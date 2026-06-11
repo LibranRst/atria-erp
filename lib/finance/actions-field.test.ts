@@ -302,6 +302,11 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
 
   describe("Field Claims (Project Cost) Flow", () => {
     it("harus menyetujui pengajuan klaim lapangan PM Budi, memicu approval PENDING jika overrun, dan memproses pencairan kas kecil", async () => {
+      // Reset BCA bank account balance to ensure sufficient funds
+      await db.update(bankAccount)
+        .set({ balance: "735000000.00" })
+        .where(eq(bankAccount.id, BCA_ACC_ID));
+
       // 1. Cari budget item dengan sisa plafon kecil untuk memicu overrun
       const budgetItem = await db.query.projectBudgetItem.findFirst({
         where: eq(projectBudgetItem.projectBudgetId, "88888888-8888-8888-8888-888888888881"),
