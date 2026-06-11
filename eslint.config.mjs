@@ -10,6 +10,7 @@ const eslintConfig = defineConfig([
     // Local agent/plugin tooling:
     ".agents/**",
     ".superpowers/**",
+    ".claude/**",
 
     // Default ignores of eslint-config-next:
     ".next/**",

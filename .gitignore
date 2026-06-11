@@ -1,5 +1,6 @@
 .superpowers/
 .agents/
+.claude/
 node_modules/
 .env
 .env.local
