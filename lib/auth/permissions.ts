@@ -89,6 +89,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "create:cost",
     "update:cost",
     "view:vendor_bill",
+    "create:vendor_bill",
     "view:client_invoice",
   ],
   PURCHASING: [
