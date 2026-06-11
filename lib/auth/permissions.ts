@@ -28,6 +28,7 @@ export type PermissionKey =
   | "create:client_invoice"
   | "update:client_invoice"
   | "reconcile:client_invoice"
+  | "view:profitability"
   | "view:ai_brief";
 
 // 2. Matriks Otorisasi Berdasarkan Peran (Role Permission Matrix)
@@ -57,6 +58,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "create:client_invoice",
     "update:client_invoice",
     "reconcile:client_invoice",
+    "view:profitability",
     "view:ai_brief",
   ],
   FINANCE_ADMIN: [
@@ -77,6 +79,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "create:client_invoice",
     "update:client_invoice",
     "reconcile:client_invoice",
+    "view:profitability",
   ],
   PROJECT_MANAGER: [
     "view:budget",
