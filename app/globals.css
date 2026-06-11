@@ -1,26 +1,73 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: hsl(220, 20%, 8%);
+  --foreground: hsl(210, 40%, 98%);
+
+  /* Base & Background Colors */
+  --bg-deep: hsl(220, 20%, 8%);
+  --bg-surface: hsl(220, 15%, 13%);
+  --bg-elevated: hsl(220, 12%, 18%);
+  --border: hsl(220, 12%, 22%);
+
+  /* Typography Colors */
+  --text-primary: hsl(210, 40%, 98%);
+  --text-secondary: hsl(215, 20%, 75%);
+  --text-muted: hsl(215, 12%, 50%);
+
+  /* Brand & Functional Colors */
+  --primary: hsl(245, 58%, 51%);
+  --primary-light: hsl(245, 30%, 15%);
+  --success: hsl(150, 84%, 37%);
+  --success-light: hsl(150, 30%, 12%);
+  --warning: hsl(38, 92%, 50%);
+  --warning-light: hsl(38, 30%, 12%);
+  --critical: hsl(350, 89%, 60%);
+  --critical-light: hsl(350, 30%, 12%);
+
+  /* Border Radii Tokens */
+  --radius-lg: 8px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Map HSL colors to Tailwind classes */
+  --color-deep: var(--bg-deep);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-border: var(--border);
+  --color-text-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-warning-light: var(--warning-light);
+  --color-critical: var(--critical);
+  --color-critical-light: var(--critical-light);
+
+  /* Map Border Radii to Tailwind classes */
+  --radius-lg: var(--radius-lg);
+  --radius-2xl: var(--radius-2xl);
+  --radius-3xl: var(--radius-3xl);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
+}
+
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    border-color: var(--border);
+  }
 }

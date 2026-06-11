@@ -84,7 +84,7 @@ Menampilkan daftar invoice secara kronologis berdasar tanggal jatuh tempo (`due_
     *   `PARTIALLY_PAID` (Teks biru/indigo utama `color-primary` dengan latar belakang redup `color-primary-light` 15% opacity)
     *   `PAID` (Teks hijau emerald pekat `color-success` dengan latar belakang redup `color-success-light` 15% opacity)
     *   `OVERDUE` (Teks merah pekat `color-critical` dengan latar belakang redup `color-critical-light` 15% opacity)
-    *   `VOID` (Teks abu-abu redup `color-text-muted` dengan latar belakang redup `color-bg-elevated` 15% opacity, serta coret tengah)
+    *   `VOID` (Teks abu-abu redup `color-muted` dengan latar belakang redup `color-elevated` 15% opacity, serta coret tengah)
 
 ### 4.2 Pencatatan Pembayaran Piutang (Record Payment Flow)
 Formulir input cepat untuk mencatat pembayaran masuk yang diterima di `bank_account`:

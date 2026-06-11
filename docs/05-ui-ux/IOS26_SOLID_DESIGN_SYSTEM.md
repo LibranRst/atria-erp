@@ -15,7 +15,7 @@ Sistem desain **iOS 26 Solid** berfokus pada:
 
 > [!NOTE]
 > **Catatan Deviasi dari AGENTS.md (Refusal of Glassmorphism & backdrop-blur-md):**
-> Meskipun dokumen `AGENTS.md` menyarankan penggunaan glassmorphism dan `backdrop-blur-md` pada panel, header, atau modal sheet, sistem desain **iOS 26 Solid** secara sadar **menolak/menghindari** penerapan efek blur latar belakang tersebut. Keputusan ini diambil demi memaksimalkan kinerja rendering GPU pada WebView seluler di lapangan. Di area proyek konstruksi yang terang dan dinamis, perangkat yang digunakan oleh Project Manager (PM) sering kali memiliki spesifikasi terbatas atau mengalami penurunan performa rendering akibat beban filter CSS blur yang berat. Dengan menggunakan latar belakang warna solid (`color-bg-surface` atau `color-bg-elevated`) yang dipadukan dengan border 1px solid (`color-border`) berdensitas kontras tinggi, kami memastikan aplikasi tetap responsif pada kecepatan 60fps sekaligus menghemat konsumsi baterai perangkat di lapangan.
+> Meskipun dokumen `AGENTS.md` menyarankan penggunaan glassmorphism dan `backdrop-blur-md` pada panel, header, atau modal sheet, sistem desain **iOS 26 Solid** secara sadar **menolak/menghindari** penerapan efek blur latar belakang tersebut. Keputusan ini diambil demi memaksimalkan kinerja rendering GPU pada WebView seluler di lapangan. Di area proyek konstruksi yang terang dan dinamis, perangkat yang digunakan oleh Project Manager (PM) sering kali memiliki spesifikasi terbatas atau mengalami penurunan performa rendering akibat beban filter CSS blur yang berat. Dengan menggunakan latar belakang warna solid (`color-surface` atau `color-elevated`) yang dipadukan dengan border 1px solid (`color-border`) berdensitas kontras tinggi, kami memastikan aplikasi tetap responsif pada kecepatan 60fps sekaligus menghemat konsumsi baterai perangkat di lapangan.
 
 ---
 
@@ -24,15 +24,15 @@ Sistem desain **iOS 26 Solid** berfokus pada:
 Sistem warna menggunakan model **HSL (Hue, Saturation, Lightness)** untuk mempermudah kustomisasi tema dinamis dan variasi kegelapan warna (opacity).
 
 ### 2.1 Warna Dasar & Latar (Base & Background Colors)
-*   `color-bg-deep`: `hsl(220, 20%, 8%)` - Latar belakang utama aplikasi (gelap pekat).
-*   `color-bg-surface`: `hsl(220, 15%, 13%)` - Latar belakang kartu, panel, dan bar navigasi.
-*   `color-bg-elevated`: `hsl(220, 12%, 18%)` - Latar belakang modal sheet, popover, dan dropdown.
+*   `color-deep`: `hsl(220, 20%, 8%)` - Latar belakang utama aplikasi (gelap pekat).
+*   `color-surface`: `hsl(220, 15%, 13%)` - Latar belakang kartu, panel, dan bar navigasi.
+*   `color-elevated`: `hsl(220, 12%, 18%)` - Latar belakang modal sheet, popover, dan dropdown.
 *   `color-border`: `hsl(220, 12%, 22%)` - Warna border mikro tipis (1px) untuk pemisah elemen.
 
 ### 2.2 Warna Teks (Typography Colors)
 *   `color-text-primary`: `hsl(210, 40%, 98%)` - Teks judul dan nominal keuangan utama (kontras maksimum).
-*   `color-text-secondary`: `hsl(215, 20%, 75%)` - Teks deskripsi dan label form.
-*   `color-text-muted`: `hsl(215, 12%, 50%)` - Teks log audit, tanggal, dan informasi sekunder.
+*   `color-secondary`: `hsl(215, 20%, 75%)` - Teks deskripsi dan label form.
+*   `color-muted`: `hsl(215, 12%, 50%)` - Teks log audit, tanggal, dan informasi sekunder.
 
 ### 2.3 Warna Fungsional & Status (Brand & Functional Colors)
 Setiap warna status memiliki pasangan warna latar belakang redup (15% opacity) untuk kebutuhan badge kontras tinggi.
@@ -85,7 +85,7 @@ Seluruh margin, padding, dan jarak antar elemen wajib menggunakan kelipatan **4p
 Untuk mencerminkan kehalusan antarmuka iOS modern, digunakan tiga tingkat kelengkungan sudut (`border-radius`):
 1.  **Badge & Tombol Kecil (`rounded-lg`):** `8px` - Digunakan untuk elemen dengan tinggi kecil seperti status badge, checkbox, dan tombol verifikasi mini.
 2.  **Kartu & Input Form (`rounded-2xl`):** `16px` - Digunakan untuk komponen berukuran sedang seperti kartu proyek, kartu mutasi kas, container input form, dan pop-up dialog.
-3.  **Bottom Sheets & Modal Drawer (`rounded-t-3xl`):** `24px` pada sudut kiri atas dan kanan atas. Sudut bawah dibiarkan datar (`0px`) karena sheet menempel pada bagian bawah layar.
+3.  **Bottom Sheets & Modal Drawer (`rounded-t-3xl`):** `24px` pada sudut kiri atas dan kanan atas (menggunakan token `radius-3xl`, yang dikompilasi oleh Tailwind v4 menjadi class `rounded-3xl` atau `rounded-t-3xl` secara alami). Sudut bawah dibiarkan datar (`0px`) karena sheet menempel pada bagian bawah layar.
 
 ---
 
@@ -95,7 +95,7 @@ Untuk mencerminkan kehalusan antarmuka iOS modern, digunakan tiga tingkat keleng
 *   **Struktur HTML/CSS:**
     ```css
     .card-solid {
-      background-color: var(--color-bg-surface);
+      background-color: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: 16px; /* rounded-2xl */
       padding: 16px; /* space-lg */
@@ -133,8 +133,8 @@ Digunakan untuk formulir pemilihan proyek cepat atau peninjauan nota belanja:
 
 ### 6.3 Segmented Controls (iOS Style Toggle Pills)
 Kontrol navigasi horizontal untuk menyaring tampilan (misal filter tab detail proyek: *Budget*, *Invoices*, *Bills*):
-*   Container menggunakan warna `color-bg-surface` dengan padding `4px` dan kelengkungan `12px`.
-*   Pill aktif menggunakan warna `color-bg-elevated` dengan shadow halus. Perubahan tab memicu animasi geser linear yang cepat (transisi 150ms).
+*   Container menggunakan warna `color-surface` dengan padding `4px` dan kelengkungan `12px`.
+*   Pill aktif menggunakan warna `color-elevated` dengan shadow halus. Perubahan tab memicu animasi geser linear yang cepat (transisi 150ms).
 
 ### 6.4 Baris Daftar (List Rows)
 *   Setiap baris mutasi ledger atau item BoQ dirancang dengan tata letak flexbox: ikon kategori di sisi kiri (ukuran lingkaran background **40x40px**), teks detail di tengah (Judul + Sub-label di bawahnya), dan data nominal finansial di sisi kanan (rata kanan/right-aligned).
@@ -151,7 +151,7 @@ Digunakan untuk menandai fase persetujuan atau pembayaran. Setiap badge mengguna
 *   `PARTIALLY_PAID` -> Teks `color-primary` (biru/indigo utama), Latar belakang `color-primary-light` (15% opacity).
 *   `WARNING` -> Teks `color-warning`, Latar belakang `color-warning-light` (15% opacity).
 *   `CRITICAL` / `OVERDUE` -> Teks `color-critical`, Latar belakang `color-critical-light` (15% opacity).
-*   `VOID` -> Teks `color-text-muted` (abu-abu), Latar belakang `color-bg-elevated` (15% opacity) dengan efek coret tengah (`line-through`).
+*   `VOID` -> Teks `color-muted` (abu-abu), Latar belakang `color-elevated` (15% opacity) dengan efek coret tengah (`line-through`).
 
 ### 7.2 Format & Gaya Angka Finansial (Financial Numbers Styling)
 Penulisan angka nominal uang Rupiah dirancang agar sangat terbaca untuk mendeteksi selisih angka sekecil apa pun:
