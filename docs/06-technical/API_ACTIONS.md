@@ -77,7 +77,7 @@ Aksi ini mengagregasikan statistik keuangan utama untuk ditampilkan pada dashboa
 
 import { db } from "@/db";
 import { bankAccount, clientInvoice, vendorBill, project } from "@/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { ActionResponse } from "@/lib/types/action-response";
@@ -108,10 +108,10 @@ export async function getDashboardStats(): Promise<ActionResponse<DashboardStats
     // 2. Enforce permission check (only OWNER or FINANCE_ADMIN can read global financial stats)
     try {
       assertPermission(session.user, "view:profitability");
-    } catch (err: any) {
+    } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err.message || "Akses ditolak." },
+        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
       };
     }
 
@@ -132,7 +132,7 @@ export async function getDashboardStats(): Promise<ActionResponse<DashboardStats
       .where(
         and(
           eq(clientInvoice.status, "UNPAID"),
-          sql`${clientInvoice.status} != 'VOID'`
+          ne(clientInvoice.status, "VOID")
         )
       );
     
@@ -155,7 +155,7 @@ export async function getDashboardStats(): Promise<ActionResponse<DashboardStats
       .where(
         and(
           eq(vendorBill.status, "UNPAID"),
-          sql`${vendorBill.status} != 'VOID'`
+          ne(vendorBill.status, "VOID")
         )
       );
 
@@ -179,12 +179,12 @@ export async function getDashboardStats(): Promise<ActionResponse<DashboardStats
         activeProjectsCount: activeProjects.length,
       },
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: error.message || "Terjadi kesalahan internal pada server.",
+        message: error instanceof Error ? error.message : "Terjadi kesalahan internal pada server.",
       },
     };
   }
@@ -199,7 +199,7 @@ Aksi ini digunakan oleh Project Manager (PM) untuk mendaftarkan anggaran belanja
 "use server";
 
 import { db } from "@/db";
-import { projectBudgetItem, projectBudget } from "@/db/schema";
+import { projectBudgetItem, projectBudget, project } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
@@ -259,10 +259,10 @@ export async function createBudgetItem(
     // 3. Enforce RBAC Permission Check
     try {
       assertPermission(session.user, "create:budget");
-    } catch (err: any) {
+    } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err.message || "Akses ditolak." },
+        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
       };
     }
 
@@ -276,6 +276,23 @@ export async function createBudgetItem(
         success: false,
         error: { code: "NOT_FOUND", message: "Rencana anggaran proyek tidak ditemukan." },
       };
+    }
+
+    // PM Project Scoping Check
+    if (session.user.role === "PROJECT_MANAGER") {
+      const parentProject = await db.query.project.findFirst({
+        where: eq(project.id, budgetHeader.projectId),
+      });
+
+      if (!parentProject || parentProject.projectManagerId !== session.user.id) {
+        return {
+          success: false,
+          error: {
+            code: "FORBIDDEN",
+            message: "Project Manager hanya dapat menambahkan item anggaran pada proyek yang ditugaskan kepada mereka.",
+          },
+        };
+      }
     }
 
     if (budgetHeader.status !== "DRAFT" && budgetHeader.status !== "REJECTED") {
@@ -306,12 +323,12 @@ export async function createBudgetItem(
       success: true,
       data: newItem,
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: error.message || "Terjadi kesalahan internal saat membuat item anggaran.",
+        message: error instanceof Error ? error.message : "Terjadi kesalahan internal saat membuat item anggaran.",
       },
     };
   }
@@ -374,10 +391,10 @@ export async function recordClientPayment(
     // 2. Verify permission
     try {
       assertPermission(session.user, "reconcile:ledger");
-    } catch (err: any) {
+    } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err.message || "Izin ditolak." },
+        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Izin ditolak." },
       };
     }
 
@@ -494,23 +511,24 @@ export async function recordClientPayment(
       success: true,
       data: result,
     };
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
     let errorCode: "TRANSACTION_FAILED" | "NOT_FOUND" | "FORBIDDEN" = "TRANSACTION_FAILED";
-    let message = error.message;
+    let displayMessage = message;
 
-    if (error.message === "BANK_ACCOUNT_NOT_FOUND" || error.message === "INVOICE_NOT_FOUND") {
+    if (message === "BANK_ACCOUNT_NOT_FOUND" || message === "INVOICE_NOT_FOUND") {
       errorCode = "NOT_FOUND";
-      message = "Rekening bank atau data invoice tidak ditemukan.";
-    } else if (error.message === "INVOICE_ALREADY_CLOSED") {
+      displayMessage = "Rekening bank atau data invoice tidak ditemukan.";
+    } else if (message === "INVOICE_ALREADY_CLOSED") {
       errorCode = "FORBIDDEN";
-      message = "Invoice sudah dilunasi atau telah dibatalkan.";
+      displayMessage = "Invoice sudah dilunasi atau telah dibatalkan.";
     }
 
     return {
       success: false,
       error: {
         code: errorCode,
-        message: message || "Gagal mencatat pembayaran klien.",
+        message: displayMessage || "Gagal mencatat pembayaran klien.",
       },
     };
   }
@@ -576,10 +594,10 @@ export async function submitVendorBill(
 
     try {
       assertPermission(session.user, "create:vendor_bill");
-    } catch (err: any) {
+    } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err.message || "Akses ditolak." },
+        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
       };
     }
 
@@ -604,10 +622,10 @@ export async function submitVendorBill(
       success: true,
       data: bill,
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: { code: "INTERNAL_SERVER_ERROR", message: error.message || "Gagal mencatat tagihan." },
+      error: { code: "INTERNAL_SERVER_ERROR", message: error instanceof Error ? error.message : "Gagal mencatat tagihan." },
     };
   }
 }
@@ -666,10 +684,10 @@ export async function scheduleVendorBillPayment(
 
     try {
       assertPermission(session.user, "pay:vendor_bill");
-    } catch (err: any) {
+    } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err.message || "Akses ditolak." },
+        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
       };
     }
 
@@ -712,10 +730,10 @@ export async function scheduleVendorBillPayment(
       success: true,
       data: payment,
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: { code: "INTERNAL_SERVER_ERROR", message: error.message || "Gagal menjadwalkan pembayaran." },
+      error: { code: "INTERNAL_SERVER_ERROR", message: error instanceof Error ? error.message : "Gagal menjadwalkan pembayaran." },
     };
   }
 }
@@ -730,7 +748,7 @@ Dipanggil setelah approval selesai, melakukan debet kas bank, pencatatan `cash_t
 
 import { db } from "@/db";
 import { vendorBill, vendorPayment, bankAccount, cashTransaction, projectBudgetItem, auditLog } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { ActionResponse } from "@/lib/types/action-response";
@@ -770,16 +788,18 @@ export async function payVendorBill(
     // Check permissions
     try {
       assertPermission(session.user, "pay:vendor_bill");
-    } catch (err: any) {
-      return { success: false, error: { code: "FORBIDDEN", message: err.message || "Akses ditolak." } };
+    } catch (err) {
+      return { success: false, error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." } };
     }
 
     // Execute inside a database transaction block (Option A)
     const result = await db.transaction(async (tx) => {
       // 1. Fetch and Lock the vendor payment record
-      const payment = await tx.query.vendorPayment.findFirst({
-        where: eq(vendorPayment.id, vendorPaymentId),
-      });
+      const [payment] = await tx
+        .select()
+        .from(vendorPayment)
+        .where(eq(vendorPayment.id, vendorPaymentId))
+        .for("update");
 
       if (!payment) {
         throw new Error("PAYMENT_RECORD_NOT_FOUND");
@@ -863,8 +883,25 @@ export async function payVendorBill(
         })
         .where(eq(vendorPayment.id, vendorPaymentId));
 
-      // 8. Update vendor bill status to PAID or PARTIALLY_PAID
-      const nextBillStatus = "PAID";
+      // 8. Update vendor bill status to PAID or PARTIALLY_PAID (calculated dynamically)
+      const completedPayments = await tx
+        .select({ amountPaid: vendorPayment.amountPaid })
+        .from(vendorPayment)
+        .where(
+          and(
+            eq(vendorPayment.vendorBillId, payment.vendorBillId),
+            eq(vendorPayment.status, "COMPLETED")
+          )
+        );
+
+      const totalPaidAmount = completedPayments.reduce(
+        (sum, p) => sum + Number(p.amountPaid),
+        0
+      ) + paymentAmount;
+
+      const billAmount = Number(bill.amount);
+      const nextBillStatus = totalPaidAmount >= billAmount ? "PAID" : "PARTIALLY_PAID";
+
       await tx
         .update(vendorBill)
         .set({
@@ -922,24 +959,30 @@ export async function payVendorBill(
       success: true,
       data: result,
     };
-  } catch (error: any) {
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "";
     let code: "NOT_FOUND" | "INSUFFICIENT_FUNDS" | "FORBIDDEN" | "TRANSACTION_FAILED" = "TRANSACTION_FAILED";
-    let message = error.message;
+    let displayMessage = errMsg;
 
-    if (error.message === "PAYMENT_RECORD_NOT_FOUND" || error.message === "BANK_ACCOUNT_NOT_FOUND" || error.message === "VENDOR_BILL_NOT_FOUND" || error.message === "BUDGET_ITEM_NOT_FOUND") {
+    if (
+      errMsg === "PAYMENT_RECORD_NOT_FOUND" ||
+      errMsg === "BANK_ACCOUNT_NOT_FOUND" ||
+      errMsg === "VENDOR_BILL_NOT_FOUND" ||
+      errMsg === "BUDGET_ITEM_NOT_FOUND"
+    ) {
       code = "NOT_FOUND";
-      message = "Data record keuangan yang dibutuhkan untuk transaksi tidak ditemukan.";
-    } else if (error.message === "INSUFFICIENT_FUNDS") {
+      displayMessage = "Data record keuangan yang dibutuhkan untuk transaksi tidak ditemukan.";
+    } else if (errMsg === "INSUFFICIENT_FUNDS") {
       code = "INSUFFICIENT_FUNDS";
-      message = "Pencairan dibatalkan: Saldo akun bank perusahaan tidak mencukupi.";
-    } else if (error.message === "PAYMENT_ALREADY_COMPLETED") {
+      displayMessage = "Pencairan dibatalkan: Saldo akun bank perusahaan tidak mencukupi.";
+    } else if (errMsg === "PAYMENT_ALREADY_COMPLETED") {
       code = "FORBIDDEN";
-      message = "Pembayaran ini sudah diselesaikan sebelumnya.";
+      displayMessage = "Pembayaran ini sudah diselesaikan sebelumnya.";
     }
 
     return {
       success: false,
-      error: { code, message },
+      error: { code, message: displayMessage || "Gagal melakukan pembayaran tagihan vendor." },
     };
   }
 }
@@ -997,8 +1040,8 @@ export async function createCashTransaction(
     // Reconciling or writing direct ledger requires 'reconcile:ledger' permission
     try {
       assertPermission(session.user, "reconcile:ledger");
-    } catch (err: any) {
-      return { success: false, error: { code: "FORBIDDEN", message: err.message || "Akses ditolak." } };
+    } catch (err) {
+      return { success: false, error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." } };
     }
 
     // Execute balance and ledger writes in a single block transaction (Option A)
@@ -1079,21 +1122,22 @@ export async function createCashTransaction(
       success: true,
       data: result,
     };
-  } catch (error: any) {
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "";
     let code: "NOT_FOUND" | "INSUFFICIENT_FUNDS" | "TRANSACTION_FAILED" = "TRANSACTION_FAILED";
-    let message = error.message;
+    let displayMessage = errMsg;
 
-    if (error.message === "BANK_ACCOUNT_NOT_FOUND") {
+    if (errMsg === "BANK_ACCOUNT_NOT_FOUND") {
       code = "NOT_FOUND";
-      message = "Rekening bank tidak ditemukan.";
-    } else if (error.message === "INSUFFICIENT_FUNDS") {
+      displayMessage = "Rekening bank tidak ditemukan.";
+    } else if (errMsg === "INSUFFICIENT_FUNDS") {
       code = "INSUFFICIENT_FUNDS";
-      message = "Saldo kas bank tidak mencukupi untuk melakukan mutasi keluar.";
+      displayMessage = "Saldo kas bank tidak mencukupi untuk melakukan mutasi keluar.";
     }
 
     return {
       success: false,
-      error: { code, message },
+      error: { code, message: displayMessage || "Terjadi kesalahan internal." },
     };
   }
 }

@@ -170,6 +170,56 @@ Agen ini memproses foto nota belanja material atau kuitansi yang diunggah oleh P
     ```
 *   **Validasi Kategori Anggaran:** Hasil ekstraksi di atas akan dipetakan ke kategori anggaran proyek (`cost_category`) menggunakan pencocokan teks semantik (misal: "Semen" dipetakan ke kategori `'MATERIAL'`).
 
+### 2.4 Pengaturan SDK Gemini API untuk Keandalan Output JSON
+
+Untuk menjamin bahwa luaran dari Gemini API selalu berupa JSON terstruktur yang valid dan sesuai dengan schema yang diharapkan (menghindari kegagalan parsing JSON di sisi server), pengembang wajib menggunakan opsi native Gemini SDK berikut saat melakukan pemanggilan API:
+
+1. **`responseMimeType`**: Harus disetel ke `"application/json"`. Parameter ini memaksa model Gemini untuk menstrukturkan responsnya dalam format JSON yang valid secara sintaksis.
+2. **`responseSchema`**: Menyediakan definisi schema JSON target (menggunakan format OpenAPI Schema) secara langsung ke API call SDK. Dengan menyertakan schema ini di tingkat SDK, model Gemini menjamin output mengikuti properti, tipe data, dan daftar properti wajib (*required fields*) yang telah didefinisikan.
+
+#### Contoh Pengaturan SDK (Node.js):
+```typescript
+import { GoogleGenAI, Type } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const response = await ai.models.generateContent({
+  model: "gemini-1.5-flash",
+  contents: "Ekstrak rincian bukti transaksi dari foto...",
+  config: {
+    // Memaksa model mengembalikan format JSON
+    responseMimeType: "application/json",
+    // Menentukan schema terstruktur yang harus dipatuhi
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        vendorName: { type: Type.STRING },
+        transactionDate: { type: Type.STRING },
+        subtotal: { type: Type.NUMBER },
+        tax: { type: Type.NUMBER },
+        totalAmount: { type: Type.NUMBER },
+        items: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              itemName: { type: Type.STRING },
+              quantity: { type: Type.INTEGER },
+              unitPrice: { type: Type.NUMBER },
+              totalPrice: { type: Type.NUMBER },
+            },
+            required: ["itemName", "quantity", "unitPrice", "totalPrice"],
+          },
+        },
+      },
+      required: ["vendorName", "transactionDate", "subtotal", "tax", "totalAmount", "items"],
+    },
+  },
+});
+```
+
+Dengan konfigurasi ini, aplikasi tidak perlu lagi melakukan pembersihan string (seperti menghapus triple backticks ` ```json ` secara manual), karena Gemini API secara langsung mengembalikan string JSON bersih yang siap di-parse oleh Zod.
+
 ---
 
 ## 3. Pola Otorisasi & Alur Persetujuan (Approval-Gated Mutation Flow)
