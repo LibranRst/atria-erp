@@ -4,6 +4,15 @@ Dokumen ini memecah seluruh siklus pengembangan Atria ERP menjadi **12 tugas ato
 
 ---
 
+## Pemetaan Terminologi (Terminology Mapping)
+
+Untuk menyinkronkan penamaan entitas dalam diagram alur (*workflow flows*) dengan nama tabel database riil pada codebase agar tidak membingungkan coding agent:
+
+- **`client_payment_milestone`** (Workflows/Flows) $\rightarrow$ **`client_invoice`** (Database)
+- **`field_request`** (Workflows/Flows) $\rightarrow$ **`project_cost`** (Database)
+
+---
+
 ## Daftar Tugas Utama (Task List Overview)
 
 | Task ID | Task Title | Target Core | Dependencies |
@@ -14,8 +23,8 @@ Dokumen ini memecah seluruh siklus pengembangan Atria ERP menjadi **12 tugas ato
 | **TSK-004** | Integrasi Better Auth & Middleware Proteksi Rute | Authentication & Middleware Route Protection | TSK-002 |
 | **TSK-005** | Penegakan Keamanan RBAC & Scoping Proyek | assertPermission Helper & PM Scoping | TSK-004 |
 | **TSK-006** | Engine Mutasi Saldo Kas & Option A Ledger | Transactional Locking Helper (`mutateBalance`) | TSK-003, TSK-005 |
-| **TSK-007** | Server Action Pembayaran Klien & Dasbor Stats | recordClientPayment & getDashboardStats | TSK-006 |
-| **TSK-008** | Server Actions Pengelolaan Tagihan & Pembayaran Vendor | submitVendorBill, schedule & pay actions | TSK-007 |
+| **TSK-007** | Server Actions Anggaran Proyek & Penerimaan Klien | Budget Management & Client Payments | TSK-006 |
+| **TSK-008** | Server Actions Pengelolaan Biaya Lapangan, Tagihan & Pembayaran Vendor | Field Claims, Vendor Bills & Approvals | TSK-007 |
 | **TSK-009** | Integrasi Gemini AI OCR Nota & Daily Briefing Cron | Gemini SDK Pipeline & Daily Briefing Cron | TSK-008 |
 | **TSK-010** | App Shell & iOS 26 Solid UI Core Components | Bottom Navigation & Core Components | TSK-001 |
 | **TSK-011** | UI Form Pengeluaran Lapangan & Integrasi OCR PM | Expense Form & OCR Loader | TSK-009, TSK-010 |
@@ -68,10 +77,10 @@ Dokumen ini memecah seluruh siklus pengembangan Atria ERP menjadi **12 tugas ato
 *   **Acceptance Criteria (Kriteria Penerimaan):**
     *   Mengisi tabel `role` dengan 3 peran master: `OWNER`, `FINANCE_ADMIN`, dan `PROJECT_MANAGER`.
     *   Mengisi tabel `project_cost_category` dengan kategori default: `MATERIAL`, `SUBCONTRACTOR`, `OPERATIONAL`, dan `OTHER`.
-    *   Mengisi tabel `bank_account` dengan rekening awal BCA Operational, Mandiri Project, dan Petty Cash Office lengkap dengan saldo saldo awal di atas Rp 10.000.000,00.
+    *   Mengisi tabel `bank_account` dengan rekening awal BCA Operational, Mandiri Project, dan Petty Cash Office lengkap dengan saldo awal di atas Rp 10.000.000,00.
 *   **Dependencies (Ketergantungan):** TSK-002.
 *   **Test Notes (Catatan Pengujian):**
-    *   *Command:* `bun run db/seed` (atau command yang dipetakan di package.json)
+    *   *Command:* `bun run db/seed.ts`
     *   *Outcome:* Database terisi record baru tanpa error foreign key mismatch. Lakukan verifikasi baris tabel via neon console atau db management tool.
 
 ---
@@ -88,8 +97,8 @@ Dokumen ini memecah seluruh siklus pengembangan Atria ERP menjadi **12 tugas ato
     *   Rute `/dashboard/settings/bank-accounts` dikunci khusus untuk peran `OWNER` saja.
 *   **Dependencies (Ketergantungan):** TSK-002.
 *   **Test Notes (Catatan Pengujian):**
-    *   *Command:* Jalankan server dev (`bun run dev`) dan lakukan HTTP request mock ke `/dashboard/ledger` menggunakan curl tanpa menyertakan auth cookies.
-    *   *Outcome:* Server mengembalikan redirect 302 ke rute `/login`.
+    *   *Command:* Jalankan server dev dengan `bun run dev` lalu panggil `curl -I http://localhost:3000/dashboard/ledger` tanpa cookie session.
+    *   *Outcome:* Server mengembalikan status redirect 302 ke rute `/login`.
 
 ---
 
@@ -103,7 +112,7 @@ Dokumen ini memecah seluruh siklus pengembangan Atria ERP menjadi **12 tugas ato
     *   Fungsi `scopeProjectQuery(userId, role)` mengembalikan query modifier atau filter database yang membatasi relasi proyek PM hanya pada baris di mana `project.projectManagerId = userId`.
 *   **Dependencies (Ketergantungan):** TSK-004.
 *   **Test Notes (Catatan Pengujian):**
-    *   *Command:* Jalankan unit test di `/lib/auth/permissions.test.ts` (menggunakan Bun test).
+    *   *Command:* `bun test lib/auth/permissions.test.ts`
     *   *Outcome:* Memanggil `assertPermission` dengan peran `PROJECT_MANAGER` untuk permission `reconcile:ledger` terbukti sukses melempar error `FORBIDDEN`.
 
 ---
@@ -119,41 +128,53 @@ Dokumen ini memecah seluruh siklus pengembangan Atria ERP menjadi **12 tugas ato
     *   Menghitung saldo baru, menulis perubahan saldo, memverifikasi record terupdate tepat 1 baris, menulis entri kas baru ke `cash_transaction` dengan status `reconciled = true`, dan menulis data history ke `audit_log`.
 *   **Dependencies (Ketergantungan):** TSK-003, TSK-005.
 *   **Test Notes (Catatan Pengujian):**
-    *   *Command:* Jalankan skrip pengujian integrasi transaksional keuangan di `/scratch/test-transaction-locking.ts`.
+    *   *Command:* `bun test scratch/test-transaction-locking.ts`
     *   *Outcome:* Pengujian menyisipkan mutasi kas secara konkuren dan membuktikan saldo akhir BCA Operational terpotong dengan akurat tanpa adanya race condition atau saldo minus.
 
 ---
 
-### TSK-007: Server Action Pembayaran Klien & Dasbor Stats
-*   **Goal (Tujuan):** Membuat Next.js Server Actions untuk pencatatan pembayaran invoice klien (`recordClientPayment`) dan pengambilan data statistik dasbor keuangan (`getDashboardStats`).
+### TSK-007: Server Actions Anggaran Proyek & Penerimaan Klien
+*   **Goal (Tujuan):** Mengimplementasikan Server Actions manajemen anggaran proyek (`createProjectBudget`, `submitBudgetForApproval`, `approveBudget`, `rejectBudget`, `createBudgetItem`) serta pencatatan pembayaran termin klien (`recordClientPayment`) dan dasbor stats (`getDashboardStats`).
 *   **Files likely touched (File yang tersentuh):**
+    *   `/app/actions/project/budget.ts`
     *   `/app/actions/finance/record-client-payment.ts`
     *   `/app/actions/finance/get-dashboard-stats.ts`
+    *   `/lib/validations/budget.ts`
 *   **Acceptance Criteria (Kriteria Penerimaan):**
-    *   Kedua Server Actions diawali dengan perintah `"use server"` dan memanggil session check server-side menggunakan Better Auth.
-    *   `recordClientPayment` menerima input data tervalidasi menggunakan skema Zod (`recordClientPaymentSchema`).
-    *   Menggunakan helper `mutateBalance` untuk menambah saldo bank (`DEBIT`), memperbarui status `client_invoice` menjadi `PAID` atau `PARTIALLY_PAID`, dan mengembalikan response bertipe `ActionResponse`.
+    *   Semua Server Actions diawali dengan perintah `"use server"` dan memanggil session check server-side menggunakan Better Auth.
+    *   `createProjectBudget` menerima `projectId` dan membuat draf awal `project_budget` dengan status default `DRAFT`.
+    *   `submitBudgetForApproval` mengubah status anggaran proyek menjadi `PENDING_APPROVAL` jika draf sudah lengkap.
+    *   `approveBudget` hanya boleh dipanggil oleh `OWNER` atau `FINANCE_ADMIN` untuk menyetujui anggaran proyek dan mengubah statusnya menjadi `APPROVED`.
+    *   `rejectBudget` mengubah status anggaran proyek menjadi `REJECTED` atau mengembalikan ke `DRAFT` disertai dengan catatan penolakan (`notes`).
+    *   `createBudgetItem` menerima parameter item anggaran (`project_budget_item`), dan hanya diizinkan untuk menambahkan item jika status anggaran proyek tersebut adalah `DRAFT` atau `REJECTED`. Jika status sudah `APPROVED`, throw error `FORBIDDEN`.
+    *   `recordClientPayment` menerima input data tervalidasi menggunakan skema Zod (`recordClientPaymentSchema`), memotong sisa tagihan pada `client_invoice` secara aman di bawah `db.transaction`, mengubah status invoice menjadi `PAID` atau `PARTIALLY_PAID`, dan menambah saldo bank menggunakan helper `mutateBalance` (`DEBIT`).
 *   **Dependencies (Ketergantungan):** TSK-006.
 *   **Test Notes (Catatan Pengujian):**
-    *   *Command:* Jalankan skrip test di `/scratch/test-dashboard-queries.ts`.
-    *   *Outcome:* Response dari `getDashboardStats` mengembalikan objek JSON berisi total saldo kas, total receivables, total payables, dan active projects count dengan struktur format data yang bersih.
+    *   *Command:* `bun test scratch/test-budget-actions.ts`
+    *   *Outcome:* Pengujian membuktikan alur status transisi anggaran proyek berjalan lancar, dan penambahan item anggaran pada proyek yang anggarannya sudah berstatus `APPROVED` diblokir dengan error `FORBIDDEN`.
 
 ---
 
-### TSK-008: Server Actions Pengelolaan Tagihan & Pembayaran Vendor
-*   **Goal (Tujuan):** Mengembangkan 3 Server Actions pendukung transaksi Accounts Payable: menginput tagihan vendor (`submitVendorBill`), menjadwalkan pembayaran (`scheduleVendorBillPayment`), dan mencatat realisasi transfer dana keluar (`payVendorBill`).
+### TSK-008: Server Actions Pengelolaan Biaya Lapangan, Tagihan & Pembayaran Vendor
+*   **Goal (Tujuan):** Mengembangkan Server Actions pendukung Accounts Payable dan biaya lapangan (field claims): input tagihan vendor (`submitVendorBill`), penjadwalan pembayaran (`scheduleVendorBillPayment`), pencatatan realisasi bayar vendor (`payVendorBill`), verifikasi pengajuan lapangan (`verifyFieldRequest`), persetujuan pengajuan lapangan oleh Owner (`approveFieldRequest`), serta pelunasan biaya lapangan (`payFieldRequest`).
 *   **Files likely touched (File yang tersentuh):**
     *   `/app/actions/finance/submit-vendor-bill.ts`
     *   `/app/actions/finance/schedule-vendor-bill.ts`
     *   `/app/actions/finance/pay-vendor-bill.ts`
+    *   `/app/actions/finance/field-requests.ts`
+    *   `/lib/validations/finance.ts`
 *   **Acceptance Criteria (Kriteria Penerimaan):**
     *   `submitVendorBill` melakukan scoping check agar PM hanya dapat mencatat tagihan ke proyek milik mereka.
-    *   `scheduleVendorBillPayment` membuat record `vendor_payment` dengan status `PENDING`. Jika nominal pembayaran $\ge$ Rp 5.000.000 atau status alokasi anggaran proyek mengalami pembengkakan (`budget_overrun = true`), set flag otorisasi agar memerlukan approval Owner.
-    *   `payVendorBill` memanggil helper `mutateBalance` (`CREDIT`), memperbarui actual spent pada `project_budget_item`, serta mengubah status tagihan menjadi `PAID`.
+    *   Pengajuan klaim biaya lapangan baru oleh PM disimpan ke tabel `project_cost` dengan status default `SUBMITTED`.
+    *   `verifyFieldRequest` dijalankan oleh Admin atau PM Senior untuk merubah status biaya lapangan dari `SUBMITTED` menjadi `VERIFIED`.
+    *   Mekanisme limit persetujuan (approval limit) dideteksi secara dinamis saat penjadwalan (`scheduleVendorBillPayment`) atau pembayaran diajukan: jika nominal transaksi $\ge$ Rp 5.000.000 atau status anggaran proyek mengalami pembengkakan (`budget_overrun = true` hasil perbandingan totalspent + proposed terhadap plafon `project_budget_item`), sistem akan menyisipkan record persetujuan baru di tabel `approval` dengan status `PENDING` secara transaksional tanpa memerlukan kolom redundan di tabel `vendor_payment` atau `project_cost`.
+    *   `approveFieldRequest` dijalankan oleh Owner/Admin untuk merubah status `approval` menjadi `APPROVED`.
+    *   `payFieldRequest` melakukan pencairan dana tunai riil (menggunakan helper `mutateBalance` dengan `CREDIT` dari kas kecil/petty cash bank), merubah status `project_cost` menjadi `PAID`, serta mencatat transaksi lunas di `cash_transaction`.
+    *   `payVendorBill` melakukan pembayaran riil pada tagihan vendor setelah memeriksa keberadaan record `approval` berstatus `APPROVED` untuk tagihan tersebut jika melampaui limit Rp 5.000.000 atau budget overrun.
 *   **Dependencies (Ketergantungan):** TSK-007.
 *   **Test Notes (Catatan Pengujian):**
-    *   *Command:* Daftarkan tagihan vendor Rp 6.000.000,00, jadwalkan pembayaran, lalu panggil `payVendorBill` tanpa approval Owner terdaftar di database.
-    *   *Outcome:* Server Action mengembalikan error status `FORBIDDEN` dengan deskripsi pembayaran bernilai besar membutuhkan otorisasi Owner.
+    *   *Command:* `bun test scratch/test-field-approvals.ts`
+    *   *Outcome:* Pengajuan di atas Rp 5.000.000 sukses memicu pembuatan baris baru di tabel `approval` dengan status `PENDING`. Pencairan dana (`payFieldRequest`) terblokir dan melempar error `FORBIDDEN` sebelum status `approval` diubah oleh Owner menjadi `APPROVED`.
 
 ---
 
@@ -169,8 +190,8 @@ Dokumen ini memecah seluruh siklus pengembangan Atria ERP menjadi **12 tugas ato
     *   Endpoint cron `/app/api/cron/daily-briefing/route.ts` mengumpulkan statistik mutasi 24 jam terakhir dan memicu Gemini 1.5 Pro untuk menulis narasi briefing CFO Bahasa Indonesia ke tabel `ai_run`.
 *   **Dependencies (Ketergantungan):** TSK-008.
 *   **Test Notes (Catatan Pengujian):**
-    *   *Command:* Panggil endpoint cron local `/api/cron/daily-briefing` menggunakan API client dengan access header lokal.
-    *   *Outcome:* Response sukses dan entri briefing finansial baru tersimpan di tabel `ai_run` dengan format JSON yang sesuai.
+    *   *Command:* `curl -X POST -H "Authorization: Bearer local-cron-token" http://localhost:3000/api/cron/daily-briefing`
+    *   *Outcome:* Response sukses (status 200 OK) dan entri briefing finansial baru tersimpan di tabel `ai_run` dengan format JSON yang sesuai.
 
 ---
 
@@ -187,8 +208,8 @@ Dokumen ini memecah seluruh siklus pengembangan Atria ERP menjadi **12 tugas ato
     *   Lencana status (*status badges*) menerapkan warna teks pekat dengan opacity latar belakang redup sebesar 15% (contoh: status PAID memiliki teks emerald green dan background emerald dengan opacity 15%).
 *   **Dependencies (Ketergantungan):** TSK-001.
 *   **Test Notes (Catatan Pengujian):**
-    *   *Command:* Tampilkan halaman di browser simulator seluler, periksa CSS classes pada badges dan cards via element inspector.
-    *   *Outcome:* Badge status memuat properti `color` pekat dan `background-color` dengan nilai alfa opacity `0.15` (HSL atau RGBA).
+    *   *Command:* Kompilasi proyek dengan `bun run build`, jalankan server lokal `bun run dev`, lalu gunakan browser devtools mobile emulator untuk memeriksa elemen CSS.
+    *   *Outcome:* Bounding box sentuh Bottom Nav bernilai $\ge$ 48px, dan badge status memuat properti `color` pekat dan `background-color` dengan nilai alfa opacity `0.15` (misal HSL atau RGBA).
 
 ---
 
@@ -204,8 +225,8 @@ Dokumen ini memecah seluruh siklus pengembangan Atria ERP menjadi **12 tugas ato
     *   Saat foto berhasil diunggah, memicu Server Action `processReceipt` dan menampilkan skeleton shimmer loader pada kolom input biaya, deskripsi, dan nama toko. Kolom terisi otomatis setelah parser Gemini selesai merespon.
 *   **Dependencies (Ketergantungan):** TSK-009, TSK-010.
 *   **Test Notes (Catatan Pengujian):**
-    *   *Command:* Simulasikan pengambilan gambar nota belanja semen pada browser emulator.
-    *   *Outcome:* Skeleton loader aktif berkedip saat OCR berjalan, kemudian mengisi nilai nominal Rp 720.000,00 dan deskripsi toko bangunan secara akurat pada form.
+    *   *Command:* `bun test scratch/test-ocr-form-integration.ts`
+    *   *Outcome:* Skrip pengujian memicu form simulator, mengaktifkan skeleton loader saat proses OCR berjalan, dan sukses mengisi nilai nominal Rp 720.000 secara otomatis setelah data dari model Gemini kembali.
 
 ---
 
@@ -217,10 +238,10 @@ Dokumen ini memecah seluruh siklus pengembangan Atria ERP menjadi **12 tugas ato
     *   `/components/dashboard/bank-grid.tsx`
     *   `/components/approvals/approval-list.tsx`
 *   **Acceptance Criteria (Kriteria Penerimaan):**
-    *   Kartu rekening bank disajikan dalam grid horizontal yang dapat digeser (*swipeable*) dengan representasi saldo BCA/Mandiri menggunakan format Rupiah tabular numbers.
+    *   Kartu rekening bank disajikan dalam grid horizontal yang dapat digeser (*swipeable*) dengan representasi saldo BCA/Mandiri menggunakan format Rupiah dengan font tabular numbers (`font-variant-numeric: tabular-nums`).
     *   Menampilkan ringkasan teks naratif CFO briefing harian dari tabel `ai_run` di bagian atas dasbor.
     *   Layar approvals menampilkan antrean biaya di atas 5M atau budget overrun, dengan detail komparatif plafon RAB vs realisasi, tombol quick action setujui/tolak berukuran **52x52px**, dan gesture geser untuk approve/reject.
 *   **Dependencies (Ketergantungan):** TSK-010, TSK-011.
 *   **Test Notes (Catatan Pengujian):**
-    *   *Command:* Lakukan gesture swipe ke kanan pada salah satu kartu antrean persetujuan klaim operasional di ponsel emulator.
-    *   *Outcome:* Status pengajuan berubah seketika di database menjadi `APPROVED`/`PAID`, memicu pemotongan saldo BCA Operational, dan mencatat log mutasi baru pada audit stream.
+    *   *Command:* `bun test scratch/test-owner-dashboard-flow.ts`
+    *   *Outcome:* Menyuplai gesture swipe kanan memicu `approveFieldRequest` / `payFieldRequest`, merubah status `project_cost` menjadi `APPROVED` atau `PAID` secara instan, memotong saldo kas bank BCA Operational, dan mencatat histori log audit baru.

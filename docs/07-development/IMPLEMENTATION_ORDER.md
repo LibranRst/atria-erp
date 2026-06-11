@@ -21,8 +21,6 @@ flowchart TD
 
 ## 1. Justifikasi Pembangunan Aliran Data Terlebih Dahulu (Data Flow First Justification)
 
-Mengapa kita harus membangun dari Database -> Auth -> Actions -> AI -> UI? 
-
 1.  **TypeScript Type Inference dari Database Schema:**
     Drizzle ORM memungkinkan kita untuk menurunkan tipe data TypeScript secara langsung dari skema tabel (`typeof table.$inferSelect` dan `$inferInsert`). Dengan mendefinisikan skema database terlebih dahulu, seluruh Server Actions dan komponen UI di atasnya akan mendapatkan dukungan otomatisasi autocompletion dan pengecekan tipe statis (*compile-time type safety*). Perubahan tipe data di database akan langsung terdeteksi sebagai error kompilasi pada UI, sehingga mencegah kebocoran bug desimal ke production.
 2.  **Keamanan Mutlak (Zero Client Trust):**
@@ -42,34 +40,41 @@ Berikut adalah petunjuk pelaksanaan verifikasi kelayakan sistem untuk setiap lan
 *   **Aktivitas Pembangunan:** Menulis tabel, indeks, foreign keys, dan menjalankan migrasi ke Neon PostgreSQL.
 *   **Panduan Verifikasi:**
     1.  **Dry Run Migrasi:** Jalankan `bunx drizzle-kit generate` dan periksa SQL mentah di folder `/drizzle` secara visual untuk memastikan tidak ada relasi cascade yang tidak diinginkan pada tabel transaksi kas.
-    2.  **Verifikasi Seed:** Jalankan perintah seeding dan verifikasi bahwa data master `role`, `project_cost_category`, dan bank accounts awal tersimpan dengan benar di database.
+    2.  **Verifikasi Seed:** Jalankan perintah `bun run db/seed.ts` dan verifikasi bahwa data master `role`, `project_cost_category`, dan bank accounts awal tersimpan dengan benar di database.
     3.  **Audit Constraints:** Coba lakukan query manual untuk menghapus salah satu baris `role` yang masih memiliki relasi aktif di tabel `user`. PostgreSQL harus menolak penghapusan tersebut dan mengembalikan error foreign key constraint (`restrict`).
 
 ### Langkah 2: Autentikasi & Proteksi Rute (Auth & Security Layer)
 *   **Aktivitas Pembangunan:** Mengonfigurasi Better Auth, membuat Custom Middleware, dan helper otorisasi `assertPermission`.
 *   **Panduan Verifikasi:**
-    1.  **Middleware Redirects:** Jalankan server dan panggil endpoint dasbor ledger tanpa mengirimkan cookie session. Pastikan status respons adalah 302 Redirect ke halaman login.
-    2.  **Role Verification (RBAC):** Buat unit test yang memicu pemanggilan helper `assertPermission` menggunakan data user dengan peran `PROJECT_MANAGER` untuk meminta izin `reconcile:ledger`. Pastikan eksekusi melemparkan error `FORBIDDEN` dengan deskripsi kegagalan otorisasi peran secara tepat.
+    1.  **Middleware Redirects:** Jalankan server dev (`bun run dev`) dan panggil endpoint dasbor ledger tanpa mengirimkan cookie session: `curl -I http://localhost:3000/dashboard/ledger`. Pastikan status respons adalah 302 Redirect ke halaman login.
+    2.  **Role Verification (RBAC):** Jalankan perintah `bun test lib/auth/permissions.test.ts` untuk memicu pemanggilan helper `assertPermission` menggunakan data user dengan peran `PROJECT_MANAGER` untuk meminta izin `reconcile:ledger`. Pastikan eksekusi melemparkan error `FORBIDDEN` dengan deskripsi kegagalan otorisasi peran secara tepat.
 
 ### Langkah 3: Logika Transaksi & Buku Besar (Core Ledger Transactions)
 *   **Aktivitas Pembangunan:** Menulis internal helper `mutateBalance` dengan Option A transaksional ledger dan pessimistic locking.
 *   **Panduan Verifikasi:**
-    1.  **Pessimistic Locking Verification:** Jalankan skrip testing konkuren. Kirimkan 2 request transfer keluar secara simultan pada satu rekening bank BCA Operational yang memiliki saldo awal pas-pasan.
+    1.  **Pessimistic Locking Verification:** Jalankan skrip testing konkuren: `bun test scratch/test-transaction-locking.ts`. Kirimkan 2 request transfer keluar secara simultan pada satu rekening bank BCA Operational yang memiliki saldo awal pas-pasan.
     2.  **Expected Outcome:** Request pertama harus berhasil memotong saldo dan mencatat transaksi ledger, sedangkan request kedua harus terblokir sementara (antre), kemudian gagal seketika dengan status `INSUFFICIENT_FUNDS` saat baris data bank terbuka dari lock. Saldo bank tidak boleh bernilai negatif, dan database transaction wajib membatalkan penulisan ledger request kedua (rollback).
 
 ### Langkah 4: Server Actions & Validasi Zod (Business API Layer)
-*   **Aktivitas Pembangunan:** Mengembangkan Server Actions: `recordClientPayment`, `submitVendorBill`, `scheduleVendorBillPayment`, dan `payVendorBill`.
+*   **Aktivitas Pembangunan:** Mengembangkan Server Actions:
+    *   Manajemen Anggaran Proyek: `createProjectBudget`, `submitBudgetForApproval`, `approveBudget`, `rejectBudget`, `createBudgetItem`.
+    *   Pembayaran Klien & Tagihan Vendor: `recordClientPayment`, `submitVendorBill`, `scheduleVendorBillPayment`, `payVendorBill`, `getDashboardStats`.
+    *   Biaya Lapangan (Field Claims) & Approval: `verifyFieldRequest`, `approveFieldRequest`, `payFieldRequest`.
 *   **Panduan Verifikasi:**
-    1.  **Zod Schema Validation:** Panggil Server Action `recordClientPayment` dengan parameter nominal `amountPaid` bernilai negatif atau format UUID invoice yang salah.
-    2.  **Expected Outcome:** Action harus mengembalikan respon `{ success: false, error: { code: "VALIDATION_ERROR" } }` lengkap dengan pemetaan pesan error field yang relevan tanpa melempar kegagalan sistem internal (500 error).
-    3.  **Project Scoping Validation:** Masuk dengan sesi user PM Budi Santoso, panggil Server Action `submitVendorBill` untuk mencatat tagihan ke proyek yang tidak dipimpin oleh Budi. Pastikan Action menolak dengan respon status `FORBIDDEN`.
+    1.  **Zod Schema Validation:** Panggil Server Action `recordClientPayment` dengan parameter nominal `amountPaid` bernilai negatif atau format UUID invoice yang salah. Pastikan mengembalikan respon `{ success: false, error: { code: "VALIDATION_ERROR" } }`.
+    2.  **Project Scoping Validation:** Masuk dengan sesi user PM Budi Santoso, panggil Server Action `submitVendorBill` untuk mencatat tagihan ke proyek yang tidak dipimpin oleh Budi. Pastikan Action menolak dengan respon status `FORBIDDEN`.
+    3.  **Project Budget State Validation:** Jalankan `bun test scratch/test-budget-actions.ts`. Verifikasi bahwa transisi status anggaran (`DRAFT` $\rightarrow$ `PENDING_APPROVAL` $\rightarrow$ `APPROVED`) berjalan sesuai aturan, dan jika anggaran berstatus `APPROVED`, pemanggilan `createBudgetItem` diblokir dan melempar error `FORBIDDEN`.
+    4.  **Field Claim & Dynamic Limit Validation:** Jalankan `bun test scratch/test-field-approvals.ts`. 
+        *   Buat pengajuan biaya lapangan sebesar Rp 6.000.000 (di atas limit Rp 5.000.000) atau yang menyebabkan budget overrun.
+        *   Pastikan secara transaksional sistem membuat record di tabel `approval` dengan status `PENDING` tanpa ada kolom redundan pada tabel `project_cost`.
+        *   Pastikan pemanggilan `payFieldRequest` diblokir dengan error `FORBIDDEN` jika status `approval` masih `PENDING`.
+        *   Ubah status di tabel `approval` menjadi `APPROVED` oleh Owner, jalankan kembali `payFieldRequest`, dan pastikan saldo kas kecil terpotong serta status `project_cost` berubah menjadi `PAID` secara aman.
 
 ### Langkah 5: Pipa AI & Integrasi Gemini (AI Integration Pipeline)
 *   **Aktivitas Pembangunan:** Menyiapkan Google Gen AI SDK untuk parser OCR nota dan cron daily briefing CFO.
 *   **Panduan Verifikasi:**
-    1.  **OCR Output Structure:** Kirim foto contoh struk belanja material berbahasa Indonesia (format PNG/JPEG) ke fungsi parsing Gemini SDK.
-    2.  **Expected Outcome:** Pastikan output dari SDK mengembalikan string JSON murni yang langsung dapat di-parse oleh Zod tanpa ada kegagalan format token. Verifikasi properti totalAmount di dalam JSON bernilai numerik akurat.
-    3.  **Cron Job Verification:** Pemicu endpoint `/api/cron/daily-briefing` dan periksa tabel `ai_run` untuk memastikan ringkasan briefing finansial harian tersimpan dengan token count tercatat secara akurat.
+    1.  **OCR Output Structure:** Kirim foto contoh struk belanja material berbahasa Indonesia (format PNG/JPEG) ke fungsi parsing Gemini SDK. Pastikan output dari SDK mengembalikan string JSON murni yang langsung dapat di-parse oleh Zod tanpa ada kegagalan format token. Verifikasi properti totalAmount di dalam JSON bernilai numerik akurat.
+    2.  **Cron Job Verification:** Pemicu endpoint `/api/cron/daily-briefing` dengan access header lokal: `curl -X POST -H "Authorization: Bearer local-cron-token" http://localhost:3000/api/cron/daily-briefing` dan periksa tabel `ai_run` untuk memastikan ringkasan briefing finansial harian tersimpan dengan token count tercatat secara akurat.
 
 ### Langkah 6: Komponen UI & Layar Seluler (UI/UX Pages Layer)
 *   **Aktivitas Pembangunan:** Membangun antarmuka mobile webview iOS 26 Solid, sticky bottom nav, dan desktop layouts.

@@ -104,38 +104,40 @@ Membangun jantung dari sistem pencatatan keuangan internal yang menjamin akurasi
 ---
 
 ### Phase 4: Project Budgeting, Scoping & RAB Management (Penganggaran Proyek, Pembatasan Akses PM & Manajemen RAB)
-Mengaitkan mutasi finansial dengan proyek riil serta menjaga kerahasiaan data margin antar manajer proyek.
+Mengaitkan mutasi finansial dengan proyek riil, membatasi modifikasi anggaran setelah disetujui, serta menjaga kerahasiaan data margin antar manajer proyek.
 
 *   **Objektif Utama:**
     *   Mengembangkan fitur penyusunan Rencana Anggaran Biaya (RAB) per proyek berdasarkan kategori biaya (`project_budget_item`).
+    *   Menyusun Server Actions manajemen siklus anggaran proyek: `createProjectBudget`, `submitBudgetForApproval`, `approveBudget`, dan `rejectBudget`.
+    *   Menyusun Server Action `createBudgetItem` yang terkunci statusnya jika anggaran proyek telah berstatus disetujui (`APPROVED`).
     *   Menegakkan aturan Strict Project Scoping agar PM hanya dapat mengakses data proyek yang ditugaskan kepada mereka.
-    *   Menyusun Server Action `createBudgetItem` yang terkunci statusnya jika anggaran proyek telah disetujui (`APPROVED`).
 *   **Fitur & Deliverables Utama:**
-    *   Server Action `/app/actions/project/create-budget-item.ts` dengan scoping penugasan PM.
+    *   Server Actions manajemen anggaran di `/app/actions/project/budget.ts`.
     *   Fungsi scoping query `/lib/auth/scoping.ts` untuk menyaring data proyek berdasarkan hak akses user session.
-    *   Siklus perubahan status anggaran (`project_budget` state transition: `DRAFT` -> `PENDING_APPROVAL` -> `APPROVED` -> `REJECTED`).
+    *   Siklus perubahan status anggaran (*project_budget* state transition: `DRAFT` $\rightarrow$ `PENDING_APPROVAL` $\rightarrow$ `APPROVED` $\rightarrow$ `REJECTED`).
 *   **Fokus Finance-First:**
-    *   PM dibatasi untuk tidak dapat merubah alokasi anggaran proyek ketika statusnya sudah beralih dari draf, guna mencegah perubahan target anggaran di luar sepengetahuan Owner.
+    *   PM dibatasi untuk tidak dapat merubah alokasi anggaran proyek (`createBudgetItem` diblokir) ketika statusnya sudah beralih menjadi `APPROVED`, guna mencegah perubahan target anggaran di luar sepengetahuan Owner.
 *   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Query database PM terbukti hanya mengembalikan data proyek di mana user ID mereka tercatat sebagai `projectManagerId`. Request ke ID proyek lain mengembalikan respon `FORBIDDEN`.
+    *   Query database PM terbukti hanya mengembalikan data proyek di mana user ID mereka tercatat sebagai `projectManagerId`. Pemanggilan `createBudgetItem` pada anggaran yang berstatus `APPROVED` mengembalikan error `FORBIDDEN`.
 
 ---
 
 ### Phase 5: Field Expense Claims, Approvals & Disbursement Flow (Pengajuan Dana Lapangan, Alur Approval & Pembayaran)
-Membangun birokrasi digital untuk pengeluaran uang kas lapangan dan pelunasan tagihan suplier material.
+Membangun birokrasi digital untuk pengeluaran uang kas lapangan dan pelunasan tagihan suplier material dengan pendeteksian limit persetujuan secara dinamis.
 
 *   **Objektif Utama:**
-    *   Mengimplementasikan alur verifikasi bertingkat untuk biaya lapangan (`project_cost`) dan tagihan vendor (`vendor_bill`).
-    *   Menegakkan batasan nominal persetujuan (pembayaran $\ge$ Rp 5.000.000 wajib disetujui Owner).
-    *   Mendeteksi pembengkakan biaya (*budget overrun*) secara real-time dan memblokir pencairan dana secara otomatis sebelum ada override approval dari Owner.
+    *   Mengimplementasikan alur verifikasi bertingkat untuk biaya lapangan (`project_cost` / *field claims*) dan tagihan vendor (`vendor_bill`).
+    *   Menyusun Server Actions persetujuan biaya lapangan: `verifyFieldRequest` (oleh Admin/PM Senior), `approveFieldRequest` (oleh Owner), dan `payFieldRequest` (pencairan kas riil).
+    *   Menegakkan batasan nominal persetujuan (pembayaran $\ge$ Rp 5.000.000) dan budget overrun secara dinamis melalui pencatatan di tabel `approval` tanpa redundansi kolom di tabel transaksi utama.
 *   **Fitur & Deliverables Utama:**
-    *   Server Action `/app/actions/finance/submit-vendor-bill.ts`, `scheduleVendorBillPayment`, dan `payVendorBill`.
-    *   Logika verifikasi *budget overrun* pada penulisan `actual_spent` di item anggaran proyek.
-    *   Pemicu notifikasi status peringatan finansial (`notification` creation: `WARNING` atau `CRITICAL` berdasarkan persentase pemakaian budget).
+    *   Server Actions biaya lapangan di `/app/actions/finance/field-requests.ts`.
+    *   Server Actions tagihan vendor `/app/actions/finance/submit-vendor-bill.ts`, `scheduleVendorBillPayment`, dan `payVendorBill`.
+    *   Logika verifikasi *budget overrun* pada penulisan `actual_spent` di item anggaran proyek secara transaksional.
+    *   Logika penyimpanan status persetujuan di tabel `approval`.
 *   **Fokus Finance-First:**
-    *   Mencegah pengeluaran liar di lapangan dengan validasi budget ceiling secara real-time pada setiap input pengajuan PM.
+    *   Mencegah pengeluaran liar di lapangan dengan validasi budget ceiling secara real-time pada setiap input pengajuan PM, serta mengunci transaksi di atas limit ke dalam antrean `PENDING` di tabel `approval`.
 *   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Pengajuan di atas Rp 5.000.000 atau status `budget_overrun = true` sukses terblokir dalam antrean `PENDING` dan hanya dapat diproses setelah record `approval` disisipkan oleh Owner.
+    *   Pengajuan pembayaran $\ge$ Rp 5.000.000 atau status budget overrun sukses dideteksi secara dinamis dan menyisipkan record `approval` baru berstatus `PENDING`. Pemanggilan `payFieldRequest` sebelum status disetujui Owner terbukti terblokir dengan error `FORBIDDEN`.
 
 ---
 
