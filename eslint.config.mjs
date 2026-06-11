@@ -7,6 +7,10 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Override default ignores of eslint-config-next.
   globalIgnores([
+    // Local agent/plugin tooling:
+    ".agents/**",
+    ".superpowers/**",
+
     // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",

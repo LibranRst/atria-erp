@@ -1,4 +1,5 @@
 .superpowers/
+.agents/
 node_modules/
 .env
 .env.local
