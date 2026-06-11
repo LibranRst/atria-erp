@@ -1,34 +1,51 @@
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui";
+
 export default function Home(): React.JSX.Element {
   return (
     <section className="flex min-h-[calc(100dvh-7rem)] flex-col justify-between gap-8">
       <div className="space-y-6">
-        <div className="rounded-3xl border border-border bg-surface p-5 shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted">
-            Atria ERP
-          </p>
-          <div className="mt-5 space-y-3">
-            <h1 className="text-3xl font-bold tracking-tight text-text-primary">
-              Finance-first control room for interior projects.
-            </h1>
-            <p className="text-sm leading-6 text-secondary">
-              Pantau proyek, ledger kas, dan pengeluaran lapangan dari satu shell seluler yang siap dipakai Project Manager di lapangan.
+        <Card className="rounded-3xl p-5 shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
+          <CardHeader>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted">
+              Atria ERP
             </p>
-          </div>
-        </div>
+            <CardTitle className="pt-4 text-3xl">
+              Finance-first control room for interior projects.
+            </CardTitle>
+            <CardDescription>
+              Pantau proyek, ledger kas, dan pengeluaran lapangan dari satu shell seluler yang siap dipakai Project Manager di lapangan.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Badge status="APPROVED">Shell Ready</Badge>
+            <Badge status="PENDING">UI Foundation</Badge>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-3">
-          <div className="rounded-2xl border border-border bg-elevated p-4">
-            <p className="text-xs font-medium text-muted">Primary workflow</p>
-            <p className="mt-1 text-base font-semibold text-text-primary">
-              Projects → Ledger → Add Expense → Profile
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-surface p-4">
-            <p className="text-xs font-medium text-muted">Design foundation</p>
-            <p className="mt-1 text-base font-semibold text-text-primary">
-              iOS 26 Solid tokens, 48px touch targets, and sticky thumb navigation.
-            </p>
-          </div>
+          <Card variant="elevated">
+            <CardHeader>
+              <p className="text-xs font-medium text-muted">Primary workflow</p>
+              <CardTitle className="text-base">
+                Projects → Ledger → Add Expense → Profile
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader>
+              <p className="text-xs font-medium text-muted">Design foundation</p>
+              <CardTitle className="text-base">
+                iOS 26 Solid tokens, 48px touch targets, and sticky thumb navigation.
+              </CardTitle>
+            </CardHeader>
+          </Card>
         </div>
       </div>
 
