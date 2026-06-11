@@ -49,7 +49,8 @@ Kategori tahap/milestone penagihan piutang kontrak kepada klien.
 | `DP` | *Down Payment* (Uang Muka), biasanya dibayarkan sebelum proyek dimulai fisik (20% - 30%). | Pemicu proyek berubah status menjadi `ACTIVE`. |
 | `PROGRESS_1` | Tagihan termin pertama berdasarkan progres fisik di lapangan (misal: struktur/dinding selesai 50%). | Memerlukan verifikasi opname lapangan oleh PM. |
 | `PROGRESS_2` | Tagihan termin kedua (misal: pekerjaan MEP & MEP selesai 80%). | Opsional tergantung kesepakatan nilai proyek. |
-| `PELUNASAN` | Retensi / Pelunasan akhir setelah serah terima pekerjaan (Handover / BAST). | Biasanya bernilai 10% - 20% dari nilai kontrak. |
+| `PELUNASAN` | Pelunasan akhir setelah serah terima pekerjaan (Handover / BAST). | Biasanya bernilai 10% - 15% dari nilai kontrak. |
+| `RETENTION` | Retensi (pemeliharaan), biasanya ditahan 5% selama 3-6 bulan setelah Handover (BAST) sebelum dicairkan. | Otomatis memicu finance_alert saat tanggal due_date terlampaui. |
 | `AD_HOC` | Tagihan pekerjaan tambah/kurang (*variation order* / VO) di luar kontrak utama. | Dibuat terpisah berdasarkan negosiasi di tengah proyek. |
 
 ---

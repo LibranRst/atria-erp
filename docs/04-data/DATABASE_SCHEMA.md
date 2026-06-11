@@ -309,7 +309,7 @@ export const clientInvoice = pgTable("client_invoice", {
   invoiceNumber: varchar("invoice_number", { length: 100 }).notNull().unique(),
   amount: numeric("amount", { precision: 15, scale: 2 }).notNull(),
   status: varchar("status", { length: 50 }).notNull(), // UNPAID, PARTIALLY_PAID, PAID, OVERDUE, VOID
-  stage: varchar("stage", { length: 50 }).notNull(), // DP, PROGRESS_1, PROGRESS_2, PELUNASAN, AD_HOC
+  stage: varchar("stage", { length: 50 }).notNull(), // DP, PROGRESS_1, PROGRESS_2, PELUNASAN, RETENTION, AD_HOC
   dueDate: timestamp("due_date").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -533,6 +533,69 @@ export const auditLog = pgTable("audit_log", {
 
 ---
 
+### 2.21 Table: `app_config`
+Tabel untuk menyimpan konfigurasi aplikasi secara dinamis (misal: limit nominal approval Owner).
+
+```typescript
+export const appConfig = pgTable("app_config", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value").notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedById: uuid("updated_by_id").references(() => user.id, { onDelete: "restrict" }),
+});
+```
+*   **Catatan (Bahasa Indonesia):** Digunakan untuk menyimpan variabel konfigurasi seperti `min_owner_approval_amount` (default '5000000.00').
+
+---
+
+### 2.22 Table: `bank_statement_import`
+Tabel header pencatatan pengunggahan berkas mutasi rekening koran bank (e-statement).
+
+```typescript
+export const bankStatementImport = pgTable("bank_statement_import", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bankAccountId: uuid("bank_account_id").notNull().references(() => bankAccount.id, { onDelete: "restrict" }),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileUrl: text("file_url").notNull(),
+  importedById: uuid("imported_by_id").notNull().references(() => user.id, { onDelete: "restrict" }),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  bankAccIdx: index("bsi_bank_account_id_idx").on(table.bankAccountId),
+}));
+```
+*   **Foreign Keys:** `bankAccountId` -> `bankAccount.id` (`onDelete: "restrict"`)
+*   **Catatan (Bahasa Indonesia):** Digunakan untuk melacak siapa yang melakukan impor file koran bank dan periode transaksinya.
+
+---
+
+### 2.23 Table: `bank_statement_row`
+Tabel detil transaksi dari file mutasi bank koran untuk kebutuhan rekonsiliasi kas riil.
+
+```typescript
+export const bankStatementRow = pgTable("bank_statement_row", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  importId: uuid("import_id").notNull().references(() => bankStatementImport.id, { onDelete: "cascade" }),
+  transactionDate: timestamp("transaction_date").notNull(),
+  description: text("description").notNull(),
+  amount: numeric("amount", { precision: 15, scale: 2 }).notNull(),
+  type: varchar("type", { length: 10 }).notNull(), // DEBIT, CREDIT
+  isReconciled: boolean("is_reconciled").default(false).notNull(),
+  matchedCashTransactionId: uuid("matched_cash_transaction_id").references(() => cashTransaction.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  importIdx: index("bsr_import_id_idx").on(table.importId),
+  matchedCashTxIdx: index("bsr_matched_cash_transaction_idx").on(table.matchedCashTransactionId),
+}));
+```
+*   **Foreign Keys:** `matchedCashTransactionId` -> `cashTransaction.id` (`onDelete: "set null"`).
+*   **Catatan (Bahasa Indonesia):** Baris transaksi koran dicocokkan dengan entri ledger. Jika baris ledger dihapus (misal koreksi), status rekonsiliasi akan reset kembali.
+
+---
+
 ## 3. Penegakan Saldo Kas Transaksional (Ledger Option A)
 
 Atria ERP menerapkan **Option A** dalam penegakan saldo kas transaksional. Sistem ini menggabungkan pencatatan buku besar (*ledger*) mutasi kas secara riil dengan pembaruan saldo aktual pada tabel `bank_account` yang berjalan secara sinkron di dalam satu transaksi database (`db.transaction`).
@@ -540,7 +603,7 @@ Atria ERP menerapkan **Option A** dalam penegakan saldo kas transaksional. Siste
 ### Bagaimana Option A Bekerja:
 
 1.  **Penguncian Baris Data Rekening Bank (`Pessimistic Locking` / `FOR UPDATE`):**
-    Setiap transaksi mutasi kas (baik `DEBIT` maupun `CREDIT`) wajib melakukan query penguncian baris pada PostgreSQL untuk record akun bank tujuan agar tidak dapat dibaca atau dimodifikasi oleh proses concurrent lainnya. Ini mencegah *race condition* (misalnya dua penarikan kas kecil terjadi bersamaan dan menghitung sisa saldo dari basis angka lama yang sama).
+    Setiap transaksi mutasi kas (baik `DEBIT` maupun `CREDIT`) wajib melakukan query penguncian baris pada PostgreSQL untuk record akun bank tujuan agar tidak dapat dimodifikasi oleh proses concurrent lainnya.
     
     ```typescript
     const [account] = await tx.select()
@@ -560,11 +623,12 @@ Atria ERP menerapkan **Option A** dalam penegakan saldo kas transaksional. Siste
     $$\text{New Balance} = \text{Old Balance} \pm \text{Transaction Amount}$$
     
     ```typescript
-    const updateResult = await tx.update(bankAccount)
-      .set({ balance: newBalance, updatedAt: new Date() })
-      .where(eq(bankAccount.id, bankAccountId));
+    const updatedRows = await tx.update(bankAccount)
+      .set({ balance: newBalance.toFixed(2), updatedAt: new Date() })
+      .where(eq(bankAccount.id, bankAccountId))
+      .returning();
     
-    if (updateResult.rowsAffected !== 1) {
+    if (updatedRows.length !== 1) {
       throw new Error("Gagal mengupdate saldo bank: data terpengaruh tidak sesuai.");
     }
     ```
