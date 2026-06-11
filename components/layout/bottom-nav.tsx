@@ -41,8 +41,10 @@ const NAV_ITEMS: readonly NavItem[] = [
   },
 ];
 
-export function BottomNav(): React.JSX.Element {
+export function BottomNav(): React.JSX.Element | null {
   const pathname = usePathname();
+
+  if (pathname === "/login") return null;
 
   return (
     <nav
