@@ -20,7 +20,7 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
   // 1. Get session
   const session = await auth.api.getSession({
     headers: {
-      cookie: (await import("next/headers")).cookies().toString(),
+      cookie: (await (await import("next/headers")).cookies()).toString(),
     },
   });
 

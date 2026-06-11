@@ -25,7 +25,7 @@ export async function submitVendorBill(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 

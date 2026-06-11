@@ -12,7 +12,7 @@ export default async function NewExpensePage(): Promise<React.JSX.Element> {
   // 1. Dapatkan session server-side
   const session = await auth.api.getSession({
     headers: {
-      cookie: (await import("next/headers")).cookies().toString(),
+      cookie: (await (await import("next/headers")).cookies()).toString(),
     },
   });
 

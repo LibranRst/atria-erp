@@ -29,7 +29,7 @@ export async function submitFieldRequest(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 
@@ -145,7 +145,7 @@ export async function verifyFieldRequest(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 
@@ -239,7 +239,7 @@ export async function approveFieldRequest(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 
@@ -346,7 +346,7 @@ export async function payFieldRequest(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 
@@ -544,7 +544,7 @@ export async function approveVendorPayment(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 

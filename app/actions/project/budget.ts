@@ -21,7 +21,7 @@ export async function createProjectBudget(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 
@@ -124,7 +124,7 @@ export async function createBudgetItem(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 
@@ -218,7 +218,7 @@ export async function submitBudgetForApproval(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 
@@ -304,7 +304,7 @@ export async function approveBudget(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 
@@ -383,7 +383,7 @@ export async function rejectBudget(
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: (await import("next/headers")).cookies().toString(),
+        cookie: (await (await import("next/headers")).cookies()).toString(),
       },
     });
 

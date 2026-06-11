@@ -13,7 +13,7 @@ export default async function ProjectsPage(): Promise<React.JSX.Element> {
   // 1. Get session
   const session = await auth.api.getSession({
     headers: {
-      cookie: (await import("next/headers")).cookies().toString(),
+      cookie: (await (await import("next/headers")).cookies()).toString(),
     },
   });
 
