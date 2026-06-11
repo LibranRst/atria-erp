@@ -538,7 +538,8 @@ export async function payFieldRequest(
  */
 export async function approveVendorPayment(
   vendorPaymentId: string,
-  notes?: string
+  notes?: string,
+  status: "APPROVED" | "REJECTED" = "APPROVED"
 ): Promise<ActionResponse<{ paymentId: string; status: string }>> {
   try {
     const session = await auth.api.getSession({
@@ -553,7 +554,7 @@ export async function approveVendorPayment(
 
     const userRoleName = await resolveRoleName(session.user.roleId);
     if (userRoleName !== "OWNER") {
-      return { success: false, error: { code: "FORBIDDEN", message: "Hanya Owner yang dapat menyetujui pembayaran vendor." } };
+      return { success: false, error: { code: "FORBIDDEN", message: "Hanya Owner yang dapat menyetujui/menolak pembayaran vendor." } };
     }
 
     const result = await db.transaction(async (tx) => {
@@ -576,34 +577,46 @@ export async function approveVendorPayment(
         await tx
           .update(approval)
           .set({
-            status: "APPROVED",
+            status,
             notes: notes || null,
           })
           .where(eq(approval.id, appRecord.id));
       } else {
-        // If there was no approval record but Owner decides to approve it explicitly
+        // If there was no approval record but Owner decides to approve/reject it explicitly
         await tx.insert(approval).values({
           approverId: session.user.id,
           referenceType: "vendor_payment",
           referenceId: vendorPaymentId,
-          status: "APPROVED",
+          status,
           notes: notes || null,
           createdAt: new Date(),
         });
       }
 
+      // Update vendor_payment status if rejected
+      if (status === "REJECTED") {
+        await tx
+          .update(vendorPayment)
+          .set({
+            status: "FAILED",
+            referenceNumber: notes || "Ditolak oleh Owner",
+            paymentDate: new Date(),
+          })
+          .where(eq(vendorPayment.id, vendorPaymentId));
+      }
+
       // Write audit log
       await tx.insert(auditLog).values({
         userId: session.user.id,
-        action: "APPROVE_VENDOR_PAYMENT",
+        action: status === "APPROVED" ? "APPROVE_VENDOR_PAYMENT" : "REJECT_VENDOR_PAYMENT",
         targetTable: "vendor_payment",
         targetId: vendorPaymentId,
         originalState: JSON.stringify({ paymentStatus: payment.status }),
-        newState: JSON.stringify({ paymentStatus: payment.status, approved: true }),
+        newState: JSON.stringify({ paymentStatus: payment.status, approved: status === "APPROVED", status }),
         createdAt: new Date(),
       });
 
-      return { paymentId: vendorPaymentId, status: "APPROVED" };
+      return { paymentId: vendorPaymentId, status };
     });
 
     return {

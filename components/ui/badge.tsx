@@ -12,7 +12,9 @@ export type BadgeStatus =
   | "OVERDUE"
   | "REJECTED"
   | "VOID"
-  | "DRAFT";
+  | "DRAFT"
+  | "HEALTHY"
+  | "PRIMARY";
 
 export type BadgeVariant = "success" | "warning" | "primary" | "critical" | "muted";
 
@@ -29,6 +31,8 @@ const statusVariantMap: Record<BadgeStatus, BadgeVariant> = {
   REJECTED: "critical",
   VOID: "muted",
   DRAFT: "muted",
+  HEALTHY: "success",
+  PRIMARY: "primary",
 };
 
 const variantClasses: Record<BadgeVariant, string> = {
