@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { project } from "@/db/schema";
+import { project, bankAccount } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import React from "react";
+import { ProjectInvoices } from "@/components/project/project-invoices";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -61,6 +62,9 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
   if (!proj) {
     notFound();
   }
+
+  // 4. Kueri daftar rekening bank
+  const bankAccountsData = await db.query.bankAccount.findMany();
 
   const budget = proj.budget;
   const budgetItems = budget?.items || [];
@@ -317,6 +321,13 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
           })
         )}
       </div>
+
+      {/* Card Invoices & Pembayaran Klien */}
+      <ProjectInvoices 
+        invoices={proj.clientInvoices as any} 
+        bankAccounts={bankAccountsData as any} 
+        userRole={roleName || "UNKNOWN"} 
+      />
     </section>
   );
 }
