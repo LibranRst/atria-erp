@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
 import { processReceipt } from "@/app/actions/ai/process-receipt";
 import { submitFieldRequest } from "@/app/actions/finance/field-requests";
@@ -28,6 +29,7 @@ interface ExpenseFormProps {
 }
 
 export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
+  const router = useRouter();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [selectedBudgetItemId, setSelectedBudgetItemId] = useState<string>("");
   const [amount, setAmount] = useState<number | "">("");
@@ -95,7 +97,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
       setIsProcessingOCR(false);
 
       if (!ocrRes.success) {
-        setError("AI OCR gagal memproses gambar nota. Silakan isi parameter formulir secara manual.");
+        setError(`AI OCR gagal memproses gambar nota: ${ocrRes.error?.message || "Eror tidak diketahui"}. Silakan isi parameter formulir secara manual.`);
         return;
       }
 
@@ -149,6 +151,11 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
       setAmount("");
       setDescription("");
       setReceiptImageUrl(null);
+      
+      // Redirect to list page
+      setTimeout(() => {
+        router.push("/expenses");
+      }, 1000);
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan internal sistem.");
     } finally {
