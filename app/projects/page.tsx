@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { scopeProjectQuery } from "@/lib/auth/scoping";
 import Link from "next/link";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
 import { redirect } from "next/navigation";
 import React from "react";
 
@@ -37,52 +37,79 @@ export default async function ProjectsPage(): Promise<React.JSX.Element> {
   });
 
   return (
-    <section className="space-y-6 py-6 px-4 pb-24">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">Daftar Proyek</h1>
-          <p className="text-sm text-secondary">Pilih proyek untuk melihat rincian rencana anggaran (BoQ).</p>
+    <section className="space-y-sm select-none">
+      {/* Header */}
+      <div className="flex items-center justify-between px-1">
+        <div className="space-y-base">
+          <p className="font-label-caps text-primary">Atria Projects</p>
+          <h1 className="font-headline-lg text-on-surface">Daftar Proyek</h1>
         </div>
         <Badge status="APPROVED">{`${projectsData.length.toString()} Aktif`}</Badge>
       </div>
 
       {projectsData.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center py-12 text-center">
-          <CardHeader>
-            <CardTitle className="text-muted">Tidak Ada Proyek Aktif</CardTitle>
-            <CardDescription>
-              Saat ini tidak ada proyek aktif yang ditugaskan kepada Anda.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <div className="premium-card p-md flex flex-col items-center justify-center py-14 text-center border border-outline-variant/30">
+          <div className="h-14 w-14 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant mb-4">
+            <span className="material-symbols-outlined text-[32px]">folder_copy</span>
+          </div>
+          <h3 className="font-headline-md text-[16px] text-on-surface">Tidak Ada Proyek</h3>
+          <p className="font-body-sm text-on-surface-variant mt-1">
+            Saat ini tidak ada rencana anggaran proyek aktif yang ditugaskan kepada Anda.
+          </p>
+        </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-md">
           {projectsData.map((proj) => {
             const contractVal = Number(proj.totalContractValue);
             const financialHealth = proj.financialHealth as "HEALTHY" | "WARNING" | "CRITICAL";
 
             return (
-              <Link key={proj.id} href={`/projects/${proj.id}`} className="block transition active:scale-[0.99]">
-                <Card className="hover:border-primary">
-                  <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                    <CardTitle className="text-lg font-bold">{proj.name}</CardTitle>
+              <Link key={proj.id} href={`/projects/${proj.id}`} className="block transition active:scale-[0.98] duration-100">
+                <div className="premium-card p-md border border-outline-variant/30 hover:border-primary/40 space-y-md">
+                  
+                  {/* Top Row: Title & Status Badge */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-surface-container flex items-center justify-center">
+                        <span className="material-symbols-outlined text-primary text-[22px]">work</span>
+                      </div>
+                      <h3 className="font-body-md font-bold text-on-surface truncate max-w-[200px]">
+                        {proj.name}
+                      </h3>
+                    </div>
                     <Badge status={financialHealth}>{financialHealth}</Badge>
-                  </CardHeader>
-                  <CardContent className="space-y-2.5">
-                    <div className="text-xs text-secondary">
-                      <span className="font-semibold">Klien:</span> {proj.client?.name || "-"}
+                  </div>
+                  
+                  {/* Metadata Row */}
+                  <div className="grid grid-cols-2 gap-md bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
+                    <div className="space-y-base">
+                      <span className="font-label-caps text-[9px] text-on-surface-variant">Klien</span>
+                      <div className="flex items-center gap-1 text-on-surface font-semibold text-[13px] leading-tight">
+                        <span className="material-symbols-outlined text-[16px] text-secondary">person</span>
+                        <span className="truncate">{proj.client?.name || "-"}</span>
+                      </div>
                     </div>
-                    <div className="text-xs text-secondary">
-                      <span className="font-semibold">PM:</span> {proj.projectManager?.name || "-"}
+                    <div className="space-y-base">
+                      <span className="font-label-caps text-[9px] text-on-surface-variant">Project Manager</span>
+                      <div className="flex items-center gap-1 text-on-surface font-semibold text-[13px] leading-tight">
+                        <span className="material-symbols-outlined text-[16px] text-secondary">person</span>
+                        <span className="truncate">{proj.projectManager?.name || "-"}</span>
+                      </div>
                     </div>
-                    <div className="border-t border-border pt-2.5 flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-muted">Nilai Kontrak</span>
-                      <span className="text-sm font-bold text-text-primary tabular-nums">
+                  </div>
+
+                  {/* Contract Value Row */}
+                  <div className="border-t border-outline-variant/20 pt-md flex items-center justify-between">
+                    <span className="font-label-caps text-on-surface-variant">Nilai Kontrak</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-numeral-md text-on-surface font-bold financial-amount">
                         Rp {contractVal.toLocaleString("id-ID")}
                       </span>
+                      <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  
+                </div>
               </Link>
             );
           })}

@@ -1,13 +1,12 @@
 import { db } from "@/db";
-import { project, projectBudget, projectBudgetItem, projectCostCategory } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { project } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, AlertTriangle, ShieldAlert } from "lucide-react";
 import React from "react";
 
 interface PageProps {
@@ -85,21 +84,30 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
   });
 
   return (
-    <section className="space-y-6 py-6 px-4 pb-24">
-      {/* Tombol Kembali */}
-      <Link href="/projects" className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-secondary hover:text-text-primary">
-        <ArrowLeft className="h-4 w-4" />
-        Kembali ke Proyek
-      </Link>
+    <section className="space-y-sm select-none">
+      {/* Top iOS Navigation Bar */}
+      <div className="flex items-center justify-between border-b border-outline-variant/10 pb-sm">
+        <Link href="/projects" className="inline-flex items-center gap-1 font-bold text-primary active:scale-95 transition-all text-xs">
+          <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+          <span>Proyek</span>
+        </Link>
+        <span className="font-label-caps text-on-surface-variant">Rincian Anggaran</span>
+        <div className="w-12 h-4" /> {/* Spacer */}
+      </div>
 
       {/* Header Info */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">{proj.name}</h1>
-          <p className="text-sm text-secondary">
-            Klien: {proj.client?.name || "-"} | PM: {proj.projectManager?.name || "-"}
-          </p>
+      <div className="space-y-xs px-1">
+        <div className="space-y-base">
+          <h1 className="font-headline-lg text-on-surface leading-tight">
+            {proj.name}
+          </h1>
+          <div className="flex items-center gap-2 font-label-caps text-on-surface-variant text-[9px]">
+            <span>Klien: {proj.client?.name || "-"}</span>
+            <span>•</span>
+            <span>PM: {proj.projectManager?.name || "-"}</span>
+          </div>
         </div>
+        
         <div className="flex items-center gap-2">
           <Badge status={financialHealth}>{`Kesehatan: ${financialHealth}`}</Badge>
           <Badge status={budget?.status === "APPROVED" ? "APPROVED" : "DRAFT"}>
@@ -109,87 +117,93 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
       </div>
 
       {/* Card Ringkasan Finansial Proyek */}
-      <Card className="rounded-3xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.18)]">
-        <CardHeader className="p-0 pb-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Ringkasan Finansial RAB</p>
-        </CardHeader>
-        <CardContent className="p-0 space-y-4">
-          <div className="grid grid-cols-2 gap-4 border-b border-border pb-4">
-            <div>
-              <div className="text-xs text-secondary">Total Nilai Kontrak</div>
-              <div className="text-lg font-bold text-text-primary tabular-nums">
+      <div className="premium-card p-md border border-outline-variant/30 space-y-md">
+        <div className="pb-sm border-b border-outline-variant/10">
+          <h3 className="font-label-caps text-on-surface flex items-center gap-2">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary" />
+            Ringkasan Keuangan RAB
+          </h3>
+        </div>
+        <div className="space-y-md">
+          <div className="grid grid-cols-2 gap-md border-b border-outline-variant/10 pb-md">
+            <div className="space-y-base">
+              <span className="font-label-caps text-[9px] text-on-surface-variant">Nilai Kontrak</span>
+              <div className="font-numeral-md text-on-surface font-bold financial-amount">
                 Rp {Number(proj.totalContractValue).toLocaleString("id-ID")}
               </div>
             </div>
-            <div>
-              <div className="text-xs text-secondary">Alokasi Anggaran (RAB)</div>
-              <div className="text-lg font-bold text-text-primary tabular-nums">
+            <div className="space-y-base">
+              <span className="font-label-caps text-[9px] text-on-surface-variant">Total Alokasi (RAB)</span>
+              <div className="font-numeral-md text-on-surface font-bold financial-amount">
                 Rp {totalAllocated.toLocaleString("id-ID")}
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-xs text-secondary">Realisasi Pengeluaran</div>
-              <div className="text-lg font-bold text-text-primary tabular-nums">
+          <div className="grid grid-cols-2 gap-md">
+            <div className="space-y-base">
+              <span className="font-label-caps text-[9px] text-on-surface-variant">Realisasi Belanja</span>
+              <div className="font-numeral-md text-on-surface font-bold financial-amount">
                 Rp {totalSpent.toLocaleString("id-ID")}
               </div>
             </div>
-            <div>
-              <div className="text-xs text-secondary">Sisa Plafon Anggaran</div>
-              <div className={`text-lg font-bold tabular-nums ${totalRemaining < 0 ? "text-critical" : "text-success"}`}>
-                Rp {totalRemaining.toLocaleString("id-ID")}
+            <div className="space-y-base">
+              <span className="font-label-caps text-[9px] text-on-surface-variant">Sisa Plafon Anggaran</span>
+              <div className={`font-numeral-md font-bold financial-amount ${totalRemaining < 0 ? "text-error" : "text-primary"}`}>
+                {totalRemaining < 0 ? "-" : ""}Rp {Math.abs(totalRemaining).toLocaleString("id-ID")}
               </div>
             </div>
           </div>
 
           {/* Progress Bar Utilitas Total */}
-          <div className="space-y-1.5 pt-2">
-            <div className="flex items-center justify-between text-xs font-semibold">
-              <span className="text-secondary">Utilitas Anggaran Proyek</span>
-              <span className={totalUtilization >= 100 ? "text-critical" : totalUtilization >= 90 ? "text-warning" : "text-success"}>
+          <div className="space-y-xs pt-xs">
+            <div className="flex items-center justify-between text-[11px] font-semibold">
+              <span className="text-on-surface-variant">Utilitas Total Anggaran</span>
+              <span className={totalUtilization >= 100 ? "text-error" : totalUtilization >= 90 ? "text-secondary font-bold" : "text-primary font-bold"}>
                 {totalUtilization.toFixed(1)}%
               </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-elevated">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container border border-outline-variant/10">
               <div
                 className={`h-full rounded-full transition-all duration-300 ${
                   totalUtilization >= 100
-                    ? "bg-critical"
+                    ? "bg-error"
                     : totalUtilization >= 90
-                    ? "bg-warning"
-                    : "bg-success"
+                    ? "bg-secondary"
+                    : "bg-primary"
                 }`}
                 style={{ width: `${Math.min(totalUtilization, 100)}%` }}
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Rincian Item Anggaran Per Kategori */}
-      <div className="space-y-6">
-        <h2 className="text-lg font-bold text-text-primary">Rincian Rencana Anggaran (BoQ)</h2>
+      <div className="space-y-md px-1">
+        <h2 className="font-label-caps text-on-surface-variant">Rincian Anggaran (BoQ)</h2>
 
         {Object.keys(itemsByCategory).length === 0 ? (
-          <Card className="flex flex-col items-center justify-center py-8 text-center">
-            <CardDescription>
+          <div className="premium-card p-md flex flex-col items-center justify-center py-10 text-center border border-outline-variant/30">
+            <div className="h-10 w-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant mb-2">
+              <span className="material-symbols-outlined text-[24px]">description</span>
+            </div>
+            <p className="font-body-sm text-on-surface-variant">
               Tidak ada item anggaran yang terdaftar pada RAB proyek ini.
-            </CardDescription>
-          </Card>
+            </p>
+          </div>
         ) : (
           Object.keys(itemsByCategory).map((catName) => {
             const items = itemsByCategory[catName];
             return (
-              <div key={catName} className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary-light px-2.5 py-1 rounded-lg">
-                    {catName}
+              <div key={catName} className="space-y-sm">
+                <div className="flex items-center">
+                  <span className="font-label-caps text-[10px] text-primary bg-surface-container border border-outline-variant/20 px-2.5 py-1 rounded-full">
+                    Kategori: {catName}
                   </span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-sm">
                   {items.map((item) => {
                     const allocated = Number(item.allocatedAmount);
                     const spent = Number(item.actualSpent);
@@ -198,42 +212,42 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
                     const isOverrun = spent > allocated;
 
                     return (
-                      <Card key={item.id} className="p-4" variant="elevated">
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold text-text-primary text-sm">{item.name}</h3>
-                              <p className="text-xs text-muted">
+                      <div key={item.id} className="premium-card p-md border border-outline-variant/20 bg-surface/60 hover:bg-surface active:scale-[0.99] transition-all space-y-md">
+                        <div className="flex flex-col gap-sm">
+                          <div className="flex items-start justify-between gap-md">
+                            <div className="min-w-0 space-y-base">
+                              <h3 className="font-body-sm font-bold text-on-surface truncate max-w-[200px]">{item.name}</h3>
+                              <p className="font-label-caps text-[9px] text-on-surface-variant font-bold tracking-tight">
                                 Plafon: Rp {allocated.toLocaleString("id-ID")}
                               </p>
                             </div>
-                            <div className="text-right">
-                              <div className={`text-sm font-bold tabular-nums ${isOverrun ? "text-critical" : "text-success"}`}>
+                            <div className="text-right shrink-0">
+                              <div className={`font-numeral-md font-bold financial-amount ${isOverrun ? "text-error" : "text-primary"}`}>
                                 {isOverrun ? "-" : ""}Rp {Math.abs(remaining).toLocaleString("id-ID")}
                               </div>
-                              <span className="text-[10px] uppercase font-semibold text-muted tracking-wider">
+                              <span className="font-label-caps text-[8px] text-on-surface-variant block">
                                 {isOverrun ? "Overrun" : "Sisa Plafon"}
                               </span>
                             </div>
                           </div>
 
                           {/* Progress Bar Item Anggaran */}
-                          <div className="space-y-1">
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface">
+                          <div className="space-y-xs">
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container border border-outline-variant/10">
                               <div
                                 className={`h-full rounded-full transition-all duration-300 ${
-                                  isOverrun ? "bg-critical" : percent >= 90 ? "bg-warning" : "bg-primary"
+                                  isOverrun ? "bg-error" : percent >= 90 ? "bg-secondary" : "bg-primary"
                                 }`}
                                 style={{ width: `${Math.min(percent, 100)}%` }}
                               />
                             </div>
-                            <div className="flex items-center justify-between text-[10px] font-semibold text-muted">
+                            <div className="flex items-center justify-between text-[10px] text-on-surface-variant">
                               <span>Realisasi: Rp {spent.toLocaleString("id-ID")}</span>
                               <span>{percent.toFixed(1)}% terpakai</span>
                             </div>
                           </div>
                         </div>
-                      </Card>
+                      </div>
                     );
                   })}
                 </div>

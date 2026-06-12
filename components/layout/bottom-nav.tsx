@@ -1,79 +1,98 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardList, FolderKanban, PlusCircle, UserCircle } from "lucide-react";
-import { usePathname } from "next/navigation";
-import type { ComponentType, SVGProps } from "react";
-
-type NavIcon = ComponentType<SVGProps<SVGSVGElement>>;
+import { usePathname, useSearchParams } from "next/navigation";
+import React from "react";
 
 type NavItem = {
   readonly label: string;
   readonly href: string;
-  readonly icon: NavIcon;
-  readonly match: (pathname: string) => boolean;
+  readonly iconName: string;
+  readonly match: (pathname: string, searchParams: URLSearchParams) => boolean;
 };
-
-const NAV_ITEMS: readonly NavItem[] = [
-  {
-    label: "Projects",
-    href: "/projects",
-    icon: FolderKanban,
-    match: (pathname: string): boolean => pathname === "/" || pathname.startsWith("/projects"),
-  },
-  {
-    label: "Ledger",
-    href: "/ledger",
-    icon: ClipboardList,
-    match: (pathname: string): boolean => pathname.startsWith("/ledger"),
-  },
-  {
-    label: "Add Expense",
-    href: "/expenses/new",
-    icon: PlusCircle,
-    match: (pathname: string): boolean => pathname.startsWith("/expenses/new"),
-  },
-  {
-    label: "Profile",
-    href: "/profile",
-    icon: UserCircle,
-    match: (pathname: string): boolean => pathname.startsWith("/profile"),
-  },
-];
 
 export function BottomNav(): React.JSX.Element | null {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   if (pathname === "/login") return null;
 
+  const navItems: readonly NavItem[] = [
+    {
+      label: "Today",
+      href: "/ledger",
+      iconName: "today",
+      match: (path, params): boolean => path === "/ledger" && params.get("brief") !== "true",
+    },
+    {
+      label: "Projects",
+      href: "/projects",
+      iconName: "architecture",
+      match: (path): boolean => path.startsWith("/projects") || path === "/",
+    },
+    {
+      label: "Payments",
+      href: "/approvals",
+      iconName: "payments",
+      match: (path): boolean => path.startsWith("/approvals"),
+    },
+    {
+      label: "Expenses",
+      href: "/expenses/new",
+      iconName: "receipt_long",
+      match: (path): boolean => path.startsWith("/expenses"),
+    },
+    {
+      label: "AI Brief",
+      href: "/ledger?brief=true",
+      iconName: "auto_awesome",
+      match: (path, params): boolean => path === "/ledger" && params.get("brief") === "true",
+    },
+  ];
+
   return (
-    <nav
-      aria-label="Primary mobile navigation"
-      className="sticky bottom-0 z-20 h-16 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,0.24)]"
-    >
-      <ul className="grid h-full grid-cols-4 items-center gap-1">
-        {NAV_ITEMS.map((item: NavItem): React.JSX.Element => {
-          const Icon = item.icon;
-          const isActive = item.match(pathname);
+    <div className="fixed bottom-8 left-0 right-0 mx-auto w-[calc(100%-2rem)] max-w-md z-50 h-[72px] pointer-events-none select-none">
+      {/* Floating Action Button (FAB) */}
+      <Link
+        href="/expenses/new"
+        className="absolute right-0 -top-16 z-50 flex w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl items-center justify-center active:scale-95 transition-all duration-200 border border-white/10 pointer-events-auto cursor-pointer"
+        aria-label="Add Expense"
+      >
+        <span className="material-symbols-outlined text-[32px]">add</span>
+      </Link>
+
+      {/* Floating Tab Bar Container */}
+      <nav
+        aria-label="Primary mobile navigation"
+        className="flex justify-center items-center px-1 py-2 gap-2 h-full bg-surface/90 backdrop-blur-md border border-outline-variant/30 rounded-full shadow-xl pointer-events-auto"
+      >
+        {navItems.map((item: NavItem): React.JSX.Element => {
+          const isActive = item.match(pathname, searchParams);
 
           return (
-            <li key={item.href} className="h-full">
-              <Link
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex min-h-12 min-w-12 flex-col items-center justify-center gap-1 rounded-2xl px-2 text-[0.68rem] font-semibold leading-none transition-colors duration-150 ${
-                  isActive
-                    ? "bg-primary-light text-primary"
-                    : "text-muted hover:bg-elevated hover:text-secondary"
-                }`}
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex flex-col items-center justify-center gap-1 h-full rounded-full transition-all duration-200 px-2 flex-1 active:scale-90 ${
+                isActive
+                  ? "bg-primary text-on-primary"
+                  : "text-on-surface-variant hover:bg-surface-container-low"
+              }`}
+            >
+              <span 
+                className="material-symbols-outlined text-[24px]"
+                style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
               >
-                <Icon aria-hidden="true" className="size-5" strokeWidth={2.25} />
-                <span className="max-w-full truncate">{item.label}</span>
-              </Link>
-            </li>
+                {item.iconName}
+              </span>
+              <span className="font-label-caps uppercase tracking-wider text-[8px]">
+                {item.label}
+              </span>
+            </Link>
           );
         })}
-      </ul>
-    </nav>
+      </nav>
+    </div>
   );
 }

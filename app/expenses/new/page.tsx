@@ -43,7 +43,7 @@ export default async function NewExpensePage(): Promise<React.JSX.Element> {
   });
 
   return (
-    <section className="space-y-4 py-6 px-4 pb-24">
+    <section className="space-y-sm select-none">
       <ExpenseForm projects={projectsData} />
     </section>
   );

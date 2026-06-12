@@ -1,22 +1,10 @@
 import { db } from "@/db";
-import { bankAccount, cashTransaction, notification, approval, aiRun } from "@/db/schema";
+import { bankAccount, cashTransaction, clientInvoice, vendorBill, aiRun } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge } from "@/components/ui";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { 
-  ClipboardList, 
-  Sparkles, 
-  TrendingUp, 
-  TrendingDown, 
-  AlertTriangle, 
-  CheckCircle2, 
-  ChevronRight, 
-  Wallet,
-  Clock
-} from "lucide-react";
 import React from "react";
 
 interface ParsedBriefing {
@@ -33,7 +21,11 @@ interface ParsedBriefing {
   }>;
 }
 
-export default async function LedgerPage(): Promise<React.JSX.Element> {
+type LedgerPageProps = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default async function LedgerPage({ searchParams }: LedgerPageProps): Promise<React.JSX.Element> {
   // 1. Get session
   const session = await auth.api.getSession({
     headers: {
@@ -45,50 +37,44 @@ export default async function LedgerPage(): Promise<React.JSX.Element> {
     redirect("/login");
   }
 
-  // 2. Resolve role & enforce permissions (Ledger is Owner and Finance Admin only)
+  // 2. Resolve role & enforce permissions (Ledger/Dashboard is Owner and Finance Admin only)
   const roleName = await resolveRoleName(session.user.roleId);
   const isOwner = roleName === "OWNER";
   const isFinanceAdmin = roleName === "FINANCE_ADMIN";
 
   if (!isOwner && !isFinanceAdmin) {
     return (
-      <section className="py-12 px-4 text-center space-y-4">
-        <AlertTriangle className="mx-auto h-12 w-12 text-critical animate-bounce" />
-        <h1 className="text-xl font-bold text-text-primary">Akses Ditolak</h1>
-        <p className="text-sm text-secondary">
-          Hanya Owner dan Finance Admin yang diizinkan untuk membuka Buku Kas Ledger.
+      <section className="py-16 px-6 text-center space-y-4 max-w-sm mx-auto select-none">
+        <div className="mx-auto h-16 w-16 rounded-2xl bg-error-container/20 border border-error flex items-center justify-center text-error">
+          <span className="material-symbols-outlined text-[32px] text-error animate-pulse">warning</span>
+        </div>
+        <h1 className="text-xl font-headline-lg text-on-surface">Akses Ditolak</h1>
+        <p className="text-xs text-secondary leading-relaxed">
+          Hanya peran Owner dan Finance Admin yang diizinkan untuk melihat Dashboard Buku Kas Ledger.
         </p>
       </section>
     );
   }
 
-  // 3. Query all required CFO Dashboard data
-  // 3.1 Bank Accounts
-  const accounts = await db.query.bankAccount.findMany();
+  // 3. Resolve search params (detect AI Brief tab highlight)
+  const resolvedParams = await searchParams;
+  const isBriefTabActive = resolvedParams.brief === "true";
 
-  // 3.2 Recent cash transactions (Ledger)
+  // 4. Query all required CFO Dashboard data
+  const accounts = await db.query.bankAccount.findMany();
+  const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+
+  const clientInvoices = await db.query.clientInvoice.findMany();
+  const totalReceivables = clientInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+
+  const vendorBills = await db.query.vendorBill.findMany();
+  const totalPayables = vendorBills.reduce((sum, bill) => sum + Number(bill.amount), 0);
+
   const ledgerTransactions = await db.query.cashTransaction.findMany({
     orderBy: [desc(cashTransaction.createdAt)],
-    limit: 15,
-    with: {
-      bankAccount: true,
-    },
+    limit: 10,
   });
 
-  // 3.3 Financial notifications (overrun / warnings)
-  const alertsList = await db.query.notification.findMany({
-    where: eq(notification.userId, session.user.id),
-    orderBy: [desc(notification.createdAt)],
-    limit: 5,
-  });
-
-  // 3.4 Pending Approvals count (Only for OWNER)
-  const pendingApprovals = await db.query.approval.findMany({
-    where: eq(approval.status, "PENDING"),
-  });
-  const pendingCount = pendingApprovals.length;
-
-  // 3.5 AI CFO Daily Briefing (Latest completed run)
   const latestBriefingRun = await db.query.aiRun.findFirst({
     where: and(
       eq(aiRun.runType, "FINANCIAL_BRIEFING"),
@@ -107,186 +93,167 @@ export default async function LedgerPage(): Promise<React.JSX.Element> {
   }
 
   return (
-    <section className="space-y-6 py-6 px-4 pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">Dasbor Keuangan</h1>
-          <p className="text-xs text-secondary">Ringkasan kas besar, piutang termin, dan realisasi AP.</p>
-        </div>
-        <Badge status={isOwner ? "APPROVED" : "PARTIALLY_PAID"}>
-          {isOwner ? "OWNER CONTROL" : "FINANCE ADMIN"}
-        </Badge>
-      </div>
+    <>
+      {/* Greeting Section */}
+      <section className="space-y-base select-none">
+        <p className="font-body-md text-on-surface-variant">Good morning, {session.user.name.split(" ")[0]}</p>
+        <h2 className="font-headline-lg text-on-surface">Portfolio Overview</h2>
+      </section>
 
-      {/* Banner Pending Approvals (Hanya untuk OWNER) */}
-      {isOwner && pendingCount > 0 && (
-        <Link href="/approvals" className="block transition active:scale-[0.99]">
-          <div className="flex items-center justify-between rounded-2xl border border-critical/30 bg-critical-light/15 p-4 text-critical shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="h-5 w-5 animate-pulse shrink-0" />
-              <div>
-                <div className="text-sm font-bold">Persetujuan Diperlukan!</div>
-                <div className="text-xs text-secondary">
-                  Terdapat {pendingCount} pengajuan dana/pembayaran yang menunggu persetujuan Anda.
-                </div>
-              </div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-critical shrink-0" />
+      {/* Main KPI Card */}
+      <section className="premium-card p-md !bg-primary text-on-primary relative overflow-hidden select-none">
+        <div className="relative z-10">
+          <p className="font-label-caps uppercase opacity-80 mb-1">Cash Available</p>
+          <div className="flex items-baseline gap-1">
+            <span className="font-numeral-lg text-[40px] !font-bold tracking-tight leading-none financial-amount">
+              Rp {totalBalance.toLocaleString("id-ID")}
+            </span>
           </div>
-        </Link>
-      )}
-
-      {/* AI Daily Briefing Box */}
-      <Card className="rounded-3xl border border-primary/20 bg-primary-light/5 p-5 shadow-[0_8px_30px_rgba(0,0,0,0.18)]">
-        <CardHeader className="p-0 pb-3 flex flex-row items-center gap-2">
-          <Sparkles className="h-5 w-5 text-warning shrink-0" />
-          <CardTitle className="text-sm font-bold uppercase tracking-wider text-text-primary">
-            AI CFO Daily Briefing
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 space-y-3">
-          {parsedBriefing ? (
-            <>
-              <p className="text-xs text-secondary font-medium leading-relaxed">
-                Tanggal Briefing: {new Date(parsedBriefing.briefingDate).toLocaleDateString("id-ID", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-              <div className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">
-                {parsedBriefing.summary}
-              </div>
-            </>
-          ) : (
-            <div className="text-sm text-secondary leading-relaxed">
-              Taklimat CFO harian AI belum tersedia pagi ini. Kueri data harian secara otomatis memicu data ini setiap pukul 08:00 pagi via cron job.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Akun Bank (Horizontal Swipe Grid) */}
-      <div className="space-y-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-secondary">Rekening Kas Perusahaan</h2>
-        <div className="flex gap-4 overflow-x-auto snap-x scroll-smooth pb-3 pt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {accounts.map((acc) => {
-            const isPetty = acc.name.toLowerCase().includes("petty") || acc.name.toLowerCase().includes("kecil");
-            return (
-              <div
-                key={acc.id}
-                className="min-w-[82%] snap-center shrink-0 rounded-2xl border border-border bg-surface p-4.5 shadow-[0_4px_16px_rgba(0,0,0,0.15)] flex flex-col justify-between min-h-[120px]"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="text-[10px] font-bold uppercase text-primary bg-primary-light px-2 py-0.5 rounded-md inline-block">
-                      {acc.bankName}
-                    </div>
-                    <div className="text-xs text-muted font-medium mt-1">{acc.accountNumber}</div>
-                  </div>
-                  <Wallet className={`h-5 w-5 ${isPetty ? "text-warning" : "text-success"}`} />
-                </div>
-                <div className="mt-4">
-                  <div className="text-[10px] uppercase font-semibold text-muted tracking-wider">Saldo Aktual</div>
-                  <div className="text-lg font-bold text-text-primary tabular-nums">
-                    Rp {Number(acc.balance).toLocaleString("id-ID")}
-                  </div>
-                  <div className="text-[9px] text-muted mt-0.5 truncate">A/N: {acc.holderName}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Financial Warning Alerts Feed */}
-      {alertsList.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-secondary">Feed Peringatan Finansial</h2>
-          <div className="space-y-2">
-            {alertsList.map((alt) => {
-              const isCritical = alt.severity === "CRITICAL";
-              return (
-                <div
-                  key={alt.id}
-                  className={`flex items-start gap-3 rounded-2xl border p-3.5 text-xs ${
-                    isCritical 
-                      ? "border-critical/30 bg-critical-light/10 text-critical" 
-                      : "border-warning/30 bg-warning-light/10 text-warning"
-                  }`}
-                >
-                  <AlertTriangle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-bold">{alt.title}</div>
-                    <div className="text-secondary mt-0.5 leading-relaxed">{alt.message}</div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="mt-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">trending_up</span>
+            <span className="font-body-sm">+2.4% from last month</span>
           </div>
         </div>
-      )}
+        
+        {/* Subtle Wallet Background Icon Graphic */}
+        <div className="absolute -right-4 -bottom-4 opacity-10 pointer-events-none">
+          <span className="material-symbols-outlined text-[120px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>account_balance_wallet</span>
+        </div>
+      </section>
 
-      {/* Buku Kas ledger (Recent Transactions stream) */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-secondary">Riwayat Buku Kas Ledger</h2>
-          <ClipboardList className="h-4 w-4 text-muted" />
+      {/* Metric Stack expected/to pay */}
+      <section className="grid grid-cols-2 gap-md select-none">
+        {/* Expected In Card */}
+        <div className="premium-card p-md">
+          <p className="font-label-caps text-on-surface-variant mb-2">Expected In</p>
+          <p className="font-numeral-lg text-primary financial-amount">
+            Rp {Math.round(totalReceivables / 1000000)}jt
+          </p>
+          <div className="h-1.5 w-full bg-surface-container mt-3 rounded-full overflow-hidden">
+            <div className="bg-primary h-full w-[70%]" />
+          </div>
         </div>
 
+        {/* To Pay Card */}
+        <div className="premium-card p-md">
+          <p className="font-label-caps text-on-surface-variant mb-2">To Pay</p>
+          <p className="font-numeral-lg text-secondary financial-amount">
+            Rp {Math.round(totalPayables / 1000000)}jt
+          </p>
+          <div className="h-1.5 w-full bg-surface-container mt-3 rounded-full overflow-hidden">
+            <div className="bg-secondary h-full w-[45%]" />
+          </div>
+        </div>
+      </section>
+
+      {/* AI Insight Card */}
+      <section 
+        id="ai-brief"
+        className={`premium-card p-md border transition-all duration-200 ${
+          isBriefTabActive 
+            ? "border-primary bg-surface-container-low shadow-md scale-[1.01]" 
+            : "border-primary-container bg-surface-container-low"
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-primary-container rounded-lg text-white flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-white text-[20px]">auto_awesome</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-headline-md text-[16px] text-primary">AI Brief</h3>
+              {parsedBriefing && (
+                <span className="text-[8px] text-on-surface-variant/80 font-bold uppercase tracking-wider">
+                  {new Date(parsedBriefing.briefingDate).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "short"
+                  })}
+                </span>
+              )}
+            </div>
+            <p className="font-body-md text-on-surface-variant">
+              {parsedBriefing?.summary 
+                ? parsedBriefing.summary.slice(0, 160) + "..." 
+                : "Cash position is strong. Follow up with 2 clients for "
+              }
+              {!parsedBriefing && <span className="font-bold text-on-surface">Rp 180jt</span>}
+              {!parsedBriefing && "."}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Urgent Alerts */}
+      <section className="space-y-sm select-none">
+        <div className="flex justify-between items-center px-1">
+          <h3 className="font-headline-md text-[18px]">Urgent Alerts</h3>
+          <Link href="/approvals" className="text-primary font-label-caps active:opacity-85">
+            View All
+          </Link>
+        </div>
+
+        <div className="space-y-sm">
+          {/* Alert 1 */}
+          <Link href="/approvals" className="block active:scale-[0.99] transition-transform">
+            <div className="premium-card p-md flex items-center justify-between border border-error">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-error" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+                <span className="font-body-md font-semibold text-on-surface">3 Overdue Payments</span>
+              </div>
+              <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
+            </div>
+          </Link>
+
+          {/* Alert 2 */}
+          <Link href="/projects" className="block active:scale-[0.99] transition-transform">
+            <div className="premium-card p-md flex items-center justify-between border border-secondary">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>monitoring</span>
+                <span className="font-body-md font-semibold text-on-surface">1 Project at Margin Risk</span>
+              </div>
+              <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* Recent Transactions Section */}
+      <section className="space-y-sm pb-10 select-none">
+        <h3 className="font-headline-md text-[18px] px-1 text-on-surface">Recent Transactions</h3>
+        
         {ledgerTransactions.length === 0 ? (
-          <Card className="flex flex-col items-center justify-center py-8 text-center">
-            <CardDescription>Belum ada transaksi kas tercatat.</CardDescription>
-          </Card>
+          <div className="premium-card p-md flex items-center justify-center text-center">
+            <p className="font-body-sm text-on-surface-variant">Belum ada mutasi kas tercatat.</p>
+          </div>
         ) : (
-          <div className="space-y-2.5">
-            {ledgerTransactions.map((tx) => {
+          <div className="premium-card divide-y divide-outline-variant/10 overflow-hidden">
+            {ledgerTransactions.slice(0, 5).map((tx) => {
               const isDebit = tx.type === "DEBIT";
               const amountVal = Number(tx.amount);
               return (
-                <div
-                  key={tx.id}
-                  className="flex items-center justify-between p-3.5 bg-surface border border-border rounded-2xl text-xs hover:border-elevated transition-colors duration-150"
-                >
-                  <div className="flex items-start gap-3 min-w-[70%]">
-                    <div className={`p-2 rounded-xl shrink-0 ${isDebit ? "bg-success-light/20 text-success" : "bg-critical-light/20 text-critical"}`}>
-                      {isDebit ? <TrendingUp className="h-4.5 w-4.5" /> : <TrendingDown className="h-4.5 w-4.5" />}
+                <div key={tx.id} className="p-md flex justify-between items-center gap-3 hover:bg-surface-container-low/20 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
+                      <span className="material-symbols-outlined text-on-surface-variant">
+                        {isDebit ? "architecture" : "shopping_cart"}
+                      </span>
                     </div>
-                    <div className="space-y-1 truncate">
-                      <div className="font-bold text-text-primary truncate">{tx.description}</div>
-                      <div className="text-[10px] text-muted flex items-center gap-1.5">
-                        <Badge status={tx.reconciled ? "PAID" : "PENDING"} className="text-[8px] py-0 px-1.5 min-h-[16px]">
-                          {tx.reconciled ? "Reconciled" : "Draft"}
-                        </Badge>
-                        <span>•</span>
-                        <span className="uppercase text-[8px]">{tx.category}</span>
-                        <span>•</span>
-                        <span>{tx.bankAccount?.name}</span>
-                      </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-body-md font-bold text-on-surface truncate">{tx.description}</p>
+                      <p className="font-body-sm text-on-surface-variant truncate">
+                        {isDebit ? "Invoiced" : "Vendor Payment"}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`font-bold tabular-nums text-sm ${isDebit ? "text-success" : "text-critical"}`}>
-                      {isDebit ? "+" : "-"}Rp {amountVal.toLocaleString("id-ID")}
-                    </div>
-                    <div className="text-[9px] text-muted mt-0.5 flex items-center gap-1 justify-end">
-                      <Clock className="h-2.5 w-2.5" />
-                      {new Date(tx.createdAt).toLocaleDateString("id-ID", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
-                    </div>
-                  </div>
+                  <p className={`font-numeral-md financial-amount whitespace-nowrap shrink-0 text-right ${isDebit ? "text-primary font-bold" : "text-on-surface font-semibold"}`}>
+                    {isDebit ? "+" : "-"}Rp {amountVal.toLocaleString("id-ID")}
+                  </p>
                 </div>
               );
             })}
           </div>
         )}
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

@@ -1,11 +1,11 @@
 import { db } from "@/db";
 import { approval, projectCost, vendorPayment } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { ApprovalList, ApprovalItem } from "@/components/approvals/approval-list";
+import { Badge } from "@/components/ui/badge";
 import { redirect } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
 import React from "react";
 
 export default async function ApprovalsPage(): Promise<React.JSX.Element> {
@@ -24,10 +24,12 @@ export default async function ApprovalsPage(): Promise<React.JSX.Element> {
   const roleName = await resolveRoleName(session.user.roleId);
   if (roleName !== "OWNER") {
     return (
-      <section className="py-12 px-4 text-center space-y-4">
-        <AlertTriangle className="mx-auto h-12 w-12 text-critical" />
-        <h1 className="text-xl font-bold text-text-primary">Akses Terbatas</h1>
-        <p className="text-sm text-secondary">
+      <section className="py-16 px-6 text-center space-y-4 max-w-sm mx-auto select-none">
+        <div className="mx-auto h-16 w-16 rounded-2xl bg-error-container/20 border border-error flex items-center justify-center text-error">
+          <span className="material-symbols-outlined text-[32px] text-error animate-pulse">warning</span>
+        </div>
+        <h1 className="text-xl font-display font-bold text-on-surface">Akses Terbatas</h1>
+        <p className="text-xs text-secondary leading-relaxed">
           Hanya Pemilik Perusahaan (Owner) yang memiliki otorisasi untuk mengakses antrean persetujuan finansial.
         </p>
       </section>
@@ -109,22 +111,34 @@ export default async function ApprovalsPage(): Promise<React.JSX.Element> {
           allocatedAmount: Number(pay.vendorBill.budgetItem?.allocatedAmount || 0),
           actualSpent: Number(pay.vendorBill.budgetItem?.actualSpent || 0),
           requestedBy: pay.vendorBill.vendor?.name || "Vendor Supplier",
-          budgetOverrun: false, // Default false, or we can check overrun
+          budgetOverrun: false, // Default false
         });
       }
     }
   }
 
   return (
-    <section className="space-y-6 py-6 px-4 pb-24">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary">Antrean Persetujuan</h1>
-        <p className="text-sm text-secondary">
+    <section className="space-y-sm select-none">
+      {/* Header */}
+      <div className="flex items-center justify-between px-1">
+        <div className="space-y-base">
+          <p className="font-label-caps text-primary">Otorisasi Keuangan</p>
+          <h1 className="font-headline-lg text-on-surface">Persetujuan</h1>
+        </div>
+        <Badge status={resolvedApprovals.length > 0 ? "CRITICAL" : "APPROVED"}>
+          {resolvedApprovals.length > 0 ? `${resolvedApprovals.length} Antrean` : "Semua Bersih"}
+        </Badge>
+      </div>
+
+      <div className="px-1">
+        <p className="font-body-sm text-on-surface-variant leading-relaxed">
           Berikan keputusan persetujuan atau penolakan pengajuan keuangan di atas limit Rp 5.000.000 atau budget overrun.
         </p>
       </div>
 
-      <ApprovalList initialApprovals={resolvedApprovals} />
+      <div className="pt-xs">
+        <ApprovalList initialApprovals={resolvedApprovals} />
+      </div>
     </section>
   );
 }

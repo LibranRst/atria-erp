@@ -6,16 +6,12 @@ Dokumen ini berisi spesifikasi teknis dan aturan implementasi sistem desain anta
 
 ## 1. Filosofi Estetika & Nada Desain (iOS 26 Solid Philosophy)
 
-Atria ERP menghindari tren estetika yang berlebihan seperti efek kaca cair (*liquid glass*), gradasi neon mencolok, transparansi bertingkat yang membebani rendering browser seluler, atau blur latar belakang yang tebal (*excessive frosted glass blur*). 
+Atria ERP menghindari tren estetika yang berlebihan seperti efek kaca cair (*liquid glass*), gradasi neon mencolok, atau transparansi bertingkat yang membebani rendering browser seluler.
 
 Sistem desain **iOS 26 Solid** berfokus pada:
-1.  **Solid & Flat Blocks:** Penggunaan warna latar solid yang berkelas dengan border mikro tipis untuk memisahkan konten.
-2.  **Kejelasan Hierarki:** Penekanan pada ukuran huruf, ketebalan tipografi, dan kontras warna untuk mengarahkan fokus pengguna.
-3.  **Efisiensi GPU Webview:** Mengurangi beban rendering CSS filter blur pada perangkat seluler demi memastikan animasi transisi berjalan mulus pada kecepatan 60fps.
-
-> [!NOTE]
-> **Catatan Deviasi dari AGENTS.md (Refusal of Glassmorphism & backdrop-blur-md):**
-> Meskipun dokumen `AGENTS.md` menyarankan penggunaan glassmorphism dan `backdrop-blur-md` pada panel, header, atau modal sheet, sistem desain **iOS 26 Solid** secara sadar **menolak/menghindari** penerapan efek blur latar belakang tersebut. Keputusan ini diambil demi memaksimalkan kinerja rendering GPU pada WebView seluler di lapangan. Di area proyek konstruksi yang terang dan dinamis, perangkat yang digunakan oleh Project Manager (PM) sering kali memiliki spesifikasi terbatas atau mengalami penurunan performa rendering akibat beban filter CSS blur yang berat. Dengan menggunakan latar belakang warna solid (`color-surface` atau `color-elevated`) yang dipadukan dengan border 1px solid (`color-border`) berdensitas kontras tinggi, kami memastikan aplikasi tetap responsif pada kecepatan 60fps sekaligus menghemat konsumsi baterai perangkat di lapangan.
+1.  **Light Theme & Flat Blocks:** Penggunaan warna latar off-white hangat yang nyaman dipandang di bawah sinar matahari dengan border mikro tipis dan bayangan sangat halus (*subtle shadows*).
+2.  **Kejelasan Hierarki:** Penekanan pada ukuran huruf, ketebalan tipografi, dan kontras warna (menggunakan Deep Teal sebagai warna utama dan Slate Gray untuk teks primer).
+3.  **Efisiensi GPU Webview:** Mengurangi beban rendering CSS filter blur pada perangkat seluler demi memastikan aplikasi tetap responsif pada kecepatan 60fps.
 
 ---
 
@@ -24,31 +20,31 @@ Sistem desain **iOS 26 Solid** berfokus pada:
 Sistem warna menggunakan model **HSL (Hue, Saturation, Lightness)** untuk mempermudah kustomisasi tema dinamis dan variasi kegelapan warna (opacity).
 
 ### 2.1 Warna Dasar & Latar (Base & Background Colors)
-*   `color-deep`: `hsl(220, 20%, 8%)` - Latar belakang utama aplikasi (gelap pekat).
-*   `color-surface`: `hsl(220, 15%, 13%)` - Latar belakang kartu, panel, dan bar navigasi.
-*   `color-elevated`: `hsl(220, 12%, 18%)` - Latar belakang modal sheet, popover, dan dropdown.
-*   `color-border`: `hsl(220, 12%, 22%)` - Warna border mikro tipis (1px) untuk pemisah elemen.
+*   `color-deep`: `hsl(30, 15%, 97%)` - Latar belakang utama aplikasi (off-white hangat / `#F7F6F3`).
+*   `color-surface`: `hsl(0, 0%, 100%)` - Latar belakang kartu, panel, dan bar navigasi (putih bersih / `#FFFFFF`).
+*   `color-elevated`: `hsl(30, 12%, 94%)` - Latar belakang modal sheet, popover, dan item terpilih (cream / `#F1F0EC`).
+*   `color-border`: `hsl(214, 32%, 91%)` - Warna border pemisah (`#E2E8F0`).
 
 ### 2.2 Warna Teks (Typography Colors)
-*   `color-text-primary`: `hsl(210, 40%, 98%)` - Teks judul dan nominal keuangan utama (kontras maksimum).
-*   `color-secondary`: `hsl(215, 20%, 75%)` - Teks deskripsi dan label form.
-*   `color-muted`: `hsl(215, 12%, 50%)` - Teks log audit, tanggal, dan informasi sekunder.
+*   `color-text-primary`: `hsl(215, 28%, 17%)` - Teks judul dan nominal keuangan utama (dark slate / `#1E293B`).
+*   `color-secondary`: `hsl(215, 16%, 47%)` - Teks deskripsi dan label form (slate-500 / `#64748B`).
+*   `color-muted`: `hsl(215, 16%, 65%)` - Teks log audit, tanggal, dan informasi sekunder (slate-400 / `#94A3B8`).
 
 ### 2.3 Warna Fungsional & Status (Brand & Functional Colors)
 Setiap warna status memiliki pasangan warna latar belakang redup (15% opacity) untuk kebutuhan badge kontras tinggi.
 
-*   **Primary Brand (Deep Indigos):**
-    *   `color-primary`: `hsl(245, 58%, 51%)` - Warna tombol utama, link, dan tab aktif.
-    *   `color-primary-light`: `hsl(245, 30%, 15%)` - Latar belakang badge/tombol sekunder.
+*   **Primary Brand (Deep Teal):**
+    *   `color-primary`: `hsl(185, 100%, 16%)` - Warna tombol utama, link, tab aktif, dan jumlah nominal mutasi debit (`#004D54`).
+    *   `color-primary-light`: `hsl(185, 60%, 93%)` - Latar belakang badge/tombol sekunder (`#E6F4F5`).
 *   **Success Status (Emerald Green):**
-    *   `color-success`: `hsl(150, 84%, 37%)` - Indikator profitabilitas aman, status invoice `PAID`, rekening bank surplus.
-    *   `color-success-light`: `hsl(150, 30%, 12%)` - Latar belakang badge aman/surplus.
+    *   `color-success`: `hsl(142, 76%, 36%)` - Indikator profitabilitas aman, status invoice `PAID`, rekening bank surplus.
+    *   `color-success-light`: `hsl(142, 76%, 93%)` - Latar belakang badge aman/surplus.
 *   **Warning Status (Amber/Orange):**
     *   `color-warning`: `hsl(38, 92%, 50%)` - Indikator anggaran terpakai $\ge 90\%$, status invoice `OVERDUE`.
-    *   `color-warning-light`: `hsl(38, 30%, 12%)` - Latar belakang badge peringatan anggaran.
+    *   `color-warning-light`: `hsl(38, 30%, 93%)` - Latar belakang badge peringatan anggaran.
 *   **Critical Status (Red/Coral):**
     *   `color-critical`: `hsl(350, 89%, 60%)` - Indikator anggaran jebol $\ge 100\%$, pengeluaran ditolak, saldo minus.
-    *   `color-critical-light`: `hsl(350, 30%, 12%)` - Latar belakang badge kritis/danger.
+    *   `color-critical-light`: `hsl(350, 89%, 93%)` - Latar belakang badge kritis/danger.
 
 ---
 
@@ -85,7 +81,7 @@ Seluruh margin, padding, dan jarak antar elemen wajib menggunakan kelipatan **4p
 Untuk mencerminkan kehalusan antarmuka iOS modern, digunakan tiga tingkat kelengkungan sudut (`border-radius`):
 1.  **Badge & Tombol Kecil (`rounded-lg`):** `8px` - Digunakan untuk elemen dengan tinggi kecil seperti status badge, checkbox, dan tombol verifikasi mini.
 2.  **Kartu & Input Form (`rounded-2xl`):** `16px` - Digunakan untuk komponen berukuran sedang seperti kartu proyek, kartu mutasi kas, container input form, dan pop-up dialog.
-3.  **Bottom Sheets & Modal Drawer (`rounded-t-3xl`):** `24px` pada sudut kiri atas dan kanan atas (menggunakan token `radius-3xl`, yang dikompilasi oleh Tailwind v4 menjadi class `rounded-3xl` atau `rounded-t-3xl` secara alami). Sudut bawah dibiarkan datar (`0px`) karena sheet menempel pada bagian bawah layar.
+3.  **Bottom Sheets, Modal Drawer, & Floating Tabbar (`rounded-3xl` / `rounded-[28px]`):** `24px` atau `28px` - Digunakan untuk kontainer melayang tabbar navigasi dan bottom sheet untuk memberikan estetika modern yang lembut.
 
 ---
 
@@ -97,9 +93,9 @@ Untuk mencerminkan kehalusan antarmuka iOS modern, digunakan tiga tingkat keleng
     .card-solid {
       background-color: var(--color-surface);
       border: 1px solid var(--color-border);
-      border-radius: 16px; /* rounded-2xl */
+      border-radius: 24px; /* rounded-3xl */
       padding: 16px; /* space-lg */
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
     }
     ```
 *   **Aturan Visual:** Tidak menggunakan filter blur. Jika kartu berada di atas peta atau gambar latar belakang, gunakan warna latar solid dengan tingkat kegelapan penuh (*opaque*) demi keterbacaan teks angka finansial.
@@ -119,26 +115,17 @@ Semua tombol interaktif wajib memenuhi kriteria area sentuh minimum **44x44px** 
 
 ---
 
-## 6. Elemen Formulir & Kontrol (Forms, Bottom Sheets, & Segmented Controls)
+## 6. Elemen Formulir & Kontrol (Forms, Bottom Sheets, & Floating Navigation)
 
-### 6.1 Formulir Input (Form Inputs)
-*   **Input Field Container:** Tinggi total 52px untuk mempermudah pengetikan jempol di lapangan. Kelengkungan `rounded-2xl` (16px).
-*   **Fokus State:** Saat kolom input aktif, border berubah warna menjadi `color-primary` solid 2px tanpa efek glow/bayangan luar.
-*   **Error State:** Jika validasi Zod gagal, border berubah menjadi `color-critical` solid 2px dan pesan kesalahan tampil di bawah kolom dengan warna `color-critical`.
+### 6.1 Floating Navigation & FAB (Floating Action Button)
+*   **Floating Tab Bar Container:** Mengambang di atas konten dengan margin bawah `mb-4 px-4`. Berbentuk kapsul dengan kelengkungan `rounded-[28px]` dan bayangan lembut `shadow-[0_8px_24px_rgba(0,0,0,0.06)]`.
+*   **Active Tab Circle Indicator:** Item tab aktif dibungkus dengan lingkaran solid `bg-primary size-10 flex items-center justify-center text-white rounded-full`. Item pasif tidak memiliki lingkaran background. Jarak vertikal dijaga seragam agar pusat ikon sejajar vertikal.
+*   **FAB (Floating Action Button):** Tombol bulat melayang `bg-primary` di pojok kanan bawah, tepat di atas baris tab navigasi. Menyediakan pintasan instan bermodel ikon "+" untuk mempercepat akses form biaya lapangan.
 
 ### 6.2 Bottom Sheets (Slide-up Drawer)
 Digunakan untuk formulir pemilihan proyek cepat atau peninjauan nota belanja:
 *   **Pull Bar Indicator:** Di bagian tengah atas modal sheet, terdapat baris penarik horizontal dengan ukuran `36px x 4px` berwarna `color-border` dengan sudut membulat penuh untuk memberi tanda visual bahwa panel dapat digeser ke bawah.
 *   **Backdrop Overlay:** Saat bottom sheet aktif, layar belakang ditutupi oleh overlay hitam solid dengan transparansi 60% (`rgba(0, 0, 0, 0.6)`). Ketukan pada area backdrop akan menutup sheet secara otomatis.
-
-### 6.3 Segmented Controls (iOS Style Toggle Pills)
-Kontrol navigasi horizontal untuk menyaring tampilan (misal filter tab detail proyek: *Budget*, *Invoices*, *Bills*):
-*   Container menggunakan warna `color-surface` dengan padding `4px` dan kelengkungan `12px`.
-*   Pill aktif menggunakan warna `color-elevated` dengan shadow halus. Perubahan tab memicu animasi geser linear yang cepat (transisi 150ms).
-
-### 6.4 Baris Daftar (List Rows)
-*   Setiap baris mutasi ledger atau item BoQ dirancang dengan tata letak flexbox: ikon kategori di sisi kiri (ukuran lingkaran background **40x40px**), teks detail di tengah (Judul + Sub-label di bawahnya), dan data nominal finansial di sisi kanan (rata kanan/right-aligned).
-*   Tinggi baris minimal **60px** untuk memastikan target tap baris aman.
 
 ---
 
@@ -151,7 +138,6 @@ Digunakan untuk menandai fase persetujuan atau pembayaran. Setiap badge mengguna
 *   `PARTIALLY_PAID` -> Teks `color-primary` (biru/indigo utama), Latar belakang `color-primary-light` (15% opacity).
 *   `WARNING` -> Teks `color-warning`, Latar belakang `color-warning-light` (15% opacity).
 *   `CRITICAL` / `OVERDUE` -> Teks `color-critical`, Latar belakang `color-critical-light` (15% opacity).
-*   `VOID` -> Teks `color-muted` (abu-abu), Latar belakang `color-elevated` (15% opacity) dengan efek coret tengah (`line-through`).
 
 ### 7.2 Format & Gaya Angka Finansial (Financial Numbers Styling)
 Penulisan angka nominal uang Rupiah dirancang agar sangat terbaca untuk mendeteksi selisih angka sekecil apa pun:
@@ -163,8 +149,4 @@ Penulisan angka nominal uang Rupiah dirancang agar sangat terbaca untuk mendetek
     }
     ```
 2.  **Pemisah Ribuan & Desimal:** Wajib menggunakan pemisah ribuan titik (`.`) dan pemisah desimal koma (`,`) standar Rupiah Indonesia. Desimal dua angka di belakang koma (sen) disajikan dengan ukuran font lebih kecil 15% dari angka utama (misal: `Rp 650.000.000,`<sup>`00`</sup>).
-3.  **Tanda Minus Finansial:** Saldo minus atau kas keluar (`CREDIT`) ditulis dengan tanda minus jelas di depan simbol mata uang dan berwarna merah solid. Contoh: `-Rp 42.000.000,00`. Kas masuk (`DEBIT`) ditulis dengan tanda plus berwarna hijau emerald. Contoh: `+Rp 195.000.000,00`.
-
-### 7.3 Visualisasi Mikro (Micro-Charts)
-*   **Progress Bars:** Batang progres horizontal setinggi 8px dengan kelengkungan bulat penuh. Bagian latar menggunakan `color-border` dan indikator terisi menggunakan `color-primary`. Jika pemakaian budget item $\ge 90\%$, indikator otomatis berubah warna menjadi `color-warning`. Jika $\ge 100\%$, indikator menjadi `color-critical`.
-*   **Sparklines (Grafik Tren Kas):** Grafik garis mikro tanpa grid atau label sumbu yang disisipkan di dalam kartu rekening bank untuk menunjukkan tren naik/turun saldo dalam 30 hari terakhir. Garis menggunakan stroke tebal 2px solid `color-primary` (atau `color-success`/`color-critical` tergantung pada profitabilitas kas bersih bulan berjalan).
+3.  **Tanda Minus Finansial:** Saldo minus atau kas keluar (`CREDIT`) ditulis dengan tanda minus jelas di depan simbol mata uang dan berwarna merah solid. Contoh: `-Rp 42.000.000,00`. Kas masuk (`DEBIT`) ditulis dengan tanda plus berwarna deep teal (`color-primary`). Contoh: `+Rp 195.000.000,00`.

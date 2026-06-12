@@ -1,9 +1,8 @@
-import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
 import { auth } from "@/lib/auth";
 import { resolveRoleName, ROLE_PERMISSIONS } from "@/lib/auth/permissions";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/profile/logout-button";
-import { ShieldCheck, User, Mail, ShieldAlert, CheckCircle2 } from "lucide-react";
 import React from "react";
 
 const PERMISSION_DESCRIPTIONS: Record<string, string> = {
@@ -65,82 +64,116 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
     }
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  };
+
   return (
-    <section className="space-y-6 py-6 px-4 pb-24">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary">Profil Pengguna</h1>
-        <p className="text-sm text-secondary">Kelola sesi masuk dan lihat tingkat otorisasi Anda.</p>
+    <section className="space-y-sm select-none">
+      {/* Header */}
+      <div className="flex items-center justify-between px-1">
+        <div className="space-y-base">
+          <p className="font-label-caps text-primary">Pengaturan Sistem</p>
+          <h1 className="font-headline-lg text-on-surface">Profil Pengguna</h1>
+        </div>
+        <Badge status={getBadgeStatus(roleName)}>
+          {roleName}
+        </Badge>
       </div>
 
-      {/* Kartu Detail Informasi Pengguna */}
-      <Card className="rounded-3xl p-2 shadow-lg border-border bg-surface">
-        <CardHeader className="pb-4 flex flex-row items-center gap-4 space-y-0">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary-light border border-primary/20 text-primary">
-            <User className="h-6 w-6" />
+      {/* Profile Card dengan Inisial Kustom */}
+      <div className="premium-card p-md border border-outline-variant/30 flex items-center gap-md">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-surface-container border border-outline-variant/20 text-primary text-xl font-display font-bold">
+          {getInitials(session.user.name)}
+        </div>
+        <div className="space-y-base min-w-0">
+          <h2 className="font-body-lg font-bold text-on-surface truncate">{session.user.name}</h2>
+          <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-medium">
+            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">mail</span>
+            <span className="truncate">{session.user.email}</span>
           </div>
-          <div className="space-y-1 min-w-0">
-            <h2 className="text-lg font-bold text-text-primary truncate">{session.user.name}</h2>
-            <div className="flex items-center gap-1.5 text-xs text-secondary font-medium">
-              <Mail className="h-3.5 w-3.5" />
-              <span className="truncate">{session.user.email}</span>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-2 border-t border-border pt-4">
-            <div className="space-y-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">Peran Sistem</p>
-              <div>
-                <Badge status={getBadgeStatus(roleName)}>{roleName}</Badge>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">Status Akun</p>
-              <div>
-                <Badge status={session.user.isActive ? "APPROVED" : "CRITICAL"}>
-                  {session.user.isActive ? "AKTIF" : "NONAKTIF"}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Kartu Matriks Izin Otorisasi */}
-      <Card className="rounded-3xl p-2 shadow-lg border-border bg-surface">
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-primary" />
-            <CardTitle className="text-base font-bold">Hak Akses Finansial</CardTitle>
+      {/* Group 1: Informasi Sistem */}
+      <div className="space-y-sm px-1">
+        <h2 className="font-label-caps text-on-surface-variant">Detail Sesi Akun</h2>
+        <div className="premium-card border border-outline-variant/30 overflow-hidden divide-y divide-outline-variant/10">
+          {/* Row 1: Peran */}
+          <div className="flex items-center justify-between p-md text-xs">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-surface-container flex items-center justify-center text-primary shrink-0">
+                <span className="material-symbols-outlined text-[20px]">verified_user</span>
+              </div>
+              <span className="font-semibold text-on-surface text-[13px]">Peran Otentikasi</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-on-surface-variant">{roleName}</span>
+              <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
+            </div>
           </div>
-          <CardDescription className="text-xs">
-            Daftar kemampuan otorisasi di dalam sistem Atria ERP berdasarkan peran Anda.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {permissions.length === 0 ? (
-            <div className="flex items-center gap-3 rounded-xl border border-warning/20 bg-warning-light/10 p-3.5 text-xs text-warning font-medium">
-              <ShieldAlert className="h-4 w-4 shrink-0 text-warning" />
-              <div>Peran Anda tidak memiliki izin finansial aktif di sistem.</div>
+
+          {/* Row 2: Status Akun */}
+          <div className="flex items-center justify-between p-md text-xs">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-surface-container flex items-center justify-center text-success shrink-0">
+                <span className="material-symbols-outlined text-success text-[20px]">check_circle</span>
+              </div>
+              <span className="font-semibold text-on-surface text-[13px]">Status Pengguna</span>
             </div>
-          ) : (
-            <div className="border border-border rounded-2xl overflow-hidden divide-y divide-border bg-elevated">
-              {permissions.map((perm) => (
-                <div key={perm} className="flex items-center justify-between px-3.5 py-3 text-xs">
-                  <span className="font-semibold text-text-primary">{PERMISSION_DESCRIPTIONS[perm] || perm}</span>
-                  <div className="flex items-center gap-1.5 font-medium text-success">
-                    <CheckCircle2 className="h-4 w-4 text-success" />
-                    <span>Aktif</span>
+            <div className="flex items-center gap-2">
+              <span className={`font-bold ${session.user.isActive ? "text-primary" : "text-error"}`}>
+                {session.user.isActive ? "Aktif" : "Nonaktif"}
+              </span>
+              <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Group 2: Hak Otorisasi */}
+      <div className="space-y-sm px-1">
+        <div className="flex items-center justify-between">
+          <h2 className="font-label-caps text-on-surface-variant">Hak Akses Finansial</h2>
+          <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container px-2.5 py-0.5 rounded-full border border-outline-variant/20">
+            {permissions.length} Hak Aktif
+          </span>
+        </div>
+        
+        {permissions.length === 0 ? (
+          <div className="flex items-start gap-3 rounded-xl border border-secondary/30 bg-surface-container-low p-md text-xs text-on-surface-variant font-medium">
+            <span className="material-symbols-outlined text-secondary text-[20px]">warning</span>
+            <div className="leading-relaxed">Peran Anda tidak memiliki izin finansial aktif di sistem.</div>
+          </div>
+        ) : (
+          <div className="premium-card border border-outline-variant/30 overflow-hidden divide-y divide-outline-variant/10 max-h-[320px] overflow-y-auto">
+            {permissions.map((perm) => (
+              <div key={perm} className="flex items-center justify-between p-md text-xs hover:bg-surface-container-low/20 transition-colors">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-8 w-8 rounded-full bg-surface-container flex items-center justify-center text-primary shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">key</span>
                   </div>
+                  <span className="font-medium text-on-surface truncate text-[13px]">
+                    {PERMISSION_DESCRIPTIONS[perm] || perm}
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <div className="flex items-center gap-1 shrink-0 text-primary font-bold">
+                  <span className="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+                  <span>Aktif</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Aksi Logout */}
-      <div className="pt-2">
+      <div className="pt-2 px-1">
         <LogoutButton />
       </div>
     </section>

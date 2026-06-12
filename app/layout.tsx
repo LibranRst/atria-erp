@@ -1,21 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Manrope, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import { MobileShell } from "@/components/layout/mobile-shell";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const hanken = Hanken_Grotesk({
+  variable: "--font-hanken",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Atria ERP",
-  description: "Finance-first mobile operating system for interior contractors",
+  title: "Finance ERP",
+  description: "Finance-first control room for interior contractors",
 };
 
 export default function RootLayout({
@@ -26,9 +34,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${manrope.variable} ${hanken.variable} ${jetbrains.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-deep">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-full bg-[#fcf9f8] font-body-md text-on-surface">
         <MobileShell>{children}</MobileShell>
       </body>
     </html>
