@@ -35,12 +35,17 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
     redirect("/projects");
   }
 
-  // 3. Query project, budget, and items
+  // 3. Query project, budget, items, invoices, and payments
   const proj = await db.query.project.findFirst({
     where: eq(project.id, projectId),
     with: {
       client: true,
       projectManager: true,
+      clientInvoices: {
+        with: {
+          payments: true,
+        },
+      },
       budget: {
         with: {
           items: {
@@ -82,6 +87,19 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
     }
     itemsByCategory[catName].push(item);
   });
+
+  // Calculate total client payments received
+  let totalReceived = 0;
+  proj.clientInvoices?.forEach((inv) => {
+    inv.payments?.forEach((pay) => {
+      totalReceived += Number(pay.amountPaid);
+    });
+  });
+
+  const contractValue = Number(proj.totalContractValue);
+  const projectedGrossProfit = contractValue - totalAllocated;
+  const projectedGrossMargin = contractValue > 0 ? (projectedGrossProfit / contractValue) * 100 : 0;
+  const realizedNetProfit = totalReceived - totalSpent;
 
   return (
     <section className="space-y-sm select-none">
@@ -174,6 +192,49 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
                 }`}
                 style={{ width: `${Math.min(totalUtilization, 100)}%` }}
               />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Card Analisis Profitabilitas Proyek */}
+      <div className="premium-card p-md border border-outline-variant/30 space-y-md">
+        <div className="pb-sm border-b border-outline-variant/10">
+          <h3 className="font-label-caps text-on-surface flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-[20px]">trending_up</span>
+            Analisis Profitabilitas Proyek
+          </h3>
+        </div>
+        <div className="space-y-md">
+          {/* Proyeksi Laba Kotor */}
+          <div className="flex justify-between items-center border-b border-outline-variant/10 pb-md">
+            <div className="space-y-base min-w-0 flex-1">
+              <span className="font-label-caps text-[9px] text-on-surface-variant">Proyeksi Laba Kotor (Gross Profit)</span>
+              <p className="text-[11px] text-on-surface-variant leading-tight truncate">Nilai Kontrak - Anggaran RAB</p>
+            </div>
+            <div className="text-right shrink-0">
+              <div className={`font-numeral-md font-bold financial-amount ${projectedGrossProfit >= 0 ? "text-primary" : "text-error"}`}>
+                Rp {projectedGrossProfit.toLocaleString("id-ID")}
+              </div>
+              <span className={`text-[10px] font-bold ${projectedGrossProfit >= 0 ? "text-primary" : "text-error"}`}>
+                {projectedGrossMargin.toFixed(1)}% margin
+              </span>
+            </div>
+          </div>
+
+          {/* Laba Bersih Terealisasi */}
+          <div className="flex justify-between items-center">
+            <div className="space-y-base min-w-0 flex-1">
+              <span className="font-label-caps text-[9px] text-on-surface-variant">Laba Bersih Riil (Net Profit)</span>
+              <p className="text-[11px] text-on-surface-variant leading-tight truncate">Kas Masuk Klien - Realisasi Belanja</p>
+            </div>
+            <div className="text-right shrink-0">
+              <div className={`font-numeral-md font-bold financial-amount ${realizedNetProfit >= 0 ? "text-primary" : "text-error"}`}>
+                {realizedNetProfit < 0 ? "-" : ""}Rp {Math.abs(realizedNetProfit).toLocaleString("id-ID")}
+              </div>
+              <span className="font-label-caps text-[8px] text-on-surface-variant block">
+                Terbayar: Rp {totalReceived.toLocaleString("id-ID")}
+              </span>
             </div>
           </div>
         </div>
