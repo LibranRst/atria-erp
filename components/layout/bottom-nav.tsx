@@ -4,6 +4,9 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import React from "react";
 
+import { authClient } from "@/lib/auth-client";
+import { ROLE_ID_TO_NAME } from "@/lib/auth/permissions";
+
 type NavItem = {
   readonly label: string;
   readonly href: string;
@@ -14,8 +17,12 @@ type NavItem = {
 export function BottomNav(): React.JSX.Element | null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { data: session } = authClient.useSession();
 
   if (pathname === "/login") return null;
+
+  const roleId = session?.user ? (session.user as any).roleId : null;
+  const roleName = roleId ? ROLE_ID_TO_NAME[roleId] : null;
 
   const navItems: readonly NavItem[] = [
     {
@@ -50,6 +57,23 @@ export function BottomNav(): React.JSX.Element | null {
     },
   ];
 
+  const filteredNavItems = navItems.filter((item) => {
+    // Default safe layout during loading
+    if (!roleName) {
+      return item.label === "Projects" || item.label === "Expenses";
+    }
+
+    if (item.label === "Today" || item.label === "AI Brief") {
+      return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
+    }
+
+    if (item.label === "Payments") {
+      return roleName === "OWNER";
+    }
+
+    return true; // Projects, Expenses
+  });
+
   return (
     <div className="fixed bottom-8 left-0 right-0 mx-auto w-[calc(100%-2rem)] max-w-md z-50 h-[72px] pointer-events-none select-none">
       {/* Floating Action Button (FAB) */}
@@ -66,7 +90,7 @@ export function BottomNav(): React.JSX.Element | null {
         aria-label="Primary mobile navigation"
         className="flex justify-center items-center px-1 py-2 gap-2 h-full bg-surface/90 backdrop-blur-md border border-outline-variant/30 rounded-full shadow-xl pointer-events-auto"
       >
-        {navItems.map((item: NavItem): React.JSX.Element => {
+        {filteredNavItems.map((item: NavItem): React.JSX.Element => {
           const isActive = item.match(pathname, searchParams);
 
           return (
