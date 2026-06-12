@@ -91,7 +91,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       })
       .returning();
 
-    // 4. Panggil Gemini 1.5 Pro untuk menganalisis dan menghasilkan narasi CFO briefing
+    // 4. Panggil Gemini 3 Flash Preview untuk menganalisis dan menghasilkan narasi CFO briefing
     try {
       const prompt = `
 Role: Senior CFO AI Assistant
@@ -114,7 +114,7 @@ Rules:
 `;
 
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-pro",
+        model: "gemini-3-flash-preview",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -187,7 +187,7 @@ Rules:
         .update(aiRun)
         .set({
           status: "FAILED",
-          errorMessage: genError.message || "Gagal memanggil API Gemini Pro.",
+          errorMessage: genError.message || "Gagal memanggil API Gemini.",
         })
         .where(eq(aiRun.id, runLog.id));
 

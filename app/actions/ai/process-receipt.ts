@@ -25,7 +25,7 @@ interface ParsedReceipt {
 }
 
 /**
- * Memproses gambar nota PM lapangan menggunakan model Gemini 1.5 Flash.
+ * Memproses gambar nota PM lapangan menggunakan model Gemini 3 Flash Preview.
  * Mengekstrak total biaya, nama toko, tanggal transaksi, dan rincian item belanja.
  *
  * @param receiptImageUrl URL gambar nota dari ImageKit
@@ -99,10 +99,10 @@ export async function processReceipt(
       })
       .returning();
 
-    // 5. Panggil Gemini 1.5 Flash untuk ekstraksi teks nota multimodal
+    // 5. Panggil Gemini 3 Flash Preview untuk ekstraksi teks nota multimodal
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3-flash-preview",
         contents: [
           {
             inlineData: {

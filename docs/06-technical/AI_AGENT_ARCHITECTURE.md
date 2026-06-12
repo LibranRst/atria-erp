@@ -18,7 +18,7 @@ flowchart TD
 
     subgraph AIEngine ["AI Agent Layer (Gemini API)"]
         Context["Context Builder (RSC/Drizzle)"]
-        Gemini["Gemini API (1.5 Pro / Flash)"]
+        Gemini["Gemini API (3 Flash)"]
     end
 
     subgraph ClientUI ["Client Mobile UI (iOS 26 Solid)"]
@@ -132,7 +132,7 @@ Agen ini memantau kecepatan pengeluaran proyek dan memperkirakan ketahanan kas k
 ### 2.3 OCRReceiptAgent (Multimodal Receipt Details Extraction)
 Agen ini memproses foto nota belanja material atau kuitansi yang diunggah oleh Project Manager dari ponsel mereka untuk secara otomatis mengekstraksi rincian pembelian.
 
-*   **Input Data:** File gambar bukti belanja (JPEG/PNG) yang diunggah secara aman ke ImageKit CDN. URL gambar dikirimkan ke model multimodal Gemini (seperti `gemini-1.5-flash`).
+*   **Input Data:** File gambar bukti belanja (JPEG/PNG) yang diunggah secara aman ke ImageKit CDN. URL gambar dikirimkan ke model multimodal Gemini (seperti `gemini-3-flash-preview`).
 *   **Strategi Multimodal Prompt:**
     ```text
     [IMAGE INPUT]
@@ -184,7 +184,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const response = await ai.models.generateContent({
-  model: "gemini-1.5-flash",
+  model: "gemini-3-flash-preview",
   contents: "Ekstrak rincian bukti transaksi dari foto...",
   config: {
     // Memaksa model mengembalikan format JSON
