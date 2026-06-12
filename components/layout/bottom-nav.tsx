@@ -28,7 +28,7 @@ export function BottomNav(): React.JSX.Element | null {
       label: "Projects",
       href: "/projects",
       iconName: "architecture",
-      match: (path): boolean => path.startsWith("/projects") || path === "/",
+      match: (path): boolean => path.startsWith("/projects"),
     },
     {
       label: "Payments",

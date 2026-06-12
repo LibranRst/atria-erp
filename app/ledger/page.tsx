@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { bankAccount, cashTransaction, clientInvoice, vendorBill, aiRun } from "@/db/schema";
+import { bankAccount, cashTransaction, clientInvoice, vendorBill, aiRun, project, approval } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
@@ -65,15 +65,39 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
 
   const clientInvoices = await db.query.clientInvoice.findMany();
-  const totalReceivables = clientInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+  const totalReceivables = clientInvoices.reduce((sum, inv) => {
+    if (inv.status === "UNPAID" || inv.status === "PARTIALLY_PAID" || inv.status === "OVERDUE") {
+      return sum + Number(inv.amount);
+    }
+    return sum;
+  }, 0);
 
   const vendorBills = await db.query.vendorBill.findMany();
-  const totalPayables = vendorBills.reduce((sum, bill) => sum + Number(bill.amount), 0);
+  const totalPayables = vendorBills.reduce((sum, bill) => {
+    if (bill.status === "UNPAID" || bill.status === "PARTIALLY_PAID" || bill.status === "OVERDUE") {
+      return sum + Number(bill.amount);
+    }
+    return sum;
+  }, 0);
 
   const ledgerTransactions = await db.query.cashTransaction.findMany({
     orderBy: [desc(cashTransaction.createdAt)],
     limit: 10,
   });
+
+  // Query pending approvals for alert badges
+  const pendingApprovals = await db.query.approval.findMany({
+    where: eq(approval.status, "PENDING"),
+  });
+  const pendingApprovalsCount = pendingApprovals.length;
+
+  // Query active projects and count warning/critical projects for alert badges
+  const allProjects = await db.query.project.findMany({
+    where: eq(project.status, "ACTIVE"),
+  });
+  const riskyProjectsCount = allProjects.filter(
+    (p) => p.financialHealth === "CRITICAL" || p.financialHealth === "WARNING"
+  ).length;
 
   const latestBriefingRun = await db.query.aiRun.findFirst({
     where: and(
@@ -90,6 +114,110 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
     } catch (e) {
       console.error("Failed to parse daily briefing JSON:", e);
     }
+  }
+
+  if (isBriefTabActive) {
+    return (
+      <section className="space-y-lg select-none pb-10">
+        {/* Header */}
+        <div className="space-y-base px-1">
+          <p className="font-label-caps text-primary">CFO AI Daily Briefing</p>
+          <h1 className="font-headline-lg text-on-surface">Analisis Finansial</h1>
+          {parsedBriefing && (
+            <p className="text-xs text-on-surface-variant font-semibold">
+              Terakhir diperbarui: {new Date(parsedBriefing.briefingDate).toLocaleDateString("id-ID", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+              })}
+            </p>
+          )}
+        </div>
+
+        {/* Narrative Summary */}
+        <div className="premium-card p-md border border-primary-container bg-surface-container-low/50 space-y-md">
+          <div className="flex items-center gap-2 text-primary font-bold">
+            <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
+            <h3 className="font-headline-md text-[16px]">Rangkuman Naratif</h3>
+          </div>
+          <p className="font-body-md text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+            {parsedBriefing?.summary || "Tidak ada rangkuman analisis harian yang tersedia saat ini."}
+          </p>
+        </div>
+
+        {/* AI Metrics Grid */}
+        <div className="space-y-sm">
+          <h3 className="font-label-caps text-on-surface-variant px-1">Metrik Utama AI</h3>
+          <div className="grid grid-cols-1 gap-sm">
+            {/* Cash Balance */}
+            <div className="premium-card p-md flex items-center justify-between border border-outline-variant/30">
+              <div className="space-y-base">
+                <span className="font-label-caps text-[9px] text-on-surface-variant">Proyeksi Saldo Kas</span>
+                <p className="font-numeral-lg text-primary font-bold financial-amount">
+                  Rp {(parsedBriefing?.metrics.cashBalance ?? totalBalance).toLocaleString("id-ID")}
+                </p>
+              </div>
+              <span className="material-symbols-outlined text-primary text-[28px]">account_balance_wallet</span>
+            </div>
+
+            {/* Receivables */}
+            <div className="premium-card p-md flex items-center justify-between border border-outline-variant/30">
+              <div className="space-y-base">
+                <span className="font-label-caps text-[9px] text-on-surface-variant">Piutang Overdue</span>
+                <p className="font-numeral-lg text-secondary font-bold financial-amount">
+                  Rp {(parsedBriefing?.metrics.receivablesOverdue ?? 0).toLocaleString("id-ID")}
+                </p>
+              </div>
+              <span className="material-symbols-outlined text-secondary text-[28px]">trending_down</span>
+            </div>
+
+            {/* Payables */}
+            <div className="premium-card p-md flex items-center justify-between border border-outline-variant/30">
+              <div className="space-y-base">
+                <span className="font-label-caps text-[9px] text-on-surface-variant">Hutang Vendor (7 Hari Ke Depan)</span>
+                <p className="font-numeral-lg text-on-surface font-bold financial-amount">
+                  Rp {(parsedBriefing?.metrics.payablesDueSevenDays ?? 0).toLocaleString("id-ID")}
+                </p>
+              </div>
+              <span className="material-symbols-outlined text-outline text-[28px]">payment</span>
+            </div>
+          </div>
+        </div>
+
+        {/* AI Alerts */}
+        <div className="space-y-sm">
+          <h3 className="font-label-caps text-on-surface-variant px-1">Peringatan Risiko AI</h3>
+          {(!parsedBriefing || !parsedBriefing.alerts || parsedBriefing.alerts.length === 0) ? (
+            <div className="premium-card p-md flex items-center gap-3 border border-outline-variant/20 bg-surface/50">
+              <span className="material-symbols-outlined text-success" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              <p className="font-body-sm text-on-surface-variant">Tidak ada risiko finansial terdeteksi hari ini.</p>
+            </div>
+          ) : (
+            <div className="space-y-sm">
+              {parsedBriefing.alerts.map((alert, idx) => {
+                const isCritical = alert.severity === "CRITICAL";
+                return (
+                  <div key={idx} className={`premium-card p-md flex items-start gap-3 border ${isCritical ? "border-error bg-error-container/5" : "border-secondary bg-secondary-container/5"}`}>
+                    <span className={`material-symbols-outlined ${isCritical ? "text-error" : "text-secondary"}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                      {isCritical ? "warning" : "info"}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-body-md font-bold text-on-surface leading-tight">
+                        {isCritical ? "Risiko Kritis" : "Peringatan Risiko"}
+                      </p>
+                      <p className="font-body-sm text-on-surface-variant leading-relaxed mt-1">
+                        {alert.message || "Risiko terdeteksi pada proyek."}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -193,23 +321,37 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
         </div>
 
         <div className="space-y-sm">
-          {/* Alert 1 */}
+          {/* Alert 1 - Pending Approvals */}
           <Link href="/approvals" className="block active:scale-[0.99] transition-transform">
-            <div className="premium-card p-md flex items-center justify-between border border-error">
+            <div className={`premium-card p-md flex items-center justify-between border ${pendingApprovalsCount > 0 ? "border-error bg-error-container/5" : "border-outline-variant/30"}`}>
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-error" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
-                <span className="font-body-md font-semibold text-on-surface">3 Overdue Payments</span>
+                <span className={pendingApprovalsCount > 0 ? "material-symbols-outlined text-error" : "material-symbols-outlined text-on-surface-variant"} style={{ fontVariationSettings: "'FILL' 1" }}>
+                  {pendingApprovalsCount > 0 ? "warning" : "check_circle"}
+                </span>
+                <span className="font-body-md font-semibold text-on-surface">
+                  {pendingApprovalsCount > 0 
+                    ? `${pendingApprovalsCount} Pengajuan Menunggu Persetujuan` 
+                    : "Tidak Ada Pengajuan Menunggu Persetujuan"
+                  }
+                </span>
               </div>
               <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
             </div>
           </Link>
 
-          {/* Alert 2 */}
+          {/* Alert 2 - Risky Projects */}
           <Link href="/projects" className="block active:scale-[0.99] transition-transform">
-            <div className="premium-card p-md flex items-center justify-between border border-secondary">
+            <div className={`premium-card p-md flex items-center justify-between border ${riskyProjectsCount > 0 ? "border-secondary bg-secondary-container/5" : "border-outline-variant/30"}`}>
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>monitoring</span>
-                <span className="font-body-md font-semibold text-on-surface">1 Project at Margin Risk</span>
+                <span className={riskyProjectsCount > 0 ? "material-symbols-outlined text-secondary" : "material-symbols-outlined text-on-surface-variant"} style={{ fontVariationSettings: "'FILL' 1" }}>
+                  {riskyProjectsCount > 0 ? "monitoring" : "folder_open"}
+                </span>
+                <span className="font-body-md font-semibold text-on-surface">
+                  {riskyProjectsCount > 0 
+                    ? `${riskyProjectsCount} Proyek dengan Risiko Finansial` 
+                    : "Semua Kesehatan Finansial Proyek Aman"
+                  }
+                </span>
               </div>
               <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
             </div>
