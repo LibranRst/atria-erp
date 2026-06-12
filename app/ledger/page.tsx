@@ -274,6 +274,45 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
         </div>
       </section>
 
+      {/* Rekening Kas Perusahaan (Horizontal Swipe Grid) */}
+      <section className="space-y-sm select-none">
+        <h3 className="font-label-caps text-on-surface-variant px-1">Rekening Kas Perusahaan</h3>
+        <div className="flex gap-md overflow-x-auto snap-x snap-mandatory pb-3 pt-1 no-scrollbar">
+          {accounts.map((acc) => {
+            const isPetty = acc.name.toLowerCase().includes("petty") || acc.name.toLowerCase().includes("kecil");
+            const iconName = isPetty ? "wallet" : "account_balance";
+            const iconColorClass = isPetty ? "text-secondary" : "text-primary";
+            const badgeColorClass = isPetty 
+              ? "bg-secondary/10 border-secondary/20 text-secondary" 
+              : "bg-primary/10 border-primary/20 text-primary";
+            
+            return (
+              <div
+                key={acc.id}
+                className="min-w-[260px] snap-center shrink-0 premium-card p-md border border-outline-variant/20 flex flex-col justify-between min-h-[135px] hover:border-primary/30 transition-all active:scale-[0.99]"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <div className={`text-[10px] font-bold uppercase border px-2.5 py-0.5 rounded-full inline-block ${badgeColorClass}`}>
+                      {acc.bankName}
+                    </div>
+                    <div className="text-xs text-on-surface-variant font-medium mt-1">{acc.accountNumber}</div>
+                  </div>
+                  <span className={`material-symbols-outlined text-[24px] ${iconColorClass}`}>{iconName}</span>
+                </div>
+                <div className="mt-4 space-y-base">
+                  <div className="text-[9px] uppercase font-semibold text-on-surface-variant tracking-wider">Saldo Aktual</div>
+                  <div className="font-numeral-md text-on-surface font-bold financial-amount leading-none">
+                    Rp {Number(acc.balance).toLocaleString("id-ID")}
+                  </div>
+                  <div className="text-[9px] text-on-surface-variant truncate">A/N: {acc.holderName}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* AI Insight Card */}
       <section 
         id="ai-brief"
