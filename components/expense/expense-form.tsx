@@ -73,7 +73,14 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   const handleClose = () => {
     setIsOpen(false);
     setTimeout(() => {
-      router.back();
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("new-expense") === "true") {
+        params.delete("new-expense");
+        const newSearch = params.toString();
+        router.replace(`${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`, { scroll: false });
+      } else {
+        router.back();
+      }
     }, 250);
   };
 

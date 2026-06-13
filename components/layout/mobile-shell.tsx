@@ -4,6 +4,7 @@ import React, { Suspense } from "react";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { GlobalExpenseDrawer } from "@/components/expense/global-drawer";
 
 type MobileShellProps = Readonly<{
   children: React.ReactNode;
@@ -57,6 +58,13 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
       {!isLoginPage && (
         <Suspense fallback={null}>
           <BottomNav />
+        </Suspense>
+      )}
+
+      {/* Global Expense Drawer wrapped in Suspense */}
+      {!isLoginPage && (
+        <Suspense fallback={null}>
+          <GlobalExpenseDrawer />
         </Suspense>
       )}
     </div>

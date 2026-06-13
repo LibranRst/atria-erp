@@ -80,11 +80,18 @@ export function BottomNav(): React.JSX.Element | null {
     return true; // Projects, Expenses
   });
 
+  // Generate the href for the FAB
+  const fabHref = React.useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("new-expense", "true");
+    return `${pathname}?${params.toString()}`;
+  }, [pathname, searchParams]);
+
   return (
     <div className="fixed bottom-8 left-0 right-0 mx-auto w-[calc(100%-2rem)] max-w-md z-50 h-[72px] pointer-events-none select-none">
       {/* Floating Action Button (FAB) */}
       <Link
-        href="/expenses/new"
+        href={fabHref}
         className="absolute right-0 -top-16 z-50 flex w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl items-center justify-center active:scale-95 transition-all duration-200 border border-white/10 pointer-events-auto cursor-pointer"
         aria-label="Add Expense"
       >

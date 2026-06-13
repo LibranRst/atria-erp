@@ -2,10 +2,10 @@
 
 import { db } from "@/db";
 import { projectBudget, projectBudgetItem, project } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { assertProjectAccess } from "@/lib/auth/scoping";
+import { assertProjectAccess, scopeProjectQuery } from "@/lib/auth/scoping";
 import { ActionResponse } from "@/lib/types/action-response";
 import { createBudgetItemSchema, CreateBudgetItemInput } from "@/lib/validations/budget";
 
@@ -450,3 +450,57 @@ export async function rejectBudget(
     };
   }
 }
+
+/**
+ * Kueri proyek aktif yang dapat diakses oleh pengguna saat ini untuk form pengeluaran.
+ */
+export async function getActiveProjectsForExpense(): Promise<ActionResponse<any[]>> {
+  try {
+    const session = await auth.api.getSession({
+      headers: {
+        cookie: (await (await import("next/headers")).cookies()).toString(),
+      },
+    });
+
+    if (!session || !session.user) {
+      return {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Sesi tidak valid. Harap login kembali." },
+      };
+    }
+
+    const roleName = await resolveRoleName(session.user.roleId);
+    const projectFilter = scopeProjectQuery(session.user.id, roleName);
+
+    const projectsData = await db.query.project.findMany({
+      where: projectFilter 
+        ? and(eq(project.status, "ACTIVE"), projectFilter)
+        : eq(project.status, "ACTIVE"),
+      with: {
+        budget: {
+          with: {
+            items: {
+              with: {
+                costCategory: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      data: JSON.parse(JSON.stringify(projectsData)), // Ensure plain objects for RSC serialization compatibility
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: error instanceof Error ? error.message : "Terjadi kesalahan server saat mengambil data proyek.",
+      },
+    };
+  }
+}
+
