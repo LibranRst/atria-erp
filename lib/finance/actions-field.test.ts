@@ -303,6 +303,8 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const costRes = await submitFieldRequest({
         projectId: MENTENG_PROJECT_ID,
         projectBudgetItemId: budgetItem!.id,
+        quantity: 24,
+        unitPrice: 250000,
         amount: 6000000,
         description: "Beli perlengkapan finishing tambahan",
       });
@@ -372,6 +374,8 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const costRes = await submitFieldRequest({
         projectId: MENTENG_PROJECT_ID,
         projectBudgetItemId: budgetItem!.id,
+        quantity: 640,
+        unitPrice: 250000,
         amount: 160000000,
         description: "Beli marmer Italia premium",
       });
@@ -457,11 +461,15 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
         items: [
           {
             projectBudgetItemId: item1.id,
+            quantity: 2,
+            unitPrice: 250000,
             amount: 500000,
             description: "Belanja gypsum & paku besi"
           },
           {
             projectBudgetItemId: item2.id,
+            quantity: 1,
+            unitPrice: 750000,
             amount: 750000,
             description: "Sewa tangga & transport belanja"
           }

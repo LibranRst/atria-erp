@@ -32,7 +32,7 @@ export async function submitFieldRequest(
     };
   }
 
-  const { projectId, projectBudgetItemId, amount, description, receiptImageUrl } = validation.data;
+  const { projectId, projectBudgetItemId, quantity, unitPrice, amount, description, receiptImageUrl } = validation.data;
 
   try {
     const session = await auth.api.getSession({
@@ -108,6 +108,8 @@ export async function submitFieldRequest(
           projectId,
           projectBudgetItemId,
           requestedById: session.user.id,
+          quantity: quantity.toString(),
+          unitPrice: unitPrice.toString(),
           amount: amount.toFixed(2),
           description,
           receiptImageUrl: receiptImageUrl || null,
@@ -192,7 +194,7 @@ export async function submitFieldRequests(
       const createdCosts = [];
 
       for (const item of items) {
-        const { projectBudgetItemId, amount, description } = item;
+        const { projectBudgetItemId, quantity, unitPrice, amount, description } = item;
 
         // 1. Fetch budget item to check overrun
         const budgetItem = await tx.query.projectBudgetItem.findFirst({
@@ -243,6 +245,8 @@ export async function submitFieldRequests(
             projectBudgetItemId,
             requestedById: session.user.id,
             receiptGroupId,
+            quantity: quantity.toString(),
+            unitPrice: unitPrice.toString(),
             amount: amount.toFixed(2),
             description,
             receiptImageUrl: receiptImageUrl || null,

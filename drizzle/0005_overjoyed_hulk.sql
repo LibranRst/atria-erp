@@ -1,0 +1,2 @@
+ALTER TABLE "project_cost" ADD COLUMN "quantity" numeric(12, 2) DEFAULT '1.00' NOT NULL;--> statement-breakpoint
+ALTER TABLE "project_cost" ADD COLUMN "unit_price" numeric(15, 2) DEFAULT '0.00' NOT NULL;

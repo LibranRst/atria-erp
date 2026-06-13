@@ -223,6 +223,8 @@ export const projectCost = pgTable("project_cost", {
   projectBudgetItemId: uuid("project_budget_item_id").notNull().references(() => projectBudgetItem.id, { onDelete: "restrict" }),
   requestedById: uuid("requested_by_id").notNull().references(() => user.id, { onDelete: "restrict" }),
   receiptGroupId: uuid("receipt_group_id"),
+  quantity: numeric("quantity", { precision: 12, scale: 2 }).default("1.00").notNull(),
+  unitPrice: numeric("unit_price", { precision: 15, scale: 2 }).default("0.00").notNull(),
   amount: numeric("amount", { precision: 15, scale: 2 }).notNull(),
   description: text("description").notNull(),
   receiptImageUrl: text("receipt_image_url"),

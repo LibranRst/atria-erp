@@ -40,6 +40,8 @@ interface ExpenseFormProps {
 
 interface ExpenseLine {
   projectBudgetItemId: string;
+  quantity: number | "";
+  unitPrice: number | "";
   amount: number | "";
   description: string;
 }
@@ -73,7 +75,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   
   // State Baris Pengeluaran Multi-Item
   const [lines, setLines] = useState<ExpenseLine[]>([
-    { projectBudgetItemId: "", amount: "", description: "" }
+    { projectBudgetItemId: "", quantity: 1, unitPrice: "", amount: "", description: "" }
   ]);
 
   // Status flags
@@ -124,7 +126,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   });
 
   const addLine = () => {
-    setLines([...lines, { projectBudgetItemId: "", amount: "", description: "" }]);
+    setLines([...lines, { projectBudgetItemId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
   };
 
   const removeLine = (index: number) => {
@@ -136,7 +138,16 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
 
   const updateLine = (index: number, field: keyof ExpenseLine, value: any) => {
     const newLines = [...lines];
-    newLines[index] = { ...newLines[index], [field]: value };
+    const updatedLine = { ...newLines[index], [field]: value };
+
+    // Auto-calculate amount when quantity or unitPrice changes
+    if (field === "quantity" || field === "unitPrice") {
+      const q = updatedLine.quantity === "" ? 0 : Number(updatedLine.quantity);
+      const p = updatedLine.unitPrice === "" ? 0 : Number(updatedLine.unitPrice);
+      updatedLine.amount = q * p;
+    }
+
+    newLines[index] = updatedLine;
     setLines(newLines);
   };
 
@@ -208,8 +219,10 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
         
         return {
           projectBudgetItemId: matchingBi ? matchingBi.id : "",
-          amount: (it.totalPrice || (it.unitPrice * it.quantity) || "") as number | "",
-          description: `[OCR] ${it.itemName} (${it.quantity}x @Rp ${Number(it.unitPrice).toLocaleString("id-ID")})`,
+          quantity: it.quantity || 1,
+          unitPrice: it.unitPrice || "",
+          amount: it.totalPrice || (it.unitPrice * it.quantity) || "",
+          description: `[OCR] ${it.itemName}`,
         };
       });
 
@@ -217,7 +230,9 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
       if (mappedLines.length === 0) {
         mappedLines.push({
           projectBudgetItemId: "",
-          amount: (parsedData.totalAmount || "") as number | "",
+          quantity: 1,
+          unitPrice: parsedData.totalAmount || "",
+          amount: parsedData.totalAmount || "",
           description: `[OCR] Pembelian di ${parsedData.vendorName}`,
         });
       }
@@ -269,6 +284,8 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
         receiptImageUrl: receiptImageUrl || "",
         items: lines.map(line => ({
           projectBudgetItemId: line.projectBudgetItemId,
+          quantity: Number(line.quantity),
+          unitPrice: Number(line.unitPrice),
           amount: Number(line.amount),
           description: line.description,
         })),
@@ -281,7 +298,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
       setSuccess(true);
       // Reset form
       setSelectedProjectId("");
-      setLines([{ projectBudgetItemId: "", amount: "", description: "" }]);
+      setLines([{ projectBudgetItemId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
       setReceiptImageUrl(null);
       
       // Delay closing to show success state
@@ -376,7 +393,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                   value={selectedProjectId}
                   onChange={(e) => {
                     setSelectedProjectId(e.target.value);
-                    setLines([{ projectBudgetItemId: "", amount: "", description: "" }]);
+                    setLines([{ projectBudgetItemId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
                     setOcrWarning(null);
                   }}
                   disabled={isUploading || isProcessingOCR || isSubmitting}
@@ -558,37 +575,75 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                       </div>
                     </div>
 
-                    {/* Nominal & Deskripsi */}
-                    <div className="grid grid-cols-1 gap-md">
-                      <div className="space-y-sm">
-                        <label htmlFor={`amount-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
-                          Nominal (Rupiah)
+                    {/* Kuantitas, Harga Satuan, Total Nominal */}
+                    <div className="grid grid-cols-12 gap-sm items-end">
+                      {/* Kuantitas */}
+                      <div className="col-span-4 space-y-sm">
+                        <label htmlFor={`qty-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
+                          Qty
+                        </label>
+                        <div className="relative flex items-center">
+                          <input
+                            id={`qty-input-${index}`}
+                            type="number"
+                            step="any"
+                            value={line.quantity}
+                            onChange={(e) => updateLine(index, "quantity", e.target.value !== "" ? Number(e.target.value) : "")}
+                            disabled={isUploading || isSubmitting || isProcessingOCR}
+                            placeholder="1"
+                            className="w-full h-[48px] bg-surface-container-low rounded-xl pl-md pr-10 font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all"
+                          />
+                          {/* Unit label if budget item selected */}
+                          {(() => {
+                            const bi = budgetItems.find(item => item.id === line.projectBudgetItemId);
+                            return bi?.unit ? (
+                              <span className="absolute right-3 text-[10px] font-bold text-on-surface-variant/70 uppercase">
+                                {bi.unit}
+                              </span>
+                            ) : null;
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Harga Satuan */}
+                      <div className="col-span-8 space-y-sm">
+                        <label htmlFor={`unit-price-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
+                          Harga Satuan (Rp)
                         </label>
                         <input
-                          id={`amount-input-${index}`}
+                          id={`unit-price-input-${index}`}
                           type="number"
-                          value={line.amount}
-                          onChange={(e) => updateLine(index, "amount", e.target.value !== "" ? Number(e.target.value) : "")}
+                          value={line.unitPrice}
+                          onChange={(e) => updateLine(index, "unitPrice", e.target.value !== "" ? Number(e.target.value) : "")}
                           disabled={isUploading || isSubmitting || isProcessingOCR}
-                          placeholder="Contoh: 150000"
+                          placeholder="Harga per unit..."
                           className="w-full h-[48px] bg-surface-container-low rounded-xl px-md font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all"
                         />
                       </div>
+                    </div>
 
-                      <div className="space-y-sm">
-                        <label htmlFor={`desc-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
-                          Keterangan Barang/Jasa
-                        </label>
-                        <textarea
-                          id={`desc-input-${index}`}
-                          value={line.description}
-                          onChange={(e) => updateLine(index, "description", e.target.value)}
-                          disabled={isUploading || isSubmitting || isProcessingOCR}
-                          rows={2}
-                          placeholder="Sebutkan rincian barang belanja..."
-                          className="w-full bg-surface-container-low rounded-xl p-md font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all resize-none"
-                        />
-                      </div>
+                    {/* Total Nominal (Auto-computed) */}
+                    <div className="space-y-sm bg-surface-container-low/20 rounded-xl p-3 border border-outline-variant/10 flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-on-surface-variant uppercase">Subtotal</span>
+                      <span className="font-numeral-md text-xs font-bold text-primary">
+                        Rp {(Number(line.amount) || 0).toLocaleString("id-ID")}
+                      </span>
+                    </div>
+
+                    {/* Deskripsi */}
+                    <div className="space-y-sm">
+                      <label htmlFor={`desc-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
+                        Keterangan Barang/Jasa
+                      </label>
+                      <textarea
+                        id={`desc-input-${index}`}
+                        value={line.description}
+                        onChange={(e) => updateLine(index, "description", e.target.value)}
+                        disabled={isUploading || isSubmitting || isProcessingOCR}
+                        rows={2}
+                        placeholder="Sebutkan rincian barang belanja..."
+                        className="w-full bg-surface-container-low rounded-xl p-md font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all resize-none"
+                      />
                     </div>
                   </div>
                 ))}

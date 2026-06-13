@@ -33,6 +33,8 @@ export type PayVendorBillInput = z.infer<typeof payVendorBillSchema>;
 export const submitFieldRequestSchema = z.object({
   projectId: z.string().regex(uuidRegex, "ID Proyek tidak valid."),
   projectBudgetItemId: z.string().regex(uuidRegex, "ID Kategori Anggaran tidak valid."),
+  quantity: z.number().positive("Kuantitas harus lebih besar dari 0."),
+  unitPrice: z.number().nonnegative("Harga satuan tidak boleh negatif."),
   amount: z.number().positive("Nominal pengeluaran harus lebih besar dari 0."),
   description: z.string().min(5, "Deskripsi pengeluaran minimal 5 karakter.").max(500),
   receiptImageUrl: z.string().url("Format URL nota tidak valid.").or(z.string().length(0)).optional().nullable(),
@@ -46,6 +48,8 @@ export const submitFieldRequestsSchema = z.object({
   items: z.array(
     z.object({
       projectBudgetItemId: z.string().regex(uuidRegex, "ID Kategori Anggaran tidak valid."),
+      quantity: z.number().positive("Kuantitas harus lebih besar dari 0."),
+      unitPrice: z.number().nonnegative("Harga satuan tidak boleh negatif."),
       amount: z.number().positive("Nominal pengeluaran harus lebih besar dari 0."),
       description: z.string().min(5, "Deskripsi pengeluaran minimal 5 karakter.").max(500),
     })
