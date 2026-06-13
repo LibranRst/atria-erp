@@ -44,6 +44,28 @@ interface ExpenseLine {
   description: string;
 }
 
+function findMatchingBudgetItem(itemName: string, budgetItems: ProjectBudgetItem[]): ProjectBudgetItem | undefined {
+  const normalizedItemName = itemName.toLowerCase().trim();
+  if (!normalizedItemName) return undefined;
+
+  // 1. Coba pencarian persis (exact match atau substring)
+  let match = budgetItems.find((bi) => {
+    const biName = bi.name.toLowerCase().trim();
+    return biName.includes(normalizedItemName) || normalizedItemName.includes(biName);
+  });
+
+  // 2. Coba pencarian berbasis token kata (word token matching)
+  if (!match) {
+    const words = normalizedItemName.split(/\s+/).filter((w) => w.length > 2);
+    for (const word of words) {
+      match = budgetItems.find((bi) => bi.name.toLowerCase().includes(word));
+      if (match) break;
+    }
+  }
+
+  return match;
+}
+
 export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   const router = useRouter();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -59,6 +81,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   const [isProcessingOCR, setIsProcessingOCR] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [ocrWarning, setOcrWarning] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
   // Animation open state
@@ -172,22 +195,49 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
         return;
       }
 
-      // 4. Isi otomatis baris pertama formulir dari hasil AI OCR
+      // 4. Isi otomatis baris formulir dari hasil AI OCR secara cerdas
       const parsedData = ocrRes.data;
+      const ocrItems = parsedData.items || [];
       
-      const itemsText = parsedData.items
-        ?.map((it) => `${it.itemName} (${it.quantity}x @Rp ${Number(it.unitPrice).toLocaleString("id-ID")})`)
-        .join(", ");
-      
-      const generatedDesc = `[OCR] Pembelian di ${parsedData.vendorName}. Rincian: ${itemsText || ""}`.substring(0, 500);
-
-      setLines([
-        {
-          projectBudgetItemId: "",
-          amount: parsedData.totalAmount || "",
-          description: generatedDesc,
+      let unmatchedCount = 0;
+      const mappedLines: ExpenseLine[] = ocrItems.map((it) => {
+        const matchingBi = findMatchingBudgetItem(it.itemName, budgetItems);
+        if (!matchingBi) {
+          unmatchedCount++;
         }
-      ]);
+        
+        return {
+          projectBudgetItemId: matchingBi ? matchingBi.id : "",
+          amount: (it.totalPrice || (it.unitPrice * it.quantity) || "") as number | "",
+          description: `[OCR] ${it.itemName} (${it.quantity}x @Rp ${Number(it.unitPrice).toLocaleString("id-ID")})`,
+        };
+      });
+
+      // Jika tidak ada item yang ter-parse, buat satu baris default
+      if (mappedLines.length === 0) {
+        mappedLines.push({
+          projectBudgetItemId: "",
+          amount: (parsedData.totalAmount || "") as number | "",
+          description: `[OCR] Pembelian di ${parsedData.vendorName}`,
+        });
+      }
+
+      setLines(mappedLines);
+
+      // Warning state untuk item tidak cocok
+      if (unmatchedCount > 0) {
+        if (unmatchedCount === ocrItems.length) {
+          setOcrWarning(
+            `Semua item nota (${ocrItems.length} item) tidak cocok dengan item anggaran proyek. Silakan pilih item anggaran secara manual.`
+          );
+        } else {
+          setOcrWarning(
+            `Terdeteksi ${unmatchedCount} dari ${ocrItems.length} item nota yang tidak cocok dengan anggaran proyek. Silakan pilih item anggaran secara manual.`
+          );
+        }
+      } else {
+        setOcrWarning(null);
+      }
 
     } catch (err: unknown) {
       console.error("ImageKit/Gemini OCR Upload Error:", err);
@@ -303,6 +353,20 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
               </div>
             )}
 
+            {ocrWarning && (
+              <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-800 font-medium">
+                <span className="material-symbols-outlined text-amber-600 text-[18px]">warning</span>
+                <div className="leading-relaxed flex-1">{ocrWarning}</div>
+                <button 
+                  type="button" 
+                  onClick={() => setOcrWarning(null)} 
+                  className="text-amber-800 hover:opacity-75 cursor-pointer ml-auto flex items-center justify-center"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              </div>
+            )}
+
             {/* Project Selector */}
             <div className="relative space-y-sm">
               <label htmlFor="project-select" className="font-label-caps text-label-caps text-on-surface-variant uppercase block ml-1">Project</label>
@@ -313,6 +377,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                   onChange={(e) => {
                     setSelectedProjectId(e.target.value);
                     setLines([{ projectBudgetItemId: "", amount: "", description: "" }]);
+                    setOcrWarning(null);
                   }}
                   disabled={isUploading || isProcessingOCR || isSubmitting}
                   className="appearance-none w-full h-[56px] bg-surface-container-low rounded-xl px-md font-body-md text-on-surface border-none focus:ring-2 focus:ring-primary transition-all cursor-pointer"
@@ -348,37 +413,57 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                   </button>
                 </div>
               ) : (
-                <div className="flex gap-md">
-                  {/* Kamera */}
-                  <label className="flex-1 h-28 rounded-xl border-2 border-dashed border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-center gap-1 active-scale transition-colors hover:bg-surface-container-low group cursor-pointer">
-                    <div className="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary transition-transform group-hover:scale-110">
-                      <span className="material-symbols-outlined">photo_camera</span>
-                    </div>
-                    <span className="font-body-md text-primary font-semibold text-xs">Ambil Foto</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleFileUpload}
-                      disabled={isUploading || isProcessingOCR || isSubmitting}
-                      className="hidden"
-                    />
-                  </label>
+                <div className="space-y-xs">
+                  <div className="flex gap-md">
+                    {/* Kamera */}
+                    <label 
+                      className={`flex-1 h-28 rounded-xl border-2 border-dashed border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-center gap-1 transition-all group ${
+                        !selectedProjectId 
+                          ? "opacity-40 cursor-not-allowed" 
+                          : "active-scale hover:bg-surface-container-low cursor-pointer"
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary transition-transform ${!selectedProjectId ? "" : "group-hover:scale-110"}`}>
+                        <span className="material-symbols-outlined">photo_camera</span>
+                      </div>
+                      <span className="font-body-md text-primary font-semibold text-xs">Ambil Foto</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleFileUpload}
+                        disabled={!selectedProjectId || isUploading || isProcessingOCR || isSubmitting}
+                        className="hidden"
+                      />
+                    </label>
 
-                  {/* Unggah File */}
-                  <label className="flex-1 h-28 rounded-xl border-2 border-dashed border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-center gap-1 active-scale transition-colors hover:bg-surface-container-low group cursor-pointer">
-                    <div className="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary transition-transform group-hover:scale-110">
-                      <span className="material-symbols-outlined">upload</span>
-                    </div>
-                    <span className="font-body-md text-primary font-semibold text-xs">Pilih Gambar</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      disabled={isUploading || isProcessingOCR || isSubmitting}
-                      className="hidden"
-                    />
-                  </label>
+                    {/* Unggah File */}
+                    <label 
+                      className={`flex-1 h-28 rounded-xl border-2 border-dashed border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-center gap-1 transition-all group ${
+                        !selectedProjectId 
+                          ? "opacity-40 cursor-not-allowed" 
+                          : "active-scale hover:bg-surface-container-low cursor-pointer"
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary transition-transform ${!selectedProjectId ? "" : "group-hover:scale-110"}`}>
+                        <span className="material-symbols-outlined">upload</span>
+                      </div>
+                      <span className="font-body-md text-primary font-semibold text-xs">Pilih Gambar</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        disabled={!selectedProjectId || isUploading || isProcessingOCR || isSubmitting}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {!selectedProjectId && (
+                    <p className="text-[11px] text-on-surface-variant/70 italic ml-1">
+                      * Silakan pilih proyek terlebih dahulu untuk mengaktifkan unggah/kamera nota.
+                    </p>
+                  )}
                 </div>
               )}
 
