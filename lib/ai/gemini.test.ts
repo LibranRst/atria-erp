@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { aiRun, user, bankAccount, clientInvoice, vendorBill } from "@/db/schema";
+import { aiRun } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { ai } from "@/lib/ai/gemini";
@@ -71,6 +71,89 @@ const PM_BUDI_USER = {
   name: "Budi Santoso",
 };
 
+type GeminiMockArgs = {
+  model: string;
+  contents: unknown;
+};
+
+async function mockGenerateContent(args: unknown): Promise<{
+  text: string;
+  usageMetadata: {
+    totalTokenCount: number;
+  };
+}> {
+  const { model, contents } = args as GeminiMockArgs;
+  if (model === "gemini-3-flash-preview") {
+    const isOCR = Array.isArray(contents) && contents.some((contentPart: unknown) => {
+      return (
+        typeof contentPart === "object" &&
+        contentPart !== null &&
+        "inlineData" in contentPart
+      );
+    });
+    if (isOCR) {
+      return {
+        text: JSON.stringify({
+          vendorName: "TB Sinar Maju",
+          transactionDate: "2026-06-10T00:00:00.000Z",
+          subtotal: 750000.00,
+          tax: 0.00,
+          totalAmount: 750000.00,
+          items: [
+            {
+              itemName: "Semen Tiga Roda 50kg",
+              quantity: 10,
+              unitPrice: 72000.00,
+              totalPrice: 720000.00,
+            },
+            {
+              itemName: "Paku Kayu 3 Inch",
+              quantity: 2,
+              unitPrice: 15000.00,
+              totalPrice: 30000.00,
+            },
+          ],
+        }),
+        usageMetadata: {
+          totalTokenCount: 150,
+        },
+      };
+    }
+
+    return {
+      text: JSON.stringify({
+        briefingDate: "2026-06-11",
+        summary: "Laporan CFO harian: Likuiditas kas aman terkendali dengan total kas di bank...",
+        metrics: {
+          cashBalance: 1250000000.00,
+          receivablesOverdue: 150000000.00,
+          payablesDueSevenDays: 45000000.00,
+        },
+        alerts: [
+          {
+            projectId: "77777777-7777-7777-7777-777777777771",
+            projectName: "Apartemen Sudirman Suite",
+            severity: "WARNING",
+            message: "Penggunaan budget material mencapai 92%.",
+          },
+        ],
+        pendingActions: [
+          {
+            actionType: "APPROVE_COST_CLAIM",
+            referenceId: "88888888-8888-8888-8888-888888888881",
+            description: "Reimbursement PM Lapangan Rp 6.200.000",
+          },
+        ],
+      }),
+      usageMetadata: {
+        totalTokenCount: 350,
+      },
+    };
+  }
+
+  throw new Error(`Model ${model} tidak dikenali dalam test mock.`);
+}
+
 describe("Atria ERP AI Layer Integration - TSK-009", () => {
   beforeAll(() => {
     // Mock global fetch
@@ -88,74 +171,7 @@ describe("Atria ERP AI Layer Integration - TSK-009", () => {
     }) as unknown as typeof fetch;
 
     // Mock Gemini API generateContent
-    (ai.models as unknown as { generateContent: unknown }).generateContent = async (args: unknown) => {
-      const model = (args as { model: string }).model;
-      if (model === "gemini-3-flash-preview") {
-        const contents = (args as { contents: any }).contents;
-        const isOCR = Array.isArray(contents) && contents.some((c: any) => typeof c === 'object' && c.inlineData);
-        if (isOCR) {
-          // Mock OCR output
-          return {
-            text: JSON.stringify({
-              vendorName: "TB Sinar Maju",
-              transactionDate: "2026-06-10T00:00:00.000Z",
-              subtotal: 750000.00,
-              tax: 0.00,
-              totalAmount: 750000.00,
-              items: [
-                {
-                  itemName: "Semen Tiga Roda 50kg",
-                  quantity: 10,
-                  unitPrice: 72000.00,
-                  totalPrice: 720000.00,
-                },
-                {
-                  itemName: "Paku Kayu 3 Inch",
-                  quantity: 2,
-                  unitPrice: 15000.00,
-                  totalPrice: 30000.00,
-                },
-              ],
-            }),
-            usageMetadata: {
-              totalTokenCount: 150,
-            },
-          };
-        } else {
-          // Mock CFO briefing output
-          return {
-            text: JSON.stringify({
-              briefingDate: "2026-06-11",
-              summary: "Laporan CFO harian: Likuiditas kas aman terkendali dengan total kas di bank...",
-              metrics: {
-                cashBalance: 1250000000.00,
-                receivablesOverdue: 150000000.00,
-                payablesDueSevenDays: 45000000.00,
-              },
-              alerts: [
-                {
-                  projectId: "77777777-7777-7777-7777-777777777771",
-                  projectName: "Apartemen Sudirman Suite",
-                  severity: "WARNING",
-                  message: "Penggunaan budget material mencapai 92%.",
-                },
-              ],
-              pendingActions: [
-                {
-                  actionType: "APPROVE_COST_CLAIM",
-                  referenceId: "88888888-8888-8888-8888-888888888881",
-                  description: "Reimbursement PM Lapangan Rp 6.200.000",
-                },
-              ],
-            }),
-            usageMetadata: {
-              totalTokenCount: 350,
-            },
-          };
-        }
-      }
-      throw new Error(`Model ${model} tidak dikenali dalam test mock.`);
-    };
+    (ai.models as unknown as { generateContent: unknown }).generateContent = mockGenerateContent;
   });
 
   afterAll(() => {
@@ -199,6 +215,42 @@ describe("Atria ERP AI Layer Integration - TSK-009", () => {
       expect(res.success).toBe(false);
       if (!res.success) {
         expect(res.error.code).toBe("UNAUTHORIZED");
+      }
+    });
+
+    it("harus menolak hasil OCR yang tidak sesuai schema Zod dan menyimpan status FAILED", async () => {
+      mockUserSession(PM_BUDI_USER);
+
+      (ai.models as unknown as { generateContent: unknown }).generateContent = async () => {
+        return {
+          text: JSON.stringify({
+            vendorName: "",
+            transactionDate: "bukan-tanggal-iso",
+            totalAmount: -1,
+            items: [],
+          }),
+          usageMetadata: {
+            totalTokenCount: 42,
+          },
+        };
+      };
+
+      try {
+        const res = await processReceipt("https://example.com/receipt.jpg");
+        expect(res.success).toBe(false);
+        if (!res.success) {
+          expect(res.error.code).toBe("VALIDATION_ERROR");
+        }
+
+        const runLog = await db.query.aiRun.findFirst({
+          where: eq(aiRun.runType, "OCR_RECEIPT"),
+          orderBy: (run, { desc }) => [desc(run.createdAt)],
+        });
+
+        expect(runLog).toBeDefined();
+        expect(runLog!.status).toBe("FAILED");
+      } finally {
+        (ai.models as unknown as { generateContent: unknown }).generateContent = mockGenerateContent;
       }
     });
   });

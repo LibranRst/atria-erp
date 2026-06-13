@@ -101,6 +101,8 @@ describe("Atria ERP CFO Dashboard & Owner Approvals - TSK-012", () => {
 
       if (!cost) return;
 
+      await db.update(projectCost).set({ status: "VERIFIED" }).where(eq(projectCost.id, cost.id));
+
       // 1. Owner menyetujui pengajuan
       mockUserSession(OWNER_USER);
       const resApprove = await approveFieldRequest({

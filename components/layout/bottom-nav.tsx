@@ -14,6 +14,10 @@ type NavItem = {
   readonly match: (pathname: string, searchParams: URLSearchParams) => boolean;
 };
 
+type SessionUserWithRole = {
+  readonly roleId?: string;
+};
+
 export function BottomNav(): React.JSX.Element | null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -21,7 +25,7 @@ export function BottomNav(): React.JSX.Element | null {
 
   if (pathname === "/login") return null;
 
-  const roleId = session?.user ? (session.user as any).roleId : null;
+  const roleId = session?.user ? (session.user as SessionUserWithRole).roleId : null;
   const roleName = roleId ? ROLE_ID_TO_NAME[roleId] : null;
 
   const navItems: readonly NavItem[] = [
@@ -29,7 +33,8 @@ export function BottomNav(): React.JSX.Element | null {
       label: "Today",
       href: "/ledger",
       iconName: "today",
-      match: (path, params): boolean => path === "/ledger" && params.get("brief") !== "true",
+      match: (path, params): boolean =>
+        path === "/ledger" && params.get("brief") !== "true",
     },
     {
       label: "Projects",
@@ -53,7 +58,8 @@ export function BottomNav(): React.JSX.Element | null {
       label: "AI Brief",
       href: "/ledger?brief=true",
       iconName: "auto_awesome",
-      match: (path, params): boolean => path === "/ledger" && params.get("brief") === "true",
+      match: (path, params): boolean =>
+        path === "/ledger" && params.get("brief") === "true",
     },
   ];
 
@@ -104,13 +110,15 @@ export function BottomNav(): React.JSX.Element | null {
                   : "text-on-surface-variant hover:bg-surface-container-low"
               }`}
             >
-              <span 
+              <span
                 className="material-symbols-outlined text-[24px]"
-                style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
+                style={{
+                  fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0",
+                }}
               >
                 {item.iconName}
               </span>
-              <span className="font-label-caps uppercase tracking-wider text-[8px]">
+              <span className="font-label-caps uppercase tracking-wider text-[5px]">
                 {item.label}
               </span>
             </Link>

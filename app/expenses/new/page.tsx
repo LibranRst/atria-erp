@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { project, projectBudget } from "@/db/schema";
+import { project } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";

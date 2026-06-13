@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { bankAccount, cashTransaction, clientInvoice, vendorBill, aiRun, project, approval } from "@/db/schema";
+import { cashTransaction, aiRun, project, approval } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";

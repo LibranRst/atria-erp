@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { ActionResponse } from "@/lib/types/action-response";
 import { payVendorBillSchema, PayVendorBillInput } from "@/lib/validations/finance";
+import { getErrorMessage } from "@/lib/utils/error-message";
 
 export async function payVendorBill(
   input: PayVendorBillInput
@@ -227,8 +228,8 @@ export async function payVendorBill(
       success: true,
       data: result,
     };
-  } catch (error: any) {
-    const errMsg = error.message || "";
+  } catch (error: unknown) {
+    const errMsg = getErrorMessage(error, "");
     let code: "NOT_FOUND" | "INSUFFICIENT_FUNDS" | "FORBIDDEN" | "TRANSACTION_FAILED" = "TRANSACTION_FAILED";
     let displayMessage = errMsg;
 

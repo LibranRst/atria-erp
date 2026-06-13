@@ -37,6 +37,8 @@ export default function RootLayout({
       className={`${manrope.variable} ${hanken.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <head>
+        {/* Material Symbols is the current icon font for the mobile shell. */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
           rel="stylesheet"

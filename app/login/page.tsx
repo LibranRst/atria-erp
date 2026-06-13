@@ -23,7 +23,7 @@ export default function LoginPage(): React.JSX.Element {
     setError(null);
 
     try {
-      const { data, error: authError } = await authClient.signIn.email({
+      const { error: authError } = await authClient.signIn.email({
         email,
         password,
       });
@@ -35,7 +35,7 @@ export default function LoginPage(): React.JSX.Element {
         router.push("/");
         router.refresh();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login unexpected error:", err);
       setError("Terjadi kesalahan internal. Silakan coba lagi.");
       setIsLoading(false);

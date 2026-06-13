@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { project, bankAccount } from "@/db/schema";
+import { project } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
@@ -8,10 +8,24 @@ import { Badge } from "@/components/ui/badge";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import React from "react";
-import { ProjectInvoices } from "@/components/project/project-invoices";
+import { ClientInvoiceItem, ProjectInvoices } from "@/components/project/project-invoices";
+import { BudgetManager } from "@/components/project/budget-manager";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+function toClientInvoiceStatus(status: string): ClientInvoiceItem["status"] {
+  switch (status) {
+    case "UNPAID":
+    case "PARTIALLY_PAID":
+    case "PAID":
+    case "OVERDUE":
+    case "VOID":
+      return status;
+    default:
+      throw new Error(`Status invoice klien tidak dikenal: ${status}`);
+  }
 }
 
 export default async function ProjectDetailPage({ params }: PageProps): Promise<React.JSX.Element> {
@@ -32,7 +46,7 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
   const roleName = await resolveRoleName(session.user.roleId);
   try {
     await assertProjectAccess(projectId, session.user.id, roleName);
-  } catch (err) {
+  } catch {
     redirect("/projects");
   }
 
@@ -65,6 +79,9 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
 
   // 4. Kueri daftar rekening bank
   const bankAccountsData = await db.query.bankAccount.findMany();
+
+  // 5. Kueri daftar kategori biaya (cost categories)
+  const costCategoriesData = await db.query.projectCostCategory.findMany();
 
   const budget = proj.budget;
   const budgetItems = budget?.items || [];
@@ -104,6 +121,14 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
   const projectedGrossProfit = contractValue - totalAllocated;
   const projectedGrossMargin = contractValue > 0 ? (projectedGrossProfit / contractValue) * 100 : 0;
   const realizedNetProfit = totalReceived - totalSpent;
+  const invoicesForClient: ClientInvoiceItem[] = proj.clientInvoices.map((invoice) => ({
+    ...invoice,
+    status: toClientInvoiceStatus(invoice.status),
+    payments: invoice.payments.map((payment) => ({
+      ...payment,
+      referenceNumber: payment.referenceNumber ?? "-",
+    })),
+  }));
 
   return (
     <section className="space-y-sm select-none">
@@ -244,88 +269,19 @@ export default async function ProjectDetailPage({ params }: PageProps): Promise<
         </div>
       </div>
 
-      {/* Rincian Item Anggaran Per Kategori */}
-      <div className="space-y-md px-1">
-        <h2 className="font-label-caps text-on-surface-variant">Rincian Anggaran (BoQ)</h2>
-
-        {Object.keys(itemsByCategory).length === 0 ? (
-          <div className="premium-card p-md flex flex-col items-center justify-center py-10 text-center border border-outline-variant/30">
-            <div className="h-10 w-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant mb-2">
-              <span className="material-symbols-outlined text-[24px]">description</span>
-            </div>
-            <p className="font-body-sm text-on-surface-variant">
-              Tidak ada item anggaran yang terdaftar pada RAB proyek ini.
-            </p>
-          </div>
-        ) : (
-          Object.keys(itemsByCategory).map((catName) => {
-            const items = itemsByCategory[catName];
-            return (
-              <div key={catName} className="space-y-sm">
-                <div className="flex items-center">
-                  <span className="font-label-caps text-[10px] text-primary bg-surface-container border border-outline-variant/20 px-2.5 py-1 rounded-full">
-                    Kategori: {catName}
-                  </span>
-                </div>
-
-                <div className="space-y-sm">
-                  {items.map((item) => {
-                    const allocated = Number(item.allocatedAmount);
-                    const spent = Number(item.actualSpent);
-                    const remaining = allocated - spent;
-                    const percent = allocated > 0 ? (spent / allocated) * 100 : 0;
-                    const isOverrun = spent > allocated;
-
-                    return (
-                      <div key={item.id} className="premium-card p-md border border-outline-variant/20 bg-surface/60 hover:bg-surface active:scale-[0.99] transition-all space-y-md">
-                        <div className="flex flex-col gap-sm">
-                          <div className="flex items-start justify-between gap-md">
-                            <div className="min-w-0 space-y-base">
-                              <h3 className="font-body-sm font-bold text-on-surface truncate max-w-[200px]">{item.name}</h3>
-                              <p className="font-label-caps text-[9px] text-on-surface-variant font-bold tracking-tight">
-                                Plafon: Rp {allocated.toLocaleString("id-ID")}
-                              </p>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <div className={`font-numeral-md font-bold financial-amount ${isOverrun ? "text-error" : "text-primary"}`}>
-                                {isOverrun ? "-" : ""}Rp {Math.abs(remaining).toLocaleString("id-ID")}
-                              </div>
-                              <span className="font-label-caps text-[8px] text-on-surface-variant block">
-                                {isOverrun ? "Overrun" : "Sisa Plafon"}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Progress Bar Item Anggaran */}
-                          <div className="space-y-xs">
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container border border-outline-variant/10">
-                              <div
-                                className={`h-full rounded-full transition-all duration-300 ${
-                                  isOverrun ? "bg-error" : percent >= 90 ? "bg-secondary" : "bg-primary"
-                                }`}
-                                style={{ width: `${Math.min(percent, 100)}%` }}
-                              />
-                            </div>
-                            <div className="flex items-center justify-between text-[10px] text-on-surface-variant">
-                              <span>Realisasi: Rp {spent.toLocaleString("id-ID")}</span>
-                              <span>{percent.toFixed(1)}% terpakai</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+      {/* Rincian Item Anggaran Per Kategori (Interaktif via BudgetManager) */}
+      <BudgetManager
+        projectId={projectId}
+        budget={budget}
+        costCategories={costCategoriesData}
+        userRole={roleName || "UNKNOWN"}
+        userId={session.user.id}
+      />
 
       {/* Card Invoices & Pembayaran Klien */}
       <ProjectInvoices 
-        invoices={proj.clientInvoices as any} 
-        bankAccounts={bankAccountsData as any} 
+        invoices={invoicesForClient} 
+        bankAccounts={bankAccountsData} 
         userRole={roleName || "UNKNOWN"} 
       />
     </section>

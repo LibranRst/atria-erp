@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { ActionResponse } from "@/lib/types/action-response";
 import { schedulePaymentSchema, SchedulePaymentInput } from "@/lib/validations/finance";
+import { getErrorMessage } from "@/lib/utils/error-message";
 import crypto from "crypto";
 
 export async function scheduleVendorBillPayment(
@@ -125,19 +126,20 @@ export async function scheduleVendorBillPayment(
       success: true,
       data: paymentResult,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = getErrorMessage(error, "Gagal menjadwalkan pembayaran vendor.");
     let errorCode: "NOT_FOUND" | "FORBIDDEN" | "TRANSACTION_FAILED" | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
-    let displayMessage = error.message;
+    let displayMessage = errMsg;
 
-    if (error.message === "VENDOR_BILL_NOT_FOUND" || error.message === "BUDGET_ITEM_NOT_FOUND" || error.message === "OWNER_USER_NOT_FOUND") {
+    if (errMsg === "VENDOR_BILL_NOT_FOUND" || errMsg === "BUDGET_ITEM_NOT_FOUND" || errMsg === "OWNER_USER_NOT_FOUND") {
       errorCode = "NOT_FOUND";
       displayMessage = "Data pendukung transaksi tidak ditemukan.";
-    } else if (error.message === "VENDOR_BILL_CLOSED") {
+    } else if (errMsg === "VENDOR_BILL_CLOSED") {
       errorCode = "FORBIDDEN";
       displayMessage = "Tagihan vendor sudah lunas atau dibatalkan.";
     } else {
       errorCode = "TRANSACTION_FAILED";
-      displayMessage = error.message || "Gagal menjadwalkan pembayaran vendor.";
+      displayMessage = errMsg;
     }
 
     return {

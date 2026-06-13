@@ -1,4 +1,3 @@
-import { db } from "@/db";
 import { auth } from "@/lib/auth";
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
 import { describe, it, expect, afterAll, mock } from "bun:test";

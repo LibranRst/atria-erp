@@ -1,17 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
 import { processReceipt } from "@/app/actions/ai/process-receipt";
-import { submitFieldRequest } from "@/app/actions/finance/field-requests";
+import { submitFieldRequests } from "@/app/actions/finance/field-requests";
+import { getErrorMessage } from "@/lib/utils/error-message";
 
 interface ProjectBudgetItem {
   id: string;
   name: string;
+  budgetCategory: string;
+  quantity: string;
+  unit: string;
+  unitPrice: string;
   allocatedAmount: string;
   actualSpent: string;
+  costCategory?: {
+    id: string;
+    name: string;
+    description: string | null;
+  } | null;
 }
 
 interface Project {
@@ -28,13 +38,21 @@ interface ExpenseFormProps {
   projects: Project[];
 }
 
+interface ExpenseLine {
+  projectBudgetItemId: string;
+  amount: number | "";
+  description: string;
+}
+
 export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   const router = useRouter();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [selectedBudgetItemId, setSelectedBudgetItemId] = useState<string>("");
-  const [amount, setAmount] = useState<number | "">("");
-  const [description, setDescription] = useState<string>("");
   const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
+  
+  // State Baris Pengeluaran Multi-Item
+  const [lines, setLines] = useState<ExpenseLine[]>([
+    { projectBudgetItemId: "", amount: "", description: "" }
+  ]);
 
   // Status flags
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -43,11 +61,57 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
+  // Animation open state
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Trigger slide up animation shortly after mounting
+    const timer = setTimeout(() => setIsOpen(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setTimeout(() => {
+      router.back();
+    }, 250);
+  };
+
   // Dapatkan daftar item anggaran berdasarkan proyek terpilih yang anggarannya sudah disetujui (APPROVED)
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const budgetItems = selectedProject?.budget?.status === "APPROVED"
     ? selectedProject?.budget?.items || []
     : [];
+
+  // Group budget items by budgetCategory
+  const itemsByCategory: Record<string, ProjectBudgetItem[]> = {};
+  budgetItems.forEach((item) => {
+    const catName = item.budgetCategory || "Umum";
+    if (!itemsByCategory[catName]) {
+      itemsByCategory[catName] = [];
+    }
+    itemsByCategory[catName].push(item);
+  });
+
+  const addLine = () => {
+    setLines([...lines, { projectBudgetItemId: "", amount: "", description: "" }]);
+  };
+
+  const removeLine = (index: number) => {
+    if (lines.length === 1) return;
+    const newLines = [...lines];
+    newLines.splice(index, 1);
+    setLines(newLines);
+  };
+
+  const updateLine = (index: number, field: keyof ExpenseLine, value: any) => {
+    const newLines = [...lines];
+    newLines[index] = { ...newLines[index], [field]: value };
+    setLines(newLines);
+  };
+
+  // Hitung total nominal gabungan
+  const totalAmount = lines.reduce((sum, line) => sum + (Number(line.amount) || 0), 0);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,20 +165,26 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
         return;
       }
 
-      // 4. Isi otomatis formulir dari hasil AI OCR
+      // 4. Isi otomatis baris pertama formulir dari hasil AI OCR
       const parsedData = ocrRes.data;
-      setAmount(parsedData.totalAmount);
-
+      
       const itemsText = parsedData.items
         ?.map((it) => `${it.itemName} (${it.quantity}x @Rp ${Number(it.unitPrice).toLocaleString("id-ID")})`)
         .join(", ");
       
       const generatedDesc = `[OCR] Pembelian di ${parsedData.vendorName}. Rincian: ${itemsText || ""}`.substring(0, 500);
-      setDescription(generatedDesc);
 
-    } catch (err: any) {
+      setLines([
+        {
+          projectBudgetItemId: "",
+          amount: parsedData.totalAmount || "",
+          description: generatedDesc,
+        }
+      ]);
+
+    } catch (err: unknown) {
       console.error("ImageKit/Gemini OCR Upload Error:", err);
-      setError(err.message || "Terjadi kesalahan saat mengunggah atau memproses berkas nota.");
+      setError(getErrorMessage(err, "Terjadi kesalahan saat mengunggah atau memproses berkas nota."));
       setIsUploading(false);
       setIsProcessingOCR(false);
     }
@@ -122,8 +192,13 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProjectId || !selectedBudgetItemId || amount === "" || !description) {
-      setError("Semua field wajib diisi lengkap.");
+    if (!selectedProjectId) {
+      setError("Proyek harus dipilih.");
+      return;
+    }
+
+    if (lines.some(line => !line.projectBudgetItemId || line.amount === "" || Number(line.amount) <= 0 || !line.description.trim())) {
+      setError("Semua baris item wajib diisi lengkap dengan nominal di atas 0.");
       return;
     }
 
@@ -132,12 +207,14 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
     setSuccess(false);
 
     try {
-      const res = await submitFieldRequest({
+      const res = await submitFieldRequests({
         projectId: selectedProjectId,
-        projectBudgetItemId: selectedBudgetItemId,
-        amount: Number(amount),
-        description,
         receiptImageUrl: receiptImageUrl || "",
+        items: lines.map(line => ({
+          projectBudgetItemId: line.projectBudgetItemId,
+          amount: Number(line.amount),
+          description: line.description,
+        })),
       });
 
       if (!res.success) {
@@ -147,237 +224,313 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
       setSuccess(true);
       // Reset form
       setSelectedProjectId("");
-      setSelectedBudgetItemId("");
-      setAmount("");
-      setDescription("");
+      setLines([{ projectBudgetItemId: "", amount: "", description: "" }]);
       setReceiptImageUrl(null);
       
-      // Redirect to list page
+      // Delay closing to show success state
       setTimeout(() => {
-        router.push("/expenses");
+        handleClose();
       }, 1000);
-    } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan internal sistem.");
-    } finally {
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Terjadi kesalahan internal sistem."));
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="premium-card p-md border border-outline-variant/30 space-y-md mx-auto w-full max-w-lg select-none">
-      {/* Title Header */}
-      <div className="pb-sm border-b border-outline-variant/10 space-y-xs">
-        <div className="flex items-center justify-between">
-          <h2 className="font-headline-md text-on-surface">Pengeluaran Lapangan</h2>
-          <Badge status={success ? "PAID" : isSubmitting ? "PENDING" : "DRAFT"}>
-            {success ? "SUKSES" : isSubmitting ? "KIRIM..." : "FORM PM"}
-          </Badge>
-        </div>
-        <p className="font-body-sm text-on-surface-variant leading-relaxed">
-          Catat biaya pengeluaran konstruksi lapangan atau klaim reimbursement secara instan menggunakan AI OCR.
-        </p>
-      </div>
+    <>
+      {/* Translucent Backdrop */}
+      <div 
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        onClick={handleClose}
+      />
 
-      <form onSubmit={handleSubmit} className="space-y-md">
-        {/* Notifikasi Status */}
-        {error && (
-          <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs text-error font-medium">
-            <span className="material-symbols-outlined text-error text-[18px]">error</span>
-            <div className="leading-relaxed">{error}</div>
-          </div>
-        )}
+      {/* iOS Slide-up Drawer Container */}
+      <div 
+        className={`fixed inset-x-0 bottom-0 top-0 sm:top-12 sm:max-w-md sm:mx-auto bg-background z-[100] flex flex-col rounded-t-[24px] shadow-2xl transition-transform duration-300 ease-out border border-outline-variant/30 ${isOpen ? "translate-y-0" : "translate-y-full"}`}
+      >
+        {/* Header */}
+        <header className="flex justify-between items-center px-margin-mobile h-16 shrink-0 z-10 border-b border-outline-variant/10">
+          <button 
+            type="button" 
+            onClick={handleClose} 
+            className="active-scale p-2 -ml-2 text-on-surface-variant flex items-center justify-center cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[28px]">close</span>
+          </button>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">Add Expense</h1>
+          <button 
+            type="button" 
+            onClick={() => router.push("/expenses")} 
+            className="active-scale p-2 -mr-2 text-primary font-bold font-label-caps uppercase tracking-wider text-xs cursor-pointer"
+          >
+            History
+          </button>
+        </header>
 
-        {success && (
-          <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-surface-container-low p-3.5 text-xs text-primary font-medium">
-            <span className="material-symbols-outlined text-primary text-[18px]">check_circle</span>
-            <div className="leading-relaxed">Pengajuan biaya lapangan berhasil disimpan dan dikirim untuk verifikasi Finance Admin.</div>
-          </div>
-        )}
+        {/* Content Area (Scrollable) */}
+        <div className="flex-1 overflow-y-auto no-scrollbar px-margin-mobile pb-32 space-y-lg">
+          {/* Amount Section */}
+          <section className="mt-8 flex flex-col items-center select-none">
+            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-[0.1em] mb-2">Total Amount</span>
+            <div className="flex items-baseline gap-1 group font-numeral-lg text-[40px] font-bold text-on-surface">
+              <span className="text-primary select-none text-[26px]">Rp</span>
+              <span>{totalAmount.toLocaleString("id-ID")}</span>
+            </div>
+          </section>
 
-        {/* Area Kamera & Unggah Nota (OCR) */}
-        <div className="space-y-xs">
-          <label className="font-label-caps text-[10px] text-on-surface-variant">
-            Bukti Nota Belanja / Kwitansi
-          </label>
-          <div className="flex flex-col gap-sm">
-            {receiptImageUrl ? (
-              <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container p-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={receiptImageUrl}
-                  alt="Receipt Preview"
-                  className="h-44 w-full rounded-lg object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setReceiptImageUrl(null)}
-                  className="absolute top-4 right-4 rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold text-white border border-white/20 backdrop-blur-md active:bg-black/90 cursor-pointer"
-                >
-                  Hapus
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-md">
-                {/* Kamera Trigger */}
-                <label className="flex flex-1 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-outline-variant/60 bg-surface-container-low py-7 text-center transition active:bg-surface-container min-h-[96px]">
-                  <span className="material-symbols-outlined text-secondary text-[24px]">photo_camera</span>
-                  <span className="text-xs font-semibold text-on-surface-variant">Ambil Foto</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleFileUpload}
-                    disabled={isUploading || isProcessingOCR || isSubmitting}
-                    className="hidden"
-                  />
-                </label>
-
-                {/* Upload Folder Trigger */}
-                <label className="flex flex-1 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-outline-variant/60 bg-surface-container-low py-7 text-center transition active:bg-surface-container min-h-[96px]">
-                  <span className="material-symbols-outlined text-secondary text-[24px]">upload</span>
-                  <span className="text-xs font-semibold text-on-surface-variant">Pilih Gambar</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    disabled={isUploading || isProcessingOCR || isSubmitting}
-                    className="hidden"
-                  />
-                </label>
+          {/* Form Fields */}
+          <form onSubmit={handleSubmit} className="space-y-lg pb-10">
+            {/* Notifikasi Status */}
+            {error && (
+              <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs text-error font-medium">
+                <span className="material-symbols-outlined text-error text-[18px]">error</span>
+                <div className="leading-relaxed">{error}</div>
               </div>
             )}
 
-            {/* Status Indicator Unggahan & OCR */}
-            {(isUploading || isProcessingOCR) && (
-              <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-surface-container-low p-3 text-xs font-medium text-on-surface animate-pulse">
-                <svg className="animate-spin h-4 w-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24">
+            {success && (
+              <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-surface-container-low p-3.5 text-xs text-primary font-medium">
+                <span className="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+                <div className="leading-relaxed">Pengajuan biaya lapangan berhasil disimpan dan dikirim untuk verifikasi Finance Admin.</div>
+              </div>
+            )}
+
+            {/* Project Selector */}
+            <div className="relative space-y-sm">
+              <label htmlFor="project-select" className="font-label-caps text-label-caps text-on-surface-variant uppercase block ml-1">Project</label>
+              <div className="relative">
+                <select
+                  id="project-select"
+                  value={selectedProjectId}
+                  onChange={(e) => {
+                    setSelectedProjectId(e.target.value);
+                    setLines([{ projectBudgetItemId: "", amount: "", description: "" }]);
+                  }}
+                  disabled={isUploading || isProcessingOCR || isSubmitting}
+                  className="appearance-none w-full h-[56px] bg-surface-container-low rounded-xl px-md font-body-md text-on-surface border-none focus:ring-2 focus:ring-primary transition-all cursor-pointer"
+                >
+                  <option value="">Select active project</option>
+                  {projects.map((proj) => (
+                    <option key={proj.id} value={proj.id}>
+                      {proj.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+              </div>
+            </div>
+
+            {/* Documentation Upload Area */}
+            <div className="space-y-sm">
+              <label className="font-label-caps text-label-caps text-on-surface-variant uppercase block ml-1">Documentation</label>
+              {receiptImageUrl ? (
+                <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container p-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={receiptImageUrl}
+                    alt="Receipt Preview"
+                    className="h-44 w-full rounded-lg object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setReceiptImageUrl(null)}
+                    className="absolute top-4 right-4 rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold text-white border border-white/20 backdrop-blur-md active:bg-black/90 cursor-pointer"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-md">
+                  {/* Kamera */}
+                  <label className="flex-1 h-28 rounded-xl border-2 border-dashed border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-center gap-1 active-scale transition-colors hover:bg-surface-container-low group cursor-pointer">
+                    <div className="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary transition-transform group-hover:scale-110">
+                      <span className="material-symbols-outlined">photo_camera</span>
+                    </div>
+                    <span className="font-body-md text-primary font-semibold text-xs">Ambil Foto</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileUpload}
+                      disabled={isUploading || isProcessingOCR || isSubmitting}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Unggah File */}
+                  <label className="flex-1 h-28 rounded-xl border-2 border-dashed border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-center gap-1 active-scale transition-colors hover:bg-surface-container-low group cursor-pointer">
+                    <div className="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary transition-transform group-hover:scale-110">
+                      <span className="material-symbols-outlined">upload</span>
+                    </div>
+                    <span className="font-body-md text-primary font-semibold text-xs">Pilih Gambar</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      disabled={isUploading || isProcessingOCR || isSubmitting}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              )}
+
+              {/* Status Indicator Unggahan & OCR */}
+              {(isUploading || isProcessingOCR) && (
+                <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-surface-container-low p-3 text-xs font-medium text-on-surface animate-pulse">
+                  <svg className="animate-spin h-4 w-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <div className="flex items-center gap-1">
+                    {isUploading ? (
+                      "Mengunggah gambar nota..."
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-primary text-[14px]">auto_awesome</span>
+                        Gemini AI sedang membaca nota belanja...
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Rincian Pengeluaran Barang (Multi-Item) */}
+            <div className="space-y-md border-t border-outline-variant/10 pt-md">
+              <div className="flex items-center justify-between">
+                <h3 className="font-label-caps text-label-caps text-on-surface-variant uppercase block ml-1">Rincian Barang Belanja</h3>
+                <button
+                  type="button"
+                  onClick={addLine}
+                  disabled={!selectedProjectId || isUploading || isProcessingOCR || isSubmitting}
+                  className="flex items-center gap-1 text-[11px] font-bold text-primary hover:text-primary-dark disabled:opacity-50 active-scale transition cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[14px]">add_circle</span>
+                  Tambah Item
+                </button>
+              </div>
+
+              <div className="space-y-md">
+                {lines.map((line, index) => (
+                  <div key={index} className="relative p-md rounded-2xl border border-outline-variant/20 bg-surface-container-low/40 space-y-md">
+                    {lines.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeLine(index)}
+                        disabled={isUploading || isProcessingOCR || isSubmitting}
+                        className="absolute top-2 right-2 text-on-surface-variant hover:text-error text-xs p-1 cursor-pointer flex items-center justify-center h-8 w-8 rounded-full hover:bg-surface-container"
+                        title="Hapus Item"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    )}
+
+                    <div className="text-[10px] font-bold text-on-surface-variant">
+                      Item #{index + 1}
+                    </div>
+
+                    {/* Pilih Item Anggaran RAB (BoQ) */}
+                    <div className="space-y-sm">
+                      <label htmlFor={`budget-item-select-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
+                        Item Anggaran RAB (BoQ)
+                      </label>
+                      <div className="relative">
+                        <select
+                          id={`budget-item-select-${index}`}
+                          value={line.projectBudgetItemId}
+                          onChange={(e) => updateLine(index, "projectBudgetItemId", e.target.value)}
+                          disabled={!selectedProjectId || isUploading || isProcessingOCR || isSubmitting}
+                          className="appearance-none w-full h-[48px] bg-surface-container-low rounded-xl px-md font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all cursor-pointer"
+                        >
+                          <option value="">-- Pilih Item Anggaran (BoQ) --</option>
+                          {Object.keys(itemsByCategory).map((catName) => (
+                            <optgroup key={catName} label={`KATEGORI ANGGARAN: ${catName}`}>
+                              {itemsByCategory[catName].map((item) => {
+                                const allocated = Number(item.allocatedAmount);
+                                const spent = Number(item.actualSpent);
+                                const remaining = allocated - spent;
+                                const qty = Number(item.quantity);
+                                const price = Number(item.unitPrice);
+                                const costCat = item.costCategory?.name || "UMUM";
+                                return (
+                                  <option key={item.id} value={item.id}>
+                                    [{costCat}] {item.name} ({qty.toLocaleString("id-ID")} {item.unit} @ Rp {price.toLocaleString("id-ID")} - Sisa: Rp {remaining.toLocaleString("id-ID")})
+                                  </option>
+                                );
+                              })}
+                            </optgroup>
+                          ))}
+                        </select>
+                        <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-[20px]">expand_more</span>
+                      </div>
+                    </div>
+
+                    {/* Nominal & Deskripsi */}
+                    <div className="grid grid-cols-1 gap-md">
+                      <div className="space-y-sm">
+                        <label htmlFor={`amount-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
+                          Nominal (Rupiah)
+                        </label>
+                        <input
+                          id={`amount-input-${index}`}
+                          type="number"
+                          value={line.amount}
+                          onChange={(e) => updateLine(index, "amount", e.target.value !== "" ? Number(e.target.value) : "")}
+                          disabled={isUploading || isSubmitting || isProcessingOCR}
+                          placeholder="Contoh: 150000"
+                          className="w-full h-[48px] bg-surface-container-low rounded-xl px-md font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all"
+                        />
+                      </div>
+
+                      <div className="space-y-sm">
+                        <label htmlFor={`desc-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
+                          Keterangan Barang/Jasa
+                        </label>
+                        <textarea
+                          id={`desc-input-${index}`}
+                          value={line.description}
+                          onChange={(e) => updateLine(index, "description", e.target.value)}
+                          disabled={isUploading || isSubmitting || isProcessingOCR}
+                          rows={2}
+                          placeholder="Sebutkan rincian barang belanja..."
+                          className="w-full bg-surface-container-low rounded-xl p-md font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all resize-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Sticky Action Button */}
+        <div className="absolute bottom-0 left-0 right-0 p-margin-mobile bg-gradient-to-t from-background via-background/90 to-transparent pt-12 z-20">
+          <button 
+            type="submit"
+            onClick={handleSubmit}
+            disabled={isUploading || isProcessingOCR || isSubmitting || !selectedProjectId || lines.some(l => !l.projectBudgetItemId || l.amount === "" || !l.description)}
+            className="w-full h-14 bg-primary text-on-primary rounded-xl font-headline-md text-headline-md shadow-lg active-scale flex items-center justify-center gap-2 hover:bg-primary/95 transition-all disabled:opacity-50 cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-on-primary" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                <div className="flex items-center gap-1">
-                  {isUploading ? (
-                    "Mengunggah gambar nota ke CDN..."
-                  ) : (
-                    <>
-                      <span className="material-symbols-outlined text-primary text-[14px]">auto_awesome</span>
-                      Gemini AI sedang membaca rincian nota belanja...
-                    </>
-                  )}
-                </div>
-              </div>
+                <span>Saving Expense...</span>
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined">check_circle</span>
+                Save Expense
+              </>
             )}
-          </div>
+          </button>
+          <div className="h-[20px]"></div>
         </div>
-
-        {/* Pilih Proyek */}
-        <div className="space-y-base">
-          <label htmlFor="project-select" className="font-label-caps text-[10px] text-on-surface-variant">
-            Proyek Konstruksi
-          </label>
-          <select
-            id="project-select"
-            value={selectedProjectId}
-            onChange={(e) => {
-              setSelectedProjectId(e.target.value);
-              setSelectedBudgetItemId(""); // reset budget item
-            }}
-            disabled={isUploading || isProcessingOCR || isSubmitting}
-            className="h-11 w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface outline-none focus:border-primary disabled:opacity-50"
-          >
-            <option value="">-- Pilih Proyek Aktif --</option>
-            {projects.map((proj) => (
-              <option key={proj.id} value={proj.id}>
-                {proj.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Pilih Item BoQ Anggaran */}
-        <div className="space-y-base">
-          <label htmlFor="budget-item-select" className="font-label-caps text-[10px] text-on-surface-variant">
-            Kategori Anggaran RAB (BoQ)
-          </label>
-          <select
-            id="budget-item-select"
-            value={selectedBudgetItemId}
-            onChange={(e) => setSelectedBudgetItemId(e.target.value)}
-            disabled={!selectedProjectId || isUploading || isProcessingOCR || isSubmitting}
-            className="h-11 w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface outline-none focus:border-primary disabled:opacity-50"
-          >
-            <option value="">-- Pilih Item BoQ Anggaran --</option>
-            {budgetItems.map((item) => {
-              const allocated = Number(item.allocatedAmount);
-              const spent = Number(item.actualSpent);
-              const remaining = allocated - spent;
-              return (
-                <option key={item.id} value={item.id}>
-                  {item.name} (Sisa Plafon: Rp {remaining.toLocaleString("id-ID")})
-                </option>
-              );
-            })}
-          </select>
-        </div>
-
-        {/* Input Nominal Pengeluaran */}
-        <div className="space-y-base">
-          <label htmlFor="amount-input" className="font-label-caps text-[10px] text-on-surface-variant">
-            Nominal Pengeluaran (Rupiah)
-          </label>
-          {isProcessingOCR ? (
-            <div className="h-11 w-full animate-pulse rounded-xl bg-surface-container-low border border-outline-variant" />
-          ) : (
-            <input
-              id="amount-input"
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value !== "" ? Number(e.target.value) : "")}
-              disabled={isUploading || isSubmitting}
-              placeholder="Contoh: 150000"
-              className="h-11 w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface outline-none focus:border-primary disabled:opacity-50"
-            />
-          )}
-        </div>
-
-        {/* Input Deskripsi/Keterangan */}
-        <div className="space-y-base">
-          <label htmlFor="desc-input" className="font-label-caps text-[10px] text-on-surface-variant">
-            Keterangan Pengeluaran
-          </label>
-          {isProcessingOCR ? (
-            <div className="h-24 w-full animate-pulse rounded-xl bg-surface-container-low border border-outline-variant" />
-          ) : (
-            <textarea
-              id="desc-input"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={isUploading || isSubmitting}
-              rows={3}
-              placeholder="Sebutkan rincian barang belanja beserta toko pembelian..."
-              className="w-full rounded-xl border border-outline-variant bg-surface-container-low p-3 text-sm text-on-surface outline-none focus:border-primary disabled:opacity-50"
-            />
-          )}
-        </div>
-
-        {/* Tombol Simpan Form */}
-        <button
-          type="submit"
-          disabled={isUploading || isProcessingOCR || isSubmitting || !selectedProjectId || !selectedBudgetItemId || amount === "" || !description}
-          className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 cursor-pointer"
-        >
-          {isSubmitting ? (
-            <div className="flex items-center gap-2">
-              <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Menyimpan Pengajuan...</span>
-            </div>
-          ) : (
-            "Simpan & Ajukan Pengeluaran"
-          )}
-        </button>
-      </form>
-    </div>
+      </div>
+    </>
   );
 }

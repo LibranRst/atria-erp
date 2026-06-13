@@ -1,9 +1,10 @@
 import { db } from "@/db";
-import { bankAccount, clientInvoice, vendorBill, project, approval, aiRun, user } from "@/db/schema";
+import { clientInvoice, vendorBill, project, approval, aiRun, user, projectCost } from "@/db/schema";
 import { eq, and, lte, inArray } from "drizzle-orm";
 import { ai } from "@/lib/ai/gemini";
+import { getErrorMessage } from "@/lib/utils/error-message";
 import { Type } from "@google/genai";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest): Promise<Response> {
   try {
@@ -182,24 +183,22 @@ Rules:
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
-    } catch (genError: any) {
+    } catch (genError: unknown) {
+      const genErrorMessage = getErrorMessage(genError, "Gagal memanggil API Gemini.");
       await db
         .update(aiRun)
         .set({
           status: "FAILED",
-          errorMessage: genError.message || "Gagal memanggil API Gemini.",
+          errorMessage: genErrorMessage,
         })
         .where(eq(aiRun.id, runLog.id));
 
       throw genError;
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return new Response(
-      JSON.stringify({ error: error.message || "Gagal menjalankan briefing finansial harian." }),
+      JSON.stringify({ error: getErrorMessage(error, "Gagal menjalankan briefing finansial harian.") }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
-
-// Import tambahan untuk skema query relations
-import { projectCost } from "@/db/schema";

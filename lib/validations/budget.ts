@@ -10,7 +10,10 @@ export const createBudgetItemSchema = z.object({
   projectBudgetId: uuidSchema("ID Rencana Anggaran (Budget) tidak valid."),
   costCategoryId: uuidSchema("ID Kategori Biaya tidak valid."),
   name: z.string().min(3, "Nama item anggaran minimal 3 karakter.").max(255, "Nama item anggaran maksimal 255 karakter."),
-  allocatedAmount: z.number().positive("Nominal alokasi anggaran harus lebih besar dari nol."),
+  budgetCategory: z.string().min(3, "Kategori anggaran minimal 3 karakter.").max(255, "Kategori anggaran maksimal 255 karakter."),
+  quantity: z.number().positive("Kuantitas harus lebih besar dari nol."),
+  unit: z.string().min(1, "Satuan wajib diisi.").max(50, "Satuan maksimal 50 karakter."),
+  unitPrice: z.number().nonnegative("Harga satuan tidak boleh negatif."),
 });
 
 export type CreateBudgetItemInput = z.infer<typeof createBudgetItemSchema>;

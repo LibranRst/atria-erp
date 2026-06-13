@@ -6,7 +6,10 @@ import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { ActionResponse } from "@/lib/types/action-response";
 import { ai } from "@/lib/ai/gemini";
+import { getErrorMessage } from "@/lib/utils/error-message";
 import { Type } from "@google/genai";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 interface ParsedReceiptItem {
   itemName: string;
@@ -23,6 +26,22 @@ interface ParsedReceipt {
   totalAmount: number;
   items: ParsedReceiptItem[];
 }
+
+const parsedReceiptItemSchema = z.object({
+  itemName: z.string().min(1),
+  quantity: z.number().nonnegative(),
+  unitPrice: z.number().nonnegative(),
+  totalPrice: z.number().nonnegative(),
+});
+
+const parsedReceiptSchema = z.object({
+  vendorName: z.string().min(1),
+  transactionDate: z.string().datetime(),
+  subtotal: z.number().nonnegative(),
+  tax: z.number().nonnegative(),
+  totalAmount: z.number().positive(),
+  items: z.array(parsedReceiptItemSchema),
+});
 
 /**
  * Memproses gambar nota PM lapangan menggunakan model Gemini 3 Flash Preview.
@@ -77,12 +96,12 @@ export async function processReceipt(
       const arrayBuffer = await imageRes.arrayBuffer();
       imageBase64 = Buffer.from(arrayBuffer).toString("base64");
       mimeType = imageRes.headers.get("content-type") || "image/jpeg";
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         success: false,
         error: {
           code: "VALIDATION_ERROR",
-          message: err.message || "Gagal mengunduh gambar nota belanja dari storage CDN.",
+          message: getErrorMessage(err, "Gagal mengunduh gambar nota belanja dari storage CDN."),
         },
       };
     }
@@ -146,7 +165,45 @@ export async function processReceipt(
         throw new Error("Model Gemini mengembalikan respons kosong.");
       }
 
-      const parsedData: ParsedReceipt = JSON.parse(rawText);
+      let parsedJson: unknown;
+      try {
+        parsedJson = JSON.parse(rawText);
+      } catch (parseError: unknown) {
+        await db
+          .update(aiRun)
+          .set({
+            status: "FAILED",
+            errorMessage: getErrorMessage(parseError, "Gemini mengembalikan JSON nota yang tidak valid."),
+          })
+          .where(eq(aiRun.id, runLog.id));
+
+        return {
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Gemini mengembalikan format JSON nota yang tidak valid. Silakan isi formulir secara manual.",
+          },
+        };
+      }
+
+      const parsedReceipt = parsedReceiptSchema.safeParse(parsedJson);
+      if (!parsedReceipt.success) {
+        await db
+          .update(aiRun)
+          .set({
+            status: "FAILED",
+            errorMessage: parsedReceipt.error.message,
+          })
+          .where(eq(aiRun.id, runLog.id));
+
+        return {
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Gemini tidak berhasil membaca struktur nota secara lengkap. Silakan isi formulir secara manual.",
+          },
+        };
+      }
 
       // 6. Update status ai_run menjadi COMPLETED dengan hasil
       await db
@@ -160,30 +217,28 @@ export async function processReceipt(
 
       return {
         success: true,
-        data: parsedData,
+        data: parsedReceipt.data,
       };
-    } catch (genError: any) {
+    } catch (genError: unknown) {
+      const genErrorMessage = getErrorMessage(genError, "Gagal memanggil API Gemini.");
       // Update status ai_run menjadi FAILED
       await db
         .update(aiRun)
         .set({
           status: "FAILED",
-          errorMessage: genError.message || "Gagal memanggil API Gemini.",
+          errorMessage: genErrorMessage,
         })
         .where(eq(aiRun.id, runLog.id));
 
       throw genError;
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: error.message || "Terjadi kesalahan internal saat memproses nota belanja dengan AI.",
+        message: getErrorMessage(error, "Terjadi kesalahan internal saat memproses nota belanja dengan AI."),
       },
     };
   }
 }
-
-// Helper eq import fallback
-import { eq } from "drizzle-orm";

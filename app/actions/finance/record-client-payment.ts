@@ -5,9 +5,10 @@ import { clientInvoice, clientPayment, bankAccount, auditLog } from "@/db/schema
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
-import { mutateBalance, parseNumericToCents, fromCents } from "@/lib/finance/balance-mutation";
+import { mutateBalance, parseNumericToCents } from "@/lib/finance/balance-mutation";
 import { ActionResponse } from "@/lib/types/action-response";
 import { recordClientPaymentSchema, RecordClientPaymentInput } from "@/lib/validations/budget";
+import { getErrorMessage } from "@/lib/utils/error-message";
 import crypto from "crypto";
 
 /**
@@ -160,18 +161,19 @@ export async function recordClientPayment(
       success: true,
       data: result,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = getErrorMessage(error, "Gagal mencatatkan pembayaran termin klien.");
     let errorCode: "UNAUTHORIZED" | "FORBIDDEN" | "VALIDATION_ERROR" | "INSUFFICIENT_FUNDS" | "TRANSACTION_FAILED" | "NOT_FOUND" | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
-    if (error.message?.startsWith("INVOICE_NOT_FOUND")) {
+    if (errMsg.startsWith("INVOICE_NOT_FOUND")) {
       errorCode = "NOT_FOUND";
-    } else if (error.message?.startsWith("INVOICE_CLOSED")) {
+    } else if (errMsg.startsWith("INVOICE_CLOSED")) {
       errorCode = "FORBIDDEN";
     }
     return {
       success: false,
       error: {
         code: errorCode,
-        message: error.message || "Gagal mencatatkan pembayaran termin klien.",
+        message: errMsg,
       },
     };
   }

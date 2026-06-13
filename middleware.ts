@@ -5,6 +5,10 @@ import { auth } from "@/lib/auth";
 const ROLE_OWNER_ID = "00000000-0000-0000-0000-000000000001";
 const ROLE_FINANCE_ADMIN_ID = "00000000-0000-0000-0000-000000000002";
 
+type SessionUserWithRole = {
+  roleId?: string;
+};
+
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const session = await auth.api.getSession({
     headers: request.headers,
@@ -18,7 +22,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   }
 
   // Ambil roleId dari user tambahan Better Auth
-  const userRoleId = (session.user as any).roleId;
+  const userRoleId = (session.user as SessionUserWithRole).roleId;
 
   // 2. Proteksi Rute Ledger (Hanya OWNER dan FINANCE_ADMIN)
   if (pathname.startsWith("/ledger")) {

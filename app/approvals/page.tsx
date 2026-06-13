@@ -60,7 +60,7 @@ export default async function ApprovalsPage(): Promise<React.JSX.Element> {
         },
       });
 
-      if (cost) {
+      if (cost && cost.status === "VERIFIED") {
         resolvedApprovals.push({
           id: app.id,
           createdAt: app.createdAt,

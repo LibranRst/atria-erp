@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
+import { getErrorMessage } from "@/lib/utils/error-message";
 
 export interface ApprovalItem {
   id: string;
@@ -62,8 +63,8 @@ export function ApprovalList({ initialApprovals }: ApprovalListProps): React.JSX
 
       setSuccessMsg(`Berhasil ${action === "APPROVED" ? "menyetujui" : "menolak"} pengajuan senilai Rp ${item.amount.toLocaleString("id-ID")}.`);
       setApprovals((prev) => prev.filter((a) => a.id !== item.id));
-    } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan internal.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Terjadi kesalahan internal."));
     } finally {
       setProcessingId(null);
     }

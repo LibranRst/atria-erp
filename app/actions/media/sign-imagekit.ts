@@ -3,6 +3,7 @@
 import crypto from "crypto";
 import { auth } from "@/lib/auth";
 import { ActionResponse } from "@/lib/types/action-response";
+import { getErrorMessage } from "@/lib/utils/error-message";
 
 export interface ImageKitSignature {
   token: string;
@@ -55,12 +56,12 @@ export async function signImagekit(): Promise<ActionResponse<ImageKitSignature>>
         signature,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: error.message || "Gagal menghasilkan tanda tangan otentikasi ImageKit.",
+        message: getErrorMessage(error, "Gagal menghasilkan tanda tangan otentikasi ImageKit."),
       },
     };
   }

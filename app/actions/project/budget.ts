@@ -119,7 +119,8 @@ export async function createBudgetItem(
     };
   }
 
-  const { projectBudgetId, costCategoryId, name, allocatedAmount } = validation.data;
+  const { projectBudgetId, costCategoryId, name, budgetCategory, quantity, unit, unitPrice } = validation.data;
+  const allocatedAmount = quantity * unitPrice;
 
   try {
     const session = await auth.api.getSession({
@@ -183,6 +184,10 @@ export async function createBudgetItem(
         projectBudgetId,
         costCategoryId,
         name,
+        budgetCategory,
+        quantity: quantity.toFixed(2),
+        unit,
+        unitPrice: unitPrice.toFixed(2),
         allocatedAmount: allocatedAmount.toFixed(2),
         actualSpent: "0.00",
         createdAt: new Date(),

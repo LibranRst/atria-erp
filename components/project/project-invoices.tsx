@@ -4,6 +4,7 @@ import React, { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { recordClientPayment } from "@/app/actions/finance/record-client-payment";
 import { useRouter } from "next/navigation";
+import { getErrorMessage } from "@/lib/utils/error-message";
 
 export interface InvoicePaymentItem {
   id: string;
@@ -122,8 +123,8 @@ export function ProjectInvoices({
           setSelectedInvoice(null);
           setSuccess(null);
         }, 1500);
-      } catch (err: any) {
-        setError(err.message || "Terjadi kesalahan internal.");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Terjadi kesalahan internal."));
       }
     });
   };

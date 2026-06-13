@@ -7,7 +7,15 @@ import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { ActionResponse } from "@/lib/types/action-response";
-import { submitFieldRequestSchema, ApproveFieldRequestInput, approveFieldRequestSchema, SubmitFieldRequestInput } from "@/lib/validations/finance";
+import { 
+  submitFieldRequestSchema, 
+  ApproveFieldRequestInput, 
+  approveFieldRequestSchema, 
+  SubmitFieldRequestInput,
+  submitFieldRequestsSchema,
+  SubmitFieldRequestsInput
+} from "@/lib/validations/finance";
+import { getErrorMessage } from "@/lib/utils/error-message";
 import crypto from "crypto";
 
 /**
@@ -117,16 +125,155 @@ export async function submitFieldRequest(
       success: true,
       data: result,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = getErrorMessage(error, "Gagal mencatat pengajuan biaya lapangan.");
     let errorCode: "NOT_FOUND" | "TRANSACTION_FAILED" | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
-    let displayMessage = error.message;
+    let displayMessage = errMsg;
 
-    if (error.message === "BUDGET_ITEM_NOT_FOUND" || error.message === "OWNER_USER_NOT_FOUND") {
+    if (errMsg === "BUDGET_ITEM_NOT_FOUND" || errMsg === "OWNER_USER_NOT_FOUND") {
       errorCode = "NOT_FOUND";
       displayMessage = "Data pendukung anggaran atau Owner tidak ditemukan.";
     } else {
       errorCode = "TRANSACTION_FAILED";
-      displayMessage = error.message || "Gagal mencatat pengajuan biaya lapangan.";
+      displayMessage = errMsg;
+    }
+
+    return {
+      success: false,
+      error: { code: errorCode, message: displayMessage },
+    };
+  }
+}
+
+/**
+ * PM mengajukan beberapa biaya pengeluaran lapangan sekaligus (Multi-Item) di bawah satu nota.
+ */
+export async function submitFieldRequests(
+  input: SubmitFieldRequestsInput
+): Promise<ActionResponse<Array<typeof projectCost.$inferSelect>>> {
+  const validation = submitFieldRequestsSchema.safeParse(input);
+  if (!validation.success) {
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Parameter pengajuan biaya lapangan tidak valid." },
+    };
+  }
+
+  const { projectId, receiptImageUrl, items } = validation.data;
+
+  try {
+    const session = await auth.api.getSession({
+      headers: {
+        cookie: (await (await import("next/headers")).cookies()).toString(),
+      },
+    });
+
+    if (!session || !session.user) {
+      return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+    }
+
+    try {
+      await assertPermission(session.user, "create:cost");
+    } catch (err) {
+      return { success: false, error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." } };
+    }
+
+    // PM scoping check
+    try {
+      const userRoleName = await resolveRoleName(session.user.roleId);
+      await assertProjectAccess(projectId, session.user.id, userRoleName);
+    } catch (err) {
+      return { success: false, error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." } };
+    }
+
+    const receiptGroupId = crypto.randomUUID();
+
+    const results = await db.transaction(async (tx) => {
+      const createdCosts = [];
+
+      for (const item of items) {
+        const { projectBudgetItemId, amount, description } = item;
+
+        // 1. Fetch budget item to check overrun
+        const budgetItem = await tx.query.projectBudgetItem.findFirst({
+          where: eq(projectBudgetItem.id, projectBudgetItemId),
+        });
+
+        if (!budgetItem) {
+          throw new Error("BUDGET_ITEM_NOT_FOUND");
+        }
+
+        const allocated = Number(budgetItem.allocatedAmount);
+        const spent = Number(budgetItem.actualSpent);
+        const isOverrun = (spent + amount) > allocated;
+        const requiresApproval = amount >= 5000000 || isOverrun;
+
+        const projectCostId = crypto.randomUUID();
+
+        // 2. If requires Owner approval, insert approval record
+        if (requiresApproval) {
+          const ownerUser = await tx.query.user.findFirst({
+            where: eq(user.roleId, "00000000-0000-0000-0000-000000000001"), // OWNER role UUID
+          });
+
+          if (!ownerUser) {
+            throw new Error("OWNER_USER_NOT_FOUND");
+          }
+
+          const notes = isOverrun 
+            ? `[Item: ${budgetItem.name}] Pengeluaran lapangan melebihi plafon anggaran (Budget Overrun).` 
+            : `[Item: ${budgetItem.name}] Nominal pengeluaran lapangan mencapai/melebihi Rp 5.000.000.`;
+
+          await tx.insert(approval).values({
+            approverId: ownerUser.id,
+            referenceType: "project_cost",
+            referenceId: projectCostId,
+            status: "PENDING",
+            notes,
+            createdAt: new Date(),
+          });
+        }
+
+        // 3. Insert project_cost record
+        const [cost] = await tx
+          .insert(projectCost)
+          .values({
+            id: projectCostId,
+            projectId,
+            projectBudgetItemId,
+            requestedById: session.user.id,
+            receiptGroupId,
+            amount: amount.toFixed(2),
+            description,
+            receiptImageUrl: receiptImageUrl || null,
+            status: "SUBMITTED",
+            budgetOverrun: isOverrun,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
+
+        createdCosts.push(cost);
+      }
+
+      return createdCosts;
+    });
+
+    return {
+      success: true,
+      data: results,
+    };
+  } catch (error: unknown) {
+    const errMsg = getErrorMessage(error, "Gagal mencatat pengajuan biaya lapangan.");
+    let errorCode: "NOT_FOUND" | "TRANSACTION_FAILED" | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
+    let displayMessage = errMsg;
+
+    if (errMsg === "BUDGET_ITEM_NOT_FOUND" || errMsg === "OWNER_USER_NOT_FOUND") {
+      errorCode = "NOT_FOUND";
+      displayMessage = "Data pendukung anggaran atau Owner tidak ditemukan.";
+    } else {
+      errorCode = "TRANSACTION_FAILED";
+      displayMessage = errMsg;
     }
 
     return {
@@ -172,10 +319,14 @@ export async function verifyFieldRequest(
         throw new Error("COST_NOT_IN_SUBMITTED_STATE");
       }
 
+      const amount = Number(cost.amount);
+      const requiresApproval = amount >= 5000000 || cost.budgetOverrun;
+      const nextStatus = requiresApproval ? "VERIFIED" : "APPROVED";
+
       const [updatedCost] = await tx
         .update(projectCost)
         .set({
-          status: "VERIFIED",
+          status: nextStatus,
           verifiedById: session.user.id,
           verifiedAt: new Date(),
           updatedAt: new Date(),
@@ -190,7 +341,7 @@ export async function verifyFieldRequest(
         targetTable: "project_cost",
         targetId: projectCostId,
         originalState: JSON.stringify({ status: cost.status }),
-        newState: JSON.stringify({ status: "VERIFIED" }),
+        newState: JSON.stringify({ status: nextStatus }),
         createdAt: new Date(),
       });
 
@@ -201,14 +352,15 @@ export async function verifyFieldRequest(
       success: true,
       data: result,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = getErrorMessage(error, "Gagal memverifikasi biaya proyek.");
     let errorCode: "NOT_FOUND" | "FORBIDDEN" | "TRANSACTION_FAILED" = "TRANSACTION_FAILED";
-    let displayMessage = error.message;
+    let displayMessage = errMsg;
 
-    if (error.message === "PROJECT_COST_NOT_FOUND") {
+    if (errMsg === "PROJECT_COST_NOT_FOUND") {
       errorCode = "NOT_FOUND";
       displayMessage = "Biaya proyek tidak ditemukan.";
-    } else if (error.message === "COST_NOT_IN_SUBMITTED_STATE") {
+    } else if (errMsg === "COST_NOT_IN_SUBMITTED_STATE") {
       errorCode = "FORBIDDEN";
       displayMessage = "Biaya proyek tidak berada dalam status SUBMITTED.";
     }
@@ -260,6 +412,10 @@ export async function approveFieldRequest(
 
       if (!cost) {
         throw new Error("PROJECT_COST_NOT_FOUND");
+      }
+
+      if (cost.status !== "VERIFIED") {
+        throw new Error("COST_NOT_IN_VERIFIED_STATE");
       }
 
       // Sync status in the approval table if one exists
@@ -319,13 +475,17 @@ export async function approveFieldRequest(
       success: true,
       data: result,
     };
-  } catch (error: any) {
-    let errorCode: "NOT_FOUND" | "TRANSACTION_FAILED" = "TRANSACTION_FAILED";
-    let displayMessage = error.message;
+  } catch (error: unknown) {
+    const errMsg = getErrorMessage(error, "Gagal memproses persetujuan biaya proyek.");
+    let errorCode: "NOT_FOUND" | "FORBIDDEN" | "TRANSACTION_FAILED" = "TRANSACTION_FAILED";
+    let displayMessage = errMsg;
 
-    if (error.message === "PROJECT_COST_NOT_FOUND") {
+    if (errMsg === "PROJECT_COST_NOT_FOUND") {
       errorCode = "NOT_FOUND";
       displayMessage = "Biaya proyek tidak ditemukan.";
+    } else if (errMsg === "COST_NOT_IN_VERIFIED_STATE") {
+      errorCode = "FORBIDDEN";
+      displayMessage = "Pengajuan biaya harus diverifikasi Finance Admin sebelum dapat disetujui Owner.";
     }
 
     return {
@@ -374,6 +534,10 @@ export async function payFieldRequest(
 
       if (cost.status === "PAID") {
         throw new Error("COST_ALREADY_PAID");
+      }
+
+      if (cost.status !== "APPROVED") {
+        throw new Error("COST_NOT_APPROVED");
       }
 
       const amount = Number(cost.amount);
@@ -504,8 +668,8 @@ export async function payFieldRequest(
       success: true,
       data: result,
     };
-  } catch (error: any) {
-    const errMsg = error.message || "";
+  } catch (error: unknown) {
+    const errMsg = getErrorMessage(error, "");
     let code: "NOT_FOUND" | "INSUFFICIENT_FUNDS" | "FORBIDDEN" | "TRANSACTION_FAILED" = "TRANSACTION_FAILED";
     let displayMessage = errMsg;
 
@@ -519,11 +683,15 @@ export async function payFieldRequest(
     } else if (errMsg === "INSUFFICIENT_FUNDS") {
       code = "INSUFFICIENT_FUNDS";
       displayMessage = "Pencairan dibatalkan: Saldo akun bank kas kecil tidak mencukupi.";
-    } else if (errMsg === "COST_ALREADY_PAID" || errMsg === "APPROVAL_REQUIRED_BUT_PENDING") {
+    } else if (errMsg === "COST_ALREADY_PAID" || errMsg === "COST_NOT_APPROVED" || errMsg === "APPROVAL_REQUIRED_BUT_PENDING") {
       code = "FORBIDDEN";
-      displayMessage = errMsg === "COST_ALREADY_PAID"
-        ? "Pengeluaran lapangan ini sudah dibayarkan sebelumnya."
-        : "Pengeluaran lapangan memerlukan persetujuan Owner dan belum disetujui.";
+      if (errMsg === "COST_ALREADY_PAID") {
+        displayMessage = "Pengeluaran lapangan ini sudah dibayarkan sebelumnya.";
+      } else if (errMsg === "COST_NOT_APPROVED") {
+        displayMessage = "Pengeluaran lapangan harus berstatus APPROVED sebelum dapat dicairkan.";
+      } else {
+        displayMessage = "Pengeluaran lapangan memerlukan persetujuan Owner dan belum disetujui.";
+      }
     }
 
     return {
@@ -623,11 +791,12 @@ export async function approveVendorPayment(
       success: true,
       data: result,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = getErrorMessage(error, "Gagal memproses persetujuan pembayaran vendor.");
     let errorCode: "NOT_FOUND" | "TRANSACTION_FAILED" = "TRANSACTION_FAILED";
-    let displayMessage = error.message;
+    let displayMessage = errMsg;
 
-    if (error.message === "PAYMENT_RECORD_NOT_FOUND") {
+    if (errMsg === "PAYMENT_RECORD_NOT_FOUND") {
       errorCode = "NOT_FOUND";
       displayMessage = "Record pembayaran vendor tidak ditemukan.";
     }

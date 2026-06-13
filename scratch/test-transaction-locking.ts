@@ -1,14 +1,14 @@
 import { db } from "@/db";
-import { bankAccount, cashTransaction } from "@/db/schema";
+import { bankAccount } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { mutateBalance } from "@/lib/finance/balance-mutation";
+import { getErrorMessage } from "@/lib/utils/error-message";
 
 async function runConcurrencyTest(): Promise<void> {
   console.log("=== MEMULAI PENGUJIAN KONKURENSI TRANSAKSI ===");
 
   const PETTY_CASH_ID = "66666666-6666-6666-6666-666666666663";
   const USER_BUDI_ID = "33333333-3333-3333-3333-333333333331";
-  const PROJECT_MENTENG_ID = "77777777-7777-7777-7777-777777777771";
 
   // 1. Reset saldo Petty Cash Office ke Rp 13.000.000,00 untuk kebersihan pengujian
   console.log("1. Mereset saldo Petty Cash Office ke Rp 13.000.000,00...");
@@ -48,8 +48,8 @@ async function runConcurrencyTest(): Promise<void> {
           });
         });
         return { success: true, index, result };
-      } catch (error: any) {
-        return { success: false, index, error: error.message };
+      } catch (error: unknown) {
+        return { success: false, index, error: getErrorMessage(error, "Transaksi konkuren gagal.") };
       }
     };
   });
@@ -70,8 +70,9 @@ async function runConcurrencyTest(): Promise<void> {
       console.log(`   [SUCCESS] Transaksi ke-${res.index + 1} berhasil.`);
     } else {
       failureCount++;
-      console.log(`   [FAILED] Transaksi ke-${res.index + 1} gagal dengan alasan: ${res.error}`);
-      if (res.error.includes("INSUFFICIENT_FUNDS")) {
+      const errorMessage = res.error ?? "";
+      console.log(`   [FAILED] Transaksi ke-${res.index + 1} gagal dengan alasan: ${errorMessage}`);
+      if (errorMessage.includes("INSUFFICIENT_FUNDS")) {
         insufficientFundsCount++;
       }
     }

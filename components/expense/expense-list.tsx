@@ -2,8 +2,9 @@
 
 import React, { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
-import { payFieldRequest } from "@/app/actions/finance/field-requests";
+import { payFieldRequest, verifyFieldRequest } from "@/app/actions/finance/field-requests";
 import { useRouter } from "next/navigation";
+import { getErrorMessage } from "@/lib/utils/error-message";
 
 export interface ExpenseCostItem {
   id: string;
@@ -45,7 +46,17 @@ interface ExpenseListProps {
   userRole: string;
 }
 
-type FilterStatus = "ALL" | "PENDING" | "APPROVED" | "PAID" | "REJECTED";
+type FilterStatus = "ALL" | "NEEDS_VERIFICATION" | "NEEDS_APPROVAL" | "READY_TO_PAY" | "PAID" | "REJECTED";
+
+const statusSteps: Array<{
+  readonly key: ExpenseCostItem["status"];
+  readonly label: string;
+}> = [
+  { key: "SUBMITTED", label: "Diajukan" },
+  { key: "VERIFIED", label: "Verifikasi" },
+  { key: "APPROVED", label: "Disetujui" },
+  { key: "PAID", label: "Lunas" },
+];
 
 export function ExpenseList({
   initialCosts,
@@ -55,6 +66,7 @@ export function ExpenseList({
   const router = useRouter();
   const [filter, setFilter] = useState<FilterStatus>("ALL");
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   
   // Disbursement modal states
   const [selectedCost, setSelectedCost] = useState<ExpenseCostItem | null>(null);
@@ -68,12 +80,40 @@ export function ExpenseList({
 
   // Filter logic
   const filteredCosts = initialCosts.filter((cost) => {
-    if (filter === "ALL") return true;
-    if (filter === "PENDING") {
-      return cost.status === "SUBMITTED" || cost.status === "VERIFIED";
+    if (filter === "ALL") {
+      return cost.status !== "PAID" && cost.status !== "REJECTED";
+    }
+    if (filter === "NEEDS_VERIFICATION") {
+      return cost.status === "SUBMITTED";
+    }
+    if (filter === "NEEDS_APPROVAL") {
+      return cost.status === "VERIFIED";
+    }
+    if (filter === "READY_TO_PAY") {
+      return cost.status === "APPROVED";
     }
     return cost.status === filter;
   });
+
+  const handleVerifyClick = (cost: ExpenseCostItem) => {
+    setError(null);
+    setSuccess(null);
+
+    startTransition(async () => {
+      try {
+        const res = await verifyFieldRequest(cost.id);
+        if (!res.success) {
+          setError(res.error.message || "Gagal memverifikasi pengajuan.");
+          return;
+        }
+
+        setSuccess(`Pengajuan Rp ${Number(cost.amount).toLocaleString("id-ID")} berhasil diverifikasi.`);
+        router.refresh();
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Terjadi kesalahan internal."));
+      }
+    });
+  };
 
   const handleDisburseClick = (cost: ExpenseCostItem) => {
     setSelectedCost(cost);
@@ -121,8 +161,8 @@ export function ExpenseList({
           setSelectedCost(null);
           setSuccess(null);
         }, 1500);
-      } catch (err: any) {
-        setError(err.message || "Terjadi kesalahan internal.");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Terjadi kesalahan internal."));
       }
     });
   };
@@ -142,8 +182,9 @@ export function ExpenseList({
         {(
           [
             { label: "Semua", value: "ALL" },
-            { label: "Menunggu", value: "PENDING" },
-            { label: "Disetujui", value: "APPROVED" },
+            { label: "Butuh Verifikasi", value: "NEEDS_VERIFICATION" },
+            { label: "Butuh Approval", value: "NEEDS_APPROVAL" },
+            { label: "Siap Cair", value: "READY_TO_PAY" },
             { label: "Lunas", value: "PAID" },
             { label: "Ditolak", value: "REJECTED" },
           ] as const
@@ -167,7 +208,7 @@ export function ExpenseList({
       </div>
 
       {/* List Content */}
-      {filteredCosts.length === 0 ? (
+      {(filter === "ALL" ? initialCosts.length === 0 : filteredCosts.length === 0) ? (
         <div className="premium-card p-md flex flex-col items-center justify-center py-16 text-center border border-outline-variant/30 space-y-md">
           <div className="h-14 w-14 rounded-full bg-surface-container flex items-center justify-center text-primary border border-outline-variant/10 shadow-sm">
             <span className="material-symbols-outlined text-primary text-[28px]">receipt_long</span>
@@ -186,6 +227,71 @@ export function ExpenseList({
             const allocated = Number(cost.budgetItem?.allocatedAmount || 0);
             const spent = Number(cost.budgetItem?.actualSpent || 0);
             const utilizationPercent = allocated > 0 ? (spent / allocated) * 100 : 0;
+
+            const isCompact = cost.status === "PAID" || cost.status === "REJECTED";
+
+            if (isCompact) {
+              return (
+                <div
+                  key={cost.id}
+                  className="premium-card p-sm border border-outline-variant/15 bg-surface-container-low/40 hover:bg-surface-container-low transition-colors flex items-center justify-between gap-md"
+                >
+                  <div className="flex items-center gap-sm min-w-0">
+                    {/* Status Icon Indicator */}
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
+                      cost.status === "PAID" 
+                        ? "bg-primary-container/20 text-primary" 
+                        : "bg-error-container/20 text-error"
+                    }`}>
+                      <span className="material-symbols-outlined text-[18px]">
+                        {cost.status === "PAID" ? "check_circle" : "cancel"}
+                      </span>
+                    </div>
+
+                    {/* Meta info */}
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-xs">
+                        <span className="font-semibold text-xs text-on-surface truncate max-w-[125px]">
+                          {cost.project?.name || "Proyek"}
+                        </span>
+                        <span className="text-[10px] text-on-surface-variant">•</span>
+                        <span className="text-[10px] text-on-surface-variant">
+                          {new Date(cost.createdAt).toLocaleDateString("id-ID", { month: "short", day: "numeric" })}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-on-surface-variant truncate max-w-[180px] sm:max-w-[240px]">
+                        {cost.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Amount & Receipt */}
+                  <div className="flex items-center gap-sm shrink-0">
+                    <div className="text-right">
+                      <div className="font-numeral text-xs font-bold text-on-surface">
+                        Rp {amountNum.toLocaleString("id-ID")}
+                      </div>
+                      <span className={`text-[9px] font-bold uppercase ${
+                        cost.status === "PAID" ? "text-primary" : "text-error"
+                      }`}>
+                        {cost.status === "PAID" ? "Lunas" : "Ditolak"}
+                      </span>
+                    </div>
+
+                    {cost.receiptImageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveImage(cost.receiptImageUrl)}
+                        className="h-8 w-8 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/15 flex items-center justify-center text-on-surface-variant active:scale-90 transition-transform cursor-pointer"
+                        title="Lihat Nota"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">image</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <div
@@ -286,6 +392,45 @@ export function ExpenseList({
                   )}
                 </div>
 
+                {/* Status Stepper */}
+                <div className="rounded-lg border border-outline-variant/10 bg-surface-container-low p-sm">
+                  <div className="grid grid-cols-4 gap-1">
+                    {statusSteps.map((step, stepIndex) => {
+                      const currentIndex = statusSteps.findIndex((statusStep) => statusStep.key === cost.status);
+                      const isRejected = cost.status === "REJECTED";
+                      const isComplete = !isRejected && currentIndex >= stepIndex;
+                      const isCurrent = !isRejected && cost.status === step.key;
+
+                      return (
+                        <div key={step.key} className="flex flex-col items-center gap-1 text-center">
+                          <div
+                            className={`h-2 w-full rounded-full ${
+                              isRejected
+                                ? "bg-error/30"
+                                : isComplete
+                                ? "bg-primary"
+                                : "bg-surface-container"
+                            }`}
+                          />
+                          <span
+                            className={`text-[8px] font-bold ${
+                              isCurrent
+                                ? "text-primary"
+                                : isRejected
+                                ? "text-error"
+                                : isComplete
+                                ? "text-on-surface"
+                                : "text-on-surface-variant"
+                            }`}
+                          >
+                            {step.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Bottom Bar: PM name and disburse button */}
                 <div className="border-t border-outline-variant/10 pt-md flex items-center justify-between">
                   <div className="flex items-center gap-2 text-on-surface-variant">
@@ -297,21 +442,138 @@ export function ExpenseList({
                     </span>
                   </div>
 
-                  {/* Disburse Button */}
-                  {cost.status === "APPROVED" && isOwnerOrFinance && (
-                    <button
-                      type="button"
-                      onClick={() => handleDisburseClick(cost)}
-                      className="px-sm py-2 bg-secondary text-on-secondary rounded-full text-xs font-bold shadow active:scale-95 transition-all flex items-center gap-1 hover:bg-secondary/95 cursor-pointer h-10 min-w-[90px] justify-center"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">payments</span>
-                      Cairkan
-                    </button>
-                  )}
+                  <div className="flex gap-sm">
+                    {/* Verify Button */}
+                    {cost.status === "SUBMITTED" && isOwnerOrFinance && (
+                      <button
+                        type="button"
+                        onClick={() => handleVerifyClick(cost)}
+                        disabled={isPending}
+                        className="px-sm py-2 bg-primary text-on-primary rounded-full text-xs font-bold shadow active:scale-95 transition-all flex items-center gap-1 hover:bg-primary/95 disabled:opacity-50 cursor-pointer h-10 min-w-[105px] justify-center"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">fact_check</span>
+                        Verifikasi
+                      </button>
+                    )}
+
+                    {/* Disburse Button */}
+                    {cost.status === "APPROVED" && isOwnerOrFinance && (
+                      <button
+                        type="button"
+                        onClick={() => handleDisburseClick(cost)}
+                        disabled={isPending}
+                        className="px-sm py-2 bg-secondary text-on-secondary rounded-full text-xs font-bold shadow active:scale-95 transition-all flex items-center gap-1 hover:bg-secondary/95 disabled:opacity-50 cursor-pointer h-10 min-w-[90px] justify-center"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">payments</span>
+                        Cairkan
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })}
+
+          {/* Collapsible History Section (Only shown on "ALL" tab) */}
+          {filter === "ALL" && (() => {
+            const historyCosts = initialCosts.filter((c) => c.status === "PAID" || c.status === "REJECTED");
+            if (historyCosts.length === 0) return null;
+
+            return (
+              <div className="space-y-sm pt-xs">
+                {/* Accordion Header */}
+                <button
+                  type="button"
+                  onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
+                  className="w-full flex items-center justify-between p-sm rounded-xl border border-outline-variant/15 bg-surface-container-low hover:bg-surface-container transition-all active:scale-[0.99] cursor-pointer"
+                >
+                  <div className="flex items-center gap-sm">
+                    <span className="material-symbols-outlined text-primary text-[20px]">history</span>
+                    <span className="font-bold text-xs text-on-surface">
+                      Riwayat Pengeluaran (Lunas & Ditolak)
+                    </span>
+                    <span className="inline-flex items-center justify-center bg-outline-variant/20 text-on-surface-variant text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                      {historyCosts.length}
+                    </span>
+                  </div>
+                  <span className={`material-symbols-outlined text-on-surface-variant transition-transform duration-200 ${
+                    isHistoryExpanded ? "rotate-180" : ""
+                  }`}>
+                    keyboard_arrow_down
+                  </span>
+                </button>
+
+                {/* Accordion Content */}
+                {isHistoryExpanded && (
+                  <div className="space-y-sm animate-in fade-in duration-200">
+                    {historyCosts.map((cost) => {
+                      const amountNum = Number(cost.amount);
+                      return (
+                        <div
+                          key={cost.id}
+                          className="premium-card p-sm border border-outline-variant/15 bg-surface-container-low/40 hover:bg-surface-container-low transition-colors flex items-center justify-between gap-md"
+                        >
+                          <div className="flex items-center gap-sm min-w-0">
+                            {/* Status Icon Indicator */}
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
+                              cost.status === "PAID" 
+                                ? "bg-primary-container/20 text-primary" 
+                                : "bg-error-container/20 text-error"
+                            }`}>
+                              <span className="material-symbols-outlined text-[18px]">
+                                {cost.status === "PAID" ? "check_circle" : "cancel"}
+                              </span>
+                            </div>
+
+                            {/* Meta info */}
+                            <div className="min-w-0 space-y-0.5">
+                              <div className="flex items-center gap-xs">
+                                <span className="font-semibold text-xs text-on-surface truncate max-w-[125px]">
+                                  {cost.project?.name || "Proyek"}
+                                </span>
+                                <span className="text-[10px] text-on-surface-variant">•</span>
+                                <span className="text-[10px] text-on-surface-variant">
+                                  {new Date(cost.createdAt).toLocaleDateString("id-ID", { month: "short", day: "numeric" })}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-on-surface-variant truncate max-w-[180px] sm:max-w-[240px]">
+                                {cost.description}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Amount & Receipt */}
+                          <div className="flex items-center gap-sm shrink-0">
+                            <div className="text-right">
+                              <div className="font-numeral text-xs font-bold text-on-surface">
+                                Rp {amountNum.toLocaleString("id-ID")}
+                              </div>
+                              <span className={`text-[9px] font-bold uppercase ${
+                                cost.status === "PAID" ? "text-primary" : "text-error"
+                              }`}>
+                                {cost.status === "PAID" ? "Lunas" : "Ditolak"}
+                              </span>
+                            </div>
+
+                            {cost.receiptImageUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveImage(cost.receiptImageUrl)}
+                                className="h-8 w-8 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/15 flex items-center justify-center text-on-surface-variant active:scale-90 transition-transform cursor-pointer"
+                                title="Lihat Nota"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">image</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
 

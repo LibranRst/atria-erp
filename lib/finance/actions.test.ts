@@ -1,8 +1,8 @@
 import { db } from "@/db";
-import { project, projectBudget, projectBudgetItem, clientInvoice, clientPayment, bankAccount } from "@/db/schema";
+import { project, clientInvoice, bankAccount } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { createProjectBudget, createBudgetItem, submitBudgetForApproval, approveBudget, rejectBudget } from "@/app/actions/project/budget";
+import { createProjectBudget, createBudgetItem, submitBudgetForApproval, approveBudget } from "@/app/actions/project/budget";
 import { recordClientPayment } from "@/app/actions/finance/record-client-payment";
 import { getDashboardStats } from "@/app/actions/finance/get-dashboard-stats";
 import { describe, it, expect, afterAll, mock } from "bun:test";
@@ -75,13 +75,6 @@ const PM_BUDI_USER = {
   name: "Budi Santoso",
 };
 
-const PM_SITI_USER = {
-  id: "33333333-3333-3333-3333-333333333332",
-  roleId: "00000000-0000-0000-0000-000000000003",
-  email: "siti@dekoria.com",
-  name: "Siti Aminah",
-};
-
 const MENTENG_PROJECT_ID = "77777777-7777-7777-7777-777777777771"; // PM Budi
 const SUDIRMAN_PROJECT_ID = "77777777-7777-7777-7777-777777777772"; // PM Siti
 const MATERIAL_CATEGORY_ID = "99999999-9999-9999-9999-999999999991";
@@ -120,7 +113,10 @@ describe("Atria ERP Server Actions - TSK-007", () => {
         projectBudgetId: APPROVED_BUDGET_ID,
         costCategoryId: MATERIAL_CATEGORY_ID,
         name: "Cat Tembok Jotun",
-        allocatedAmount: 12000000,
+        budgetCategory: "Pekerjaan Cat Tembok",
+        quantity: 10,
+        unit: "can",
+        unitPrice: 1200000,
       });
 
       expect(res.success).toBe(false);
@@ -159,7 +155,10 @@ describe("Atria ERP Server Actions - TSK-007", () => {
         projectBudgetId: budgetId,
         costCategoryId: MATERIAL_CATEGORY_ID,
         name: "Lantai Vinyl Kayu",
-        allocatedAmount: 15000000,
+        budgetCategory: "Pekerjaan Lantai",
+        quantity: 50,
+        unit: "m2",
+        unitPrice: 300000,
       });
       expect(itemRes.success).toBe(true);
 

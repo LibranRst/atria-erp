@@ -1,11 +1,11 @@
 import { db } from "@/db";
-import { project, projectBudgetItem, vendor, vendorBill, vendorPayment, projectCost, bankAccount, approval } from "@/db/schema";
+import { projectBudgetItem, vendorBill, projectCost, bankAccount, approval } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { submitVendorBill } from "@/app/actions/finance/submit-vendor-bill";
 import { scheduleVendorBillPayment } from "@/app/actions/finance/schedule-vendor-bill";
 import { payVendorBill } from "@/app/actions/finance/pay-vendor-bill";
-import { submitFieldRequest, verifyFieldRequest, approveFieldRequest, payFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
+import { submitFieldRequest, submitFieldRequests, verifyFieldRequest, approveFieldRequest, payFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
 import { describe, it, expect, afterAll, mock } from "bun:test";
 
 // Mock next/headers untuk mencegah error cookies() di luar server Next.js
@@ -76,16 +76,8 @@ const PM_BUDI_USER = {
   name: "Budi Santoso",
 };
 
-const PM_SITI_USER = {
-  id: "33333333-3333-3333-3333-333333333332",
-  roleId: "00000000-0000-0000-0000-000000000003",
-  email: "siti@dekoria.com",
-  name: "Siti Aminah",
-};
-
 const MENTENG_PROJECT_ID = "77777777-7777-7777-7777-777777777771"; // PM Budi
 const SUDIRMAN_PROJECT_ID = "77777777-7777-7777-7777-777777777772"; // PM Siti
-const MATERIAL_CATEGORY_ID = "99999999-9999-9999-9999-999999999991";
 const BCA_ACC_ID = "66666666-6666-6666-6666-666666666661";
 
 describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", () => {
@@ -301,6 +293,67 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
   });
 
   describe("Field Claims (Project Cost) Flow", () => {
+    it("harus menolak approval dan pencairan biaya lapangan yang belum melalui status wajib", async () => {
+      const budgetItem = await db.query.projectBudgetItem.findFirst({
+        where: eq(projectBudgetItem.projectBudgetId, "88888888-8888-8888-8888-888888888881"),
+      });
+      expect(budgetItem).toBeDefined();
+
+      mockUserSession(PM_BUDI_USER);
+      const costRes = await submitFieldRequest({
+        projectId: MENTENG_PROJECT_ID,
+        projectBudgetItemId: budgetItem!.id,
+        amount: 6000000,
+        description: "Beli perlengkapan finishing tambahan",
+      });
+
+      expect(costRes.success).toBe(true);
+      if (!costRes.success) return;
+      expect(costRes.data.status).toBe("SUBMITTED");
+
+      mockUserSession(OWNER_USER);
+      const approveSubmittedRes = await approveFieldRequest({
+        projectCostId: costRes.data.id,
+        status: "APPROVED",
+        notes: "Coba approve sebelum verifikasi",
+      });
+      expect(approveSubmittedRes.success).toBe(false);
+      if (!approveSubmittedRes.success) {
+        expect(approveSubmittedRes.error.code).toBe("FORBIDDEN");
+      }
+
+      mockUserSession(FINANCE_USER);
+      const paySubmittedRes = await payFieldRequest(costRes.data.id, BCA_ACC_ID, "TRF-SHOULD-FAIL-SUBMITTED");
+      expect(paySubmittedRes.success).toBe(false);
+      if (!paySubmittedRes.success) {
+        expect(paySubmittedRes.error.code).toBe("FORBIDDEN");
+      }
+
+      const verifyRes = await verifyFieldRequest(costRes.data.id);
+      expect(verifyRes.success).toBe(true);
+
+      const payVerifiedRes = await payFieldRequest(costRes.data.id, BCA_ACC_ID, "TRF-SHOULD-FAIL-VERIFIED");
+      expect(payVerifiedRes.success).toBe(false);
+      if (!payVerifiedRes.success) {
+        expect(payVerifiedRes.error.code).toBe("FORBIDDEN");
+      }
+
+      mockUserSession(OWNER_USER);
+      const rejectRes = await approveFieldRequest({
+        projectCostId: costRes.data.id,
+        status: "REJECTED",
+        notes: "Ditolak untuk test state machine",
+      });
+      expect(rejectRes.success).toBe(true);
+
+      mockUserSession(FINANCE_USER);
+      const payRejectedRes = await payFieldRequest(costRes.data.id, BCA_ACC_ID, "TRF-SHOULD-FAIL-REJECTED");
+      expect(payRejectedRes.success).toBe(false);
+      if (!payRejectedRes.success) {
+        expect(payRejectedRes.error.code).toBe("FORBIDDEN");
+      }
+    });
+
     it("harus menyetujui pengajuan klaim lapangan PM Budi, memicu approval PENDING jika overrun, dan memproses pencairan kas kecil", async () => {
       // Reset BCA bank account balance to ensure sufficient funds
       await db.update(bankAccount)
@@ -315,11 +368,11 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
 
       mockUserSession(PM_BUDI_USER);
       
-      // Ajukan klaim melebihi plafon (plafon di seed: Rp 120.000.000,00, kita ajukan Rp 150.000.000,00)
+      // Ajukan klaim melebihi plafon (sisa plafon di seed: Rp 150.000.000,00, kita ajukan Rp 160.000.000,00)
       const costRes = await submitFieldRequest({
         projectId: MENTENG_PROJECT_ID,
         projectBudgetItemId: budgetItem!.id,
-        amount: 150000000,
+        amount: 160000000,
         description: "Beli marmer Italia premium",
       });
 
@@ -375,7 +428,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const payRes = await payFieldRequest(costRes.data.id, BCA_ACC_ID, "TRF-CLAIM-MARMER");
       expect(payRes.success).toBe(true);
       if (payRes.success) {
-        expect(payRes.data.nextBalance).toBe(balBefore - 150000000);
+        expect(payRes.data.nextBalance).toBe(balBefore - 160000000);
       }
 
       // Pastikan status projectCost berubah ke PAID
@@ -384,6 +437,49 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       });
       expect(paidCost!.status).toBe("PAID");
       expect(paidCost!.cashTransactionId).toBeDefined();
+    });
+
+    it("harus mendukung pengajuan biaya lapangan multi-item (submitFieldRequests) dan mengelompokkannya dalam receiptGroupId", async () => {
+      mockUserSession(PM_BUDI_USER);
+
+      // Cari item anggaran untuk proyek Menteng
+      const items = await db.query.projectBudgetItem.findMany({
+        where: eq(projectBudgetItem.projectBudgetId, "88888888-8888-8888-8888-888888888881"),
+      });
+      expect(items.length).toBeGreaterThanOrEqual(2);
+
+      const item1 = items[0];
+      const item2 = items[1];
+
+      const res = await submitFieldRequests({
+        projectId: MENTENG_PROJECT_ID,
+        receiptImageUrl: "https://ik.imagekit.io/dekoria/receipt-multi.jpg",
+        items: [
+          {
+            projectBudgetItemId: item1.id,
+            amount: 500000,
+            description: "Belanja gypsum & paku besi"
+          },
+          {
+            projectBudgetItemId: item2.id,
+            amount: 750000,
+            description: "Sewa tangga & transport belanja"
+          }
+        ]
+      });
+
+      expect(res.success).toBe(true);
+      if (res.success) {
+        expect(res.data.length).toBe(2);
+        const cost1 = res.data[0];
+        const cost2 = res.data[1];
+
+        // Pastikan keduanya memiliki receiptGroupId yang sama
+        expect(cost1.receiptGroupId).toBeDefined();
+        expect(cost1.receiptGroupId).toBe(cost2.receiptGroupId);
+        expect(cost1.receiptImageUrl).toBe("https://ik.imagekit.io/dekoria/receipt-multi.jpg");
+        expect(cost2.receiptImageUrl).toBe("https://ik.imagekit.io/dekoria/receipt-multi.jpg");
+      }
     });
   });
 });

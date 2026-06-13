@@ -1,3 +1,4 @@
+import { auth } from "@/lib/auth";
 import { db } from "./index";
 import {
   role,
@@ -18,13 +19,38 @@ import {
   approval,
   aiRun,
   notification,
-  auditLog
+  auditLog,
+  account,
 } from "./schema";
 
 async function main(): Promise<void> {
-  console.log("Starting database seeding...");
+  console.log("Starting database cleanup and seeding...");
 
   await db.transaction(async (tx) => {
+    // Cleanup existing data in reverse dependency order
+    console.log("Cleaning up database tables...");
+    await tx.delete(auditLog);
+    await tx.delete(notification);
+    await tx.delete(aiRun);
+    await tx.delete(approval);
+    await tx.delete(projectCost);
+    await tx.delete(vendorPayment);
+    await tx.delete(vendorBill);
+    await tx.delete(clientPayment);
+    await tx.delete(cashTransaction);
+    await tx.delete(clientInvoice);
+    await tx.delete(projectBudgetItem);
+    await tx.delete(projectBudget);
+    await tx.delete(project);
+    await tx.delete(projectCostCategory);
+    await tx.delete(bankAccount);
+    await tx.delete(vendor);
+    await tx.delete(client);
+    await tx.delete(account);
+    await tx.delete(user);
+    await tx.delete(role);
+    console.log("Database cleaned!");
+
     // 1. Seed Roles
     console.log("Seeding roles...");
     await tx.insert(role).values([
@@ -43,7 +69,12 @@ async function main(): Promise<void> {
         name: "project_manager",
         description: "Manajer Proyek Lapangan (Pengaju Biaya & Operator)",
       },
-    ]).onConflictDoNothing();
+    ]);
+
+    const defaultPassword = "password123";
+    const hashedDefaultPassword = await auth.$context.then((context) =>
+      context.password.hash(defaultPassword)
+    );
 
     // 2. Seed Users
     console.log("Seeding users...");
@@ -76,7 +107,39 @@ async function main(): Promise<void> {
         emailVerified: true,
         roleId: "00000000-0000-0000-0000-000000000003",
       },
-    ]).onConflictDoNothing();
+    ]);
+
+    console.log("Seeding auth accounts...");
+    await tx.insert(account).values([
+      {
+        id: "account-11111111-1111-1111-1111-111111111111",
+        accountId: "11111111-1111-1111-1111-111111111111",
+        providerId: "credential",
+        userId: "11111111-1111-1111-1111-111111111111",
+        password: hashedDefaultPassword,
+      },
+      {
+        id: "account-22222222-2222-2222-2222-222222222222",
+        accountId: "22222222-2222-2222-2222-222222222222",
+        providerId: "credential",
+        userId: "22222222-2222-2222-2222-222222222222",
+        password: hashedDefaultPassword,
+      },
+      {
+        id: "account-33333333-3333-3333-3333-333333333331",
+        accountId: "33333333-3333-3333-3333-333333333331",
+        providerId: "credential",
+        userId: "33333333-3333-3333-3333-333333333331",
+        password: hashedDefaultPassword,
+      },
+      {
+        id: "account-33333333-3333-3333-3333-333333333332",
+        accountId: "33333333-3333-3333-3333-333333333332",
+        providerId: "credential",
+        userId: "33333333-3333-3333-3333-333333333332",
+        password: hashedDefaultPassword,
+      },
+    ]);
 
     // 3. Seed Clients
     console.log("Seeding clients...");
@@ -96,7 +159,7 @@ async function main(): Promise<void> {
         phone: "081234567890",
         address: "Sudirman Suites Penthouse A, Jakarta Selatan",
       },
-    ]).onConflictDoNothing();
+    ]);
 
     // 4. Seed Vendors
     console.log("Seeding vendors...");
@@ -111,27 +174,7 @@ async function main(): Promise<void> {
         bankAccountNumber: "1234567890",
         bankAccountHolder: "PT Cahaya Abadi Material",
       },
-      {
-        id: "55555555-5555-5555-5555-555555555552",
-        name: "CV Kayu Jati Luhur",
-        email: "cvkayujati@gmail.com",
-        phone: "081199887766",
-        address: "Jl. Raya Jepara No. 45, Jepara, Jawa Tengah",
-        bankName: "Mandiri",
-        bankAccountNumber: "0987654321",
-        bankAccountHolder: "CV Kayu Jati Luhur",
-      },
-      {
-        id: "55555555-5555-5555-5555-555555555553",
-        name: "Jasa MEP Pak Slamet",
-        email: "slametmep@gmail.com",
-        phone: "081333444555",
-        address: "Kp. Melayu RT 04/05, Jakarta Selatan",
-        bankName: "BCA",
-        bankAccountNumber: "5554443322",
-        bankAccountHolder: "Slamet Prasetyo",
-      },
-    ]).onConflictDoNothing();
+    ]);
 
     // 5. Seed Bank Accounts
     console.log("Seeding bank accounts...");
@@ -142,7 +185,7 @@ async function main(): Promise<void> {
         accountNumber: "8889991122",
         bankName: "BCA",
         holderName: "PT Dekoria Desain Estetika",
-        balance: "735000000.00",
+        balance: "625000000.00", // 480M awal + 195M termin - 50M vendor
       },
       {
         id: "66666666-6666-6666-6666-666666666662",
@@ -150,7 +193,7 @@ async function main(): Promise<void> {
         accountNumber: "11122233344",
         bankName: "Mandiri",
         holderName: "PT Dekoria Desain Estetika",
-        balance: "710000000.00",
+        balance: "360000000.00", // 360M termin masuk
       },
       {
         id: "66666666-6666-6666-6666-666666666663",
@@ -158,9 +201,9 @@ async function main(): Promise<void> {
         accountNumber: "9990001112",
         bankName: "BCA",
         holderName: "Lisa Permata (Cashier)",
-        balance: "13000000.00",
+        balance: "10000000.00",
       },
-    ]).onConflictDoNothing();
+    ]);
 
     // 6. Seed Cost Categories
     console.log("Seeding project cost categories...");
@@ -171,21 +214,11 @@ async function main(): Promise<void> {
         description: "Pembelian bahan bangunan & material finishing interior",
       },
       {
-        id: "99999999-9999-9999-9999-999999999992",
-        name: "SUBCONTRACTOR",
-        description: "Jasa instalasi khusus & upah tukang subkon luar",
-      },
-      {
         id: "99999999-9999-9999-9999-999999999993",
         name: "OPERATIONAL",
         description: "Biaya operasional lapangan, bensin, konsumsi, dan koordinasi",
       },
-      {
-        id: "99999999-9999-9999-9999-999999999994",
-        name: "OTHER",
-        description: "Biaya tak terduga non-rutin",
-      },
-    ]).onConflictDoNothing();
+    ]);
 
     // 7. Seed Projects
     console.log("Seeding projects...");
@@ -196,7 +229,7 @@ async function main(): Promise<void> {
         clientId: "44444444-4444-4444-4444-444444444441",
         projectManagerId: "33333333-3333-3333-3333-333333333331",
         status: "ACTIVE",
-        financialHealth: "CRITICAL",
+        financialHealth: "HEALTHY",
         totalContractValue: "650000000.00",
         startDate: new Date("2026-05-15"),
         endDate: new Date("2026-08-15"),
@@ -212,7 +245,7 @@ async function main(): Promise<void> {
         startDate: new Date("2026-06-01"),
         endDate: new Date("2026-10-01"),
       },
-    ]).onConflictDoNothing();
+    ]);
 
     // 8. Seed Budgets
     console.log("Seeding budgets...");
@@ -223,17 +256,9 @@ async function main(): Promise<void> {
         status: "APPROVED",
         approvedById: "11111111-1111-1111-1111-111111111111",
         approvedAt: new Date("2026-05-14T10:00:00Z"),
-        notes: "RAB disetujui Owner dengan target margin 7.6%",
+        notes: "RAB disetujui Owner Menteng",
       },
-      {
-        id: "88888888-8888-8888-8888-888888888882",
-        projectId: "77777777-7777-7777-7777-777777777772",
-        status: "APPROVED",
-        approvedById: "11111111-1111-1111-1111-111111111111",
-        approvedAt: new Date("2026-05-28T14:00:00Z"),
-        notes: "RAB Sudirman Suites disetujui, target margin 12.5%",
-      },
-    ]).onConflictDoNothing();
+    ]);
 
     // 9. Seed Budget Items
     console.log("Seeding budget items...");
@@ -244,87 +269,31 @@ async function main(): Promise<void> {
         projectBudgetId: "88888888-8888-8888-8888-888888888881",
         costCategoryId: "99999999-9999-9999-9999-999999999991",
         name: "Finishing Kabinet Dapur (HPL & Duco)",
-        allocatedAmount: "220000000.00",
-        actualSpent: "210000000.00",
+        budgetCategory: "Pekerjaan Dapur",
+        quantity: "1.00",
+        unit: "set",
+        unitPrice: "200000000.00",
+        allocatedAmount: "200000000.00",
+        actualSpent: "50000000.00",
       },
       {
         id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
         projectBudgetId: "88888888-8888-8888-8888-888888888881",
         costCategoryId: "99999999-9999-9999-9999-999999999991",
-        name: "Carrara Marble Countertop & Backsplash",
-        allocatedAmount: "180000000.00",
-        actualSpent: "0.00",
-      },
-      {
-        id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3",
-        projectBudgetId: "88888888-8888-8888-8888-888888888881",
-        costCategoryId: "99999999-9999-9999-9999-999999999992",
-        name: "Pekerjaan MEP & Kelistrikan Dapur",
-        allocatedAmount: "70000000.00",
-        actualSpent: "65000000.00",
-      },
-      {
-        id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4",
-        projectBudgetId: "88888888-8888-8888-8888-888888888881",
-        costCategoryId: "99999999-9999-9999-9999-999999999992",
-        name: "Upah Pertukangan Sipil Lapangan",
-        allocatedAmount: "90000000.00",
-        actualSpent: "0.00",
-      },
-      {
-        id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5",
-        projectBudgetId: "88888888-8888-8888-8888-888888888881",
-        costCategoryId: "99999999-9999-9999-9999-999999999993",
-        name: "Transportasi & Operasional Lapangan PM",
-        allocatedAmount: "40000000.00",
-        actualSpent: "42000000.00",
-      },
-      // Proyek Sudirman
-      {
-        id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1",
-        projectBudgetId: "88888888-8888-8888-8888-888888888882",
-        costCategoryId: "99999999-9999-9999-9999-999999999991",
-        name: "Partisi Dinding Gypsum & Plafon Penthouse",
-        allocatedAmount: "350000000.00",
-        actualSpent: "0.00",
-      },
-      {
-        id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2",
-        projectBudgetId: "88888888-8888-8888-8888-888888888882",
-        costCategoryId: "99999999-9999-9999-9999-999999999991",
-        name: "Custom Wardrobe Master Bedroom",
-        allocatedAmount: "400000000.00",
-        actualSpent: "0.00",
-      },
-      {
-        id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3",
-        projectBudgetId: "88888888-8888-8888-8888-888888888882",
-        costCategoryId: "99999999-9999-9999-9999-999999999992",
-        name: "Pekerjaan MEP & Penerangan Penthouse",
+        name: "Carrara Marble Countertop",
+        budgetCategory: "Pekerjaan Dapur",
+        quantity: "15.00",
+        unit: "m2",
+        unitPrice: "10000000.00",
         allocatedAmount: "150000000.00",
         actualSpent: "0.00",
       },
-      {
-        id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb4",
-        projectBudgetId: "88888888-8888-8888-8888-888888888882",
-        costCategoryId: "99999999-9999-9999-9999-999999999992",
-        name: "Upah Tenaga Kerja & Tukang",
-        allocatedAmount: "200000000.00",
-        actualSpent: "0.00",
-      },
-      {
-        id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb5",
-        projectBudgetId: "88888888-8888-8888-8888-888888888882",
-        costCategoryId: "99999999-9999-9999-9999-999999999993",
-        name: "Perizinan & Koordinasi Gedung",
-        allocatedAmount: "50000000.00",
-        actualSpent: "0.00",
-      },
-    ]).onConflictDoNothing();
+    ]);
 
     // 10. Seed Client Invoices
     console.log("Seeding client invoices...");
     await tx.insert(clientInvoice).values([
+      // Menteng
       {
         id: "01010101-0101-0101-0101-010101010101",
         projectId: "77777777-7777-7777-7777-777777777771",
@@ -339,12 +308,13 @@ async function main(): Promise<void> {
         id: "01010101-0101-0101-0101-010101010102",
         projectId: "77777777-7777-7777-7777-777777777771",
         invoiceNumber: "INV/2026/002",
-        amount: "325000000.00",
+        amount: "200000000.00",
         status: "UNPAID",
         stage: "PROGRESS_1",
         dueDate: new Date("2026-06-25T23:59:59Z"),
-        notes: "Termin Progress 50% Lapangan",
+        notes: "Termin 2 - Progress 50% Lapangan (Dapat diuji pembayaran)",
       },
+      // Sudirman
       {
         id: "01010101-0101-0101-0101-010101010103",
         projectId: "77777777-7777-7777-7777-777777777772",
@@ -355,7 +325,7 @@ async function main(): Promise<void> {
         dueDate: new Date("2026-06-05T23:59:59Z"),
         notes: "DP 30% Sudirman Suites Penthouse",
       },
-    ]).onConflictDoNothing();
+    ]);
 
     // 11. Seed Cash Transactions (Ledger Entries)
     console.log("Seeding ledger cash transactions...");
@@ -393,7 +363,7 @@ async function main(): Promise<void> {
         bankAccountId: "66666666-6666-6666-6666-666666666661",
         type: "CREDIT",
         category: "vendor_payment",
-        amount: "210000000.00",
+        amount: "50000000.00",
         description: "Pembayaran Tagihan Material Kabinet - PT Cahaya Abadi",
         reconciled: true,
         reconciliationDate: new Date("2026-06-10T16:00:00Z"),
@@ -401,34 +371,7 @@ async function main(): Promise<void> {
         referenceType: "vendor_payment",
         referenceId: "03030303-0303-0303-0303-030303030301",
       },
-      // Petty Cash Outflows (Field requests PM)
-      {
-        id: "cccccccc-cccc-cccc-cccc-cccccccccc04",
-        bankAccountId: "66666666-6666-6666-6666-666666666663",
-        type: "CREDIT",
-        category: "reimbursement",
-        amount: "65000000.00",
-        description: "Pelunasan Dana Reimbursement PM Budi - MEP Kabel Eterna",
-        reconciled: true,
-        reconciliationDate: new Date("2026-06-03T14:00:00Z"),
-        reconciledById: "22222222-2222-2222-2222-222222222222",
-        referenceType: "project_cost",
-        referenceId: "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f001",
-      },
-      {
-        id: "cccccccc-cccc-cccc-cccc-cccccccccc05",
-        bankAccountId: "66666666-6666-6666-6666-666666666663",
-        type: "CREDIT",
-        category: "reimbursement",
-        amount: "42000000.00",
-        description: "Pelunasan Dana Akomodasi Scaffolding - Over Budget Approved",
-        reconciled: true,
-        reconciliationDate: new Date("2026-06-08T11:00:00Z"),
-        reconciledById: "22222222-2222-2222-2222-222222222222",
-        referenceType: "project_cost",
-        referenceId: "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f002",
-      },
-    ]).onConflictDoNothing();
+    ]);
 
     // 12. Seed Client Payments
     console.log("Seeding client payments...");
@@ -453,7 +396,7 @@ async function main(): Promise<void> {
         receivedById: "22222222-2222-2222-2222-222222222222",
         referenceNumber: "TRF-MND-4412",
       },
-    ]).onConflictDoNothing();
+    ]);
 
     // 13. Seed Vendor Bills
     console.log("Seeding vendor bills...");
@@ -463,24 +406,13 @@ async function main(): Promise<void> {
         vendorId: "55555555-5555-5555-5555-555555555551",
         projectId: "77777777-7777-7777-7777-777777777771",
         projectBudgetItemId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
-        billNumber: "BILL-2026-049",
-        amount: "210000000.00",
+        billNumber: "BILL-2026-001",
+        amount: "50000000.00",
         status: "PAID",
         dueDate: new Date("2026-06-10T23:59:59Z"),
-        notes: "Material multipleks finishing HPL untuk dapur Menteng",
+        notes: "Uang muka material kabinet Menteng",
       },
-      {
-        id: "33033303-3303-3303-3303-330333033302",
-        vendorId: "55555555-5555-5555-5555-555555555552",
-        projectId: "77777777-7777-7777-7777-777777777771",
-        projectBudgetItemId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
-        billNumber: "BILL-2026-057",
-        amount: "175000000.00",
-        status: "UNPAID",
-        dueDate: new Date("2026-06-25T23:59:59Z"),
-        notes: "Marmer alam Carrara Italia impor slab utuh",
-      },
-    ]).onConflictDoNothing();
+    ]);
 
     // 14. Seed Vendor Payments
     console.log("Seeding vendor payments...");
@@ -490,79 +422,83 @@ async function main(): Promise<void> {
         vendorBillId: "33033303-3303-3303-3303-330333033301",
         bankAccountId: "66666666-6666-6666-6666-666666666661",
         cashTransactionId: "cccccccc-cccc-cccc-cccc-cccccccccc03",
-        amountPaid: "210000000.00",
+        amountPaid: "50000000.00",
         status: "COMPLETED",
         paymentDate: new Date("2026-06-10T15:30:00Z"),
         paidById: "22222222-2222-2222-2222-222222222222",
         referenceNumber: "LLG-BCA-0012",
       },
-    ]).onConflictDoNothing();
+    ]);
 
-    // 15. Seed Project Costs
-    console.log("Seeding project field costs...");
-    await tx.insert(projectCost).values([
-      {
-        id: "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f001",
-        projectId: "77777777-7777-7777-7777-777777777771",
-        projectBudgetItemId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3",
-        requestedById: "33333333-3333-3333-3333-333333333331",
-        amount: "65000000.00",
-        description: "Belanja kabel Eterna, MCB Schneider, & conduit PVC",
-        receiptImageUrl: "https://storage.googleapis.com/atria-receipts/rec-09123.jpg",
-        status: "PAID",
-        budgetOverrun: false,
-        bankAccountId: "66666666-6666-6666-6666-666666666663",
-        cashTransactionId: "cccccccc-cccc-cccc-cccc-cccccccccc04",
-        verifiedById: "22222222-2222-2222-2222-222222222222",
-        verifiedAt: new Date("2026-06-03T09:00:00Z"),
-        approvedById: "11111111-1111-1111-1111-111111111111",
-        approvedAt: new Date("2026-06-03T12:00:00Z"),
-        paidById: "22222222-2222-2222-2222-222222222222",
-        paidAt: new Date("2026-06-03T14:00:00Z"),
-      },
-      {
-        id: "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f002",
-        projectId: "77777777-7777-7777-7777-777777777771",
-        projectBudgetItemId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5",
-        requestedById: "33333333-3333-3333-3333-333333333331",
-        amount: "42000000.00",
-        description: "Klaim akomodasi, sewa scaffolding, & konsumsi lembur tukang",
-        receiptImageUrl: "https://storage.googleapis.com/atria-receipts/rec-09124.jpg",
-        status: "PAID",
-        budgetOverrun: true,
-        bankAccountId: "66666666-6666-6666-6666-666666666663",
-        cashTransactionId: "cccccccc-cccc-cccc-cccc-cccccccccc05",
-        verifiedById: "22222222-2222-2222-2222-222222222222",
-        verifiedAt: new Date("2026-06-07T10:00:00Z"),
-        approvedById: "11111111-1111-1111-1111-111111111111",
-        approvedAt: new Date("2026-06-08T09:00:00Z"),
-        paidById: "22222222-2222-2222-2222-222222222222",
-        paidAt: new Date("2026-06-08T11:00:00Z"),
-      },
-    ]).onConflictDoNothing();
+    // 15. Seed Project Costs & Approvals
+    console.log("Seeding project field costs & approvals...");
 
-    // 16. Seed Approvals
-    console.log("Seeding transaction approvals...");
-    await tx.insert(approval).values([
-      {
-        id: "e0e0e0e0-e0e0-e0e0-e0e0-e0e0e0e0e001",
-        approverId: "11111111-1111-1111-1111-111111111111",
-        referenceType: "project_cost",
-        referenceId: "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f001",
-        status: "APPROVED",
-        notes: "Disetujui, sesuai nota pembelian material MEP.",
-      },
-      {
-        id: "e0e0e0e0-e0e0-e0e0-e0e0-e0e0e0e0e002",
-        approverId: "11111111-1111-1111-1111-111111111111",
-        referenceType: "project_cost",
-        referenceId: "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f002",
-        status: "APPROVED",
-        notes: "Override anggaran disetujui. PM wajib memastikan tidak ada penambahan operasional lagi.",
-      },
-    ]).onConflictDoNothing();
+    // Cost 1: PM Claim (Approved but unpaid, to test disburse)
+    const cost1Id = "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f001";
+    await tx.insert(projectCost).values({
+      id: cost1Id,
+      projectId: "77777777-7777-7777-7777-777777777771",
+      projectBudgetItemId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+      requestedById: "33333333-3333-3333-3333-333333333331",
+      amount: "6000000.00",
+      description: "Belanja Cat Duco Nippon Paint & Thinner",
+      receiptImageUrl: "http://localhost:3000/receipt_test.png",
+      status: "APPROVED",
+      budgetOverrun: false,
+      createdAt: new Date("2026-06-11T09:00:00Z"),
+      updatedAt: new Date("2026-06-11T12:00:00Z"),
+    });
 
-    // 17. Seed AI Runs
+    await tx.insert(approval).values({
+      id: "e0e0e0e0-e0e0-e0e0-e0e0-e0e0e0e0e001",
+      approverId: "11111111-1111-1111-1111-111111111111",
+      referenceType: "project_cost",
+      referenceId: cost1Id,
+      status: "APPROVED",
+      notes: "Disetujui Owner",
+    });
+
+    // Cost 2: PM Claim (Submitted, waiting for verification)
+    await tx.insert(projectCost).values({
+      id: "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f002",
+      projectId: "77777777-7777-7777-7777-777777777771",
+      projectBudgetItemId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+      requestedById: "33333333-3333-3333-3333-333333333331",
+      amount: "1500000.00",
+      description: "Uang bensin operasional & parkir lapangan",
+      receiptImageUrl: "http://localhost:3000/receipt_test.png",
+      status: "SUBMITTED",
+      budgetOverrun: false,
+      createdAt: new Date("2026-06-12T08:00:00Z"),
+      updatedAt: new Date("2026-06-12T08:00:00Z"),
+    });
+
+    // Cost 3: PM Claim (Submitted, requires approval, to test approve/reject in Payments menu)
+    const cost3Id = "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f003";
+    await tx.insert(projectCost).values({
+      id: cost3Id,
+      projectId: "77777777-7777-7777-7777-777777777771",
+      projectBudgetItemId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
+      requestedById: "33333333-3333-3333-3333-333333333331",
+      amount: "8000000.00",
+      description: "Sewa mobil box angkut marmer slab",
+      receiptImageUrl: "http://localhost:3000/receipt_test.png",
+      status: "SUBMITTED",
+      budgetOverrun: false,
+      createdAt: new Date("2026-06-12T10:00:00Z"),
+      updatedAt: new Date("2026-06-12T10:00:00Z"),
+    });
+
+    await tx.insert(approval).values({
+      id: "e0e0e0e0-e0e0-e0e0-e0e0-e0e0e0e0e003",
+      approverId: "11111111-1111-1111-1111-111111111111",
+      referenceType: "project_cost",
+      referenceId: cost3Id,
+      status: "PENDING",
+      notes: "Nominal pengeluaran lapangan mencapai/melebihi Rp 5.000.000.",
+    });
+
+    // 16. Seed AI Runs
     console.log("Seeding AI run logs...");
     await tx.insert(aiRun).values([
       {
@@ -570,38 +506,28 @@ async function main(): Promise<void> {
         runType: "OCR_RECEIPT",
         runById: "33333333-3333-3333-3333-333333333331",
         status: "COMPLETED",
-        payload: '{"imageUrl": "https://storage.googleapis.com/atria-receipts/rec-09123.jpg"}',
-        result: '{"vendorName": "Toko Listrik Jaya", "transactionDate": "2026-06-03", "totalAmount": 65000000, "items": [{"name": "Kabel Eterna", "qty": 10, "price": 6500000}]}',
-        tokensUsed: 1200,
+        payload: '{"imageUrl": "http://localhost:3000/receipt_test.png"}',
+        result: '{"vendorName": "Toko Nippon Paint", "transactionDate": "2026-06-11", "totalAmount": 6000000}',
+        tokensUsed: 120,
       },
-    ]).onConflictDoNothing();
+    ]);
 
-    // 18. Seed Notifications
-    console.log("Seeding notifications and budget alerts...");
+    // 17. Seed Notifications
+    console.log("Seeding notifications...");
     await tx.insert(notification).values([
       {
         id: "dddddddd-dddd-dddd-dddd-dddddddddd01",
         userId: "11111111-1111-1111-1111-111111111111",
-        title: "WARNING: Budget Limit 90% Terlampaui",
-        message: "Anggaran MEP Proyek Menteng telah terpakai Rp 65.000.000 dari alokasi Rp 70.000.000 (92.8%).",
+        title: "WARNING: Anggaran Mendekati Limit",
+        message: "Item anggaran Finishing Kabinet Dapur telah terpakai Rp 50.000.000 (25.0%).",
         read: false,
         severity: "WARNING",
         referenceType: "project_budget_item",
-        referenceId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3",
+        referenceId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
       },
-      {
-        id: "dddddddd-dddd-dddd-dddd-dddddddddd02",
-        userId: "11111111-1111-1111-1111-111111111111",
-        title: "CRITICAL: Anggaran Proyek Jebol!",
-        message: "Anggaran Operasional PM Proyek Menteng telah melampaui batas sebesar Rp 42.000.000 dari alokasi Rp 40.000.000 (105.0%).",
-        read: false,
-        severity: "CRITICAL",
-        referenceType: "project_budget_item",
-        referenceId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5",
-      },
-    ]).onConflictDoNothing();
+    ]);
 
-    // 19. Seed Audit Logs
+    // 18. Seed Audit Logs
     console.log("Seeding audit logs...");
     await tx.insert(auditLog).values([
       {
@@ -612,24 +538,18 @@ async function main(): Promise<void> {
         targetId: "01010101-0101-0101-0101-010101010101",
         originalState: '{"status": "UNPAID"}',
         newState: '{"status": "PAID"}',
-        ipAddress: "192.168.1.10",
-        userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26)",
+        ipAddress: "127.0.0.1",
+        userAgent: "Mozilla/5.0",
       },
-      {
-        id: "99099909-9909-9909-9909-990999099902",
-        userId: "22222222-2222-2222-2222-222222222222",
-        action: "PAY_FIELD_REQUEST",
-        targetTable: "project_cost",
-        targetId: "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f002",
-        originalState: '{"status": "APPROVED", "actual_spent": "0.00"}',
-        newState: '{"status": "PAID", "actual_spent": "42000000.00"}',
-        ipAddress: "192.168.1.10",
-        userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26)",
-      },
-    ]).onConflictDoNothing();
+    ]);
   });
 
   console.log("Database seeding completed successfully!");
+  console.log("Default development login credentials:");
+  console.log("- ronald@dekoria.com / password123 (owner)");
+  console.log("- lisa@dekoria.com / password123 (finance_admin)");
+  console.log("- budi@dekoria.com / password123 (project_manager)");
+  console.log("- siti@dekoria.com / password123 (project_manager)");
 }
 
 main().catch((err) => {
