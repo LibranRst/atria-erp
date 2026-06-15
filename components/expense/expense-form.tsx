@@ -98,6 +98,11 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   // Animation open state
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
+  // Custom Pickers State
+  const [showProjectPicker, setShowProjectPicker] = useState<boolean>(false);
+  const [activeBoqPickerLineIndex, setActiveBoqPickerLineIndex] = useState<number | null>(null);
+  const [boqSearchQuery, setBoqSearchQuery] = useState<string>("");
+
   useEffect(() => {
     // Trigger slide up animation shortly after mounting
     const timer = setTimeout(() => setIsOpen(true), 50);
@@ -399,30 +404,24 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
               </div>
             )}
 
-            {/* Project Selector */}
+             {/* Project Selector Trigger */}
             <div className="relative space-y-sm">
-              <label htmlFor="project-select" className="font-label-caps text-label-caps text-on-surface-variant uppercase block ml-1">Project</label>
-              <div className="relative">
-                <select
-                  id="project-select"
-                  value={selectedProjectId}
-                  onChange={(e) => {
-                    setSelectedProjectId(e.target.value);
-                    setLines([{ projectBudgetItemId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
-                    setOcrWarning(null);
-                  }}
-                  disabled={isUploading || isProcessingOCR || isSubmitting}
-                  className="appearance-none w-full h-[56px] bg-surface-container-low rounded-xl px-md font-body-md text-on-surface border-none focus:ring-2 focus:ring-primary transition-all cursor-pointer"
-                >
-                  <option value="">Select active project</option>
-                  {projects.map((proj) => (
-                    <option key={proj.id} value={proj.id}>
-                      {proj.name}
-                    </option>
-                  ))}
-                </select>
-                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
-              </div>
+              <label className="font-label-caps text-label-caps text-on-surface-variant uppercase block ml-1">Project</label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!(isUploading || isProcessingOCR || isSubmitting)) {
+                    setShowProjectPicker(true);
+                  }
+                }}
+                disabled={isUploading || isProcessingOCR || isSubmitting}
+                className="w-full h-[56px] bg-surface-container-low rounded-xl px-md flex items-center justify-between text-left font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all active:scale-[0.99] disabled:opacity-50"
+              >
+                <span className={selectedProject ? "text-on-surface" : "text-on-surface-variant/70"}>
+                  {selectedProject ? selectedProject.name : "Select active project"}
+                </span>
+                <span className="material-symbols-outlined text-on-surface-variant">expand_more</span>
+              </button>
             </div>
 
             {/* Documentation Upload Area */}
@@ -554,40 +553,37 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                       Item #{index + 1}
                     </div>
 
-                    {/* Pilih Item Anggaran RAB (BoQ) */}
+                    {/* Pilih Item Anggaran RAB (BoQ) Trigger */}
                     <div className="space-y-sm">
-                      <label htmlFor={`budget-item-select-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
+                      <label className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
                         Item Anggaran RAB (BoQ)
                       </label>
-                      <div className="relative">
-                        <select
-                          id={`budget-item-select-${index}`}
-                          value={line.projectBudgetItemId}
-                          onChange={(e) => updateLine(index, "projectBudgetItemId", e.target.value)}
-                          disabled={!selectedProjectId || isUploading || isProcessingOCR || isSubmitting}
-                          className="appearance-none w-full h-[48px] bg-surface-container-low rounded-xl px-md font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all cursor-pointer"
-                        >
-                          <option value="">-- Pilih Item Anggaran (BoQ) --</option>
-                          {Object.keys(itemsByCategory).map((catName) => (
-                            <optgroup key={catName} label={`KATEGORI ANGGARAN: ${catName}`}>
-                              {itemsByCategory[catName].map((item) => {
-                                const allocated = Number(item.allocatedAmount);
-                                const spent = Number(item.actualSpent);
-                                const remaining = allocated - spent;
-                                const qty = Number(item.quantity);
-                                const price = Number(item.unitPrice);
-                                const costCat = item.costCategory?.name || "UMUM";
-                                return (
-                                  <option key={item.id} value={item.id}>
-                                    [{costCat}] {item.name} ({qty.toLocaleString("id-ID")} {item.unit} @ Rp {price.toLocaleString("id-ID")} - Sisa: Rp {remaining.toLocaleString("id-ID")})
-                                  </option>
-                                );
-                              })}
-                            </optgroup>
-                          ))}
-                        </select>
-                        <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-[20px]">expand_more</span>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedProjectId && !(isUploading || isProcessingOCR || isSubmitting)) {
+                            setActiveBoqPickerLineIndex(index);
+                            setBoqSearchQuery("");
+                          }
+                        }}
+                        disabled={!selectedProjectId || isUploading || isProcessingOCR || isSubmitting}
+                        className="w-full h-[48px] bg-surface-container-low rounded-xl px-md flex items-center justify-between text-left font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all active:scale-[0.99] disabled:opacity-50"
+                      >
+                        {(() => {
+                          const selectedItem = budgetItems.find((item) => item.id === line.projectBudgetItemId);
+                          if (selectedItem) {
+                            const costCat = selectedItem.costCategory?.name || "UMUM";
+                            return (
+                              <span className="truncate pr-2 font-medium">
+                                <span className="text-primary font-bold mr-1">[{costCat}]</span>
+                                {selectedItem.name}
+                              </span>
+                            );
+                          }
+                          return <span className="text-on-surface-variant/70">-- Pilih Item Anggaran (BoQ) --</span>;
+                        })()}
+                        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">expand_more</span>
+                      </button>
                     </div>
 
                     {/* Kuantitas, Harga Satuan, Total Nominal */}
@@ -729,6 +725,210 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
             )}
           </button>
           <div className="h-[20px]"></div>
+        </div>
+      </div>
+
+      {/* Project Picker Backdrop */}
+      {showProjectPicker && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[105] transition-opacity duration-300 animate-fade-in"
+          onClick={() => setShowProjectPicker(false)}
+        />
+      )}
+
+      {/* Project Picker Bottom Sheet */}
+      <div 
+        className={`fixed inset-x-0 bottom-0 sm:max-w-md sm:mx-auto bg-background z-[110] flex flex-col rounded-t-[24px] shadow-2xl transition-transform duration-300 ease-out border border-outline-variant/30 max-h-[70vh] ${
+          showProjectPicker ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <header className="flex justify-between items-center px-margin-mobile h-14 shrink-0 border-b border-outline-variant/10">
+          <div className="w-10"></div>
+          <h2 className="font-headline-md text-sm font-bold text-on-surface uppercase tracking-wider">Select Project</h2>
+          <button 
+            type="button" 
+            onClick={() => setShowProjectPicker(false)} 
+            className="h-10 w-10 active-scale flex items-center justify-center text-on-surface-variant hover:text-on-surface cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </header>
+        <div className="flex-1 overflow-y-auto p-4 space-y-sm no-scrollbar">
+          {projects.map((proj) => (
+            <button
+              key={proj.id}
+              type="button"
+              onClick={() => {
+                setSelectedProjectId(proj.id);
+                setLines([{ projectBudgetItemId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
+                setOcrWarning(null);
+                setShowProjectPicker(false);
+              }}
+              className={`w-full p-4 rounded-xl text-left font-body-md text-xs transition-all active:scale-[0.98] flex items-center justify-between border ${
+                selectedProjectId === proj.id 
+                  ? "bg-primary-container/10 border-primary text-primary font-bold" 
+                  : "bg-surface-container-low border-outline-variant/10 text-on-surface hover:bg-surface-container"
+              }`}
+            >
+              <span>{proj.name}</span>
+              {selectedProjectId === proj.id && (
+                <span className="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+              )}
+            </button>
+          ))}
+          {projects.length === 0 && (
+            <div className="text-center py-8 text-xs text-on-surface-variant/70 italic">
+              Tidak ada proyek aktif.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* BoQ Picker Backdrop */}
+      {activeBoqPickerLineIndex !== null && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[105] transition-opacity duration-300 animate-fade-in"
+          onClick={() => setActiveBoqPickerLineIndex(null)}
+        />
+      )}
+
+      {/* BoQ Picker Bottom Sheet */}
+      <div 
+        className={`fixed inset-x-0 bottom-0 sm:max-w-md sm:mx-auto bg-background z-[110] flex flex-col rounded-t-[24px] shadow-2xl transition-transform duration-300 ease-out border border-outline-variant/30 h-[80vh] ${
+          activeBoqPickerLineIndex !== null ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <header className="flex justify-between items-center px-margin-mobile h-14 shrink-0 border-b border-outline-variant/10">
+          <div className="w-10"></div>
+          <h2 className="font-headline-md text-sm font-bold text-on-surface uppercase tracking-wider">Select Budget Item (BoQ)</h2>
+          <button 
+            type="button" 
+            onClick={() => setActiveBoqPickerLineIndex(null)} 
+            className="h-10 w-10 active-scale flex items-center justify-center text-on-surface-variant hover:text-on-surface cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </header>
+
+        {/* Search bar inside sheet */}
+        <div className="p-4 border-b border-outline-variant/10 shrink-0">
+          <div className="relative flex items-center">
+            <span className="material-symbols-outlined absolute left-4 text-on-surface-variant/70 text-[20px]">search</span>
+            <input
+              type="text"
+              value={boqSearchQuery}
+              onChange={(e) => setBoqSearchQuery(e.target.value)}
+              placeholder="Cari item anggaran atau kategori..."
+              className="w-full h-11 bg-surface-container-low rounded-xl pl-11 pr-10 font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary focus:outline-none transition-all"
+            />
+            {boqSearchQuery && (
+              <button
+                type="button"
+                onClick={() => setBoqSearchQuery("")}
+                className="absolute right-4 text-on-surface-variant hover:text-on-surface flex items-center justify-center cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Scrollable results list grouped by category */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-md no-scrollbar">
+          {(() => {
+            const query = boqSearchQuery.toLowerCase().trim();
+            const filteredCategories: Record<string, ProjectBudgetItem[]> = {};
+            
+            Object.keys(itemsByCategory).forEach((catName) => {
+              const matchedItems = itemsByCategory[catName].filter((item) => {
+                const nameMatch = item.name.toLowerCase().includes(query);
+                const catMatch = catName.toLowerCase().includes(query);
+                const costMatch = (item.costCategory?.name || "UMUM").toLowerCase().includes(query);
+                return nameMatch || catMatch || costMatch;
+              });
+              
+              if (matchedItems.length > 0) {
+                filteredCategories[catName] = matchedItems;
+              }
+            });
+
+            const categoryKeys = Object.keys(filteredCategories);
+
+            if (categoryKeys.length === 0) {
+              return (
+                <div className="text-center py-12 text-xs text-on-surface-variant/70 italic flex flex-col items-center justify-center gap-2">
+                  <span className="material-symbols-outlined text-[32px] text-on-surface-variant/40">search_off</span>
+                  <span>Tidak ada item anggaran yang cocok dengan "{boqSearchQuery}"</span>
+                </div>
+              );
+            }
+
+            return categoryKeys.map((catName) => (
+              <div key={catName} className="space-y-sm">
+                <div className="font-label-caps text-[10px] font-bold text-primary tracking-wider uppercase bg-primary/5 px-2.5 py-1.5 rounded-md border border-primary/10">
+                  {catName}
+                </div>
+                <div className="space-y-xs">
+                  {filteredCategories[catName].map((item) => {
+                    const allocated = Number(item.allocatedAmount);
+                    const spent = Number(item.actualSpent);
+                    const remaining = allocated - spent;
+                    const isOverrun = remaining <= 0;
+                    const price = Number(item.unitPrice);
+                    const costCat = item.costCategory?.name || "UMUM";
+                    const isSelected = activeBoqPickerLineIndex !== null && lines[activeBoqPickerLineIndex]?.projectBudgetItemId === item.id;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          if (activeBoqPickerLineIndex !== null) {
+                            updateLine(activeBoqPickerLineIndex, "projectBudgetItemId", item.id);
+                            const currentLine = lines[activeBoqPickerLineIndex];
+                            if (!currentLine.unitPrice || Number(currentLine.unitPrice) === 0) {
+                              updateLine(activeBoqPickerLineIndex, "unitPrice", price);
+                            }
+                            setActiveBoqPickerLineIndex(null);
+                          }
+                        }}
+                        className={`w-full p-3.5 rounded-xl text-left transition-all active:scale-[0.98] border flex flex-col gap-xs ${
+                          isSelected 
+                            ? "bg-primary-container/10 border-primary" 
+                            : "bg-surface-container-low border-outline-variant/10 hover:bg-surface-container"
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="font-body-md text-xs font-semibold text-on-surface">
+                            <span className="text-on-surface-variant/70 font-mono text-[10px] mr-1.5 bg-surface-container px-1.5 py-0.5 rounded border border-outline-variant/15">
+                              {costCat}
+                            </span>
+                            {item.name}
+                          </div>
+                          {isSelected && (
+                            <span className="material-symbols-outlined text-primary text-[18px] shrink-0 ml-1">check_circle</span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[10px] text-on-surface-variant/80 mt-1 border-t border-outline-variant/5 pt-1.5">
+                          <div>
+                            <span className="block text-on-surface-variant/50">Anggaran:</span>
+                            <span className="font-semibold">{Number(item.quantity).toLocaleString("id-ID")} {item.unit} @ Rp {price.toLocaleString("id-ID")}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="block text-on-surface-variant/50">Sisa Dana:</span>
+                            <span className={`font-bold ${isOverrun ? "text-error" : "text-emerald-600"}`}>
+                              Rp {remaining.toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       </div>
     </>
