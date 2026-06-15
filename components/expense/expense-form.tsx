@@ -614,6 +614,11 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                                 updateLine(index, "quantity", num < 0 ? 0 : num);
                               }
                             }}
+                            onKeyDown={(e) => {
+                              if (e.key === "-" || e.key === "+" || e.key === "e" || e.key === "E") {
+                                e.preventDefault();
+                              }
+                            }}
                             disabled={isUploading || isSubmitting || isProcessingOCR}
                             placeholder="1"
                             className="w-full h-[48px] bg-surface-container-low text-center font-body-md text-xs text-on-surface border-y border-x-0 border-outline-variant/20 focus:ring-1 focus:ring-primary focus:outline-none focus:z-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -638,7 +643,20 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                           id={`unit-price-input-${index}`}
                           type="number"
                           value={line.unitPrice}
-                          onChange={(e) => updateLine(index, "unitPrice", e.target.value !== "" ? Number(e.target.value) : "")}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "") {
+                              updateLine(index, "unitPrice", "");
+                            } else {
+                              const num = Number(val);
+                              updateLine(index, "unitPrice", num < 0 ? 0 : num);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "-" || e.key === "+" || e.key === "e" || e.key === "E") {
+                              e.preventDefault();
+                            }
+                          }}
                           disabled={isUploading || isSubmitting || isProcessingOCR}
                           placeholder="Harga per unit..."
                           className="w-full h-[48px] bg-surface-container-low rounded-xl px-md font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all"
