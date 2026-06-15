@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { payFieldRequest, verifyFieldRequest } from "@/app/actions/finance/field-requests";
 import { useRouter } from "next/navigation";
 import { getErrorMessage } from "@/lib/utils/error-message";
+import { VendorBillList } from "./vendor-bill-list";
 
 export interface ExpenseCostItem {
   id: string;
@@ -44,6 +45,10 @@ interface ExpenseListProps {
   initialCosts: ExpenseCostItem[];
   bankAccounts: BankAccountItem[];
   userRole: string;
+  vendorBills?: any[];
+  vendorPayments?: any[];
+  vendors?: any[];
+  projects?: any[];
 }
 
 type FilterStatus = "ALL" | "NEEDS_VERIFICATION" | "NEEDS_APPROVAL" | "READY_TO_PAY" | "PAID" | "REJECTED";
@@ -62,8 +67,13 @@ export function ExpenseList({
   initialCosts,
   bankAccounts,
   userRole,
+  vendorBills = [],
+  vendorPayments = [],
+  vendors = [],
+  projects = [],
 }: ExpenseListProps): React.JSX.Element {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"FIELD_CLAIMS" | "VENDOR_BILLS">("FIELD_CLAIMS");
   const [filter, setFilter] = useState<FilterStatus>("ALL");
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
@@ -166,7 +176,6 @@ export function ExpenseList({
       }
     });
   };
-
   return (
     <div className="space-y-md px-1 select-none">
       {/* Header */}
@@ -177,9 +186,37 @@ export function ExpenseList({
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-xs overflow-x-auto pb-xs scrollbar-none border-b border-outline-variant/10">
-        {(
+      {/* Segmented Control Switcher */}
+      <div className="flex w-full bg-surface-container-low border border-outline-variant/10 rounded-xl p-1 select-none">
+        <button
+          type="button"
+          onClick={() => setActiveTab("FIELD_CLAIMS")}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            activeTab === "FIELD_CLAIMS"
+              ? "bg-primary text-on-primary shadow-sm"
+              : "text-on-surface-variant hover:text-on-surface"
+          }`}
+        >
+          Pengeluaran Lapangan
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("VENDOR_BILLS")}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            activeTab === "VENDOR_BILLS"
+              ? "bg-primary text-on-primary shadow-sm"
+              : "text-on-surface-variant hover:text-on-surface"
+          }`}
+        >
+          Tagihan Vendor
+        </button>
+      </div>
+
+      {activeTab === "FIELD_CLAIMS" ? (
+        <>
+          {/* Filter Tabs */}
+          <div className="flex gap-xs overflow-x-auto pb-xs scrollbar-none border-b border-outline-variant/10">
+            {(
           [
             { label: "Semua", value: "ALL" },
             { label: "Butuh Verifikasi", value: "NEEDS_VERIFICATION" },
@@ -575,6 +612,17 @@ export function ExpenseList({
             );
           })()}
         </div>
+      )}
+      </>
+      ) : (
+        <VendorBillList 
+          vendorBills={vendorBills}
+          vendorPayments={vendorPayments}
+          vendors={vendors}
+          projects={projects}
+          bankAccounts={bankAccounts}
+          userRole={userRole}
+        />
       )}
 
       {/* Modal Zoom Foto Nota */}
