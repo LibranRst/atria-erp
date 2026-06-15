@@ -153,7 +153,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
 
   const adjustQuantity = (index: number, delta: number) => {
     const currentQty = lines[index].quantity === "" ? 0 : Number(lines[index].quantity);
-    const newQty = Math.max(0.01, Number((currentQty + delta).toFixed(2)));
+    const newQty = Math.max(0, Number((currentQty + delta).toFixed(2)));
     updateLine(index, "quantity", newQty);
   };
 
@@ -595,7 +595,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                           <button
                             type="button"
                             onClick={() => adjustQuantity(index, -1)}
-                            disabled={isUploading || isSubmitting || isProcessingOCR || (Number(line.quantity) || 0) <= 0.01}
+                            disabled={isUploading || isSubmitting || isProcessingOCR || (Number(line.quantity) || 0) <= 0}
                             className="h-[48px] w-11 shrink-0 flex items-center justify-center bg-surface-container border border-outline-variant/20 rounded-l-xl active:scale-95 transition-all text-on-surface-variant hover:text-on-surface disabled:opacity-50 select-none cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-[20px] font-bold">remove</span>
@@ -605,7 +605,15 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                             type="number"
                             step="any"
                             value={line.quantity}
-                            onChange={(e) => updateLine(index, "quantity", e.target.value !== "" ? Number(e.target.value) : "")}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "") {
+                                updateLine(index, "quantity", "");
+                              } else {
+                                const num = Number(val);
+                                updateLine(index, "quantity", num < 0 ? 0 : num);
+                              }
+                            }}
                             disabled={isUploading || isSubmitting || isProcessingOCR}
                             placeholder="1"
                             className="w-full h-[48px] bg-surface-container-low text-center font-body-md text-xs text-on-surface border-y border-x-0 border-outline-variant/20 focus:ring-1 focus:ring-primary focus:outline-none focus:z-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
