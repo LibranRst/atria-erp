@@ -171,7 +171,7 @@ async function main(): Promise<void> {
         name: "PT Cahaya Mas Panel",
         email: "sales@cahayamas.com",
         phone: "021-5559876",
-        address: "Kawasan Industri Pulogadung Lokasi F, Jakarta Timur",
+        address: "Kawasan Industri Pulogadung Blok F, Jakarta Timur",
         bankName: "BCA",
         bankAccountNumber: "0955512345",
         bankAccountHolder: "PT Cahaya Mas Panel",
@@ -262,7 +262,7 @@ async function main(): Promise<void> {
       },
     ]);
 
-    // 9. Seed Budget Items
+    // 9. Seed Budget Items (Pristine: Spent is initially 0.00!)
     console.log("Seeding budget items...");
     await tx.insert(projectBudgetItem).values([
       // Menteng Items
@@ -276,7 +276,7 @@ async function main(): Promise<void> {
         unit: "lembar",
         unitPrice: "250000.00",
         allocatedAmount: "25000000.00",
-        actualSpent: "5000000.00",
+        actualSpent: "0.00", // Start at 0!
       },
       {
         id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
@@ -312,7 +312,7 @@ async function main(): Promise<void> {
         unit: "trip",
         unitPrice: "350000.00",
         allocatedAmount: "5250000.00",
-        actualSpent: "1050000.00",
+        actualSpent: "0.00", // Start at 0!
       },
       // Sudirman Items
       {
