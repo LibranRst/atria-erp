@@ -20,7 +20,7 @@ export async function payVendorBill(
     };
   }
 
-  const { vendorPaymentId, referenceNumber } = validation.data;
+  const { vendorPaymentId, referenceNumber, bankAccountId } = validation.data;
 
   try {
     const session = await auth.api.getSession({
@@ -98,11 +98,13 @@ export async function payVendorBill(
         }
       }
 
+      const targetBankAccountId = bankAccountId || payment.bankAccountId;
+
       // 5. Fetch and Lock the bank account
       const [account] = await tx
         .select()
         .from(bankAccount)
-        .where(eq(bankAccount.id, payment.bankAccountId))
+        .where(eq(bankAccount.id, targetBankAccountId))
         .for("update");
 
       if (!account) {
@@ -124,7 +126,7 @@ export async function payVendorBill(
           balance: newBalance.toFixed(2),
           updatedAt: new Date(),
         })
-        .where(eq(bankAccount.id, payment.bankAccountId))
+        .where(eq(bankAccount.id, targetBankAccountId))
         .returning();
 
       if (updatedRows.length !== 1) {
@@ -135,7 +137,7 @@ export async function payVendorBill(
       const [ledgerTx] = await tx
         .insert(cashTransaction)
         .values({
-          bankAccountId: payment.bankAccountId,
+          bankAccountId: targetBankAccountId,
           type: "CREDIT",
           category: "vendor_payment",
           amount: paymentAmount.toFixed(2),
@@ -154,6 +156,7 @@ export async function payVendorBill(
       await tx
         .update(vendorPayment)
         .set({
+          bankAccountId: targetBankAccountId,
           cashTransactionId: ledgerTx.id,
           status: "COMPLETED",
           referenceNumber,

@@ -54,6 +54,7 @@ export function VendorBillList({
 
   // Disburse Form States
   const [refNumber, setRefNumber] = useState("");
+  const [disburseBankId, setDisburseBankId] = useState("");
 
   // Derived states
   const isOwnerOrFinance = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
@@ -180,6 +181,7 @@ export function VendorBillList({
   // Action: Disburse Payment Trigger
   const handleDisburseClick = (payment: any) => {
     setSelectedPaymentForDisburse(payment);
+    setDisburseBankId(payment.bankAccountId); // Pre-populate with the scheduled account
     setRefNumber("");
     setError(null);
     setSuccess(null);
@@ -200,6 +202,7 @@ export function VendorBillList({
         const res = await payVendorBill({
           vendorPaymentId: selectedPaymentForDisburse.id,
           referenceNumber: refNumber.trim(),
+          bankAccountId: disburseBankId || undefined, // Pass the chosen bank account override
         });
 
         if (!res.success) {
@@ -811,13 +814,32 @@ export function VendorBillList({
                 <span className="text-on-surface-variant">Jumlah Pembayaran:</span>
                 <span className="font-bold text-primary">Rp {Number(selectedPaymentForDisburse.amountPaid).toLocaleString("id-ID")}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-on-surface-variant">Sumber Dana:</span>
-                <span>{selectedPaymentForDisburse.bankAccount?.name}</span>
-              </div>
             </div>
 
             <form onSubmit={handleDisburseSubmit} className="space-y-md">
+              {/* Select Bank Account Override */}
+              <div className="space-y-xs">
+                <label className="font-label-caps text-[10px] text-on-surface-variant block">Pilih Kantong / Sumber Kas</label>
+                <div className="relative">
+                  <select
+                    value={disburseBankId}
+                    disabled={isPending}
+                    onChange={(e) => setDisburseBankId(e.target.value)}
+                    className="w-full h-11 px-sm rounded-xl border border-outline-variant/50 bg-surface text-on-surface font-semibold text-[13px] appearance-none focus:outline-none focus:border-primary disabled:opacity-50 cursor-pointer"
+                    required
+                  >
+                    {bankAccounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.bankName} - {acc.name} (Saldo: Rp {Number(acc.balance).toLocaleString("id-ID")})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-on-surface-variant">
+                    <span className="material-symbols-outlined text-[18px]">keyboard_arrow_down</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Reference Number */}
               <div className="space-y-xs">
                 <label className="font-label-caps text-[10px] text-on-surface-variant block">Nomor Referensi Bukti Transfer</label>

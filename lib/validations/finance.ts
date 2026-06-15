@@ -26,6 +26,7 @@ export type SchedulePaymentInput = z.infer<typeof schedulePaymentSchema>;
 export const payVendorBillSchema = z.object({
   vendorPaymentId: z.string().regex(uuidRegex, "ID Pembayaran Vendor tidak valid."),
   referenceNumber: z.string().min(1, "Nomor referensi mutasi bank wajib diisi.").max(100),
+  bankAccountId: z.string().regex(uuidRegex, "ID bank tidak valid.").optional(),
 });
 
 export type PayVendorBillInput = z.infer<typeof payVendorBillSchema>;
