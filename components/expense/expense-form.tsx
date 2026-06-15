@@ -150,12 +150,25 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
     setLines(newLines);
   };
 
-  const updateLine = (index: number, field: keyof ExpenseLine, value: any) => {
+  const updateLine = (
+    index: number,
+    updates: Partial<ExpenseLine> | keyof ExpenseLine,
+    value?: any
+  ) => {
     const newLines = [...lines];
-    const updatedLine = { ...newLines[index], [field]: value };
+    let updatedLine = { ...newLines[index] };
 
-    // Auto-calculate amount when quantity or unitPrice changes
-    if (field === "quantity" || field === "unitPrice") {
+    if (typeof updates === "string") {
+      updatedLine = { ...updatedLine, [updates]: value };
+    } else {
+      updatedLine = { ...updatedLine, ...updates };
+    }
+
+    // Recalculate amount if quantity or unitPrice was modified
+    const hasQtyChange = typeof updates === "string" ? updates === "quantity" : "quantity" in updates;
+    const hasPriceChange = typeof updates === "string" ? updates === "unitPrice" : "unitPrice" in updates;
+    
+    if (hasQtyChange || hasPriceChange) {
       const q = updatedLine.quantity === "" ? 0 : Number(updatedLine.quantity);
       const p = updatedLine.unitPrice === "" ? 0 : Number(updatedLine.unitPrice);
       updatedLine.amount = q * p;
@@ -884,11 +897,10 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                         type="button"
                         onClick={() => {
                           if (activeBoqPickerLineIndex !== null) {
-                            updateLine(activeBoqPickerLineIndex, "projectBudgetItemId", item.id);
-                            const currentLine = lines[activeBoqPickerLineIndex];
-                            if (!currentLine.unitPrice || Number(currentLine.unitPrice) === 0) {
-                              updateLine(activeBoqPickerLineIndex, "unitPrice", price);
-                            }
+                            updateLine(activeBoqPickerLineIndex, {
+                              projectBudgetItemId: item.id,
+                              unitPrice: price,
+                            });
                             setActiveBoqPickerLineIndex(null);
                           }
                         }}
