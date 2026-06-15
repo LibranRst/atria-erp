@@ -151,6 +151,12 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
     setLines(newLines);
   };
 
+  const adjustQuantity = (index: number, delta: number) => {
+    const currentQty = lines[index].quantity === "" ? 0 : Number(lines[index].quantity);
+    const newQty = Math.max(0.01, Number((currentQty + delta).toFixed(2)));
+    updateLine(index, "quantity", newQty);
+  };
+
   // Hitung total nominal gabungan
   const totalAmount = lines.reduce((sum, line) => sum + (Number(line.amount) || 0), 0);
 
@@ -578,11 +584,22 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                     {/* Kuantitas, Harga Satuan, Total Nominal */}
                     <div className="grid grid-cols-12 gap-sm items-end">
                       {/* Kuantitas */}
-                      <div className="col-span-4 space-y-sm">
+                      <div className="col-span-5 space-y-sm">
                         <label htmlFor={`qty-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
-                          Qty
+                          Qty {(() => {
+                            const bi = budgetItems.find(item => item.id === line.projectBudgetItemId);
+                            return bi?.unit ? `(${bi.unit})` : "";
+                          })()}
                         </label>
-                        <div className="relative flex items-center">
+                        <div className="flex items-center">
+                          <button
+                            type="button"
+                            onClick={() => adjustQuantity(index, -1)}
+                            disabled={isUploading || isSubmitting || isProcessingOCR || (Number(line.quantity) || 0) <= 0.01}
+                            className="h-[48px] w-11 shrink-0 flex items-center justify-center bg-surface-container border border-outline-variant/20 rounded-l-xl active:scale-95 transition-all text-on-surface-variant hover:text-on-surface disabled:opacity-50 select-none cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[20px] font-bold">remove</span>
+                          </button>
                           <input
                             id={`qty-input-${index}`}
                             type="number"
@@ -591,22 +608,21 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                             onChange={(e) => updateLine(index, "quantity", e.target.value !== "" ? Number(e.target.value) : "")}
                             disabled={isUploading || isSubmitting || isProcessingOCR}
                             placeholder="1"
-                            className="w-full h-[48px] bg-surface-container-low rounded-xl pl-md pr-10 font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all"
+                            className="w-full h-[48px] bg-surface-container-low text-center font-body-md text-xs text-on-surface border-y border-x-0 border-outline-variant/20 focus:ring-1 focus:ring-primary focus:outline-none focus:z-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
-                          {/* Unit label if budget item selected */}
-                          {(() => {
-                            const bi = budgetItems.find(item => item.id === line.projectBudgetItemId);
-                            return bi?.unit ? (
-                              <span className="absolute right-3 text-[10px] font-bold text-on-surface-variant/70 uppercase">
-                                {bi.unit}
-                              </span>
-                            ) : null;
-                          })()}
+                          <button
+                            type="button"
+                            onClick={() => adjustQuantity(index, 1)}
+                            disabled={isUploading || isSubmitting || isProcessingOCR}
+                            className="h-[48px] w-11 shrink-0 flex items-center justify-center bg-surface-container border border-outline-variant/20 rounded-r-xl active:scale-95 transition-all text-on-surface-variant hover:text-on-surface disabled:opacity-50 select-none cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[20px] font-bold">add</span>
+                          </button>
                         </div>
                       </div>
 
                       {/* Harga Satuan */}
-                      <div className="col-span-8 space-y-sm">
+                      <div className="col-span-7 space-y-sm">
                         <label htmlFor={`unit-price-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
                           Harga Satuan (Rp)
                         </label>
