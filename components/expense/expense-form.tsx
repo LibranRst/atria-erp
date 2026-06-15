@@ -68,6 +68,15 @@ function findMatchingBudgetItem(itemName: string, budgetItems: ProjectBudgetItem
   return match;
 }
 
+function cleanLeadingZeros(val: string): string {
+  if (!val) return "";
+  let cleaned = val.replace(/^0+(?=\d)/, "");
+  if (cleaned.startsWith(".")) {
+    cleaned = "0" + cleaned;
+  }
+  return cleaned;
+}
+
 export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   const router = useRouter();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -606,7 +615,8 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                             step="any"
                             value={line.quantity}
                             onChange={(e) => {
-                              const val = e.target.value;
+                              const val = cleanLeadingZeros(e.target.value);
+                              e.target.value = val;
                               if (val === "") {
                                 updateLine(index, "quantity", "");
                               } else {
@@ -644,7 +654,8 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                           type="number"
                           value={line.unitPrice}
                           onChange={(e) => {
-                            const val = e.target.value;
+                            const val = cleanLeadingZeros(e.target.value);
+                            e.target.value = val;
                             if (val === "") {
                               updateLine(index, "unitPrice", "");
                             } else {
