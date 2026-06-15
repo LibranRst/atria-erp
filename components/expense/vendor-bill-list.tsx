@@ -118,7 +118,19 @@ export function VendorBillList({
   // Action: Schedule Payment Trigger
   const handleScheduleClick = (bill: any) => {
     setSelectedBillForSchedule(bill);
-    setScheduleAmount(Number(bill.amount).toFixed(2));
+    
+    // Hitung sisa tagihan yang belum dijadwalkan atau dibayar
+    const pendingAmount = bill.payments
+      ?.filter((p: any) => p.status === "PENDING" || p.status === "PROCESSING")
+      ?.reduce((sum: number, p: any) => sum + Number(p.amountPaid), 0) || 0;
+
+    const completedAmount = bill.payments
+      ?.filter((p: any) => p.status === "COMPLETED")
+      ?.reduce((sum: number, p: any) => sum + Number(p.amountPaid), 0) || 0;
+
+    const remaining = Number(bill.amount) - (pendingAmount + completedAmount);
+    setScheduleAmount(remaining > 0 ? remaining.toFixed(2) : Number(bill.amount).toFixed(2));
+    
     setScheduleDate(new Date().toISOString().split("T")[0]);
     if (bankAccounts.length > 0) {
       setSelectedBankId(bankAccounts[0].id);
@@ -277,6 +289,18 @@ export function VendorBillList({
               if (bill.status === "VOID") statusMapping = "VOID";
               if (bill.status === "PARTIALLY_PAID") statusMapping = "PARTIALLY_PAID";
 
+              const pendingPaymentAmount = bill.payments
+                ?.filter((p: any) => p.status === "PENDING" || p.status === "PROCESSING")
+                ?.reduce((sum: number, p: any) => sum + Number(p.amountPaid), 0) || 0;
+
+              const completedPaymentAmount = bill.payments
+                ?.filter((p: any) => p.status === "COMPLETED")
+                ?.reduce((sum: number, p: any) => sum + Number(p.amountPaid), 0) || 0;
+
+              const totalScheduledOrPaid = pendingPaymentAmount + completedPaymentAmount;
+              const isFullyScheduledOrPaid = totalScheduledOrPaid >= amountNum;
+              const hasPending = pendingPaymentAmount > 0;
+
               return (
                 <div
                   key={bill.id}
@@ -318,13 +342,19 @@ export function VendorBillList({
 
                     {/* Schedule action trigger */}
                     {isOwnerOrFinance && (bill.status !== "PAID" && bill.status !== "VOID") && (
-                      <button
-                        type="button"
-                        onClick={() => handleScheduleClick(bill)}
-                        className="h-8 px-sm bg-secondary text-on-secondary text-[11px] font-bold rounded-full hover:bg-secondary/95 active:scale-95 transition-all cursor-pointer"
-                      >
-                        Jadwalkan Bayar
-                      </button>
+                      isFullyScheduledOrPaid ? (
+                        <Badge status="PENDING">
+                          {hasPending ? "Dalam Antrean" : "Sudah Dijadwalkan"}
+                        </Badge>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleScheduleClick(bill)}
+                          className="h-8 px-sm bg-secondary text-on-secondary text-[11px] font-bold rounded-full hover:bg-secondary/95 active:scale-95 transition-all cursor-pointer"
+                        >
+                          {totalScheduledOrPaid > 0 ? "Jadwalkan Sisa" : "Jadwalkan Bayar"}
+                        </button>
+                      )
                     )}
                   </div>
                 </div>
