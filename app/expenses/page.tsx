@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { projectCost, vendorBill, vendorPayment, vendor, project, bankAccount } from "@/db/schema";
+import { projectCost, vendorBill, vendorPayment, vendor, project, bankAccount, approval } from "@/db/schema";
 import { eq, desc, and, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
@@ -122,10 +122,25 @@ export default async function ExpensesPage(): Promise<React.JSX.Element> {
     orderBy: [desc(vendorPayment.createdAt)],
   });
 
-  // 5. Kueri daftar rekening bank
+  // 5. Kueri data persetujuan (approval) untuk memvalidasi pencairan plans
+  const vendorPaymentsApprovals = await db.query.approval.findMany({
+    where: eq(approval.referenceType, "vendor_payment"),
+  });
+
+  const paymentsForList = vendorPaymentsData.map((pay) => {
+    const appRecord = vendorPaymentsApprovals.find(
+      (app) => app.referenceId === pay.id
+    );
+    return {
+      ...pay,
+      approvalStatus: appRecord ? appRecord.status : "APPROVED",
+    };
+  });
+
+  // 6. Kueri daftar rekening bank
   const bankAccountsData = await db.query.bankAccount.findMany();
 
-  // 6. Kueri metadata pendukung form input (Vendors & Projects)
+  // 7. Kueri metadata pendukung form input (Vendors & Projects)
   const vendorsData = await db.query.vendor.findMany({
     orderBy: [desc(vendor.name)],
   });
@@ -158,7 +173,7 @@ export default async function ExpensesPage(): Promise<React.JSX.Element> {
         bankAccounts={bankAccountsData} 
         userRole={roleName || "UNKNOWN"}
         vendorBills={vendorBillsData}
-        vendorPayments={vendorPaymentsData}
+        vendorPayments={paymentsForList}
         vendors={vendorsData}
         projects={projectsData}
       />

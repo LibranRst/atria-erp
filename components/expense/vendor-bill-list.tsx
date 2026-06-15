@@ -400,8 +400,8 @@ export function VendorBillList({
                         <h4 className="font-body-md font-bold text-on-surface truncate max-w-[200px]">
                           {pay.vendorBill?.vendor?.name}
                         </h4>
-                        <Badge status={isCompleted ? "PAID" : "PENDING"}>
-                          {isCompleted ? "Lunas" : "Menunggu"}
+                        <Badge status={isCompleted ? "PAID" : pay.approvalStatus === "PENDING" ? "PENDING" : pay.approvalStatus === "REJECTED" ? "REJECTED" : "APPROVED"}>
+                          {isCompleted ? "Lunas" : pay.approvalStatus === "PENDING" ? "Menunggu" : pay.approvalStatus === "REJECTED" ? "Ditolak" : "Disetujui"}
                         </Badge>
                       </div>
                       <p className="text-[10px] text-on-surface-variant font-medium">
@@ -430,7 +430,15 @@ export function VendorBillList({
                   {/* Disburse actions or approval checks */}
                   {!isCompleted && (
                     <div className="flex justify-end items-center border-t border-outline-variant/10 pt-sm">
-                      {isOwnerOrFinance ? (
+                      {pay.approvalStatus === "PENDING" ? (
+                        <span className="text-[10px] font-bold bg-warning-light text-warning border border-warning/30 px-2.5 py-1 rounded-full uppercase">
+                          Menunggu Approval Owner
+                        </span>
+                      ) : pay.approvalStatus === "REJECTED" ? (
+                        <span className="text-[10px] font-bold bg-critical-light text-critical border border-critical/30 px-2.5 py-1 rounded-full uppercase">
+                          Ditolak Owner
+                        </span>
+                      ) : isOwnerOrFinance ? (
                         <button
                           type="button"
                           onClick={() => handleDisburseClick(pay)}
@@ -439,7 +447,7 @@ export function VendorBillList({
                           Cairkan / Bayar
                         </button>
                       ) : (
-                        <span className="text-[10px] font-bold text-warning-light bg-warning/10 border border-warning/20 px-2 py-0.5 rounded-full uppercase">
+                        <span className="text-[10px] font-bold bg-success-light text-success border border-success/30 px-2.5 py-1 rounded-full uppercase">
                           Proses Antrean
                         </span>
                       )}
