@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { cashTransaction, aiRun, project, approval } from "@/db/schema";
+import { cashTransaction, aiRun, project, approval, projectCost, vendorPayment } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
@@ -89,7 +89,26 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
   const pendingApprovals = await db.query.approval.findMany({
     where: eq(approval.status, "PENDING"),
   });
-  const pendingApprovalsCount = pendingApprovals.length;
+  
+  // Filter pending approvals to match the display rules on the approvals page
+  let pendingApprovalsCount = 0;
+  for (const app of pendingApprovals) {
+    if (app.referenceType === "project_cost") {
+      const cost = await db.query.projectCost.findFirst({
+        where: eq(projectCost.id, app.referenceId),
+      });
+      if (cost && cost.status === "VERIFIED") {
+        pendingApprovalsCount++;
+      }
+    } else if (app.referenceType === "vendor_payment") {
+      const pay = await db.query.vendorPayment.findFirst({
+        where: eq(vendorPayment.id, app.referenceId),
+      });
+      if (pay) {
+        pendingApprovalsCount++;
+      }
+    }
+  }
 
   // Query active projects and count warning/critical projects for alert badges
   const allProjects = await db.query.project.findMany({
