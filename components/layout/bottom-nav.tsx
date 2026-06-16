@@ -37,14 +37,14 @@ export function BottomNav(): React.JSX.Element | null {
     {
       label: "Dashboard",
       href: "/ledger",
-      iconName: "today",
+      iconName: "dashboard",
       match: (path, params): boolean =>
         path === "/ledger" && params.get("brief") !== "true",
     },
     {
       label: "Projects",
       href: "/projects",
-      iconName: "architecture",
+      iconName: "folder",
       match: (path): boolean => path.startsWith("/projects"),
     },
     {
@@ -59,13 +59,6 @@ export function BottomNav(): React.JSX.Element | null {
       iconName: "receipt_long",
       match: (path): boolean => path.startsWith("/expenses"),
     },
-    {
-      label: "AI Brief",
-      href: "/ledger?brief=true",
-      iconName: "auto_awesome",
-      match: (path, params): boolean =>
-        path === "/ledger" && params.get("brief") === "true",
-    },
   ];
 
   const filteredNavItems = navItems.filter((item) => {
@@ -74,11 +67,23 @@ export function BottomNav(): React.JSX.Element | null {
       return item.label === "Projects" || item.label === "Expenses";
     }
 
-    if (item.label === "Dashboard" || item.label === "AI Brief") {
-      return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
+    if (roleName === "OWNER" || roleName === "FINANCE_ADMIN") {
+      // Owner / Finance core: Dashboard, Projects, Expenses
+      return item.label === "Dashboard" || item.label === "Projects" || item.label === "Expenses";
     }
 
-    return true; // Projects, Materials, Expenses
+    if (roleName === "PURCHASING") {
+      // Purchasing core: Materials, Expenses, Projects
+      return item.label === "Materials" || item.label === "Expenses" || item.label === "Projects";
+    }
+
+    if (roleName === "PROJECT_MANAGER") {
+      // Project Manager core: Projects, Expenses, Materials
+      return item.label === "Projects" || item.label === "Expenses" || item.label === "Materials";
+    }
+
+    // Default fallback: Projects, Expenses, Materials
+    return item.label === "Projects" || item.label === "Expenses" || item.label === "Materials";
   });
 
   return (
