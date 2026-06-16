@@ -22,6 +22,11 @@ export function BottomNav(): React.JSX.Element | null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: session } = authClient.useSession();
+  const fabHref = React.useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("new-expense", "true");
+    return `${pathname}?${params.toString()}`;
+  }, [pathname, searchParams]);
 
   if (pathname === "/login") return null;
 
@@ -30,7 +35,7 @@ export function BottomNav(): React.JSX.Element | null {
 
   const navItems: readonly NavItem[] = [
     {
-      label: "Today",
+      label: "Dashboard",
       href: "/ledger",
       iconName: "today",
       match: (path, params): boolean =>
@@ -43,10 +48,10 @@ export function BottomNav(): React.JSX.Element | null {
       match: (path): boolean => path.startsWith("/projects"),
     },
     {
-      label: "Payments",
-      href: "/approvals",
-      iconName: "payments",
-      match: (path): boolean => path.startsWith("/approvals"),
+      label: "Materials",
+      href: "/materials",
+      iconName: "inventory_2",
+      match: (path): boolean => path.startsWith("/materials"),
     },
     {
       label: "Expenses",
@@ -69,23 +74,12 @@ export function BottomNav(): React.JSX.Element | null {
       return item.label === "Projects" || item.label === "Expenses";
     }
 
-    if (item.label === "Today" || item.label === "AI Brief") {
+    if (item.label === "Dashboard" || item.label === "AI Brief") {
       return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
     }
 
-    if (item.label === "Payments") {
-      return roleName === "OWNER";
-    }
-
-    return true; // Projects, Expenses
+    return true; // Projects, Materials, Expenses
   });
-
-  // Generate the href for the FAB
-  const fabHref = React.useMemo(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("new-expense", "true");
-    return `${pathname}?${params.toString()}`;
-  }, [pathname, searchParams]);
 
   return (
     <div className="fixed bottom-8 left-0 right-0 mx-auto w-[calc(100%-2rem)] max-w-md z-50 h-[72px] pointer-events-none select-none">

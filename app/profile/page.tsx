@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { resolveRoleName, ROLE_PERMISSIONS } from "@/lib/auth/permissions";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/profile/logout-button";
+import Link from "next/link";
 import React from "react";
 
 const PERMISSION_DESCRIPTIONS: Record<string, string> = {
@@ -78,7 +79,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
       {/* Header */}
       <div className="flex items-center justify-between px-1">
         <div className="space-y-base">
-          <p className="font-label-caps text-primary">Pengaturan Sistem</p>
+          <p className="font-label-caps text-primary">Akun Pengguna</p>
           <h1 className="font-headline-lg text-on-surface">Profil Pengguna</h1>
         </div>
         <Badge status={getBadgeStatus(roleName)}>
@@ -135,6 +136,27 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
           </div>
         </div>
       </div>
+
+      {/* Group: Pengaturan (Hanya Owner, Finance, dan Purchasing) */}
+      {(roleName === "OWNER" || roleName === "FINANCE_ADMIN" || roleName === "PURCHASING") && (
+        <div className="space-y-sm px-1">
+          <h2 className="font-label-caps text-on-surface-variant">Konfigurasi & Master Data</h2>
+          <Link href="/settings" className="block active:scale-[0.99] transition-transform">
+            <div className="premium-card p-md border border-outline-variant/30 flex items-center justify-between hover:bg-surface-container-low/20 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-surface-container flex items-center justify-center text-primary shrink-0">
+                  <span className="material-symbols-outlined text-[20px]">tune</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-on-surface text-[13px] block">Pengaturan ERP</span>
+                  <span className="text-[10px] text-on-surface-variant">Kelola alokasi budget, kategori biaya, & master material</span>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
+            </div>
+          </Link>
+        </div>
+      )}
 
       {/* Group 2: Hak Otorisasi */}
       <div className="space-y-sm px-1">
