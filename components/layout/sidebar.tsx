@@ -157,11 +157,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps): React.JSX.Element {
         {session?.user && (
           <div className="px-md pb-md border-b border-outline-variant/10 space-y-sm select-none">
             <div className="flex items-center gap-md">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-container border border-outline-variant/20 text-primary text-md font-display font-bold">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-container border border-outline-variant/20 text-primary text-md font-sans text-[32px] leading-[40px] tracking-tight font-bold font-bold">
                 {getInitials(session.user.name)}
               </div>
               <div className="min-w-0">
-                <h3 className="font-body-md font-bold text-on-surface truncate leading-tight">
+                <h3 className="font-sans text-[16px] leading-[24px] font-normal font-bold text-on-surface truncate leading-tight">
                   {session.user.name}
                 </h3>
                 <p className="text-[10px] text-on-surface-variant truncate font-medium">

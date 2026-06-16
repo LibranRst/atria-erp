@@ -131,14 +131,14 @@ export function ProjectInvoices({
 
   return (
     <div className="space-y-md px-1 select-none">
-      <h2 className="font-label-caps text-on-surface-variant">Tagihan Klien (Invoices)</h2>
+      <h2 className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Tagihan Klien (Invoices)</h2>
 
       {invoices.length === 0 ? (
         <div className="premium-card p-md flex flex-col items-center justify-center py-10 text-center border border-outline-variant/30">
           <div className="h-10 w-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant mb-2">
             <span className="material-symbols-outlined text-[24px]">receipt_long</span>
           </div>
-          <p className="font-body-sm text-on-surface-variant">
+          <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant">
             Tidak ada invoice/tagihan klien yang terbit untuk proyek ini.
           </p>
         </div>
@@ -160,8 +160,8 @@ export function ProjectInvoices({
                 {/* Header */}
                 <div className="flex justify-between items-center">
                   <div className="space-y-xs">
-                    <span className="font-label-caps text-[9px] text-on-surface-variant">Nomor Invoice</span>
-                    <h3 className="font-body-sm font-bold text-on-surface">{inv.invoiceNumber}</h3>
+                    <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Nomor Invoice</span>
+                    <h3 className="font-sans text-[14px] leading-[20px] font-normal font-bold text-on-surface">{inv.invoiceNumber}</h3>
                   </div>
                   <Badge status={inv.status}>{inv.status}</Badge>
                 </div>
@@ -169,14 +169,14 @@ export function ProjectInvoices({
                 {/* Amount details */}
                 <div className="grid grid-cols-2 gap-md pt-base border-t border-outline-variant/10">
                   <div className="space-y-xs">
-                    <span className="font-label-caps text-[8px] text-on-surface-variant">Nominal Tagihan</span>
-                    <div className="font-numeral-md text-on-surface font-bold financial-amount">
+                    <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[8px] text-on-surface-variant">Nominal Tagihan</span>
+                    <div className="font-mono text-[16px] leading-[20px] font-medium text-on-surface font-bold financial-amount">
                       Rp {amountNum.toLocaleString("id-ID")}
                     </div>
                   </div>
                   <div className="space-y-xs">
-                    <span className="font-label-caps text-[8px] text-on-surface-variant">Sisa Tagihan</span>
-                    <div className={`font-numeral-md font-bold financial-amount ${remaining > 0 ? "text-error" : "text-primary"}`}>
+                    <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[8px] text-on-surface-variant">Sisa Tagihan</span>
+                    <div className={`font-mono text-[16px] leading-[20px] font-medium font-bold financial-amount ${remaining > 0 ? "text-error" : "text-primary"}`}>
                       Rp {remaining.toLocaleString("id-ID")}
                     </div>
                   </div>
@@ -185,7 +185,7 @@ export function ProjectInvoices({
                 {/* Termín / Payments History */}
                 {inv.payments.length > 0 && (
                   <div className="rounded-lg bg-surface-container-low border border-outline-variant/10 p-sm space-y-xs text-xs font-semibold">
-                    <span className="font-label-caps text-[8px] text-on-surface-variant block pb-base border-b border-outline-variant/10">
+                    <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[8px] text-on-surface-variant block pb-base border-b border-outline-variant/10">
                       Riwayat Pembayaran Termin
                     </span>
                     <div className="space-y-base pt-xs">
@@ -231,7 +231,7 @@ export function ProjectInvoices({
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-outline-variant/10 pb-sm">
-              <h2 className="font-headline-md text-[18px] text-on-surface">Penerimaan Kas Termin</h2>
+              <h2 className="font-sans text-[20px] leading-[28px] font-semibold text-[18px] text-on-surface">Penerimaan Kas Termin</h2>
               <button
                 type="button"
                 onClick={() => setSelectedInvoice(null)}
@@ -272,7 +272,7 @@ export function ProjectInvoices({
             <form onSubmit={handleSubmit} className="space-y-md">
               {/* Select Bank Account */}
               <div className="space-y-xs">
-                <label htmlFor="bankSelect" className="font-label-caps text-[10px] text-on-surface-variant block">
+                <label htmlFor="bankSelect" className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">
                   Rekening Penerima Dana (DEBIT)
                 </label>
                 <div className="relative">
@@ -297,7 +297,7 @@ export function ProjectInvoices({
 
               {/* Amount Paid */}
               <div className="space-y-xs">
-                <label htmlFor="amountInput" className="font-label-caps text-[10px] text-on-surface-variant block">
+                <label htmlFor="amountInput" className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">
                   Nominal Diterima (Rp)
                 </label>
                 <input
@@ -315,7 +315,7 @@ export function ProjectInvoices({
 
               {/* Reference Number */}
               <div className="space-y-xs">
-                <label htmlFor="refInput" className="font-label-caps text-[10px] text-on-surface-variant block">
+                <label htmlFor="refInput" className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">
                   Nomor Referensi Bukti Transfer (Klien)
                 </label>
                 <input
@@ -332,7 +332,7 @@ export function ProjectInvoices({
 
               {/* Payment Date */}
               <div className="space-y-xs">
-                <label htmlFor="dateInput" className="font-label-caps text-[10px] text-on-surface-variant block">
+                <label htmlFor="dateInput" className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">
                   Tanggal Transaksi Diterima
                 </label>
                 <input

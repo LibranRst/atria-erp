@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
 import { processReceipt } from "@/app/actions/ai/process-receipt";
@@ -24,7 +23,54 @@ interface ProjectBudgetItem {
   } | null;
 }
 
-interface Project {
+interface ProjectBudgetCategoryOption {
+  id: string;
+  code: string;
+  name: string;
+  allocatedAmount: string;
+  pendingAmount: string;
+  actualAmount: string;
+  remainingAmount: string;
+  usedPercentage: string;
+  status: string;
+  sortOrder: number;
+}
+
+interface MaterialOption {
+  id: string;
+  name: string;
+  unit: string;
+  availableStock: number;
+}
+
+interface ProjectRapItemOption {
+  id: string;
+  materialId: string | null;
+  label: string;
+  area: string;
+  quantity: string;
+  unit: string;
+  status: string;
+}
+
+interface CategoryPlanItemOption {
+  id: string;
+  projectBudgetCategoryId: string;
+  expenseCategoryCode: string;
+  label: string;
+  area: string;
+  quantity: string;
+  unit: string;
+  estimatedTotalCost: string;
+  status: string;
+}
+
+interface InventoryLocationOption {
+  id: string;
+  name: string;
+}
+
+export interface ExpenseFormProject {
   id: string;
   name: string;
   budget?: {
@@ -32,14 +78,29 @@ interface Project {
     status: string;
     items?: ProjectBudgetItem[];
   } | null;
+  canonicalBudgets?: Array<{
+    id: string;
+    status: string;
+    categories?: ProjectBudgetCategoryOption[];
+  }>;
+  materialOptions?: MaterialOption[];
+  rapItems?: ProjectRapItemOption[];
+  categoryPlanItems?: CategoryPlanItemOption[];
 }
 
 interface ExpenseFormProps {
-  projects: Project[];
+  projects: ExpenseFormProject[];
+  inventoryLocations?: InventoryLocationOption[];
 }
 
 interface ExpenseLine {
+  projectBudgetCategoryId: string;
   projectBudgetItemId: string;
+  materialId: string;
+  projectRapItemId: string;
+  projectCategoryPlanItemId: string;
+  stockHandling: "EXPENSE_ONLY" | "STOCK_IN" | "DIRECT_USE" | "RESERVE_FOR_PROJECT";
+  inventoryLocationId: string;
   quantity: number | "";
   unitPrice: number | "";
   amount: number | "";
@@ -77,14 +138,23 @@ function cleanLeadingZeros(val: string): string {
   return cleaned;
 }
 
-export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
+function mapBudgetItemToCanonicalCode(item: ProjectBudgetItem | undefined): string {
+  const source = `${item?.costCategory?.name ?? ""} ${item?.budgetCategory ?? ""} ${item?.name ?? ""}`.toUpperCase();
+  if (source.includes("MATERIAL") || source.includes("BAHAN") || source.includes("KAYU") || source.includes("KACA")) return "MATERIAL";
+  if (source.includes("TUKANG") || source.includes("LABOR") || source.includes("PEKERJA")) return "TUKANG";
+  if (source.includes("OPERASIONAL") || source.includes("OPERATIONAL") || source.includes("BENSIN") || source.includes("TOLL")) return "OPERASIONAL";
+  if (source.includes("SUBCON") || source.includes("SUBKON")) return "SUBCON";
+  return "LAIN_LAIN";
+}
+
+export function ExpenseForm({ projects, inventoryLocations = [] }: ExpenseFormProps): React.JSX.Element {
   const router = useRouter();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
   
   // State Baris Pengeluaran Multi-Item
   const [lines, setLines] = useState<ExpenseLine[]>([
-    { projectBudgetItemId: "", quantity: 1, unitPrice: "", amount: "", description: "" }
+    { projectBudgetCategoryId: "", projectBudgetItemId: "", materialId: "", projectRapItemId: "", projectCategoryPlanItemId: "", stockHandling: "EXPENSE_ONLY", inventoryLocationId: "", quantity: 1, unitPrice: "", amount: "", description: "" }
   ]);
 
   // Status flags
@@ -100,8 +170,6 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
 
   // Custom Pickers State
   const [showProjectPicker, setShowProjectPicker] = useState<boolean>(false);
-  const [activeBoqPickerLineIndex, setActiveBoqPickerLineIndex] = useState<number | null>(null);
-  const [boqSearchQuery, setBoqSearchQuery] = useState<string>("");
 
   useEffect(() => {
     // Trigger slide up animation shortly after mounting
@@ -128,19 +196,16 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   const budgetItems = selectedProject?.budget?.status === "APPROVED"
     ? selectedProject?.budget?.items || []
     : [];
-
-  // Group budget items by budgetCategory
-  const itemsByCategory: Record<string, ProjectBudgetItem[]> = {};
-  budgetItems.forEach((item) => {
-    const catName = item.budgetCategory || "Umum";
-    if (!itemsByCategory[catName]) {
-      itemsByCategory[catName] = [];
-    }
-    itemsByCategory[catName].push(item);
-  });
+  const budgetCategories = selectedProject?.canonicalBudgets?.[0]?.categories
+    ?.slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder) ?? [];
+  const materialOptions = selectedProject?.materialOptions ?? [];
+  const rapItems = selectedProject?.rapItems ?? [];
+  const categoryPlanItems = selectedProject?.categoryPlanItems ?? [];
+  const defaultInventoryLocationId = inventoryLocations[0]?.id ?? "";
 
   const addLine = () => {
-    setLines([...lines, { projectBudgetItemId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
+    setLines([...lines, { projectBudgetCategoryId: "", projectBudgetItemId: "", materialId: "", projectRapItemId: "", projectCategoryPlanItemId: "", stockHandling: "EXPENSE_ONLY", inventoryLocationId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
   };
 
   const removeLine = (index: number) => {
@@ -153,7 +218,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
   const updateLine = (
     index: number,
     updates: Partial<ExpenseLine> | keyof ExpenseLine,
-    value?: any
+    value?: ExpenseLine[keyof ExpenseLine]
   ) => {
     const newLines = [...lines];
     let updatedLine = { ...newLines[index] };
@@ -205,9 +270,10 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
       const { token, expire, signature } = signRes.data;
 
       // 2. Unggah langsung ke REST API ImageKit
+      const safeFileName = `receipt-${new Date().getTime()}-${file.name.replaceAll(" ", "_")}`;
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("fileName", `receipt-${Date.now()}-${file.name.replaceAll(" ", "_")}`);
+      formData.append("fileName", safeFileName);
       formData.append("publicKey", process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "public_PRvr9hXwFetaQx4ZejdGwJ1Ue8=");
       formData.append("signature", signature);
       formData.append("token", token);
@@ -251,7 +317,13 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
         }
         
         return {
+          projectBudgetCategoryId: budgetCategories.find((category) => category.code === mapBudgetItemToCanonicalCode(matchingBi))?.id ?? "",
           projectBudgetItemId: matchingBi ? matchingBi.id : "",
+          materialId: "",
+          projectRapItemId: "",
+          projectCategoryPlanItemId: "",
+          stockHandling: "EXPENSE_ONLY",
+          inventoryLocationId: "",
           quantity: it.quantity || 1,
           unitPrice: it.unitPrice || "",
           amount: it.totalPrice || (it.unitPrice * it.quantity) || "",
@@ -262,7 +334,13 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
       // Jika tidak ada item yang ter-parse, buat satu baris default
       if (mappedLines.length === 0) {
         mappedLines.push({
+          projectBudgetCategoryId: "",
           projectBudgetItemId: "",
+          materialId: "",
+          projectRapItemId: "",
+          projectCategoryPlanItemId: "",
+          stockHandling: "EXPENSE_ONLY",
+          inventoryLocationId: "",
           quantity: 1,
           unitPrice: parsedData.totalAmount || "",
           amount: parsedData.totalAmount || "",
@@ -302,8 +380,19 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
       return;
     }
 
-    if (lines.some(line => !line.projectBudgetItemId || line.amount === "" || Number(line.amount) <= 0 || !line.description.trim())) {
-      setError("Semua baris item wajib diisi lengkap dengan nominal di atas 0.");
+    if (lines.some(line => !line.projectBudgetCategoryId || line.amount === "" || Number(line.amount) <= 0 || !line.description.trim())) {
+      setError("Semua baris wajib memiliki kategori budget, nominal di atas 0, dan keterangan.");
+      return;
+    }
+
+    const invalidStockLine = lines.find((line) => {
+      const category = budgetCategories.find((item) => item.id === line.projectBudgetCategoryId);
+      if (category?.code !== "MATERIAL") return false;
+      if (line.stockHandling === "EXPENSE_ONLY") return false;
+      return !line.materialId || !line.inventoryLocationId;
+    });
+    if (invalidStockLine) {
+      setError("Material expense dengan stock handling wajib memilih Material Master dan lokasi stock.");
       return;
     }
 
@@ -316,7 +405,13 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
         projectId: selectedProjectId,
         receiptImageUrl: receiptImageUrl || "",
         items: lines.map(line => ({
-          projectBudgetItemId: line.projectBudgetItemId,
+          projectBudgetCategoryId: line.projectBudgetCategoryId,
+          projectBudgetItemId: line.projectBudgetItemId || undefined,
+          materialId: line.materialId || undefined,
+          projectRapItemId: line.projectRapItemId || undefined,
+          projectCategoryPlanItemId: line.projectCategoryPlanItemId || undefined,
+          stockHandling: line.stockHandling,
+          inventoryLocationId: line.inventoryLocationId || undefined,
           quantity: Number(line.quantity),
           unitPrice: Number(line.unitPrice),
           amount: Number(line.amount),
@@ -331,7 +426,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
       setSuccess(true);
       // Reset form
       setSelectedProjectId("");
-      setLines([{ projectBudgetItemId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
+      setLines([{ projectBudgetCategoryId: "", projectBudgetItemId: "", materialId: "", projectRapItemId: "", projectCategoryPlanItemId: "", stockHandling: "EXPENSE_ONLY", inventoryLocationId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
       setReceiptImageUrl(null);
       
       // Delay closing to show success state
@@ -365,11 +460,11 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
           >
             <span className="material-symbols-outlined text-[28px]">close</span>
           </button>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">Add Expense</h1>
+          <h1 className="font-sans text-[24px] leading-[32px] tracking-tight font-semibold text-headline-lg text-on-surface tracking-tight">Add Expense</h1>
           <button 
             type="button" 
             onClick={() => router.push("/expenses")} 
-            className="active-scale p-2 -mr-2 text-primary font-bold font-label-caps uppercase tracking-wider text-xs cursor-pointer"
+            className="active-scale p-2 -mr-2 text-primary font-bold font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase uppercase tracking-wider text-xs cursor-pointer"
           >
             History
           </button>
@@ -379,8 +474,8 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
         <div className="flex-1 overflow-y-auto no-scrollbar px-margin-mobile pb-32 space-y-lg">
           {/* Amount Section */}
           <section className="mt-8 flex flex-col items-center select-none">
-            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-[0.1em] mb-2">Total Amount</span>
-            <div className="flex items-baseline gap-1 group font-numeral-lg text-[40px] font-bold text-on-surface">
+            <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-label-caps text-on-surface-variant uppercase tracking-[0.1em] mb-2">Total Amount</span>
+            <div className="flex items-baseline gap-1 group font-mono text-[22px] leading-[28px] font-medium text-[40px] font-bold text-on-surface">
               <span className="text-primary select-none text-[26px]">Rp</span>
               <span>{totalAmount.toLocaleString("id-ID")}</span>
             </div>
@@ -419,7 +514,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
 
              {/* Project Selector Trigger */}
             <div className="relative space-y-sm">
-              <label className="font-label-caps text-label-caps text-on-surface-variant uppercase block ml-1">Project</label>
+              <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-label-caps text-on-surface-variant uppercase block ml-1">Project</label>
               <button
                 type="button"
                 onClick={() => {
@@ -428,7 +523,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                   }
                 }}
                 disabled={isUploading || isProcessingOCR || isSubmitting}
-                className="w-full h-[56px] bg-surface-container-low rounded-xl px-md flex items-center justify-between text-left font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all active:scale-[0.99] disabled:opacity-50"
+                className="w-full h-[56px] bg-surface-container-low rounded-xl px-md flex items-center justify-between text-left font-sans text-[16px] leading-[24px] font-normal text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all active:scale-[0.99] disabled:opacity-50"
               >
                 <span className={selectedProject ? "text-on-surface" : "text-on-surface-variant/70"}>
                   {selectedProject ? selectedProject.name : "Select active project"}
@@ -439,7 +534,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
 
             {/* Documentation Upload Area */}
             <div className="space-y-sm">
-              <label className="font-label-caps text-label-caps text-on-surface-variant uppercase block ml-1">Documentation</label>
+              <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-label-caps text-on-surface-variant uppercase block ml-1">Documentation</label>
               {receiptImageUrl ? (
                 <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container p-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -470,7 +565,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                       <div className={`w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary transition-transform ${!selectedProjectId ? "" : "group-hover:scale-110"}`}>
                         <span className="material-symbols-outlined">photo_camera</span>
                       </div>
-                      <span className="font-body-md text-primary font-semibold text-xs">Ambil Foto</span>
+                      <span className="font-sans text-[16px] leading-[24px] font-normal text-primary font-semibold text-xs">Ambil Foto</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -492,7 +587,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                       <div className={`w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary transition-transform ${!selectedProjectId ? "" : "group-hover:scale-110"}`}>
                         <span className="material-symbols-outlined">upload</span>
                       </div>
-                      <span className="font-body-md text-primary font-semibold text-xs">Pilih Gambar</span>
+                      <span className="font-sans text-[16px] leading-[24px] font-normal text-primary font-semibold text-xs">Pilih Gambar</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -535,7 +630,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
             {/* Rincian Pengeluaran Barang (Multi-Item) */}
             <div className="space-y-md border-t border-outline-variant/10 pt-md">
               <div className="flex items-center justify-between">
-                <h3 className="font-label-caps text-label-caps text-on-surface-variant uppercase block ml-1">Rincian Barang Belanja</h3>
+                <h3 className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-label-caps text-on-surface-variant uppercase block ml-1">Rincian Barang Belanja</h3>
                 <button
                   type="button"
                   onClick={addLine}
@@ -566,48 +661,184 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                       Item #{index + 1}
                     </div>
 
-                    {/* Pilih Item Anggaran RAB (BoQ) Trigger */}
                     <div className="space-y-sm">
-                      <label className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
-                        Item Anggaran RAB (BoQ)
+                      <label htmlFor={`budget-category-${index}`} className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant block ml-1 uppercase">
+                        Budget Category
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (selectedProjectId && !(isUploading || isProcessingOCR || isSubmitting)) {
-                            setActiveBoqPickerLineIndex(index);
-                            setBoqSearchQuery("");
-                          }
+                      <select
+                        id={`budget-category-${index}`}
+                        value={line.projectBudgetCategoryId}
+                        onChange={(e) => {
+                          const nextCategoryId = e.target.value;
+                          const nextCategory = budgetCategories.find((category) => category.id === nextCategoryId);
+                          updateLine(index, {
+                            projectBudgetCategoryId: nextCategoryId,
+                            projectBudgetItemId: "",
+                            projectCategoryPlanItemId: "",
+                            materialId: nextCategory?.code === "MATERIAL" ? line.materialId : "",
+                            projectRapItemId: nextCategory?.code === "MATERIAL" ? line.projectRapItemId : "",
+                            stockHandling: nextCategory?.code === "MATERIAL" ? line.stockHandling : "EXPENSE_ONLY",
+                            inventoryLocationId: nextCategory?.code === "MATERIAL" ? line.inventoryLocationId : "",
+                          });
                         }}
                         disabled={!selectedProjectId || isUploading || isProcessingOCR || isSubmitting}
-                        className="w-full h-[48px] bg-surface-container-low rounded-xl px-md flex items-center justify-between text-left font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all active:scale-[0.99] disabled:opacity-50"
+                        className="w-full h-[48px] bg-surface-container-low rounded-xl px-md font-sans text-[16px] leading-[24px] font-normal text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all disabled:opacity-50"
+                        required
                       >
-                        {(() => {
-                          const selectedItem = budgetItems.find((item) => item.id === line.projectBudgetItemId);
-                          if (selectedItem) {
-                            const costCat = selectedItem.costCategory?.name || "UMUM";
-                            return (
-                              <span className="truncate pr-2 font-medium">
-                                <span className="text-primary font-bold mr-1">[{costCat}]</span>
-                                {selectedItem.name}
-                              </span>
-                            );
-                          }
-                          return <span className="text-on-surface-variant/70">-- Pilih Item Anggaran (BoQ) --</span>;
-                        })()}
-                        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">expand_more</span>
-                      </button>
+                        <option value="">Pilih kategori budget</option>
+                        {budgetCategories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name} - sisa Rp {Number(category.remainingAmount).toLocaleString("id-ID")}
+                          </option>
+                        ))}
+                      </select>
                     </div>
+
+                    {budgetCategories.find((category) => category.id === line.projectBudgetCategoryId)?.code === "MATERIAL" && (
+                      <div className="space-y-sm rounded-2xl border border-primary/10 bg-primary/5 p-3">
+                        <div>
+                          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-primary uppercase">Material Link</p>
+                          <p className="text-[10px] text-on-surface-variant">Hubungkan biaya material ke material, RAP, dan stock bila barang fisiknya perlu dilacak.</p>
+                        </div>
+
+                        <div className="space-y-sm">
+                          <label htmlFor={`material-input-${index}`} className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant block ml-1 uppercase">
+                            Material Master
+                          </label>
+                          <select
+                            id={`material-input-${index}`}
+                            value={line.materialId}
+                            onChange={(e) => {
+                              updateLine(index, {
+                                materialId: e.target.value,
+                                projectRapItemId: "",
+                                projectCategoryPlanItemId: "",
+                              });
+                            }}
+                            disabled={isUploading || isProcessingOCR || isSubmitting}
+                            className="w-full h-[48px] bg-surface-container-low rounded-xl px-md font-sans text-[16px] leading-[24px] font-normal text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all disabled:opacity-50"
+                          >
+                            <option value="">Tidak perlu link material</option>
+                            {materialOptions.map((material) => (
+                              <option key={material.id} value={material.id}>
+                                {material.name} - ready {material.availableStock.toLocaleString("id-ID")} {material.unit}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-sm">
+                          <label htmlFor={`stock-handling-input-${index}`} className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant block ml-1 uppercase">
+                            Stock Handling
+                          </label>
+                          <select
+                            id={`stock-handling-input-${index}`}
+                            value={line.stockHandling}
+                            onChange={(e) => {
+                              const stockHandling = e.target.value as ExpenseLine["stockHandling"];
+                              updateLine(index, {
+                                stockHandling,
+                                inventoryLocationId: stockHandling === "EXPENSE_ONLY" ? "" : (line.inventoryLocationId || defaultInventoryLocationId),
+                              });
+                            }}
+                            disabled={isUploading || isProcessingOCR || isSubmitting}
+                            className="w-full h-[48px] bg-surface-container-low rounded-xl px-md font-sans text-[16px] leading-[24px] font-normal text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all disabled:opacity-50"
+                          >
+                            <option value="EXPENSE_ONLY">Expense only - tidak ubah stock</option>
+                            <option value="STOCK_IN">Stock In - masuk inventory</option>
+                            <option value="DIRECT_USE">Direct Use - langsung dipakai project</option>
+                            <option value="RESERVE_FOR_PROJECT">Reserve - simpan untuk project</option>
+                          </select>
+                        </div>
+
+                        {line.stockHandling !== "EXPENSE_ONLY" && (
+                          <div className="space-y-sm">
+                            <label htmlFor={`inventory-location-input-${index}`} className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant block ml-1 uppercase">
+                              Inventory Location
+                            </label>
+                            <select
+                              id={`inventory-location-input-${index}`}
+                              value={line.inventoryLocationId}
+                              onChange={(e) => updateLine(index, "inventoryLocationId", e.target.value)}
+                              disabled={isUploading || isProcessingOCR || isSubmitting}
+                              className="w-full h-[48px] bg-surface-container-low rounded-xl px-md font-sans text-[16px] leading-[24px] font-normal text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all disabled:opacity-50"
+                              required
+                            >
+                              <option value="">Pilih lokasi stock</option>
+                              {inventoryLocations.map((location) => (
+                                <option key={location.id} value={location.id}>
+                                  {location.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        <div className="space-y-sm">
+                          <label htmlFor={`rap-input-${index}`} className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant block ml-1 uppercase">
+                            RAP Material Item
+                          </label>
+                          <select
+                            id={`rap-input-${index}`}
+                            value={line.projectRapItemId}
+                            onChange={(e) => {
+                              const rapItem = rapItems.find((item) => item.id === e.target.value);
+                              updateLine(index, {
+                                projectRapItemId: e.target.value,
+                                materialId: rapItem?.materialId ?? line.materialId,
+                              });
+                            }}
+                            disabled={isUploading || isProcessingOCR || isSubmitting}
+                            className="w-full h-[48px] bg-surface-container-low rounded-xl px-md font-sans text-[16px] leading-[24px] font-normal text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all disabled:opacity-50"
+                          >
+                            <option value="">Tidak link ke RAP</option>
+                            {rapItems
+                              .filter((item) => !line.materialId || item.materialId === line.materialId)
+                              .map((item) => (
+                                <option key={item.id} value={item.id}>
+                                  {item.area} - {item.label} ({item.quantity} {item.unit}, {item.status})
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {["TUKANG", "SUBCON"].includes(budgetCategories.find((category) => category.id === line.projectBudgetCategoryId)?.code ?? "") && (
+                      <div className="space-y-sm rounded-2xl border border-outline-variant/15 bg-surface-container-low p-3">
+                        <div>
+                          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-primary uppercase">
+                            {budgetCategories.find((category) => category.id === line.projectBudgetCategoryId)?.code === "SUBCON" ? "Subcon Package" : "Work Package"}
+                          </p>
+                          <p className="text-[10px] text-on-surface-variant">
+                            Optional. Link biaya ini ke paket kerja internal agar actual cost bisa dibandingkan dengan estimasi package.
+                          </p>
+                        </div>
+
+                        <select
+                          value={line.projectCategoryPlanItemId}
+                          onChange={(e) => updateLine(index, "projectCategoryPlanItemId", e.target.value)}
+                          disabled={isUploading || isProcessingOCR || isSubmitting}
+                          className="w-full h-[48px] bg-surface rounded-xl px-md font-sans text-[16px] leading-[24px] font-normal text-xs text-on-surface border border-outline-variant/20 focus:ring-2 focus:ring-primary transition-all disabled:opacity-50"
+                        >
+                          <option value="">Tidak link ke package</option>
+                          {categoryPlanItems
+                            .filter((item) => item.projectBudgetCategoryId === line.projectBudgetCategoryId)
+                            .map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.area} - {item.label} ({item.quantity} {item.unit}, Rp {Number(item.estimatedTotalCost).toLocaleString("id-ID")})
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    )}
 
                     {/* Kuantitas, Harga Satuan, Total Nominal */}
                     <div className="grid grid-cols-12 gap-sm items-end">
                       {/* Kuantitas */}
                       <div className="col-span-5 space-y-sm">
-                        <label htmlFor={`qty-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
-                          Qty {(() => {
-                            const bi = budgetItems.find(item => item.id === line.projectBudgetItemId);
-                            return bi?.unit ? `(${bi.unit})` : "";
-                          })()}
+                        <label htmlFor={`qty-input-${index}`} className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant block ml-1 uppercase">
+                          Qty
                         </label>
                         <div className="flex items-center">
                           <button
@@ -640,7 +871,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                             }}
                             disabled={isUploading || isSubmitting || isProcessingOCR}
                             placeholder="1"
-                            className="w-full h-[48px] bg-surface-container-low text-center font-body-md text-xs text-on-surface border-y border-x-0 border-outline-variant/20 focus:ring-1 focus:ring-primary focus:outline-none focus:z-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full h-[48px] bg-surface-container-low text-center font-sans text-[16px] leading-[24px] font-normal text-xs text-on-surface border-y border-x-0 border-outline-variant/20 focus:ring-1 focus:ring-primary focus:outline-none focus:z-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <button
                             type="button"
@@ -655,7 +886,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
 
                       {/* Harga Satuan */}
                       <div className="col-span-7 space-y-sm">
-                        <label htmlFor={`unit-price-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
+                        <label htmlFor={`unit-price-input-${index}`} className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant block ml-1 uppercase">
                           Harga Satuan (Rp)
                         </label>
                         <input
@@ -679,7 +910,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                           }}
                           disabled={isUploading || isSubmitting || isProcessingOCR}
                           placeholder="Harga per unit..."
-                          className="w-full h-[48px] bg-surface-container-low rounded-xl px-md font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all"
+                          className="w-full h-[48px] bg-surface-container-low rounded-xl px-md font-sans text-[16px] leading-[24px] font-normal text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all"
                         />
                       </div>
                     </div>
@@ -687,14 +918,14 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                     {/* Total Nominal (Auto-computed) */}
                     <div className="space-y-sm bg-surface-container-low/20 rounded-xl p-3 border border-outline-variant/10 flex items-center justify-between">
                       <span className="text-[10px] font-bold text-on-surface-variant uppercase">Subtotal</span>
-                      <span className="font-numeral-md text-xs font-bold text-primary">
+                      <span className="font-mono text-[16px] leading-[20px] font-medium text-xs font-bold text-primary">
                         Rp {(Number(line.amount) || 0).toLocaleString("id-ID")}
                       </span>
                     </div>
 
                     {/* Deskripsi */}
                     <div className="space-y-sm">
-                      <label htmlFor={`desc-input-${index}`} className="font-label-caps text-[9px] text-on-surface-variant block ml-1 uppercase">
+                      <label htmlFor={`desc-input-${index}`} className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant block ml-1 uppercase">
                         Keterangan Barang/Jasa
                       </label>
                       <textarea
@@ -704,7 +935,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
                         disabled={isUploading || isSubmitting || isProcessingOCR}
                         rows={2}
                         placeholder="Sebutkan rincian barang belanja..."
-                        className="w-full bg-surface-container-low rounded-xl p-md font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all resize-none"
+                        className="w-full bg-surface-container-low rounded-xl p-md font-sans text-[16px] leading-[24px] font-normal text-xs text-on-surface border-none focus:ring-2 focus:ring-primary transition-all resize-none"
                       />
                     </div>
                   </div>
@@ -719,8 +950,8 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
           <button 
             type="submit"
             onClick={handleSubmit}
-            disabled={isUploading || isProcessingOCR || isSubmitting || !selectedProjectId || lines.some(l => !l.projectBudgetItemId || l.amount === "" || !l.description)}
-            className="w-full h-14 bg-primary text-on-primary rounded-xl font-headline-md text-headline-md shadow-lg active-scale flex items-center justify-center gap-2 hover:bg-primary/95 transition-all disabled:opacity-50 cursor-pointer"
+            disabled={isUploading || isProcessingOCR || isSubmitting || !selectedProjectId || lines.some(l => !l.projectBudgetCategoryId || l.amount === "" || !l.description)}
+            className="w-full h-14 bg-primary text-on-primary rounded-xl font-sans text-[20px] leading-[28px] font-semibold text-headline-md shadow-lg active-scale flex items-center justify-center gap-2 hover:bg-primary/95 transition-all disabled:opacity-50 cursor-pointer"
           >
             {isSubmitting ? (
               <>
@@ -757,7 +988,7 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
       >
         <header className="flex justify-between items-center px-margin-mobile h-14 shrink-0 border-b border-outline-variant/10">
           <div className="w-10"></div>
-          <h2 className="font-headline-md text-sm font-bold text-on-surface uppercase tracking-wider">Select Project</h2>
+          <h2 className="font-sans text-[20px] leading-[28px] font-semibold text-sm font-bold text-on-surface uppercase tracking-wider">Select Project</h2>
           <button 
             type="button" 
             onClick={() => setShowProjectPicker(false)} 
@@ -773,11 +1004,11 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
               type="button"
               onClick={() => {
                 setSelectedProjectId(proj.id);
-                setLines([{ projectBudgetItemId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
+                setLines([{ projectBudgetCategoryId: "", projectBudgetItemId: "", materialId: "", projectRapItemId: "", projectCategoryPlanItemId: "", stockHandling: "EXPENSE_ONLY", inventoryLocationId: "", quantity: 1, unitPrice: "", amount: "", description: "" }]);
                 setOcrWarning(null);
                 setShowProjectPicker(false);
               }}
-              className={`w-full p-4 rounded-xl text-left font-body-md text-xs transition-all active:scale-[0.98] flex items-center justify-between border ${
+              className={`w-full p-4 rounded-xl text-left font-sans text-[16px] leading-[24px] font-normal text-xs transition-all active:scale-[0.98] flex items-center justify-between border ${
                 selectedProjectId === proj.id 
                   ? "bg-primary-container/10 border-primary text-primary font-bold" 
                   : "bg-surface-container-low border-outline-variant/10 text-on-surface hover:bg-surface-container"
@@ -797,152 +1028,6 @@ export function ExpenseForm({ projects }: ExpenseFormProps): React.JSX.Element {
         </div>
       </div>
 
-      {/* BoQ Picker Backdrop */}
-      {activeBoqPickerLineIndex !== null && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[105] transition-opacity duration-300 animate-fade-in"
-          onClick={() => setActiveBoqPickerLineIndex(null)}
-        />
-      )}
-
-      {/* BoQ Picker Bottom Sheet */}
-      <div 
-        className={`fixed inset-x-0 bottom-0 sm:max-w-md sm:mx-auto bg-background z-[110] flex flex-col rounded-t-[24px] shadow-2xl transition-transform duration-300 ease-out border border-outline-variant/30 h-[80vh] ${
-          activeBoqPickerLineIndex !== null ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <header className="flex justify-between items-center px-margin-mobile h-14 shrink-0 border-b border-outline-variant/10">
-          <div className="w-10"></div>
-          <h2 className="font-headline-md text-sm font-bold text-on-surface uppercase tracking-wider">Select Budget Item (BoQ)</h2>
-          <button 
-            type="button" 
-            onClick={() => setActiveBoqPickerLineIndex(null)} 
-            className="h-10 w-10 active-scale flex items-center justify-center text-on-surface-variant hover:text-on-surface cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[20px]">close</span>
-          </button>
-        </header>
-
-        {/* Search bar inside sheet */}
-        <div className="p-4 border-b border-outline-variant/10 shrink-0">
-          <div className="relative flex items-center">
-            <span className="material-symbols-outlined absolute left-4 text-on-surface-variant/70 text-[20px]">search</span>
-            <input
-              type="text"
-              value={boqSearchQuery}
-              onChange={(e) => setBoqSearchQuery(e.target.value)}
-              placeholder="Cari item anggaran atau kategori..."
-              className="w-full h-11 bg-surface-container-low rounded-xl pl-11 pr-10 font-body-md text-xs text-on-surface border-none focus:ring-2 focus:ring-primary focus:outline-none transition-all"
-            />
-            {boqSearchQuery && (
-              <button
-                type="button"
-                onClick={() => setBoqSearchQuery("")}
-                className="absolute right-4 text-on-surface-variant hover:text-on-surface flex items-center justify-center cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px]">close</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Scrollable results list grouped by category */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-md no-scrollbar">
-          {(() => {
-            const query = boqSearchQuery.toLowerCase().trim();
-            const filteredCategories: Record<string, ProjectBudgetItem[]> = {};
-            
-            Object.keys(itemsByCategory).forEach((catName) => {
-              const matchedItems = itemsByCategory[catName].filter((item) => {
-                const nameMatch = item.name.toLowerCase().includes(query);
-                const catMatch = catName.toLowerCase().includes(query);
-                const costMatch = (item.costCategory?.name || "UMUM").toLowerCase().includes(query);
-                return nameMatch || catMatch || costMatch;
-              });
-              
-              if (matchedItems.length > 0) {
-                filteredCategories[catName] = matchedItems;
-              }
-            });
-
-            const categoryKeys = Object.keys(filteredCategories);
-
-            if (categoryKeys.length === 0) {
-              return (
-                <div className="text-center py-12 text-xs text-on-surface-variant/70 italic flex flex-col items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-[32px] text-on-surface-variant/40">search_off</span>
-                  <span>Tidak ada item anggaran yang cocok dengan "{boqSearchQuery}"</span>
-                </div>
-              );
-            }
-
-            return categoryKeys.map((catName) => (
-              <div key={catName} className="space-y-sm">
-                <div className="font-label-caps text-[10px] font-bold text-primary tracking-wider uppercase bg-primary/5 px-2.5 py-1.5 rounded-md border border-primary/10">
-                  {catName}
-                </div>
-                <div className="space-y-xs">
-                  {filteredCategories[catName].map((item) => {
-                    const allocated = Number(item.allocatedAmount);
-                    const spent = Number(item.actualSpent);
-                    const remaining = allocated - spent;
-                    const isOverrun = remaining <= 0;
-                    const price = Number(item.unitPrice);
-                    const costCat = item.costCategory?.name || "UMUM";
-                    const isSelected = activeBoqPickerLineIndex !== null && lines[activeBoqPickerLineIndex]?.projectBudgetItemId === item.id;
-
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          if (activeBoqPickerLineIndex !== null) {
-                            updateLine(activeBoqPickerLineIndex, {
-                              projectBudgetItemId: item.id,
-                              unitPrice: price,
-                            });
-                            setActiveBoqPickerLineIndex(null);
-                          }
-                        }}
-                        className={`w-full p-3.5 rounded-xl text-left transition-all active:scale-[0.98] border flex flex-col gap-xs ${
-                          isSelected 
-                            ? "bg-primary-container/10 border-primary" 
-                            : "bg-surface-container-low border-outline-variant/10 hover:bg-surface-container"
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="font-body-md text-xs font-semibold text-on-surface">
-                            <span className="text-on-surface-variant/70 font-mono text-[10px] mr-1.5 bg-surface-container px-1.5 py-0.5 rounded border border-outline-variant/15">
-                              {costCat}
-                            </span>
-                            {item.name}
-                          </div>
-                          {isSelected && (
-                            <span className="material-symbols-outlined text-primary text-[18px] shrink-0 ml-1">check_circle</span>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-[10px] text-on-surface-variant/80 mt-1 border-t border-outline-variant/5 pt-1.5">
-                          <div>
-                            <span className="block text-on-surface-variant/50">Anggaran:</span>
-                            <span className="font-semibold">{Number(item.quantity).toLocaleString("id-ID")} {item.unit} @ Rp {price.toLocaleString("id-ID")}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="block text-on-surface-variant/50">Sisa Dana:</span>
-                            <span className={`font-bold ${isOverrun ? "text-error" : "text-emerald-600"}`}>
-                              Rp {remaining.toLocaleString("id-ID")}
-                            </span>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ));
-          })()}
-        </div>
-      </div>
     </>
   );
 }

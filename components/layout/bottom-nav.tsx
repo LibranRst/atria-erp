@@ -124,7 +124,7 @@ export function BottomNav(): React.JSX.Element | null {
               >
                 {item.iconName}
               </span>
-              <span className="font-label-caps uppercase tracking-wider text-[5px]">
+              <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase uppercase tracking-wider text-[5px]">
                 {item.label}
               </span>
             </Link>

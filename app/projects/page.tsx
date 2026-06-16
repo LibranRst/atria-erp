@@ -41,8 +41,8 @@ export default async function ProjectsPage(): Promise<React.JSX.Element> {
       {/* Header */}
       <div className="flex items-center justify-between px-1">
         <div className="space-y-base">
-          <p className="font-label-caps text-primary">Atria Projects</p>
-          <h1 className="font-headline-lg text-on-surface">Daftar Proyek</h1>
+          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-primary">Atria Projects</p>
+          <h1 className="font-sans text-[24px] leading-[32px] tracking-tight font-semibold text-on-surface">Daftar Proyek</h1>
         </div>
         <Badge status="APPROVED">{`${projectsData.length.toString()} Aktif`}</Badge>
       </div>
@@ -52,8 +52,8 @@ export default async function ProjectsPage(): Promise<React.JSX.Element> {
           <div className="h-14 w-14 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant mb-4">
             <span className="material-symbols-outlined text-[32px]">folder_copy</span>
           </div>
-          <h3 className="font-headline-md text-[16px] text-on-surface">Tidak Ada Proyek</h3>
-          <p className="font-body-sm text-on-surface-variant mt-1">
+          <h3 className="font-sans text-[20px] leading-[28px] font-semibold text-[16px] text-on-surface">Tidak Ada Proyek</h3>
+          <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant mt-1">
             Saat ini tidak ada rencana anggaran proyek aktif yang ditugaskan kepada Anda.
           </p>
         </div>
@@ -73,7 +73,7 @@ export default async function ProjectsPage(): Promise<React.JSX.Element> {
                       <div className="h-10 w-10 rounded-full bg-surface-container flex items-center justify-center">
                         <span className="material-symbols-outlined text-primary text-[22px]">work</span>
                       </div>
-                      <h3 className="font-body-md font-bold text-on-surface truncate max-w-[200px]">
+                      <h3 className="font-sans text-[16px] leading-[24px] font-normal font-bold text-on-surface truncate max-w-[200px]">
                         {proj.name}
                       </h3>
                     </div>
@@ -83,14 +83,14 @@ export default async function ProjectsPage(): Promise<React.JSX.Element> {
                   {/* Metadata Row */}
                   <div className="grid grid-cols-2 gap-md bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
                     <div className="space-y-base">
-                      <span className="font-label-caps text-[9px] text-on-surface-variant">Klien</span>
+                      <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Klien</span>
                       <div className="flex items-center gap-1 text-on-surface font-semibold text-[13px] leading-tight">
                         <span className="material-symbols-outlined text-[16px] text-secondary">person</span>
                         <span className="truncate">{proj.client?.name || "-"}</span>
                       </div>
                     </div>
                     <div className="space-y-base">
-                      <span className="font-label-caps text-[9px] text-on-surface-variant">Project Manager</span>
+                      <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Project Manager</span>
                       <div className="flex items-center gap-1 text-on-surface font-semibold text-[13px] leading-tight">
                         <span className="material-symbols-outlined text-[16px] text-secondary">person</span>
                         <span className="truncate">{proj.projectManager?.name || "-"}</span>
@@ -100,9 +100,9 @@ export default async function ProjectsPage(): Promise<React.JSX.Element> {
 
                   {/* Contract Value Row */}
                   <div className="border-t border-outline-variant/20 pt-md flex items-center justify-between">
-                    <span className="font-label-caps text-on-surface-variant">Nilai Kontrak</span>
+                    <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Nilai Kontrak</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-numeral-md text-on-surface font-bold financial-amount">
+                      <span className="font-mono text-[16px] leading-[20px] font-medium text-on-surface font-bold financial-amount">
                         Rp {contractVal.toLocaleString("id-ID")}
                       </span>
                       <span className="material-symbols-outlined text-outline-variant">chevron_right</span>

@@ -93,8 +93,8 @@ export function ApprovalList({ initialApprovals }: ApprovalListProps): React.JSX
             <span className="material-symbols-outlined text-primary text-[28px]">check_circle</span>
           </div>
           <div className="space-y-base">
-            <h3 className="font-headline-md text-[16px] text-on-surface">Semua Selesai!</h3>
-            <p className="font-body-sm text-on-surface-variant leading-relaxed max-w-[280px] mx-auto">
+            <h3 className="font-sans text-[20px] leading-[28px] font-semibold text-[16px] text-on-surface">Semua Selesai!</h3>
+            <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant leading-relaxed max-w-[280px] mx-auto">
               Tidak ada antrean persetujuan baru yang menunggu otorisasi Anda saat ini.
             </p>
           </div>
@@ -113,7 +113,7 @@ export function ApprovalList({ initialApprovals }: ApprovalListProps): React.JSX
                   <Badge status={item.type === "project_cost" ? "WARNING" : "PRIMARY"}>
                     {item.type === "project_cost" ? "Dana Lapangan" : "Vendor Payment"}
                   </Badge>
-                  <div className="font-label-caps text-[9px] text-on-surface-variant flex items-center gap-1">
+                  <div className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant flex items-center gap-1">
                     <span className="material-symbols-outlined text-[12px]">schedule</span>
                     {new Date(item.createdAt).toLocaleDateString("id-ID", {
                       month: "short",
@@ -127,11 +127,11 @@ export function ApprovalList({ initialApprovals }: ApprovalListProps): React.JSX
                 {/* Nominal & Justifikasi */}
                 <div className="flex justify-between items-start gap-md">
                   <div className="space-y-xs min-w-0">
-                    <span className="font-label-caps text-[9px] text-on-surface-variant">Nilai Pengajuan</span>
-                    <div className="font-numeral-lg text-on-surface font-bold financial-amount">
+                    <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Nilai Pengajuan</span>
+                    <div className="font-mono text-[22px] leading-[28px] font-medium text-on-surface font-bold financial-amount">
                       Rp {item.amount.toLocaleString("id-ID")}
                     </div>
-                    <p className="font-body-sm text-on-surface-variant leading-relaxed pt-base">
+                    <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant leading-relaxed pt-base">
                       <span className="font-bold text-on-surface">Keterangan:</span> {item.description}
                     </p>
                   </div>
@@ -169,7 +169,7 @@ export function ApprovalList({ initialApprovals }: ApprovalListProps): React.JSX
 
                   {/* Budget Utilization Comparison */}
                   <div className="rounded-lg bg-surface-container-low border border-outline-variant/10 p-sm space-y-xs">
-                    <div className="flex justify-between font-label-caps text-[9px] text-on-surface-variant">
+                    <div className="flex justify-between font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">
                       <span>Plafon: Rp {item.allocatedAmount.toLocaleString("id-ID")}</span>
                       <span>Realisasi: Rp {item.actualSpent.toLocaleString("id-ID")}</span>
                     </div>
@@ -259,7 +259,7 @@ export function ApprovalList({ initialApprovals }: ApprovalListProps): React.JSX
               alt="Receipt Zoom"
               className="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl border border-white/5"
             />
-            <p className="text-center font-label-caps text-white/70 mt-md">Ketuk di mana saja untuk menutup</p>
+            <p className="text-center font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-white/70 mt-md">Ketuk di mana saja untuk menutup</p>
           </div>
         </div>
       )}

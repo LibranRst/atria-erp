@@ -5,7 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { payFieldRequest, verifyFieldRequest } from "@/app/actions/finance/field-requests";
 import { useRouter } from "next/navigation";
 import { getErrorMessage } from "@/lib/utils/error-message";
-import { VendorBillList } from "./vendor-bill-list";
+import {
+  VendorBillList,
+  type VendorListBill,
+  type VendorListPayment,
+  type VendorListProject,
+  type VendorListVendor,
+} from "./vendor-bill-list";
 
 export interface ExpenseCostItem {
   id: string;
@@ -45,10 +51,10 @@ interface ExpenseListProps {
   initialCosts: ExpenseCostItem[];
   bankAccounts: BankAccountItem[];
   userRole: string;
-  vendorBills?: any[];
-  vendorPayments?: any[];
-  vendors?: any[];
-  projects?: any[];
+  vendorBills?: VendorListBill[];
+  vendorPayments?: VendorListPayment[];
+  vendors?: VendorListVendor[];
+  projects?: VendorListProject[];
 }
 
 type FilterStatus = "ALL" | "NEEDS_VERIFICATION" | "NEEDS_APPROVAL" | "READY_TO_PAY" | "PAID" | "REJECTED";
@@ -181,8 +187,8 @@ export function ExpenseList({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-base">
-          <p className="font-label-caps text-primary">Operasional Proyek</p>
-          <h1 className="font-headline-lg text-on-surface">Daftar Pengajuan</h1>
+          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-primary">Operasional Proyek</p>
+          <h1 className="font-sans text-[24px] leading-[32px] tracking-tight font-semibold text-on-surface">Daftar Pengajuan</h1>
         </div>
       </div>
 
@@ -251,8 +257,8 @@ export function ExpenseList({
             <span className="material-symbols-outlined text-primary text-[28px]">receipt_long</span>
           </div>
           <div className="space-y-base">
-            <h3 className="font-headline-md text-[16px] text-on-surface">Tidak Ada Pengajuan</h3>
-            <p className="font-body-sm text-on-surface-variant leading-relaxed max-w-[280px] mx-auto">
+            <h3 className="font-sans text-[20px] leading-[28px] font-semibold text-[16px] text-on-surface">Tidak Ada Pengajuan</h3>
+            <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant leading-relaxed max-w-[280px] mx-auto">
               Tidak ada pengajuan pengeluaran biaya lapangan dalam kategori filter ini.
             </p>
           </div>
@@ -344,7 +350,7 @@ export function ExpenseList({
                       ? "MENUNGGU PERSETUJUAN"
                       : cost.status}
                   </Badge>
-                  <div className="font-label-caps text-[9px] text-on-surface-variant flex items-center gap-1">
+                  <div className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant flex items-center gap-1">
                     <span className="material-symbols-outlined text-[12px]">schedule</span>
                     {new Date(cost.createdAt).toLocaleDateString("id-ID", {
                       month: "short",
@@ -358,11 +364,11 @@ export function ExpenseList({
                 {/* Amount & Description */}
                 <div className="flex justify-between items-start gap-md">
                   <div className="space-y-xs min-w-0">
-                    <span className="font-label-caps text-[9px] text-on-surface-variant">Jumlah</span>
-                    <div className="font-numeral-lg text-on-surface font-bold financial-amount">
+                    <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Jumlah</span>
+                    <div className="font-mono text-[22px] leading-[28px] font-medium text-on-surface font-bold financial-amount">
                       Rp {amountNum.toLocaleString("id-ID")}
                     </div>
-                    <p className="font-body-sm text-on-surface-variant leading-relaxed pt-base">
+                    <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant leading-relaxed pt-base">
                       <span className="font-bold text-on-surface">Keterangan:</span> {cost.description}
                     </p>
                   </div>
@@ -404,7 +410,7 @@ export function ExpenseList({
 
                   {cost.budgetItem && (
                     <div className="rounded-lg bg-surface-container-low border border-outline-variant/10 p-sm space-y-xs">
-                      <div className="flex justify-between font-label-caps text-[9px] text-on-surface-variant">
+                      <div className="flex justify-between font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">
                         <span>Plafon: Rp {allocated.toLocaleString("id-ID")}</span>
                         <span>Realisasi: Rp {spent.toLocaleString("id-ID")}</span>
                       </div>
@@ -644,7 +650,7 @@ export function ExpenseList({
             >
               <span className="material-symbols-outlined">close</span>
             </button>
-            <p className="text-center font-label-caps text-white/70 mt-md">Ketuk di luar gambar untuk menutup</p>
+            <p className="text-center font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-white/70 mt-md">Ketuk di luar gambar untuk menutup</p>
           </div>
         </div>
       )}
@@ -658,7 +664,7 @@ export function ExpenseList({
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-outline-variant/10 pb-sm">
-              <h2 className="font-headline-md text-[18px] text-on-surface">Pencairan Dana</h2>
+              <h2 className="font-sans text-[20px] leading-[28px] font-semibold text-[18px] text-on-surface">Pencairan Dana</h2>
               <button
                 type="button"
                 onClick={() => setSelectedCost(null)}
@@ -709,7 +715,7 @@ export function ExpenseList({
             <form onSubmit={handleConfirmDisburse} className="space-y-md">
               {/* Select Bank Account */}
               <div className="space-y-xs">
-                <label htmlFor="bankSelect" className="font-label-caps text-[10px] text-on-surface-variant block">
+                <label htmlFor="bankSelect" className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">
                   Rekening Sumber Dana
                 </label>
                 <div className="relative">
@@ -734,7 +740,7 @@ export function ExpenseList({
 
               {/* Reference Number */}
               <div className="space-y-xs">
-                <label htmlFor="refInput" className="font-label-caps text-[10px] text-on-surface-variant block">
+                <label htmlFor="refInput" className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">
                   Nomor Referensi Bukti Transfer
                 </label>
                 <input

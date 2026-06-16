@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Badge } from "@/components/ui/badge";
+import { Badge, BadgeStatus } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import {
@@ -56,7 +56,6 @@ export function BudgetManager({
   budget,
   costCategories,
   userRole,
-  userId,
 }: BudgetManagerProps): React.JSX.Element {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -240,7 +239,7 @@ export function BudgetManager({
         </div>
         <div className="space-y-xs">
           <h3 className="font-title-md text-on-surface">RAB Belum Tersedia</h3>
-          <p className="font-body-sm text-on-surface-variant max-w-[280px]">
+          <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant max-w-[280px]">
             Rencana Anggaran Biaya (RAB) proyek belum dibuat untuk proyek ini.
           </p>
         </div>
@@ -297,8 +296,8 @@ export function BudgetManager({
       {/* Rincian Pos Anggaran */}
       <div className="space-y-md">
         <div className="flex items-center justify-between">
-          <h2 className="font-label-caps text-on-surface-variant">Rincian Anggaran (BoQ)</h2>
-          <Badge status={budget.status as any}>{budget.status}</Badge>
+          <h2 className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Rincian Anggaran (BoQ)</h2>
+          <Badge status={budget.status as BadgeStatus}>{budget.status}</Badge>
         </div>
 
         {budgetItems.length === 0 ? (
@@ -312,7 +311,7 @@ export function BudgetManager({
             return (
               <div key={catName} className="space-y-sm">
                 <div className="flex items-center">
-                  <span className="font-label-caps text-[10px] text-primary bg-surface-container border border-outline-variant/20 px-2.5 py-1 rounded-full">
+                  <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-primary bg-surface-container border border-outline-variant/20 px-2.5 py-1 rounded-full">
                     Kategori Anggaran: {catName}
                   </span>
                 </div>
@@ -331,7 +330,7 @@ export function BudgetManager({
                           <div className="flex items-start justify-between gap-md">
                             <div className="min-w-0 space-y-base">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <h3 className="font-body-sm font-bold text-on-surface truncate max-w-[200px]">{item.name}</h3>
+                                <h3 className="font-sans text-[14px] leading-[20px] font-normal font-bold text-on-surface truncate max-w-[200px]">{item.name}</h3>
                                 {item.costCategory && (
                                   <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
                                     {item.costCategory.name}
@@ -341,15 +340,15 @@ export function BudgetManager({
                               <p className="text-[11px] text-on-surface-variant leading-relaxed">
                                 {Number(item.quantity).toLocaleString("id-ID")} {item.unit} @ Rp {Number(item.unitPrice).toLocaleString("id-ID")}
                               </p>
-                              <p className="font-label-caps text-[9px] text-on-surface-variant font-bold tracking-tight">
+                              <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant font-bold tracking-tight">
                                 Total Plafon: Rp {allocated.toLocaleString("id-ID")}
                               </p>
                             </div>
                             <div className="text-right shrink-0">
-                              <div className={`font-numeral-md font-bold financial-amount ${isOverrun ? "text-error" : "text-primary"}`}>
+                              <div className={`font-mono text-[16px] leading-[20px] font-medium font-bold financial-amount ${isOverrun ? "text-error" : "text-primary"}`}>
                                 {isOverrun ? "-" : ""}Rp {Math.abs(remaining).toLocaleString("id-ID")}
                               </div>
-                              <span className="font-label-caps text-[8px] text-on-surface-variant block">
+                              <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[8px] text-on-surface-variant block">
                                 {isOverrun ? "Overrun" : "Sisa Plafon"}
                               </span>
                             </div>
@@ -394,7 +393,7 @@ export function BudgetManager({
             <div className="space-y-sm text-xs">
               <div className="grid grid-cols-2 gap-md">
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-label-caps text-[9px] text-on-surface-variant">Nama Item Anggaran</label>
+                  <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Nama Item Anggaran</label>
                   <input
                     type="text"
                     value={itemName}
@@ -406,7 +405,7 @@ export function BudgetManager({
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-label-caps text-[9px] text-on-surface-variant">Kategori Anggaran</label>
+                  <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Kategori Anggaran</label>
                   <input
                     type="text"
                     value={budgetCategory}
@@ -420,7 +419,7 @@ export function BudgetManager({
 
               <div className="grid grid-cols-2 gap-md">
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-label-caps text-[9px] text-on-surface-variant">Kelompok Biaya (Cost Category)</label>
+                  <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Kelompok Biaya (Cost Category)</label>
                   <select
                     value={selectedCategoryId}
                     onChange={(e) => setSelectedCategoryId(e.target.value)}
@@ -437,7 +436,7 @@ export function BudgetManager({
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-label-caps text-[9px] text-on-surface-variant">Satuan Ukur</label>
+                  <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Satuan Ukur</label>
                   <input
                     type="text"
                     value={unit}
@@ -451,7 +450,7 @@ export function BudgetManager({
 
               <div className="grid grid-cols-2 gap-md">
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-label-caps text-[9px] text-on-surface-variant">Kuantitas (Volume)</label>
+                  <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Kuantitas (Volume)</label>
                   <input
                     type="number"
                     value={quantity}
@@ -463,7 +462,7 @@ export function BudgetManager({
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-label-caps text-[9px] text-on-surface-variant">Harga Satuan (Rp)</label>
+                  <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Harga Satuan (Rp)</label>
                   <input
                     type="number"
                     value={unitPrice}
@@ -517,7 +516,7 @@ export function BudgetManager({
               </h3>
 
               <div className="flex flex-col gap-1.5 text-xs">
-                <label className="font-label-caps text-[9px] text-on-surface-variant">Alasan Revisi / Catatan Penolakan</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Alasan Revisi / Catatan Penolakan</label>
                 <textarea
                   value={rejectionNotes}
                   onChange={(e) => setRejectionNotes(e.target.value)}

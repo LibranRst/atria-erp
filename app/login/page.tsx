@@ -50,9 +50,9 @@ export default function LoginPage(): React.JSX.Element {
           <span className="material-symbols-outlined text-white text-[32px]">account_balance</span>
         </div>
         <div className="text-center space-y-1.5">
-          <p className="font-label-caps text-primary">Atria Operating System</p>
-          <h1 className="font-display text-display text-primary text-[28px] tracking-tight">Atria ERP</h1>
-          <p className="font-body-sm text-on-surface-variant max-w-[280px]">
+          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-primary">Atria Operating System</p>
+          <h1 className="font-sans text-[32px] leading-[40px] tracking-tight font-bold text-display text-primary text-[28px] tracking-tight">Atria ERP</h1>
+          <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant max-w-[280px]">
             Masuk untuk mengakses control room keuangan proyek & ledger buku kas lapangan.
           </p>
         </div>
@@ -62,12 +62,12 @@ export default function LoginPage(): React.JSX.Element {
       <div className="premium-card p-md border border-outline-variant/30 space-y-md shrink-0">
         <div className="pb-sm border-b border-outline-variant/10 space-y-xs">
           <div className="flex items-center justify-between">
-            <h2 className="font-headline-md text-on-surface">Kredensial Masuk</h2>
+            <h2 className="font-sans text-[20px] leading-[28px] font-semibold text-on-surface">Kredensial Masuk</h2>
             <Badge status={isLoading ? "PENDING" : "DRAFT"}>
               {isLoading ? "PROSES" : "LOGIN"}
             </Badge>
           </div>
-          <p className="font-body-sm text-on-surface-variant">
+          <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant">
             Masukkan alamat email terdaftar dan kata sandi Anda.
           </p>
         </div>
@@ -83,7 +83,7 @@ export default function LoginPage(): React.JSX.Element {
           <div className="space-y-base">
             <label
               htmlFor="email-input"
-              className="font-label-caps text-[10px] text-on-surface-variant flex items-center gap-1"
+              className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-on-surface-variant text-[14px]">mail</span>
               <span>Alamat Email</span>
@@ -103,7 +103,7 @@ export default function LoginPage(): React.JSX.Element {
           <div className="space-y-base">
             <label
               htmlFor="password-input"
-              className="font-label-caps text-[10px] text-on-surface-variant flex items-center gap-1"
+              className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-on-surface-variant text-[14px]">lock</span>
               <span>Kata Sandi</span>

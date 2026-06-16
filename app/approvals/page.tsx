@@ -28,7 +28,7 @@ export default async function ApprovalsPage(): Promise<React.JSX.Element> {
         <div className="mx-auto h-16 w-16 rounded-2xl bg-error-container/20 border border-error flex items-center justify-center text-error">
           <span className="material-symbols-outlined text-[32px] text-error animate-pulse">warning</span>
         </div>
-        <h1 className="text-xl font-display font-bold text-on-surface">Akses Terbatas</h1>
+        <h1 className="text-xl font-sans text-[32px] leading-[40px] tracking-tight font-bold font-bold text-on-surface">Akses Terbatas</h1>
         <p className="text-xs text-secondary leading-relaxed">
           Hanya Pemilik Perusahaan (Owner) yang memiliki otorisasi untuk mengakses antrean persetujuan finansial.
         </p>
@@ -122,8 +122,8 @@ export default async function ApprovalsPage(): Promise<React.JSX.Element> {
       {/* Header */}
       <div className="flex items-center justify-between px-1">
         <div className="space-y-base">
-          <p className="font-label-caps text-primary">Otorisasi Keuangan</p>
-          <h1 className="font-headline-lg text-on-surface">Persetujuan</h1>
+          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-primary">Otorisasi Keuangan</p>
+          <h1 className="font-sans text-[24px] leading-[32px] tracking-tight font-semibold text-on-surface">Persetujuan</h1>
         </div>
         <Badge status={resolvedApprovals.length > 0 ? "CRITICAL" : "APPROVED"}>
           {resolvedApprovals.length > 0 ? `${resolvedApprovals.length} Antrean` : "Semua Bersih"}
@@ -131,7 +131,7 @@ export default async function ApprovalsPage(): Promise<React.JSX.Element> {
       </div>
 
       <div className="px-1">
-        <p className="font-body-sm text-on-surface-variant leading-relaxed">
+        <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant leading-relaxed">
           Berikan keputusan persetujuan atau penolakan pengajuan keuangan di atas limit Rp 5.000.000 atau budget overrun.
         </p>
       </div>

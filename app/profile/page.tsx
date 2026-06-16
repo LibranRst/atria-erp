@@ -79,8 +79,8 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
       {/* Header */}
       <div className="flex items-center justify-between px-1">
         <div className="space-y-base">
-          <p className="font-label-caps text-primary">Akun Pengguna</p>
-          <h1 className="font-headline-lg text-on-surface">Profil Pengguna</h1>
+          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-primary">Akun Pengguna</p>
+          <h1 className="font-sans text-[24px] leading-[32px] tracking-tight font-semibold text-on-surface">Profil Pengguna</h1>
         </div>
         <Badge status={getBadgeStatus(roleName)}>
           {roleName}
@@ -89,11 +89,11 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
 
       {/* Profile Card dengan Inisial Kustom */}
       <div className="premium-card p-md border border-outline-variant/30 flex items-center gap-md">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-surface-container border border-outline-variant/20 text-primary text-xl font-display font-bold">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-surface-container border border-outline-variant/20 text-primary text-xl font-sans text-[32px] leading-[40px] tracking-tight font-bold font-bold">
           {getInitials(session.user.name)}
         </div>
         <div className="space-y-base min-w-0">
-          <h2 className="font-body-lg font-bold text-on-surface truncate">{session.user.name}</h2>
+          <h2 className="font-sans text-[18px] leading-[26px] font-normal font-bold text-on-surface truncate">{session.user.name}</h2>
           <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-medium">
             <span className="material-symbols-outlined text-[16px] text-on-surface-variant">mail</span>
             <span className="truncate">{session.user.email}</span>
@@ -103,7 +103,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
 
       {/* Group 1: Informasi Sistem */}
       <div className="space-y-sm px-1">
-        <h2 className="font-label-caps text-on-surface-variant">Detail Sesi Akun</h2>
+        <h2 className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Detail Sesi Akun</h2>
         <div className="premium-card border border-outline-variant/30 overflow-hidden divide-y divide-outline-variant/10">
           {/* Row 1: Peran */}
           <div className="flex items-center justify-between p-md text-xs">
@@ -140,7 +140,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
       {/* Group: Pengaturan (Hanya Owner, Finance, dan Purchasing) */}
       {(roleName === "OWNER" || roleName === "FINANCE_ADMIN" || roleName === "PURCHASING") && (
         <div className="space-y-sm px-1">
-          <h2 className="font-label-caps text-on-surface-variant">Konfigurasi & Master Data</h2>
+          <h2 className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Konfigurasi & Master Data</h2>
           <Link href="/settings" className="block active:scale-[0.99] transition-transform">
             <div className="premium-card p-md border border-outline-variant/30 flex items-center justify-between hover:bg-surface-container-low/20 transition-colors">
               <div className="flex items-center gap-3">
@@ -161,7 +161,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
       {/* Group 2: Hak Otorisasi */}
       <div className="space-y-sm px-1">
         <div className="flex items-center justify-between">
-          <h2 className="font-label-caps text-on-surface-variant">Hak Akses Finansial</h2>
+          <h2 className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Hak Akses Finansial</h2>
           <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container px-2.5 py-0.5 rounded-full border border-outline-variant/20">
             {permissions.length} Hak Aktif
           </span>

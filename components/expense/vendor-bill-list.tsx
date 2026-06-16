@@ -8,12 +8,113 @@ import { submitVendorBill } from "@/app/actions/finance/submit-vendor-bill";
 import { scheduleVendorBillPayment } from "@/app/actions/finance/schedule-vendor-bill";
 import { payVendorBill } from "@/app/actions/finance/pay-vendor-bill";
 
+export interface VendorListVendor {
+  readonly id: string;
+  readonly name: string;
+}
+
+export interface VendorListBudgetItem {
+  readonly id: string;
+  readonly name: string;
+  readonly allocatedAmount: string;
+  readonly actualSpent: string;
+}
+
+export interface VendorListProject {
+  readonly id: string;
+  readonly name: string;
+  readonly budget?: {
+    readonly items?: VendorListBudgetItem[];
+  } | null;
+  readonly canonicalBudgets?: Array<{
+    readonly id: string;
+    readonly status: string;
+    readonly categories?: Array<{
+      readonly id: string;
+      readonly code: string;
+      readonly name: string;
+      readonly allocatedAmount: string;
+      readonly pendingAmount: string;
+      readonly actualAmount: string;
+      readonly paidAmount: string;
+      readonly remainingAmount: string;
+      readonly usedPercentage: string;
+      readonly status: string;
+      readonly sortOrder: number;
+    }>;
+  }>;
+  readonly categoryPlanItems?: Array<{
+    readonly id: string;
+    readonly projectBudgetCategoryId: string;
+    readonly expenseCategoryCode: string;
+    readonly label: string;
+    readonly area: string;
+    readonly quantity: string;
+    readonly unit: string;
+    readonly estimatedTotalCost: string;
+    readonly status: string;
+  }>;
+}
+
+export interface VendorListBankAccount {
+  readonly id: string;
+  readonly name: string;
+  readonly bankName: string;
+  readonly balance: string;
+}
+
+export interface VendorListPayment {
+  readonly id: string;
+  readonly vendorBillId: string;
+  readonly bankAccountId: string;
+  readonly amountPaid: string;
+  readonly status: string;
+  readonly paymentDate: Date;
+  readonly referenceNumber: string | null;
+  readonly approvalStatus?: string;
+  readonly bankAccount?: {
+    readonly name: string;
+  } | null;
+  readonly vendorBill?: {
+    readonly billNumber: string;
+    readonly vendor?: {
+      readonly name: string;
+    } | null;
+    readonly project?: {
+      readonly name: string;
+    } | null;
+  } | null;
+}
+
+export interface VendorListBill {
+  readonly id: string;
+  readonly vendorId: string;
+  readonly projectId: string;
+  readonly projectBudgetItemId: string | null;
+  readonly projectBudgetCategoryId: string;
+  readonly billNumber: string;
+  readonly amount: string;
+  readonly status: string;
+  readonly dueDate: Date;
+  readonly notes: string | null;
+  readonly vendor?: {
+    readonly name: string;
+  } | null;
+  readonly project?: {
+    readonly name: string;
+  } | null;
+  readonly budgetItem?: {
+    readonly name: string;
+  } | null;
+  readonly payments?: VendorListPayment[];
+}
+
 interface VendorBillListProps {
-  readonly vendorBills: any[];
-  readonly vendorPayments: any[];
-  readonly vendors: any[];
-  readonly projects: any[];
-  readonly bankAccounts: any[];
+  readonly vendorBills: VendorListBill[];
+  readonly vendorPayments: VendorListPayment[];
+  readonly vendors: VendorListVendor[];
+  readonly projects: VendorListProject[];
+  readonly bankAccounts: VendorListBankAccount[];
   readonly userRole: string;
 }
 
@@ -31,8 +132,8 @@ export function VendorBillList({
 
   // Modal / Drawer visibility states
   const [showAddBill, setShowAddBill] = useState(false);
-  const [selectedBillForSchedule, setSelectedBillForSchedule] = useState<any | null>(null);
-  const [selectedPaymentForDisburse, setSelectedPaymentForDisburse] = useState<any | null>(null);
+  const [selectedBillForSchedule, setSelectedBillForSchedule] = useState<VendorListBill | null>(null);
+  const [selectedPaymentForDisburse, setSelectedPaymentForDisburse] = useState<VendorListPayment | null>(null);
 
   // Error / Success feedback
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +142,9 @@ export function VendorBillList({
   // Add Bill Form States
   const [selectedVendorId, setSelectedVendorId] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [selectedBudgetCategoryId, setSelectedBudgetCategoryId] = useState("");
   const [selectedBudgetItemId, setSelectedBudgetItemId] = useState("");
+  const [selectedCategoryPlanItemId, setSelectedCategoryPlanItemId] = useState("");
   const [billNumber, setBillNumber] = useState("");
   const [billAmount, setBillAmount] = useState("");
   const [billDueDate, setBillDueDate] = useState("");
@@ -62,13 +165,20 @@ export function VendorBillList({
 
   // Dynamic budget items lookup based on selected project
   const activeProject = projects.find((p) => p.id === selectedProjectId);
-  const budgetItems = activeProject?.budget?.items || [];
+  const budgetCategories = activeProject?.canonicalBudgets?.[0]?.categories
+    ?.slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder) ?? [];
+  const selectedBudgetCategory = budgetCategories.find((category) => category.id === selectedBudgetCategoryId);
+  const packageOptions = activeProject?.categoryPlanItems
+    ?.filter((item) => item.projectBudgetCategoryId === selectedBudgetCategoryId) ?? [];
 
   // Reset form helper
   const resetAddBillForm = () => {
     setSelectedVendorId("");
     setSelectedProjectId("");
+    setSelectedBudgetCategoryId("");
     setSelectedBudgetItemId("");
+    setSelectedCategoryPlanItemId("");
     setBillNumber("");
     setBillAmount("");
     setBillDueDate("");
@@ -81,7 +191,7 @@ export function VendorBillList({
     setError(null);
     setSuccess(null);
 
-    if (!selectedVendorId || !selectedProjectId || !selectedBudgetItemId || !billNumber.trim() || !billAmount || !billDueDate) {
+    if (!selectedVendorId || !selectedProjectId || !selectedBudgetCategoryId || !billNumber.trim() || !billAmount || !billDueDate) {
       setError("Silakan isi semua kolom formulir wajib.");
       return;
     }
@@ -91,7 +201,9 @@ export function VendorBillList({
         const res = await submitVendorBill({
           vendorId: selectedVendorId,
           projectId: selectedProjectId,
-          projectBudgetItemId: selectedBudgetItemId,
+          projectBudgetCategoryId: selectedBudgetCategoryId,
+          projectBudgetItemId: selectedBudgetItemId || undefined,
+          projectCategoryPlanItemId: selectedCategoryPlanItemId || undefined,
           billNumber: billNumber.trim(),
           amount: Number(billAmount),
           dueDate: new Date(billDueDate),
@@ -117,17 +229,17 @@ export function VendorBillList({
   };
 
   // Action: Schedule Payment Trigger
-  const handleScheduleClick = (bill: any) => {
+  const handleScheduleClick = (bill: VendorListBill) => {
     setSelectedBillForSchedule(bill);
     
     // Hitung sisa tagihan yang belum dijadwalkan atau dibayar
     const pendingAmount = bill.payments
-      ?.filter((p: any) => p.status === "PENDING" || p.status === "PROCESSING")
-      ?.reduce((sum: number, p: any) => sum + Number(p.amountPaid), 0) || 0;
+      ?.filter((p: VendorListPayment) => p.status === "PENDING" || p.status === "PROCESSING")
+      ?.reduce((sum: number, p: VendorListPayment) => sum + Number(p.amountPaid), 0) || 0;
 
     const completedAmount = bill.payments
-      ?.filter((p: any) => p.status === "COMPLETED")
-      ?.reduce((sum: number, p: any) => sum + Number(p.amountPaid), 0) || 0;
+      ?.filter((p: VendorListPayment) => p.status === "COMPLETED")
+      ?.reduce((sum: number, p: VendorListPayment) => sum + Number(p.amountPaid), 0) || 0;
 
     const remaining = Number(bill.amount) - (pendingAmount + completedAmount);
     setScheduleAmount(remaining > 0 ? remaining.toFixed(2) : Number(bill.amount).toFixed(2));
@@ -146,16 +258,22 @@ export function VendorBillList({
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    const billForSchedule = selectedBillForSchedule;
 
     if (!selectedBankId || !scheduleAmount || !scheduleDate) {
       setError("Silakan lengkapi formulir penjadwalan.");
       return;
     }
 
+    if (!billForSchedule) {
+      setError("Tagihan vendor tidak ditemukan.");
+      return;
+    }
+
     startTransition(async () => {
       try {
         const res = await scheduleVendorBillPayment({
-          vendorBillId: selectedBillForSchedule.id,
+          vendorBillId: billForSchedule.id,
           bankAccountId: selectedBankId,
           paymentDate: new Date(scheduleDate),
           amountPaid: Number(scheduleAmount),
@@ -179,7 +297,7 @@ export function VendorBillList({
   };
 
   // Action: Disburse Payment Trigger
-  const handleDisburseClick = (payment: any) => {
+  const handleDisburseClick = (payment: VendorListPayment) => {
     setSelectedPaymentForDisburse(payment);
     setDisburseBankId(payment.bankAccountId); // Pre-populate with the scheduled account
     setRefNumber("");
@@ -191,16 +309,22 @@ export function VendorBillList({
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    const paymentForDisburse = selectedPaymentForDisburse;
 
     if (!refNumber.trim()) {
       setError("Nomor referensi bukti transfer wajib diisi.");
       return;
     }
 
+    if (!paymentForDisburse) {
+      setError("Rencana pembayaran vendor tidak ditemukan.");
+      return;
+    }
+
     startTransition(async () => {
       try {
         const res = await payVendorBill({
-          vendorPaymentId: selectedPaymentForDisburse.id,
+          vendorPaymentId: paymentForDisburse.id,
           referenceNumber: refNumber.trim(),
           bankAccountId: disburseBankId || undefined, // Pass the chosen bank account override
         });
@@ -277,8 +401,8 @@ export function VendorBillList({
                 <span className="material-symbols-outlined text-primary text-[28px]">payments</span>
               </div>
               <div className="space-y-base">
-                <h3 className="font-headline-md text-[16px] text-on-surface">Tidak Ada Tagihan</h3>
-                <p className="font-body-sm text-on-surface-variant leading-relaxed">
+                <h3 className="font-sans text-[20px] leading-[28px] font-semibold text-[16px] text-on-surface">Tidak Ada Tagihan</h3>
+                <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant leading-relaxed">
                   Belum ada tagihan pembelian material/vendor yang tercatat.
                 </p>
               </div>
@@ -293,12 +417,12 @@ export function VendorBillList({
               if (bill.status === "PARTIALLY_PAID") statusMapping = "PARTIALLY_PAID";
 
               const pendingPaymentAmount = bill.payments
-                ?.filter((p: any) => p.status === "PENDING" || p.status === "PROCESSING")
-                ?.reduce((sum: number, p: any) => sum + Number(p.amountPaid), 0) || 0;
+                ?.filter((p: VendorListPayment) => p.status === "PENDING" || p.status === "PROCESSING")
+                ?.reduce((sum: number, p: VendorListPayment) => sum + Number(p.amountPaid), 0) || 0;
 
               const completedPaymentAmount = bill.payments
-                ?.filter((p: any) => p.status === "COMPLETED")
-                ?.reduce((sum: number, p: any) => sum + Number(p.amountPaid), 0) || 0;
+                ?.filter((p: VendorListPayment) => p.status === "COMPLETED")
+                ?.reduce((sum: number, p: VendorListPayment) => sum + Number(p.amountPaid), 0) || 0;
 
               const totalScheduledOrPaid = pendingPaymentAmount + completedPaymentAmount;
               const isFullyScheduledOrPaid = totalScheduledOrPaid >= amountNum;
@@ -312,7 +436,7 @@ export function VendorBillList({
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-body-md font-bold text-on-surface truncate max-w-[200px]">
+                        <h3 className="font-sans text-[16px] leading-[24px] font-normal font-bold text-on-surface truncate max-w-[200px]">
                           {bill.vendor?.name}
                         </h3>
                         <Badge status={statusMapping} />
@@ -321,18 +445,18 @@ export function VendorBillList({
                         Nomor: <span className="font-bold text-on-surface">{bill.billNumber}</span>
                       </p>
                     </div>
-                    <div className="text-right font-numeral-md text-on-surface font-bold">
+                    <div className="text-right font-mono text-[16px] leading-[20px] font-medium text-on-surface font-bold">
                       Rp {amountNum.toLocaleString("id-ID")}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-sm bg-surface-container-low p-sm rounded-lg border border-outline-variant/10 text-[11px] font-semibold text-on-surface">
                     <div className="space-y-base">
-                      <span className="font-label-caps text-[9px] text-on-surface-variant">Proyek</span>
+                      <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Proyek</span>
                       <p className="truncate">{bill.project?.name}</p>
                     </div>
                     <div className="space-y-base">
-                      <span className="font-label-caps text-[9px] text-on-surface-variant">Item Budget BoQ</span>
+                      <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Item Budget BoQ</span>
                       <p className="truncate">{bill.budgetItem?.name}</p>
                     </div>
                   </div>
@@ -376,8 +500,8 @@ export function VendorBillList({
                 <span className="material-symbols-outlined text-primary text-[28px]">schedule</span>
               </div>
               <div className="space-y-base">
-                <h3 className="font-headline-md text-[16px] text-on-surface">Tidak Ada Rencana Pembayaran</h3>
-                <p className="font-body-sm text-on-surface-variant leading-relaxed">
+                <h3 className="font-sans text-[20px] leading-[28px] font-semibold text-[16px] text-on-surface">Tidak Ada Rencana Pembayaran</h3>
+                <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant leading-relaxed">
                   Belum ada rencana atau mutasi pembayaran vendor yang terdaftar.
                 </p>
               </div>
@@ -400,7 +524,7 @@ export function VendorBillList({
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-body-md font-bold text-on-surface truncate max-w-[200px]">
+                        <h4 className="font-sans text-[16px] leading-[24px] font-normal font-bold text-on-surface truncate max-w-[200px]">
                           {pay.vendorBill?.vendor?.name}
                         </h4>
                         <Badge status={isCompleted ? "PAID" : pay.approvalStatus === "PENDING" ? "PENDING" : pay.approvalStatus === "REJECTED" ? "REJECTED" : "APPROVED"}>
@@ -412,7 +536,7 @@ export function VendorBillList({
                       </p>
                     </div>
                     <div className="text-right">
-                      <div className="font-numeral-md text-on-surface font-bold">
+                      <div className="font-mono text-[16px] leading-[20px] font-medium text-on-surface font-bold">
                         Rp {amountPaidNum.toLocaleString("id-ID")}
                       </div>
                       <span className="text-[9px] text-on-surface-variant">Sumber: {pay.bankAccount?.name}</span>
@@ -421,11 +545,11 @@ export function VendorBillList({
 
                   <div className="grid grid-cols-2 gap-sm bg-surface-container-low/50 p-sm rounded-lg border border-outline-variant/10 text-[11px] font-semibold text-on-surface">
                     <div className="space-y-base">
-                      <span className="font-label-caps text-[9px] text-on-surface-variant">Proyek</span>
+                      <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Proyek</span>
                       <p className="truncate">{pay.vendorBill?.project?.name}</p>
                     </div>
                     <div className="space-y-base">
-                      <span className="font-label-caps text-[9px] text-on-surface-variant">Tanggal Rencana Bayar</span>
+                      <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Tanggal Rencana Bayar</span>
                       <p>{new Date(pay.paymentDate).toLocaleDateString("id-ID", { month: "short", day: "numeric" })}</p>
                     </div>
                   </div>
@@ -478,7 +602,7 @@ export function VendorBillList({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-outline-variant/10 pb-sm">
-              <h2 className="font-headline-md text-[18px] text-on-surface">Tagihan Vendor Baru</h2>
+              <h2 className="font-sans text-[20px] leading-[28px] font-semibold text-[18px] text-on-surface">Tagihan Vendor Baru</h2>
               <button
                 type="button"
                 onClick={() => setShowAddBill(false)}
@@ -505,7 +629,7 @@ export function VendorBillList({
             <form onSubmit={handleAddBillSubmit} className="space-y-md">
               {/* Select Vendor */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Nama Vendor/Supplier</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Nama Vendor/Supplier</label>
                 <div className="relative">
                   <select
                     value={selectedVendorId}
@@ -527,14 +651,16 @@ export function VendorBillList({
 
               {/* Select Project */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Proyek Anggaran</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Proyek Anggaran</label>
                 <div className="relative">
                   <select
                     value={selectedProjectId}
                     disabled={isPending}
                     onChange={(e) => {
                       setSelectedProjectId(e.target.value);
-                      setSelectedBudgetItemId(""); // reset item
+                      setSelectedBudgetCategoryId("");
+                      setSelectedBudgetItemId("");
+                      setSelectedCategoryPlanItemId("");
                     }}
                     className="w-full h-11 px-sm rounded-xl border border-outline-variant/50 bg-surface text-on-surface font-semibold text-[13px] appearance-none focus:outline-none focus:border-primary disabled:opacity-50 cursor-pointer"
                     required
@@ -550,21 +676,25 @@ export function VendorBillList({
                 </div>
               </div>
 
-              {/* Select Budget Item (populated dynamically) */}
+              {/* Select Budget Category */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Item Anggaran RAB (BoQ)</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Kategori Budget</label>
                 <div className="relative">
                   <select
-                    value={selectedBudgetItemId}
+                    value={selectedBudgetCategoryId}
                     disabled={isPending || !selectedProjectId}
-                    onChange={(e) => setSelectedBudgetItemId(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedBudgetCategoryId(e.target.value);
+                      setSelectedBudgetItemId("");
+                      setSelectedCategoryPlanItemId("");
+                    }}
                     className="w-full h-11 px-sm rounded-xl border border-outline-variant/50 bg-surface text-on-surface font-semibold text-[13px] appearance-none focus:outline-none focus:border-primary disabled:opacity-50 cursor-pointer"
                     required
                   >
-                    <option value="">-- Pilih Item Budget --</option>
-                    {budgetItems.map((item: any) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name} (Sisa: Rp {(Number(item.allocatedAmount) - Number(item.actualSpent)).toLocaleString("id-ID")})
+                    <option value="">-- Pilih Kategori --</option>
+                    {budgetCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name} (Sisa: Rp {Number(category.remainingAmount).toLocaleString("id-ID")})
                       </option>
                     ))}
                   </select>
@@ -574,9 +704,33 @@ export function VendorBillList({
                 </div>
               </div>
 
+              {["TUKANG", "SUBCON"].includes(selectedBudgetCategory?.code ?? "") && (
+                <div className="space-y-xs rounded-2xl border border-outline-variant/15 bg-surface-container-low p-3">
+                  <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">
+                    {selectedBudgetCategory?.code === "SUBCON" ? "Subcon Package" : "Work Package"} (Opsional)
+                  </label>
+                  <select
+                    value={selectedCategoryPlanItemId}
+                    disabled={isPending || !selectedProjectId || !selectedBudgetCategoryId}
+                    onChange={(e) => setSelectedCategoryPlanItemId(e.target.value)}
+                    className="w-full h-11 px-sm rounded-xl border border-outline-variant/50 bg-surface text-on-surface font-semibold text-[13px] appearance-none focus:outline-none focus:border-primary disabled:opacity-50 cursor-pointer"
+                  >
+                    <option value="">Tidak link ke package</option>
+                    {packageOptions.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.area} - {item.label} ({item.quantity} {item.unit}, Rp {Number(item.estimatedTotalCost).toLocaleString("id-ID")})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-on-surface-variant">
+                    Link ini membantu membandingkan tagihan vendor dengan estimasi internal Tukang/Subcon.
+                  </p>
+                </div>
+              )}
+
               {/* Bill Number */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Nomor Tagihan (Bill Number)</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Nomor Tagihan (Bill Number)</label>
                 <input
                   type="text"
                   value={billNumber}
@@ -590,7 +744,7 @@ export function VendorBillList({
 
               {/* Amount */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Nominal Tagihan (Rupiah)</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Nominal Tagihan (Rupiah)</label>
                 <input
                   type="number"
                   value={billAmount}
@@ -604,7 +758,7 @@ export function VendorBillList({
 
               {/* Due Date */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Tanggal Jatuh Tempo</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Tanggal Jatuh Tempo</label>
                 <input
                   type="date"
                   value={billDueDate}
@@ -617,7 +771,7 @@ export function VendorBillList({
 
               {/* Notes */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Keterangan / Catatan</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Keterangan / Catatan</label>
                 <textarea
                   value={billNotes}
                   disabled={isPending}
@@ -659,7 +813,7 @@ export function VendorBillList({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-outline-variant/10 pb-sm">
-              <h2 className="font-headline-md text-[18px] text-on-surface">Jadwalkan Bayar</h2>
+              <h2 className="font-sans text-[20px] leading-[28px] font-semibold text-[18px] text-on-surface">Jadwalkan Bayar</h2>
               <button
                 type="button"
                 onClick={() => setSelectedBillForSchedule(null)}
@@ -701,7 +855,7 @@ export function VendorBillList({
             <form onSubmit={handleScheduleSubmit} className="space-y-md">
               {/* Select Bank Account */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Sumber Rekening Kas</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Sumber Rekening Kas</label>
                 <div className="relative">
                   <select
                     value={selectedBankId}
@@ -725,7 +879,7 @@ export function VendorBillList({
 
               {/* Schedule Date */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Tanggal Pembayaran</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Tanggal Pembayaran</label>
                 <input
                   type="date"
                   value={scheduleDate}
@@ -738,7 +892,7 @@ export function VendorBillList({
 
               {/* Amount to Pay */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Nominal yang Dibayarkan (Rupiah)</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Nominal yang Dibayarkan (Rupiah)</label>
                 <input
                   type="number"
                   value={scheduleAmount}
@@ -781,7 +935,7 @@ export function VendorBillList({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-outline-variant/10 pb-sm">
-              <h2 className="font-headline-md text-[18px] text-on-surface">Cairkan Pembayaran Vendor</h2>
+              <h2 className="font-sans text-[20px] leading-[28px] font-semibold text-[18px] text-on-surface">Cairkan Pembayaran Vendor</h2>
               <button
                 type="button"
                 onClick={() => setSelectedPaymentForDisburse(null)}
@@ -819,7 +973,7 @@ export function VendorBillList({
             <form onSubmit={handleDisburseSubmit} className="space-y-md">
               {/* Select Bank Account Override */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Pilih Kantong / Sumber Kas</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Pilih Kantong / Sumber Kas</label>
                 <div className="relative">
                   <select
                     value={disburseBankId}
@@ -842,7 +996,7 @@ export function VendorBillList({
 
               {/* Reference Number */}
               <div className="space-y-xs">
-                <label className="font-label-caps text-[10px] text-on-surface-variant block">Nomor Referensi Bukti Transfer</label>
+                <label className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[10px] text-on-surface-variant block">Nomor Referensi Bukti Transfer</label>
                 <input
                   type="text"
                   value={refNumber}

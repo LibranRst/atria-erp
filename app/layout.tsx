@@ -44,7 +44,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full bg-[#fcf9f8] font-body-md text-on-surface">
+      <body className="min-h-full bg-[#fcf9f8] font-sans text-[16px] leading-[24px] font-normal text-on-surface">
         <MobileShell>{children}</MobileShell>
       </body>
     </html>
