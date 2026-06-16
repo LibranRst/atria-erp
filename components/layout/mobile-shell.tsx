@@ -69,7 +69,10 @@ function MobileHeader({
         </div>
 
         {/* Centered Page Title */}
-        <h1 className="font-display text-on-surface text-[14px] font-semibold tracking-tight text-center flex-1 truncate px-2">
+        <h1 
+          style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "14px", fontWeight: 600 }}
+          className="text-on-surface tracking-tight text-center flex-1 truncate px-2"
+        >
           {pageTitle}
         </h1>
 
