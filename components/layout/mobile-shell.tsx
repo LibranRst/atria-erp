@@ -43,7 +43,7 @@ function MobileHeader({
   }, [pathname, searchParams]);
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 flex items-center h-14 bg-surface shadow-sm select-none border-b border-outline-variant/10">
+    <header className="fixed top-0 left-0 w-full z-50 flex items-center h-14 bg-surface select-none border-b border-outline-variant/10">
       <div className="max-w-md mx-auto w-full px-margin-mobile flex justify-between items-center h-full">
         {/* Left Button: Sidebar Menu trigger or Back button */}
         <div className="w-10 h-10 flex items-center justify-start">
@@ -69,7 +69,7 @@ function MobileHeader({
         </div>
 
         {/* Centered Page Title */}
-        <h1 className="font-display text-on-surface text-[16px] font-bold tracking-tight text-center flex-1 truncate px-2">
+        <h1 className="font-display text-on-surface text-[14px] font-semibold tracking-tight text-center flex-1 truncate px-2">
           {pageTitle}
         </h1>
 
