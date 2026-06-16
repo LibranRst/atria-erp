@@ -84,6 +84,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps): React.JSX.Element {
   const filteredItems = sidebarItems.filter((item) => {
     if (!roleName) return false;
 
+    if (item.label === "Dashboard") {
+      return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
+    }
+
     if (item.label === "Persetujuan (Approvals)") {
       return roleName === "OWNER";
     }
