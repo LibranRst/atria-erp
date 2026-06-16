@@ -418,9 +418,9 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
             </div>
             {category.code === "MATERIAL" && (
               <div className="pt-2">
-                <Link href="/materials" className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/20 px-3 text-xs font-bold text-primary active:scale-[0.98]">
-                  <span className="material-symbols-outlined text-[16px]">inventory_2</span>
-                  Detail Penggunaan Material
+                <Link href="/projects" className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/20 px-3 text-xs font-bold text-primary active:scale-[0.98]">
+                  <span className="material-symbols-outlined text-[16px]">folder_open</span>
+                  Lihat Anggaran Proyek
                 </Link>
               </div>
             )}
