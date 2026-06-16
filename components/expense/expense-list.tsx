@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { payFieldRequest, verifyFieldRequest } from "@/app/actions/finance/field-requests";
 import { useRouter } from "next/navigation";
 import { getErrorMessage } from "@/lib/utils/error-message";
+import Link from "next/link";
 import {
   VendorBillList,
   type VendorListBill,
@@ -55,6 +56,7 @@ interface ExpenseListProps {
   vendorPayments?: VendorListPayment[];
   vendors?: VendorListVendor[];
   projects?: VendorListProject[];
+  pendingApprovalsCount?: number;
 }
 
 type FilterStatus = "ALL" | "NEEDS_VERIFICATION" | "NEEDS_APPROVAL" | "READY_TO_PAY" | "PAID" | "REJECTED";
@@ -77,6 +79,7 @@ export function ExpenseList({
   vendorPayments = [],
   vendors = [],
   projects = [],
+  pendingApprovalsCount = 0,
 }: ExpenseListProps): React.JSX.Element {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"FIELD_CLAIMS" | "VENDOR_BILLS">("FIELD_CLAIMS");
@@ -191,6 +194,25 @@ export function ExpenseList({
           <h1 className="font-sans text-[24px] leading-[32px] tracking-tight font-semibold text-on-surface">Daftar Pengajuan</h1>
         </div>
       </div>
+
+      {/* Contextual Approvals Banner for Owner */}
+      {userRole === "OWNER" && pendingApprovalsCount > 0 && (
+        <Link
+          href="/approvals"
+          className="flex items-center justify-between p-md bg-primary-container/10 border border-primary-container/30 rounded-2xl hover:bg-primary-container/15 transition-all duration-200 cursor-pointer pointer-events-auto"
+        >
+          <div className="flex items-center gap-md">
+            <span className="material-symbols-outlined text-primary text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+              verified_user
+            </span>
+            <div className="min-w-0">
+              <p className="font-sans text-[14px] leading-[20px] font-bold text-on-surface">Persetujuan Menunggu</p>
+              <p className="font-sans text-[11px] leading-[16px] text-on-surface-variant font-medium">Ada {pendingApprovalsCount} pengajuan yang memerlukan persetujuan Anda.</p>
+            </div>
+          </div>
+          <span className="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
+        </Link>
+      )}
 
       {/* Segmented Control Switcher */}
       <div className="flex w-full bg-surface-container-low border border-outline-variant/10 rounded-xl p-1 select-none">

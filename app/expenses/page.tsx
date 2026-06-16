@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { projectCost, vendorBill, vendorPayment, vendor, project, bankAccount, approval } from "@/db/schema";
+import { projectCost, vendorBill, vendorPayment, vendor, project, approval, materialMaster } from "@/db/schema";
 import { eq, desc, and, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
@@ -158,13 +158,114 @@ export default async function ExpensesPage(): Promise<React.JSX.Element> {
           },
         },
       },
+      canonicalBudgets: {
+        with: {
+          categories: {
+            with: {
+              expenseCategory: true,
+            },
+          },
+        },
+      },
+      raps: {
+        with: {
+          items: true,
+        },
+      },
+      categoryPlanItems: {
+        with: {
+          expenseCategory: true,
+        },
+      },
     },
   });
+  const materialOptionsData = await db.query.materialMaster.findMany({
+    where: eq(materialMaster.isActive, true),
+    with: {
+      inventory: true,
+    },
+  });
+  const materialOptions = materialOptionsData.map((material) => ({
+    id: material.id,
+    name: material.name,
+    unit: material.unit,
+    availableStock: material.inventory.reduce((sum, inventory) => {
+      return sum + Number(inventory.currentStock) - Number(inventory.reservedStock);
+    }, 0),
+  }));
 
   const costsForList: ExpenseCostItem[] = costsData.map((cost) => ({
     ...cost,
     status: toExpenseCostStatus(cost.status),
   }));
+  const projectsForForms = projectsData.map((proj) => ({
+    id: proj.id,
+    name: proj.name,
+    budget: proj.budget,
+    canonicalBudgets: proj.canonicalBudgets.map((budget) => ({
+      id: budget.id,
+      status: budget.status,
+      categories: budget.categories.map((category) => ({
+        id: category.id,
+        code: category.expenseCategory.code,
+        name: category.expenseCategory.name,
+        allocatedAmount: category.allocatedAmount,
+        pendingAmount: category.pendingAmount,
+        actualAmount: category.actualAmount,
+        paidAmount: category.paidAmount,
+        remainingAmount: category.remainingAmount,
+        usedPercentage: category.usedPercentage,
+        status: category.status,
+        sortOrder: category.sortOrder,
+      })),
+    })),
+    materialOptions,
+    rapItems: proj.raps.flatMap((rap) => rap.items.map((item) => ({
+      id: item.id,
+      materialId: item.materialId,
+      label: item.name,
+      area: item.area,
+      quantity: item.totalQuantity,
+      unit: item.unit,
+      status: item.status,
+    }))),
+    categoryPlanItems: proj.categoryPlanItems.map((item) => ({
+      id: item.id,
+      projectBudgetCategoryId: item.projectBudgetCategoryId,
+      expenseCategoryCode: item.expenseCategory.code,
+      label: item.name,
+      area: item.area,
+      quantity: item.quantity,
+      unit: item.unit,
+      estimatedTotalCost: item.estimatedTotalCost,
+      status: item.status,
+    })),
+  }));
+
+  // 7b. Query pending approvals count for Owner shortcut banner
+  let pendingApprovalsCount = 0;
+  if (roleName === "OWNER") {
+    const pendingApprovals = await db.query.approval.findMany({
+      where: eq(approval.status, "PENDING"),
+    });
+    for (const app of pendingApprovals) {
+      if (app.referenceType === "project_cost") {
+        const cost = await db.query.projectCost.findFirst({
+          where: eq(projectCost.id, app.referenceId),
+        });
+        if (cost && cost.status === "VERIFIED") {
+          pendingApprovalsCount++;
+        }
+      } else if (app.referenceType === "vendor_payment") {
+        const pay = await db.query.vendorPayment.findFirst({
+          where: eq(vendorPayment.id, app.referenceId),
+        });
+        if (pay) {
+          pendingApprovalsCount++;
+        }
+      }
+    }
+  }
 
   return (
     <section className="space-y-sm select-none">
@@ -175,9 +276,9 @@ export default async function ExpensesPage(): Promise<React.JSX.Element> {
         vendorBills={vendorBillsData}
         vendorPayments={paymentsForList}
         vendors={vendorsData}
-        projects={projectsData}
+        projects={projectsForForms}
+        pendingApprovalsCount={pendingApprovalsCount}
       />
     </section>
   );
 }
-

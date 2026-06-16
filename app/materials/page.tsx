@@ -2,6 +2,9 @@ import React from "react";
 import { redirect } from "next/navigation";
 import { getMaterialInventory, getMaterialShortages } from "@/app/actions/material/inventory";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { auth } from "@/lib/auth";
+import { resolveRoleName } from "@/lib/auth/permissions";
 
 function formatNumber(value: number): string {
   return value.toLocaleString("id-ID", {
@@ -40,6 +43,15 @@ export default async function MaterialsPage(): Promise<React.JSX.Element> {
   const totalStockValue = inventory.reduce((sum, item) => sum + item.currentStock * item.averageCost, 0);
   const totalReusableValue = inventory.reduce((sum, item) => sum + Math.max(0, item.availableStock) * item.averageCost, 0);
   const lowStockCount = inventory.filter((item) => item.status === "LOW_STOCK" || item.status === "OUT_OF_STOCK" || item.status === "RESERVED").length;
+
+  // Resolve user role to show settings shortcut link
+  const session = await auth.api.getSession({
+    headers: {
+      cookie: (await (await import("next/headers")).cookies()).toString(),
+    },
+  });
+  const roleName = session?.user ? await resolveRoleName((session.user as any).roleId) : null;
+  const showSettingsShortcut = roleName === "OWNER" || roleName === "FINANCE_ADMIN" || roleName === "PURCHASING";
 
   return (
     <section className="space-y-lg select-none">
@@ -110,7 +122,18 @@ export default async function MaterialsPage(): Promise<React.JSX.Element> {
       </section>
 
       <section className="space-y-sm">
-        <h2 className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant px-1">Inventory</h2>
+        <div className="flex items-center justify-between px-1">
+          <h2 className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Inventory</h2>
+          {showSettingsShortcut && (
+            <Link
+              href="/settings"
+              className="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-1 -mr-1"
+              aria-label="Pengaturan Material"
+            >
+              <span className="material-symbols-outlined text-[18px]">settings</span>
+            </Link>
+          )}
+        </div>
         <div className="space-y-sm">
           {inventory.map((item) => (
             <div key={item.inventoryId} className="premium-card p-md border border-outline-variant/30 space-y-md">

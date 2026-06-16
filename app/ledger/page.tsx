@@ -313,9 +313,18 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
               Rp {totalBalance.toLocaleString("id-ID")}
             </span>
           </div>
-          <div className="mt-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">trending_up</span>
-            <span className="font-sans text-[14px] leading-[20px] font-normal">+2.4% from last month</span>
+          <div className="mt-4 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">trending_up</span>
+              <span className="font-sans text-[14px] leading-[20px] font-normal">+2.4% from last month</span>
+            </div>
+            <Link
+              href="/ledger?brief=true"
+              className="bg-white/20 hover:bg-white/30 text-white rounded-full px-sm py-1.5 text-[10px] font-bold flex items-center gap-1 active:scale-95 transition-all cursor-pointer border border-white/10 shrink-0"
+            >
+              <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+              <span>Analisis AI</span>
+            </Link>
           </div>
         </div>
         
