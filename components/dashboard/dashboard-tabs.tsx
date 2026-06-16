@@ -56,9 +56,18 @@ export function DashboardTabs({
 
       {/* Tab Contents */}
       <div className="transition-all duration-200">
-        {activeTab === "BUDGET" && budgetSection}
-        {activeTab === "FINANCE" && financeSection}
-        {activeTab === "ACTIVITY" && activitySection}
+        {(() => {
+          switch (activeTab) {
+            case "BUDGET":
+              return budgetSection;
+            case "FINANCE":
+              return financeSection;
+            case "ACTIVITY":
+              return activitySection;
+            default:
+              return null;
+          }
+        })()}
       </div>
     </div>
   );
