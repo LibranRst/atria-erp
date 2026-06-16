@@ -7,6 +7,8 @@ import { getOwnerBudgetDashboard } from "@/app/actions/project/excel-budget";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import React from "react";
+import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
+import { Badge } from "@/components/ui/badge";
 
 interface ParsedBriefing {
   briefingDate: string;
@@ -296,222 +298,177 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
     );
   }
 
-  return (
-    <>
-      {/* Greeting Section */}
-      <section className="space-y-base select-none">
-        <p className="font-sans text-[16px] leading-[24px] font-normal text-on-surface-variant">Good morning, {session.user.name.split(" ")[0]}</p>
-        <h2 className="font-sans text-[24px] leading-[32px] tracking-tight font-semibold text-on-surface">Portfolio Overview</h2>
-      </section>
+  const getIndonesianDate = () => {
+    const today = new Date();
+    return today.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+  };
 
-      {/* Main KPI Card */}
-      <section className="premium-card p-md !bg-primary text-on-primary relative overflow-hidden select-none">
-        <div className="relative z-10">
-          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase uppercase opacity-80 mb-1">Cash Available</p>
-          <div className="flex items-baseline gap-1">
-            <span className="font-mono text-[22px] leading-[28px] font-medium text-[40px] !font-bold tracking-tight leading-none financial-amount">
-              Rp {totalBalance.toLocaleString("id-ID")}
+  const budgetSection = ownerBudgetDashboard ? (
+    <div className="space-y-lg">
+      {/* Budget Health Header Card */}
+      <div className="premium-card p-md border border-outline-variant/30 space-y-md">
+        <div className="flex items-center justify-between">
+          <h3 className="font-sans text-[16px] leading-[24px] font-bold text-on-surface">Budget Health</h3>
+          <span className="rounded-full border border-outline-variant/30 px-3 py-1 text-[10px] font-bold text-on-surface-variant">
+            {ownerBudgetDashboard.projectsOverBudget} Over Budget
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-md">
+          <div>
+            <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Project Value</p>
+            <p className="font-mono text-[16px] leading-[20px] font-bold text-on-surface financial-amount mt-0.5">
+              Rp {ownerBudgetDashboard.totalProjectValue.toLocaleString("id-ID")}
+            </p>
+          </div>
+          <div>
+            <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Budget CAP</p>
+            <p className="font-mono text-[16px] leading-[20px] font-bold text-on-surface financial-amount mt-0.5">
+              Rp {ownerBudgetDashboard.totalBudget.toLocaleString("id-ID")}
+            </p>
+          </div>
+          <div>
+            <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Consumed</p>
+            <p className="font-mono text-[16px] leading-[20px] font-bold text-secondary financial-amount mt-0.5">
+              Rp {ownerBudgetDashboard.consumedBudget.toLocaleString("id-ID")}
+            </p>
+          </div>
+          <div>
+            <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Remaining</p>
+            <p className={`font-mono text-[16px] leading-[20px] font-bold financial-amount mt-0.5 ${ownerBudgetDashboard.remainingBudget < 0 ? "text-error" : "text-primary"}`}>
+              Rp {ownerBudgetDashboard.remainingBudget.toLocaleString("id-ID")}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-xs border-t border-outline-variant/10 pt-md">
+          <div className="flex items-center justify-between text-[11px] font-semibold">
+            <span className="text-on-surface-variant">Budget Used</span>
+            <span className={ownerBudgetDashboard.usedPercentage > 100 ? "text-error" : ownerBudgetDashboard.usedPercentage >= 75 ? "text-secondary" : "text-primary"}>
+              {ownerBudgetDashboard.usedPercentage.toFixed(1)}%
             </span>
           </div>
-          <div className="mt-4 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">trending_up</span>
-              <span className="font-sans text-[14px] leading-[20px] font-normal">+2.4% from last month</span>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container border border-outline-variant/10">
+            <div
+              className={`h-full rounded-full ${ownerBudgetDashboard.usedPercentage > 100 ? "bg-error" : ownerBudgetDashboard.usedPercentage >= 75 ? "bg-secondary" : "bg-primary"}`}
+              style={{ width: `${Math.min(ownerBudgetDashboard.usedPercentage, 100)}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-sm">
+          <div className="rounded-xl border border-outline-variant/20 bg-surface-container-low p-sm text-center">
+            <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Projected Margin</p>
+            <p className="font-mono text-[16px] leading-[20px] font-bold text-primary mt-0.5">
+              {ownerBudgetDashboard.projectedMarginPercentage.toFixed(1)}%
+            </p>
+          </div>
+          <div className="rounded-xl border border-outline-variant/20 bg-surface-container-low p-sm text-center">
+            <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Near Limit</p>
+            <p className="font-mono text-[16px] leading-[20px] font-bold text-secondary mt-0.5">
+              {ownerBudgetDashboard.categoriesNearLimit} Kategori
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Categories list */}
+      <div className="space-y-sm">
+        {ownerBudgetDashboard.categories.map((category) => (
+          <div key={category.code} className="premium-card p-md border border-outline-variant/30 space-y-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h4 className="font-sans text-[14px] leading-[20px] font-bold text-on-surface">{category.name}</h4>
+                <p className="text-[10px] text-on-surface-variant mt-1 leading-normal">
+                  Budget: Rp {category.allocatedAmount.toLocaleString("id-ID")} • Spend: Rp {category.actualAmount.toLocaleString("id-ID")}
+                </p>
+              </div>
+              <Badge status={
+                category.status === "OVER_BUDGET" || category.status === "CRITICAL"
+                  ? "CRITICAL"
+                  : category.status === "WATCH"
+                  ? "WARNING"
+                  : "APPROVED"
+              }>
+                {category.status}
+              </Badge>
             </div>
-            <Link
-              href="/ledger?brief=true"
-              className="bg-white/20 hover:bg-white/30 text-white rounded-full px-sm py-1.5 text-[10px] font-bold flex items-center gap-1 active:scale-95 transition-all cursor-pointer border border-white/10 shrink-0"
-            >
-              <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-              <span>Analisis AI</span>
-            </Link>
-          </div>
-        </div>
-        
-        {/* Subtle Wallet Background Icon Graphic */}
-        <div className="absolute -right-4 -bottom-4 opacity-10 pointer-events-none">
-          <span className="material-symbols-outlined text-[120px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>account_balance_wallet</span>
-        </div>
-      </section>
-
-      {/* Metric Stack expected/to pay */}
-      <section className="grid grid-cols-2 gap-md select-none">
-        {/* Expected In Card */}
-        <div className="premium-card p-md">
-          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant mb-2">Expected In</p>
-          <p className="font-mono text-[22px] leading-[28px] font-medium text-primary financial-amount">
-            Rp {Math.round(totalReceivables / 1000000)}jt
-          </p>
-          <div className="h-1.5 w-full bg-surface-container mt-3 rounded-full overflow-hidden">
-            <div className="bg-primary h-full w-[70%]" />
-          </div>
-        </div>
-
-        {/* To Pay Card */}
-        <div className="premium-card p-md">
-          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant mb-2">To Pay</p>
-          <p className="font-mono text-[22px] leading-[28px] font-medium text-secondary financial-amount">
-            Rp {Math.round(totalPayables / 1000000)}jt
-          </p>
-          <div className="h-1.5 w-full bg-surface-container mt-3 rounded-full overflow-hidden">
-            <div className="bg-secondary h-full w-[45%]" />
-          </div>
-        </div>
-      </section>
-
-      {ownerBudgetDashboard && (
-        <section className="space-y-sm select-none">
-          <div className="flex items-center justify-between px-1">
-            <div>
-              <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-primary">Project Budget Control</p>
-              <h3 className="font-sans text-[20px] leading-[28px] font-semibold text-[18px] text-on-surface">Budget Health</h3>
-            </div>
-            <span className="rounded-full border border-outline-variant/30 px-3 py-1 text-[10px] font-bold text-on-surface-variant">
-              {ownerBudgetDashboard.projectsOverBudget} over
-            </span>
-          </div>
-
-          <div className="premium-card p-md border border-outline-variant/30 space-y-md">
-            <div className="grid grid-cols-2 gap-md">
-              <div>
-                <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Project Value</p>
-                <p className="font-mono text-[16px] leading-[20px] font-medium font-bold text-on-surface financial-amount">
-                  Rp {Math.round(ownerBudgetDashboard.totalProjectValue / 1000000)}jt
-                </p>
+            <div className="space-y-xs pt-1">
+              <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
+                <span>Remaining: Rp {category.remainingAmount.toLocaleString("id-ID")}</span>
+                <span>{category.usedPercentage.toFixed(1)}%</span>
               </div>
-              <div>
-                <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Budget</p>
-                <p className="font-mono text-[16px] leading-[20px] font-medium font-bold text-on-surface financial-amount">
-                  Rp {Math.round(ownerBudgetDashboard.totalBudget / 1000000)}jt
-                </p>
-              </div>
-              <div>
-                <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Consumed</p>
-                <p className="font-mono text-[16px] leading-[20px] font-medium font-bold text-secondary financial-amount">
-                  Rp {Math.round(ownerBudgetDashboard.consumedBudget / 1000000)}jt
-                </p>
-              </div>
-              <div>
-                <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Pending Review</p>
-                <p className="font-mono text-[16px] leading-[20px] font-medium font-bold text-on-surface financial-amount">
-                  Rp {Math.round(ownerBudgetDashboard.pendingBudget / 1000000)}jt
-                </p>
-              </div>
-              <div>
-                <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Paid</p>
-                <p className="font-mono text-[16px] leading-[20px] font-medium font-bold text-primary financial-amount">
-                  Rp {Math.round(ownerBudgetDashboard.paidBudget / 1000000)}jt
-                </p>
-              </div>
-              <div>
-                <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Remaining</p>
-                <p className={`font-mono text-[16px] leading-[20px] font-medium font-bold financial-amount ${ownerBudgetDashboard.remainingBudget < 0 ? "text-error" : "text-primary"}`}>
-                  Rp {Math.round(ownerBudgetDashboard.remainingBudget / 1000000)}jt
-                </p>
-              </div>
-            </div>
-            <div className="space-y-xs">
-              <div className="flex items-center justify-between text-[11px] font-semibold">
-                <span className="text-on-surface-variant">Budget Used</span>
-                <span className={ownerBudgetDashboard.usedPercentage > 100 ? "text-error" : ownerBudgetDashboard.usedPercentage >= 75 ? "text-secondary" : "text-primary"}>
-                  {ownerBudgetDashboard.usedPercentage.toFixed(1)}%
-                </span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container border border-outline-variant/10">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container">
                 <div
-                  className={`h-full rounded-full ${ownerBudgetDashboard.usedPercentage > 100 ? "bg-error" : ownerBudgetDashboard.usedPercentage >= 75 ? "bg-secondary" : "bg-primary"}`}
-                  style={{ width: `${Math.min(ownerBudgetDashboard.usedPercentage, 100)}%` }}
+                  className={`h-full rounded-full ${
+                    category.status === "OVER_BUDGET" || category.status === "CRITICAL"
+                      ? "bg-error"
+                      : category.status === "WATCH"
+                      ? "bg-secondary"
+                      : "bg-primary"
+                  }`}
+                  style={{ width: `${Math.min(category.usedPercentage, 100)}%` }}
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-sm">
-              <div className="rounded-2xl border border-outline-variant/20 bg-surface-container-low p-sm">
-                <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Projected Margin</p>
-                <p className="font-mono text-[16px] leading-[20px] font-medium font-bold text-primary financial-amount">
-                  {ownerBudgetDashboard.projectedMarginPercentage.toFixed(1)}%
-                </p>
+            {category.code === "MATERIAL" && (
+              <div className="pt-2">
+                <Link href="/materials" className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/20 px-3 text-xs font-bold text-primary active:scale-[0.98]">
+                  <span className="material-symbols-outlined text-[16px]">inventory_2</span>
+                  Detail Penggunaan Material
+                </Link>
               </div>
-              <div className="rounded-2xl border border-outline-variant/20 bg-surface-container-low p-sm">
-                <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Near Limit</p>
-                <p className="font-mono text-[16px] leading-[20px] font-medium font-bold text-secondary">
-                  {ownerBudgetDashboard.categoriesNearLimit} kategori
-                </p>
-              </div>
-            </div>
+            )}
           </div>
+        ))}
+      </div>
+    </div>
+  ) : (
+    <div className="premium-card p-md text-center py-10 border border-outline-variant/30">
+      <p className="font-sans text-[13px] leading-[20px] font-normal text-on-surface-variant">Data anggaran proyek belum tersedia.</p>
+    </div>
+  );
 
-          <div className="space-y-sm">
-            {ownerBudgetDashboard.categories.map((category) => (
-              <div key={category.code} className="premium-card p-md border border-outline-variant/30 space-y-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="font-sans text-[16px] leading-[24px] font-normal font-bold text-on-surface">{category.name}</h4>
-                    <p className="text-[10px] text-on-surface-variant">
-                      Budget Rp {Math.round(category.allocatedAmount / 1000000)}jt • Actual Rp {Math.round(category.actualAmount / 1000000)}jt • Pending Rp {Math.round(category.pendingAmount / 1000000)}jt
-                    </p>
-                  </div>
-                  <span className={`rounded-full px-2.5 py-1 text-[9px] font-bold ${
-                    category.status === "OVER_BUDGET" || category.status === "CRITICAL"
-                      ? "bg-error-container/20 text-error border border-error/30"
-                      : category.status === "WATCH"
-                      ? "bg-secondary-container/20 text-secondary border border-secondary/30"
-                      : "bg-primary/10 text-primary border border-primary/20"
-                  }`}>
-                    {category.status}
-                  </span>
-                </div>
-                <div className="space-y-xs">
-                  <div className="flex justify-between text-[11px] font-semibold">
-                    <span className="text-on-surface-variant">Remaining Rp {Math.round(category.remainingAmount / 1000000)}jt</span>
-                    <span>{category.usedPercentage.toFixed(1)}%</span>
-                  </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container">
-                    <div
-                      className={`h-full rounded-full ${
-                        category.status === "OVER_BUDGET" || category.status === "CRITICAL"
-                          ? "bg-error"
-                          : category.status === "WATCH"
-                          ? "bg-secondary"
-                          : "bg-primary"
-                      }`}
-                      style={{ width: `${Math.min(category.usedPercentage, 100)}%` }}
-                    />
-                  </div>
-                </div>
-                {category.code === "MATERIAL" && (
-                  <Link href="/materials" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/20 px-3 text-xs font-bold text-primary active:scale-[0.98]">
-                    <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-                    View Material Usage
-                  </Link>
-                )}
-              </div>
-            ))}
+  const financeSection = (
+    <div className="space-y-lg">
+      {/* Stock Overview Card */}
+      <div className="premium-card p-md border border-outline-variant/30 space-y-md">
+        <h3 className="font-sans text-[16px] leading-[24px] font-bold text-on-surface">Material Stock Value</h3>
+        <div className="grid grid-cols-2 gap-md">
+          <div>
+            <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Total Stock Value</p>
+            <p className="font-mono text-[16px] leading-[20px] font-bold text-primary financial-amount mt-0.5">
+              Rp {totalStockValue.toLocaleString("id-ID")}
+            </p>
+            <p className="text-[10px] text-on-surface-variant mt-1">{lowStockCount} Low stock</p>
           </div>
-        </section>
-      )}
+          <div>
+            <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Reusable Stock</p>
+            <p className="font-mono text-[16px] leading-[20px] font-bold text-secondary financial-amount mt-0.5">
+              Rp {reusableStockValue.toLocaleString("id-ID")}
+            </p>
+            <p className="text-[10px] text-on-surface-variant mt-1">{materialShortageCount} Shortages</p>
+          </div>
+        </div>
+        <div className="border-t border-outline-variant/10 pt-md">
+          <Link href="/materials" className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/20 px-3 text-xs font-bold text-primary active:scale-[0.98]">
+            <span className="material-symbols-outlined text-[16px]">inventory_2</span>
+            Kelola Stok Material
+          </Link>
+        </div>
+      </div>
 
-      <section className="grid grid-cols-2 gap-md select-none">
-        <Link href="/materials" className="premium-card p-md block active:scale-[0.99] transition-transform">
-          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant mb-2">Stock Value</p>
-          <p className="font-mono text-[22px] leading-[28px] font-medium text-primary financial-amount">
-            Rp {Math.round(totalStockValue / 1000000)}jt
-          </p>
-          <p className="text-[10px] text-on-surface-variant mt-2">{lowStockCount} low stock</p>
-        </Link>
-
-        <Link href="/materials" className="premium-card p-md block active:scale-[0.99] transition-transform">
-          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant mb-2">Reusable</p>
-          <p className="font-mono text-[22px] leading-[28px] font-medium text-secondary financial-amount">
-            Rp {Math.round(reusableStockValue / 1000000)}jt
-          </p>
-          <p className="text-[10px] text-on-surface-variant mt-2">{materialShortageCount} shortage</p>
-        </Link>
-      </section>
-
-      {/* Rekening Kas Perusahaan (Horizontal Swipe Grid) */}
-      <section className="space-y-sm select-none">
-        <h3 className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant px-1">Rekening Kas Perusahaan</h3>
-        <div className="flex gap-md overflow-x-auto snap-x snap-mandatory pb-3 pt-1 no-scrollbar">
+      {/* Bank Accounts list */}
+      <div className="space-y-sm">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="font-sans text-[14px] leading-[20px] font-bold text-on-surface">Rekening Kas Perusahaan</h3>
+        </div>
+        <div className="space-y-sm">
           {accounts.map((acc) => {
             const isPetty = acc.name.toLowerCase().includes("petty") || acc.name.toLowerCase().includes("kecil");
             const iconName = isPetty ? "wallet" : "account_balance";
@@ -523,71 +480,46 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
             return (
               <div
                 key={acc.id}
-                className="min-w-[260px] snap-center shrink-0 premium-card p-md border border-outline-variant/20 flex flex-col justify-between min-h-[135px] hover:border-primary/30 transition-all active:scale-[0.99]"
+                className="premium-card p-md border border-outline-variant/20 hover:border-primary/30 transition-all flex items-center justify-between gap-md"
               >
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className={`text-[10px] font-bold uppercase border px-2.5 py-0.5 rounded-full inline-block ${badgeColorClass}`}>
-                      {acc.bankName}
+                <div className="flex items-center gap-md min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center shrink-0">
+                    <span className={`material-symbols-outlined text-[20px] ${iconColorClass}`}>{iconName}</span>
+                  </div>
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-xs">
+                      <span className="font-bold text-xs text-on-surface truncate">
+                        {acc.name}
+                      </span>
+                      <span className={`text-[8px] font-bold uppercase border px-2 rounded-full inline-block ${badgeColorClass}`}>
+                        {acc.bankName}
+                      </span>
                     </div>
-                    <div className="text-xs text-on-surface-variant font-medium mt-1">{acc.accountNumber}</div>
+                    <p className="text-[10px] text-on-surface-variant truncate">
+                      {acc.accountNumber} • A/N: {acc.holderName}
+                    </p>
                   </div>
-                  <span className={`material-symbols-outlined text-[24px] ${iconColorClass}`}>{iconName}</span>
                 </div>
-                <div className="mt-4 space-y-base">
-                  <div className="text-[9px] uppercase font-semibold text-on-surface-variant tracking-wider">Saldo Aktual</div>
-                  <div className="font-mono text-[16px] leading-[20px] font-medium text-on-surface font-bold financial-amount leading-none">
+                <div className="text-right shrink-0">
+                  <p className="font-mono text-[14px] font-bold text-on-surface financial-amount">
                     Rp {Number(acc.balance).toLocaleString("id-ID")}
-                  </div>
-                  <div className="text-[9px] text-on-surface-variant truncate">A/N: {acc.holderName}</div>
+                  </p>
+                  <p className="text-[9px] text-on-surface-variant uppercase tracking-wider font-semibold mt-0.5">Saldo Aktual</p>
                 </div>
               </div>
             );
           })}
         </div>
-      </section>
+      </div>
+    </div>
+  );
 
-      {/* AI Insight Card */}
-      <section 
-        id="ai-brief"
-        className={`premium-card p-md border transition-all duration-200 ${
-          isBriefTabActive 
-            ? "border-primary bg-surface-container-low shadow-md scale-[1.01]" 
-            : "border-primary-container bg-surface-container-low"
-        }`}
-      >
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-primary-container rounded-lg text-white flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-white text-[20px]">auto_awesome</span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="font-sans text-[20px] leading-[28px] font-semibold text-[16px] text-primary">AI Brief</h3>
-              {parsedBriefing && (
-                <span className="text-[8px] text-on-surface-variant/80 font-bold uppercase tracking-wider">
-                  {new Date(parsedBriefing.briefingDate).toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "short"
-                  })}
-                </span>
-              )}
-            </div>
-            <p className="font-sans text-[16px] leading-[24px] font-normal text-on-surface-variant">
-              {parsedBriefing?.summary 
-                ? parsedBriefing.summary.slice(0, 160) + "..." 
-                : "Cash position is strong. Follow up with 2 clients for "
-              }
-              {!parsedBriefing && <span className="font-bold text-on-surface">Rp 180jt</span>}
-              {!parsedBriefing && "."}
-            </p>
-          </div>
-        </div>
-      </section>
-
+  const activitySection = (
+    <div className="space-y-lg">
       {/* Urgent Alerts */}
-      <section className="space-y-sm select-none">
+      <div className="space-y-sm">
         <div className="flex justify-between items-center px-1">
-          <h3 className="font-sans text-[20px] leading-[28px] font-semibold text-[18px]">Urgent Alerts</h3>
+          <h3 className="font-sans text-[14px] leading-[20px] font-bold text-on-surface">Urgent Alerts</h3>
           <Link href="/approvals" className="text-primary font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase active:opacity-85">
             View All
           </Link>
@@ -601,14 +533,14 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
                 <span className={pendingApprovalsCount > 0 ? "material-symbols-outlined text-error" : "material-symbols-outlined text-on-surface-variant"} style={{ fontVariationSettings: "'FILL' 1" }}>
                   {pendingApprovalsCount > 0 ? "warning" : "check_circle"}
                 </span>
-                <span className="font-sans text-[16px] leading-[24px] font-normal font-semibold text-on-surface">
+                <span className="font-sans text-[13px] leading-[20px] font-semibold text-on-surface">
                   {pendingApprovalsCount > 0 
                     ? `${pendingApprovalsCount} Pengajuan Menunggu Persetujuan` 
                     : "Tidak Ada Pengajuan Menunggu Persetujuan"
                   }
                 </span>
               </div>
-              <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
+              <span className="material-symbols-outlined text-outline-variant text-[20px]">chevron_right</span>
             </div>
           </Link>
 
@@ -619,24 +551,25 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
                 <span className={riskyProjectsCount > 0 ? "material-symbols-outlined text-secondary" : "material-symbols-outlined text-on-surface-variant"} style={{ fontVariationSettings: "'FILL' 1" }}>
                   {riskyProjectsCount > 0 ? "monitoring" : "folder_open"}
                 </span>
-                <span className="font-sans text-[16px] leading-[24px] font-normal font-semibold text-on-surface">
+                <span className="font-sans text-[13px] leading-[20px] font-semibold text-on-surface">
                   {riskyProjectsCount > 0 
                     ? `${riskyProjectsCount} Proyek dengan Risiko Finansial` 
                     : "Semua Kesehatan Finansial Proyek Aman"
                   }
                 </span>
               </div>
-              <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
+              <span className="material-symbols-outlined text-outline-variant text-[20px]">chevron_right</span>
             </div>
           </Link>
 
+          {/* Alert 3 - Materials */}
           <Link href="/materials" className="block active:scale-[0.99] transition-transform">
             <div className={`premium-card p-md flex items-center justify-between border ${materialShortageCount > 0 || lowStockCount > 0 ? "border-secondary bg-secondary-container/5" : "border-outline-variant/30"}`}>
               <div className="flex items-center gap-3">
                 <span className={materialShortageCount > 0 || lowStockCount > 0 ? "material-symbols-outlined text-secondary" : "material-symbols-outlined text-on-surface-variant"} style={{ fontVariationSettings: "'FILL' 1" }}>
                   {materialShortageCount > 0 || lowStockCount > 0 ? "inventory_2" : "check_circle"}
                 </span>
-                <span className="font-sans text-[16px] leading-[24px] font-normal font-semibold text-on-surface">
+                <span className="font-sans text-[13px] leading-[20px] font-semibold text-on-surface">
                   {materialShortageCount > 0
                     ? `${materialShortageCount} Material RAP Perlu Dibeli`
                     : lowStockCount > 0
@@ -645,19 +578,19 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
                   }
                 </span>
               </div>
-              <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
+              <span className="material-symbols-outlined text-outline-variant text-[20px]">chevron_right</span>
             </div>
           </Link>
         </div>
-      </section>
+      </div>
 
       {/* Recent Transactions Section */}
-      <section className="space-y-sm pb-10 select-none">
-        <h3 className="font-sans text-[20px] leading-[28px] font-semibold text-[18px] px-1 text-on-surface">Recent Transactions</h3>
+      <div className="space-y-sm">
+        <h3 className="font-sans text-[14px] leading-[20px] font-bold text-on-surface px-1">Recent Transactions</h3>
         
         {ledgerTransactions.length === 0 ? (
           <div className="premium-card p-md flex items-center justify-center text-center">
-            <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant">Belum ada mutasi kas tercatat.</p>
+            <p className="font-sans text-[13px] leading-[20px] font-normal text-on-surface-variant">Belum ada mutasi kas tercatat.</p>
           </div>
         ) : (
           <div className="premium-card divide-y divide-outline-variant/10 overflow-hidden">
@@ -668,18 +601,18 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
                 <div key={tx.id} className="p-md flex justify-between items-center gap-3 hover:bg-surface-container-low/20 transition-colors">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
-                      <span className="material-symbols-outlined text-on-surface-variant">
+                      <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
                         {isDebit ? "architecture" : "shopping_cart"}
                       </span>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-sans text-[16px] leading-[24px] font-normal font-bold text-on-surface truncate">{tx.description}</p>
-                      <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant truncate">
-                        {isDebit ? "Invoiced" : "Vendor Payment"}
+                      <p className="font-sans text-[14px] leading-[20px] font-bold text-on-surface truncate">{tx.description}</p>
+                      <p className="font-sans text-[12px] leading-[16px] text-on-surface-variant truncate">
+                        {isDebit ? "Client Invoice Payment" : "Vendor payment / project expense"}
                       </p>
                     </div>
                   </div>
-                  <p className={`font-mono text-[16px] leading-[20px] font-medium financial-amount whitespace-nowrap shrink-0 text-right ${isDebit ? "text-primary font-bold" : "text-on-surface font-semibold"}`}>
+                  <p className={`font-mono text-[14px] font-medium financial-amount whitespace-nowrap shrink-0 text-right ${isDebit ? "text-primary font-bold" : "text-on-surface font-semibold"}`}>
                     {isDebit ? "+" : "-"}Rp {amountVal.toLocaleString("id-ID")}
                   </p>
                 </div>
@@ -687,7 +620,96 @@ export default async function LedgerPage({ searchParams }: LedgerPageProps): Pro
             })}
           </div>
         )}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Date & Greeting Row */}
+      <section className="space-y-base select-none px-1">
+        <p className="font-sans text-[9px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant/80">
+          {getIndonesianDate()}
+        </p>
+        <h2 className="text-xl font-bold tracking-tight text-on-surface">
+          Halo, {session.user.name.split(" ")[0]}
+        </h2>
       </section>
+
+      {/* Unified Cash Available KPI Widget */}
+      <section className="premium-card p-md !bg-primary text-on-primary relative overflow-hidden select-none border border-primary-container/20 shadow-sm">
+        <div className="relative z-10 space-y-md">
+          <div>
+            <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase opacity-80 mb-1">CASH AVAILABLE</p>
+            <div className="font-mono text-[36px] font-bold tracking-tight leading-none financial-amount">
+              Rp {totalBalance.toLocaleString("id-ID")}
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 pt-md grid grid-cols-2 gap-md">
+            <div>
+              <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase opacity-75 mb-1">EXPECTED IN (PIUTANG)</p>
+              <p className="font-mono text-[16px] leading-[20px] font-bold financial-amount mt-0.5">
+                Rp {totalReceivables.toLocaleString("id-ID")}
+              </p>
+            </div>
+            <div>
+              <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase opacity-75 mb-1">TO PAY (HUTANG)</p>
+              <p className="font-mono text-[16px] leading-[20px] font-bold financial-amount mt-0.5">
+                Rp {totalPayables.toLocaleString("id-ID")}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Subtle Wallet Background Icon Graphic */}
+        <div className="absolute -right-4 -bottom-4 opacity-10 pointer-events-none">
+          <span className="material-symbols-outlined text-[120px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
+            account_balance_wallet
+          </span>
+        </div>
+      </section>
+
+      {/* AI CFO Brief Insight Card */}
+      <section className="premium-card p-md border border-primary-container/30 bg-surface-container-low/50 select-none">
+        <div className="flex items-start gap-md">
+          <div className="p-2 bg-primary-container/10 border border-primary/20 rounded-xl text-primary flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-primary text-[20px]">auto_awesome</span>
+          </div>
+          <div className="min-w-0 flex-1 space-y-base">
+            <div className="flex items-center justify-between">
+              <h3 className="font-sans text-[14px] leading-[20px] font-bold text-primary">CFO AI Briefing</h3>
+              {parsedBriefing && (
+                <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant/80">
+                  {new Date(parsedBriefing.briefingDate).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "short"
+                  })}
+                </span>
+              )}
+            </div>
+            <p className="font-sans text-[13px] leading-[18px] font-normal text-on-surface-variant line-clamp-2">
+              {parsedBriefing?.summary || "Analisis keuangan harian belum tersedia saat ini."}
+            </p>
+            <div className="flex justify-end pt-1">
+              <Link
+                href="/ledger?brief=true"
+                className="bg-primary text-on-primary rounded-full px-sm py-1.5 text-[10px] font-bold flex items-center gap-1 active:scale-95 transition-all cursor-pointer border border-primary/10 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                <span>Analisis AI</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Lower section with tabs */}
+      <DashboardTabs
+        budgetSection={budgetSection}
+        financeSection={financeSection}
+        activitySection={activitySection}
+      />
     </>
   );
 }
