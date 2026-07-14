@@ -1,13 +1,15 @@
 "use server";
 
 import { db } from "@/db";
-import { vendorBill } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { vendorBill, vendor } from "@/db/schema";
+import { asc } from "drizzle-orm";
+import { getActiveProjectsForExpense, type ProjectForExpense } from "@/app/actions/project/budget";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { ActionResponse } from "@/lib/types/action-response";
 import { submitVendorBillSchema, SubmitVendorBillInput } from "@/lib/validations/finance";
+import { createVendorBillTx } from "@/lib/finance/vendor-bill-write";
 
 export async function submitVendorBill(
   input: SubmitVendorBillInput
@@ -20,7 +22,17 @@ export async function submitVendorBill(
     };
   }
 
-  const { vendorId, projectId, projectBudgetItemId, billNumber, amount, dueDate, notes } = validation.data;
+    const {
+      vendorId,
+      projectId,
+      projectBudgetCategoryId,
+      projectBudgetItemId,
+      projectCategoryPlanItemId,
+      billNumber,
+      amount,
+      dueDate,
+      notes,
+    } = validation.data;
 
   try {
     const session = await auth.api.getSession({
@@ -58,43 +70,87 @@ export async function submitVendorBill(
       };
     }
 
-    // Check duplicate bill number
-    const existingBill = await db.query.vendorBill.findFirst({
-      where: eq(vendorBill.billNumber, billNumber),
-    });
-
-    if (existingBill) {
-      return {
-        success: false,
-        error: { code: "FORBIDDEN", message: "Tagihan dengan nomor ini sudah terdaftar." },
-      };
-    }
-
-    // Save vendor bill with status UNPAID.
-    const [bill] = await db
-      .insert(vendorBill)
-      .values({
-        vendorId,
-        projectId,
-        projectBudgetItemId,
-        billNumber,
-        amount: amount.toFixed(2),
-        status: "UNPAID",
-        dueDate,
-        notes: notes || null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returning();
+    const bill = await db.transaction((tx) => createVendorBillTx(tx, {
+      vendorId,
+      projectId,
+      projectBudgetCategoryId,
+      projectBudgetItemId,
+      projectCategoryPlanItemId,
+      billNumber,
+      amount,
+      dueDate,
+      notes,
+      requestedById: session.user.id,
+    }));
 
     return {
       success: true,
       data: bill,
     };
   } catch (error) {
+    if (error instanceof Error && error.message === "VENDOR_BILL_NUMBER_EXISTS") {
+      return { success: false, error: { code: "CONFLICT", message: "Nomor tagihan ini sudah terdaftar." } };
+    }
     return {
       success: false,
       error: { code: "INTERNAL_SERVER_ERROR", message: error instanceof Error ? error.message : "Gagal mencatat tagihan." },
+    };
+  }
+}
+
+export interface VendorBillFormData {
+  projects: ProjectForExpense[];
+  vendors: Array<{ id: string; name: string }>;
+  userRole: string;
+}
+
+export async function getVendorBillFormData(): Promise<ActionResponse<VendorBillFormData>> {
+  try {
+    const session = await auth.api.getSession({
+      headers: {
+        cookie: (await (await import("next/headers")).cookies()).toString(),
+      },
+    });
+
+    if (!session || !session.user) {
+      return {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Sesi tidak valid. Harap login kembali." },
+      };
+    }
+
+    const roleName = await resolveRoleName(session.user.roleId);
+
+    // Dapatkan proyek aktif menggunakan fungsi getActiveProjectsForExpense yang sudah ada
+    const projectsRes = await getActiveProjectsForExpense();
+    if (!projectsRes.success) {
+      return {
+        success: false,
+        error: projectsRes.error,
+      };
+    }
+
+    // Dapatkan data vendor
+    const vendorsData = await db.query.vendor.findMany({
+      columns: { id: true, name: true },
+      orderBy: [asc(vendor.name)],
+    });
+
+    return {
+      success: true,
+      data: {
+        projects: projectsRes.data,
+        vendors: vendorsData,
+        userRole: roleName || "UNKNOWN",
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: error instanceof Error ? error.message : "Terjadi kesalahan server saat mengambil data form tagihan vendor.",
+      },
     };
   }
 }

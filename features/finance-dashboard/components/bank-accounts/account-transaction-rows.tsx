@@ -1,0 +1,67 @@
+import React from "react";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+
+import { MoneyValue } from "@/components/ui/page-primitives";
+import {
+  DashboardRowGroup,
+} from "@/features/finance-dashboard/components/dashboard-primitives";
+import { DashboardTabEmpty } from "@/features/finance-dashboard/components/dashboard-rows";
+import type { CashTransaction } from "./types";
+
+function transactionIcon(transaction: CashTransaction): React.ReactNode {
+  if (transaction.type === "DEBIT") {
+    return <ArrowDownLeft className="h-4 w-4" />;
+  }
+  return <ArrowUpRight className="h-4 w-4" />;
+}
+
+export function AccountTransactionRows({
+  transactions,
+}: {
+  readonly transactions: readonly CashTransaction[];
+}): React.JSX.Element {
+  if (transactions.length === 0) {
+    return (
+      <DashboardTabEmpty>Belum ada mutasi pada rekening ini.</DashboardTabEmpty>
+    );
+  }
+
+  return (
+    <DashboardRowGroup>
+      {transactions.map((transaction) => (
+        <div
+          key={transaction.id}
+          className="flex min-h-[58px] items-center gap-3 px-4 py-3"
+        >
+          <span
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+              transaction.type === "DEBIT"
+                ? "bg-primary/8 text-primary"
+                : "bg-error/8 text-error"
+            }`}
+          >
+            {transactionIcon(transaction)}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-xs font-bold text-on-surface">
+              {transaction.description}
+            </span>
+            <span className="mt-0.5 block truncate text-[10px] text-on-surface-variant">
+              {transaction.category} •{" "}
+              {transaction.createdAt.toLocaleDateString("id-ID")}
+            </span>
+          </span>
+          <MoneyValue
+            amount={transaction.amount}
+            variant="compactWithFull"
+            prefix={transaction.type === "DEBIT" ? "+" : "-"}
+            tone={transaction.type === "DEBIT" ? "primary" : "danger"}
+            align="right"
+            size="sm"
+            className="shrink-0"
+          />
+        </div>
+      ))}
+    </DashboardRowGroup>
+  );
+}

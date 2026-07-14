@@ -69,9 +69,16 @@ interface MutateBalanceArgs {
   amount: string; // Harus berformat string desimal (misal: "5000000.00")
   description: string;
   category: string;
-  referenceType: "client_payment" | "vendor_payment" | "project_cost";
+  referenceType:
+    | "client_payment"
+    | "vendor_payment"
+    | "project_cost"
+    | "opening_balance"
+    | "manual_cash_movement"
+    | "bank_transfer";
   referenceId: string;
   userId: string;
+  transactionDate?: Date;
   ipAddress?: string;
   userAgent?: string;
 }
@@ -96,6 +103,7 @@ export async function mutateBalance(
     referenceType,
     referenceId,
     userId,
+    transactionDate,
     ipAddress,
     userAgent,
   } = args;
@@ -165,10 +173,11 @@ export async function mutateBalance(
       amount,
       description,
       reconciled: true,
-      reconciliationDate: new Date(),
+      reconciliationDate: transactionDate ?? new Date(),
       reconciledById: userId,
       referenceType,
       referenceId,
+      createdAt: transactionDate ?? new Date(),
     })
     .returning();
 

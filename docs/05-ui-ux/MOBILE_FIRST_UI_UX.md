@@ -1,68 +1,120 @@
-# Spesifikasi UI/UX Mobile-First - Atria ERP
+# Mobile-First UI/UX Guide
 
-Dokumen ini mendefinisikan arsitektur antarmuka, tata letak layar, alur interaksi, dan strategi adaptasi desktop untuk Atria ERP. Desain ini mengikuti filosofi **iOS 26 Solid** yang mengutamakan kontras tinggi, keterbacaan di lapangan, serta keamanan transaksi finansial.
+## Product Feel
+The app should feel calm, premium, operational, and trustworthy. It must not feel like a dense spreadsheet or generic admin dashboard.
 
----
+It should feel like: **Project Budget Control upgraded into a real ERP with material stock visibility.**
 
-## 1. App Shell & Navigasi Utama (Bottom Navigation & FAB)
+The workbook is source material for category logic and familiar workflow only. Do not use "Excel" as a visible screen label, section title, navigation item, badge, or empty-state copy.
 
-Aplikasi ini menggunakan **App Shell** satu halaman (Single Page App Shell) yang membungkus seluruh navigasi seluler dengan area konten dinamis di bagian tengah, navigasi melayang di bagian bawah, dan tombol aksi melayang (FAB).
+## Mobile Priorities
+- Owner understands project value, budget, consumed budget, remaining budget, category usage, margin risk, and material issues within 30 seconds.
+- Finance/Admin inputs expenses quickly.
+- Purchasing records stock movement without confusion.
+- Project team sees material readiness without asking through chat.
 
-### 1.1 Bottom Navigation Bar (Floating Pill Tab Bar)
-Navigasi bawah bersifat melayang (*floating*) di atas konten halaman dengan bentuk kapsul membulat halus (`rounded-[28px]`).
+## Navigation
+Mobile navigation should prioritize:
+- Dashboard
+- Projects
+- Materials
+- Add Expense / Stock Action
+- Settings for Owner, Finance Admin, and Purchasing
+- Profile
 
-*   **Tinggi Bar:** 80px untuk ruang tap yang luas dan menghindari sentuhan tidak sengaja pada baris sistem.
-*   **Touch Targets:** Setiap tab navigasi memiliki area sensitivitas tap minimal **48x48 piksel** (dioptimalkan ke 52x52px).
-*   **Daftar Tab Navigasi (Kiri ke Kanan):**
-    1.  **Today** (Ikon: Kalender) - Dasbor utama ringkasan portofolio keuangan saat ini (`/ledger`).
-    2.  **Projects** (Ikon: Kompas) - Menampilkan daftar proyek aktif dan ringkasan anggaran.
-    3.  **Payments** (Ikon: Banknote) - Daftar persetujuan/pembayaran tagihan vendor atau klaim PM (`/approvals`).
-    4.  **Expenses** (Ikon: Receipt) - Form pencatatan biaya pengeluaran lapangan baru (`/expenses/new`).
-    5.  **AI Brief** (Ikon: Sparkles) - CFO AI Daily Briefing terpusat (`/ledger?brief=true`).
-*   **Active Tab Circle Indicator:** Tab yang sedang aktif ditandai dengan lingkaran berwarna teal pekat (`bg-primary size-10 text-white rounded-full`) di sekitar ikonnya, sedangkan tab pasif hanya menampilkan ikon berwarna abu-abu redup tanpa latar belakang lingkaran.
+Role filtering can hide destinations that are irrelevant or forbidden.
 
-### 1.2 Floating Action Button (FAB)
-Di pojok kanan bawah, melayang tepat di atas tab bar navigasi, terdapat tombol aksi melayang (FAB) berbentuk lingkaran teal pekat dengan ikon "+" putih. Tombol ini memberikan akses pintas instan untuk mencatat pengeluaran lapangan baru dari mana saja.
+## Screen Patterns
+- Use readable cards and progressive disclosure.
+- Use cards, progress bars, percentage indicators, and badges for category budget status.
+- Use bottom sheets for quick expense, stock in, reserve, use, and return actions.
+- Avoid wide tables on mobile. Use grouped cards instead.
+- Keep touch targets at least 44x44px.
 
-### 1.3 Avatar Profil Header
-Di bagian header atas layar dasbor utama, terdapat foto profil melingkar pengguna aktif (Sarah). Ketukan pada foto profil ini mengarahkan pengguna ke halaman Pengaturan Profil (`/profile`) sehingga menghemat ruang pada bar navigasi bawah.
+## Settings Pattern
+- Settings is a source-of-truth workspace, not a technical database editor.
+- Use clear sections: Budget Allocation, Expense Categories, Item & Price Library, Material Master.
+- Budget ratios should be edited as human-readable percentages.
+- Settings stays inside the fixed `max-w-md` application shell at every viewport. Do not use `sm`, `md`, or `xl` layout changes inside this workspace because viewport breakpoints can create desktop arrangements inside the narrow container.
+- Module navigation follows Project Detail horizontal pills. Only tab and filter strips may scroll horizontally.
+- Financial summaries use compact 2×2 metrics with a shortened primary value and wrapped full value underneath. Do not use large snap-card carousels for Settings metrics.
+- Forms, lists, headers, and filter containers remain single-column. Create/edit interactions always use a centered mobile bottom sheet rather than switching to a desktop side drawer.
+- Budget Allocation must label Gross Margin and Unallocated Buffer as separate values and explain that category ratios use Internal Budget.
+- Keep the five canonical Expense Categories active and code-locked; ratio editing belongs only in Budget Allocation.
+- Material Master settings should show material identity and default inventory thresholds without replacing the operational Materials page.
+- `/materials` uses fixed mobile tabs Overview, Inventory, Needs, and Activity. It provides global stock operations, search/filter, grouped location inventory, approval cards, and movement/receipt history without desktop breakpoints.
+- Global action forms use bottom sheets; stock value uses compact 2×2 metrics and short/full financial values.
+- Role badges should make edit/read-only state obvious.
+- Library cards show Internal Cost, Suggested Client Price, gross margin, component count, price source, and source note. Cost-component editing remains one-column in the bottom sheet.
+- Project forms offer `Gunakan template Library` and explain snapshot behavior.
+- Approved RAB screens expose revision/Change Order actions instead of editable approved rows.
+- Draft RAP uses a guided Material → Tukang → Subcon → Review builder. Locked RAP uses a compact summary with Material/Tukang/Subcon filters instead of stacked setup sections.
+- RAP material and package lists use compact rows; stock, cost, variance, notes, and actions open in labeled bottom sheets.
+- The RAB tab uses compact client-safe item cards; source selection, line editing, manual items, bundles, Change Orders, and revision cancellation open in labeled mobile bottom sheets.
+- Every RAB form control has a persistent visible label. Placeholders are examples only and never replace labels.
+- Project pages share the fixed mobile workspace rule: no viewport breakpoint may turn forms/cards into desktop layouts inside `max-w-md`.
+- The Owner/Finance Dashboard is one financial-first flow without Budget/Stock/Activity tabs. It shows no more than three role-ranked priorities, three risky projects, five compact category rows, and five recent transactions.
+- Project Overview uses a compact identity header, one financial health summary, RAB/RAP/Material/Tagihan readiness, no more than three blockers, and compact category rows whose full values open in a bottom sheet.
 
----
+## Core Screens
+- Owner Dashboard
+- Project Budget List
+- Project Budget Detail
+- Project Budget Setup
+- Category Budget Usage
+- Project RAP / Material Plan
+- Add RAP Material Item
+- Tukang Work Packages
+- Subcon Packages
+- Material Master
+- Material Inventory
+- Material Detail
+- Stock Movement History
+- Stock In
+- Reserve Material for Project
+- Use Material for Project
+- Leftover Stock
+- Material Shortage / Need to Buy
+- Expense Tracker
+- Add Expense
+- Vendor Bill / Purchase
+- Project Profitability
+- RAB Client-facing Estimate
+- Generate RAB from RAP
+- AI Finance & Material Brief
+- Settings: Budget Allocation, Expense Categories, Item & Price Library, Material Master
 
-## 2. Dasbor Keuangan (Finance Dashboard)
+## Category Budget Card Pattern
+Each Project Budget Detail screen must show category cards before material drill-down:
+- Category name: Tukang, Material, Operasional, Lain-lain, or Subcon.
+- Budget: allocated amount.
+- Actual: approved/paid spend.
+- Remaining: allocated minus actual.
+- Used: percentage with progress bar.
+- Status: `SAFE`, `WATCH`, `CRITICAL`, or `OVER_BUDGET`.
+- Drill-down: Material opens material usage; other categories open filtered expenses.
 
-Dasbor utama memberikan ringkasan kesehatan finansial perusahaan secara instan kepada Owner dan Admin Finance dengan tata letak vertikal yang modular:
+Example:
+```text
+Material
+Budget: Rp87.500.000
+Actual: Rp81.000.000
+Remaining: Rp6.500.000
+Used: 92%
+Status: WATCH
+Action: View Material Usage
+```
 
-### 2.1 Kartu Saldo Kas Utama (Cash Available Card)
-*   **Warna Latar:** Solid Deep Teal pekat (`bg-primary`) dengan bayangan halus.
-*   **Teks Atas:** Label "CASH AVAILABLE" dengan huruf kapital kecil, warna teal muda redup, dan tracking renggang.
-*   **Nilai Saldo:** Nilai agregat dari seluruh rekening bank perusahaan (misal: `Rp 420.500.000,00`) disajikan dengan font Outfit besar berukuran 32px dan penyejajaran angka tabular (`font-variant-numeric: tabular-nums`).
-*   **Umpan Tren:** Badge tren positif "+2.4% dari last month" berwarna hijau cerah dengan ikon tren naik.
-*   **Dekorasi Latar:** Ikon dompet (*wallet*) yang samar di sisi pojok kanan bawah kartu sebagai penanda visual yang elegan.
+Material stock cards must appear as supporting detail after the Material budget card, not instead of the budget card.
 
-### 2.2 Kartu Ekspektasi Kas Ganda (Expected In & To Pay)
-Dua kartu putih bersih bersandingan secara horizontal:
-*   **Expected In (Kiri):** Menampilkan estimasi piutang invoice masuk (misal: `Rp 85jt`) dilengkapi batang kemajuan progres horizontal berwarna teal pekat.
-*   **To Pay (Kanan):** Menampilkan estimasi utang vendor jatuh tempo (misal: `Rp 42jt`) dilengkapi batang progres berwarna abu-abu charcoal.
+## Category Detail Pattern
+- Material opens RAP Material Plan and stock-control detail.
+- Tukang opens Work Packages: area/scope, estimated package cost, actual linked expense, variance, status.
+- Subcon opens Subcon Packages: vendor/scope, estimated package cost, vendor bill/expense linkage, variance, status.
+- Operasional and Lain-lain stay simple with category, amount, description, vendor/receipt/payment context.
+- Do not label Tukang/Subcon packages as RAP or BoQ in the primary UI.
 
-### 2.3 Panel AI Brief
-*   Boks modular berwarna krem/abu-abu hangat dengan ikon bintang berpendar (*sparkles*) di dalam boks teal kecil.
-*   Menampilkan taklimat/ringkasan naratif kecerdasan buatan Gemini CFO secara padat mengenai posisi kas saat ini dan tindakan tindak lanjut tagihan yang disarankan.
+## Client-Facing RAB UX Rule
+Client-facing RAB preview must only show client-safe labels, descriptions, quantities, units, prices, totals, discounts, and notes intended for the client. It must not show internal cost, margin, markup, stock availability, vendor note, or internal note.
 
-### 2.4 Urgent Alerts Section
-*   Daftar peringatan kritis berdesain baris bar yang dapat diketuk:
-    *   **3 Overdue Payments:** Lencana peringatan merah solid dengan tanda segitiga bahaya.
-    *   **1 Project at Margin Risk:** Lencana peringatan kuning/amber solid untuk risiko margin proyek.
-
-### 2.5 Recent Transactions List
-*   Satu kontainer kartu putih solid dengan pembatas baris tipis berisi aliran mutasi kas buku besar terbaru:
-    *   Kas Masuk (`DEBIT`): Menggunakan ikon kompas abu-abu, judul proyek klien (misal: "Studio Loft Renovation - Invoiced"), dan nominal bertanda plus dengan warna teal pekat.
-    *   Kas Keluar (`CREDIT`): Menggunakan ikon keranjang belanja, judul vendor (misal: "Luxe Marble Supplies - Vendor Payment"), dan nominal bertanda minus warna slate gray.
-
----
-
-## 3. Detail Keuangan Proyek (Project Finance Detail Screen)
-
-Layar ini menampilkan status kesehatan anggaran proyek secara granular:
-*   **BoQ Kategori Biaya:** Progress bar horizontal berwarna dinamis: biru untuk aman ($\le 90\%$), amber untuk batas kritis ($90\% - 100\%$), dan merah menyala untuk budget overrun ($\ge 100\%$).
-*   **Jumlah Moneter:** Menggunakan format tabular numbers Outfit untuk kemudahan pembacaan audit vertikal.
+Quotation generation should let users select source rows from RAP Material Plan, Tukang Work Packages, Subcon Packages, and manual client-safe lines before creating the draft.

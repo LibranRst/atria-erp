@@ -2,6 +2,10 @@
 
 Rencana ini menjelaskan implementasi Halaman Profil `/profile` dan tombol Logout yang terintegrasi dengan Better Auth, mematuhi standar estetika iOS 26 Solid (kontras tinggi, touch target $\ge$ 48px, tanpa frosted/liquid glass).
 
+## 2026-07-03 Redesign Polish
+
+Halaman profil akan dipoles agar mengikuti hierarchy halaman Dashboard dan Settings: header ringkas, kartu profil premium, ringkasan session/account, dan akses per modul. Permission tetap transparan, tetapi pengalaman utama berubah dari daftar izin panjang menjadi module access cards dengan detail native `<details>` yang mudah discan. Scope tetap visual/UX; tidak ada perubahan auth, RBAC, schema, route publik, atau flow logout.
+
 ---
 
 ## User Review Required

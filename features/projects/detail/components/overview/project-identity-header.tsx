@@ -1,0 +1,217 @@
+"use client";
+
+import React, { useState } from "react";
+
+import { BottomSheet } from "@/components/ui";
+import { formatStatus } from "@/components/ui/badge";
+import {
+  projectHealthLabel,
+  projectHealthReasonLabel,
+  type EffectiveProjectHealth,
+  type EffectiveProjectHealthReason,
+} from "@/lib/project/effective-health";
+import { DetailRow } from "./project-overview-primitives";
+
+export type IdentityProject = {
+  readonly name: string;
+  readonly status: string;
+  readonly financialHealth: string;
+  readonly coverImageUrl: string | null;
+  readonly location: string | null;
+  readonly roomArea: string | null;
+  readonly projectType: string | null;
+  readonly notes: string | null;
+  readonly createdAt: Date;
+  readonly startDate?: Date | null;
+  readonly endDate?: Date | null;
+  readonly client: {
+    readonly name: string;
+    readonly email: string | null;
+    readonly phone: string | null;
+    readonly address: string | null;
+  } | null;
+  readonly projectManager: {
+    readonly name: string;
+    readonly email: string | null;
+  } | null;
+};
+
+export function ProjectIdentityHeader({
+  project,
+  effectiveHealth,
+  healthReasons,
+}: {
+  readonly project: IdentityProject;
+  readonly effectiveHealth: EffectiveProjectHealth;
+  readonly healthReasons: readonly EffectiveProjectHealthReason[];
+}): React.JSX.Element {
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [failedCoverUrl, setFailedCoverUrl] = useState<string | null>(null);
+  const initial = project.name.trim().charAt(0).toUpperCase() || "P";
+  const showCover = Boolean(
+    project.coverImageUrl && failedCoverUrl !== project.coverImageUrl,
+  );
+
+  return (
+    <>
+      <section className="overflow-hidden rounded-[28px] border border-outline-variant/15 bg-primary shadow-[0_14px_34px_rgba(17,17,17,0.08)]">
+        <div className="relative aspect-square overflow-hidden bg-primary">
+          {showCover && project.coverImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={project.coverImageUrl}
+              alt={`Cover ${project.name}`}
+              onError={() => setFailedCoverUrl(project.coverImageUrl)}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <ProjectCoverFallback initial={initial} />
+          )}
+
+          <div
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent_40%,rgba(0,0,0,0.82)_100%)]"
+            aria-hidden="true"
+          />
+
+          <button
+            type="button"
+            onClick={() => setDetailOpen(true)}
+            className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/55 text-white shadow-[0_6px_18px_rgba(0,0,0,0.18)] outline-none transition-colors hover:bg-black/70 focus-visible:ring-2 focus-visible:ring-white/60 active:bg-black/80"
+            aria-label="Lihat detail proyek"
+          >
+            <span className="material-symbols-outlined text-[20px]">info</span>
+          </button>
+
+          <div className="absolute inset-x-0 bottom-0 p-4">
+            <div className="flex min-w-0 items-center justify-between gap-3">
+              <p className="min-w-0 flex-1 truncate text-[9px] font-bold uppercase tracking-[0.14em] text-white/65">
+                {project.client?.name ?? "Klien belum diisi"}
+              </p>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <HeroStatusPill label={formatStatus(project.status)} />
+                <HeroStatusPill
+                  label={projectHealthLabel(effectiveHealth)}
+                  health={effectiveHealth}
+                  title={
+                    healthReasons[0]
+                      ? projectHealthReasonLabel(healthReasons[0])
+                      : "Tidak ada sinyal risiko aktif"
+                  }
+                />
+              </div>
+            </div>
+            <h1 className="mt-2 line-clamp-2 max-w-[95%] text-[21px] font-bold leading-[26px] tracking-[-0.025em] text-white">
+              {project.name}
+            </h1>
+            <p className="mt-2 flex min-w-0 items-center gap-1.5 truncate text-[10px] font-medium text-white/65">
+              <span className="material-symbols-outlined shrink-0 text-[13px]">
+                location_on
+              </span>
+              <span className="truncate">
+                {project.location || "Lokasi belum diisi"}
+              </span>
+              <span className="shrink-0 text-white/30">·</span>
+              <span className="max-w-[42%] shrink-0 truncate">
+                PM {project.projectManager?.name || "belum diisi"}
+              </span>
+            </p>
+          </div>
+        </div>
+      </section>
+      <BottomSheet
+        open={detailOpen}
+        title="Detail Proyek"
+        onClose={() => setDetailOpen(false)}
+      >
+        <div className="space-y-2">
+          <DetailRow
+            label="Klien"
+            value={project.client?.name ?? "Belum diisi"}
+            detail={
+              [project.client?.email, project.client?.phone]
+                .filter(Boolean)
+                .join(" · ") ||
+              project.client?.address ||
+              undefined
+            }
+          />
+          <DetailRow
+            label="Project Manager"
+            value={project.projectManager?.name ?? "Belum diisi"}
+            detail={project.projectManager?.email ?? undefined}
+          />
+          <DetailRow
+            label="Kesehatan finansial"
+            value={projectHealthLabel(effectiveHealth)}
+            detail={
+              healthReasons.length > 0
+                ? healthReasons.map(projectHealthReasonLabel).join(" · ")
+                : "Tidak ada sinyal risiko aktif"
+            }
+          />
+          <DetailRow label="Lokasi" value={project.location ?? "Belum diisi"} />
+          <DetailRow
+            label="Area / Tipe"
+            value={
+              [project.roomArea, project.projectType].filter(Boolean).join(" · ") ||
+              "Belum diisi"
+            }
+          />
+          <DetailRow
+            label="Periode"
+            value={
+              project.startDate || project.endDate
+                ? `${project.startDate ? new Date(project.startDate).toLocaleDateString("id-ID") : "—"} – ${project.endDate ? new Date(project.endDate).toLocaleDateString("id-ID") : "—"}`
+                : `Dibuat ${new Date(project.createdAt).toLocaleDateString("id-ID")}`
+            }
+          />
+          {project.notes && <DetailRow label="Catatan" value={project.notes} />}
+        </div>
+      </BottomSheet>
+    </>
+  );
+}
+
+function HeroStatusPill({
+  label,
+  health,
+  title,
+}: {
+  readonly label: string;
+  readonly health?: EffectiveProjectHealth;
+  readonly title?: string;
+}): React.JSX.Element {
+  const tone =
+    health === "CRITICAL"
+      ? "border-error/25 bg-error/90 text-white"
+      : health === "WARNING"
+        ? "border-warning-light/20 bg-warning/85 text-white"
+        : "border-white/15 bg-black/35 text-white";
+
+  return (
+    <span
+      className={`inline-flex min-h-6 items-center rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide shadow-[0_4px_14px_rgba(0,0,0,0.12)] ${tone}`}
+      title={title}
+    >
+      {label}
+    </span>
+  );
+}
+
+function ProjectCoverFallback({
+  initial,
+}: {
+  readonly initial: string;
+}): React.JSX.Element {
+  return (
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-primary text-on-primary">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.07)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <span className="absolute text-[42px] font-bold uppercase tracking-[0.18em] text-white/[0.035]">
+        Project
+      </span>
+      <span className="relative flex h-16 w-16 -translate-y-5 items-center justify-center rounded-[20px] border border-white/10 bg-white/10 text-[30px] font-semibold leading-none text-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
+        {initial}
+      </span>
+    </div>
+  );
+}

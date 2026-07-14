@@ -1,13 +1,14 @@
 "use server";
 
 import { db } from "@/db";
-import { vendorBill, vendorPayment, bankAccount, cashTransaction, projectBudgetItem, auditLog, approval } from "@/db/schema";
+import { vendorBill, vendorPayment, bankAccount, cashTransaction, projectBudgetItem, projectBudgetCategory, projectExpenses, auditLog, approval } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { ActionResponse } from "@/lib/types/action-response";
 import { payVendorBillSchema, PayVendorBillInput } from "@/lib/validations/finance";
 import { getErrorMessage } from "@/lib/utils/error-message";
+import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
 
 export async function payVendorBill(
   input: PayVendorBillInput
@@ -65,20 +66,20 @@ export async function payVendorBill(
         throw new Error("VENDOR_BILL_NOT_FOUND");
       }
 
-      // 3. Fetch the budget item
-      const budgetItem = await tx.query.projectBudgetItem.findFirst({
-        where: eq(projectBudgetItem.id, bill.projectBudgetItemId),
+      // 3. Fetch the canonical budget category for overrun checks.
+      const budgetCategory = await tx.query.projectBudgetCategory.findFirst({
+        where: eq(projectBudgetCategory.id, bill.projectBudgetCategoryId),
       });
 
-      if (!budgetItem) {
-        throw new Error("BUDGET_ITEM_NOT_FOUND");
+      if (!budgetCategory) {
+        throw new Error("PROJECT_BUDGET_CATEGORY_NOT_FOUND");
       }
 
       // 4. Verify Approval status if payment amount >= 5M or causes budget overrun
       const paymentAmount = Number(payment.amountPaid);
-      const allocated = Number(budgetItem.allocatedAmount);
-      const spent = Number(budgetItem.actualSpent);
-      const isOverrun = (spent + paymentAmount) > allocated;
+      const allocated = Number(budgetCategory.allocatedAmount);
+      const spent = Number(budgetCategory.actualAmount);
+      const isOverrun = spent > allocated;
       const requiresApproval = paymentAmount >= 5000000 || isOverrun;
 
       if (requiresApproval) {
@@ -191,16 +192,37 @@ export async function payVendorBill(
         })
         .where(eq(vendorBill.id, payment.vendorBillId));
 
-      // 10. Accumulate project budget item actual spent
-      const nextActualSpent = spent + paymentAmount;
+      // 10. Accumulate legacy project budget item actual spent when linked.
+      const legacyBudgetItem = bill.projectBudgetItemId
+        ? await tx.query.projectBudgetItem.findFirst({
+          where: eq(projectBudgetItem.id, bill.projectBudgetItemId),
+        })
+        : null;
+      const legacySpent = legacyBudgetItem ? Number(legacyBudgetItem.actualSpent) : 0;
+      const nextActualSpent = legacyBudgetItem ? legacySpent + paymentAmount : 0;
+
+      if (legacyBudgetItem && bill.projectBudgetItemId) {
+        await tx
+          .update(projectBudgetItem)
+          .set({
+            actualSpent: nextActualSpent.toFixed(2),
+            updatedAt: new Date(),
+          })
+          .where(eq(projectBudgetItem.id, bill.projectBudgetItemId));
+      }
 
       await tx
-        .update(projectBudgetItem)
+        .update(projectExpenses)
         .set({
-          actualSpent: nextActualSpent.toFixed(2),
+          paymentStatus: nextBillStatus === "PAID" ? "PAID" : "PARTIALLY_PAID",
           updatedAt: new Date(),
         })
-        .where(eq(projectBudgetItem.id, bill.projectBudgetItemId));
+        .where(eq(projectExpenses.vendorBillId, bill.id));
+
+      await syncProjectBudgetCategory({
+        tx,
+        projectBudgetCategoryId: bill.projectBudgetCategoryId,
+      });
 
       // 11. Write Audit Log
       await tx.insert(auditLog).values({
@@ -212,13 +234,13 @@ export async function payVendorBill(
           balance: oldBalance.toFixed(2),
           paymentStatus: payment.status,
           billStatus: bill.status,
-          actualSpent: spent.toFixed(2),
+          actualSpent: legacyBudgetItem ? legacySpent.toFixed(2) : null,
         }),
         newState: JSON.stringify({
           balance: newBalance.toFixed(2),
           paymentStatus: "COMPLETED",
           billStatus: nextBillStatus,
-          actualSpent: nextActualSpent.toFixed(2),
+          actualSpent: legacyBudgetItem ? nextActualSpent.toFixed(2) : null,
           cashTransactionId: ledgerTx.id,
         }),
         createdAt: new Date(),
@@ -240,7 +262,7 @@ export async function payVendorBill(
       errMsg === "PAYMENT_RECORD_NOT_FOUND" ||
       errMsg === "BANK_ACCOUNT_NOT_FOUND" ||
       errMsg === "VENDOR_BILL_NOT_FOUND" ||
-      errMsg === "BUDGET_ITEM_NOT_FOUND"
+      errMsg === "PROJECT_BUDGET_CATEGORY_NOT_FOUND"
     ) {
       code = "NOT_FOUND";
       displayMessage = "Data record keuangan yang dibutuhkan untuk transaksi tidak ditemukan.";

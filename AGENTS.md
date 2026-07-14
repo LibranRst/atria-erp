@@ -1,76 +1,97 @@
-# AI Agent Development Guidelines (AGENTS.md)
+# AI Agent Development Guidelines
 
-Welcome, AI Agent! You are working on **Atria ERP**, a critical, production-grade, finance-first internal application. Because this app directly manages cash flows, bank reconciliations, and project budgets, you must adhere to the strict guidelines and guardrails detailed in this document. 
+You are working on Atria ERP for Dekoria, an interior design and build company. The product direction is Project Finance & Material Control, not a generic ERP.
 
----
+The product promise is: **Project Budget Control upgraded into a real ERP with material stock visibility.** Workbook logic is source material for ratios and team habits, but user-facing screens must not be labeled as Excel.
 
-## 📋 1. Rules on Planning & Execution
+## Planning and Documentation
+1. Read existing schema, actions, docs, and UI before changing code.
+2. Before major executable changes, write or update a plan under `docs/superpowers/plans/`.
+3. Keep documentation aligned with the current product direction.
+4. Do not leave docs saying inventory is out of MVP scope.
+5. Do not refer to a non-existent `field_request` table; the implemented field expense table is `project_cost`.
+6. Do not let material/inventory screens replace the category-based project budget workflow.
+7. Treat Settings as the source of truth for budget allocation defaults, expense categories, item/price library, and material master settings.
 
-1.  **Read Before Writing:** You must read existing schemas and API documentation before proposing any changes. Do not guess file structures, database relations, or variable names.
-2.  **Implementation Plans:** Before writing any executable code, you **must** write a detailed step-by-step implementation plan. Save this plan under `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md` and wait for user approval.
-3.  **TDD & Verification:** If the user specifies or the task demands, write failing tests first, run them, write minimal implementation code, verify they pass, and commit.
-4.  **No Placeholders:** Never output code containing `// TODO`, `// TBD`, or incomplete statements. Every function, schema, and API action you build must be fully implemented, validated, and documented.
+## Product Vocabulary
+- Project Budget: ERP internal budget setup with project value, approved RAB value, internal budget cap, category allocations, pending review, consumed budget, paid amount, remaining budget, used percentage, and margin visibility.
+- Expense Categories: canonical budget buckets are Material, Tukang, Operasional, Lain-lain, and Subcon.
+- Settings: owner/admin-controlled defaults for Budget Allocation, Expense Categories, Item & Price Library, and Material Master. Code constants are seed/fallback values, not the long-term source of truth.
+- Budget Category Usage: allocated amount, actual spend, remaining amount, used percentage, and risk status per category.
+- RAP: internal execution/material plan and cost baseline.
+- Tukang Work Package: lightweight internal labor/scope plan linked to Tukang expenses.
+- Subcon Package: lightweight internal vendor/subcon scope plan linked to vendor bills or Subcon expenses.
+- RAB: client-facing estimate/proposal that may be generated from selected RAP Material items, Tukang packages, Subcon packages, and manual client-safe rows, but must be client-safe.
+- Material Master: structured material list with specs, category, unit, brand/code/color, and vendor context.
+- Inventory: current stock, reserved stock, available stock, minimum/buffer stock, location, and cost context.
+- Stock Movement: stock in, stock out, reserve, use, return, transfer, adjustment, and waste.
 
----
+## Preserve Useful Work
+Do not blindly delete or rewrite existing auth, RBAC, project scoping, ledger, bank mutation helper, project budget, expenses, vendor bills, client payments, approvals, AI OCR/briefing, mobile shell, project pages, or reusable components.
 
-## 💻 2. Engineering & Security Rules
+When replacing the budget model, introduce canonical tables additively and preserve compatibility with legacy `project_budget`, `project_budget_item`, and `project_cost` until reads, writes, tests, approvals, vendor bills, and dashboards have been migrated.
 
-### Strict TypeScript
-*   Disable `any` entirely. Use concrete types, generics, or type utility helpers.
-*   All function arguments and return types must be explicitly defined.
-*   Avoid using type assertions (`as Type`) unless interfacing with un-typed third-party libraries. Instead, use proper type guards or Zod parsers.
+## Strict TypeScript
+- Do not introduce `any`.
+- Give function arguments and return types explicit types.
+- Avoid type assertions unless interfacing with untyped third-party data.
+- Use Zod for Server Action input validation.
 
-### Schema Validation (Zod)
-*   Every Next.js Server Action or API endpoint must validate its incoming payload using a Zod schema.
-*   Zod validation schemas must reside in a centralized location, such as `lib/validations/` or alongside the corresponding database schemas.
-*   Validate string lengths, number bounds, email formats, and UUID formats strictly. Do not accept raw, unvalidated strings for IDs.
+## Drizzle and Finance Safety
+- Do not execute raw SQL in application code.
+- Use Drizzle query APIs and query builder.
+- Balance-changing actions must run in `db.transaction`.
+- Reconciled `cash_transaction` rows must not be edited or deleted.
+- Every balance-changing operation must write `audit_log`.
+- Money movement requires explicit user action and appropriate permission.
 
-### Drizzle ORM Rules
-*   Use Drizzle's relational query API (`db.query.tableName.findMany(...)`) for type-safe fetches.
-*   Declare foreign keys and index relations explicitly in the database schema to prevent database leaks or orphan rows.
-*   Database updates must use the Drizzle query builder (`db.insert`, `db.update`, `db.delete`). Do not construct raw SQL template strings.
+## Material-Control Safety
+- Material control is attached to the Material budget category. It must not replace Tukang, Operasional, Lain-lain, Subcon, or project margin tracking.
+- Material/RAP/stock links are allowed only for Material category expenses.
+- Tukang/Subcon package links are allowed only for their matching category and project.
+- Operasional and Lain-lain should stay fast and simple; do not add heavy RAP/BOQ-style planning to them by default.
+- Non-material expense entry must stay fast and simple.
+- Stock-changing actions must run in `db.transaction`.
+- Stock-changing actions must write `stock_movement` and `audit_log`.
+- Reservation does not create a cash transaction.
+- Usage does not create a cash transaction by itself; cash impact belongs to expense/vendor payment flows.
+- Adjustments and waste require an audit note.
 
-### Role-Based Access Control (RBAC) & Mutations
-*   **Role Validation:** All Server Actions that mutate data must run a security checker (e.g., `checkPermission(session.user, 'action_name')`).
-*   **Scoped Access:** A Project Manager (PM) should only be allowed to modify data belonging to projects where they are explicitly assigned. Owner and Admin roles have global project read/write access.
-*   **Session Security:** Read the user session directly on the server side using Better Auth. Never rely on client-provided user IDs for mutations.
+## RBAC and Scoping
+- Mutations must read the Better Auth session server-side.
+- Do not trust client-provided user IDs.
+- PMs may only access projects assigned to them.
+- Owner and Finance Admin have global finance access within their permissions.
+- Purchasing has material/inventory permissions but still must use explicit actions.
+- Owner and Finance Admin can manage finance Settings; Purchasing can manage Material Master settings but must not change budget formula or margin defaults.
 
-### Database Safety & Transactions
-*   Any operation that changes balances or affects multiple tables (e.g., approving an invoice and updating the project budget) **must run inside a database transaction** (`db.transaction(async (tx) => { ... })`).
-*   If any step inside the transaction fails, throw an explicit error to roll back all changes. Partial database writes are unacceptable.
+## AI Guardrails
+- AI can analyze, summarize, suggest, and prefill forms.
+- AI must analyze category budget usage before or alongside material shortage details.
+- AI must not mutate finance/material data without explicit human approval.
+- AI must not generate or execute arbitrary SQL.
+- AI output for owner should be practical and written in simple Bahasa Indonesia.
+- AI must not expose internal RAP cost/margin/markup/vendor notes/internal notes in client-facing RAB output.
 
----
+## UI/UX Rules
+- Mobile-first.
+- Use readable cards, clear sections, large tap targets, simple forms, status badges, and clean financial amounts.
+- Avoid cluttered tables on mobile.
+- Owner dashboard must be understandable within 30 seconds.
+- Owner and finance must immediately see project value, budget, consumed budget, remaining budget, category usage, and margin risk before drilling into material details.
+- Keep the UI calm, premium, operational, and trustworthy.
 
-## 🎨 3. UI/UX Rules (iOS 26 Solid Philosophy)
+### iOS-Inspired Fully Rounded UI Style (Paten)
+We enforce a strict fully rounded iOS interaction style for a premium, native-app feel:
+- **Inputs & Dropdowns**: All text inputs (TextInput), date pickers (DatePickerField), and selection selectors (ComboboxField, FilterSelect) MUST be fully rounded (`rounded-full`) with a minimum height of `min-h-12` (48px) and side padding `px-5`.
+- **Textareas**: Multiline text areas (Textarea) must use `rounded-2xl` (16px border-radius) for layout stability.
+- **Buttons**: All primary, secondary, and option cards/buttons (including toggles and selectors) must use `rounded-full` (capsule style).
+- **Drawers & Sheets**: Sliding bottom drawers and bottom sheets (BottomSheet, ConfirmationSheet) must use large soft rounded top corners (`rounded-t-[28px]`) or fully rounded cards (`rounded-[28px]`) with a top divider pull bar where applicable.
 
-Atria ERP is built for Project Managers working in noisy, bright construction fields. The interface must look and feel like a premium, native iOS app wrapped in a mobile WebView.
-
-### Layout & Navigation
-*   **Bottom Navigation Bar:** Mobile views must utilize a sticky bottom navigation bar for quick access to primary modules: Projects, Ledger, Add Expense, and Profile.
-*   **Touch Targets:** All interactive elements (buttons, inputs, select triggers) must have a minimum touch target size of **44x44 pixels** to prevent accidental taps.
-*   **Grid and Cards:** Group data into dense, cohesive cards. Use distinct visual borders and shadows rather than plain list rows.
-
-### Styling System (iOS 26 Solid Aesthetics)
-*   **Color Palette:** Use clean HSL-based colors. Avoid bright default primary colors. Instead, use deep indigos, charcoal grays, emerald greens for success, and amber tones for warnings.
-*   **Glassmorphism:** Apply micro-borders, clean drop-shadows, and background blur effects (`backdrop-blur-md`) on panels, headers, and modal sheets.
-*   **Border Radii:** Use smooth, large border corners:
-    *   Small buttons/badges: `rounded-lg` (8px)
-    *   Standard cards: `rounded-2xl` (16px)
-    *   Bottom sheets/Modals: `rounded-t-3xl` (24px)
-*   **Typography:** Default to clean, modern sans-serif fonts (e.g., Inter, Outfit). Maintain strict hierarchy: large titles (`text-2xl font-bold tracking-tight`) and compact, high-contrast sub-labels (`text-xs font-medium text-muted-foreground`).
-
----
-
-## 🚫 4. Strict Financial Guardrails
-
-To prevent financial discrepancies and secure company funds, you must abide by the following:
-
-1.  **NEVER Execute Raw SQL:** You are strictly forbidden from writing or executing raw SQL strings (e.g., `db.execute(sql`...`)`) inside the application code. This is to eliminate SQL injection vulnerabilities and ensure all queries go through Drizzle's compiler.
-2.  **NEVER Mutate Reconciled Transactions:** A ledger transaction (`cash_transaction`) that has been marked as `reconciled = true` **cannot be edited or deleted**. If a correction is needed, you must create a compensating reversal transaction (a journal entry offset) with an audit note.
-3.  **Explicit User Approval for Money Movements:** Never write logic that automatically creates or modifies bills, payments, or invoices without explicit user triggers. Any fund disbursement requires an explicit approval request from an Owner or Admin.
-4.  **Enforce Ledger Balance Double Check:** Whenever a cash transaction is recorded, you must update the associated `bank_account` current balance. Verify that:
-    $$\text{New Balance} = \text{Old Balance} \pm \text{Transaction Amount}$$
-    If Drizzle reports that the updated rows do not match the expected count, abort the transaction.
-5.  **Audit Trail Logging:** Every balance-changing query must write a record into the `audit_log` table containing the user ID, timestamp, target record ID, original state, and new state.
-
-If any task or code suggestion violates these guidelines, refuse to write it and ask the user for clarification.
+### Unified Motion & Animation Tokens
+All animations MUST use Framer Motion and reference the unified animation presets in `lib/utils/motion.ts` to ensure consistency:
+- **Drawers & Sheets sliding up**: Use `slideUpDrawerVariants` with `transitionSpringSmooth` (`type: "spring", stiffness: 300, damping: 32`) to achieve a natural sliding momentum.
+- **Backdrops & Fades**: Use `fadeVariants` with `transitionEaseSmooth` (`type: "tween", ease: [0.32, 0.94, 0.6, 1], duration: 0.35`) for a smooth translucent fade-in/fade-out overlay.
+- **Snappy Micro-interactions**: For tap active scales, hover effects, or quick popovers, use `transitionSpringSnappy` (`type: "spring", stiffness: 380, damping: 30, mass: 0.8`) e.g. with `whileTap={{ scale: 0.97 }}` or `scale: [1, 1.02]`.
+- **Bouncy celebratory animations**: Use `transitionSpringBouncy` (`type: "spring", stiffness: 300, damping: 26`).
+- Avoid defining custom/ad-hoc spring properties or inline CSS keyframes directly.

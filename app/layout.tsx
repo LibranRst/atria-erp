@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import { MobileShell } from "@/components/layout/mobile-shell";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -46,6 +47,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full bg-[#fcf9f8] font-sans text-[16px] leading-[24px] font-normal text-on-surface">
         <MobileShell>{children}</MobileShell>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

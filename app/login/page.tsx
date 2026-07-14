@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 export default function LoginPage(): React.JSX.Element {
   const [email, setEmail] = useState<string>("");
@@ -14,8 +17,17 @@ export default function LoginPage(): React.JSX.Element {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Email dan password wajib diisi.");
+    const formData = new FormData(e.currentTarget);
+    const submittedEmail = String(formData.get("email") ?? "").trim();
+    const submittedPassword = String(formData.get("password") ?? "");
+
+    setEmail(submittedEmail);
+    setPassword(submittedPassword);
+
+    if (!submittedEmail || !submittedPassword) {
+      const message = "Email dan password wajib diisi.";
+      setError(message);
+      toast.error(message);
       return;
     }
 
@@ -24,20 +36,25 @@ export default function LoginPage(): React.JSX.Element {
 
     try {
       const { error: authError } = await authClient.signIn.email({
-        email,
-        password,
+        email: submittedEmail,
+        password: submittedPassword,
       });
 
       if (authError) {
-        setError(authError.message || "Email atau password salah.");
+        const message = authError.message || "Email atau password salah.";
+        setError(message);
+        toast.error(message);
         setIsLoading(false);
       } else {
+        toast.success("Login berhasil. Selamat datang kembali.");
         router.push("/");
         router.refresh();
       }
     } catch (err: unknown) {
       console.error("Login unexpected error:", err);
-      setError("Terjadi kesalahan internal. Silakan coba lagi.");
+      const message = "Terjadi kesalahan internal. Silakan coba lagi.";
+      setError(message);
+      toast.error(message);
       setIsLoading(false);
     }
   };
@@ -46,20 +63,20 @@ export default function LoginPage(): React.JSX.Element {
     <section className="flex min-h-[calc(100dvh-5rem)] flex-col justify-between py-6 px-1 select-none">
       {/* Top Branding Spacer */}
       <div className="flex-1 flex flex-col justify-center items-center pb-8 pt-4">
-        <div className="h-16 w-16 rounded-[22px] bg-primary flex items-center justify-center text-white shadow-xl border border-white/10 mb-5 animate-pulse">
+        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-[22px] bg-primary text-white">
           <span className="material-symbols-outlined text-white text-[32px]">account_balance</span>
         </div>
         <div className="text-center space-y-1.5">
           <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-primary">Atria Operating System</p>
           <h1 className="font-sans text-[32px] leading-[40px] tracking-tight font-bold text-display text-primary text-[28px] tracking-tight">Atria ERP</h1>
           <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant max-w-[280px]">
-            Masuk untuk mengakses control room keuangan proyek & ledger buku kas lapangan.
+            Kontrol budget proyek, pengeluaran, dan ketersediaan material dalam satu ruang kerja.
           </p>
         </div>
       </div>
 
       {/* Login Credentials Box */}
-      <div className="premium-card p-md border border-outline-variant/30 space-y-md shrink-0">
+      <div className="shrink-0 space-y-md rounded-[28px] border border-outline-variant/20 bg-white p-md shadow-[0_12px_28px_rgba(17,17,17,0.035)]">
         <div className="pb-sm border-b border-outline-variant/10 space-y-xs">
           <div className="flex items-center justify-between">
             <h2 className="font-sans text-[20px] leading-[28px] font-semibold text-on-surface">Kredensial Masuk</h2>
@@ -72,7 +89,7 @@ export default function LoginPage(): React.JSX.Element {
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-md">
+        <form method="post" onSubmit={handleLogin} className="space-y-md">
           {error && (
             <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs text-error font-medium">
               <span className="material-symbols-outlined text-error text-[18px]">error</span>
@@ -90,13 +107,16 @@ export default function LoginPage(): React.JSX.Element {
             </label>
             <input
               id="email-input"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               placeholder="nama@dekoria.com"
+              autoComplete="email"
+              inputMode="email"
               required
-              className="h-11 w-full rounded-xl border border-outline-variant bg-surface-container-low px-3.5 text-sm text-on-surface outline-none focus:border-primary disabled:opacity-50"
+              className="min-h-12 w-full rounded-full border border-outline-variant bg-surface-container-low px-5 text-sm text-on-surface outline-none focus:border-primary disabled:opacity-50"
             />
           </div>
 
@@ -110,39 +130,33 @@ export default function LoginPage(): React.JSX.Element {
             </label>
             <input
               id="password-input"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
               placeholder="••••••••"
+              autoComplete="current-password"
               required
-              className="h-11 w-full rounded-xl border border-outline-variant bg-surface-container-low px-3.5 text-sm text-on-surface outline-none focus:border-primary disabled:opacity-50"
+              className="min-h-12 w-full rounded-full border border-outline-variant bg-surface-container-low px-5 text-sm text-on-surface outline-none focus:border-primary disabled:opacity-50"
             />
           </div>
 
-          <button
+          <motion.button
             type="submit"
-            disabled={isLoading || !email || !password}
-            className="flex h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 mt-2 cursor-pointer"
+            disabled={isLoading}
+            whileTap={isLoading ? undefined : { scale: 0.97 }}
+            transition={transitionSpringSnappy}
+            className="mt-2 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full bg-primary text-sm font-bold text-white disabled:opacity-50"
           >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span>Memverifikasi...</span>
-              </div>
-            ) : (
-              "Masuk Sistem"
-            )}
-          </button>
+            {isLoading ? "Memverifikasi…" : "Masuk Sistem"}
+          </motion.button>
         </form>
       </div>
 
       {/* Footer Branding */}
       <div className="text-center text-[9px] text-on-surface-variant space-y-0.5 pt-6 select-none shrink-0 font-medium">
-        <p>Atria ERP Enterprise Financial Core • v1.0.0</p>
+        <p>Atria ERP · Project Finance & Material Control</p>
         <p>© 2026 PT Dekoria Desain Estetika. All rights reserved.</p>
       </div>
     </section>

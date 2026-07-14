@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { clientInvoice, vendorBill, project, approval, aiRun, user, projectCost } from "@/db/schema";
+import { clientInvoice, vendorBill, project, approval, aiRun, user, projectCost, role } from "@/db/schema";
 import { eq, and, lte, inArray } from "drizzle-orm";
 import { ai } from "@/lib/ai/gemini";
 import { getErrorMessage } from "@/lib/utils/error-message";
@@ -58,10 +58,75 @@ export async function POST(request: NextRequest): Promise<Response> {
       where: inArray(projectCost.status, ["SUBMITTED", "VERIFIED"]),
     });
 
-    // 2.7 Cari ID Owner untuk pencatatan di ai_run
-    const ownerUser = await db.query.user.findFirst({
-      where: eq(user.roleId, "00000000-0000-0000-0000-000000000001"), // OWNER role UUID
+    // 2.7 Konteks material control
+    const inventoryRows = await db.query.materialInventory.findMany();
+    const totalStockValue = inventoryRows.reduce(
+      (sum, item) => sum + (Number(item.currentStock) * Number(item.averageCost)),
+      0
+    );
+    const leftoverReusableValue = inventoryRows.reduce(
+      (sum, item) => sum + (Math.max(0, Number(item.currentStock) - Number(item.reservedStock)) * Number(item.averageCost)),
+      0
+    );
+    const lowStockCount = inventoryRows.filter((item) => {
+      const available = Number(item.currentStock) - Number(item.reservedStock);
+      return available <= Number(item.minimumStock);
+    }).length;
+
+    const rapItems = await db.query.projectRapItem.findMany({
+      with: {
+        material: {
+          with: {
+            inventory: true,
+          },
+        },
+      },
     });
+    const materialShortageCount = rapItems.filter((item) => {
+      const available = item.material?.inventory.reduce((sum, inv) => {
+        return sum + Number(inv.currentStock) - Number(inv.reservedStock);
+      }, 0) ?? 0;
+      return Number(item.totalQuantity) > available;
+    }).length;
+
+    // 2.8 Konteks Project Budget category usage
+    const canonicalBudgets = await db.query.projectBudgets.findMany({
+      with: {
+        project: true,
+        categories: {
+          with: {
+            expenseCategory: true,
+          },
+        },
+      },
+    });
+    const budgetCategorySummaries = canonicalBudgets.flatMap((budget) =>
+      budget.categories.map((category) => ({
+        projectId: budget.projectId,
+        projectName: budget.project.name,
+        category: category.expenseCategory.name,
+        code: category.expenseCategory.code,
+        budget: Number(category.allocatedAmount),
+        actual: Number(category.actualAmount),
+        remaining: Number(category.remainingAmount),
+        usedPercentage: Number(category.usedPercentage),
+        status: category.status,
+        projectProgressPercentage: Number(budget.projectProgressPercentage),
+      }))
+    );
+    const categoryRiskCount = budgetCategorySummaries.filter((item) => item.status !== "SAFE").length;
+    const projectsOverBudgetCount = canonicalBudgets.filter((budget) => {
+      const actual = budget.categories.reduce((sum, category) => sum + Number(category.actualAmount), 0);
+      return actual > Number(budget.internalBudget);
+    }).length;
+
+    // 2.9 Cari ID Owner untuk pencatatan di ai_run
+    const ownerRole = await db.query.role.findFirst({
+      where: eq(role.name, "owner"),
+    });
+    const ownerUser = ownerRole
+      ? await db.query.user.findFirst({ where: eq(user.roleId, ownerRole.id) })
+      : null;
 
     if (!ownerUser) {
       return new Response(
@@ -77,6 +142,13 @@ export async function POST(request: NextRequest): Promise<Response> {
       activeProjectsCount,
       pendingActionsCount,
       pendingCostsCount: pendingCosts.length,
+      totalStockValue,
+      leftoverReusableValue,
+      lowStockCount,
+      materialShortageCount,
+      categoryRiskCount,
+      projectsOverBudgetCount,
+      budgetCategorySummaries,
       timestamp: new Date().toISOString(),
     };
 
@@ -104,14 +176,28 @@ Konteks Finansial Perusahaan:
 - Hutang Vendor Jatuh Tempo (7 Hari Ke Depan): Rp ${payablesDueSevenDays.toLocaleString("id-ID")}
 - Jumlah Proyek Aktif: ${activeProjectsCount}
 - Antrean Persetujuan (Pending Approvals): ${pendingActionsCount} pengajuan.
+- Project Over Budget: ${projectsOverBudgetCount}
+- Kategori Budget Near/Over Limit: ${categoryRiskCount}
+- Ringkasan Category Budget Usage: ${JSON.stringify(budgetCategorySummaries)}
+- Nilai Stock Material Saat Ini: Rp ${totalStockValue.toLocaleString("id-ID")}
+- Estimasi Stock Tersedia/Reusable: Rp ${leftoverReusableValue.toLocaleString("id-ID")}
+- Material Low Stock: ${lowStockCount} item.
+- RAP Material Shortage: ${materialShortageCount} item.
 - Rincian Pengajuan Biaya Lapangan PM Lapangan: ${JSON.stringify(
         pendingCosts.map((c) => ({ id: c.id, amount: Number(c.amount), description: c.description }))
       )}
 
 Rules:
 - Selalu tampilkan angka moneter dalam format Rupiah (IDR) pada narasi ringkasan.
-- Kelompokkan laporan menjadi tiga bagian pada ringkasan 'summary': (1) Status Kas & Likuiditas, (2) Pengingat Pembayaran Penting (Hutang/Piutang), dan (3) Tindakan Penting yang Membutuhkan Otorisasi Hari Ini.
-- Hindari jargon teknis AI. Fokus pada metrik bisnis dan manajemen risiko.
+- Hindari jargon teknis AI. Fokus pada metrik bisnis, risiko budget, cash timing, dan keputusan operasional Owner.
+- Analisis category budget usage terlebih dahulu. Material stock adalah drill-down dari kategori Material, bukan pengganti budget category.
+- Jika Material usage tinggi dibanding progress proyek, sebutkan risiko margin secara jelas.
+- Jika ada material shortage atau low stock, berikan saran tindakan praktis untuk Owner/Finance/Purchasing.
+- Format summary wajib berupa 2 blok saja:
+  1. "Ringkasan" — satu paragraf ringkasan agak panjang berisi 4-6 kalimat. Jelaskan kondisi kas, budget/margin proyek, kategori yang paling berisiko, dan material/stock hanya jika relevan. Jangan dibuat bullet.
+  2. "Poin Penting" — 3-4 bullet pendek berisi action yang bisa dilakukan Owner atau hal penting yang perlu Owner tahu hari ini.
+- Gunakan newline agar mudah dibaca di mobile: satu baris kosong antara "Ringkasan" dan "Poin Penting"; gunakan bullet "- " hanya di bagian "Poin Penting".
+- Jangan hanya menulis pembuka generik seperti "Laporan CFO harian". Owner harus langsung paham kondisi, risiko, dan next action.
 `;
 
       const response = await ai.models.generateContent({
@@ -130,6 +216,11 @@ Rules:
                   cashBalance: { type: Type.NUMBER },
                   receivablesOverdue: { type: Type.NUMBER },
                   payablesDueSevenDays: { type: Type.NUMBER },
+                  totalStockValue: { type: Type.NUMBER },
+                  materialShortageCount: { type: Type.NUMBER },
+                  leftoverReusableValue: { type: Type.NUMBER },
+                  categoryRiskCount: { type: Type.NUMBER },
+                  projectsOverBudgetCount: { type: Type.NUMBER },
                 },
                 required: ["cashBalance", "receivablesOverdue", "payablesDueSevenDays"],
               },

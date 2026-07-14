@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { EXPENSE_CATEGORY_CODES } from "@/lib/budget/excel-budget";
 
 // Regex untuk memvalidasi UUID 36 karakter (mendukung dummy UUID buatan untuk testing/seeding)
 const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -17,6 +18,34 @@ export const createBudgetItemSchema = z.object({
 });
 
 export type CreateBudgetItemInput = z.infer<typeof createBudgetItemSchema>;
+
+export const createProjectBudgetFromRatiosSchema = z.object({
+  projectId: uuidSchema("ID Proyek tidak valid."),
+  contractValue: z.number().nonnegative("Nilai kontrak tidak boleh negatif."),
+  approvedRabValue: z.number().nonnegative("Nilai RAB approved tidak boleh negatif.").optional(),
+  projectProgressPercentage: z.number().min(0).max(100).optional(),
+  notes: z.string().max(1000).optional().nullable(),
+});
+
+export type CreateProjectBudgetFromRatiosInput = z.infer<typeof createProjectBudgetFromRatiosSchema>;
+
+export const updateProjectBudgetCategoryAllocationSchema = z.object({
+  projectBudgetCategoryId: uuidSchema("ID kategori budget proyek tidak valid."),
+  ratioPercentage: z.number().min(0).max(1).optional(),
+  allocatedAmount: z.number().nonnegative().optional(),
+}).refine((value) => value.ratioPercentage !== undefined || value.allocatedAmount !== undefined, {
+  message: "Ratio atau nominal alokasi wajib diisi.",
+});
+
+export type UpdateProjectBudgetCategoryAllocationInput = z.infer<typeof updateProjectBudgetCategoryAllocationSchema>;
+
+export const approveCanonicalProjectBudgetSchema = z.object({
+  projectBudgetId: uuidSchema("ID budget proyek tidak valid."),
+});
+
+export type ApproveCanonicalProjectBudgetInput = z.infer<typeof approveCanonicalProjectBudgetSchema>;
+
+export const canonicalExpenseCategoryCodeSchema = z.enum(EXPENSE_CATEGORY_CODES);
 
 // 2. Skema Validasi Pencatatan Pembayaran Termin Klien
 export const recordClientPaymentSchema = z.object({

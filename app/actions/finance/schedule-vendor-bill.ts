@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { vendorBill, vendorPayment, projectBudgetItem, approval, user } from "@/db/schema";
+import { vendorBill, vendorPayment, projectBudgetCategory, approval, user, role } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
@@ -61,18 +61,18 @@ export async function scheduleVendorBillPayment(
         throw new Error("VENDOR_BILL_CLOSED");
       }
 
-      // 2. Fetch the budget item to check overrun
-      const budgetItem = await tx.query.projectBudgetItem.findFirst({
-        where: eq(projectBudgetItem.id, bill.projectBudgetItemId),
+      // 2. Fetch the canonical budget category to check category overrun
+      const budgetCategory = await tx.query.projectBudgetCategory.findFirst({
+        where: eq(projectBudgetCategory.id, bill.projectBudgetCategoryId),
       });
 
-      if (!budgetItem) {
-        throw new Error("BUDGET_ITEM_NOT_FOUND");
+      if (!budgetCategory) {
+        throw new Error("PROJECT_BUDGET_CATEGORY_NOT_FOUND");
       }
 
-      const allocated = Number(budgetItem.allocatedAmount);
-      const spent = Number(budgetItem.actualSpent);
-      const isOverrun = (spent + amountPaid) > allocated;
+      const allocated = Number(budgetCategory.allocatedAmount);
+      const spent = Number(budgetCategory.actualAmount);
+      const isOverrun = spent > allocated;
       const requiresApproval = amountPaid >= 5000000 || isOverrun;
 
       // 3. Pre-generate payment UUID
@@ -80,9 +80,12 @@ export async function scheduleVendorBillPayment(
 
       // 4. If approval is required, insert an approval record for the Owner
       if (requiresApproval) {
-        const ownerUser = await tx.query.user.findFirst({
-          where: eq(user.roleId, "00000000-0000-0000-0000-000000000001"), // OWNER role UUID
+        const ownerRole = await tx.query.role.findFirst({
+          where: eq(role.name, "owner"),
         });
+        const ownerUser = ownerRole
+          ? await tx.query.user.findFirst({ where: eq(user.roleId, ownerRole.id) })
+          : null;
 
         if (!ownerUser) {
           throw new Error("OWNER_USER_NOT_FOUND");
@@ -131,7 +134,7 @@ export async function scheduleVendorBillPayment(
     let errorCode: "NOT_FOUND" | "FORBIDDEN" | "TRANSACTION_FAILED" | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
     let displayMessage = errMsg;
 
-    if (errMsg === "VENDOR_BILL_NOT_FOUND" || errMsg === "BUDGET_ITEM_NOT_FOUND" || errMsg === "OWNER_USER_NOT_FOUND") {
+    if (errMsg === "VENDOR_BILL_NOT_FOUND" || errMsg === "PROJECT_BUDGET_CATEGORY_NOT_FOUND" || errMsg === "OWNER_USER_NOT_FOUND") {
       errorCode = "NOT_FOUND";
       displayMessage = "Data pendukung transaksi tidak ditemukan.";
     } else if (errMsg === "VENDOR_BILL_CLOSED") {

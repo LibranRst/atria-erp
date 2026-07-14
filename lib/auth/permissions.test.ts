@@ -38,8 +38,13 @@ describe("Atria ERP RBAC - permissions.ts", () => {
       // Ditolak menghapus bank account
       await expect(assertPermission(financeUser, "delete:bank_account")).rejects.toThrow("FORBIDDEN");
       
-      // Ditolak menyetujui anggaran (approve:budget)
-      await expect(assertPermission(financeUser, "approve:budget")).rejects.toThrow("FORBIDDEN");
+      // Diizinkan mengelola budget setup dan Settings defaults
+      await expect(assertPermission(financeUser, "create:budget")).resolves.toBeUndefined();
+      await expect(assertPermission(financeUser, "update:budget")).resolves.toBeUndefined();
+      await expect(assertPermission(financeUser, "approve:budget")).resolves.toBeUndefined();
+      await expect(assertPermission(financeUser, "view:settings")).resolves.toBeUndefined();
+      await expect(assertPermission(financeUser, "manage:budget_settings")).resolves.toBeUndefined();
+      await expect(assertPermission(financeUser, "manage:item_library")).resolves.toBeUndefined();
     });
 
     it("harus membatasi izin PROJECT_MANAGER hanya pada pengajuan biaya dan draf anggaran", async () => {
@@ -51,6 +56,30 @@ describe("Atria ERP RBAC - permissions.ts", () => {
 
       // Ditolak melakukan rekonsiliasi kas
       await expect(assertPermission(pmUser, "reconcile:ledger")).rejects.toThrow("FORBIDDEN");
+      await expect(assertPermission(pmUser, "view:settings")).rejects.toThrow("FORBIDDEN");
+    });
+
+    it("harus memberi Purchasing akses material dan membatasi akses ledger", async () => {
+      const purchasingUser = { id: "user-purchasing-id", roleId: "00000000-0000-0000-0000-000000000004" };
+
+      await expect(assertPermission(purchasingUser, "view:inventory")).resolves.toBeUndefined();
+      await expect(assertPermission(purchasingUser, "reserve:stock")).resolves.toBeUndefined();
+      await expect(assertPermission(purchasingUser, "waste:stock")).resolves.toBeUndefined();
+      await expect(assertPermission(purchasingUser, "transfer:stock")).resolves.toBeUndefined();
+      await expect(assertPermission(purchasingUser, "create:stock_count")).resolves.toBeUndefined();
+      await expect(assertPermission(purchasingUser, "adjust:stock")).rejects.toThrow("FORBIDDEN");
+      await expect(assertPermission(purchasingUser, "view:settings")).resolves.toBeUndefined();
+      await expect(assertPermission(purchasingUser, "manage:material_settings")).resolves.toBeUndefined();
+      await expect(assertPermission(purchasingUser, "manage:budget_settings")).rejects.toThrow("FORBIDDEN");
+      await expect(assertPermission(purchasingUser, "reconcile:ledger")).rejects.toThrow("FORBIDDEN");
+    });
+
+    it("harus membatasi PM agar hanya membaca inventory dan RAP tanpa mutasi stock global", async () => {
+      const pmUser = { id: "user-pm-id", roleId: "00000000-0000-0000-0000-000000000003" };
+
+      await expect(assertPermission(pmUser, "view:inventory")).resolves.toBeUndefined();
+      await expect(assertPermission(pmUser, "view:rap")).resolves.toBeUndefined();
+      await expect(assertPermission(pmUser, "reserve:stock")).rejects.toThrow("FORBIDDEN");
     });
   });
 });

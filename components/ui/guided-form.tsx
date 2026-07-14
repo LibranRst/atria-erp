@@ -1,0 +1,553 @@
+"use client";
+
+import React from "react";
+import { AnimatePresence, motion } from "framer-motion";
+
+import { BottomSheet } from "./bottom-sheet";
+import { cx } from "./form-control-utils";
+import type { FormRiskTone } from "./form-support";
+import { formatShortIdr } from "@/lib/utils/money";
+import {
+  transitionEaseSmooth,
+  transitionSpringSnappy,
+} from "@/lib/utils/motion";
+
+export type MicroStatusItem = {
+  readonly label: string;
+  readonly value?: string;
+  readonly amount?: number;
+  readonly tone?: FormRiskTone;
+};
+
+const dotClass: Record<FormRiskTone, string> = {
+  default: "bg-outline",
+  warning: "bg-warning",
+  danger: "bg-error",
+  success: "bg-primary",
+};
+
+const textClass: Record<FormRiskTone, string> = {
+  default: "text-on-surface-variant",
+  warning: "text-warning",
+  danger: "text-error",
+  success: "text-primary",
+};
+
+export function OperationalFormSheet({
+  open,
+  title,
+  children,
+  submitLabel,
+  submittingLabel,
+  pending,
+  disabled,
+  disabledReason,
+  statusText,
+  statusTone = "default",
+  statusItems,
+  review,
+  action,
+  error,
+  danger,
+  formId,
+  hideSubmit,
+  onClose,
+  onSubmit,
+}: {
+  readonly open: boolean;
+  readonly title: string;
+  readonly children: React.ReactNode;
+  readonly submitLabel: string;
+  readonly submittingLabel?: string;
+  readonly pending?: boolean;
+  readonly disabled?: boolean;
+  readonly disabledReason?: string;
+  readonly statusText?: string;
+  readonly statusTone?: FormRiskTone;
+  readonly statusItems?: readonly MicroStatusItem[];
+  readonly review?: React.ReactNode;
+  readonly action?: React.ReactNode;
+  readonly error?: React.ReactNode;
+  readonly danger?: boolean;
+  readonly formId?: string;
+  readonly hideSubmit?: boolean;
+  readonly onClose: () => void;
+  readonly onSubmit?: () => void;
+}): React.JSX.Element {
+  const submitAction = hideSubmit ? null : (
+    <motion.button
+      type={formId ? "submit" : "button"}
+      form={formId}
+      whileTap={{ scale: 0.97 }}
+      transition={transitionSpringSnappy}
+      disabled={pending || disabled}
+      onClick={formId ? undefined : onSubmit}
+      className={cx(
+        "min-h-12 w-full rounded-full px-5 text-sm font-bold text-white outline-none focus-visible:ring-2 disabled:opacity-45",
+        danger
+          ? "bg-error focus-visible:ring-error/30"
+          : "bg-primary focus-visible:ring-primary/30",
+      )}
+    >
+      {pending ? submittingLabel ?? "Memproses…" : submitLabel}
+    </motion.button>
+  );
+  const footerContent =
+    statusText || (statusItems && statusItems.length > 0) || review || disabledReason || submitAction ? (
+      <div className="space-y-2">
+        {statusText ? (
+          <p
+            className={cx(
+              "px-1 text-[11px] font-medium leading-4",
+              textClass[statusTone],
+            )}
+            role={statusTone === "danger" ? "alert" : "status"}
+          >
+            {statusText}
+          </p>
+        ) : statusItems && statusItems.length > 0 ? (
+          <MicroStatusDock items={statusItems} />
+        ) : review ? (
+          review
+        ) : null}
+        {disabledReason ? (
+          <p className="px-1 text-[10px] font-medium leading-4 text-on-surface-variant">
+            {disabledReason}
+          </p>
+        ) : null}
+        {submitAction}
+      </div>
+    ) : undefined;
+
+  return (
+    <BottomSheet
+      open={open}
+      title={title}
+      action={action}
+      onClose={onClose}
+      footer={footerContent}
+    >
+      <div className="space-y-4">
+        {error}
+        {children}
+      </div>
+    </BottomSheet>
+  );
+}
+
+export function FormDisclosure({
+  title,
+  description,
+  summary,
+  icon,
+  expanded,
+  onToggle,
+  children,
+}: {
+  readonly title: string;
+  readonly description?: string;
+  readonly summary?: string;
+  readonly icon?: React.ReactNode;
+  readonly expanded: boolean;
+  readonly onToggle: () => void;
+  readonly children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <section className="min-w-0 space-y-3">
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.98 }}
+        transition={transitionSpringSnappy}
+        onClick={onToggle}
+        className={cx(
+          "flex min-h-14 w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-left outline-none ring-1 focus-visible:ring-2 focus-visible:ring-primary/30",
+          expanded
+            ? "bg-primary/7 text-primary ring-primary/20"
+            : "bg-surface-container-low text-on-surface ring-outline-variant/15",
+        )}
+        aria-expanded={expanded}
+      >
+        {icon ? (
+          <span
+            className={cx(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+              expanded
+                ? "bg-primary text-on-primary"
+                : "bg-surface text-on-surface-variant",
+            )}
+            aria-hidden="true"
+          >
+            {icon}
+          </span>
+        ) : null}
+        <span className="min-w-0 flex-1">
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-xs font-bold leading-4">{title}</span>
+            {summary ? (
+              <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-[9px] font-bold text-on-surface-variant">
+                {summary}
+              </span>
+            ) : null}
+          </span>
+          {description ? (
+            <span className="mt-0.5 block truncate text-[10px] leading-4 text-on-surface-variant">
+              {description}
+            </span>
+          ) : null}
+        </span>
+        <motion.span
+          animate={{ rotate: expanded ? 180 : 0 }}
+          transition={transitionSpringSnappy}
+          className="material-symbols-outlined shrink-0 text-[20px] text-on-surface-variant"
+          aria-hidden="true"
+        >
+          expand_more
+        </motion.span>
+      </motion.button>
+      <AnimatePresence initial={false}>
+        {expanded ? (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={transitionEaseSmooth}
+            className="overflow-hidden"
+          >
+            {children}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </section>
+  );
+}
+
+export type CompactEditableItemStatus =
+  | "complete"
+  | "warning"
+  | "danger"
+  | "neutral";
+
+const compactStatusClass: Record<CompactEditableItemStatus, string> = {
+  complete: "bg-primary",
+  warning: "bg-warning",
+  danger: "bg-error",
+  neutral: "bg-outline",
+};
+
+export function CompactEditableItemRow({
+  status,
+  title,
+  meta,
+  value,
+  disabled = false,
+  onClick,
+}: {
+  readonly status: CompactEditableItemStatus;
+  readonly title: string;
+  readonly meta: string;
+  readonly value?: string;
+  readonly disabled?: boolean;
+  readonly onClick: () => void;
+}): React.JSX.Element {
+  const statusLabel =
+    status === "complete"
+      ? "Lengkap"
+      : status === "warning"
+        ? "Perlu diperiksa"
+        : status === "danger"
+          ? "Bermasalah"
+          : "Belum diisi";
+
+  return (
+    <motion.button
+      type="button"
+      layout
+      whileTap={{ scale: 0.985 }}
+      transition={transitionSpringSnappy}
+      disabled={disabled}
+      onClick={onClick}
+      className="flex min-h-16 w-full items-center gap-3 rounded-[22px] bg-surface-container-low/70 px-4 py-2.5 text-left outline-none ring-1 ring-outline-variant/15 focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-45"
+      aria-label={`${title}. ${statusLabel}. ${meta}`}
+    >
+      <span
+        className={cx("h-2.5 w-2.5 shrink-0 rounded-full", compactStatusClass[status])}
+        aria-hidden="true"
+      />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-xs font-bold leading-4 text-on-surface">
+          {title}
+        </span>
+        <span className="mt-0.5 block truncate text-[10px] leading-4 text-on-surface-variant">
+          {meta} · {statusLabel}
+        </span>
+      </span>
+      {value ? (
+        <span className="max-w-[36%] shrink-0 truncate text-right text-xs font-bold tabular-nums text-on-surface">
+          {value}
+        </span>
+      ) : null}
+      <span
+        className="material-symbols-outlined shrink-0 text-[18px] text-on-surface-variant"
+        aria-hidden="true"
+      >
+        chevron_right
+      </span>
+    </motion.button>
+  );
+}
+
+export function FormSection({
+  title,
+  helper,
+  action,
+  children,
+  className,
+}: {
+  readonly title: string;
+  readonly helper?: string;
+  readonly action?: React.ReactNode;
+  readonly children: React.ReactNode;
+  readonly className?: string;
+}): React.JSX.Element {
+  return (
+    <section className={cx("min-w-0 space-y-2.5", className)}>
+      <div className="flex min-w-0 items-end justify-between gap-3 px-1">
+        <div className="min-w-0">
+          <h3 className="truncate text-[10px] font-bold uppercase tracking-[0.11em] text-on-surface">
+            {title}
+          </h3>
+          {helper ? (
+            <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant">
+              {helper}
+            </p>
+          ) : null}
+        </div>
+        {action}
+      </div>
+      <div className="space-y-2.5">{children}</div>
+    </section>
+  );
+}
+
+export function MicroStatusDock({
+  items,
+}: {
+  readonly items: readonly MicroStatusItem[];
+}): React.JSX.Element {
+  const visibleItems = items.slice(0, 3);
+  return (
+    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-surface-container-low px-3 py-2 text-[10px] leading-4 ring-1 ring-outline-variant/10">
+      {visibleItems.map((item, index) => {
+        const tone = item.tone ?? "default";
+        const renderedValue =
+          typeof item.amount === "number" ? formatShortIdr(item.amount) : (item.value ?? "-");
+
+        return (
+          <span
+            key={`${item.label}-${index}`}
+            className="inline-flex min-w-0 max-w-full items-baseline gap-1.5"
+          >
+            <span
+              className={cx("h-1.5 w-1.5 shrink-0 self-center rounded-full", dotClass[tone])}
+              aria-hidden="true"
+            />
+            <span className="shrink-0 font-bold uppercase tracking-wide text-on-surface-variant">
+              {item.label}
+            </span>
+            <span className={cx("min-w-0 break-words font-semibold", textClass[tone])}>
+              {renderedValue}
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+export function FieldContextLine({
+  children,
+  tone = "default",
+}: {
+  readonly children: React.ReactNode;
+  readonly tone?: FormRiskTone;
+}): React.JSX.Element {
+  return (
+    <p className={cx("ml-1 min-w-0 text-[10px] font-medium leading-4", textClass[tone])}>
+      {children}
+    </p>
+  );
+}
+
+export function SmartDefaultHint({
+  children,
+}: {
+  readonly children: React.ReactNode;
+}): React.JSX.Element {
+  return <FieldContextLine tone="success">Default: {children}</FieldContextLine>;
+}
+
+export function InlineReviewStrip({
+  items,
+}: {
+  readonly items: readonly MicroStatusItem[];
+  readonly compact?: boolean;
+}): React.JSX.Element {
+  return <MicroStatusDock items={items} />;
+}
+
+export const GuidedFormSheet = OperationalFormSheet;
+export const GuidedFormSection = FormSection;
+
+export function WorkflowFormSheet({
+  open,
+  title,
+  children,
+  primaryLabel,
+  secondaryLabel,
+  pendingLabel = "Memproses…",
+  pending = false,
+  disabled = false,
+  secondaryDisabled = false,
+  disabledReason,
+  statusText,
+  statusTone = "default",
+  danger = false,
+  onClose,
+  onPrimary,
+  onSecondary,
+}: {
+  readonly open: boolean;
+  readonly title: string;
+  readonly children: React.ReactNode;
+  readonly primaryLabel: string;
+  readonly secondaryLabel?: string;
+  readonly pendingLabel?: string;
+  readonly pending?: boolean;
+  readonly disabled?: boolean;
+  readonly secondaryDisabled?: boolean;
+  readonly disabledReason?: string;
+  readonly statusText?: string;
+  readonly statusTone?: FormRiskTone;
+  readonly danger?: boolean;
+  readonly onClose: () => void;
+  readonly onPrimary: () => void;
+  readonly onSecondary?: () => void;
+}): React.JSX.Element {
+  const blocked = pending || disabled;
+
+  return (
+    <BottomSheet
+      open={open}
+      title={title}
+      onClose={onClose}
+      footer={
+        <div className="space-y-2">
+          {statusText ? (
+            <p
+              className={cx(
+                "px-1 text-[11px] font-medium leading-4",
+                textClass[statusTone],
+              )}
+              role={statusTone === "danger" ? "alert" : "status"}
+            >
+              {statusText}
+            </p>
+          ) : null}
+          {disabledReason ? (
+            <p className="px-1 text-[11px] leading-4 text-on-surface-variant">
+              {disabledReason}
+            </p>
+          ) : null}
+          <div className={cx("grid gap-2", secondaryLabel ? "grid-cols-[0.8fr_1.2fr]" : "grid-cols-1")}>
+            {secondaryLabel && onSecondary ? (
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                transition={transitionSpringSnappy}
+                onClick={onSecondary}
+                disabled={pending || secondaryDisabled}
+                className="min-h-12 rounded-full bg-surface-container px-5 text-sm font-bold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-45"
+              >
+                {secondaryLabel}
+              </motion.button>
+            ) : null}
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              onClick={onPrimary}
+              disabled={blocked}
+              className={cx(
+                "min-h-12 rounded-full px-5 text-sm font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-45",
+                danger ? "bg-error" : "bg-primary",
+              )}
+            >
+              {pending ? pendingLabel : primaryLabel}
+            </motion.button>
+          </div>
+        </div>
+      }
+    >
+      {children}
+    </BottomSheet>
+  );
+}
+
+export function OptionChoiceGroup<TValue extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  readonly label: string;
+  readonly value: TValue;
+  readonly options: readonly {
+    readonly value: TValue;
+    readonly label: string;
+    readonly description?: string;
+  }[];
+  readonly onChange: (value: TValue) => void;
+}): React.JSX.Element {
+  return (
+    <fieldset className="space-y-2">
+      <legend className="px-1 text-xs font-semibold text-on-surface">{label}</legend>
+      <div className="space-y-2">
+        {options.map((option) => {
+          const selected = option.value === value;
+          return (
+            <motion.button
+              key={option.value}
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              onClick={() => onChange(option.value)}
+              className={cx(
+                "flex min-h-12 w-full items-center gap-3 rounded-full px-5 text-left outline-none ring-1 focus-visible:ring-2 focus-visible:ring-primary/30",
+                selected
+                  ? "bg-primary/10 text-primary ring-primary/35"
+                  : "bg-surface-container-low text-on-surface ring-outline-variant/20",
+              )}
+              aria-pressed={selected}
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold leading-5">{option.label}</span>
+                {option.description ? (
+                  <span className="block truncate text-[11px] leading-4 text-on-surface-variant">
+                    {option.description}
+                  </span>
+                ) : null}
+              </span>
+              <span
+                className={cx(
+                  "h-4 w-4 shrink-0 rounded-full ring-2 ring-inset",
+                  selected ? "bg-primary ring-primary" : "ring-outline-variant",
+                )}
+                aria-hidden="true"
+              />
+            </motion.button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}

@@ -9,6 +9,7 @@ export type ActionResponse<T> =
         code:
           | "UNAUTHORIZED" // Tidak terautentikasi (sesi tidak valid)
           | "FORBIDDEN" // Tidak memiliki hak akses peran (RBAC check gagal)
+          | "CONFLICT" // Versi data berubah sejak terakhir dibaca
           | "VALIDATION_ERROR" // Input form tidak sesuai schema Zod
           | "INSUFFICIENT_FUNDS" // Saldo bank kurang untuk transaksi kas keluar
           | "TRANSACTION_FAILED" // Kegagalan di level database transaction / rollback

@@ -2,12 +2,21 @@
 
 import { db } from "@/db";
 import { projectBudget, projectBudgetItem, project } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
-import { auth } from "@/lib/auth";
-import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { assertProjectAccess, scopeProjectQuery } from "@/lib/auth/scoping";
+import { eq } from "drizzle-orm";
+import { assertPermission } from "@/lib/auth/permissions";
 import { ActionResponse } from "@/lib/types/action-response";
 import { createBudgetItemSchema, CreateBudgetItemInput } from "@/lib/validations/budget";
+import { getActiveProjectsForExpense as getActiveProjectsForExpenseRead } from "./budget-expense-options";
+import type { ProjectForExpense } from "./budget-types";
+import {
+  assertScopedProjectBudgetAccess,
+  createApprovalInvoicesIfNeededTx,
+  forbiddenResponse,
+  getBudgetActionSession,
+  internalServerErrorResponse,
+} from "./budget-utils";
+
+export type { ProjectForExpense } from "./budget-types";
 
 /**
  * Membuat draf anggaran (project_budget) baru untuk proyek tertentu.
@@ -19,26 +28,14 @@ export async function createProjectBudget(
   projectId: string
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
   try {
-    const session = await auth.api.getSession({
-      headers: {
-        cookie: (await (await import("next/headers")).cookies()).toString(),
-      },
-    });
-
-    if (!session || !session.user) {
-      return {
-        success: false,
-        error: { code: "UNAUTHORIZED", message: "Sesi tidak valid. Harap login kembali." },
-      };
-    }
+    const sessionResult = await getBudgetActionSession("Sesi tidak valid. Harap login kembali.");
+    if (!sessionResult.success) return sessionResult;
+    const { user, roleName } = sessionResult.data;
 
     try {
-      await assertPermission(session.user, "create:budget");
+      await assertPermission(user, "create:budget");
     } catch (err) {
-      return {
-        success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
-      };
+      return forbiddenResponse(err instanceof Error ? err.message : "Akses ditolak.");
     }
 
     // Validasi proyek ada di database
@@ -55,13 +52,9 @@ export async function createProjectBudget(
 
     // Scoping check untuk PM
     try {
-      const userRoleName = await resolveRoleName(session.user.roleId);
-      await assertProjectAccess(projectId, session.user.id, userRoleName);
+      await assertScopedProjectBudgetAccess(projectId, user, roleName);
     } catch (err) {
-      return {
-        success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
-      };
+      return forbiddenResponse(err instanceof Error ? err.message : "Akses ditolak.");
     }
 
     // Cek apakah anggaran proyek ini sudah pernah dibuat sebelumnya
@@ -91,13 +84,7 @@ export async function createProjectBudget(
       data: newBudget,
     };
   } catch (error) {
-    return {
-      success: false,
-      error: {
-        code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan internal pada server.",
-      },
-    };
+    return internalServerErrorResponse(error);
   }
 }
 
@@ -123,26 +110,14 @@ export async function createBudgetItem(
   const allocatedAmount = quantity * unitPrice;
 
   try {
-    const session = await auth.api.getSession({
-      headers: {
-        cookie: (await (await import("next/headers")).cookies()).toString(),
-      },
-    });
-
-    if (!session || !session.user) {
-      return {
-        success: false,
-        error: { code: "UNAUTHORIZED", message: "Sesi tidak valid. Harap login kembali." },
-      };
-    }
+    const sessionResult = await getBudgetActionSession("Sesi tidak valid. Harap login kembali.");
+    if (!sessionResult.success) return sessionResult;
+    const { user, roleName } = sessionResult.data;
 
     try {
-      await assertPermission(session.user, "create:budget");
+      await assertPermission(user, "create:budget");
     } catch (err) {
-      return {
-        success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
-      };
+      return forbiddenResponse(err instanceof Error ? err.message : "Akses ditolak.");
     }
 
     const budgetHeader = await db.query.projectBudget.findFirst({
@@ -158,13 +133,9 @@ export async function createBudgetItem(
 
     // Scoping check untuk PM
     try {
-      const userRoleName = await resolveRoleName(session.user.roleId);
-      await assertProjectAccess(budgetHeader.projectId, session.user.id, userRoleName);
+      await assertScopedProjectBudgetAccess(budgetHeader.projectId, user, roleName);
     } catch (err) {
-      return {
-        success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
-      };
+      return forbiddenResponse(err instanceof Error ? err.message : "Akses ditolak.");
     }
 
     // Pembatasan mutasi item anggaran berdasarkan status budget
@@ -200,13 +171,7 @@ export async function createBudgetItem(
       data: newItem,
     };
   } catch (error) {
-    return {
-      success: false,
-      error: {
-        code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan internal pada server.",
-      },
-    };
+    return internalServerErrorResponse(error);
   }
 }
 
@@ -221,26 +186,14 @@ export async function submitBudgetForApproval(
   projectBudgetId: string
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
   try {
-    const session = await auth.api.getSession({
-      headers: {
-        cookie: (await (await import("next/headers")).cookies()).toString(),
-      },
-    });
-
-    if (!session || !session.user) {
-      return {
-        success: false,
-        error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." },
-      };
-    }
+    const sessionResult = await getBudgetActionSession("Sesi tidak valid.");
+    if (!sessionResult.success) return sessionResult;
+    const { user, roleName } = sessionResult.data;
 
     try {
-      await assertPermission(session.user, "create:budget");
+      await assertPermission(user, "create:budget");
     } catch (err) {
-      return {
-        success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
-      };
+      return forbiddenResponse(err instanceof Error ? err.message : "Akses ditolak.");
     }
 
     const budget = await db.query.projectBudget.findFirst({
@@ -256,13 +209,9 @@ export async function submitBudgetForApproval(
 
     // Scoping check untuk PM
     try {
-      const userRoleName = await resolveRoleName(session.user.roleId);
-      await assertProjectAccess(budget.projectId, session.user.id, userRoleName);
+      await assertScopedProjectBudgetAccess(budget.projectId, user, roleName);
     } catch (err) {
-      return {
-        success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
-      };
+      return forbiddenResponse(err instanceof Error ? err.message : "Akses ditolak.");
     }
 
     if (budget.status !== "DRAFT" && budget.status !== "REJECTED") {
@@ -286,13 +235,7 @@ export async function submitBudgetForApproval(
       data: updatedBudget,
     };
   } catch (error) {
-    return {
-      success: false,
-      error: {
-        code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan internal pada server.",
-      },
-    };
+    return internalServerErrorResponse(error);
   }
 }
 
@@ -307,26 +250,14 @@ export async function approveBudget(
   projectBudgetId: string
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
   try {
-    const session = await auth.api.getSession({
-      headers: {
-        cookie: (await (await import("next/headers")).cookies()).toString(),
-      },
-    });
-
-    if (!session || !session.user) {
-      return {
-        success: false,
-        error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." },
-      };
-    }
+    const sessionResult = await getBudgetActionSession("Sesi tidak valid.");
+    if (!sessionResult.success) return sessionResult;
+    const { user } = sessionResult.data;
 
     try {
-      await assertPermission(session.user, "approve:budget");
+      await assertPermission(user, "approve:budget");
     } catch (err) {
-      return {
-        success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
-      };
+      return forbiddenResponse(err instanceof Error ? err.message : "Akses ditolak.");
     }
 
     const budget = await db.query.projectBudget.findFirst({
@@ -347,29 +278,32 @@ export async function approveBudget(
       };
     }
 
-    const [updatedBudget] = await db
-      .update(projectBudget)
-      .set({
-        status: "APPROVED",
-        approvedById: session.user.id,
-        approvedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(projectBudget.id, projectBudgetId))
-      .returning();
+    const updatedBudget = await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(projectBudget)
+        .set({
+          status: "APPROVED",
+          approvedById: user.id,
+          approvedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(projectBudget.id, projectBudgetId))
+        .returning();
+
+      await createApprovalInvoicesIfNeededTx(tx, {
+        projectId: budget.projectId,
+        userId: user.id,
+      });
+
+      return updated;
+    });
 
     return {
       success: true,
       data: updatedBudget,
     };
   } catch (error) {
-    return {
-      success: false,
-      error: {
-        code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan internal pada server.",
-      },
-    };
+    return internalServerErrorResponse(error);
   }
 }
 
@@ -386,26 +320,14 @@ export async function rejectBudget(
   notes: string
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
   try {
-    const session = await auth.api.getSession({
-      headers: {
-        cookie: (await (await import("next/headers")).cookies()).toString(),
-      },
-    });
-
-    if (!session || !session.user) {
-      return {
-        success: false,
-        error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." },
-      };
-    }
+    const sessionResult = await getBudgetActionSession("Sesi tidak valid.");
+    if (!sessionResult.success) return sessionResult;
+    const { user } = sessionResult.data;
 
     try {
-      await assertPermission(session.user, "approve:budget");
+      await assertPermission(user, "approve:budget");
     } catch (err) {
-      return {
-        success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
-      };
+      return forbiddenResponse(err instanceof Error ? err.message : "Akses ditolak.");
     }
 
     const budget = await db.query.projectBudget.findFirst({
@@ -441,66 +363,13 @@ export async function rejectBudget(
       data: updatedBudget,
     };
   } catch (error) {
-    return {
-      success: false,
-      error: {
-        code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan internal pada server.",
-      },
-    };
+    return internalServerErrorResponse(error);
   }
 }
 
 /**
  * Kueri proyek aktif yang dapat diakses oleh pengguna saat ini untuk form pengeluaran.
  */
-export async function getActiveProjectsForExpense(): Promise<ActionResponse<any[]>> {
-  try {
-    const session = await auth.api.getSession({
-      headers: {
-        cookie: (await (await import("next/headers")).cookies()).toString(),
-      },
-    });
-
-    if (!session || !session.user) {
-      return {
-        success: false,
-        error: { code: "UNAUTHORIZED", message: "Sesi tidak valid. Harap login kembali." },
-      };
-    }
-
-    const roleName = await resolveRoleName(session.user.roleId);
-    const projectFilter = scopeProjectQuery(session.user.id, roleName);
-
-    const projectsData = await db.query.project.findMany({
-      where: projectFilter 
-        ? and(eq(project.status, "ACTIVE"), projectFilter)
-        : eq(project.status, "ACTIVE"),
-      with: {
-        budget: {
-          with: {
-            items: {
-              with: {
-                costCategory: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return {
-      success: true,
-      data: JSON.parse(JSON.stringify(projectsData)), // Ensure plain objects for RSC serialization compatibility
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: {
-        code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan server saat mengambil data proyek.",
-      },
-    };
-  }
+export async function getActiveProjectsForExpense(): Promise<ActionResponse<ProjectForExpense[]>> {
+  return getActiveProjectsForExpenseRead();
 }
-

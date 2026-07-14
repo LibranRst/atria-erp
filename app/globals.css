@@ -4,11 +4,13 @@
     --background: #fcf9f8;
     --foreground: #1c1b1b;
 
-    /* Theme colors from designer HTML */
-    --primary: #00535b;
+    /* Monochrome-first iOS-inspired direction */
+    --primary: #111111;
     --on-primary: #ffffff;
-    --primary-container: #006d77;
-    --on-primary-container: #9becf7;
+    --primary-container: #242424;
+    --on-primary-container: #f7f7f7;
+    --deep-teal: #00535b;
+    --deep-teal-soft: #e5f4f3;
 
     --secondary: #5e5e5b;
     --on-secondary: #ffffff;
@@ -38,6 +40,18 @@
 
     --outline: #6f797a;
     --outline-variant: #bec8ca;
+
+    --border: #dedede;
+    --elevated: #ffffff;
+    --muted: #6f6f6f;
+    --text-primary: #111111;
+    --primary-light: #f1f1f1;
+    --success: #0f766e;
+    --success-light: #e6f4f1;
+    --warning: #9a5b00;
+    --warning-light: #fff4dd;
+    --critical: #b42318;
+    --critical-light: #fff0ed;
 }
 
 @theme {
@@ -47,6 +61,8 @@
     --color-on-primary: var(--on-primary);
     --color-primary-container: var(--primary-container);
     --color-on-primary-container: var(--on-primary-container);
+    --color-deep-teal: var(--deep-teal);
+    --color-deep-teal-soft: var(--deep-teal-soft);
     --color-secondary: var(--secondary);
     --color-on-secondary: var(--on-secondary);
     --color-secondary-container: var(--secondary-container);
@@ -70,6 +86,17 @@
     --color-surface-container-highest: var(--surface-container-highest);
     --color-outline: var(--outline);
     --color-outline-variant: var(--outline-variant);
+    --color-border: var(--border);
+    --color-elevated: var(--elevated);
+    --color-muted: var(--muted);
+    --color-text-primary: var(--text-primary);
+    --color-primary-light: var(--primary-light);
+    --color-success: var(--success);
+    --color-success-light: var(--success-light);
+    --color-warning: var(--warning);
+    --color-warning-light: var(--warning-light);
+    --color-critical: var(--critical);
+    --color-critical-light: var(--critical-light);
 
     /* Spacing Configuration */
     --spacing-base: 4px;
@@ -105,6 +132,7 @@ body {
     background-color: #fcf9f8;
     color: var(--color-on-surface);
     -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
 }
 
 @layer base {
@@ -120,8 +148,10 @@ body {
 /* Custom Styles from Reference Design */
 .premium-card {
     background-color: #ffffff;
-    box-shadow: 0px 4px 20px rgba(26, 26, 26, 0.04);
-    border-radius: 1rem;
+    box-shadow: 0 14px 34px rgba(17, 17, 17, 0.045);
+    border: 1px solid
+        color-mix(in srgb, var(--outline-variant) 20%, transparent);
+    border-radius: 28px;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -133,9 +163,63 @@ body {
     scrollbar-width: none !important; /* Firefox */
 }
 
-
 /* Financial numeral amount formatting helper */
 .financial-amount {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.money-value-dynamic--sm {
+    container-type: inline-size;
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.money-value-dynamic__text {
+    font-size: clamp(
+        var(--money-value-min),
+        var(--money-value-fluid),
+        var(--money-value-max)
+    );
+    line-height: 1.12;
+    overflow-wrap: normal;
+    word-break: keep-all;
+}
+
+.money-value-dynamic--sm {
+    --money-value-min: 0.75rem;
+    --money-value-fluid: 9cqw;
+    --money-value-max: 0.95rem;
+}
+
+.money-value-dynamic--md {
+    --money-value-min: 0.85rem;
+    --money-value-fluid: 9.5cqw;
+    --money-value-max: 1.15rem;
+}
+
+.money-value-dynamic--lg {
+    --money-value-min: 0.95rem;
+    --money-value-fluid: 10cqw;
+    --money-value-max: 1.5rem;
+}
+
+.money-value-dynamic--hero {
+    --money-value-min: 1.05rem;
+    --money-value-fluid: 9.5cqw;
+    --money-value-max: 1.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
 }

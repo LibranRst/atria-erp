@@ -1,102 +1,105 @@
-# MVP Blueprint - Atria ERP
+# MVP Blueprint - Project Finance & Material Control
 
-## 1. Janji Inti MVP (Core Promise)
-MVP Atria ERP menjanjikan: **"Transparansi Keuangan Proyek Secara Real-Time dari Genggaman Tangan."**
+## 1. Core Promise
+MVP Atria ERP helps Dekoria control project budget, expense categories, budget usage, remaining budget, material needs, stock availability, purchase requirements, actual spending, vendor bills, and margin risk in one mobile-first internal system.
 
-Sistem ini dirancang untuk menghentikan kebocoran uang kas perusahaan di lapangan dengan menerapkan satu alur transaksi terintegrasi: pengajuan instan dari Project Manager, verifikasi cepat oleh Admin, persetujuan aman dari Owner, dan pencatatan otomatis pada buku besar keuangan (`cash_transaction` ledger) yang terhubung ke `project_budget_item`.
+The promise is: **Project Budget Control upgraded into a real ERP with material stock visibility.**
 
----
+The MVP preserves the familiar workflow:
 
-## 2. Modul MVP & Skala Prioritas (MVP Modules & Priorities)
+`Project Budget Setup -> Expense Tracker by Category -> Budget Dashboard -> Category Usage -> Remaining Budget -> Margin Visibility`
 
-Untuk memastikan rilis yang cepat namun stabil, pengembangan dibagi menjadi 4 modul prioritas utama:
+and adds material control:
 
-```mermaid
-graph TD
-    M1[Modul 1: Core Ledger & Bank Account] --> M2[Modul 2: Project Budget & Profitability]
-    M2 --> M3[Modul 3: Approval Flow & Field Requests]
-    M3 --> M4[Modul 4: Gemini OCR AI Integration]
-```
+`Material category -> RAP / Material Plan -> Inventory Check -> Purchase Need -> Stock Movement -> Material Budget and Margin Risk`
 
-### Modul 1: Core Ledger & Bank Account (Prioritas 1)
-*   **Tujuan:** Membangun fondasi pencatatan kas keluar-masuk perusahaan.
-*   **Tabel Database Terkait:** `bank_account`, `cash_transaction`, `audit_log`.
-*   **Fitur Utama:**
-    *   Dashboard saldo akumulatif seluruh rekening bank perusahaan.
-    *   Pencatatan kas masuk (debit) dari pembayaran klien.
-    *   Pencatatan kas keluar (credit) untuk biaya operasional kantor.
-    *   Halaman rekonsiliasi manual mutasi rekening koran bank dengan entri sistem.
+## 2. MVP Modules
 
-### Modul 2: Project Budget & Profitability (Prioritas 2)
-*   **Tujuan:** Mengaitkan setiap rupiah transaksi kas dengan proyek tertentu untuk memantau untung-rugi.
-*   **Tabel Database Terkait:** `project`, `project_budget_item`.
-*   **Fitur Utama:**
-    *   Pembuatan profil proyek baru dan penunjukan Project Manager (PM) penanggung jawab.
-    *   Input rencana anggaran belanja (RAB) proyek per kategori (`project_budget_item`).
-    *   Grafik pembanding antara rencana anggaran vs realisasi pengeluaran riil di lapangan.
-    *   Dashboard laba/rugi kotor (*Gross Profit*) proyek yang terupdate otomatis.
+### Module 1: Existing Finance Spine
+- Preserve bank accounts, cash ledger, audit logs, project costs, client payments, vendor bills, approvals, and AI OCR.
+- Keep all balance-changing actions inside transactions through the existing balance mutation helper.
 
-### Modul 3: Approval Flow & Field Requests (Prioritas 3)
-*   **Tujuan:** Mengatur alur birokrasi pengeluaran dana proyek dari lapangan secara digital.
-*   **Tabel Database Terkait:** `field_request` (menyimpan data pengajuan *cash advance* / *reimbursement*).
-*   **Fitur Utama:**
-    *   Halaman mobile khusus PM untuk mengajukan dana lapangan dengan mengunggah struk/nota.
-    *   State-machine status pengajuan: `SUBMITTED` -> `VERIFIED` -> `APPROVED` -> `PAID`.
-    *   Sistem otorisasi Server Actions: PM mengajukan, Admin memverifikasi nominal, Owner menyetujui pembayaran, Admin menandai sebagai lunas (`PAID`).
+### Module 2: Project Budget Setup
+- Uses Settings defaults seeded from the current budget workflow: 90% internal budget cap; Tukang 18%, Material 35%, Operasional 1%, Lain-lain 0.5%, and Subcon 0% of Internal Budget. The remaining 45.5% is Unallocated Buffer, not gross margin.
+- Owner/finance can override ratios or allocated amounts per project.
+- This is internal budget control, not the client-facing RAB.
 
-### Modul 4: Gemini OCR AI Integration (Prioritas 4)
-*   **Tujuan:** Mempercepat proses input data pengeluaran PM di lapangan dan mengurangi kesalahan pengetikan manual.
-*   **Teknologi Terkait:** Gemini AI API (model Gemini Pro Vision / Gemini 1.5 Flash).
-*   **Fitur Utama:**
-    *   PM cukup mengambil foto kuitansi/nota toko bangunan dari kamera ponsel.
-    *   Gemini AI mengekstrak teks, tanggal, nama vendor, dan total biaya secara asinkron.
-    *   Hasil ekstraksi otomatis mengisi formulir `field_request`, PM hanya perlu melakukan review singkat sebelum menekan tombol kirim.
+### Module 2B: Settings Source of Truth
+- Dedicated Settings area manages Budget Allocation defaults, Expense Categories, Item & Price Library, and Material Master.
+- Budget settings feed new Project Budget creation.
+- Expense categories feed budget, expense tracker, dashboards, reports, and AI.
+- Item & Price Library stores traceable cost components and margin/provenance, then copies immutable snapshots into RAP material items, Tukang/Subcon packages, and quotation lines.
+- Material Master settings feed stock/inventory readiness and material selection.
+- Settings defaults affect newly created project budgets only. Existing project allocations remain unchanged.
 
----
+### Module 3: Expense Tracker by Category
+- Required category: Material, Tukang, Operasional, Lain-lain, or Subcon.
+- Non-material expenses stay fast and simple.
+- Material expenses can progressively link to RAP/material/stock movement.
+- Tukang expenses can optionally link to Work Packages.
+- Subcon expenses/vendor bills can optionally link to Subcon Packages.
+- Operasional and Lain-lain stay quick and simple.
 
-## 3. Nilai Berdasarkan Peran (Role-Based Value)
+### Module 4: Budget Dashboard
+- Category cards show allocated budget, actual spend, remaining budget, used percentage, and risk status.
+- Dashboard shows total project value, total budget, consumed budget, remaining budget, projected margin, overbudget projects, and near-limit categories.
 
-*   **Bagi Owner (Pemilik Perusahaan):**
-    *   Menghilangkan ketergantungan pada laporan Excel manual mingguan dari tim keuangan.
-    *   Mencegah kerugian proyek sebelum terlambat melalui sistem approval mutasi kas bernilai besar langsung dari HP.
-*   **Bagi Admin (Finance/Bookkeeper):**
-    *   Mengurangi beban administrasi karena data transaksi awal diinput langsung oleh PM dari lapangan.
-    *   Proses rekonsiliasi bank harian yang cepat berkat nomor referensi transaksi yang konsisten di sistem.
-*   **Bagi Project Manager (PM):**
-    *   Proses pencairan dana operasional lapangan menjadi lebih cepat karena alur approval yang terdigitalisasi.
-    *   Melihat sisa anggaran kategori proyek sebelum membeli material untuk menghindari teguran over-budget.
+### Module 5: RAP / Material Plan
+- Internal execution plan per project.
+- Tracks material need by area/room, required quantity, buffer, total needed, estimated cost, source, and status.
+- Locked RAP becomes the cost baseline.
+- Locked RAP/package and approved RAB revisions are immutable; formal Change Order approval supersedes the prior baseline and recalculates contract/budget atomically.
 
----
+### Module 5B: Tukang/Subcon Packages
+- Tukang uses lightweight Work Packages for labor/scope estimates.
+- Subcon uses lightweight Vendor/Subcon Packages for vendor scopes.
+- These packages track estimated cost, actual linked spend, and variance without stock behavior.
 
-## 4. Alur Kerja Harian (Daily Workflows)
+### Module 6: Material Master & Inventory
+- Material master stores category, name, specification, brand/code/color, unit, default vendor, and active flag.
+- Inventory stores current, reserved, available, minimum/buffer stock, location, average cost, and last purchase price.
+- Goods Receipt is the physical stock-in event and remains separate from vendor payment.
+- Stock usage/return is recognized in profitability at average cost even when no current-period cash moves.
 
-### A. Alur Kerja Harian Owner (Owner Daily Workflow)
-1.  **Pagi Hari (Monitoring):** Buka aplikasi melalui ponsel, memantau total saldo kas di `bank_account` dan melihat grafik P&L proyek yang sedang berjalan.
-2.  **Siang & Sore Hari (Approval):** Membuka menu pending approvals untuk memeriksa pengajuan dana lapangan (`field_request`) dengan status `VERIFIED`. Owner menyetujui transaksi penting dengan menekan tombol *Approve* (memanggil Server Action untuk mengubah status pengajuan menjadi `APPROVED`).
+### Module 7: Closing & Final Profitability
+- Completion is blocked by unpaid/mismatched client invoices, outstanding vendor bills/payments/expenses, open RAB or Change Order, unresolved stock reservations, or unsynchronized budget.
+- Successful closing writes a final snapshot with realized margin and cash position as separate values.
 
-### B. Alur Kerja Harian Admin (Admin Daily Workflow)
-1.  **Penerimaan Pengajuan:** Memeriksa daftar `field_request` baru yang masuk dari PM lapangan (status `SUBMITTED`).
-2.  **Verifikasi Dokumen:** Memeriksa kesesuaian nominal pada form pengajuan dengan foto nota/struk yang diunggah. Jika sesuai, ubah status menjadi `VERIFIED`.
-3.  **Pembayaran (Disbursement):** Setelah pengajuan berstatus `APPROVED` oleh Owner, Admin melakukan transfer bank riil ke rekening vendor/PM, lalu mencatatnya sebagai transaksi kas keluar di `cash_transaction` dan mengubah status request menjadi `PAID`.
-4.  **Rekonsiliasi Sore Hari:** Mengunggah mutasi rekening koran harian dan melakukan pencocokan (*matching*) dengan `cash_transaction` di ledger sistem.
+### Module 7: Stock Movement
+- Supports `STOCK_IN`, `STOCK_OUT`, `RESERVE`, `USE`, `RETURN`, `TRANSFER`, `ADJUSTMENT`, and `WASTE`.
+- Movements can link to project, RAP item, material, vendor bill, expense, and actor.
+- Stock-changing actions must write audit logs.
 
-### C. Alur Kerja Harian Project Manager (PM Daily Workflow)
-1.  **Beli Material / Sewa Jasa:** PM memesan material di lapangan (misal: paku atau sewa tangga lipat) dan membayar menggunakan kas bon atau uang pribadi untuk *reimbursement*.
-2.  **Input Pengeluaran Real-Time:** PM memotret struk belanja menggunakan kamera HP di aplikasi, menekan tombol *Scan receipt via Gemini AI*, lalu memilih kategori anggaran proyek (`project_budget_item_id`) yang sesuai.
-3.  **Kirim Pengajuan:** PM memverifikasi keakuratan nominal hasil scan Gemini, lalu menekan tombol *Submit*. PM dapat melanjutkan pekerjaan lapangan sementara memantau progres persetujuan dana di saku celana mereka.
+### Module 8: Vendor Purchase Tracking
+- Vendor bills connect to project and budget category.
+- Material vendor bills can link to material/RAP when relevant.
+- Vendor bills can represent material purchases or payable commitments.
 
----
+### Module 9: Client-Safe RAB Estimate
+- RAB can be generated from selected RAP Material items, Tukang Work Packages, Subcon Packages, and manual client-safe lines.
+- Generated rows must be editable before sending to client.
+- Client preview never exposes internal cost, margin, markup, vendor notes, or internal notes.
 
-## 5. Kriteria Peluncuran MVP (Launch Criteria)
+### Module 10: Owner Dashboard & AI Brief
+- Owner sees budget condition, category usage, actual cost, remaining budget, material shortage, leftover/reusable stock, vendor bills due, margin risk, and urgent actions.
+- AI writes simple Bahasa Indonesia summaries and suggestions, but does not mutate data.
 
-Sebelum MVP Atria ERP dirilis untuk penggunaan internal perusahaan secara resmi, kriteria berikut wajib dipenuhi:
+## 3. Role-Based Value
+- Owner: 30-second view of project value, category budget usage, finance/material health, margin risk, and urgent approvals.
+- Finance/Admin: project budget setup, category expense input, vendor bills, payment status, receipt proof, and dashboard control.
+- Purchasing/Material: material needs, stock availability, reservations, stock movement, shortages, and leftover handling.
+- Project Team: project material readiness, shortage, reserved, waiting purchase, and used/leftover status.
 
-### Kesiapan Fungsional (Functional Readiness)
-1.  **Satu Alur Transaksi Sempurna (Perfect Happy Path):** Alur `field_request` dari input nota PM -> verifikasi Admin -> approval Owner -> pembayaran Admin -> pemotongan saldo `bank_account` -> pencatatan log `cash_transaction` berjalan 100% tanpa ada kegagalan status database.
-2.  **Akurasi Gemini OCR:** Tingkat keberhasilan Gemini AI membaca nominal total belanja pada nota fisik berbahasa Indonesia (baik ketikan komputer maupun tulisan tangan rapi) mencapai minimal **90%** dalam kondisi pencahayaan yang cukup di lapangan.
-3.  **Role Validation:** Pengujian penetrasi internal memastikan PM dari Proyek A sama sekali tidak memiliki akses API/Server Actions untuk membaca anggaran atau menginput transaksi ke Proyek B.
+## 4. Daily Workflows
+- Owner opens Dashboard, reads category usage cards, approves payments or budget exceptions, and reviews AI Finance & Material Brief.
+- Finance/Admin records expenses by category, verifies payment status, links material/RAP only when relevant, and watches budget/margin risk.
+- Purchasing checks Need to Buy, reserves available stock, records stock in from purchases, marks stock used, and returns leftover material.
+- PM checks project material readiness and inputs field expenses without filling unnecessary material details when the expense is operational.
 
-### Kesiapan Performa & Keamanan (Performance & Security Readiness)
-1.  **Load Time Mobile:** Waktu muat halaman dashboard utama dan form pengajuan dana pada perangkat mobile tidak melebihi **2.5 detik** menggunakan jaringan seluler 4G LTE standar.
-2.  **Database Transaction Rollback:** Teruji secara teknis bahwa jika proses pembaruan saldo bank gagal di tengah jalan, seluruh transaksi kas terkait dibatalkan (*rolled back*) tanpa meninggalkan data gantung.
-3.  **Zero Raw SQL:** Audit kode codebase memastikan tidak ada kode SQL mentah yang digunakan di luar script migrasi Drizzle.
+## 5. Launch Criteria
+- Project Budget Setup, Settings, Expense Tracker by Category, Budget Dashboard, RAP, Material Master, Inventory, Stock Movement, Vendor Bills, RAB Estimate, and AI Brief have usable MVP screens.
+- Category budget cards show allocated, actual, remaining, used percentage, and risk badge.
+- Stock movement math is tested for reserve/use/return/adjustment/waste.
+- Existing finance tests remain green.
+- Lint/build are clean.
+- RAB preview is verified to hide internal cost and margin fields.

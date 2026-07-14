@@ -1,148 +1,80 @@
 # Atria ERP
 
-Atria ERP is a finance-first, mobile-first internal Enterprise Resource Planning (ERP) web application specifically engineered for interior design & build companies. The application is designed to prevent budget leaks, streamline project cash flow tracking, and automate bookkeeping in real-time, straight from the field.
+Atria ERP is Dekoria's internal Project Finance & Material Control System for interior design and build projects. It preserves the team's familiar project-budget workflow of Project Budget Setup -> Expense Tracker by Category -> Budget Control Dashboard -> Category Usage -> Remaining Budget -> Project Margin, then upgrades it with RAP material planning, inventory visibility, stock movement, vendor bill tracking, project profitability, and owner-friendly AI briefs.
 
----
+The product promise is: **Project Budget Control upgraded into a real ERP with material stock visibility.** The workbook remains source material for ratios and habits, but user-facing screens should not be labeled as Excel.
 
-## 🚀 Core Philosophy
+The product is practical by design. It is not a full accounting suite, not a generic project management tool, not just a prettier spreadsheet, and not a complex warehouse/manufacturing system. Its job is to help Dekoria see where project budget, category spending, materials, and margin are going before leaks become expensive surprises.
 
-### 1. Finance-First
-Unlike traditional ERPs that start with HR or inventory, Atria ERP centers entirely on the **general ledger, project budgeting, and real-time cash flow**. Every operational activity (materials purchase, subcontractor payment, client invoicing) is recorded as a financial transaction. The company's true financial health is updated instantly.
+## Product Focus
+- Project Budget: ERP budget setup by category with contract value, internal budget, consumed budget, pending review, paid amount, remaining budget, used percentage, target gross, and projected margin.
+- Settings: source of truth for Budget Allocation defaults, Expense Categories, Item & Price Library, and Material Master settings.
+- Expense Categories: Material, Tukang, Operasional, Lain-lain, and Subcon are first-class budget controls.
+- Expense Tracker: actual money spent by project and category, with quick mobile entry and optional vendor/receipt/payment context.
+- Budget Dashboard: owner-readable category cards with allocated budget, actual spend, remaining budget, used percentage, and risk badge.
+- RAP: internal execution and material plan. Locked RAP becomes the cost baseline.
+- Tukang Work Packages: lightweight internal labor/scope packages linked to Tukang expenses.
+- Subcon Packages: lightweight vendor/subcon scope packages linked to Subcon vendor bills or expenses.
+- Material Master: structured material names, specs, units, category, brand/code, and vendor context.
+- Stock Inventory: current, reserved, available, buffer/minimum, location, and valuation context.
+- Stock Movement: stock in, stock out, reserve, use, return, transfer, adjustment, and waste.
+- Vendor Bills / Purchase Tracking: payable and purchase records connected to vendor, project, budget, and material when relevant.
+- RAB: client-facing estimate generated from selected RAP Material items, Tukang packages, Subcon packages, and manual client-safe lines when useful, but editable and safe from internal cost/margin exposure.
+- Owner Dashboard and AI Brief: simple Bahasa Indonesia summaries of category budget usage, margin risk, material shortage, leftover opportunity, due bills, and suggested actions.
 
-### 2. Mobile-First (iOS 26 Solid UI/UX)
-Construction and interior design projects happen on-site, not at desks. Atria ERP is optimized for mobile WebViews and mobile browsers, utilizing a bottom navigation bar, card-based layouts, and touch-optimized interfaces. Project Managers (PMs) can request funds, upload receipts, and log expenses directly from their mobile phones while on-site.
+## Preserved Foundations
+The existing app already includes valuable foundations and should not be rewritten blindly:
+- Better Auth, RBAC, project scoping, and role permissions.
+- Drizzle/PostgreSQL schema, migrations, and seed workflow.
+- Project budgets, project costs, vendor bills, client invoices, payments, ledger, and audit logs.
+- Existing budget item and project cost tables remain during migration while canonical project budget/category tables are introduced.
+- Transactional bank balance mutation helper.
+- Mobile shell, bottom navigation, expense drawer, project detail, expenses, approvals, and ledger/dashboard screens.
+- Gemini OCR and daily AI briefing architecture.
 
----
+## Tech Stack
+- Runtime and package manager: Bun
+- Framework: Next.js App Router
+- Language: TypeScript
+- Database: PostgreSQL / Neon
+- ORM: Drizzle ORM
+- Authentication: Better Auth
+- Styling: Tailwind CSS with project CSS tokens
+- AI: Google Gemini via `@google/genai`
 
-## 🛠 Tech Stack
+## Documentation Map
+- `docs/01-product/PRD.md`: product direction and acceptance criteria.
+- `docs/02-product/MVP_BLUEPRINT.md`: MVP modules and role workflows.
+- `docs/03-flows/FLOWS.md`: finance/material operational flows.
+- `docs/04-data/DATABASE_SCHEMA.md`: database model and relationships.
+- `docs/04-data/STATUS_ENUMS.md`: status and movement enums.
+- `docs/05-ui-ux/MOBILE_FIRST_UI_UX.md`: mobile-first screen guidance.
+- `docs/05-ui-ux/IOS26_SOLID_DESIGN_SYSTEM.md`: visual system.
+- `docs/06-technical/AUTH_AND_PERMISSION.md`: RBAC model.
+- `docs/06-technical/API_ACTIONS.md`: Server Action contracts.
+- `docs/06-technical/AI_AGENT_ARCHITECTURE.md`: AI guardrails and brief design.
+- `docs/07-development/ROADMAP.md`: phased roadmap.
+- `docs/07-development/TASK_BREAKDOWN.md`: implementation task breakdown.
+- `docs/07-development/IMPLEMENTATION_ORDER.md`: build and verification order.
 
-The application is built using a modern, fast, and type-safe JavaScript/TypeScript ecosystem:
-
-*   **Runtime & Package Manager:** [Bun](https://bun.sh/) (for ultra-fast package install, script running, and testing)
-*   **Frontend & Framework:** [Next.js 15+ App Router](https://nextjs.org/) (React Server Components, Server Actions)
-*   **Language:** [TypeScript](https://www.typescriptlang.org/) (Strict type-safety across database, business logic, and UI)
-*   **Database:** [Neon PostgreSQL](https://neon.tech/) (Serverless Postgres with instant branching and scaling)
-*   **ORM:** [Drizzle ORM](https://orm.drizzle.team/) (Type-safe SQL query builder and migration generator)
-*   **Authentication:** [Better Auth](https://www.better-auth.com/) (Secure, modern, and extensible authentication framework)
-*   **UI Components:** [Tailwind CSS](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/) (Modular, customizable components styled for iOS 26 Solid design)
-*   **AI Engine:** [Gemini AI](https://deepmind.google/technologies/gemini/) (For parsing receipts, auto-categorizing transactions, and drafting budget reports)
-
----
-
-## 📂 Documentation Map
-
-Below is the directory structure for project documentation. These files serve as the single source of truth (SSOT) for developers and AI agents working on Atria ERP:
-
-```text
-📁 atria-erp/
-├── 📄 README.md                    # Project overview & developer setup instructions
-├── 📄 AGENTS.md                    # Rules, guardrails, and instructions for AI coding agents
-└── 📁 docs/
-    ├── 📁 01-product/
-    │   └── 📄 PRD.md               # Product Requirements (Bahasa Indonesia)
-    ├── 📁 02-product/
-    │   └── 📄 MVP_BLUEPRINT.md     # Module scoping, roles, and daily workflows (Bahasa Indonesia)
-    ├── 📁 03-flows/
-    │   └── 📄 FLOWS.md             # Financial workflows & cash flow logic (Mermaid)
-    ├── 📁 04-data/
-    │   ├── 📄 DATABASE_SCHEMA.md   # Complete database schemas & relations
-    │   ├── 📄 STATUS_ENUMS.md      # State machine definitions for projects & transactions
-    │   └── 📄 SEED_DATA.md         # Production-like mock data for local testing
-    ├── 📁 05-ui-ux/
-    │   ├── 📄 MOBILE_FIRST_UI_UX.md # Mobile interaction specs & wireframe blueprints
-    │   └── 📄 IOS26_SOLID_DESIGN_SYSTEM.md # CSS variables, color scheme, spacing rules
-    ├── 📁 06-technical/
-    │   ├── 📄 STACK_DECISION.md    # In-depth architectural trade-offs
-    │   ├── 📄 ARCHITECTURE.md      # Project folder structure & Server Actions logic
-    │   ├── 📄 AUTH_AND_PERMISSION.md # Role-Based Access Control (RBAC) definition
-    │   ├── 📄 API_ACTIONS.md       # API endpoint / Server Action schemas & Zod validations
-    │   └── 📄 AI_AGENT_ARCHITECTURE.md # Receipt OCR parsing & Gemini LLM safety layers
-    └── 📁 07-development/
-        ├── 📄 ROADMAP.md           # Multi-phase release plan
-        ├── 📄 TASK_BREAKDOWN.md    # Phased coding checklist for AI implementation
-        └── 📄 IMPLEMENTATION_ORDER.md # Dependency tree & step-by-step developer guidelines
-```
-
----
-
-## ⚙️ Local Development Setup
-
-Follow these steps to run Atria ERP locally. Ensure you have [Bun](https://bun.sh) installed.
-
-### 1. Clone the Repository
-```bash
-git clone <repository_url>
-cd atria-erp
-```
-
-### 2. Install Dependencies
+## Local Development
 ```bash
 bun install
-```
-
-### 3. Setup Environment Variables
-Copy the template environment file and fill in the values:
-```bash
 cp .env.example .env
-```
-
-### 4. Setup the Database
-Generate Drizzle migrations and push the schema directly to your Neon database instance:
-```bash
-bun run db:generate
-bun run db:push
-```
-
-### 5. Seed Mock Data
-Seed the database with pre-configured users, sample projects, and transactions:
-```bash
 bun run db:seed
-```
-
-### 6. Run the Development Server
-```bash
 bun run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your mobile browser emulator to see the app.
 
----
+Open `http://localhost:3000`.
 
-## 🔑 Environment Variables Template
-
-Add the following variables to your `.env` file for local development:
-
-```env
-# Database Configuration
-DATABASE_URL="postgres://username:password@ep-host-name.region.neon.tech/dbname?sslmode=require"
-
-# Better Auth Configuration
-BETTER_AUTH_SECRET="super-secret-random-key-at-least-32-characters"
-BETTER_AUTH_URL="http://localhost:3000"
-
-# Application URL
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-
-# AI Integration
-GEMINI_API_KEY="AIzaSyYourGeminiApiKeyHere"
-
-# Node Environment
-NODE_ENV="development"
-```
-
----
-
-## 📏 Development & Architecture Rules
-
-1.  **Strict Type Safety:** All API requests and database queries must be strongly typed. Absolutely no `any` is allowed.
-2.  **Server Actions for Mutations:** All data mutations must run via Next.js Server Actions with strict Zod validation on inputs and Role-Based authorization checks on execution.
-3.  **Tailwind CSS + CSS Variables:** Styling must strictly inherit tokens defined in CSS variables (`app/globals.css`). Do not hardcode hex codes or arbitrary sizes.
-4.  **No Raw SQL in App Code:** Use Drizzle ORM queries (`db.query` or `db.select`) to guarantee type-safety and syntax validation. Raw SQL is only permitted inside migrations.
-5.  **Audit Logs:** Every balance-changing transaction must write to an immutable audit ledger (`cash_transaction` and `audit_log` tables).
-
----
-
-## 📈 Project Status
-
-*   **Current Phase:** Phase 1 (Product & Technical Alignment Documentation)
-*   **Completed:** Git repository initialization, environment setup blueprints, and foundational architecture documentation.
-*   **Next Milestone:** Phase 2 (Database Schema modeling, Drizzle Setup, and Seeder scripts).
+## Core Engineering Rules
+- Use strict TypeScript. Do not introduce `any`.
+- Validate all Server Action inputs with Zod.
+- Use Drizzle query APIs and query builder. Do not execute raw SQL in app code.
+- Budget formulas and master data should come from Settings, with code constants used only as seed/fallback defaults.
+- Mutations must read the server session directly through Better Auth.
+- Balance-changing and stock-changing operations must run inside transactions and write audit logs.
+- Reconciled ledger transactions are immutable.
+- AI may analyze and propose, but must not mutate finance/material records without explicit human approval.
+- Material tracking must roll up into the Material category; it must not hide or replace Tukang, Operasional, Lain-lain, Subcon, gross, or remaining-budget controls.
+- Tukang/Subcon package planning is a lightweight detail layer. Do not turn Operasional and Lain-lain into heavy RAP/BOQ flows.

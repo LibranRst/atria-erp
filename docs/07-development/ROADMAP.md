@@ -1,196 +1,48 @@
-# Development Roadmap - Atria ERP
+# Roadmap - Project Budget Finance & Material Control ERP
 
-Dokumen ini memaparkan peta jalan pengembangan (*development roadmap*) Atria ERP dari **Phase 0** hingga **Phase 8**. Peta jalan ini dirancang secara berurutan untuk memastikan sistem berjalan dengan prinsip **finance-first** di setiap tahap pengembangannya. Semua penjelasan produk disajikan dalam Bahasa Indonesia, sementara istilah teknis tetap menggunakan bahasa Inggris (*English*) untuk menjaga keakuratan implementasi.
+## Phase 0: Preserve and Stabilize
+- Keep existing auth, RBAC, ledger, project budget, expenses, vendor bills, approvals, AI OCR, and mobile shell.
+- Fix lint/type debt so future work starts from a clean baseline.
 
----
+## Phase 1: Documentation Source of Truth
+- Update PRD, MVP blueprint, flows, schema docs, enums, UI guide, auth/permissions, API actions, AI architecture, roadmap, task breakdown, implementation order, README, and agent instructions.
+- Remove obsolete claims that inventory is out of scope.
+- Align terminology: Project Budget, RAP, and RAB.
+- Re-center the source of truth on Project Budget Control upgraded with material stock visibility. Workbook logic remains background source material only.
 
-## Ringkasan Fase Peta Jalan (Roadmap Summary)
+## Phase 2: Canonical Budget Data Model
+- Add `expense_category`, `project_budgets`, `project_budget_categories`, `project_expenses`, and `project_profitability_snapshots`.
+- Add Settings tables for Budget Allocation defaults and Item & Price Library.
+- Seed budget defaults: 90% internal budget cap, Tukang 18%, Material 35%, Operasional 1%, Lain-lain 0.5%, Gross remainder, Subcon optional.
+- Backfill canonical rows from legacy budget/cost tables while preserving compatibility.
 
-```mermaid
-gantt
-    title Peta Jalan Pengembangan Atria ERP
-    dateFormat  YYYY-MM-DD
-    section Backend & Core
-    Phase 0: Environment Setup         :a0, 2026-06-11, 3d
-    Phase 1: DB Schema & Drizzle       :a1, after a0, 5d
-    Phase 2: Auth, RBAC & Middleware   :a2, after a1, 5d
-    Phase 3: Core Ledger & Bank Mut    :a3, after a2, 7d
-    Phase 4: Budget & Cost Scoping     :a4, after a3, 7d
-    Phase 5: Field Claims & Approvals  :a5, after a4, 8d
-    section AI & Integrations
-    Phase 6: Gemini AI OCR Pipeline    :a6, after a5, 6d
-    section UI/UX Layer
-    Phase 7: iOS 26 Solid UI Components:a7, after a6, 10d
-    section Verification
-    Phase 8: Audit & Prod Release      :a8, after a7, 5d
-```
+## Phase 3: Material Data Model
+- Add material category, material master, inventory location, material inventory, RAP, RAP item, stock movement, RAB estimate, and RAB estimate item tables.
+- Extend project expenses and vendor bills with optional material/RAP/stock links.
+- Add Tukang Work Package and Subcon Package planning as lightweight non-material detail linked to matching expenses, vendor bills, and quotation source rows.
+- Add seed/demo data for realistic project material workflows.
 
----
+## Phase 4: Budget Dashboard and Category Actions
+- Add Zod-validated actions for budget setup from ratios, category override, approval, recalculation, project dashboard, and owner dashboard.
+- Add category risk status calculation: SAFE, WATCH, CRITICAL, OVER_BUDGET.
+- Move dashboard and project detail reads toward canonical category budget cards.
 
-## Detil Fase Pengembangan (Phased Development Details)
+## Phase 5: Material-Control Actions
+- Add validations, permissions, and Server Actions for material master, inventory read model, stock in, reserve, use, return, adjustment, shortage, RAP, and RAB estimate generation.
+- All stock-changing actions run in transactions and write audit logs.
 
-### Phase 0: Project Initialization & Environment Setup (Inisialisasi Proyek & Pengaturan Lingkungan)
-Fase awal untuk membangun fondasi repositori, konfigurasi proyek, dan standardisasi kode agar pengembangan berjalan lancar tanpa hambatan di kemudian hari.
+## Phase 6: UX Screens
+- Add dedicated `/settings` for Budget Allocation, Expense Categories, Item & Price Library, and Material Master.
+- Add Project Budget Setup and Category Budget Cards before material drill-down.
+- Add mobile-first Materials, Inventory, Material Detail, Stock Movement, Stock In, Reserve, Use, Leftover, Need to Buy, RAP, and RAB Estimate screens.
+- Add Project Detail package cards for Tukang Work Packages and Subcon Packages, plus selected-source quotation generation.
+- Update Owner Dashboard and Project Detail to show finance/material health.
+- Keep expense entry fast and progressive.
 
-*   **Objektif Utama:**
-    *   Menyiapkan repositori kode (*code repository*) dengan Bun runtime environment dan Next.js App Router.
-    *   Menetapkan aturan ketat TypeScript dan ESLint untuk menolak penggunaan tipe `any`.
-    *   Mengonfigurasi struktur folder standar proyek untuk menampung validasi skema Zod dan Server Actions.
-*   **Fitur & Deliverables Utama:**
-    *   File konfigurasi proyek: `package.json`, `tsconfig.json`, `tailwind.config.ts`, `.gitignore`.
-    *   Struktur direktori: `/db`, `/app/actions`, `/lib/validations`, `/components/ui`.
-    *   Definisi file tipe respons global `ActionResponse<T>` di `lib/types/action-response.ts`.
-*   **Fokus Finance-First:**
-    *   Menyediakan kerangka kerja validasi data masukan (*input validation*) sejak awal di tingkat Server Actions menggunakan format `ActionResponse` guna mencegah kegagalan data transaksional yang berantakan.
-*   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Proyek dapat dikompilasi dengan sukses (`bun run build`) tanpa kesalahan linting atau ketidakcocokan tipe data TypeScript.
+## Phase 7: AI Finance & Material Brief
+- Expand AI context from cash/project budget only to include category usage, margin projection, RAP, inventory, shortages, leftover stock, vendor bills, unusual material cost, and suggested owner actions.
+- Keep AI read-only and human-approved for mutations.
 
----
-
-### Phase 1: Database Layer & Drizzle ORM Schema Setup (Desain Skema Database & Drizzle ORM)
-Membangun struktur data relasional PostgreSQL (Neon) yang aman, terdokumentasi, dan dioptimalkan dengan indeks pencarian cepat.
-
-*   **Objektif Utama:**
-    *   Menulis skema Drizzle ORM untuk 20 tabel inti keuangan sesuai dengan dokumen `DATABASE_SCHEMA.md`.
-    *   Menegakkan integritas data dengan foreign key constraints menggunakan aturan `onDelete: "restrict"` pada tabel relasi mutasi kas.
-    *   Mengonfigurasi skema database branching Neon yang terintegrasi dengan GitHub Actions.
-*   **Fitur & Deliverables Utama:**
-    *   Definisi skema Drizzle di `/db/schema.ts` dan ekspor instance koneksi database di `/db/index.ts`.
-    *   Script migrasi database menggunakan `drizzle-kit generate` dan `drizzle-kit migrate`.
-    *   Script seed data awal di `/db/seed.ts` untuk mengisi peran master (`role`), kategori biaya (`project_cost_category`), dan data rekening bank awal (`bank_account`).
-*   **Fokus Finance-First:**
-    *   Menerapkan constraint relational yang ketat untuk mencegah terhapusnya transaksi historis secara sengaja atau tidak sengaja (menerapkan `restrict` di seluruh foreign key utama).
-*   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Migrasi database berhasil dijalankan di Neon PostgreSQL local dan production, serta data seeding terisi lengkap tanpa kegagalan constraint.
-
----
-
-### Phase 2: Authentication, Authorization (RBAC) & Route Protection (Autentikasi, Otorisasi (RBAC) & Proteksi Rute)
-Mengamankan seluruh akses aplikasi dengan membatasi tindakan operasional berdasarkan peran pengguna yang terverifikasi.
-
-*   **Objektif Utama:**
-    *   Mengintegrasikan Better Auth dengan PostgreSQL adapter untuk manajemen sesi pengguna di sisi server.
-    *   Menerapkan helper otorisasi `assertPermission` pada Server Actions untuk melakukan validasi peran (*role checks*).
-    *   Membangun Route Middleware untuk mencegah pemuatan halaman sensitif oleh pengguna yang tidak berhak.
-*   **Fitur & Deliverables Utama:**
-    *   Konfigurasi Better Auth server di `lib/auth.ts` dan client instance di `lib/auth-client.ts`.
-    *   Helper otorisasi `/lib/auth/permissions.ts` berisi daftar pemetaan izin 7 peran sistem.
-    *   Next.js Middleware `middleware.ts` untuk proteksi rute halaman `/dashboard/ledger`, `/dashboard/settings/*`, dan `/login`.
-*   **Fokus Finance-First:**
-    *   Pembacaan sesi (*session reading*) wajib dieksekusi langsung di server-side guna menghindari manipulasi ID pengguna dari browser client saat memicu mutasi keuangan.
-*   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Pengujian pengalihan rute (*route redirects*) berjalan 100% (pengguna tanpa login terlempar ke `/login`, PM yang mencoba membuka `/dashboard/ledger` diblokir dan dialihkan ke `/unauthorized`).
-
----
-
-### Phase 3: Core Ledger & Bank Account Mutations (Buku Besar Utama & Mutasi Rekening Kas/Bank)
-Membangun jantung dari sistem pencatatan keuangan internal yang menjamin akurasi mutasi kas perusahaan.
-
-*   **Objektif Utama:**
-    *   Mengimplementasikan model mutasi kas **Option A (Transaction Block Model)** di dalam satu transaksi database (`db.transaction`).
-    *   Mencegah *race condition* pada pembaruan saldo rekening bank menggunakan Pessimistic Locking (`.for('update')`).
-    *   Menyusun Server Action untuk pencatatan kas masuk termin klien (`recordClientPayment`) dan dasbor statistik finansial global (`getDashboardStats`).
-*   **Fitur & Deliverables Utama:**
-    *   Fungsi internal helper `mutateBalance` di `/lib/finance/balance-mutation.ts` yang menangani locking, verifikasi saldo kas keluar, update rekening, dan audit logs.
-    *   Server Action `/app/actions/finance/record-client-payment.ts` dan `/app/actions/finance/get-dashboard-stats.ts`.
-    *   Penerapan aturan immutable ledger: transaksi dengan flag `reconciled = true` dikunci dari modifikasi (update/delete).
-*   **Fokus Finance-First:**
-    *   Menjamin rumus matematis balance-check berjalan sempurna:
-        $$\text{New Balance} = \text{Old Balance} \pm \text{Transaction Amount}$$
-        Dan melakukan rollback transaksi penuh jika ada satu langkah penulisan yang gagal.
-*   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Pengujian konkuren (*concurrent transaction test*) berhasil membuktikan bahwa dua request penarikan kas serentak tidak merusak perhitungan sisa saldo rekening.
-
----
-
-### Phase 4: Project Budgeting, Scoping & RAB Management (Penganggaran Proyek, Pembatasan Akses PM & Manajemen RAB)
-Mengaitkan mutasi finansial dengan proyek riil, membatasi modifikasi anggaran setelah disetujui, serta menjaga kerahasiaan data margin antar manajer proyek.
-
-*   **Objektif Utama:**
-    *   Mengembangkan fitur penyusunan Rencana Anggaran Biaya (RAB) per proyek berdasarkan kategori biaya (`project_budget_item`).
-    *   Menyusun Server Actions manajemen siklus anggaran proyek: `createProjectBudget`, `submitBudgetForApproval`, `approveBudget`, dan `rejectBudget`.
-    *   Menyusun Server Action `createBudgetItem` yang terkunci statusnya jika anggaran proyek telah berstatus disetujui (`APPROVED`).
-    *   Menegakkan aturan Strict Project Scoping agar PM hanya dapat mengakses data proyek yang ditugaskan kepada mereka.
-*   **Fitur & Deliverables Utama:**
-    *   Server Actions manajemen anggaran di `/app/actions/project/budget.ts`.
-    *   Fungsi scoping query `/lib/auth/scoping.ts` untuk menyaring data proyek berdasarkan hak akses user session.
-    *   Siklus perubahan status anggaran (*project_budget* state transition: `DRAFT` $\rightarrow$ `PENDING_APPROVAL` $\rightarrow$ `APPROVED` $\rightarrow$ `REJECTED`).
-*   **Fokus Finance-First:**
-    *   PM dibatasi untuk tidak dapat merubah alokasi anggaran proyek (`createBudgetItem` diblokir) ketika statusnya sudah beralih menjadi `APPROVED`, guna mencegah perubahan target anggaran di luar sepengetahuan Owner.
-*   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Query database PM terbukti hanya mengembalikan data proyek di mana user ID mereka tercatat sebagai `projectManagerId`. Pemanggilan `createBudgetItem` pada anggaran yang berstatus `APPROVED` mengembalikan error `FORBIDDEN`.
-
----
-
-### Phase 5: Field Expense Claims, Approvals & Disbursement Flow (Pengajuan Dana Lapangan, Alur Approval & Pembayaran)
-Membangun birokrasi digital untuk pengeluaran uang kas lapangan dan pelunasan tagihan suplier material dengan pendeteksian limit persetujuan secara dinamis.
-
-*   **Objektif Utama:**
-    *   Mengimplementasikan alur verifikasi bertingkat untuk biaya lapangan (`project_cost` / *field claims*) dan tagihan vendor (`vendor_bill`).
-    *   Menyusun Server Actions persetujuan biaya lapangan: `verifyFieldRequest` (oleh Admin/PM Senior), `approveFieldRequest` (oleh Owner), dan `payFieldRequest` (pencairan kas riil).
-    *   Menegakkan batasan nominal persetujuan (pembayaran $\ge$ Rp 5.000.000) dan budget overrun secara dinamis melalui pencatatan di tabel `approval` tanpa redundansi kolom di tabel transaksi utama.
-*   **Fitur & Deliverables Utama:**
-    *   Server Actions biaya lapangan di `/app/actions/finance/field-requests.ts`.
-    *   Server Actions tagihan vendor `/app/actions/finance/submit-vendor-bill.ts`, `scheduleVendorBillPayment`, dan `payVendorBill`.
-    *   Logika verifikasi *budget overrun* pada penulisan `actual_spent` di item anggaran proyek secara transaksional.
-    *   Logika penyimpanan status persetujuan di tabel `approval`.
-*   **Fokus Finance-First:**
-    *   Mencegah pengeluaran liar di lapangan dengan validasi budget ceiling secara real-time pada setiap input pengajuan PM, serta mengunci transaksi di atas limit ke dalam antrean `PENDING` di tabel `approval`.
-*   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Pengajuan pembayaran $\ge$ Rp 5.000.000 atau status budget overrun sukses dideteksi secara dinamis dan menyisipkan record `approval` baru berstatus `PENDING`. Pemanggilan `payFieldRequest` sebelum status disetujui Owner terbukti terblokir dengan error `FORBIDDEN`.
-
----
-
-### Phase 6: Multimodal OCR Receipt Processing & Gemini AI Pipeline (Pemrosesan Nota OCR Multimodal & Pipa Gemini AI)
-Menyediakan fitur otomatisasi pintar untuk menghemat waktu input PM lapangan dan menyajikan taklimat CFO harian bagi Owner.
-
-*   **Objektif Utama:**
-    *   Membangun pipeline tanda tangan unggah berkas langsung (*direct signed URL upload*) dari client ke ImageKit CDN.
-    *   Mengintegrasikan Google Gen AI SDK untuk membaca gambar nota belanja dan mengekstraksi data ke format JSON secara terstruktur.
-    *   Menyusun pipa terjadwal (*scheduled cron job*) untuk pengumpulan data agregasi keuangan harian dan pemicu prompt Gemini untuk financial briefing.
-*   **Fitur & Deliverables Utama:**
-    *   Server Action penandatanganan unggah ImageKit di `/app/actions/media/sign-imagekit.ts`.
-    *   Pipeline parser Gemini OCR dengan parameter `responseMimeType: "application/json"` dan `responseSchema` OpenAPI di `/lib/ai/gemini.ts`.
-    *   Endpoint Cron Job `/app/api/cron/daily-briefing/route.ts` untuk pembuatan draf laporan CFO harian.
-*   **Fokus Finance-First:**
-    *   Menerapkan aturan **AI Read-Only**: hasil parsing AI diposisikan sebagai proposal draf read-only yang membutuhkan review dan persetujuan eksplisit manusia (*human-in-the-loop*) sebelum dicatat ke ledger kas.
-*   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Gemini API berhasil mengekstrak nominal kuitansi secara konsisten dalam bentuk string JSON bersih dan tervalidasi oleh skema parser Zod tanpa ada kegagalan format token.
-
----
-
-### Phase 7: Mobile-First iOS 26 Solid UI Components & Views (Antarmuka iOS 26 Solid & Tampilan Seluler)
-Mengembangkan antarmuka visual premium yang responsif, andal di lapangan, dan konsisten dengan tata letak iOS.
-
-*   **Objektif Utama:**
-    *   Menghindari penggunaan efek CSS blur (`backdrop-blur`) yang berat demi kestabilan rendering WebView pada kecepatan 60fps di ponsel lapangan.
-    *   Mengatur kelengkungan sudut standar (`rounded-lg` 8px, `rounded-2xl` 16px, `rounded-t-3xl` 24px) dan area tap sentuh minimal **48x48px**.
-    *   Menerapkan format tabular numbers pada penyajian angka uang Rupiah untuk ketepatan audit visual.
-*   **Fitur & Deliverables Utama:**
-    *   App Shell Layout dengan sticky bottom navigation bar setinggi 64px.
-    *   Dashboard Keuangan (kartu rekening BCA/Mandiri swipeable, feed notifikasi, dan riwayat audit log).
-    *   Layar input pengeluaran PM ramah satu tangan dilengkapi skeleton shimmer loader saat Gemini memproses nota.
-    *   Layar persetujuan Owner dengan tombol quick actions dan gesture geser (*swipe gesture*).
-    *   Sidebar Navigation responsive untuk layar desktop/tablet.
-*   **Fokus Finance-First:**
-    *   Menyajikan visualisasi status warning anggaran (90% amber) dan critical (100% merah) secara kontras tinggi agar PM tidak kecolongan budget di tengah lokasi proyek.
-*   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Pemuatan halaman dashboard utama di jaringan seluler 4G di bawah **2.5 detik**. Ukuran touch target tombol actions diverifikasi di browser inspector tepat $\ge$ 48px.
-
----
-
-### Phase 8: End-to-End Financial Auditing, Testing & Production Release (Audit Keuangan End-to-End, Pengujian & Rilis Produksi)
-Fase akhir untuk menguji keandalan sistem terhadap kegagalan transaksi, celah keamanan, dan verifikasi akhir sebelum deployment.
-
-*   **Objektif Utama:**
-    *   Melakukan audit kode codebase menyeluruh untuk memastikan 0% query raw SQL digunakan.
-    *   Menjalankan integration tests terhadap seluruh alur mutasi kas (happy path & fail cases).
-    *   Melakukan load testing untuk verifikasi performa serverless functions Next.js saat menampung concurrent requests.
-*   **Fitur & Deliverables Utama:**
-    *   File laporan pengujian integrasi finansial.
-    *   Konfigurasi pipeline GitHub Actions untuk deployment otomatis ke Vercel production.
-    *   Pencatatan log audit final untuk pengujian serah terima aplikasi.
-*   **Fokus Finance-First:**
-    *   Memastikan tidak ada celah pembocoran saldo kas, balance checking mismatch, atau status transaksi reconciled yang bisa dimodifikasi.
-*   **Milestone & Tolok Ukur Keberhasilan:**
-    *   Selisih nominal saldo antara buku besar sistem (`cash_transaction`) dan rekening bank riil setelah serangkaian uji coba mutasi bernilai tepat **0%**.
+## Phase 8: Verification and Release
+- Add tests for permissions, stock math, RAP shortage math, client-safe RAB projection, dashboard aggregates, and existing finance regressions.
+- Run lint, targeted tests, build, seed verification, and mobile browser smoke checks.

@@ -1,0 +1,52 @@
+# Follow-up Architecture Audit Cleanup
+
+## Scope
+- Move generic sheet primitives out of the Settings feature into shared UI ownership.
+- Keep existing sheet behavior, styling, focus management, body scroll locking, and motion unchanged.
+- Split the finance dashboard approval workflow out of the broad dashboard tabs file.
+- Split dense Material & Stock tab panels out of the control-center container.
+- Extract Material & Stock derived dashboard data and operation server-action orchestration into dedicated hooks.
+- Split Material & Stock dashboard tab UI into overview, inventory, needs, activity, and shared type modules.
+- Split Material & Stock operation dialogs into dedicated sheet modules with a compatibility re-export.
+- Split Material & Stock operation sheet primitives/forms/detail into focused modules with a compatibility re-export.
+- Split dense Expense list/form UI into focused field claim, dialog, line editor, type, and utility modules.
+- Split Vendor Bill list UI into shared types, calculation helpers, card rows, and payment bottom sheets.
+- Split the broad shared form controls module into basic, select, date, type, and utility modules while preserving the old export path.
+- Split Project detail tabs into a lean tab orchestrator, dedicated DTO/type module, pure view-model builder, and RAP/RAB mapper module for finance/RAP/RAB readiness calculations.
+- Split dense RAP and RAB drawer modules into focused detail, revision, source picker, line editor, bundle, and change-order drawer files while preserving the old drawer export paths.
+- Extract RAP/RAB manager form defaults, derived values, setup utilities, workflow drawer wiring, package setup content, RAB empty state, and RAB revision history sections into focused modules.
+- Split Project budget manager and overview hotspots into focused alert, empty state, item list, item form, approval, identity header, primitive, and utility modules.
+- Split Project invoice, profitability, RAP/RAB manager form state, RAP setup stage panels, and RAB client summary/list/action sections into focused modules.
+- Split RAP/RAB manager server-action orchestration into dedicated action hooks so the public managers only compose forms, derived values, permissions, and handlers.
+- Extract Project Detail action payload builders, server DTO mappers, and view-model calculation/readiness utilities from the remaining dense modules.
+- Split Settings server-action contracts, read/query actions, and shared auth/audit/mapping helpers out of the oversized Settings action module while preserving its public import path.
+- Extract Field Request auth/session guard helpers and material stock handling helpers from the dense finance action module without changing transaction behavior.
+- Extract RAP/RAB server-action session/scoping/error helpers and shared RAP/RAB item payload builders from the oversized project RAP/RAB action module.
+- Extract Material Inventory server-action session/scoping/status/transaction/audit/project-cost helpers from the oversized inventory action module.
+- Extract Project Budget server-action session/scoping/error helpers and approval auto-invoice generation from the oversized budget action module.
+- Extract canonical Project Budget dashboard/read-model helpers, access guards, allocation defaults, and owner aggregation from the legacy budget action module while preserving its public import path.
+- Extract Finance Dashboard overview DTOs and parsing/category/outstanding helpers from the server action so the action focuses on data loading and response composition.
+- Extract Field Request submit item orchestration, approval/audit helpers, and error mappers from the finance field request action while preserving transaction behavior.
+- Split Settings Item & Price Library and Material Settings write actions into dedicated modules, leaving the public Settings action file as a compatibility facade.
+- Split RAP/RAB manual quotation line and bundle operations into a dedicated module, leaving the public RAP/RAB action file as a compatibility facade.
+- Split Material Inventory stock movement actions into a dedicated module, leaving the public inventory action file focused on material/inventory reads and compatibility wrappers.
+- Split RAP/RAB generation and initial approval workflows into dedicated action modules, leaving the public RAP/RAB action file as a compact compatibility facade.
+- Split Project Budget expense project-option loading and DTO contracts into dedicated modules, leaving budget mutations and the old public import path intact.
+- Split Field Request review/approval and payment workflows into dedicated action modules so the public finance field request file composes submit/review/payment concerns.
+- Extract Project revision/Change Order session, scoping, and error helpers into a dedicated utility module.
+- Extract Expense Form presentational summary, notice, and line-item section UI into focused components while preserving form state and submission behavior.
+- Split Finance Dashboard card primitives into tone/progress helpers, overview cards, and overview list rows while preserving the existing dashboard-cards export path.
+- Split Project Drawer options and form/success sections out of the drawer state/submission component.
+- Split Bottom Navigation role/action config and presentational tab/FAB parts out of the main navigation component.
+- Split Field Claim row/history rendering out of the field claims panel.
+- Split Settings budget/expense write actions into a dedicated module, leaving the public Settings action file as a compact facade.
+- Split Material inventory project movement actions (use, return, waste) into a dedicated module while preserving stock transaction/audit behavior.
+- Split Change Order approval workflow out of the revision/change-order action module.
+- Extract Expense receipt ImageKit/OCR upload mapping and Project list card/header/types/utils from dense client components.
+- Extract RAP manager action feedback and action hook contracts from the RAP manager action hook.
+- Update imports only where needed and preserve route/product behavior.
+
+## Safety
+- No database, schema, server action, route, or environment variable changes.
+- Existing Settings imports keep a compatibility re-export while current consumers move to shared UI imports.
+- Verify with the existing Bun scripts: `bun run lint` and `bun run build`.

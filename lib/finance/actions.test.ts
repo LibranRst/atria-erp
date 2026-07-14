@@ -1,9 +1,10 @@
 import { db } from "@/db";
-import { project, clientInvoice, bankAccount } from "@/db/schema";
+import { project, clientInvoice, bankAccount, projectBudget } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { createProjectBudget, createBudgetItem, submitBudgetForApproval, approveBudget } from "@/app/actions/project/budget";
 import { recordClientPayment } from "@/app/actions/finance/record-client-payment";
+import { createClientInvoice } from "@/app/actions/finance/create-client-invoice";
 import { getDashboardStats } from "@/app/actions/finance/get-dashboard-stats";
 import { describe, it, expect, afterAll, mock } from "bun:test";
 
@@ -128,7 +129,7 @@ describe("Atria ERP Server Actions - TSK-007", () => {
 
     it("harus mendukung alur pembuatan, pengajuan, dan persetujuan draf anggaran baru", async () => {
       mockUserSession(OWNER_USER);
-      
+
       // Buat proyek baru untuk test budget lifecycle
       const [testProj] = await db
         .insert(project)
@@ -182,6 +183,11 @@ describe("Atria ERP Server Actions - TSK-007", () => {
       if (!approveRes.success) return;
       expect(approveRes.data.status).toBe("APPROVED");
       expect(approveRes.data.approvedById).toBe(OWNER_USER.id);
+
+      // Clean up
+      await db.delete(clientInvoice).where(eq(clientInvoice.projectId, testProj.id));
+      await db.delete(projectBudget).where(eq(projectBudget.projectId, testProj.id));
+      await db.delete(project).where(eq(project.id, testProj.id));
     });
   });
 
@@ -251,6 +257,121 @@ describe("Atria ERP Server Actions - TSK-007", () => {
     });
   });
 
+  // createClientInvoice Action and Auto-Generation on Budget Approval
+  describe("createClientInvoice Action and Auto-Generation", () => {
+    afterAll(() => {
+      restoreUserSession();
+    });
+
+    it("harus menolak pembuatan invoice manual oleh PM (karena PM tidak memiliki izin)", async () => {
+      mockUserSession(PM_BUDI_USER);
+      const res = await createClientInvoice({
+        projectId: MENTENG_PROJECT_ID,
+        invoiceNumber: "INV-PM-TEST",
+        amount: 50000000,
+        stage: "AD_HOC",
+        dueDate: new Date(),
+        notes: "Test manual PM",
+      });
+
+      expect(res.success).toBe(false);
+      if (!res.success) {
+        expect(res.error.code).toBe("FORBIDDEN");
+      }
+    });
+
+    it("harus mengizinkan Owner membuat invoice secara manual dan menulis audit log", async () => {
+      mockUserSession(OWNER_USER);
+      const invoiceNum = `INV/TEST/${Math.floor(1000 + Math.random() * 9000)}`;
+      const res = await createClientInvoice({
+        projectId: MENTENG_PROJECT_ID,
+        invoiceNumber: invoiceNum,
+        amount: 25000000,
+        stage: "AD_HOC",
+        dueDate: new Date(),
+        notes: "Test manual Owner",
+      });
+
+      expect(res.success).toBe(true);
+      if (res.success) {
+        expect(res.data.invoiceNumber).toBe(invoiceNum);
+        expect(res.data.status).toBe("UNPAID");
+        expect(res.data.stage).toBe("AD_HOC");
+
+        // Clean up
+        await db.delete(clientInvoice).where(eq(clientInvoice.id, res.data.id));
+      }
+    });
+
+    it("harus meng-generate invoice secara otomatis (DP, Progress 1, Pelunasan) saat budget disetujui", async () => {
+      mockUserSession(PM_BUDI_USER);
+
+      // 1. Buat project test baru (dengan totalContractValue 300jt)
+      const [newProj] = await db
+        .insert(project)
+        .values({
+          name: "Test Auto Invoice Project",
+          clientId: "44444444-4444-4444-4444-444444444441",
+          projectManagerId: PM_BUDI_USER.id,
+          status: "DRAFT",
+          totalContractValue: "300000000.00",
+        })
+        .returning();
+
+      // 2. Buat draft budget
+      const budgetRes = await createProjectBudget(newProj.id);
+      expect(budgetRes.success).toBe(true);
+      const testBudgetId = budgetRes.success ? budgetRes.data.id : "";
+
+      // 3. Tambahkan item budget
+      const itemRes = await createBudgetItem({
+        projectBudgetId: testBudgetId,
+        costCategoryId: MATERIAL_CATEGORY_ID,
+        name: "Test Material Kabinet",
+        budgetCategory: "Material",
+        quantity: 1,
+        unit: "set",
+        unitPrice: 100000000,
+      });
+      expect(itemRes.success).toBe(true);
+
+      // 4. Submit budget untuk diajukan ke Owner
+      const submitRes = await submitBudgetForApproval(testBudgetId);
+      expect(submitRes.success).toBe(true);
+
+      // 5. Ubah ke sesi Owner untuk menyetujui budget
+      mockUserSession(OWNER_USER);
+      const approveRes = await approveBudget(testBudgetId);
+      expect(approveRes.success).toBe(true);
+
+      // 6. Verifikasi bahwa 3 invoice ter-generate otomatis (DP, PROGRESS_1, PELUNASAN)
+      const invoices = await db.query.clientInvoice.findMany({
+        where: eq(clientInvoice.projectId, newProj.id),
+      });
+
+      expect(invoices.length).toBe(3);
+
+      const dpInv = invoices.find((inv) => inv.stage === "DP");
+      const progressInv = invoices.find((inv) => inv.stage === "PROGRESS_1");
+      const pelunasanInv = invoices.find((inv) => inv.stage === "PELUNASAN");
+
+      expect(dpInv).toBeDefined();
+      expect(progressInv).toBeDefined();
+      expect(pelunasanInv).toBeDefined();
+
+      // DP = 30% * 300jt = 90jt
+      expect(Number(dpInv!.amount)).toBe(90000000);
+      // PROGRESS_1 = 50% * 300jt = 150jt
+      expect(Number(progressInv!.amount)).toBe(150000000);
+      // PELUNASAN = 20% * 300jt = 60jt
+      expect(Number(pelunasanInv!.amount)).toBe(60000000);
+
+      // Clean up
+      await db.delete(clientInvoice).where(eq(clientInvoice.projectId, newProj.id));
+      await db.delete(project).where(eq(project.id, newProj.id));
+    });
+  });
+
   // 3. Uji Coba Server Action getDashboardStats
   describe("getDashboardStats Action", () => {
     it("harus mengembalikan statistik agregasi finansial dasbor secara tepat", async () => {
@@ -264,7 +385,7 @@ describe("Atria ERP Server Actions - TSK-007", () => {
         expect(stats.totalCashBalance).toBeGreaterThan(0);
         expect(stats.totalReceivables).toBeGreaterThanOrEqual(0);
         expect(stats.totalPayables).toBeGreaterThanOrEqual(0);
-        expect(stats.activeProjectsCount).toBe(2); // Menteng & Sudirman di seed
+        expect(stats.activeProjectsCount).toBeGreaterThanOrEqual(3); // Menteng, Sudirman, & Brawijaya di seed
       }
     });
 

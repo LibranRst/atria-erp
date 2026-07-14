@@ -1,0 +1,126 @@
+"use server";
+
+import { db } from "@/db";
+import { clientInvoice, auditLog } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
+import { assertProjectAccess } from "@/lib/auth/scoping";
+import { ActionResponse } from "@/lib/types/action-response";
+import { createClientInvoiceSchema, CreateClientInvoiceInput } from "@/lib/validations/finance";
+
+/**
+ * Mencatat/membuat Invoice Klien baru secara manual.
+ * Terbatas untuk peran OWNER, FINANCE_ADMIN, dan SALES dengan validasi akses proyek (scoping check).
+ */
+export async function createClientInvoice(
+  input: CreateClientInvoiceInput
+): Promise<ActionResponse<typeof clientInvoice.$inferSelect>> {
+  const validation = createClientInvoiceSchema.safeParse(input);
+  if (!validation.success) {
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Parameter input tidak valid." },
+    };
+  }
+
+  const { projectId, invoiceNumber, amount, stage, dueDate, notes } = validation.data;
+
+  try {
+    const session = await auth.api.getSession({
+      headers: {
+        cookie: (await (await import("next/headers")).cookies()).toString(),
+      },
+    });
+
+    if (!session || !session.user) {
+      return {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." },
+      };
+    }
+
+    try {
+      await assertPermission(session.user, "create:client_invoice");
+    } catch (err) {
+      return {
+        success: false,
+        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
+      };
+    }
+
+    // Scoping check for PM / Designer / other scoped roles
+    try {
+      const userRoleName = await resolveRoleName(session.user.roleId);
+      if (userRoleName === "PROJECT_MANAGER" || userRoleName === "DESIGNER") {
+        await assertProjectAccess(projectId, session.user.id, userRoleName);
+      }
+    } catch (err) {
+      return {
+        success: false,
+        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
+      };
+    }
+
+    // Check duplicate invoice number
+    const existingInvoice = await db.query.clientInvoice.findFirst({
+      where: eq(clientInvoice.invoiceNumber, invoiceNumber),
+    });
+
+    if (existingInvoice) {
+      return {
+        success: false,
+        error: { code: "FORBIDDEN", message: `Nomor invoice "${invoiceNumber}" sudah terdaftar.` },
+      };
+    }
+
+    const newInvoice = await db.transaction(async (tx) => {
+      const [inserted] = await tx
+        .insert(clientInvoice)
+        .values({
+          projectId,
+          invoiceNumber,
+          amount: amount.toFixed(2),
+          status: "UNPAID",
+          stage,
+          dueDate,
+          notes: notes || null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      // Write audit log
+      await tx.insert(auditLog).values({
+        userId: session.user.id,
+        action: "CREATE_CLIENT_INVOICE",
+        targetTable: "client_invoice",
+        targetId: inserted.id,
+        originalState: null,
+        newState: JSON.stringify({
+          projectId,
+          invoiceNumber,
+          amount: amount.toFixed(2),
+          stage,
+          dueDate,
+        }),
+        createdAt: new Date(),
+      });
+
+      return inserted;
+    });
+
+    return {
+      success: true,
+      data: newInvoice,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: error instanceof Error ? error.message : "Terjadi kesalahan internal pada server.",
+      },
+    };
+  }
+}

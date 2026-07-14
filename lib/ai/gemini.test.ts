@@ -22,6 +22,7 @@ mock.module("next/headers", () => {
 // Simpan method original
 const originalGetSession = (auth.api as unknown as { getSession: unknown }).getSession;
 const originalGenerateContent = ai.models.generateContent;
+let lastDailyBriefingPrompt = "";
 const originalFetch = global.fetch;
 
 // Helper untuk mock sesi pengguna
@@ -120,10 +121,12 @@ async function mockGenerateContent(args: unknown): Promise<{
       };
     }
 
+    lastDailyBriefingPrompt = typeof contents === "string" ? contents : "";
+
     return {
       text: JSON.stringify({
         briefingDate: "2026-06-11",
-        summary: "Laporan CFO harian: Likuiditas kas aman terkendali dengan total kas di bank...",
+        summary: "Ringkasan\nKas perusahaan aman di Rp 1.250.000.000, tetapi ritme pembayaran tetap perlu dijaga karena ada piutang aktif Rp 150.000.000 dan hutang vendor 7 hari ke depan Rp 45.000.000. Risiko utama hari ini ada di budget Material Apartemen Sudirman Suite yang sudah 92%, sehingga margin bisa tertekan kalau ada belanja tambahan tanpa validasi RAP. Secara operasional, approval biaya lapangan Rp 6.200.000 perlu diputuskan agar pekerjaan tidak tertahan. Owner sebaiknya menjaga urutan keputusan: amankan kas masuk, cek risiko budget kategori, lalu baru buka pembayaran atau pembelian material yang benar-benar prioritas.\n\nPoin Penting\n- Cek approval biaya lapangan Rp 6.200.000 dan putuskan bayar atau hold hari ini.\n- Minta Finance follow up piutang Rp 150.000.000 sebelum vendor jatuh tempo.\n- Validasi kebutuhan Material Apartemen Sudirman Suite sebelum menyetujui belanja tambahan.",
         metrics: {
           cashBalance: 1250000000.00,
           receivablesOverdue: 150000000.00,
@@ -285,6 +288,11 @@ describe("Atria ERP AI Layer Integration - TSK-009", () => {
       expect(json.briefingDate).toBe("2026-06-11");
       expect(json.metrics.cashBalance).toBe(1250000000.00);
       expect(json.alerts[0].projectName).toBe("Apartemen Sudirman Suite");
+      expect(json.summary).toContain("Ringkasan");
+      expect(json.summary).toContain("Poin Penting");
+      expect(lastDailyBriefingPrompt).toContain("Format summary wajib");
+      expect(lastDailyBriefingPrompt).toContain("satu paragraf ringkasan");
+      expect(lastDailyBriefingPrompt).toContain("Poin Penting");
 
       // Verifikasi log disimpan ke database
       const runLog = await db.query.aiRun.findFirst({

@@ -1,0 +1,307 @@
+import { and, desc, eq, inArray, type SQL } from "drizzle-orm";
+
+import { db } from "@/db";
+import {
+  approval,
+  materialMaster,
+  project,
+  projectCost,
+  vendor,
+  vendorBill,
+  vendorPayment,
+} from "@/db/schema";
+import type {
+  BankAccountItem,
+  ExpenseCostItem,
+} from "../components/expense-list";
+import type {
+  VendorListBill,
+  VendorListPayment,
+  VendorListProject,
+  VendorListVendor,
+} from "../components/vendor-bill-list";
+import { resolveRoleName } from "@/lib/auth/permissions";
+import { requireServerSession } from "@/lib/server/session";
+
+export type ExpensesPageData = {
+  readonly initialCosts: ExpenseCostItem[];
+  readonly bankAccounts: BankAccountItem[];
+  readonly userRole: string;
+  readonly vendorBills: VendorListBill[];
+  readonly vendorPayments: VendorListPayment[];
+  readonly vendors: VendorListVendor[];
+  readonly projects: VendorListProject[];
+  readonly pendingApprovalsCount: number;
+};
+
+function toExpenseCostStatus(status: string): ExpenseCostItem["status"] {
+  switch (status) {
+    case "SUBMITTED":
+    case "VERIFIED":
+    case "APPROVED":
+    case "REJECTED":
+    case "PAID":
+      return status;
+    default:
+      throw new Error(`Status pengajuan biaya tidak dikenal: ${status}`);
+  }
+}
+
+export async function getExpensesPageData(): Promise<ExpensesPageData> {
+  const session = await requireServerSession();
+  const roleName = (await resolveRoleName(session.user.roleId)) ?? "UNKNOWN";
+  const isPM = roleName === "PROJECT_MANAGER";
+
+  const costFilter = isPM
+    ? eq(projectCost.requestedById, session.user.id)
+    : undefined;
+
+  const costsData = await db.query.projectCost.findMany({
+    where: costFilter,
+    with: {
+      project: true,
+      budgetItem: {
+        with: {
+          costCategory: true,
+        },
+      },
+      requestedBy: true,
+    },
+    orderBy: [desc(projectCost.createdAt)],
+  });
+
+  let vendorBillFilter: SQL | undefined;
+  let vendorPaymentFilter: SQL | undefined;
+
+  if (isPM) {
+    const pmProjects = await db.query.project.findMany({
+      where: eq(project.projectManagerId, session.user.id),
+      columns: { id: true },
+    });
+    const pmProjectIds = pmProjects.map((row) => row.id);
+
+    if (pmProjectIds.length > 0) {
+      vendorBillFilter = inArray(vendorBill.projectId, pmProjectIds);
+
+      const pmBills = await db.query.vendorBill.findMany({
+        where: inArray(vendorBill.projectId, pmProjectIds),
+        columns: { id: true },
+      });
+      const pmBillIds = pmBills.map((row) => row.id);
+      vendorPaymentFilter =
+        pmBillIds.length > 0
+          ? inArray(vendorPayment.vendorBillId, pmBillIds)
+          : eq(vendorPayment.id, "00000000-0000-0000-0000-000000000000");
+    } else {
+      vendorBillFilter = eq(
+        vendorBill.id,
+        "00000000-0000-0000-0000-000000000000",
+      );
+      vendorPaymentFilter = eq(
+        vendorPayment.id,
+        "00000000-0000-0000-0000-000000000000",
+      );
+    }
+  }
+
+  const vendorBillsData = await db.query.vendorBill.findMany({
+    where: vendorBillFilter,
+    with: {
+      project: true,
+      vendor: true,
+      budgetItem: {
+        with: {
+          costCategory: true,
+        },
+      },
+      payments: {
+        with: {
+          bankAccount: true,
+        },
+      },
+    },
+    orderBy: [desc(vendorBill.createdAt)],
+  });
+
+  const vendorPaymentsData = await db.query.vendorPayment.findMany({
+    where: vendorPaymentFilter,
+    with: {
+      vendorBill: {
+        with: {
+          project: true,
+          vendor: true,
+          budgetItem: {
+            with: {
+              costCategory: true,
+            },
+          },
+        },
+      },
+      bankAccount: true,
+      paidBy: true,
+    },
+    orderBy: [desc(vendorPayment.createdAt)],
+  });
+
+  const vendorPaymentsApprovals = await db.query.approval.findMany({
+    where: eq(approval.referenceType, "vendor_payment"),
+  });
+
+  const paymentsForList = vendorPaymentsData.map((pay) => {
+    const approvalRecord = vendorPaymentsApprovals.find(
+      (record) => record.referenceId === pay.id,
+    );
+    return {
+      ...pay,
+      approvalStatus: approvalRecord ? approvalRecord.status : "APPROVED",
+    };
+  });
+
+  const bankAccountsData = await db.query.bankAccount.findMany();
+
+  const vendorsData = await db.query.vendor.findMany({
+    orderBy: [desc(vendor.name)],
+  });
+
+  const pmProjectFilter = isPM
+    ? eq(project.projectManagerId, session.user.id)
+    : undefined;
+  const projectsData = await db.query.project.findMany({
+    where: pmProjectFilter
+      ? and(eq(project.status, "ACTIVE"), pmProjectFilter)
+      : eq(project.status, "ACTIVE"),
+    with: {
+      budget: {
+        with: {
+          items: {
+            with: {
+              costCategory: true,
+            },
+          },
+        },
+      },
+      canonicalBudgets: {
+        with: {
+          categories: {
+            with: {
+              expenseCategory: true,
+            },
+          },
+        },
+      },
+      raps: {
+        with: {
+          items: true,
+        },
+      },
+      categoryPlanItems: {
+        with: {
+          expenseCategory: true,
+        },
+      },
+    },
+  });
+
+  const materialOptionsData = await db.query.materialMaster.findMany({
+    where: eq(materialMaster.isActive, true),
+    with: {
+      inventory: true,
+    },
+  });
+  const materialOptions = materialOptionsData.map((material) => ({
+    id: material.id,
+    name: material.name,
+    unit: material.unit,
+    availableStock: material.inventory.reduce((sum, inventory) => {
+      return (
+        sum + Number(inventory.currentStock) - Number(inventory.reservedStock)
+      );
+    }, 0),
+  }));
+
+  const costsForList: ExpenseCostItem[] = costsData.map((cost) => ({
+    ...cost,
+    status: toExpenseCostStatus(cost.status),
+  }));
+
+  const projectsForForms: VendorListProject[] = projectsData.map((row) => ({
+    id: row.id,
+    name: row.name,
+    budget: row.budget,
+    canonicalBudgets: row.canonicalBudgets.map((budget) => ({
+      id: budget.id,
+      status: budget.status,
+      categories: budget.categories.map((category) => ({
+        id: category.id,
+        code: category.expenseCategory.code,
+        name: category.expenseCategory.name,
+        allocatedAmount: category.allocatedAmount,
+        pendingAmount: category.pendingAmount,
+        actualAmount: category.actualAmount,
+        paidAmount: category.paidAmount,
+        remainingAmount: category.remainingAmount,
+        usedPercentage: category.usedPercentage,
+        status: category.status,
+        sortOrder: category.sortOrder,
+      })),
+    })),
+    materialOptions,
+    rapItems: row.raps.flatMap((rap) =>
+      rap.items.map((item) => ({
+        id: item.id,
+        materialId: item.materialId,
+        label: item.name,
+        area: item.area,
+        quantity: item.totalQuantity,
+        unit: item.unit,
+        status: item.status,
+      })),
+    ),
+    categoryPlanItems: row.categoryPlanItems.map((item) => ({
+      id: item.id,
+      projectBudgetCategoryId: item.projectBudgetCategoryId,
+      expenseCategoryCode: item.expenseCategory.code,
+      label: item.name,
+      area: item.area,
+      quantity: item.quantity,
+      unit: item.unit,
+      estimatedTotalCost: item.estimatedTotalCost,
+      status: item.status,
+    })),
+  }));
+
+  let pendingApprovalsCount = 0;
+  if (roleName === "OWNER") {
+    const pendingApprovals = await db.query.approval.findMany({
+      where: eq(approval.status, "PENDING"),
+    });
+    for (const record of pendingApprovals) {
+      if (record.referenceType === "project_cost") {
+        const cost = await db.query.projectCost.findFirst({
+          where: eq(projectCost.id, record.referenceId),
+        });
+        if (cost?.status === "VERIFIED") {
+          pendingApprovalsCount += 1;
+        }
+      } else if (record.referenceType === "vendor_payment") {
+        const payment = await db.query.vendorPayment.findFirst({
+          where: eq(vendorPayment.id, record.referenceId),
+        });
+        if (payment) {
+          pendingApprovalsCount += 1;
+        }
+      }
+    }
+  }
+
+  return {
+    initialCosts: costsForList,
+    bankAccounts: bankAccountsData,
+    userRole: roleName,
+    vendorBills: vendorBillsData,
+    vendorPayments: paymentsForList,
+    vendors: vendorsData,
+    projects: projectsForForms,
+    pendingApprovalsCount,
+  };
+}

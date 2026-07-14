@@ -1,120 +1,118 @@
 import { db } from "@/db";
-import { project } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { scopeProjectQuery } from "@/lib/auth/scoping";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { redirect } from "next/navigation";
 import React from "react";
+import { ProjectListClient } from "@/features/projects/list/components/project-list-client";
+import { requireServerSession } from "@/lib/server/session";
+import { resolveEffectiveProjectHealth } from "@/lib/project/effective-health";
+
+function toProjectStatus(status: string): "DRAFT" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED" {
+  if (status === "ACTIVE" || status === "ON_HOLD" || status === "COMPLETED" || status === "CANCELLED") {
+    return status;
+  }
+  return "DRAFT";
+}
+
+function toFinancialHealth(status: string): "HEALTHY" | "WARNING" | "CRITICAL" {
+  if (status === "WARNING" || status === "CRITICAL") {
+    return status;
+  }
+  return "HEALTHY";
+}
 
 export default async function ProjectsPage(): Promise<React.JSX.Element> {
-  // 1. Get session
-  const session = await auth.api.getSession({
-    headers: {
-      cookie: (await (await import("next/headers")).cookies()).toString(),
-    },
-  });
+  const session = await requireServerSession();
 
-  if (!session || !session.user) {
-    redirect("/login");
-  }
-
-  // 2. Resolve PM scoping filter
   const roleName = await resolveRoleName(session.user.roleId);
   const projectFilter = scopeProjectQuery(session.user.id, roleName);
 
-  // 3. Query projects
+  // 3. Query projects with budgets & categories
   const projectsData = await db.query.project.findMany({
-    where: projectFilter 
-      ? and(eq(project.status, "ACTIVE"), projectFilter)
-      : eq(project.status, "ACTIVE"),
+    where: projectFilter || undefined,
     with: {
       client: true,
       projectManager: true,
+      canonicalBudgets: {
+        with: {
+          categories: {
+            with: {
+              expenseCategory: true,
+            },
+          },
+        },
+      },
     },
+    orderBy: (table, { desc }) => [desc(table.createdAt)],
+  });
+
+  // 4. Query clients & users for form
+  const clientsData = await db.query.client.findMany({
+    orderBy: (table, { asc }) => [asc(table.name)],
+  });
+
+  const usersData = await db.query.user.findMany({
+    orderBy: (table, { asc }) => [asc(table.name)],
+  });
+
+  const isAllowedToCreate = roleName === "OWNER" || roleName === "FINANCE_ADMIN";
+
+  // 5. Map data to client components expectation
+  const mappedProjects = projectsData.map((proj) => {
+    const contractVal = Number(proj.totalContractValue);
+    const budget = proj.canonicalBudgets?.[0] || null;
+    const categories = budget?.categories || [];
+    const actualCost = categories.reduce((sum, c) => sum + Number(c.actualAmount), 0);
+    const internalBudget = Number(budget?.internalBudget || contractVal * 0.9);
+    const remainingBudget = internalBudget - actualCost;
+    const usedPercentage = internalBudget > 0 ? (actualCost / internalBudget) * 100 : 0;
+    const projectedMarginPercentage = contractVal > 0
+      ? ((contractVal - Math.max(internalBudget, actualCost)) / contractVal) * 100
+      : 0;
+    const targetMarginPercentage = contractVal > 0
+      ? (Number(budget?.targetGrossAmount ?? 0) / contractVal) * 100
+      : 0;
+    const health = resolveEffectiveProjectHealth({
+      storedHealth: proj.financialHealth,
+      remainingBudget,
+      usedPercentage,
+      categoryStatuses: categories.map((category) => category.status),
+      projectedMarginPercentage,
+      targetMarginPercentage,
+    });
+
+    return {
+      id: proj.id,
+      name: proj.name,
+      clientId: proj.clientId,
+      projectManagerId: proj.projectManagerId,
+      status: toProjectStatus(proj.status),
+      financialHealth: toFinancialHealth(proj.financialHealth),
+      effectiveHealth: health.effectiveHealth,
+      healthReasons: health.healthReasons,
+      totalContractValue: contractVal,
+      startDate: proj.startDate ? proj.startDate.toISOString() : null,
+      endDate: proj.endDate ? proj.endDate.toISOString() : null,
+      location: proj.location,
+      roomArea: proj.roomArea,
+      projectType: proj.projectType,
+      coverImageUrl: proj.coverImageUrl,
+      notes: proj.notes,
+      budgetStatus: budget?.status || "TIDAK ADA",
+      actualCost,
+      internalBudget,
+      usedPercentage,
+      remainingBudget,
+      clientName: proj.client?.name || "-",
+      pmName: proj.projectManager?.name || "-",
+    };
   });
 
   return (
-    <section className="space-y-sm select-none">
-      {/* Header */}
-      <div className="flex items-center justify-between px-1">
-        <div className="space-y-base">
-          <p className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-primary">Atria Projects</p>
-          <h1 className="font-sans text-[24px] leading-[32px] tracking-tight font-semibold text-on-surface">Daftar Proyek</h1>
-        </div>
-        <Badge status="APPROVED">{`${projectsData.length.toString()} Aktif`}</Badge>
-      </div>
-
-      {projectsData.length === 0 ? (
-        <div className="premium-card p-md flex flex-col items-center justify-center py-14 text-center border border-outline-variant/30">
-          <div className="h-14 w-14 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant mb-4">
-            <span className="material-symbols-outlined text-[32px]">folder_copy</span>
-          </div>
-          <h3 className="font-sans text-[20px] leading-[28px] font-semibold text-[16px] text-on-surface">Tidak Ada Proyek</h3>
-          <p className="font-sans text-[14px] leading-[20px] font-normal text-on-surface-variant mt-1">
-            Saat ini tidak ada rencana anggaran proyek aktif yang ditugaskan kepada Anda.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-md">
-          {projectsData.map((proj) => {
-            const contractVal = Number(proj.totalContractValue);
-            const financialHealth = proj.financialHealth as "HEALTHY" | "WARNING" | "CRITICAL";
-
-            return (
-              <Link key={proj.id} href={`/projects/${proj.id}`} className="block transition active:scale-[0.98] duration-100">
-                <div className="premium-card p-md border border-outline-variant/30 hover:border-primary/40 space-y-md">
-                  
-                  {/* Top Row: Title & Status Badge */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-surface-container flex items-center justify-center">
-                        <span className="material-symbols-outlined text-primary text-[22px]">work</span>
-                      </div>
-                      <h3 className="font-sans text-[16px] leading-[24px] font-normal font-bold text-on-surface truncate max-w-[200px]">
-                        {proj.name}
-                      </h3>
-                    </div>
-                    <Badge status={financialHealth}>{financialHealth}</Badge>
-                  </div>
-                  
-                  {/* Metadata Row */}
-                  <div className="grid grid-cols-2 gap-md bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
-                    <div className="space-y-base">
-                      <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Klien</span>
-                      <div className="flex items-center gap-1 text-on-surface font-semibold text-[13px] leading-tight">
-                        <span className="material-symbols-outlined text-[16px] text-secondary">person</span>
-                        <span className="truncate">{proj.client?.name || "-"}</span>
-                      </div>
-                    </div>
-                    <div className="space-y-base">
-                      <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-[9px] text-on-surface-variant">Project Manager</span>
-                      <div className="flex items-center gap-1 text-on-surface font-semibold text-[13px] leading-tight">
-                        <span className="material-symbols-outlined text-[16px] text-secondary">person</span>
-                        <span className="truncate">{proj.projectManager?.name || "-"}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contract Value Row */}
-                  <div className="border-t border-outline-variant/20 pt-md flex items-center justify-between">
-                    <span className="font-sans text-[8px] leading-[16px] tracking-wider font-bold uppercase text-on-surface-variant">Nilai Kontrak</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[16px] leading-[20px] font-medium text-on-surface font-bold financial-amount">
-                        Rp {contractVal.toLocaleString("id-ID")}
-                      </span>
-                      <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
-                    </div>
-                  </div>
-                  
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-    </section>
+    <ProjectListClient
+      projects={mappedProjects}
+      clients={clientsData.map((c) => ({ id: c.id, name: c.name }))}
+      users={usersData.map((u) => ({ id: u.id, name: u.name }))}
+      isAllowedToCreate={isAllowedToCreate}
+    />
   );
 }

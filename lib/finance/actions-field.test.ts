@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { projectBudgetItem, vendorBill, projectCost, bankAccount, approval } from "@/db/schema";
+import { projectBudgetItem, vendorBill, projectCost, bankAccount, approval, materialInventory, stockMovement, projectExpenses } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { submitVendorBill } from "@/app/actions/finance/submit-vendor-bill";
@@ -79,6 +79,13 @@ const PM_BUDI_USER = {
 const MENTENG_PROJECT_ID = "77777777-7777-7777-7777-777777777771"; // PM Budi
 const SUDIRMAN_PROJECT_ID = "77777777-7777-7777-7777-777777777772"; // PM Siti
 const BCA_ACC_ID = "66666666-6666-6666-6666-666666666661";
+const MENTENG_TUKANG_CATEGORY_ID = "32323232-3232-3232-3232-323232323101";
+const MENTENG_MATERIAL_CATEGORY_ID = "32323232-3232-3232-3232-323232323102";
+const MENTENG_OPERASIONAL_CATEGORY_ID = "32323232-3232-3232-3232-323232323103";
+const MENTENG_TUKANG_PLAN_ITEM_ID = "35353535-3535-3535-3535-353535353501";
+const MATERIAL_PLYWOOD_ID = "13131313-1313-1313-1313-131313131301";
+const WAREHOUSE_LOCATION_ID = "14141414-1414-1414-1414-141414141401";
+const MENTENG_RAP_PLYWOOD_ITEM_ID = "17171717-1717-1717-1717-171717171701";
 
 describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", () => {
   afterAll(() => {
@@ -96,6 +103,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const res = await submitVendorBill({
         vendorId: vend!.id,
         projectId: SUDIRMAN_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
         projectBudgetItemId: "88888888-8888-8888-8888-888888888881", // dummy budget item
         billNumber: `BILL-TEST-${Date.now()}`,
         amount: 3500000,
@@ -123,6 +131,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const res = await submitVendorBill({
         vendorId: vend!.id,
         projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
         projectBudgetItemId: budgetItem!.id,
         billNumber: `BILL-OK-${Date.now()}`,
         amount: 2500000, // Rp 2.500.000 (di bawah limit 5M)
@@ -146,6 +155,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const billRes = await submitVendorBill({
         vendorId: vend!.id,
         projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
         projectBudgetItemId: budgetItem!.id,
         billNumber: `BILL-LARGE-${Date.now()}`,
         amount: 15000000, // Rp 15.000.000
@@ -198,6 +208,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const billRes = await submitVendorBill({
         vendorId: vend!.id,
         projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
         projectBudgetItemId: budgetItem!.id,
         billNumber: `BILL-WAIT-${Date.now()}`,
         amount: 6000000,
@@ -240,6 +251,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const billRes = await submitVendorBill({
         vendorId: vend!.id,
         projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
         projectBudgetItemId: budgetItem!.id,
         billNumber: `BILL-PASS-${Date.now()}`,
         amount: 8000000,
@@ -302,6 +314,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       mockUserSession(PM_BUDI_USER);
       const costRes = await submitFieldRequest({
         projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
         projectBudgetItemId: budgetItem!.id,
         quantity: 24,
         unitPrice: 250000,
@@ -370,13 +383,14 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
 
       mockUserSession(PM_BUDI_USER);
       
-      // Ajukan klaim melebihi plafon (sisa plafon di seed: Rp 150.000.000,00, kita ajukan Rp 160.000.000,00)
+      // Ajukan klaim melebihi plafon category Material.
       const costRes = await submitFieldRequest({
         projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
         projectBudgetItemId: budgetItem!.id,
-        quantity: 640,
+        quantity: 1040,
         unitPrice: 250000,
-        amount: 160000000,
+        amount: 260000000,
         description: "Beli marmer Italia premium",
       });
 
@@ -432,7 +446,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const payRes = await payFieldRequest(costRes.data.id, BCA_ACC_ID, "TRF-CLAIM-MARMER");
       expect(payRes.success).toBe(true);
       if (payRes.success) {
-        expect(payRes.data.nextBalance).toBe(balBefore - 160000000);
+        expect(payRes.data.nextBalance).toBe(balBefore - 260000000);
       }
 
       // Pastikan status projectCost berubah ke PAID
@@ -460,6 +474,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
         receiptImageUrl: "https://ik.imagekit.io/dekoria/receipt-multi.jpg",
         items: [
           {
+            projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
             projectBudgetItemId: item1.id,
             quantity: 2,
             unitPrice: 250000,
@@ -467,6 +482,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
             description: "Belanja gypsum & paku besi"
           },
           {
+            projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
             projectBudgetItemId: item2.id,
             quantity: 1,
             unitPrice: 750000,
@@ -488,6 +504,91 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
         expect(cost1.receiptImageUrl).toBe("https://ik.imagekit.io/dekoria/receipt-multi.jpg");
         expect(cost2.receiptImageUrl).toBe("https://ik.imagekit.io/dekoria/receipt-multi.jpg");
       }
+    });
+
+    it("harus mencatat material expense dengan stock in eksplisit dan menghubungkan stock movement", async () => {
+      mockUserSession(PM_BUDI_USER);
+
+      const inventoryBefore = await db.query.materialInventory.findFirst({
+        where: and(
+          eq(materialInventory.materialId, MATERIAL_PLYWOOD_ID),
+          eq(materialInventory.locationId, WAREHOUSE_LOCATION_ID)
+        ),
+      });
+      expect(inventoryBefore).toBeDefined();
+
+      const res = await submitFieldRequest({
+        projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
+        materialId: MATERIAL_PLYWOOD_ID,
+        projectRapItemId: MENTENG_RAP_PLYWOOD_ITEM_ID,
+        inventoryLocationId: WAREHOUSE_LOCATION_ID,
+        stockHandling: "STOCK_IN",
+        quantity: 3,
+        unitPrice: 250000,
+        amount: 750000,
+        description: "Pembelian multipleks untuk stock proyek Menteng",
+      });
+
+      expect(res.success).toBe(true);
+      if (!res.success) return;
+
+      const inventoryAfter = await db.query.materialInventory.findFirst({
+        where: eq(materialInventory.id, inventoryBefore!.id),
+      });
+      expect(Number(inventoryAfter!.currentStock)).toBe(Number(inventoryBefore!.currentStock) + 3);
+
+      const movement = await db.query.stockMovement.findFirst({
+        where: and(
+          eq(stockMovement.projectCostId, res.data.id),
+          eq(stockMovement.movementType, "STOCK_IN")
+        ),
+      });
+      expect(movement).toBeDefined();
+      expect(movement!.projectRapItemId).toBe(MENTENG_RAP_PLYWOOD_ITEM_ID);
+
+      const canonicalExpense = await db.query.projectExpenses.findFirst({
+        where: eq(projectExpenses.legacyProjectCostId, res.data.id),
+      });
+      expect(canonicalExpense?.stockMovementId).toBe(movement!.id);
+    });
+
+    it("harus menghubungkan expense Tukang ke Work Package canonical", async () => {
+      mockUserSession(PM_BUDI_USER);
+
+      const res = await submitFieldRequest({
+        projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_TUKANG_CATEGORY_ID,
+        projectCategoryPlanItemId: MENTENG_TUKANG_PLAN_ITEM_ID,
+        quantity: 1,
+        unitPrice: 1250000,
+        amount: 1250000,
+        description: "Termin tukang tambahan untuk kitchen installation crew",
+      });
+
+      expect(res.success).toBe(true);
+      if (!res.success) return;
+
+      const canonicalExpense = await db.query.projectExpenses.findFirst({
+        where: eq(projectExpenses.legacyProjectCostId, res.data.id),
+      });
+      expect(canonicalExpense?.projectCategoryPlanItemId).toBe(MENTENG_TUKANG_PLAN_ITEM_ID);
+    });
+
+    it("harus menolak package Tukang dipakai untuk expense Operasional", async () => {
+      mockUserSession(PM_BUDI_USER);
+
+      const res = await submitFieldRequest({
+        projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_OPERASIONAL_CATEGORY_ID,
+        projectCategoryPlanItemId: MENTENG_TUKANG_PLAN_ITEM_ID,
+        quantity: 1,
+        unitPrice: 250000,
+        amount: 250000,
+        description: "Operasional tidak boleh link ke work package tukang",
+      });
+
+      expect(res.success).toBe(false);
     });
   });
 });

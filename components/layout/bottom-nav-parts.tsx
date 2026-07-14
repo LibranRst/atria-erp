@@ -1,0 +1,207 @@
+"use client";
+
+import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
+
+import {
+  transitionEaseSmooth,
+  transitionSpringBouncy,
+  transitionSpringSmooth,
+} from "@/lib/utils/motion";
+import type { FabAction, NavItem } from "./bottom-nav-config";
+
+export function BottomTabBar({
+  activeIndex,
+  clickedTabHref,
+  items,
+  pathname,
+  searchParams,
+  onTabClick,
+}: {
+  readonly activeIndex: number;
+  readonly clickedTabHref: string | null;
+  readonly items: readonly NavItem[];
+  readonly pathname: string;
+  readonly searchParams: URLSearchParams;
+  readonly onTabClick: (href: string) => void;
+}): React.JSX.Element {
+  return (
+    <nav
+      aria-label="Primary mobile navigation"
+      className="pointer-events-auto relative z-10 flex h-full flex-1 items-center justify-center rounded-full border border-outline-variant/20 bg-white p-1 shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+    >
+      {activeIndex !== -1 && (
+        <motion.div
+          className="absolute bottom-1 top-1 rounded-full bg-primary"
+          initial={false}
+          animate={{
+            left: `calc(4px + (100% - 8px) * ${activeIndex} / ${items.length})`,
+            width: `calc((100% - 8px) / ${items.length})`,
+          }}
+          transition={transitionSpringBouncy}
+        />
+      )}
+
+      {items.map((item): React.JSX.Element => {
+        const isActive = clickedTabHref
+          ? item.href === clickedTabHref
+          : item.match(pathname, searchParams);
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={isActive ? "page" : undefined}
+            onClick={() => onTabClick(item.href)}
+            className={`relative flex h-full flex-1 flex-col items-center justify-center rounded-full px-2 transition-all duration-200 active:scale-90 ${
+              isActive ? "text-on-primary" : "text-on-surface-variant"
+            }`}
+          >
+            <span
+              className="material-symbols-outlined relative z-10 text-[24px]"
+              style={{
+                fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0",
+              }}
+            >
+              {item.iconName}
+            </span>
+            <span className="relative z-10 font-sans text-[8px] font-bold uppercase leading-[16px] tracking-wider">
+              {item.label}
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function QuickActionFab({
+  actions,
+  contentRef,
+  isOpen,
+  menuHeight,
+  onAction,
+  onOpen,
+}: {
+  readonly actions: readonly FabAction[];
+  readonly contentRef: React.RefObject<HTMLDivElement | null>;
+  readonly isOpen: boolean;
+  readonly menuHeight: number | null;
+  readonly onAction: (action: FabAction) => void;
+  readonly onOpen: () => void;
+}): React.JSX.Element {
+  return (
+    <div className="relative z-30 h-14 w-14 shrink-0">
+      <motion.div
+        onClick={() => {
+          if (!isOpen) onOpen();
+        }}
+        whileHover={!isOpen ? { scale: 1.02 } : undefined}
+        whileTap={!isOpen ? { scale: 0.95 } : undefined}
+        animate={{
+          height: isOpen && menuHeight ? menuHeight : 56,
+          width: isOpen ? 240 : 56,
+          bottom: isOpen ? 68 : 0,
+        }}
+        transition={isOpen ? transitionSpringBouncy : transitionSpringSmooth}
+        className={`pointer-events-auto absolute right-0 z-50 origin-bottom-right cursor-pointer select-none overflow-hidden rounded-[28px] border transition-colors duration-300
+          ${
+            isOpen
+              ? "border-outline-variant/20 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+              : "border-outline-variant/20 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+          }`}
+      >
+        <motion.div
+          animate={{
+            opacity: isOpen ? 0 : 1,
+            scale: isOpen ? 0.75 : 1,
+          }}
+          transition={transitionEaseSmooth}
+          className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        >
+          <span className="material-symbols-outlined text-[32px] text-primary">
+            add
+          </span>
+        </motion.div>
+
+        <motion.div
+          ref={contentRef}
+          animate={{
+            opacity: isOpen ? 1 : 0,
+            scale: isOpen ? 1 : 0.95,
+          }}
+          transition={transitionEaseSmooth}
+          className={`flex w-[240px] flex-col p-3 ${
+            isOpen ? "pointer-events-auto" : "pointer-events-none"
+          }`}
+        >
+          <div className="flex flex-col gap-1 pr-1">
+            {actions.map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                tabIndex={isOpen ? 0 : -1}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onAction(action);
+                }}
+                className={`flex w-full cursor-pointer items-center gap-3 rounded-full p-2 text-left transition-colors duration-150 ${
+                  action.disabled
+                    ? "opacity-50 hover:bg-transparent active:bg-transparent"
+                    : "hover:bg-surface-container-low active:bg-surface-container-high"
+                }`}
+              >
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                    action.disabled
+                      ? "bg-on-surface-variant/10 text-on-surface-variant"
+                      : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    {action.iconName}
+                  </span>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span
+                    className={`block text-xs font-bold ${action.disabled ? "text-on-surface-variant" : "text-on-surface"}`}
+                  >
+                    {action.label}
+                  </span>
+                  <span className="block truncate text-[10px] font-semibold text-on-surface-variant">
+                    {action.description}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+export function BottomNavBackdrop({
+  isOpen,
+  onClose,
+}: {
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+}): React.JSX.Element {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.button
+          type="button"
+          aria-label="Close quick actions"
+          onClick={onClose}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={transitionEaseSmooth}
+          className="pointer-events-auto fixed inset-0 z-20 bg-black/20 backdrop-blur-[2px]"
+        />
+      )}
+    </AnimatePresence>
+  );
+}

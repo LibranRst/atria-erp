@@ -1,0 +1,157 @@
+import crypto from "crypto";
+import { eq } from "drizzle-orm";
+
+import { projectBudgetCategory, projectBudgetItem, projectCost } from "@/db/schema";
+import {
+  assertCategoryPlanItemLinkAllowed,
+  assertMaterialLinksAllowed,
+  createCanonicalExpenseForProjectCost,
+  resolveBudgetCategoryForExpense,
+  syncProjectBudgetCategory,
+} from "@/lib/budget/budget-sync";
+import { applyExpenseStockHandling, type FieldRequestTx, type StockHandling } from "./field-request-stock";
+import { createProjectCostApprovalTx } from "./field-request-utils";
+
+export type FieldRequestSubmissionItem = {
+  readonly projectBudgetCategoryId: string;
+  readonly projectBudgetItemId?: string | null;
+  readonly materialId?: string | null;
+  readonly projectRapItemId?: string | null;
+  readonly projectCategoryPlanItemId?: string | null;
+  readonly inventoryLocationId?: string | null;
+  readonly stockHandling: StockHandling;
+  readonly quantity: number;
+  readonly unitPrice: number;
+  readonly amount: number;
+  readonly description: string;
+};
+
+export async function createSubmittedFieldRequestTx(
+  tx: FieldRequestTx,
+  args: {
+    readonly projectId: string;
+    readonly requestedById: string;
+    readonly receiptImageUrl?: string | null;
+    readonly receiptGroupId?: string | null;
+    readonly item: FieldRequestSubmissionItem;
+    readonly includeApprovalCategoryLabel?: boolean;
+  },
+): Promise<typeof projectCost.$inferSelect> {
+  const budgetContext = await resolveBudgetCategoryForExpense({
+    tx,
+    projectId: args.projectId,
+    projectBudgetCategoryId: args.item.projectBudgetCategoryId,
+    projectBudgetItemId: args.item.projectBudgetItemId,
+  });
+  assertMaterialLinksAllowed({
+    categoryCode: budgetContext.categoryCode,
+    materialId: args.item.materialId,
+    projectRapItemId: args.item.projectRapItemId,
+  });
+  await assertCategoryPlanItemLinkAllowed({
+    tx,
+    projectId: args.projectId,
+    projectBudgetCategoryId: budgetContext.projectBudgetCategoryId,
+    categoryCode: budgetContext.categoryCode,
+    projectCategoryPlanItemId: args.item.projectCategoryPlanItemId,
+  });
+  if (budgetContext.categoryCode !== "MATERIAL" && args.item.stockHandling !== "EXPENSE_ONLY") {
+    throw new Error("STOCK_HANDLING_ONLY_ALLOWED_FOR_MATERIAL_CATEGORY");
+  }
+
+  const budgetCategory = await tx.query.projectBudgetCategory.findFirst({
+    where: eq(projectBudgetCategory.id, budgetContext.projectBudgetCategoryId),
+    with: {
+      expenseCategory: true,
+    },
+  });
+
+  if (!budgetCategory) {
+    throw new Error("PROJECT_BUDGET_CATEGORY_NOT_FOUND");
+  }
+
+  const legacyBudgetItem = args.includeApprovalCategoryLabel && args.item.projectBudgetItemId
+    ? await tx.query.projectBudgetItem.findFirst({
+        where: eq(projectBudgetItem.id, args.item.projectBudgetItemId),
+      })
+    : null;
+  const allocated = Number(budgetCategory.allocatedAmount);
+  const spent = Number(budgetCategory.actualAmount);
+  const isOverrun = spent + args.item.amount > allocated;
+  const requiresApproval = args.item.amount >= 5000000 || isOverrun;
+  const projectCostId = crypto.randomUUID();
+
+  if (requiresApproval) {
+    await createProjectCostApprovalTx(tx, {
+      projectCostId,
+      isOverrun,
+      label: args.includeApprovalCategoryLabel
+        ? legacyBudgetItem?.name ?? budgetCategory.expenseCategory.name
+        : undefined,
+    });
+  }
+
+  const [cost] = await tx
+    .insert(projectCost)
+    .values({
+      id: projectCostId,
+      projectId: args.projectId,
+      projectBudgetCategoryId: budgetContext.projectBudgetCategoryId,
+      projectBudgetItemId: args.item.projectBudgetItemId ?? null,
+      materialId: args.item.materialId ?? null,
+      projectRapItemId: args.item.projectRapItemId ?? null,
+      requestedById: args.requestedById,
+      ...(args.receiptGroupId ? { receiptGroupId: args.receiptGroupId } : {}),
+      quantity: args.item.quantity.toString(),
+      unitPrice: args.item.unitPrice.toString(),
+      amount: args.item.amount.toFixed(2),
+      description: args.item.description,
+      receiptImageUrl: args.receiptImageUrl || null,
+      status: "SUBMITTED",
+      budgetOverrun: isOverrun,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning();
+
+  const stockMovementId = await applyExpenseStockHandling({
+    tx,
+    stockHandling: args.item.stockHandling,
+    materialId: args.item.materialId,
+    inventoryLocationId: args.item.inventoryLocationId,
+    projectId: args.projectId,
+    projectRapItemId: args.item.projectRapItemId,
+    projectCostId,
+    quantity: args.item.quantity,
+    unitPrice: args.item.unitPrice,
+    description: args.item.description,
+    userId: args.requestedById,
+  });
+
+  await createCanonicalExpenseForProjectCost({
+    tx,
+    projectCostId,
+    projectId: args.projectId,
+    projectBudgetCategoryId: budgetContext.projectBudgetCategoryId,
+    projectBudgetId: budgetContext.projectBudgetId,
+    expenseCategoryId: budgetContext.expenseCategoryId,
+    requestedById: args.requestedById,
+    description: args.item.description,
+    quantity: args.item.quantity,
+    unitCost: args.item.unitPrice,
+    amount: args.item.amount,
+    receiptImageUrl: args.receiptImageUrl,
+    status: "SUBMITTED",
+    materialId: args.item.materialId,
+    projectRapItemId: args.item.projectRapItemId,
+    projectCategoryPlanItemId: args.item.projectCategoryPlanItemId,
+    stockMovementId,
+  });
+
+  await syncProjectBudgetCategory({
+    tx,
+    projectBudgetCategoryId: budgetContext.projectBudgetCategoryId,
+  });
+
+  return cost;
+}

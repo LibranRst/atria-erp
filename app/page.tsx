@@ -1,25 +1,16 @@
-import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
+import { requireServerSession } from "@/lib/server/session";
 import { redirect } from "next/navigation";
 
 export default async function Home(): Promise<never> {
-  // 1. Get session
-  const session = await auth.api.getSession({
-    headers: {
-      cookie: (await (await import("next/headers")).cookies()).toString(),
-    },
-  });
+  const session = await requireServerSession();
 
-  if (!session || !session.user) {
-    redirect("/login");
-  }
-
-  // 2. Resolve role
   const roleName = await resolveRoleName(session.user.roleId);
 
-  // 3. Redirect based on role
   if (roleName === "OWNER" || roleName === "FINANCE_ADMIN") {
     redirect("/ledger");
+  } else if (roleName === "PURCHASING") {
+    redirect("/materials");
   } else {
     redirect("/projects");
   }

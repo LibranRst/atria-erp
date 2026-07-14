@@ -29,7 +29,34 @@ export type PermissionKey =
   | "update:client_invoice"
   | "reconcile:client_invoice"
   | "view:profitability"
-  | "view:ai_brief";
+  | "view:ai_brief"
+  | "view:material"
+  | "create:material"
+  | "update:material"
+  | "view:inventory"
+  | "create:stock_movement"
+  | "reserve:stock"
+  | "use:stock"
+  | "adjust:stock"
+  | "waste:stock"
+  | "transfer:stock"
+  | "create:stock_count"
+  | "approve:stock_count"
+  | "request:goods_receipt_reversal"
+  | "approve:goods_receipt_reversal"
+  | "view:rap"
+  | "create:rap"
+  | "update:rap"
+  | "lock:rap"
+  | "view:rab"
+  | "create:rab"
+  | "update:rab"
+  | "approve:rab"
+  | "view:settings"
+  | "manage:budget_settings"
+  | "manage:expense_categories"
+  | "manage:item_library"
+  | "manage:material_settings";
 
 // 2. Matriks Otorisasi Berdasarkan Peran (Role Permission Matrix)
 export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
@@ -60,6 +87,33 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "reconcile:client_invoice",
     "view:profitability",
     "view:ai_brief",
+    "view:material",
+    "create:material",
+    "update:material",
+    "view:inventory",
+    "create:stock_movement",
+    "reserve:stock",
+    "use:stock",
+    "adjust:stock",
+    "waste:stock",
+    "transfer:stock",
+    "create:stock_count",
+    "approve:stock_count",
+    "request:goods_receipt_reversal",
+    "approve:goods_receipt_reversal",
+    "view:rap",
+    "create:rap",
+    "update:rap",
+    "lock:rap",
+    "view:rab",
+    "create:rab",
+    "update:rab",
+    "approve:rab",
+    "view:settings",
+    "manage:budget_settings",
+    "manage:expense_categories",
+    "manage:item_library",
+    "manage:material_settings",
   ],
   FINANCE_ADMIN: [
     "view:bank_account",
@@ -68,6 +122,9 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "create:ledger",
     "reconcile:ledger",
     "view:budget",
+    "create:budget",
+    "update:budget",
+    "approve:budget",
     "view:cost",
     "update:cost",
     "pay:cost",
@@ -80,6 +137,28 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "update:client_invoice",
     "reconcile:client_invoice",
     "view:profitability",
+    "view:material",
+    "create:material",
+    "update:material",
+    "view:inventory",
+    "create:stock_movement",
+    "reserve:stock",
+    "use:stock",
+    "approve:stock_count",
+    "approve:goods_receipt_reversal",
+    "view:rap",
+    "create:rap",
+    "update:rap",
+    "lock:rap",
+    "view:rab",
+    "create:rab",
+    "update:rab",
+    "approve:rab",
+    "view:settings",
+    "manage:budget_settings",
+    "manage:expense_categories",
+    "manage:item_library",
+    "manage:material_settings",
   ],
   PROJECT_MANAGER: [
     "view:budget",
@@ -91,12 +170,33 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "view:vendor_bill",
     "create:vendor_bill",
     "view:client_invoice",
+    "view:material",
+    "view:inventory",
+    "view:rap",
+    "create:rap",
+    "update:rap",
+    "view:rab",
   ],
   PURCHASING: [
     "view:budget",
     "view:vendor_bill",
     "create:vendor_bill",
     "update:vendor_bill",
+    "view:material",
+    "create:material",
+    "update:material",
+    "view:inventory",
+    "create:stock_movement",
+    "reserve:stock",
+    "use:stock",
+    "waste:stock",
+    "transfer:stock",
+    "create:stock_count",
+    "request:goods_receipt_reversal",
+    "view:rap",
+    "update:rap",
+    "view:settings",
+    "manage:material_settings",
   ],
   SALES: [
     "view:budget",
@@ -106,6 +206,8 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
   ],
   DESIGNER: [
     "view:budget",
+    "view:rap",
+    "view:rab",
   ],
   MARKETING: [],
 };
