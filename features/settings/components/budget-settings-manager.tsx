@@ -97,7 +97,7 @@ export function BudgetSettingsManager({
         />
       )}
 
-      <FormSection title="Simulasi nilai proyek" helper="Nilai contoh membantu membaca dampak formula dan tidak ikut disimpan.">
+      <FormSection presentation="plain" title="Simulasi nilai proyek" helper="Nilai contoh membantu membaca dampak formula dan tidak ikut disimpan.">
         <FormField label="Nilai proyek contoh" helper="Hanya untuk simulasi; tidak ikut disimpan."><MoneyInput value={sampleValue} onChange={(value) => setSampleValue(Number(value || 0))} /></FormField>
         <SettingsGroupSurface>
           <dl className="divide-y divide-black/[0.055] px-4">
@@ -143,7 +143,7 @@ export function BudgetSettingsManager({
         </FormField>
       </FormSection>
 
-      <FormSection title="Pembagian kategori" helper="Bagikan Budget Internal ke kategori aktif. Total tidak boleh lebih dari 100%.">
+      <FormSection presentation="plain" title="Pembagian kategori" helper="Bagikan Budget Internal ke kategori aktif. Total tidak boleh lebih dari 100%.">
         <div className="flex min-w-0 items-end justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-[17px] font-semibold text-on-surface">
