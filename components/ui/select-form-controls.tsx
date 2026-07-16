@@ -26,6 +26,9 @@ export function SheetSelect({
   title,
   compact,
   error,
+  createActionLabel,
+  createActionDescription,
+  onCreateAction,
 }: {
   readonly id?: string;
   readonly label: string;
@@ -43,11 +46,15 @@ export function SheetSelect({
   readonly title?: string;
   readonly compact?: boolean;
   readonly error?: string;
+  readonly createActionLabel?: string;
+  readonly createActionDescription?: string;
+  readonly onCreateAction?: () => void;
 }): React.JSX.Element {
   const grouped = useFormPresentation() === "grouped";
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [pendingValue, setPendingValue] = React.useState<string | null>(null);
+  const [pendingCreateAction, setPendingCreateAction] = React.useState(false);
   const selected = options.find((option) => option.value === value);
   const searchable = options.length > 6;
   const filtered = options.filter((option) => {
@@ -110,6 +117,11 @@ export function SheetSelect({
         title={title ?? label}
         onClose={() => setOpen(false)}
         onExitComplete={() => {
+          if (pendingCreateAction) {
+            setPendingCreateAction(false);
+            onCreateAction?.();
+            return;
+          }
           const nextValue = pendingValue;
           if (nextValue === null) return;
           setPendingValue(null);
@@ -152,20 +164,28 @@ export function SheetSelect({
                           }}
                           className={cx(
                             "flex min-h-14 w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition active:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50",
-                            active ? "bg-blue-50 text-blue-600" : "text-on-surface",
+                            active
+                              ? "bg-blue-50 text-blue-600"
+                              : "text-on-surface",
                           )}
                         >
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-xs font-bold leading-4">
                               {option.label}
                             </span>
-                            {(option.description || option.meta || option.disabledReason) ? (
+                            {option.description ||
+                            option.meta ||
+                            option.disabledReason ? (
                               <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
-                                {option.disabledReason ?? option.description ?? option.meta}
+                                {option.disabledReason ??
+                                  option.description ??
+                                  option.meta}
                               </span>
                             ) : null}
                           </span>
-                          {active ? <Check className="h-4 w-4 shrink-0" /> : null}
+                          {active ? (
+                            <Check className="h-4 w-4 shrink-0" />
+                          ) : null}
                         </button>
                       );
                     })}
@@ -173,6 +193,37 @@ export function SheetSelect({
               </div>
             ))
           )}
+          {createActionLabel && onCreateAction ? (
+            <button
+              type="button"
+              onClick={() => {
+                setPendingValue(null);
+                setPendingCreateAction(true);
+                setOpen(false);
+              }}
+              className="flex min-h-14 w-full min-w-0 items-center gap-3 rounded-[22px] bg-surface-container-lowest px-4 py-3 text-left text-blue-600 outline-none ring-1 ring-outline-variant/15 transition active:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500/25"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50">
+                <Plus className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-xs font-bold leading-[1.15]">
+                  {createActionLabel}
+                </span>
+                {createActionDescription ? (
+                  <span className="mt-1 block truncate text-[10px] leading-[1.2] text-on-surface-variant">
+                    {createActionDescription}
+                  </span>
+                ) : null}
+              </span>
+              <span
+                className="material-symbols-outlined shrink-0 text-[18px]"
+                aria-hidden="true"
+              >
+                chevron_right
+              </span>
+            </button>
+          ) : null}
         </div>
       </BottomSheet>
     </FormField>
@@ -273,7 +324,7 @@ export function ComboboxField({
               Belum ada pilihan.
             </p>
           ) : null}
-          {(filteredOptions.length > 0 || canUseCustomValue) ? (
+          {filteredOptions.length > 0 || canUseCustomValue ? (
             <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-outline-variant/15">
               {filteredOptions.map((option) => {
                 const active = option === value;
@@ -290,7 +341,9 @@ export function ComboboxField({
                       active ? "bg-blue-50 text-blue-600" : "text-on-surface",
                     )}
                   >
-                    <span className="min-w-0 flex-1 truncate text-xs font-bold">{option}</span>
+                    <span className="min-w-0 flex-1 truncate text-xs font-bold">
+                      {option}
+                    </span>
                     {active ? <Check className="h-4 w-4 shrink-0" /> : null}
                   </button>
                 );
@@ -304,7 +357,9 @@ export function ComboboxField({
                   }}
                   className="flex min-h-12 w-full min-w-0 items-center justify-between gap-3 bg-blue-50 px-4 py-3 text-left text-blue-600 transition active:bg-blue-100"
                 >
-                  <span className="min-w-0 truncate text-xs font-bold">Gunakan &quot;{customValue}&quot;</span>
+                  <span className="min-w-0 truncate text-xs font-bold">
+                    Gunakan &quot;{customValue}&quot;
+                  </span>
                   <Plus className="h-4 w-4 shrink-0" />
                 </button>
               ) : null}

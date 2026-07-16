@@ -36,7 +36,7 @@ export function SettingsModuleHeader({
           onClick={onAction}
           whileTap={reduceMotion ? undefined : { scale: 0.96 }}
           transition={transitionSpringSnappy}
-          className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-primary/8 px-3 text-[10px] font-bold text-primary outline-none after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/25 disabled:opacity-35"
+          className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-[#007AFF]/[0.08] px-3 text-[10px] font-semibold text-[#007AFF] outline-none after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] active:bg-[#007AFF]/[0.14] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 disabled:opacity-35"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           {actionLabel}

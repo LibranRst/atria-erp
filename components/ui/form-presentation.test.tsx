@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { FormField, Textarea, TextInput } from "./basic-form-controls";
 import { FormSection, FormSheetPresentationBoundary } from "./guided-form";
 import { FormPresentationProvider } from "./form-presentation-context";
+import { ValuePreviewStrip } from "./form-support";
 import { SheetSelect } from "./select-form-controls";
 
 describe("iOS grouped form presentation", () => {
@@ -41,7 +42,11 @@ describe("iOS grouped form presentation", () => {
   test("supports explicit inline rows and keeps helper copy inside the row", () => {
     const html = renderToStaticMarkup(
       <FormSection title="Preferensi">
-        <FormField label="Aktif" helper="Tersedia untuk transaksi baru." layout="inline">
+        <FormField
+          label="Aktif"
+          helper="Tersedia untuk transaksi baru."
+          layout="inline"
+        >
           <button type="button">Ya</button>
         </FormField>
       </FormSection>,
@@ -90,7 +95,22 @@ describe("iOS grouped form presentation", () => {
     );
 
     expect(html).toContain("rounded-full");
-    expect(html).toContain("border-outline-variant/35 bg-surface-container-lowest px-5");
-    expect(html).not.toContain("group/form min-w-0 space-y-1 bg-surface-container-lowest px-4 py-3");
+    expect(html).toContain(
+      "border-outline-variant/35 bg-surface-container-lowest px-5",
+    );
+    expect(html).not.toContain(
+      "group/form min-w-0 space-y-1 bg-surface-container-lowest px-4 py-3",
+    );
+  });
+
+  test("lets a single value preview occupy the full available row", () => {
+    const html = renderToStaticMarkup(
+      <ValuePreviewStrip
+        items={[{ label: "Subtotal komponen", amount: 12000000 }]}
+      />,
+    );
+
+    expect(html).toContain("grid-cols-1");
+    expect(html).not.toContain("grid-cols-2");
   });
 });
