@@ -23,7 +23,7 @@ export function SettingsModuleHeader({
 }): React.JSX.Element {
   const reduceMotion = useReducedMotion();
   return (
-    <header className="flex min-w-0 items-end justify-between gap-3 px-1">
+    <header className="flex min-w-0 items-end justify-between gap-3">
       <div className="min-w-0">
         <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-on-surface-variant/65">{eyebrow}</p>
         <h2 className="mt-1 text-[19px] font-semibold leading-[1.12] tracking-[-0.02em] text-on-surface">{title}</h2>

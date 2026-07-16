@@ -394,7 +394,7 @@ export function FormSection({
   const grouped = presentation === "grouped";
   return (
     <section className={cx("min-w-0 space-y-2.5", className)}>
-      <div className="flex min-w-0 items-end justify-between gap-3 px-1">
+      <div className="flex min-w-0 items-end justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-[10px] font-bold uppercase tracking-[0.11em] text-on-surface">
             {title}
@@ -630,7 +630,7 @@ export function OptionChoiceGroup<TValue extends string>({
 }): React.JSX.Element {
   return (
     <fieldset className="space-y-2">
-      <legend className="px-1 text-xs font-semibold text-on-surface">
+      <legend className="text-xs font-semibold text-on-surface">
         {label}
       </legend>
       <div className="space-y-2">

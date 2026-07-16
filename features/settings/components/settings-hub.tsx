@@ -64,7 +64,7 @@ export function SettingsHub({
       </section>
 
       <section className="space-y-2">
-        <div className="flex min-h-10 items-center px-1"><h3 className="text-[17px] font-semibold tracking-[-0.015em] text-on-surface">Modul pengaturan</h3></div>
+        <div className="flex min-h-10 items-center"><h3 className="text-[17px] font-semibold tracking-[-0.015em] text-on-surface">Modul pengaturan</h3></div>
         <SettingsGroupSurface>
           <div className="divide-y divide-black/[0.055]">
             {modules.map((module) => {

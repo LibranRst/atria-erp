@@ -23,7 +23,7 @@ type SettingsHeaderProps = {
 
 export function SettingsHeader({ eyebrow, title, description, role, canManage, action }: SettingsHeaderProps): React.JSX.Element {
   return (
-    <header className="min-w-0 px-1">
+    <header className="min-w-0">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/65">{eyebrow}</p>
@@ -79,11 +79,11 @@ export function CompactMetric({ label, value, supportingValue, amount, moneyVari
 export function Field({ label, hint, children }: { readonly label: string; readonly hint?: string; readonly children: React.ReactNode }): React.JSX.Element {
   return (
     <div className="min-w-0 space-y-1.5">
-      <label className="ml-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">
+      <label className="block text-[9px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">
         {label}
       </label>
       {children}
-      {hint && <span className="ml-1 block text-[10px] font-normal leading-4 text-on-surface-variant">{hint}</span>}
+      {hint && <span className="block text-[10px] font-normal leading-4 text-on-surface-variant">{hint}</span>}
     </div>
   );
 }

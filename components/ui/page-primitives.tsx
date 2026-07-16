@@ -21,7 +21,7 @@ export function PageHeader({
 }: PageHeaderProps): JSX.Element {
   return (
     <header
-      className={`flex items-start justify-between gap-4 px-1 ${className}`}
+      className={`flex items-start justify-between gap-4 ${className}`}
     >
       <div className="min-w-0">
         {eyebrow && (
