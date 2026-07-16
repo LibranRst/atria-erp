@@ -385,7 +385,7 @@ export function MoneyInput({
         aria-describedby={ariaDescribedBy}
       />
       {showPreview && (
-        <p className="financial-amount ml-1 font-mono text-[10px] text-on-surface-variant [overflow-wrap:anywhere]">
+        <p className="financial-amount font-mono text-[10px] text-on-surface-variant [overflow-wrap:anywhere]">
           Rp {numeric.toLocaleString("id-ID")}
         </p>
       )}

@@ -2,9 +2,9 @@ import type { SelectOption } from "./form-control-types";
 
 export const fieldShell = "min-w-0 space-y-1.5";
 export const labelClass =
-  "ml-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-on-surface-variant";
-export const helperClass = "ml-1 text-[10px] leading-4 text-on-surface-variant";
-export const errorClass = "ml-1 text-[10px] font-semibold leading-4 text-error";
+  "block text-[9px] font-bold uppercase tracking-[0.12em] text-on-surface-variant";
+export const helperClass = "text-[10px] leading-4 text-on-surface-variant";
+export const errorClass = "text-[10px] font-semibold leading-4 text-error";
 export const controlClass =
   "min-h-12 w-full min-w-0 rounded-2xl border border-outline-variant/35 bg-surface-container-low px-3 text-sm font-semibold text-on-surface outline-none transition focus:border-outline focus:ring-0 disabled:cursor-not-allowed disabled:opacity-55";
 

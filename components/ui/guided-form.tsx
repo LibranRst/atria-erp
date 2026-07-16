@@ -479,7 +479,7 @@ export function FieldContextLine({
   return (
     <p
       className={cx(
-        "ml-1 min-w-0 text-[10px] font-medium leading-4",
+        "min-w-0 text-[10px] font-medium leading-4",
         textClass[tone],
       )}
     >

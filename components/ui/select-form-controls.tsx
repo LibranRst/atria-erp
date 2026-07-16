@@ -132,7 +132,7 @@ export function SheetSelect({
             groups.map((group) => (
               <div key={group || "ungrouped"} className="space-y-2">
                 {group && (
-                  <p className="ml-1 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                  <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
                     {group}
                   </p>
                 )}
