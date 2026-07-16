@@ -22,7 +22,7 @@ export default function ProfileLoading(): React.JSX.Element {
       aria-label="Memuat profil"
       role="status"
     >
-      <div className="space-y-2 px-1">
+      <div className="space-y-2">
         <SkeletonLine className="h-2.5 w-14 bg-surface-container-low" />
         <SkeletonLine className="h-7 w-32" />
         <SkeletonLine className="h-3 w-64 bg-surface-container-low" />
@@ -44,14 +44,14 @@ export default function ProfileLoading(): React.JSX.Element {
       </section>
 
       <section className="space-y-2">
-        <SkeletonLine className="ml-1 h-4 w-28" />
+        <SkeletonLine className="h-4 w-28" />
         <div className="divide-y divide-black/[0.055] overflow-hidden rounded-[26px] bg-white/[0.9] shadow-[0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/[0.025] max-[430px]:rounded-[24px]">
           {[0, 1, 2].map((row) => <ProfileRowSkeleton key={row} />)}
         </div>
       </section>
 
       <section className="space-y-2">
-        <div className="flex items-center justify-between px-1">
+        <div className="flex items-center justify-between">
           <SkeletonLine className="h-4 w-24" />
           <SkeletonLine className="h-2.5 w-20 bg-surface-container-low" />
         </div>

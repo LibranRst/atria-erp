@@ -31,7 +31,7 @@ export default function ProjectDetailLoading(): React.JSX.Element {
 
       {["readiness", "actions"].map((section) => (
         <section key={section} className="space-y-2.5">
-          <SkeletonLine className="ml-1 h-5 w-32" />
+          <SkeletonLine className="h-5 w-32" />
           <div className="overflow-hidden rounded-[24px] bg-white px-4 shadow-[0_12px_30px_rgba(17,17,17,0.04)]">
             {["one", "two", "three"].map((row, index) => (
               <div key={row} className={`flex h-16 items-center gap-3 ${index > 0 ? "border-t border-outline-variant/20" : ""}`}>
