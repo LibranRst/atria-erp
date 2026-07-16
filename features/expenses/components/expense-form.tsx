@@ -520,9 +520,18 @@ export function ExpenseForm({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => applyProjectChange(lastProjectSuggestion.id)}
-                className="min-h-12 w-full rounded-full bg-primary/8 px-5 text-left text-xs font-semibold text-primary ring-1 ring-primary/15"
+                className="flex min-h-14 w-full min-w-0 items-center gap-3 bg-surface-container-lowest px-4 py-2.5 text-left outline-none transition-colors active:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/25"
               >
-                Gunakan proyek terakhir · {lastProjectSuggestion.name}
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant" aria-hidden="true">
+                  <span className="material-symbols-outlined text-[18px] leading-none">history</span>
+                </span>
+                <span className="grid min-w-0 flex-1 gap-0.5">
+                  <span className="block text-[10px] font-semibold leading-[1.15] text-on-surface-variant">Proyek terakhir</span>
+                  <span className="block truncate text-xs font-bold leading-[1.15] text-on-surface">
+                    {lastProjectSuggestion.name}
+                  </span>
+                </span>
+                <span className="shrink-0 text-[11px] font-bold text-blue-600">Gunakan</span>
               </motion.button>
             ) : null}
             {selectedProject && !selectedProjectApproved ? (
@@ -535,6 +544,7 @@ export function ExpenseForm({
           <FormSection
             title="2 · Nota (opsional)"
             helper="Unggah untuk membaca item otomatis, atau lewati dan isi rincian."
+            presentation="plain"
           >
             <ExpenseReceiptUpload
               attachment={draft.payload.receipt}
@@ -559,6 +569,7 @@ export function ExpenseForm({
           <FormSection
             title="3 · Rincian"
             helper={`${draft.payload.lines.length - incompleteCount} dari ${draft.payload.lines.length} item sudah lengkap.`}
+            presentation="plain"
           >
             <ExpenseItemsSection
               disabled={busy}

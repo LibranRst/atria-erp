@@ -82,7 +82,7 @@ export function ExpenseReceiptUpload({
           />
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2 rounded-[24px] bg-surface-container-lowest p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
           <div className="grid grid-cols-2 gap-2">
             <ReceiptUploadOption
               icon="photo_camera"
@@ -99,7 +99,7 @@ export function ExpenseReceiptUpload({
             />
           </div>
           {!selectedProjectId ? (
-            <p className="px-1 text-[11px] leading-4 text-on-surface-variant">
+            <p className="px-1 text-[11px] leading-[1.35] text-on-surface-variant">
               Pilih proyek terlebih dahulu agar hasil scan memakai kategori yang benar.
             </p>
           ) : null}
@@ -158,7 +158,7 @@ function ReceiptUploadOption({
     <motion.label
       whileTap={disabled ? undefined : { scale: 0.97 }}
       transition={transitionSpringSnappy}
-      className={`flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-primary ring-1 ring-outline-variant/20 ${disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer"}`}
+      className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-surface-container-low px-3 text-on-surface ring-1 ring-outline-variant/10 focus-within:ring-2 focus-within:ring-blue-500/25 ${disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
     >
       <span className="material-symbols-outlined text-[18px]" aria-hidden="true">{icon}</span>
       <span className="truncate text-xs font-bold">{label}</span>

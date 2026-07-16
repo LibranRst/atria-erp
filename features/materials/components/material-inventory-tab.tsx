@@ -1,11 +1,19 @@
 "use client";
 
-import React from "react";
 import { MapPin, Package } from "lucide-react";
+import React from "react";
 
-import { FilterPills, PanelEmptyState as EmptyState, SearchInput } from "@/components/ui";
+import { ExclusiveSearchFilterBar, type SearchFilterMode } from "@/components/ui/exclusive-search-filter-bar";
 import { MoneyValue } from "@/components/ui/page-primitives";
+import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import type { MaterialLocation } from "@/features/materials/components/material-dashboard-types";
+import {
+  MaterialGroupSurface,
+  MaterialInlineState,
+  MaterialSection,
+  MaterialStatusLabel,
+  type MaterialTone,
+} from "@/features/materials/components/material-page-primitives";
 import {
   formatMaterialQuantity,
   getGroupedMaterialStockSummary,
@@ -36,61 +44,74 @@ export function MaterialInventoryTab({
   onStatusChange,
   onOpenMaterial,
 }: InventoryTabProps): React.JSX.Element {
+  const [mode, setMode] = React.useState<SearchFilterMode>("filter");
+
   return (
-    <div className="space-y-md">
-      <div className="sticky top-16 z-20 space-y-3 rounded-[28px] border border-outline-variant/20 bg-white/95 p-sm shadow-[0_14px_34px_rgba(17,17,17,0.055)] backdrop-blur-md">
-        <SearchInput
-          value={search}
-          onChange={onSearchChange}
-          placeholder="Cari material, kategori..."
-          ariaLabel="Cari inventory material"
+    <div className="space-y-lg max-[430px]:space-y-5">
+      <div className="space-y-2" data-material-controls="inline">
+        <ExclusiveSearchFilterBar
+          mode={mode}
+          filterValue={status}
+          onFilterChange={onStatusChange}
+          filterAriaLabel="Filter status stok"
+          filterLayoutId="material-inventory-status"
+          searchLayoutId="material-inventory-search"
+          searchValue={search}
+          onSearchChange={onSearchChange}
+          onModeChange={setMode}
+          searchPlaceholder="Cari material atau kategori"
+          searchAriaLabel="Cari inventori material"
+          filterOptions={[
+            { value: "ALL", label: "Semua" },
+            { value: "AVAILABLE", label: "Tersedia" },
+            { value: "LOW_STOCK", label: "Menipis" },
+            { value: "OUT_OF_STOCK", label: "Habis" },
+            { value: "RESERVED", label: "Terikat" },
+          ]}
         />
-        <div className="overflow-x-auto">
-          <FilterPills
+        {locations.length > 0 ? (
+          <SegmentedTabs
             value={location}
             onChange={onLocationChange}
+            ariaLabel="Filter lokasi stok"
+            layoutId="material-inventory-location"
+            density="compact"
+            scrollable
+            fillAvailableSpace={locations.length + 1 <= 3}
             options={[
-              { value: "ALL", label: "Semua lokasi" },
+              { value: "ALL", label: "Semua lokasi", icon: <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> },
               ...locations.map((row) => ({ value: row.id, label: row.name })),
             ]}
           />
-        </div>
-        <div className="overflow-x-auto">
-          <FilterPills
-            value={status}
-            onChange={onStatusChange}
-            options={[
-              { value: "ALL", label: "Semua status" },
-              { value: "AVAILABLE", label: "Available" },
-              { value: "LOW_STOCK", label: "Low" },
-              { value: "OUT_OF_STOCK", label: "Out" },
-              { value: "RESERVED", label: "Reserved" },
-            ]}
-          />
-        </div>
+        ) : null}
       </div>
 
-      {visibleMaterials.length === 0 ? (
-        <EmptyState
-          title="Material tidak ditemukan"
-          description="Ubah pencarian atau filter inventory."
-        />
-      ) : (
-        <div className="space-y-2.5">
-          {visibleMaterials.map((material) => (
-            <InventoryMaterialCard
-              key={material.id}
-              material={material}
-              onOpenMaterial={onOpenMaterial}
+      <MaterialSection title="Daftar material" meta={`${visibleMaterials.length} material`}>
+        <MaterialGroupSurface>
+          {visibleMaterials.length === 0 ? (
+            <MaterialInlineState
+              icon="search_off"
+              title="Material tidak ditemukan"
+              description="Ubah kata pencarian, lokasi, atau status stok untuk melihat hasil lain."
             />
-          ))}
-        </div>
-      )}
+          ) : (
+            <div className="divide-y divide-black/[0.055]">
+              {visibleMaterials.map((material) => (
+                <InventoryMaterialRow
+                  key={material.id}
+                  material={material}
+                  onOpenMaterial={onOpenMaterial}
+                />
+              ))}
+            </div>
+          )}
+        </MaterialGroupSurface>
+      </MaterialSection>
     </div>
   );
 }
 
-function InventoryMaterialCard({
+function InventoryMaterialRow({
   material,
   onOpenMaterial,
 }: {
@@ -99,63 +120,45 @@ function InventoryMaterialCard({
 }): React.JSX.Element {
   const summary = getGroupedMaterialStockSummary(material);
   const primaryRow = material.rows[0];
-  const availabilityPercent =
-    summary.currentStock > 0
-      ? Math.min(
-          Math.max((summary.availableStock / summary.currentStock) * 100, 0),
-          100,
-        )
-      : 0;
-  const metadata = [
-    primaryRow?.specification,
-    primaryRow?.brand,
-    primaryRow?.code,
-    primaryRow?.color,
-  ].filter((item): item is string => Boolean(item));
+  const metadata = [primaryRow?.specification, primaryRow?.brand, primaryRow?.code, primaryRow?.color]
+    .filter((item): item is string => Boolean(item));
+  const statusPresentation = inventoryStatusPresentation(summary);
 
   return (
     <button
       type="button"
       onClick={() => onOpenMaterial(material.id)}
-      className="w-full rounded-[28px] border border-outline-variant/20 bg-white px-3 py-3.5 text-left shadow-[0_8px_22px_rgba(17,17,17,0.04)] outline-none transition hover:bg-surface-container-low/45 focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-[0.99]"
+      className="w-full px-3.5 py-3.5 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
+      aria-label={`Buka detail ${material.name}`}
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface">
-          <Package className="h-4 w-4" />
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${statusPresentation.iconClass}`}>
+          <Package className="h-4 w-4" aria-hidden="true" />
         </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-start justify-between gap-2">
-            <p className="truncate text-sm font-bold">{material.name}</p>
-          </div>
-          <p className="mt-1 truncate text-[10px] leading-4 text-on-surface-variant">
-            {material.categoryName}
-            {metadata.length > 0 ? ` · ${metadata.join(" · ")}` : ""}
-          </p>
-        </div>
+        <span className="grid min-w-0 flex-1 gap-1">
+          <span className="truncate text-[13px] font-bold leading-4 text-on-surface">{material.name}</span>
+          <span className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
+            {material.categoryName}{metadata.length > 0 ? ` · ${metadata.join(" · ")}` : ""}
+          </span>
+        </span>
+        <MaterialStatusLabel label={statusPresentation.label} tone={statusPresentation.tone} />
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-2 border-t border-outline-variant/10 pt-2.5">
-        <InventoryMetric label="Available" value={formatMaterialQuantity(summary.availableStock)} />
-        <InventoryMetric label="Reserved" value={formatMaterialQuantity(summary.reservedStock)} />
-        <InventoryMetric label="Minimum" value={formatMaterialQuantity(summary.minimumStock)} />
+      <div className="mt-3 grid grid-cols-3 divide-x divide-black/[0.055] rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
+        <InventoryMetric label="Tersedia" value={formatMaterialQuantity(summary.availableStock)} />
+        <InventoryMetric label="Terreservasi" value={formatMaterialQuantity(summary.reservedStock)} align="center" />
+        <InventoryMetric label="Minimum" value={formatMaterialQuantity(summary.minimumStock)} align="right" />
       </div>
-      <div className="mt-2.5">
-        <div className="flex items-center justify-between gap-3 text-[10px] font-semibold text-on-surface-variant">
-          <span className="inline-flex min-w-0 items-center gap-1 truncate">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            {summary.locationCount} lokasi · {primaryRow?.locationName ?? "Belum ada lokasi"}
-          </span>
+
+      <div className="mt-3 flex items-center justify-between gap-3 px-1">
+        <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[10px] font-semibold text-on-surface-variant">
+          <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {summary.locationCount} lokasi · {primaryRow?.locationName ?? "Lokasi belum diatur"}
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5">
           <MoneyValue amount={summary.stockValue} variant="compactWithFull" align="right" size="xs" />
-        </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-container">
-          <div
-            className={`h-full rounded-full ${summary.status === "OUT_OF_STOCK" ? "bg-critical" : summary.status === "AVAILABLE" ? "bg-primary" : "bg-warning"}`}
-            style={{ width: `${availabilityPercent}%` }}
-          />
-        </div>
-      </div>
-      <div className="mt-2.5 flex justify-end">
-        <InventoryStatusPill summary={summary} />
+          <span className="material-symbols-outlined text-[17px] text-[#007AFF]" aria-hidden="true">chevron_right</span>
+        </span>
       </div>
     </button>
   );
@@ -164,40 +167,34 @@ function InventoryMaterialCard({
 function InventoryMetric({
   label,
   value,
+  align = "left",
 }: {
   readonly label: string;
   readonly value: string;
+  readonly align?: "left" | "center" | "right";
 }): React.JSX.Element {
+  const alignment = align === "right" ? "text-right pl-2" : align === "center" ? "text-center px-2" : "pr-2";
   return (
-    <div className="min-w-0">
-      <p className="truncate text-[8px] font-bold uppercase tracking-wide text-on-surface-variant">
-        {label}
-      </p>
-      <p className="mt-1 font-mono text-[12px] font-extrabold leading-4 text-on-surface tabular-nums">
-        {value}
-      </p>
-    </div>
+    <span className={`min-w-0 ${alignment}`}>
+      <span className="block truncate text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/65">{label}</span>
+      <span className="mt-1 block truncate font-mono text-[12px] font-extrabold leading-4 tabular-nums text-on-surface">{value}</span>
+    </span>
   );
 }
 
-function InventoryStatusPill({
-  summary,
-}: {
-  readonly summary: GroupedMaterialStockSummary;
-}): React.JSX.Element {
-  const label = summary.status === "AVAILABLE" ? "Available" : "Attention";
-  const classes =
-    summary.status === "AVAILABLE"
-      ? "bg-surface-container-low text-on-surface-variant ring-outline-variant/15"
-      : summary.status === "OUT_OF_STOCK"
-        ? "bg-critical-light text-critical ring-critical/10"
-        : "bg-warning-light text-warning ring-warning/10";
-
-  return (
-    <span
-      className={`shrink-0 rounded-full px-2.5 py-1 text-[8px] font-extrabold uppercase tracking-wide ring-1 ${classes}`}
-    >
-      {label}
-    </span>
-  );
+function inventoryStatusPresentation(summary: GroupedMaterialStockSummary): {
+  readonly label: string;
+  readonly tone: MaterialTone;
+  readonly iconClass: string;
+} {
+  if (summary.status === "OUT_OF_STOCK") {
+    return { label: "Habis", tone: "critical", iconClass: "bg-error/[0.08] text-error ring-1 ring-error/[0.06]" };
+  }
+  if (summary.status === "LOW_STOCK") {
+    return { label: "Menipis", tone: "warning", iconClass: "bg-warning/[0.09] text-warning ring-1 ring-warning/[0.06]" };
+  }
+  if (summary.status === "RESERVED") {
+    return { label: "Terikat", tone: "pending", iconClass: "bg-primary/[0.08] text-primary ring-1 ring-primary/[0.06]" };
+  }
+  return { label: "Tersedia", tone: "positive", iconClass: "bg-success/[0.08] text-success ring-1 ring-success/[0.06]" };
 }

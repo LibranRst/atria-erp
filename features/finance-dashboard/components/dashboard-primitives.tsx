@@ -3,8 +3,56 @@
 import Link from "next/link";
 import React from "react";
 
-import { MoneyValue } from "@/components/ui/page-primitives";
-import { cn } from "@/lib/utils/cn";
+type DashboardStatusTone = "critical" | "warning" | "positive" | "neutral";
+
+const summaryStatusTone: Record<DashboardStatusTone, string> = {
+  critical: "bg-error/[0.075] text-error ring-error/[0.08]",
+  warning: "bg-warning/[0.09] text-warning ring-warning/[0.08]",
+  positive: "bg-success/[0.08] text-success ring-success/[0.08]",
+  neutral: "bg-surface-container-high/70 text-on-surface-variant ring-black/[0.035]",
+};
+
+export function DashboardSummarySurface({
+  ariaLabel,
+  eyebrow,
+  icon,
+  status,
+  statusTone = "neutral",
+  children,
+}: {
+  readonly ariaLabel: string;
+  readonly eyebrow: string;
+  readonly icon: string;
+  readonly status?: string;
+  readonly statusTone?: DashboardStatusTone;
+  readonly children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <section
+      className="relative isolate overflow-hidden rounded-[26px] bg-white/[0.88] p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/[0.025] backdrop-blur-xl max-[430px]:rounded-[24px] max-[430px]:p-3.5"
+      aria-label={ariaLabel}
+    >
+      <span className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/90" aria-hidden="true" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] bg-surface-container-high/65 text-on-surface-variant ring-1 ring-black/[0.035]">
+            <span className="material-symbols-outlined text-[17px]" aria-hidden="true">{icon}</span>
+          </span>
+          <p className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.13em] text-on-surface-variant/60">
+            {eyebrow}
+          </p>
+        </div>
+        {status ? (
+          <span className={`inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[9px] font-semibold ring-1 ${summaryStatusTone[statusTone]}`}>
+            <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+            {status}
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-3.5">{children}</div>
+    </section>
+  );
+}
 
 export function SectionAction({
   href,
@@ -16,9 +64,12 @@ export function SectionAction({
   return (
     <Link
       href={href}
-      className="inline-flex h-8 shrink-0 items-center rounded-full bg-primary/5 border border-primary/10 px-3.5 text-[10px] font-extrabold text-primary active:scale-[0.97] transition-all"
+      className="relative inline-flex h-8 shrink-0 items-center gap-0.5 rounded-full bg-[#007AFF]/[0.08] px-3 text-[10px] font-semibold text-[#007AFF] outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] active:bg-[#007AFF]/[0.14] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30"
     >
       {label}
+      <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
+        chevron_right
+      </span>
     </Link>
   );
 }
@@ -29,159 +80,28 @@ export function OverviewPreviewSection({
   action,
   children,
   contentClassName = "",
-  unframed = false,
 }: {
   readonly title: string;
   readonly href: string;
   readonly action?: React.ReactNode;
   readonly children: React.ReactNode;
   readonly contentClassName?: string;
-  readonly unframed?: boolean;
 }): React.JSX.Element {
   return (
-    <section className="space-y-2.5">
-      <div className="flex min-h-8 items-center justify-between gap-3 px-1">
+    <section className="space-y-2">
+      <div className="flex min-h-11 items-center justify-between gap-3 px-1 max-[430px]:min-h-10">
         <div className="flex min-w-0 items-center gap-2">
-          <h2 className="truncate text-[17px] font-semibold leading-6 text-on-surface">
+          <h2 className="truncate text-[17px] font-bold leading-6 tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5">
             {title}
           </h2>
           {action}
         </div>
         <SectionAction href={href} label="Lihat semua" />
       </div>
-      {unframed ? (
-        <div className={contentClassName}>{children}</div>
-      ) : (
-        <div
-          className={cn(
-            `overflow-hidden rounded-[28px] bg-white p-3 shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/10`,
-            contentClassName,
-          )}
-        >
-          {children}
-        </div>
-      )}
-    </section>
-  );
-}
-
-type DashboardMetricTone = "default" | "positive" | "warning" | "danger";
-
-export type DashboardMetricItem = {
-  readonly label: string;
-  readonly value: string;
-  readonly kind?: "money";
-  readonly amount?: number;
-  readonly tone?: DashboardMetricTone;
-  readonly fullValue?: string;
-};
-
-function dashboardMetricToneClass(
-  tone: DashboardMetricTone = "default",
-): string {
-  if (tone === "positive") return "text-primary";
-  if (tone === "warning") return "text-secondary";
-  if (tone === "danger") return "text-error";
-  return "text-on-surface";
-}
-
-function dashboardMetricMoneyTone(
-  tone: DashboardMetricTone = "default",
-): "default" | "primary" | "warning" | "danger" {
-  if (tone === "positive") return "primary";
-  if (tone === "warning") return "warning";
-  if (tone === "danger") return "danger";
-  return "default";
-}
-
-function DashboardMetricDot({
-  tone = "default",
-}: {
-  readonly tone?: DashboardMetricTone;
-}): React.JSX.Element {
-  if (tone === "default") {
-    return (
-      <span
-        className="h-1.5 w-1.5 rounded-full bg-outline-variant/50"
-        aria-hidden="true"
-      />
-    );
-  }
-  if (tone === "positive") {
-    return (
-      <span
-        className="h-1.5 w-1.5 rounded-full bg-primary"
-        aria-hidden="true"
-      />
-    );
-  }
-  if (tone === "warning") {
-    return (
-      <span
-        className="h-1.5 w-1.5 rounded-full bg-secondary"
-        aria-hidden="true"
-      />
-    );
-  }
-  return (
-    <span className="h-1.5 w-1.5 rounded-full bg-error" aria-hidden="true" />
-  );
-}
-
-function DashboardSummaryStrip({
-  metrics,
-}: {
-  readonly metrics: readonly DashboardMetricItem[];
-}): React.JSX.Element {
-  return (
-    <div className="overflow-hidden rounded-[20px] bg-white shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/10">
-      <div className="grid grid-cols-3 divide-x divide-outline-variant/10">
-        {metrics.map((metric) => (
-          <div
-            key={metric.label}
-            className="min-w-0 px-2.5 py-2.5 min-[390px]:px-3"
-          >
-            <div className="flex min-w-0 items-center gap-1.5">
-              <DashboardMetricDot tone={metric.tone} />
-              <p className="truncate text-[9px] leading-normal font-bold text-on-surface-variant/65">
-                {metric.label}
-              </p>
-            </div>
-            {metric.kind === "money" && typeof metric.amount === "number" ? (
-              <MoneyValue
-                amount={metric.amount}
-                variant="compactWithFull"
-                tone={dashboardMetricMoneyTone(metric.tone)}
-                size="sm"
-                className="mt-1"
-              />
-            ) : (
-              <p
-                className={`financial-amount mt-1 truncate font-mono text-[12px] leading-none font-black min-[390px]:text-[14px] ${dashboardMetricToneClass(metric.tone)}`}
-                title={metric.fullValue}
-              >
-                {metric.value}
-              </p>
-            )}
-          </div>
-        ))}
+      <div className={`relative isolate overflow-hidden rounded-[26px] bg-white/[0.88] shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/[0.025] backdrop-blur-xl max-[430px]:rounded-[24px] ${contentClassName}`}>
+        {children}
       </div>
-    </div>
-  );
-}
-
-export function DashboardTabShell({
-  metrics,
-  children,
-}: {
-  readonly metrics: readonly DashboardMetricItem[];
-  readonly children: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <div className="space-y-lg">
-      <DashboardSummaryStrip metrics={metrics} />
-      {children}
-    </div>
+    </section>
   );
 }
 
@@ -199,16 +119,14 @@ export function DashboardDetailSection({
   readonly contentClassName?: string;
 }): React.JSX.Element {
   return (
-    <section className="space-y-2.5">
-      <div className="flex min-h-8 items-center justify-between gap-3 px-1">
-        <h2 className="min-w-0 truncate text-[17px] font-semibold leading-6 text-on-surface">
+    <section className="space-y-2">
+      <div className="flex min-h-11 items-center justify-between gap-3 px-1 max-[430px]:min-h-10">
+        <h2 className="min-w-0 truncate text-[17px] font-bold leading-6 tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5">
           {title}
         </h2>
         {href ? <SectionAction href={href} label={actionLabel} /> : null}
       </div>
-      <div
-        className={`overflow-hidden rounded-[28px] bg-white shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/10 ${contentClassName}`}
-      >
+      <div className={`relative isolate overflow-hidden rounded-[26px] bg-white/[0.88] shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/[0.025] backdrop-blur-xl max-[430px]:rounded-[24px] ${contentClassName}`}>
         {children}
       </div>
     </section>
@@ -217,8 +135,22 @@ export function DashboardDetailSection({
 
 export function DashboardRowGroup({
   children,
+  connected = false,
 }: {
   readonly children: React.ReactNode;
+  readonly connected?: boolean;
 }): React.JSX.Element {
-  return <div className="divide-y divide-outline-variant/35">{children}</div>;
+  if (connected) {
+    return (
+      <div className="relative">
+        <span
+          className="pointer-events-none absolute inset-y-0 left-[54px] w-px bg-black/[0.11] max-[430px]:left-[50px]"
+          aria-hidden="true"
+        />
+        <div className="relative">{children}</div>
+      </div>
+    );
+  }
+
+  return <div className="divide-y divide-black/[0.055]">{children}</div>;
 }

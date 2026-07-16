@@ -51,6 +51,9 @@ export {
   type CompactEditableItemStatus,
 } from "./form-controls";
 export type { SelectOption } from "./form-controls";
+export type { FormFieldLayout, FormPresentation } from "./form-controls";
+export { useAnimatedSheetClose } from "./use-animated-sheet-close";
+export { useSheetPresenceValue } from "./use-sheet-presence-value";
 export {
   EmptyState,
   MetricGrid,

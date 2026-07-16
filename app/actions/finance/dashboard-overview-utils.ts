@@ -2,6 +2,7 @@ import type { ExpenseCategoryCode } from "@/lib/budget/excel-budget";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
 import type {
   DashboardRole,
+  DashboardDueBucket,
   FinanceDashboardAction,
   FinanceDashboardCategory,
   FinanceDashboardRiskyProject,
@@ -14,6 +15,7 @@ export type FinanceDashboardRecentTransaction = {
   readonly category: string;
   readonly description: string;
   readonly amount: number;
+  readonly reconciled: boolean;
   readonly createdAt: Date;
 };
 
@@ -27,19 +29,32 @@ export type FinanceDashboardCashDueItem = {
   readonly projectName: string;
   readonly counterpartyName: string;
   readonly documentNumber: string;
+  readonly status: string;
+  readonly bucket: DashboardDueBucket;
+  readonly dayOffset: number;
   readonly href: string;
+};
+
+export type FinanceDashboardCashDueGroup = {
+  readonly bucket: DashboardDueBucket;
+  readonly label: string;
+  readonly count: number;
+  readonly totalOutstanding: number;
+  readonly items: readonly FinanceDashboardCashDueItem[];
 };
 
 export type FinanceDashboardMaterialIssue = {
   readonly id: string;
-  readonly type: "RAP_SHORTAGE" | "LOW_STOCK";
-  readonly severity: "CRITICAL" | "WARNING";
+  readonly type: "RAP_SHORTAGE" | "LOW_STOCK" | "REVERSAL_REQUEST" | "WASTE" | "ADJUSTMENT";
+  readonly severity: "CRITICAL" | "WARNING" | "INFO";
   readonly materialName: string;
   readonly projectName: string | null;
   readonly locationName: string | null;
   readonly availableStock: number;
   readonly requiredStock: number | null;
   readonly minimumStock: number | null;
+  readonly quantity: number | null;
+  readonly createdAt: Date | null;
   readonly unit: string;
   readonly description: string;
   readonly href: string;
@@ -62,16 +77,23 @@ export type FinanceDashboardBankAccount = {
 export type FinanceDashboardTabDetails = {
   readonly approvals: readonly ApprovalDetail[];
   readonly cashDue: readonly FinanceDashboardCashDueItem[];
+  readonly cashDueGroups: readonly FinanceDashboardCashDueGroup[];
   readonly budgetRisks: readonly FinanceDashboardRiskyProject[];
   readonly materials: readonly FinanceDashboardMaterialIssue[];
 };
 
 export type FinanceDashboardOverview = {
   readonly role: DashboardRole;
+  readonly generatedAt: Date;
+  readonly dataQuality: {
+    readonly partial: boolean;
+    readonly unavailableSources: readonly string[];
+  };
   readonly summary: {
     readonly cashAvailable: number;
     readonly receivablesOutstanding: number;
     readonly payablesOutstanding: number;
+    readonly payablesDueSoon: number;
     readonly projectValue: number;
     readonly internalBudget: number;
     readonly actualCost: number;
@@ -109,12 +131,6 @@ export type FinanceDashboardOverview = {
     readonly reusableStockValue: number;
   };
   readonly recentTransactions: readonly FinanceDashboardRecentTransaction[];
-  readonly aiInsight: { readonly summary: string; date: Date } | null;
-};
-
-type BriefingResult = {
-  readonly summary?: unknown;
-  readonly briefingDate?: unknown;
 };
 
 export function toCategoryCode(value: string): ExpenseCategoryCode {
@@ -127,31 +143,6 @@ export function toCategoryCode(value: string): ExpenseCategoryCode {
       return value;
     default:
       throw new Error(`Kategori expense tidak dikenal: ${value}`);
-  }
-}
-
-export function parseAiInsight(
-  result: string | null,
-  createdAt: Date,
-): FinanceDashboardOverview["aiInsight"] {
-  if (!result) return null;
-  try {
-    const parsed = JSON.parse(result) as BriefingResult;
-    if (
-      typeof parsed.summary !== "string" ||
-      parsed.summary.trim().length === 0
-    )
-      return null;
-    const date =
-      typeof parsed.briefingDate === "string"
-        ? new Date(parsed.briefingDate)
-        : createdAt;
-    return {
-      summary: parsed.summary.trim(),
-      date: Number.isNaN(date.getTime()) ? createdAt : date,
-    };
-  } catch {
-    return null;
   }
 }
 

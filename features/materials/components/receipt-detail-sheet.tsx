@@ -3,11 +3,12 @@
 import React from "react";
 
 import type { ReceiptView } from "@/app/actions/material/operations-dashboard";
-import { Badge, BottomSheet } from "@/components/ui";
+import { Badge, BottomSheet, useSheetPresenceValue } from "@/components/ui";
 import { MoneyValue } from "@/components/ui/page-primitives";
 import { Mini } from "@/features/materials/components/material-operation-sheets";
 import {
   formatMaterialQuantity,
+  formatMaterialStatus,
   materialBadgeTone,
 } from "@/features/materials/lib/material-ui-utils";
 
@@ -24,19 +25,23 @@ export function ReceiptDetailSheet({
   onClose,
   onRequestReversal,
 }: ReceiptDetailSheetProps): React.JSX.Element {
+  const { presentedValue: presentedReceipt, open, handleExitComplete } =
+    useSheetPresenceValue(receipt, receipt?.id);
+
   return (
     <BottomSheet
-      open={Boolean(receipt)}
-      title={receipt?.receiptNumber ?? "Goods Receipt"}
+      open={open}
+      title={presentedReceipt?.receiptNumber ?? "Detail penerimaan"}
       onClose={onClose}
+      onExitComplete={handleExitComplete}
     >
-      {receipt && (
+      {presentedReceipt && (
         <div className="space-y-sm">
           <div className="grid grid-cols-2 gap-2">
-            <Mini label="Project" value={receipt.projectName} />
-            <Mini label="Total" amount={receipt.total} />
+            <Mini label="Project" value={presentedReceipt.projectName} />
+            <Mini label="Total" amount={presentedReceipt.total} />
           </div>
-          {receipt.items.map((item) => (
+          {presentedReceipt.items.map((item) => (
             <div
               key={`${item.materialName}-${item.quantity}`}
               className="rounded-2xl bg-surface-container-low p-3 text-xs"
@@ -54,14 +59,14 @@ export function ReceiptDetailSheet({
               </div>
             </div>
           ))}
-          <Badge status={materialBadgeTone(receipt.status)}>{receipt.status}</Badge>
-          {canRequestReversal && receipt.status === "POSTED" && (
+          <Badge status={materialBadgeTone(presentedReceipt.status)}>{formatMaterialStatus(presentedReceipt.status)}</Badge>
+          {canRequestReversal && presentedReceipt.status === "POSTED" && (
             <button
               type="button"
-              onClick={() => onRequestReversal(receipt.id)}
-              className="min-h-11 w-full rounded-full bg-error-container/20 text-xs font-bold text-error"
+              onClick={() => onRequestReversal(presentedReceipt.id)}
+              className="min-h-12 w-full rounded-full bg-error-container/20 text-xs font-bold text-error"
             >
-              Request Reversal
+              Minta pembatalan penerimaan
             </button>
           )}
         </div>

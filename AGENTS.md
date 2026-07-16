@@ -74,19 +74,29 @@ When replacing the budget model, introduce canonical tables additively and prese
 - AI must not expose internal RAP cost/margin/markup/vendor notes/internal notes in client-facing RAB output.
 
 ## UI/UX Rules
-- Mobile-first.
-- Use readable cards, clear sections, large tap targets, simple forms, status badges, and clean financial amounts.
-- Avoid cluttered tables on mobile.
+- `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md` is the active source of truth for main-page composition, density, surfaces, rows, tabs, financial values, loading states, and visual QA.
+- Treat the current Dashboard (`/ledger`) and Expenses (`/expenses`) as reference implementations. Reuse their design grammar and shared primitives; do not copy either page's layout blindly into another workflow.
+- Mobile widths 320–430 px are the source of truth. The fixed `max-w-md` shell remains one column at every viewport; a desktop browser preview alone is not acceptance evidence.
+- Build hierarchy through one justified focal summary, concise section headers, grouped surfaces, purpose-built rows, dividers, and whitespace. Do not wrap every metric or repeated item in its own card.
+- Repeated rows normally share one soft surface. Preserve cards for focal or independently interactive units, and preserve configured gradients for identity surfaces such as bank accounts.
+- Use shared `MoneyValue` formatting, tabular numerals, compact primary amounts, and exact secondary amounts. Primary financial values must not wrap at supported mobile widths.
+- Use the shared `SegmentedTabs` for peer views and filters. Horizontal auto-centering must never move the document vertically; changing a tab or filter must preserve a stable reading position.
+- Every main route needs a structural skeleton matching its final hierarchy. Do not use a generic centered spinner or unrelated loading card for core pages.
+- Keep visible controls compact while preserving an effective minimum touch target of 48x48 px, keyboard focus, screen-reader labels, safe-area clearance, and reduced-motion support.
+- Status must combine concise Bahasa Indonesia copy with icon/shape/position; color alone is insufficient. Do not add colored vertical severity rails to ordinary rows. Continuous vertical connectors are reserved for real timelines.
+- Use contextual budget indicators, comparisons, or timelines. Do not repeat the same progress bar across unrelated sections or add decorative charts.
+- Avoid generic admin compositions, AI-looking repeated patterns, oversized mobile typography/spacing, excessive gradients/glass/blur, and animated decoration.
 - Owner dashboard must be understandable within 30 seconds.
 - Owner and finance must immediately see project value, budget, consumed budget, remaining budget, category usage, and margin risk before drilling into material details.
 - Keep the UI calm, premium, operational, and trustworthy.
 
-### iOS-Inspired Fully Rounded UI Style (Paten)
-We enforce a strict fully rounded iOS interaction style for a premium, native-app feel:
-- **Inputs & Dropdowns**: All text inputs (TextInput), date pickers (DatePickerField), and selection selectors (ComboboxField, FilterSelect) MUST be fully rounded (`rounded-full`) with a minimum height of `min-h-12` (48px) and side padding `px-5`.
-- **Textareas**: Multiline text areas (Textarea) must use `rounded-2xl` (16px border-radius) for layout stability.
+### iOS-Inspired Contextual Form Style (Paten)
+We enforce a contextual iOS form style for a premium, native-app feel:
+- **Standalone Inputs & Dropdowns**: Text inputs, date pickers, and selectors outside grouped forms MUST use a white fully rounded control (`rounded-full`) with a minimum height of `min-h-12` (48px) and side padding `px-5`.
+- **Grouped Forms**: Controls inside `FormSection` MUST render as borderless rows on one white grouped surface. Apply the radius to the outer panel, use subtle dividers between rows, keep labels visible, and do not nest a capsule around every value.
+- **Textareas**: Standalone textareas use `rounded-2xl`; grouped textareas grow inside their row without an additional rounded container.
 - **Buttons**: All primary, secondary, and option cards/buttons (including toggles and selectors) must use `rounded-full` (capsule style).
-- **Drawers & Sheets**: Sliding bottom drawers and bottom sheets (BottomSheet, ConfirmationSheet) must use large soft rounded top corners (`rounded-t-[28px]`) or fully rounded cards (`rounded-[28px]`) with a top divider pull bar where applicable.
+- **Drawers & Sheets**: Sliding bottom drawers and bottom sheets use a `surface-container-low` canvas, white grouped content surfaces, large soft rounded top corners (`rounded-t-[28px]`), and a pull bar where applicable.
 
 ### Unified Motion & Animation Tokens
 All animations MUST use Framer Motion and reference the unified animation presets in `lib/utils/motion.ts` to ensure consistency:

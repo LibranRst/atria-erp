@@ -13,8 +13,7 @@ const HEADER_MENU_ITEMS: readonly HeaderMenuItem[] = [
     label: "Dashboard",
     href: "/ledger",
     iconName: "dashboard",
-    match: (path, params): boolean =>
-      path === "/ledger" && params.get("brief") !== "true",
+    match: (path): boolean => path === "/ledger",
   },
   {
     label: "Proyek",
@@ -39,13 +38,6 @@ const HEADER_MENU_ITEMS: readonly HeaderMenuItem[] = [
     href: "/approvals",
     iconName: "verified_user",
     match: (path): boolean => path.startsWith("/approvals"),
-  },
-  {
-    label: "AI CFO Briefing",
-    href: "/ledger?brief=true",
-    iconName: "auto_awesome",
-    match: (path, params): boolean =>
-      path === "/ledger" && params.get("brief") === "true",
   },
   {
     label: "Pengaturan ERP",
@@ -75,10 +67,6 @@ export function getHeaderMenuItems(
       return roleName === "OWNER";
     }
 
-    if (item.label === "AI CFO Briefing") {
-      return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
-    }
-
     if (item.label === "Pengaturan ERP") {
       return (
         roleName === "OWNER" ||
@@ -91,13 +79,7 @@ export function getHeaderMenuItems(
   });
 }
 
-export function getPageTitle(
-  pathname: string,
-  searchParams: URLSearchParams,
-): string {
-  if (pathname === "/ledger" && searchParams.get("brief") === "true") {
-    return "AI CFO Briefing";
-  }
+export function getPageTitle(pathname: string): string {
   if (pathname === "/ledger") return "Dashboard";
   if (pathname === "/projects") return "Proyek";
   if (pathname.startsWith("/projects/")) return "Detail Proyek";

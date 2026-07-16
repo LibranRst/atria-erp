@@ -75,21 +75,21 @@ export function ExpenseDraftsPanel({
 
   return (
     <>
-      <section className="overflow-hidden rounded-[24px] bg-surface-container-low ring-1 ring-outline-variant/15">
+      <section className="overflow-hidden rounded-[24px] bg-white/[0.88] shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025] backdrop-blur-xl">
         <button
           type="button"
           onClick={() => setExpanded((current) => !current)}
           className="flex min-h-14 w-full items-center gap-3 px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           aria-expanded={expanded}
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/[0.09] text-primary ring-1 ring-primary/[0.06]">
             <span className="material-symbols-outlined text-[18px]">edit_note</span>
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-xs font-bold text-on-surface">
+          <span className="grid min-w-0 flex-1 gap-0.5">
+            <span className="block text-xs font-bold leading-[1.15] text-on-surface">
               {visibleDrafts.length} draft siap dilanjutkan
             </span>
-            <span className="mt-0.5 block truncate text-[10px] text-on-surface-variant">
+            <span className="block truncate text-[10px] leading-[1.2] text-on-surface-variant">
               Terakhir: {visibleDrafts[0]?.projectName} · {savedTimeLabel(visibleDrafts[0]?.lastSavedAt ?? new Date())}
             </span>
           </span>
@@ -117,7 +117,7 @@ export function ExpenseDraftsPanel({
                     layout
                     key={draft.id}
                     transition={transitionSpringSnappy}
-                    className="flex min-h-14 items-center gap-2 rounded-[20px] bg-white px-2 py-1.5"
+                    className="flex min-h-14 items-center gap-2 rounded-[20px] bg-surface-container-low/65 px-2 py-1.5"
                   >
                     <button
                       type="button"

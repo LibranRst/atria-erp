@@ -11,6 +11,7 @@ import {
   WorkflowFormSheet,
   SheetSelect,
   TextInput,
+  useSheetPresenceValue,
 } from "@/components/ui";
 import { FinanceUnsavedChangesModal, MoneyImpactRow } from "@/features/finance/components/finance-form-patterns";
 import type { BankAccountItem, ClientInvoiceItem } from "./project-invoices-types";
@@ -52,12 +53,14 @@ export function ClientPaymentSheet({
   readonly onDiscard: () => void;
   readonly onSubmit: () => void;
 }): React.JSX.Element | null {
+  const { presentedValue: invoice, open, handleExitComplete } =
+    useSheetPresenceValue(selectedInvoice, selectedInvoice?.id);
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
-  if (!selectedInvoice) return null;
-  const invoiceAmount = Number(selectedInvoice.amount);
+  if (!invoice) return null;
+  const invoiceAmount = Number(invoice.amount);
   const paidAmount = Number(amountPaid || 0);
-  const paidBefore = selectedInvoice.payments.reduce((sum, payment) => sum + Number(payment.amountPaid), 0);
+  const paidBefore = invoice.payments.reduce((sum, payment) => sum + Number(payment.amountPaid), 0);
   const remaining = Math.max(0, invoiceAmount - paidBefore);
   const selectedAccount = bankAccounts.find((account) => account.id === selectedBankId);
   const accountBefore = Number(selectedAccount?.balance ?? 0);
@@ -82,7 +85,8 @@ export function ClientPaymentSheet({
   return (
     <>
     <WorkflowFormSheet
-      open={Boolean(selectedInvoice)}
+      open={open}
+      onExitComplete={handleExitComplete}
       title={reviewing ? "Tinjau penerimaan klien" : "Penerimaan kas termin"}
       onClose={requestClose}
       pending={isPending}
@@ -114,7 +118,7 @@ export function ClientPaymentSheet({
           </div>
         )}
 
-        <FieldContextLine>Invoice {selectedInvoice.invoiceNumber} · Sisa Rp {remaining.toLocaleString("id-ID")}</FieldContextLine>
+        <FieldContextLine>Invoice {invoice.invoiceNumber} · Sisa Rp {remaining.toLocaleString("id-ID")}</FieldContextLine>
 
         {reviewing ? (
           <div className="space-y-3">

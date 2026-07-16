@@ -103,7 +103,7 @@ export function StockOperationSheet({ projectId, rap, materials, userRole }: { r
 
   return <>
     <div className="grid grid-cols-2 gap-2">
-      {(Object.keys(LABELS) as Operation[]).map((key) => <button key={key} type="button" onClick={() => open(key)} className={`min-h-11 rounded-full px-3 text-xs font-bold ${key === "WASTE" ? "bg-error-container/25 text-error" : "bg-white text-primary ring-1 ring-primary/15"}`}>{LABELS[key]}</button>)}
+      {(Object.keys(LABELS) as Operation[]).map((key) => <button key={key} type="button" onClick={() => open(key)} className={`min-h-12 rounded-full px-3 text-xs font-bold ${key === "WASTE" ? "bg-error-container/25 text-error" : "bg-white text-primary ring-1 ring-primary/15"}`}>{LABELS[key]}</button>)}
     </div>
     <WorkflowFormSheet
       open={Boolean(operation)}

@@ -133,7 +133,7 @@ export function ExpenseItemsSection({
               layout
               key={line.key}
               transition={transitionSpringSnappy}
-              className="rounded-[22px] bg-surface-container-low/70 p-2 ring-1 ring-outline-variant/15"
+              className="overflow-hidden rounded-[24px] bg-surface-container-lowest p-2 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
             >
               <button
                 type="button"

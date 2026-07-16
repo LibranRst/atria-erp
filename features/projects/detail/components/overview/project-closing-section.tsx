@@ -3,7 +3,7 @@
 import React from "react";
 
 import { FormField, Textarea } from "@/components/ui";
-import { MetricGrid, MoneyMetricPill, NativeSection } from "@/components/ui/page-primitives";
+import { MoneyValue } from "@/components/ui/page-primitives";
 import type { ProjectClosingChecklist } from "@/app/actions/project/closing";
 
 export function ProjectClosingSection({
@@ -26,16 +26,15 @@ export function ProjectClosingSection({
   readonly handleCompleteProject: () => void;
 }): React.JSX.Element {
   return (
-    <NativeSection eyebrow="Financial Closing" title="Project Closing Checklist">
-      <p className="text-xs leading-5 text-on-surface-variant">
-        Completion hanya tersedia setelah invoice, vendor bill/payment, expense,
-        RAB/Change Order, stock reservation, dan canonical budget sudah final.
-      </p>
+    <section className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
+      <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-on-surface-variant">Penutupan finansial</p>
+      <h2 className="mt-0.5 text-[17px] font-semibold leading-6 text-on-surface">Checklist penutupan proyek</h2>
+      <p className="mt-1 text-xs leading-5 text-on-surface-variant">Proyek hanya dapat diselesaikan setelah tagihan, biaya, RAB, change order, reservasi stok, dan budget sudah final.</p>
       <button
         type="button"
         onClick={loadClosingChecklist}
         disabled={closingPending}
-        className="mt-sm min-h-11 w-full rounded-full bg-surface-container-low px-4 text-xs font-bold text-primary disabled:opacity-40"
+        className="mt-4 min-h-12 w-full rounded-full bg-surface-container-low px-4 text-xs font-bold text-primary disabled:opacity-40"
       >
         {closingPending ? "Memeriksa…" : "Periksa kesiapan closing"}
       </button>
@@ -46,21 +45,7 @@ export function ProjectClosingSection({
       )}
       {closingChecklist && (
         <div className="mt-sm space-y-sm">
-          <MetricGrid>
-            <MoneyMetricPill
-              label="Final/Current Cost"
-              amount={closingChecklist.actualCost}
-            />
-            <MoneyMetricPill
-              label="Realized Margin"
-              amount={closingChecklist.realizedMargin}
-              detail={`${closingChecklist.realizedMarginPercentage.toFixed(2)}%`}
-            />
-            <MoneyMetricPill
-              label="Cash Position"
-              amount={closingChecklist.cashPosition}
-            />
-          </MetricGrid>
+          <div className="overflow-hidden rounded-[20px] bg-surface-container-low"><ClosingFact label="Biaya final saat ini" amount={closingChecklist.actualCost} /><ClosingFact label={`Margin realisasi · ${closingChecklist.realizedMarginPercentage.toFixed(2)}%`} amount={closingChecklist.realizedMargin} /><ClosingFact label="Posisi kas" amount={closingChecklist.cashPosition} /></div>
           {closingChecklist.blockers.length > 0 ? (
             <div className="rounded-2xl bg-error-container/25 p-3">
               <p className="text-xs font-bold text-error">Belum dapat ditutup</p>
@@ -101,12 +86,16 @@ export function ProjectClosingSection({
                 }
                 className="min-h-12 w-full rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
               >
-                Complete Project & Create Final Snapshot
+                Selesaikan proyek dan simpan snapshot final
               </button>
             </>
           )}
         </div>
       )}
-    </NativeSection>
+    </section>
   );
+}
+
+function ClosingFact({ label, amount }: { readonly label: string; readonly amount: number }): React.JSX.Element {
+  return <div className="flex min-h-14 items-center justify-between gap-3 border-t border-outline-variant/25 px-3 py-2.5 first:border-t-0"><span className="text-[10px] font-semibold text-on-surface-variant">{label}</span><MoneyValue amount={amount} variant="compactWithFull" align="right" size="sm" tone={amount < 0 ? "danger" : "default"} /></div>;
 }

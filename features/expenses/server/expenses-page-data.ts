@@ -21,6 +21,7 @@ import type {
   VendorListVendor,
 } from "../components/vendor-bill-list";
 import { resolveRoleName } from "@/lib/auth/permissions";
+import { getPendingApprovalDetails } from "@/lib/finance/approval-details";
 import { requireServerSession } from "@/lib/server/session";
 
 export type ExpensesPageData = {
@@ -270,29 +271,9 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
     })),
   }));
 
-  let pendingApprovalsCount = 0;
-  if (roleName === "OWNER") {
-    const pendingApprovals = await db.query.approval.findMany({
-      where: eq(approval.status, "PENDING"),
-    });
-    for (const record of pendingApprovals) {
-      if (record.referenceType === "project_cost") {
-        const cost = await db.query.projectCost.findFirst({
-          where: eq(projectCost.id, record.referenceId),
-        });
-        if (cost?.status === "VERIFIED") {
-          pendingApprovalsCount += 1;
-        }
-      } else if (record.referenceType === "vendor_payment") {
-        const payment = await db.query.vendorPayment.findFirst({
-          where: eq(vendorPayment.id, record.referenceId),
-        });
-        if (payment) {
-          pendingApprovalsCount += 1;
-        }
-      }
-    }
-  }
+  const pendingApprovalsCount = roleName === "OWNER"
+    ? (await getPendingApprovalDetails()).length
+    : 0;
 
   return {
     initialCosts: costsForList,

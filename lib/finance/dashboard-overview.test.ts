@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { buildFinanceDashboardCore, calculateOutstanding, limitDashboardTabDetails, type FinanceDashboardCoreInput } from "./dashboard-overview";
+import {
+  buildFinanceDashboardCore,
+  calculateOutstanding,
+  dashboardDueDayOffset,
+  limitDashboardTabDetails,
+  resolveDashboardDueBucket,
+  type FinanceDashboardCoreInput,
+} from "./dashboard-overview";
 
 const now = new Date("2026-06-22T00:00:00.000Z");
 
@@ -37,6 +44,7 @@ describe("finance dashboard overview", () => {
     expect(result.summary.internalBudget).toBe(900);
     expect(result.summary.receivablesOutstanding).toBe(60);
     expect(result.summary.payablesOutstanding).toBe(60);
+    expect(result.summary.payablesDueSoon).toBe(60);
     expect(result.categories[0]?.status).toBe("OVER_BUDGET");
     expect(result.riskyProjects[0]?.effectiveHealth).toBe("CRITICAL");
     expect(result.riskyProjects[0]?.healthReasons).toContain("CATEGORY_CRITICAL");
@@ -93,5 +101,57 @@ describe("finance dashboard overview", () => {
 
   test("limits dashboard tab details to the dashboard detail limit", () => {
     expect(limitDashboardTabDetails([1, 2, 3, 4, 5, 6])).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  test("groups due dates by Asia/Jakarta calendar boundaries", () => {
+    const reference = new Date("2026-07-15T16:30:00.000Z"); // 23:30 Jakarta
+    const laterSameJakartaDay = new Date("2026-07-15T16:59:00.000Z");
+    const nextJakartaDay = new Date("2026-07-15T17:01:00.000Z");
+    expect(dashboardDueDayOffset(laterSameJakartaDay, reference)).toBe(0);
+    expect(resolveDashboardDueBucket(laterSameJakartaDay, reference)).toBe("TODAY");
+    expect(dashboardDueDayOffset(nextJakartaDay, reference)).toBe(1);
+    expect(resolveDashboardDueBucket(nextJakartaDay, reference)).toBe("NEXT_7_DAYS");
+  });
+
+  test("does not count documents due today as overdue actions", () => {
+    const reference = new Date("2026-07-15T10:00:00.000Z"); // 17:00 Jakarta
+    const base = input("FINANCE_ADMIN");
+    const result = buildFinanceDashboardCore({
+      ...base,
+      now: reference,
+      receivables: [],
+      payables: [
+        {
+          amount: 100,
+          paidAmount: 0,
+          status: "PENDING",
+          dueDate: new Date("2026-07-14T17:00:00.000Z"), // 15 Jul Jakarta
+        },
+        {
+          amount: 200,
+          paidAmount: 0,
+          status: "PENDING",
+          dueDate: new Date("2026-07-13T17:00:00.000Z"), // 14 Jul Jakarta
+        },
+      ],
+    });
+
+    expect(result.actions.find((action) => action.id === "overdue-payables")?.title).toBe(
+      "1 tagihan vendor terlambat",
+    );
+    expect(result.dashboardTabs.counts.cash).toBe(2);
+  });
+
+  test("treats paid and void documents as zero near-term obligations", () => {
+    const base = input("FINANCE_ADMIN");
+    const result = buildFinanceDashboardCore({
+      ...base,
+      payables: [
+        { amount: 200, paidAmount: 200, status: "PAID", dueDate: now },
+        { amount: 300, paidAmount: 0, status: "VOID", dueDate: now },
+      ],
+    });
+    expect(result.summary.payablesOutstanding).toBe(0);
+    expect(result.summary.payablesDueSoon).toBe(0);
   });
 });

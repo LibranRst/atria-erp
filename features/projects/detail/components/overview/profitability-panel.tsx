@@ -61,7 +61,7 @@ export function ProfitabilityPanel({
   if (isLocked) {
     return (
       <LockedTabState
-        tabLabel="Profitability"
+        tabLabel="Margin"
         actionLabel={nextSetupLabel}
         actionIcon={nextSetupIcon}
         onAction={() => setActiveTab(nextSetupTab)}
@@ -108,7 +108,7 @@ export function ProfitabilityPanel({
   }
 
   return (
-    <div className="space-y-sm">
+    <div className="space-y-lg max-[430px]:space-y-5">
       <ProfitProjectionSection
         contractValue={contractValue}
         totalAllocated={totalAllocated}

@@ -132,7 +132,9 @@ export function ProjectDrawer({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
-  const [showOperationalDetails, setShowOperationalDetails] = useState<boolean | null>(null);
+  const [showOperationalDetails, setShowOperationalDetails] = useState<
+    boolean | null
+  >(null);
 
   // Error/Success state
   const [error, setError] = useState<string | null>(null);
@@ -172,8 +174,11 @@ export function ProjectDrawer({
     coverImageUrl,
     notes,
   ].filter((value) => Boolean(value)).length;
-  const hasOperationalDetails = Boolean(editProject || operationalDetailCount > 0);
-  const operationalDetailsVisible = showOperationalDetails ?? hasOperationalDetails;
+  const hasOperationalDetails = Boolean(
+    editProject || operationalDetailCount > 0,
+  );
+  const operationalDetailsVisible =
+    showOperationalDetails ?? hasOperationalDetails;
   const dateError = getProjectDateError(startDate, endDate);
   const projectBlockers = [
     !name.trim() ? "Nama proyek" : "",
@@ -467,7 +472,7 @@ export function ProjectDrawer({
         <form
           id="project-drawer-form"
           onSubmit={prepareReview}
-          className="space-y-lg"
+          className="space-y-md"
         >
           <FormSection
             title="Identitas inti"
@@ -531,6 +536,16 @@ export function ProjectDrawer({
 
           <FormDisclosure
             title="Detail operasional"
+            description="Jadwal, lokasi, cover, dan catatan proyek"
+            variant="compact"
+            icon={
+              <span
+                className="material-symbols-outlined text-[18px]"
+                aria-hidden="true"
+              >
+                tune
+              </span>
+            }
             summary={
               operationalDetailCount > 0
                 ? `${operationalDetailCount} terisi`
@@ -538,60 +553,54 @@ export function ProjectDrawer({
             }
             expanded={operationalDetailsVisible}
             onToggle={() =>
-              setShowOperationalDetails((current) =>
-                !(current ?? hasOperationalDetails),
+              setShowOperationalDetails(
+                (current) => !(current ?? hasOperationalDetails),
               )
             }
           >
-            <FormSection
-              title="Konteks pelaksanaan"
-              helper="Isi hanya informasi yang membantu tim menjalankan proyek."
-            >
-              <ProjectCoverField
-                coverImageUrl={coverImageUrl}
-                isUploading={isUploadingCover}
-                isPending={isPending}
-                onClear={() => setCoverImageUrl("")}
-                onUpload={(file) => {
-                  void handleCoverUpload(file);
-                }}
-              />
-
-              <ProjectDetailFields
-                startDate={startDate}
-                endDate={endDate}
-                location={location}
-                roomArea={roomArea}
-                projectType={projectType}
-                onStartDateChange={setStartDate}
-                onEndDateChange={setEndDate}
-                onLocationChange={setLocation}
-                onRoomAreaChange={setRoomArea}
-                onProjectTypeChange={setProjectType}
-              />
-
-              <FormField label="Catatan Proyek" optional>
-                <Textarea
-                  value={notes}
-                  onChange={setNotes}
-                  placeholder="Catatan tambahan mengenai scope proyek..."
+            <div className="space-y-md">
+              <FormSection
+                title="Jadwal dan lokasi"
+                helper="Konteks utama untuk pelaksanaan proyek."
+              >
+                <ProjectDetailFields
+                  startDate={startDate}
+                  endDate={endDate}
+                  location={location}
+                  roomArea={roomArea}
+                  projectType={projectType}
+                  onStartDateChange={setStartDate}
+                  onEndDateChange={setEndDate}
+                  onLocationChange={setLocation}
+                  onRoomAreaChange={setRoomArea}
+                  onProjectTypeChange={setProjectType}
                 />
-              </FormField>
-            </FormSection>
+              </FormSection>
+
+              <FormSection
+                title="Cover dan catatan"
+                helper="Informasi pendukung yang dapat dilengkapi nanti."
+              >
+                <ProjectCoverField
+                  coverImageUrl={coverImageUrl}
+                  isUploading={isUploadingCover}
+                  isPending={isPending}
+                  onClear={() => setCoverImageUrl("")}
+                  onUpload={(file) => {
+                    void handleCoverUpload(file);
+                  }}
+                />
+                <FormField label="Catatan Proyek" optional>
+                  <Textarea
+                    value={notes}
+                    onChange={setNotes}
+                    placeholder="Catatan tambahan mengenai scope proyek..."
+                  />
+                </FormField>
+              </FormSection>
+            </div>
           </FormDisclosure>
 
-          {projectBlockers.length > 0 ? (
-            <FormRiskNotice title="Cegah setup proyek keliru" tone="warning">
-              Lengkapi {projectBlockers.join(", ")} sebelum menyimpan agar
-              budget, approval, dan assignment langsung masuk ke tempat yang
-              benar.
-            </FormRiskNotice>
-          ) : (
-            <FormRiskNotice title="Siap dibuat" tone="success">
-              Identitas utama sudah cukup. Detail seperti cover, area, dan
-              catatan masih bisa disesuaikan setelah proyek dibuat.
-            </FormRiskNotice>
-          )}
           {recovery.recoveredAt ? (
             <SmartDefaultHint>
               Isian sebelumnya dipulihkan dari perangkat ini.

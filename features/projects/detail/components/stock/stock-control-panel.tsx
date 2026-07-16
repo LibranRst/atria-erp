@@ -1,16 +1,12 @@
 "use client";
 
 import React from "react";
-import { LockedTabState } from "../project-tab-states";
-import { StockOperationSheet } from "./stock-operation-sheet";
-import {
-  MetricGrid,
-  MetricPill,
-  NativeSection,
-} from "@/components/ui/page-primitives";
+
 import { formatStatus } from "@/components/ui/badge";
 import type { RapView, MaterialOption } from "../shared/rap-rab-manager";
 import type { StockMovement, TabId } from "../project-tabs";
+import { LockedTabState } from "../project-tab-states";
+import { StockOperationSheet } from "./stock-operation-sheet";
 
 interface StockControlPanelProps {
   readonly projectId: string;
@@ -25,21 +21,21 @@ interface StockControlPanelProps {
   readonly setActiveTab: (tab: TabId) => void;
 }
 
-const getMovementBadgeColor = (type: string) => {
-  switch (type) {
-    case "STOCK_IN":
-      return "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
-    case "STOCK_OUT":
-    case "USE":
-      return "bg-amber-500/10 text-amber-500 border border-amber-500/20";
-    case "RESERVE":
-      return "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20";
-    case "RETURN":
-      return "bg-sky-500/10 text-sky-500 border border-sky-500/20";
-    default:
-      return "bg-slate-500/10 text-slate-500 border border-slate-500/20";
-  }
-};
+function movementTone(type: string): string {
+  if (type === "WASTE") return "bg-error text-white";
+  if (type === "USE" || type === "STOCK_OUT") return "bg-secondary text-white";
+  if (type === "RETURN" || type === "STOCK_IN") return "bg-primary text-white";
+  return "bg-on-surface text-white";
+}
+
+function movementLabel(type: string): string {
+  if (type === "RESERVE") return "Reservasi";
+  if (type === "USE" || type === "STOCK_OUT") return "Pemakaian";
+  if (type === "RETURN") return "Pengembalian";
+  if (type === "WASTE") return "Material terbuang";
+  if (type === "STOCK_IN") return "Stok masuk";
+  return formatStatus(type);
+}
 
 export function StockControlPanel({
   projectId,
@@ -54,123 +50,76 @@ export function StockControlPanel({
   setActiveTab,
 }: StockControlPanelProps): React.JSX.Element {
   if (isLocked) {
-    return (
-      <LockedTabState
-        tabLabel="Stok"
-        actionLabel={nextSetupLabel}
-        actionIcon={nextSetupIcon}
-        onAction={() => setActiveTab(nextSetupTab)}
-      />
-    );
+    return <LockedTabState tabLabel="Stok" actionLabel={nextSetupLabel} actionIcon={nextSetupIcon} onAction={() => setActiveTab(nextSetupTab)} />;
   }
 
   const reservedQty = rap?.items.reduce((sum, item) => sum + item.reservedQuantity, 0) || 0;
   const usedQty = rap?.items.reduce((sum, item) => sum + item.usedQuantity, 0) || 0;
   const leftoverQty = rap?.items.reduce((sum, item) => sum + item.leftoverQuantity, 0) || 0;
+  const totalTracked = reservedQty + usedQty + leftoverQty;
 
   return (
-    <div className="space-y-sm">
-      <NativeSection
-        eyebrow="Stock Control"
-        title="Status Persediaan Material"
-      >
-        <MetricGrid balanceLastRow>
-          <MetricPill
-            label="Reserved"
-            value={`${reservedQty}`}
-          />
-          <MetricPill
-            label="Used"
-            value={`${usedQty}`}
-            tone="muted"
-          />
-          <MetricPill
-            label="Leftover"
-            value={`${leftoverQty}`}
-          />
-        </MetricGrid>
-        <div className="mt-sm">
-          <StockOperationSheet
-            projectId={projectId}
-            rap={rap}
-            materials={materials}
-            userRole={userRole}
-          />
+    <div className="space-y-lg max-[430px]:space-y-5">
+      <section className="rounded-[28px] bg-primary p-5 text-white shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
+        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">Posisi material proyek</p>
+        <div className="mt-2 flex items-end justify-between gap-3">
+          <div>
+            <p className="font-mono text-[28px] font-bold leading-8 tabular-nums">{totalTracked.toLocaleString("id-ID")}</p>
+            <p className="mt-1 text-[10px] text-white/60">total kuantitas yang tercatat</p>
+          </div>
+          <span className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-bold text-white/80">{rap?.items.length ?? 0} material RAP</span>
         </div>
-      </NativeSection>
+        <div className="mt-4 grid grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-4">
+          <QuantityFact label="Direservasi" value={reservedQty} />
+          <QuantityFact label="Terpakai" value={usedQty} align="center" />
+          <QuantityFact label="Tersisa" value={leftoverQty} align="right" />
+        </div>
+        <div className="mt-4">
+          <StockOperationSheet projectId={projectId} rap={rap} materials={materials} userRole={userRole} />
+        </div>
+      </section>
 
-      <NativeSection
-        eyebrow="Inventory Activity"
-        title="Mutasi Stok Proyek"
-      >
+      <section className="space-y-2.5">
+        <header className="px-1">
+          <h2 className="text-[17px] font-semibold leading-6 text-on-surface">Aktivitas stok</h2>
+          <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">Urutan reservasi, pemakaian, pengembalian, dan material terbuang.</p>
+        </header>
         {stockMovements.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl bg-surface-container-low px-md py-10 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-on-surface shadow-sm">
-              <span className="material-symbols-outlined text-[24px]">
-                inventory_2
-              </span>
-            </div>
-            <p className="mt-3 text-sm font-semibold text-on-surface">
-              Belum ada mutasi stok.
-            </p>
-            <p className="mt-1 max-w-xs text-xs leading-5 text-on-surface-variant">
-              Aktivitas reserve, usage, return, dan adjustment akan muncul di sini.
-            </p>
+          <div className="rounded-[22px] bg-white px-4 py-4 text-xs leading-5 text-on-surface-variant shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
+            <span className="font-bold text-on-surface">Belum ada mutasi stok.</span> Aktivitas material pertama akan muncul setelah operasi stok dicatat.
           </div>
         ) : (
-          <div className="divide-y divide-outline-variant/35 max-h-[440px] overflow-y-auto overflow-hidden rounded-2xl bg-surface-container-low pr-1">
-            {stockMovements.map((move) => (
-              <div key={move.id} className="flex gap-3 p-sm text-xs">
-                <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${getMovementBadgeColor(move.movementType)}`}
-                >
-                  <span className="material-symbols-outlined text-[18px]">
-                    sync_alt
-                  </span>
-                </div>
-                <div className="min-w-0 flex-1">
+          <div className="rounded-[24px] bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
+            {stockMovements.map((move, index) => (
+              <div key={move.id} className="relative flex gap-3 py-3">
+                {index < stockMovements.length - 1 ? <span className="absolute left-[17px] top-11 bottom-[-12px] w-px bg-outline-variant/45" aria-hidden="true" /> : null}
+                <span className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-4 ring-white ${movementTone(move.movementType)}`}>
+                  <span className="material-symbols-outlined text-[17px]">{move.movementType === "WASTE" ? "delete" : move.movementType === "RETURN" ? "undo" : "sync_alt"}</span>
+                </span>
+                <div className="min-w-0 flex-1 pt-0.5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-on-surface">
-                        {move.material.name}
-                      </p>
-                      <p className="truncate text-[10px] text-on-surface-variant">
-                        {move.location.name} • {move.createdBy.name}
-                      </p>
+                      <p className="truncate text-xs font-bold text-on-surface">{move.material.name}</p>
+                      <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">{move.location.name} · {move.createdBy.name}</p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-white border border-outline-variant/20 px-2 py-0.5 text-[9px] font-bold text-on-surface">
-                      {formatStatus(move.movementType)}
-                    </span>
+                    <div className="shrink-0 text-right">
+                      <p className="font-mono text-xs font-bold tabular-nums text-on-surface">{Number(move.quantity).toLocaleString("id-ID")} {move.material.unit}</p>
+                      <p className="mt-0.5 text-[9px] font-semibold text-on-surface-variant">{movementLabel(move.movementType)}</p>
+                    </div>
                   </div>
-                  <div className="mt-2 flex items-center justify-between gap-3">
-                    <span className="font-mono font-bold text-on-surface">
-                      {Number(move.quantity).toLocaleString("id-ID")}{" "}
-                      {move.material.unit}
-                    </span>
-                    <span className="text-[9px] text-on-surface-variant">
-                      {new Date(move.createdAt).toLocaleDateString(
-                        "id-ID",
-                        {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
-                      )}
-                    </span>
-                  </div>
-                  {move.note && (
-                    <p className="mt-2 rounded-xl bg-white/70 p-2 text-[10px] italic text-on-surface-variant">
-                      &quot;{move.note}&quot;
-                    </p>
-                  )}
+                  <p className="mt-1.5 text-[9px] text-on-surface-variant">{new Date(move.createdAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                  {move.note ? <p className="mt-1.5 text-[10px] leading-4 text-on-surface-variant">{move.note}</p> : null}
                 </div>
               </div>
             ))}
           </div>
         )}
-      </NativeSection>
+      </section>
     </div>
   );
+}
+
+function QuantityFact({ label, value, align = "left" }: { readonly label: string; readonly value: number; readonly align?: "left" | "center" | "right" }): React.JSX.Element {
+  const className = align === "center" ? "px-2 text-center" : align === "right" ? "pl-2 text-right" : "pr-2";
+  return <div className={className}><p className="truncate text-[8px] font-bold uppercase tracking-wide text-white/50">{label}</p><p className="mt-1 font-mono text-[13px] font-bold tabular-nums">{value.toLocaleString("id-ID")}</p></div>;
 }

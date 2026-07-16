@@ -78,6 +78,7 @@ type BottomSheetProps = {
   readonly action?: React.ReactNode;
   readonly initialExpanded?: boolean;
   readonly onClose: () => void;
+  readonly onExitComplete?: () => void;
 };
 
 type SheetActionButtonProps = {
@@ -104,12 +105,14 @@ export function SheetActionButton({
   const accessibleLabel = pending ? pendingLabel ?? "Memproses" : label;
 
   return (
-    <button
+    <motion.button
       type={type}
       form={form}
       disabled={pending || disabled}
       onClick={onClick}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition active:scale-[0.97] disabled:opacity-45 ${
+      whileTap={{ scale: 0.97 }}
+      transition={transitionSpringSnappy}
+      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-[0_6px_16px_rgba(17,17,17,0.14)] outline-none focus-visible:ring-2 disabled:opacity-45 ${
         danger ? "bg-error" : "bg-primary"
       }`}
       aria-label={accessibleLabel}
@@ -120,7 +123,7 @@ export function SheetActionButton({
       ) : (
         <Check className="h-4 w-4" aria-hidden="true" />
       )}
-    </button>
+    </motion.button>
   );
 }
 
@@ -132,6 +135,7 @@ export function BottomSheet({
   action,
   initialExpanded = false,
   onClose,
+  onExitComplete,
 }: BottomSheetProps): React.JSX.Element | null {
   const sheetRef = React.useRef<HTMLElement>(null);
   const handleRef = React.useRef<HTMLButtonElement>(null);
@@ -200,7 +204,7 @@ export function BottomSheet({
     return () => {
       window.cancelAnimationFrame(animationFrame);
     };
-  }, [initialExpanded, open, updateSheetMetrics]);
+  }, [initialExpanded, open, portalNode, updateSheetMetrics]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -224,7 +228,7 @@ export function BottomSheet({
       window.visualViewport?.removeEventListener("resize", updateSheetMetrics);
       window.visualViewport?.removeEventListener("scroll", updateSheetMetrics);
     };
-  }, [open, updateSheetMetrics]);
+  }, [open, portalNode, updateSheetMetrics]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -315,7 +319,7 @@ export function BottomSheet({
   }
 
   const sheet = (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onExitComplete}>
       {open && (
         <>
           <motion.div
@@ -346,13 +350,13 @@ export function BottomSheet({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.08, bottom: 0.04 }}
             onDragEnd={handleDragEnd}
-            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] border border-outline-variant/25 bg-background shadow-[0_-24px_80px_rgba(0,0,0,0.28)] outline-none"
+            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-surface-container-low shadow-[0_-24px_80px_rgba(0,0,0,0.28)] ring-1 ring-outline-variant/20 outline-none"
             style={{ zIndex: zIndex + 1, maxHeight: `calc(100dvh - ${SHEET_TOP_GAP}px)` }}
             role="dialog"
             aria-modal="true"
             aria-label={title}
           >
-            <div className="z-10 flex h-5 shrink-0 items-center justify-center bg-background/95 pt-2">
+            <div className="z-10 flex h-5 shrink-0 items-center justify-center bg-surface-container-low/95 pt-2">
               <button
                 ref={handleRef}
                 type="button"
@@ -377,16 +381,16 @@ export function BottomSheet({
 
             <header
               ref={headerRef}
-              className="relative z-10 flex h-14 shrink-0 items-center border-b border-outline-variant/10 bg-background/95 px-margin-mobile backdrop-blur-md"
+              className="relative z-10 flex h-14 shrink-0 items-center bg-surface-container-low/95 px-margin-mobile backdrop-blur-md"
             >
               <button
                 ref={closeButtonRef}
                 type="button"
                 onClick={() => onCloseRef.current()}
-                className="absolute left-margin-mobile top-1/2 z-10 flex -translate-y-1/2 cursor-pointer items-center justify-center rounded-full p-2 text-on-surface-variant outline-none active-scale focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="absolute left-margin-mobile top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface-container-lowest text-on-surface shadow-[0_5px_16px_rgba(17,17,17,0.08)] ring-1 ring-outline-variant/15 outline-none active-scale focus-visible:ring-2 focus-visible:ring-blue-500/30"
                 aria-label="Tutup"
               >
-                <span className="material-symbols-outlined text-[28px]">
+                <span className="material-symbols-outlined text-[24px] leading-none">
                   close
                 </span>
               </button>
@@ -415,7 +419,7 @@ export function BottomSheet({
             {footer && (
               <div
                 ref={footerRef}
-                className="shrink-0 border-t border-outline-variant/15 bg-surface/95 px-margin-mobile pb-[calc(1rem+env(safe-area-inset-bottom))] pt-sm backdrop-blur-md"
+                className="shrink-0 border-t border-outline-variant/15 bg-surface-container-low/95 px-margin-mobile pb-[calc(1rem+env(safe-area-inset-bottom))] pt-sm backdrop-blur-md"
               >
                 {footer}
               </div>
@@ -553,7 +557,7 @@ export function ConfirmationModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 10 }}
               transition={transitionSpringSmooth}
-              className="pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-[360px] overflow-y-auto rounded-[28px] bg-background p-5 shadow-[0_28px_90px_rgba(0,0,0,0.32)] ring-1 ring-white/10 outline-none no-scrollbar"
+              className="pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-[360px] overflow-y-auto rounded-[28px] bg-surface-container-low p-5 shadow-[0_28px_90px_rgba(0,0,0,0.32)] ring-1 ring-white/10 outline-none no-scrollbar"
             >
               <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}>
                 {tone === "default" ? (
@@ -572,7 +576,11 @@ export function ConfirmationModal({
                   </p>
                 ) : null}
               </div>
-              {children ? <div className="mt-4">{children}</div> : null}
+              {children ? (
+                <div className="mt-4 rounded-[22px] bg-surface-container-lowest p-4 ring-1 ring-outline-variant/15">
+                  {children}
+                </div>
+              ) : null}
               <div className="mt-5">{actions}</div>
             </motion.section>
           </div>

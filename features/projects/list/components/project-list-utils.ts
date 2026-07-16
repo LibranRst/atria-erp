@@ -4,11 +4,52 @@ export const PROJECT_FILTERS: readonly { id: FilterId; label: string }[] = [
   { id: "ALL", label: "Semua" },
   { id: "ACTIVE", label: "Aktif" },
   { id: "DRAFT", label: "Draft" },
-  { id: "ON_HOLD", label: "Hold" },
+  { id: "ON_HOLD", label: "Ditunda" },
   { id: "COMPLETED", label: "Selesai" },
-  { id: "WARNING", label: "Warning" },
-  { id: "CRITICAL", label: "Critical" },
+  { id: "WARNING", label: "Perhatian" },
+  { id: "CRITICAL", label: "Kritis" },
 ];
+
+export type ProjectPortfolioSummary = {
+  readonly activeCount: number;
+  readonly attentionCount: number;
+  readonly activeContractValue: number;
+  readonly activeInternalBudget: number;
+  readonly activeActualCost: number;
+  readonly activeRemainingBudget: number;
+};
+
+export function summarizeProjectPortfolio(
+  projects: readonly ProjectItem[],
+): ProjectPortfolioSummary {
+  const activeProjects = projects.filter((project) => project.status === "ACTIVE");
+  const operationalProjects = projects.filter(
+    (project) => project.status !== "COMPLETED" && project.status !== "CANCELLED",
+  );
+
+  return {
+    activeCount: activeProjects.length,
+    attentionCount: operationalProjects.filter(
+      (project) => project.effectiveHealth !== "HEALTHY",
+    ).length,
+    activeContractValue: activeProjects.reduce(
+      (sum, project) => sum + project.totalContractValue,
+      0,
+    ),
+    activeInternalBudget: activeProjects.reduce(
+      (sum, project) => sum + project.internalBudget,
+      0,
+    ),
+    activeActualCost: activeProjects.reduce(
+      (sum, project) => sum + project.actualCost,
+      0,
+    ),
+    activeRemainingBudget: activeProjects.reduce(
+      (sum, project) => sum + project.remainingBudget,
+      0,
+    ),
+  };
+}
 
 export function formatRp(value: number): string {
   return `Rp ${value.toLocaleString("id-ID")}`;

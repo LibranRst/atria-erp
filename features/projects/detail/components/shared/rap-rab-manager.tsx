@@ -109,7 +109,7 @@ export function RapRabManager({
   const showRab = mode === "all" || mode === "rab";
 
   return (
-    <div className="space-y-sm">
+    <div className="space-y-lg max-[430px]:space-y-5">
       {(combinedError || combinedSuccess) && (
         <div
           className={`rounded-2xl border p-md text-xs font-semibold ${combinedError ? "border-error/30 bg-error-container/20 text-error" : "border-primary/30 bg-surface-container-low text-primary"}`}
@@ -119,7 +119,7 @@ export function RapRabManager({
       )}
 
       {showRapPlanning && (
-        <div className="space-y-sm">
+        <div className="space-y-lg max-[430px]:space-y-5">
           {!rap ? (
             <NativePanel eyebrow="Rencana Internal" title="Mulai dari Material">
               <div className="py-lg text-center">

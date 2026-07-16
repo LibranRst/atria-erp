@@ -40,8 +40,7 @@
 - Keep expense entry fast and progressive.
 
 ## Phase 7: AI Finance & Material Brief
-- Expand AI context from cash/project budget only to include category usage, margin projection, RAP, inventory, shortages, leftover stock, vendor bills, unusual material cost, and suggested owner actions.
-- Keep AI read-only and human-approved for mutations.
+- Deferred until the core Dashboard and operational modules are stable. No AI CFO surface or financial-briefing pipeline is active in the current release.
 
 ## Phase 8: Verification and Release
 - Add tests for permissions, stock math, RAP shortage math, client-safe RAB projection, dashboard aggregates, and existing finance regressions.

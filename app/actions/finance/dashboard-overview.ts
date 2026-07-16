@@ -1,25 +1,27 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
-import { aiRun, approval, cashTransaction, project } from "@/db/schema";
+import { cashTransaction, goodsReceipt, project, stockMovement } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
-import { getPendingApprovalDetails } from "@/lib/finance/approval-details";
+import { getPendingApprovalDetails, rankPendingApprovals } from "@/lib/finance/approval-details";
 import {
   buildFinanceDashboardCore,
   DASHBOARD_TAB_DETAIL_LIMIT,
   limitDashboardTabDetails,
+  dashboardDueDayOffset,
+  resolveDashboardDueBucket,
   type DashboardProjectInput,
   type DashboardRole,
 } from "@/lib/finance/dashboard-overview";
 import type { ActionResponse } from "@/lib/types/action-response";
 import {
   outstandingAmount,
-  parseAiInsight,
   toCategoryCode,
+  type FinanceDashboardCashDueGroup,
   type FinanceDashboardCashDueItem,
   type FinanceDashboardMaterialIssue,
   type FinanceDashboardOverview,
@@ -28,11 +30,43 @@ import {
 export type {
   FinanceDashboardBankAccount,
   FinanceDashboardCashDueItem,
+  FinanceDashboardCashDueGroup,
   FinanceDashboardMaterialIssue,
   FinanceDashboardOverview,
   FinanceDashboardRecentTransaction,
   FinanceDashboardTabDetails,
 } from "./dashboard-overview-utils";
+
+function optionalData<T>(
+  result: PromiseSettledResult<T>,
+  source: string,
+  fallback: T,
+  unavailableSources: string[],
+): T {
+  if (result.status === "fulfilled") return result.value;
+  console.error(`Dashboard supporting source failed: ${source}`, result.reason);
+  unavailableSources.push(source);
+  return fallback;
+}
+
+const DUE_GROUPS: readonly { readonly bucket: FinanceDashboardCashDueItem["bucket"]; readonly label: string }[] = [
+  { bucket: "OVERDUE", label: "Terlambat" },
+  { bucket: "TODAY", label: "Hari ini" },
+  { bucket: "NEXT_7_DAYS", label: "7 hari ke depan" },
+  { bucket: "LATER", label: "Berikutnya" },
+];
+
+function buildCashDueGroups(items: readonly FinanceDashboardCashDueItem[]): readonly FinanceDashboardCashDueGroup[] {
+  return DUE_GROUPS.map((group) => {
+    const matches = items.filter((item) => item.bucket === group.bucket);
+    return {
+      ...group,
+      count: matches.length,
+      totalOutstanding: matches.reduce((sum, item) => sum + item.outstandingAmount, 0),
+      items: limitDashboardTabDetails(matches, 3),
+    };
+  });
+}
 
 export async function getFinanceDashboardOverview(): Promise<
   ActionResponse<FinanceDashboardOverview>
@@ -63,18 +97,7 @@ export async function getFinanceDashboardOverview(): Promise<
       where: eq(project.status, "ACTIVE"),
     });
     const activeProjectIds = activeProjects.map((item) => item.id);
-    const [
-      accounts,
-      invoices,
-      bills,
-      pendingApprovalRecords,
-      approvalDetails,
-      inventoryRows,
-      rapItems,
-      transactions,
-      latestBriefing,
-      budgets,
-    ] = await Promise.all([
+    const [accounts, invoices, bills, budgets] = await Promise.all([
       db.query.bankAccount.findMany({
         with: {
           cashTransactions: {
@@ -89,32 +112,6 @@ export async function getFinanceDashboardOverview(): Promise<
       db.query.vendorBill.findMany({
         with: { payments: true, project: true, vendor: true },
       }),
-      role === "OWNER"
-        ? db.query.approval.findMany({ where: eq(approval.status, "PENDING") })
-        : Promise.resolve([]),
-      role === "OWNER"
-        ? getPendingApprovalDetails(DASHBOARD_TAB_DETAIL_LIMIT)
-        : Promise.resolve([]),
-      db.query.materialInventory.findMany({
-        with: { material: true, location: true },
-      }),
-      db.query.projectRapItem.findMany({
-        with: {
-          rap: { with: { project: true } },
-          material: { with: { inventory: true } },
-        },
-      }),
-      db.query.cashTransaction.findMany({
-        orderBy: [desc(cashTransaction.createdAt)],
-        limit: 5,
-      }),
-      db.query.aiRun.findFirst({
-        where: and(
-          eq(aiRun.runType, "FINANCIAL_BRIEFING"),
-          eq(aiRun.status, "COMPLETED"),
-        ),
-        orderBy: [desc(aiRun.createdAt)],
-      }),
       activeProjectIds.length === 0
         ? Promise.resolve([])
         : db.query.projectBudgets.findMany({
@@ -126,11 +123,40 @@ export async function getFinanceDashboardOverview(): Promise<
             },
           }),
     ]);
-    const pendingApprovalCount = pendingApprovalRecords.filter(
-      (item) =>
-        item.referenceType === "project_cost" ||
-        item.referenceType === "vendor_payment",
-    ).length;
+
+    const optionalResults = await Promise.allSettled([
+      role === "OWNER" ? getPendingApprovalDetails() : Promise.resolve([]),
+      db.query.materialInventory.findMany({ with: { material: true, location: true } }),
+      db.query.projectRapItem.findMany({
+        with: {
+          rap: { with: { project: true } },
+          material: { with: { inventory: true } },
+        },
+      }),
+      db.query.cashTransaction.findMany({ orderBy: [desc(cashTransaction.createdAt)], limit: 5 }),
+      db.query.goodsReceipt.findMany({
+        where: eq(goodsReceipt.status, "REVERSAL_REQUESTED"),
+        with: { project: true, inventoryLocation: true },
+        orderBy: [desc(goodsReceipt.createdAt)],
+        limit: 5,
+      }),
+      db.query.stockMovement.findMany({
+        where: inArray(stockMovement.movementType, ["WASTE", "ADJUSTMENT", "EMERGENCY_ADJUSTMENT", "STOCK_COUNT_ADJUSTMENT"]),
+        with: { material: true, location: true, project: true },
+        orderBy: [desc(stockMovement.createdAt)],
+        limit: 5,
+      }),
+    ] as const);
+    const unavailableSources: string[] = [];
+    const approvalDetails = optionalData(optionalResults[0], "persetujuan", [], unavailableSources);
+    const inventoryRows = optionalData(optionalResults[1], "inventori", [], unavailableSources);
+    const rapItems = optionalData(optionalResults[2], "kebutuhan RAP", [], unavailableSources);
+    const transactions = optionalData(optionalResults[3], "aktivitas kas", [], unavailableSources);
+    const reversalReceipts = optionalData(optionalResults[4], "penerimaan material", [], unavailableSources);
+    const materialMovements = optionalData(optionalResults[5], "pergerakan material", [], unavailableSources);
+    const now = new Date();
+    const rankedApprovalDetails = rankPendingApprovals(approvalDetails, now);
+    const pendingApprovalCount = rankedApprovalDetails.length;
 
     const totalStockValue = inventoryRows.reduce(
       (sum, item) => sum + Number(item.currentStock) * Number(item.averageCost),
@@ -164,7 +190,6 @@ export async function getFinanceDashboardOverview(): Promise<
         ) ?? 0;
       return Number(item.totalQuantity) > available;
     }).length;
-    const now = new Date();
     const cashDue: FinanceDashboardCashDueItem[] = [
       ...bills.map((bill): FinanceDashboardCashDueItem | null => {
         const paidAmount = bill.payments
@@ -175,7 +200,7 @@ export async function getFinanceDashboardOverview(): Promise<
           paidAmount,
           bill.status,
         );
-        if (outstanding <= 0 || bill.dueDate >= now) return null;
+        if (outstanding <= 0) return null;
         return {
           id: bill.id,
           type: "payable",
@@ -186,6 +211,9 @@ export async function getFinanceDashboardOverview(): Promise<
           projectName: bill.project?.name ?? "Proyek Tidak Dikenal",
           counterpartyName: bill.vendor?.name ?? "Vendor",
           documentNumber: bill.billNumber,
+          status: bill.status,
+          bucket: resolveDashboardDueBucket(bill.dueDate, now),
+          dayOffset: dashboardDueDayOffset(bill.dueDate, now),
           href: "/expenses?view=vendor-bills",
         };
       }),
@@ -199,7 +227,7 @@ export async function getFinanceDashboardOverview(): Promise<
           paidAmount,
           invoice.status,
         );
-        if (outstanding <= 0 || invoice.dueDate >= now) return null;
+        if (outstanding <= 0) return null;
         return {
           id: invoice.id,
           type: "receivable",
@@ -210,12 +238,15 @@ export async function getFinanceDashboardOverview(): Promise<
           projectName: invoice.project?.name ?? "Proyek Tidak Dikenal",
           counterpartyName: "Client",
           documentNumber: invoice.invoiceNumber,
+          status: invoice.status,
+          bucket: resolveDashboardDueBucket(invoice.dueDate, now),
+          dayOffset: dashboardDueDayOffset(invoice.dueDate, now),
           href: `/projects/${invoice.projectId}?tab=payments`,
         };
       }),
     ]
       .filter((item): item is FinanceDashboardCashDueItem => item !== null)
-      .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+      .sort((a, b) => a.dayOffset - b.dayOffset || a.dueDate.getTime() - b.dueDate.getTime());
 
     const materialIssues: FinanceDashboardMaterialIssue[] = [
       ...liveRapItems.map((item): FinanceDashboardMaterialIssue | null => {
@@ -239,6 +270,8 @@ export async function getFinanceDashboardOverview(): Promise<
           availableStock: available,
           requiredStock: required,
           minimumStock: null,
+          quantity: required - available,
+          createdAt: null,
           unit: item.material?.unit ?? item.unit,
           description: `${item.name} membutuhkan ${(required - available).toLocaleString("id-ID")} ${item.material?.unit ?? item.unit} tambahan.`,
           href: `/projects/${item.rap.projectId}?tab=stok`,
@@ -259,16 +292,52 @@ export async function getFinanceDashboardOverview(): Promise<
           availableStock: available,
           requiredStock: null,
           minimumStock: minimum,
+          quantity: null,
+          createdAt: null,
           unit: item.material?.unit ?? "unit",
           description: `Stok tersedia ${available.toLocaleString("id-ID")} ${item.material?.unit ?? "unit"} di ${item.location?.name ?? "lokasi"}.`,
           href: "/materials?tab=inventory",
         };
       }),
+      ...reversalReceipts.map((receipt): FinanceDashboardMaterialIssue => ({
+        id: `receipt-${receipt.id}`,
+        type: "REVERSAL_REQUEST",
+        severity: "WARNING",
+        materialName: receipt.receiptNumber,
+        projectName: receipt.project?.name ?? "Proyek Tidak Dikenal",
+        locationName: receipt.inventoryLocation?.name ?? "Lokasi",
+        availableStock: 0,
+        requiredStock: null,
+        minimumStock: null,
+        quantity: null,
+        createdAt: receipt.createdAt,
+        unit: "",
+        description: receipt.reversalReason ?? "Penerimaan material menunggu keputusan reversal.",
+        href: "/materials?tab=overview",
+      })),
+      ...materialMovements.map((movement): FinanceDashboardMaterialIssue => ({
+        id: `movement-${movement.id}`,
+        type: movement.movementType === "WASTE" ? "WASTE" : "ADJUSTMENT",
+        severity: movement.movementType === "WASTE" ? "WARNING" : "INFO",
+        materialName: movement.material?.name ?? "Material",
+        projectName: movement.project?.name ?? null,
+        locationName: movement.location?.name ?? "Lokasi",
+        availableStock: 0,
+        requiredStock: null,
+        minimumStock: null,
+        quantity: Number(movement.quantity),
+        createdAt: movement.createdAt,
+        unit: movement.material?.unit ?? "unit",
+        description: movement.note ?? (movement.movementType === "WASTE" ? "Material terbuang tercatat." : "Penyesuaian stok tercatat."),
+        href: "/materials?tab=activity",
+      })),
     ]
       .filter((item): item is FinanceDashboardMaterialIssue => item !== null)
-      .sort((a, b) =>
-        a.severity === b.severity ? 0 : a.severity === "CRITICAL" ? -1 : 1,
-      );
+      .sort((a, b) => {
+        const rank = (severity: FinanceDashboardMaterialIssue["severity"]): number => severity === "CRITICAL" ? 2 : severity === "WARNING" ? 1 : 0;
+        return rank(b.severity) - rank(a.severity)
+          || (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
+      });
 
     const projectInputs: DashboardProjectInput[] = budgets.map((budget) => ({
       projectId: budget.projectId,
@@ -322,6 +391,11 @@ export async function getFinanceDashboardOverview(): Promise<
       success: true,
       data: {
         role,
+        generatedAt: now,
+        dataQuality: {
+          partial: unavailableSources.length > 0,
+          unavailableSources,
+        },
         ...core,
         bankAccounts: accounts.map((account) => ({
           id: account.id,
@@ -341,6 +415,7 @@ export async function getFinanceDashboardOverview(): Promise<
             category: transaction.category,
             description: transaction.description,
             amount: Number(transaction.amount),
+            reconciled: transaction.reconciled,
             createdAt: transaction.createdAt,
           })),
         })),
@@ -348,18 +423,20 @@ export async function getFinanceDashboardOverview(): Promise<
           ...core.dashboardTabs,
           counts: {
             ...core.dashboardTabs.counts,
-            accounts: accounts.length,
+            accounts: 0,
+            materials: core.dashboardTabs.counts.materials + reversalReceipts.length,
           },
         },
         dashboardDetails: {
           approvals: limitDashboardTabDetails(
-            approvalDetails,
+            rankedApprovalDetails,
             DASHBOARD_TAB_DETAIL_LIMIT,
           ),
           cashDue: limitDashboardTabDetails(
             cashDue,
             DASHBOARD_TAB_DETAIL_LIMIT,
           ),
+          cashDueGroups: buildCashDueGroups(cashDue),
           budgetRisks: limitDashboardTabDetails(
             core.riskyProjects,
             DASHBOARD_TAB_DETAIL_LIMIT,
@@ -382,11 +459,9 @@ export async function getFinanceDashboardOverview(): Promise<
           category: transaction.category,
           description: transaction.description,
           amount: Number(transaction.amount),
+          reconciled: transaction.reconciled,
           createdAt: transaction.createdAt,
         })),
-        aiInsight: latestBriefing
-          ? parseAiInsight(latestBriefing.result, latestBriefing.createdAt)
-          : null,
       },
     };
   } catch (error) {

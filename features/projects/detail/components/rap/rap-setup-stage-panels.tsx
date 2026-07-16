@@ -77,7 +77,7 @@ export function MaterialRapStagePanel({
               </span>
             </span>
             <span className="max-w-[38%] shrink-0 text-right">
-              <span className="financial-amount block break-words font-mono text-[10px] font-bold leading-3 [overflow-wrap:anywhere]">
+              <span className="financial-amount block break-words font-mono text-[10px] font-bold [overflow-wrap:anywhere]">
                 {formatShortRp(Number(item.estimatedTotalCost))}
               </span>
               <span
@@ -100,7 +100,7 @@ export function MaterialRapStagePanel({
         <button
           type="button"
           onClick={openAddRapForm}
-          className="mt-sm min-h-11 w-full rounded-full bg-primary text-xs font-bold text-on-primary"
+          className="mt-sm min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary"
         >
           Tambah Material
         </button>

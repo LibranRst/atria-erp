@@ -57,8 +57,8 @@ function MobileHeader({
   const hasBackButton = !isRootRoute;
 
   const pageTitle = React.useMemo(
-    () => getPageTitle(pathname, searchParams),
-    [pathname, searchParams],
+    () => getPageTitle(pathname),
+    [pathname],
   );
   const roleName = React.useMemo(
     () => getRoleName(session?.user ?? null),

@@ -117,64 +117,96 @@ export function BankAccountCard({
   const inactiveClass = account.isActive ? "" : "opacity-60 grayscale";
   const full = variant === "full";
 
-  const content = (
+  const content = full ? (
     <div
-      className={`relative flex shrink-0 snap-start flex-col justify-between overflow-hidden text-left shadow-[0_12px_28px_rgba(17,17,17,0.04)] transition active:scale-[0.99] ${textClass} ${inactiveClass} ${
-        full
-          ? "min-h-[154px] w-full rounded-[28px] p-5"
-          : "min-h-[120px] w-[240px] rounded-2xl p-4"
-      }`}
+      className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 text-left shadow-[0_3px_6px_rgba(17,17,17,0.08),0_18px_42px_rgba(17,17,17,0.13)] ring-1 ${textClass} ${inactiveClass} ${account.cardTextColor === "dark" ? "ring-black/[0.07]" : "ring-white/[0.16]"}`}
+      style={{
+        backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
+      }}
+    >
+      <span
+        className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-white/[0.12] blur-2xl"
+        aria-hidden="true"
+      />
+      <div className="relative flex items-start gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-white/14 ring-1 ring-white/15 backdrop-blur-sm">
+          <span
+            className="material-symbols-outlined text-[21px]"
+            aria-hidden="true"
+          >
+            account_balance
+          </span>
+        </span>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <h3 className="truncate text-sm font-semibold leading-[1.15] tracking-[-0.01em]">
+            {account.name}
+          </h3>
+          <p className="mt-1 truncate text-[10px] font-medium uppercase leading-[1.2] tracking-[0.08em] opacity-65">
+            {account.bankName}
+          </p>
+        </div>
+        <span
+          className="material-symbols-outlined shrink-0 pt-1 text-[23px] opacity-65"
+          aria-hidden="true"
+        >
+          contactless
+        </span>
+      </div>
+
+      <div className="relative mt-auto pt-3">
+        <p className="text-[9px] font-semibold uppercase tracking-[0.13em] opacity-60">
+          Saldo tersedia
+        </p>
+        <MoneyValue
+          amount={account.balance}
+          variant="fullDynamic"
+          tone={account.cardTextColor === "dark" ? "inherit" : "inverse"}
+          size="lg"
+          className="mt-1.5"
+        />
+      </div>
+
+      <div className="relative mt-4 flex items-center justify-between gap-3">
+        <p className="font-mono text-[11px] font-semibold tracking-[0.16em] opacity-75">
+          •••• {account.accountNumber.slice(-4)}
+        </p>
+        <p className="min-w-0 max-w-[55%] truncate text-right text-[9px] font-semibold uppercase tracking-[0.1em] opacity-60">
+          {account.holderName}
+        </p>
+      </div>
+    </div>
+  ) : (
+    <div
+      className={`relative flex min-h-[120px] w-[240px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl p-4 text-left shadow-[0_12px_28px_rgba(17,17,17,0.04)] transition active:scale-[0.99] ${textClass} ${inactiveClass}`}
       style={{
         backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
       }}
     >
       <div className="relative z-10 flex min-w-0 items-start justify-between gap-3">
-        <div
-          className={`min-w-0 flex-1 ${full ? "flex items-center gap-2.5" : ""}`}
-        >
-          {full ? (
-            <span
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/14 opacity-90 ring-1 ring-white/15 backdrop-blur-sm"
-              aria-hidden="true"
-            >
-              <span className="material-symbols-outlined block translate-y-px text-[18px] leading-none">
-                account_balance
-              </span>
-            </span>
-          ) : null}
+        <div className="min-w-0 flex-1">
           <div className="min-w-0 flex-1">
             <p className="truncate text-[9px] font-bold uppercase leading-none tracking-wider opacity-75">
               {account.bankName}
             </p>
-            <h3
-              className={`mt-1 truncate font-black tracking-tight ${
-                full ? "text-[17px] leading-5" : "text-xs leading-normal"
-              }`}
-            >
+            <h3 className="mt-1 truncate text-xs font-black leading-normal tracking-tight">
               {account.name}
             </h3>
           </div>
         </div>
-        {full ? (
-          <span className="shrink-0 rounded-full bg-white/14 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider ring-1 ring-white/15 backdrop-blur-sm">
-            {account.isActive ? "Aktif" : "Archived"}
-          </span>
-        ) : (
-          <span className="material-symbols-outlined shrink-0 text-[18px] opacity-75">
-            account_balance
-          </span>
-        )}
+        <span className="material-symbols-outlined shrink-0 text-[18px] opacity-75">
+          account_balance
+        </span>
       </div>
 
-      <div className={`relative z-10 ${full ? "mt-8" : "mt-4"}`}>
+      <div className="relative z-10 mt-4">
         <p className="font-mono text-[10px] leading-none tracking-[0.18em] opacity-75">
           •••• {account.accountNumber.slice(-4)}
         </p>
         <MoneyValue
           amount={account.balance}
-          variant={full ? "fullDynamic" : "compactWithFull"}
+          variant="compactWithFull"
           tone={account.cardTextColor === "dark" ? "inherit" : "inverse"}
-          size={full ? "lg" : "md"}
+          size="md"
           className="mt-1"
         />
       </div>
@@ -263,7 +295,7 @@ function CircularProgress({
           cy={size / 2}
         />
       </svg>
-      <span className="absolute font-mono text-[9px] font-bold text-on-surface">
+      <span className="absolute font-mono text-[9px] font-bold leading-none text-on-surface">
         {Math.round(percentage)}%
       </span>
     </div>

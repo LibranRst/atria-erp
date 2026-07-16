@@ -11,6 +11,7 @@ import {
   formatIsoDate,
   parseIsoDate,
 } from "./form-control-utils";
+import { useFormPresentation } from "./form-presentation-context";
 
 export function DatePickerField({
   id,
@@ -33,6 +34,7 @@ export function DatePickerField({
   readonly required?: boolean;
   readonly error?: string;
 }): React.JSX.Element {
+  const grouped = useFormPresentation() === "grouped";
   const parsed = parseIsoDate(value);
   const [open, setOpen] = React.useState(false);
   const [viewDate, setViewDate] = React.useState<Date>(parsed ?? new Date());
@@ -64,7 +66,11 @@ export function DatePickerField({
         aria-expanded={open}
         disabled={disabled}
         onClick={() => setOpen(true)}
-        className="flex min-h-12 w-full items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-low px-5 text-left transition active:scale-[0.99] focus:outline-none focus:border-outline focus:ring-0 disabled:cursor-not-allowed disabled:opacity-55"
+        className={cx(
+          grouped
+            ? "flex min-h-8 w-full items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55"
+            : "flex min-h-12 w-full items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition active:scale-[0.99] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55",
+        )}
       >
         <span
           className={cx(
@@ -77,7 +83,7 @@ export function DatePickerField({
         <CalendarDays className="h-4 w-4 text-on-surface-variant" />
       </button>
       <BottomSheet open={open} title={label} onClose={() => setOpen(false)}>
-        <div className="space-y-sm">
+        <div className="rounded-[24px] bg-surface-container-lowest p-3 ring-1 ring-outline-variant/15">
           <div className="flex items-center justify-between">
             <button
               type="button"
@@ -86,7 +92,8 @@ export function DatePickerField({
                   new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1),
                 )
               }
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-container-low"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-blue-600 transition active:bg-blue-50"
+              aria-label="Bulan sebelumnya"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -98,7 +105,8 @@ export function DatePickerField({
                   new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1),
                 )
               }
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-container-low"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-blue-600 transition active:bg-blue-50"
+              aria-label="Bulan berikutnya"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -134,8 +142,8 @@ export function DatePickerField({
                   className={cx(
                     "flex aspect-square items-center justify-center rounded-full text-xs font-bold transition active:scale-95",
                     active
-                      ? "bg-primary text-on-primary"
-                      : "bg-surface-container-low text-on-surface",
+                      ? "bg-blue-500 text-white"
+                      : "text-on-surface hover:bg-surface-container-low",
                   )}
                 >
                   {day}

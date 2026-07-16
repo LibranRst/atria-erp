@@ -44,7 +44,7 @@ Drizzle ORM digunakan sebagai Object-Relational Mapping (ORM) utama.
 Menggunakan kombinasi Tailwind CSS untuk penataan gaya utilitas dan shadcn/ui untuk komponen antarmuka.
 *   **Rasionil Finansial & Operasional:** Mempercepat tim pengembang dalam mendesain antarmuka mobile-first yang seragam tanpa perlu menulis CSS kustom yang rumit. Tampilan akhir sangat premium, konsisten dengan prinsip estetika iOS 26 Solid.
 *   **Fitur Teknis Utama:**
-    *   **Tailwind CSS Utility Classes:** Mempermudah penyesuaian ukuran *touch target* minimal 44x44 piksel secara langsung di elemen HTML.
+    *   **Tailwind CSS Utility Classes:** Mempermudah penyesuaian *touch target* efektif minimal 48x48 piksel secara langsung di elemen HTML, termasuk saat tombol terlihat lebih compact.
     *   **shadcn/ui Copy-Paste Model:** Komponen disalin langsung ke dalam repositori aplikasi, memungkinkan kustomisasi penuh pada level kode tanpa terikat dependensi pustaka pihak ketiga yang kaku.
 
 ### 1.6 Better Auth

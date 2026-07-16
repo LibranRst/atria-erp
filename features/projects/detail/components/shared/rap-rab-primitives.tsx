@@ -16,7 +16,7 @@ export function NativePanel({
   readonly children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <section className="rounded-[28px] border border-outline-variant/20 bg-white p-md shadow-[0_14px_34px_rgba(17,17,17,0.045)]">
+    <section className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
       <div className="mb-sm flex items-start justify-between gap-3">
         <div className="min-w-0">
           {eyebrow && (
@@ -50,7 +50,7 @@ export function MiniMetric({
         {label}
       </p>
       <p
-        className={`financial-amount mt-0.5 break-words font-mono text-[13px] font-bold leading-4 tabular-nums [overflow-wrap:anywhere] ${danger ? "text-error" : "text-on-surface"}`}
+        className={`financial-amount mt-0.5 truncate whitespace-nowrap font-mono text-[13px] font-bold tabular-nums ${danger ? "text-error" : "text-on-surface"}`}
       >
         {value}
       </p>

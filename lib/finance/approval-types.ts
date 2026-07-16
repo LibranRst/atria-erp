@@ -3,6 +3,7 @@ export type ApprovalDetailType = "project_cost" | "vendor_payment";
 export type ApprovalDetail = {
   readonly id: string;
   readonly createdAt: Date;
+  readonly dueDate: Date | null;
   readonly notes: string | null;
   readonly type: ApprovalDetailType;
   readonly referenceId: string;
@@ -15,4 +16,6 @@ export type ApprovalDetail = {
   readonly actualSpent: number;
   readonly requestedBy: string;
   readonly budgetOverrun: boolean;
+  readonly priority: "CRITICAL" | "WARNING" | "NORMAL";
+  readonly priorityReason: string;
 };

@@ -60,7 +60,7 @@ export function DetailRow({
   readonly detail?: string;
 }): React.JSX.Element {
   return (
-    <div className="rounded-2xl bg-surface-container-low p-3">
+    <div className="border-t border-outline-variant/25 px-4 py-3 first:border-t-0">
       <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
         {label}
       </p>

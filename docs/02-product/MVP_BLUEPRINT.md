@@ -80,9 +80,9 @@ and adds material control:
 - Generated rows must be editable before sending to client.
 - Client preview never exposes internal cost, margin, markup, vendor notes, or internal notes.
 
-### Module 10: Owner Dashboard & AI Brief
+### Module 10: Owner Dashboard
 - Owner sees budget condition, category usage, actual cost, remaining budget, material shortage, leftover/reusable stock, vendor bills due, margin risk, and urgent actions.
-- AI writes simple Bahasa Indonesia summaries and suggestions, but does not mutate data.
+- AI CFO briefing is deferred and is not part of the current Dashboard experience.
 
 ## 3. Role-Based Value
 - Owner: 30-second view of project value, category budget usage, finance/material health, margin risk, and urgent approvals.
@@ -91,13 +91,13 @@ and adds material control:
 - Project Team: project material readiness, shortage, reserved, waiting purchase, and used/leftover status.
 
 ## 4. Daily Workflows
-- Owner opens Dashboard, reads category usage cards, approves payments or budget exceptions, and reviews AI Finance & Material Brief.
+- Owner opens Dashboard, reads the financial position and ranked actions, then reviews approvals, budget risk, due documents, accounts, or material attention through the Dashboard tabs.
 - Finance/Admin records expenses by category, verifies payment status, links material/RAP only when relevant, and watches budget/margin risk.
 - Purchasing checks Need to Buy, reserves available stock, records stock in from purchases, marks stock used, and returns leftover material.
 - PM checks project material readiness and inputs field expenses without filling unnecessary material details when the expense is operational.
 
 ## 5. Launch Criteria
-- Project Budget Setup, Settings, Expense Tracker by Category, Budget Dashboard, RAP, Material Master, Inventory, Stock Movement, Vendor Bills, RAB Estimate, and AI Brief have usable MVP screens.
+- Project Budget Setup, Settings, Expense Tracker by Category, Budget Dashboard, RAP, Material Master, Inventory, Stock Movement, Vendor Bills, and RAB Estimate have usable MVP screens.
 - Category budget cards show allocated, actual, remaining, used percentage, and risk badge.
 - Stock movement math is tested for reserve/use/return/adjustment/waste.
 - Existing finance tests remain green.

@@ -8,6 +8,7 @@ import {
   FormRiskNotice,
   SheetSelect,
   TextInput,
+  useSheetPresenceValue,
   WorkflowFormSheet,
 } from "@/components/ui";
 import { FinanceUnsavedChangesModal, MoneyImpactRow } from "@/features/finance/components/finance-form-patterns";
@@ -50,7 +51,7 @@ export function ReceiptImageLightbox({
         >
           <span className="material-symbols-outlined">close</span>
         </button>
-        <p className="mt-md text-center font-sans text-[8px] font-bold uppercase leading-[16px] tracking-wider text-white/70">
+        <p className="mt-md text-center font-sans text-[8px] font-bold uppercase tracking-wider text-white/70">
           Ketuk di luar gambar untuk menutup
         </p>
       </div>
@@ -89,10 +90,12 @@ export function FieldDisbursementSheet({
   onBankChange,
   onRefNumberChange,
 }: FieldDisbursementSheetProps): React.JSX.Element | null {
+  const { presentedValue: presentedCost, open, handleExitComplete } =
+    useSheetPresenceValue(selectedCost, selectedCost?.id);
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
-  if (!selectedCost) return null;
-  const amount = Number(selectedCost.amount);
+  if (!presentedCost) return null;
+  const amount = Number(presentedCost.amount);
   const selectedAccount = bankAccounts.find((account) => account.id === selectedBankId);
   const before = Number(selectedAccount?.balance ?? 0);
   const after = before - amount;
@@ -114,7 +117,8 @@ export function FieldDisbursementSheet({
   return (
     <>
     <WorkflowFormSheet
-      open
+      open={open}
+      onExitComplete={handleExitComplete}
       title={reviewing ? "Tinjau pencairan dana" : "Pencairan dana"}
       onClose={requestClose}
       pending={pending}
@@ -142,23 +146,23 @@ export function FieldDisbursementSheet({
           <div className="flex justify-between text-[14px]">
             <span className="text-on-surface-variant">Jumlah Pencairan:</span>
             <span className="font-numeral font-bold text-primary">
-              Rp {Number(selectedCost.amount).toLocaleString("id-ID")}
+              Rp {Number(presentedCost.amount).toLocaleString("id-ID")}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-on-surface-variant">Proyek:</span>
             <span className="max-w-[200px] truncate">
-              {selectedCost.project?.name}
+              {presentedCost.project?.name}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-on-surface-variant">Pengaju (PM):</span>
-            <span>{selectedCost.requestedBy?.name}</span>
+            <span>{presentedCost.requestedBy?.name}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-on-surface-variant">Keterangan:</span>
             <span className="max-w-[200px] truncate">
-              {selectedCost.description}
+              {presentedCost.description}
             </span>
           </div>
         </div>

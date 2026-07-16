@@ -11,7 +11,7 @@ Material control is attached to the Material category as the structured drill-do
 flowchart TD
   A["Owner opens mobile dashboard"] --> B["Server reads Better Auth session"]
   B --> C["RBAC: Owner or Finance Admin"]
-  C --> D["Query project budgets, project costs, vendor bills, RAP, inventory, stock movements, AI brief"]
+  C --> D["Query project budgets, approvals, invoices, vendor bills, accounts, RAP, inventory, and stock movements"]
   D --> E["Calculate total value, budget, consumed, remaining, category usage, material shortage, bills due, margin risk"]
   E --> F["Render owner-readable budget/category/material cards"]
 ```
@@ -170,12 +170,4 @@ flowchart TD
 Client-facing RAB output must never include internal unit cost, margin formula, stock availability, vendor notes, or internal notes.
 
 ## 11. AI Finance & Material Brief
-```mermaid
-flowchart TD
-  A["Cron or user request"] --> B["Read-only context builder"]
-  B --> C["Gemini analyzes category budget usage, margin risk, and material stock signals"]
-  C --> D["Store ai_run result"]
-  D --> E["Render Bahasa Indonesia summary and suggested actions"]
-```
-
-AI can analyze, summarize, and suggest. It cannot mutate finance/material data without explicit approval.
+Deferred. The current release has no AI CFO Dashboard surface, briefing route, or active financial-briefing cron. Historical `ai_run` data and AI OCR remain preserved for a later phase.

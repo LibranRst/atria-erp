@@ -23,6 +23,7 @@ import {
   SheetSelect,
   Textarea,
   TextInput,
+  useAnimatedSheetClose,
   WorkflowFormSheet,
 } from "@/components/ui";
 import {
@@ -95,16 +96,17 @@ export function VendorBillForm({ open = true, onClose, projects, vendors, loadin
     patch({ projectId, projectBudgetCategoryId: "", projectBudgetItemId: "", projectCategoryPlanItemId: "" });
   }
 
-  function closeImmediately(): void {
+  const completeClose = React.useCallback((): void => {
     if (onClose) onClose();
     else if (new URLSearchParams(window.location.search).get("new-vendor-bill") === "true") updateUrlSearchParam("new-vendor-bill", null, "replace");
     else router.back();
-  }
+  }, [onClose, router]);
+  const animatedClose = useAnimatedSheetClose(open, completeClose);
 
   function requestClose(): void {
     if (reviewing) { setReviewing(false); return; }
     if (draft.isDirty) { setConfirmClose(true); return; }
-    closeImmediately();
+    animatedClose.close();
   }
 
   async function loadDraft(id: string): Promise<void> {
@@ -126,14 +128,14 @@ export function VendorBillForm({ open = true, onClose, projects, vendors, loadin
     const result = await draft.saveNow();
     if (!result.success) { setError(result.message); setConfirmClose(false); return; }
     setConfirmClose(false);
-    closeImmediately();
+    animatedClose.close();
   }
 
   async function discardAndClose(): Promise<void> {
     if (draft.draftId) await discardVendorBillDraft({ draftId: draft.draftId });
     draft.reset(initialPayload(currentProjectId));
     setConfirmClose(false);
-    closeImmediately();
+    animatedClose.close();
   }
 
   async function submit(): Promise<void> {
@@ -144,7 +146,7 @@ export function VendorBillForm({ open = true, onClose, projects, vendors, loadin
     if (!response.success) { setError(response.error.message); toast.error(response.error.message); return; }
     draft.reset(initialPayload(currentProjectId));
     setReviewing(false);
-    closeImmediately();
+    animatedClose.close();
     router.refresh();
     setSuccess({
       title: "Tagihan vendor dibuat",
@@ -160,9 +162,10 @@ export function VendorBillForm({ open = true, onClose, projects, vendors, loadin
   return (
     <>
       <WorkflowFormSheet
-        open={open}
+        open={animatedClose.visible}
         title={reviewing ? "Tinjau tagihan vendor" : "Tagihan vendor baru"}
         onClose={requestClose}
+        onExitComplete={animatedClose.handleExitComplete}
         pending={pending || draft.status === "saving"}
         pendingLabel={reviewing ? "Membuat…" : "Menyimpan…"}
         disabled={!canReview}
@@ -183,16 +186,24 @@ export function VendorBillForm({ open = true, onClose, projects, vendors, loadin
             </div>
           ) : null}
           {!reviewing && drafts.length > 0 ? (
-            <FormSection title="Draft aktif" helper="Lanjutkan tagihan yang pernah disimpan.">
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <FormSection title="Draft aktif" helper="Lanjutkan tagihan yang pernah disimpan." presentation="plain">
+              <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
                 {drafts.slice(0, 5).map((item) => (
-                  <div key={item.id} className="min-w-[230px] rounded-[22px] bg-surface-container-low p-2 ring-1 ring-outline-variant/10">
-                    <button type="button" onClick={() => void loadDraft(item.id)} className="w-full rounded-2xl px-2 py-1 text-left">
-                      <span className="block truncate text-xs font-bold">{item.payload.billNumber || "Tagihan belum bernomor"}</span>
-                      <span className="mt-1 block truncate text-[10px] text-on-surface-variant">{item.projectName} · Rp {Number(item.payload.amount || 0).toLocaleString("id-ID")}</span>
-                      <span className="mt-1 block text-[9px] text-on-surface-variant">{new Date(item.lastSavedAt).toLocaleString("id-ID")}</span>
+                  <div key={item.id} className="flex min-h-[72px] min-w-0 items-center gap-1 px-2 py-1.5">
+                    <button type="button" onClick={() => void loadDraft(item.id)} className="flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-[18px] px-2.5 py-2 text-left outline-none transition-colors active:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-blue-500/25" aria-label={`Lanjutkan draft ${item.payload.billNumber || "tagihan belum bernomor"}`}>
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant" aria-hidden="true">
+                        <span className="material-symbols-outlined text-[18px] leading-none">edit_note</span>
+                      </span>
+                      <span className="grid min-w-0 flex-1 gap-0.5">
+                        <span className="truncate text-xs font-bold leading-[1.15] text-on-surface">{item.payload.billNumber || "Tagihan belum bernomor"}</span>
+                        <span className="truncate text-[10px] leading-[1.2] text-on-surface-variant">{item.projectName} · Rp {Number(item.payload.amount || 0).toLocaleString("id-ID")}</span>
+                        <span className="text-[9px] leading-[1.2] text-on-surface-variant/75">Disimpan {new Date(item.lastSavedAt).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                      </span>
+                      <span className="material-symbols-outlined shrink-0 text-[18px] leading-none text-on-surface-variant" aria-hidden="true">chevron_right</span>
                     </button>
-                    <button type="button" onClick={() => setPendingDiscardDraftId(item.id)} className="mt-1 min-h-10 w-full rounded-full bg-error-container/20 px-3 text-[10px] font-bold text-error">Buang Draft</button>
+                    <button type="button" onClick={() => setPendingDiscardDraftId(item.id)} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-error outline-none transition-colors active:bg-error-container/20 focus-visible:ring-2 focus-visible:ring-error/25" aria-label={`Buang draft ${item.payload.billNumber || "tagihan belum bernomor"}`}>
+                      <span className="material-symbols-outlined text-[18px] leading-none" aria-hidden="true">delete</span>
+                    </button>
                   </div>
                 ))}
               </div>

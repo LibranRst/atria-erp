@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { BottomSheet } from "@/components/ui";
+import { BottomSheet, useSheetPresenceValue } from "@/components/ui";
 import { Badge, type BadgeStatus } from "@/components/ui/badge";
 import { CompactMoney, CompactQty } from "../shared/rap-rab-primitives";
 import type {
@@ -34,14 +34,20 @@ export function RapItemDetailDrawer({
   readonly openEditRapForm: (item: RapItemView) => void;
   readonly handleDeleteRapItem: (id: string) => void;
 }): React.JSX.Element | null {
-  const item = rap?.items.find((row) => row.id === rapDetailItemId);
+  const selectedItem = rap?.items.find((row) => row.id === rapDetailItemId);
+  const {
+    presentedValue: item,
+    open,
+    handleExitComplete,
+  } = useSheetPresenceValue(selectedItem, rapDetailItemId);
   if (!item) return null;
 
   return (
     <BottomSheet
-      open={Boolean(rapDetailItemId)}
+      open={open}
       title="Detail Material RAP"
       onClose={() => setRapDetailItemId(null)}
+      onExitComplete={handleExitComplete}
       footer={
         canEditRap && rap?.status === "DRAFT" ? (
           <div className="grid grid-cols-2 gap-2">
@@ -133,16 +139,22 @@ export function PackageDetailDrawer({
   readonly handleDeleteCategoryPlanItem: (id: string) => void;
   readonly handleReopenPackage: (id: string) => void;
 }): React.JSX.Element | null {
-  const item = categoryPlanItems.find((row) => row.id === packageDetailItemId);
+  const selectedItem = categoryPlanItems.find((row) => row.id === packageDetailItemId);
+  const {
+    presentedValue: item,
+    open,
+    handleExitComplete,
+  } = useSheetPresenceValue(selectedItem, packageDetailItemId);
   if (!item) return null;
 
   const editable = canEditCategoryPlan && item.status === "DRAFT";
 
   return (
     <BottomSheet
-      open={Boolean(packageDetailItemId)}
+      open={open}
       title="Detail Package"
       onClose={() => setPackageDetailItemId(null)}
+      onExitComplete={handleExitComplete}
       footer={
         canEditCategoryPlan ? (
           <div className="grid gap-2">
@@ -174,7 +186,7 @@ export function PackageDetailDrawer({
                   setPackageDetailItemId(null);
                   handleDeleteCategoryPlanItem(item.id);
                 }}
-                className="min-h-11 rounded-full bg-error-container/25 text-xs font-bold text-error"
+                className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error"
               >
                 Hapus Package
               </button>

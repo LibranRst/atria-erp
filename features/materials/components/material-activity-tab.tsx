@@ -1,21 +1,25 @@
 "use client";
 
-import React from "react";
 import { ArrowDownToLine, ArrowLeftRight, ClipboardCheck } from "lucide-react";
+import React from "react";
 
 import type {
   MaterialMovementView,
   MaterialOperationsDashboard,
   ReceiptView,
 } from "@/app/actions/material/operations-dashboard";
-import { Badge, FilterPills, FilterSelect } from "@/components/ui";
+import { Badge, FilterSelect } from "@/components/ui";
 import { MoneyValue } from "@/components/ui/page-primitives";
+import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import {
-  MovementRow,
-  Section,
-} from "@/features/materials/components/material-operation-sheets";
+  MaterialGroupSurface,
+  MaterialInlineState,
+  MaterialSection,
+} from "@/features/materials/components/material-page-primitives";
+import { MovementRow } from "@/features/materials/components/material-operation-sheets";
 import {
   formatMaterialDate,
+  formatMaterialStatus,
   formatMovementType,
   materialBadgeTone,
 } from "@/features/materials/lib/material-ui-utils";
@@ -64,195 +68,132 @@ export function MaterialActivityTab({
   onLoadMore,
 }: ActivityTabProps): React.JSX.Element {
   return (
-    <div className="space-y-md">
-      <div className="space-y-3 rounded-[28px] border border-outline-variant/20 bg-white p-sm shadow-[0_14px_34px_rgba(17,17,17,0.045)]">
-        <div className="px-1">
-          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-primary">
-            Audit trail
-          </p>
-          <p className="mt-1 text-xs leading-5 text-on-surface-variant">
-            Filter penerimaan, movement, transfer, dan stock count.
-          </p>
-        </div>
-        <div className="overflow-x-auto">
-          <FilterPills
-            label="Tipe movement"
-            value={activityType}
-            onChange={onActivityTypeChange}
-            options={[
-              { value: "ALL", label: "Semua tipe" },
-              ...movementTypes.map((value) => ({
-                value,
-                label: formatMovementType(value),
-              })),
-            ]}
-          />
-        </div>
-        <div className="overflow-x-auto">
-          <FilterPills
-            label="Periode"
+    <div className="space-y-lg max-[430px]:space-y-5">
+      <section className="space-y-2.5" aria-label="Filter aktivitas material" data-material-controls="inline">
+        <SegmentedTabs
+          value={activityType}
+          onChange={onActivityTypeChange}
+          ariaLabel="Filter tipe aktivitas material"
+          layoutId="material-activity-type"
+          density="compact"
+          scrollable
+          fillAvailableSpace={movementTypes.length + 1 <= 3}
+          options={[
+            { value: "ALL", label: "Semua" },
+            ...movementTypes.map((value) => ({ value, label: formatMovementType(value) })),
+          ]}
+        />
+        <div>
+          <SegmentedTabs
             value={activityPeriod}
             onChange={onActivityPeriodChange}
+            ariaLabel="Filter periode aktivitas material"
+            layoutId="material-activity-period"
+            density="compact"
+            fillAvailableSpace
             options={[
-              { value: "ALL", label: "Semua tanggal" },
+              { value: "ALL", label: "Semua waktu" },
               { value: "7", label: "7 hari" },
               { value: "30", label: "30 hari" },
             ]}
           />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <FilterSelect
-            label="Filter project"
-            value={activityProject}
-            options={activityProjectOptions}
-            onChange={onActivityProjectChange}
-          />
-          <FilterSelect
-            label="Filter lokasi"
-            value={activityLocation}
-            options={activityLocationOptions}
-            onChange={onActivityLocationChange}
-          />
+          <FilterSelect label="Project" value={activityProject} options={activityProjectOptions} onChange={onActivityProjectChange} />
+          <FilterSelect label="Lokasi" value={activityLocation} options={activityLocationOptions} onChange={onActivityLocationChange} />
         </div>
-      </div>
+      </section>
 
-      <Section title="Goods Receipts">
-        {visibleReceipts.length === 0 ? (
-          <InlineEmpty
-            title="Tidak ada receipt"
-            description="Ubah filter untuk melihat penerimaan material."
-          />
-        ) : (
-          visibleReceipts.map((row) => (
-            <button
-              key={row.id}
-              type="button"
-              onClick={() => onOpenReceipt(row)}
-              className="flex min-h-[76px] w-full items-center gap-3 rounded-[24px] bg-white p-3 text-left shadow-[0_8px_20px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/10 transition hover:bg-surface-container-low active:scale-[0.99]"
-            >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-success-light text-success">
-                <ArrowDownToLine className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-bold">
-                  {row.receiptNumber}
-                </span>
-                <span className="block truncate text-[10px] text-on-surface-variant">
-                  {row.projectName} · {row.locationName}
-                </span>
-                <span className="mt-0.5 block truncate text-[9px] text-on-surface-variant/70">
-                  {formatMaterialDate(row.receivedAt)} · {row.receivedByName}
-                </span>
-              </span>
-              <span className="shrink-0 text-right">
-                <Badge status={materialBadgeTone(row.status)}>{row.status}</Badge>
-                <MoneyValue
-                  amount={row.total}
-                  variant="compactWithFull"
-                  align="right"
-                  size="sm"
-                  className="mt-1"
-                />
-              </span>
-            </button>
-          ))
-        )}
-      </Section>
+      <MaterialSection title="Penerimaan barang" meta={`${visibleReceipts.length} dokumen`}>
+        <MaterialGroupSurface>
+          {visibleReceipts.length === 0 ? (
+            <MaterialInlineState icon="inbox" title="Tidak ada penerimaan" description="Ubah filter untuk melihat dokumen penerimaan lainnya." />
+          ) : (
+            <div className="divide-y divide-black/[0.055]">
+              {visibleReceipts.map((row) => (
+                <button
+                  key={row.id}
+                  type="button"
+                  onClick={() => onOpenReceipt(row)}
+                  className="flex min-h-[76px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-success/[0.08] text-success ring-1 ring-success/[0.06]">
+                    <ArrowDownToLine className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="grid min-w-0 flex-1 gap-1">
+                    <span className="truncate text-[13px] font-bold leading-4 text-on-surface">{row.receiptNumber}</span>
+                    <span className="truncate text-[10px] leading-[1.3] text-on-surface-variant">{row.projectName} · {row.locationName}</span>
+                    <span className="truncate text-[9px] leading-3 text-on-surface-variant/65">{formatMaterialDate(row.receivedAt)} · {row.receivedByName}</span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <Badge status={materialBadgeTone(row.status)}>{formatMaterialStatus(row.status)}</Badge>
+                    <MoneyValue amount={row.total} variant="compactWithFull" align="right" size="xs" className="mt-1" />
+                  </span>
+                  <span className="material-symbols-outlined shrink-0 text-[17px] text-[#007AFF]" aria-hidden="true">chevron_right</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </MaterialGroupSurface>
+      </MaterialSection>
 
-      <Section
-        title="Stock Movements"
-        contentClassName="divide-y divide-outline-variant/35"
-      >
-        {visibleMovements.length === 0 ? (
-          <InlineEmpty
-            title="Tidak ada movement"
-            description="Ubah filter untuk melihat histori pergerakan stock."
-          />
-        ) : (
-          visibleMovements.map((row) => <MovementRow key={row.id} row={row} />)
-        )}
-        {movementsLength >= 30 && (
-          <button
-            type="button"
-            onClick={onLoadMore}
-            disabled={pending}
-            className="min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary ring-1 ring-outline-variant/15 transition active:scale-[0.97] disabled:opacity-50"
-          >
-            Load more
-          </button>
-        )}
-      </Section>
+      <MaterialSection title="Pergerakan stok" meta={`${visibleMovements.length} aktivitas`}>
+        <MaterialGroupSurface>
+          {visibleMovements.length === 0 ? (
+            <MaterialInlineState icon="history" title="Tidak ada pergerakan stok" description="Ubah filter untuk melihat histori aktivitas lainnya." />
+          ) : (
+            <div className="divide-y divide-black/[0.055] px-3">
+              {visibleMovements.map((row) => <MovementRow key={row.id} row={row} />)}
+            </div>
+          )}
+          {movementsLength >= 30 ? (
+            <div className="border-t border-black/[0.055] p-3">
+              <button type="button" onClick={onLoadMore} disabled={pending} className="min-h-12 w-full rounded-full bg-[#007AFF]/[0.08] px-5 text-[11px] font-bold text-[#007AFF] outline-none active:bg-[#007AFF]/[0.14] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 disabled:opacity-45">
+                {pending ? "Memuat…" : "Muat aktivitas sebelumnya"}
+              </button>
+            </div>
+          ) : null}
+        </MaterialGroupSurface>
+      </MaterialSection>
 
-      <Section title="Transfers & Counts">
-        {transfers.map((row) => (
-          <TransferRow key={row.id} row={row} />
-        ))}
-        {counts.map((row) => (
-          <CountRow key={row.id} row={row} />
-        ))}
-        {transfers.length === 0 && counts.length === 0 && (
-          <p className="rounded-2xl bg-white p-4 text-xs leading-5 text-on-surface-variant ring-1 ring-outline-variant/10">
-            Belum ada transfer atau stock opname.
-          </p>
-        )}
-      </Section>
+      <MaterialSection title="Transfer dan stock opname" meta={`${transfers.length + counts.length} dokumen`}>
+        <MaterialGroupSurface>
+          {transfers.length === 0 && counts.length === 0 ? (
+            <MaterialInlineState icon="inventory" title="Belum ada dokumen" description="Transfer dan stock opname akan tersimpan di bagian ini." />
+          ) : (
+            <div className="divide-y divide-black/[0.055]">
+              {transfers.map((row) => <TransferRow key={row.id} row={row} />)}
+              {counts.map((row) => <CountRow key={row.id} row={row} />)}
+            </div>
+          )}
+        </MaterialGroupSurface>
+      </MaterialSection>
     </div>
   );
 }
 
-function InlineEmpty({
-  title,
-  description,
-}: {
-  readonly title: string;
-  readonly description: string;
-}): React.JSX.Element {
+function TransferRow({ row }: { readonly row: MaterialOperationsDashboard["transfers"][number] }): React.JSX.Element {
   return (
-    <div className="rounded-2xl bg-white p-4 text-xs leading-5 text-on-surface-variant ring-1 ring-outline-variant/10">
-      <p className="font-bold text-on-surface">{title}</p>
-      <p className="mt-1">{description}</p>
-    </div>
-  );
-}
-
-function TransferRow({
-  row,
-}: {
-  readonly row: MaterialOperationsDashboard["transfers"][number];
-}): React.JSX.Element {
-  return (
-    <div className="flex min-h-16 items-center gap-3 rounded-[24px] bg-white p-3 text-xs shadow-[0_8px_20px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/10">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary">
-        <ArrowLeftRight className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-bold">{row.transferNumber}</p>
-        <p className="mt-1 truncate text-[10px] text-on-surface-variant">
-          {row.fromLocationName} → {row.toLocationName} · {row.items.length} items
-        </p>
+    <div className="flex min-h-[68px] items-center gap-3 px-3.5 py-3">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/[0.08] text-primary ring-1 ring-primary/[0.06]"><ArrowLeftRight className="h-4 w-4" aria-hidden="true" /></span>
+      <div className="grid min-w-0 flex-1 gap-1">
+        <p className="truncate text-[13px] font-bold leading-4 text-on-surface">{row.transferNumber}</p>
+        <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">{row.fromLocationName} → {row.toLocationName} · {row.items.length} material</p>
       </div>
     </div>
   );
 }
 
-function CountRow({
-  row,
-}: {
-  readonly row: MaterialOperationsDashboard["counts"][number];
-}): React.JSX.Element {
+function CountRow({ row }: { readonly row: MaterialOperationsDashboard["counts"][number] }): React.JSX.Element {
   return (
-    <div className="flex min-h-16 items-center gap-3 rounded-[24px] bg-white p-3 text-xs shadow-[0_8px_20px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/10">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-light text-warning">
-        <ClipboardCheck className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
+    <div className="flex min-h-[68px] items-center gap-3 px-3.5 py-3">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/[0.09] text-warning ring-1 ring-warning/[0.06]"><ClipboardCheck className="h-4 w-4" aria-hidden="true" /></span>
+      <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-center justify-between gap-2">
-          <p className="truncate font-bold">{row.countNumber}</p>
-          <Badge status={materialBadgeTone(row.status)}>{row.status}</Badge>
+          <p className="truncate text-[13px] font-bold leading-4 text-on-surface">{row.countNumber}</p>
+          <Badge status={materialBadgeTone(row.status)}>{formatMaterialStatus(row.status)}</Badge>
         </div>
-        <p className="mt-1 truncate text-[10px] text-on-surface-variant">
-          {row.locationName} · {row.items.length} material · {formatMaterialDate(row.countedAt)}
-        </p>
+        <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">{row.locationName} · {row.items.length} material · {formatMaterialDate(row.countedAt)}</p>
       </div>
     </div>
   );

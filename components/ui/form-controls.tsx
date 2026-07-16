@@ -20,6 +20,7 @@ export {
   COMMON_UNIT_OPTIONS,
 } from "./form-control-types";
 export type { SelectOption } from "./form-control-types";
+export type { FormFieldLayout, FormPresentation } from "./form-presentation-context";
 export {
   FormRiskNotice,
   ValuePreviewStrip,

@@ -14,29 +14,32 @@ export function LockedTabState({
   onAction,
 }: LockedTabStateProps): React.JSX.Element {
   return (
-    <div className="rounded-[28px] border border-outline-variant/20 bg-white px-6 py-14 text-center shadow-[0_14px_34px_rgba(17,17,17,0.045)]">
-      <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-3xl bg-surface-container-low text-on-surface-variant shadow-sm">
-        <span className="material-symbols-outlined text-[36px] text-on-surface-variant/80">
+    <section className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/[0.025]">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant">
+        <span className="material-symbols-outlined text-[20px] text-on-surface-variant/80">
           lock
         </span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-on-surface-variant">Belum tersedia</p>
+          <h3 className="mt-0.5 text-[16px] font-semibold leading-5 text-on-surface">{tabLabel} masih terkunci</h3>
+          <p className="mt-1 text-xs leading-5 text-on-surface-variant">
+            Budget internal harus disetujui sebelum data dan operasi pada bagian ini dapat digunakan.
+          </p>
+        </div>
       </div>
-      <h3 className="text-lg font-semibold leading-6 text-on-surface">
-        Fitur {tabLabel} Terkunci
-      </h3>
-      <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-on-surface-variant">
-        Proyek ini belum memiliki RAB yang disetujui oleh klien. Susun RAP
-        internal dulu, lalu generate dan approve RAB dari source RAP tersebut.
-      </p>
       <button
+        type="button"
         onClick={onAction}
-        className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-95"
+        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.98]"
       >
         <span className="material-symbols-outlined text-[16px]">
           {actionIcon}
         </span>
         <span>{actionLabel}</span>
       </button>
-    </div>
+    </section>
   );
 }
 
@@ -48,32 +51,29 @@ export function RabPrerequisiteState({
   onGoToRap,
 }: RabPrerequisiteStateProps): React.JSX.Element {
   return (
-    <div className="rounded-[28px] border border-outline-variant/20 bg-white p-md text-center shadow-[0_14px_34px_rgba(17,17,17,0.045)]">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-primary text-on-primary">
-        <span className="material-symbols-outlined text-[32px]">
-          architecture
-        </span>
+    <section className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/[0.025]">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-on-primary">
+          <span className="material-symbols-outlined text-[20px]">architecture</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-primary">Urutan perencanaan</p>
+          <h3 className="mt-0.5 text-[16px] font-semibold leading-5 text-on-surface">Selesaikan RAP sebelum membuat RAB</h3>
+          <p className="mt-1 text-xs leading-5 text-on-surface-variant">
+            RAB mengambil item material dan paket kerja yang telah disiapkan secara client-safe dari RAP.
+          </p>
+        </div>
       </div>
-      <p className="mt-5 text-[10px] font-bold uppercase tracking-wide text-deep-teal">
-        RAP dulu, baru RAB
-      </p>
-      <h3 className="mt-1 text-lg font-semibold leading-6 text-on-surface">
-        Buat RAP internal sebelum generate RAB client.
-      </h3>
-      <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-on-surface-variant">
-        RAB akan digenerate dari item RAP material, work package, subcon
-        package, dan line manual yang sudah client-safe.
-      </p>
       <button
         type="button"
         onClick={onGoToRap}
-        className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-95"
+        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.98]"
       >
         Buka RAP
         <span className="material-symbols-outlined text-[16px]">
           arrow_forward
         </span>
       </button>
-    </div>
+    </section>
   );
 }

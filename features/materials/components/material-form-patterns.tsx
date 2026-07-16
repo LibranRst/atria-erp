@@ -5,7 +5,10 @@ import { motion } from "framer-motion";
 
 import { ConfirmationModal, WorkflowFormSheet } from "@/components/ui";
 import { cx } from "@/components/ui/form-control-utils";
-import { transitionSpringBouncy, transitionSpringSnappy } from "@/lib/utils/motion";
+import {
+  transitionSpringBouncy,
+  transitionSpringSnappy,
+} from "@/lib/utils/motion";
 import { calculateStockImpact } from "@/features/materials/lib/material-ui-utils";
 
 export type MaterialOperationSuccess = {
@@ -31,34 +34,78 @@ export function StockImpactRow({
 }): React.JSX.Element {
   const impact = calculateStockImpact({ before, delta, reserved });
   const unsafe = !impact.safe;
+  const normalizeZero = (value: number): number =>
+    Math.abs(value) < Number.EPSILON ? 0 : value;
+  const normalizedDelta = normalizeZero(delta);
   const quantity = (value: number): string =>
-    `${value.toLocaleString("id-ID", { maximumFractionDigits: 2 })}${unit ? ` ${unit}` : ""}`;
+    `${normalizeZero(value).toLocaleString("id-ID", { maximumFractionDigits: 2 })}${unit ? ` ${unit}` : ""}`;
+  const deltaLabel =
+    normalizedDelta === 0
+      ? "Tidak berubah"
+      : `${normalizedDelta > 0 ? "+" : ""}${quantity(normalizedDelta)}`;
 
   return (
-    <div className="rounded-2xl bg-surface-container-low px-4 py-3 ring-1 ring-outline-variant/10">
-      <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 text-xs font-bold text-on-surface">{label}</p>
-        <p className={cx("shrink-0 text-xs font-bold", unsafe ? "text-error" : "text-primary")}>
-          {delta > 0 ? "+" : ""}{quantity(delta)}
+    <section className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+      <div className="flex min-h-12 items-center justify-between gap-3 px-4 py-2.5">
+        <p className="min-w-0 truncate text-xs font-bold text-on-surface">
+          {label}
+        </p>
+        <p
+          className={cx(
+            "shrink-0 text-[10px] font-bold",
+            unsafe
+              ? "text-error"
+              : normalizedDelta === 0
+                ? "text-on-surface-variant"
+                : "text-primary",
+          )}
+        >
+          {deltaLabel}
         </p>
       </div>
-      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-outline-variant/15 bg-surface-container-low/60 px-4 py-3 text-center">
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">Sebelum</p>
-          <p className="mt-0.5 text-sm font-semibold tabular-nums">{quantity(before)}</p>
+          <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+            Sebelum
+          </p>
+          <p className="mt-1 whitespace-nowrap font-mono text-[13px] font-bold tabular-nums">
+            {quantity(before)}
+          </p>
         </div>
-        <span className="text-on-surface-variant" aria-hidden="true">→</span>
+        <span
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-sm text-on-surface-variant ring-1 ring-outline-variant/15"
+          aria-hidden="true"
+        >
+          →
+        </span>
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">Sesudah</p>
-          <p className={cx("mt-0.5 text-sm font-bold tabular-nums", unsafe ? "text-error" : "text-primary")}>{quantity(after)}</p>
+          <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+            Sesudah
+          </p>
+          <p
+            className={cx(
+              "mt-1 whitespace-nowrap font-mono text-[13px] font-bold tabular-nums",
+              unsafe ? "text-error" : "text-on-surface",
+            )}
+          >
+            {quantity(after)}
+          </p>
         </div>
       </div>
       {typeof reserved === "number" ? (
-        <p className={cx("mt-2 text-[10px] leading-4", unsafe ? "text-error" : "text-on-surface-variant")}>
-          Stok terreservasi {quantity(reserved)}{unsafe ? " · jumlah sesudah perubahan tidak aman" : ""}
+        <p
+          className={cx(
+            "border-t border-outline-variant/15 px-4 py-2.5 text-[10px] leading-4",
+            unsafe
+              ? "bg-error-container/10 text-error"
+              : "text-on-surface-variant",
+          )}
+        >
+          Stok terreservasi {quantity(reserved)}
+          {unsafe ? " · jumlah sesudah perubahan tidak aman" : ""}
         </p>
       ) : null}
-    </div>
+    </section>
   );
 }
 
@@ -94,13 +141,20 @@ export function MaterialSuccessSheet({
         </motion.div>
         <div>
           <p className="text-lg font-bold text-on-surface">{success?.title}</p>
-          <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-on-surface-variant">{success?.description}</p>
+          <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-on-surface-variant">
+            {success?.description}
+          </p>
         </div>
         <dl className="divide-y divide-outline-variant/35 rounded-2xl bg-surface-container-low px-4 text-left">
           {success?.facts.map((fact) => (
-            <div key={fact.label} className="flex items-start justify-between gap-4 py-3">
+            <div
+              key={fact.label}
+              className="flex items-start justify-between gap-4 py-3"
+            >
               <dt className="text-xs text-on-surface-variant">{fact.label}</dt>
-              <dd className="text-right text-xs font-bold text-on-surface">{fact.value}</dd>
+              <dd className="text-right text-xs font-bold text-on-surface">
+                {fact.value}
+              </dd>
             </div>
           ))}
         </dl>
@@ -131,12 +185,37 @@ export function MaterialUnsavedChangesModal({
       onClose={onContinue}
       actions={
         <div className="space-y-2">
-          <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} disabled={pending} onClick={onSave} className="min-h-12 w-full rounded-full bg-primary px-5 text-sm font-bold text-white disabled:opacity-45">
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.97 }}
+            transition={transitionSpringSnappy}
+            disabled={pending}
+            onClick={onSave}
+            className="min-h-12 w-full rounded-full bg-primary px-5 text-sm font-bold text-white disabled:opacity-45"
+          >
             {pending ? "Menyimpan…" : "Simpan Draft & Tutup"}
           </motion.button>
           <div className="grid grid-cols-2 gap-2">
-            <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} disabled={pending} onClick={onDiscard} className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error disabled:opacity-45">Buang Perubahan</motion.button>
-            <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} disabled={pending} onClick={onContinue} className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface disabled:opacity-45">Lanjut Mengisi</motion.button>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              disabled={pending}
+              onClick={onDiscard}
+              className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error disabled:opacity-45"
+            >
+              Buang Perubahan
+            </motion.button>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              disabled={pending}
+              onClick={onContinue}
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface disabled:opacity-45"
+            >
+              Lanjut Mengisi
+            </motion.button>
           </div>
         </div>
       }

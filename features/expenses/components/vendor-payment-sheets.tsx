@@ -11,6 +11,7 @@ import {
   MoneyInput,
   SheetSelect,
   TextInput,
+  useSheetPresenceValue,
   WorkflowFormSheet,
 } from "@/components/ui";
 import {
@@ -57,13 +58,15 @@ export function VendorSchedulePaymentSheet({
   onScheduleAmountChange,
   onScheduleDateChange,
 }: VendorSchedulePaymentSheetProps): React.JSX.Element | null {
+  const { presentedValue: presentedBill, open, handleExitComplete } =
+    useSheetPresenceValue(bill, bill?.id);
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
-  if (!bill) return null;
+  if (!presentedBill) return null;
 
   const amount = Number(scheduleAmount || 0);
-  const { totalScheduledOrPaid } = getBillPaymentSummary(bill);
-  const remaining = Math.max(0, Number(bill.amount) - totalScheduledOrPaid);
+  const { totalScheduledOrPaid } = getBillPaymentSummary(presentedBill);
+  const remaining = Math.max(0, Number(presentedBill.amount) - totalScheduledOrPaid);
   const selectedAccount = bankAccounts.find((account) => account.id === selectedBankId);
   const canContinue = Boolean(selectedBankId && scheduleDate) && amount > 0 && amount <= remaining;
   const disabledReason = !selectedBankId
@@ -85,7 +88,8 @@ export function VendorSchedulePaymentSheet({
   return (
     <>
       <WorkflowFormSheet
-        open
+        open={open}
+        onExitComplete={handleExitComplete}
         title={reviewing ? "Tinjau rencana pembayaran" : "Jadwalkan pembayaran vendor"}
         onClose={requestClose}
         pending={isPending}
@@ -99,7 +103,7 @@ export function VendorSchedulePaymentSheet({
       >
         <div className="space-y-md">
           <PaymentError error={error} />
-          <FieldContextLine>{bill.vendor?.name} · Tagihan {bill.billNumber} · Sisa Rp {remaining.toLocaleString("id-ID")}</FieldContextLine>
+          <FieldContextLine>{presentedBill.vendor?.name} · Tagihan {presentedBill.billNumber} · Sisa Rp {remaining.toLocaleString("id-ID")}</FieldContextLine>
           {reviewing ? (
             <div className="space-y-3">
               <FormSection title="Rencana yang akan dibuat" helper="Penjadwalan belum mengurangi saldo rekening.">
@@ -170,11 +174,13 @@ export function VendorDisbursePaymentSheet({
   onDisburseBankIdChange,
   onRefNumberChange,
 }: VendorDisbursePaymentSheetProps): React.JSX.Element | null {
+  const { presentedValue: presentedPayment, open, handleExitComplete } =
+    useSheetPresenceValue(payment, payment?.id);
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
-  if (!payment) return null;
+  if (!presentedPayment) return null;
 
-  const amount = Number(payment.amountPaid);
+  const amount = Number(presentedPayment.amountPaid);
   const selectedAccount = bankAccounts.find((account) => account.id === disburseBankId);
   const before = Number(selectedAccount?.balance ?? 0);
   const after = before - amount;
@@ -196,7 +202,8 @@ export function VendorDisbursePaymentSheet({
   return (
     <>
       <WorkflowFormSheet
-        open
+        open={open}
+        onExitComplete={handleExitComplete}
         title={reviewing ? "Tinjau pembayaran vendor" : "Cairkan pembayaran vendor"}
         onClose={requestClose}
         pending={isPending}
@@ -211,7 +218,7 @@ export function VendorDisbursePaymentSheet({
       >
         <div className="space-y-md">
           <PaymentError error={error} />
-          <FieldContextLine>{payment.vendorBill?.vendor?.name} · {payment.vendorBill?.billNumber} · Rp {amount.toLocaleString("id-ID")}</FieldContextLine>
+          <FieldContextLine>{presentedPayment.vendorBill?.vendor?.name} · {presentedPayment.vendorBill?.billNumber} · Rp {amount.toLocaleString("id-ID")}</FieldContextLine>
           {reviewing ? (
             <div className="space-y-3">
               <MoneyImpactRow label={selectedAccount?.name ?? "Rekening sumber"} before={before} delta={-amount} after={after} />

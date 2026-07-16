@@ -10,7 +10,6 @@ import {
   DatePickerField,
   FormField,
   SheetSelect,
-  SegmentedTabs,
   Textarea,
   TextInput,
 } from "@/components/ui";
@@ -57,17 +56,24 @@ export function ProjectCreatedSuccess({
   return (
     <div className="space-y-lg py-6 text-center">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary bg-primary/10 text-primary">
-        <span className="material-symbols-outlined text-[36px]">check_circle</span>
+        <span className="material-symbols-outlined text-[36px]">
+          check_circle
+        </span>
       </div>
       <div className="space-y-sm">
-        <h3 className="text-lg font-bold text-on-surface">Proyek Berhasil Dibuat!</h3>
+        <h3 className="text-lg font-bold text-on-surface">
+          Proyek Berhasil Dibuat!
+        </h3>
         <p className="mx-auto max-w-xs text-xs leading-relaxed text-on-surface-variant">
-          Proyek dan anggaran awal kategori (Tukang, Material, Operasional, dll.) telah otomatis disiapkan berdasarkan setelan sistem.
+          Proyek dan anggaran awal kategori (Tukang, Material, Operasional,
+          dll.) telah otomatis disiapkan berdasarkan setelan sistem.
         </p>
       </div>
 
       <div className="space-y-sm text-left">
-        <p className="px-1 font-sans text-[8px] font-bold uppercase leading-[16px] tracking-wider text-on-surface-variant">Langkah Berikutnya:</p>
+        <p className="px-1 font-sans text-[8px] font-bold uppercase leading-[16px] tracking-wider text-on-surface-variant">
+          Langkah Berikutnya:
+        </p>
         <div className="space-y-xs">
           {actions.map((action) => (
             <button
@@ -80,13 +86,21 @@ export function ProjectCreatedSuccess({
               className="flex min-h-16 w-full items-center justify-between rounded-full border border-outline-variant/30 bg-surface-container-low px-5 py-3 text-left transition-transform hover:border-primary/40 active:scale-[0.99]"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary">{action.icon}</span>
+                <span className="material-symbols-outlined text-primary">
+                  {action.icon}
+                </span>
                 <div>
-                  <span className="block text-xs font-bold text-on-surface">{action.title}</span>
-                  <span className="text-[10px] text-on-surface-variant">{action.description}</span>
+                  <span className="block text-xs font-bold text-on-surface">
+                    {action.title}
+                  </span>
+                  <span className="text-[10px] text-on-surface-variant">
+                    {action.description}
+                  </span>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-[20px] text-outline-variant">chevron_right</span>
+              <span className="material-symbols-outlined text-[20px] text-outline-variant">
+                chevron_right
+              </span>
             </button>
           ))}
         </div>
@@ -121,16 +135,7 @@ export function ProjectCoverField({
   const busy = isUploading || isPending;
 
   return (
-    <div className="space-y-2.5">
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">
-          Cover proyek
-        </p>
-        <span className="text-[9px] font-medium text-on-surface-variant">
-          Opsional
-        </span>
-      </div>
-
+    <FormField label="Cover proyek" optional>
       {coverImageUrl ? (
         <div className="space-y-2.5">
           <div className="relative aspect-[16/9] overflow-hidden rounded-[24px] bg-surface-container-low ring-1 ring-outline-variant/20">
@@ -186,19 +191,17 @@ export function ProjectCoverField({
           whileTap={busy ? undefined : { scale: 0.985 }}
           transition={transitionSpringSnappy}
           aria-disabled={busy}
-          className="group flex min-h-16 cursor-pointer items-center gap-3 rounded-full bg-surface-container-low px-4 py-2 ring-1 ring-outline-variant/20 focus-within:ring-2 focus-within:ring-primary/25 aria-disabled:pointer-events-none aria-disabled:opacity-45"
+          className="group flex min-h-12 cursor-pointer items-center gap-3 bg-transparent py-1 focus-within:text-blue-600 aria-disabled:pointer-events-none aria-disabled:opacity-45"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <ImagePlus className="h-5 w-5" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary">
+            <ImagePlus className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-xs font-bold text-on-surface">
+            <span className="block text-xs font-bold leading-[1.15] text-on-surface">
               {isUploading ? "Mengunggah cover…" : "Tambahkan cover proyek"}
             </span>
-            <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
-              {isUploading
-                ? "Mohon tunggu"
-                : "JPG atau PNG · Maks. 8 MB"}
+            <span className="mt-0.5 block text-[10px] leading-[1.25] text-on-surface-variant">
+              {isUploading ? "Mohon tunggu" : "JPG atau PNG · Maks. 8 MB"}
             </span>
           </span>
           <input
@@ -214,7 +217,7 @@ export function ProjectCoverField({
           />
         </motion.label>
       )}
-    </div>
+    </FormField>
   );
 }
 
@@ -248,11 +251,10 @@ export function ProjectClientFields({
   readonly onNewClientAddressChange: (value: string) => void;
 }): React.JSX.Element {
   return (
-    <div className="space-y-3">
-      <SegmentedTabs
+    <div className="divide-y divide-outline-variant/20">
+      <SheetSelect
+        label="Jenis klien"
         value={isNewClient ? "new" : "existing"}
-        ariaLabel="Jenis klien proyek"
-        layoutId="project-client-mode"
         options={[
           { value: "existing", label: "Klien terdaftar" },
           { value: "new", label: "Klien baru" },
@@ -261,24 +263,46 @@ export function ProjectClientFields({
       />
 
       {isNewClient ? (
-        <div className="space-y-sm font-sans">
+        <div className="divide-y divide-outline-variant/20">
           <FormField label="Nama Klien" required>
-            <TextInput value={newClientName} onChange={onNewClientNameChange} placeholder="Nama lengkap klien" />
+            <TextInput
+              value={newClientName}
+              onChange={onNewClientNameChange}
+              placeholder="Nama lengkap klien"
+            />
           </FormField>
-          <div className="grid grid-cols-1 gap-sm sm:grid-cols-2">
-            <FormField label="No. Telepon">
-              <TextInput value={newClientPhone} onChange={onNewClientPhoneChange} placeholder="Telepon klien" inputMode="tel" />
-            </FormField>
-            <FormField label="Email" optional>
-              <TextInput value={newClientEmail} onChange={onNewClientEmailChange} placeholder="email@domain.com" />
-            </FormField>
-          </div>
+          <FormField label="No. Telepon">
+            <TextInput
+              value={newClientPhone}
+              onChange={onNewClientPhoneChange}
+              placeholder="Telepon klien"
+              inputMode="tel"
+            />
+          </FormField>
+          <FormField label="Email" optional>
+            <TextInput
+              value={newClientEmail}
+              onChange={onNewClientEmailChange}
+              placeholder="email@domain.com"
+            />
+          </FormField>
           <FormField label="Alamat Klien">
-            <Textarea value={newClientAddress} onChange={onNewClientAddressChange} placeholder="Alamat domisili klien..." />
+            <Textarea
+              value={newClientAddress}
+              onChange={onNewClientAddressChange}
+              placeholder="Alamat domisili klien..."
+            />
           </FormField>
         </div>
       ) : (
-        <SheetSelect label="Klien Terdaftar" value={clientId} onChange={onClientIdChange} options={clientOptions} placeholder="Pilih klien" required />
+        <SheetSelect
+          label="Klien Terdaftar"
+          value={clientId}
+          onChange={onClientIdChange}
+          options={clientOptions}
+          placeholder="Pilih klien"
+          required
+        />
       )}
     </div>
   );
@@ -308,20 +332,39 @@ export function ProjectDetailFields({
   readonly onProjectTypeChange: (value: string) => void;
 }): React.JSX.Element {
   return (
-    <>
-      <div className="grid grid-cols-1 gap-sm sm:grid-cols-2">
-        <DatePickerField label="Tanggal Mulai" value={startDate} onChange={onStartDateChange} />
-        <DatePickerField label="Tanggal Selesai" value={endDate} onChange={onEndDateChange} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-xs sm:grid-cols-3">
-        <FormField label="Lokasi">
-          <TextInput value={location} onChange={onLocationChange} placeholder="Menteng" />
-        </FormField>
-        <ComboboxField label="Ruangan/Area" value={roomArea} onChange={onRoomAreaChange} options={COMMON_ROOM_OPTIONS} placeholder="Pilih atau ketik area" />
-        <ComboboxField label="Tipe Proyek" value={projectType} onChange={onProjectTypeChange} options={PROJECT_TYPE_OPTIONS} placeholder="Pilih atau ketik tipe" />
-      </div>
-    </>
+    <div className="divide-y divide-outline-variant/20">
+      <DatePickerField
+        label="Tanggal Mulai"
+        value={startDate}
+        onChange={onStartDateChange}
+      />
+      <DatePickerField
+        label="Tanggal Selesai"
+        value={endDate}
+        onChange={onEndDateChange}
+      />
+      <FormField label="Lokasi">
+        <TextInput
+          value={location}
+          onChange={onLocationChange}
+          placeholder="Menteng"
+        />
+      </FormField>
+      <ComboboxField
+        label="Ruangan/Area"
+        value={roomArea}
+        onChange={onRoomAreaChange}
+        options={COMMON_ROOM_OPTIONS}
+        placeholder="Pilih atau ketik area"
+      />
+      <ComboboxField
+        label="Tipe Proyek"
+        value={projectType}
+        onChange={onProjectTypeChange}
+        options={PROJECT_TYPE_OPTIONS}
+        placeholder="Pilih atau ketik tipe"
+      />
+    </div>
   );
 }
 
@@ -334,15 +377,29 @@ export function ProjectEditStateFields({
   readonly status: ProjectStatusOption;
   readonly financialHealth: ProjectFinancialHealthOption;
   readonly onStatusChange: (value: ProjectStatusOption) => void;
-  readonly onFinancialHealthChange: (value: ProjectFinancialHealthOption) => void;
+  readonly onFinancialHealthChange: (
+    value: ProjectFinancialHealthOption,
+  ) => void;
 }): React.JSX.Element {
   const statusOptions = PROJECT_STATUS_OPTIONS.filter(
     (option) => option.value !== "COMPLETED" || status === "COMPLETED",
   );
   return (
-    <div className="space-y-sm font-sans">
-      <SheetSelect label="Status Proyek" value={status} onChange={(value) => onStatusChange(value as ProjectStatusOption)} options={statusOptions} />
-      <SheetSelect label="Kesehatan Finansial" value={financialHealth} onChange={(value) => onFinancialHealthChange(value as ProjectFinancialHealthOption)} options={FINANCIAL_HEALTH_OPTIONS} />
+    <div className="divide-y divide-outline-variant/20">
+      <SheetSelect
+        label="Status Proyek"
+        value={status}
+        onChange={(value) => onStatusChange(value as ProjectStatusOption)}
+        options={statusOptions}
+      />
+      <SheetSelect
+        label="Kesehatan Finansial"
+        value={financialHealth}
+        onChange={(value) =>
+          onFinancialHealthChange(value as ProjectFinancialHealthOption)
+        }
+        options={FINANCIAL_HEALTH_OPTIONS}
+      />
     </div>
   );
 }

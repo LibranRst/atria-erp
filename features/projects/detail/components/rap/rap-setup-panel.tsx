@@ -67,11 +67,11 @@ export function RapSetupPanel({
 }): React.JSX.Element {
   return (
     <>
-      <section className="rounded-[28px] border border-outline-variant/20 bg-white p-sm shadow-[0_14px_34px_rgba(17,17,17,0.045)]">
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
-              Setup Internal Plan
+              Setup rencana internal
             </p>
             <p className="text-sm font-bold">
               {getRapSetupStageLabel(activeRapStage)}
@@ -81,19 +81,11 @@ export function RapSetupPanel({
             Tahap {getRapSetupStageNumber(activeRapStage)} / 4
           </Badge>
         </div>
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-container">
-          <div
-            className="h-full rounded-full bg-primary transition-all"
-            style={{
-              width: `${getRapSetupStageNumber(activeRapStage) * 25}%`,
-            }}
-          />
-        </div>
         <SegmentedTabs
           value={activeRapStage}
           onChange={setActiveRapStage}
           ariaLabel="Tahap setup RAP"
-          className="mt-3"
+          className="mt-4"
           options={RAP_SETUP_STAGES.map((stage, index) => {
             return {
               value: stage,

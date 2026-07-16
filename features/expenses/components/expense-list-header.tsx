@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import React from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { formatCompactRp } from "@/features/expenses/components/expense-list-utils";
+import { transitionSpringSnappy } from "@/lib/utils/motion";
+
+const expensePressScale = { scale: 0.985 } as const;
 
 export function FinanceInboxHeader({
   activeClaimTotal,
@@ -14,13 +18,12 @@ export function FinanceInboxHeader({
 }): React.JSX.Element {
   return (
     <div className="min-w-0 px-1">
-        <h1 className="text-[28px] font-semibold leading-8 tracking-tight text-on-surface">
-          Finance Inbox
-        </h1>
-        <p className="mt-1 text-xs font-medium text-on-surface-variant">
-          Aktif {formatCompactRp(activeClaimTotal)} • Total{" "}
-          {formatCompactRp(fieldClaimTotal)}
-        </p>
+      <h1 className="text-[28px] font-semibold leading-8 tracking-tight text-on-surface max-[430px]:text-[26px]">
+        Kas &amp; Tagihan
+      </h1>
+      <p className="mt-1 text-xs font-medium text-on-surface-variant">
+        Aktif {formatCompactRp(activeClaimTotal)} · Total tercatat {formatCompactRp(fieldClaimTotal)}
+      </p>
     </div>
   );
 }
@@ -30,30 +33,27 @@ export function PendingApprovalsBanner({
 }: {
   readonly count: number;
 }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
   return (
-    <Link
-      href="/approvals"
-      className="pointer-events-auto flex cursor-pointer items-center justify-between rounded-[28px] border border-outline-variant/20 bg-white p-md shadow-[0_14px_34px_rgba(17,17,17,0.045)] transition-all duration-200 hover:bg-surface-container-low"
+    <motion.div
+      whileTap={reduceMotion ? undefined : expensePressScale}
+      transition={transitionSpringSnappy}
     >
-      <div className="flex items-center gap-md">
-        <span
-          className="material-symbols-outlined text-[22px] text-primary"
-          style={{ fontVariationSettings: "'FILL' 1" }}
-        >
-          verified_user
+      <Link
+        href="/ledger?tab=approvals"
+        className="flex min-h-[64px] items-center gap-3 rounded-[22px] bg-white/[0.88] px-3 py-2.5 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025] outline-none backdrop-blur-xl active:bg-white focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/[0.09] text-warning ring-1 ring-warning/[0.06]">
+          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">approval</span>
         </span>
-        <div className="min-w-0">
-          <p className="font-sans text-[14px] font-bold leading-[20px] text-on-surface">
-            Persetujuan Menunggu
-          </p>
-          <p className="font-sans text-[11px] font-medium leading-[16px] text-on-surface-variant">
-            Ada {count} pengajuan yang memerlukan persetujuan Anda.
-          </p>
-        </div>
-      </div>
-      <span className="material-symbols-outlined text-[20px] text-on-surface-variant">
-        chevron_right
-      </span>
-    </Link>
+        <span className="grid min-w-0 flex-1 gap-0.5">
+          <span className="block text-[13px] font-semibold leading-[1.15] tracking-[-0.01em] text-on-surface">{count} persetujuan menunggu</span>
+          <span className="block truncate text-[10px] leading-[1.2] text-on-surface-variant/75">Tinjau sebelum pembayaran atau pekerjaan tertahan.</span>
+        </span>
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]" aria-hidden="true">
+          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+        </span>
+      </Link>
+    </motion.div>
   );
 }

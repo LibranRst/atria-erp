@@ -11,7 +11,7 @@ The product is practical by design. It is not a full accounting suite, not a gen
 - Settings: source of truth for Budget Allocation defaults, Expense Categories, Item & Price Library, and Material Master settings.
 - Expense Categories: Material, Tukang, Operasional, Lain-lain, and Subcon are first-class budget controls.
 - Expense Tracker: actual money spent by project and category, with quick mobile entry and optional vendor/receipt/payment context.
-- Budget Dashboard: owner-readable category cards with allocated budget, actual spend, remaining budget, used percentage, and risk badge.
+- Budget Dashboard: owner-readable grouped status and contextual comparisons for allocated budget, actual spend, remaining budget, used percentage, and risk.
 - RAP: internal execution and material plan. Locked RAP becomes the cost baseline.
 - Tukang Work Packages: lightweight internal labor/scope packages linked to Tukang expenses.
 - Subcon Packages: lightweight vendor/subcon scope packages linked to Subcon vendor bills or expenses.
@@ -20,7 +20,7 @@ The product is practical by design. It is not a full accounting suite, not a gen
 - Stock Movement: stock in, stock out, reserve, use, return, transfer, adjustment, and waste.
 - Vendor Bills / Purchase Tracking: payable and purchase records connected to vendor, project, budget, and material when relevant.
 - RAB: client-facing estimate generated from selected RAP Material items, Tukang packages, Subcon packages, and manual client-safe lines when useful, but editable and safe from internal cost/margin exposure.
-- Owner Dashboard and AI Brief: simple Bahasa Indonesia summaries of category budget usage, margin risk, material shortage, leftover opportunity, due bills, and suggested actions.
+- Owner Dashboard: concise Bahasa Indonesia summaries of financial position, category budget usage, margin risk, material shortage, due documents, and next actions. AI CFO/financial briefing is deferred.
 
 ## Preserved Foundations
 The existing app already includes valuable foundations and should not be rewritten blindly:
@@ -30,7 +30,7 @@ The existing app already includes valuable foundations and should not be rewritt
 - Existing budget item and project cost tables remain during migration while canonical project budget/category tables are introduced.
 - Transactional bank balance mutation helper.
 - Mobile shell, bottom navigation, expense drawer, project detail, expenses, approvals, and ledger/dashboard screens.
-- Gemini OCR and daily AI briefing architecture.
+- Gemini OCR and preserved AI run history for future use; AI CFO/financial briefing is currently deferred from the product surface.
 
 ## Tech Stack
 - Runtime and package manager: Bun
@@ -48,6 +48,7 @@ The existing app already includes valuable foundations and should not be rewritt
 - `docs/03-flows/FLOWS.md`: finance/material operational flows.
 - `docs/04-data/DATABASE_SCHEMA.md`: database model and relationships.
 - `docs/04-data/STATUS_ENUMS.md`: status and movement enums.
+- `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md`: active Dashboard/Expenses-derived page design language and QA gate.
 - `docs/05-ui-ux/MOBILE_FIRST_UI_UX.md`: mobile-first screen guidance.
 - `docs/05-ui-ux/IOS26_SOLID_DESIGN_SYSTEM.md`: visual system.
 - `docs/06-technical/AUTH_AND_PERMISSION.md`: RBAC model.

@@ -49,15 +49,8 @@ export function InternalPlanOverview({
 }): React.JSX.Element {
   return (
     <>
-      <NativePanel
-        eyebrow="Rencana Internal"
-        title={`Revisi RAP ${rap.revision}`}
-        action={<Badge status="APPROVED">Terkunci</Badge>}
-      >
-        <div className="rounded-[28px] bg-primary p-md text-on-primary">
-          <p className="text-[10px] font-bold uppercase text-white/65">
-            Total Rencana Internal
-          </p>
+      <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
+        <div className="flex items-start justify-between gap-3"><div className="min-w-0 flex-1"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">Total rencana internal</p>
           <p className="mt-1 font-mono text-[22px] font-bold">
             {formatRp(
               plannedCost +
@@ -71,24 +64,24 @@ export function InternalPlanOverview({
                 ),
             )}
           </p>
-          <div className="mt-3 flex justify-between text-[10px] text-white/70">
+        </div><Badge status="APPROVED">Terkunci</Badge></div>
+          <div className="mt-4 flex justify-between border-t border-white/12 pt-4 text-[10px] text-white/70">
             <span>{rap.items.length} material</span>
             <span>{packageItemCount} paket</span>
             <span>
               {needToBuy > 0 ? `${needToBuy} perlu dibeli` : "Material siap"}
             </span>
           </div>
-        </div>
         {canEditRap && rabEstimate?.status === "APPROVED" && (
           <button
             type="button"
             onClick={() => setInternalRevisionOpen(true)}
-            className="mt-sm min-h-11 w-full rounded-full bg-primary/10 text-xs font-bold text-primary"
+            className="mt-4 min-h-12 w-full rounded-full bg-white/10 text-xs font-bold text-white ring-1 ring-white/15"
           >
             Buat Revisi RAP
           </button>
         )}
-      </NativePanel>
+      </section>
       <SegmentedTabs
         value={rapOverviewFilter}
         onChange={setRapOverviewFilter}
@@ -115,7 +108,7 @@ export function InternalPlanOverview({
         )}
       />
       <NativePanel
-        eyebrow="Rincian Operasional"
+        eyebrow="Rincian operasional"
         title={
           rapOverviewFilter === "MATERIAL"
             ? "Material"
@@ -124,14 +117,14 @@ export function InternalPlanOverview({
               : "Paket Subcon"
         }
       >
-        <div className="space-y-2">
+        <div className="divide-y divide-outline-variant/25 overflow-hidden rounded-[20px] bg-surface-container-low">
           {rapOverviewFilter === "MATERIAL"
             ? rap.items.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => setRapDetailItemId(item.id)}
-                  className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-surface-container-low p-3 text-left"
+                  className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-bold">
@@ -141,7 +134,7 @@ export function InternalPlanOverview({
                       {item.area} - {item.totalQuantity} {item.unit}
                     </span>
                   </span>
-                  <span className="financial-amount max-w-[38%] shrink-0 break-words text-right font-mono text-[10px] font-bold leading-3 [overflow-wrap:anywhere]">
+                  <span className="financial-amount max-w-[38%] shrink-0 break-words text-right font-mono text-[10px] font-bold [overflow-wrap:anywhere]">
                     {formatShortRp(Number(item.estimatedTotalCost))}
                   </span>
                 </button>
@@ -154,7 +147,7 @@ export function InternalPlanOverview({
                   key={item.id}
                   type="button"
                   onClick={() => setPackageDetailItemId(item.id)}
-                  className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-surface-container-low p-3 text-left"
+                  className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-bold">
@@ -166,7 +159,7 @@ export function InternalPlanOverview({
                     </span>
                   </span>
                   <span className="max-w-[38%] shrink-0 text-right">
-                    <span className="financial-amount block break-words font-mono text-[10px] font-bold leading-3 [overflow-wrap:anywhere]">
+                    <span className="financial-amount block break-words font-mono text-[10px] font-bold [overflow-wrap:anywhere]">
                       {formatShortRp(Number(item.estimatedTotalCost))}
                     </span>
                     <span className="block text-[9px] font-bold text-primary">

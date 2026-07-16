@@ -11,6 +11,7 @@ import {
   Textarea,
   TextInput,
 } from "@/components/ui";
+import { FormPresentationProvider } from "@/components/ui/form-presentation-context";
 import type { SimpleItem } from "@/features/materials/lib/material-ui-utils";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
@@ -51,72 +52,92 @@ export function ItemRows({
   readonly single?: boolean;
 }): React.JSX.Element {
   const [editingKey, setEditingKey] = React.useState<string | null>(
-    items.length === 1 ? items[0]?.key ?? null : null,
+    items.length === 1 ? (items[0]?.key ?? null) : null,
   );
   const options = materials.map((row) => ({ value: row.id, label: row.name }));
   return (
-    <div className="mt-sm space-y-2">
+    <div className="space-y-2">
       {items.map((item, index) => (
         <div
           key={item.key}
-          className="overflow-hidden rounded-2xl bg-surface-container-low ring-1 ring-outline-variant/10"
+          className="overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
         >
           <button
             type="button"
-            onClick={() => setEditingKey((current) => current === item.key ? null : item.key)}
+            onClick={() =>
+              setEditingKey((current) =>
+                current === item.key ? null : item.key,
+              )
+            }
             className="flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/30"
             aria-expanded={editingKey === item.key}
           >
-            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${item.materialId && Number(item.quantity) > 0 ? "bg-primary" : "bg-warning"}`} />
+            <span
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${item.materialId && Number(item.quantity) > 0 ? "bg-primary" : "bg-warning"}`}
+            />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-xs font-bold">
-                {materials.find((row) => row.id === item.materialId)?.name ?? `Material ${index + 1}`}
+              <span className="block truncate text-xs font-bold leading-[1.15]">
+                {materials.find((row) => row.id === item.materialId)?.name ??
+                  `Material ${index + 1}`}
               </span>
-              <span className="mt-0.5 block text-[10px] text-on-surface-variant">
+              <span className="mt-0.5 block text-[10px] leading-[1.2] text-on-surface-variant">
                 {item.materialId && Number(item.quantity) > 0
                   ? `${Number(item.quantity).toLocaleString("id-ID", { maximumFractionDigits: 2 })} unit`
                   : "Lengkapi material dan jumlah"}
               </span>
             </span>
-            <ChevronDown className={`h-4 w-4 shrink-0 text-on-surface-variant ${editingKey === item.key ? "rotate-180" : ""}`} aria-hidden="true" />
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-on-surface-variant ${editingKey === item.key ? "rotate-180" : ""}`}
+              aria-hidden="true"
+            />
           </button>
           {editingKey === item.key ? (
-            <div className="space-y-2 border-t border-outline-variant/15 bg-surface px-3 pb-3 pt-3">
-              <SheetSelect
-                label="Material"
-                value={item.materialId}
-                onChange={(value) =>
-                  setItems(
-                    items.map((row) =>
-                      row.key === item.key ? { ...row, materialId: value } : row,
-                    ),
-                  )
-                }
-                options={options}
-                placeholder="Pilih material"
-              />
-              <FormField label="Jumlah">
-                <QuantityStepper
-                  value={item.quantity}
-                  min={0}
-                  step={1}
-                  onChange={(value) =>
-                    setItems(
-                      items.map((row) =>
-                        row.key === item.key ? { ...row, quantity: value } : row,
-                      ),
-                    )
-                  }
-                />
-              </FormField>
+            <div className="border-t border-outline-variant/15">
+              <FormPresentationProvider presentation="grouped">
+                <div className="divide-y divide-outline-variant/20">
+                  <SheetSelect
+                    label="Material"
+                    value={item.materialId}
+                    onChange={(value) =>
+                      setItems(
+                        items.map((row) =>
+                          row.key === item.key
+                            ? { ...row, materialId: value }
+                            : row,
+                        ),
+                      )
+                    }
+                    options={options}
+                    placeholder="Pilih material"
+                  />
+                  <FormField label="Jumlah">
+                    <QuantityStepper
+                      value={item.quantity}
+                      min={0}
+                      step={1}
+                      onChange={(value) =>
+                        setItems(
+                          items.map((row) =>
+                            row.key === item.key
+                              ? { ...row, quantity: value }
+                              : row,
+                          ),
+                        )
+                      }
+                    />
+                  </FormField>
+                </div>
+              </FormPresentationProvider>
               {!single ? (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 border-t border-outline-variant/15 bg-surface-container-low/45 p-3">
                   <motion.button
                     type="button"
                     whileTap={{ scale: 0.97 }}
                     transition={transitionSpringSnappy}
-                    onClick={() => setItems([...items, { ...item, key: createItem().key }])}
-                    className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container text-xs font-bold text-on-surface"
+                    onClick={() =>
+                      setItems([...items, { ...item, key: createItem().key }])
+                    }
+                    className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-lowest text-xs font-bold text-on-surface ring-1 ring-outline-variant/15"
                   >
                     <Copy className="h-4 w-4" aria-hidden="true" /> Duplikat
                   </motion.button>
@@ -129,7 +150,7 @@ export function ItemRows({
                       setItems(items.filter((row) => row.key !== item.key));
                       setEditingKey(null);
                     }}
-                    className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-error-container/25 text-xs font-bold text-error disabled:opacity-35"
+                    className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-error-container/20 text-xs font-bold text-error disabled:opacity-35"
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" /> Hapus
                   </motion.button>
@@ -149,7 +170,7 @@ export function ItemRows({
             setItems([...items, next]);
             setEditingKey(next.key);
           }}
-          className="min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary ring-1 ring-primary/15"
+          className="min-h-12 w-full rounded-full bg-surface-container-lowest text-xs font-bold text-primary shadow-[0_6px_18px_rgba(17,17,17,0.025)] ring-1 ring-primary/15"
         >
           Tambah Material
         </motion.button>

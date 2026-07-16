@@ -7,6 +7,7 @@ import { BottomSheet } from "./bottom-sheet";
 import { FormField } from "./basic-form-controls";
 import type { SelectOption } from "./form-control-types";
 import { cx, selectedOptionLabel } from "./form-control-utils";
+import { useFormPresentation } from "./form-presentation-context";
 
 export function SheetSelect({
   id,
@@ -43,8 +44,10 @@ export function SheetSelect({
   readonly compact?: boolean;
   readonly error?: string;
 }): React.JSX.Element {
+  const grouped = useFormPresentation() === "grouped";
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
+  const [pendingValue, setPendingValue] = React.useState<string | null>(null);
   const selected = options.find((option) => option.value === value);
   const searchable = options.length > 6;
   const filtered = options.filter((option) => {
@@ -77,22 +80,25 @@ export function SheetSelect({
           setOpen(true);
         }}
         className={cx(
-          "flex w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-low px-5 text-left transition active:scale-[0.99] focus:outline-none focus:border-outline focus:ring-0 disabled:cursor-not-allowed disabled:opacity-55",
-          compact ? "min-h-11" : "min-h-12",
-          readOnly && "bg-surface-container",
+          grouped
+            ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55"
+            : "flex w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition active:scale-[0.99] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55",
+          !grouped && (compact ? "min-h-11" : "min-h-12"),
+          !grouped && compact && "bg-surface-container-low",
+          readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
         )}
       >
         <span className="min-w-0">
           <span
             className={cx(
-              "block truncate text-sm font-bold leading-normal",
+              "block truncate text-sm font-bold leading-4",
               selected ? "text-on-surface" : "text-on-surface-variant/65",
             )}
           >
             {selected?.label || placeholder}
           </span>
           {(selected?.description || selected?.meta) && (
-            <span className="block truncate text-[10px] text-on-surface-variant leading-normal">
+            <span className="mt-0.5 block truncate text-[10px] leading-4 text-on-surface-variant">
               {selected.description ?? selected.meta}
             </span>
           )}
@@ -103,6 +109,12 @@ export function SheetSelect({
         open={open}
         title={title ?? label}
         onClose={() => setOpen(false)}
+        onExitComplete={() => {
+          const nextValue = pendingValue;
+          if (nextValue === null) return;
+          setPendingValue(null);
+          onChange(nextValue);
+        }}
       >
         <div className="space-y-sm">
           {searchable && (
@@ -120,48 +132,44 @@ export function SheetSelect({
             groups.map((group) => (
               <div key={group || "ungrouped"} className="space-y-2">
                 {group && (
-                  <p className="ml-1 text-[9px] font-bold uppercase tracking-wide text-primary">
+                  <p className="ml-1 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
                     {group}
                   </p>
                 )}
-                {filtered
-                  .filter((option) => (option.group ?? "") === group)
-                  .map((option) => {
-                    const active = option.value === value;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        disabled={option.disabled}
-                        onClick={() => {
-                          onChange(option.value);
-                          setOpen(false);
-                        }}
-                        className={cx(
-                          "flex min-h-14 w-full min-w-0 items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50",
-                          active
-                            ? "border-primary bg-primary/5 text-primary"
-                            : "border-outline-variant/15 bg-surface-container-low text-on-surface",
-                        )}
-                      >
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-xs font-bold">
-                            {option.label}
-                          </span>
-                          {(option.description ||
-                            option.meta ||
-                            option.disabledReason) && (
-                            <span className="mt-1 block text-[10px] leading-4 text-on-surface-variant">
-                              {option.disabledReason ??
-                                option.description ??
-                                option.meta}
-                            </span>
+                <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-outline-variant/15">
+                  {filtered
+                    .filter((option) => (option.group ?? "") === group)
+                    .map((option) => {
+                      const active = option.value === value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          disabled={option.disabled}
+                          onClick={() => {
+                            setPendingValue(option.value);
+                            setOpen(false);
+                          }}
+                          className={cx(
+                            "flex min-h-14 w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition active:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50",
+                            active ? "bg-blue-50 text-blue-600" : "text-on-surface",
                           )}
-                        </span>
-                        {active && <Check className="h-4 w-4 shrink-0" />}
-                      </button>
-                    );
-                  })}
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-xs font-bold leading-4">
+                              {option.label}
+                            </span>
+                            {(option.description || option.meta || option.disabledReason) ? (
+                              <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
+                                {option.disabledReason ?? option.description ?? option.meta}
+                              </span>
+                            ) : null}
+                          </span>
+                          {active ? <Check className="h-4 w-4 shrink-0" /> : null}
+                        </button>
+                      );
+                    })}
+                </div>
               </div>
             ))
           )}
@@ -194,8 +202,10 @@ export function ComboboxField({
   readonly disabled?: boolean;
   readonly allowCustomValue?: boolean;
 }): React.JSX.Element {
+  const grouped = useFormPresentation() === "grouped";
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
+  const [pendingValue, setPendingValue] = React.useState<string | null>(null);
   const uniqueOptions = Array.from(
     new Set([...options, value].filter(Boolean)),
   );
@@ -225,7 +235,11 @@ export function ComboboxField({
           setQuery("");
           setOpen(true);
         }}
-        className="flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-low px-5 text-left transition active:scale-[0.99] focus:outline-none focus:border-outline focus:ring-0 disabled:cursor-not-allowed disabled:opacity-55"
+        className={cx(
+          grouped
+            ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55"
+            : "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition active:scale-[0.99] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55",
+        )}
       >
         <span
           className={cx(
@@ -237,7 +251,17 @@ export function ComboboxField({
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-on-surface-variant" />
       </button>
-      <BottomSheet open={open} title={label} onClose={() => setOpen(false)}>
+      <BottomSheet
+        open={open}
+        title={label}
+        onClose={() => setOpen(false)}
+        onExitComplete={() => {
+          const nextValue = pendingValue;
+          if (nextValue === null) return;
+          setPendingValue(null);
+          onChange(nextValue);
+        }}
+      >
         <div className="space-y-sm">
           <SearchField
             value={query}
@@ -249,45 +273,43 @@ export function ComboboxField({
               Belum ada pilihan.
             </p>
           ) : null}
-          {filteredOptions.map((option) => {
-            const active = option === value;
-            return (
-              <button
-                key={option}
-                type="button"
-                onClick={() => {
-                  onChange(option);
-                  setOpen(false);
-                }}
-                className={cx(
-                  "flex min-h-12 w-full min-w-0 items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[0.99]",
-                  active
-                    ? "border-primary bg-primary/5 text-primary"
-                    : "border-outline-variant/15 bg-surface-container-low text-on-surface",
-                )}
-              >
-                <span className="min-w-0 flex-1 truncate text-xs font-bold">
-                  {option}
-                </span>
-                {active && <Check className="h-4 w-4 shrink-0" />}
-              </button>
-            );
-          })}
-          {canUseCustomValue && (
-            <button
-              type="button"
-              onClick={() => {
-                onChange(customValue);
-                setOpen(false);
-              }}
-              className="flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-2xl border border-primary/35 bg-primary/5 p-3 text-left text-primary transition active:scale-[0.99]"
-            >
-              <span className="min-w-0 truncate text-xs font-bold">
-                Gunakan &quot;{customValue}&quot;
-              </span>
-              <Plus className="h-4 w-4 shrink-0" />
-            </button>
-          )}
+          {(filteredOptions.length > 0 || canUseCustomValue) ? (
+            <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-outline-variant/15">
+              {filteredOptions.map((option) => {
+                const active = option === value;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => {
+                      setPendingValue(option);
+                      setOpen(false);
+                    }}
+                    className={cx(
+                      "flex min-h-12 w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition active:bg-surface-container-low",
+                      active ? "bg-blue-50 text-blue-600" : "text-on-surface",
+                    )}
+                  >
+                    <span className="min-w-0 flex-1 truncate text-xs font-bold">{option}</span>
+                    {active ? <Check className="h-4 w-4 shrink-0" /> : null}
+                  </button>
+                );
+              })}
+              {canUseCustomValue ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingValue(customValue);
+                    setOpen(false);
+                  }}
+                  className="flex min-h-12 w-full min-w-0 items-center justify-between gap-3 bg-blue-50 px-4 py-3 text-left text-blue-600 transition active:bg-blue-100"
+                >
+                  <span className="min-w-0 truncate text-xs font-bold">Gunakan &quot;{customValue}&quot;</span>
+                  <Plus className="h-4 w-4 shrink-0" />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </BottomSheet>
     </FormField>
@@ -318,7 +340,7 @@ export function SearchInput({
   return (
     <div
       className={cx(
-        "flex min-h-12 items-center gap-2 rounded-full bg-surface-container-low px-5 focus-within:ring-2 focus-within:ring-primary/15",
+        "flex min-h-12 items-center gap-2 rounded-full bg-surface-container-lowest px-5 shadow-[0_5px_16px_rgba(17,17,17,0.045)] ring-1 ring-outline-variant/20 transition-shadow focus-within:ring-2 focus-within:ring-blue-500/25",
         className,
       )}
     >

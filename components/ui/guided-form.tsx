@@ -3,8 +3,12 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { BottomSheet } from "./bottom-sheet";
+import { BottomSheet, SheetActionButton } from "./bottom-sheet";
 import { cx } from "./form-control-utils";
+import {
+  type FormPresentation,
+  FormPresentationProvider,
+} from "./form-presentation-context";
 import type { FormRiskTone } from "./form-support";
 import { formatShortIdr } from "@/lib/utils/money";
 import {
@@ -33,6 +37,18 @@ const textClass: Record<FormRiskTone, string> = {
   success: "text-primary",
 };
 
+export function FormSheetPresentationBoundary({
+  children,
+}: {
+  readonly children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <FormPresentationProvider presentation="standalone">
+      {children}
+    </FormPresentationProvider>
+  );
+}
+
 export function OperationalFormSheet({
   open,
   title,
@@ -51,7 +67,9 @@ export function OperationalFormSheet({
   danger,
   formId,
   hideSubmit,
+  actionPlacement = "footer",
   onClose,
+  onExitComplete,
   onSubmit,
 }: {
   readonly open: boolean;
@@ -71,29 +89,36 @@ export function OperationalFormSheet({
   readonly danger?: boolean;
   readonly formId?: string;
   readonly hideSubmit?: boolean;
+  readonly actionPlacement?: "header" | "footer";
   readonly onClose: () => void;
+  readonly onExitComplete?: () => void;
   readonly onSubmit?: () => void;
 }): React.JSX.Element {
-  const submitAction = hideSubmit ? null : (
-    <motion.button
-      type={formId ? "submit" : "button"}
-      form={formId}
-      whileTap={{ scale: 0.97 }}
-      transition={transitionSpringSnappy}
-      disabled={pending || disabled}
-      onClick={formId ? undefined : onSubmit}
-      className={cx(
-        "min-h-12 w-full rounded-full px-5 text-sm font-bold text-white outline-none focus-visible:ring-2 disabled:opacity-45",
-        danger
-          ? "bg-error focus-visible:ring-error/30"
-          : "bg-primary focus-visible:ring-primary/30",
-      )}
-    >
-      {pending ? submittingLabel ?? "Memproses…" : submitLabel}
-    </motion.button>
-  );
+  const submitAction =
+    hideSubmit || actionPlacement === "header" ? null : (
+      <motion.button
+        type={formId ? "submit" : "button"}
+        form={formId}
+        whileTap={{ scale: 0.97 }}
+        transition={transitionSpringSnappy}
+        disabled={pending || disabled}
+        onClick={formId ? undefined : onSubmit}
+        className={cx(
+          "min-h-12 w-full rounded-full px-5 text-sm font-bold text-white outline-none focus-visible:ring-2 disabled:opacity-45",
+          danger
+            ? "bg-error focus-visible:ring-error/30"
+            : "bg-primary focus-visible:ring-primary/30",
+        )}
+      >
+        {pending ? (submittingLabel ?? "Memproses…") : submitLabel}
+      </motion.button>
+    );
   const footerContent =
-    statusText || (statusItems && statusItems.length > 0) || review || disabledReason || submitAction ? (
+    statusText ||
+    (statusItems && statusItems.length > 0) ||
+    review ||
+    disabledReason ||
+    submitAction ? (
       <div className="space-y-2">
         {statusText ? (
           <p
@@ -123,14 +148,31 @@ export function OperationalFormSheet({
     <BottomSheet
       open={open}
       title={title}
-      action={action}
+      action={
+        action ??
+        (actionPlacement === "header" && !hideSubmit ? (
+          <SheetActionButton
+            label={submitLabel}
+            pendingLabel={submittingLabel}
+            pending={pending}
+            disabled={disabled}
+            danger={danger}
+            form={formId}
+            type={formId ? "submit" : "button"}
+            onClick={formId ? undefined : onSubmit}
+          />
+        ) : undefined)
+      }
       onClose={onClose}
+      onExitComplete={onExitComplete}
       footer={footerContent}
     >
-      <div className="space-y-4">
-        {error}
-        {children}
-      </div>
+      <FormSheetPresentationBoundary>
+        <div className="space-y-4">
+          {error}
+          {children}
+        </div>
+      </FormSheetPresentationBoundary>
     </BottomSheet>
   );
 }
@@ -140,6 +182,7 @@ export function FormDisclosure({
   description,
   summary,
   icon,
+  variant = "default",
   expanded,
   onToggle,
   children,
@@ -148,32 +191,47 @@ export function FormDisclosure({
   readonly description?: string;
   readonly summary?: string;
   readonly icon?: React.ReactNode;
+  readonly variant?: "default" | "compact";
   readonly expanded: boolean;
   readonly onToggle: () => void;
   readonly children: React.ReactNode;
 }): React.JSX.Element {
+  const compact = variant === "compact";
+
   return (
-    <section className="min-w-0 space-y-3">
+    <section className={cx("min-w-0", compact ? "space-y-2.5" : "space-y-3")}>
       <motion.button
         type="button"
         whileTap={{ scale: 0.98 }}
         transition={transitionSpringSnappy}
         onClick={onToggle}
         className={cx(
-          "flex min-h-14 w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-left outline-none ring-1 focus-visible:ring-2 focus-visible:ring-primary/30",
-          expanded
-            ? "bg-primary/7 text-primary ring-primary/20"
-            : "bg-surface-container-low text-on-surface ring-outline-variant/15",
+          "flex w-full items-center text-left outline-none ring-1 focus-visible:ring-2 focus-visible:ring-primary/30",
+          compact
+            ? "min-h-12 gap-2.5 rounded-[22px] bg-surface-container-lowest px-3 py-2.5 shadow-[0_8px_24px_rgba(17,17,17,0.035)]"
+            : "min-h-14 gap-3 rounded-full px-3.5 py-2.5",
+          compact
+            ? expanded
+              ? "text-on-surface ring-primary/18"
+              : "text-on-surface ring-outline-variant/15"
+            : expanded
+              ? "bg-primary/7 text-primary ring-primary/20"
+              : "bg-surface-container-low text-on-surface ring-outline-variant/15",
         )}
         aria-expanded={expanded}
       >
         {icon ? (
           <span
             className={cx(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+              "flex shrink-0 items-center justify-center rounded-full",
+              compact ? "h-8 w-8" : "h-10 w-10",
               expanded
-                ? "bg-primary text-on-primary"
-                : "bg-surface text-on-surface-variant",
+                ? compact
+                  ? "bg-primary/8 text-primary"
+                  : "bg-primary text-on-primary"
+                : compact
+                  ? "bg-surface-container-low text-on-surface-variant"
+                  : "bg-surface text-on-surface-variant",
             )}
             aria-hidden="true"
           >
@@ -181,16 +239,35 @@ export function FormDisclosure({
           </span>
         ) : null}
         <span className="min-w-0 flex-1">
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="truncate text-xs font-bold leading-4">{title}</span>
+          <span className="flex min-w-0 items-center gap-2 leading-none">
+            <span
+              className={cx(
+                "truncate text-xs font-bold",
+                compact ? "leading-[1.15]" : "leading-4",
+              )}
+            >
+              {title}
+            </span>
             {summary ? (
-              <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-[9px] font-bold text-on-surface-variant">
+              <span
+                className={cx(
+                  "shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold leading-[1.1]",
+                  compact && expanded
+                    ? "bg-primary/8 text-primary"
+                    : "bg-surface-container-low text-on-surface-variant",
+                )}
+              >
                 {summary}
               </span>
             ) : null}
           </span>
           {description ? (
-            <span className="mt-0.5 block truncate text-[10px] leading-4 text-on-surface-variant">
+            <span
+              className={cx(
+                "mt-0.5 block truncate text-[10px] text-on-surface-variant",
+                compact ? "leading-[1.2]" : "leading-4",
+              )}
+            >
               {description}
             </span>
           ) : null}
@@ -198,7 +275,10 @@ export function FormDisclosure({
         <motion.span
           animate={{ rotate: expanded ? 180 : 0 }}
           transition={transitionSpringSnappy}
-          className="material-symbols-outlined shrink-0 text-[20px] text-on-surface-variant"
+          className={cx(
+            "material-symbols-outlined shrink-0 text-on-surface-variant",
+            compact ? "text-[18px]" : "text-[20px]",
+          )}
           aria-hidden="true"
         >
           expand_more
@@ -222,10 +302,7 @@ export function FormDisclosure({
 }
 
 export type CompactEditableItemStatus =
-  | "complete"
-  | "warning"
-  | "danger"
-  | "neutral";
+  "complete" | "warning" | "danger" | "neutral";
 
 const compactStatusClass: Record<CompactEditableItemStatus, string> = {
   complete: "bg-primary",
@@ -270,7 +347,10 @@ export function CompactEditableItemRow({
       aria-label={`${title}. ${statusLabel}. ${meta}`}
     >
       <span
-        className={cx("h-2.5 w-2.5 shrink-0 rounded-full", compactStatusClass[status])}
+        className={cx(
+          "h-2.5 w-2.5 shrink-0 rounded-full",
+          compactStatusClass[status],
+        )}
         aria-hidden="true"
       />
       <span className="min-w-0 flex-1">
@@ -302,13 +382,16 @@ export function FormSection({
   action,
   children,
   className,
+  presentation = "grouped",
 }: {
   readonly title: string;
   readonly helper?: string;
   readonly action?: React.ReactNode;
   readonly children: React.ReactNode;
   readonly className?: string;
+  readonly presentation?: Exclude<FormPresentation, "standalone"> | "plain";
 }): React.JSX.Element {
+  const grouped = presentation === "grouped";
   return (
     <section className={cx("min-w-0 space-y-2.5", className)}>
       <div className="flex min-w-0 items-end justify-between gap-3 px-1">
@@ -324,7 +407,19 @@ export function FormSection({
         </div>
         {action}
       </div>
-      <div className="space-y-2.5">{children}</div>
+      <FormPresentationProvider
+        presentation={grouped ? "grouped" : "standalone"}
+      >
+        <div
+          className={cx(
+            grouped
+              ? "min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
+              : "space-y-2.5",
+          )}
+        >
+          {children}
+        </div>
+      </FormPresentationProvider>
     </section>
   );
 }
@@ -340,7 +435,9 @@ export function MicroStatusDock({
       {visibleItems.map((item, index) => {
         const tone = item.tone ?? "default";
         const renderedValue =
-          typeof item.amount === "number" ? formatShortIdr(item.amount) : (item.value ?? "-");
+          typeof item.amount === "number"
+            ? formatShortIdr(item.amount)
+            : (item.value ?? "-");
 
         return (
           <span
@@ -348,13 +445,21 @@ export function MicroStatusDock({
             className="inline-flex min-w-0 max-w-full items-baseline gap-1.5"
           >
             <span
-              className={cx("h-1.5 w-1.5 shrink-0 self-center rounded-full", dotClass[tone])}
+              className={cx(
+                "h-1.5 w-1.5 shrink-0 self-center rounded-full",
+                dotClass[tone],
+              )}
               aria-hidden="true"
             />
             <span className="shrink-0 font-bold uppercase tracking-wide text-on-surface-variant">
               {item.label}
             </span>
-            <span className={cx("min-w-0 break-words font-semibold", textClass[tone])}>
+            <span
+              className={cx(
+                "min-w-0 break-words font-semibold",
+                textClass[tone],
+              )}
+            >
               {renderedValue}
             </span>
           </span>
@@ -372,7 +477,12 @@ export function FieldContextLine({
   readonly tone?: FormRiskTone;
 }): React.JSX.Element {
   return (
-    <p className={cx("ml-1 min-w-0 text-[10px] font-medium leading-4", textClass[tone])}>
+    <p
+      className={cx(
+        "ml-1 min-w-0 text-[10px] font-medium leading-4",
+        textClass[tone],
+      )}
+    >
       {children}
     </p>
   );
@@ -383,7 +493,9 @@ export function SmartDefaultHint({
 }: {
   readonly children: React.ReactNode;
 }): React.JSX.Element {
-  return <FieldContextLine tone="success">Default: {children}</FieldContextLine>;
+  return (
+    <FieldContextLine tone="success">Default: {children}</FieldContextLine>
+  );
 }
 
 export function InlineReviewStrip({
@@ -413,6 +525,7 @@ export function WorkflowFormSheet({
   statusTone = "default",
   danger = false,
   onClose,
+  onExitComplete,
   onPrimary,
   onSecondary,
 }: {
@@ -430,6 +543,7 @@ export function WorkflowFormSheet({
   readonly statusTone?: FormRiskTone;
   readonly danger?: boolean;
   readonly onClose: () => void;
+  readonly onExitComplete?: () => void;
   readonly onPrimary: () => void;
   readonly onSecondary?: () => void;
 }): React.JSX.Element {
@@ -440,6 +554,7 @@ export function WorkflowFormSheet({
       open={open}
       title={title}
       onClose={onClose}
+      onExitComplete={onExitComplete}
       footer={
         <div className="space-y-2">
           {statusText ? (
@@ -458,7 +573,12 @@ export function WorkflowFormSheet({
               {disabledReason}
             </p>
           ) : null}
-          <div className={cx("grid gap-2", secondaryLabel ? "grid-cols-[0.8fr_1.2fr]" : "grid-cols-1")}>
+          <div
+            className={cx(
+              "grid gap-2",
+              secondaryLabel ? "grid-cols-[0.8fr_1.2fr]" : "grid-cols-1",
+            )}
+          >
             {secondaryLabel && onSecondary ? (
               <motion.button
                 type="button"
@@ -488,7 +608,7 @@ export function WorkflowFormSheet({
         </div>
       }
     >
-      {children}
+      <FormSheetPresentationBoundary>{children}</FormSheetPresentationBoundary>
     </BottomSheet>
   );
 }
@@ -510,7 +630,9 @@ export function OptionChoiceGroup<TValue extends string>({
 }): React.JSX.Element {
   return (
     <fieldset className="space-y-2">
-      <legend className="px-1 text-xs font-semibold text-on-surface">{label}</legend>
+      <legend className="px-1 text-xs font-semibold text-on-surface">
+        {label}
+      </legend>
       <div className="space-y-2">
         {options.map((option) => {
           const selected = option.value === value;
@@ -530,7 +652,9 @@ export function OptionChoiceGroup<TValue extends string>({
               aria-pressed={selected}
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold leading-5">{option.label}</span>
+                <span className="block text-sm font-bold leading-5">
+                  {option.label}
+                </span>
                 {option.description ? (
                   <span className="block truncate text-[11px] leading-4 text-on-surface-variant">
                     {option.description}

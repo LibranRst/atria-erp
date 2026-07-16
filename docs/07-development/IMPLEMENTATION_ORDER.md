@@ -46,7 +46,7 @@ Add project budget category links to expenses and vendor bills. Add optional mat
 Add `/settings`, category budget cards to Owner Dashboard and Project Detail before material drill-down. Add material and project-control screens using existing mobile shell/card patterns. Avoid dense tables on mobile.
 
 ## 8. Expand AI Brief
-Include category budget usage, material shortage, leftover/reuse opportunity, project margin risk, vendor due bills, and unusual material costs.
+Deferred. Preserve OCR and historical AI data, but do not expose or run AI CFO briefing in the current Dashboard release.
 
 ## 9. Verify
 Run:

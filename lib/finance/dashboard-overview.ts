@@ -9,7 +9,9 @@ import {
 export type DashboardRole = "OWNER" | "FINANCE_ADMIN";
 export type DashboardSeverity = "CRITICAL" | "WARNING" | "INFO";
 export type DashboardPageTab = "overview" | "approvals" | "budget" | "cash" | "accounts" | "materials";
+export type DashboardDueBucket = "OVERDUE" | "TODAY" | "NEXT_7_DAYS" | "LATER";
 export const DASHBOARD_TAB_DETAIL_LIMIT = 5;
+export const DASHBOARD_TIME_ZONE = "Asia/Jakarta";
 
 export type DashboardOpenDocument = {
   readonly amount: number;
@@ -59,9 +61,19 @@ export type FinanceDashboardRiskyProject = {
   readonly effectiveHealth: EffectiveProjectHealth;
   readonly healthReasons: readonly EffectiveProjectHealthReason[];
   readonly usedPercentage: number;
+  readonly internalBudget: number;
+  readonly actualCost: number;
   readonly remainingBudget: number;
+  readonly targetMarginPercentage: number;
   readonly projectedMarginPercentage: number;
   readonly riskReason: string;
+  readonly riskyCategories: readonly {
+    readonly code: ExpenseCategoryCode;
+    readonly name: string;
+    readonly usedPercentage: number;
+    readonly remainingAmount: number;
+    readonly status: "SAFE" | "WATCH" | "CRITICAL" | "OVER_BUDGET";
+  }[];
 };
 
 export type FinanceDashboardOverviewCore = {
@@ -69,6 +81,7 @@ export type FinanceDashboardOverviewCore = {
     readonly cashAvailable: number;
     readonly receivablesOutstanding: number;
     readonly payablesOutstanding: number;
+    readonly payablesDueSoon: number;
     readonly projectValue: number;
     readonly internalBudget: number;
     readonly actualCost: number;
@@ -114,6 +127,31 @@ export function limitDashboardTabDetails<T>(items: readonly T[], limit = DASHBOA
   return items.slice(0, limit);
 }
 
+function zonedDayNumber(value: Date, timeZone = DASHBOARD_TIME_ZONE): number {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(value);
+  const year = Number(parts.find((part) => part.type === "year")?.value ?? 0);
+  const month = Number(parts.find((part) => part.type === "month")?.value ?? 1);
+  const day = Number(parts.find((part) => part.type === "day")?.value ?? 1);
+  return Date.UTC(year, month - 1, day) / 86_400_000;
+}
+
+export function dashboardDueDayOffset(dueDate: Date, referenceDate: Date): number {
+  return zonedDayNumber(dueDate) - zonedDayNumber(referenceDate);
+}
+
+export function resolveDashboardDueBucket(dueDate: Date, referenceDate: Date): DashboardDueBucket {
+  const offset = dashboardDueDayOffset(dueDate, referenceDate);
+  if (offset < 0) return "OVERDUE";
+  if (offset === 0) return "TODAY";
+  if (offset <= 7) return "NEXT_7_DAYS";
+  return "LATER";
+}
+
 export function resolveDefaultDashboardTab(): DashboardPageTab {
   return "overview";
 }
@@ -121,8 +159,20 @@ export function resolveDefaultDashboardTab(): DashboardPageTab {
 export function buildFinanceDashboardCore(input: FinanceDashboardCoreInput): FinanceDashboardOverviewCore {
   const receivablesOutstanding = input.receivables.reduce((sum, item) => sum + calculateOutstanding(item), 0);
   const payablesOutstanding = input.payables.reduce((sum, item) => sum + calculateOutstanding(item), 0);
-  const overdueReceivables = input.receivables.filter((item) => calculateOutstanding(item) > 0 && item.dueDate < input.now).length;
-  const overduePayables = input.payables.filter((item) => calculateOutstanding(item) > 0 && item.dueDate < input.now).length;
+  const overdueReceivables = input.receivables.filter(
+    (item) =>
+      calculateOutstanding(item) > 0 &&
+      resolveDashboardDueBucket(item.dueDate, input.now) === "OVERDUE",
+  ).length;
+  const overduePayables = input.payables.filter(
+    (item) =>
+      calculateOutstanding(item) > 0 &&
+      resolveDashboardDueBucket(item.dueDate, input.now) === "OVERDUE",
+  ).length;
+  const payablesDueSoon = input.payables.reduce((sum, item) => {
+    const bucket = resolveDashboardDueBucket(item.dueDate, input.now);
+    return bucket === "LATER" ? sum : sum + calculateOutstanding(item);
+  }, 0);
 
   const projectValue = input.projects.reduce((sum, item) => sum + item.contractValue, 0);
   const internalBudget = input.projects.reduce((sum, item) => sum + item.internalBudget, 0);
@@ -167,6 +217,18 @@ export function buildFinanceDashboardCore(input: FinanceDashboardCoreInput): Fin
     const targetMarginPercentage = project.contractValue > 0
       ? (project.targetGrossAmount / project.contractValue) * 100
       : 0;
+    const riskyCategories = project.categories.map((category) => {
+      const categoryUsedPercentage = calculateUsedPercentage(category.actualAmount, category.allocatedAmount);
+      return {
+        code: category.code,
+        name: category.name,
+        usedPercentage: categoryUsedPercentage,
+        remainingAmount: category.allocatedAmount - category.actualAmount,
+        status: getBudgetCategoryStatus(categoryUsedPercentage),
+      };
+    }).filter((category) => category.status !== "SAFE")
+      .sort((a, b) => b.usedPercentage - a.usedPercentage)
+      .slice(0, 3);
     const health = resolveEffectiveProjectHealth({
       storedHealth: project.financialHealth,
       remainingBudget: remaining,
@@ -184,43 +246,48 @@ export function buildFinanceDashboardCore(input: FinanceDashboardCoreInput): Fin
       effectiveHealth: health.effectiveHealth,
       healthReasons: health.healthReasons,
       usedPercentage,
+      internalBudget: project.internalBudget,
+      actualCost: projectActual,
       remainingBudget: remaining,
+      targetMarginPercentage,
       projectedMarginPercentage,
       riskReason: health.healthReasons[0]
         ? projectHealthReasonLabel(health.healthReasons[0])
         : "Perlu review margin dan pemakaian budget.",
+      riskyCategories,
     };
   }).filter((project) => project.effectiveHealth !== "HEALTHY")
     .sort((a, b) => {
       const healthRank = (value: string): number => value === "CRITICAL" ? 2 : value === "WARNING" ? 1 : 0;
       return healthRank(b.effectiveHealth) - healthRank(a.effectiveHealth) || b.usedPercentage - a.usedPercentage;
     });
-  const riskyProjects = allRiskyProjects.slice(0, 3);
+  const riskyProjects = allRiskyProjects.slice(0, DASHBOARD_TAB_DETAIL_LIMIT);
 
   const actions: Array<FinanceDashboardAction & { readonly priority: number }> = [];
   const addAction = (action: FinanceDashboardAction, ownerPriority: number, financePriority: number): void => {
     actions.push({ ...action, priority: input.role === "OWNER" ? ownerPriority : financePriority });
   };
   if (input.pendingApprovals > 0) {
-    addAction({ id: "approvals", severity: "CRITICAL", title: `${input.pendingApprovals} persetujuan menunggu`, description: "Review pengajuan yang siap diputuskan.", href: "/approvals" }, 10, 30);
+    addAction({ id: "approvals", severity: "CRITICAL", title: `${input.pendingApprovals} persetujuan menunggu`, description: "Keputusan tertunda dapat menahan pekerjaan atau pembayaran.", href: "/ledger?tab=approvals" }, 10, 30);
   }
   if (riskyProjects.length > 0) {
-    const criticalCount = riskyProjects.filter((project) => project.effectiveHealth === "CRITICAL").length;
-    addAction({ id: "project-risk", severity: criticalCount > 0 ? "CRITICAL" : "WARNING", title: `${riskyProjects.length} proyek perlu perhatian`, description: criticalCount > 0 ? `${criticalCount} proyek berada pada kondisi kritis.` : "Pemakaian budget mendekati batas.", href: `/projects?filter=${criticalCount > 0 ? "CRITICAL" : "WARNING"}` }, 20, 40);
+    const criticalCount = allRiskyProjects.filter((project) => project.effectiveHealth === "CRITICAL").length;
+    addAction({ id: "project-risk", severity: criticalCount > 0 ? "CRITICAL" : "WARNING", title: `${allRiskyProjects.length} proyek perlu perhatian`, description: criticalCount > 0 ? `${criticalCount} proyek berisiko menekan margin.` : "Pemakaian budget mendekati batas.", href: "/ledger?tab=budget" }, 20, 40);
   }
   if (overduePayables > 0) {
-    addAction({ id: "overdue-payables", severity: "CRITICAL", title: `${overduePayables} tagihan vendor lewat jatuh tempo`, description: "Tinjau jadwal dan status pembayaran vendor.", href: "/expenses?view=vendor-bills" }, 31, 10);
+    addAction({ id: "overdue-payables", severity: "CRITICAL", title: `${overduePayables} tagihan vendor terlambat`, description: "Keterlambatan dapat menghambat suplai dan pekerjaan.", href: "/ledger?tab=cash" }, 31, 10);
   }
   if (overdueReceivables > 0) {
-    addAction({ id: "overdue-receivables", severity: "WARNING", title: `${overdueReceivables} invoice klien lewat jatuh tempo`, description: "Tindak lanjuti penerimaan pembayaran klien.", href: "/projects?filter=ACTIVE" }, 30, 20);
+    addAction({ id: "overdue-receivables", severity: "WARNING", title: `${overdueReceivables} invoice klien terlambat`, description: "Kas masuk tertahan sampai invoice ditindaklanjuti.", href: "/ledger?tab=cash" }, 30, 20);
   }
   if (input.materialShortageCount > 0 || input.lowStockCount > 0) {
-    addAction({ id: "material-risk", severity: "WARNING", title: `${input.materialShortageCount || input.lowStockCount} material perlu ditindaklanjuti`, description: input.materialShortageCount > 0 ? "Kebutuhan RAP belum tertutup stok tersedia." : "Stok tersedia menyentuh batas minimum.", href: "/materials?tab=needs" }, 40, 50);
+    addAction({ id: "material-risk", severity: "WARNING", title: `${input.materialShortageCount + input.lowStockCount} masalah material`, description: input.materialShortageCount > 0 ? "Kebutuhan RAP belum tertutup stok tersedia." : "Stok tersedia menyentuh batas minimum.", href: "/ledger?tab=materials" }, 40, 50);
   }
   const priorityCounts = {
     approvals: input.role === "OWNER" ? input.pendingApprovals : 0,
     budget: allRiskyProjects.length,
-    cash: overduePayables + overdueReceivables,
+    cash: input.payables.filter((item) => calculateOutstanding(item) > 0 && resolveDashboardDueBucket(item.dueDate, input.now) !== "LATER").length
+      + input.receivables.filter((item) => calculateOutstanding(item) > 0 && resolveDashboardDueBucket(item.dueDate, input.now) !== "LATER").length,
     accounts: 0,
     materials: input.materialShortageCount + input.lowStockCount,
   };
@@ -230,6 +297,7 @@ export function buildFinanceDashboardCore(input: FinanceDashboardCoreInput): Fin
       cashAvailable: input.cashAvailable,
       receivablesOutstanding,
       payablesOutstanding,
+      payablesDueSoon,
       projectValue,
       internalBudget,
       actualCost,

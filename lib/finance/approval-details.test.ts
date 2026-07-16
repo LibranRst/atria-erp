@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   mapProjectCostApprovalDetail,
   mapVendorPaymentApprovalDetail,
+  rankPendingApprovals,
   type ProjectCostApprovalSource,
   type VendorPaymentApprovalSource,
 } from "./approval-details";
@@ -80,6 +81,7 @@ describe("approval detail mapping", () => {
       createdAt: new Date("2026-06-24T09:00:00.000Z"),
       vendorBill: {
         billNumber: "VB-001",
+        dueDate: new Date("2026-06-23T09:00:00.000Z"),
         notes: null,
         project: { name: "Office BSD" },
         vendor: { name: "CV Sumber Jaya" },
@@ -95,5 +97,44 @@ describe("approval detail mapping", () => {
     expect(detail.projectName).toBe("Office BSD");
     expect(detail.requestedBy).toBe("CV Sumber Jaya");
     expect(detail.budgetOverrun).toBe(false);
+    expect(detail.dueDate).toEqual(new Date("2026-06-23T09:00:00.000Z"));
+  });
+
+  test("ranks budget overrun before overdue and nominal-only approvals", () => {
+    const overrun = mapProjectCostApprovalDetail({
+      approval: approvalRecord,
+      cost: {
+        id: "cost-priority",
+        projectId: "project-1",
+        projectBudgetItemId: null,
+        projectBudgetCategoryId: "category-1",
+        materialId: null,
+        projectRapItemId: null,
+        requestedById: "pm-1",
+        receiptGroupId: null,
+        quantity: "1",
+        unitPrice: "6000000",
+        amount: "6000000",
+        description: "Biaya melewati budget",
+        receiptImageUrl: null,
+        status: "VERIFIED",
+        budgetOverrun: true,
+        bankAccountId: null,
+        cashTransactionId: null,
+        verifiedById: null,
+        verifiedAt: null,
+        approvedById: null,
+        approvedAt: null,
+        paidById: null,
+        paidAt: null,
+        createdAt: new Date("2026-06-24T06:00:00.000Z"),
+        updatedAt: new Date("2026-06-24T07:00:00.000Z"),
+      },
+    });
+    const overdue = { ...overrun, id: "overdue", budgetOverrun: false, dueDate: new Date("2026-06-20T00:00:00.000Z"), priority: "NORMAL" as const, priorityReason: "Perlu keputusan Owner" };
+    const ranked = rankPendingApprovals([overdue, overrun], new Date("2026-06-25T00:00:00.000Z"));
+    expect(ranked[0]?.id).toBe(overrun.id);
+    expect(ranked[0]?.priorityReason).toBe("Melewati batas budget");
+    expect(ranked[1]?.priority).toBe("CRITICAL");
   });
 });

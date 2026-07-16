@@ -273,7 +273,7 @@ export function ExpenseList({
   }
 
   return (
-    <div className="space-y-md px-1">
+    <div className="space-y-lg px-1 pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
       {!projectId && (
         <FinanceInboxHeader
           activeClaimTotal={activeClaimTotal}
@@ -285,6 +285,7 @@ export function ExpenseList({
         value={displayedTab}
         onChange={selectTab}
         ariaLabel="Tampilan kas dan tagihan"
+        density="compact"
         options={[
           {
             value: "FIELD_CLAIMS",
@@ -307,35 +308,39 @@ export function ExpenseList({
         ]}
       />
 
-      {userRole === "OWNER" && pendingApprovalsCount > 0 && (
-        <PendingApprovalsBanner count={pendingApprovalsCount} />
-      )}
-
       {displayedTab === "FIELD_CLAIMS" ? (
-        <div className="space-y-md">
-          <ExpenseDraftsPanel projectId={projectId} />
-          <FieldClaimsPanel
-            projectId={projectId}
-            initialCosts={initialCosts}
-            filteredCosts={filteredCosts}
-            filter={filter}
-            filterTabs={filterTabs}
-            needsActionCount={needsActionCount}
-            readyToPayCount={readyToPayCount}
-            activeClaimTotal={activeClaimTotal}
-            isOwnerOrFinance={isOwnerOrFinance}
-            pending={isPending}
-            historyExpanded={isHistoryExpanded}
-            onFilterChange={setFilter}
-            onHistoryExpandedChange={setIsHistoryExpanded}
-            onOpenExpenseDrawer={openExpenseDrawer}
-            onVerify={handleVerifyClick}
-            onDisburse={handleDisburseClick}
-            onOpenReceipt={setActiveImage}
-          />
-        </div>
+        <FieldClaimsPanel
+          leadingContent={(
+            <>
+              {userRole === "OWNER" && pendingApprovalsCount > 0 ? (
+                <PendingApprovalsBanner count={pendingApprovalsCount} />
+              ) : null}
+              <ExpenseDraftsPanel projectId={projectId} />
+            </>
+          )}
+          projectId={projectId}
+          initialCosts={initialCosts}
+          filteredCosts={filteredCosts}
+          filter={filter}
+          filterTabs={filterTabs}
+          needsActionCount={needsActionCount}
+          readyToPayCount={readyToPayCount}
+          activeClaimTotal={activeClaimTotal}
+          isOwnerOrFinance={isOwnerOrFinance}
+          pending={isPending}
+          historyExpanded={isHistoryExpanded}
+          onFilterChange={setFilter}
+          onHistoryExpandedChange={setIsHistoryExpanded}
+          onOpenExpenseDrawer={openExpenseDrawer}
+          onVerify={handleVerifyClick}
+          onDisburse={handleDisburseClick}
+          onOpenReceipt={setActiveImage}
+        />
       ) : (
         <VendorBillList
+          leadingContent={userRole === "OWNER" && pendingApprovalsCount > 0 ? (
+            <PendingApprovalsBanner count={pendingApprovalsCount} />
+          ) : null}
           projectId={projectId}
           vendorBills={vendorBills}
           vendorPayments={vendorPayments}

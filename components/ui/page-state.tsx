@@ -132,7 +132,7 @@ export function ConnectivityBanner(): React.JSX.Element | null {
           animate="visible"
           exit="exit"
           role="status"
-          className="fixed inset-x-0 top-16 z-40 mx-auto flex w-[calc(100%-2.5rem)] max-w-sm items-center gap-2 rounded-full bg-warning px-4 py-2 text-[11px] font-bold text-white shadow-lg"
+          className="fixed inset-x-0 top-16 z-40 mx-auto flex w-[calc(100%-2.5rem)] max-w-sm items-center gap-2 rounded-full bg-warning px-4 py-2 text-[11px] font-bold leading-4 text-white shadow-lg"
         >
           <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
             cloud_off

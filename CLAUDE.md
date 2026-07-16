@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Atria ERP is a finance-first, mobile-first internal ERP for interior design/build contractors. The product centers on project budgets, cash/bank ledger integrity, field expense approvals, and real-time profitability rather than generic HR or inventory modules. Most product and technical specifications are in Bahasa Indonesia under `docs/`; treat those docs as the source of truth for intended behavior until executable code catches up.
+Atria ERP is a finance-first, mobile-first internal ERP for interior design/build contractors. The product centers on project budgets, cash/bank ledger integrity, field expense approvals, material stock visibility, and real-time profitability rather than generic HR modules. Most product and technical specifications are under `docs/`; active guides and executable code take precedence over historical implementation plans.
 
-The repository is currently an early Next.js App Router project with foundational docs and a minimal app shell. The documented target stack is Bun, Next.js App Router, TypeScript, Neon PostgreSQL, Drizzle ORM, Better Auth, Tailwind CSS/shadcn-style components, ImageKit for receipt uploads, and Gemini AI for receipt OCR and daily finance briefings. Not all target dependencies are installed yet.
+The repository is an active Next.js App Router application using Bun, TypeScript, Neon PostgreSQL, Drizzle ORM, Better Auth, Tailwind CSS, ImageKit, and Gemini receipt OCR. AI CFO/financial briefing is deferred from the current Dashboard; do not reintroduce it unless product scope explicitly changes.
 
 ## Common Commands
 
@@ -20,17 +20,17 @@ bun run start        # run built app
 bun run lint         # run ESLint
 ```
 
-Testing is planned around Bun Test, but there is no test script or test configuration in `package.json` yet. When tests are added, run a single test file with:
+Tests use Bun Test. Run a focused test file with:
 
 ```bash
 bun test path/to/file.test.ts
 ```
 
-README-documented database commands (`bun run db:generate`, `bun run db:push`, `bun run db:seed`) are intended for the Drizzle/Neon phase, but those scripts are not present in `package.json` yet. Do not assume they work until the scripts and Drizzle files exist.
+Check `package.json` before running database or project scripts; do not infer commands from historical docs.
 
 ## Current Codebase Shape
 
-- `app/` contains the Next.js App Router UI entry points: `layout.tsx`, `page.tsx`, and global Tailwind tokens in `globals.css`.
+- `app/` contains the Next.js App Router routes, layouts, loading states, and server actions.
 - `app/globals.css` defines the HSL-based dark design tokens (`--bg-*`, `--text-*`, `--primary`, `--success`, `--warning`, `--critical`) and maps them into Tailwind v4 `@theme` variables. Prefer these semantic tokens over hardcoded colors.
 - `tsconfig.json` uses strict TypeScript and maps `@/*` to the repository root.
 - `eslint.config.mjs` extends Next.js core web vitals and TypeScript rules.
@@ -78,18 +78,23 @@ This app manages financial state. Follow `AGENTS.md`, `docs/06-technical/ARCHITE
 
 Atria ERP is mobile-first for field Project Managers and should feel like a premium native iOS-style WebView.
 
-- Primary mobile navigation is a sticky bottom nav with Projects, Ledger, Add Expense, and Profile.
-- Touch targets should be at least 44x44px; the UI specs often target 48x48px or larger for critical actions.
-- Use dense cards, strong hierarchy, semantic financial status colors, and the tokens in `app/globals.css`.
-- Avoid traditional centered spinners for key async flows; the UI spec prefers shimmer skeletons.
-- Desktop/tablet layouts should adapt to sidebar navigation and dual-pane finance/reconciliation views where appropriate.
+- `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md` is the active page-design source of truth.
+- The current Dashboard (`/ledger`) and Expenses (`/expenses`) are reference implementations. Reuse their grammar and shared primitives; do not copy either layout blindly.
+- The fixed `max-w-md` mobile shell remains one column at all viewports. Verify 320, 360, 390, and 430px rather than judging only from desktop preview.
+- Use one justified focal summary, concise section headers, grouped surfaces with dividers, purpose-built rows, and restrained status treatments. Do not make every row a card.
+- Use shared financial formatting with tabular numerals; primary amounts must not wrap.
+- Keep visible actions compact while preserving a 48x48px effective touch target.
+- Use structural route skeletons matching the final hierarchy. Avoid generic centered spinners and large loading layout shifts.
+- Horizontal tabs and filters may auto-center within their strip but must never scroll the document vertically or move the user's reading position.
+- Preserve established identity surfaces such as bank account gradients. Avoid repeated progress bars, decorative vertical severity rails, excessive glass/gradients, and whole-section animations.
 
 ## Documentation Map to Read Before Work
 
 - Product scope and MVP: `docs/01-product/PRD.md`, `docs/02-product/MVP_BLUEPRINT.md`
 - Financial workflows: `docs/03-flows/FLOWS.md`
 - Data model and statuses: `docs/04-data/DATABASE_SCHEMA.md`, `docs/04-data/STATUS_ENUMS.md`, `docs/04-data/SEED_DATA.md`
-- UI/UX and design tokens: `docs/05-ui-ux/MOBILE_FIRST_UI_UX.md`, `docs/05-ui-ux/IOS26_SOLID_DESIGN_SYSTEM.md`
+- Main-surface design language: `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md`
+- UI/UX workflow and component tokens: `docs/05-ui-ux/MOBILE_FIRST_UI_UX.md`, `docs/05-ui-ux/IOS26_SOLID_DESIGN_SYSTEM.md`
 - Technical architecture, auth, actions, AI: `docs/06-technical/ARCHITECTURE.md`, `docs/06-technical/AUTH_AND_PERMISSION.md`, `docs/06-technical/API_ACTIONS.md`, `docs/06-technical/AI_AGENT_ARCHITECTURE.md`
 - Build order and roadmap: `docs/07-development/IMPLEMENTATION_ORDER.md`, `docs/07-development/ROADMAP.md`, `docs/07-development/TASK_BREAKDOWN.md`
 
@@ -98,5 +103,5 @@ Atria ERP is mobile-first for field Project Managers and should feel like a prem
 Important instructions from `AGENTS.md`:
 
 - Read existing schemas and API documentation before proposing changes.
-- Before writing executable code, create a step-by-step implementation plan under `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md` and wait for user approval.
+- Before major executable changes, write or update a step-by-step implementation plan under `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`.
 - Do not leave placeholder code such as `TODO`, `TBD`, or incomplete statements in implemented functions, schemas, or actions.

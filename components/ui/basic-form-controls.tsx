@@ -4,6 +4,11 @@ import React from "react";
 import { Check, LockKeyhole, Minus, Plus } from "lucide-react";
 
 import {
+  type FormFieldLayout,
+  useFormPresentation,
+} from "./form-presentation-context";
+
+import {
   controlClass,
   cx,
   decimalValue,
@@ -24,6 +29,7 @@ export function FormField({
   required,
   optional,
   readOnly,
+  layout = "stacked",
   children,
   className,
 }: {
@@ -35,14 +41,69 @@ export function FormField({
   readonly required?: boolean;
   readonly optional?: boolean;
   readonly readOnly?: boolean;
+  readonly layout?: FormFieldLayout;
   readonly children: React.ReactNode;
   readonly className?: string;
 }): React.JSX.Element {
   const adornment = fieldAdornment(required, optional);
+  const presentation = useFormPresentation();
+  const grouped = presentation === "grouped";
+  const message = error ?? helper;
+  const messageClass = error ? errorClass : helperClass;
+
+  if (layout === "inline") {
+    return (
+      <div
+        className={cx(
+          grouped
+            ? "group/form min-w-0 bg-surface-container-lowest px-4 py-3"
+            : fieldShell,
+          error && grouped && "bg-error-container/10",
+          className,
+        )}
+      >
+        <div className="flex min-h-8 min-w-0 items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <label
+                className={cx(labelClass, grouped && "ml-0 text-[10px] tracking-[0.08em] transition-colors group-focus-within/form:text-blue-600")}
+                htmlFor={htmlFor}
+              >
+                {label}
+              </label>
+              {readOnly ? (
+                <LockKeyhole className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
+              ) : null}
+            </div>
+            {message ? (
+              <p id={helperId} className={cx(messageClass, grouped && "ml-0 mt-1")}>
+                {message}
+              </p>
+            ) : null}
+          </div>
+          <div className="min-w-0 shrink-0">{children}</div>
+          {adornment ? (
+            <span className="shrink-0 text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/75">
+              {adornment}
+            </span>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={cx(fieldShell, className)}>
+    <div
+      className={cx(
+        grouped
+          ? "group/form min-w-0 space-y-1 bg-surface-container-lowest px-4 py-3"
+          : fieldShell,
+        error && grouped && "bg-error-container/10",
+        className,
+      )}
+    >
       <div className="flex min-w-0 items-center justify-between gap-2">
-        <label className={labelClass} htmlFor={htmlFor}>
+        <label className={cx(labelClass, grouped && "ml-0 transition-colors group-focus-within/form:text-blue-600")} htmlFor={htmlFor}>
           {label}
         </label>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -61,11 +122,11 @@ export function FormField({
       </div>
       {children}
       {error ? (
-        <p id={helperId} className={errorClass}>
+        <p id={helperId} className={cx(errorClass, grouped && "ml-0")}>
           {error}
         </p>
       ) : helper ? (
-        <p id={helperId} className={helperClass}>
+        <p id={helperId} className={cx(helperClass, grouped && "ml-0")}>
           {helper}
         </p>
       ) : null}
@@ -120,12 +181,15 @@ export function TextInput({
   readonly "aria-describedby"?: string;
   readonly "aria-invalid"?: boolean;
 }): React.JSX.Element {
+  const grouped = useFormPresentation() === "grouped";
   return (
     <div
       className={cx(
-        "flex min-h-12 w-full min-w-0 items-center gap-2 rounded-full border border-outline-variant/35 bg-surface-container-low px-5 transition focus-within:border-outline focus-within:ring-0",
+        grouped
+          ? "flex min-h-8 w-full min-w-0 items-center gap-2 border-0 bg-transparent px-0 focus-within:ring-0"
+          : "flex min-h-12 w-full min-w-0 items-center gap-2 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15",
         disabled && "opacity-55",
-        readOnly && "bg-surface-container",
+        readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
         className,
       )}
     >
@@ -150,7 +214,7 @@ export function TextInput({
         readOnly={readOnly}
         required={required}
         inputMode={inputMode}
-        className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-on-surface outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed"
+        className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-on-surface caret-blue-500 outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed"
       />
       {suffix && (
         <span className="shrink-0 text-xs font-bold text-on-surface-variant">
@@ -192,6 +256,7 @@ export function Textarea({
   readonly "aria-describedby"?: string;
   readonly "aria-invalid"?: boolean;
 }): React.JSX.Element {
+  const grouped = useFormPresentation() === "grouped";
   return (
     <textarea
       id={id}
@@ -208,9 +273,10 @@ export function Textarea({
       aria-describedby={ariaDescribedBy}
       aria-invalid={ariaInvalid}
       className={cx(
-        controlClass,
-        "min-h-24 resize-none py-3 placeholder:text-on-surface-variant/55",
-        readOnly && "bg-surface-container",
+        grouped
+          ? "min-h-20 w-full min-w-0 resize-none border-0 bg-transparent px-0 py-1 text-sm font-semibold leading-5 text-on-surface caret-blue-500 outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed disabled:opacity-55"
+          : cx(controlClass, "min-h-24 resize-none rounded-2xl bg-surface-container-lowest py-3 placeholder:text-on-surface-variant/55 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"),
+        readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
         className,
       )}
     />
@@ -342,6 +408,8 @@ export function QuantityStepper({
   readonly step?: number;
   readonly disabled?: boolean;
 }): React.JSX.Element {
+  const grouped = useFormPresentation() === "grouped";
+
   function adjust(delta: number): void {
     const current = Number(value || 0);
     const next = Math.max(min, Number((current + delta).toFixed(2)));
@@ -349,7 +417,14 @@ export function QuantityStepper({
   }
 
   return (
-    <div className="grid min-h-12 grid-cols-[44px_1fr_44px] overflow-hidden rounded-full border border-outline-variant/35 bg-surface-container-low focus-within:border-outline focus-within:ring-0">
+    <div
+      className={cx(
+        "grid grid-cols-[44px_1fr_44px] overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/15",
+        grouped
+          ? "min-h-10 rounded-full bg-surface-container-low"
+          : "min-h-12 rounded-full border border-outline-variant/35 bg-surface-container-lowest",
+      )}
+    >
       <button
         type="button"
         disabled={disabled || Number(value || 0) <= min}
@@ -397,6 +472,7 @@ export function ChoiceRow({
   readonly description?: string;
   readonly disabled?: boolean;
 }): React.JSX.Element {
+  const grouped = useFormPresentation() === "grouped";
   return (
     <button
       type="button"
@@ -404,17 +480,23 @@ export function ChoiceRow({
       onClick={() => onChange(!checked)}
       aria-pressed={checked}
       className={cx(
-        "flex min-h-12 w-full items-center gap-3 rounded-full border px-5 py-3 text-left transition active:scale-[0.99] disabled:opacity-45",
+        grouped
+          ? "flex min-h-14 w-full items-center gap-3 bg-surface-container-lowest px-4 py-3 text-left transition active:bg-surface-container-low disabled:opacity-45"
+          : "flex min-h-12 w-full items-center gap-3 rounded-full border px-5 py-3 text-left transition active:scale-[0.99] disabled:opacity-45",
         checked
-          ? "border-primary bg-primary/5 text-primary"
-          : "border-outline-variant/15 bg-surface-container-low text-on-surface",
+          ? grouped
+            ? "text-blue-600"
+            : "border-blue-500 bg-blue-50 text-blue-600"
+          : grouped
+            ? "text-on-surface"
+            : "border-outline-variant/15 bg-surface-container-lowest text-on-surface",
       )}
     >
       <span
         className={cx(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
           checked
-            ? "border-primary bg-primary text-on-primary"
+            ? "border-blue-500 bg-blue-500 text-white"
             : "border-outline-variant bg-surface",
         )}
       >

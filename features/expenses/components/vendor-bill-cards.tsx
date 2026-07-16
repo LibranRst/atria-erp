@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
-import { MoneyValue } from "@/components/ui/page-primitives";
 import { Badge } from "@/components/ui/badge";
+import { MoneyValue } from "@/components/ui/page-primitives";
 import type {
   VendorListBill,
   VendorListPayment,
@@ -13,6 +14,16 @@ import {
   getVendorBillStatus,
   getVendorPaymentBadge,
 } from "@/features/expenses/components/vendor-bill-list-utils";
+import { transitionSpringSnappy } from "@/lib/utils/motion";
+
+const payablePressScale = { scale: 0.975 } as const;
+
+function vendorBillStatusLabel(status: ReturnType<typeof getVendorBillStatus>): string {
+  if (status === "PAID") return "Lunas";
+  if (status === "PARTIALLY_PAID") return "Dibayar sebagian";
+  if (status === "VOID") return "Dibatalkan";
+  return "Belum dibayar";
+}
 
 type VendorBillCardProps = {
   readonly bill: VendorListBill;
@@ -25,66 +36,53 @@ export function VendorBillCard({
   isOwnerOrFinance,
   onScheduleClick,
 }: VendorBillCardProps): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
   const amountNum = Number(bill.amount);
   const statusMapping = getVendorBillStatus(bill.status);
-  const { totalScheduledOrPaid, isFullyScheduledOrPaid, hasPending } =
-    getBillPaymentSummary(bill);
+  const { totalScheduledOrPaid, isFullyScheduledOrPaid, hasPending } = getBillPaymentSummary(bill);
 
   return (
-    <div className="space-y-sm rounded-[28px] border border-outline-variant/20 bg-white p-md shadow-[0_14px_34px_rgba(17,17,17,0.045)] transition-colors">
-      <div className="flex items-start justify-between">
-        <div className="min-w-0 space-y-1">
+    <div className="px-3 py-3 max-[430px]:px-2.5">
+      <div className="flex items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/[0.09] text-warning ring-1 ring-warning/[0.06]">
+          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">request_quote</span>
+        </span>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="max-w-[200px] truncate font-sans text-[16px] font-bold leading-[24px] text-on-surface">
+            <h3 className="min-w-0 flex-1 truncate text-[13px] font-semibold tracking-[-0.01em] text-on-surface">
               {bill.vendor?.name || "Vendor"}
             </h3>
-            <Badge status={statusMapping} />
+            <Badge status={statusMapping}>{vendorBillStatusLabel(statusMapping)}</Badge>
           </div>
-          <p className="text-[11px] font-medium text-on-surface-variant">
-            {bill.project?.name || "Proyek"} • {bill.billNumber}
+          <p className="mt-1 truncate text-[10px] text-on-surface-variant/75">
+            {bill.project?.name || "Proyek"} · {bill.billNumber}
           </p>
-          {bill.budgetItem?.name && (
-            <p className="truncate text-[10px] text-on-surface-variant">
-              {bill.budgetItem.name}
-            </p>
-          )}
+          {bill.budgetItem?.name ? <p className="mt-0.5 truncate text-[9px] text-on-surface-variant/60">{bill.budgetItem.name}</p> : null}
         </div>
-        <MoneyValue
-          amount={amountNum}
-          variant="fullDynamic"
-          align="right"
-          size="md"
-          className="w-[42%] shrink-0"
-        />
+        <MoneyValue amount={amountNum} variant="compactWithFull" align="right" size="sm" className="shrink-0" />
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-outline-variant/10 pt-sm">
-        <div className="flex items-center gap-1 text-[11px] font-medium text-on-surface-variant">
-          <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-          <span>
-            {new Date(bill.dueDate).toLocaleDateString("id-ID", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </span>
+      <div className="mt-2 flex min-h-9 items-center justify-between gap-3 pl-12">
+        <div className="flex min-w-0 items-center gap-1 text-[9px] font-semibold text-on-surface-variant/70">
+          <span className="material-symbols-outlined text-[13px]" aria-hidden="true">calendar_today</span>
+          <span>{new Date(bill.dueDate).toLocaleDateString("id-ID", { month: "short", day: "numeric", year: "numeric" })}</span>
         </div>
 
-        {isOwnerOrFinance && bill.status !== "PAID" && bill.status !== "VOID" && (
+        {isOwnerOrFinance && bill.status !== "PAID" && bill.status !== "VOID" ? (
           isFullyScheduledOrPaid ? (
-            <Badge status="PENDING">
-              {hasPending ? "Dalam Antrean" : "Sudah Dijadwalkan"}
-            </Badge>
+            <Badge status="PENDING">{hasPending ? "Dalam Antrean" : "Sudah Dijadwalkan"}</Badge>
           ) : (
-            <button
+            <motion.button
               type="button"
               onClick={() => onScheduleClick(bill)}
-              className="h-8 cursor-pointer rounded-full bg-primary px-sm text-[11px] font-bold text-on-primary transition-all hover:bg-primary/95 active:scale-95"
+              whileTap={reduceMotion ? undefined : payablePressScale}
+              transition={transitionSpringSnappy}
+              className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] font-bold text-on-primary outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30"
             >
               {totalScheduledOrPaid > 0 ? "Jadwalkan Sisa" : "Jadwalkan Bayar"}
-            </button>
+            </motion.button>
           )
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -101,82 +99,62 @@ export function VendorPaymentCard({
   isOwnerOrFinance,
   onDisburseClick,
 }: VendorPaymentCardProps): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
   const amountPaidNum = Number(payment.amountPaid);
   const isCompleted = payment.status === "COMPLETED";
   const badge = getVendorPaymentBadge(payment);
 
   return (
-    <div
-      className={`space-y-sm rounded-[28px] border p-md shadow-[0_14px_34px_rgba(17,17,17,0.045)] transition-colors ${
-        isCompleted
-          ? "border-outline-variant/15 bg-surface-container-low/70"
-          : "border-outline-variant/20 bg-white"
-      }`}
-    >
-      <div className="flex items-start justify-between">
-        <div className="min-w-0 space-y-1">
+    <div className={`px-3 py-3 max-[430px]:px-2.5 ${isCompleted ? "bg-surface-container-low/35" : ""}`}>
+      <div className="flex items-start gap-3">
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${isCompleted ? "bg-success/[0.08] text-success ring-success/[0.06]" : "bg-warning/[0.09] text-warning ring-warning/[0.06]"}`}>
+          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">{isCompleted ? "check_circle" : "payments"}</span>
+        </span>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h4 className="max-w-[200px] truncate font-sans text-[16px] font-bold leading-[24px] text-on-surface">
+            <h4 className="min-w-0 flex-1 truncate text-[13px] font-semibold tracking-[-0.01em] text-on-surface">
               {payment.vendorBill?.vendor?.name || "Vendor"}
             </h4>
             <Badge status={badge.status}>{badge.label}</Badge>
           </div>
-          <p className="text-[11px] font-medium text-on-surface-variant">
-            {payment.vendorBill?.project?.name || "Proyek"} • {payment.vendorBill?.billNumber}
+          <p className="mt-1 truncate text-[10px] text-on-surface-variant/75">
+            {payment.vendorBill?.project?.name || "Proyek"} · {payment.vendorBill?.billNumber}
           </p>
         </div>
-        <div className="text-right">
-          <MoneyValue
-            amount={amountPaidNum}
-            variant="fullDynamic"
-            align="right"
-            size="md"
-          />
-          <span className="text-[9px] text-on-surface-variant">
-            {payment.bankAccount?.name}
-          </span>
-        </div>
+        <MoneyValue amount={amountPaidNum} variant="compactWithFull" align="right" size="sm" className="shrink-0" />
       </div>
 
-      {!isCompleted && (
-        <div className="flex items-center justify-between gap-3 border-t border-outline-variant/10 pt-sm">
-          <div className="flex items-center gap-1 text-[11px] font-medium text-on-surface-variant">
-            <span className="material-symbols-outlined text-[14px]">event</span>
-            {new Date(payment.paymentDate).toLocaleDateString("id-ID", {
-              month: "short",
-              day: "numeric",
-            })}
+      {!isCompleted ? (
+        <div className="mt-2 flex min-h-9 items-center justify-between gap-3 pl-12">
+          <div className="flex min-w-0 items-center gap-1 text-[9px] font-semibold text-on-surface-variant/70">
+            <span className="material-symbols-outlined text-[13px]" aria-hidden="true">event</span>
+            {new Date(payment.paymentDate).toLocaleDateString("id-ID", { month: "short", day: "numeric" })}
+            {payment.bankAccount?.name ? <span className="truncate">· {payment.bankAccount.name}</span> : null}
           </div>
           {payment.approvalStatus === "PENDING" ? (
-            <span className="rounded-full border border-warning/30 bg-warning-light px-2.5 py-1 text-[10px] font-bold uppercase text-warning">
-              Menunggu Approval Owner
-            </span>
+            <span className="shrink-0 rounded-full bg-warning/[0.09] px-2.5 py-1 text-[9px] font-semibold text-warning">Menunggu Owner</span>
           ) : payment.approvalStatus === "REJECTED" ? (
-            <span className="rounded-full border border-critical/30 bg-critical-light px-2.5 py-1 text-[10px] font-bold uppercase text-critical">
-              Ditolak Owner
-            </span>
+            <span className="shrink-0 rounded-full bg-error/[0.075] px-2.5 py-1 text-[9px] font-semibold text-error">Ditolak Owner</span>
           ) : isOwnerOrFinance ? (
-            <button
+            <motion.button
               type="button"
               onClick={() => onDisburseClick(payment)}
-              className="h-8 cursor-pointer rounded-full bg-primary px-sm text-[11px] font-bold text-on-primary transition-all hover:bg-primary/95 active:scale-95"
+              whileTap={reduceMotion ? undefined : payablePressScale}
+              transition={transitionSpringSnappy}
+              className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] font-bold text-on-primary outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30"
             >
-              Cairkan / Bayar
-            </button>
+              Cairkan
+            </motion.button>
           ) : (
-            <span className="rounded-full border border-success/30 bg-success-light px-2.5 py-1 text-[10px] font-bold uppercase text-success">
-              Proses Antrean
-            </span>
+            <span className="shrink-0 rounded-full bg-success/[0.08] px-2.5 py-1 text-[9px] font-semibold text-success">Dalam antrean</span>
           )}
         </div>
-      )}
-
-      {isCompleted && payment.referenceNumber && (
-        <div className="flex justify-between gap-3 border-t border-outline-variant/10 pt-sm text-[10px] font-semibold text-on-surface-variant">
-          <span>Referensi</span>
-          <span className="font-bold text-on-surface">{payment.referenceNumber}</span>
+      ) : payment.referenceNumber ? (
+        <div className="mt-2 flex justify-between gap-3 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
+          <span>{payment.bankAccount?.name ?? "Rekening"} · Referensi</span>
+          <span className="truncate font-bold text-on-surface">{payment.referenceNumber}</span>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

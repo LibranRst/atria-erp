@@ -82,7 +82,7 @@ function BudgetItemCard({
   const isOverrun = spent > allocated;
 
   return (
-    <div className="space-y-md rounded-[28px] border border-outline-variant/20 bg-white p-md shadow-[0_14px_34px_rgba(17,17,17,0.045)] transition-all hover:bg-surface-container-low">
+    <div className="space-y-md rounded-[28px] border border-outline-variant/20 bg-white p-md shadow-[0_14px_34px_rgba(17,17,17,0.045)] transition-colors hover:bg-surface-container-low">
       <div className="flex flex-col gap-sm">
         <div className="flex items-start justify-between gap-md">
           <div className="min-w-0 space-y-base">
@@ -122,7 +122,7 @@ function BudgetItemCard({
         <div className="space-y-xs">
           <div className="h-1.5 w-full overflow-hidden rounded-full border border-outline-variant/10 bg-surface-container">
             <div
-              className={`h-full rounded-full transition-all duration-300 ${
+              className={`h-full rounded-full transition-colors duration-300 ${
                 isOverrun ? "bg-error" : percent >= 90 ? "bg-secondary" : "bg-primary"
               }`}
               style={{ width: `${Math.min(percent, 100)}%` }}

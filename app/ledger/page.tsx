@@ -2,19 +2,12 @@ import React from "react";
 
 import { getFinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
 import {
-  FinanceAnalysis,
   FinanceDashboard,
 } from "@/features/finance-dashboard/components/finance-dashboard";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { requireServerSession } from "@/lib/server/session";
 
-type LedgerPageProps = {
-  readonly searchParams: Promise<{ readonly brief?: string | string[] }>;
-};
-
-export default async function LedgerPage({
-  searchParams,
-}: LedgerPageProps): Promise<React.JSX.Element> {
+export default async function LedgerPage(): Promise<React.JSX.Element> {
   const session = await requireServerSession();
 
   const role = await resolveRoleName(session.user.roleId);
@@ -41,10 +34,5 @@ export default async function LedgerPage({
     );
   }
 
-  const params = await searchParams;
-  return params.brief === "true" ? (
-    <FinanceAnalysis data={result.data} />
-  ) : (
-    <FinanceDashboard data={result.data} userName={session.user.name} />
-  );
+  return <FinanceDashboard data={result.data} userName={session.user.name} />;
 }

@@ -14,6 +14,24 @@ Use this checklist before deploy or after large refactors. Focus on proving the 
   - [ ] Purchasing
 - [ ] Keep browser console open and note any runtime errors.
 
+## Main-Surface Design Gate
+
+Use this gate for every new page or substantial visual rework. Dashboard (`/ledger`) and Expenses (`/expenses`) are the current reference implementations; compare their design grammar, not their exact content layout.
+
+- [ ] Verify the page at 320, 360, 390, and 430px, plus a large viewport that still uses the fixed `max-w-md` shell.
+- [ ] Confirm the hierarchy reads as current position/workload, attention, next action, then supporting detail.
+- [ ] Confirm repeated rows share a grouped surface and dividers; independent interactive units retain clear card affordance.
+- [ ] Confirm no primary monetary value wraps or causes horizontal overflow.
+- [ ] Confirm status remains understandable without color and ordinary rows do not use decorative vertical severity rails.
+- [ ] Confirm timeline connectors are continuous and timeline rows do not also use horizontal dividers.
+- [ ] Confirm each visible control has a 48x48px effective touch target, keyboard focus, and a screen-reader label where needed.
+- [ ] Confirm tabs and filters scroll only their horizontal strip and do not move the document vertically.
+- [ ] Confirm changing tabs or filters does not collapse content enough to cause an unexpected page jump.
+- [ ] Confirm loading skeletons mirror the final page hierarchy and transition without a large layout shift.
+- [ ] Confirm empty, no-result, error, restricted, partial/stale, pending, success, and failed-action states relevant to the workflow.
+- [ ] Confirm gradients are limited to established focal or identity surfaces and motion respects reduced-motion preferences.
+- [ ] Confirm the result does not repeat identical cards, progress bars, pills, or decorative patterns across unrelated sections.
+
 ## 1. Login And Role Access
 - [ ] Login as Owner.
 - [ ] Confirm Owner can access dashboard, projects, expenses, ledger/approvals, materials, and settings.
@@ -131,19 +149,19 @@ Expected result:
 ## 7. Finance Dashboard / Ledger Smoke Test
 - [ ] Open `/ledger`.
 - [ ] Confirm overview dashboard loads without blank sections.
-- [ ] Check bank account cards.
-- [ ] Check priority/approval list.
-- [ ] Check project risk cards.
-- [ ] Check category health.
-- [ ] Check recent cash activity.
-- [ ] Open Budget Risk tab.
-- [ ] Open Cash Due tab.
-- [ ] Open Materials tab.
-- [ ] Open Approvals tab as Owner.
+- [ ] Check financial position, freshness/partial state, ranked priorities, project risk, nearest due documents, material attention, and recent cash preview.
+- [ ] Open Persetujuan as Owner; verify priority order, approval confirmation, and required rejection reason.
+- [ ] Confirm Finance Admin does not see Persetujuan.
+- [ ] Open Budget; compare budget/actual and target/projected margin.
+- [ ] Open Jatuh Tempo; verify Terlambat, Hari Ini, 7 Hari ke Depan, and Berikutnya grouping.
+- [ ] Open Rekening; verify account status and that mutations open from the detail sheet.
+- [ ] Open Material; verify shortage, low stock, reversal request, waste, and adjustment summaries.
+- [ ] Confirm no AI CFO menu, card, `brief=true` page, or daily briefing endpoint remains; AI OCR still works.
 
 Expected result:
 - [ ] Dashboard numbers are plausible after QA actions.
 - [ ] Links from dashboard cards go to valid pages.
+- [ ] Tabs and amounts remain readable at 320, 390, and 430px; bottom navigation does not cover actions.
 - [ ] No console/runtime errors appear.
 
 ## 8. Settings Smoke Test

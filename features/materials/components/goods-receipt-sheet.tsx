@@ -258,21 +258,37 @@ export function GoodsReceiptSheet({ projects, locations, materials, inventory, v
             </div>
             <section className="space-y-2">
               <div className="flex items-end justify-between gap-3 px-1">
-                <div><p className="text-[10px] font-bold uppercase tracking-wide">Material diterima</p><p className="mt-0.5 text-[10px] text-on-surface-variant">Buka satu item untuk mengubah detail.</p></div>
-                <p className="text-xs font-bold text-primary">{money.format(total)}</p>
+                <div className="grid min-w-0 gap-0.5">
+                  <p className="text-[10px] font-bold uppercase leading-[1.15] tracking-wide">Material diterima</p>
+                  <p className="text-[10px] leading-[1.25] text-on-surface-variant">Buka item untuk mengubah detail.</p>
+                </div>
+                <p className="shrink-0 font-mono text-xs font-bold tabular-nums text-on-surface">{money.format(total)}</p>
               </div>
               {items.map((item, index) => {
                 const material = materials.find((row) => row.id === item.materialId);
                 const complete = Boolean(item.materialId && item.quantity > 0 && item.unitCost >= 0);
                 return (
-                  <div key={item.key} className="overflow-hidden rounded-2xl bg-surface-container-low ring-1 ring-outline-variant/10">
-                    <button type="button" onClick={() => setEditingKey((current) => current === item.key ? null : item.key)} className="flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/30" aria-expanded={editingKey === item.key}>
-                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${complete ? "bg-primary" : "bg-warning"}`} />
-                      <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold">{material?.name ?? `Material ${index + 1}`}</span><span className="mt-0.5 block text-[10px] text-on-surface-variant">{complete ? `${item.quantity.toLocaleString("id-ID")} ${material?.unit ?? "unit"} × ${money.format(item.unitCost)}` : "Lengkapi material, jumlah, dan harga"}</span></span>
-                      <span className="shrink-0 text-right"><span className="block text-xs font-bold tabular-nums">{money.format(item.quantity * item.unitCost)}</span><ChevronDown className={`ml-auto mt-1 h-3.5 w-3.5 text-on-surface-variant ${editingKey === item.key ? "rotate-180" : ""}`} aria-hidden="true" /></span>
+                  <div key={item.key} className="overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+                    <button type="button" onClick={() => setEditingKey((current) => current === item.key ? null : item.key)} className="flex min-h-[68px] w-full items-center gap-3 px-3.5 py-2.5 text-left outline-none transition-colors active:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/25" aria-expanded={editingKey === item.key}>
+                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${complete ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"}`} aria-hidden="true">
+                        <span className="material-symbols-outlined text-[18px] leading-none">{complete ? "check" : "inventory_2"}</span>
+                      </span>
+                      <span className="grid min-w-0 flex-1 gap-0.5">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="truncate text-xs font-bold leading-[1.15]">{material?.name ?? `Material ${index + 1}`}</span>
+                          <span className={`shrink-0 text-[9px] font-bold leading-none ${complete ? "text-primary" : "text-warning"}`}>{complete ? "Lengkap" : "Lengkapi"}</span>
+                        </span>
+                        <span className="truncate text-[10px] leading-[1.25] text-on-surface-variant">{complete ? `${item.quantity.toLocaleString("id-ID")} ${material?.unit ?? "unit"} × ${money.format(item.unitCost)}` : "Pilih material, jumlah, dan harga"}</span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <span className="font-mono text-xs font-bold tabular-nums">{money.format(item.quantity * item.unitCost)}</span>
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant">
+                          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${editingKey === item.key ? "rotate-180" : ""}`} aria-hidden="true" />
+                        </span>
+                      </span>
                     </button>
                     {editingKey === item.key ? (
-                      <div className="space-y-2 border-t border-outline-variant/15 bg-surface px-3 pb-3 pt-3">
+                      <div className="space-y-2.5 border-t border-outline-variant/15 bg-surface-container-low/65 p-3">
                         <SheetSelect label="Material" value={item.materialId} options={materialOptions} onChange={(value) => updateItem(item.key, { materialId: value, projectRapItemId: "" })} placeholder="Pilih material" required />
                         <SheetSelect label="Tautan RAP" optional value={item.projectRapItemId} options={[{ value: "", label: "Tanpa tautan RAP" }, ...(selectedProject?.rapItems?.filter((row) => row.materialId === item.materialId).map((row) => ({ value: row.id, label: row.name, description: row.area })) ?? [])]} onChange={(value) => updateItem(item.key, { projectRapItemId: value })} placeholder="Tanpa tautan RAP" />
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2"><FormField label={material?.unit ? `Jumlah (${material.unit})` : "Jumlah"}><QuantityStepper value={item.quantity} min={0} step={1} onChange={(value) => updateItem(item.key, { quantity: Number(value) })} /></FormField><FormField label="Harga per unit"><MoneyInput value={item.unitCost} showPreview={false} onChange={(value) => updateItem(item.key, { unitCost: Number(value) })} /></FormField></div>
@@ -283,7 +299,7 @@ export function GoodsReceiptSheet({ projects, locations, materials, inventory, v
                   </div>
                 );
               })}
-              <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => { const item = newItem(); setItems((current) => [...current, item]); setEditingKey(item.key); }} className="min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary ring-1 ring-primary/15">Tambah Material</motion.button>
+              <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => { const item = newItem(); setItems((current) => [...current, item]); setEditingKey(item.key); }} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest text-xs font-bold text-on-surface shadow-[0_5px_16px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"><Plus className="h-4 w-4 text-blue-600" aria-hidden="true" /> Tambah Material</motion.button>
             </section>
             <FormField label="Catatan penerimaan" optional><Textarea rows={3} value={note} onChange={setNote} /></FormField>
           </div>

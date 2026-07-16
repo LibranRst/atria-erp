@@ -2,6 +2,7 @@ import React from "react";
 import { Repeat2, RotateCcw } from "lucide-react";
 
 import { FormField } from "@/components/ui";
+import { useFormPresentation } from "@/components/ui/form-presentation-context";
 import { CARD_PRESETS } from "./constants";
 import type { AccountDraft } from "./types";
 
@@ -14,9 +15,16 @@ function ColorInput({
   readonly value: string;
   readonly onChange: (value: string) => void;
 }): React.JSX.Element {
+  const grouped = useFormPresentation() === "grouped";
   return (
     <FormField label={label}>
-      <label className="flex min-h-12 items-center gap-3 rounded-full border border-outline-variant/35 bg-surface-container-low px-5">
+      <label
+        className={
+          grouped
+            ? "flex min-h-9 items-center gap-3 bg-transparent"
+            : "flex min-h-12 items-center gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15"
+        }
+      >
         <span
           className="h-6 w-6 rounded-full border border-white/70 shadow-sm"
           style={{ backgroundColor: value }}
@@ -29,7 +37,7 @@ function ColorInput({
           type="color"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="h-8 w-8 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0"
+          className="h-8 w-8 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
           aria-label={label}
         />
       </label>
@@ -51,24 +59,48 @@ export function ColorEditor({
   return (
     <section className="space-y-3">
       <div
-        className={`min-h-[112px] rounded-[28px] p-4 shadow-[0_14px_34px_rgba(17,17,17,0.05)] ${
+        className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 shadow-[0_14px_34px_rgba(17,17,17,0.08)] ${
           draft.cardTextColor === "dark" ? "text-[#141414]" : "text-white"
         }`}
         style={{
           backgroundImage: `linear-gradient(135deg, ${draft.cardColorFrom}, ${draft.cardColorTo})`,
         }}
       >
-        <p className="text-[9px] font-bold uppercase tracking-[0.16em] opacity-70">
-          Preview
-        </p>
-        <h3 className="mt-1 truncate text-base font-black">
-          {draft.name || "Nama rekening"}
-        </h3>
-        <div className="mt-8 flex items-end justify-between gap-3">
-          <p className="font-mono text-xs font-bold opacity-80">
+        <span
+          className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-white/[0.12] blur-2xl"
+          aria-hidden="true"
+        />
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-semibold leading-[1.15]">
+              {draft.name || "Nama rekening"}
+            </h3>
+            <p className="mt-1 truncate text-[10px] font-medium uppercase tracking-[0.08em] opacity-65">
+              {draft.bankName || "Nama bank"}
+            </p>
+          </div>
+          <span
+            className="material-symbols-outlined text-[23px] opacity-65"
+            aria-hidden="true"
+          >
+            contactless
+          </span>
+        </div>
+        <div className="relative mt-auto">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.13em] opacity-60">
+            Saldo tersedia
+          </p>
+          <p className="mt-1.5 whitespace-nowrap font-mono text-lg font-bold tabular-nums">
+            Rp 0
+          </p>
+        </div>
+        <div className="relative mt-4 flex items-center justify-between gap-3">
+          <p className="font-mono text-[11px] font-semibold tracking-[0.16em] opacity-75">
             •••• {(draft.accountNumber || "0000").slice(-4)}
           </p>
-          <p className="font-mono text-sm font-black">Rp 0</p>
+          <p className="min-w-0 max-w-[55%] truncate text-right text-[9px] font-semibold uppercase tracking-[0.1em] opacity-60">
+            {draft.holderName || "Pemegang"}
+          </p>
         </div>
       </div>
 
@@ -131,7 +163,7 @@ export function ColorEditor({
           className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
         >
           <Repeat2 className="h-4 w-4" />
-          Reverse
+          Balik warna
         </button>
         <button
           type="button"
@@ -145,7 +177,7 @@ export function ColorEditor({
           className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
         >
           <RotateCcw className="h-4 w-4" />
-          Reset
+          Atur ulang
         </button>
         <button
           type="button"
@@ -156,7 +188,7 @@ export function ColorEditor({
           }
           className="min-h-12 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
         >
-          Text {draft.cardTextColor === "light" ? "Light" : "Dark"}
+          Teks {draft.cardTextColor === "light" ? "Terang" : "Gelap"}
         </button>
       </div>
     </section>

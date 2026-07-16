@@ -78,19 +78,18 @@ Metrik ini adalah indikator kesehatan keuangan Dekoria secara real-time yang sel
 ## 2. Navigasi Tab Dashboard Finansial
 Gunakan segmented tabs di bagian bawah metrik utama untuk melihat detail operasional:
 
-### Tab A: Ringkasan (Overview)
+### Tab A: Ringkasan
 Ini adalah landing page dashboard Anda:
-*   **Bank Accounts**: Menampilkan daftar rekening aktif beserta saldo masing-masing. Di sini Anda bisa melihat bank mana yang menampung kas terbesar.
-*   **Quick Operations**: Pintasan cepat untuk melakukan aksi-aksi krusial (e.g., pencatatan Goods Receipt, mutasi stok, dsb).
-*   **Risky Projects**: Proyek yang memiliki deviasi pengeluaran tidak sehat. Jika actual cost proyek mendekati atau melebihi anggaran internal, proyek akan terdaftar di sini lengkap dengan status kesehatannya (HEALTHY, WATCH, CRITICAL).
-*   **Recent Activity**: Daftar mutasi kas atau pergerakan stok paling baru di seluruh proyek untuk audit harian yang cepat.
+*   **Posisi Finansial**: Kas, piutang, hutang, kewajiban dekat, budget terpakai, sisa budget, dan margin proyeksi.
+*   **Prioritas**: Maksimal tiga tindakan paling penting sesuai role.
+*   **Preview Risiko**: Project berisiko, jatuh tempo terdekat, perhatian material, dan perubahan kas terbaru.
 
 ### Tab B: Persetujuan (Approvals) — *Khusus Role Owner*
 Semua pengajuan yang membutuhkan persetujuan Owner berkumpul di sini. Owner harus memeriksa detail pengaju sebelum menyetujui:
 *   **Field Claims (Pengeluaran Lapangan)**: Pengajuan kas kecil oleh PM yang nilainya melebihi limit kategori budget atau terjadi overrun. Statusnya harus `VERIFIED` oleh Finance sebelum masuk ke antrean Owner.
 *   **Vendor Payments**: Rencana pembayaran tagihan vendor yang bernilai Rp5.000.000 atau lebih.
 
-### Tab C: Budget Risk
+### Tab C: Budget
 Tab ini memberikan deteksi dini kebocoran budget proyek:
 *   Menganalisis perbandingan antara **Allocated** (budget yang dialokasikan ke kategori seperti Material, Tukang, dsb) dengan **Actual Spent** (pengeluaran riil) dan **Pending** (pengeluaran yang sedang diajukan/diverifikasi).
 *   Membaca status risiko per kategori:
@@ -98,16 +97,21 @@ Tab ini memberikan deteksi dini kebocoran budget proyek:
     *   `WATCH`: Pengeluaran mencapai 80%–100% dari alokasi.
     *   `CRITICAL`: Pengeluaran melebihi 100% dari alokasi (over budget).
 
-### Tab D: Cash Due
+### Tab D: Jatuh Tempo
 Tab ini memetakan arus kas keluar-masuk jangka pendek:
-*   **Overdue Payables**: Tagihan vendor yang sudah melewati tanggal jatuh tempo tetapi belum dibayar.
-*   **Overdue Receivables**: Termin invoice client yang sudah melewati batas waktu bayar tetapi belum ditransfer oleh client.
+*   Dokumen terbuka dikelompokkan menjadi **Terlambat**, **Hari Ini**, **7 Hari ke Depan**, dan **Berikutnya**.
+*   Nominal selalu menggunakan sisa outstanding setelah pembayaran parsial.
 *   Membantu Finance Admin menyusun prioritas pembayaran vendor agar tidak terkena denda atau penahanan material.
 
-### Tab E: Materials
+### Tab E: Rekening
+Menampilkan total kas, cakupan kewajiban dekat, rekening aktif/tidak aktif, saldo, transaksi terakhir, dan status rekonsiliasi. Operasi kas dibuka melalui detail rekening.
+
+### Tab F: Material
 Menampilkan kompilasi masalah pergudangan di seluruh proyek Dekoria:
 *   **RAP Shortage**: Material di dalam RAP proyek yang jumlah kebutuhan fisiknya melebihi stok tersedia di gudang (`needToBuy > 0`), sehingga Anda wajib melakukan pembelian (vendor bill).
 *   **Low Stock Alerts**: Material yang stok fisiknya di gudang berada di bawah batas minimum pengaman (`minimumStock` / buffer).
+
+AI CFO briefing sedang ditunda dan tidak memiliki menu, halaman, atau pipeline aktif pada tahap ini. AI OCR nota tetap tersedia pada flow expense.
 
 ---
 

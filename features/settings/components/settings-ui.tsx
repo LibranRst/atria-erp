@@ -23,16 +23,16 @@ type SettingsHeaderProps = {
 
 export function SettingsHeader({ eyebrow, title, description, role, canManage, action }: SettingsHeaderProps): React.JSX.Element {
   return (
-    <header className="min-w-0 space-y-sm px-1">
-      <div className="flex min-w-0 items-center gap-2">
-        <p className="min-w-0 truncate text-[9px] font-bold uppercase tracking-[0.16em] text-primary">{eyebrow}</p>
-        <span className="shrink-0 rounded-full bg-surface-container px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
-          {canManage === false ? "Read only" : role}
+    <header className="min-w-0 px-1">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/65">{eyebrow}</p>
+          <h1 className="mt-1.5 text-[24px] font-semibold leading-[1.12] tracking-[-0.025em] text-on-surface max-[360px]:text-[22px]">{title}</h1>
+          <p className="mt-1 text-[11px] leading-[1.35] text-on-surface-variant">{description}</p>
+        </div>
+        <span className="mt-0.5 shrink-0 rounded-full bg-surface-container-low px-2.5 py-1.5 text-[8px] font-extrabold uppercase tracking-[0.08em] text-on-surface-variant">
+          {canManage === false ? "Hanya baca" : role}
         </span>
-      </div>
-      <div className="min-w-0">
-        <h1 className="break-words text-[28px] font-semibold leading-8 tracking-tight text-on-surface">{title}</h1>
-        <p className="mt-1.5 text-xs leading-5 text-on-surface-variant">{description}</p>
       </div>
       {action && <div className="w-full">{action}</div>}
     </header>
@@ -57,7 +57,7 @@ export function CompactMetric({ label, value, supportingValue, amount, moneyVari
       {typeof amount === "number" ? (
         <>
           {supportingValue && (
-            <p className={`mt-0.5 break-words font-mono text-[11px] font-bold leading-4 tabular-nums [overflow-wrap:anywhere] ${valueClass}`}>{supportingValue}</p>
+            <p className={`mt-0.5 break-words font-mono text-[11px] font-bold tabular-nums [overflow-wrap:anywhere] ${valueClass}`}>{supportingValue}</p>
           )}
           <MoneyValue
             amount={amount}
@@ -67,10 +67,10 @@ export function CompactMetric({ label, value, supportingValue, amount, moneyVari
           />
         </>
       ) : (
-        <p className={`financial-amount mt-0.5 break-words font-mono text-[13px] font-bold leading-4 tabular-nums [overflow-wrap:anywhere] ${valueClass}`}>{value}</p>
+        <p className={`financial-amount mt-0.5 break-words font-mono text-[13px] font-bold tabular-nums [overflow-wrap:anywhere] ${valueClass}`}>{value}</p>
       )}
       {typeof amount !== "number" && fullValue && fullValue !== value && (
-        <p className="financial-amount mt-1 break-words font-mono text-[9px] leading-3 text-on-surface-variant/75 tabular-nums [overflow-wrap:anywhere]">{fullValue}</p>
+        <p className="financial-amount mt-1 break-words font-mono text-[9px] text-on-surface-variant/75 tabular-nums [overflow-wrap:anywhere]">{fullValue}</p>
       )}
     </div>
   );

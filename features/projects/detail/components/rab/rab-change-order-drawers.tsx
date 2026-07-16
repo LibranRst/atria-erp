@@ -14,6 +14,7 @@ import {
   OperationalFormSheet,
   Textarea,
   TextInput,
+  useSheetPresenceValue,
   ValuePreviewStrip,
 } from "@/components/ui";
 import { MetricGrid } from "@/components/ui/page-primitives";
@@ -199,14 +200,17 @@ export function ChangeOrderDetailDrawer({
   readonly setHistoryDetailId: (id: string | null) => void;
   readonly changeOrders: readonly ChangeOrderHistoryView[];
 }): React.JSX.Element | null {
-  const order = changeOrders.find((item) => item.id === historyDetailId);
+  const selectedOrder = changeOrders.find((item) => item.id === historyDetailId);
+  const { presentedValue: order, open, handleExitComplete } =
+    useSheetPresenceValue(selectedOrder, historyDetailId);
   if (!order) return null;
 
   return (
     <BottomSheet
-      open={Boolean(historyDetailId)}
+      open={open}
       title="Detail Change Order"
       onClose={() => setHistoryDetailId(null)}
+      onExitComplete={handleExitComplete}
     >
       <div className="space-y-sm">
         <MetricGrid>

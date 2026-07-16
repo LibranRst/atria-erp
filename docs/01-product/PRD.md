@@ -42,7 +42,7 @@ Material tracking is attached to the Material category. It must not replace Tuka
 8. Vendor Bills / Purchase Tracking
 9. Owner Finance & Material Dashboard
 10. Client-facing RAB Estimate based on RAP when useful
-11. AI Finance & Material Brief
+11. AI Finance & Material Brief (deferred; no active Dashboard surface or pipeline)
 
 ## 5. Supporting Modules
 Existing project management, users/roles, dashboard, media handling, design/project workflows, sales/leads, content readiness, AI summaries, auth/permissions, reusable components, and layout structure should be preserved when useful. They are supporting modules behind the finance/material-control MVP.
@@ -94,11 +94,11 @@ Existing project management, users/roles, dashboard, media handling, design/proj
 - Project Team: sees material readiness and status for assigned projects without manual chat follow-up.
 
 ## 10. Acceptance Criteria
-- Owner Dashboard shows active project value, total budget, consumed budget, remaining budget, category usage for Tukang/Material/Operasional/Lain-lain/Subcon, margin projection, material shortage, leftover/reusable stock value, vendor bills due, recent expenses, urgent alerts, and AI suggested actions.
+- Owner Dashboard shows active project value, total budget, consumed budget, remaining budget, category usage for Tukang/Material/Operasional/Lain-lain/Subcon, margin projection, material shortage, leftover/reusable stock value, vendor bills due, recent cash activity, and urgent actions.
 - Project Budget Detail shows approved RAB value, internal budget, category budget cards, allocated budget, actual spend, remaining budget, used percentage, category risk, RAP planned material cost, paid/unpaid cost, material usage, projected margin, and budget health.
 - Project Detail shows RAP Material Plan for Material, Tukang Work Packages for Tukang, and Subcon Packages for Subcon; Operasional and Lain-lain remain fast expense categories.
 - Client Estimate / Quotation generation supports selected internal sources plus manual lines and does not expose internal package notes, stock, margin formula, or vendor notes.
 - RAP shows area/room, required quantity, buffer, total needed, available stock, reserved stock, need to buy, estimated unit cost, estimated total cost, source, linked material, and linked expense/stock movement when available.
 - Material Inventory shows name, category, spec, brand/code/color, unit, current stock, reserved stock, available stock, minimum/buffer, average cost, last purchase price, location, and status.
 - Expense Tracker supports project, category, description, vendor, amount, quantity, unit cost, status, payment date, receipt/proof, linked material, linked RAP item, and linked stock movement.
-- AI Brief summarizes category budget usage, margin risk, material shortage, overbudget projects, unusual material costs, leftover/reuse opportunities, vendor/payment issues, and suggested owner actions in simple Bahasa Indonesia.
+- AI CFO/financial briefing is deferred until the core ERP dashboard and operational flows are stable. The current Dashboard contains no AI briefing entry point or generated analysis.

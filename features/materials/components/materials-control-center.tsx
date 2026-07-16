@@ -11,7 +11,6 @@ import { GoodsReceiptSheet } from "./goods-receipt-sheet";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmationSheet, Textarea } from "@/components/ui";
 import { PageHeader } from "@/components/ui/page-primitives";
-import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import { MaterialDetail } from "@/features/materials/components/material-operation-sheets";
 import {
   EmergencyAdjustSheet,
@@ -29,8 +28,8 @@ import {
 import { useMaterialControlDerivedData } from "@/features/materials/components/use-material-control-derived-data";
 import { useMaterialControlOperations } from "@/features/materials/components/use-material-control-operations";
 import { MaterialSuccessSheet } from "@/features/materials/components/material-form-patterns";
+import { MaterialTabsNavigation } from "@/features/materials/components/material-tabs-navigation";
 import {
-  materialTabs,
   toMaterialTab,
   type MaterialTab,
   type WarehouseAction,
@@ -157,46 +156,33 @@ export function MaterialsControlCenter({
       Number(quantity) > 0 &&
       note.trim().length >= (action === "WASTE" ? 10 : 3),
   );
+  const shortageCount = data.shortages.filter((row) => row.needToBuy > 0).length;
 
-  return <section className="space-y-lg pb-8 select-none">
-    <header className="space-y-sm">
+  return <section className="space-y-lg pb-8 select-none max-[430px]:space-y-5 max-[430px]:pb-6">
+    <header className="space-y-2 px-1">
       <PageHeader
-        eyebrow="Material Control"
-        title="Material & Stock"
-        subtitle="Inventory aktual, kebutuhan project, penerimaan, perpindahan, dan audit stock."
+        eyebrow="Kontrol material"
+        title="Material & Stok"
+        subtitle="Posisi stok, kebutuhan project, dan aktivitas gudang."
         action={
           <Badge status={data.capabilities.canOperate ? "PRIMARY" : "DRAFT"}>
-            {data.capabilities.canOperate ? data.roleName : "READ ONLY"}
+            {data.capabilities.canOperate ? roleLabel(data.roleName) : "HANYA LIHAT"}
           </Badge>
         }
       />
       {message && (
-        <div className="rounded-[28px] border border-primary/10 bg-primary/5 px-4 py-3 text-xs font-semibold leading-5 text-primary">
-          {message}
+        <div className="flex min-h-10 items-center gap-2 px-1 text-[10px] font-semibold leading-[1.3] text-primary" role="status">
+          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">info</span>
+          <span className="min-w-0 flex-1">{message}</span>
         </div>
       )}
     </header>
 
-    <SegmentedTabs
+    <MaterialTabsNavigation
       value={tab}
       onChange={selectTab}
-      ariaLabel="Material control materialTabs"
-      scrollable
-      options={materialTabs.map((item) => ({
-        value: item.id,
-        label: item.label,
-        icon: (
-          <span className="material-symbols-outlined text-[16px]">
-            {item.id === "overview"
-              ? "dashboard"
-              : item.id === "inventory"
-                ? "inventory_2"
-                : item.id === "needs"
-                  ? "assignment_late"
-                  : "history"}
-          </span>
-        ),
-      }))}
+      shortageCount={shortageCount}
+      attentionCount={lowCount}
     />
 
     {tab === "overview" && (
@@ -208,6 +194,7 @@ export function MaterialsControlCenter({
         pendingApprovals={pendingApprovals}
         movements={movements}
         onDecision={setDecision}
+        onNavigate={selectTab}
       />
     )}
 
@@ -373,10 +360,10 @@ export function MaterialsControlCenter({
       open={Boolean(decision)}
       title={
         decision?.type.includes("RECEIPT")
-          ? "Keputusan Reversal Penerimaan"
-          : "Keputusan Stock Opname"
+          ? "Keputusan pembatalan penerimaan"
+          : "Keputusan stock opname"
       }
-      description="Aksi approval/reversal akan dicatat permanen di audit log."
+      description="Keputusan akan dicatat permanen di audit log."
       confirmLabel={
         decision?.type.includes("REJECT")
           ? "Tolak"
@@ -410,4 +397,10 @@ export function MaterialsControlCenter({
     </ConfirmationSheet>
     <MaterialSuccessSheet success={success} onClose={() => setSuccess(null)} />
   </section>;
+}
+
+function roleLabel(roleName: string): string {
+  if (roleName === "FINANCE_ADMIN") return "FINANCE";
+  if (roleName === "PURCHASING") return "PURCHASING";
+  return "OWNER";
 }

@@ -7,7 +7,6 @@ import type {
   SettingsHubOverview,
   SettingsOverview,
 } from "@/app/actions/settings/system";
-import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import {
   updateBrowserUrl,
   useBrowserUrlSearchParam,
@@ -17,10 +16,10 @@ import { CategorySettingsManager } from "./category-settings-manager";
 import { LibrarySettingsManager } from "./library-settings-manager";
 import { MaterialSettingsManager } from "./material-settings-manager";
 import { SettingsHub } from "./settings-hub";
-import { SettingsHeader, SettingsNotice } from "./settings-ui";
+import { SettingsNavigation } from "./settings-navigation";
+import { SettingsHeader } from "./settings-ui";
 import {
   parseSettingsTab,
-  SETTINGS_TABS,
   settingsTabUrl,
   type SettingsTab,
 } from "./settings-tabs-config";
@@ -29,13 +28,6 @@ type SettingsDashboardProps = {
   readonly overview: SettingsOverview;
   readonly pricingTemplates: readonly PricingTemplateRow[];
   readonly initialTab?: SettingsTab;
-};
-
-type SettingsHeaderCopy = {
-  readonly eyebrow: string;
-  readonly title: string;
-  readonly description: string;
-  readonly canManageKey?: keyof SettingsOverview["permissions"];
 };
 
 function toHubOverview(overview: SettingsOverview): SettingsHubOverview {
@@ -61,54 +53,6 @@ function toHubOverview(overview: SettingsOverview): SettingsHubOverview {
   };
 }
 
-function getHeaderCopy(tab: SettingsTab): SettingsHeaderCopy {
-  if (tab === "budget") {
-    return {
-      eyebrow: "Default finansial",
-      title: "Alokasi Budget",
-      description:
-        "Rasio kategori memakai Budget Internal. Buffer dan margin kotor dihitung terpisah.",
-      canManageKey: "canManageBudgetSettings",
-    };
-  }
-
-  if (tab === "categories") {
-    return {
-      eyebrow: "Kategori baku",
-      title: "Kategori Pengeluaran",
-      description:
-        "Lima kelompok biaya yang menjaga budget dan laporan tetap konsisten.",
-      canManageKey: "canManageExpenseCategories",
-    };
-  }
-
-  if (tab === "library") {
-    return {
-      eyebrow: "Template proyek berulang",
-      title: "Library Item & Harga",
-      description:
-        "Template untuk RAP, paket kerja, Subcon, dan baris RAB. Harga berasal dari rincian biaya serta target margin kotor yang terlihat.",
-      canManageKey: "canManageItemLibrary",
-    };
-  }
-
-  if (tab === "materials") {
-    return {
-      eyebrow: "Identitas & default material",
-      title: "Material Master",
-      description:
-        "Identitas material dan default inventori. Pergerakan stok tetap dilakukan di Material & Stok.",
-      canManageKey: "canManageMaterialSettings",
-    };
-  }
-
-  return {
-    eyebrow: "Pusat kontrol",
-    title: "Pengaturan ERP",
-    description: "Default budget dan master data untuk alur proyek baru.",
-  };
-}
-
 export function SettingsDashboard({
   initialTab = "overview",
   overview,
@@ -124,12 +68,6 @@ export function SettingsDashboard({
   function changeTab(tab: SettingsTab): void {
     updateBrowserUrl(settingsTabUrl(tab), "replace");
   }
-
-  const headerCopy = getHeaderCopy(activeTab);
-  const canManage =
-    headerCopy.canManageKey === undefined
-      ? undefined
-      : overview.permissions[headerCopy.canManageKey];
 
   let content: React.JSX.Element;
 
@@ -184,32 +122,15 @@ export function SettingsDashboard({
   }
 
   return (
-    <section className="min-w-0 space-y-md">
+    <section className="min-w-0 space-y-lg pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
       <SettingsHeader
-        eyebrow={headerCopy.eyebrow}
-        title={headerCopy.title}
-        description={headerCopy.description}
+        eyebrow="Pusat kontrol"
+        title="Pengaturan ERP"
+        description="Default finansial dan master data untuk alur proyek berikutnya."
         role={overview.roleName}
-        canManage={canManage}
       />
-      <SegmentedTabs
-        value={activeTab}
-        onChange={changeTab}
-        ariaLabel="Settings modules"
-        scrollable
-        options={SETTINGS_TABS.map((module) => {
-          const Icon = module.icon;
-          return {
-            value: module.value,
-            label: module.label,
-            icon: <Icon className="h-4 w-4" aria-hidden="true" />,
-          };
-        })}
-      />
-      <div className="min-w-0 space-y-md">
-        <SettingsNotice />
-        {content}
-      </div>
+      <SettingsNavigation value={activeTab} onChange={changeTab} />
+      <div className="min-w-0">{content}</div>
     </section>
   );
 }

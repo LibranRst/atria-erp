@@ -13,7 +13,9 @@ import {
   ProjectIdentityHeader,
   ProjectOverview,
 } from "./overview/project-overview";
-import { SegmentedTabs } from "@/components/ui/segmented-tabs";
+import {
+  ProjectDetailNavigation,
+} from "./project-detail-navigation";
 import {
   LockedTabState,
   RabPrerequisiteState,
@@ -21,7 +23,6 @@ import {
 import { StockControlPanel } from "./stock/stock-control-panel";
 import { ProfitabilityPanel } from "./overview/profitability-panel";
 import {
-  TABS,
   toTabId,
   type ProjectTabsProps,
   type TabId,
@@ -59,6 +60,11 @@ export function ProjectTabs({
   const isLocked =
     !projectBudgetDashboard || projectBudgetDashboard.status !== "APPROVED";
   const { setProjectState } = useProjectState();
+  const contentRef = React.useRef<HTMLDivElement | null>(null);
+  const pendingScrollPositionRef = React.useRef<number | null>(null);
+  const [contentMinHeight, setContentMinHeight] = React.useState<number | null>(
+    null,
+  );
 
   React.useEffect(() => {
     setProjectState({
@@ -74,6 +80,27 @@ export function ProjectTabs({
   }, [project.id, isLocked, setProjectState]);
 
   const activeTab = toTabId(tabParam, isLocked);
+
+  React.useLayoutEffect(() => {
+    const pendingScrollPosition = pendingScrollPositionRef.current;
+    if (pendingScrollPosition === null) return;
+    pendingScrollPositionRef.current = null;
+    window.scrollTo({ top: pendingScrollPosition, behavior: "auto" });
+  }, [activeTab]);
+
+  React.useEffect(() => {
+    if (contentMinHeight === null) return;
+
+    const releasePreservedHeight = (): void => {
+      if (window.scrollY <= 80) setContentMinHeight(null);
+    };
+
+    window.addEventListener("scroll", releasePreservedHeight, {
+      passive: true,
+    });
+    return () =>
+      window.removeEventListener("scroll", releasePreservedHeight);
+  }, [contentMinHeight]);
 
   const health = resolveEffectiveProjectHealth({
     storedHealth: project.financialHealth,
@@ -118,10 +145,23 @@ export function ProjectTabs({
     materialMasterCatalog,
   });
 
-  const isTabLocked = (tabId: TabId): boolean =>
-    isLocked && tabId !== "overview" && tabId !== "rab" && tabId !== "rap";
-
   function selectProjectTab(tabId: TabId): void {
+    if (tabId === activeTab) return;
+    const currentScrollY = window.scrollY;
+    const currentContentRect = contentRef.current?.getBoundingClientRect();
+    if (currentScrollY > 80 && currentContentRect) {
+      const contentTop = currentContentRect.top + currentScrollY;
+      const viewportRequiredHeight = Math.max(
+        0,
+        currentScrollY + window.innerHeight - contentTop,
+      );
+      setContentMinHeight((current) =>
+        Math.max(current ?? 0, currentContentRect.height, viewportRequiredHeight),
+      );
+    } else {
+      setContentMinHeight(null);
+    }
+    pendingScrollPositionRef.current = currentScrollY;
     const defaultTab = isLocked ? "rap" : "overview";
     const params = new URLSearchParams(window.location.search);
     if (tabId === defaultTab) params.delete("tab");
@@ -141,27 +181,21 @@ export function ProjectTabs({
         healthReasons={health.healthReasons}
       />
 
-      <SegmentedTabs
-        value={activeTab}
-        onChange={selectProjectTab}
-        ariaLabel="Project detail tabs"
-        scrollable
-        options={TABS.map((tab) => {
-          const locked = isTabLocked(tab.id);
-          return {
-            value: tab.id,
-            label: tab.label,
-            icon: (
-              <span className="material-symbols-outlined text-[16px]">
-                {locked ? "lock" : tab.icon}
-              </span>
-            ),
-          };
-        })}
+      <ProjectDetailNavigation
+        activeTab={activeTab}
+        isLocked={isLocked}
+        onTabChange={selectProjectTab}
       />
 
-      {/* Tab Contents */}
-      <div className="min-h-[400px] transition-all duration-200">
+      <div
+        ref={contentRef}
+        className="min-h-[400px] [overflow-anchor:none]"
+        style={
+          contentMinHeight === null
+            ? undefined
+            : { minHeight: `${Math.max(400, contentMinHeight)}px` }
+        }
+      >
         {activeTab === "overview" && (
           <ProjectOverview
             budget={projectBudgetDashboard}
@@ -232,7 +266,7 @@ export function ProjectTabs({
         {activeTab === "expenses" &&
           (isLocked ? (
             <LockedTabState
-              tabLabel="Expenses"
+              tabLabel="Pengeluaran"
               actionLabel={nextSetupLabel}
               actionIcon={nextSetupIcon}
               onAction={() => selectProjectTab(nextSetupTab)}
@@ -255,7 +289,7 @@ export function ProjectTabs({
         {activeTab === "payments" &&
           (isLocked ? (
             <LockedTabState
-              tabLabel="Payments"
+              tabLabel="Pembayaran"
               actionLabel={nextSetupLabel}
               actionIcon={nextSetupIcon}
               onAction={() => selectProjectTab(nextSetupTab)}

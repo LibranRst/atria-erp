@@ -36,7 +36,7 @@ export function PackageSetupContent({
             type="button"
             onClick={() => onSkip(false)}
             disabled={isPending}
-            className="mt-3 min-h-11 w-full rounded-full bg-white text-xs font-bold text-primary"
+            className="mt-3 min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary"
           >
             Buka Kembali Scope
           </button>
@@ -93,7 +93,7 @@ export function PackageSetupContent({
             type="button"
             onClick={onAdd}
             disabled={isPending}
-            className="min-h-11 rounded-full bg-primary text-xs font-bold text-on-primary"
+            className="min-h-12 rounded-full bg-primary text-xs font-bold text-on-primary"
           >
             Tambah Package
           </button>
@@ -102,7 +102,7 @@ export function PackageSetupContent({
               type="button"
               onClick={() => onSkip(true)}
               disabled={isPending}
-              className="min-h-11 rounded-full bg-white text-xs font-bold text-on-surface-variant ring-1 ring-outline-variant/20"
+              className="min-h-12 rounded-full bg-white text-xs font-bold text-on-surface-variant ring-1 ring-outline-variant/20"
             >
               Tidak Digunakan
             </button>

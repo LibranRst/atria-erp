@@ -4,6 +4,7 @@ import { getPricingTemplates } from "@/app/actions/settings/pricing-library";
 import { getSettingsOverview } from "@/app/actions/settings/system";
 import { SettingsDashboard } from "@/features/settings/components/settings-dashboard";
 import type { SettingsTab } from "@/features/settings/components/settings-tabs-config";
+import { PageState } from "@/components/ui";
 
 type SettingsPageContentProps = {
   readonly initialTab?: SettingsTab;
@@ -19,19 +20,11 @@ export async function SettingsPageContent({
 
   if (!result.success) {
     if (result.error.code === "UNAUTHORIZED") redirect("/login");
-    return (
-      <p className="rounded-2xl border border-error/30 bg-error-container/10 p-4 text-sm text-error">
-        {result.error.message}
-      </p>
-    );
+    return <PageState kind={result.error.code === "FORBIDDEN" ? "restricted" : "error"} title={result.error.code === "FORBIDDEN" ? "Akses pengaturan dibatasi" : "Pengaturan belum dapat dimuat"} description={result.error.message} compact />;
   }
 
   if (!templates.success) {
-    return (
-      <p className="rounded-2xl border border-error/30 bg-error-container/10 p-4 text-sm text-error">
-        {templates.error.message}
-      </p>
-    );
+    return <PageState kind="error" title="Library harga belum dapat dimuat" description={templates.error.message} compact />;
   }
 
   return (

@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 
 import { BottomSheet } from "@/components/ui";
-import { formatStatus } from "@/components/ui/badge";
 import {
   projectHealthLabel,
   projectHealthReasonLabel,
@@ -54,7 +53,7 @@ export function ProjectIdentityHeader({
 
   return (
     <>
-      <section className="overflow-hidden rounded-[28px] border border-outline-variant/15 bg-primary shadow-[0_14px_34px_rgba(17,17,17,0.08)]">
+      <section className="overflow-hidden rounded-[28px] bg-primary shadow-[0_16px_38px_rgba(17,17,17,0.11)] ring-1 ring-black/[0.04]">
         <div className="relative aspect-square overflow-hidden bg-primary">
           {showCover && project.coverImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -76,7 +75,7 @@ export function ProjectIdentityHeader({
           <button
             type="button"
             onClick={() => setDetailOpen(true)}
-            className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/55 text-white shadow-[0_6px_18px_rgba(0,0,0,0.18)] outline-none transition-colors hover:bg-black/70 focus-visible:ring-2 focus-visible:ring-white/60 active:bg-black/80"
+            className="absolute right-3 top-3 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/55 text-white shadow-[0_6px_18px_rgba(0,0,0,0.18)] outline-none transition-colors hover:bg-black/70 focus-visible:ring-2 focus-visible:ring-white/60 active:bg-black/80"
             aria-label="Lihat detail proyek"
           >
             <span className="material-symbols-outlined text-[20px]">info</span>
@@ -88,7 +87,7 @@ export function ProjectIdentityHeader({
                 {project.client?.name ?? "Klien belum diisi"}
               </p>
               <div className="flex shrink-0 items-center gap-1.5">
-                <HeroStatusPill label={formatStatus(project.status)} />
+                <HeroStatusPill label={projectStatusLabel(project.status)} />
                 <HeroStatusPill
                   label={projectHealthLabel(effectiveHealth)}
                   health={effectiveHealth}
@@ -123,7 +122,7 @@ export function ProjectIdentityHeader({
         title="Detail Proyek"
         onClose={() => setDetailOpen(false)}
       >
-        <div className="space-y-2">
+        <div className="overflow-hidden rounded-[22px] bg-surface-container-low">
           <DetailRow
             label="Klien"
             value={project.client?.name ?? "Belum diisi"}
@@ -136,7 +135,7 @@ export function ProjectIdentityHeader({
             }
           />
           <DetailRow
-            label="Project Manager"
+            label="Penanggung jawab"
             value={project.projectManager?.name ?? "Belum diisi"}
             detail={project.projectManager?.email ?? undefined}
           />
@@ -172,6 +171,15 @@ export function ProjectIdentityHeader({
   );
 }
 
+function projectStatusLabel(status: string): string {
+  if (status === "ACTIVE") return "Aktif";
+  if (status === "ON_HOLD") return "Ditunda";
+  if (status === "COMPLETED") return "Selesai";
+  if (status === "CANCELLED") return "Dibatalkan";
+  if (status === "DRAFT") return "Draf";
+  return status.replaceAll("_", " ");
+}
+
 function HeroStatusPill({
   label,
   health,
@@ -205,11 +213,7 @@ function ProjectCoverFallback({
 }): React.JSX.Element {
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-primary text-on-primary">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.07)_1px,transparent_1px)] bg-[size:24px_24px]" />
-      <span className="absolute text-[42px] font-bold uppercase tracking-[0.18em] text-white/[0.035]">
-        Project
-      </span>
-      <span className="relative flex h-16 w-16 -translate-y-5 items-center justify-center rounded-[20px] border border-white/10 bg-white/10 text-[30px] font-semibold leading-none text-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
+      <span className="relative flex h-20 w-20 -translate-y-5 items-center justify-center rounded-[24px] bg-white/10 text-[32px] font-semibold leading-none text-white/90 ring-1 ring-white/12 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
         {initial}
       </span>
     </div>

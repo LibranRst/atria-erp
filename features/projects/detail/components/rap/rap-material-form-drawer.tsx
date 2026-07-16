@@ -91,7 +91,7 @@ export function RapMaterialFormDrawer({
             helper="Gunakan data tersimpan untuk mempercepat input, atau isi manual bila material belum tersedia."
           >
             {!editingRapItemId && (
-              <div className="space-y-xs">
+              <div>
                 <SheetSelect
                   label="Gunakan template Library"
                   value={rapForm.templateId}
@@ -113,7 +113,7 @@ export function RapMaterialFormDrawer({
                       })),
                   ]}
                 />
-                <p className="text-[10px] leading-4 text-on-surface-variant">
+                <p className="px-4 pb-3 pt-1 text-[10px] leading-4 text-on-surface-variant">
                   Biaya dan rekomendasi harga klien berasal dari rincian Library,
                   lalu disimpan sebagai snapshot proyek.
                 </p>
@@ -140,7 +140,7 @@ export function RapMaterialFormDrawer({
             title="2 · Identitas & penggunaan"
             helper="Nama dan area akan menjadi konteks utama saat item muncul di daftar RAP."
           >
-            <div className="grid grid-cols-1 gap-sm sm:grid-cols-2">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
               <ComboboxField
                 label="Area / Ruangan"
                 value={rapForm.area}
@@ -243,14 +243,16 @@ export function RapMaterialFormDrawer({
               />
             </FormField>
 
-            <ValuePreviewStrip
-              lastItemFullWidth
-              items={[
-                { label: "Total kebutuhan", value: `${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit}` },
-                { label: "Perlu dibeli", value: `${formNeedToBuy.toLocaleString("id-ID")} ${rapForm.unit}`, tone: formNeedToBuy > 0 ? "warning" : "success" },
-                { label: "Estimasi biaya", amount: formEstimatedTotal, tone: formEstimatedTotal > 0 ? "success" : "default" },
-              ]}
-            />
+            <div className="p-3">
+              <ValuePreviewStrip
+                lastItemFullWidth
+                items={[
+                  { label: "Total kebutuhan", value: `${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit}` },
+                  { label: "Perlu dibeli", value: `${formNeedToBuy.toLocaleString("id-ID")} ${rapForm.unit}`, tone: formNeedToBuy > 0 ? "warning" : "success" },
+                  { label: "Estimasi biaya", amount: formEstimatedTotal, tone: formEstimatedTotal > 0 ? "success" : "default" },
+                ]}
+              />
+            </div>
           </FormSection>
         </form>
       </div>

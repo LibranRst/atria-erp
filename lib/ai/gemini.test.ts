@@ -4,9 +4,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { ai } from "@/lib/ai/gemini";
 import { processReceipt } from "@/app/actions/ai/process-receipt";
-import { POST as dailyBriefingCron } from "@/app/api/cron/daily-briefing/route";
 import { describe, it, expect, beforeAll, afterAll, mock } from "bun:test";
-import { NextRequest } from "next/server";
 
 // Mock next/headers
 mock.module("next/headers", () => {
@@ -22,7 +20,6 @@ mock.module("next/headers", () => {
 // Simpan method original
 const originalGetSession = (auth.api as unknown as { getSession: unknown }).getSession;
 const originalGenerateContent = ai.models.generateContent;
-let lastDailyBriefingPrompt = "";
 const originalFetch = global.fetch;
 
 // Helper untuk mock sesi pengguna
@@ -58,13 +55,6 @@ function restoreUserSession() {
 }
 
 // Seed data constants
-const OWNER_USER = {
-  id: "11111111-1111-1111-1111-111111111111",
-  roleId: "00000000-0000-0000-0000-000000000001",
-  email: "ronald@dekoria.com",
-  name: "Ronald Wijaya",
-};
-
 const PM_BUDI_USER = {
   id: "33333333-3333-3333-3333-333333333331",
   roleId: "00000000-0000-0000-0000-000000000003",
@@ -121,37 +111,7 @@ async function mockGenerateContent(args: unknown): Promise<{
       };
     }
 
-    lastDailyBriefingPrompt = typeof contents === "string" ? contents : "";
-
-    return {
-      text: JSON.stringify({
-        briefingDate: "2026-06-11",
-        summary: "Ringkasan\nKas perusahaan aman di Rp 1.250.000.000, tetapi ritme pembayaran tetap perlu dijaga karena ada piutang aktif Rp 150.000.000 dan hutang vendor 7 hari ke depan Rp 45.000.000. Risiko utama hari ini ada di budget Material Apartemen Sudirman Suite yang sudah 92%, sehingga margin bisa tertekan kalau ada belanja tambahan tanpa validasi RAP. Secara operasional, approval biaya lapangan Rp 6.200.000 perlu diputuskan agar pekerjaan tidak tertahan. Owner sebaiknya menjaga urutan keputusan: amankan kas masuk, cek risiko budget kategori, lalu baru buka pembayaran atau pembelian material yang benar-benar prioritas.\n\nPoin Penting\n- Cek approval biaya lapangan Rp 6.200.000 dan putuskan bayar atau hold hari ini.\n- Minta Finance follow up piutang Rp 150.000.000 sebelum vendor jatuh tempo.\n- Validasi kebutuhan Material Apartemen Sudirman Suite sebelum menyetujui belanja tambahan.",
-        metrics: {
-          cashBalance: 1250000000.00,
-          receivablesOverdue: 150000000.00,
-          payablesDueSevenDays: 45000000.00,
-        },
-        alerts: [
-          {
-            projectId: "77777777-7777-7777-7777-777777777771",
-            projectName: "Apartemen Sudirman Suite",
-            severity: "WARNING",
-            message: "Penggunaan budget material mencapai 92%.",
-          },
-        ],
-        pendingActions: [
-          {
-            actionType: "APPROVE_COST_CLAIM",
-            referenceId: "88888888-8888-8888-8888-888888888881",
-            description: "Reimbursement PM Lapangan Rp 6.200.000",
-          },
-        ],
-      }),
-      usageMetadata: {
-        totalTokenCount: 350,
-      },
-    };
+    throw new Error(`Unexpected non-OCR Gemini call: ${String(contents)}`);
   }
 
   throw new Error(`Model ${model} tidak dikenali dalam test mock.`);
@@ -258,52 +218,4 @@ describe("Atria ERP AI Layer Integration - TSK-009", () => {
     });
   });
 
-  describe("Daily CFO Briefing Cron Job", () => {
-    it("harus menolak request cron jika authorization token tidak valid", async () => {
-      const req = new NextRequest("http://localhost:3000/api/cron/daily-briefing", {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer invalid-token",
-        },
-      });
-
-      const res = await dailyBriefingCron(req);
-      expect(res.status).toBe(401);
-      const json = await res.json();
-      expect(json.error).toContain("Unauthorized");
-    });
-
-    it("harus menghasilkan CFO briefing harian, menyimpan log di ai_run, dan mengembalikan data analisis", async () => {
-      const req = new NextRequest("http://localhost:3000/api/cron/daily-briefing", {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer local-cron-token",
-        },
-      });
-
-      const res = await dailyBriefingCron(req);
-      expect(res.status).toBe(200);
-
-      const json = await res.json();
-      expect(json.briefingDate).toBe("2026-06-11");
-      expect(json.metrics.cashBalance).toBe(1250000000.00);
-      expect(json.alerts[0].projectName).toBe("Apartemen Sudirman Suite");
-      expect(json.summary).toContain("Ringkasan");
-      expect(json.summary).toContain("Poin Penting");
-      expect(lastDailyBriefingPrompt).toContain("Format summary wajib");
-      expect(lastDailyBriefingPrompt).toContain("satu paragraf ringkasan");
-      expect(lastDailyBriefingPrompt).toContain("Poin Penting");
-
-      // Verifikasi log disimpan ke database
-      const runLog = await db.query.aiRun.findFirst({
-        where: eq(aiRun.runType, "FINANCIAL_BRIEFING"),
-        orderBy: (run, { desc }) => [desc(run.createdAt)],
-      });
-
-      expect(runLog).toBeDefined();
-      expect(runLog!.status).toBe("COMPLETED");
-      expect(runLog!.runById).toBe(OWNER_USER.id);
-      expect(runLog!.tokensUsed).toBe(350);
-    });
-  });
 });

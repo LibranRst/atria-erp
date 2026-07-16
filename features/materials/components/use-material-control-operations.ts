@@ -189,7 +189,7 @@ export function useMaterialControlOperations({
       const label = action === "RESERVE" ? "Reservasi" : action === "USE" ? "Pemakaian" : action === "RETURN" ? "Pengembalian" : "Material terbuang";
       finish(`${label} material berhasil dicatat.`, {
         title: `${label} berhasil dicatat`,
-        description: "Movement stok dan audit trail telah dibuat dalam satu transaksi.",
+        description: "Pergerakan stok dan audit trail telah dibuat dalam satu transaksi.",
         facts: [
           { label: "Project", value: data.projects.find((row) => row.id === projectId)?.name ?? "Project" },
           { label: "Jumlah", value: Number(quantity).toLocaleString("id-ID") },
@@ -219,7 +219,7 @@ export function useMaterialControlOperations({
       }
       finish("Transfer stok berhasil diposting.", {
         title: "Transfer stok berhasil",
-        description: "Movement keluar dan masuk telah diposting pada lokasi yang dipilih.",
+        description: "Pergerakan keluar dan masuk telah diposting pada lokasi yang dipilih.",
         facts: [
           { label: "Nomor", value: documentNumber },
           { label: "Material", value: `${items.length} item` },
@@ -233,14 +233,14 @@ export function useMaterialControlOperations({
     startTransition(async () => {
       const result = await createInventoryLocation({
         name: newLocationName,
-        description: "Operational location created from Material & Stock.",
+        description: "Lokasi operasional dibuat dari halaman Material & Stok.",
       });
       if (!result.success) {
         setMessage(result.error.message);
         toast.error(result.error.message);
         return;
       }
-      const successMsg = "Inventory location dibuat dan material defaults diinisialisasi.";
+      const successMsg = "Lokasi inventori dibuat dan stok awal material disiapkan.";
       setMessage(successMsg);
       toast.success(successMsg);
       closeAction();

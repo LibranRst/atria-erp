@@ -32,7 +32,7 @@ export function Mini({
           className="mt-1"
         />
       ) : (
-        <p className="mt-1 break-words font-mono text-[12px] font-bold leading-4 tabular-nums [overflow-wrap:anywhere]">
+        <p className="mt-1 break-words font-mono text-[12px] font-bold tabular-nums [overflow-wrap:anywhere]">
           {value}
         </p>
       )}
@@ -62,23 +62,23 @@ export function MovementRow({
   readonly row: MaterialMovementView;
 }): React.JSX.Element {
   return (
-    <div className="flex min-h-[56px] items-center gap-3 py-2.5">
+    <div className="flex min-h-[64px] items-center gap-3 py-2.5">
       <span
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${movementIconTone(row)}`}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${movementIconTone(row)}`}
       >
         <span className="material-symbols-outlined text-[16px]">
           {movementIcon(row)}
         </span>
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-xs font-bold">
+      <span className="grid min-w-0 flex-1 gap-1">
+        <span className="block truncate text-[13px] font-bold leading-4">
           {row.materialName}
         </span>
-        <span className="block truncate text-[9px] text-on-surface-variant">
+        <span className="block truncate text-[10px] leading-[1.3] text-on-surface-variant">
           {formatMovementType(row.movementType)} · {row.locationName}
           {row.projectName ? ` · ${row.projectName}` : ""}
         </span>
-        <span className="mt-0.5 block truncate text-[9px] text-on-surface-variant/70">
+        <span className="block truncate text-[9px] leading-3 text-on-surface-variant/65">
           {formatMaterialDate(row.createdAt)} · {row.createdByName}
         </span>
       </span>
@@ -128,14 +128,14 @@ export function ApprovalRow({
   readonly onReject: () => void;
 }): React.JSX.Element {
   return (
-    <div className="rounded-[24px] bg-white p-3 shadow-[0_8px_20px_rgba(17,17,17,0.035)] ring-1 ring-warning/15">
+    <div className="px-3.5 py-3">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-light text-warning">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/[0.09] text-warning ring-1 ring-warning/[0.06]">
           <span className="material-symbols-outlined text-[18px]">priority_high</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-bold">{title}</span>
-          <span className="mt-1 block text-[10px] leading-4 text-on-surface-variant">
+          <span className="block truncate text-xs font-bold leading-4">{title}</span>
+          <span className="mt-0.5 block text-[10px] leading-[1.3] text-on-surface-variant">
             {description}
           </span>
           {typeof amount === "number" && (
@@ -148,20 +148,20 @@ export function ApprovalRow({
           )}
         </span>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
+      <div className="mt-3 grid grid-cols-2 gap-2 pl-12">
         <button
           type="button"
           onClick={onReject}
-          className="min-h-11 rounded-full bg-error-container/20 text-[10px] font-bold text-error transition active:scale-[0.97]"
+          className="min-h-12 rounded-full bg-error-container/20 text-[10px] font-bold text-error transition active:scale-[0.97]"
         >
-          Reject
+          Tolak
         </button>
         <button
           type="button"
           onClick={onApprove}
-          className="min-h-11 rounded-full bg-primary text-[10px] font-bold text-on-primary transition active:scale-[0.97]"
+          className="min-h-12 rounded-full bg-primary text-[10px] font-bold text-on-primary transition active:scale-[0.97]"
         >
-          Approve
+          Setujui
         </button>
       </div>
     </div>

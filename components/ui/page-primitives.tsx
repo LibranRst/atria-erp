@@ -33,7 +33,7 @@ export function PageHeader({
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-1 text-xs leading-5 text-on-surface-variant">
+          <p className="mt-1 text-xs leading-4 text-on-surface-variant">
             {subtitle}
           </p>
         )}
@@ -175,16 +175,16 @@ export function MoneyValue({
   }
 
   return (
-    <span className={`block min-w-0 ${alignClass} ${className}`}>
+    <span className={`money-value-compact block min-w-0 ${alignClass} ${className}`}>
       <span
-        className={`financial-amount block break-words font-mono font-bold tabular-nums [overflow-wrap:anywhere] ${moneyCompactSizeClass(size)} ${valueClass}`}
+        className={`financial-amount block whitespace-nowrap font-mono font-bold tabular-nums ${moneyCompactSizeClass(size)} ${valueClass}`}
         title={fullValue}
       >
         {compactValue}
       </span>
       {compactValue !== fullValue && (
         <span
-          className={`financial-amount mt-1 block break-words font-mono tabular-nums [overflow-wrap:anywhere] ${moneySecondarySizeClass(size)} ${moneySecondaryToneClass(tone)}`}
+          className={`financial-amount money-value-exact mt-1 block font-mono tabular-nums ${moneySecondarySizeClass(size)} ${moneySecondaryToneClass(tone)}`}
         >
           {fullValue}
         </span>

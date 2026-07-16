@@ -14,6 +14,7 @@ import {
   OperationalFormSheet,
   Textarea,
   TextInput,
+  useSheetPresenceValue,
   ValuePreviewStrip,
 } from "@/components/ui";
 import { rabSourceLabel } from "../shared/rap-rab-primitives";
@@ -43,7 +44,9 @@ export function RabItemEditDrawer({
   readonly rabEstimate: RabEstimateView | null;
   readonly canManageRab: boolean;
 }): React.JSX.Element | null {
-  const item = sortedRabItems.find((row) => row.id === rabItemEditorId);
+  const selectedItem = sortedRabItems.find((row) => row.id === rabItemEditorId);
+  const { presentedValue: item, open, handleExitComplete } =
+    useSheetPresenceValue(selectedItem, rabItemEditorId);
   if (!item) return null;
 
   const draft = rabDraftEdits[item.id] ?? item;
@@ -53,7 +56,8 @@ export function RabItemEditDrawer({
 
   return (
     <OperationalFormSheet
-      open={Boolean(rabItemEditorId)}
+      open={open}
+      onExitComplete={handleExitComplete}
       title={editable ? "Edit Item RAB" : "Detail Item RAB"}
       onClose={closeRabItemEditor}
       pending={isPending}

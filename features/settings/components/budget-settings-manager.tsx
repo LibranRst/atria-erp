@@ -11,6 +11,8 @@ import {
 import { SettingsHeader } from "./settings-ui";
 import { ConfirmationModal, FormField, FormRiskNotice, FormSection, MoneyInput, NumericInput, Textarea, TextInput } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { SettingsGroupSurface, SettingsModuleHeader, SettingsStatusLabel } from "./settings-primitives";
+import { MoneyValue } from "@/components/ui/page-primitives";
 
 const fullMoney = (value: number): string =>
   `Rp ${Math.round(value).toLocaleString("id-ID")}`;
@@ -79,7 +81,13 @@ export function BudgetSettingsManager({
 
   return (
     <section className="min-w-0 space-y-lg">
-      {!hideHeader && (
+      {hideHeader ? (
+        <SettingsModuleHeader
+          eyebrow="Default finansial"
+          title="Alokasi Budget"
+          description="Atur hubungan Budget Internal, margin target, pembagian kategori, dan buffer."
+        />
+      ) : (
         <SettingsHeader
           eyebrow="Default finansial"
           title="Alokasi Budget"
@@ -89,14 +97,16 @@ export function BudgetSettingsManager({
         />
       )}
 
-      <FormSection title="1 · Simulasi nilai proyek" helper="Ubah nilai contoh untuk melihat dampak formula. Nilai ini tidak ikut disimpan.">
+      <FormSection title="Simulasi nilai proyek" helper="Nilai contoh membantu membaca dampak formula dan tidak ikut disimpan.">
         <FormField label="Nilai proyek contoh" helper="Hanya untuk simulasi; tidak ikut disimpan."><MoneyInput value={sampleValue} onChange={(value) => setSampleValue(Number(value || 0))} /></FormField>
-        <dl className="divide-y divide-outline-variant/35 rounded-2xl bg-surface-container-low px-4">
-          {[{ label: "Budget internal", value: internalBudget, tone: "text-primary" }, { label: "Margin kotor", value: sampleValue - internalBudget, tone: "text-on-surface" }, { label: "Teralokasi", value: allocated, tone: "text-on-surface" }, { label: "Buffer", value: buffer, tone: "text-warning" }].map((item) => <div key={item.label} className="flex min-h-11 items-center justify-between gap-3 py-2"><dt className="text-[11px] text-on-surface-variant">{item.label}</dt><dd className={`text-xs font-bold tabular-nums ${item.tone}`}>{fullMoney(item.value)}</dd></div>)}
-        </dl>
+        <SettingsGroupSurface>
+          <dl className="divide-y divide-black/[0.055] px-4">
+            {[{ label: "Budget Internal", value: internalBudget, tone: "primary" as const }, { label: "Margin kotor", value: sampleValue - internalBudget, tone: "default" as const }, { label: "Teralokasi", value: allocated, tone: "default" as const }, { label: "Buffer", value: buffer, tone: "warning" as const }].map((item) => <div key={item.label} className="flex min-h-12 items-center justify-between gap-3 py-2.5"><dt className="text-[11px] text-on-surface-variant">{item.label}</dt><dd className="min-w-0"><MoneyValue amount={item.value} variant="compactWithFull" size="xs" align="right" tone={item.tone} /></dd></div>)}
+          </dl>
+        </SettingsGroupSurface>
       </FormSection>
 
-      <FormSection title="2 · Formula proyek baru" helper="Perubahan hanya menjadi default untuk setup berikutnya; proyek aktif tidak berubah otomatis.">
+      <FormSection title="Formula proyek baru" helper="Perubahan menjadi default berikutnya; proyek aktif tidak berubah otomatis.">
         <FormField label="Nama default" htmlFor="budget-default-name">
           <TextInput
             id="budget-default-name"
@@ -133,7 +143,7 @@ export function BudgetSettingsManager({
         </FormField>
       </FormSection>
 
-      <FormSection title="3 · Alokasi kategori" helper="Bagikan Budget Internal ke kategori aktif. Total tidak boleh lebih dari 100%.">
+      <FormSection title="Pembagian kategori" helper="Bagikan Budget Internal ke kategori aktif. Total tidak boleh lebih dari 100%.">
         <div className="flex min-w-0 items-end justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-[17px] font-semibold text-on-surface">
@@ -146,11 +156,9 @@ export function BudgetSettingsManager({
             {percent(allocation)}
           </p>
         </div>
-        <div className="mt-sm h-2 overflow-hidden rounded-full bg-surface-container">
-          <div
-            className={`h-full rounded-full ${overLimit ? "bg-error" : "bg-primary"}`}
-            style={{ width: `${Math.min(100, allocation * 100)}%` }}
-          />
+        <div className="mt-sm flex h-2 overflow-hidden rounded-full bg-surface-container" aria-label={`Teralokasi ${percent(allocation)}, buffer ${percent(Math.max(0, 1 - allocation))}`}>
+          <span className={overLimit ? "bg-error" : "bg-primary"} style={{ width: `${Math.min(100, allocation * 100)}%` }} />
+          {!overLimit ? <span className="bg-primary/18" style={{ width: `${Math.max(0, 100 - allocation * 100)}%` }} /> : null}
         </div>
         <div className="mt-2 flex min-w-0 justify-between gap-3 text-[10px] text-on-surface-variant">
           <span className="min-w-0">Teralokasi {fullMoney(allocated)}</span>
@@ -158,13 +166,14 @@ export function BudgetSettingsManager({
             Buffer {percent(Math.max(0, 1 - allocation))}
           </span>
         </div>
-        <div className="mt-md space-y-2">
+        <SettingsGroupSurface className="mt-md">
+          <div className="divide-y divide-black/[0.055]">
           {setting.categories.map((category, index) => {
             const categoryAmount =
               internalBudget *
               (category.isEnabled ? category.ratioPercentage : 0);
             return (
-              <div key={category.id} className={`min-w-0 rounded-[22px] p-3 ring-1 ${category.isEnabled ? "bg-surface-container-low ring-outline-variant/15" : "bg-surface-container-low/45 ring-outline-variant/10"}`}>
+              <div key={category.id} className={`min-w-0 px-3.5 py-3 ${category.isEnabled ? "bg-white" : "bg-surface-container-low/35"}`}>
                 <div className="flex min-w-0 items-center gap-2.5">
                   <motion.button
                     type="button"
@@ -196,7 +205,7 @@ export function BudgetSettingsManager({
                       {category.code}
                     </p>
                   </div>
-                  <div className="max-w-[42%] shrink-0 text-right"><p className="text-xs font-bold tabular-nums text-on-surface">{fullMoney(categoryAmount)}</p><p className="mt-0.5 text-[9px] text-on-surface-variant">{category.isEnabled ? percent(category.ratioPercentage) : "Nonaktif"}</p></div>
+                  <div className="max-w-[42%] shrink-0 text-right"><MoneyValue amount={categoryAmount} variant="compactWithFull" size="xs" align="right" /><div className="mt-1 flex justify-end"><SettingsStatusLabel label={category.isEnabled ? percent(category.ratioPercentage) : "Nonaktif"} tone={category.isEnabled ? "neutral" : "inactive"} /></div></div>
                 </div>
                 {category.isEnabled ? <div className="relative mt-2">
                   <NumericInput
@@ -223,31 +232,32 @@ export function BudgetSettingsManager({
               </div>
             );
           })}
-        </div>
+          </div>
+        </SettingsGroupSurface>
         {overLimit ? <FormRiskNotice title="Alokasi melebihi 100%" tone="danger">Kurangi rasio kategori sebelum menyimpan default.</FormRiskNotice> : <FormRiskNotice title="Buffer tetap terlihat" tone="success">Sisa {percent(Math.max(0, 1 - allocation))} tidak dialokasikan dan tetap menjadi buffer Budget Internal.</FormRiskNotice>}
       </FormSection>
 
-      <div className="min-w-0 space-y-2 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      {message ? <p className={`rounded-2xl px-3 py-2.5 text-[11px] leading-[1.35] ${overLimit ? "bg-error/[0.07] text-error" : "bg-success/[0.07] text-success"}`}>{message}</p> : null}
+      {canManage && dirty ? <div className="sticky bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-10 min-w-0 rounded-[22px] bg-white/[0.96] p-2 shadow-[0_12px_32px_rgba(17,17,17,0.13)] ring-1 ring-black/[0.04] backdrop-blur-xl">
         <p
           className={`px-1 text-[11px] leading-4 ${overLimit ? "font-bold text-error" : "text-on-surface-variant"}`}
         >
-          {message ??
-            (overLimit
+          {overLimit
               ? "Total kategori melebihi 100%. Kurangi rasio sebelum menyimpan."
-              : `Teralokasi ${percent(allocation)} · Buffer ${percent(Math.max(0, 1 - allocation))}`)}
+              : `Teralokasi ${percent(allocation)} · Buffer ${percent(Math.max(0, 1 - allocation))}`}
         </p>
         <motion.button
           type="button"
-          disabled={!canManage || pending || overLimit || !dirty}
+          disabled={pending || overLimit}
           onClick={() => setConfirmSave(true)}
           whileTap={{ scale: 0.97 }}
           transition={transitionSpringSnappy}
           className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
         >
           <Save className="h-4 w-4" />
-          {pending ? "Menyimpan…" : !dirty ? "Tidak ada perubahan" : canManage ? "Tinjau & Simpan" : "Hanya baca"}
+          {pending ? "Menyimpan…" : "Tinjau perubahan"}
         </motion.button>
-      </div>
+      </div> : null}
       <ConfirmationModal
         open={confirmSave}
         title="Terapkan default budget baru?"

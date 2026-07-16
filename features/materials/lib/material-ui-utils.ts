@@ -103,19 +103,37 @@ export function formatMaterialDate(value: Date): string {
 
 export function formatMovementType(value: string): string {
   const labels: Record<string, string> = {
-    ADJUSTMENT: "Adjustment",
+    ADJUSTMENT: "Penyesuaian",
+    EMERGENCY_ADJUSTMENT: "Penyesuaian darurat",
     GOODS_RECEIPT: "Penerimaan Barang",
-    GOODS_RECEIPT_REVERSAL: "Reversal Penerimaan",
+    GOODS_RECEIPT_REVERSAL: "Pembatalan penerimaan",
     RESERVE: "Reservasi",
     RETURN: "Pengembalian",
-    STOCK_IN: "Stock In",
-    STOCK_OUT: "Stock Out",
-    TRANSFER_IN: "Transfer In",
-    TRANSFER_OUT: "Transfer Out",
+    STOCK_COUNT_ADJUSTMENT: "Penyesuaian stock opname",
+    STOCK_IN: "Stok masuk",
+    STOCK_OUT: "Stok keluar",
+    TRANSFER_IN: "Transfer masuk",
+    TRANSFER_OUT: "Transfer keluar",
     USE: "Pemakaian",
     WASTE: "Material Terbuang",
   };
   return labels[value] ?? value.replaceAll("_", " ");
+}
+
+export function formatMaterialStatus(value: string): string {
+  const labels: Record<string, string> = {
+    AVAILABLE: "Tersedia",
+    LOW_STOCK: "Menipis",
+    OUT_OF_STOCK: "Habis",
+    RESERVED: "Terikat",
+    DRAFT: "Draft",
+    PENDING_APPROVAL: "Menunggu",
+    POSTED: "Selesai",
+    APPROVED: "Disetujui",
+    REJECTED: "Ditolak",
+    REVERSAL_REQUESTED: "Pembatalan diminta",
+  };
+  return labels[value] ?? value.replaceAll("_", " ").toLocaleLowerCase("id-ID");
 }
 
 export function createSimpleItem(): SimpleItem {

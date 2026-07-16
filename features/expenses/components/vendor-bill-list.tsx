@@ -6,8 +6,13 @@ import { useRouter } from "next/navigation";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import { scheduleVendorBillPayment } from "@/app/actions/finance/schedule-vendor-bill";
 import { payVendorBill } from "@/app/actions/finance/pay-vendor-bill";
-import { EmptyState, MetricGrid, MoneyMetricPill, NativeSection } from "@/components/ui/page-primitives";
+import { EmptyState, MoneyValue } from "@/components/ui/page-primitives";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
+import {
+  ExpensesGroupSurface,
+  ExpensesSectionHeader,
+  ExpensesSummarySurface,
+} from "@/features/expenses/components/expenses-primitives";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { toast } from "sonner";
 import { VendorBillCard, VendorPaymentCard } from "@/features/expenses/components/vendor-bill-cards";
@@ -50,6 +55,7 @@ export type {
 } from "@/features/expenses/components/vendor-bill-list-types";
 
 interface VendorBillListProps {
+  readonly leadingContent?: React.ReactNode;
   readonly projectId?: string;
   readonly vendorBills: VendorListBill[];
   readonly vendorPayments: VendorListPayment[];
@@ -60,6 +66,7 @@ interface VendorBillListProps {
 }
 
 export function VendorBillList({
+  leadingContent,
   projectId,
   vendorBills,
   vendorPayments,
@@ -114,6 +121,7 @@ export function VendorBillList({
   const paidAmount = vendorPayments
     .filter((payment) => payment.status === "COMPLETED")
     .reduce((sum, payment) => sum + Number(payment.amountPaid), 0);
+  const openBillCount = vendorBills.filter((bill) => bill.status !== "PAID" && bill.status !== "VOID").length;
 
   const openAddBillForm = React.useCallback((): void => {
     updateUrlSearchParam("new-vendor-bill", "true", "push");
@@ -270,27 +278,42 @@ export function VendorBillList({
   };
 
   return (
-    <div className="space-y-md">
-      <NativeSection
-        eyebrow="Vendor Payables"
-        title="Tagihan Vendor"
-        action={projectId && canCreateVendorBill ? (
+    <div className="space-y-lg max-[430px]:space-y-5">
+      <div className="space-y-3" data-expense-overview-cluster>
+        {leadingContent}
+        <ExpensesSummarySurface
+          ariaLabel="Posisi tagihan vendor"
+          eyebrow="Tagihan vendor"
+          icon="request_quote"
+          status={openBillCount > 0 ? `${openBillCount} tagihan terbuka` : "Tidak ada tagihan terbuka"}
+          statusTone={openBillCount > 0 ? "warning" : "positive"}
+          action={projectId && canCreateVendorBill ? (
             <button
               type="button"
               onClick={openAddBillForm}
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-primary px-4 text-xs font-bold text-on-primary shadow-sm active:scale-95 cursor-pointer"
+              className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#007AFF]/[0.08] px-3 text-[10px] font-semibold text-[#007AFF] outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] active:bg-[#007AFF]/[0.14] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30"
             >
-              <span className="material-symbols-outlined text-[16px]">add_circle</span>
+              <span className="material-symbols-outlined text-[14px]">add</span>
               Tambah
             </button>
-        ) : undefined}
-      >
-        <MetricGrid balanceLastRow className="mt-md">
-          <MoneyMetricPill label="Total" amount={totalBillAmount} />
-          <MoneyMetricPill label="Antrean" amount={scheduledAmount} />
-          <MoneyMetricPill label="Lunas" amount={paidAmount} />
-        </MetricGrid>
-      </NativeSection>
+          ) : undefined}
+        >
+          <div className="min-w-0">
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">Total tagihan tercatat</p>
+            <MoneyValue amount={totalBillAmount} variant="compactWithFull" size="lg" className="mt-1" />
+          </div>
+          <div className="mt-3.5 grid grid-cols-2 divide-x divide-black/[0.055] rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
+            <div className="min-w-0 pr-3">
+              <p className="text-[9px] font-semibold text-on-surface-variant/60">Dalam antrean</p>
+              <MoneyValue amount={scheduledAmount} variant="compactWithFull" size="sm" className="mt-1" />
+            </div>
+            <div className="min-w-0 pl-3 text-right">
+              <p className="text-[9px] font-semibold text-on-surface-variant/60">Sudah dibayar</p>
+              <MoneyValue amount={paidAmount} variant="compactWithFull" size="sm" align="right" className="mt-1" />
+            </div>
+          </div>
+        </ExpensesSummarySurface>
+      </div>
 
       <SegmentedTabs
         value={subTab}
@@ -299,6 +322,7 @@ export function VendorBillList({
           setVisibleLimit(20);
         }}
         ariaLabel="Tampilan tagihan vendor"
+        density="compact"
         options={[
           { value: "BILLS", label: "Tagihan", count: vendorBills.length, icon: <span className="material-symbols-outlined text-[16px]">request_quote</span> },
           { value: "PAYMENTS", label: "Rencana Bayar", count: vendorPayments.length, icon: <span className="material-symbols-outlined text-[16px]">payments</span> },
@@ -306,18 +330,18 @@ export function VendorBillList({
       />
 
       {subTab === "BILLS" && (
-        <div className="space-y-md">
+        <div className="space-y-3">
+          <ExpensesSectionHeader title="Daftar tagihan" meta={`${vendorBills.length} item`} />
           {vendorBills.length === 0 ? (
-            <EmptyState icon="payments" title="Tidak Ada Tagihan" description="Belum ada tagihan pembelian material/vendor yang tercatat." />
+            <ExpensesGroupSurface><EmptyState icon="payments" title="Tidak Ada Tagihan" description="Belum ada tagihan pembelian material/vendor yang tercatat." /></ExpensesGroupSurface>
           ) : (
-            vendorBills.slice(0, visibleLimit).map((bill) => (
-              <VendorBillCard
-                key={bill.id}
-                bill={bill}
-                isOwnerOrFinance={isOwnerOrFinance}
-                onScheduleClick={handleScheduleClick}
-              />
-            ))
+            <ExpensesGroupSurface>
+              <div className="divide-y divide-black/[0.055]">
+                {vendorBills.slice(0, visibleLimit).map((bill) => (
+                  <VendorBillCard key={bill.id} bill={bill} isOwnerOrFinance={isOwnerOrFinance} onScheduleClick={handleScheduleClick} />
+                ))}
+              </div>
+            </ExpensesGroupSurface>
           )}
           {vendorBills.length > visibleLimit ? (
             <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
@@ -326,18 +350,18 @@ export function VendorBillList({
       )}
 
       {subTab === "PAYMENTS" && (
-        <div className="space-y-md">
+        <div className="space-y-3">
+          <ExpensesSectionHeader title="Rencana pembayaran" meta={`${vendorPayments.length} item`} />
           {vendorPayments.length === 0 ? (
-            <EmptyState icon="schedule" title="Tidak Ada Rencana Pembayaran" description="Belum ada rencana atau mutasi pembayaran vendor yang terdaftar." />
+            <ExpensesGroupSurface><EmptyState icon="schedule" title="Tidak Ada Rencana Pembayaran" description="Belum ada rencana atau mutasi pembayaran vendor yang terdaftar." /></ExpensesGroupSurface>
           ) : (
-            vendorPayments.slice(0, visibleLimit).map((payment) => (
-              <VendorPaymentCard
-                key={payment.id}
-                payment={payment}
-                isOwnerOrFinance={isOwnerOrFinance}
-                onDisburseClick={handleDisburseClick}
-              />
-            ))
+            <ExpensesGroupSurface>
+              <div className="divide-y divide-black/[0.055]">
+                {vendorPayments.slice(0, visibleLimit).map((payment) => (
+                  <VendorPaymentCard key={payment.id} payment={payment} isOwnerOrFinance={isOwnerOrFinance} onDisburseClick={handleDisburseClick} />
+                ))}
+              </div>
+            </ExpensesGroupSurface>
           )}
           {vendorPayments.length > visibleLimit ? (
             <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
