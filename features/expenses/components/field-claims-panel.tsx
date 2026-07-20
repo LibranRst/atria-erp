@@ -155,7 +155,7 @@ export function FieldClaimsPanel({
               <button
                 type="button"
                 onClick={() => setVisibleLimit((current) => current + 20)}
-                className="min-h-12 w-full rounded-full bg-surface-container text-xs font-bold text-on-surface"
+                className="min-h-12 w-full rounded-full bg-surface-container text-xs font-bold leading-4 text-on-surface"
               >
                 Tampilkan 20 berikutnya
               </button>
@@ -200,16 +200,16 @@ function FieldClaimsSummary({
         <button
           type="button"
           onClick={onOpenExpenseDrawer}
-          className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#007AFF]/[0.08] px-3 text-[10px] font-semibold text-[#007AFF] outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] active:bg-[#007AFF]/[0.14] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30"
+          className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#007AFF]/[0.08] px-3 text-[10px] font-semibold leading-4 text-[#007AFF] outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] active:bg-[#007AFF]/[0.14] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30"
         >
-          <span className="material-symbols-outlined text-[14px]">add</span>
+          <span className="material-symbols-outlined text-[14px] leading-none" aria-hidden="true">add</span>
           Tambah
         </button>
       ) : undefined}
     >
       <div className="flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[9px] font-semibold text-on-surface-variant/60">Total aktif</p>
+          <p className="text-[9px] font-semibold leading-3 text-on-surface-variant/60">Total aktif</p>
           <MoneyValue amount={activeClaimTotal} variant="compactWithFull" size="lg" className="mt-1" />
         </div>
         <p className="max-w-[145px] text-right text-[10px] leading-4 text-on-surface-variant/70">Dana yang masih berada dalam alur verifikasi hingga pencairan.</p>
@@ -231,8 +231,8 @@ function InboxMetric({
 }): React.JSX.Element {
   return (
     <div className="min-w-0 px-2.5 first:pl-0 last:pr-0">
-      <p className="truncate text-[9px] font-semibold text-on-surface-variant/60">{label}</p>
-      <p className="mt-1 font-mono text-sm font-bold text-on-surface">{value}</p>
+      <p className="truncate text-[9px] font-semibold leading-3 text-on-surface-variant/60">{label}</p>
+      <p className="mt-1 font-mono text-sm font-bold leading-5 text-on-surface">{value}</p>
     </div>
   );
 }

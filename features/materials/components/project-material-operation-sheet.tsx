@@ -5,8 +5,10 @@ import React from "react";
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
   ConfirmationSheet,
+  FieldContextLine,
   FormRiskNotice,
   FormField,
+  FormSection,
   QuantityStepper,
   SheetSelect,
   Textarea,
@@ -16,8 +18,57 @@ import { StockImpactRow } from "@/features/materials/components/material-form-pa
 import { Error } from "@/features/materials/components/material-operation-sheets";
 import {
   formatMaterialQuantity,
+  type ProjectOperation,
   type WarehouseAction,
 } from "@/features/materials/lib/material-ui-utils";
+
+type OperationCopy = {
+  readonly label: string;
+  readonly contextHelper: string;
+  readonly detailHelper: string;
+  readonly noteLabel: string;
+  readonly noteHelper: string;
+  readonly notePlaceholder: string;
+};
+
+const OPERATION_COPY: Record<ProjectOperation, OperationCopy> = {
+  RESERVE: {
+    label: "Reservasi Material",
+    contextHelper: "Tautkan stok ke kebutuhan RAP proyek dan pilih lokasi penyimpanan.",
+    detailHelper: "Reservasi mengurangi stok tersedia tanpa mengubah stok fisik.",
+    noteLabel: "Catatan reservasi",
+    noteHelper: "Jelaskan tujuan reservasi, minimal 3 karakter.",
+    notePlaceholder: "Contoh: Disiapkan untuk pemasangan area utama",
+  },
+  USE: {
+    label: "Pakai Material",
+    contextHelper: "Tautkan pemakaian ke kebutuhan RAP dan lokasi asal yang benar.",
+    detailHelper: "Pemakaian mengurangi stok fisik dan dicatat sebagai biaya proyek.",
+    noteLabel: "Catatan pemakaian",
+    noteHelper: "Jelaskan pemakaian material, minimal 3 karakter.",
+    notePlaceholder: "Contoh: Dipasang di area ruang keluarga",
+  },
+  RETURN: {
+    label: "Kembalikan Sisa",
+    contextHelper: "Pilih kebutuhan RAP dan lokasi penerima sisa material proyek.",
+    detailHelper: "Pengembalian menambah stok fisik dan membalik biaya pemakaian terkait.",
+    noteLabel: "Catatan pengembalian",
+    noteHelper: "Jelaskan asal sisa material, minimal 3 karakter.",
+    notePlaceholder: "Contoh: Sisa pemasangan dikembalikan ke gudang",
+  },
+  WASTE: {
+    label: "Material Terbuang",
+    contextHelper: "Tautkan material terbuang ke RAP dan lokasi stok yang terdampak.",
+    detailHelper: "Stok fisik berkurang permanen dan alasan disimpan pada audit trail.",
+    noteLabel: "Alasan material terbuang",
+    noteHelper: "Wajib spesifik, minimal 10 karakter.",
+    notePlaceholder: "Jelaskan penyebab, kondisi, dan lokasi material terbuang",
+  },
+};
+
+function isProjectOperation(action: WarehouseAction | null): action is ProjectOperation {
+  return action === "RESERVE" || action === "USE" || action === "RETURN" || action === "WASTE";
+}
 
 type ProjectMaterialOperationSheetProps = {
   readonly action: WarehouseAction | null;
@@ -68,27 +119,39 @@ export function ProjectMaterialOperationSheet({
   const [confirmClose, setConfirmClose] = React.useState(false);
   const inventory = selectedMaterial.find((row) => row.locationId === locationId);
   const numericQuantity = Number(quantity || 0);
-  const operationLabels: Record<string, string> = {
-    RESERVE: "Reservasi",
-    USE: "Pemakaian",
-    RETURN: "Pengembalian",
-    WASTE: "Material Terbuang",
-  };
-  const operationLabel = action ? operationLabels[action] ?? action : "Operasi Material";
+  const operation = isProjectOperation(action) ? action : null;
+  const operationCopy = operation ? OPERATION_COPY[operation] : null;
+  const operationLabel = operationCopy?.label ?? "Operasi Material";
   const impactBefore = action === "RESERVE" ? inventory?.availableStock ?? 0 : inventory?.currentStock ?? 0;
   const impactDelta = action === "RETURN" ? numericQuantity : -numericQuantity;
   const impactAfter = impactBefore + impactDelta;
+  const disabledReason = !projectId
+    ? "Pilih proyek yang menerima perubahan stok."
+    : !rapItemId
+      ? "Pilih kebutuhan material pada RAP proyek."
+      : !locationId
+        ? "Pilih lokasi inventori yang terdampak."
+        : numericQuantity <= 0
+          ? "Isi jumlah material lebih dari 0."
+          : note.trim().length < (action === "WASTE" ? 10 : 3)
+            ? action === "WASTE"
+              ? "Alasan material terbuang minimal 10 karakter."
+              : "Catatan operasi minimal 3 karakter."
+            : !valid
+              ? "Periksa kembali detail operasi material."
+              : undefined;
   return (
     <>
     <WorkflowFormSheet
       open={open}
       title={reviewing ? `Tinjau ${operationLabel}` : operationLabel}
       onClose={() => reviewing ? setReviewing(false) : projectId || rapItemId || locationId || quantity || note ? setConfirmClose(true) : onClose()}
-      primaryLabel={reviewing ? `Catat ${operationLabel}` : `Tinjau ${operationLabel}`}
-      secondaryLabel={reviewing ? "Kembali Mengedit" : undefined}
+      primaryLabel={reviewing ? "Catat" : "Tinjau"}
+      secondaryLabel={reviewing ? "Ubah" : undefined}
       pendingLabel="Memproses…"
       pending={pending}
       disabled={!valid}
+      disabledReason={disabledReason}
       danger={action === "WASTE" && reviewing}
       onPrimary={() => {
         if (reviewing) { setReviewing(false); onSubmit(); }
@@ -98,11 +161,13 @@ export function ProjectMaterialOperationSheet({
     >
       {reviewing ? (
         <div className="space-y-md">
-          <div className="rounded-2xl bg-primary/5 px-4 py-3">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-primary">Project dan RAP</p>
-            <p className="mt-1 text-sm font-bold">{projects.find((row) => row.id === projectId)?.name}</p>
-            <p className="mt-0.5 text-xs text-on-surface-variant">{selectedProject?.rapItems.find((row) => row.id === rapItemId)?.name}</p>
-          </div>
+          <FormSection title="Tinjau operasi material" helper="Periksa proyek dan detail operasi sebelum mencatat.">
+            <ReviewFact label="Proyek" value={projects.find((row) => row.id === projectId)?.name ?? "–"} />
+            <ReviewFact label="RAP material" value={selectedProject?.rapItems.find((row) => row.id === rapItemId)?.name ?? "–"} />
+            <ReviewFact label="Lokasi" value={inventory?.locationName ?? "–"} />
+            <ReviewFact label="Jumlah" value={`${formatMaterialQuantity(numericQuantity)} ${inventory?.unit ?? "unit"}`} />
+            {note.trim() && <ReviewFact label="Catatan" value={note} />}
+          </FormSection>
           <StockImpactRow
             label={action === "RESERVE" ? "Stok tersedia" : "Stok fisik"}
             before={impactBefore}
@@ -116,73 +181,107 @@ export function ProjectMaterialOperationSheet({
             tone={action === "WASTE" ? "danger" : action === "USE" ? "warning" : "default"}
           >
             {action === "RESERVE"
-              ? "Stok fisik tidak berubah, tetapi stok tersedia untuk project lain akan berkurang."
+              ? "Stok fisik tidak berubah, tetapi stok tersedia untuk proyek lain akan berkurang."
               : action === "USE"
-                ? "Stok fisik berkurang dan pemakaian ditautkan ke RAP project ini."
+                ? "Stok fisik berkurang dan pemakaian ditautkan ke RAP proyek ini."
                 : action === "RETURN"
-                  ? "Stok fisik bertambah kembali dari pemakaian project ini."
-                  : "Stok fisik berkurang dan alasan audit disimpan pada movement."}
+                  ? "Stok fisik bertambah kembali dari pemakaian proyek ini."
+                  : "Stok fisik berkurang dan alasan audit disimpan pada pergerakan stok."}
           </FormRiskNotice>
-          <div className="rounded-2xl bg-surface-container-low px-4 py-3">
-            <p className="text-[10px] font-bold uppercase text-on-surface-variant">Catatan</p>
-            <p className="mt-1 text-xs leading-5">{note}</p>
-          </div>
         </div>
       ) : (
-      <div className="space-y-sm">
+      <div className="space-y-md">
         {message && <Error text={message} />}
-        <SheetSelect
-          label="Project"
-          value={projectId}
-          onChange={onProjectChange}
-          options={projects.map((row) => ({ value: row.id, label: row.name }))}
-          placeholder="Pilih project"
-        />
-        <SheetSelect
-          label="RAP Material"
-          value={rapItemId}
-          onChange={onRapItemChange}
-          options={
-            selectedProject?.rapItems
-              .filter((row) => row.materialId)
-              .map((row) => ({
-                value: row.id,
-                label: row.name,
-                description: row.area,
-              })) ?? []
-          }
-          placeholder="Pilih RAP item"
-        />
-        <SheetSelect
-          label="Lokasi inventori"
-          value={locationId}
-          onChange={onLocationChange}
-          options={selectedMaterial.map((row) => ({
-            value: row.locationId,
-            label: row.locationName,
-            description: `Tersedia ${formatMaterialQuantity(row.availableStock)} ${row.unit}`,
-          }))}
-          placeholder="Pilih lokasi"
-        />
-        {inventory ? <StockImpactRow label={action === "RESERVE" ? "Stok tersedia" : "Stok fisik"} before={impactBefore} delta={impactDelta} after={impactAfter} reserved={action === "RESERVE" ? undefined : inventory.reservedStock} unit={inventory.unit} /> : null}
-        <FormField label="Jumlah">
-          <QuantityStepper
-            value={quantity}
-            min={0}
-            step={1}
-            onChange={onQuantityChange}
-          />
-        </FormField>
-        <FormField
-          label={action === "WASTE" ? "Catatan audit" : "Catatan"}
-          helper={action === "WASTE" ? "Minimal 10 karakter." : undefined}
+        <FormSection
+          title="Proyek dan material"
+          helper={operationCopy?.contextHelper ?? "Pilih konteks operasi material."}
         >
-          <Textarea rows={3} value={note} onChange={onNoteChange} />
-        </FormField>
+          <SheetSelect
+            label="Proyek"
+            value={projectId}
+            onChange={onProjectChange}
+            options={projects.map((row) => ({ value: row.id, label: row.name }))}
+            placeholder="Pilih proyek"
+            required
+          />
+          <SheetSelect
+            label="RAP material"
+            value={rapItemId}
+            onChange={onRapItemChange}
+            options={
+              selectedProject?.rapItems
+                .filter((row) => row.materialId)
+                .map((row) => ({
+                  value: row.id,
+                  label: row.name,
+                  description: row.area,
+                })) ?? []
+            }
+            placeholder={projectId ? "Pilih kebutuhan material" : "Pilih proyek lebih dulu"}
+            disabled={!projectId}
+            required
+          />
+          <SheetSelect
+            label="Lokasi inventori"
+            value={locationId}
+            onChange={onLocationChange}
+            options={selectedMaterial.map((row) => ({
+              value: row.locationId,
+              label: row.locationName,
+              description: `Tersedia ${formatMaterialQuantity(row.availableStock)} ${row.unit}`,
+              meta: `Fisik ${formatMaterialQuantity(row.currentStock)} · reservasi ${formatMaterialQuantity(row.reservedStock)}`,
+            }))}
+            placeholder={rapItemId ? "Pilih lokasi" : "Pilih RAP material lebih dulu"}
+            disabled={!rapItemId}
+            required
+          />
+        </FormSection>
+        {inventory ? (
+          <FieldContextLine tone={inventory.availableStock <= 0 ? "danger" : "success"}>
+            Fisik {formatMaterialQuantity(inventory.currentStock)} · reservasi {formatMaterialQuantity(inventory.reservedStock)} · tersedia {formatMaterialQuantity(inventory.availableStock)} {inventory.unit}
+          </FieldContextLine>
+        ) : null}
+        {inventory ? <StockImpactRow label={action === "RESERVE" ? "Stok tersedia" : "Stok fisik"} before={impactBefore} delta={impactDelta} after={impactAfter} reserved={action === "RESERVE" ? undefined : inventory.reservedStock} unit={inventory.unit} /> : null}
+        <FormSection
+          title="Jumlah dan catatan"
+          helper={operationCopy?.detailHelper ?? "Lengkapi jumlah dan catatan operasi."}
+        >
+          <FormField label={inventory?.unit ? `Jumlah (${inventory.unit})` : "Jumlah"} required>
+            <QuantityStepper
+              value={quantity}
+              unit={inventory?.unit}
+              min={0}
+              step={1}
+              onChange={onQuantityChange}
+            />
+          </FormField>
+          <FormField
+            label={operationCopy?.noteLabel ?? "Catatan"}
+            helper={operationCopy?.noteHelper}
+            required
+          >
+            <Textarea
+              rows={3}
+              value={note}
+              onChange={onNoteChange}
+              placeholder={operationCopy?.notePlaceholder}
+              required
+            />
+          </FormField>
+        </FormSection>
       </div>
       )}
     </WorkflowFormSheet>
     <ConfirmationSheet open={confirmClose} title="Buang perubahan operasi material?" description="Data yang belum dicatat akan hilang." confirmLabel="Buang Perubahan" danger onClose={() => setConfirmClose(false)} onConfirm={() => { setConfirmClose(false); onClose(); }} />
     </>
+  );
+}
+
+function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+  return (
+    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+      <span className="text-on-surface-variant shrink-0">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
+    </div>
   );
 }

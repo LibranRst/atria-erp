@@ -33,6 +33,8 @@ import {
   useUrlSearchParam,
 } from "@/lib/utils/use-url-search-param";
 import { resolveEffectiveProjectHealth } from "@/lib/project/effective-health";
+import { getProjectActivationReadiness } from "@/lib/project/activation-readiness";
+import { ProjectActivationSheet } from "./project-activation-sheet";
 
 export type {
   ProjectData,
@@ -110,6 +112,14 @@ export function ProjectTabs({
     projectedMarginPercentage: projectBudgetDashboard?.projectedMarginPercentage,
     targetMarginPercentage: projectBudgetDashboard?.targetGrossPercentage,
   });
+  const activationReadiness = getProjectActivationReadiness({
+    projectStatus: project.status,
+    budgetStatus: projectBudgetDashboard?.status,
+    raps: project.raps,
+    rabEstimates: project.rabEstimates,
+  });
+  const canActivateProject =
+    userRole === "OWNER" || userRole === "FINANCE_ADMIN";
 
   const {
     contractValue,
@@ -180,6 +190,13 @@ export function ProjectTabs({
         effectiveHealth={health.effectiveHealth}
         healthReasons={health.healthReasons}
       />
+      <ProjectActivationSheet
+        key={`${project.id}-${project.status}-${activationReadiness.isReady}`}
+        projectId={project.id}
+        projectName={project.name}
+        canActivate={canActivateProject}
+        readiness={activationReadiness}
+      />
 
       <ProjectDetailNavigation
         activeTab={activeTab}
@@ -199,6 +216,7 @@ export function ProjectTabs({
         {activeTab === "overview" && (
           <ProjectOverview
             budget={projectBudgetDashboard}
+            userRole={userRole}
             contractValue={contractValue}
             actions={overviewActions}
             readiness={readiness}

@@ -235,6 +235,18 @@ describe("Atria ERP Server Actions - TSK-007", () => {
       });
       expect(partialInvoice!.status).toBe("PARTIALLY_PAID");
 
+      const overpaymentRes = await recordClientPayment({
+        clientInvoiceId: testInvoice.id,
+        bankAccountId: BCA_ACC_ID,
+        amountPaid: 30000001,
+        paymentDate: new Date(),
+        referenceNumber: "TRF-TEST-OVERPAY",
+      });
+      expect(overpaymentRes.success).toBe(false);
+      if (!overpaymentRes.success) {
+        expect(overpaymentRes.error.code).toBe("VALIDATION_ERROR");
+      }
+
       // Catat Pembayaran Kedua (Pelunasan sisa) senilai Rp 30.000.000,00
       const finalRes = await recordClientPayment({
         clientInvoiceId: testInvoice.id,
@@ -282,9 +294,16 @@ describe("Atria ERP Server Actions - TSK-007", () => {
 
     it("harus mengizinkan Owner membuat invoice secara manual dan menulis audit log", async () => {
       mockUserSession(OWNER_USER);
+      const [invoiceProject] = await db.insert(project).values({
+        name: "Test Manual Invoice Project",
+        clientId: "44444444-4444-4444-4444-444444444441",
+        projectManagerId: PM_BUDI_USER.id,
+        status: "DRAFT",
+        totalContractValue: "100000000.00",
+      }).returning();
       const invoiceNum = `INV/TEST/${Math.floor(1000 + Math.random() * 9000)}`;
       const res = await createClientInvoice({
-        projectId: MENTENG_PROJECT_ID,
+        projectId: invoiceProject.id,
         invoiceNumber: invoiceNum,
         amount: 25000000,
         stage: "AD_HOC",
@@ -300,6 +319,24 @@ describe("Atria ERP Server Actions - TSK-007", () => {
 
         // Clean up
         await db.delete(clientInvoice).where(eq(clientInvoice.id, res.data.id));
+      }
+      await db.delete(project).where(eq(project.id, invoiceProject.id));
+    });
+
+    it("harus menolak total invoice aktif yang melebihi nilai kontrak", async () => {
+      mockUserSession(OWNER_USER);
+      const res = await createClientInvoice({
+        projectId: MENTENG_PROJECT_ID,
+        invoiceNumber: `INV/CAP/${Math.floor(1000 + Math.random() * 9000)}`,
+        amount: 999999999,
+        stage: "AD_HOC",
+        dueDate: new Date(),
+        notes: "Test preventive contract cap",
+      });
+      expect(res.success).toBe(false);
+      if (!res.success) {
+        expect(res.error.code).toBe("VALIDATION_ERROR");
+        expect(res.error.message).toContain("Change Order");
       }
     });
 

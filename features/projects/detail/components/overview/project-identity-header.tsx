@@ -10,6 +10,7 @@ import {
   type EffectiveProjectHealthReason,
 } from "@/lib/project/effective-health";
 import { DetailRow } from "./project-overview-primitives";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
 export type IdentityProject = {
   readonly name: string;
@@ -177,7 +178,7 @@ function projectStatusLabel(status: string): string {
   if (status === "COMPLETED") return "Selesai";
   if (status === "CANCELLED") return "Dibatalkan";
   if (status === "DRAFT") return "Draf";
-  return status.replaceAll("_", " ");
+  return formatBusinessLabel(status);
 }
 
 function HeroStatusPill({

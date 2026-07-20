@@ -14,6 +14,7 @@ import {
   FieldContextLine,
   FormField,
   FormRiskNotice,
+  FormSection,
   MoneyInput,
   QuantityStepper,
   SheetSelect,
@@ -30,7 +31,7 @@ import { createClientId } from "@/lib/utils/client-id";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { updateUrlSearchParam, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 
-type RapOption = { readonly id: string; readonly materialId: string | null; readonly name: string; readonly area: string };
+type RapOption = { readonly id: string; readonly materialId: string | null; readonly name: string; readonly area: string; readonly quantity?: number | null; readonly unitCost?: number | null };
 type ProjectOption = { readonly id: string; readonly name: string; readonly rapItems?: readonly RapOption[] };
 type MaterialOption = { readonly id: string; readonly name: string; readonly unit?: string };
 type Option = { readonly id: string; readonly name: string };
@@ -105,8 +106,13 @@ export function GoodsReceiptSheet({ projects, locations, materials, inventory, v
 
   const closeImmediately = React.useCallback((): void => {
     setOpen(false);
-    if (new URLSearchParams(window.location.search).get("action") === "RECEIVE") updateUrlSearchParam("action", null, "push");
-  }, []);
+    if (new URLSearchParams(window.location.search).get("action") === "RECEIVE") {
+      const params = new URLSearchParams(window.location.search);
+      params.delete("action");
+      const query = params.toString();
+      router.replace(`${window.location.pathname}${query ? `?${query}` : ""}`);
+    }
+  }, [router]);
 
   function requestClose(): void {
     if (reviewing) { setReviewing(false); return; }
@@ -216,8 +222,8 @@ export function GoodsReceiptSheet({ projects, locations, materials, inventory, v
         open={isSheetOpen}
         title={reviewing ? "Tinjau Penerimaan Barang" : "Penerimaan Barang"}
         onClose={requestClose}
-        primaryLabel={reviewing ? "Posting Penerimaan Barang" : "Tinjau Penerimaan"}
-        secondaryLabel={reviewing ? "Kembali Mengedit" : undefined}
+        primaryLabel={reviewing ? "Posting" : "Tinjau"}
+        secondaryLabel={reviewing ? "Ubah" : undefined}
         pendingLabel="Memposting…"
         pending={pending}
         disabled={!valid}
@@ -242,7 +248,13 @@ export function GoodsReceiptSheet({ projects, locations, materials, inventory, v
         ) : (
           <div className="space-y-md">
             {message ? <p className="rounded-2xl bg-error-container/30 p-3 text-xs leading-5 text-error" role="alert">{message}</p> : null}
-            <SheetSelect label="Tagihan vendor" optional value={vendorBillId} options={vendorBillOptions} onChange={changeVendorBill} placeholder="Tanpa tagihan vendor" searchPlaceholder="Cari nomor, vendor, atau project..." />
+            
+            <FormSection title="Sumber & Lokasi" helper="Koneksikan ke tagihan vendor atau project untuk alokasi stok.">
+              <SheetSelect label="Tagihan vendor" optional value={vendorBillId} options={vendorBillOptions} onChange={changeVendorBill} placeholder="Tanpa tagihan vendor" searchPlaceholder="Cari nomor, vendor, atau project..." />
+              <SheetSelect label="Project" value={projectId} options={projectOptions} onChange={changeProject} placeholder="Pilih project" required />
+              <SheetSelect label="Lokasi inventori" value={locationId} options={locationOptions} onChange={setLocationId} placeholder="Pilih lokasi" required />
+            </FormSection>
+
             {selectedVendorBill ? (
               <FieldContextLine tone={selectedVendorBill.materialId ? "success" : "warning"}>
                 {selectedVendorBill.materialId
@@ -250,12 +262,13 @@ export function GoodsReceiptSheet({ projects, locations, materials, inventory, v
                   : "Project, nominal, dan catatan sudah diprefill. Pilih material yang benar sebelum posting."}
               </FieldContextLine>
             ) : null}
-            <SheetSelect label="Project" value={projectId} options={projectOptions} onChange={changeProject} placeholder="Pilih project" required />
-            <SheetSelect label="Lokasi inventori" value={locationId} options={locationOptions} onChange={setLocationId} placeholder="Pilih lokasi" required />
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+
+            <FormSection title="Dokumen Penerimaan" helper="Nomor dan tanggal pencatatan penerimaan fisik.">
               <FormField label="Nomor penerimaan" required><TextInput value={receiptNumber} onChange={setReceiptNumber} /></FormField>
               <DatePickerField label="Tanggal diterima" value={receivedAt} onChange={setReceivedAt} required />
-            </div>
+              <FormField label="Catatan penerimaan" optional><Textarea rows={3} value={note} onChange={setNote} /></FormField>
+            </FormSection>
+
             <section className="space-y-2">
               <div className="flex items-end justify-between gap-3 px-1">
                 <div className="grid min-w-0 gap-0.5">
@@ -290,7 +303,29 @@ export function GoodsReceiptSheet({ projects, locations, materials, inventory, v
                     {editingKey === item.key ? (
                       <div className="space-y-2.5 border-t border-outline-variant/15 bg-surface-container-low/65 p-3">
                         <SheetSelect label="Material" value={item.materialId} options={materialOptions} onChange={(value) => updateItem(item.key, { materialId: value, projectRapItemId: "" })} placeholder="Pilih material" required />
-                        <SheetSelect label="Tautan RAP" optional value={item.projectRapItemId} options={[{ value: "", label: "Tanpa tautan RAP" }, ...(selectedProject?.rapItems?.filter((row) => row.materialId === item.materialId).map((row) => ({ value: row.id, label: row.name, description: row.area })) ?? [])]} onChange={(value) => updateItem(item.key, { projectRapItemId: value })} placeholder="Tanpa tautan RAP" />
+                        <SheetSelect
+                          label="Tautan RAP"
+                          optional
+                          value={item.projectRapItemId}
+                          options={[
+                            { value: "", label: "Tanpa tautan RAP" },
+                            ...(selectedProject?.rapItems
+                              ?.filter((row) => row.materialId === item.materialId)
+                              .map((row) => ({
+                                value: row.id,
+                                label: row.name,
+                                description: row.area,
+                              })) ?? []),
+                          ]}
+                          onChange={(value) => {
+                            const rapItem = selectedProject?.rapItems?.find((row) => row.id === value);
+                            updateItem(item.key, {
+                              projectRapItemId: value,
+                              ...(rapItem ? { quantity: rapItem.quantity ?? 1, unitCost: rapItem.unitCost ?? 0 } : {}),
+                            });
+                          }}
+                          placeholder="Tanpa tautan RAP"
+                        />
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2"><FormField label={material?.unit ? `Jumlah (${material.unit})` : "Jumlah"}><QuantityStepper value={item.quantity} min={0} step={1} onChange={(value) => updateItem(item.key, { quantity: Number(value) })} /></FormField><FormField label="Harga per unit"><MoneyInput value={item.unitCost} showPreview={false} onChange={(value) => updateItem(item.key, { unitCost: Number(value) })} /></FormField></div>
                         <FormField label="Catatan item" optional><Textarea rows={2} value={item.note} onChange={(value) => updateItem(item.key, { note: value })} /></FormField>
                         <div className="grid grid-cols-2 gap-2"><motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => { const copy = { ...item, key: createClientId("receipt-item") }; setItems((current) => [...current, copy]); setEditingKey(copy.key); }} className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container text-xs font-bold"><Copy className="h-4 w-4" /> Duplikat</motion.button><motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} disabled={items.length === 1} onClick={() => { setItems((current) => current.filter((row) => row.key !== item.key)); setEditingKey(null); }} className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-error-container/25 text-xs font-bold text-error disabled:opacity-35"><Trash2 className="h-4 w-4" /> Hapus</motion.button></div>
@@ -301,7 +336,6 @@ export function GoodsReceiptSheet({ projects, locations, materials, inventory, v
               })}
               <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => { const item = newItem(); setItems((current) => [...current, item]); setEditingKey(item.key); }} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest text-xs font-bold text-on-surface shadow-[0_5px_16px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"><Plus className="h-4 w-4 text-blue-600" aria-hidden="true" /> Tambah Material</motion.button>
             </section>
-            <FormField label="Catatan penerimaan" optional><Textarea rows={3} value={note} onChange={setNote} /></FormField>
           </div>
         )}
       </WorkflowFormSheet>
@@ -320,7 +354,7 @@ export function GoodsReceiptSheet({ projects, locations, materials, inventory, v
           setPendingVendorBillId(null);
         }}
       />
-      <MaterialSuccessSheet success={success} secondaryLabel="Terima Barang Lagi" onClose={() => setSuccess(null)} onSecondary={() => { setSuccess(null); launch(); }} />
+      <MaterialSuccessSheet success={success} secondaryLabel="Tambah" onClose={() => setSuccess(null)} onSecondary={() => { setSuccess(null); launch(); }} />
     </>
   );
 }

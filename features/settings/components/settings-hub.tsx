@@ -1,7 +1,8 @@
 "use client";
 
-import { Boxes, ChartNoAxesCombined, Layers3, PackageSearch } from "lucide-react";
+import { Boxes, ChartNoAxesCombined, CheckCircle2, CircleAlert, Layers3, PackageSearch } from "lucide-react";
 
+import type { ProductionReadinessItem } from "@/app/actions/administration";
 import type { SettingsHubOverview } from "@/app/actions/settings/system";
 import type { SettingsTab } from "./settings-tabs-config";
 import { SettingsGroupSurface, SettingsModuleHeader, SettingsRowChevron, SettingsStatusLabel } from "./settings-primitives";
@@ -12,9 +13,11 @@ function percent(value: number): string {
 
 export function SettingsHub({
   data,
+  readiness = [],
   onSelectTab,
 }: {
   readonly data: SettingsHubOverview;
+  readonly readiness?: readonly ProductionReadinessItem[];
   readonly hideHeader?: boolean;
   readonly onSelectTab: (tab: SettingsTab) => void;
 }): React.JSX.Element {
@@ -62,6 +65,37 @@ export function SettingsHub({
         </div>
         <p className="mt-3 text-[10px] leading-[1.35] text-white/48">Perubahan default tidak mengubah budget proyek yang sudah aktif.</p>
       </section>
+
+      {readiness.length > 0 ? (
+        <section className="space-y-2">
+          <div className="flex min-h-10 items-center justify-between gap-3">
+            <h3 className="text-[17px] font-semibold tracking-[-0.015em] text-on-surface">Kesiapan production</h3>
+            <SettingsStatusLabel
+              label={readiness.every((item) => item.ready) ? "Siap simulasi" : `${readiness.filter((item) => !item.ready).length} belum siap`}
+              tone={readiness.every((item) => item.ready) ? "positive" : "inactive"}
+            />
+          </div>
+          <SettingsGroupSurface>
+            <div className="divide-y divide-black/[0.055]">
+              {readiness.map((item) => {
+                const Icon = item.ready ? CheckCircle2 : CircleAlert;
+                return (
+                  <div key={item.id} className="flex min-h-[68px] items-center gap-3 px-3.5 py-3">
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.ready ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13px] font-bold text-on-surface">{item.label}</span>
+                      <span className="mt-0.5 block text-[10px] leading-[1.35] text-on-surface-variant">{item.detail}</span>
+                    </span>
+                    <SettingsStatusLabel label={item.ready ? "Siap" : "Lengkapi"} tone={item.ready ? "positive" : "inactive"} />
+                  </div>
+                );
+              })}
+            </div>
+          </SettingsGroupSurface>
+        </section>
+      ) : null}
 
       <section className="space-y-2">
         <div className="flex min-h-10 items-center"><h3 className="text-[17px] font-semibold tracking-[-0.015em] text-on-surface">Modul pengaturan</h3></div>

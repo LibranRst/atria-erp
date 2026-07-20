@@ -144,9 +144,9 @@ CREATE INDEX "pco_status_idx" ON "project_change_order" USING btree ("status");
 UPDATE "item_price_library"
 SET
 	"target_gross_percentage" = CASE
-		WHEN "item_type" = 'MATERIAL_ITEM' THEN '0.3000'
-		WHEN "item_type" IN ('WORK_PACKAGE', 'SUBCON_PACKAGE') THEN '0.2000'
-		ELSE '0.4000'
+		WHEN "item_type" = 'MATERIAL_ITEM' THEN 0.3000::numeric
+		WHEN "item_type" IN ('WORK_PACKAGE', 'SUBCON_PACKAGE') THEN 0.2000::numeric
+		ELSE 0.4000::numeric
 	END,
 	"price_source_type" = 'LEGACY_BACKFILL',
 	"source_note" = COALESCE("source_note", 'Migrated from legacy default internal cost; review and replace with a detailed cost breakdown.');

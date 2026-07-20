@@ -64,7 +64,7 @@ export function getHeaderMenuItems(
     }
 
     if (item.label === "Persetujuan") {
-      return roleName === "OWNER";
+      return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
     }
 
     if (item.label === "Pengaturan ERP") {

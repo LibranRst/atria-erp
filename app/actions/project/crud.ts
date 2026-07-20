@@ -12,7 +12,8 @@ import {
   CreateProjectInput,
   UpdateProjectInput,
 } from "@/lib/validations/project";
-import { createProjectBudgetFromRatios } from "@/app/actions/project/excel-budget";
+import { getBudgetAllocationDefault } from "@/app/actions/project/excel-budget-utils";
+import { insertCanonicalProjectBudgetTx } from "@/lib/budget/project-budget-creation";
 
 type SessionUser = {
   readonly id: string;
@@ -67,6 +68,7 @@ export async function createProjectAction(
   let finalClientId = data.clientId;
 
   try {
+    const allocationDefault = await getBudgetAllocationDefault();
     const result = await db.transaction(async (tx) => {
       // 1. Create client if it's new
       if (!finalClientId) {
@@ -97,7 +99,7 @@ export async function createProjectAction(
           name: data.name,
           clientId: finalClientId,
           projectManagerId: data.projectManagerId,
-          status: data.status,
+          status: "DRAFT",
           financialHealth: "HEALTHY",
           totalContractValue: data.totalContractValue.toFixed(2),
           startDate: data.startDate ? new Date(data.startDate) : null,
@@ -112,6 +114,15 @@ export async function createProjectAction(
         })
         .returning();
 
+      const newBudget = await insertCanonicalProjectBudgetTx({
+        tx,
+        projectId: newProject.id,
+        contractValue: Number(newProject.totalContractValue),
+        approvedRabValue: Number(newProject.totalContractValue),
+        allocation: allocationDefault,
+        notes: "Inisialisasi anggaran kategori otomatis dari pengaturan sistem.",
+      });
+
       // 3. Write audit log
       await tx.insert(auditLog).values({
         id: crypto.randomUUID(),
@@ -119,25 +130,12 @@ export async function createProjectAction(
         action: "CREATE_PROJECT",
         targetTable: "project",
         targetId: newProject.id,
-        newState: JSON.stringify(newProject),
+        newState: JSON.stringify({ project: newProject, canonicalBudgetId: newBudget.id }),
         createdAt: new Date(),
       });
 
       return newProject;
     });
-
-    // 4. Automatically initialize Project Budget using settings defaults
-    const budgetRes = await createProjectBudgetFromRatios({
-      projectId: result.id,
-      contractValue: Number(result.totalContractValue),
-      approvedRabValue: Number(result.totalContractValue),
-      projectProgressPercentage: 0,
-      notes: "Inisialisasi anggaran kategori otomatis dari pengaturan sistem.",
-    });
-
-    if (!budgetRes.success) {
-      console.error("Gagal membuat anggaran default proyek:", budgetRes.error);
-    }
 
     return { success: true, data: { id: result.id } };
   } catch (error) {

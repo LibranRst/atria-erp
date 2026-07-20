@@ -48,7 +48,7 @@ export function BudgetItemForm({
       pending={isPending}
       disabled={!isBudgetItemFormValid(form)}
       disabledReason={!isBudgetItemFormValid(form) ? "Lengkapi nama, kategori, kelompok biaya, kuantitas, dan harga satuan." : undefined}
-      submitLabel="Tambahkan Item Budget"
+      submitLabel="Tambah"
       submittingLabel="Menambahkan…"
       statusText={`Subtotal Rp ${estimatedTotal.toLocaleString("id-ID")}`}
       statusTone={estimatedTotal > 0 ? "success" : "warning"}

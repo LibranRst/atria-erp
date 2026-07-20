@@ -71,3 +71,17 @@ export function getVendorPaymentBadge(payment: VendorListPayment): {
   }
   return { status: "APPROVED", label: "Disetujui" };
 }
+
+export function getVendorPaymentPresentation(payment: VendorListPayment): {
+  readonly status: "PAID" | "PENDING" | "REJECTED" | "APPROVED";
+  readonly label: string;
+  readonly canDisburse: boolean;
+} {
+  if (payment.status === "COMPLETED") return { status: "PAID", label: "Selesai Cair", canDisburse: false };
+  if (payment.status === "FAILED") return { status: "REJECTED", label: "Gagal Cair", canDisburse: false };
+  if (payment.status === "PROCESSING") return { status: "PENDING", label: "Sedang Diproses", canDisburse: false };
+  if (payment.status !== "PENDING") return { status: "REJECTED", label: "Status Tidak Valid", canDisburse: false };
+  if (payment.approvalStatus === "PENDING") return { status: "PENDING", label: "Menunggu Owner", canDisburse: false };
+  if (payment.approvalStatus === "REJECTED") return { status: "REJECTED", label: "Ditolak Owner", canDisburse: false };
+  return { status: "APPROVED", label: "Siap Cair", canDisburse: true };
+}

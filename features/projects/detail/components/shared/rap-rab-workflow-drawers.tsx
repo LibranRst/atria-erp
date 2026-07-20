@@ -65,6 +65,7 @@ export function RapRabWorkflowDrawers({
         canEditRap={rapManager.canEditRap}
         openEditRapForm={rapManager.openEditRapForm}
         handleDeleteRapItem={rapManager.handleDeleteRapItem}
+        pending={rapManager.isPending}
       />
 
       <PackageDetailDrawer
@@ -76,6 +77,7 @@ export function RapRabWorkflowDrawers({
         handleMarkCategoryPlanActive={rapManager.handleMarkCategoryPlanActive}
         handleDeleteCategoryPlanItem={rapManager.handleDeleteCategoryPlanItem}
         handleReopenPackage={rapManager.handleReopenPackage}
+        pending={rapManager.isPending}
       />
 
       <InternalRevisionDrawer

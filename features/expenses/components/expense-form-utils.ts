@@ -1,7 +1,6 @@
 import type {
   ExpenseDraftPayload,
   ExpenseLine,
-  ProjectBudgetItem,
 } from "@/features/expenses/components/expense-form-types";
 import { createClientId } from "@/lib/utils/client-id";
 
@@ -97,34 +96,6 @@ export function createBlankExpenseDraft(projectId = ""): ExpenseDraftPayload {
   };
 }
 
-export function findMatchingBudgetItem(
-  itemName: string,
-  budgetItems: ProjectBudgetItem[],
-): ProjectBudgetItem | undefined {
-  const normalizedItemName = itemName.toLowerCase().trim();
-  if (!normalizedItemName) return undefined;
-
-  let match = budgetItems.find((budgetItem) => {
-    const budgetItemName = budgetItem.name.toLowerCase().trim();
-    return (
-      budgetItemName.includes(normalizedItemName) ||
-      normalizedItemName.includes(budgetItemName)
-    );
-  });
-
-  if (!match) {
-    const words = normalizedItemName.split(/\s+/).filter((word) => word.length > 2);
-    for (const word of words) {
-      match = budgetItems.find((budgetItem) =>
-        budgetItem.name.toLowerCase().includes(word),
-      );
-      if (match) break;
-    }
-  }
-
-  return match;
-}
-
 export function cleanLeadingZeros(value: string): string {
   if (!value) return "";
   let cleaned = value.replace(/^0+(?=\d)/, "");
@@ -134,34 +105,11 @@ export function cleanLeadingZeros(value: string): string {
   return cleaned;
 }
 
-export function mapBudgetItemToCanonicalCode(
-  item: ProjectBudgetItem | undefined,
-): string {
-  const source =
-    `${item?.costCategory?.name ?? ""} ${item?.budgetCategory ?? ""} ${item?.name ?? ""}`.toUpperCase();
-  if (
-    source.includes("MATERIAL") ||
-    source.includes("BAHAN") ||
-    source.includes("KAYU") ||
-    source.includes("KACA")
-  ) {
-    return "MATERIAL";
-  }
-  if (
-    source.includes("TUKANG") ||
-    source.includes("LABOR") ||
-    source.includes("PEKERJA")
-  ) {
-    return "TUKANG";
-  }
-  if (
-    source.includes("OPERASIONAL") ||
-    source.includes("OPERATIONAL") ||
-    source.includes("BENSIN") ||
-    source.includes("TOLL")
-  ) {
-    return "OPERASIONAL";
-  }
+export function inferExpenseCategoryCode(itemName: string): string {
+  const source = itemName.toUpperCase();
+  if (["MATERIAL", "BAHAN", "KAYU", "KACA", "CAT", "SEMEN", "BESI"].some((keyword) => source.includes(keyword))) return "MATERIAL";
+  if (["TUKANG", "LABOR", "PEKERJA", "MANDOR", "UPAH"].some((keyword) => source.includes(keyword))) return "TUKANG";
+  if (["OPERASIONAL", "OPERATIONAL", "BENSIN", "TOLL", "PARKIR", "KIRIM"].some((keyword) => source.includes(keyword))) return "OPERASIONAL";
   if (source.includes("SUBCON") || source.includes("SUBKON")) return "SUBCON";
   return "LAIN_LAIN";
 }

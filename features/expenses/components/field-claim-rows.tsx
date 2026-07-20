@@ -8,6 +8,7 @@ import { ExpensesGroupSurface } from "@/features/expenses/components/expenses-pr
 import type { ExpenseCostItem } from "@/features/expenses/components/expense-list-types";
 import { fieldClaimStatusLabel } from "@/features/expenses/components/expense-list-utils";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { ActivityDetailChevron, useActivityDetail } from "@/features/activity-detail/components/activity-detail-provider";
 
 const expenseRowPressScale = { scale: 0.975 } as const;
 
@@ -27,6 +28,7 @@ export function FieldClaimRow({
   readonly onOpenReceipt: (imageUrl: string) => void;
 }): React.JSX.Element {
   const reduceMotion = useReducedMotion();
+  const { openActivityDetail } = useActivityDetail();
   const amountNum = Number(cost.amount);
   const allocated = Number(cost.budgetItem?.allocatedAmount || 0);
   const spent = Number(cost.budgetItem?.actualSpent || 0);
@@ -44,46 +46,61 @@ export function FieldClaimRow({
   }
 
   const statusTone = cost.status === "APPROVED" ? "text-success" : cost.status === "SUBMITTED" || cost.status === "VERIFIED" ? "text-warning" : "text-on-surface-variant";
+  const showBudgetRisk = Boolean(cost.budgetItem && (cost.budgetOverrun || utilizationPercent >= 90));
 
   return (
-    <div className="px-3 py-3 max-[430px]:px-2.5">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => openActivityDetail({ kind: "PROJECT_COST", id: cost.id })}
+      onKeyDown={(event) => {
+        if ((event.key === "Enter" || event.key === " ") && event.currentTarget === event.target) {
+          event.preventDefault();
+          openActivityDetail({ kind: "PROJECT_COST", id: cost.id });
+        }
+      }}
+      className="min-h-[96px] px-3 py-3.5 text-left outline-none transition-colors hover:bg-black/[0.015] focus-visible:bg-surface-container-low active:bg-surface-container-low/70 max-[430px]:px-2.5"
+      aria-label={`Lihat detail pengeluaran ${cost.description}`}
+    >
       <div className="flex items-start gap-3">
         <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${cost.status === "APPROVED" ? "bg-success/[0.08] text-success ring-success/[0.06]" : "bg-warning/[0.09] text-warning ring-warning/[0.06]"}`}>
-          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">{cost.status === "APPROVED" ? "payments" : "receipt_long"}</span>
+          <span className="material-symbols-outlined text-[18px] leading-none" aria-hidden="true">{cost.status === "APPROVED" ? "payments" : "receipt_long"}</span>
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <span className={`truncate text-[9px] font-semibold ${statusTone}`}>{fieldClaimStatusLabel(cost.status)}</span>
-            <span className="shrink-0 text-[9px] font-semibold text-on-surface-variant/60">
+            <span className={`truncate text-[9px] font-bold leading-3 ${statusTone}`}>{fieldClaimStatusLabel(cost.status)}</span>
+            <span className="shrink-0 text-[9px] font-semibold leading-3 text-on-surface-variant/60">
               {new Date(cost.createdAt).toLocaleDateString("id-ID", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
             </span>
           </div>
           <div className="mt-1 flex items-start justify-between gap-3">
-            <p className="line-clamp-2 min-w-0 flex-1 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-on-surface">{cost.description}</p>
+            <p className="line-clamp-2 min-w-0 flex-1 text-[13px] font-semibold leading-5 tracking-[-0.01em] text-on-surface">{cost.description}</p>
             <MoneyValue amount={amountNum} variant="compactWithFull" size="sm" align="right" className="shrink-0" />
           </div>
-          <p className="mt-1 truncate text-[10px] text-on-surface-variant/75">{cost.project?.name || "Proyek"} · {cost.budgetItem?.name || "Belum ditentukan"}</p>
+          <p className="mt-0.5 truncate text-[10px] font-medium leading-4 text-on-surface-variant/75">{cost.project?.name || "Proyek"} · {cost.budgetItem?.name || "Belum ditentukan"}</p>
+          {showBudgetRisk ? (
+            <p className="mt-1 flex min-w-0 items-center gap-1 text-[9px] font-bold leading-3 text-error">
+              <span className="material-symbols-outlined shrink-0 text-[13px] leading-none" aria-hidden="true">warning</span>
+              <span className="truncate">{cost.budgetOverrun ? "Melebihi budget" : "Mendekati batas budget"} · {utilizationPercent.toFixed(0)}%</span>
+            </p>
+          ) : null}
         </div>
+        <ActivityDetailChevron />
       </div>
 
-      <div className="mt-2 flex min-h-9 items-center gap-2 pl-12">
-        <span className="min-w-0 flex-1 truncate text-[9px] font-semibold text-on-surface-variant/65">PM {cost.requestedBy?.name || "-"}</span>
-        {cost.budgetItem && (cost.budgetOverrun || utilizationPercent >= 90) ? (
-          <span className="shrink-0 rounded-full bg-error/[0.075] px-2.5 py-1 text-[9px] font-semibold text-error">
-            {cost.budgetOverrun ? "Ditandai berisiko" : "Mendekati batas"} · {utilizationPercent.toFixed(0)}%
-          </span>
-        ) : null}
+      <div className="mt-2 flex min-h-8 items-center gap-2 pl-12 pr-8">
+        <span className="min-w-0 flex-1 truncate text-[9px] font-semibold leading-3 text-on-surface-variant/60">Diajukan {cost.requestedBy?.name || "-"}</span>
         {cost.receiptImageUrl ? <ReceiptButton imageUrl={cost.receiptImageUrl} onOpenReceipt={onOpenReceipt} /> : null}
         {cost.status === "SUBMITTED" && isOwnerOrFinance && (
           <motion.button
             type="button"
-            onClick={() => onVerify(cost)}
+            onClick={(event) => { event.stopPropagation(); onVerify(cost); }}
             disabled={pending}
             whileTap={reduceMotion ? undefined : expenseRowPressScale}
             transition={transitionSpringSnappy}
-            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] font-bold text-on-primary outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50"
+            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] font-bold leading-4 text-on-primary outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[14px]">fact_check</span>
+            <span className="material-symbols-outlined text-[14px] leading-none" aria-hidden="true">fact_check</span>
             Verifikasi
           </motion.button>
         )}
@@ -91,13 +108,13 @@ export function FieldClaimRow({
         {cost.status === "APPROVED" && isOwnerOrFinance && (
           <motion.button
             type="button"
-            onClick={() => onDisburse(cost)}
+            onClick={(event) => { event.stopPropagation(); onDisburse(cost); }}
             disabled={pending}
             whileTap={reduceMotion ? undefined : expenseRowPressScale}
             transition={transitionSpringSnappy}
-            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] font-bold text-on-primary outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50"
+            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] font-bold leading-4 text-on-primary outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[14px]">payments</span>
+            <span className="material-symbols-outlined text-[14px] leading-none" aria-hidden="true">payments</span>
             Cairkan
           </motion.button>
         )}
@@ -133,16 +150,16 @@ export function FieldClaimHistory({
         className="flex min-h-12 w-full items-center justify-between rounded-full bg-surface-container-low/70 px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
       >
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="material-symbols-outlined text-[18px] text-on-surface-variant">history</span>
-          <span className="truncate text-xs font-semibold text-on-surface">Riwayat pengeluaran</span>
-          <span className="inline-flex items-center justify-center rounded-full bg-outline-variant/20 px-1.5 py-0.5 text-[10px] font-bold text-on-surface-variant">
+          <span className="material-symbols-outlined text-[18px] leading-none text-on-surface-variant" aria-hidden="true">history</span>
+          <span className="truncate text-xs font-semibold leading-4 text-on-surface">Riwayat pengeluaran</span>
+          <span className="inline-flex items-center justify-center rounded-full bg-outline-variant/20 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-on-surface-variant">
             {historyCosts.length}
           </span>
         </div>
         <motion.span
           animate={reduceMotion ? undefined : { rotate: expanded ? 180 : 0 }}
           transition={transitionSpringSnappy}
-          className="material-symbols-outlined text-[18px] text-on-surface-variant"
+          className="material-symbols-outlined text-[18px] leading-none text-on-surface-variant"
         >
           keyboard_arrow_down
         </motion.span>
@@ -175,38 +192,38 @@ function CompactClaimRow({
   readonly amount: number;
   readonly onOpenReceipt: (imageUrl: string) => void;
 }): React.JSX.Element {
+  const { openActivityDetail } = useActivityDetail();
+  const statusTone = cost.status === "PAID" ? "text-success" : "text-error";
   return (
-    <div className="flex min-h-[68px] items-center justify-between gap-3 px-3 py-2.5">
-      <div className="flex min-w-0 items-center gap-sm">
+    <div role="button" tabIndex={0} onClick={() => openActivityDetail({ kind: "PROJECT_COST", id: cost.id })} onKeyDown={(event) => { if ((event.key === "Enter" || event.key === " ") && event.currentTarget === event.target) { event.preventDefault(); openActivityDetail({ kind: "PROJECT_COST", id: cost.id }); } }} className="min-h-[78px] w-full px-3 py-3 text-left outline-none transition-colors hover:bg-black/[0.015] focus-visible:bg-surface-container-low active:bg-surface-container-low/70" aria-label={`Lihat detail pengeluaran ${cost.description}`}>
+      <div className="flex min-w-0 items-start gap-3">
         <StatusIcon status={cost.status} />
-        <div className="min-w-0 space-y-0.5">
-          <div className="flex items-center gap-xs">
-            <span className="max-w-[145px] truncate text-xs font-semibold text-on-surface">
-              {cost.project?.name || "Proyek"}
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <span className={`truncate text-[9px] font-bold leading-3 ${statusTone}`}>
+              {cost.status === "PAID" ? "Lunas" : "Ditolak"}
             </span>
-            <span className="text-[10px] text-on-surface-variant">•</span>
-            <span className="text-[10px] text-on-surface-variant">
-              {new Date(cost.createdAt).toLocaleDateString("id-ID", {
-                month: "short",
-                day: "numeric",
-              })}
+            <span className="shrink-0 text-[9px] font-semibold leading-3 text-on-surface-variant/60">
+              {new Date(cost.createdAt).toLocaleDateString("id-ID", { month: "short", day: "numeric" })}
             </span>
           </div>
-          <p className="max-w-[200px] truncate text-[10px] text-on-surface-variant/75">
-            {cost.description}
+          <div className="mt-1 flex min-w-0 items-start justify-between gap-3">
+            <p className="min-w-0 flex-1 truncate text-xs font-semibold leading-4 text-on-surface">
+              {cost.description}
+            </p>
+            <MoneyValue amount={amount} variant="compactWithFull" align="right" size="sm" className="shrink-0" />
+          </div>
+          <p className="mt-0.5 truncate text-[10px] font-medium leading-4 text-on-surface-variant/70">
+            {cost.project?.name || "Proyek"}
           </p>
         </div>
+        <ActivityDetailChevron />
       </div>
-
-      <div className="flex shrink-0 items-center gap-sm">
-        <StatusAmount status={cost.status} amount={amount} />
-        {cost.receiptImageUrl && (
-          <ReceiptButton
-            imageUrl={cost.receiptImageUrl}
-            onOpenReceipt={onOpenReceipt}
-          />
-        )}
-      </div>
+      {cost.receiptImageUrl ? (
+        <div className="mt-1 flex justify-end pr-8">
+          <ReceiptButton imageUrl={cost.receiptImageUrl} onOpenReceipt={onOpenReceipt} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -224,34 +241,8 @@ function StatusIcon({
           : "bg-error-container/20 text-error"
       }`}
     >
-      <span className="material-symbols-outlined text-[18px]">
+      <span className="material-symbols-outlined text-[18px] leading-none" aria-hidden="true">
         {status === "PAID" ? "check_circle" : "cancel"}
-      </span>
-    </div>
-  );
-}
-
-function StatusAmount({
-  status,
-  amount,
-}: {
-  readonly status: ExpenseCostItem["status"];
-  readonly amount: number;
-}): React.JSX.Element {
-  return (
-    <div className="text-right">
-      <MoneyValue
-        amount={amount}
-        variant="compactWithFull"
-        align="right"
-        size="sm"
-      />
-      <span
-        className={`text-[9px] font-bold uppercase ${
-          status === "PAID" ? "text-primary" : "text-error"
-        }`}
-      >
-        {status === "PAID" ? "Lunas" : "Ditolak"}
       </span>
     </div>
   );
@@ -268,14 +259,14 @@ function ReceiptButton({
   return (
     <motion.button
       type="button"
-      onClick={() => onOpenReceipt(imageUrl)}
+      onClick={(event) => { event.stopPropagation(); onOpenReceipt(imageUrl); }}
       whileTap={reduceMotion ? undefined : expenseRowPressScale}
       transition={transitionSpringSnappy}
       className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF] outline-none after:absolute after:-inset-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
       title="Lihat Nota"
       aria-label="Lihat nota"
     >
-      <span className="material-symbols-outlined text-[16px]" aria-hidden="true">image</span>
+      <span className="material-symbols-outlined text-[16px] leading-none" aria-hidden="true">image</span>
     </motion.button>
   );
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "bun:test";
 import { assertPermission, resolveRoleName } from "./permissions";
-import { scopeProjectQuery, assertProjectAccess } from "./scoping";
+import { scopeProjectQuery, assertProjectAccess, assertProjectIsOperational } from "./scoping";
+import { eq } from "drizzle-orm";
 
 describe("Atria ERP RBAC - permissions.ts", () => {
   // Test Role Name Resolution
@@ -136,6 +137,25 @@ describe("Atria ERP Project Scoping - scoping.ts", () => {
       await expect(assertProjectAccess(SUDIRMAN_PROJECT_ID, BUDI_PM_ID, pmRoleId)).rejects.toThrow("UNAUTHORIZED");
       // Siti mencoba mengakses proyek Menteng (ditugaskan ke Budi)
       await expect(assertProjectAccess(MENTENG_PROJECT_ID, SITI_PM_ID, pmRoleId)).rejects.toThrow("UNAUTHORIZED");
+    });
+  });
+
+  describe("assertProjectIsOperational", () => {
+    const MENTENG_PROJECT_ID = "77777777-7777-7777-7777-777777777771";
+
+    it("menolak proyek Draft dan mengizinkan proyek Aktif", async () => {
+      await expect(assertProjectIsOperational(MENTENG_PROJECT_ID)).resolves.toBeUndefined();
+
+      await db.update(project)
+        .set({ status: "DRAFT" })
+        .where(eq(project.id, MENTENG_PROJECT_ID));
+      try {
+        await expect(assertProjectIsOperational(MENTENG_PROJECT_ID)).rejects.toThrow("PROJECT_NOT_ACTIVE");
+      } finally {
+        await db.update(project)
+          .set({ status: "ACTIVE" })
+          .where(eq(project.id, MENTENG_PROJECT_ID));
+      }
     });
   });
 });

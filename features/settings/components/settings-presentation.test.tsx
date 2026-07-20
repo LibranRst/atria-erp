@@ -25,6 +25,8 @@ describe("Settings presentation", () => {
             canManageExpenseCategories: true,
             canManageItemLibrary: false,
             canManageMaterialSettings: true,
+            canManageUsers: true,
+            canManageVendors: true,
           },
           budgetCapRatio: 0.9,
           categoryAllocationRatio: 0.545,

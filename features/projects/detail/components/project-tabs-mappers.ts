@@ -1,4 +1,5 @@
 import { calculateQuotationTotal } from "@/lib/project/quotation-total";
+import { projectMaterialProjection } from "@/lib/material/project-material-projection";
 import type {
   ChangeOrderHistoryView,
   ProjectCategoryPlanItemView,
@@ -206,10 +207,10 @@ function buildRapItemForManager(
         sum + Number(inventory.currentStock) - Number(inventory.reservedStock)
       );
     }, 0) ?? 0;
-  const reservedQuantity = sumMovements(item, "RESERVE");
-  const boughtQuantity = sumMovements(item, "STOCK_IN");
-  const usedQuantity = sumMovements(item, "USE");
-  const returnedQuantity = sumMovements(item, "RETURN");
+  const materialProjection = projectMaterialProjection(
+    item.stockMovements ?? [],
+    Number(item.totalQuantity),
+  );
   const actualMaterialCost = costs
     .filter(
       (expense) =>
@@ -217,12 +218,6 @@ function buildRapItemForManager(
         ["APPROVED", "PAID"].includes(expense.status),
     )
     .reduce((sum, expense) => sum + Number(expense.amount), 0);
-  const totalQuantity = Number(item.totalQuantity);
-  const needToBuy = Math.max(
-    0,
-    totalQuantity - reservedQuantity - Math.max(0, boughtQuantity - usedQuantity),
-  );
-
   return {
     id: item.id,
     materialId: item.materialId,
@@ -237,23 +232,23 @@ function buildRapItemForManager(
     estimatedUnitCost: item.estimatedUnitCost,
     estimatedTotalCost: item.estimatedTotalCost,
     source: item.source,
-    status: item.status,
+    status:
+      item.status === "PLANNED" || item.status === "DRAFT"
+        ? item.status
+        : materialProjection.needToBuy > 0
+          ? "SHORTAGE"
+          : "READY",
     internalNote: item.internalNote,
     availableStock,
-    needToBuy,
-    reservedQuantity,
-    boughtQuantity,
-    usedQuantity,
-    leftoverQuantity: Math.max(0, boughtQuantity - usedQuantity + returnedQuantity),
+    needToBuy: materialProjection.needToBuy,
+    reservedQuantity: materialProjection.reservedQuantity,
+    boughtQuantity: materialProjection.boughtQuantity,
+    usedQuantity: materialProjection.usedQuantity,
+    leftoverQuantity: materialProjection.leftoverQuantity,
+    securedQuantity: materialProjection.securedQuantity,
+    returnedQuantity: materialProjection.returnedQuantity,
+    wasteQuantity: materialProjection.wasteQuantity,
     actualMaterialCost,
     costVariance: actualMaterialCost - Number(item.estimatedTotalCost),
   };
-}
-
-function sumMovements(item: ProjectRapItem, movementType: string): number {
-  return (
-    item.stockMovements
-      ?.filter((movement) => movement.movementType === movementType)
-      ?.reduce((sum, movement) => sum + Number(movement.quantity), 0) ?? 0
-  );
 }

@@ -78,7 +78,7 @@ describe("Project Workflow Rework - creation and RAB auto-scale", () => {
       name: newProjectName,
       clientId: existingClient.id,
       projectManagerId: "33333333-3333-3333-3333-333333333331", // PM Budi
-      status: "DRAFT",
+      status: "ACTIVE",
     });
 
     expect(res.success).toBe(true);
@@ -91,6 +91,7 @@ describe("Project Workflow Rework - creation and RAB auto-scale", () => {
       where: eq(project.id, projectId),
     });
     expect(proj).toBeDefined();
+    expect(proj?.status).toBe("DRAFT");
     expect(Number(proj?.totalContractValue)).toBe(0);
 
     // Verify budget record is created with 0 contract value

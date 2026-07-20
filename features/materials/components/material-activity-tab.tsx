@@ -2,6 +2,7 @@
 
 import { ArrowDownToLine, ArrowLeftRight, ClipboardCheck } from "lucide-react";
 import React from "react";
+import { ActivityDetailChevron, useActivityDetail } from "@/features/activity-detail/components/activity-detail-provider";
 
 import type {
   MaterialMovementView,
@@ -67,6 +68,7 @@ export function MaterialActivityTab({
   onOpenReceipt,
   onLoadMore,
 }: ActivityTabProps): React.JSX.Element {
+  const { openActivityDetail } = useActivityDetail();
   return (
     <div className="space-y-lg max-[430px]:space-y-5">
       <section className="space-y-2.5" aria-label="Filter aktivitas material" data-material-controls="inline">
@@ -162,8 +164,8 @@ export function MaterialActivityTab({
             <MaterialInlineState icon="inventory" title="Belum ada dokumen" description="Transfer dan stock opname akan tersimpan di bagian ini." />
           ) : (
             <div className="divide-y divide-black/[0.055]">
-              {transfers.map((row) => <TransferRow key={row.id} row={row} />)}
-              {counts.map((row) => <CountRow key={row.id} row={row} />)}
+              {transfers.map((row) => <TransferRow key={row.id} row={row} onOpen={() => openActivityDetail({ kind: "STOCK_TRANSFER", id: row.id })} />)}
+              {counts.map((row) => <CountRow key={row.id} row={row} onOpen={() => openActivityDetail({ kind: "STOCK_COUNT", id: row.id })} />)}
             </div>
           )}
         </MaterialGroupSurface>
@@ -172,21 +174,22 @@ export function MaterialActivityTab({
   );
 }
 
-function TransferRow({ row }: { readonly row: MaterialOperationsDashboard["transfers"][number] }): React.JSX.Element {
+function TransferRow({ row, onOpen }: { readonly row: MaterialOperationsDashboard["transfers"][number]; readonly onOpen: () => void }): React.JSX.Element {
   return (
-    <div className="flex min-h-[68px] items-center gap-3 px-3.5 py-3">
+    <button type="button" onClick={onOpen} className="flex min-h-[68px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70" aria-label={`Lihat detail transfer ${row.transferNumber}`}>
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/[0.08] text-primary ring-1 ring-primary/[0.06]"><ArrowLeftRight className="h-4 w-4" aria-hidden="true" /></span>
       <div className="grid min-w-0 flex-1 gap-1">
         <p className="truncate text-[13px] font-bold leading-4 text-on-surface">{row.transferNumber}</p>
         <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">{row.fromLocationName} → {row.toLocationName} · {row.items.length} material</p>
       </div>
-    </div>
+      <ActivityDetailChevron />
+    </button>
   );
 }
 
-function CountRow({ row }: { readonly row: MaterialOperationsDashboard["counts"][number] }): React.JSX.Element {
+function CountRow({ row, onOpen }: { readonly row: MaterialOperationsDashboard["counts"][number]; readonly onOpen: () => void }): React.JSX.Element {
   return (
-    <div className="flex min-h-[68px] items-center gap-3 px-3.5 py-3">
+    <button type="button" onClick={onOpen} className="flex min-h-[68px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70" aria-label={`Lihat detail opname ${row.countNumber}`}>
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/[0.09] text-warning ring-1 ring-warning/[0.06]"><ClipboardCheck className="h-4 w-4" aria-hidden="true" /></span>
       <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-center justify-between gap-2">
@@ -195,6 +198,7 @@ function CountRow({ row }: { readonly row: MaterialOperationsDashboard["counts"]
         </div>
         <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">{row.locationName} · {row.items.length} material · {formatMaterialDate(row.countedAt)}</p>
       </div>
-    </div>
+      <ActivityDetailChevron />
+    </button>
   );
 }

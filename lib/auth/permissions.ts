@@ -56,7 +56,12 @@ export type PermissionKey =
   | "manage:budget_settings"
   | "manage:expense_categories"
   | "manage:item_library"
-  | "manage:material_settings";
+  | "manage:material_settings"
+  | "manage:users"
+  | "manage:vendors"
+  | "create:opening_inventory"
+  | "approve:opening_inventory"
+  | "reverse:opening_inventory";
 
 // 2. Matriks Otorisasi Berdasarkan Peran (Role Permission Matrix)
 export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
@@ -114,6 +119,11 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "manage:expense_categories",
     "manage:item_library",
     "manage:material_settings",
+    "manage:users",
+    "manage:vendors",
+    "create:opening_inventory",
+    "approve:opening_inventory",
+    "reverse:opening_inventory",
   ],
   FINANCE_ADMIN: [
     "view:bank_account",
@@ -159,6 +169,9 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "manage:expense_categories",
     "manage:item_library",
     "manage:material_settings",
+    "manage:vendors",
+    "create:opening_inventory",
+    "approve:opening_inventory",
   ],
   PROJECT_MANAGER: [
     "view:budget",
@@ -197,6 +210,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "update:rap",
     "view:settings",
     "manage:material_settings",
+    "create:opening_inventory",
   ],
   SALES: [
     "view:budget",

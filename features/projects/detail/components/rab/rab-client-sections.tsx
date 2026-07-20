@@ -8,6 +8,7 @@ import { Badge, type BadgeStatus } from "@/components/ui/badge";
 import { MoneyValue } from "@/components/ui/page-primitives";
 import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import {
   NativePanel,
   rabSourceLabel,
@@ -37,7 +38,7 @@ function rabStatusLabel(status: string): string {
   if (status === "APPROVED") return "Disetujui";
   if (status === "DRAFT") return "Draf";
   if (status === "VOID") return "Dibatalkan";
-  return status.replaceAll("_", " ");
+  return formatBusinessLabel(status);
 }
 
 export function RabClientSummaryPanel({

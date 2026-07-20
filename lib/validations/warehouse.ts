@@ -23,11 +23,19 @@ export const saveStockCountSchema = z.object({
   note: z.string().trim().max(1000).optional().nullable(),
   items: z.array(z.object({ materialId: uuid, countedQuantity: z.number().finite().nonnegative() })).min(1),
 });
-export const stockCountIdSchema = z.object({ stockCountId: uuid });
+export const stockCountIdSchema = z.object({
+  stockCountId: uuid,
+  emergencyOverride: z.boolean().default(false),
+  reason: z.string().trim().min(10).max(1000).optional(),
+});
 export const rejectStockCountSchema = stockCountIdSchema.extend({ reason: z.string().trim().min(10).max(1000) });
 
 export const receiptReversalRequestSchema = z.object({ goodsReceiptId: uuid, reason: z.string().trim().min(10).max(1000) });
-export const receiptReversalDecisionSchema = z.object({ goodsReceiptId: uuid, reason: z.string().trim().min(10).max(1000).optional() });
+export const receiptReversalDecisionSchema = z.object({
+  goodsReceiptId: uuid,
+  reason: z.string().trim().min(10).max(1000).optional(),
+  emergencyOverride: z.boolean().default(false),
+});
 
 export const emergencyAdjustmentSchema = z.object({ materialId: uuid, inventoryLocationId: uuid, direction: z.enum(["INCREASE", "DECREASE"]), quantity: positive, note: z.string().trim().min(10).max(500) });
 export const createInventoryLocationSchema = z.object({ name: z.string().trim().min(3).max(100), description: z.string().trim().max(500).optional().nullable() });

@@ -19,7 +19,7 @@ export const createProjectSchema = z.object({
   projectType: z.string().optional().or(z.literal("")),
   coverImageUrl: z.string().url("URL cover proyek tidak valid").optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
-  status: z.enum(["DRAFT", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"]).default("ACTIVE"),
+  status: z.enum(["DRAFT", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"]).default("DRAFT"),
 });
 
 export const updateProjectSchema = z.object({

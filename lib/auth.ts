@@ -58,6 +58,15 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  session: {
+    additionalFields: {
+      developerActorUserId: {
+        type: "string",
+        required: false,
+        input: false,
+      },
+    },
+  },
   user: {
     additionalFields: {
       roleId: {
@@ -71,8 +80,21 @@ export const auth = betterAuth({
         defaultValue: true,
         input: false,
       },
+      mustChangePassword: {
+        type: "boolean",
+        required: true,
+        defaultValue: false,
+        input: false,
+      },
     },
   },
   // Ditambahkan secret kunci rahasia token, gunakan variabel env
-  secret: process.env.BETTER_AUTH_SECRET || "fallback-secret-key-please-replace-in-env",
+  secret: (() => {
+    const configuredSecret = process.env.BETTER_AUTH_SECRET;
+    if (configuredSecret) return configuredSecret;
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("BETTER_AUTH_SECRET wajib dikonfigurasi pada environment production.");
+    }
+    return "local-development-only-secret-replace-before-production";
+  })(),
 });

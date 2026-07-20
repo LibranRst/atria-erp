@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:reset": "bun scripts/reset-database.ts",
     "db:seed": "bun db/seed.ts"
   },
   "dependencies": {

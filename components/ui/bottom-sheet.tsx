@@ -102,7 +102,7 @@ export function SheetActionButton({
   type = "button",
   onClick,
 }: SheetActionButtonProps): React.JSX.Element {
-  const accessibleLabel = pending ? pendingLabel ?? "Memproses" : label;
+  const accessibleLabel = pending ? (pendingLabel ?? "Memproses") : label;
 
   return (
     <motion.button
@@ -166,7 +166,8 @@ export function BottomSheet({
   const updateSheetMetrics = React.useCallback((): void => {
     if (typeof window === "undefined") return;
 
-    const nextViewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const nextViewportHeight =
+      window.visualViewport?.height ?? window.innerHeight;
     const handleHeight = handleRef.current?.offsetHeight ?? 20;
     const headerHeight = headerRef.current?.offsetHeight ?? 56;
     const bodyStyle = bodyRef.current
@@ -176,7 +177,8 @@ export function BottomSheet({
       ? Number.parseFloat(bodyStyle.paddingTop) +
         Number.parseFloat(bodyStyle.paddingBottom)
       : 0;
-    const bodyHeight = (bodyContentRef.current?.scrollHeight ?? 0) + bodyPadding;
+    const bodyHeight =
+      (bodyContentRef.current?.scrollHeight ?? 0) + bodyPadding;
     const footerHeight = footerRef.current?.offsetHeight ?? 0;
     const metrics = calculateBottomSheetMetrics({
       viewportHeight: nextViewportHeight,
@@ -296,8 +298,12 @@ export function BottomSheet({
 
   if (portalNode === null) return null;
 
-  const expandedHeight = Math.max(MIN_SHEET_HEIGHT, viewportHeight - SHEET_TOP_GAP);
-  const canResize = !contentOverflows && expandedHeight - naturalHeight > MIN_RESIZE_DISTANCE;
+  const expandedHeight = Math.max(
+    MIN_SHEET_HEIGHT,
+    viewportHeight - SHEET_TOP_GAP,
+  );
+  const canResize =
+    !contentOverflows && expandedHeight - naturalHeight > MIN_RESIZE_DISTANCE;
   const activeHeight = expanded && canResize ? expandedHeight : naturalHeight;
 
   function toggleExpanded(): void {
@@ -305,7 +311,10 @@ export function BottomSheet({
     setExpanded((current) => !current);
   }
 
-  function handleDragEnd(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo): void {
+  function handleDragEnd(
+    _: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ): void {
     if (!canResize) return;
 
     if (info.offset.y < -SNAP_DISTANCE || info.velocity.y < -SNAP_VELOCITY) {
@@ -350,13 +359,16 @@ export function BottomSheet({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.08, bottom: 0.04 }}
             onDragEnd={handleDragEnd}
-            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-surface-container-low shadow-[0_-24px_80px_rgba(0,0,0,0.28)] ring-1 ring-outline-variant/20 outline-none"
-            style={{ zIndex: zIndex + 1, maxHeight: `calc(100dvh - ${SHEET_TOP_GAP}px)` }}
+            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-background shadow-[0_-24px_80px_rgba(0,0,0,0.28)] ring-1 ring-outline-variant/20 outline-none"
+            style={{
+              zIndex: zIndex + 1,
+              maxHeight: `calc(100dvh - ${SHEET_TOP_GAP}px)`,
+            }}
             role="dialog"
             aria-modal="true"
             aria-label={title}
           >
-            <div className="z-10 flex h-5 shrink-0 items-center justify-center bg-surface-container-low/95 pt-2">
+            <div className="z-10 flex h-5 shrink-0 items-center justify-center bg-background/95 pt-2">
               <button
                 ref={handleRef}
                 type="button"
@@ -372,7 +384,9 @@ export function BottomSheet({
               >
                 <span
                   className={`h-1 w-10 rounded-full transition-colors ${
-                    canResize ? "bg-outline-variant/70" : "bg-outline-variant/35"
+                    canResize
+                      ? "bg-outline-variant/70"
+                      : "bg-outline-variant/35"
                   }`}
                   aria-hidden="true"
                 />
@@ -381,7 +395,7 @@ export function BottomSheet({
 
             <header
               ref={headerRef}
-              className="relative z-10 flex h-14 shrink-0 items-center bg-surface-container-low/95 px-margin-mobile backdrop-blur-md"
+              className="relative z-10 flex h-14 shrink-0 bg-background items-center px-margin-mobile backdrop-blur-md"
             >
               <button
                 ref={closeButtonRef}
@@ -412,14 +426,12 @@ export function BottomSheet({
                 contentOverflows ? "overflow-y-auto" : "overflow-y-hidden"
               }`}
             >
-              <div ref={bodyContentRef}>
-                {children}
-              </div>
+              <div ref={bodyContentRef}>{children}</div>
             </div>
             {footer && (
               <div
                 ref={footerRef}
-                className="shrink-0 border-t border-outline-variant/15 bg-surface-container-low/95 px-margin-mobile pb-[calc(1rem+env(safe-area-inset-bottom))] pt-sm backdrop-blur-md"
+                className="shrink-0 border-t border-outline-variant/15 bg-background px-margin-mobile pb-[calc(1rem+env(safe-area-inset-bottom))] pt-sm backdrop-blur-md"
               >
                 {footer}
               </div>
@@ -473,9 +485,10 @@ export function ConfirmationModal({
   React.useEffect(() => {
     if (!open) return undefined;
     const activeDialogId = dialogId;
-    const previousFocus = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
+    const previousFocus =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     const layer = promoteSheet(activeDialogId);
     const releaseBodyScroll = lockBodyScroll();
     const animationFrame = window.requestAnimationFrame(() => {
@@ -491,9 +504,11 @@ export function ConfirmationModal({
         return;
       }
       if (event.key !== "Tab" || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
-        "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex='-1'])",
-      ));
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex='-1'])",
+        ),
+      );
       if (focusable.length === 0) {
         event.preventDefault();
         dialogRef.current.focus();
@@ -516,17 +531,19 @@ export function ConfirmationModal({
       window.removeEventListener("keydown", onKeyDown);
       deactivateSheet(activeDialogId);
       releaseBodyScroll();
-      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+      if (previousFocus?.isConnected)
+        previousFocus.focus({ preventScroll: true });
     };
   }, [dialogId, open]);
 
   if (portalNode === null) return null;
 
-  const toneClass = tone === "danger"
-    ? "bg-error-container/25 text-error"
-    : tone === "warning"
-      ? "bg-warning/12 text-warning"
-      : "bg-primary/10 text-primary";
+  const toneClass =
+    tone === "danger"
+      ? "bg-error-container/25 text-error"
+      : tone === "warning"
+        ? "bg-warning/12 text-warning"
+        : "bg-primary/10 text-primary";
 
   return createPortal(
     <AnimatePresence>
@@ -557,9 +574,11 @@ export function ConfirmationModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 10 }}
               transition={transitionSpringSmooth}
-              className="pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-[360px] overflow-y-auto rounded-[28px] bg-surface-container-low p-5 shadow-[0_28px_90px_rgba(0,0,0,0.32)] ring-1 ring-white/10 outline-none no-scrollbar"
+              className="pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-[360px] overflow-y-auto rounded-[28px] bg-background p-5 shadow-[0_28px_90px_rgba(0,0,0,0.32)] ring-1 ring-white/10 outline-none no-scrollbar"
             >
-              <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}>
+              <div
+                className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}
+              >
                 {tone === "default" ? (
                   <Check className="h-6 w-6" aria-hidden="true" />
                 ) : (
@@ -567,11 +586,17 @@ export function ConfirmationModal({
                 )}
               </div>
               <div className="mt-4 text-center">
-                <h2 id={titleId} className="text-lg font-bold leading-6 text-on-surface">
+                <h2
+                  id={titleId}
+                  className="text-lg font-bold leading-6 text-on-surface"
+                >
                   {title}
                 </h2>
                 {description ? (
-                  <p id={descriptionId} className="mx-auto mt-2 max-w-[300px] text-sm leading-5 text-on-surface-variant">
+                  <p
+                    id={descriptionId}
+                    className="mx-auto mt-2 max-w-[300px] text-sm leading-5 text-on-surface-variant"
+                  >
                     {description}
                   </p>
                 ) : null}

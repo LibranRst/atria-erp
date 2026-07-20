@@ -3,6 +3,8 @@ export type SettingsPermissionState = {
   readonly canManageExpenseCategories: boolean;
   readonly canManageItemLibrary: boolean;
   readonly canManageMaterialSettings: boolean;
+  readonly canManageUsers: boolean;
+  readonly canManageVendors: boolean;
 };
 
 export type BudgetAllocationSettingRow = {

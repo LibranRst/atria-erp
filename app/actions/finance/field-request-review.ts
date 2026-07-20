@@ -9,6 +9,7 @@ import {
   syncProjectBudgetCategory,
 } from "@/lib/budget/budget-sync";
 import type { ActionResponse } from "@/lib/types/action-response";
+import { resolveRoleName } from "@/lib/auth/permissions";
 import {
   approveFieldRequestSchema,
   type ApproveFieldRequestInput,
@@ -34,6 +35,13 @@ export async function verifyFieldRequest(
     });
     if (!authResult.success) return authResult;
     const currentUser = authResult.data.user;
+    const roleName = await resolveRoleName(currentUser.roleId);
+    if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN") {
+      return {
+        success: false,
+        error: { code: "FORBIDDEN", message: "Verifikasi pengeluaran hanya dapat dilakukan Owner atau Finance Admin." },
+      };
+    }
 
     const result = await db.transaction(async (tx) => {
       const cost = await tx.query.projectCost.findFirst({
@@ -104,7 +112,7 @@ export async function approveFieldRequest(
     };
   }
 
-  const { projectCostId, status, notes } = validation.data;
+  const { projectCostId, status, notes, emergencyOverride } = validation.data;
 
   try {
     const authResult = await authorizeFieldRequestAction({
@@ -124,6 +132,9 @@ export async function approveFieldRequest(
 
       if (cost.status !== "VERIFIED") {
         throw new Error("COST_NOT_IN_VERIFIED_STATE");
+      }
+      if (status === "APPROVED" && cost.requestedById === currentUser.id) {
+        if (!emergencyOverride || (notes?.trim().length ?? 0) < 10) throw new Error("MAKER_CHECKER_REQUIRED");
       }
 
       await upsertApprovalTx(tx, {
@@ -147,7 +158,7 @@ export async function approveFieldRequest(
 
       await writeFieldRequestAuditTx(tx, {
         userId: currentUser.id,
-        action: status === "APPROVED" ? "APPROVE_FIELD_REQUEST" : "REJECT_FIELD_REQUEST",
+        action: status === "APPROVED" ? (cost.requestedById === currentUser.id ? "EMERGENCY_APPROVE_FIELD_REQUEST" : "APPROVE_FIELD_REQUEST") : "REJECT_FIELD_REQUEST",
         targetTable: "project_cost",
         targetId: projectCostId,
         originalState: { status: cost.status },
@@ -178,7 +189,8 @@ export async function approveFieldRequest(
 export async function approveVendorPayment(
   vendorPaymentId: string,
   notes?: string,
-  status: "APPROVED" | "REJECTED" = "APPROVED"
+  status: "APPROVED" | "REJECTED" = "APPROVED",
+  emergencyOverride = false,
 ): Promise<ActionResponse<{ paymentId: string; status: string }>> {
   try {
     const authResult = await authorizeOwnerVendorApproval();
@@ -192,6 +204,12 @@ export async function approveVendorPayment(
 
       if (!payment) {
         throw new Error("PAYMENT_RECORD_NOT_FOUND");
+      }
+      if (payment.status !== "PENDING") {
+        throw new Error("PAYMENT_NOT_PENDING");
+      }
+      if (status === "APPROVED" && payment.paidById === currentUser.id) {
+        if (!emergencyOverride || (notes?.trim().length ?? 0) < 10) throw new Error("MAKER_CHECKER_REQUIRED");
       }
 
       await upsertApprovalTx(tx, {
@@ -215,7 +233,7 @@ export async function approveVendorPayment(
 
       await writeFieldRequestAuditTx(tx, {
         userId: currentUser.id,
-        action: status === "APPROVED" ? "APPROVE_VENDOR_PAYMENT" : "REJECT_VENDOR_PAYMENT",
+        action: status === "APPROVED" ? (payment.paidById === currentUser.id ? "EMERGENCY_APPROVE_VENDOR_PAYMENT" : "APPROVE_VENDOR_PAYMENT") : "REJECT_VENDOR_PAYMENT",
         targetTable: "vendor_payment",
         targetId: vendorPaymentId,
         originalState: { paymentStatus: payment.status },

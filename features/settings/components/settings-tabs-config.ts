@@ -3,10 +3,12 @@ import {
   ChartNoAxesCombined,
   Layers3,
   PackageSearch,
+  ListChecks,
   Settings2,
+  UsersRound,
 } from "lucide-react";
 
-export type SettingsTab = "overview" | "budget" | "categories" | "library" | "materials";
+export type SettingsTab = "overview" | "setup" | "budget" | "categories" | "library" | "materials" | "administration";
 
 export const SETTINGS_TABS: ReadonlyArray<{
   readonly value: SettingsTab;
@@ -15,18 +17,22 @@ export const SETTINGS_TABS: ReadonlyArray<{
   readonly icon: typeof Settings2;
 }> = [
   { value: "overview", label: "Ringkasan", shortLabel: "Ringkasan", icon: Settings2 },
+  { value: "setup", label: "Kesiapan Setup", shortLabel: "Kesiapan", icon: ListChecks },
   { value: "budget", label: "Alokasi Budget", shortLabel: "Budget", icon: ChartNoAxesCombined },
   { value: "categories", label: "Kategori Pengeluaran", shortLabel: "Kategori", icon: Layers3 },
   { value: "library", label: "Library Item & Harga", shortLabel: "Library", icon: PackageSearch },
   { value: "materials", label: "Material Master", shortLabel: "Material", icon: Boxes },
+  { value: "administration", label: "Tim & Vendor", shortLabel: "Tim", icon: UsersRound },
 ];
 
 export function parseSettingsTab(value: string | null): SettingsTab {
   if (
+    value === "setup" ||
     value === "budget" ||
     value === "categories" ||
     value === "library" ||
-    value === "materials"
+    value === "materials" ||
+    value === "administration"
   ) {
     return value;
   }
@@ -35,9 +41,11 @@ export function parseSettingsTab(value: string | null): SettingsTab {
 
 export function settingsTabFromPathname(pathname: string): SettingsTab | null {
   if (pathname === "/settings/budget") return "budget";
+  if (pathname === "/settings/setup") return "setup";
   if (pathname === "/settings/categories") return "categories";
   if (pathname === "/settings/library") return "library";
   if (pathname === "/settings/materials") return "materials";
+  if (pathname === "/settings/administration") return "administration";
   if (pathname === "/settings") return "overview";
   return null;
 }

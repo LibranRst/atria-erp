@@ -162,9 +162,9 @@ export function TransferSheet({
         disabled={!valid}
         disabledReason={disabledReason}
         primaryLabel={
-          reviewing ? "Posting Transfer Stok" : "Tinjau Transfer Stok"
+          reviewing ? "Posting" : "Tinjau"
         }
-        secondaryLabel={reviewing ? "Kembali Mengedit" : undefined}
+        secondaryLabel={reviewing ? "Ubah" : undefined}
         pendingLabel="Memposting…"
         onPrimary={() => {
           if (reviewing) {
@@ -176,18 +176,12 @@ export function TransferSheet({
       >
         {reviewing ? (
           <div className="space-y-md">
-            <div className="rounded-2xl bg-primary/5 px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-primary">
-                Perpindahan
-              </p>
-              <p className="mt-1 text-sm font-bold">
-                {fromLocationName} → {toLocationName}
-              </p>
-              <p className="mt-1 text-xs text-on-surface-variant">
-                {items.length} material ·{" "}
-                {totalQuantity.toLocaleString("id-ID")} unit
-              </p>
-            </div>
+            <FormSection title="Tinjau rencana transfer" helper="Periksa detail perpindahan sebelum memposting.">
+              <ReviewFact label="Lokasi asal" value={fromLocationName ?? "–"} />
+              <ReviewFact label="Lokasi tujuan" value={toLocationName ?? "–"} />
+              <ReviewFact label="Total barang" value={`${items.length} material · ${totalQuantity.toLocaleString("id-ID")} unit`} />
+              {note.trim() && <ReviewFact label="Catatan" value={note} />}
+            </FormSection>
             <div className="space-y-2">
               {itemImpacts.map(({ item, source, destination, quantity }) => (
                 <div key={item.key} className="space-y-2">
@@ -308,5 +302,14 @@ export function TransferSheet({
         }}
       />
     </>
+  );
+}
+
+function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+  return (
+    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+      <span className="text-on-surface-variant shrink-0">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
+    </div>
   );
 }

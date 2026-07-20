@@ -96,7 +96,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
                   ))}
                 </div>
 
-                {project ? (
+                {project && data.roleName !== "PURCHASING" ? (
                   <div className="border-t border-black/[0.055] px-3.5 py-2.5">
                     <Link
                       href={`/projects/${project.id}?tab=rap`}

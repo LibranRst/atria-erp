@@ -69,7 +69,7 @@ export function RapMaterialFormDrawer({
       title={editingRapItemId ? "Edit Material RAP" : "Tambah Material RAP"}
       onClose={closeRapForm}
       formId="rap-material-item-form"
-      submitLabel={editingRapItemId ? "Perbarui Material RAP" : "Tambahkan Material RAP"}
+      submitLabel={editingRapItemId ? "Perbarui" : "Tambah"}
       submittingLabel="Menyimpan…"
       pending={isPending}
       disabled={!rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity}
@@ -87,7 +87,7 @@ export function RapMaterialFormDrawer({
           className="space-y-md"
         >
           <FormSection
-            title="1 · Sumber material"
+            title="Sumber material"
             helper="Gunakan data tersimpan untuk mempercepat input, atau isi manual bila material belum tersedia."
           >
             {!editingRapItemId && (
@@ -137,7 +137,7 @@ export function RapMaterialFormDrawer({
           </FormSection>
 
           <FormSection
-            title="2 · Identitas & penggunaan"
+            title="Identitas & penggunaan"
             helper="Nama dan area akan menjadi konteks utama saat item muncul di daftar RAP."
           >
             <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
@@ -182,7 +182,7 @@ export function RapMaterialFormDrawer({
           </FormSection>
 
           <FormSection
-            title="3 · Kebutuhan & biaya"
+            title="Kebutuhan & biaya"
             helper="Aplikasi menghitung kebutuhan total, kekurangan, dan estimasi biaya secara langsung."
           >
             <div className="grid grid-cols-2 gap-2">

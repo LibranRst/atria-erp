@@ -31,6 +31,6 @@ describe("material operational form calculations", () => {
     expect(formatMaterialStatus("LOW_STOCK")).toBe("Menipis");
     expect(formatMaterialStatus("REVERSAL_REQUESTED")).toBe("Pembatalan diminta");
     expect(formatMovementType("STOCK_IN")).toBe("Stok masuk");
-    expect(formatMovementType("GOODS_RECEIPT_REVERSAL")).toBe("Pembatalan penerimaan");
+    expect(formatMovementType("GOODS_RECEIPT_REVERSAL")).toBe("Pembatalan penerimaan barang");
   });
 });

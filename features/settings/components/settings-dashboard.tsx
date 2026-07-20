@@ -7,6 +7,13 @@ import type {
   SettingsHubOverview,
   SettingsOverview,
 } from "@/app/actions/settings/system";
+import type {
+  AdministrationOverview,
+  ProductionReadinessItem,
+} from "@/app/actions/administration";
+import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
+import type { InitialStockCandidate, InventoryOpeningBatchView } from "@/app/actions/material/opening-inventory";
+import { AdministrationManager } from "@/features/administration/components/administration-manager";
 import {
   updateBrowserUrl,
   useBrowserUrlSearchParam,
@@ -18,6 +25,7 @@ import { MaterialSettingsManager } from "./material-settings-manager";
 import { SettingsHub } from "./settings-hub";
 import { SettingsNavigation } from "./settings-navigation";
 import { SettingsHeader } from "./settings-ui";
+import { SetupReadinessManager } from "./setup-readiness-manager";
 import {
   parseSettingsTab,
   settingsTabUrl,
@@ -28,6 +36,11 @@ type SettingsDashboardProps = {
   readonly overview: SettingsOverview;
   readonly pricingTemplates: readonly PricingTemplateRow[];
   readonly initialTab?: SettingsTab;
+  readonly administration: AdministrationOverview | null;
+  readonly readiness: readonly ProductionReadinessItem[];
+  readonly onboarding: OwnerOnboardingOverview | null;
+  readonly initialStock: readonly InitialStockCandidate[];
+  readonly openingBatches: readonly InventoryOpeningBatchView[];
 };
 
 function toHubOverview(overview: SettingsOverview): SettingsHubOverview {
@@ -57,6 +70,11 @@ export function SettingsDashboard({
   initialTab = "overview",
   overview,
   pricingTemplates,
+  administration,
+  readiness,
+  onboarding,
+  initialStock,
+  openingBatches,
 }: SettingsDashboardProps): React.JSX.Element {
   const tabParam = useBrowserUrlSearchParam(
     "tab",
@@ -71,7 +89,11 @@ export function SettingsDashboard({
 
   let content: React.JSX.Element;
 
-  if (activeTab === "budget") {
+  if (activeTab === "setup") {
+    content = onboarding ? <SetupReadinessManager overview={onboarding} inventory={initialStock} batches={openingBatches} /> : <p className="rounded-[24px] bg-white p-5 text-xs text-on-surface-variant">Kesiapan setup hanya tersedia untuk Owner.</p>;
+  } else if (activeTab === "administration") {
+    content = administration ? <AdministrationManager initialData={administration} /> : <p className="rounded-2xl bg-white p-5">Akses administrasi dibatasi.</p>;
+  } else if (activeTab === "budget") {
     content = overview.budgetAllocationSetting ? (
       <BudgetSettingsManager
         hideHeader
@@ -117,7 +139,7 @@ export function SettingsDashboard({
     );
   } else {
     content = (
-      <SettingsHub hideHeader data={hubOverview} onSelectTab={changeTab} />
+      <SettingsHub hideHeader data={hubOverview} readiness={readiness} onSelectTab={changeTab} />
     );
   }
 
@@ -129,7 +151,7 @@ export function SettingsDashboard({
         description="Default finansial dan master data untuk alur proyek berikutnya."
         role={overview.roleName}
       />
-      <SettingsNavigation value={activeTab} onChange={changeTab} />
+      <SettingsNavigation value={activeTab} onChange={changeTab} showAdministration={Boolean(administration)} showSetup={Boolean(onboarding)} />
       <div className="min-w-0">{content}</div>
     </section>
   );

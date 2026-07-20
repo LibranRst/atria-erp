@@ -4,6 +4,8 @@ import React from "react";
 import { ProfileAccessList } from "@/features/profile/components/profile-access-list";
 import { ProfileIdentitySurface } from "@/features/profile/components/profile-identity-surface";
 import { LogoutButton } from "@/features/profile/components/logout-button";
+import { DeveloperAccountSwitcher } from "@/features/profile/components/developer-account-switcher";
+import { getDeveloperAccountSimulationState } from "@/app/actions/developer-account-simulation";
 import {
   countAccessibleProfileModules,
   formatProfileRole,
@@ -51,6 +53,10 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
   const canAccessSettings = permissions.includes("view:settings");
   const displayName = session.user.name || "Pengguna Atria";
   const displayEmail = session.user.email || "Email belum tersedia";
+  const developerSimulation =
+    roleName === "OWNER"
+      ? await getDeveloperAccountSimulationState()
+      : null;
 
   return (
     <section className="space-y-5 pb-8 max-[430px]:-mx-1 max-[430px]:space-y-4 max-[430px]:pb-6">
@@ -127,6 +133,10 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
         <SectionHeader title="Hak akses" meta={`${accessibleModuleCount} dari ${accessGroups.length} modul`} />
         <ProfileAccessList groups={accessGroups} roleLabel={roleLabel} />
       </section>
+
+      {developerSimulation?.success && developerSimulation.data.enabled ? (
+        <DeveloperAccountSwitcher state={developerSimulation.data} />
+      ) : null}
 
       <section className="space-y-2">
         <SectionHeader title="Sesi" />

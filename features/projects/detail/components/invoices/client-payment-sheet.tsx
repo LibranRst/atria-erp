@@ -92,8 +92,8 @@ export function ClientPaymentSheet({
       pending={isPending}
       disabled={!canSave}
       disabledReason={disabledReason}
-      primaryLabel={reviewing ? "Catat Pembayaran Klien" : "Tinjau Penerimaan"}
-      secondaryLabel={reviewing ? "Ubah Data" : undefined}
+      primaryLabel={reviewing ? "Catat" : "Tinjau"}
+      secondaryLabel={reviewing ? "Ubah" : undefined}
       pendingLabel="Mencatat…"
       statusText={overpayment ? `Nominal melebihi sisa invoice sebesar Rp ${(paidAmount - remaining).toLocaleString("id-ID")}.` : undefined}
       statusTone={overpayment ? "warning" : "default"}
@@ -130,49 +130,54 @@ export function ClientPaymentSheet({
             </FormSection>
           </div>
         ) : (
-        <form id="client-payment-form" onSubmit={(event) => { event.preventDefault(); setReviewing(true); }} className="space-y-md">
-          <FormSection title="Dana masuk" helper="Rekening dan nominal yang benar-benar diterima.">
-          <SheetSelect
-            label="Rekening Penerima Dana (DEBIT)"
-            value={selectedBankId}
-            disabled={isPending}
-            onChange={setSelectedBankId}
-            options={bankAccounts.map((account) => ({
-              value: account.id,
-              label: `${account.bankName} - ${account.name}`,
-              description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}`,
-            }))}
-          />
+          <form id="client-payment-form" onSubmit={(event) => { event.preventDefault(); setReviewing(true); }} className="space-y-md">
+            <FormSection title="Dana masuk" helper="Rekening dan nominal yang benar-benar diterima.">
+              <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                <SheetSelect
+                  label="Rekening Penerima Dana (DEBIT)"
+                  value={selectedBankId}
+                  disabled={isPending}
+                  onChange={setSelectedBankId}
+                  options={bankAccounts.map((account) => ({
+                    value: account.id,
+                    label: `${account.bankName} - ${account.name}`,
+                    description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}`,
+                  }))}
+                  required
+                />
 
-          <FormField label="Nominal Diterima" required>
-            <MoneyInput
-              value={amountPaid}
-              disabled={isPending}
-              onChange={setAmountPaid}
-              placeholder="Masukkan nominal transfer"
-            />
-          </FormField>
-          </FormSection>
+                <FormField label="Nominal Diterima" required>
+                  <MoneyInput
+                    value={amountPaid}
+                    disabled={isPending}
+                    onChange={setAmountPaid}
+                    placeholder="Masukkan nominal transfer"
+                  />
+                </FormField>
+              </div>
+            </FormSection>
 
-          <FormSection title="Referensi transaksi" helper="Untuk rekonsiliasi bank dan audit kas.">
-          <FormField label="Nomor Referensi Bukti Transfer" required>
-            <TextInput
-              value={refNumber}
-              disabled={isPending}
-              onChange={setRefNumber}
-              placeholder="Contoh: TRANSFER-KLIEN-0238"
-            />
-          </FormField>
+            <FormSection title="Referensi transaksi" helper="Untuk rekonsiliasi bank dan audit kas.">
+              <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                <FormField label="Nomor Referensi Bukti Transfer" required>
+                  <TextInput
+                    value={refNumber}
+                    disabled={isPending}
+                    onChange={setRefNumber}
+                    placeholder="Contoh: TRANSFER-KLIEN-0238"
+                  />
+                </FormField>
 
-          <DatePickerField
-            label="Tanggal Transaksi Diterima"
-            value={paymentDate}
-            disabled={isPending}
-            onChange={setPaymentDate}
-            required
-          />
-          </FormSection>
-        </form>
+                <DatePickerField
+                  label="Tanggal Transaksi Diterima"
+                  value={paymentDate}
+                  disabled={isPending}
+                  onChange={setPaymentDate}
+                  required
+                />
+              </div>
+            </FormSection>
+          </form>
         )}
       </div>
     </WorkflowFormSheet>

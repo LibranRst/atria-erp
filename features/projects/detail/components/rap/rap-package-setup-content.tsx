@@ -3,6 +3,7 @@
 import React from "react";
 
 import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import type { ProjectCategoryPlanItemView } from "../shared/rap-rab-manager";
 
 export function PackageSetupContent({
@@ -61,22 +62,24 @@ export function PackageSetupContent({
               </span>
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold">{item.name}</span>
-              <span className="block truncate text-[10px] text-on-surface-variant">
+              <span className="block truncate text-sm leading-5 font-bold">
+                {item.name}
+              </span>
+              <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
                 {item.area}
                 {item.vendorName ? ` - ${item.vendorName}` : ""}
               </span>
             </span>
             <span className="text-right">
-              <span className="block font-mono text-[10px] font-bold">
+              <span className="block font-mono text-[10px] leading-5 font-bold">
                 {formatShortRp(Number(item.estimatedTotalCost))}
               </span>
               <span
-                className={`block text-[9px] font-bold ${
+                className={`block text-[9px] leading-4 font-bold ${
                   item.status === "DRAFT" ? "text-warning" : "text-primary"
                 }`}
               >
-                {item.status === "ACTIVE" ? "Siap" : item.status}
+                {item.status === "ACTIVE" ? "Siap" : formatBusinessLabel(item.status)}
               </span>
             </span>
           </button>

@@ -1,7 +1,5 @@
 # UI/UX & Design System Documentation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Create comprehensive, production-grade UI/UX specifications and design system guidelines (in Bahasa Indonesia with English technical terms) for the mobile-first, finance-first Atria ERP application following the iOS 26 Solid design philosophy.
 
 **Architecture:** Detailed markdown specifications describing the layout, screens, components, color tokens, typography, and interactive behaviors.

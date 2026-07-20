@@ -109,6 +109,12 @@ export function buildFabActions({
   if (isMaterialsPage && isOperational) {
     const actions: FabAction[] = [
       {
+        label: "Lokasi Baru",
+        description: "Tambah gudang atau area stok",
+        iconName: "add_location_alt",
+        href: withQuery("action", "LOCATION"),
+      },
+      {
         label: "Terima Barang",
         description: "Catat penerimaan barang",
         iconName: "arrow_downward",

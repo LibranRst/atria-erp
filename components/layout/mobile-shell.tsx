@@ -24,6 +24,8 @@ import {
   transitionSpringSmooth,
 } from "@/lib/utils/motion";
 import { ConnectivityBanner } from "@/components/ui/page-state";
+import { DeveloperSimulationBanner } from "@/features/profile/components/developer-simulation-banner";
+import { ActivityDetailProvider } from "@/features/activity-detail/components/activity-detail-provider";
 
 type MobileShellProps = Readonly<{
   children: React.ReactNode;
@@ -39,7 +41,7 @@ function getRoleName(user: unknown): string | null {
   }
 
   const roleId = (user as SessionUserWithRole).roleId;
-  return typeof roleId === "string" ? ROLE_ID_TO_NAME[roleId] ?? null : null;
+  return typeof roleId === "string" ? (ROLE_ID_TO_NAME[roleId] ?? null) : null;
 }
 
 function MobileHeader({
@@ -56,10 +58,7 @@ function MobileHeader({
   const isMenuOpen = openRouteKey === routeKey;
   const hasBackButton = !isRootRoute;
 
-  const pageTitle = React.useMemo(
-    () => getPageTitle(pathname),
-    [pathname],
-  );
+  const pageTitle = React.useMemo(() => getPageTitle(pathname), [pathname]);
   const roleName = React.useMemo(
     () => getRoleName(session?.user ?? null),
     [session?.user],
@@ -87,7 +86,9 @@ function MobileHeader({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.7 }}
                 transition={
-                  hasBackButton ? transitionSpringBouncy : transitionSpringSmooth
+                  hasBackButton
+                    ? transitionSpringBouncy
+                    : transitionSpringSmooth
                 }
                 className="absolute left-0 top-0 z-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-[0_10px_24px_rgba(17,17,17,0.10)] transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
                 aria-label="Go back"
@@ -103,7 +104,9 @@ function MobileHeader({
             type="button"
             onClick={() => toast("AI Chat segera hadir.")}
             animate={{ x: hasBackButton ? 46 : 0 }}
-            transition={hasBackButton ? transitionSpringBouncy : transitionSpringSmooth}
+            transition={
+              hasBackButton ? transitionSpringBouncy : transitionSpringSmooth
+            }
             className="absolute left-0 top-0 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-[0_10px_24px_rgba(17,17,17,0.10)] transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
             aria-label="AI Chat segera hadir"
           >
@@ -146,7 +149,11 @@ function MobileHeader({
 export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
   const pathname = usePathname();
 
-  const isLoginPage = pathname === "/login";
+  const isLoginPage =
+    pathname === "/login" ||
+    pathname === "/setup" ||
+    pathname.startsWith("/onboarding") ||
+    pathname === "/profile/password";
 
   // Check if current route is a root-level tab route
   const isRootRoute = React.useMemo(() => {
@@ -163,6 +170,7 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
 
   return (
     <ProjectStateProvider>
+      <ActivityDetailProvider>
       <div className="min-h-screen bg-background text-on-surface font-sans">
         {/* Top AppBar - Fixed, contents centered to match page width */}
         {!isLoginPage && (
@@ -187,6 +195,8 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
         >
           {children}
         </main>
+
+        {!isLoginPage ? <DeveloperSimulationBanner /> : null}
 
         {/* Bottom Navigation wrapped in Suspense */}
         {!isLoginPage && (
@@ -223,6 +233,7 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
           </Suspense>
         )}
       </div>
+      </ActivityDetailProvider>
     </ProjectStateProvider>
   );
 }

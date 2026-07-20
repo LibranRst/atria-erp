@@ -30,6 +30,8 @@ type CategorySettingsManagerProps = {
   readonly roleName: string;
   readonly canManage: boolean;
   readonly hideHeader?: boolean;
+  readonly presentation?: "settings" | "onboarding";
+  readonly onMutationComplete?: () => void;
 };
 
 export function CategorySettingsManager({
@@ -37,6 +39,8 @@ export function CategorySettingsManager({
   roleName,
   canManage,
   hideHeader = false,
+  presentation = "settings",
+  onMutationComplete,
 }: CategorySettingsManagerProps): React.JSX.Element {
   const [categories, setCategories] = React.useState(initialCategories);
   const [editing, setEditing] =
@@ -83,6 +87,7 @@ export function CategorySettingsManager({
         setEditingBaseline(null);
         setMessage("Kategori diperbarui.");
         toast.success("Kategori diperbarui.");
+        onMutationComplete?.();
       } else {
         setMessage(result.error.message);
         toast.error(result.error.message);
@@ -91,8 +96,8 @@ export function CategorySettingsManager({
   }
 
   return (
-    <section className="min-w-0 space-y-lg">
-      {hideHeader ? (
+    <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-lg"}`}>
+      {presentation === "onboarding" ? null : hideHeader ? (
         <SettingsModuleHeader
           eyebrow="Kategori baku"
           title="Kategori Pengeluaran"
@@ -160,7 +165,7 @@ export function CategorySettingsManager({
                 ? "Belum ada perubahan untuk disimpan."
                 : undefined
         }
-        submitLabel="Simpan Perubahan"
+        submitLabel="Simpan"
         submittingLabel="Menyimpan…"
         onSubmit={save}
         statusText={

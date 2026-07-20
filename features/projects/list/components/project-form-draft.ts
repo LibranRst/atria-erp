@@ -66,7 +66,7 @@ export function createProjectFormDraft(
     projectType: project?.projectType ?? "",
     coverImageUrl: project?.coverImageUrl ?? "",
     notes: project?.notes ?? "",
-    status: project?.status ?? "ACTIVE",
+    status: project?.status ?? "DRAFT",
     financialHealth: project?.financialHealth ?? "HEALTHY",
   };
 }

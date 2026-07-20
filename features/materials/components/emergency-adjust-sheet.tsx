@@ -7,21 +7,19 @@ import {
   ConfirmationSheet,
   FormRiskNotice,
   FormField,
+  FormSection,
   OptionChoiceGroup,
+  QuantityStepper,
   SheetSelect,
   Textarea,
   WorkflowFormSheet,
 } from "@/components/ui";
 import { StockImpactRow } from "@/features/materials/components/material-form-patterns";
-import { ItemRows } from "@/features/materials/components/material-operation-sheets";
 import type {
   MaterialOption,
   SelectOption,
 } from "@/features/materials/components/material-operation-dialog-types";
-import {
-  createSimpleItem,
-  type SimpleItem,
-} from "@/features/materials/lib/material-ui-utils";
+import type { SimpleItem } from "@/features/materials/lib/material-ui-utils";
 
 type EmergencyAdjustSheetProps = {
   readonly open: boolean;
@@ -92,8 +90,8 @@ export function EmergencyAdjustSheet({
       open={open}
       title={reviewing ? "Tinjau Penyesuaian Darurat" : "Penyesuaian Stok Darurat"}
       onClose={() => reviewing ? setReviewing(false) : locationId || item?.materialId || note ? setConfirmClose(true) : onClose()}
-      primaryLabel={reviewing ? "Posting Penyesuaian Stok" : "Tinjau Penyesuaian"}
-      secondaryLabel={reviewing ? "Kembali Mengedit" : undefined}
+      primaryLabel={reviewing ? "Posting" : "Tinjau"}
+      secondaryLabel={reviewing ? "Ubah" : undefined}
       pendingLabel="Memposting…"
       pending={pending}
       disabled={!valid}
@@ -111,10 +109,11 @@ export function EmergencyAdjustSheet({
             Penyesuaian darurat langsung mengubah stok fisik. Gunakan hanya untuk koreksi yang tidak dapat diselesaikan lewat penerimaan, transfer, atau opname.
           </FormRiskNotice>
           <StockImpactRow label={`${selectedInventory?.materialName ?? "Material"} · ${selectedInventory?.locationName ?? "Lokasi"}`} before={selectedInventory?.currentStock ?? 0} delta={delta} after={after} reserved={selectedInventory?.reservedStock} unit={selectedInventory?.unit} />
-          <div className="rounded-2xl bg-surface-container-low px-4 py-3">
-            <p className="text-[10px] font-bold uppercase text-on-surface-variant">Alasan audit</p>
-            <p className="mt-1 text-xs leading-5 text-on-surface">{note}</p>
-          </div>
+          {note.trim() && (
+            <FormSection title="Detail audit" helper="Alasan penyesuaian darurat dicatat pada log audit.">
+              <ReviewFact label="Alasan audit" value={note} />
+            </FormSection>
+          )}
         </div>
       ) : (
       <div className="space-y-md">
@@ -127,28 +126,65 @@ export function EmergencyAdjustSheet({
           { value: "DECREASE", label: "Kurangi stok", description: "Jumlah fisik lebih kecil dari catatan sistem." },
         ]}
       />
-      <SheetSelect
-        label="Lokasi inventori"
-        value={locationId}
-        onChange={onLocationChange}
-        options={locationOptions}
-        placeholder="Pilih lokasi"
-      />
-      <ItemRows
-        items={items.slice(0, 1)}
-        setItems={onItemsChange}
-        materials={materials}
-        createItem={createSimpleItem}
-        single
-      />
+      <FormSection
+        title="Material dan lokasi"
+        helper="Pastikan stok dikoreksi pada material dan lokasi fisik yang tepat."
+      >
+        <SheetSelect
+          label="Lokasi inventori"
+          value={locationId}
+          onChange={onLocationChange}
+          options={locationOptions}
+          placeholder="Pilih lokasi"
+          required
+        />
+        <SheetSelect
+          label="Material"
+          value={item?.materialId ?? ""}
+          onChange={(value) => onItemsChange([{ ...(item ?? { key: "emergency-adjust", quantity: "1" }), materialId: value }])}
+          options={materials.map((material) => ({ value: material.id, label: material.name }))}
+          placeholder={locationId ? "Pilih material" : "Pilih lokasi lebih dulu"}
+          disabled={!locationId}
+          required
+        />
+      </FormSection>
       {selectedInventory ? <StockImpactRow label="Pratinjau stok" before={selectedInventory.currentStock} delta={delta} after={after} reserved={selectedInventory.reservedStock} unit={selectedInventory.unit} /> : null}
-      <FormField label="Alasan audit" helper="Wajib dan spesifik, minimal 10 karakter.">
-        <Textarea rows={3} value={note} onChange={onNoteChange} />
-      </FormField>
+      <FormSection
+        title="Jumlah dan audit"
+        helper="Penyesuaian darurat mengubah stok fisik langsung dan selalu meninggalkan audit trail."
+      >
+        <FormField label={selectedInventory?.unit ? `Jumlah (${selectedInventory.unit})` : "Jumlah"} required>
+          <QuantityStepper
+            value={item?.quantity ?? ""}
+            unit={selectedInventory?.unit}
+            min={0}
+            step={1}
+            onChange={(value) => onItemsChange([{ ...(item ?? { key: "emergency-adjust", materialId: "" }), quantity: value }])}
+          />
+        </FormField>
+        <FormField label="Alasan audit" helper="Wajib dan spesifik, minimal 10 karakter." required>
+          <Textarea
+            rows={3}
+            value={note}
+            onChange={onNoteChange}
+            placeholder="Jelaskan penyebab selisih dan bukti pemeriksaan fisik"
+            required
+          />
+        </FormField>
+      </FormSection>
       </div>
       )}
     </WorkflowFormSheet>
     <ConfirmationSheet open={confirmClose} title="Buang perubahan penyesuaian?" description="Data yang belum diposting akan hilang." confirmLabel="Buang Perubahan" danger onClose={() => setConfirmClose(false)} onConfirm={() => { setConfirmClose(false); onClose(); }} />
     </>
+  );
+}
+
+function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+  return (
+    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+      <span className="text-on-surface-variant shrink-0">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
+    </div>
   );
 }

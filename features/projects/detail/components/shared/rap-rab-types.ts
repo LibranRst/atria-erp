@@ -51,6 +51,9 @@ export interface RapItemView {
   readonly boughtQuantity: number;
   readonly usedQuantity: number;
   readonly leftoverQuantity: number;
+  readonly securedQuantity: number;
+  readonly returnedQuantity: number;
+  readonly wasteQuantity: number;
   readonly actualMaterialCost: number;
   readonly costVariance: number;
 }

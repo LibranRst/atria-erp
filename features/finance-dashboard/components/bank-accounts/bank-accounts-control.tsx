@@ -111,7 +111,10 @@ function EmptyAccountsState({
 }): React.JSX.Element {
   return (
     <div className="rounded-[28px] bg-white px-5 py-6 text-center shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/10">
-      <span className="material-symbols-outlined mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/8 text-[24px] text-primary">
+      <span
+        className="material-symbols-outlined mx-auto !flex h-12 w-12 items-center justify-center rounded-full bg-primary/8 text-[24px] leading-none text-primary"
+        aria-hidden="true"
+      >
         account_balance
       </span>
       <h3 className="mt-3 text-base font-bold text-on-surface">

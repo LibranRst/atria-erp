@@ -18,6 +18,7 @@ import {
   ValuePreviewStrip,
 } from "@/components/ui";
 import { MetricGrid } from "@/components/ui/page-primitives";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import {
   MiniMoneyMetric,
   RabMoneyBlock,
@@ -62,7 +63,7 @@ export function ChangeOrderDrawer({
       open={changeOrderOpen}
       title="Proses Change Order"
       onClose={() => setChangeOrderOpen(false)}
-      submitLabel="Tinjau Change Order"
+      submitLabel="Tinjau"
       submittingLabel="Memproses…"
       pending={isPending}
       disabled={!formValid}
@@ -261,7 +262,7 @@ export function ChangeOrderDetailDrawer({
               : ""}
           </p>
           <p>
-            <strong>Status:</strong> {order.status}
+            <strong>Status:</strong> {formatBusinessLabel(order.status)}
           </p>
         </div>
       </div>

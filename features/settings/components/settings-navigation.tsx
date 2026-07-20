@@ -8,7 +8,7 @@ import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/ui/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import { SETTINGS_TABS, type SettingsTab } from "./settings-tabs-config";
 
-export function SettingsNavigation({ value, onChange }: { readonly value: SettingsTab; readonly onChange: (value: SettingsTab) => void }): React.JSX.Element {
+export function SettingsNavigation({ value, onChange, showAdministration = false, showSetup = false }: { readonly value: SettingsTab; readonly onChange: (value: SettingsTab) => void; readonly showAdministration?: boolean; readonly showSetup?: boolean }): React.JSX.Element {
   const ref = React.useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = React.useState(false);
   const stickyActive = WORKSPACE_STICKY_CONTROLS_ENABLED && isSticky;
@@ -67,7 +67,7 @@ export function SettingsNavigation({ value, onChange }: { readonly value: Settin
           layoutId="settings-main-tabs"
           scrollable
           density="compact"
-          options={SETTINGS_TABS.map((module) => {
+          options={SETTINGS_TABS.filter((module) => (module.value !== "administration" || showAdministration) && (module.value !== "setup" || showSetup)).map((module) => {
             const Icon = module.icon;
             return { value: module.value, label: module.shortLabel, icon: <Icon className="h-[15px] w-[15px]" aria-hidden="true" /> };
           })}

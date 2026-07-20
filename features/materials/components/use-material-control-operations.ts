@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type Dispatch, type SetStateAction } from "react";
+import { useMemo, useState, useTransition, type Dispatch, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -35,7 +35,6 @@ import {
   type SimpleItem,
   type WarehouseAction,
 } from "@/features/materials/lib/material-ui-utils";
-import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 
 type SelectedRap =
   | MaterialOperationsDashboard["projects"][number]["rapItems"][number]
@@ -69,6 +68,7 @@ export function useMaterialControlOperations({
   readonly success: MaterialOperationSuccess | null;
   readonly decision: MaterialOperationDecision | null;
   readonly decisionReason: string;
+  readonly emergencyOverride: boolean;
   readonly message: string | null;
   readonly movements: readonly MaterialMovementView[];
   readonly newLocationName: string;
@@ -87,6 +87,7 @@ export function useMaterialControlOperations({
   readonly setCounted: Dispatch<SetStateAction<Record<string, string>>>;
   readonly setDecision: (value: MaterialOperationDecision | null) => void;
   readonly setDecisionReason: (value: string) => void;
+  readonly setEmergencyOverride: (value: boolean) => void;
   readonly setNewLocationName: (value: string) => void;
   readonly setAdjustDirection: (value: "INCREASE" | "DECREASE") => void;
   readonly setSuccess: (value: MaterialOperationSuccess | null) => void;
@@ -121,18 +122,36 @@ export function useMaterialControlOperations({
   const [success, setSuccess] = useState<MaterialOperationSuccess | null>(null);
   const [decision, setDecision] = useState<MaterialOperationDecision | null>(null);
   const [decisionReason, setDecisionReason] = useState("");
+  const [emergencyOverride, setEmergencyOverride] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [movements, setMovements] = useState<readonly MaterialMovementView[]>(
-    data.movements,
-  );
+  const [additionalMovements, setAdditionalMovements] = useState<readonly MaterialMovementView[]>([]);
+  const movements = useMemo(() => {
+    const serverIds = new Set(data.movements.map((movement) => movement.id));
+    return [
+      ...data.movements,
+      ...additionalMovements.filter((movement) => !serverIds.has(movement.id)),
+    ];
+  }, [additionalMovements, data.movements]);
   const [pending, startTransition] = useTransition();
   const [newLocationName, setNewLocationName] = useState("");
   const [adjustDirection, setAdjustDirection] = useState<"INCREASE" | "DECREASE">(
     "INCREASE",
   );
 
+  function updateActionInUrl(actionId: string | null): void {
+    const params = new URLSearchParams(window.location.search);
+    if (actionId === null) {
+      params.delete("action");
+    } else {
+      params.set("action", actionId);
+    }
+    const query = params.toString();
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}`;
+    router.replace(nextUrl);
+  }
+
   function closeAction(): void {
-    updateUrlSearchParam("action", null, "push");
+    updateActionInUrl(null);
   }
 
   function handleQuickOperation(actionId: string): void {
@@ -149,7 +168,7 @@ export function useMaterialControlOperations({
     setCounted({});
     setStockCountId(null);
     setSuccess(null);
-    updateUrlSearchParam("action", actionId, "push");
+    updateActionInUrl(actionId);
   }
 
   function finish(text: string, nextSuccess: MaterialOperationSuccess): void {
@@ -242,6 +261,7 @@ export function useMaterialControlOperations({
       }
       const successMsg = "Lokasi inventori dibuat dan stok awal material disiapkan.";
       setMessage(successMsg);
+      setNewLocationName("");
       toast.success(successMsg);
       closeAction();
       router.refresh();
@@ -355,7 +375,11 @@ export function useMaterialControlOperations({
     startTransition(async () => {
       const result =
         decision.type === "COUNT_APPROVE"
-          ? await approveStockCount({ stockCountId: decision.id })
+          ? await approveStockCount({
+              stockCountId: decision.id,
+              emergencyOverride,
+              reason: emergencyOverride ? decisionReason : undefined,
+            })
           : decision.type === "COUNT_REJECT"
             ? await rejectStockCount({
                 stockCountId: decision.id,
@@ -369,6 +393,8 @@ export function useMaterialControlOperations({
               : decision.type === "RECEIPT_APPROVE"
                 ? await approveGoodsReceiptReversal({
                     goodsReceiptId: decision.id,
+                    emergencyOverride,
+                    reason: emergencyOverride ? decisionReason : undefined,
                   })
                 : await rejectGoodsReceiptReversal({
                     goodsReceiptId: decision.id,
@@ -398,7 +424,7 @@ export function useMaterialControlOperations({
         toast.error(result.error.message);
         return;
       }
-      setMovements((current) => [...current, ...result.data]);
+      setAdditionalMovements((current) => [...current, ...result.data]);
     });
   }
 
@@ -420,6 +446,7 @@ export function useMaterialControlOperations({
     success,
     decision,
     decisionReason,
+    emergencyOverride,
     message,
     movements,
     newLocationName,
@@ -438,6 +465,7 @@ export function useMaterialControlOperations({
     setCounted,
     setDecision,
     setDecisionReason,
+    setEmergencyOverride,
     setNewLocationName,
     setAdjustDirection,
     setSuccess,

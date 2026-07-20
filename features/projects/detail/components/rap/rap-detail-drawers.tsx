@@ -3,8 +3,9 @@
 import React from "react";
 
 import { BottomSheet, useSheetPresenceValue } from "@/components/ui";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { Badge, type BadgeStatus } from "@/components/ui/badge";
-import { CompactMoney, CompactQty } from "../shared/rap-rab-primitives";
+import { MoneyValue } from "@/components/ui/page-primitives";
 import type {
   ProjectCategoryPlanItemView,
   RapItemView,
@@ -26,6 +27,7 @@ export function RapItemDetailDrawer({
   canEditRap,
   openEditRapForm,
   handleDeleteRapItem,
+  pending = false,
 }: {
   readonly rap: RapView | null;
   readonly rapDetailItemId: string | null;
@@ -33,6 +35,7 @@ export function RapItemDetailDrawer({
   readonly canEditRap: boolean;
   readonly openEditRapForm: (item: RapItemView) => void;
   readonly handleDeleteRapItem: (id: string) => void;
+  readonly pending?: boolean;
 }): React.JSX.Element | null {
   const selectedItem = rap?.items.find((row) => row.id === rapDetailItemId);
   const {
@@ -53,21 +56,23 @@ export function RapItemDetailDrawer({
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
+              disabled={pending}
               onClick={() => {
                 setRapDetailItemId(null);
                 openEditRapForm(item);
               }}
-              className="min-h-12 rounded-full bg-surface-container text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
             >
               Edit Material
             </button>
             <button
               type="button"
+              disabled={pending}
               onClick={() => {
                 setRapDetailItemId(null);
                 handleDeleteRapItem(item.id);
               }}
-              className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error"
+              className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error transition active:scale-[0.97] disabled:opacity-50"
             >
               Hapus
             </button>
@@ -75,46 +80,52 @@ export function RapItemDetailDrawer({
         ) : undefined
       }
     >
-      <div className="space-y-sm">
-        <div>
-          <p className="text-lg font-bold">{item.name}</p>
-          <p className="text-xs text-on-surface-variant">
-            {item.area} - {item.materialName}
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <CompactQty
-            label="Total Kebutuhan"
-            value={`${item.totalQuantity} ${item.unit}`}
-          />
-          <CompactQty
-            label="Perlu Dibeli"
-            value={item.needToBuy.toLocaleString("id-ID")}
-            danger={item.needToBuy > 0}
-          />
-          <CompactQty
-            label="Tersedia"
-            value={item.availableStock.toLocaleString("id-ID")}
-          />
-          <CompactQty
-            label="Terpakai"
-            value={item.usedQuantity.toLocaleString("id-ID")}
-          />
-        </div>
-        <CompactMoney
-          label="Estimasi Internal"
-          value={Number(item.estimatedTotalCost)}
-        />
-        {item.description && (
-          <div className="rounded-2xl bg-surface-container-low p-3 text-xs leading-5">
-            {item.description}
+      <div className="space-y-md">
+        <div className="flex items-start justify-between gap-3 px-1">
+          <div className="min-w-0">
+            <p className="text-base font-bold text-on-surface">{item.name}</p>
+            <p className="mt-0.5 text-xs text-on-surface-variant">
+              {item.area} · {item.materialName}
+            </p>
           </div>
-        )}
-        {item.internalNote && (
-          <div className="rounded-2xl bg-primary/5 p-3 text-xs leading-5 text-on-surface-variant">
-            <strong>Catatan internal:</strong> {item.internalNote}
-          </div>
-        )}
+          <Badge status={toBadgeStatus(item.status)}>
+            {formatBusinessLabel(item.status)}
+          </Badge>
+        </div>
+
+        <div className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15 divide-y divide-outline-variant/15">
+          {item.description && (
+            <div className="px-4 py-3.5 bg-surface-container-low/20">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Spesifikasi / Penggunaan</p>
+              <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.description}</p>
+            </div>
+          )}
+
+          <DetailRow label="Total Kebutuhan" value={`${item.totalQuantity} ${item.unit}`} />
+          <DetailRow 
+            label="Perlu Dibeli" 
+            value={
+              <span className={item.needToBuy > 0 ? "text-error" : "text-on-surface"}>
+                {item.needToBuy} {item.unit}
+              </span>
+            } 
+          />
+          <DetailRow label="Stok Fisik Tersedia" value={`${item.availableStock} ${item.unit}`} />
+          <DetailRow label="Stok Terreservasi" value={`${item.reservedQuantity} ${item.unit}`} />
+          <DetailRow label="Stok Terpakai" value={`${item.usedQuantity} ${item.unit}`} />
+          
+          <DetailRow 
+            label="Estimasi Internal" 
+            value={<MoneyValue amount={Number(item.estimatedTotalCost)} variant="compactWithFull" size="sm" align="right" />} 
+          />
+
+          {item.internalNote && (
+            <div className="px-4 py-3.5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Catatan Internal</p>
+              <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.internalNote}</p>
+            </div>
+          )}
+        </div>
       </div>
     </BottomSheet>
   );
@@ -129,6 +140,7 @@ export function PackageDetailDrawer({
   handleMarkCategoryPlanActive,
   handleDeleteCategoryPlanItem,
   handleReopenPackage,
+  pending = false,
 }: {
   readonly categoryPlanItems: readonly ProjectCategoryPlanItemView[];
   readonly packageDetailItemId: string | null;
@@ -138,6 +150,7 @@ export function PackageDetailDrawer({
   readonly handleMarkCategoryPlanActive: (id: string) => void;
   readonly handleDeleteCategoryPlanItem: (id: string) => void;
   readonly handleReopenPackage: (id: string) => void;
+  readonly pending?: boolean;
 }): React.JSX.Element | null {
   const selectedItem = categoryPlanItems.find((row) => row.id === packageDetailItemId);
   const {
@@ -152,7 +165,7 @@ export function PackageDetailDrawer({
   return (
     <BottomSheet
       open={open}
-      title="Detail Package"
+      title="Detail Paket Kerja"
       onClose={() => setPackageDetailItemId(null)}
       onExitComplete={handleExitComplete}
       footer={
@@ -162,80 +175,112 @@ export function PackageDetailDrawer({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
+                  disabled={pending}
                   onClick={() => {
                     setPackageDetailItemId(null);
                     openEditCategoryPlanForm(item);
                   }}
-                  className="min-h-12 rounded-full bg-surface-container text-xs font-bold"
+                  className="min-h-12 rounded-full bg-surface-container text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
                 >
                   Edit
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleMarkCategoryPlanActive(item.id)}
-                  className="min-h-12 rounded-full bg-primary text-xs font-bold text-on-primary"
+                  disabled={pending}
+                  onClick={() => {
+                    handleMarkCategoryPlanActive(item.id);
+                  }}
+                  className="min-h-12 rounded-full bg-primary text-xs font-bold text-on-primary transition active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Tandai Siap
+                  {pending ? "Memproses…" : "Tandai Siap"}
                 </button>
               </div>
             )}
             {editable && (
               <button
                 type="button"
+                disabled={pending}
                 onClick={() => {
                   setPackageDetailItemId(null);
                   handleDeleteCategoryPlanItem(item.id);
                 }}
-                className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error"
+                className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error transition active:scale-[0.97] disabled:opacity-50"
               >
-                Hapus Package
+                Hapus Paket
               </button>
             )}
             {item.status === "ACTIVE" && (
               <button
                 type="button"
-                onClick={() => handleReopenPackage(item.id)}
-                className="min-h-12 rounded-full bg-primary/10 text-xs font-bold text-primary"
+                disabled={pending}
+                onClick={() => {
+                  handleReopenPackage(item.id);
+                }}
+                className="min-h-12 rounded-full bg-primary/10 text-xs font-bold text-primary transition active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Edit Lagi
+                {pending ? "Memproses…" : "Edit Lagi"}
               </button>
             )}
           </div>
         ) : undefined
       }
     >
-      <div className="space-y-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-lg font-bold">{item.name}</p>
-            <p className="text-xs text-on-surface-variant">
-              {item.expenseCategoryName} - {item.area}
+      <div className="space-y-md">
+        <div className="flex items-start justify-between gap-3 px-1">
+          <div className="min-w-0">
+            <p className="text-base font-bold text-on-surface">{item.name}</p>
+            <p className="mt-0.5 text-xs text-on-surface-variant">
+              {item.expenseCategoryName} · {item.area}
             </p>
           </div>
           <Badge status={toBadgeStatus(item.status)}>
-            {item.status === "ACTIVE" ? "Siap" : item.status}
+            {item.status === "ACTIVE" ? "Siap" : formatBusinessLabel(item.status)}
           </Badge>
         </div>
-        {item.scopeDescription && (
-          <div className="rounded-2xl bg-surface-container-low p-3 text-xs leading-5">
-            {item.scopeDescription}
-          </div>
-        )}
-        <div className="grid grid-cols-2 gap-2">
-          <CompactMoney label="Estimasi" value={Number(item.estimatedTotalCost)} />
-          <CompactMoney label="Aktual" value={item.actualCost} />
-          <CompactMoney
-            label="Sisa Estimasi"
-            value={-item.variance}
-            danger={item.variance > 0}
+
+        <div className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15 divide-y divide-outline-variant/15">
+          {item.scopeDescription && (
+            <div className="px-4 py-3.5 bg-surface-container-low/20">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Lingkup Pekerjaan</p>
+              <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.scopeDescription}</p>
+            </div>
+          )}
+
+          <DetailRow 
+            label="Estimasi Paket" 
+            value={<MoneyValue amount={Number(item.estimatedTotalCost)} variant="compactWithFull" size="sm" align="right" />} 
           />
+          <DetailRow 
+            label="Realisasi Aktual" 
+            value={<MoneyValue amount={item.actualCost} variant="compactWithFull" size="sm" align="right" />} 
+          />
+          <DetailRow 
+            label="Sisa Estimasi" 
+            value={
+              <MoneyValue 
+                amount={-item.variance} 
+                variant="compactWithFull" 
+                size="sm" 
+                align="right" 
+                tone={item.variance > 0 ? "danger" : "default"} 
+              />
+            } 
+          />
+
+          {item.vendorName && (
+            <DetailRow label="Vendor Utama" value={item.vendorName} />
+          )}
         </div>
-        {item.vendorName && (
-          <div className="rounded-2xl bg-primary/5 p-3 text-xs">
-            <strong>Vendor:</strong> {item.vendorName}
-          </div>
-        )}
       </div>
     </BottomSheet>
+  );
+}
+
+function DetailRow({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+  return (
+    <div className="flex items-start justify-between gap-4 px-4 py-3.5 text-xs">
+      <span className="text-on-surface-variant shrink-0">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
+    </div>
   );
 }

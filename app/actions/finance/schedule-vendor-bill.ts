@@ -1,14 +1,15 @@
 "use server";
 
 import { db } from "@/db";
-import { vendorBill, vendorPayment, projectBudgetCategory, approval, user, role } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { auditLog, bankAccount, vendorBill, vendorPayment, project, projectBudgetCategory, approval, user, role } from "@/db/schema";
+import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { ActionResponse } from "@/lib/types/action-response";
 import { schedulePaymentSchema, SchedulePaymentInput } from "@/lib/validations/finance";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import crypto from "crypto";
+import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
 
 export async function scheduleVendorBillPayment(
   input: SchedulePaymentInput
@@ -49,16 +50,44 @@ export async function scheduleVendorBillPayment(
     // Run inside database transaction block
     const paymentResult = await db.transaction(async (tx) => {
       // 1. Verify vendor bill status is UNPAID or PARTIALLY_PAID
-      const bill = await tx.query.vendorBill.findFirst({
-        where: eq(vendorBill.id, vendorBillId),
-      });
+      const [bill] = await tx
+        .select()
+        .from(vendorBill)
+        .where(eq(vendorBill.id, vendorBillId))
+        .for("update");
 
       if (!bill) {
         throw new Error("VENDOR_BILL_NOT_FOUND");
       }
 
+      const [billProject] = await tx
+        .select({ status: project.status })
+        .from(project)
+        .where(eq(project.id, bill.projectId))
+        .for("update");
+      assertProjectStatusIsOperational(billProject?.status);
+
       if (bill.status === "PAID" || bill.status === "VOID") {
         throw new Error("VENDOR_BILL_CLOSED");
+      }
+
+      const account = await tx.query.bankAccount.findFirst({
+        where: and(eq(bankAccount.id, bankAccountId), eq(bankAccount.isActive, true)),
+      });
+      if (!account) throw new Error("BANK_ACCOUNT_NOT_FOUND");
+
+      const committedPayments = await tx.query.vendorPayment.findMany({
+        where: and(
+          eq(vendorPayment.vendorBillId, vendorBillId),
+          inArray(vendorPayment.status, ["PENDING", "COMPLETED"]),
+        ),
+      });
+      const committedAmount = committedPayments.reduce(
+        (sum, payment) => sum + Number(payment.amountPaid),
+        0,
+      );
+      if (amountPaid > Number(bill.amount) - committedAmount + 0.001) {
+        throw new Error("PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING");
       }
 
       // 2. Fetch the canonical budget category to check category overrun
@@ -122,6 +151,20 @@ export async function scheduleVendorBillPayment(
         })
         .returning();
 
+      await tx.insert(auditLog).values({
+        userId: session.user.id,
+        action: "SCHEDULE_VENDOR_PAYMENT",
+        targetTable: "vendor_payment",
+        targetId: newPayment.id,
+        newState: JSON.stringify({
+          vendorBillId,
+          bankAccountId,
+          amountPaid: newPayment.amountPaid,
+          paymentDate,
+          requiresApproval,
+        }),
+      });
+
       return newPayment;
     });
 
@@ -134,12 +177,15 @@ export async function scheduleVendorBillPayment(
     let errorCode: "NOT_FOUND" | "FORBIDDEN" | "TRANSACTION_FAILED" | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
     let displayMessage = errMsg;
 
-    if (errMsg === "VENDOR_BILL_NOT_FOUND" || errMsg === "PROJECT_BUDGET_CATEGORY_NOT_FOUND" || errMsg === "OWNER_USER_NOT_FOUND") {
+    if (errMsg === "VENDOR_BILL_NOT_FOUND" || errMsg === "PROJECT_BUDGET_CATEGORY_NOT_FOUND" || errMsg === "OWNER_USER_NOT_FOUND" || errMsg === "BANK_ACCOUNT_NOT_FOUND") {
       errorCode = "NOT_FOUND";
       displayMessage = "Data pendukung transaksi tidak ditemukan.";
     } else if (errMsg === "VENDOR_BILL_CLOSED") {
       errorCode = "FORBIDDEN";
       displayMessage = "Tagihan vendor sudah lunas atau dibatalkan.";
+    } else if (errMsg === "PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING") {
+      errorCode = "FORBIDDEN";
+      displayMessage = "Nominal pembayaran melebihi sisa tagihan yang belum dijadwalkan.";
     } else {
       errorCode = "TRANSACTION_FAILED";
       displayMessage = errMsg;

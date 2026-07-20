@@ -1,7 +1,5 @@
 # Phase 1: Project Setup and Design Foundation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Initialize the Next.js App Router project using Bun, TypeScript, Tailwind CSS, and shadcn/ui, and establish the HSL color palette and base mobile app shell layout.
 
 **Architecture:** A mobile-first Next.js responsive app structure. We'll set up `global.css` with solid HSL tokens (slate background, deep indigo primary, emerald success, amber warning, coral critical) and configure the app shell containing a sticky bottom navigation bar.

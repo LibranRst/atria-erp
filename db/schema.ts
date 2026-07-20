@@ -26,6 +26,8 @@ export const user = pgTable("user", {
   image: text("image"),
   roleId: uuid("role_id").notNull().references(() => role.id, { onDelete: "restrict" }),
   isActive: boolean("is_active").default(true).notNull(),
+  mustChangePassword: boolean("must_change_password").default(false).notNull(),
+  temporaryPasswordIssuedAt: timestamp("temporary_password_issued_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
@@ -52,7 +54,8 @@ export const userRelations = relations(user, ({ one, many }) => ({
   updatedBudgetAllocationSettings: many(budgetAllocationSetting, { relationName: "budgetAllocationSettingUpdater" }),
   updatedItemPriceLibraryItems: many(itemPriceLibrary, { relationName: "itemPriceLibraryUpdater" }),
   importedStatements: many(bankStatementImport),
-  sessions: many(session),
+  sessions: many(session, { relationName: "sessionUser" }),
+  developerSimulationSessions: many(session, { relationName: "developerActor" }),
   accounts: many(account),
   formDrafts: many(formDraft),
 }));
@@ -710,6 +713,7 @@ export const vendor = pgTable("vendor", {
   bankName: varchar("bank_name", { length: 100 }),
   bankAccountNumber: varchar("bank_account_number", { length: 50 }),
   bankAccountHolder: varchar("bank_account_holder", { length: 255 }),
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -1065,6 +1069,57 @@ export const stockMovementRelations = relations(stockMovement, ({ one }) => ({
   projectCost: one(projectCost, { fields: [stockMovement.projectCostId], references: [projectCost.id] }),
   vendorBill: one(vendorBill, { fields: [stockMovement.vendorBillId], references: [vendorBill.id] }),
   createdBy: one(user, { fields: [stockMovement.createdById], references: [user.id] }),
+}));
+
+export const inventoryOpeningBatch = pgTable("inventory_opening_batch", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  batchNumber: varchar("batch_number", { length: 100 }).notNull().unique(),
+  cutoverDate: timestamp("cutover_date").notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("PENDING_APPROVAL"),
+  note: text("note").notNull(),
+  referenceNumber: varchar("reference_number", { length: 100 }),
+  requestedById: uuid("requested_by_id").notNull().references(() => user.id, { onDelete: "restrict" }),
+  approvedById: uuid("approved_by_id").references(() => user.id, { onDelete: "restrict" }),
+  approvedAt: timestamp("approved_at"),
+  postedAt: timestamp("posted_at"),
+  decisionReason: text("decision_reason"),
+  rejectedReason: text("rejected_reason"),
+  reversedById: uuid("reversed_by_id").references(() => user.id, { onDelete: "restrict" }),
+  reversedAt: timestamp("reversed_at"),
+  reversalReason: text("reversal_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("iob_status_idx").on(table.status),
+  index("iob_requested_by_idx").on(table.requestedById),
+]);
+
+export const inventoryOpeningItem = pgTable("inventory_opening_item", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  batchId: uuid("batch_id").notNull().references(() => inventoryOpeningBatch.id, { onDelete: "cascade" }),
+  materialInventoryId: uuid("material_inventory_id").notNull().references(() => materialInventory.id, { onDelete: "restrict" }),
+  quantity: numeric("quantity", { precision: 12, scale: 2 }).notNull(),
+  unitCost: numeric("unit_cost", { precision: 15, scale: 2 }).notNull(),
+  stockMovementId: uuid("stock_movement_id").references(() => stockMovement.id, { onDelete: "set null" }),
+  reversalStockMovementId: uuid("reversal_stock_movement_id").references(() => stockMovement.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("ioi_batch_inventory_uidx").on(table.batchId, table.materialInventoryId),
+  index("ioi_batch_idx").on(table.batchId),
+]);
+
+export const inventoryOpeningBatchRelations = relations(inventoryOpeningBatch, ({ one, many }) => ({
+  requestedBy: one(user, { fields: [inventoryOpeningBatch.requestedById], references: [user.id], relationName: "openingRequestedBy" }),
+  approvedBy: one(user, { fields: [inventoryOpeningBatch.approvedById], references: [user.id], relationName: "openingApprovedBy" }),
+  reversedBy: one(user, { fields: [inventoryOpeningBatch.reversedById], references: [user.id], relationName: "openingReversedBy" }),
+  items: many(inventoryOpeningItem),
+}));
+
+export const inventoryOpeningItemRelations = relations(inventoryOpeningItem, ({ one }) => ({
+  batch: one(inventoryOpeningBatch, { fields: [inventoryOpeningItem.batchId], references: [inventoryOpeningBatch.id] }),
+  inventory: one(materialInventory, { fields: [inventoryOpeningItem.materialInventoryId], references: [materialInventory.id] }),
+  stockMovement: one(stockMovement, { fields: [inventoryOpeningItem.stockMovementId], references: [stockMovement.id], relationName: "openingMovement" }),
+  reversalStockMovement: one(stockMovement, { fields: [inventoryOpeningItem.reversalStockMovementId], references: [stockMovement.id], relationName: "openingReversalMovement" }),
 }));
 
 export const stockTransferItem = pgTable("stock_transfer_item", {
@@ -1514,12 +1569,23 @@ export const session = pgTable("session", {
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   userId: uuid("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  developerActorUserId: uuid("developer_actor_user_id").references(() => user.id, { onDelete: "set null" }),
 }, (table) => [
   index("session_user_id_idx").on(table.userId),
+  index("session_developer_actor_user_id_idx").on(table.developerActorUserId),
 ]);
 
 export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, { fields: [session.userId], references: [user.id] }),
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+    relationName: "sessionUser",
+  }),
+  developerActor: one(user, {
+    fields: [session.developerActorUserId],
+    references: [user.id],
+    relationName: "developerActor",
+  }),
 }));
 
 // ==========================================

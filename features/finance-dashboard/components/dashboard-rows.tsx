@@ -54,7 +54,11 @@ export function ApprovalWorkbenchRow({
 }): React.JSX.Element {
   const reduceMotion = useReducedMotion();
   const approvalLabel =
-    item.type === "project_cost" ? "Dana Lapangan" : "Vendor Payment";
+    item.type === "project_cost"
+      ? "Dana Lapangan"
+      : item.type === "inventory_opening"
+        ? "Saldo Stok"
+        : "Vendor Payment";
   const counterpartyLabel = item.requestedBy;
   const critical = item.priority === "CRITICAL";
 
@@ -76,7 +80,11 @@ export function ApprovalWorkbenchRow({
               className="material-symbols-outlined text-[18px]"
               aria-hidden="true"
             >
-              {item.type === "project_cost" ? "receipt_long" : "request_quote"}
+              {item.type === "project_cost"
+                ? "receipt_long"
+                : item.type === "inventory_opening"
+                  ? "inventory"
+                  : "request_quote"}
             </span>
           </span>
           <div className="min-w-0 flex-1">
@@ -161,7 +169,7 @@ export function ApprovalBudgetContext({
 
   return (
     <section className="overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
-      <div className="flex items-start justify-between gap-3 px-4 py-3.5">
+      <div className="flex items-center justify-between gap-3 px-4 py-3.5">
         <div className="min-w-0">
           <p className="truncate text-[10px] font-extrabold uppercase tracking-wide text-on-surface-variant/60">
             Konteks budget

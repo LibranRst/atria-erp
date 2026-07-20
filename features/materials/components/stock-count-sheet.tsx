@@ -124,9 +124,9 @@ export function StockCountSheet({
               : onClose()
         }
         primaryLabel={
-          reviewing ? "Kirim untuk Persetujuan" : "Tinjau Stock Opname"
+          reviewing ? "Kirim" : "Tinjau"
         }
-        secondaryLabel={reviewing ? "Kembali Mengedit" : "Simpan Draft"}
+        secondaryLabel={reviewing ? "Ubah" : "Draft"}
         pendingLabel={reviewing ? "Mengirim…" : "Menyimpan…"}
         pending={pending}
         disabled={!valid}
@@ -142,44 +142,44 @@ export function StockCountSheet({
       >
         {reviewing ? (
           <div className="space-y-md">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-2xl bg-surface-container-low p-3">
-                <p className="text-[9px] font-bold uppercase text-on-surface-variant">
-                  Material berubah
-                </p>
-                <p className="mt-1 text-xl font-bold">
-                  {varianceSummary.changedCount}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-surface-container-low p-3">
-                <p className="text-[9px] font-bold uppercase text-on-surface-variant">
-                  Dampak nilai
-                </p>
-                <p
-                  className={`mt-1 text-sm font-bold ${totalVarianceValue < 0 ? "text-error" : "text-primary"}`}
-                >
-                  {new Intl.NumberFormat("id-ID", {
-                    style: "currency",
-                    currency: "IDR",
-                    maximumFractionDigits: 0,
-                  }).format(totalVarianceValue)}
-                </p>
-              </div>
-            </div>
+            <FormSection title="Tinjau hasil opname" helper="Periksa nomor dokumen dan dampak selisih sebelum mengirim.">
+              <ReviewFact label="Nomor dokumen" value={documentNumber} />
+              <ReviewFact label="Lokasi" value={locationOptions.find((o) => o.value === locationId)?.label ?? "–"} />
+              <ReviewFact label="Material berubah" value={`${varianceSummary.changedCount} item`} />
+              <ReviewFact
+                label="Dampak nilai"
+                value={
+                  <span className={totalVarianceValue < 0 ? "text-error" : "text-primary"}>
+                    {new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      maximumFractionDigits: 0,
+                    }).format(totalVarianceValue)}
+                  </span>
+                }
+              />
+              {note.trim() && <ReviewFact label="Catatan audit" value={note} />}
+            </FormSection>
+
             {changedRows.length === 0 ? (
               <FormRiskNotice title="Tidak ada selisih" tone="default">
                 Semua jumlah fisik sama dengan snapshot sistem. Dokumen tetap
                 dapat dikirim sebagai bukti pemeriksaan.
               </FormRiskNotice>
             ) : (
-              <div className="space-y-2">
+              <div className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15 divide-y divide-outline-variant/15">
+                <div className="bg-surface-container-low/50 px-4 py-2.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                    Rincian Selisih ({changedRows.length} item)
+                  </p>
+                </div>
                 {changedRows.map((row) => (
                   <div
                     key={row.materialId}
-                    className="flex items-center justify-between gap-3 rounded-2xl bg-surface-container-low px-4 py-3"
+                    className="flex items-center justify-between gap-3 px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-bold">
+                      <p className="truncate text-xs font-bold text-on-surface">
                         {row.materialName}
                       </p>
                       <p className="mt-0.5 text-[10px] text-on-surface-variant">
@@ -312,19 +312,16 @@ export function StockCountSheet({
           </div>
         )}
       </WorkflowFormSheet>
-      <MaterialUnsavedChangesModal
-        open={confirmClose}
-        pending={pending}
-        onSave={() => {
-          setConfirmClose(false);
-          onSaveDraft();
-        }}
-        onDiscard={() => {
-          setConfirmClose(false);
-          onClose();
-        }}
-        onContinue={() => setConfirmClose(false)}
-      />
+      <MaterialUnsavedChangesModal open={confirmClose} pending={pending} onSave={() => { setConfirmClose(false); onSaveDraft(); }} onDiscard={() => { setConfirmClose(false); onClose(); }} onContinue={() => setConfirmClose(false)} />
     </>
+  );
+}
+
+function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+  return (
+    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+      <span className="text-on-surface-variant shrink-0">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
+    </div>
   );
 }

@@ -130,7 +130,7 @@ export function ExpenseLineEditor({
       <WorkflowFormSheet
         open={open}
         title={`Item ${index + 1}`}
-        primaryLabel="Simpan Item"
+        primaryLabel="Simpan"
         disabled={!complete}
         disabledReason={!complete ? "Lengkapi kategori, keterangan, jumlah, harga, dan kebutuhan stok." : undefined}
         statusText={overBudget ? "Subtotal melebihi sisa kategori." : `Subtotal Rp ${amount.toLocaleString("id-ID")}`}

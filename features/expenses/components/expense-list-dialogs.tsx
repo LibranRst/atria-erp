@@ -6,6 +6,7 @@ import {
   FieldContextLine,
   FormField,
   FormRiskNotice,
+  FormSection,
   SheetSelect,
   TextInput,
   useSheetPresenceValue,
@@ -116,94 +117,115 @@ export function FieldDisbursementSheet({
 
   return (
     <>
-    <WorkflowFormSheet
-      open={open}
-      onExitComplete={handleExitComplete}
-      title={reviewing ? "Tinjau pencairan dana" : "Pencairan dana"}
-      onClose={requestClose}
-      pending={pending}
-      pendingLabel="Mencairkan…"
-      disabled={!canContinue}
-      disabledReason={disabledReason}
-      danger={reviewing}
-      primaryLabel={reviewing ? "Konfirmasi Pencairan Dana" : "Tinjau Pencairan"}
-      secondaryLabel={reviewing ? "Ubah Data" : undefined}
-      onPrimary={() => reviewing ? onSubmit() : setReviewing(true)}
-      onSecondary={() => setReviewing(false)}
-    >
-      <div className="space-y-md">
-        {error && (
-          <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs font-medium text-error">
-            <span className="material-symbols-outlined text-[18px] text-error">
-              error
-            </span>
-            <div className="leading-relaxed">{error}</div>
-          </div>
-        )}
-        {success ? <FieldContextLine tone="success">{success}</FieldContextLine> : null}
+      <WorkflowFormSheet
+        open={open}
+        onExitComplete={handleExitComplete}
+        title={reviewing ? "Tinjau pencairan dana" : "Pencairan dana"}
+        onClose={requestClose}
+        pending={pending}
+        pendingLabel="Mencairkan…"
+        disabled={!canContinue}
+        disabledReason={disabledReason}
+        danger={reviewing}
+        primaryLabel={reviewing ? "Cairkan" : "Tinjau"}
+        secondaryLabel={reviewing ? "Ubah" : undefined}
+        onPrimary={() => reviewing ? onSubmit() : setReviewing(true)}
+        onSecondary={() => setReviewing(false)}
+      >
+        <div className="space-y-md">
+          {error && (
+            <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs font-medium text-error">
+              <span className="material-symbols-outlined text-[18px] text-error">
+                error
+              </span>
+              <div className="leading-relaxed">{error}</div>
+            </div>
+          )}
+          {success ? <FieldContextLine tone="success">{success}</FieldContextLine> : null}
 
-        <div className="space-y-xs rounded-xl border border-outline-variant/10 bg-surface-container-low p-sm text-xs font-semibold text-on-surface">
-          <div className="flex justify-between text-[14px]">
-            <span className="text-on-surface-variant">Jumlah Pencairan:</span>
-            <span className="font-numeral font-bold text-primary">
-              Rp {Number(presentedCost.amount).toLocaleString("id-ID")}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-on-surface-variant">Proyek:</span>
-            <span className="max-w-[200px] truncate">
-              {presentedCost.project?.name}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-on-surface-variant">Pengaju (PM):</span>
-            <span>{presentedCost.requestedBy?.name}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-on-surface-variant">Keterangan:</span>
-            <span className="max-w-[200px] truncate">
-              {presentedCost.description}
-            </span>
-          </div>
+          <FormSection title="Rincian Pengeluaran">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+              <ReviewFact
+                label="Jumlah Pencairan"
+                value={
+                  <span className="font-numeral font-bold text-primary text-[14px]">
+                    Rp {Number(presentedCost.amount).toLocaleString("id-ID")}
+                  </span>
+                }
+              />
+              <ReviewFact label="Proyek" value={presentedCost.project?.name ?? "–"} />
+              <ReviewFact label="Pengaju (PM)" value={presentedCost.requestedBy?.name ?? "–"} />
+              {presentedCost.description && (
+                <ReviewFact label="Keterangan" value={presentedCost.description} />
+              )}
+            </div>
+          </FormSection>
+
+          {reviewing ? (
+             <div className="space-y-3">
+               <FormSection title="Dampak Keuangan" helper="Periksa dampak pencairan dana pada saldo kas rekening.">
+                 <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                   <ReviewFact label="Rekening Sumber" value={selectedAccount?.name ?? "–"} />
+                   <ReviewFact
+                     label="Saldo Rekening"
+                     value={
+                       <span className={after < 0 ? "text-error font-bold" : "text-primary font-bold"}>
+                         Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
+                       </span>
+                     }
+                   />
+                   <ReviewFact label="Referensi transfer" value={refNumber} />
+                 </div>
+               </FormSection>
+               <FormRiskNotice title="Pencairan final" tone="warning">
+                 Sistem menandai pengeluaran lunas, mencatat ledger rekonsiliasi, dan menyinkronkan budget. Koreksi dilakukan melalui transaksi pembalik.
+               </FormRiskNotice>
+             </div>
+          ) : (
+             <form
+               id="expense-disburse-form"
+               onSubmit={(event) => { event.preventDefault(); setReviewing(true); }}
+               className="space-y-md"
+             >
+               <FormSection title="Pencairan Pengeluaran" helper="Pilih rekening bank sumber kas kecil proyek dan isi nomor referensi transfer.">
+                 <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                   <SheetSelect
+                     label="Rekening Sumber Dana"
+                     value={selectedBankId}
+                     disabled={pending}
+                     onChange={onBankChange}
+                     options={bankAccounts.map((acc) => ({
+                       value: acc.id,
+                       label: `${acc.bankName} - ${acc.name}`,
+                       description: `Saldo Rp ${Number(acc.balance).toLocaleString("id-ID")}`,
+                     }))}
+                     required
+                   />
+
+                   <FormField label="Nomor Referensi Bukti Transfer" required>
+                     <TextInput
+                       value={refNumber}
+                       disabled={pending}
+                       onChange={onRefNumberChange}
+                       placeholder="Contoh: TRF-BCA-10294"
+                     />
+                   </FormField>
+                 </div>
+               </FormSection>
+             </form>
+          )}
         </div>
-
-        {reviewing ? (
-          <div className="space-y-3">
-            <MoneyImpactRow label={selectedAccount?.name ?? "Rekening sumber"} before={before} delta={-amount} after={after} />
-            <FormRiskNotice title="Pencairan final" tone="warning">
-              Sistem menandai pengeluaran lunas, mencatat ledger rekonsiliasi, dan menyinkronkan budget. Koreksi dilakukan melalui transaksi pembalik.
-            </FormRiskNotice>
-            <FieldContextLine>Referensi {refNumber}</FieldContextLine>
-          </div>
-        ) : <form
-          id="expense-disburse-form"
-          onSubmit={(event) => { event.preventDefault(); setReviewing(true); }}
-          className="space-y-md"
-        >
-          <SheetSelect
-            label="Rekening Sumber Dana"
-            value={selectedBankId}
-            disabled={pending}
-            onChange={onBankChange}
-            options={bankAccounts.map((acc) => ({
-              value: acc.id,
-              label: `${acc.bankName} - ${acc.name}`,
-              description: `Saldo Rp ${Number(acc.balance).toLocaleString("id-ID")}`,
-            }))}
-          />
-
-          <FormField label="Nomor Referensi Bukti Transfer" required>
-            <TextInput
-              value={refNumber}
-              disabled={pending}
-              onChange={onRefNumberChange}
-              placeholder="Contoh: TRF-BCA-10294"
-            />
-          </FormField>
-        </form>}
-      </div>
-    </WorkflowFormSheet>
-    <FinanceUnsavedChangesModal open={confirmClose} onKeep={() => { setConfirmClose(false); onClose(); }} onDiscard={() => { setConfirmClose(false); onDiscard(); }} onContinue={() => setConfirmClose(false)} />
+      </WorkflowFormSheet>
+      <FinanceUnsavedChangesModal open={confirmClose} onKeep={() => { setConfirmClose(false); onClose(); }} onDiscard={() => { setConfirmClose(false); onDiscard(); }} onContinue={() => setConfirmClose(false)} />
     </>
+  );
+}
+
+function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+  return (
+    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+      <span className="text-on-surface-variant shrink-0">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
+    </div>
   );
 }

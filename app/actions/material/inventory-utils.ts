@@ -7,9 +7,13 @@ import {
   stockMovement,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { assertProjectAccess } from "@/lib/auth/scoping";
+import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
+export {
+  calculateOutstandingProjectReservations,
+  type ProjectMaterialMovement as ProjectReservationMovement,
+} from "@/lib/material/project-material-projection";
 import { ActionResponse } from "@/lib/types/action-response";
 import { and, eq } from "drizzle-orm";
 
@@ -69,8 +73,10 @@ export async function assertProjectScopeForMaterialAction(
   roleName: string
 ): Promise<void> {
   if (!projectId) return;
-  if (roleName === "OWNER" || roleName === "FINANCE_ADMIN" || roleName === "PURCHASING") return;
-  await assertProjectAccess(projectId, userId, roleName);
+  if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN" && roleName !== "PURCHASING") {
+    await assertProjectAccess(projectId, userId, roleName);
+  }
+  await assertProjectIsOperational(projectId);
 }
 
 export function toDecimal(value: number): string {
@@ -207,6 +213,9 @@ export function mapStockError<T>(
   }
   if (message === "INSUFFICIENT_CURRENT_STOCK") {
     return { success: false, error: { code: "FORBIDDEN", message: "Stock fisik tidak cukup untuk aksi ini." } };
+  }
+  if (message === "STOCK_RESERVED_FOR_OTHER_PROJECTS") {
+    return { success: false, error: { code: "FORBIDDEN", message: "Aksi ini akan memakai stock yang direservasi untuk project lain." } };
   }
   if (message === "RETURN_EXCEEDS_PROJECT_USAGE") {
     return { success: false, error: { code: "VALIDATION_ERROR", message: "Jumlah return melebihi pemakaian bersih material pada proyek." } };

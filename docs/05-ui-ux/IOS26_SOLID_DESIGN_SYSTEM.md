@@ -2,6 +2,8 @@
 
 For page composition, density, grouped rows, financial formatting, loading states, and visual QA, `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md` is the active source of truth. The rules below define the component and interaction layer used by that page language.
 
+Load `.agents/skills/atria-ui-ux/SKILL.md` before any UI/UX implementation or review. It is the mandatory workflow entrypoint and links the live visual references to these component rules.
+
 ## Direction
 The interface should feel premium, calm, modern, operational, and trustworthy. It should be inspired by modern iOS interaction patterns but remain solid and readable, not overly glassy or decorative.
 
@@ -34,10 +36,13 @@ The interface should feel premium, calm, modern, operational, and trustworthy. I
 
 ## Reference UI
 
-The current Dashboard and Expenses pages are the canonical implementation references:
+The current Dashboard, all six Dashboard tabs, and the approved operational forms are the canonical implementation references:
 
 - `features/finance-dashboard/components/`
 - `features/expenses/components/`
+- `features/expenses/components/expense-form.tsx`
+- `features/expenses/components/vendor-bill-form.tsx`
+- `features/projects/list/components/project-drawer.tsx`
 - `components/ui/segmented-tabs.tsx`
 - `components/ui/page-primitives.tsx`
 
@@ -68,4 +73,8 @@ All animations must use Framer Motion and reference the unified animation preset
 - **Snappy Micro-interactions**: Use `transitionSpringSnappy` (`stiffness: 380, damping: 30, mass: 0.8`) with active tap scale effects (e.g. `whileTap={{ scale: 0.97 }}`).
 - **Bouncy celebratory animations**: Use `transitionSpringBouncy` (`stiffness: 300, damping: 26`).
 - Avoid custom inline spring configs or CSS keyframe animations.
-- Respect reduced motion. Keep selection and spatial transitions, but do not animate whole sections or tab content without a functional reason.
+- Keep route and page changes instant. Do not add page transitions.
+- Keep tab and filter content instant; only the active `SegmentedTabs` pill may use its established spring.
+- Do not add whole-section/list entrances, staggers, decorative loops, or motion to every card or row.
+- Use meaningful local morphs only when the same object changes state or geometry within one context.
+- Respect reduced motion and keep every interaction functional without animation.

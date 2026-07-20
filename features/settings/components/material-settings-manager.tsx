@@ -47,6 +47,7 @@ import {
   SettingsRowChevron,
   SettingsStatusLabel,
 } from "./settings-primitives";
+import { MaterialImportSheet } from "./material-import-sheet";
 
 type Option = { readonly id: string; readonly name: string };
 type MaterialDraft = {
@@ -82,6 +83,8 @@ type MaterialSettingsManagerProps = {
   readonly roleName: string;
   readonly canManage: boolean;
   readonly hideHeader?: boolean;
+  readonly presentation?: "settings" | "onboarding";
+  readonly onMutationComplete?: () => void;
 };
 
 const STATUS_FILTERS = [
@@ -98,6 +101,8 @@ export function MaterialSettingsManager({
   roleName,
   canManage,
   hideHeader = false,
+  presentation = "settings",
+  onMutationComplete,
 }: MaterialSettingsManagerProps): React.JSX.Element {
   const [materials, setMaterials] = React.useState(initialMaterials);
   const [categories, setCategories] = React.useState(initialCategories);
@@ -125,6 +130,7 @@ export function MaterialSettingsManager({
   const [vendorFilter, setVendorFilter] = React.useState("ALL");
   const [status, setStatus] = React.useState("ACTIVE");
   const [message, setMessage] = React.useState<string | null>(null);
+  const [showImport, setShowImport] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
   const categoryFilters = React.useMemo(
     () => [
@@ -267,6 +273,7 @@ export function MaterialSettingsManager({
           setDraftBaseline("");
           setMessage("Material berhasil diperbarui.");
           toast.success("Material berhasil diperbarui.");
+          onMutationComplete?.();
         } else {
           setMessage(result.error.message);
           toast.error(result.error.message);
@@ -291,7 +298,9 @@ export function MaterialSettingsManager({
         });
         if (result.success) {
           toast.success("Material baru berhasil ditambahkan.");
-          window.location.reload();
+          setDraft(null);
+          setDraftBaseline("");
+          onMutationComplete?.();
         } else {
           setMessage(result.error.message);
           toast.error(result.error.message);
@@ -319,6 +328,7 @@ export function MaterialSettingsManager({
         setSelectedMaterial(null);
         setConfirmMaterial(null);
         toast.success("Material berhasil diperbarui.");
+        onMutationComplete?.();
       } else {
         setMessage(result.error.message);
         toast.error(result.error.message);
@@ -352,6 +362,7 @@ export function MaterialSettingsManager({
         setInventoryBaseline("");
         setMessage("Default inventory diperbarui.");
         toast.success("Default inventory diperbarui.");
+        onMutationComplete?.();
       } else {
         setMessage(result.error.message);
         toast.error(result.error.message);
@@ -377,6 +388,7 @@ export function MaterialSettingsManager({
         setCategoryName("");
         setShowCategoryComposer(false);
         toast.success("Kategori baru berhasil ditambahkan.");
+        onMutationComplete?.();
       } else {
         setMessage(result.error.message);
         toast.error(result.error.message);
@@ -385,8 +397,10 @@ export function MaterialSettingsManager({
   }
 
   return (
-    <section className="min-w-0 space-y-lg">
-      {hideHeader ? (
+    <section
+      className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-lg"}`}
+    >
+      {presentation === "onboarding" ? null : hideHeader ? (
         <SettingsModuleHeader
           eyebrow="Identitas dan default"
           title="Material Master"
@@ -409,36 +423,82 @@ export function MaterialSettingsManager({
           {message}
         </p>
       )}
-      <SettingsFilterBar
-        status={status}
-        statusOptions={STATUS_FILTERS}
-        search={search}
-        filterCount={activeFilterCount}
-        searchPlaceholder="Cari material, kode, merek"
-        searchAriaLabel="Cari material master"
-        layoutPrefix="settings-material"
-        filterTitle="Filter material"
-        onStatusChange={setStatus}
-        onSearchChange={setSearch}
-        onResetFilters={() => {
-          setCategoryFilter("ALL");
-          setVendorFilter("ALL");
-          setStatus("ALL");
-        }}
-      >
-        <FilterSelect
-          label="Kategori"
-          value={categoryFilter}
-          options={categoryFilters}
-          onChange={setCategoryFilter}
-        />
-        <FilterSelect
-          label="Vendor"
-          value={vendorFilter}
-          options={vendorFilters}
-          onChange={setVendorFilter}
-        />
-      </SettingsFilterBar>
+      {presentation === "onboarding" ? (
+        <div className="flex min-w-0 items-center justify-between gap-3 px-1">
+          <span className="min-w-0">
+            <span className="block text-[13px] leading-5 font-bold text-on-surface">
+              Material Master
+            </span>
+            <span className="block text-[9px] leading-4 text-on-surface-variant">
+              {materials.filter((row) => row.isActive).length} material aktif
+            </span>
+          </span>
+          <span className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setShowImport(true)}
+              disabled={!canManage}
+              className="relative min-h-10 rounded-full px-3 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] disabled:opacity-40"
+            >
+              Import
+            </button>
+            <button
+              type="button"
+              onClick={() => openMaterial(blank())}
+              disabled={!canManage}
+              className="relative min-h-10 rounded-full bg-[#007AFF]/[0.08] px-3.5 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] disabled:opacity-40"
+            >
+              Tambah
+            </button>
+          </span>
+        </div>
+      ) : canManage ? (
+        <button
+          type="button"
+          onClick={() => setShowImport(true)}
+          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-4 text-[10px] font-bold text-[#007AFF] shadow-sm ring-1 ring-black/[0.04]"
+        >
+          <span
+            className="material-symbols-outlined text-[17px]"
+            aria-hidden="true"
+          >
+            upload_file
+          </span>
+          Import CSV
+        </button>
+      ) : null}
+      {presentation === "settings" ? (
+        <SettingsFilterBar
+          status={status}
+          statusOptions={STATUS_FILTERS}
+          search={search}
+          filterCount={activeFilterCount}
+          searchPlaceholder="Cari material, kode, merek"
+          searchAriaLabel="Cari material master"
+          layoutPrefix="settings-material"
+          filterTitle="Filter material"
+          onStatusChange={setStatus}
+          onSearchChange={setSearch}
+          onResetFilters={() => {
+            setCategoryFilter("ALL");
+            setVendorFilter("ALL");
+            setStatus("ALL");
+          }}
+        >
+          <FilterSelect
+            label="Kategori"
+            value={categoryFilter}
+            options={categoryFilters}
+            onChange={setCategoryFilter}
+          />
+          <FilterSelect
+            label="Vendor"
+            value={vendorFilter}
+            options={vendorFilters}
+            onChange={setVendorFilter}
+          />
+        </SettingsFilterBar>
+      ) : null}
       {filtered.length === 0 ? (
         <EmptyState
           title={
@@ -467,17 +527,11 @@ export function MaterialSettingsManager({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className="truncate text-[13px] font-bold text-on-surface">
+                    <span className="truncate text-[13px] leading-5 font-bold text-on-surface">
                       {material.name}
                     </span>
-                    <SettingsStatusLabel
-                      label={
-                        material.isActive ? material.categoryName : "Diarsipkan"
-                      }
-                      tone={material.isActive ? "neutral" : "inactive"}
-                    />
                   </span>
-                  <span className="mt-1 block truncate text-[10px] leading-[1.3] text-on-surface-variant">
+                  <span className="mt-1 block truncate text-[10px] leading-4 text-on-surface-variant">
                     {[
                       material.brand,
                       material.code,
@@ -487,7 +541,7 @@ export function MaterialSettingsManager({
                       .filter(Boolean)
                       .join(" · ") || "Detail material belum dilengkapi"}
                   </span>
-                  <span className="mt-1.5 flex min-w-0 items-center gap-2 text-[9px] text-on-surface-variant">
+                  <span className="flex min-w-0 items-center gap-2 leading-4 text-[9px] text-on-surface-variant">
                     <span className="truncate">
                       {material.inventory.length} lokasi default
                     </span>
@@ -501,7 +555,15 @@ export function MaterialSettingsManager({
                     ) : null}
                   </span>
                 </span>
-                <SettingsRowChevron />
+                <div className="flex min-w-0 items-center gap-2">
+                  <SettingsStatusLabel
+                    label={
+                      material.isActive ? material.categoryName : "Diarsipkan"
+                    }
+                    tone={material.isActive ? "neutral" : "inactive"}
+                  />
+                  <SettingsRowChevron />
+                </div>
               </button>
             ))}
           </div>
@@ -695,6 +757,11 @@ export function MaterialSettingsManager({
         ) : null}
       </BottomSheet>
 
+      <MaterialImportSheet
+        open={showImport}
+        onClose={() => setShowImport(false)}
+      />
+
       <OperationalFormSheet
         actionPlacement="header"
         open={Boolean(draft)}
@@ -703,7 +770,7 @@ export function MaterialSettingsManager({
         pending={pending}
         disabled={!canManage || !canSaveMaterial}
         disabledReason={materialDisabledReason}
-        submitLabel="Simpan Material"
+        submitLabel="Simpan"
         submittingLabel="Menyimpan…"
         onSubmit={saveMaterial}
         statusText={
@@ -882,7 +949,7 @@ export function MaterialSettingsManager({
         disabledReason={
           !categoryName.trim() ? "Isi nama kategori material." : undefined
         }
-        submitLabel="Tambahkan Kategori"
+        submitLabel="Tambah"
         submittingLabel="Menambahkan…"
         onSubmit={addCategory}
         statusText={
@@ -916,7 +983,7 @@ export function MaterialSettingsManager({
         disabledReason={
           !inventoryDirty ? "Belum ada perubahan untuk disimpan." : undefined
         }
-        submitLabel="Simpan Default Inventori"
+        submitLabel="Simpan"
         submittingLabel="Menyimpan…"
         onSubmit={saveInventory}
         statusText={

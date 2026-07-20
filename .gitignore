@@ -1,6 +1,14 @@
-.superpowers/
-.agents/
-.claude/
+# Track the canonical Atria UI/UX skill while keeping local agent state private.
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/atria-ui-ux/
+!.agents/skills/atria-ui-ux/**
+
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/atria-ui-ux
 node_modules/
 .env
 .env.local
@@ -50,4 +58,3 @@ next-env.d.ts
 .playwright-cli/
 output/
 scratch/
-

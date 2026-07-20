@@ -14,7 +14,6 @@ export type VendorBillWriteInput = {
   readonly vendorId: string;
   readonly projectId: string;
   readonly projectBudgetCategoryId: string;
-  readonly projectBudgetItemId?: string | null;
   readonly projectCategoryPlanItemId?: string | null;
   readonly billNumber: string;
   readonly amount: number;
@@ -36,7 +35,6 @@ export async function createVendorBillTx(
     tx,
     projectId: input.projectId,
     projectBudgetCategoryId: input.projectBudgetCategoryId,
-    projectBudgetItemId: input.projectBudgetItemId,
   });
   await assertCategoryPlanItemLinkAllowed({
     tx,
@@ -50,7 +48,7 @@ export async function createVendorBillTx(
     vendorId: input.vendorId,
     projectId: input.projectId,
     projectBudgetCategoryId: budgetContext.projectBudgetCategoryId,
-    projectBudgetItemId: input.projectBudgetItemId ?? null,
+    projectBudgetItemId: null,
     projectCategoryPlanItemId: input.projectCategoryPlanItemId ?? null,
     billNumber: input.billNumber,
     amount: input.amount.toFixed(2),
@@ -75,8 +73,10 @@ export async function createVendorBillTx(
     quantity: "1.00",
     unitCost: input.amount.toFixed(2),
     amount: input.amount.toFixed(2),
+    sourceType: budgetContext.categoryCode === "MATERIAL" ? "INVENTORY_PURCHASE" : "VENDOR_BILL",
+    isCashImpact: true,
     paymentStatus: "UNPAID",
-    status: "APPROVED",
+    status: budgetContext.categoryCode === "MATERIAL" ? "INVENTORY_ASSET" : "APPROVED",
   });
 
   await syncProjectBudgetCategory({ tx, projectBudgetCategoryId: budgetContext.projectBudgetCategoryId });

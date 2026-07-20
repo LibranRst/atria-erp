@@ -69,19 +69,19 @@ export function MaterialRapStagePanel({
               </span>
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold">
+              <span className="block truncate leading-5 text-sm font-bold">
                 {item.name}
               </span>
-              <span className="block truncate text-[10px] text-on-surface-variant">
+              <span className="block truncate leading-4 text-[10px] text-on-surface-variant">
                 {item.area} - {item.totalQuantity} {item.unit}
               </span>
             </span>
             <span className="max-w-[38%] shrink-0 text-right">
-              <span className="financial-amount block break-words font-mono text-[10px] font-bold [overflow-wrap:anywhere]">
+              <span className="financial-amount block break-words font-mono leading-5 text-[10px] font-bold [overflow-wrap:anywhere]">
                 {formatShortRp(Number(item.estimatedTotalCost))}
               </span>
               <span
-                className={`mt-1 block text-[9px] font-bold ${
+                className={`block text-[9px] leading-4 font-bold ${
                   item.needToBuy > 0 ? "text-warning" : "text-primary"
                 }`}
               >
@@ -234,19 +234,25 @@ export function ReviewInternalPlanPanel({
         {rap.tukangScopeSkipped ? (
           <MiniMetric label="Tukang" value="Tidak digunakan" />
         ) : (
-          <MiniMoneyMetric label="Tukang" value={sumPackageCost(tukangPlanItems)} />
+          <MiniMoneyMetric
+            label="Tukang"
+            value={sumPackageCost(tukangPlanItems)}
+          />
         )}
         {rap.subconScopeSkipped ? (
           <MiniMetric label="Subcon" value="Tidak digunakan" />
         ) : (
-          <MiniMoneyMetric label="Subcon" value={sumPackageCost(subconPlanItems)} />
+          <MiniMoneyMetric
+            label="Subcon"
+            value={sumPackageCost(subconPlanItems)}
+          />
         )}
         <MiniMoneyMetric
           label="Total Plan"
           value={
             plannedCost +
-              sumPackageCost(tukangPlanItems) +
-              sumPackageCost(subconPlanItems)
+            sumPackageCost(tukangPlanItems) +
+            sumPackageCost(subconPlanItems)
           }
         />
       </MetricGrid>

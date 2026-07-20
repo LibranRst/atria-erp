@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
+import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
 import { MoneyValue } from "@/components/ui/page-primitives";
 import { BankAccountsControl } from "@/features/finance-dashboard/components/bank-accounts-control";
 import { BudgetSplitIndicator } from "@/features/finance-dashboard/components/dashboard-budget-indicators";
@@ -38,11 +40,80 @@ function SummaryFact({ label, value, tone = "default" }: { readonly label: strin
   );
 }
 
-export function DashboardOverviewTab({ data, financialPosition }: { readonly data: FinanceDashboardOverview; readonly financialPosition: React.ReactNode }): React.JSX.Element {
+export function DashboardOverviewTab({
+  data,
+  financialPosition,
+  onboarding,
+}: {
+  readonly data: FinanceDashboardOverview;
+  readonly financialPosition: React.ReactNode;
+  readonly onboarding: OwnerOnboardingOverview | null;
+}): React.JSX.Element {
   const nextDue = data.dashboardDetails.cashDueGroups.flatMap((group) => group.items).slice(0, 3);
   const materialAttention = data.dashboardDetails.materials.filter((item) => item.severity !== "INFO").slice(0, 3);
+  const showOnboardingCard = onboarding && onboarding.state.status !== "COMPLETED";
+  const missingSteps = onboarding
+    ? onboarding.readiness.filter((item) => !item.ready && item.id !== "summary").length
+    : 0;
+  const setupSteps = onboarding
+    ? onboarding.readiness.filter((item) => item.id !== "summary")
+    : [];
+  const activeStepItem = onboarding
+    ? setupSteps.find((item) => item.id === onboarding.state.currentStep)
+    : null;
+
   return (
     <div className="space-y-lg max-[430px]:space-y-5">
+      {showOnboardingCard && onboarding ? (
+        <section className="rounded-[26px] bg-[#151719] p-5 text-white shadow-[0_2px_4px_rgba(17,17,17,0.12),0_20px_48px_rgba(17,17,17,0.16)] ring-1 ring-white/[0.08] max-[430px]:rounded-[22px] max-[430px]:p-4">
+          <div className="min-w-0">
+            <span className="block text-[9px] font-bold uppercase tracking-[0.13em] text-white/52">
+              Setup Fondasi Atria
+            </span>
+            <span className="mt-1 block text-base font-bold tracking-[-0.02em] text-white">
+              {onboarding.state.status === "PAUSED" ? `${missingSteps} langkah tersisa` : "Mulai setup organisasi"}
+            </span>
+          </div>
+
+          <div className="mt-4">
+            <div className="flex gap-1.5">
+              {setupSteps.map((stepItem) => {
+                const isCompleted = stepItem.ready;
+                const isActive = onboarding.state.currentStep === stepItem.id;
+                let bgClass = "bg-white/10";
+                if (isCompleted) {
+                  bgClass = "bg-emerald-500";
+                } else if (isActive) {
+                  bgClass = "bg-white/90 animate-pulse";
+                }
+                return (
+                  <div
+                    key={stepItem.id}
+                    className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${bgClass}`}
+                    title={`${stepItem.label}: ${stepItem.ready ? "Selesai" : isActive ? "Aktif" : "Belum selesai"}`}
+                  />
+                );
+              })}
+            </div>
+            <div className="mt-2.5 flex items-center justify-between gap-3 text-[10px] text-white/52">
+              <span className="truncate">
+                Langkah aktif: <span className="font-bold text-white/85">{activeStepItem?.label}</span>
+              </span>
+              <span className="shrink-0 font-mono text-[9px] font-semibold text-white/70">
+                {setupSteps.filter((s) => s.ready).length}/{setupSteps.length} Selesai
+              </span>
+            </div>
+          </div>
+
+          <Link
+            href={`/onboarding?step=${onboarding.state.currentStep}`}
+            className="mt-4 flex min-h-11 w-full items-center justify-center rounded-full bg-white text-xs font-bold text-[#111] transition active:scale-[0.98]"
+          >
+            Lanjutkan setup
+          </Link>
+        </section>
+      ) : null}
+
       {financialPosition}
       <OverviewPreviewSection title={data.role === "OWNER" ? "Perlu keputusan" : "Prioritas finance"} href={data.role === "OWNER" ? "/ledger?tab=approvals" : "/ledger?tab=cash"}>
         {data.actions.length === 0 ? <OverviewPreviewEmpty>Tidak ada tindakan mendesak. Kondisi utama sudah terkendali.</OverviewPreviewEmpty> : <OverviewPriorityList actions={data.actions} />}

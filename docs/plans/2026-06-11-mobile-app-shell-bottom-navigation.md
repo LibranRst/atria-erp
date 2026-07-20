@@ -1,7 +1,5 @@
 # Mobile App Shell & Sticky Bottom Navigation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Build the Phase 1 Task 3 mobile-first app shell with sticky bottom navigation for Atria ERP.
 
 **Architecture:** Keep the app shell as a server-rendered layout wrapper and isolate route-aware navigation in a small client component that uses `usePathname()`. Use the existing Tailwind v4 CSS-first tokens from `app/globals.css` (`bg-deep`, `bg-surface`, `border-border`, `text-primary`, `text-muted`, `text-secondary`) and avoid backdrop blur per `docs/05-ui-ux/IOS26_SOLID_DESIGN_SYSTEM.md`. The shell centers a max-width mobile viewport on desktop, reserves bottom safe-area space, and allows only the content region to scroll.
@@ -407,7 +405,7 @@ M app/layout.tsx
 M app/page.tsx
 A components/layout/bottom-nav.tsx
 A components/layout/mobile-shell.tsx
-A docs/superpowers/plans/2026-06-11-mobile-app-shell-bottom-navigation.md
+A docs/plans/2026-06-11-mobile-app-shell-bottom-navigation.md
 ```
 
 If `bun.lock` does not change because `lucide-react` was already installed, that is acceptable.
@@ -427,7 +425,7 @@ Expected: Diff only contains the planned mobile shell, bottom nav, welcome page,
 Run:
 
 ```bash
-git add package.json bun.lock app/layout.tsx app/page.tsx components/layout/bottom-nav.tsx components/layout/mobile-shell.tsx docs/superpowers/plans/2026-06-11-mobile-app-shell-bottom-navigation.md
+git add package.json bun.lock app/layout.tsx app/page.tsx components/layout/bottom-nav.tsx components/layout/mobile-shell.tsx docs/plans/2026-06-11-mobile-app-shell-bottom-navigation.md
 git commit -m "feat: implement mobile app shell and sticky bottom navigation"
 ```
 

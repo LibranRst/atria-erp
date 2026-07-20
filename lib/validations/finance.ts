@@ -136,9 +136,10 @@ export const approveFieldRequestSchema = z.object({
   projectCostId: z.string().regex(uuidRegex, "ID Biaya Proyek tidak valid."),
   status: z.enum(["APPROVED", "REJECTED"], { error: "Status persetujuan harus APPROVED atau REJECTED." }),
   notes: z.string().max(500).optional().nullable(),
+  emergencyOverride: z.boolean().default(false),
 });
 
-export type ApproveFieldRequestInput = z.infer<typeof approveFieldRequestSchema>;
+export type ApproveFieldRequestInput = z.input<typeof approveFieldRequestSchema>;
 
 export const createClientInvoiceSchema = z.object({
   projectId: z.string().regex(uuidRegex, "ID Proyek tidak valid."),

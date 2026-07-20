@@ -58,7 +58,6 @@ import {
   getSettingsHubOverview as getSettingsHubOverviewRead,
   getSettingsOverview as getSettingsOverviewRead,
 } from "./system-read";
-
 export type {
   BudgetAllocationCategoryRow,
   BudgetAllocationSettingRow,

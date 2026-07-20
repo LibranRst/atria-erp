@@ -14,6 +14,7 @@ import {
 } from "@/components/ui";
 import { FinanceUnsavedChangesModal, MoneyImpactRow } from "@/features/finance/components/finance-form-patterns";
 import { shortMoney } from "@/features/finance-dashboard/lib/dashboard-formatters";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { movementCategoryOptions } from "./constants";
 import { InfoPill } from "./info-pill";
 import type { BankAccount, CashMovementCategory, MovementDraft } from "./types";
@@ -84,8 +85,8 @@ export function MovementSheet({
       pending={pending}
       disabled={!canSave}
       disabledReason={disabledReason}
-      primaryLabel={reviewing ? "Catat Mutasi Kas" : "Tinjau Mutasi"}
-      secondaryLabel={reviewing ? "Ubah Data" : undefined}
+      primaryLabel={reviewing ? "Catat" : "Tinjau"}
+      secondaryLabel={reviewing ? "Ubah" : undefined}
       pendingLabel="Mencatat…"
       danger={reviewing && draft.type === "CREDIT"}
       statusText={projectedBalance < 0 ? "Saldo sesudah mutasi tidak mencukupi." : undefined}
@@ -109,7 +110,7 @@ export function MovementSheet({
               after={projectedBalance}
             />
             <FormSection title="Yang akan dicatat" helper="Mutasi ini menambah baris ledger dan tidak mengubah transaksi lama.">
-              <FieldContextLine>{draft.type === "DEBIT" ? "Kas masuk" : "Kas keluar"} · {movementCategoryOptions.find((option) => option.value === draft.category)?.label ?? draft.category}</FieldContextLine>
+              <FieldContextLine>{draft.type === "DEBIT" ? "Kas masuk" : "Kas keluar"} · {movementCategoryOptions.find((option) => option.value === draft.category)?.label ?? formatBusinessLabel(draft.category, "FINANCE")}</FieldContextLine>
               <FieldContextLine>{draft.transactionDate} · {draft.referenceNumber || "Tanpa nomor referensi"}</FieldContextLine>
               <p className="rounded-2xl bg-surface-container-low px-4 py-3 text-xs leading-5 text-on-surface">{draft.description}</p>
             </FormSection>

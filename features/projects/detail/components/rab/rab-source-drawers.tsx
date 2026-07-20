@@ -78,7 +78,7 @@ export function RabSourcePickerDrawer({
         rabEstimate?.status === "APPROVED" ? "Buat Revisi RAB" : "Pilih Sumber RAB"
       }
       onClose={() => setSourcePickerOpen(false)}
-      submitLabel={rabEstimate?.status === "APPROVED" ? "Buat Draft Revisi RAB" : "Buat Draft RAB"}
+      submitLabel={rabEstimate?.status === "APPROVED" ? "Revisi" : "Buat"}
       submittingLabel="Membuat draft…"
       pending={isPending}
       disabled={selectedQuotationSourceCount === 0}
@@ -92,76 +92,78 @@ export function RabSourcePickerDrawer({
           Sumber hanya disalin sebagai snapshot. Perubahan berikutnya di RAP tidak mengubah RAB ini secara diam-diam.
         </FormRiskNotice>
         {rap && rap.items.length > 0 && (
-          <FormSection title="1 · Material RAP" helper={`${selectedRapQuotationIds.length} dari ${rap.items.length} material dipilih.`}>
-          <fieldset className="space-y-2">
-            {rap.items.map((item) => (
-              <ChoiceRow
-                key={item.id}
-                checked={selectedRapQuotationIds.includes(item.id)}
-                onChange={() =>
-                  setSelectedRapQuotationIds((current) =>
-                    toggleSelection(current, item.id),
-                  )
-                }
-                title={item.name}
-                description={`${item.area} - ${item.totalQuantity} ${item.unit}`}
-              />
-            ))}
-          </fieldset>
-          </FormSection>
-        )}
-        {categoryPlanItems.length > 0 && (
-          <FormSection title="2 · Paket kerja" helper={`${selectedCategoryQuotationIds.length} paket dipilih. Paket yang belum aktif tidak dapat disalin.`}>
-          <fieldset className="space-y-2">
-            {categoryPlanItems.map((item) => {
-              const ready = item.status === "ACTIVE" || item.status === "LOCKED";
-              return (
+          <FormSection title="Material RAP" helper={`${selectedRapQuotationIds.length} dari ${rap.items.length} material dipilih.`}>
+            <fieldset className="space-y-2">
+              {rap.items.map((item) => (
                 <ChoiceRow
                   key={item.id}
-                  disabled={!ready}
-                  checked={selectedCategoryQuotationIds.includes(item.id)}
+                  checked={selectedRapQuotationIds.includes(item.id)}
                   onChange={() =>
-                    setSelectedCategoryQuotationIds((current) =>
+                    setSelectedRapQuotationIds((current) =>
                       toggleSelection(current, item.id),
                     )
                   }
                   title={item.name}
-                  description={`${item.expenseCategoryName} - ${
-                    ready ? "Siap" : "Aktifkan dahulu"
-                  }`}
+                  description={`${item.area} - ${item.totalQuantity} ${item.unit}`}
                 />
-              );
-            })}
-          </fieldset>
+              ))}
+            </fieldset>
+          </FormSection>
+        )}
+        {categoryPlanItems.length > 0 && (
+          <FormSection title="Paket kerja" helper={`${selectedCategoryQuotationIds.length} paket dipilih. Paket yang belum aktif tidak dapat disalin.`}>
+            <fieldset className="space-y-2">
+              {categoryPlanItems.map((item) => {
+                const ready = item.status === "ACTIVE" || item.status === "LOCKED";
+                return (
+                  <ChoiceRow
+                    key={item.id}
+                    disabled={!ready}
+                    checked={selectedCategoryQuotationIds.includes(item.id)}
+                    onChange={() =>
+                      setSelectedCategoryQuotationIds((current) =>
+                        toggleSelection(current, item.id),
+                      )
+                    }
+                    title={item.name}
+                    description={`${item.expenseCategoryName} - ${
+                      ready ? "Siap" : "Aktifkan dahulu"
+                    }`}
+                  />
+                );
+              })}
+            </fieldset>
           </FormSection>
         )}
         {!rabEstimate && (
-          <FormSection title="3 · Item manual" helper="Opsional untuk biaya yang tidak berasal dari RAP atau paket kerja.">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => setShowManualEntry((current) => !current)}
-              className="flex min-h-12 w-full items-center justify-between rounded-full bg-surface-container-low px-5 text-left text-xs font-bold text-primary ring-1 ring-outline-variant/15"
-              aria-expanded={showManualEntry}
-            >
-              {showManualEntry ? "Sembunyikan item manual" : "Tambahkan item manual"}
-              <span className="material-symbols-outlined text-[18px]">{showManualEntry ? "expand_less" : "add"}</span>
-            </motion.button>
-            {showManualEntry ? <div className="space-y-sm">
-              <FormField label="Nama item">
-                <TextInput
-                  value={manualQuotationLine.clientLabel}
-                  onChange={(value) =>
-                    setManualQuotationLine((curr) => ({
-                      ...curr,
-                      clientLabel: value,
-                    }))
-                  }
-                  placeholder="Contoh: Biaya koordinasi"
-                />
-              </FormField>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <FormSection title="Item manual" helper="Opsional untuk biaya yang tidak berasal dari RAP atau paket kerja.">
+            <div className="mb-sm">
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                transition={transitionSpringSnappy}
+                onClick={() => setShowManualEntry((current) => !current)}
+                className="flex min-h-12 w-full items-center justify-between rounded-full bg-surface-container-low px-5 text-left text-xs font-bold text-primary ring-1 ring-outline-variant/15"
+                aria-expanded={showManualEntry}
+              >
+                {showManualEntry ? "Sembunyikan item manual" : "Tambahkan item manual"}
+                <span className="material-symbols-outlined text-[18px]">{showManualEntry ? "expand_less" : "add"}</span>
+              </motion.button>
+            </div>
+            {showManualEntry ? (
+              <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                <FormField label="Nama item">
+                  <TextInput
+                    value={manualQuotationLine.clientLabel}
+                    onChange={(value) =>
+                      setManualQuotationLine((curr) => ({
+                        ...curr,
+                        clientLabel: value,
+                      }))
+                    }
+                    placeholder="Contoh: Biaya koordinasi"
+                  />
+                </FormField>
                 <FormField label="Jumlah">
                   <NumericInput
                     min={0.01}
@@ -181,21 +183,22 @@ export function RabSourcePickerDrawer({
                     setManualQuotationLine((curr) => ({ ...curr, unit: value }))
                   }
                   options={COMMON_UNIT_OPTIONS}
+                  placeholder="Pilih satuan"
                 />
+                <FormField label="Harga satuan klien">
+                  <MoneyInput
+                    value={manualQuotationLine.unitPrice}
+                    onChange={(value) =>
+                      setManualQuotationLine((curr) => ({
+                        ...curr,
+                        unitPrice: value,
+                      }))
+                    }
+                    showPreview={false}
+                  />
+                </FormField>
               </div>
-              <FormField label="Harga satuan klien">
-                <MoneyInput
-                  value={manualQuotationLine.unitPrice}
-                  onChange={(value) =>
-                    setManualQuotationLine((curr) => ({
-                      ...curr,
-                      unitPrice: value,
-                    }))
-                  }
-                  showPreview={false}
-                />
-              </FormField>
-            </div> : null}
+            ) : null}
           </FormSection>
         )}
       </div>
@@ -225,7 +228,7 @@ export function ManualRabLineDrawer({
       open={manualLineOpen}
       title="Tambah Item Manual"
       onClose={() => setManualLineOpen(false)}
-      submitLabel="Tambahkan Item RAB"
+      submitLabel="Tambah"
       submittingLabel="Menambahkan…"
       pending={isPending}
       disabled={manualQuotationLine.clientLabel.trim().length < 3 || Number(manualQuotationLine.quantity) <= 0}
@@ -235,56 +238,59 @@ export function ManualRabLineDrawer({
       statusTone={manualQuotationLine.clientLabel.trim().length >= 3 && Number(manualQuotationLine.quantity) > 0 ? "success" : "warning"}
     >
       <div className="space-y-md">
-        <FormSection title="1 · Tampilan untuk klien" helper="Gunakan nama yang singkat dan mudah dipahami tanpa konteks internal.">
-        <FormField label="Nama item">
-          <TextInput
-            value={manualQuotationLine.clientLabel}
-            onChange={(value) =>
-              setManualQuotationLine((curr) => ({ ...curr, clientLabel: value }))
-            }
-            placeholder="Contoh: Biaya koordinasi"
-          />
-        </FormField>
-        <FormField label="Deskripsi untuk klien">
-          <Textarea
-            rows={3}
-            value={manualQuotationLine.description || ""}
-            onChange={(value) =>
-              setManualQuotationLine((curr) => ({ ...curr, description: value }))
-            }
-            placeholder="Jelaskan lingkup secara singkat"
-          />
-        </FormField>
+        <FormSection title="Tampilan untuk klien" helper="Gunakan nama yang singkat dan mudah dipahami tanpa konteks internal.">
+          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+            <FormField label="Nama item">
+              <TextInput
+                value={manualQuotationLine.clientLabel}
+                onChange={(value) =>
+                  setManualQuotationLine((curr) => ({ ...curr, clientLabel: value }))
+                }
+                placeholder="Contoh: Biaya koordinasi"
+              />
+            </FormField>
+            <FormField label="Deskripsi untuk klien">
+              <Textarea
+                rows={3}
+                value={manualQuotationLine.description || ""}
+                onChange={(value) =>
+                  setManualQuotationLine((curr) => ({ ...curr, description: value }))
+                }
+                placeholder="Jelaskan lingkup secara singkat"
+              />
+            </FormField>
+          </div>
         </FormSection>
-        <FormSection title="2 · Jumlah & harga" helper="Subtotal muncul langsung di ringkasan bawah sebelum item ditambahkan.">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <FormField label="Jumlah">
-            <NumericInput
-              min={0.01}
-              value={manualQuotationLine.quantity}
+        <FormSection title="Jumlah & harga" helper="Subtotal muncul langsung di ringkasan bawah sebelum item ditambahkan.">
+          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+            <FormField label="Jumlah">
+              <NumericInput
+                min={0.01}
+                value={manualQuotationLine.quantity}
+                onChange={(value) =>
+                  setManualQuotationLine((curr) => ({ ...curr, quantity: value }))
+                }
+              />
+            </FormField>
+            <ComboboxField
+              label="Satuan"
+              value={manualQuotationLine.unit}
               onChange={(value) =>
-                setManualQuotationLine((curr) => ({ ...curr, quantity: value }))
+                setManualQuotationLine((curr) => ({ ...curr, unit: value }))
               }
+              options={COMMON_UNIT_OPTIONS}
+              placeholder="Pilih satuan"
             />
-          </FormField>
-          <ComboboxField
-            label="Satuan"
-            value={manualQuotationLine.unit}
-            onChange={(value) =>
-              setManualQuotationLine((curr) => ({ ...curr, unit: value }))
-            }
-            options={COMMON_UNIT_OPTIONS}
-          />
-        </div>
-        <FormField label="Harga satuan klien">
-          <MoneyInput
-            value={manualQuotationLine.unitPrice}
-            onChange={(value) =>
-              setManualQuotationLine((curr) => ({ ...curr, unitPrice: value }))
-            }
-            showPreview={false}
-          />
-        </FormField>
+            <FormField label="Harga satuan klien">
+              <MoneyInput
+                value={manualQuotationLine.unitPrice}
+                onChange={(value) =>
+                  setManualQuotationLine((curr) => ({ ...curr, unitPrice: value }))
+                }
+                showPreview={false}
+              />
+            </FormField>
+          </div>
         </FormSection>
       </div>
     </OperationalFormSheet>

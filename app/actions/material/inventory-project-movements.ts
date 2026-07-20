@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { materialInventory, stockMovement } from "@/db/schema";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/validations/material";
 import {
   assertProjectScopeForMaterialAction,
+  calculateOutstandingProjectReservations,
   ensureNonNegativeStock,
   findLockedInventory,
   getSessionUser,
@@ -50,6 +51,18 @@ export async function wasteMaterialForProject(
 
     const result = await db.transaction(async (tx) => {
       const inventory = await findLockedInventory(tx, validation.data.materialId, validation.data.inventoryLocationId);
+      const projectMovements = await tx.query.stockMovement.findMany({
+        where: and(
+          eq(stockMovement.projectId, validation.data.projectId),
+          eq(stockMovement.materialId, validation.data.materialId),
+          eq(stockMovement.inventoryLocationId, validation.data.inventoryLocationId),
+        ),
+        orderBy: [asc(stockMovement.createdAt), asc(stockMovement.id)],
+      });
+      const matchingMovements = validation.data.projectRapItemId
+        ? projectMovements.filter((movement) => movement.projectRapItemId === validation.data.projectRapItemId)
+        : projectMovements.filter((movement) => !movement.projectRapItemId);
+      const outstandingReservation = calculateOutstandingProjectReservations(matchingMovements);
       const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
       const current = parseNumericToCents(inventory.currentStock);
       const reserved = parseNumericToCents(inventory.reservedStock);
@@ -57,12 +70,15 @@ export async function wasteMaterialForProject(
 
       ensureNonNegativeStock(nextCurrent, "INSUFFICIENT_CURRENT_STOCK");
 
-      const reservedReduction = quantity > reserved ? reserved : quantity;
+      const ownReserved = parseNumericToCents(toDecimal(outstandingReservation));
+      const reservedReduction = quantity > ownReserved ? ownReserved : quantity;
+      const nextReserved = reserved - reservedReduction;
+      if (nextCurrent < nextReserved) throw new Error("STOCK_RESERVED_FOR_OTHER_PROJECTS");
       const [updated] = await tx
         .update(materialInventory)
         .set({
           currentStock: fromCents(nextCurrent),
-          reservedStock: fromCents(reserved - reservedReduction),
+          reservedStock: fromCents(nextReserved),
           updatedAt: new Date(),
         })
         .where(eq(materialInventory.id, inventory.id))
@@ -129,14 +145,28 @@ export async function useMaterialForProject(
 
     const result = await db.transaction(async (tx) => {
       const inventory = await findLockedInventory(tx, validation.data.materialId, validation.data.inventoryLocationId);
+      const projectMovements = await tx.query.stockMovement.findMany({
+        where: and(
+          eq(stockMovement.projectId, validation.data.projectId),
+          eq(stockMovement.materialId, validation.data.materialId),
+          eq(stockMovement.inventoryLocationId, validation.data.inventoryLocationId),
+        ),
+        orderBy: [asc(stockMovement.createdAt), asc(stockMovement.id)],
+      });
+      const matchingMovements = validation.data.projectRapItemId
+        ? projectMovements.filter((movement) => movement.projectRapItemId === validation.data.projectRapItemId)
+        : projectMovements.filter((movement) => !movement.projectRapItemId);
+      const outstandingReservation = calculateOutstandingProjectReservations(matchingMovements);
       const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
       const currentStock = parseNumericToCents(inventory.currentStock);
       const reservedStock = parseNumericToCents(inventory.reservedStock);
       const nextCurrent = currentStock - quantity;
-      const reservedReduction = quantity > reservedStock ? reservedStock : quantity;
+      const ownReserved = parseNumericToCents(toDecimal(outstandingReservation));
+      const reservedReduction = quantity > ownReserved ? ownReserved : quantity;
       const nextReserved = reservedStock - reservedReduction;
 
       ensureNonNegativeStock(nextCurrent, "INSUFFICIENT_CURRENT_STOCK");
+      if (nextCurrent < nextReserved) throw new Error("STOCK_RESERVED_FOR_OTHER_PROJECTS");
 
       const [updated] = await tx
         .update(materialInventory)
@@ -203,6 +233,23 @@ export async function returnMaterialFromProject(
 
     const result = await db.transaction(async (tx) => {
       const inventory = await findLockedInventory(tx, validation.data.materialId, validation.data.inventoryLocationId);
+      const projectMovements = await tx.query.stockMovement.findMany({
+        where: and(
+          eq(stockMovement.projectId, validation.data.projectId),
+          eq(stockMovement.materialId, validation.data.materialId),
+          eq(stockMovement.inventoryLocationId, validation.data.inventoryLocationId),
+        ),
+        orderBy: [asc(stockMovement.createdAt), asc(stockMovement.id)],
+      });
+      const matchingMovements = validation.data.projectRapItemId
+        ? projectMovements.filter((movement) => movement.projectRapItemId === validation.data.projectRapItemId)
+        : projectMovements.filter((movement) => !movement.projectRapItemId);
+      const netUsed = matchingMovements.reduce((total, movement) => {
+        if (movement.movementType === "USE") return total + Number(movement.quantity);
+        if (movement.movementType === "RETURN") return total - Number(movement.quantity);
+        return total;
+      }, 0);
+      if (validation.data.quantity > netUsed) throw new Error("RETURN_EXCEEDS_PROJECT_USAGE");
       const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
       const nextCurrent = parseNumericToCents(inventory.currentStock) + quantity;
 

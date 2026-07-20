@@ -65,8 +65,9 @@ export function ProjectCreatedSuccess({
           Proyek Berhasil Dibuat!
         </h3>
         <p className="mx-auto max-w-xs text-xs leading-relaxed text-on-surface-variant">
-          Proyek dan anggaran awal kategori (Tukang, Material, Operasional,
-          dll.) telah otomatis disiapkan berdasarkan setelan sistem.
+          Proyek dibuat sebagai Draft dan anggaran awal kategori (Tukang,
+          Material, Operasional, dll.) telah disiapkan berdasarkan setelan
+          sistem. Lengkapi setup lalu aktifkan proyek sebelum operasional.
         </p>
       </div>
 

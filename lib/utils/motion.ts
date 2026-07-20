@@ -13,7 +13,7 @@ export const transitionSpringSnappy: Transition = {
   mass: 0.8,
 };
 
-// SMOOTH: Perfect for slide-up drawers, page transitions, and layouts
+// SMOOTH: For slide-up drawers, sheets, modals, and meaningful local layout changes
 export const transitionSpringSmooth: Transition = {
   type: "spring",
   stiffness: 300,

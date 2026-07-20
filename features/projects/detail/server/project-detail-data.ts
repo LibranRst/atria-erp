@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { getProjectBudgetDashboard } from "@/app/actions/project/excel-budget";
 import { db } from "@/db";
 import {
+  bankAccount,
   itemPriceLibrary,
   materialMaster,
   project,
@@ -30,6 +31,7 @@ export async function getProjectDetailData(
 ): Promise<ProjectTabsProps> {
   const session = await requireServerSession();
   const roleName = (await resolveRoleName(session.user.roleId)) ?? "UNKNOWN";
+  const isFinanceOperator = roleName === "OWNER" || roleName === "FINANCE_ADMIN";
 
   try {
     await assertProjectAccess(projectId, session.user.id, roleName);
@@ -105,7 +107,9 @@ export async function getProjectDetailData(
     : null;
 
   const costCategoriesData = await db.query.projectCostCategory.findMany();
-  const bankAccountsData = await db.query.bankAccount.findMany();
+  const bankAccountsData = isFinanceOperator
+    ? await db.query.bankAccount.findMany({ where: eq(bankAccount.isActive, true) })
+    : [];
 
   const costsData = await db.query.projectCost.findMany({
     where: eq(projectCost.projectId, projectId),
@@ -133,7 +137,7 @@ export async function getProjectDetailData(
       },
       payments: {
         with: {
-          bankAccount: true,
+          bankAccount: { columns: { name: true } },
         },
       },
     },
@@ -157,7 +161,7 @@ export async function getProjectDetailData(
                 },
               },
             },
-            bankAccount: true,
+            bankAccount: { columns: { name: true } },
             paidBy: true,
           },
           orderBy: [desc(vendorPayment.createdAt)],

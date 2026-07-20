@@ -1,6 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { db } from "@/db";
+import { projectMaterialProjection } from "@/lib/material/project-material-projection";
 import {
   materialCategory,
   materialInventory,
@@ -73,6 +75,8 @@ export async function createMaterialCategory(
   try {
     await assertPermission(sessionResult.data.user, "create:material");
     const [created] = await db.insert(materialCategory).values(validation.data).returning();
+    revalidatePath("/materials");
+    revalidatePath("/settings");
     return { success: true, data: created };
   } catch (error) {
     return {
@@ -110,6 +114,8 @@ export async function createMaterial(
       })
       .returning();
 
+    revalidatePath("/materials");
+    revalidatePath("/settings");
     return { success: true, data: created };
   } catch (error) {
     return {
@@ -208,37 +214,67 @@ export async function getMaterialInventory(
 export async function recordStockIn(
   input: RecordStockInInput
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
-  return recordStockInWrite(input);
+  const result = await recordStockInWrite(input);
+  if (result.success) {
+    revalidatePath("/materials");
+    if (input.projectId) revalidatePath(`/projects/${input.projectId}`);
+  }
+  return result;
 }
 
 export async function reserveMaterialForProject(
   input: ReserveMaterialInput
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
-  return reserveMaterialForProjectWrite(input);
+  const result = await reserveMaterialForProjectWrite(input);
+  if (result.success) {
+    revalidatePath("/materials");
+    if (input.projectId) revalidatePath(`/projects/${input.projectId}`);
+  }
+  return result;
 }
 
 export async function wasteMaterialForProject(
   input: WasteMaterialInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
-  return wasteMaterialForProjectWrite(input);
+  const result = await wasteMaterialForProjectWrite(input);
+  if (result.success) {
+    revalidatePath("/materials");
+    if (input.projectId) revalidatePath(`/projects/${input.projectId}`);
+  }
+  return result;
 }
 
 export async function useMaterialForProject(
   input: UseMaterialInput
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
-  return recordMaterialUsageForProject(input);
+  const result = await recordMaterialUsageForProject(input);
+  if (result.success) {
+    revalidatePath("/materials");
+    if (input.projectId) revalidatePath(`/projects/${input.projectId}`);
+  }
+  return result;
 }
 
 export async function returnMaterialFromProject(
   input: ReturnMaterialInput
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
-  return returnMaterialFromProjectWrite(input);
+  const result = await returnMaterialFromProjectWrite(input);
+  if (result.success) {
+    revalidatePath("/materials");
+    if (input.projectId) revalidatePath(`/projects/${input.projectId}`);
+  }
+  return result;
 }
 
 export async function adjustMaterialStock(
   input: AdjustMaterialStockInput
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
-  return adjustMaterialStockWrite(input);
+  const result = await adjustMaterialStockWrite(input);
+  if (result.success) {
+    revalidatePath("/materials");
+    if (input.projectId) revalidatePath(`/projects/${input.projectId}`);
+  }
+  return result;
 }
 
 export interface MaterialShortageRow {
@@ -269,6 +305,7 @@ export async function getMaterialShortages(
       where: projectRapId ? eq(projectRapItem.projectRapId, projectRapId) : undefined,
       with: {
         rap: true,
+        stockMovements: true,
         material: {
           with: {
             inventory: true,
@@ -282,7 +319,11 @@ export async function getMaterialShortages(
       const availableStock = item.material?.inventory.reduce((sum, inv) => {
         return sum + Number(inv.currentStock) - Number(inv.reservedStock);
       }, 0) ?? 0;
-      const needToBuy = Math.max(0, totalQuantity - availableStock);
+
+      const materialProjection = projectMaterialProjection(
+        item.stockMovements ?? [],
+        totalQuantity,
+      );
 
       return {
         projectRapItemId: item.id,
@@ -294,9 +335,14 @@ export async function getMaterialShortages(
         bufferQuantity: Number(item.bufferQuantity),
         totalQuantity,
         availableStock,
-        needToBuy,
+        needToBuy: materialProjection.needToBuy,
         estimatedTotalCost: Number(item.estimatedTotalCost),
-        status: needToBuy > 0 ? "SHORTAGE" : item.status,
+        status:
+          item.status === "PLANNED" || item.status === "DRAFT"
+            ? item.status
+            : materialProjection.needToBuy > 0
+              ? "SHORTAGE"
+              : "READY",
       };
     });
 

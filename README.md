@@ -43,6 +43,8 @@ The existing app already includes valuable foundations and should not be rewritt
 - AI: Google Gemini via `@google/genai`
 
 ## Documentation Map
+
+- `.agents/skills/atria-ui-ux/SKILL.md`: mandatory Dashboard-led UI/UX workflow for all agents.
 - `docs/01-product/PRD.md`: product direction and acceptance criteria.
 - `docs/02-product/MVP_BLUEPRINT.md`: MVP modules and role workflows.
 - `docs/03-flows/FLOWS.md`: finance/material operational flows.
@@ -57,6 +59,8 @@ The existing app already includes valuable foundations and should not be rewritt
 - `docs/07-development/ROADMAP.md`: phased roadmap.
 - `docs/07-development/TASK_BREAKDOWN.md`: implementation task breakdown.
 - `docs/07-development/IMPLEMENTATION_ORDER.md`: build and verification order.
+- `docs/plans/`: implementation plans and historical execution records.
+- `docs/specs/`: repository design specifications.
 
 ## Local Development
 ```bash

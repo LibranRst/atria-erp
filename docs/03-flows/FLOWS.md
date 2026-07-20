@@ -50,6 +50,8 @@ flowchart TD
 
 Expense category is mandatory. Material linkage is progressive and only valid for Material category. Package linkage is only valid for matching Tukang/Subcon categories.
 
+PM may submit expenses but may not verify their own submission. Verification is restricted to Owner or Finance Admin; payment remains a separate explicit finance action.
+
 ## 4. Budget Dashboard Rollup
 ```mermaid
 flowchart TD
@@ -118,6 +120,8 @@ flowchart TD
 
 Reservation does not create a cash transaction. It only changes inventory commitment.
 
+Use, waste, and project closing calculate the outstanding reservation for the same project, material, location, and RAP item. One project must never release another project's reserved stock.
+
 ## 8. Use Material for Project
 ```mermaid
 flowchart TD
@@ -130,6 +134,8 @@ flowchart TD
 ```
 
 Material usage affects project material status and estimated remaining material need. Cash impact and Material budget actuals are recorded through expense or vendor bill payment.
+
+Use or waste is rejected if it would reduce current stock below reservations that remain outstanding for other work.
 
 ## 9. Stock In from Purchase
 ```mermaid
@@ -156,6 +162,8 @@ flowchart TD
 ```
 
 Transfer cannot consume reserved stock. Stock counts reject stale snapshots or counted quantity below reservation. Receipt reversal does not change the linked vendor bill or payment.
+
+Scheduling vendor payments reserves only the bill's remaining payable amount across pending and completed schedules. Execution rechecks the bill under lock, accepts only a pending schedule, and mutates the bank balance through the audited finance helper. Client receipts likewise reject amounts above the invoice's remaining balance.
 
 ## 10. Generate Client Estimate / Quotation from Selected Sources
 ```mermaid

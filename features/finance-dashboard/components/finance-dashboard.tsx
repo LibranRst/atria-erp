@@ -12,6 +12,7 @@ import type { DashboardPageTab } from "@/features/finance-dashboard/lib/dashboar
 import { resolveDashboardDataStatus } from "@/features/finance-dashboard/lib/dashboard-data-status";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
 import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
 import {
   AccountsTab,
   ApprovalsTab,
@@ -170,7 +171,15 @@ function DataStatus({ data, refreshing, onRefresh }: { readonly data: FinanceDas
   );
 }
 
-export function FinanceDashboard({ data, userName }: { readonly data: FinanceDashboardOverview; readonly userName: string }): React.JSX.Element {
+export function FinanceDashboard({
+  data,
+  userName,
+  onboarding,
+}: {
+  readonly data: FinanceDashboardOverview;
+  readonly userName: string;
+  readonly onboarding: OwnerOnboardingOverview | null;
+}): React.JSX.Element {
   const tabParam = useUrlSearchParam("tab");
   const router = useRouter();
   const [refreshing, startRefresh] = React.useTransition();
@@ -189,9 +198,15 @@ export function FinanceDashboard({ data, userName }: { readonly data: FinanceDas
   }
 
   const tabContent = activeTab === "overview"
-    ? <DashboardOverviewTab data={data} financialPosition={<FinancialPosition summary={data.summary} />} />
+    ? (
+      <DashboardOverviewTab
+        data={data}
+        financialPosition={<FinancialPosition summary={data.summary} />}
+        onboarding={onboarding}
+      />
+    )
     : activeTab === "approvals" && data.role === "OWNER"
-      ? <ApprovalsTab approvals={approvals} approvalCount={approvalCount} setApprovals={setApprovals} setApprovalCount={setApprovalCount} />
+      ? <ApprovalsTab approvals={approvals} approvalCount={approvalCount} setApprovals={setApprovals} setApprovalCount={setApprovalCount} canEmergencyOverride={data.role === "OWNER"} />
       : activeTab === "budget"
         ? <BudgetRiskTab data={data} />
         : activeTab === "cash"

@@ -39,7 +39,6 @@ export function toVendorBillSubmission(payload: VendorBillDraftPayload): ReturnT
     vendorId: payload.vendorId,
     projectId: payload.projectId,
     projectBudgetCategoryId: payload.projectBudgetCategoryId,
-    projectBudgetItemId: payload.projectBudgetItemId || undefined,
     projectCategoryPlanItemId: payload.projectCategoryPlanItemId || undefined,
     billNumber: payload.billNumber.trim(),
     amount: Number(payload.amount),

@@ -1,7 +1,5 @@
 # Default Seed Login Credentials Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Make the seeded Atria ERP database loggable by adding Better Auth credential accounts with a known development password for each seeded user.
 
 **Architecture:** Keep the existing direct Drizzle seed flow, but include Better Auth's `account` table in cleanup and insert one credential account per seeded user immediately after the `user` rows. Use Better Auth's documented credential account shape: `providerId: "credential"`, `accountId: user.id`, `userId: user.id`, and `password` containing a hashed password. Use Better Auth's internal password hasher from the existing `auth` instance so the seeded hashes match runtime sign-in verification instead of hardcoding or introducing a second hashing library.
@@ -397,7 +395,7 @@ Stop the dev server after verification.
 Only commit if the user explicitly asks for a commit. If committing, use:
 
 ```bash
-git add db/seed.ts docs/superpowers/plans/2026-06-12-default-seed-login-credentials.md
+git add db/seed.ts docs/plans/2026-06-12-default-seed-login-credentials.md
 git commit -m "feat: add default seeded auth credentials"
 ```
 

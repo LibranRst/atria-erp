@@ -58,8 +58,10 @@ interface MaterialData {
 }
 
 interface RapStockMovementData {
+  readonly id: string;
   readonly movementType: string;
   readonly quantity: string | number;
+  readonly createdAt: Date;
 }
 
 interface ProjectRapItemData {

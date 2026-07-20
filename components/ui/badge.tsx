@@ -1,4 +1,5 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
 export type BadgeStatus =
   | "APPROVED"
@@ -44,36 +45,7 @@ const variantClasses: Record<BadgeVariant, string> = {
 };
 
 export function formatStatus(val: string): string {
-  const maps: Record<string, string> = {
-    FINANCE_ADMIN: "Finance Admin",
-    PROJECT_MANAGER: "Project Manager",
-    OWNER: "Owner",
-    PURCHASING: "Purchasing",
-    SALES: "Sales",
-    DESIGNER: "Designer",
-    MARKETING: "Marketing",
-    OVER_BUDGET: "Over Budget",
-    PENDING_APPROVAL: "Pending Approval",
-    READY_TO_SEND: "Ready to Send",
-    WAITING_PURCHASE: "Waiting Purchase",
-    PARTIALLY_PAID: "Partially Paid",
-    STOCK_IN: "Stock In",
-    STOCK_OUT: "Stock Out",
-    NEEDS_VERIFICATION: "Needs Verification",
-    NEEDS_APPROVAL: "Needs Approval",
-    READY_TO_PAY: "Ready to Pay",
-    PENDING_REVIEW: "Pending Review",
-    ON_HOLD: "On Hold",
-    OUT_OF_STOCK: "Out of Stock",
-    LOW_STOCK: "Low Stock",
-  };
-
-  if (maps[val]) return maps[val];
-
-  return val
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
+  return formatBusinessLabel(val);
 }
 
 type BadgeProps = Omit<ComponentPropsWithoutRef<"span">, "children"> & {

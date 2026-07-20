@@ -9,6 +9,7 @@ import {
   approveFieldRequest,
   approveVendorPayment,
 } from "@/app/actions/finance/field-requests";
+import { decideInventoryOpening } from "@/app/actions/material/opening-inventory";
 import {
   BottomSheet,
   ConfirmationSheet,
@@ -25,6 +26,12 @@ import {
   approvalIsCritical,
   groupApprovals,
 } from "@/features/approvals/components/approval-list-utils";
+import {
+  ApprovalDecisionReasonFields,
+  approvalRequiresEmergencyOverride,
+  approvalRequiresOpeningReason,
+} from "@/features/approvals/components/approval-decision-reason-fields";
+import { InventoryOpeningApprovalItems } from "@/features/approvals/components/inventory-opening-approval-items";
 import {
   DashboardDetailSection,
   DashboardRowGroup,
@@ -47,7 +54,7 @@ import {
 
 export type ApprovalItem = ApprovalDetail;
 
-type ApprovalFilter = "ALL" | "FIELD" | "VENDOR" | "CRITICAL";
+type ApprovalFilter = "ALL" | "FIELD" | "VENDOR" | "STOCK" | "CRITICAL";
 
 type ApprovalDecision = {
   readonly item: ApprovalItem;
@@ -56,12 +63,14 @@ type ApprovalDecision = {
 
 interface ApprovalListProps {
   readonly initialApprovals: readonly ApprovalItem[];
+  readonly canEmergencyOverride?: boolean;
 }
 
 const rowPressScale = { scale: 0.985 } as const;
 
 export function ApprovalList({
   initialApprovals,
+  canEmergencyOverride = true,
 }: ApprovalListProps): React.JSX.Element {
   const router = useRouter();
   const [approvals, setApprovals] = React.useState<ApprovalItem[]>([
@@ -69,16 +78,23 @@ export function ApprovalList({
   ]);
   const [query, setQuery] = React.useState("");
   const [filter, setFilter] = React.useState<ApprovalFilter>("ALL");
-  const [controlMode, setControlMode] = React.useState<SearchFilterMode>("filter");
+  const [controlMode, setControlMode] =
+    React.useState<SearchFilterMode>("filter");
   const [selected, setSelected] = React.useState<ApprovalItem | null>(null);
   const [decision, setDecision] = React.useState<ApprovalDecision | null>(null);
   const [rejectionReason, setRejectionReason] = React.useState("");
+  const [approvalReason, setApprovalReason] = React.useState("");
+  const [emergencyOverride, setEmergencyOverride] = React.useState(false);
+  const [emergencyReason, setEmergencyReason] = React.useState("");
   const [activeImage, setActiveImage] = React.useState<string | null>(null);
   const [visibleLimit, setVisibleLimit] = React.useState(20);
-  const [resultsMinHeight, setResultsMinHeight] = React.useState<number | null>(null);
+  const [resultsMinHeight, setResultsMinHeight] = React.useState<number | null>(
+    null,
+  );
   const resultsRef = React.useRef<HTMLDivElement | null>(null);
   const stickyControlRef = React.useRef<HTMLDivElement | null>(null);
   const [isSticky, setIsSticky] = React.useState(false);
+  const rejectionMinimum = decision?.item.type === "inventory_opening" ? 10 : 5;
   const stickyActive = WORKSPACE_STICKY_CONTROLS_ENABLED && isSticky;
   const pendingScrollYRef = React.useRef<number | null>(null);
   const [pending, startTransition] = React.useTransition();
@@ -121,11 +137,16 @@ export function ApprovalList({
     };
   }, [hasApprovals]);
 
-  const counts = React.useMemo(() => ({
-    critical: approvals.filter(approvalIsCritical).length,
-    field: approvals.filter((item) => item.type === "project_cost").length,
-    vendor: approvals.filter((item) => item.type === "vendor_payment").length,
-  }), [approvals]);
+  const counts = React.useMemo(
+    () => ({
+      critical: approvals.filter(approvalIsCritical).length,
+      field: approvals.filter((item) => item.type === "project_cost").length,
+      vendor: approvals.filter((item) => item.type === "vendor_payment").length,
+      stock: approvals.filter((item) => item.type === "inventory_opening")
+        .length,
+    }),
+    [approvals],
+  );
   const totalAmount = React.useMemo(
     () => approvals.reduce((sum, item) => sum + item.amount, 0),
     [approvals],
@@ -143,6 +164,7 @@ export function ApprovalList({
         filter === "ALL" ||
         (filter === "FIELD" && item.type === "project_cost") ||
         (filter === "VENDOR" && item.type === "vendor_payment") ||
+        (filter === "STOCK" && item.type === "inventory_opening") ||
         (filter === "CRITICAL" && approvalIsCritical(item));
       return controlMode === "search" ? matchesQuery : matchesFilter;
     });
@@ -161,16 +183,22 @@ export function ApprovalList({
   }, [filter]);
 
   function changeFilter(value: ApprovalFilter): void {
-    const currentResultsHeight = resultsRef.current?.getBoundingClientRect().height ?? 0;
-    setResultsMinHeight((current) => Math.max(current ?? 0, currentResultsHeight));
+    const currentResultsHeight =
+      resultsRef.current?.getBoundingClientRect().height ?? 0;
+    setResultsMinHeight((current) =>
+      Math.max(current ?? 0, currentResultsHeight),
+    );
     pendingScrollYRef.current = window.scrollY;
     setVisibleLimit(20);
     setFilter(value);
   }
 
   function changeControlMode(mode: SearchFilterMode): void {
-    const currentResultsHeight = resultsRef.current?.getBoundingClientRect().height ?? 0;
-    setResultsMinHeight((current) => Math.max(current ?? 0, currentResultsHeight));
+    const currentResultsHeight =
+      resultsRef.current?.getBoundingClientRect().height ?? 0;
+    setResultsMinHeight((current) =>
+      Math.max(current ?? 0, currentResultsHeight),
+    );
     setVisibleLimit(20);
     setQuery("");
     setControlMode(mode);
@@ -186,34 +214,99 @@ export function ApprovalList({
   ): void {
     setDecision({ item, status });
     if (status === "REJECTED") setRejectionReason("");
+    if (status === "APPROVED") {
+      setApprovalReason("");
+      setEmergencyOverride(false);
+      setEmergencyReason("");
+    }
   }
 
   function closeDecision(): void {
     if (pending) return;
     setDecision(null);
     setRejectionReason("");
+    setApprovalReason("");
+    setEmergencyOverride(false);
+    setEmergencyReason("");
   }
 
   function confirmDecision(): void {
     if (!decision) return;
-    if (decision.status === "REJECTED" && rejectionReason.trim().length < 5) {
-      toast.error("Tuliskan alasan penolakan minimal 5 karakter.");
+    const requiresEmergencyOverride = approvalRequiresEmergencyOverride(
+      decision.item,
+      canEmergencyOverride,
+    );
+    const requiresOpeningReason = approvalRequiresOpeningReason(
+      decision.item,
+      canEmergencyOverride,
+    );
+    if (
+      decision.status === "REJECTED" &&
+      rejectionReason.trim().length <
+        (decision.item.type === "inventory_opening" ? 10 : 5)
+    ) {
+      toast.error(
+        `Tuliskan alasan penolakan minimal ${decision.item.type === "inventory_opening" ? 10 : 5} karakter.`,
+      );
+      return;
+    }
+    if (
+      decision.status === "APPROVED" &&
+      requiresOpeningReason &&
+      approvalReason.trim().length < 10
+    ) {
+      toast.error("Alasan persetujuan minimal 10 karakter.");
+      return;
+    }
+    if (
+      decision.status === "APPROVED" &&
+      requiresEmergencyOverride &&
+      !emergencyOverride
+    ) {
+      toast.error("Aktifkan emergency override untuk persetujuan sendiri.");
+      return;
+    }
+    if (
+      decision.status === "APPROVED" &&
+      emergencyOverride &&
+      emergencyReason.trim().length < 10
+    ) {
+      toast.error("Alasan emergency override minimal 10 karakter.");
       return;
     }
 
     const { item, status } = decision;
     startTransition(async () => {
       try {
-        const notes = status === "APPROVED"
-          ? "Disetujui Owner"
-          : rejectionReason.trim();
-        const response = item.type === "project_cost"
-          ? await approveFieldRequest({
-              projectCostId: item.referenceId,
-              status,
-              notes,
-            })
-          : await approveVendorPayment(item.referenceId, notes, status);
+        const notes =
+          status === "APPROVED"
+            ? emergencyOverride
+              ? emergencyReason.trim()
+              : item.type === "inventory_opening"
+                ? approvalReason.trim()
+                : "Disetujui Owner"
+            : rejectionReason.trim();
+        const response =
+          item.type === "inventory_opening"
+            ? await decideInventoryOpening({
+                batchId: item.referenceId,
+                decision: status === "APPROVED" ? "APPROVE" : "REJECT",
+                reason: notes,
+                emergencyOverride,
+              })
+            : item.type === "project_cost"
+              ? await approveFieldRequest({
+                  projectCostId: item.referenceId,
+                  status,
+                  notes,
+                  emergencyOverride,
+                })
+              : await approveVendorPayment(
+                  item.referenceId,
+                  notes,
+                  status,
+                  emergencyOverride,
+                );
 
         if (!response.success) throw new Error(response.error.message);
 
@@ -221,6 +314,9 @@ export function ApprovalList({
         setSelected(null);
         setDecision(null);
         setRejectionReason("");
+        setApprovalReason("");
+        setEmergencyOverride(false);
+        setEmergencyReason("");
         toast.success(
           `${status === "APPROVED" ? "Persetujuan diberikan" : "Pengajuan ditolak"} · Rp ${item.amount.toLocaleString("id-ID")}`,
         );
@@ -277,8 +373,8 @@ export function ApprovalList({
             danger={counts.critical > 0}
           />
           <QueueMetric
-            label="Lapangan · Vendor"
-            value={`${counts.field} · ${counts.vendor}`}
+            label="Lapangan · Vendor · Stok"
+            value={`${counts.field} · ${counts.vendor} · ${counts.stock}`}
             align="right"
           />
         </div>
@@ -295,7 +391,11 @@ export function ApprovalList({
             padding: stickyActive ? 8 : 0,
           }}
           transition={stickyTransition}
-          className={WORKSPACE_STICKY_CONTROLS_ENABLED ? "sticky top-16 z-20" : "relative"}
+          className={
+            WORKSPACE_STICKY_CONTROLS_ENABLED
+              ? "sticky top-16 z-20"
+              : "relative"
+          }
         >
           <AnimatePresence initial={false}>
             {stickyActive ? (
@@ -340,6 +440,11 @@ export function ApprovalList({
                   count: counts.vendor > 0 ? counts.vendor : undefined,
                 },
                 {
+                  value: "STOCK",
+                  label: "Stok",
+                  count: counts.stock > 0 ? counts.stock : undefined,
+                },
+                {
                   value: "CRITICAL",
                   label: "Risiko",
                   count: counts.critical > 0 ? counts.critical : undefined,
@@ -353,7 +458,11 @@ export function ApprovalList({
       <div
         ref={resultsRef}
         className="space-y-lg max-[430px]:space-y-5"
-        style={resultsMinHeight === null ? undefined : { minHeight: `${resultsMinHeight}px` }}
+        style={
+          resultsMinHeight === null
+            ? undefined
+            : { minHeight: `${resultsMinHeight}px` }
+        }
       >
         {approvals.length === 0 ? (
           <DashboardDetailSection title="Urutan prioritas">
@@ -368,8 +477,14 @@ export function ApprovalList({
             <PageState
               kind="filtered-empty"
               title="Antrean tidak ditemukan"
-              description={controlMode === "search" ? "Coba kata kunci lain atau tutup pencarian." : "Pilih filter lain untuk melihat pengajuan."}
-              actionLabel={controlMode === "search" ? "Tutup pencarian" : "Reset filter"}
+              description={
+                controlMode === "search"
+                  ? "Coba kata kunci lain atau tutup pencarian."
+                  : "Pilih filter lain untuk melihat pengajuan."
+              }
+              actionLabel={
+                controlMode === "search" ? "Tutup pencarian" : "Reset filter"
+              }
               onAction={resetFilters}
             />
           </DashboardDetailSection>
@@ -417,12 +532,47 @@ export function ApprovalList({
       <ConfirmationSheet
         open={decision?.status === "APPROVED"}
         title="Setujui pengajuan?"
-        description="Dampak budget sudah ditampilkan di detail. Keputusan ini akan dicatat dalam audit log."
+        description={
+          decision?.item.type === "inventory_opening"
+            ? "Pastikan jumlah fisik, harga per unit, dan subtotal sudah sesuai. Keputusan dicatat dalam audit log."
+            : "Dampak budget sudah ditampilkan di detail. Keputusan ini akan dicatat dalam audit log."
+        }
         confirmLabel="Setujui"
         pending={pending}
+        disabled={
+          (decision?.item.type === "inventory_opening" &&
+            approvalRequiresOpeningReason(
+              decision.item,
+              canEmergencyOverride,
+            ) &&
+            approvalReason.trim().length < 10) ||
+          (Boolean(
+            decision?.item &&
+            approvalRequiresEmergencyOverride(
+              decision.item,
+              canEmergencyOverride,
+            ),
+          ) &&
+            (!emergencyOverride || emergencyReason.trim().length < 10))
+        }
         onClose={closeDecision}
         onConfirm={confirmDecision}
-      />
+      >
+        {decision?.item ? (
+          <ApprovalDecisionReasonFields
+            item={decision.item}
+            canEmergencyOverride={canEmergencyOverride}
+            approvalReason={approvalReason}
+            emergencyOverride={emergencyOverride}
+            emergencyReason={emergencyReason}
+            pending={pending}
+            idPrefix="approval"
+            onApprovalReasonChange={setApprovalReason}
+            onEmergencyOverrideChange={setEmergencyOverride}
+            onEmergencyReasonChange={setEmergencyReason}
+          />
+        ) : null}
+      </ConfirmationSheet>
 
       <BottomSheet
         open={decision?.status === "REJECTED"}
@@ -431,7 +581,8 @@ export function ApprovalList({
       >
         <div className="space-y-md">
           <div className="rounded-[20px] bg-error-container/25 p-4 text-xs leading-5 text-error">
-            Pengajuan tidak akan dilanjutkan. Jelaskan alasan yang dapat ditindaklanjuti oleh pengaju.
+            Pengajuan tidak akan dilanjutkan. Jelaskan alasan yang dapat
+            ditindaklanjuti oleh pengaju.
           </div>
           <div>
             <label
@@ -449,15 +600,20 @@ export function ApprovalList({
               disabled={pending}
               placeholder="Contoh: nominal belum sesuai dengan progres pekerjaan"
               className="mt-2"
-              aria-invalid={rejectionReason.length > 0 && rejectionReason.trim().length < 5}
+              aria-invalid={
+                rejectionReason.length > 0 &&
+                rejectionReason.trim().length < rejectionMinimum
+              }
             />
             <p className="mt-1 px-1 text-[10px] text-on-surface-variant">
-              Minimal 5 karakter.
+              Minimal {rejectionMinimum} karakter.
             </p>
           </div>
           <button
             type="button"
-            disabled={pending || rejectionReason.trim().length < 5}
+            disabled={
+              pending || rejectionReason.trim().length < rejectionMinimum
+            }
             onClick={confirmDecision}
             className="min-h-12 w-full rounded-full bg-error px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-error/25 disabled:opacity-40"
           >
@@ -496,11 +652,15 @@ function QueueMetric({
   readonly align?: "left" | "right";
 }): React.JSX.Element {
   return (
-    <div className={`min-w-0 px-2.5 first:pl-0 last:pr-0 ${align === "right" ? "text-right" : "text-left"}`}>
+    <div
+      className={`min-w-0 px-2.5 first:pl-0 last:pr-0 ${align === "right" ? "text-right" : "text-left"}`}
+    >
       <p className="truncate text-[9px] font-semibold text-on-surface-variant/60">
         {label}
       </p>
-      <p className={`mt-1 truncate font-mono text-[11px] font-bold ${danger ? "text-error" : "text-on-surface"}`}>
+      <p
+        className={`mt-1 truncate font-mono text-[11px] font-bold ${danger ? "text-error" : "text-on-surface"}`}
+      >
         {value}
       </p>
     </div>
@@ -529,9 +689,10 @@ function ApprovalQueueRow({
     : warning
       ? "text-warning"
       : "text-on-surface-variant";
-  const priorityLabel = item.priority === "NORMAL" && critical
-    ? "Mencapai batas budget"
-    : item.priorityReason;
+  const priorityLabel =
+    item.priority === "NORMAL" && critical
+      ? "Mencapai batas budget"
+      : item.priorityReason;
 
   return (
     <div className="px-2.5 py-1.5">
@@ -544,9 +705,18 @@ function ApprovalQueueRow({
         className="min-h-12 w-full rounded-[20px] px-2 py-2.5 text-left outline-none active:bg-black/[0.025] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 disabled:opacity-50"
       >
         <div className="flex items-start gap-3">
-          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${toneClass}`}>
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-              {item.type === "project_cost" ? "receipt_long" : "request_quote"}
+          <span
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${toneClass}`}
+          >
+            <span
+              className="material-symbols-outlined text-[18px]"
+              aria-hidden="true"
+            >
+              {item.type === "project_cost"
+                ? "receipt_long"
+                : item.type === "inventory_opening"
+                  ? "inventory"
+                  : "request_quote"}
             </span>
           </span>
           <div className="min-w-0 flex-1">
@@ -557,7 +727,9 @@ function ApprovalQueueRow({
                 size="lg"
                 className="min-w-0"
               />
-              <span className={`max-w-[42%] shrink-0 text-right text-[9px] font-semibold leading-3 ${reasonClass}`}>
+              <span
+                className={`max-w-[42%] shrink-0 text-right text-[9px] font-semibold leading-3 ${reasonClass}`}
+              >
                 {priorityLabel}
               </span>
             </div>
@@ -568,15 +740,26 @@ function ApprovalQueueRow({
               {item.projectName}
             </p>
           </div>
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]" aria-hidden="true">
-            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+          <span
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
+            aria-hidden="true"
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              chevron_right
+            </span>
           </span>
         </div>
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
           <span className="max-w-full truncate">{item.requestedBy}</span>
-          <span className="h-1 w-1 rounded-full bg-outline-variant/60" aria-hidden="true" />
+          <span
+            className="h-1 w-1 rounded-full bg-outline-variant/60"
+            aria-hidden="true"
+          />
           <span className="max-w-full truncate">{item.budgetItemName}</span>
-          <span className="h-1 w-1 rounded-full bg-outline-variant/60" aria-hidden="true" />
+          <span
+            className="h-1 w-1 rounded-full bg-outline-variant/60"
+            aria-hidden="true"
+          />
           <span className="shrink-0">{formatQueueTime(item.createdAt)}</span>
         </div>
       </motion.button>
@@ -600,8 +783,11 @@ function ApprovalDetailSheet({
     status: ApprovalDecision["status"],
   ) => void;
 }): React.JSX.Element {
-  const { presentedValue: presentedItem, open, handleExitComplete } =
-    useSheetPresenceValue(item, item?.id);
+  const {
+    presentedValue: presentedItem,
+    open,
+    handleExitComplete,
+  } = useSheetPresenceValue(item, item?.id);
 
   return (
     <BottomSheet
@@ -609,16 +795,21 @@ function ApprovalDetailSheet({
       title="Detail persetujuan"
       onClose={onClose}
       onExitComplete={handleExitComplete}
-      footer={presentedItem ? (
-        <ApprovalDecisionFooter
-          item={presentedItem}
-          pending={pending}
-          onDecision={onDecision}
-        />
-      ) : undefined}
+      footer={
+        presentedItem ? (
+          <ApprovalDecisionFooter
+            item={presentedItem}
+            pending={pending}
+            onDecision={onDecision}
+          />
+        ) : undefined
+      }
     >
       {presentedItem ? (
-        <ApprovalDetailContent item={presentedItem} onOpenReceipt={onOpenReceipt} />
+        <ApprovalDetailContent
+          item={presentedItem}
+          onOpenReceipt={onOpenReceipt}
+        />
       ) : null}
     </BottomSheet>
   );
@@ -633,9 +824,23 @@ export function ApprovalDetailContent({
 }): React.JSX.Element {
   const critical = approvalIsCritical(item);
   const warning = !critical && item.priority === "WARNING";
-  const typeLabel = item.type === "project_cost" ? "Biaya lapangan" : "Tagihan vendor";
-  const typeIcon = item.type === "project_cost" ? "receipt_long" : "request_quote";
-  const statusLabel = critical ? "Risiko tinggi" : warning ? "Perlu perhatian" : "Siap ditinjau";
+  const typeLabel =
+    item.type === "project_cost"
+      ? "Biaya lapangan"
+      : item.type === "inventory_opening"
+        ? "Saldo awal stok"
+        : "Tagihan vendor";
+  const typeIcon =
+    item.type === "project_cost"
+      ? "receipt_long"
+      : item.type === "inventory_opening"
+        ? "inventory"
+        : "request_quote";
+  const statusLabel = critical
+    ? "Risiko tinggi"
+    : warning
+      ? "Perlu perhatian"
+      : "Siap ditinjau";
 
   return (
     <div className="space-y-4 pb-1">
@@ -643,13 +848,18 @@ export function ApprovalDetailContent({
         <div className="flex items-center justify-between gap-3">
           <span className="inline-flex min-w-0 items-center gap-2 text-[10px] font-bold text-white/70">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] bg-white/10 text-white">
-              <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
+              <span
+                className="material-symbols-outlined text-[17px]"
+                aria-hidden="true"
+              >
                 {typeIcon}
               </span>
             </span>
             <span className="truncate">{typeLabel}</span>
           </span>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold ${critical ? "bg-[#ff6b61]/18 text-[#ff9b94]" : warning ? "bg-[#ffb020]/16 text-[#ffd081]" : "bg-white/10 text-white/75"}`}>
+          <span
+            className={`shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold ${critical ? "bg-[#ff6b61]/18 text-[#ff9b94]" : warning ? "bg-[#ffb020]/16 text-[#ffd081]" : "bg-white/10 text-white/75"}`}
+          >
             {statusLabel}
           </span>
         </div>
@@ -671,28 +881,61 @@ export function ApprovalDetailContent({
           {item.description}
         </p>
         <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-[9px] font-semibold text-white/55">
-          <span className="truncate">Diajukan {formatShortDate(item.createdAt)}</span>
-          <span className="max-w-[48%] shrink-0 truncate text-right" title={item.priorityReason}>
+          <span className="truncate">
+            Diajukan {formatShortDate(item.createdAt)}
+          </span>
+          <span
+            className="max-w-[48%] shrink-0 truncate text-right"
+            title={item.priorityReason}
+          >
             {item.priorityReason}
           </span>
         </div>
       </section>
 
       <section aria-labelledby="approval-context-title">
-        <h3 id="approval-context-title" className="mb-2 px-1 text-[13px] font-bold text-on-surface">
+        <h3
+          id="approval-context-title"
+          className="mb-2 px-1 text-[13px] font-bold text-on-surface"
+        >
           Konteks pengajuan
         </h3>
         <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/[0.025]">
-          <ApprovalContextRow icon="folder_open" label="Project" value={item.projectName} />
-          <ApprovalContextRow icon="person" label="Pengaju" value={item.requestedBy} />
-          <ApprovalContextRow icon="category" label="Kategori budget" value={item.budgetItemName} />
+          <ApprovalContextRow
+            icon={
+              item.type === "inventory_opening" ? "warehouse" : "folder_open"
+            }
+            label={
+              item.type === "inventory_opening" ? "Ruang kerja" : "Project"
+            }
+            value={item.projectName}
+          />
+          <ApprovalContextRow
+            icon="person"
+            label="Pengaju"
+            value={item.requestedBy}
+          />
+          <ApprovalContextRow
+            icon={item.type === "inventory_opening" ? "inventory" : "category"}
+            label={
+              item.type === "inventory_opening" ? "Cakupan" : "Kategori budget"
+            }
+            value={item.budgetItemName}
+          />
           <ApprovalContextRow
             icon="event"
             label="Jatuh tempo"
-            value={item.dueDate ? formatShortDate(item.dueDate) : "Tidak ditentukan"}
+            value={
+              item.dueDate ? formatShortDate(item.dueDate) : "Tidak ditentukan"
+            }
           />
           {item.notes ? (
-            <ApprovalContextRow icon="notes" label="Catatan" value={item.notes} multiline />
+            <ApprovalContextRow
+              icon="notes"
+              label="Catatan"
+              value={item.notes}
+              multiline
+            />
           ) : null}
           {item.receiptImageUrl ? (
             <button
@@ -701,17 +944,35 @@ export function ApprovalDetailContent({
               className="flex min-h-12 w-full items-center gap-3 border-t border-outline-variant/20 px-3.5 py-2.5 text-left outline-none active:bg-black/[0.02] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/25"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/[0.075] text-primary">
-                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">image</span>
+                <span
+                  className="material-symbols-outlined text-[18px]"
+                  aria-hidden="true"
+                >
+                  image
+                </span>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[9px] font-semibold text-on-surface-variant/60">Dokumen pendukung</span>
-                <span className="mt-0.5 block text-[12px] font-bold text-on-surface">Lihat bukti pengajuan</span>
+                <span className="block text-[9px] font-semibold text-on-surface-variant/60">
+                  Dokumen pendukung
+                </span>
+                <span className="mt-0.5 block text-[12px] font-bold text-on-surface">
+                  Lihat bukti pengajuan
+                </span>
               </span>
-              <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden="true">chevron_right</span>
+              <span
+                className="material-symbols-outlined text-[18px] text-primary"
+                aria-hidden="true"
+              >
+                chevron_right
+              </span>
             </button>
           ) : null}
         </div>
       </section>
+
+      {item.type === "inventory_opening" ? (
+        <InventoryOpeningApprovalItems item={item} />
+      ) : null}
 
       <ApprovalImpactReview item={item} />
     </div>
@@ -732,11 +993,21 @@ function ApprovalContextRow({
   return (
     <div className="flex min-h-12 items-center gap-3 border-b border-outline-variant/20 px-3.5 py-2.5 last:border-b-0">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
-        <span className="material-symbols-outlined text-[18px]" aria-hidden="true">{icon}</span>
+        <span
+          className="material-symbols-outlined text-[18px]"
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[9px] font-semibold text-on-surface-variant/60">{label}</p>
-        <p className={`mt-0.5 text-[12px] font-semibold leading-4 text-on-surface ${multiline ? "whitespace-pre-wrap" : "truncate"}`} title={value}>
+        <p className="text-[9px] font-semibold text-on-surface-variant/60">
+          {label}
+        </p>
+        <p
+          className={`mt-0.5 text-[12px] font-semibold leading-4 text-on-surface ${multiline ? "whitespace-pre-wrap" : "truncate"}`}
+          title={value}
+        >
           {value}
         </p>
       </div>
@@ -744,10 +1015,51 @@ function ApprovalContextRow({
   );
 }
 
-function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.JSX.Element {
-  const impact = getApprovalBudgetImpact(item.allocatedAmount, item.actualSpent, item.amount);
+function ApprovalImpactReview({
+  item,
+}: {
+  readonly item: ApprovalItem;
+}): React.JSX.Element {
+  if (item.type === "inventory_opening") {
+    return (
+      <section aria-labelledby="approval-impact-title">
+        <h3
+          id="approval-impact-title"
+          className="mb-2 px-1 text-[13px] font-bold text-on-surface"
+        >
+          Dampak setelah disetujui
+        </h3>
+        <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/[0.025]">
+          <ApprovalContextRow
+            icon="add_box"
+            label="Inventory"
+            value={`Menambah ${item.budgetItemName} sesuai jumlah fisik`}
+            multiline
+          />
+          <ApprovalContextRow
+            icon="account_balance_wallet"
+            label="Kas & proyek"
+            value="Tidak membuat kas keluar, utang vendor, atau actual cost proyek"
+            multiline
+          />
+          <ApprovalContextRow
+            icon="history"
+            label="Audit"
+            value="Mencatat pergerakan saldo awal stok dan riwayat audit"
+            multiline
+          />
+        </div>
+      </section>
+    );
+  }
+  const impact = getApprovalBudgetImpact(
+    item.allocatedAmount,
+    item.actualSpent,
+    item.amount,
+  );
   const nextSpent = item.actualSpent + item.amount;
-  const critical = item.budgetOverrun || impact.afterPercentage >= RISK_LIMIT_THRESHOLD;
+  const critical =
+    item.budgetOverrun || impact.afterPercentage >= RISK_LIMIT_THRESHOLD;
   const warning = !critical && impact.afterPercentage >= RISK_WARNING_THRESHOLD;
   const toneClass = critical
     ? "bg-error-light text-error"
@@ -766,10 +1078,19 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
     <section aria-labelledby="approval-impact-title">
       <div className="mb-2 flex items-end justify-between gap-3 px-1">
         <div className="min-w-0">
-          <h3 id="approval-impact-title" className="text-[13px] font-bold text-on-surface">Dampak ke budget</h3>
-          <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">{item.budgetItemName}</p>
+          <h3
+            id="approval-impact-title"
+            className="text-[13px] font-bold text-on-surface"
+          >
+            Dampak ke budget
+          </h3>
+          <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+            {item.budgetItemName}
+          </p>
         </div>
-        <span className={`shrink-0 font-mono text-[12px] font-black ${critical ? "text-error" : warning ? "text-warning" : "text-on-surface"}`}>
+        <span
+          className={`shrink-0 font-mono text-[12px] font-black ${critical ? "text-error" : warning ? "text-warning" : "text-on-surface"}`}
+        >
           {impact.afterPercentage.toFixed(0)}%
         </span>
       </div>
@@ -777,27 +1098,66 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
       <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/[0.025]">
         <div className="px-4 py-3.5">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-[9px] font-semibold text-on-surface-variant/60">Budget kategori</span>
-            <MoneyValue amount={item.allocatedAmount} variant="compactWithFull" size="sm" align="right" />
+            <span className="text-[9px] font-semibold text-on-surface-variant/60">
+              Budget kategori
+            </span>
+            <MoneyValue
+              amount={item.allocatedAmount}
+              variant="compactWithFull"
+              size="sm"
+              align="right"
+            />
           </div>
           <div className="mt-3 grid grid-cols-[minmax(0,1fr)_28px_minmax(0,1fr)] items-center gap-2">
             <div className="min-w-0">
-              <p className="text-[9px] font-semibold text-on-surface-variant/60">Saat ini</p>
-              <MoneyValue amount={item.actualSpent} variant="compactWithFull" size="lg" className="mt-1" />
-              <p className="mt-1 font-mono text-[9px] font-bold text-on-surface-variant">{impact.beforePercentage.toFixed(0)}% terpakai</p>
+              <p className="text-[9px] font-semibold text-on-surface-variant/60">
+                Saat ini
+              </p>
+              <MoneyValue
+                amount={item.actualSpent}
+                variant="compactWithFull"
+                size="lg"
+                className="mt-1"
+              />
+              <p className="mt-1 font-mono text-[9px] font-bold text-on-surface-variant">
+                {impact.beforePercentage.toFixed(0)}% terpakai
+              </p>
             </div>
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant" aria-hidden="true">
-              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+            <span
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant"
+              aria-hidden="true"
+            >
+              <span className="material-symbols-outlined text-[15px]">
+                arrow_forward
+              </span>
             </span>
             <div className="min-w-0 text-right">
-              <p className="text-[9px] font-semibold text-on-surface-variant/60">Jika disetujui</p>
-              <MoneyValue amount={nextSpent} variant="compactWithFull" size="lg" align="right" tone={critical ? "danger" : warning ? "warning" : "default"} className="mt-1" />
-              <p className={`mt-1 font-mono text-[9px] font-bold ${critical ? "text-error" : warning ? "text-warning" : "text-on-surface-variant"}`}>{impact.afterPercentage.toFixed(0)}% terpakai</p>
+              <p className="text-[9px] font-semibold text-on-surface-variant/60">
+                Jika disetujui
+              </p>
+              <MoneyValue
+                amount={nextSpent}
+                variant="compactWithFull"
+                size="lg"
+                align="right"
+                tone={critical ? "danger" : warning ? "warning" : "default"}
+                className="mt-1"
+              />
+              <p
+                className={`mt-1 font-mono text-[9px] font-bold ${critical ? "text-error" : warning ? "text-warning" : "text-on-surface-variant"}`}
+              >
+                {impact.afterPercentage.toFixed(0)}% terpakai
+              </p>
             </div>
           </div>
         </div>
-        <div className={`flex min-h-10 items-center gap-2 px-4 py-2.5 text-[10px] font-bold ${toneClass}`}>
-          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+        <div
+          className={`flex min-h-10 items-center gap-2 px-4 py-2.5 text-[10px] font-bold ${toneClass}`}
+        >
+          <span
+            className="material-symbols-outlined text-[16px]"
+            aria-hidden="true"
+          >
             {critical ? "report" : warning ? "warning" : "check_circle"}
           </span>
           <span>{impactLabel}</span>
@@ -814,7 +1174,10 @@ function ApprovalDecisionFooter({
 }: {
   readonly item: ApprovalItem;
   readonly pending: boolean;
-  readonly onDecision: (item: ApprovalItem, status: ApprovalDecision["status"]) => void;
+  readonly onDecision: (
+    item: ApprovalItem,
+    status: ApprovalDecision["status"],
+  ) => void;
 }): React.JSX.Element {
   return (
     <div className="grid grid-cols-[0.9fr_1.1fr] gap-2">

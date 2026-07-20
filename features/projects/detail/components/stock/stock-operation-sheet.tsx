@@ -6,7 +6,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { reserveMaterialForProject, returnMaterialFromProject, useMaterialForProject as recordMaterialUse, wasteMaterialForProject } from "@/app/actions/material/inventory";
-import { ConfirmationSheet, FieldContextLine, FormRiskNotice, WorkflowFormSheet } from "@/components/ui";
+import { ConfirmationSheet, FieldContextLine, FormRiskNotice, FormSection, WorkflowFormSheet } from "@/components/ui";
 import { FormField, QuantityStepper, SheetSelect, Textarea } from "@/components/ui";
 import { MaterialSuccessSheet, StockImpactRow, type MaterialOperationSuccess } from "@/features/materials/components/material-form-patterns";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
@@ -14,7 +14,19 @@ import type { MaterialOption, RapView } from "../shared/rap-rab-manager";
 
 type Operation = "RESERVE" | "USE" | "RETURN" | "WASTE";
 
-const LABELS: Record<Operation, string> = { RESERVE: "Reservasi", USE: "Pemakaian", RETURN: "Pengembalian", WASTE: "Material Terbuang" };
+const LABELS: Record<Operation, string> = { RESERVE: "Reservasi Material", USE: "Pakai Material", RETURN: "Kembalikan Sisa", WASTE: "Material Terbuang" };
+const CONTEXT_HELPERS: Record<Operation, string> = {
+  RESERVE: "Pilih kebutuhan RAP dan lokasi stok yang akan disiapkan untuk proyek ini.",
+  USE: "Pilih kebutuhan RAP dan lokasi asal material yang benar-benar dipakai.",
+  RETURN: "Pilih kebutuhan RAP dan lokasi penerima sisa material proyek.",
+  WASTE: "Pilih kebutuhan RAP dan lokasi stok material yang rusak atau tidak dapat digunakan.",
+};
+const DETAIL_HELPERS: Record<Operation, string> = {
+  RESERVE: "Reservasi mengurangi stok tersedia tanpa mengubah stok fisik.",
+  USE: "Pemakaian mengurangi stok fisik dan dicatat sebagai biaya proyek.",
+  RETURN: "Pengembalian menambah stok fisik dan membalik biaya pemakaian terkait.",
+  WASTE: "Stok fisik berkurang permanen dan alasan disimpan pada audit trail.",
+};
 
 export function StockOperationSheet({ projectId, rap, materials, userRole }: { readonly projectId: string; readonly rap: RapView | null; readonly materials: readonly MaterialOption[]; readonly userRole: string }): React.JSX.Element | null {
   const router = useRouter();
@@ -37,14 +49,14 @@ export function StockOperationSheet({ projectId, rap, materials, userRole }: { r
   const estimatedImpact = (Number(quantity) || 0) * (inventory?.averageCost ?? 0);
   const valid = Boolean(operation && rapItem?.materialId && inventory && Number(quantity) > 0 && note.trim().length >= (operation === "WASTE" ? 10 : 3));
   const disabledReason = !rapItem?.materialId
-    ? "Pilih RAP material dulu agar stock movement masuk ke item proyek yang benar."
+    ? "Pilih RAP material agar pergerakan stok masuk ke kebutuhan proyek yang benar."
     : !inventory
-      ? "Pilih lokasi inventory agar stok tidak berubah dari lokasi yang salah."
+      ? "Pilih lokasi inventori agar stok tidak berubah dari lokasi yang salah."
       : Number(quantity) <= 0
-        ? "Isi quantity yang akan diproses."
+        ? "Isi jumlah material lebih dari 0."
         : note.trim().length < (operation === "WASTE" ? 10 : 3)
           ? operation === "WASTE"
-            ? "Waste membutuhkan audit note minimal 10 karakter."
+            ? "Alasan material terbuang minimal 10 karakter."
             : "Tambahkan catatan singkat minimal 3 karakter."
           : undefined;
   const money = useMemo(() => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }), []);
@@ -94,7 +106,7 @@ export function StockOperationSheet({ projectId, rap, materials, userRole }: { r
       if (!result.success) { setMessage(result.error.message); toast.error(result.error.message); return; }
       const label = LABELS[operation];
       toast.success(`${label} berhasil dicatat.`);
-      setSuccess({ title: `${label} berhasil dicatat`, description: "Movement stok dan audit trail telah dibuat dalam satu transaksi.", facts: [{ label: "Material", value: material?.name ?? "Material" }, { label: "Jumlah", value: `${Number(quantity).toLocaleString("id-ID")} ${rapItem.unit}` }, { label: "Status", value: "Sudah diposting" }] });
+      setSuccess({ title: `${label} berhasil dicatat`, description: "Pergerakan stok dan audit trail telah dibuat dalam satu transaksi.", facts: [{ label: "Material", value: material?.name ?? "Material" }, { label: "Jumlah", value: `${Number(quantity).toLocaleString("id-ID")} ${rapItem.unit}` }, { label: "Status", value: "Sudah diposting" }] });
       setOperation(null);
       setReviewing(false);
       router.refresh();
@@ -112,16 +124,21 @@ export function StockOperationSheet({ projectId, rap, materials, userRole }: { r
       pending={pending}
       disabled={!valid}
       disabledReason={disabledReason}
-      danger={operation === "WASTE"}
-      primaryLabel={reviewing ? `Catat ${operation ? LABELS[operation] : "Operasi"}` : `Tinjau ${operation ? LABELS[operation] : "Operasi"}`}
-      secondaryLabel={reviewing ? "Kembali Mengedit" : undefined}
+      danger={operation === "WASTE" && reviewing}
+      primaryLabel={reviewing ? "Catat" : "Tinjau"}
+      secondaryLabel={reviewing ? "Ubah" : undefined}
       pendingLabel="Memproses…"
       onPrimary={() => reviewing ? submit() : setReviewing(true)}
       onSecondary={() => setReviewing(false)}
     >
       {reviewing ? (
         <div className="space-y-md">
-          <div className="rounded-2xl bg-primary/5 px-4 py-3"><p className="text-[10px] font-bold uppercase text-primary">Material RAP</p><p className="mt-1 text-sm font-bold">{rapItem?.name}</p><p className="mt-0.5 text-xs text-on-surface-variant">{inventory?.locationName}</p></div>
+          <FormSection title="Tinjau operasi material" helper="Periksa kebutuhan proyek, lokasi, dan jumlah sebelum mencatat.">
+            <ReviewFact label="RAP material" value={rapItem?.name ?? "–"} />
+            <ReviewFact label="Lokasi" value={inventory?.locationName ?? "–"} />
+            <ReviewFact label="Jumlah" value={`${Number(quantity).toLocaleString("id-ID", { maximumFractionDigits: 2 })} ${rapItem?.unit ?? material?.unit ?? "unit"}`} />
+            {note.trim() ? <ReviewFact label="Catatan" value={note} /> : null}
+          </FormSection>
           <StockImpactRow label={operation === "RESERVE" ? "Stok tersedia" : "Stok fisik"} before={operation === "RESERVE" ? inventory?.availableStock ?? 0 : inventory?.currentStock ?? 0} delta={operation === "RETURN" ? Number(quantity) : -Number(quantity)} after={(operation === "RESERVE" ? inventory?.availableStock ?? 0 : inventory?.currentStock ?? 0) + (operation === "RETURN" ? Number(quantity) : -Number(quantity))} reserved={operation === "RESERVE" ? undefined : inventory?.reservedStock} unit={rapItem?.unit ?? material?.unit} />
           <FormRiskNotice title={operation === "WASTE" ? "Material terbuang tercatat permanen" : "Perubahan siap dicatat"} tone={operation === "WASTE" ? "danger" : operation === "USE" ? "warning" : "default"}>Nilai dampak {money.format(estimatedImpact)}. Pastikan jumlah, lokasi, dan RAP sudah benar.</FormRiskNotice>
         </div>
@@ -134,32 +151,61 @@ export function StockOperationSheet({ projectId, rap, materials, userRole }: { r
           ariaLabel="Operasi stok"
           options={(Object.keys(LABELS) as Operation[]).map((key) => ({ value: key, label: LABELS[key] }))}
         />
-        <SheetSelect label="RAP Material" value={rapItemId} onChange={(value) => { setRapItemId(value); setLocationId(""); }} options={rapOptions} placeholder="Pilih material" />
-        <SheetSelect label="Lokasi inventori" value={locationId} disabled={!material} onChange={setLocationId} options={inventoryOptions} placeholder="Pilih lokasi" />
+        <FormSection
+          title="Material proyek"
+          helper={operation ? CONTEXT_HELPERS[operation] : "Pilih konteks operasi material."}
+        >
+          <SheetSelect label="RAP material" value={rapItemId} onChange={(value) => { setRapItemId(value); setLocationId(""); }} options={rapOptions} placeholder="Pilih kebutuhan material" required />
+          <SheetSelect label="Lokasi inventori" value={locationId} disabled={!material} onChange={setLocationId} options={inventoryOptions} placeholder={material ? "Pilih lokasi" : "Pilih RAP material lebih dulu"} required />
+        </FormSection>
         {inventory && (
           <FieldContextLine tone={inventory.availableStock <= 0 ? "danger" : "success"}>
             Fisik {inventory.currentStock.toLocaleString("id-ID")} · Reservasi {inventory.reservedStock.toLocaleString("id-ID")} · Tersedia {inventory.availableStock.toLocaleString("id-ID")}
           </FieldContextLine>
         )}
-        <FormField label={rapItem?.unit ?? material?.unit ? `Jumlah (${rapItem?.unit ?? material?.unit})` : "Jumlah"}>
-          <QuantityStepper value={quantity} min={0} step={1} onChange={setQuantity} />
-        </FormField>
         {operation === "USE" || operation === "WASTE" ? (
           <FormRiskNotice
             title={operation === "WASTE" ? "Material terbuang mengunci audit trail" : "Pemakaian mengurangi stok tersedia"}
             tone={operation === "WASTE" ? "danger" : "warning"}
           >
-            Pastikan quantity dan lokasi benar agar stok tidak berkurang dari tempat yang salah dan biaya proyek tidak tampak bocor.
+            Pastikan jumlah dan lokasi benar agar stok tidak berkurang dari tempat yang salah dan biaya proyek tidak tampak bocor.
           </FormRiskNotice>
         ) : null}
-        <FormField label={operation === "WASTE" ? "Catatan audit" : "Catatan"} helper={operation === "WASTE" ? "Wajib, minimal 10 karakter." : undefined}>
-          <Textarea rows={3} value={note} onChange={setNote} />
-        </FormField>
+        <FormSection
+          title="Jumlah dan catatan"
+          helper={operation ? DETAIL_HELPERS[operation] : "Lengkapi jumlah dan catatan operasi."}
+        >
+          <FormField label={rapItem?.unit ?? material?.unit ? `Jumlah (${rapItem?.unit ?? material?.unit})` : "Jumlah"} required>
+            <QuantityStepper value={quantity} unit={rapItem?.unit ?? material?.unit} min={0} step={1} onChange={setQuantity} />
+          </FormField>
+          <FormField
+            label={operation === "WASTE" ? "Alasan material terbuang" : operation === "RETURN" ? "Catatan pengembalian" : operation === "USE" ? "Catatan pemakaian" : "Catatan reservasi"}
+            helper={operation === "WASTE" ? "Wajib spesifik, minimal 10 karakter." : "Wajib, minimal 3 karakter."}
+            required
+          >
+            <Textarea
+              rows={3}
+              value={note}
+              onChange={setNote}
+              placeholder={operation === "WASTE" ? "Jelaskan penyebab, kondisi, dan lokasi material terbuang" : "Jelaskan tujuan atau konteks operasi material"}
+              required
+            />
+          </FormField>
+        </FormSection>
       </div>
       )}
     </WorkflowFormSheet>
-    <ConfirmationSheet open={confirmWaste} title="Konfirmasi material terbuang" description={`Stok akan berkurang dan ${money.format(estimatedImpact)} tetap menjadi biaya project. Aksi ini tercatat di audit log.`} confirmLabel="Catat Material Terbuang" danger pending={pending} onClose={() => setConfirmWaste(false)} onConfirm={submit} />
+    <ConfirmationSheet open={confirmWaste} title="Konfirmasi material terbuang" description={`Stok akan berkurang dan ${money.format(estimatedImpact)} tetap menjadi biaya proyek. Aksi ini tercatat di audit log.`} confirmLabel="Catat Material Terbuang" danger pending={pending} onClose={() => setConfirmWaste(false)} onConfirm={submit} />
     <ConfirmationSheet open={confirmClose} title="Buang perubahan operasi material?" description="Data yang belum dicatat akan hilang." confirmLabel="Buang Perubahan" danger onClose={() => setConfirmClose(false)} onConfirm={() => { setConfirmClose(false); setOperation(null); }} />
     <MaterialSuccessSheet success={success} onClose={() => setSuccess(null)} />
   </>;
+}
+
+function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+  return (
+    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
+    </div>
+  );
 }

@@ -3,7 +3,7 @@
 ## 1. Documentation First
 Create the implementation plan and update all product/technical docs before executable changes. The current approved plan is:
 
-`docs/superpowers/plans/2026-06-16-settings-source-of-truth.md`
+`docs/plans/2026-06-16-settings-source-of-truth.md`
 
 ## 2. Add Settings and Canonical Budget Model
 Add Drizzle schema, relations, migrations, and seed data for:

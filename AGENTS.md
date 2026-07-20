@@ -6,7 +6,7 @@ The product promise is: **Project Budget Control upgraded into a real ERP with m
 
 ## Planning and Documentation
 1. Read existing schema, actions, docs, and UI before changing code.
-2. Before major executable changes, write or update a plan under `docs/superpowers/plans/`.
+2. Before major executable changes, write or update a plan under `docs/plans/`.
 3. Keep documentation aligned with the current product direction.
 4. Do not leave docs saying inventory is out of MVP scope.
 5. Do not refer to a non-existent `field_request` table; the implemented field expense table is `project_cost`.
@@ -74,6 +74,7 @@ When replacing the budget model, introduce canonical tables additively and prese
 - AI must not expose internal RAP cost/margin/markup/vendor notes/internal notes in client-facing RAB output.
 
 ## UI/UX Rules
+- Before planning, implementing, styling, redesigning, reworking, auditing, or reviewing any UI, load `.agents/skills/atria-ui-ux/SKILL.md` and follow its required references, motion decision, and verification workflow.
 - `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md` is the active source of truth for main-page composition, density, surfaces, rows, tabs, financial values, loading states, and visual QA.
 - Treat the current Dashboard (`/ledger`) and Expenses (`/expenses`) as reference implementations. Reuse their design grammar and shared primitives; do not copy either page's layout blindly into another workflow.
 - Mobile widths 320–430 px are the source of truth. The fixed `max-w-md` shell remains one column at every viewport; a desktop browser preview alone is not acceptance evidence.

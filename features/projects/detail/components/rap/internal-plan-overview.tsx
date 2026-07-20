@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
 import { Badge } from "@/components/ui/badge";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
@@ -163,7 +164,7 @@ export function InternalPlanOverview({
                       {formatShortRp(Number(item.estimatedTotalCost))}
                     </span>
                     <span className="block text-[9px] font-bold text-primary">
-                      {item.status === "ACTIVE" ? "Siap" : item.status}
+                      {item.status === "ACTIVE" ? "Siap" : formatBusinessLabel(item.status)}
                     </span>
                   </span>
                 </button>

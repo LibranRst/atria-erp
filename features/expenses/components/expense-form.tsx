@@ -138,15 +138,12 @@ export function ExpenseForm({
   const selectedProject = projects.find(
     (project) => project.id === draft.payload.projectId,
   );
-  const budgetItems =
-    selectedProject?.budget?.status === "APPROVED"
-      ? selectedProject.budget.items ?? []
-      : [];
   const budgetCategories =
     selectedProject?.canonicalBudgets?.[0]?.categories
       ?.slice()
       .sort((left, right) => left.sortOrder - right.sortOrder) ?? [];
-  const selectedProjectApproved = selectedProject?.budget?.status === "APPROVED";
+  const selectedProjectApproved =
+    selectedProject?.canonicalBudgets?.[0]?.status === "APPROVED";
   const lineCompleteness = draft.payload.lines.map((line) => {
     const category = budgetCategories.find(
       (item) => item.id === line.projectBudgetCategoryId,
@@ -170,7 +167,7 @@ export function ExpenseForm({
         : undefined;
 
   const projectOptions = projects.map((project) => {
-    const approved = project.budget?.status === "APPROVED";
+    const approved = project.canonicalBudgets?.[0]?.status === "APPROVED";
     return {
       value: project.id,
       label: project.name,
@@ -303,7 +300,6 @@ export function ExpenseForm({
     try {
       const resultPromise = uploadAndParseExpenseReceipt({
         file,
-        budgetItems,
         budgetCategories,
       });
       setUploading(false);
@@ -468,8 +464,8 @@ export function ExpenseForm({
       <WorkflowFormSheet
         open={open && success === null}
         title={requestedDraftId ? "Lanjutkan Draft" : "Tambah Pengeluaran"}
-        primaryLabel="Tinjau Pengeluaran"
-        secondaryLabel="Simpan & Tutup"
+        primaryLabel="Tinjau"
+        secondaryLabel="Simpan"
         pending={loadingDraft}
         pendingLabel="Memuat Draft…"
         disabled={busy || !canReview}
@@ -514,7 +510,9 @@ export function ExpenseForm({
               disabled={busy}
               required
             />
-            {!safeRouteProjectId && !draft.payload.projectId && lastProjectSuggestion?.budget?.status === "APPROVED" ? (
+            {!safeRouteProjectId &&
+            !draft.payload.projectId &&
+            lastProjectSuggestion?.canonicalBudgets?.[0]?.status === "APPROVED" ? (
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.97 }}
@@ -595,8 +593,8 @@ export function ExpenseForm({
       <WorkflowFormSheet
         open={reviewOpen}
         title="Tinjau Pengeluaran"
-        primaryLabel="Ajukan Pengeluaran"
-        secondaryLabel="Kembali Mengedit"
+        primaryLabel="Ajukan"
+        secondaryLabel="Ubah"
         pending={submitting}
         pendingLabel="Mengajukan…"
         disabled={submitBlocked}
@@ -614,45 +612,51 @@ export function ExpenseForm({
         onPrimary={() => void submitDraft()}
       >
         <div className="space-y-4">
-          <ReviewBlock label="Proyek" value={selectedProject?.name ?? "–"} />
-          <ReviewBlock
-            label="Dokumen"
-            value={draft.payload.receipt ? draft.payload.receipt.fileName : "Tanpa nota"}
-          />
-          <section className="space-y-2">
-            <h3 className="px-1 text-[10px] font-bold uppercase tracking-[0.11em] text-on-surface-variant">
-              Dampak Budget
-            </h3>
-            {categorySummaries.map(({ category, amount }) => {
-              const before = Number(category.remainingAmount);
-              const after = before - amount;
-              return (
-                <div key={category.id} className="rounded-2xl bg-surface-container-low px-4 py-3 ring-1 ring-outline-variant/15">
-                  <div className="flex items-center justify-between gap-3 text-xs">
-                    <span className="font-bold text-on-surface">{category.name}</span>
-                    <span className="font-bold tabular-nums text-on-surface">Rp {amount.toLocaleString("id-ID")}</span>
-                  </div>
-                  <p className={`mt-1 text-[11px] ${after < 0 ? "text-error" : "text-on-surface-variant"}`}>
-                    Sisa sebelum Rp {before.toLocaleString("id-ID")} → sesudah Rp {after.toLocaleString("id-ID")}
-                  </p>
-                </div>
-              );
-            })}
-          </section>
-          <ReviewBlock
-            label="Perubahan Stok"
-            value={
-              stockLines.length === 0
-                ? "Tidak ada perubahan stok"
-                : stockLines
-                    .map((line) => STOCK_HANDLING_OPTIONS.find((option) => option.value === line.stockHandling)?.label ?? line.stockHandling)
-                    .join(" · ")
-            }
-          />
-          <ReviewBlock
-            label="Langkah Berikutnya"
-            value="Finance memverifikasi, lalu approval mengikuti aturan budget proyek."
-          />
+          <FormSection title="Rincian Pengeluaran" helper="Periksa kembali proyek dan kelengkapan dokumen pengeluaran.">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+              <ReviewFact label="Proyek" value={selectedProject?.name ?? "–"} />
+              <ReviewFact
+                label="Dokumen"
+                value={draft.payload.receipt ? draft.payload.receipt.fileName : "Tanpa nota"}
+              />
+              <ReviewFact
+                label="Perubahan Stok"
+                value={
+                  stockLines.length === 0
+                    ? "Tidak ada perubahan stok"
+                    : stockLines
+                        .map((line) => STOCK_HANDLING_OPTIONS.find((option) => option.value === line.stockHandling)?.label ?? line.stockHandling)
+                        .join(" · ")
+                }
+              />
+              <ReviewFact
+                label="Langkah Berikutnya"
+                value="Finance memverifikasi, lalu approval mengikuti aturan budget proyek."
+              />
+            </div>
+          </FormSection>
+
+          {categorySummaries.length > 0 && (
+            <FormSection title="Dampak Budget" helper="Kondisi overbudget akan mengharuskan persetujuan khusus Owner.">
+              <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                {categorySummaries.map(({ category, amount }) => {
+                  const before = Number(category.remainingAmount);
+                  const after = before - amount;
+                  return (
+                    <div key={category.id} className="px-4 py-3 text-xs">
+                      <div className="flex items-center justify-between gap-3 font-semibold">
+                        <span className="text-on-surface">{category.name}</span>
+                        <span className="tabular-nums text-primary font-bold">Rp {amount.toLocaleString("id-ID")}</span>
+                      </div>
+                      <p className={`mt-1 text-[11px] font-medium ${after < 0 ? "text-error font-bold" : "text-on-surface-variant"}`}>
+                        Sisa: Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </FormSection>
+          )}
         </div>
       </WorkflowFormSheet>
 
@@ -716,8 +720,8 @@ export function ExpenseForm({
       <WorkflowFormSheet
         open={success !== null}
         title="Pengeluaran Diajukan"
-        primaryLabel="Lihat Pengajuan"
-        secondaryLabel="Tambah Pengeluaran Lagi"
+        primaryLabel="Lihat"
+        secondaryLabel="Tambah"
         statusText={success ? `${success.itemCount} item · Rp ${success.totalAmount.toLocaleString("id-ID")}` : undefined}
         statusTone="success"
         onClose={() => {
@@ -764,17 +768,17 @@ export function ExpenseForm({
   );
 }
 
-function ReviewBlock({
+function ReviewFact({
   label,
   value,
 }: {
   readonly label: string;
-  readonly value: string;
+  readonly value: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <section className="rounded-2xl bg-surface-container-low px-4 py-3 ring-1 ring-outline-variant/15">
-      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">{label}</p>
-      <p className="mt-1 text-xs font-semibold leading-5 text-on-surface">{value}</p>
-    </section>
+    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+      <span className="text-on-surface-variant shrink-0 font-semibold">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
+    </div>
   );
 }

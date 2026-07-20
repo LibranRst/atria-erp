@@ -193,13 +193,11 @@ export async function applyExpenseStockHandling(input: {
   }
 
   const currentAfterUse = nextCurrentAfterStockIn - quantity;
-  const reservedReduction = Math.min(quantity, reservedStock);
-  const nextReserved = reservedStock - reservedReduction;
   const [usedInventory] = await input.tx
     .update(materialInventory)
     .set({
       currentStock: toDecimal(currentAfterUse),
-      reservedStock: toDecimal(nextReserved),
+      reservedStock: toDecimal(reservedStock),
       updatedAt: new Date(),
     })
     .where(eq(materialInventory.id, inventory.id))

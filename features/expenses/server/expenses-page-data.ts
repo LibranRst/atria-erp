@@ -1,8 +1,10 @@
 import { and, desc, eq, inArray, type SQL } from "drizzle-orm";
+import { redirect } from "next/navigation";
 
 import { db } from "@/db";
 import {
   approval,
+  bankAccount,
   materialMaster,
   project,
   projectCost,
@@ -52,10 +54,15 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
   const session = await requireServerSession();
   const roleName = (await resolveRoleName(session.user.roleId)) ?? "UNKNOWN";
   const isPM = roleName === "PROJECT_MANAGER";
+  const isFinanceOperator = roleName === "OWNER" || roleName === "FINANCE_ADMIN";
+  const isPurchasing = roleName === "PURCHASING";
+  if (!isFinanceOperator && !isPM && !isPurchasing) redirect("/projects");
 
   const costFilter = isPM
     ? eq(projectCost.requestedById, session.user.id)
-    : undefined;
+    : isPurchasing
+      ? eq(projectCost.id, "00000000-0000-0000-0000-000000000000")
+      : undefined;
 
   const costsData = await db.query.projectCost.findMany({
     where: costFilter,
@@ -117,7 +124,7 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
       },
       payments: {
         with: {
-          bankAccount: true,
+          bankAccount: { columns: { name: true } },
         },
       },
     },
@@ -138,7 +145,7 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
           },
         },
       },
-      bankAccount: true,
+      bankAccount: { columns: { name: true } },
       paidBy: true,
     },
     orderBy: [desc(vendorPayment.createdAt)],
@@ -158,7 +165,9 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
     };
   });
 
-  const bankAccountsData = await db.query.bankAccount.findMany();
+  const bankAccountsData = isFinanceOperator
+    ? await db.query.bankAccount.findMany({ where: eq(bankAccount.isActive, true) })
+    : [];
 
   const vendorsData = await db.query.vendor.findMany({
     orderBy: [desc(vendor.name)],

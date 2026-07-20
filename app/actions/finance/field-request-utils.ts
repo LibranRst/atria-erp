@@ -151,6 +151,9 @@ export function mapApproveFieldRequestError(
       },
     };
   }
+  if (errMsg === "MAKER_CHECKER_REQUIRED") {
+    return { success: false, error: { code: "FORBIDDEN", message: "Pembuat transaksi tidak dapat menyetujui sendiri tanpa emergency override dan alasan audit." } };
+  }
   return { success: false, error: { code: "TRANSACTION_FAILED", message: errMsg } };
 }
 
@@ -171,7 +174,7 @@ export function mapPayFieldRequestError(
       },
     };
   }
-  if (errMsg === "INSUFFICIENT_FUNDS") {
+  if (errMsg.startsWith("INSUFFICIENT_FUNDS")) {
     return {
       success: false,
       error: {
@@ -204,6 +207,9 @@ export function mapApproveVendorPaymentError(
   const errMsg = getErrorMessage(error, "Gagal memproses persetujuan pembayaran vendor.");
   if (errMsg === "PAYMENT_RECORD_NOT_FOUND") {
     return { success: false, error: { code: "NOT_FOUND", message: "Record pembayaran vendor tidak ditemukan." } };
+  }
+  if (errMsg === "MAKER_CHECKER_REQUIRED") {
+    return { success: false, error: { code: "FORBIDDEN", message: "Pembuat jadwal pembayaran tidak dapat menyetujui sendiri tanpa emergency override dan alasan audit." } };
   }
   return { success: false, error: { code: "TRANSACTION_FAILED", message: errMsg } };
 }

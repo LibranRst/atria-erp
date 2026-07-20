@@ -494,7 +494,9 @@ export function SmartDefaultHint({
   readonly children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <FieldContextLine tone="success">Default: {children}</FieldContextLine>
+    <div className="min-w-0 px-5 py-2.5">
+      <FieldContextLine tone="success">Default: {children}</FieldContextLine>
+    </div>
   );
 }
 
@@ -524,6 +526,7 @@ export function WorkflowFormSheet({
   statusText,
   statusTone = "default",
   danger = false,
+  actionLayout = "split",
   onClose,
   onExitComplete,
   onPrimary,
@@ -542,6 +545,7 @@ export function WorkflowFormSheet({
   readonly statusText?: string;
   readonly statusTone?: FormRiskTone;
   readonly danger?: boolean;
+  readonly actionLayout?: "split" | "stacked";
   readonly onClose: () => void;
   readonly onExitComplete?: () => void;
   readonly onPrimary: () => void;
@@ -556,7 +560,7 @@ export function WorkflowFormSheet({
       onClose={onClose}
       onExitComplete={onExitComplete}
       footer={
-        <div className="space-y-2">
+        <div className="space-y-1">
           {statusText ? (
             <p
               className={cx(
@@ -575,8 +579,10 @@ export function WorkflowFormSheet({
           ) : null}
           <div
             className={cx(
-              "grid gap-2",
-              secondaryLabel ? "grid-cols-[0.8fr_1.2fr]" : "grid-cols-1",
+              "grid gap-2 mt-2",
+              secondaryLabel && actionLayout === "split"
+                ? "grid-cols-[0.8fr_1.2fr]"
+                : "grid-cols-1",
             )}
           >
             {secondaryLabel && onSecondary ? (
@@ -630,9 +636,7 @@ export function OptionChoiceGroup<TValue extends string>({
 }): React.JSX.Element {
   return (
     <fieldset className="space-y-2">
-      <legend className="text-xs font-semibold text-on-surface">
-        {label}
-      </legend>
+      <legend className="text-xs font-semibold text-on-surface">{label}</legend>
       <div className="space-y-2">
         {options.map((option) => {
           const selected = option.value === value;

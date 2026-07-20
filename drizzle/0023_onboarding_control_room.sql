@@ -1,0 +1,1 @@
+ALTER TABLE "inventory_opening_batch" ADD COLUMN "decision_reason" text;

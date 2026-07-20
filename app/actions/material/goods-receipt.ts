@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -16,7 +16,7 @@ import {
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { assertProjectAccess } from "@/lib/auth/scoping";
+import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
 import type { ActionResponse } from "@/lib/types/action-response";
 import { createGoodsReceiptSchema } from "@/lib/validations/workflow-governance";
 
@@ -41,14 +41,40 @@ export async function postGoodsReceipt(input: unknown): Promise<ActionResponse<G
     if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN" && roleName !== "PURCHASING") {
       await assertProjectAccess(validation.data.projectId, user.id, roleName);
     }
-    if (validation.data.vendorBillId) {
-      const bill = await db.query.vendorBill.findFirst({ where: eq(vendorBill.id, validation.data.vendorBillId) });
-      if (!bill || bill.projectId !== validation.data.projectId) {
-        return { success: false, error: { code: "VALIDATION_ERROR", message: "Vendor bill tidak sesuai dengan proyek Goods Receipt." } };
-      }
-    }
-
+    await assertProjectIsOperational(validation.data.projectId);
     const posted = await db.transaction(async (tx) => {
+      const lockedBill = validation.data.vendorBillId
+        ? (await tx.select().from(vendorBill).where(eq(vendorBill.id, validation.data.vendorBillId)).for("update"))[0]
+        : null;
+      if (validation.data.vendorBillId && (!lockedBill || lockedBill.projectId !== validation.data.projectId)) {
+        throw new Error("GOODS_RECEIPT_VENDOR_BILL_MISMATCH");
+      }
+
+      if (lockedBill) {
+        const existingBillMovements = await tx
+          .select({
+            movementType: stockMovement.movementType,
+            quantity: stockMovement.quantity,
+            unitCost: stockMovement.unitCost,
+          })
+          .from(stockMovement)
+          .where(and(
+            eq(stockMovement.vendorBillId, lockedBill.id),
+            inArray(stockMovement.movementType, ["GOODS_RECEIPT", "GOODS_RECEIPT_REVERSAL"]),
+          ));
+        const existingValue = existingBillMovements.reduce((sum, movement) => {
+          const value = Number(movement.quantity) * Number(movement.unitCost);
+          return movement.movementType === "GOODS_RECEIPT_REVERSAL" ? sum - value : sum + value;
+        }, 0);
+        const incomingValue = validation.data.items.reduce(
+          (sum, item) => sum + item.quantity * item.unitCost,
+          0,
+        );
+        if (existingValue + incomingValue > Number(lockedBill.amount) + 0.01) {
+          throw new Error("GOODS_RECEIPT_EXCEEDS_VENDOR_BILL");
+        }
+      }
+
       const duplicate = await tx.query.goodsReceipt.findFirst({ where: eq(goodsReceipt.receiptNumber, validation.data.receiptNumber) });
       if (duplicate) throw new Error("Nomor Goods Receipt sudah dipakai.");
       const [receipt] = await tx.insert(goodsReceipt).values({
@@ -64,8 +90,36 @@ export async function postGoodsReceipt(input: unknown): Promise<ActionResponse<G
 
       for (const [index, item] of validation.data.items.entries()) {
         if (item.projectRapItemId) {
-          const rapItem = await tx.query.projectRapItem.findFirst({ where: eq(projectRapItem.id, item.projectRapItemId), with: { rap: true } });
-          if (!rapItem || rapItem.rap.projectId !== validation.data.projectId || rapItem.materialId !== item.materialId) throw new Error("RAP item tidak sesuai project/material Goods Receipt.");
+          const [rapItem] = await tx.select().from(projectRapItem).where(eq(projectRapItem.id, item.projectRapItemId)).for("update");
+          if (!rapItem) throw new Error("GOODS_RECEIPT_RAP_ITEM_MISMATCH");
+          const rap = await tx.query.projectRap.findFirst({ where: (table, { eq: equal }) => equal(table.id, rapItem.projectRapId) });
+          if (!rap || rap.projectId !== validation.data.projectId || rapItem.materialId !== item.materialId) {
+            throw new Error("GOODS_RECEIPT_RAP_ITEM_MISMATCH");
+          }
+          if (lockedBill?.projectRapItemId && lockedBill.projectRapItemId !== item.projectRapItemId) {
+            throw new Error("GOODS_RECEIPT_VENDOR_BILL_ITEM_MISMATCH");
+          }
+          if (lockedBill?.materialId && lockedBill.materialId !== item.materialId) {
+            throw new Error("GOODS_RECEIPT_VENDOR_BILL_ITEM_MISMATCH");
+          }
+          const existingRapMovements = await tx
+            .select({ movementType: stockMovement.movementType, quantity: stockMovement.quantity })
+            .from(stockMovement)
+            .where(and(
+              eq(stockMovement.projectRapItemId, item.projectRapItemId),
+              inArray(stockMovement.movementType, ["GOODS_RECEIPT", "GOODS_RECEIPT_REVERSAL"]),
+            ));
+          const alreadyReceived = existingRapMovements.reduce(
+            (sum, movement) => movement.movementType === "GOODS_RECEIPT_REVERSAL"
+              ? sum - Number(movement.quantity)
+              : sum + Number(movement.quantity),
+            0,
+          );
+          if (alreadyReceived + item.quantity > Number(rapItem.totalQuantity) + 0.001) {
+            throw new Error("GOODS_RECEIPT_EXCEEDS_RAP_QUANTITY");
+          }
+        } else if (lockedBill?.projectRapItemId || (lockedBill?.materialId && lockedBill.materialId !== item.materialId)) {
+          throw new Error("GOODS_RECEIPT_VENDOR_BILL_ITEM_MISMATCH");
         }
         const [inventory] = await tx.select().from(materialInventory).where(and(
           eq(materialInventory.materialId, item.materialId),
@@ -131,6 +185,16 @@ export async function postGoodsReceipt(input: unknown): Promise<ActionResponse<G
     return { success: true, data: posted };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Gagal posting Goods Receipt.";
+    const businessMessages: Record<string, string> = {
+      GOODS_RECEIPT_VENDOR_BILL_MISMATCH: "Tagihan vendor tidak sesuai dengan proyek penerimaan.",
+      GOODS_RECEIPT_VENDOR_BILL_ITEM_MISMATCH: "Material atau item RAP tidak sesuai dengan tagihan vendor.",
+      GOODS_RECEIPT_RAP_ITEM_MISMATCH: "Item RAP tidak sesuai dengan proyek atau material penerimaan.",
+      GOODS_RECEIPT_EXCEEDS_VENDOR_BILL: "Total nilai penerimaan melebihi sisa nilai tagihan vendor.",
+      GOODS_RECEIPT_EXCEEDS_RAP_QUANTITY: "Jumlah penerimaan melebihi sisa kebutuhan item RAP.",
+    };
+    if (businessMessages[message]) {
+      return { success: false, error: { code: "VALIDATION_ERROR", message: businessMessages[message] } };
+    }
     if (message.includes("FORBIDDEN") || message.includes("Akses")) return { success: false, error: { code: "FORBIDDEN", message } };
     return { success: false, error: { code: "TRANSACTION_FAILED", message } };
   }

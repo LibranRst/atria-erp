@@ -1,15 +1,17 @@
 "use server";
 
 import { db } from "@/db";
-import { clientInvoice, clientPayment, bankAccount, auditLog } from "@/db/schema";
+import { clientInvoice, clientPayment, bankAccount, auditLog, project } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { mutateBalance, parseNumericToCents } from "@/lib/finance/balance-mutation";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { ActionResponse } from "@/lib/types/action-response";
 import { recordClientPaymentSchema, RecordClientPaymentInput } from "@/lib/validations/budget";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import crypto from "crypto";
+import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
 
 /**
  * Mencatat penerimaan kas masuk termin dari klien.
@@ -60,16 +62,39 @@ export async function recordClientPayment(
     // 3. Jalankan Transaksi Database
     const result = await db.transaction(async (tx) => {
       // 3.1 Ambil data invoice dan pastikan tidak lunas / void
-      const invoice = await tx.query.clientInvoice.findFirst({
-        where: eq(clientInvoice.id, clientInvoiceId),
-      });
+      const [invoice] = await tx
+        .select()
+        .from(clientInvoice)
+        .where(eq(clientInvoice.id, clientInvoiceId))
+        .for("update");
 
       if (!invoice) {
         throw new Error("INVOICE_NOT_FOUND: Tagihan klien tidak ditemukan.");
       }
 
+      const [invoiceProject] = await tx
+        .select({ status: project.status })
+        .from(project)
+        .where(eq(project.id, invoice.projectId))
+        .for("update");
+      assertProjectStatusIsOperational(invoiceProject?.status);
+
       if (invoice.status === "PAID" || invoice.status === "VOID") {
-        throw new Error(`INVOICE_CLOSED: Tagihan berstatus ${invoice.status} tidak dapat menerima pembayaran.`);
+        throw new Error(`INVOICE_CLOSED: Tagihan berstatus ${formatBusinessLabel(invoice.status)} tidak dapat menerima pembayaran.`);
+      }
+
+      const existingPayments = await tx
+        .select({ amountPaid: clientPayment.amountPaid })
+        .from(clientPayment)
+        .where(eq(clientPayment.clientInvoiceId, clientInvoiceId));
+      const alreadyPaidCents = existingPayments.reduce(
+        (sum, payment) => sum + parseNumericToCents(payment.amountPaid),
+        BigInt(0),
+      );
+      const invoiceAmountCents = parseNumericToCents(invoice.amount);
+      const paymentCents = parseNumericToCents(amountPaid.toFixed(2));
+      if (paymentCents > invoiceAmountCents - alreadyPaidCents) {
+        throw new Error("PAYMENT_EXCEEDS_INVOICE_OUTSTANDING: Nominal pembayaran melebihi sisa piutang invoice.");
       }
 
       // 3.2 Pre-generate UUID untuk clientPayment agar siklus referensi kueri bersih
@@ -87,6 +112,7 @@ export async function recordClientPayment(
         referenceType: "client_payment",
         referenceId: clientPaymentId,
         userId: session.user.id,
+        transactionDate: paymentDate,
       });
 
       // 3.4 Ambil saldo bank terbaru pasca-mutasi untuk dikembalikan ke client
@@ -127,8 +153,6 @@ export async function recordClientPayment(
         BigInt(0)
       );
 
-      const invoiceAmountCents = parseNumericToCents(invoice.amount);
-
       // Update status invoice (PAID jika total pembayaran >= nominal invoice)
       const nextStatus = totalPaidCents >= invoiceAmountCents ? "PAID" : "PARTIALLY_PAID";
 
@@ -168,6 +192,8 @@ export async function recordClientPayment(
       errorCode = "NOT_FOUND";
     } else if (errMsg.startsWith("INVOICE_CLOSED")) {
       errorCode = "FORBIDDEN";
+    } else if (errMsg.startsWith("PAYMENT_EXCEEDS_INVOICE_OUTSTANDING")) {
+      errorCode = "VALIDATION_ERROR";
     }
     return {
       success: false,

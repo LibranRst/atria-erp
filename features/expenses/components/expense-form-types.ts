@@ -1,19 +1,3 @@
-export interface ProjectBudgetItem {
-  id: string;
-  name: string;
-  budgetCategory: string;
-  quantity: string;
-  unit: string;
-  unitPrice: string;
-  allocatedAmount: string;
-  actualSpent: string;
-  costCategory?: {
-    id: string;
-    name: string;
-    description: string | null;
-  } | null;
-}
-
 export interface ProjectBudgetCategoryOption {
   id: string;
   code: string;
@@ -64,11 +48,6 @@ export interface InventoryLocationOption {
 export interface ExpenseFormProject {
   id: string;
   name: string;
-  budget?: {
-    id: string;
-    status: string;
-    items?: ProjectBudgetItem[];
-  } | null;
   canonicalBudgets?: Array<{
     id: string;
     status: string;

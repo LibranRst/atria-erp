@@ -6,7 +6,7 @@ import { asc } from "drizzle-orm";
 import { getActiveProjectsForExpense, type ProjectForExpense } from "@/app/actions/project/budget";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { assertProjectAccess } from "@/lib/auth/scoping";
+import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
 import { ActionResponse } from "@/lib/types/action-response";
 import { submitVendorBillSchema, SubmitVendorBillInput } from "@/lib/validations/finance";
 import { createVendorBillTx } from "@/lib/finance/vendor-bill-write";
@@ -26,7 +26,6 @@ export async function submitVendorBill(
       vendorId,
       projectId,
       projectBudgetCategoryId,
-      projectBudgetItemId,
       projectCategoryPlanItemId,
       billNumber,
       amount,
@@ -63,6 +62,7 @@ export async function submitVendorBill(
       if (userRoleName === "PROJECT_MANAGER" || userRoleName === "DESIGNER") {
         await assertProjectAccess(projectId, session.user.id, userRoleName);
       }
+      await assertProjectIsOperational(projectId);
     } catch (err) {
       return {
         success: false,
@@ -74,7 +74,6 @@ export async function submitVendorBill(
       vendorId,
       projectId,
       projectBudgetCategoryId,
-      projectBudgetItemId,
       projectCategoryPlanItemId,
       billNumber,
       amount,

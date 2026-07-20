@@ -44,6 +44,20 @@ import {
   projectChangeOrder,
   goodsReceiptItem,
   goodsReceipt,
+  inventoryOpeningBatch,
+  inventoryOpeningItem,
+  stockTransfer,
+  stockTransferItem,
+  stockCount,
+  stockCountItem,
+  rabEstimateBundle,
+  attachment,
+  bankStatementImport,
+  bankStatementRow,
+  formDraft,
+  appConfig,
+  session,
+  verification,
 } from "./schema";
 import {
   DEFAULT_EXPENSE_CATEGORIES,
@@ -64,13 +78,27 @@ async function main(): Promise<void> {
     await tx.delete(notification);
     await tx.delete(aiRun);
     await tx.delete(approval);
+    await tx.delete(attachment);
+    await tx.delete(formDraft);
+    await tx.delete(bankStatementRow);
+    await tx.delete(bankStatementImport);
+    await tx.delete(appConfig);
+    await tx.delete(session);
+    await tx.delete(verification);
     await tx.delete(projectChangeOrder);
     await tx.delete(rabEstimateItem);
+    await tx.delete(rabEstimateBundle);
     await tx.delete(rabEstimate);
     await tx.delete(projectProfitabilitySnapshot);
     await tx.delete(projectExpenses);
     await tx.delete(goodsReceiptItem);
     await tx.delete(goodsReceipt);
+    await tx.delete(inventoryOpeningItem);
+    await tx.delete(inventoryOpeningBatch);
+    await tx.delete(stockTransferItem);
+    await tx.delete(stockCountItem);
+    await tx.delete(stockTransfer);
+    await tx.delete(stockCount);
     await tx.delete(stockMovement);
     await tx.delete(projectCost);
     await tx.delete(vendorPayment);
@@ -1321,6 +1349,20 @@ async function main(): Promise<void> {
         notes: "Invoice pembelian material kayu panel Multipleks - PT Cahaya Mas",
       },
     ]);
+
+    console.log("Seeding planned vendor payments...");
+    await tx.insert(vendorPayment).values({
+      id: "34043404-3404-3404-3404-340434043401",
+      vendorBillId: "33033303-3303-3303-3303-330333033301",
+      bankAccountId: "66666666-6666-6666-6666-666666666661",
+      cashTransactionId: null,
+      amountPaid: "4000000.00",
+      status: "PENDING",
+      paymentDate: new Date("2026-07-20T03:00:00Z"),
+      paidById: "22222222-2222-2222-2222-222222222222",
+      referenceNumber: null,
+      createdAt: new Date("2026-07-18T03:00:00Z"),
+    });
 
     // 14. Seed Project Costs (Field Expenses)
     console.log("Seeding project field costs & approvals...");

@@ -96,8 +96,8 @@ export function VendorSchedulePaymentSheet({
         pendingLabel="Menjadwalkan…"
         disabled={!canContinue}
         disabledReason={disabledReason}
-        primaryLabel={reviewing ? "Jadwalkan Pembayaran" : "Tinjau Jadwal"}
-        secondaryLabel={reviewing ? "Ubah Data" : undefined}
+        primaryLabel={reviewing ? "Jadwalkan" : "Tinjau"}
+        secondaryLabel={reviewing ? "Ubah" : undefined}
         onPrimary={() => reviewing ? onSubmit() : setReviewing(true)}
         onSecondary={() => setReviewing(false)}
       >
@@ -107,10 +107,12 @@ export function VendorSchedulePaymentSheet({
           {reviewing ? (
             <div className="space-y-3">
               <FormSection title="Rencana yang akan dibuat" helper="Penjadwalan belum mengurangi saldo rekening.">
-                <ReviewFact label="Rekening rencana" value={selectedAccount ? `${selectedAccount.bankName} · ${selectedAccount.name}` : "–"} />
-                <ReviewFact label="Tanggal" value={new Date(scheduleDate).toLocaleDateString("id-ID", { dateStyle: "long" })} />
-                <ReviewFact label="Nominal" value={`Rp ${amount.toLocaleString("id-ID")}`} />
-                <ReviewFact label="Sisa setelah dijadwalkan" value={`Rp ${Math.max(0, remaining - amount).toLocaleString("id-ID")}`} />
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                  <ReviewFact label="Rekening rencana" value={selectedAccount ? `${selectedAccount.bankName} · ${selectedAccount.name}` : "–"} />
+                  <ReviewFact label="Tanggal" value={new Date(scheduleDate).toLocaleDateString("id-ID", { dateStyle: "long" })} />
+                  <ReviewFact label="Nominal" value={`Rp ${amount.toLocaleString("id-ID")}`} />
+                  <ReviewFact label="Sisa setelah dijadwalkan" value={`Rp ${Math.max(0, remaining - amount).toLocaleString("id-ID")}`} />
+                </div>
               </FormSection>
               <FormRiskNotice title={amount >= 5_000_000 ? "Memerlukan persetujuan Owner" : "Saldo belum berubah"} tone={amount >= 5_000_000 ? "warning" : "default"}>
                 {amount >= 5_000_000
@@ -120,22 +122,26 @@ export function VendorSchedulePaymentSheet({
             </div>
           ) : (
             <form onSubmit={(event) => { event.preventDefault(); setReviewing(true); }} className="space-y-md">
-              <SheetSelect
-                label="Rekening Rencana"
-                value={selectedBankId}
-                disabled={isPending}
-                onChange={onSelectedBankIdChange}
-                options={bankAccounts.map((account) => ({
-                  value: account.id,
-                  label: `${account.bankName} - ${account.name}`,
-                  description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}`,
-                }))}
-                required
-              />
-              <DatePickerField label="Tanggal Pembayaran" value={scheduleDate} disabled={isPending} onChange={onScheduleDateChange} required />
-              <FormField label="Nominal yang Dibayarkan" required>
-                <MoneyInput value={scheduleAmount} disabled={isPending} onChange={onScheduleAmountChange} placeholder="Masukkan nominal" />
-              </FormField>
+              <FormSection title="Rencana Pembayaran" helper="Jadwalkan pembayaran untuk dicatat sebagai kewajiban kas masa depan.">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                  <SheetSelect
+                    label="Rekening Rencana"
+                    value={selectedBankId}
+                    disabled={isPending}
+                    onChange={onSelectedBankIdChange}
+                    options={bankAccounts.map((account) => ({
+                      value: account.id,
+                      label: `${account.bankName} - ${account.name}`,
+                      description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}`,
+                    }))}
+                    required
+                  />
+                  <DatePickerField label="Tanggal Pembayaran" value={scheduleDate} disabled={isPending} onChange={onScheduleDateChange} required />
+                  <FormField label="Nominal Pembayaran" required>
+                    <MoneyInput value={scheduleAmount} disabled={isPending} onChange={onScheduleAmountChange} placeholder="Masukkan nominal" />
+                  </FormField>
+                </div>
+              </FormSection>
             </form>
           )}
         </div>
@@ -211,8 +217,8 @@ export function VendorDisbursePaymentSheet({
         disabled={!canContinue}
         disabledReason={disabledReason}
         danger={reviewing}
-        primaryLabel={reviewing ? "Konfirmasi Pembayaran Vendor" : "Tinjau Pembayaran"}
-        secondaryLabel={reviewing ? "Ubah Data" : undefined}
+        primaryLabel={reviewing ? "Bayar" : "Tinjau"}
+        secondaryLabel={reviewing ? "Ubah" : undefined}
         onPrimary={() => reviewing ? onSubmit() : setReviewing(true)}
         onSecondary={() => setReviewing(false)}
       >
@@ -221,25 +227,41 @@ export function VendorDisbursePaymentSheet({
           <FieldContextLine>{presentedPayment.vendorBill?.vendor?.name} · {presentedPayment.vendorBill?.billNumber} · Rp {amount.toLocaleString("id-ID")}</FieldContextLine>
           {reviewing ? (
             <div className="space-y-3">
-              <MoneyImpactRow label={selectedAccount?.name ?? "Rekening sumber"} before={before} delta={-amount} after={after} />
+              <FormSection title="Dampak Keuangan" helper="Periksa dampak pencairan dana pada saldo kas rekening.">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                  <ReviewFact label="Rekening Sumber" value={selectedAccount?.name ?? "–"} />
+                  <ReviewFact
+                    label="Saldo Rekening"
+                    value={
+                      <span className={after < 0 ? "text-error font-bold" : "text-primary font-bold"}>
+                        Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
+                      </span>
+                    }
+                  />
+                  <ReviewFact label="Referensi transfer" value={refNumber} />
+                </div>
+              </FormSection>
               <FormRiskNotice title="Transaksi kas final" tone="warning">
                 Setelah dikonfirmasi, sistem mencatat ledger rekonsiliasi dan menandai pembayaran selesai. Koreksi dilakukan dengan transaksi pembalik, bukan mengedit mutasi ini.
               </FormRiskNotice>
-              <ReviewFact label="Referensi transfer" value={refNumber} />
             </div>
           ) : (
             <form onSubmit={(event) => { event.preventDefault(); setReviewing(true); }} className="space-y-md">
-              <SheetSelect
-                label="Rekening Sumber Dana"
-                value={disburseBankId}
-                disabled={isPending}
-                onChange={onDisburseBankIdChange}
-                options={bankAccounts.map((account) => ({ value: account.id, label: `${account.bankName} - ${account.name}`, description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}` }))}
-                required
-              />
-              <FormField label="Nomor Referensi Bukti Transfer" required>
-                <TextInput value={refNumber} disabled={isPending} onChange={onRefNumberChange} placeholder="Contoh: TRF-BCA-55203" />
-              </FormField>
+              <FormSection title="Pencairan Pembayaran" helper="Pilih rekening bank sumber dan masukkan bukti transfer.">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                  <SheetSelect
+                    label="Rekening Sumber Dana"
+                    value={disburseBankId}
+                    disabled={isPending}
+                    onChange={onDisburseBankIdChange}
+                    options={bankAccounts.map((account) => ({ value: account.id, label: `${account.bankName} - ${account.name}`, description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}` }))}
+                    required
+                  />
+                  <FormField label="Nomor Referensi Bukti Transfer" required>
+                    <TextInput value={refNumber} disabled={isPending} onChange={onRefNumberChange} placeholder="Contoh: TRF-BCA-55203" />
+                  </FormField>
+                </div>
+              </FormSection>
             </form>
           )}
         </div>
@@ -259,11 +281,11 @@ function PaymentError({ error }: { readonly error: string | null }): React.JSX.E
   );
 }
 
-function ReviewFact({ label, value }: { readonly label: string; readonly value: string }): React.JSX.Element {
+function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl bg-surface-container-low px-4 py-3">
-      <span className="text-xs text-on-surface-variant">{label}</span>
-      <span className="text-right text-xs font-bold text-on-surface">{value}</span>
+    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+      <span className="text-on-surface-variant shrink-0">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

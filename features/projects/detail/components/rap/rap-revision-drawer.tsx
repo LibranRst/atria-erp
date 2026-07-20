@@ -35,7 +35,7 @@ export function InternalRevisionDrawer({
       open={internalRevisionOpen}
       title="Buat Revisi RAP"
       onClose={() => setInternalRevisionOpen(false)}
-      submitLabel="Buat Draft Revisi"
+      submitLabel="Buat"
       submittingLabel="Membuat…"
       pending={isPending}
       disabled={internalRevisionReason.trim().length < 10 || (!reviseMaterial && revisionPackageIds.length === 0)}
@@ -46,7 +46,7 @@ export function InternalRevisionDrawer({
     >
       <div className="space-y-md">
         <FormRiskNotice title="RAP lama tetap terkunci" tone="default">Aplikasi membuat draft revisi baru. Data yang sudah disetujui tidak diedit langsung.</FormRiskNotice>
-        <FormSection title="1 · Alasan revisi" helper="Alasan disimpan dalam audit dan membantu reviewer memahami perubahan.">
+        <FormSection title="Alasan revisi" helper="Alasan disimpan dalam audit dan membantu reviewer memahami perubahan.">
         <FormField
           label="Alasan revisi"
           helper="Minimal 10 karakter dan tersimpan dalam audit."
@@ -59,7 +59,7 @@ export function InternalRevisionDrawer({
           />
         </FormField>
         </FormSection>
-        <FormSection title="2 · Bagian yang direvisi" helper="Pilih hanya material atau paket yang benar-benar perlu disesuaikan.">
+        <FormSection title="Bagian yang direvisi" helper="Pilih hanya material atau paket yang benar-benar perlu disesuaikan.">
         <fieldset className="space-y-2">
           <ChoiceRow
             checked={reviseMaterial}

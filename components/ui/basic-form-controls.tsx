@@ -2,6 +2,8 @@
 
 import React from "react";
 import { Check, LockKeyhole, Minus, Plus } from "lucide-react";
+import { motion } from "framer-motion";
+import { transitionSpringBouncy } from "@/lib/utils/motion";
 
 import {
   type FormFieldLayout,
@@ -66,17 +68,27 @@ export function FormField({
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5">
               <label
-                className={cx(labelClass, grouped && "ml-0 text-[10px] tracking-[0.08em] transition-colors group-focus-within/form:text-blue-600")}
+                className={cx(
+                  labelClass,
+                  grouped &&
+                    "ml-0 text-[10px] tracking-[0.08em] transition-colors group-focus-within/form:text-blue-600",
+                )}
                 htmlFor={htmlFor}
               >
                 {label}
               </label>
               {readOnly ? (
-                <LockKeyhole className="h-3.5 w-3.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
+                <LockKeyhole
+                  className="h-3.5 w-3.5 shrink-0 text-on-surface-variant"
+                  aria-hidden="true"
+                />
               ) : null}
             </div>
             {message ? (
-              <p id={helperId} className={cx(messageClass, grouped && "ml-0 mt-1")}>
+              <p
+                id={helperId}
+                className={cx(messageClass, grouped && "ml-0 mt-1")}
+              >
                 {message}
               </p>
             ) : null}
@@ -103,7 +115,14 @@ export function FormField({
       )}
     >
       <div className="flex min-w-0 items-center justify-between gap-2">
-        <label className={cx(labelClass, grouped && "ml-0 transition-colors group-focus-within/form:text-blue-600")} htmlFor={htmlFor}>
+        <label
+          className={cx(
+            labelClass,
+            grouped &&
+              "ml-0 transition-colors group-focus-within/form:text-blue-600",
+          )}
+          htmlFor={htmlFor}
+        >
           {label}
         </label>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -134,13 +153,7 @@ export function FormField({
   );
 }
 
-type TextInputType =
-  | "email"
-  | "password"
-  | "search"
-  | "tel"
-  | "text"
-  | "url";
+type TextInputType = "email" | "password" | "search" | "tel" | "text" | "url";
 
 export function TextInput({
   id,
@@ -275,7 +288,10 @@ export function Textarea({
       className={cx(
         grouped
           ? "min-h-20 w-full min-w-0 resize-none border-0 bg-transparent px-0 py-1 text-sm font-semibold leading-5 text-on-surface caret-blue-500 outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed disabled:opacity-55"
-          : cx(controlClass, "min-h-24 resize-none rounded-2xl bg-surface-container-lowest py-3 placeholder:text-on-surface-variant/55 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"),
+          : cx(
+              controlClass,
+              "min-h-24 resize-none rounded-2xl bg-surface-container-lowest py-3 placeholder:text-on-surface-variant/55 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15",
+            ),
         readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
         className,
       )}
@@ -511,5 +527,54 @@ export function ChoiceRow({
         )}
       </span>
     </button>
+  );
+}
+
+export function SwitchRow({
+  checked,
+  onChange,
+  title,
+  description,
+  disabled,
+}: {
+  readonly checked: boolean;
+  readonly onChange: (checked: boolean) => void;
+  readonly title: string;
+  readonly description?: string;
+  readonly disabled?: boolean;
+}): React.JSX.Element {
+  return (
+    <div
+      className={cx(
+        "flex items-center justify-between gap-4 bg-white transition-opacity",
+        disabled && "opacity-45 pointer-events-none",
+      )}
+    >
+      <div className="min-w-0 flex-1 text-left">
+        <span className="block text-[13px] font-bold text-on-surface">
+          {title}
+        </span>
+        {description && (
+          <span className="mt-0.5 block text-[10px] leading-relaxed text-on-surface-variant">
+            {description}
+          </span>
+        )}
+      </div>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={cx(
+          "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+          checked ? "bg-emerald-500" : "bg-surface-container-high",
+        )}
+      >
+        <motion.span
+          transition={transitionSpringBouncy}
+          className="absolute left-0.5 top-0.5 block h-5 w-5 rounded-full bg-white shadow-sm"
+          animate={{ x: checked ? 20 : 0 }}
+        />
+      </button>
+    </div>
   );
 }

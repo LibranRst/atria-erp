@@ -35,6 +35,20 @@ describe("expense draft foundation", () => {
     expect(details["items.0.description"]?.length).toBeGreaterThan(0);
   });
 
+  it("does not forward a recovered legacy budget-item link to active submissions", () => {
+    const payload = createBlankExpenseDraft(PROJECT_ID);
+    payload.lines[0] = {
+      ...createBlankExpenseLine(),
+      projectBudgetCategoryId: CATEGORY_ID,
+      projectBudgetItemId: "33333333-3333-4333-8333-333333333333",
+      quantity: 1,
+      unitPrice: 25_000,
+      amount: 25_000,
+      description: "Biaya operasional",
+    };
+    expect(toExpenseSubmission(payload).items[0]).not.toHaveProperty("projectBudgetItemId");
+  });
+
   it("increments optimistic revisions and rejects invalid expectations", () => {
     expect(nextExpenseDraftRevision(4)).toBe(5);
     expect(() => nextExpenseDraftRevision(0)).toThrow("EXPECTED_REVISION_INVALID");

@@ -1,7 +1,5 @@
 # Core UI Components Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Complete the remaining TSK-010 UI foundation by adding reusable iOS 26 Solid `Card` and `Badge` components for Atria ERP.
 
 **Architecture:** Add small, typed, server-compatible React components under `components/ui/` with no client-only APIs and no runtime dependencies. `Card` provides solid opaque financial containers using existing Tailwind v4 semantic tokens. `Badge` centralizes status color mapping for finance/project states with accessible text labels, 15%-style subdued backgrounds via the existing light status tokens, and no backdrop blur.
@@ -36,7 +34,7 @@
   - Replace hand-written card containers with the reusable `Card` primitives and add sample `Badge` usage.
   - Keep the page simple; do not create real project/finance data yet.
 
-- Modify: `docs/superpowers/plans/2026-06-11-core-ui-components.md`
+- Modify: `docs/plans/2026-06-11-core-ui-components.md`
   - Include this plan in the implementation commit.
 
 ## Design Direction
@@ -453,7 +451,7 @@ M app/page.tsx
 A components/ui/badge.tsx
 A components/ui/card.tsx
 A components/ui/index.ts
-A docs/superpowers/plans/2026-06-11-core-ui-components.md
+A docs/plans/2026-06-11-core-ui-components.md
 ```
 
 If the previous Task 3 commit is still unpushed, `git status --branch` may also show `ahead 1` or `ahead 2` after this task is committed.
@@ -463,7 +461,7 @@ If the previous Task 3 commit is still unpushed, `git status --branch` may also 
 Run:
 
 ```bash
-git diff -- app/page.tsx components/ui/badge.tsx components/ui/card.tsx components/ui/index.ts docs/superpowers/plans/2026-06-11-core-ui-components.md
+git diff -- app/page.tsx components/ui/badge.tsx components/ui/card.tsx components/ui/index.ts docs/plans/2026-06-11-core-ui-components.md
 ```
 
 Expected: Diff only contains the planned UI components, welcome page component usage, and this plan.
@@ -473,7 +471,7 @@ Expected: Diff only contains the planned UI components, welcome page component u
 Run:
 
 ```bash
-git add app/page.tsx components/ui/badge.tsx components/ui/card.tsx components/ui/index.ts docs/superpowers/plans/2026-06-11-core-ui-components.md
+git add app/page.tsx components/ui/badge.tsx components/ui/card.tsx components/ui/index.ts docs/plans/2026-06-11-core-ui-components.md
 git commit -m "feat: add core solid UI components"
 ```
 

@@ -1,3 +1,4 @@
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { formatShortIdr } from "@/lib/utils/money";
 import type { ProjectReadinessItem } from "./overview/project-overview";
 import { buildRapForManager } from "./project-tabs-mappers";
@@ -106,13 +107,13 @@ export function buildReadiness({
       label: "RAP",
       value: activeRap
         ? activeRap.status === "LOCKED"
-          ? "Locked"
+          ? "Terkunci"
           : activeRap.setupStage === "COMPLETE"
             ? "Siap"
-            : "Setup"
+            : "Perlu dilengkapi"
         : "Belum ada",
       detail: activeRap
-        ? `R${activeRap.revision} · ${activeRap.status === "LOCKED" ? "Baseline" : activeRap.setupStage}`
+        ? `R${activeRap.revision} · ${activeRap.status === "LOCKED" ? "Baseline" : formatBusinessLabel(activeRap.setupStage)}`
         : "Internal plan belum dibuat",
       tab: "rap",
       tone:

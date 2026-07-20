@@ -6,6 +6,7 @@ This document defines the visual and interaction grammar established by the curr
 
 Read this document together with:
 
+- `.agents/skills/atria-ui-ux/SKILL.md` as the mandatory UI/UX workflow and verification entrypoint.
 - `docs/05-ui-ux/IOS26_SOLID_DESIGN_SYSTEM.md` for controls, sheets, and motion.
 - `docs/05-ui-ux/MOBILE_FIRST_UI_UX.md` for role and workflow priorities.
 - `AGENTS.md` for finance, material, RBAC, and implementation safety.
@@ -29,8 +30,10 @@ Before changing a main surface, inspect the current implementation instead of re
 
 - Dashboard composition and states: `features/finance-dashboard/components/`
 - Dashboard primitives: `features/finance-dashboard/components/dashboard-primitives.tsx`
+- Dashboard tabs: inspect Ringkasan, Persetujuan, Budget, Jatuh Tempo, Rekening, and Material in the current `features/finance-dashboard/components/` implementation.
 - Expenses composition and states: `features/expenses/components/`
 - Expenses primitives: `features/expenses/components/expenses-primitives.tsx`
+- Approved form references: `features/expenses/components/expense-form.tsx`, `features/expenses/components/vendor-bill-form.tsx`, and `features/projects/list/components/project-drawer.tsx`
 - Shared tabs: `components/ui/segmented-tabs.tsx`
 - Shared financial values and page primitives: `components/ui/page-primitives.tsx`
 - Route skeletons: `app/ledger/loading.tsx` and `app/expenses/loading.tsx`
@@ -131,6 +134,14 @@ Use an icon tile around 36 px with a compact radius for repeated rows. Use soft 
 
 Do not use colored vertical severity rails beside ordinary list items. A vertical line is valid only when it represents an actual timeline relationship; timeline connectors must visually continue between items and replace horizontal row dividers.
 
+### Activity and history rows
+
+- Every visible row that represents one identifiable event in an activity, history, recent-transaction, or timeline section must open a contextual detail surface.
+- The full row is the primary 48px touch target and carries a chevron, keyboard focus, and an explicit screen-reader label. Nested actions remain separate and must not trigger the row.
+- Activity detail is re-read from the canonical server record when opened. It explains identity, actor/time, facts, supported before/after evidence, business impact, and notes without exposing raw audit JSON.
+- Missing historical evidence is disclosed plainly; never estimate a before-state or decision reason.
+- Aggregate summaries and master-data rows are not activity events and must not imitate the interactive event-row affordance.
+
 ## Tabs and Filters
 
 - Page-level sticky tabs, filters, and search controls are temporarily disabled through `WORKSPACE_STICKY_CONTROLS_ENABLED`. Keep them in normal document flow while the flag is off; the global shell and transactional save docks are unaffected.
@@ -139,7 +150,7 @@ Do not use colored vertical severity rails beside ordinary list items. A vertica
 - Horizontal overflow may scroll and auto-center the active item. It must never scroll the document vertically.
 - Short scrollable filter sets may fill the available strip when their intrinsic labels fit. Preserve each tab's intrinsic minimum width so the same control falls back to horizontal scrolling when space is insufficient; do not hardcode viewport breakpoints for this behavior.
 - Preserve URL query state when a tab needs to be shareable or restorable.
-- Keep the active-tab spring. Do not animate or remount the whole content area merely because a filter or tab changed.
+- Keep the active-tab pill spring. Replace tab or filter content instantly; do not fade, slide, animate, or remount the whole content area merely because the selection changed.
 - Filter changes must preserve a stable reading position. Avoid collapsing result containers in ways that cause the page to jump upward.
 
 ## Financial Values and Comparisons
@@ -205,16 +216,19 @@ Empty states should explain whether the empty condition is good and what can be 
 
 ## Motion
 
-- Motion communicates selection, hierarchy, feedback, or spatial origin. It is never filler.
-- Use Framer Motion and the tokens from `lib/utils/motion.ts`; never define ad-hoc springs.
-- Respect reduced motion.
-- Keep tab selection, sheet transitions, and micro-interactions; avoid section entrance animations and full-content tab transitions.
+- Use motion only to communicate selection, origin, continuity, state, or feedback.
+- Allow existing drawer/sheet and backdrop transitions, restrained modal entry/exit, meaningful local morphs, disclosures, tap feedback, success feedback, progress changes, and the active segmented-tab pill.
+- Keep routes, pages, tab/filter content, ordinary sections, and lists instant and stable. Do not add page transitions, whole-section entrances, or list staggers.
+- Use Framer Motion tokens from `lib/utils/motion.ts`; do not add ad-hoc springs or raw CSS keyframes.
+- Respect reduced motion and avoid motion that shifts the reading position.
+- Record the motion decision in every UI plan and handoff, including when the decision is `no animation`.
 - Refresh and syncing icons do not need to spin continuously.
 
 ## Copy
 
 - Use concise, natural Bahasa Indonesia.
 - Prefer a specific condition or action: `Perlu disetujui`, `Budget berisiko`, `Tinjau tagihan`.
+- Never render enum, `snake_case`, or internal reference codes directly to users. Keep canonical values in the database/API and translate them at the presentation boundary with `formatBusinessLabel`; raw codes are only appropriate inside an explicitly developer-only technical disclosure.
 - Avoid vague labels, marketing language, title case on every word, and English product jargon when a clear Indonesian term exists.
 - Supporting text should add consequence or context, not restate the title.
 

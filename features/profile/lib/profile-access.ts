@@ -1,4 +1,5 @@
 import type { PermissionKey } from "@/lib/auth/permissions";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
 type PermissionGroupDefinition = {
   readonly key: string;
@@ -66,6 +67,11 @@ const PERMISSION_DESCRIPTIONS: Record<PermissionKey, string> = {
   "manage:expense_categories": "Mengelola kategori pengeluaran",
   "manage:item_library": "Mengelola library item dan harga",
   "manage:material_settings": "Mengelola pengaturan master material",
+  "manage:users": "Mengelola user dan role internal",
+  "manage:vendors": "Mengelola master vendor",
+  "create:opening_inventory": "Mengajukan saldo awal inventory",
+  "approve:opening_inventory": "Menyetujui dan memposting saldo awal inventory",
+  "reverse:opening_inventory": "Membalik posting saldo awal inventory",
 };
 
 const PROFILE_PERMISSION_GROUPS: readonly PermissionGroupDefinition[] = [
@@ -207,5 +213,5 @@ export function formatProfileRole(roleName: string): string {
     DESIGNER: "Designer",
   };
 
-  return roleLabels[roleName] ?? roleName.replaceAll("_", " ");
+  return roleLabels[roleName] ?? formatBusinessLabel(roleName);
 }

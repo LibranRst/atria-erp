@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { vendorBill, vendorPayment, bankAccount, cashTransaction, projectBudgetItem, projectBudgetCategory, projectExpenses, auditLog, approval } from "@/db/schema";
+import { vendorBill, vendorPayment, bankAccount, project, projectBudgetCategory, projectExpenses, auditLog, approval } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
@@ -9,6 +9,8 @@ import { ActionResponse } from "@/lib/types/action-response";
 import { payVendorBillSchema, PayVendorBillInput } from "@/lib/validations/finance";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
+import { mutateBalance } from "@/lib/finance/balance-mutation";
+import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
 
 export async function payVendorBill(
   input: PayVendorBillInput
@@ -53,18 +55,27 @@ export async function payVendorBill(
         throw new Error("PAYMENT_RECORD_NOT_FOUND");
       }
 
-      if (payment.status === "COMPLETED") {
-        throw new Error("PAYMENT_ALREADY_COMPLETED");
+      if (payment.status !== "PENDING") {
+        throw new Error(payment.status === "COMPLETED" ? "PAYMENT_ALREADY_COMPLETED" : "PAYMENT_NOT_PENDING");
       }
 
-      // 2. Fetch the vendor bill
-      const bill = await tx.query.vendorBill.findFirst({
-        where: eq(vendorBill.id, payment.vendorBillId),
-      });
+      // 2. Fetch and lock the vendor bill so concurrent payments cannot overpay it.
+      const [bill] = await tx
+        .select()
+        .from(vendorBill)
+        .where(eq(vendorBill.id, payment.vendorBillId))
+        .for("update");
 
       if (!bill) {
         throw new Error("VENDOR_BILL_NOT_FOUND");
       }
+
+      const [billProject] = await tx
+        .select({ status: project.status })
+        .from(project)
+        .where(eq(project.id, bill.projectId))
+        .for("update");
+      assertProjectStatusIsOperational(billProject?.status);
 
       // 3. Fetch the canonical budget category for overrun checks.
       const budgetCategory = await tx.query.projectBudgetCategory.findFirst({
@@ -77,6 +88,19 @@ export async function payVendorBill(
 
       // 4. Verify Approval status if payment amount >= 5M or causes budget overrun
       const paymentAmount = Number(payment.amountPaid);
+      const completedPayments = await tx
+        .select({ amountPaid: vendorPayment.amountPaid })
+        .from(vendorPayment)
+        .where(
+          and(
+            eq(vendorPayment.vendorBillId, payment.vendorBillId),
+            eq(vendorPayment.status, "COMPLETED"),
+          ),
+        );
+      const paidBefore = completedPayments.reduce((sum, row) => sum + Number(row.amountPaid), 0);
+      if (paymentAmount > Number(bill.amount) - paidBefore + 0.001) {
+        throw new Error("PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING");
+      }
       const allocated = Number(budgetCategory.allocatedAmount);
       const spent = Number(budgetCategory.actualAmount);
       const isOverrun = spent > allocated;
@@ -101,57 +125,28 @@ export async function payVendorBill(
 
       const targetBankAccountId = bankAccountId || payment.bankAccountId;
 
-      // 5. Fetch and Lock the bank account
-      const [account] = await tx
-        .select()
-        .from(bankAccount)
-        .where(eq(bankAccount.id, targetBankAccountId))
-        .for("update");
-
-      if (!account) {
-        throw new Error("BANK_ACCOUNT_NOT_FOUND");
-      }
-
-      const oldBalance = Number(account.balance);
-
-      if (oldBalance < paymentAmount) {
-        throw new Error("INSUFFICIENT_FUNDS");
-      }
-
-      const newBalance = oldBalance - paymentAmount;
-
-      // 6. Update bank account balance
-      const updatedRows = await tx
-        .update(bankAccount)
-        .set({
-          balance: newBalance.toFixed(2),
-          updatedAt: new Date(),
-        })
-        .where(eq(bankAccount.id, targetBankAccountId))
-        .returning();
-
-      if (updatedRows.length !== 1) {
-        throw new Error("BALANCE_UPDATE_MISMATCH");
-      }
-
-      // 7. Write to ledger (cash_transaction - CREDIT)
-      const [ledgerTx] = await tx
-        .insert(cashTransaction)
-        .values({
-          bankAccountId: targetBankAccountId,
-          type: "CREDIT",
-          category: "vendor_payment",
-          amount: paymentAmount.toFixed(2),
-          description: `Bayar tagihan Vendor Bill #${bill.billNumber} (Ref: ${referenceNumber})`,
-          reconciled: true,
-          reconciliationDate: new Date(),
-          reconciledById: session.user.id,
-          referenceType: "vendor_payment",
-          referenceId: payment.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
+      const accountBefore = await tx.query.bankAccount.findFirst({
+        where: eq(bankAccount.id, targetBankAccountId),
+      });
+      if (!accountBefore) throw new Error("BANK_ACCOUNT_NOT_FOUND");
+      const oldBalance = Number(accountBefore.balance);
+      const ledgerTx = await mutateBalance({
+        tx,
+        bankAccountId: targetBankAccountId,
+        type: "CREDIT",
+        amount: paymentAmount.toFixed(2),
+        category: "vendor_payment",
+        description: `Bayar tagihan Vendor Bill #${bill.billNumber} (Ref: ${referenceNumber})`,
+        referenceType: "vendor_payment",
+        referenceId: payment.id,
+        userId: session.user.id,
+        transactionDate: payment.paymentDate,
+      });
+      const accountAfter = await tx.query.bankAccount.findFirst({
+        where: eq(bankAccount.id, targetBankAccountId),
+      });
+      if (!accountAfter) throw new Error("BANK_ACCOUNT_NOT_FOUND");
+      const newBalance = Number(accountAfter.balance);
 
       // 8. Update vendor payment details
       await tx
@@ -161,25 +156,12 @@ export async function payVendorBill(
           cashTransactionId: ledgerTx.id,
           status: "COMPLETED",
           referenceNumber,
-          paymentDate: new Date(),
+          paymentDate: payment.paymentDate,
         })
         .where(eq(vendorPayment.id, vendorPaymentId));
 
       // 9. Update vendor bill status to PAID or PARTIALLY_PAID
-      const completedPayments = await tx
-        .select({ amountPaid: vendorPayment.amountPaid })
-        .from(vendorPayment)
-        .where(
-          and(
-            eq(vendorPayment.vendorBillId, payment.vendorBillId),
-            eq(vendorPayment.status, "COMPLETED")
-          )
-        );
-
-      const totalPaidAmount = completedPayments.reduce(
-        (sum, p) => sum + Number(p.amountPaid),
-        0
-      ) + paymentAmount;
+      const totalPaidAmount = paidBefore + paymentAmount;
 
       const billAmount = Number(bill.amount);
       const nextBillStatus = totalPaidAmount >= billAmount ? "PAID" : "PARTIALLY_PAID";
@@ -191,25 +173,6 @@ export async function payVendorBill(
           updatedAt: new Date(),
         })
         .where(eq(vendorBill.id, payment.vendorBillId));
-
-      // 10. Accumulate legacy project budget item actual spent when linked.
-      const legacyBudgetItem = bill.projectBudgetItemId
-        ? await tx.query.projectBudgetItem.findFirst({
-          where: eq(projectBudgetItem.id, bill.projectBudgetItemId),
-        })
-        : null;
-      const legacySpent = legacyBudgetItem ? Number(legacyBudgetItem.actualSpent) : 0;
-      const nextActualSpent = legacyBudgetItem ? legacySpent + paymentAmount : 0;
-
-      if (legacyBudgetItem && bill.projectBudgetItemId) {
-        await tx
-          .update(projectBudgetItem)
-          .set({
-            actualSpent: nextActualSpent.toFixed(2),
-            updatedAt: new Date(),
-          })
-          .where(eq(projectBudgetItem.id, bill.projectBudgetItemId));
-      }
 
       await tx
         .update(projectExpenses)
@@ -234,13 +197,13 @@ export async function payVendorBill(
           balance: oldBalance.toFixed(2),
           paymentStatus: payment.status,
           billStatus: bill.status,
-          actualSpent: legacyBudgetItem ? legacySpent.toFixed(2) : null,
+          canonicalCategoryActual: budgetCategory.actualAmount,
         }),
         newState: JSON.stringify({
           balance: newBalance.toFixed(2),
           paymentStatus: "COMPLETED",
           billStatus: nextBillStatus,
-          actualSpent: legacyBudgetItem ? nextActualSpent.toFixed(2) : null,
+          canonicalCategoryActual: budgetCategory.actualAmount,
           cashTransactionId: ledgerTx.id,
         }),
         createdAt: new Date(),
@@ -266,13 +229,17 @@ export async function payVendorBill(
     ) {
       code = "NOT_FOUND";
       displayMessage = "Data record keuangan yang dibutuhkan untuk transaksi tidak ditemukan.";
-    } else if (errMsg === "INSUFFICIENT_FUNDS") {
+    } else if (errMsg.startsWith("INSUFFICIENT_FUNDS")) {
       code = "INSUFFICIENT_FUNDS";
       displayMessage = "Pencairan dibatalkan: Saldo akun bank perusahaan tidak mencukupi.";
-    } else if (errMsg === "PAYMENT_ALREADY_COMPLETED" || errMsg === "APPROVAL_REQUIRED_BUT_PENDING" || errMsg === "APPROVAL_RECORD_MISSING") {
+    } else if (errMsg === "PAYMENT_ALREADY_COMPLETED" || errMsg === "PAYMENT_NOT_PENDING" || errMsg === "PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING" || errMsg === "APPROVAL_REQUIRED_BUT_PENDING" || errMsg === "APPROVAL_RECORD_MISSING") {
       code = "FORBIDDEN";
       displayMessage = errMsg === "PAYMENT_ALREADY_COMPLETED"
         ? "Pembayaran ini sudah diselesaikan sebelumnya."
+        : errMsg === "PAYMENT_NOT_PENDING"
+          ? "Pembayaran ini sudah ditolak atau tidak lagi menunggu pencairan."
+          : errMsg === "PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING"
+            ? "Nominal pembayaran melebihi sisa tagihan vendor."
         : "Pembayaran memerlukan persetujuan Owner dan belum disetujui.";
     }
 

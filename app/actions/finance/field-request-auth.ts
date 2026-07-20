@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName, type PermissionKey } from "@/lib/auth/permissions";
-import { assertProjectAccess } from "@/lib/auth/scoping";
+import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
 import type { ActionResponse } from "@/lib/types/action-response";
 
 export type FieldRequestUser = {
@@ -57,6 +57,7 @@ export async function authorizeFieldRequestAction({
     try {
       const userRoleName = await resolveRoleName(user.roleId);
       await assertProjectAccess(projectId, user.id, userRoleName);
+      await assertProjectIsOperational(projectId);
     } catch (err) {
       return {
         success: false,

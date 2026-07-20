@@ -1,11 +1,11 @@
 "use server";
 
 import { db } from "@/db";
-import { clientInvoice, auditLog } from "@/db/schema";
+import { clientInvoice, auditLog, project } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { assertProjectAccess } from "@/lib/auth/scoping";
+import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
 import { ActionResponse } from "@/lib/types/action-response";
 import { createClientInvoiceSchema, CreateClientInvoiceInput } from "@/lib/validations/finance";
 
@@ -55,6 +55,7 @@ export async function createClientInvoice(
       if (userRoleName === "PROJECT_MANAGER" || userRoleName === "DESIGNER") {
         await assertProjectAccess(projectId, session.user.id, userRoleName);
       }
+      await assertProjectIsOperational(projectId);
     } catch (err) {
       return {
         success: false,
@@ -75,6 +76,13 @@ export async function createClientInvoice(
     }
 
     const newInvoice = await db.transaction(async (tx) => {
+      const [lockedProject] = await tx.select().from(project).where(eq(project.id, projectId)).for("update");
+      if (!lockedProject) throw new Error("PROJECT_NOT_FOUND");
+      const activeInvoices = await tx.query.clientInvoice.findMany({ where: (table, { and, eq: equals, ne: notEqual }) => and(equals(table.projectId, projectId), notEqual(table.status, "VOID")) });
+      const invoicedAmount = activeInvoices.reduce((sum, invoice) => sum + Number(invoice.amount), 0);
+      if (invoicedAmount + amount > Number(lockedProject.totalContractValue) + 0.001) {
+        throw new Error("INVOICE_EXCEEDS_CONTRACT_VALUE");
+      }
       const [inserted] = await tx
         .insert(clientInvoice)
         .values({
@@ -115,6 +123,9 @@ export async function createClientInvoice(
       data: newInvoice,
     };
   } catch (error) {
+    if (error instanceof Error && error.message === "INVOICE_EXCEEDS_CONTRACT_VALUE") {
+      return { success: false, error: { code: "VALIDATION_ERROR", message: "Total invoice aktif akan melebihi nilai kontrak proyek. Gunakan Change Order sebelum menambah tagihan." } };
+    }
     return {
       success: false,
       error: {

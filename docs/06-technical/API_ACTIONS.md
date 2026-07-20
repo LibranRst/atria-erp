@@ -10,7 +10,6 @@
 - Responses use `ActionResponse<T>`.
 
 ## Existing Finance Actions to Preserve
-- `createProjectBudget`, `createBudgetItem`, `submitBudgetForApproval`, `approveBudget`, `rejectBudget`
 - `submitFieldRequest`, `submitFieldRequests`, `verifyFieldRequest`, `approveFieldRequest`, `payFieldRequest`
 - `submitVendorBill`, `scheduleVendorBillPayment`, `payVendorBill`
 - `recordClientPayment`
@@ -19,7 +18,7 @@
 
 ## Project Budget Control Actions
 
-Expense and vendor bill write paths are category-first. `projectBudgetCategoryId` is required; legacy `projectBudgetItemId` is optional detail linkage for BoQ compatibility.
+Expense and vendor bill write paths are category-first. `projectBudgetCategoryId` is required. Legacy `projectBudgetItemId` may still be read from compatibility records, but active writes must store it as `null` and must not use it for budget mutation.
 - `createProjectBudgetFromRatios(projectId, contractValue, ratioPresetId?)`
 - `updateProjectBudgetCategoryAllocation(projectBudgetCategoryId, ratioPercent | allocatedAmount)`
 - `approveProjectBudget(projectBudgetId)`
@@ -28,6 +27,8 @@ Expense and vendor bill write paths are category-first. `projectBudgetCategoryId
 - `getOwnerBudgetDashboard()`
 
 These actions use canonical `project_budgets`, `expense_category`, `project_budget_categories`, `project_expenses`, and `project_profitability_snapshots` tables. Legacy `project_budget`, `project_budget_item`, and `project_cost` remain compatibility sources during migration.
+
+The legacy mutation exports `createProjectBudget`, `createBudgetItem`, `submitBudgetForApproval`, `approveBudget`, and `rejectBudget` are disabled compatibility endpoints. They return `FORBIDDEN`; new UI and integrations must use the canonical category-based actions above.
 
 `createProjectBudgetFromRatios` reads the active Budget Allocation Setting. Code constants are fallback/seed defaults only.
 
@@ -53,6 +54,21 @@ These actions use canonical `project_budgets`, `expense_category`, `project_budg
 - `setMaterialActive(input)`
 
 Settings actions are Zod-validated and RBAC-protected:
+
+## Development Account Simulation
+
+- `getDeveloperAccountSimulationState()` reads the env/readiness gate and eligible active staff accounts.
+- `startDeveloperAccountSimulation({ targetUserId, context })` changes the current Better Auth session's effective user after locking the session. `GENERAL` requires completed onboarding, complete staff roles, and permanent target password. `ONBOARDING_SETUP_REVIEW` is restricted to an active Finance Admin and intentionally permits a temporary-password target during setup.
+- `stopDeveloperAccountSimulation({ context })` restores `session.userId` from `session.developerActorUserId`. Restore remains callable for an existing simulation even when the feature flag is later disabled.
+
+The feature requires `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED=true` and is hard-disabled when `NODE_ENV=production`. Start/stop operations are transactional and audited. No password is read, reset, or bypassed.
+
+## Owner Onboarding Control Room
+
+- `advanceOwnerOnboardingStep({ stepId, disposition, initialStockDecision? })` atomically records the reviewed/skipped disposition and destination step in one transaction and audit entry.
+- `completeOwnerOnboarding()` recomputes every hard readiness gate server-side and rejects completion while a blocker or pending opening-inventory batch exists.
+- `getOnboardingReviewState()` exposes only pending setup opening batches to a Finance Admin with `approve:opening_inventory`.
+- `decideInventoryOpening(input)` remains the only approval/rejection write path for both operational approvals and restricted Onboarding Review. Maker-checker cannot be bypassed by the submitting Owner.
 - Owner and Finance Admin can manage budget settings, expense categories, item library, and material settings.
 - Purchasing can manage material settings only.
 - PM/Designer/Sales have no Settings mutation access in v1.

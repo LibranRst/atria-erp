@@ -78,8 +78,8 @@ export function TransferSheet({
       onClose={requestClose}
       pending={pending}
       disabledReason={disabledReason}
-      primaryLabel={reviewing ? "Catat Transfer Rekening" : "Tinjau Transfer"}
-      secondaryLabel={reviewing ? "Ubah Data" : undefined}
+      primaryLabel={reviewing ? "Transfer" : "Tinjau"}
+      secondaryLabel={reviewing ? "Ubah" : undefined}
       pendingLabel="Mencatat…"
       disabled={pending || !canSave || projectedSourceBalance < 0}
       statusText={projectedSourceBalance < 0 ? "Saldo rekening sumber tidak mencukupi." : undefined}

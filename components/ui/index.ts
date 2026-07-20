@@ -18,6 +18,7 @@ export type { PageStateKind, PageStateTone } from "./page-state";
 export { RoutePageError, RoutePageLoading } from "./route-page-state";
 export {
   ChoiceRow,
+  SwitchRow,
   COMMON_ROOM_OPTIONS,
   COMMON_UNIT_OPTIONS,
   ComboboxField,

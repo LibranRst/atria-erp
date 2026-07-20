@@ -119,6 +119,9 @@ export async function mutateBalance(
   if (!account) {
     throw new Error("BANK_ACCOUNT_NOT_FOUND: Akun kas bank tidak ditemukan.");
   }
+  if (!account.isActive) {
+    throw new Error("BANK_ACCOUNT_INACTIVE: Rekening yang diarsipkan tidak dapat menerima mutasi baru.");
+  }
 
   // 2. Hitung saldo baru dengan satuan sen (bigint)
   const oldBalanceCents = parseNumericToCents(account.balance);

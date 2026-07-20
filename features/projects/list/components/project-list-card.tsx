@@ -6,6 +6,7 @@ import React from "react";
 import { MoneyValue } from "@/components/ui/page-primitives";
 import { BudgetSplitIndicator } from "@/features/finance-dashboard/components/dashboard-budget-indicators";
 import { projectHealthReasonLabel } from "@/lib/project/effective-health";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import type { ProjectItem, ProjectStatus } from "./project-list-types";
 import { getUsedPercentage } from "./project-list-utils";
 
@@ -214,5 +215,5 @@ function budgetStatusLabel(status: string): string {
   if (status === "PENDING_REVIEW") return "Menunggu review";
   if (status === "APPROVED") return "Disetujui";
   if (status === "DRAFT") return "Draft";
-  return status.toLowerCase().replaceAll("_", " ");
+  return formatBusinessLabel(status);
 }

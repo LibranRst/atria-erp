@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
 
-import { projectBudgetCategory, projectBudgetItem, projectCost } from "@/db/schema";
+import { projectBudgetCategory, projectCost } from "@/db/schema";
 import {
   assertCategoryPlanItemLinkAllowed,
   assertMaterialLinksAllowed,
@@ -14,7 +14,6 @@ import { createProjectCostApprovalTx } from "./field-request-utils";
 
 export type FieldRequestSubmissionItem = {
   readonly projectBudgetCategoryId: string;
-  readonly projectBudgetItemId?: string | null;
   readonly materialId?: string | null;
   readonly projectRapItemId?: string | null;
   readonly projectCategoryPlanItemId?: string | null;
@@ -41,7 +40,6 @@ export async function createSubmittedFieldRequestTx(
     tx,
     projectId: args.projectId,
     projectBudgetCategoryId: args.item.projectBudgetCategoryId,
-    projectBudgetItemId: args.item.projectBudgetItemId,
   });
   assertMaterialLinksAllowed({
     categoryCode: budgetContext.categoryCode,
@@ -70,11 +68,6 @@ export async function createSubmittedFieldRequestTx(
     throw new Error("PROJECT_BUDGET_CATEGORY_NOT_FOUND");
   }
 
-  const legacyBudgetItem = args.includeApprovalCategoryLabel && args.item.projectBudgetItemId
-    ? await tx.query.projectBudgetItem.findFirst({
-        where: eq(projectBudgetItem.id, args.item.projectBudgetItemId),
-      })
-    : null;
   const allocated = Number(budgetCategory.allocatedAmount);
   const spent = Number(budgetCategory.actualAmount);
   const isOverrun = spent + args.item.amount > allocated;
@@ -86,7 +79,7 @@ export async function createSubmittedFieldRequestTx(
       projectCostId,
       isOverrun,
       label: args.includeApprovalCategoryLabel
-        ? legacyBudgetItem?.name ?? budgetCategory.expenseCategory.name
+        ? budgetCategory.expenseCategory.name
         : undefined,
     });
   }
@@ -97,7 +90,7 @@ export async function createSubmittedFieldRequestTx(
       id: projectCostId,
       projectId: args.projectId,
       projectBudgetCategoryId: budgetContext.projectBudgetCategoryId,
-      projectBudgetItemId: args.item.projectBudgetItemId ?? null,
+      projectBudgetItemId: null,
       materialId: args.item.materialId ?? null,
       projectRapItemId: args.item.projectRapItemId ?? null,
       requestedById: args.requestedById,

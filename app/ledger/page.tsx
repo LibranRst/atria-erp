@@ -1,6 +1,7 @@
 import React from "react";
 
 import { getFinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
+import { getOwnerOnboardingOverview } from "@/app/actions/onboarding";
 import {
   FinanceDashboard,
 } from "@/features/finance-dashboard/components/finance-dashboard";
@@ -25,7 +26,16 @@ export default async function LedgerPage(): Promise<React.JSX.Element> {
     );
   }
 
-  const result = await getFinanceDashboardOverview();
+  const resultPromise = getFinanceDashboardOverview();
+  const onboardingPromise = role === "OWNER"
+    ? getOwnerOnboardingOverview()
+    : Promise.resolve({ success: false as const, error: { code: "FORBIDDEN" as const, message: "" } });
+
+  const [result, onboardingResult] = await Promise.all([
+    resultPromise,
+    onboardingPromise,
+  ]);
+
   if (!result.success) {
     return (
       <section className="rounded-2xl bg-error-container/20 p-md text-center text-xs text-error">
@@ -34,5 +44,13 @@ export default async function LedgerPage(): Promise<React.JSX.Element> {
     );
   }
 
-  return <FinanceDashboard data={result.data} userName={session.user.name} />;
+  const onboarding = onboardingResult.success ? onboardingResult.data : null;
+
+  return (
+    <FinanceDashboard
+      data={result.data}
+      userName={session.user.name}
+      onboarding={onboarding}
+    />
+  );
 }

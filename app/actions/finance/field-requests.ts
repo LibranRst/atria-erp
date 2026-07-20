@@ -154,7 +154,8 @@ export async function payFieldRequest(
 export async function approveVendorPayment(
   vendorPaymentId: string,
   notes?: string,
-  status: "APPROVED" | "REJECTED" = "APPROVED"
+  status: "APPROVED" | "REJECTED" = "APPROVED",
+  emergencyOverride = false,
 ): Promise<ActionResponse<{ paymentId: string; status: string }>> {
-  return approveVendorPaymentWrite(vendorPaymentId, notes, status);
+  return approveVendorPaymentWrite(vendorPaymentId, notes, status, emergencyOverride);
 }

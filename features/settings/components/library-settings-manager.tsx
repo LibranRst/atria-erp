@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { CirclePlus, FileSearch, Trash2 } from "lucide-react";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
 import {
   setItemPriceLibraryItemActive,
@@ -92,6 +93,8 @@ type Props = {
   readonly roleName: string;
   readonly canManage: boolean;
   readonly hideHeader?: boolean;
+  readonly presentation?: "settings" | "onboarding";
+  readonly onMutationComplete?: () => void;
 };
 
 const TYPE_FILTERS = [
@@ -140,14 +143,14 @@ function itemTypeLabel(value: string): string {
   if (value === "MATERIAL_ITEM") return ITEM_TYPE_LABELS.MATERIAL_ITEM;
   if (value === "WORK_PACKAGE") return ITEM_TYPE_LABELS.WORK_PACKAGE;
   if (value === "SUBCON_PACKAGE") return ITEM_TYPE_LABELS.SUBCON_PACKAGE;
-  return value.replaceAll("_", " ");
+  return formatBusinessLabel(value);
 }
 function priceSourceLabel(value: string): string {
   if (value === "COST_BREAKDOWN") return PRICE_SOURCE_LABELS.COST_BREAKDOWN;
   if (value === "VENDOR_QUOTE") return PRICE_SOURCE_LABELS.VENDOR_QUOTE;
   if (value === "HISTORICAL") return PRICE_SOURCE_LABELS.HISTORICAL;
   if (value === "LEGACY_BACKFILL") return PRICE_SOURCE_LABELS.LEGACY_BACKFILL;
-  return value.replaceAll("_", " ");
+  return formatBusinessLabel(value);
 }
 const fullMoney = (value: number): string =>
   `Rp ${Math.round(value).toLocaleString("id-ID")}`;
@@ -224,6 +227,8 @@ export function LibrarySettingsManager({
   roleName,
   canManage,
   hideHeader = false,
+  presentation = "settings",
+  onMutationComplete,
 }: Props): React.JSX.Element {
   const [items, setItems] = React.useState(initialItems);
   const [draft, setDraft] = React.useState<Draft | null>(null);
@@ -238,6 +243,7 @@ export function LibrarySettingsManager({
   const [confirmComponentClose, setConfirmComponentClose] =
     React.useState(false);
   const [nameTouched, setNameTouched] = React.useState(false);
+  const [sourceNoteTouched, setSourceNoteTouched] = React.useState(false);
   const [componentNameTouched, setComponentNameTouched] = React.useState(false);
   const [showSourceDetails, setShowSourceDetails] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -289,15 +295,16 @@ export function LibrarySettingsManager({
           categories.some(
             (category) => category.id === draft.expenseCategoryId,
           ),
-        draft.name.trim().length > 0,
-        draft.itemCategory.trim().length > 0,
+        draft.name.trim().length >= 2,
+        draft.itemCategory.trim().length >= 2,
         draft.unit.trim().length > 0,
         draft.effectiveFrom.trim().length > 0 &&
           !Number.isNaN(new Date(draft.effectiveFrom).getTime()),
+        draft.sourceNote.trim().length >= 3,
         draft.pricingMode === "MARGIN_BASED" || draft.fixedClientPrice > 0,
         draft.components.length > 0,
         ...draft.components.flatMap((component) => [
-          component.label.trim().length > 0,
+          component.label.trim().length >= 2,
           Number(component.quantity) > 0,
           component.unit.trim().length > 0,
           Number(component.unitCost) >= 0,
@@ -311,7 +318,7 @@ export function LibrarySettingsManager({
   );
   const componentEditorValid = Boolean(
     componentEditor &&
-    componentEditor.label.trim() &&
+    componentEditor.label.trim().length >= 2 &&
     componentEditor.quantity > 0 &&
     componentEditor.unit.trim() &&
     componentEditor.unitCost >= 0,
@@ -325,35 +332,38 @@ export function LibrarySettingsManager({
     : !draft.expenseCategoryId ||
         !categories.some((category) => category.id === draft.expenseCategoryId)
       ? "Pilih kategori pengeluaran yang valid."
-      : !draft.name.trim()
-        ? "Isi nama template."
-        : !draft.itemCategory.trim()
-          ? "Isi kategori item."
+      : draft.name.trim().length < 2
+        ? "Isi nama template minimal 2 karakter."
+        : draft.itemCategory.trim().length < 2
+          ? "Isi kategori item minimal 2 karakter."
           : !draft.unit.trim()
             ? "Isi satuan."
             : !draft.effectiveFrom.trim() ||
                 Number.isNaN(new Date(draft.effectiveFrom).getTime())
               ? "Isi tanggal berlaku yang valid."
-              : draft.pricingMode === "FIXED_CLIENT_PRICE" &&
-                  draft.fixedClientPrice <= 0
-                ? "Harga tetap untuk klien harus lebih dari 0."
-                : draft.components.some(
-                      (component) =>
-                        !component.label.trim() ||
-                        Number(component.quantity) <= 0 ||
-                        !component.unit.trim() ||
-                        Number(component.unitCost) < 0,
-                    )
-                  ? "Lengkapi nama, jumlah, satuan, dan biaya satuan di setiap komponen."
-                  : undefined;
+              : draft.sourceNote.trim().length < 3
+                ? "Isi catatan sumber harga minimal 3 karakter."
+                : draft.pricingMode === "FIXED_CLIENT_PRICE" &&
+                    draft.fixedClientPrice <= 0
+                  ? "Harga tetap untuk klien harus lebih dari 0."
+                  : draft.components.some(
+                        (component) =>
+                          component.label.trim().length < 2 ||
+                          Number(component.quantity) <= 0 ||
+                          !component.unit.trim() ||
+                          Number(component.unitCost) < 0,
+                      )
+                    ? "Lengkapi nama minimal 2 karakter, jumlah, satuan, dan biaya satuan di setiap komponen."
+                    : undefined;
 
   function openDraft(next: Draft): void {
     setDraft(next);
     setDraftBaseline(JSON.stringify(next));
     setNameTouched(false);
+    setSourceNoteTouched(false);
     setComponentEditor(null);
     setShowSourceDetails(
-      Boolean(next.id || next.sourceNote || next.description),
+      Boolean(!next.id || next.sourceNote || next.description),
     );
   }
   function requestClose(): void {
@@ -482,6 +492,7 @@ export function LibrarySettingsManager({
         setDraftBaseline("");
         setMessage("Template dan breakdown harga berhasil disimpan.");
         toast.success("Template dan breakdown harga berhasil disimpan.");
+        onMutationComplete?.();
       } else {
         setMessage(result.error.message);
         toast.error(result.error.message);
@@ -510,6 +521,7 @@ export function LibrarySettingsManager({
         }
         setConfirmItem(null);
         toast.success("Item berhasil diperbarui.");
+        onMutationComplete?.();
       } else {
         setMessage(result.error.message);
         toast.error(result.error.message);
@@ -518,8 +530,10 @@ export function LibrarySettingsManager({
   }
 
   return (
-    <section className="min-w-0 space-y-lg">
-      {hideHeader ? (
+    <section
+      className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-lg"}`}
+    >
+      {presentation === "onboarding" ? null : hideHeader ? (
         <SettingsModuleHeader
           eyebrow="Template proyek berulang"
           title="Library Item & Harga"
@@ -537,47 +551,70 @@ export function LibrarySettingsManager({
           canManage={canManage}
         />
       )}
-      <p className="text-[10px] leading-[1.35] text-on-surface-variant">
-        <strong className="font-bold text-on-surface">
-          Harga tersimpan sebagai snapshot.
-        </strong>{" "}
-        Perubahan Library tidak mengubah RAB lama secara diam-diam.
-      </p>
+      {presentation === "settings" ? (
+        <p className="text-[10px] leading-[1.35] text-on-surface-variant">
+          <strong className="font-bold text-on-surface">
+            Harga tersimpan sebagai snapshot.
+          </strong>{" "}
+          Perubahan Library tidak mengubah RAB lama secara diam-diam.
+        </p>
+      ) : null}
       {message && (
         <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-[11px] leading-4 text-primary ring-1 ring-primary/15">
           {message}
         </p>
       )}
-      <SettingsFilterBar
-        status={status}
-        statusOptions={STATUS_FILTERS}
-        search={search}
-        filterCount={activeFilterCount}
-        searchPlaceholder="Cari template, kode, kategori"
-        searchAriaLabel="Cari template harga"
-        layoutPrefix="settings-library"
-        filterTitle="Filter template"
-        onStatusChange={setStatus}
-        onSearchChange={setSearch}
-        onResetFilters={() => {
-          setType("ALL");
-          setCategoryId("ALL");
-          setStatus("ALL");
-        }}
-      >
-        <FilterSelect
-          label="Tipe"
-          value={type}
-          options={TYPE_FILTERS}
-          onChange={setType}
-        />
-        <FilterSelect
-          label="Kategori"
-          value={categoryId}
-          options={categoryFilters}
-          onChange={setCategoryId}
-        />
-      </SettingsFilterBar>
+      {presentation === "onboarding" ? (
+        <div className="flex min-w-0 items-center justify-between gap-3 px-1">
+          <span className="min-w-0">
+            <span className="block text-[13px] leading-5 font-bold text-on-surface">
+              Template tersimpan
+            </span>
+            <span className="block text-[9px] leading-4 text-on-surface-variant">
+              {items.filter((row) => row.isActive).length} template aktif
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
+            disabled={!canManage}
+            className="relative min-h-10 shrink-0 rounded-full bg-[#007AFF]/[0.08] px-3.5 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] disabled:opacity-40"
+          >
+            Tambah
+          </button>
+        </div>
+      ) : (
+        <SettingsFilterBar
+          status={status}
+          statusOptions={STATUS_FILTERS}
+          search={search}
+          filterCount={activeFilterCount}
+          searchPlaceholder="Cari template, kode, kategori"
+          searchAriaLabel="Cari template harga"
+          layoutPrefix="settings-library"
+          filterTitle="Filter template"
+          onStatusChange={setStatus}
+          onSearchChange={setSearch}
+          onResetFilters={() => {
+            setType("ALL");
+            setCategoryId("ALL");
+            setStatus("ALL");
+          }}
+        >
+          <FilterSelect
+            label="Tipe"
+            value={type}
+            options={TYPE_FILTERS}
+            onChange={setType}
+          />
+          <FilterSelect
+            label="Kategori"
+            value={categoryId}
+            options={categoryFilters}
+            onChange={setCategoryId}
+          />
+        </SettingsFilterBar>
+      )}
       {filtered.length === 0 ? (
         <EmptyState
           title={
@@ -606,67 +643,81 @@ export function LibrarySettingsManager({
                   type="button"
                   key={item.id}
                   onClick={() => openDraft(toDraft(item))}
-                  className="flex min-h-[104px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
+                  className={`flex w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75 ${presentation === "onboarding" ? "min-h-[76px]" : "min-h-[104px]"}`}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-[13px] font-bold text-on-surface">
+                      <span className="truncate text-[13px] leading-5 font-bold text-on-surface">
                         {item.name}
                       </span>
-                      <SettingsStatusLabel
-                        label={
-                          item.isActive
-                            ? itemTypeLabel(item.itemType)
-                            : "Diarsipkan"
-                        }
-                        tone={item.isActive ? "neutral" : "inactive"}
-                      />
                     </span>
-                    <span className="mt-1 block truncate text-[10px] leading-[1.3] text-on-surface-variant">
+                    <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
                       {item.itemCategory} · {item.unit}
                       {item.code ? ` · ${item.code}` : ""}
                     </span>
-                    <span className="mt-2 grid grid-cols-2 gap-3">
-                      <span className="min-w-0">
-                        <span className="block text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/60">
-                          Harga klien
+                    {presentation === "settings" ? (
+                      <span className="mt-2 grid grid-cols-2 gap-3">
+                        <span className="min-w-0">
+                          <span className="block text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/60">
+                            Harga klien
+                          </span>
+                          <MoneyValue
+                            amount={item.defaultClientPrice}
+                            variant="compactWithFull"
+                            size="xs"
+                            tone="primary"
+                            className="mt-1"
+                          />
                         </span>
-                        <MoneyValue
-                          amount={item.defaultClientPrice}
-                          variant="compactWithFull"
-                          size="xs"
-                          tone="primary"
-                          className="mt-1"
-                        />
-                      </span>
-                      <span className="min-w-0 text-right">
-                        <span className="block text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/60">
-                          Biaya internal
+                        <span className="min-w-0 text-right">
+                          <span className="block text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/60">
+                            Biaya internal
+                          </span>
+                          <MoneyValue
+                            amount={item.defaultInternalCost}
+                            variant="compactWithFull"
+                            size="xs"
+                            align="right"
+                            className="mt-1"
+                          />
                         </span>
-                        <MoneyValue
-                          amount={item.defaultInternalCost}
-                          variant="compactWithFull"
-                          size="xs"
-                          align="right"
-                          className="mt-1"
-                        />
                       </span>
-                    </span>
-                    <span className="mt-2 flex justify-between gap-3 text-[9px] text-on-surface-variant">
-                      <span className="truncate">
-                        {item.components.length} komponen ·{" "}
-                        {priceSourceLabel(item.priceSourceType)}
+                    ) : (
+                      <MoneyValue
+                        amount={item.defaultClientPrice}
+                        variant="compactWithFull"
+                        size="xs"
+                        tone="primary"
+                        className="mt-1.5"
+                      />
+                    )}
+                    {presentation === "settings" ? (
+                      <span className="mt-2 flex justify-between gap-3 text-[9px] text-on-surface-variant">
+                        <span className="truncate">
+                          {item.components.length} komponen ·{" "}
+                          {priceSourceLabel(item.priceSourceType)}
+                        </span>
+                        <span className="shrink-0 font-bold text-primary">
+                          Margin{" "}
+                          {margin.toLocaleString("id-ID", {
+                            maximumFractionDigits: 1,
+                          })}
+                          %
+                        </span>
                       </span>
-                      <span className="shrink-0 font-bold text-primary">
-                        Margin{" "}
-                        {margin.toLocaleString("id-ID", {
-                          maximumFractionDigits: 1,
-                        })}
-                        %
-                      </span>
-                    </span>
+                    ) : null}
                   </span>
-                  <SettingsRowChevron />
+                  <div className="flex flex-row items-center gap-2">
+                    <SettingsStatusLabel
+                      label={
+                        item.isActive
+                          ? itemTypeLabel(item.itemType)
+                          : "Diarsipkan"
+                      }
+                      tone={item.isActive ? "neutral" : "inactive"}
+                    />
+                    <SettingsRowChevron />
+                  </div>
                 </button>
               );
             })}
@@ -682,7 +733,7 @@ export function LibrarySettingsManager({
         pending={pending}
         disabled={!canManage || !canSaveDraft}
         disabledReason={draftDisabledReason}
-        submitLabel="Simpan Template"
+        submitLabel="Simpan"
         submittingLabel="Menyimpan..."
         onSubmit={save}
         statusText={
@@ -728,8 +779,8 @@ export function LibrarySettingsManager({
                 label="Nama template"
                 required
                 error={
-                  nameTouched && !draft.name.trim()
-                    ? "Nama template wajib diisi."
+                  nameTouched && draft.name.trim().length < 2
+                    ? "Nama template minimal 2 karakter."
                     : undefined
                 }
               >
@@ -739,15 +790,15 @@ export function LibrarySettingsManager({
                     setNameTouched(true);
                     setDraft({ ...draft, name: value });
                   }}
-                  aria-invalid={nameTouched && !draft.name.trim()}
+                  aria-invalid={nameTouched && draft.name.trim().length < 2}
                 />
               </FormField>
               <FormField
                 label="Kategori item"
                 required
                 error={
-                  !draft.itemCategory.trim()
-                    ? "Kategori item wajib diisi."
+                  draft.itemCategory.trim().length < 2
+                    ? "Kategori item minimal 2 karakter."
                     : undefined
                 }
               >
@@ -756,7 +807,7 @@ export function LibrarySettingsManager({
                   onChange={(value) =>
                     setDraft({ ...draft, itemCategory: value })
                   }
-                  aria-invalid={!draft.itemCategory.trim()}
+                  aria-invalid={draft.itemCategory.trim().length < 2}
                 />
               </FormField>
               <ComboboxField
@@ -800,7 +851,7 @@ export function LibrarySettingsManager({
             >
               {draft.components.map((component, index) => {
                 const complete = Boolean(
-                  component.label.trim() &&
+                  component.label.trim().length >= 2 &&
                   component.quantity > 0 &&
                   component.unit.trim(),
                 );
@@ -947,17 +998,12 @@ export function LibrarySettingsManager({
 
             <FormDisclosure
               variant="compact"
-              title="Sumber & detail tambahan"
-              description="Kode, vendor, tanggal, dan catatan"
+              title="Sumber harga & detail"
+              description="Tanggal dan catatan sumber wajib; detail lain opsional"
               summary={
-                [
-                  draft.code,
-                  draft.defaultVendorId,
-                  draft.sourceNote,
-                  draft.description,
-                ].filter(Boolean).length > 0
-                  ? `${[draft.code, draft.defaultVendorId, draft.sourceNote, draft.description].filter(Boolean).length} terisi`
-                  : "Opsional"
+                draft.sourceNote.trim().length >= 3
+                  ? `${priceSourceLabel(draft.priceSourceType)} · sumber terisi`
+                  : "Catatan sumber belum lengkap"
               }
               icon={<FileSearch className="h-4 w-4" />}
               expanded={showSourceDetails}
@@ -1007,17 +1053,36 @@ export function LibrarySettingsManager({
                     { value: "COST_BREAKDOWN", label: "Rincian biaya" },
                     { value: "VENDOR_QUOTE", label: "Penawaran vendor" },
                     { value: "HISTORICAL", label: "Riwayat harga" },
-                    { value: "LEGACY_BACKFILL", label: "Data lama" },
+                    ...(draft.priceSourceType === "LEGACY_BACKFILL"
+                      ? [
+                          {
+                            value: "LEGACY_BACKFILL",
+                            label: "Data lama (kompatibilitas)",
+                          },
+                        ]
+                      : []),
                   ]}
                 />
-                <FormField label="Catatan sumber" optional>
+                <FormField
+                  label="Catatan sumber"
+                  required
+                  error={
+                    sourceNoteTouched && draft.sourceNote.trim().length < 3
+                      ? "Catatan sumber minimal 3 karakter."
+                      : undefined
+                  }
+                >
                   <Textarea
                     value={draft.sourceNote}
-                    onChange={(value) =>
-                      setDraft({ ...draft, sourceNote: value })
-                    }
+                    onChange={(value) => {
+                      setSourceNoteTouched(true);
+                      setDraft({ ...draft, sourceNote: value });
+                    }}
                     placeholder="Penawaran, referensi, tanggal, dan asumsi harga"
                     rows={2}
+                    aria-invalid={
+                      sourceNoteTouched && draft.sourceNote.trim().length < 3
+                    }
                   />
                 </FormField>
                 <FormField label="Deskripsi" optional>
@@ -1064,10 +1129,10 @@ export function LibrarySettingsManager({
         disabled={!componentEditorValid}
         disabledReason={
           !componentEditorValid
-            ? "Lengkapi nama, jumlah, satuan, dan biaya satuan."
+            ? "Lengkapi nama minimal 2 karakter, jumlah, satuan, dan biaya satuan."
             : undefined
         }
-        submitLabel="Simpan Komponen"
+        submitLabel="Simpan"
         onSubmit={saveComponent}
         statusText={
           componentEditor
@@ -1097,8 +1162,9 @@ export function LibrarySettingsManager({
                 label="Nama biaya"
                 required
                 error={
-                  componentNameTouched && !componentEditor.label.trim()
-                    ? "Nama biaya wajib diisi."
+                  componentNameTouched &&
+                  componentEditor.label.trim().length < 2
+                    ? "Nama biaya minimal 2 karakter."
                     : undefined
                 }
               >
@@ -1111,7 +1177,8 @@ export function LibrarySettingsManager({
                     patchComponent({ label: value });
                   }}
                   aria-invalid={
-                    componentNameTouched && !componentEditor.label.trim()
+                    componentNameTouched &&
+                    componentEditor.label.trim().length < 2
                   }
                 />
               </FormField>

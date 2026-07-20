@@ -71,12 +71,11 @@ export async function createProjectRap(
       return { success: false, error: { code: "FORBIDDEN", message: "RAP proyek sudah tersedia." } };
     }
 
-    const [created] = await db.insert(projectRap).values({
-      projectId: validation.data.projectId,
-      status: "DRAFT",
-      revision: 1,
-      notes: validation.data.notes ?? null,
-    }).returning();
+    const created = await db.transaction(async (tx) => {
+      const [row] = await tx.insert(projectRap).values({ projectId: validation.data.projectId, status: "DRAFT", revision: 1, notes: validation.data.notes ?? null }).returning();
+      await tx.insert(auditLog).values({ userId: user.id, action: "CREATE_RAP_DRAFT", targetTable: "project_rap", targetId: row.id, newState: JSON.stringify(row) });
+      return row;
+    });
 
     return { success: true, data: created };
   } catch (error) {
@@ -103,10 +102,12 @@ export async function addProjectRapItem(
     if (rap.status !== "DRAFT") throw new Error("RAP_NOT_DRAFT");
     await assertProjectMutationAccess(user, rap.projectId, "update:rap");
 
-    const [created] = await db.insert(projectRapItem).values({
-      projectRapId: rap.id,
-      ...(await buildRapItemValues(validation.data)),
-    }).returning();
+    const values = await buildRapItemValues(validation.data);
+    const created = await db.transaction(async (tx) => {
+      const [row] = await tx.insert(projectRapItem).values({ projectRapId: rap.id, ...values }).returning();
+      await tx.insert(auditLog).values({ userId: user.id, action: "CREATE_RAP_ITEM_DRAFT", targetTable: "project_rap_item", targetId: row.id, newState: JSON.stringify(row) });
+      return row;
+    });
 
     return { success: true, data: created };
   } catch (error) {
@@ -134,13 +135,17 @@ export async function updateProjectRapItem(
     if (item.rap.status !== "DRAFT") throw new Error("RAP_NOT_DRAFT");
     await assertProjectMutationAccess(user, item.rap.projectId, "update:rap");
 
-    const [updated] = await db.update(projectRapItem)
-      .set({
-        ...(await buildRapItemValues(validation.data)),
+    const values = await buildRapItemValues(validation.data);
+    const updated = await db.transaction(async (tx) => {
+      const [row] = await tx.update(projectRapItem).set({
+        ...values,
         updatedAt: new Date(),
       })
       .where(eq(projectRapItem.id, item.id))
       .returning();
+      await tx.insert(auditLog).values({ userId: user.id, action: "UPDATE_RAP_ITEM_DRAFT", targetTable: "project_rap_item", targetId: item.id, originalState: JSON.stringify(item), newState: JSON.stringify(row) });
+      return row;
+    });
 
     return { success: true, data: updated };
   } catch (error) {
@@ -168,7 +173,10 @@ export async function deleteProjectRapItem(
     if (item.rap.status !== "DRAFT") throw new Error("RAP_NOT_DRAFT");
     await assertProjectMutationAccess(user, item.rap.projectId, "update:rap");
 
-    await db.delete(projectRapItem).where(eq(projectRapItem.id, item.id));
+    await db.transaction(async (tx) => {
+      await tx.delete(projectRapItem).where(eq(projectRapItem.id, item.id));
+      await tx.insert(auditLog).values({ userId: user.id, action: "DELETE_RAP_ITEM_DRAFT", targetTable: "project_rap_item", targetId: item.id, originalState: JSON.stringify(item) });
+    });
     return { success: true, data: { deletedId: item.id } };
   } catch (error) {
     return toError(error, "Gagal menghapus item RAP.");
@@ -273,8 +281,8 @@ export async function updateRabEstimateItem(
     await assertProjectMutationAccess(user, item.estimate.projectId, "update:rab");
 
     const lineTotal = validation.data.quantity * validation.data.unitPrice;
-    const [updated] = await db.update(rabEstimateItem)
-      .set({
+    const updated = await db.transaction(async (tx) => {
+      const [row] = await tx.update(rabEstimateItem).set({
         clientLabel: validation.data.clientLabel,
         description: validation.data.description ?? null,
         quantity: validation.data.quantity.toFixed(2),
@@ -288,6 +296,9 @@ export async function updateRabEstimateItem(
       })
       .where(eq(rabEstimateItem.id, item.id))
       .returning();
+      await tx.insert(auditLog).values({ userId: user.id, action: "UPDATE_RAB_ITEM_DRAFT", targetTable: "rab_estimate_item", targetId: item.id, originalState: JSON.stringify(item), newState: JSON.stringify(row) });
+      return row;
+    });
 
     return { success: true, data: updated };
   } catch (error) {

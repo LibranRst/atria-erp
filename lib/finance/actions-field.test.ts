@@ -140,6 +140,14 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       });
 
       expect(res.success).toBe(true);
+      if (res.success) {
+        const inventoryAsset = await db.query.projectExpenses.findFirst({
+          where: eq(projectExpenses.vendorBillId, res.data.id),
+        });
+        expect(inventoryAsset?.sourceType).toBe("INVENTORY_PURCHASE");
+        expect(inventoryAsset?.status).toBe("INVENTORY_ASSET");
+        expect(inventoryAsset?.amount).toBe("2500000.00");
+      }
     });
 
     it("harus mendeteksi nominal >= 5 juta dan membuat record approval PENDING secara otomatis", async () => {
@@ -194,6 +202,46 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
         appRecord!.notes?.includes("plafon") || 
         appRecord!.notes?.includes("Overrun")
       ).toBe(true);
+    });
+
+    it("harus menolak total jadwal pembayaran yang melebihi outstanding vendor bill", async () => {
+      const vend = await db.query.vendor.findFirst();
+      const budgetItem = await db.query.projectBudgetItem.findFirst({
+        where: eq(projectBudgetItem.projectBudgetId, "88888888-8888-8888-8888-888888888881"),
+      });
+      expect(vend).toBeDefined();
+      expect(budgetItem).toBeDefined();
+
+      mockUserSession(PM_BUDI_USER);
+      const billRes = await submitVendorBill({
+        vendorId: vend!.id,
+        projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
+        projectBudgetItemId: budgetItem!.id,
+        billNumber: `BILL-CAP-${Date.now()}`,
+        amount: 4000000,
+        dueDate: new Date(),
+      });
+      expect(billRes.success).toBe(true);
+      if (!billRes.success) return;
+
+      mockUserSession(FINANCE_USER);
+      const first = await scheduleVendorBillPayment({
+        vendorBillId: billRes.data.id,
+        bankAccountId: BCA_ACC_ID,
+        paymentDate: new Date(),
+        amountPaid: 3000000,
+      });
+      expect(first.success).toBe(true);
+
+      const exceeds = await scheduleVendorBillPayment({
+        vendorBillId: billRes.data.id,
+        bankAccountId: BCA_ACC_ID,
+        paymentDate: new Date(),
+        amountPaid: 1000001,
+      });
+      expect(exceeds.success).toBe(false);
+      if (!exceeds.success) expect(exceeds.error.code).toBe("FORBIDDEN");
     });
 
     it("harus menolak pembayaran vendor bill yang memerlukan persetujuan namun belum disetujui", async () => {
@@ -305,6 +353,24 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
   });
 
   describe("Field Claims (Project Cost) Flow", () => {
+    it("harus menolak PM memverifikasi pengajuan biaya sendiri", async () => {
+      mockUserSession(PM_BUDI_USER);
+      const submitted = await submitFieldRequest({
+        projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_OPERASIONAL_CATEGORY_ID,
+        stockHandling: "EXPENSE_ONLY",
+        quantity: 1,
+        unitPrice: 250000,
+        amount: 250000,
+        description: "Biaya operasional untuk uji pemisahan tugas",
+      });
+      expect(submitted.success).toBe(true);
+      if (!submitted.success) return;
+
+      const verified = await verifyFieldRequest(submitted.data.id);
+      expect(verified.success).toBe(false);
+      if (!verified.success) expect(verified.error.code).toBe("FORBIDDEN");
+    });
     it("harus menolak approval dan pencairan biaya lapangan yang belum melalui status wajib", async () => {
       const budgetItem = await db.query.projectBudgetItem.findFirst({
         where: eq(projectBudgetItem.projectBudgetId, "88888888-8888-8888-8888-888888888881"),

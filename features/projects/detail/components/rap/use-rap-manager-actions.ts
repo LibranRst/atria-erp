@@ -139,6 +139,7 @@ export function useRapManagerActions({
         showError(res.error.message);
         return;
       }
+      setPackageDetailItemId(null);
       showSuccess("Package sudah aktif.");
       router.refresh();
     });

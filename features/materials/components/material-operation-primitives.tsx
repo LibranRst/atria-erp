@@ -9,6 +9,7 @@ import {
   formatMaterialQuantity,
   formatMovementType,
 } from "@/features/materials/lib/material-ui-utils";
+import { ActivityDetailChevron, useActivityDetail } from "@/features/activity-detail/components/activity-detail-provider";
 
 export function Mini({
   label,
@@ -61,8 +62,9 @@ export function MovementRow({
 }: {
   readonly row: MaterialMovementView;
 }): React.JSX.Element {
+  const { openActivityDetail } = useActivityDetail();
   return (
-    <div className="flex min-h-[64px] items-center gap-3 py-2.5">
+    <button type="button" onClick={() => openActivityDetail({ kind: "STOCK_MOVEMENT", id: row.id })} className="flex min-h-[64px] w-full items-center gap-3 py-2.5 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70" aria-label={`Lihat detail mutasi ${row.materialName}`}>
       <span
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${movementIconTone(row)}`}
       >
@@ -88,7 +90,8 @@ export function MovementRow({
         {row.movementDirection === "OUT" ? "−" : row.movementDirection === "IN" ? "+" : ""}
         {formatMaterialQuantity(row.quantity)} {row.unit}
       </span>
-    </div>
+      <ActivityDetailChevron />
+    </button>
   );
 }
 

@@ -101,23 +101,13 @@ export async function createProjectCategoryPlanItem(
     });
     const estimatedTotalCost = validation.data.quantity * validation.data.estimatedUnitCost;
 
-    const [created] = await db.insert(projectCategoryPlanItem).values({
-      projectId: validation.data.projectId,
-      projectBudgetId: category.projectBudgetId,
-      projectBudgetCategoryId: validation.data.projectBudgetCategoryId,
-      expenseCategoryId: category.expenseCategoryId,
-      vendorId: validation.data.vendorId ?? null,
-      name: validation.data.name,
-      scopeDescription: validation.data.scopeDescription ?? null,
-      area: validation.data.area,
-      quantity: validation.data.quantity.toFixed(2),
-      unit: validation.data.unit,
-      estimatedUnitCost: validation.data.estimatedUnitCost.toFixed(2),
-      estimatedTotalCost: estimatedTotalCost.toFixed(2),
-      status: "DRAFT",
-      internalNote: validation.data.internalNote ?? null,
-      displayOrder: validation.data.displayOrder ?? 0,
-    }).returning();
+    const created = await db.transaction(async (tx) => {
+      const [row] = await tx.insert(projectCategoryPlanItem).values({
+        projectId: validation.data.projectId, projectBudgetId: category.projectBudgetId, projectBudgetCategoryId: validation.data.projectBudgetCategoryId, expenseCategoryId: category.expenseCategoryId, vendorId: validation.data.vendorId ?? null, name: validation.data.name, scopeDescription: validation.data.scopeDescription ?? null, area: validation.data.area, quantity: validation.data.quantity.toFixed(2), unit: validation.data.unit, estimatedUnitCost: validation.data.estimatedUnitCost.toFixed(2), estimatedTotalCost: estimatedTotalCost.toFixed(2), status: "DRAFT", internalNote: validation.data.internalNote ?? null, displayOrder: validation.data.displayOrder ?? 0,
+      }).returning();
+      await tx.insert(auditLog).values({ userId: user.id, action: "CREATE_CATEGORY_PLAN_DRAFT", targetTable: "project_category_plan_item", targetId: row.id, newState: JSON.stringify(row) });
+      return row;
+    });
 
     return { success: true, data: created };
   } catch (error) {
@@ -153,8 +143,8 @@ export async function updateProjectCategoryPlanItem(
     }
     const estimatedTotalCost = validation.data.quantity * validation.data.estimatedUnitCost;
 
-    const [updated] = await db.update(projectCategoryPlanItem)
-      .set({
+    const updated = await db.transaction(async (tx) => {
+      const [row] = await tx.update(projectCategoryPlanItem).set({
         projectBudgetId: category.projectBudgetId,
         projectBudgetCategoryId: validation.data.projectBudgetCategoryId,
         expenseCategoryId: category.expenseCategoryId,
@@ -173,6 +163,9 @@ export async function updateProjectCategoryPlanItem(
       })
       .where(eq(projectCategoryPlanItem.id, existing.id))
       .returning();
+      await tx.insert(auditLog).values({ userId: user.id, action: "UPDATE_CATEGORY_PLAN_DRAFT", targetTable: "project_category_plan_item", targetId: existing.id, originalState: JSON.stringify(existing), newState: JSON.stringify(row) });
+      return row;
+    });
 
     return { success: true, data: updated };
   } catch (error) {
@@ -235,7 +228,10 @@ export async function deleteProjectCategoryPlanItem(
       throw new Error("ONLY_DRAFT_CATEGORY_PLAN_ITEM_CAN_BE_DELETED");
     }
 
-    await db.delete(projectCategoryPlanItem).where(eq(projectCategoryPlanItem.id, existing.id));
+    await db.transaction(async (tx) => {
+      await tx.delete(projectCategoryPlanItem).where(eq(projectCategoryPlanItem.id, existing.id));
+      await tx.insert(auditLog).values({ userId: user.id, action: "DELETE_CATEGORY_PLAN_DRAFT", targetTable: "project_category_plan_item", targetId: existing.id, originalState: JSON.stringify(existing) });
+    });
     return { success: true, data: { deletedId: existing.id } };
   } catch (error) {
     return toError(error, "Gagal menghapus detail plan kategori.");

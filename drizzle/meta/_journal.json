@@ -141,6 +141,34 @@
       "when": 1783929600000,
       "tag": "0019_form_draft_expense_flow",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1784190138717,
+      "tag": "0020_production_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1784190287892,
+      "tag": "0021_opening_inventory_cutover",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1784352774356,
+      "tag": "0022_developer_account_simulation",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1784360445418,
+      "tag": "0023_onboarding_control_room",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@ import type { RapView, MaterialOption } from "../shared/rap-rab-manager";
 import type { StockMovement, TabId } from "../project-tabs";
 import { LockedTabState } from "../project-tab-states";
 import { StockOperationSheet } from "./stock-operation-sheet";
+import { ActivityDetailChevron, useActivityDetail } from "@/features/activity-detail/components/activity-detail-provider";
 
 interface StockControlPanelProps {
   readonly projectId: string;
@@ -49,6 +50,7 @@ export function StockControlPanel({
   nextSetupIcon,
   setActiveTab,
 }: StockControlPanelProps): React.JSX.Element {
+  const { openActivityDetail } = useActivityDetail();
   if (isLocked) {
     return <LockedTabState tabLabel="Stok" actionLabel={nextSetupLabel} actionIcon={nextSetupIcon} onAction={() => setActiveTab(nextSetupTab)} />;
   }
@@ -56,7 +58,7 @@ export function StockControlPanel({
   const reservedQty = rap?.items.reduce((sum, item) => sum + item.reservedQuantity, 0) || 0;
   const usedQty = rap?.items.reduce((sum, item) => sum + item.usedQuantity, 0) || 0;
   const leftoverQty = rap?.items.reduce((sum, item) => sum + item.leftoverQuantity, 0) || 0;
-  const totalTracked = reservedQty + usedQty + leftoverQty;
+  const totalTracked = rap?.items.reduce((sum, item) => sum + item.securedQuantity, 0) || 0;
 
   return (
     <div className="space-y-lg max-[430px]:space-y-5">
@@ -65,7 +67,7 @@ export function StockControlPanel({
         <div className="mt-2 flex items-end justify-between gap-3">
           <div>
             <p className="font-mono text-[28px] font-bold leading-8 tabular-nums">{totalTracked.toLocaleString("id-ID")}</p>
-            <p className="mt-1 text-[10px] text-white/60">total kuantitas yang tercatat</p>
+            <p className="mt-1 text-[10px] text-white/60">total kebutuhan yang sudah diamankan atau terpakai</p>
           </div>
           <span className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-bold text-white/80">{rap?.items.length ?? 0} material RAP</span>
         </div>
@@ -91,7 +93,7 @@ export function StockControlPanel({
         ) : (
           <div className="rounded-[24px] bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
             {stockMovements.map((move, index) => (
-              <div key={move.id} className="relative flex gap-3 py-3">
+              <button type="button" onClick={() => openActivityDetail({ kind: "STOCK_MOVEMENT", id: move.id })} key={move.id} className="relative flex min-h-12 w-full gap-3 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70" aria-label={`Lihat detail mutasi ${move.material.name}`}>
                 {index < stockMovements.length - 1 ? <span className="absolute left-[17px] top-11 bottom-[-12px] w-px bg-outline-variant/45" aria-hidden="true" /> : null}
                 <span className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-4 ring-white ${movementTone(move.movementType)}`}>
                   <span className="material-symbols-outlined text-[17px]">{move.movementType === "WASTE" ? "delete" : move.movementType === "RETURN" ? "undo" : "sync_alt"}</span>
@@ -110,7 +112,8 @@ export function StockControlPanel({
                   <p className="mt-1.5 text-[9px] text-on-surface-variant">{new Date(move.createdAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                   {move.note ? <p className="mt-1.5 text-[10px] leading-4 text-on-surface-variant">{move.note}</p> : null}
                 </div>
-              </div>
+                <ActivityDetailChevron />
+              </button>
             ))}
           </div>
         )}

@@ -35,6 +35,7 @@ describe("contextual FAB actions", () => {
 
   test("shows operational stock actions to Purchasing without Owner-only adjustment", () => {
     const labels = actions("PURCHASING", "/materials").map((item) => item.label);
+    expect(labels).toContain("Lokasi Baru");
     expect(labels).toContain("Terima Barang");
     expect(labels).toContain("Stock Opname");
     expect(labels).not.toContain("Penyesuaian Darurat");

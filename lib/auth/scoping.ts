@@ -75,3 +75,23 @@ export async function assertProjectAccess(
   // Peran lain tidak memiliki hak akses
   throw new Error(`UNAUTHORIZED: Peran ${roleName} tidak diizinkan mengakses proyek.`);
 }
+
+/**
+ * Operational transactions are allowed only after the project has been
+ * explicitly activated. Draft projects remain available for budget, RAP, and
+ * RAB setup through their normal scoped actions.
+ */
+export async function assertProjectIsOperational(projectId: string): Promise<void> {
+  const projectRecord = await db.query.project.findFirst({
+    where: eq(project.id, projectId),
+    columns: { status: true },
+  });
+
+  assertProjectStatusIsOperational(projectRecord?.status);
+}
+
+export function assertProjectStatusIsOperational(status: string | undefined): void {
+  if (status !== "ACTIVE") {
+    throw new Error("PROJECT_NOT_ACTIVE: Proyek belum Aktif. Aktifkan proyek sebelum mencatat transaksi atau pergerakan stok.");
+  }
+}

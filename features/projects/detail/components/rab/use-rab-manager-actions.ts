@@ -14,7 +14,6 @@ import {
   updateRabEstimateItem,
 } from "@/app/actions/project/rap-rab";
 import {
-  approveProjectChangeOrder,
   confirmChangeOrderClient,
   createProjectChangeOrder,
   refreshRabLinkedSources,
@@ -310,15 +309,8 @@ export function useRabManagerActions({
         showError(confirmed.error.message);
         return;
       }
-      const approved = await approveProjectChangeOrder({
-        changeOrderId: created.data.id,
-      });
-      if (!approved.success) {
-        showError(approved.error.message);
-        return;
-      }
       showSuccess(
-        "Change Order disetujui. RAB lama superseded dan nilai kontrak/budget sudah dihitung ulang.",
+        "Change Order sudah dikonfirmasi klien dan menunggu approval Owner/Finance lain.",
       );
       setChangeOrderOpen(false);
       router.refresh();

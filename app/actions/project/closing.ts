@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -16,6 +16,7 @@ import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
+import { calculateOutstandingProjectReservations } from "@/app/actions/material/inventory-utils";
 import type { ActionResponse } from "@/lib/types/action-response";
 import { completeProjectSchema } from "@/lib/validations/workflow-governance";
 
@@ -56,7 +57,10 @@ async function buildClosingChecklist(projectId: string): Promise<ProjectClosingC
   const expenses = await db.query.projectExpenses.findMany({ where: (table, { eq: equals }) => equals(table.projectId, projectId) });
   const rabs = await db.query.rabEstimate.findMany({ where: (table, { eq: equals }) => equals(table.projectId, projectId) });
   const changeOrders = await db.query.projectChangeOrder.findMany({ where: (table, { eq: equals }) => equals(table.projectId, projectId) });
-  const movements = await db.query.stockMovement.findMany({ where: (table, { eq: equals }) => equals(table.projectId, projectId) });
+  const movements = await db.query.stockMovement.findMany({
+    where: (table, { eq: equals }) => equals(table.projectId, projectId),
+    orderBy: (table) => [asc(table.createdAt), asc(table.id)],
+  });
   const budget = await db.query.projectBudgets.findFirst({ where: eq(projectBudgets.projectId, projectId), with: { categories: true } });
   const blockers: string[] = [];
   const contractValue = Number(proj.totalContractValue);
@@ -73,9 +77,9 @@ async function buildClosingChecklist(projectId: string): Promise<ProjectClosingC
   if (rabs.some((rab) => rab.status === "DRAFT")) blockers.push("Masih ada RAB revision DRAFT.");
   if (rabs.filter((rab) => rab.status === "APPROVED").length !== 1) blockers.push("Proyek harus memiliki tepat satu current approved RAB.");
   if (changeOrders.some((order) => !["APPROVED", "REJECTED", "CANCELLED"].includes(order.status))) blockers.push("Masih ada Change Order terbuka.");
-  const reserved = movements.filter((movement) => movement.movementType === "RESERVE").reduce((sum, movement) => sum + Number(movement.quantity), 0);
-  const used = movements.filter((movement) => movement.movementType === "USE").reduce((sum, movement) => sum + Number(movement.quantity), 0);
-  if (reserved - used > 0.01) blockers.push("Reservasi stock proyek belum diselesaikan.");
+  if (calculateOutstandingProjectReservations(movements) > 0.01) {
+    blockers.push("Reservasi stock proyek belum diselesaikan.");
+  }
   if (!budget || budget.status !== "APPROVED") blockers.push("Canonical project budget belum approved/sinkron.");
 
   const actualCost = budget?.categories.reduce((sum, category) => sum + Number(category.actualAmount), 0) ?? 0;

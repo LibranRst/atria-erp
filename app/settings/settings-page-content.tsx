@@ -2,6 +2,15 @@ import { redirect } from "next/navigation";
 
 import { getPricingTemplates } from "@/app/actions/settings/pricing-library";
 import { getSettingsOverview } from "@/app/actions/settings/system";
+import {
+  getAdministrationOverview,
+  getProductionReadiness,
+} from "@/app/actions/administration";
+import { getOwnerOnboardingOverview } from "@/app/actions/onboarding";
+import {
+  getInitialStockCandidates,
+  getInventoryOpeningBatches,
+} from "@/app/actions/material/opening-inventory";
 import { SettingsDashboard } from "@/features/settings/components/settings-dashboard";
 import type { SettingsTab } from "@/features/settings/components/settings-tabs-config";
 import { PageState } from "@/components/ui";
@@ -13,9 +22,14 @@ type SettingsPageContentProps = {
 export async function SettingsPageContent({
   initialTab = "overview",
 }: SettingsPageContentProps): Promise<React.JSX.Element> {
-  const [result, templates] = await Promise.all([
+  const [result, templates, administration, readiness, onboarding, initialStock, openingBatches] = await Promise.all([
     getSettingsOverview(),
     getPricingTemplates(true),
+    getAdministrationOverview(),
+    getProductionReadiness(),
+    getOwnerOnboardingOverview(),
+    getInitialStockCandidates(),
+    getInventoryOpeningBatches(),
   ]);
 
   if (!result.success) {
@@ -32,6 +46,11 @@ export async function SettingsPageContent({
       initialTab={initialTab}
       overview={result.data}
       pricingTemplates={templates.data}
+      administration={administration.success ? administration.data : null}
+      readiness={readiness.success ? readiness.data : []}
+      onboarding={onboarding.success ? onboarding.data : null}
+      initialStock={initialStock.success ? initialStock.data : []}
+      openingBatches={openingBatches.success ? openingBatches.data : []}
     />
   );
 }

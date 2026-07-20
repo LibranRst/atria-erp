@@ -77,7 +77,6 @@ export function toExpenseSubmission(payload: ExpenseDraftPayloadInput): z.input<
     receiptImageUrl: payload.receipt?.url ?? "",
     items: payload.lines.map((line) => ({
       projectBudgetCategoryId: line.projectBudgetCategoryId,
-      projectBudgetItemId: line.projectBudgetItemId || undefined,
       materialId: line.materialId || undefined,
       projectRapItemId: line.projectRapItemId || undefined,
       projectCategoryPlanItemId: line.projectCategoryPlanItemId || undefined,

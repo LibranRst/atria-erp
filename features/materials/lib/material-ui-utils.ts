@@ -1,10 +1,12 @@
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { createClientId } from "@/lib/utils/client-id";
 
 export type MaterialTab = "overview" | "inventory" | "needs" | "activity";
 export type ProjectOperation = "RESERVE" | "USE" | "RETURN" | "WASTE";
 export type WarehouseAction =
   | ProjectOperation
+  | "LOCATION"
   | "TRANSFER"
   | "COUNT"
   | "ADJUST";
@@ -102,22 +104,7 @@ export function formatMaterialDate(value: Date): string {
 }
 
 export function formatMovementType(value: string): string {
-  const labels: Record<string, string> = {
-    ADJUSTMENT: "Penyesuaian",
-    EMERGENCY_ADJUSTMENT: "Penyesuaian darurat",
-    GOODS_RECEIPT: "Penerimaan Barang",
-    GOODS_RECEIPT_REVERSAL: "Pembatalan penerimaan",
-    RESERVE: "Reservasi",
-    RETURN: "Pengembalian",
-    STOCK_COUNT_ADJUSTMENT: "Penyesuaian stock opname",
-    STOCK_IN: "Stok masuk",
-    STOCK_OUT: "Stok keluar",
-    TRANSFER_IN: "Transfer masuk",
-    TRANSFER_OUT: "Transfer keluar",
-    USE: "Pemakaian",
-    WASTE: "Material Terbuang",
-  };
-  return labels[value] ?? value.replaceAll("_", " ");
+  return formatBusinessLabel(value, "INVENTORY");
 }
 
 export function formatMaterialStatus(value: string): string {
@@ -133,7 +120,7 @@ export function formatMaterialStatus(value: string): string {
     REJECTED: "Ditolak",
     REVERSAL_REQUESTED: "Pembatalan diminta",
   };
-  return labels[value] ?? value.replaceAll("_", " ").toLocaleLowerCase("id-ID");
+  return labels[value] ?? formatBusinessLabel(value);
 }
 
 export function createSimpleItem(): SimpleItem {

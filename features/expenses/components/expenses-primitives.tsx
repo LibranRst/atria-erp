@@ -35,12 +35,12 @@ export function ExpensesSummarySurface({
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] bg-surface-container-high/65 text-on-surface-variant ring-1 ring-black/[0.035]">
-            <span className="material-symbols-outlined text-[17px]" aria-hidden="true">{icon}</span>
+            <span className="material-symbols-outlined text-[17px] leading-none" aria-hidden="true">{icon}</span>
           </span>
-          <p className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.13em] text-on-surface-variant/60">{eyebrow}</p>
+          <p className="min-w-0 truncate text-[10px] font-bold uppercase leading-4 tracking-[0.13em] text-on-surface-variant/60">{eyebrow}</p>
         </div>
         {action ?? (status ? (
-          <span className={`inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[9px] font-semibold ring-1 ${statusToneClass[statusTone]}`}>
+          <span className={`inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[9px] font-semibold leading-3 ring-1 ${statusToneClass[statusTone]}`}>
             <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
             {status}
           </span>
@@ -74,8 +74,8 @@ export function ExpensesSectionHeader({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-10 items-center justify-between gap-3 px-1">
-      <h2 className="min-w-0 truncate text-[17px] font-bold leading-6 tracking-[-0.015em] text-on-surface max-[430px]:text-[15px]">{title}</h2>
-      {meta ? <span className="shrink-0 text-[9px] font-semibold text-on-surface-variant/65">{meta}</span> : null}
+      <h2 className="min-w-0 truncate text-[17px] font-bold leading-5 tracking-[-0.015em] text-on-surface max-[430px]:text-[15px]">{title}</h2>
+      {meta ? <span className="shrink-0 text-[9px] font-semibold leading-3 text-on-surface-variant/65">{meta}</span> : null}
     </div>
   );
 }

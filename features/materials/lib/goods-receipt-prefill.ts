@@ -9,6 +9,12 @@ export type GoodsReceiptVendorBillOption = {
   readonly notes: string | null;
   readonly materialId: string | null;
   readonly projectRapItemId: string | null;
+  readonly rapItemQuantity?: number | null;
+  readonly rapItemUnitCost?: number | null;
+  readonly receivedQuantity?: number;
+  readonly receivedAmount?: number;
+  readonly remainingQuantity?: number | null;
+  readonly remainingAmount?: number;
 };
 
 export type GoodsReceiptBillPrefill = {
@@ -27,6 +33,15 @@ export function buildGoodsReceiptBillPrefill(
   bill: GoodsReceiptVendorBillOption,
 ): GoodsReceiptBillPrefill {
   const note = bill.notes?.trim() ?? "";
+  const quantity = bill.remainingQuantity && bill.remainingQuantity > 0
+    ? bill.remainingQuantity
+    : bill.rapItemQuantity && bill.rapItemQuantity > 0
+      ? bill.rapItemQuantity
+      : 1;
+  const remainingAmount = bill.remainingAmount ?? bill.amount;
+  const unitCost = quantity > 0
+    ? remainingAmount / quantity
+    : bill.rapItemUnitCost ?? 0;
   return {
     projectId: bill.projectId,
     receiptNote: note
@@ -35,8 +50,8 @@ export function buildGoodsReceiptBillPrefill(
     item: {
       materialId: bill.materialId ?? "",
       projectRapItemId: bill.materialId ? bill.projectRapItemId ?? "" : "",
-      quantity: 1,
-      unitCost: bill.amount,
+      quantity,
+      unitCost,
       note,
     },
   };

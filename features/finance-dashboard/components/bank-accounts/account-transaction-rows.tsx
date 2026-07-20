@@ -7,6 +7,8 @@ import {
 } from "@/features/finance-dashboard/components/dashboard-primitives";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/dashboard-rows";
 import type { CashTransaction } from "./types";
+import { ActivityDetailChevron, useActivityDetail } from "@/features/activity-detail/components/activity-detail-provider";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
 function transactionIcon(transaction: CashTransaction): React.ReactNode {
   if (transaction.type === "DEBIT") {
@@ -20,6 +22,7 @@ export function AccountTransactionRows({
 }: {
   readonly transactions: readonly CashTransaction[];
 }): React.JSX.Element {
+  const { openActivityDetail } = useActivityDetail();
   if (transactions.length === 0) {
     return (
       <DashboardTabEmpty>Belum ada mutasi pada rekening ini.</DashboardTabEmpty>
@@ -29,9 +32,9 @@ export function AccountTransactionRows({
   return (
     <DashboardRowGroup>
       {transactions.map((transaction) => (
-        <div
+        <button type="button" onClick={() => openActivityDetail({ kind: "CASH_TRANSACTION", id: transaction.id })}
           key={transaction.id}
-          className="flex min-h-[58px] items-center gap-3 px-4 py-3"
+          className="flex min-h-[58px] w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
         >
           <span
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
@@ -47,7 +50,7 @@ export function AccountTransactionRows({
               {transaction.description}
             </span>
             <span className="mt-0.5 block truncate text-[10px] text-on-surface-variant">
-              {transaction.category} •{" "}
+              {formatBusinessLabel(transaction.category, "FINANCE")} •{" "}
               {transaction.createdAt.toLocaleDateString("id-ID")}
             </span>
           </span>
@@ -60,7 +63,8 @@ export function AccountTransactionRows({
             size="sm"
             className="shrink-0"
           />
-        </div>
+          <ActivityDetailChevron />
+        </button>
       ))}
     </DashboardRowGroup>
   );

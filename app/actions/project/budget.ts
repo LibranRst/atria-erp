@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { projectBudget, projectBudgetItem, project } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { assertPermission } from "@/lib/auth/permissions";
+import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { ActionResponse } from "@/lib/types/action-response";
 import { createBudgetItemSchema, CreateBudgetItemInput } from "@/lib/validations/budget";
 import { getActiveProjectsForExpense as getActiveProjectsForExpenseRead } from "./budget-expense-options";
@@ -18,6 +19,16 @@ import {
 
 export type { ProjectForExpense } from "./budget-types";
 
+function legacyBudgetMutationDisabled<T>(): ActionResponse<T> {
+  return {
+    success: false,
+    error: {
+      code: "FORBIDDEN",
+      message: "Jalur budget lama sudah dinonaktifkan. Gunakan Project Budget berbasis kategori.",
+    },
+  };
+}
+
 /**
  * Membuat draf anggaran (project_budget) baru untuk proyek tertentu.
  * 
@@ -27,6 +38,8 @@ export type { ProjectForExpense } from "./budget-types";
 export async function createProjectBudget(
   projectId: string
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
+  const compatibilityGuard = legacyBudgetMutationDisabled<typeof projectBudget.$inferSelect>();
+  if (!compatibilityGuard.success) return compatibilityGuard;
   try {
     const sessionResult = await getBudgetActionSession("Sesi tidak valid. Harap login kembali.");
     if (!sessionResult.success) return sessionResult;
@@ -98,6 +111,8 @@ export async function createProjectBudget(
 export async function createBudgetItem(
   input: CreateBudgetItemInput
 ): Promise<ActionResponse<typeof projectBudgetItem.$inferSelect>> {
+  const compatibilityGuard = legacyBudgetMutationDisabled<typeof projectBudgetItem.$inferSelect>();
+  if (!compatibilityGuard.success) return compatibilityGuard;
   const validation = createBudgetItemSchema.safeParse(input);
   if (!validation.success) {
     return {
@@ -144,7 +159,7 @@ export async function createBudgetItem(
         success: false,
         error: {
           code: "FORBIDDEN",
-          message: `Item anggaran tidak dapat ditambahkan karena status anggaran sudah ${budgetHeader.status}.`,
+          message: `Item anggaran tidak dapat ditambahkan karena status anggaran sudah ${formatBusinessLabel(budgetHeader.status)}.`,
         },
       };
     }
@@ -185,6 +200,8 @@ export async function createBudgetItem(
 export async function submitBudgetForApproval(
   projectBudgetId: string
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
+  const compatibilityGuard = legacyBudgetMutationDisabled<typeof projectBudget.$inferSelect>();
+  if (!compatibilityGuard.success) return compatibilityGuard;
   try {
     const sessionResult = await getBudgetActionSession("Sesi tidak valid.");
     if (!sessionResult.success) return sessionResult;
@@ -217,7 +234,7 @@ export async function submitBudgetForApproval(
     if (budget.status !== "DRAFT" && budget.status !== "REJECTED") {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: `Anggaran dengan status ${budget.status} tidak dapat diajukan.` },
+        error: { code: "FORBIDDEN", message: `Anggaran dengan status ${formatBusinessLabel(budget.status)} tidak dapat diajukan.` },
       };
     }
 
@@ -249,6 +266,8 @@ export async function submitBudgetForApproval(
 export async function approveBudget(
   projectBudgetId: string
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
+  const compatibilityGuard = legacyBudgetMutationDisabled<typeof projectBudget.$inferSelect>();
+  if (!compatibilityGuard.success) return compatibilityGuard;
   try {
     const sessionResult = await getBudgetActionSession("Sesi tidak valid.");
     if (!sessionResult.success) return sessionResult;
@@ -319,6 +338,8 @@ export async function rejectBudget(
   projectBudgetId: string,
   notes: string
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
+  const compatibilityGuard = legacyBudgetMutationDisabled<typeof projectBudget.$inferSelect>();
+  if (!compatibilityGuard.success) return compatibilityGuard;
   try {
     const sessionResult = await getBudgetActionSession("Sesi tidak valid.");
     if (!sessionResult.success) return sessionResult;

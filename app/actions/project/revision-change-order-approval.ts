@@ -40,6 +40,10 @@ export async function approveProjectChangeOrder(input: unknown): Promise<ActionR
       }
       const roleName = await assertRevisionProjectScope(user, changeOrder.projectId, "approve:rab");
       if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN") throw new Error("FORBIDDEN: Approval Change Order hanya untuk Owner/Finance.");
+      const selfApproval = changeOrder.createdById === user.id;
+      if (selfApproval && !(roleName === "OWNER" && validation.data.emergencyOverride && validation.data.reason)) {
+        throw new Error("MAKER_CHECKER_REQUIRED: Change Order harus disetujui user lain. Owner dapat memakai emergency override dengan alasan.");
+      }
       const base = await tx.query.rabEstimate.findFirst({ where: eq(rabEstimate.id, changeOrder.baseRabEstimateId) });
       const revised = await tx.query.rabEstimate.findFirst({ where: eq(rabEstimate.id, changeOrder.revisedRabEstimateId), with: { items: true, bundles: true } });
       if (!base || !revised || base.status !== "APPROVED" || revised.status !== "DRAFT") throw new Error("RAB revision state sudah berubah.");
@@ -86,7 +90,14 @@ export async function approveProjectChangeOrder(input: unknown): Promise<ActionR
       }
 
       const [approved] = await tx.update(projectChangeOrder).set({ status: "APPROVED", approvedById: user.id, approvedAt: new Date(), updatedAt: new Date() }).where(eq(projectChangeOrder.id, changeOrder.id)).returning();
-      await tx.insert(auditLog).values({ userId: user.id, action: "APPROVE_CHANGE_ORDER", targetTable: "project_change_order", targetId: approved.id, originalState: JSON.stringify(changeOrder), newState: JSON.stringify(approved) });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: selfApproval ? "EMERGENCY_SELF_APPROVE_CHANGE_ORDER" : "APPROVE_CHANGE_ORDER",
+        targetTable: "project_change_order",
+        targetId: approved.id,
+        originalState: JSON.stringify(changeOrder),
+        newState: JSON.stringify({ ...approved, emergencyReason: selfApproval ? validation.data.reason : null }),
+      });
       return approved;
     });
     revalidatePath(`/projects/${result.projectId}`);

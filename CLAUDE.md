@@ -78,6 +78,7 @@ This app manages financial state. Follow `AGENTS.md`, `docs/06-technical/ARCHITE
 
 Atria ERP is mobile-first for field Project Managers and should feel like a premium native iOS-style WebView.
 
+- Load the project skill at `.claude/skills/atria-ui-ux/SKILL.md` before planning, implementing, styling, redesigning, reworking, auditing, or reviewing any UI. Follow its live references, motion decision, and verification workflow.
 - `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md` is the active page-design source of truth.
 - The current Dashboard (`/ledger`) and Expenses (`/expenses`) are reference implementations. Reuse their grammar and shared primitives; do not copy either layout blindly.
 - The fixed `max-w-md` mobile shell remains one column at all viewports. Verify 320, 360, 390, and 430px rather than judging only from desktop preview.
@@ -103,5 +104,5 @@ Atria ERP is mobile-first for field Project Managers and should feel like a prem
 Important instructions from `AGENTS.md`:
 
 - Read existing schemas and API documentation before proposing changes.
-- Before major executable changes, write or update a step-by-step implementation plan under `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`.
+- Before major executable changes, write or update a step-by-step implementation plan under `docs/plans/YYYY-MM-DD-<feature-name>.md`.
 - Do not leave placeholder code such as `TODO`, `TBD`, or incomplete statements in implemented functions, schemas, or actions.

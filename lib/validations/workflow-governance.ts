@@ -116,7 +116,11 @@ export const confirmChangeOrderClientSchema = z.object({
   confirmedAt: z.coerce.date(),
   confirmationReference: z.string().trim().min(3).max(255),
 });
-export const approveChangeOrderSchema = z.object({ changeOrderId: uuid });
+export const approveChangeOrderSchema = z.object({
+  changeOrderId: uuid,
+  emergencyOverride: z.boolean().default(false),
+  reason: z.string().trim().min(10).max(1000).optional(),
+});
 export const voidRabRevisionSchema = z.object({
   rabEstimateId: uuid,
   reason: z.string().trim().min(3, "Alasan pembatalan minimal 3 karakter.").max(1000),
@@ -155,6 +159,15 @@ export const createGoodsReceiptSchema = z.object({
     unitCost: money,
     note: z.string().trim().max(1000).nullable().optional(),
   })).min(1),
+}).superRefine((value, context) => {
+  const keys = value.items.map((item) => `${item.materialId}:${item.projectRapItemId ?? "manual"}`);
+  if (new Set(keys).size !== keys.length) {
+    context.addIssue({
+      code: "custom",
+      path: ["items"],
+      message: "Material dan item RAP yang sama tidak boleh diulang dalam satu penerimaan.",
+    });
+  }
 });
 
 export const generateInvoiceScheduleSchema = z.object({

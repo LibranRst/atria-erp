@@ -450,7 +450,7 @@ export function ProjectDrawer({
         pending={isPending}
         disabled={projectBlockers.length > 0}
         disabledReason={disabledReason}
-        submitLabel={editProject ? "Tinjau Perubahan" : "Tinjau Proyek"}
+        submitLabel="Tinjau"
         submittingLabel="Menyimpan..."
         statusText={
           projectBlockers.length
@@ -611,8 +611,8 @@ export function ProjectDrawer({
       <WorkflowFormSheet
         open={isOpen && reviewing}
         title={editProject ? "Tinjau Perubahan Proyek" : "Tinjau Proyek Baru"}
-        primaryLabel={editProject ? "Perbarui Proyek" : "Buat Proyek"}
-        secondaryLabel="Kembali Mengedit"
+        primaryLabel={editProject ? "Simpan" : "Buat"}
+        secondaryLabel="Ubah"
         pendingLabel={editProject ? "Memperbarui…" : "Membuat…"}
         pending={isPending}
         onClose={() => setReviewing(false)}
@@ -622,52 +622,32 @@ export function ProjectDrawer({
         statusTone="success"
       >
         <div className="space-y-3">
-          <div className="rounded-2xl bg-primary/5 px-4 py-3 ring-1 ring-primary/10">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-primary">
-              {editProject ? "Perubahan proyek" : "Proyek baru"}
-            </p>
-            <p className="mt-1 text-base font-bold text-on-surface">
-              {name.trim()}
-            </p>
-            <p className="mt-1 text-xs text-on-surface-variant">
-              {selectedClientName} · PM {selectedPmName}
-            </p>
-          </div>
-          <dl className="divide-y divide-outline-variant/35 rounded-2xl bg-surface-container-low px-4 text-xs">
-            <div className="flex justify-between gap-4 py-3">
-              <dt className="text-on-surface-variant">Lokasi & area</dt>
-              <dd className="text-right font-bold">
-                {[location, roomArea].filter(Boolean).join(" · ") ||
-                  "Belum diisi"}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4 py-3">
-              <dt className="text-on-surface-variant">Periode</dt>
-              <dd className="text-right font-bold">
-                {startDate || "Belum ditentukan"}
-                {endDate ? ` → ${endDate}` : ""}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4 py-3">
-              <dt className="text-on-surface-variant">
-                Status setelah disimpan
-              </dt>
-              <dd className="text-right font-bold">{selectedStatusLabel}</dd>
-            </div>
-            {editProject ? (
-              <div className="flex justify-between gap-4 py-3">
-                <dt className="text-on-surface-variant">Kesehatan finansial</dt>
-                <dd className="text-right font-bold">{selectedHealthLabel}</dd>
-              </div>
-            ) : null}
-          </dl>
+          <FormSection
+            title={editProject ? "Tinjau Perubahan Proyek" : "Tinjau Proyek Baru"}
+            helper="Periksa detail proyek sebelum menyimpan."
+          >
+            <ReviewFact label="Nama Proyek" value={name.trim()} />
+            <ReviewFact label="Klien" value={selectedClientName ?? "–"} />
+            <ReviewFact label="Project Manager" value={selectedPmName ?? "–"} />
+            <ReviewFact label="Lokasi & Area" value={[location, roomArea].filter(Boolean).join(" · ") || "–"} />
+            <ReviewFact
+              label="Periode"
+              value={
+                startDate || endDate
+                  ? `${startDate || "–"}${endDate ? ` → ${endDate}` : ""}`
+                  : "–"
+              }
+            />
+            <ReviewFact label="Status Proyek" value={selectedStatusLabel ?? "–"} />
+            {editProject && <ReviewFact label="Kesehatan Finansial" value={selectedHealthLabel ?? "–"} />}
+          </FormSection>
           <FormRiskNotice
             title={editProject ? "Dampak perubahan" : "Yang disiapkan otomatis"}
             tone="warning"
           >
             {editProject
               ? "Assignment PM dan status proyek langsung memengaruhi akses serta workflow operasional setelah disimpan."
-              : "Project Budget kategori awal dibuat dari default Settings. Nilai kontrak tetap 0 sampai RAB disetujui."}
+              : "Project dibuat sebagai Draft. Budget kategori awal disiapkan dari default Settings; lengkapi setup lalu aktifkan proyek sebelum transaksi atau pergerakan stok."}
           </FormRiskNotice>
         </div>
       </WorkflowFormSheet>
@@ -719,5 +699,14 @@ export function ProjectDrawer({
         }
       />
     </>
+  );
+}
+
+function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+  return (
+    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+      <span className="text-on-surface-variant shrink-0">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
+    </div>
   );
 }

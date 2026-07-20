@@ -63,7 +63,7 @@ export function CategoryPlanFormDrawer({
       title={editingCategoryPlanItemId ? "Edit Paket Kerja" : "Tambah Paket Tukang/Subcon"}
       onClose={closeCategoryPlanForm}
       formId="category-plan-item-form"
-      submitLabel={editingCategoryPlanItemId ? "Perbarui Paket" : "Tambahkan Paket"}
+      submitLabel={editingCategoryPlanItemId ? "Perbarui" : "Tambah"}
       submittingLabel="Menyimpan…"
       pending={isPending}
       disabled={!categoryPlanForm.projectBudgetCategoryId || !categoryPlanForm.name || !categoryPlanForm.area || !categoryPlanForm.unit}
@@ -80,12 +80,12 @@ export function CategoryPlanFormDrawer({
           onSubmit={handleSubmitCategoryPlanItem}
           className="space-y-md"
         >
-          <FormSection
-            title="1 · Sumber paket"
-            helper="Mulai dari template bila lingkup serupa pernah digunakan, lalu sesuaikan untuk proyek ini."
-          >
-            {!editingCategoryPlanItemId && (
-              <div className="space-y-xs">
+          {!editingCategoryPlanItemId && (
+            <FormSection
+              title="Sumber paket"
+              helper="Mulai dari template bila lingkup serupa pernah digunakan, lalu sesuaikan untuk proyek ini."
+            >
+              <div>
                 <SheetSelect
                   label="Gunakan template Library"
                   value={categoryPlanForm.templateId}
@@ -111,36 +111,35 @@ export function CategoryPlanFormDrawer({
                       })),
                   ]}
                 />
-                <p className="text-[10px] leading-4 text-on-surface-variant">
+                <p className="px-4 pb-3 pt-1 text-[10px] leading-4 text-on-surface-variant">
                   Template disalin sebagai snapshot. Edit setelahnya tidak
                   mengubah Library.
                 </p>
               </div>
-            )}
-          </FormSection>
+            </FormSection>
+          )}
 
           <FormSection
-            title="2 · Identitas & lingkup"
+            title="Identitas & lingkup"
             helper="Kategori menentukan hubungan paket dengan budget Tukang atau Subcon."
           >
-            <SheetSelect
-              label="Kategori Budget"
-              value={categoryPlanForm.projectBudgetCategoryId}
-              onChange={(value) =>
-                setCategoryPlanForm((curr) => ({
-                  ...curr,
-                  projectBudgetCategoryId: value,
-                }))
-              }
-              options={budgetCategories.map((category) => ({
-                value: category.id,
-                label: category.name,
-              }))}
-              placeholder="Pilih kategori"
-              required
-            />
-
-            <div className="grid grid-cols-1 gap-sm">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+              <SheetSelect
+                label="Kategori Budget"
+                value={categoryPlanForm.projectBudgetCategoryId}
+                onChange={(value) =>
+                  setCategoryPlanForm((curr) => ({
+                    ...curr,
+                    projectBudgetCategoryId: value,
+                  }))
+                }
+                options={budgetCategories.map((category) => ({
+                  value: category.id,
+                  label: category.name,
+                }))}
+                placeholder="Pilih kategori"
+                required
+              />
               <ComboboxField
                 label="Area / Lingkup"
                 value={categoryPlanForm.area}
@@ -165,37 +164,36 @@ export function CategoryPlanFormDrawer({
                   })),
                 ]}
               />
+              <FormField label="Nama Paket">
+                <TextInput
+                  value={categoryPlanForm.name}
+                  onChange={(value) =>
+                    setCategoryPlanForm((curr) => ({ ...curr, name: value }))
+                  }
+                  placeholder="Nama paket kerja"
+                />
+              </FormField>
+              <FormField label="Lingkup Pekerjaan">
+                <Textarea
+                  rows={2}
+                  value={categoryPlanForm.scopeDescription}
+                  onChange={(value) =>
+                    setCategoryPlanForm((curr) => ({
+                      ...curr,
+                      scopeDescription: value,
+                    }))
+                  }
+                  placeholder="Scope pekerjaan internal"
+                />
+              </FormField>
             </div>
-
-            <FormField label="Nama Paket">
-              <TextInput
-                value={categoryPlanForm.name}
-                onChange={(value) =>
-                  setCategoryPlanForm((curr) => ({ ...curr, name: value }))
-                }
-                placeholder="Nama paket kerja"
-              />
-            </FormField>
-            <FormField label="Lingkup Pekerjaan">
-              <Textarea
-                rows={2}
-                value={categoryPlanForm.scopeDescription}
-                onChange={(value) =>
-                  setCategoryPlanForm((curr) => ({
-                    ...curr,
-                    scopeDescription: value,
-                  }))
-                }
-                placeholder="Scope pekerjaan internal"
-              />
-            </FormField>
           </FormSection>
 
           <FormSection
-            title="3 · Jumlah & biaya"
+            title="Jumlah & biaya"
             helper="Estimasi ini hanya untuk kontrol internal; RAB klien dibuat dari salinan yang aman."
           >
-            <div className="grid grid-cols-1 gap-sm sm:grid-cols-2">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
               <FormField label="Jumlah">
                 <NumericInput
                   value={categoryPlanForm.quantity}
@@ -229,27 +227,29 @@ export function CategoryPlanFormDrawer({
                   showPreview={false}
                 />
               </FormField>
+              <FormField label="Catatan Internal">
+                <Textarea
+                  rows={2}
+                  value={categoryPlanForm.internalNote}
+                  onChange={(value) =>
+                    setCategoryPlanForm((curr) => ({
+                      ...curr,
+                      internalNote: value,
+                    }))
+                  }
+                  placeholder="Catatan internal, tidak tampil ke klien"
+                />
+              </FormField>
             </div>
-            <FormField label="Catatan Internal">
-              <Textarea
-                rows={2}
-                value={categoryPlanForm.internalNote}
-                onChange={(value) =>
-                  setCategoryPlanForm((curr) => ({
-                    ...curr,
-                    internalNote: value,
-                  }))
-                }
-                placeholder="Catatan internal, tidak tampil ke klien"
-              />
-            </FormField>
 
-            <ValuePreviewStrip
-              items={[
-                { label: "Jumlah", value: `${categoryPlanForm.quantity || 0} ${categoryPlanForm.unit}` },
-                { label: "Estimasi paket", amount: categoryFormEstimatedTotal, tone: categoryFormEstimatedTotal > 0 ? "success" : "default" },
-              ]}
-            />
+            <div className="p-3">
+              <ValuePreviewStrip
+                items={[
+                  { label: "Jumlah", value: `${categoryPlanForm.quantity || 0} ${categoryPlanForm.unit}` },
+                  { label: "Estimasi paket", amount: categoryFormEstimatedTotal, tone: categoryFormEstimatedTotal > 0 ? "success" : "default" },
+                ]}
+              />
+            </div>
           </FormSection>
         </form>
       </div>

@@ -239,6 +239,8 @@ export async function getSettingsContextForUser(
         user,
         "manage:material_settings",
       ),
+      canManageUsers: await hasPermission(user, "manage:users"),
+      canManageVendors: await hasPermission(user, "manage:vendors"),
     },
   };
 }

@@ -260,3 +260,97 @@ body {
         animation-iteration-count: 1 !important;
     }
 }
+
+/* ==========================================================================
+   Atria Custom Toast (Sonner) UI/UX Overrides
+   ========================================================================== */
+
+/* Align toaster container with the mobile shell (max-w-md / 448px) */
+[data-sonner-toaster] {
+  font-family: var(--font-manrope), var(--font-hanken), sans-serif !important;
+  width: calc(100% - 40px) !important;
+  max-width: calc(448px - 40px) !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  
+  /* Set Atria UI/UX Color Variables for Rich Colors */
+  --success-bg: var(--success-light) !important;
+  --success-border: color-mix(in srgb, var(--success) 12%, transparent) !important;
+  --success-text: var(--success) !important;
+
+  --error-bg: var(--critical-light) !important;
+  --error-border: color-mix(in srgb, var(--critical) 12%, transparent) !important;
+  --error-text: var(--critical) !important;
+
+  --warning-bg: var(--warning-light) !important;
+  --warning-border: color-mix(in srgb, var(--warning) 12%, transparent) !important;
+  --warning-text: var(--warning) !important;
+
+  --info-bg: var(--surface-container-lowest) !important;
+  --info-border: color-mix(in srgb, var(--outline-variant) 30%, transparent) !important;
+  --info-text: var(--primary) !important;
+
+  --normal-bg: var(--surface-container-lowest) !important;
+  --normal-border: color-mix(in srgb, var(--outline-variant) 30%, transparent) !important;
+  --normal-text: var(--primary) !important;
+  
+  --border-radius: 24px !important;
+}
+
+/* Ensure the toaster handles top positioning below the fixed header */
+[data-sonner-toaster][data-y-position='top'] {
+  top: 72px !important;
+}
+
+/* Style the individual toast items */
+[data-sonner-toaster] [data-sonner-toast] {
+  width: 100% !important;
+  box-shadow: 0 14px 34px rgba(17, 17, 17, 0.08) !important;
+  border-radius: 24px !important;
+  padding: 12px 18px !important;
+  font-size: 14px !important;
+  border-style: solid !important;
+  border-width: 1px !important;
+}
+
+/* Style Title and Description */
+[data-sonner-toast] [data-title] {
+  font-family: var(--font-manrope), sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
+
+[data-sonner-toast] [data-description] {
+  font-family: var(--font-hanken), sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  margin-top: 2px !important;
+  opacity: 0.9 !important;
+}
+
+/* Style actions/buttons inside toast to match Atria fully-rounded capsule style */
+[data-sonner-toast] [data-button] {
+  font-family: var(--font-manrope), sans-serif !important;
+  border-radius: 9999px !important; /* Capsule style */
+  font-weight: 600 !important;
+  padding: 6px 14px !important;
+  height: 32px !important;
+  font-size: 12px !important;
+  transition: transform 150ms ease, opacity 150ms ease !important;
+}
+
+[data-sonner-toast] [data-button]:active {
+  transform: scale(0.96) !important;
+}
+
+/* Style close button */
+[data-sonner-toast] [data-close-button] {
+  border-radius: 50% !important;
+  background: var(--normal-bg) !important;
+  color: var(--normal-text) !important;
+  border: 1px solid var(--normal-border) !important;
+  transition: transform 150ms ease, opacity 150ms ease !important;
+}

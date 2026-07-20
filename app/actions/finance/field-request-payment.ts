@@ -6,8 +6,6 @@ import { db } from "@/db";
 import {
   approval,
   bankAccount,
-  cashTransaction,
-  projectBudgetItem,
   projectCost,
 } from "@/db/schema";
 import {
@@ -15,6 +13,7 @@ import {
   syncProjectBudgetCategory,
 } from "@/lib/budget/budget-sync";
 import type { ActionResponse } from "@/lib/types/action-response";
+import { mutateBalance } from "@/lib/finance/balance-mutation";
 import { authorizeFieldRequestAction } from "./field-request-auth";
 import {
   mapPayFieldRequestError,
@@ -68,53 +67,23 @@ export async function payFieldRequest(
         }
       }
 
-      const [account] = await tx
-        .select()
-        .from(bankAccount)
-        .where(eq(bankAccount.id, bankAccountId))
-        .for("update");
-
-      if (!account) {
-        throw new Error("BANK_ACCOUNT_NOT_FOUND");
-      }
-
-      const oldBalance = Number(account.balance);
-      if (oldBalance < amount) {
-        throw new Error("INSUFFICIENT_FUNDS");
-      }
-
-      const newBalance = oldBalance - amount;
-
-      const updatedRows = await tx
-        .update(bankAccount)
-        .set({
-          balance: newBalance.toFixed(2),
-          updatedAt: new Date(),
-        })
-        .where(eq(bankAccount.id, bankAccountId))
-        .returning();
-
-      if (updatedRows.length !== 1) {
-        throw new Error("BALANCE_UPDATE_MISMATCH");
-      }
-
-      const [ledgerTx] = await tx
-        .insert(cashTransaction)
-        .values({
-          bankAccountId,
-          type: "CREDIT",
-          category: "field_claim",
-          amount: amount.toFixed(2),
-          description: `Realisasi biaya lapangan: ${cost.description} (Ref: ${referenceNumber})`,
-          reconciled: true,
-          reconciliationDate: new Date(),
-          reconciledById: currentUser.id,
-          referenceType: "project_cost",
-          referenceId: cost.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
+      const accountBefore = await tx.query.bankAccount.findFirst({ where: eq(bankAccount.id, bankAccountId) });
+      if (!accountBefore) throw new Error("BANK_ACCOUNT_NOT_FOUND");
+      const oldBalance = Number(accountBefore.balance);
+      const ledgerTx = await mutateBalance({
+        tx,
+        bankAccountId,
+        type: "CREDIT",
+        amount: amount.toFixed(2),
+        category: "field_claim",
+        description: `Realisasi biaya lapangan: ${cost.description} (Ref: ${referenceNumber})`,
+        referenceType: "project_cost",
+        referenceId: cost.id,
+        userId: currentUser.id,
+      });
+      const accountAfter = await tx.query.bankAccount.findFirst({ where: eq(bankAccount.id, bankAccountId) });
+      if (!accountAfter) throw new Error("BANK_ACCOUNT_NOT_FOUND");
+      const newBalance = Number(accountAfter.balance);
 
       await tx
         .update(projectCost)
@@ -127,24 +96,6 @@ export async function payFieldRequest(
           updatedAt: new Date(),
         })
         .where(eq(projectCost.id, projectCostId));
-
-      const budgetItem = cost.projectBudgetItemId
-        ? await tx.query.projectBudgetItem.findFirst({
-          where: eq(projectBudgetItem.id, cost.projectBudgetItemId),
-        })
-        : null;
-      const currentSpent = budgetItem ? Number(budgetItem.actualSpent) : 0;
-      const nextSpent = budgetItem ? currentSpent + amount : 0;
-
-      if (budgetItem && cost.projectBudgetItemId) {
-        await tx
-          .update(projectBudgetItem)
-          .set({
-            actualSpent: nextSpent.toFixed(2),
-            updatedAt: new Date(),
-          })
-          .where(eq(projectBudgetItem.id, cost.projectBudgetItemId));
-      }
 
       const syncedCategoryId = await ensureCanonicalExpenseForProjectCost({
         tx,
@@ -163,12 +114,10 @@ export async function payFieldRequest(
         originalState: {
           balance: oldBalance.toFixed(2),
           costStatus: cost.status,
-          actualSpent: budgetItem ? currentSpent.toFixed(2) : null,
         },
         newState: {
           balance: newBalance.toFixed(2),
           costStatus: "PAID",
-          actualSpent: budgetItem ? nextSpent.toFixed(2) : null,
           cashTransactionId: ledgerTx.id,
         },
       });

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Atria UI/UX"
+  short_description: "Dashboard-led iOS UI rules for Atria"
+  default_prompt: "Use $atria-ui-ux to design or review this Atria UI change."

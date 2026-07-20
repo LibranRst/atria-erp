@@ -292,6 +292,8 @@ export async function getSettingsOverview(): Promise<
       user,
       "manage:material_settings",
     ),
+    canManageUsers: await hasPermission(user, "manage:users"),
+    canManageVendors: await hasPermission(user, "manage:vendors"),
   };
 
   const [

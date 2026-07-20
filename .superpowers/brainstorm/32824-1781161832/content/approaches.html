@@ -1,0 +1,52 @@
+<h2>Arsitektur Core Engine Keuangan</h2>
+<p class="subtitle">Pilih pendekatan pemodelan data transaksi dan perhitungan profitabilitas proyek untuk MVP ini.</p>
+
+<div class="options">
+  <div class="option" data-choice="ledger" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Transaction-Led Ledger (Rekomendasi)</h3>
+      <p>Setiap uang masuk/keluar dicatat sebagai <code>cash_transaction</code> yang terhubung ke <code>bank_account</code> dan baris <code>project_budget_item</code> secara granular.</p>
+      <div class="pros-cons" style="margin-top: 10px;">
+        <div class="pros">
+          <strong>Kelebihan:</strong>
+          <ul>
+            <li>Sangat akurat, saldo bank selalu balance dengan kas riil.</li>
+            <li>Memiliki audit trail yang lengkap untuk setiap Rupiah.</li>
+            <li>Mudah dikembangkan menjadi modul akuntansi penuh di masa depan.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <strong>Kekurangan:</strong>
+          <ul>
+            <li>Admin/Finance harus disiplin mengaitkan setiap transaksi ke baris budget item atau kategori biaya.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="direct" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Project-Centric Direct Balances</h3>
+      <p>Profitabilitas dan status pembayaran dilacak langsung di tabel <code>project</code>, <code>invoice</code>, dan <code>vendor_bill</code> secara independen. Transaksi kas hanya sebagai log pelengkap.</p>
+      <div class="pros-cons" style="margin-top: 10px;">
+        <div class="pros">
+          <strong>Kelebihan:</strong>
+          <ul>
+            <li>Desain skema lebih simpel dan query lebih langsung.</li>
+            <li>Pengisian data awal lebih cepat karena tidak perlu rekonsiliasi kas bank.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <strong>Kekurangan:</strong>
+          <ul>
+            <li>Rentan desinkronisasi data jika ada update yang gagal.</li>
+            <li>Tidak ada pencocokan saldo kas bank otomatis, sehingga rawan selisih uang riil.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

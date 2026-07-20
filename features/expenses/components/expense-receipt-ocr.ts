@@ -1,12 +1,8 @@
 import { processReceipt } from "@/app/actions/ai/process-receipt";
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
 import type { ExpenseLine, ExpenseFormProject } from "./expense-form-types";
-import {
-  findMatchingBudgetItem,
-  mapBudgetItemToCanonicalCode,
-} from "./expense-form-utils";
+import { inferExpenseCategoryCode } from "./expense-form-utils";
 
-type BudgetItem = NonNullable<NonNullable<ExpenseFormProject["budget"]>["items"]>[number];
 type BudgetCategory = NonNullable<NonNullable<ExpenseFormProject["canonicalBudgets"]>[number]["categories"]>[number];
 
 type ImageKitUploadResponse = {
@@ -32,11 +28,9 @@ export type ExpenseReceiptOcrResult = {
 
 export async function uploadAndParseExpenseReceipt({
   file,
-  budgetItems,
   budgetCategories,
 }: {
   readonly file: File;
-  readonly budgetItems: readonly BudgetItem[];
   readonly budgetCategories: readonly BudgetCategory[];
 }): Promise<ExpenseReceiptOcrResult> {
   const signRes = await signImagekit();
@@ -88,13 +82,14 @@ export async function uploadAndParseExpenseReceipt({
   const ocrItems = parsedData.items || [];
   let unmatchedCount = 0;
   const lines: ExpenseLine[] = ocrItems.map((item) => {
-    const matchingBudgetItem = findMatchingBudgetItem(item.itemName, [...budgetItems]);
-    if (!matchingBudgetItem) unmatchedCount++;
+    const categoryCode = inferExpenseCategoryCode(item.itemName);
+    const matchingCategory = budgetCategories.find((category) => category.code === categoryCode);
+    if (!matchingCategory) unmatchedCount++;
 
     return {
       key: crypto.randomUUID(),
-      projectBudgetCategoryId: budgetCategories.find((category) => category.code === mapBudgetItemToCanonicalCode(matchingBudgetItem))?.id ?? "",
-      projectBudgetItemId: matchingBudgetItem ? matchingBudgetItem.id : "",
+      projectBudgetCategoryId: matchingCategory?.id ?? "",
+      projectBudgetItemId: "",
       materialId: "",
       projectRapItemId: "",
       projectCategoryPlanItemId: "",

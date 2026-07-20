@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React from "react";
+import { ActivityDetailChevron, useActivityDetail } from "@/features/activity-detail/components/activity-detail-provider";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { MoneyValue } from "@/components/ui/page-primitives";
@@ -141,13 +142,14 @@ export function OverviewCashRows({
   readonly transactions: readonly DashboardTransaction[];
   readonly rowClassName?: string;
 }): React.JSX.Element {
+  const { openActivityDetail } = useActivityDetail();
   const latestTransactions = transactions.slice(0, 4);
   return (
     <div className="divide-y divide-black/[0.055] px-3">
       {latestTransactions.map((transaction) => {
         const incoming = transaction.type === "DEBIT";
         return (
-          <div key={transaction.id} className={`${rowClassName} px-1`}>
+          <button type="button" onClick={() => openActivityDetail({ kind: "CASH_TRANSACTION", id: transaction.id })} key={transaction.id} className={`${rowClassName} w-full px-1 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70`}>
             <span
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
                 incoming
@@ -176,7 +178,8 @@ export function OverviewCashRows({
               size="sm"
               className="shrink-0"
             />
-          </div>
+            <ActivityDetailChevron />
+          </button>
         );
       })}
     </div>

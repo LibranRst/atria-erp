@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "sonner";
-
 import {
   approveFieldRequest,
   approveVendorPayment,
 } from "@/app/actions/finance/field-requests";
+import { decideInventoryOpening } from "@/app/actions/material/opening-inventory";
 import {
   BottomSheet,
   ConfirmationSheet,
@@ -15,6 +15,12 @@ import {
   useSheetPresenceValue,
 } from "@/components/ui";
 import { MoneyValue } from "@/components/ui/page-primitives";
+import {
+  ApprovalDecisionReasonFields,
+  approvalRequiresEmergencyOverride,
+  approvalRequiresOpeningReason,
+} from "@/features/approvals/components/approval-decision-reason-fields";
+import { InventoryOpeningApprovalItems } from "@/features/approvals/components/inventory-opening-approval-items";
 import {
   DashboardDetailSection,
   DashboardRowGroup,
@@ -44,6 +50,7 @@ type ApprovalsTabProps = {
     React.SetStateAction<readonly ApprovalDetail[]>
   >;
   readonly setApprovalCount: React.Dispatch<React.SetStateAction<number>>;
+  readonly canEmergencyOverride?: boolean;
 };
 
 export function ApprovalsTab({
@@ -51,6 +58,7 @@ export function ApprovalsTab({
   approvalCount,
   setApprovals,
   setApprovalCount,
+  canEmergencyOverride = false,
 }: ApprovalsTabProps): React.JSX.Element {
   const router = useRouter();
   const [selectedApproval, setSelectedApproval] =
@@ -62,6 +70,9 @@ export function ApprovalsTab({
   } = useSheetPresenceValue(selectedApproval, selectedApproval?.id);
   const [decision, setDecision] = React.useState<ApprovalDecision | null>(null);
   const [rejectionReason, setRejectionReason] = React.useState("");
+  const [approvalReason, setApprovalReason] = React.useState("");
+  const [emergencyOverride, setEmergencyOverride] = React.useState(false);
+  const [emergencyReason, setEmergencyReason] = React.useState("");
   const [pending, startTransition] = React.useTransition();
   const criticalCount = approvals.filter(
     (item) => item.priority === "CRITICAL",
@@ -74,18 +85,64 @@ export function ApprovalsTab({
   ): void {
     setDecision({ item, status });
     if (status === "REJECTED") setRejectionReason("");
+    if (status === "APPROVED") {
+      setApprovalReason("");
+      setEmergencyOverride(false);
+      setEmergencyReason("");
+    }
   }
 
   function closeDecision(): void {
     if (pending) return;
     setDecision(null);
     setRejectionReason("");
+    setApprovalReason("");
+    setEmergencyOverride(false);
+    setEmergencyReason("");
   }
 
   function confirmDecision(): void {
     if (!decision) return;
-    if (decision.status === "REJECTED" && rejectionReason.trim().length < 5) {
-      toast.error("Tuliskan alasan penolakan minimal 5 karakter.");
+    const requiresEmergencyOverride = approvalRequiresEmergencyOverride(
+      decision.item,
+      canEmergencyOverride,
+    );
+    const requiresOpeningReason = approvalRequiresOpeningReason(
+      decision.item,
+      canEmergencyOverride,
+    );
+    if (
+      decision.status === "REJECTED" &&
+      rejectionReason.trim().length <
+        (decision.item.type === "inventory_opening" ? 10 : 5)
+    ) {
+      toast.error(
+        `Tuliskan alasan penolakan minimal ${decision.item.type === "inventory_opening" ? 10 : 5} karakter.`,
+      );
+      return;
+    }
+    if (
+      decision.status === "APPROVED" &&
+      requiresOpeningReason &&
+      approvalReason.trim().length < 10
+    ) {
+      toast.error("Alasan persetujuan minimal 10 karakter.");
+      return;
+    }
+    if (
+      decision.status === "APPROVED" &&
+      requiresEmergencyOverride &&
+      !emergencyOverride
+    ) {
+      toast.error("Aktifkan emergency override untuk persetujuan sendiri.");
+      return;
+    }
+    if (
+      decision.status === "APPROVED" &&
+      emergencyOverride &&
+      emergencyReason.trim().length < 10
+    ) {
+      toast.error("Alasan emergency override minimal 10 karakter.");
       return;
     }
     const { item, status } = decision;
@@ -93,16 +150,33 @@ export function ApprovalsTab({
       try {
         const notes =
           status === "APPROVED"
-            ? "Disetujui Owner dari Dashboard"
+            ? emergencyOverride
+              ? emergencyReason.trim()
+              : item.type === "inventory_opening"
+                ? approvalReason.trim()
+                : "Disetujui Owner dari Dashboard"
             : rejectionReason.trim();
         const result =
-          item.type === "project_cost"
-            ? await approveFieldRequest({
-                projectCostId: item.referenceId,
-                status,
-                notes,
+          item.type === "inventory_opening"
+            ? await decideInventoryOpening({
+                batchId: item.referenceId,
+                decision: status === "APPROVED" ? "APPROVE" : "REJECT",
+                reason: notes,
+                emergencyOverride,
               })
-            : await approveVendorPayment(item.referenceId, notes, status);
+            : item.type === "project_cost"
+              ? await approveFieldRequest({
+                  projectCostId: item.referenceId,
+                  status,
+                  notes,
+                  emergencyOverride,
+                })
+              : await approveVendorPayment(
+                  item.referenceId,
+                  notes,
+                  status,
+                  emergencyOverride,
+                );
         if (!result.success) throw new Error(result.error.message);
 
         setApprovals((current) =>
@@ -112,6 +186,9 @@ export function ApprovalsTab({
         setSelectedApproval(null);
         setDecision(null);
         setRejectionReason("");
+        setApprovalReason("");
+        setEmergencyOverride(false);
+        setEmergencyReason("");
         toast.success(
           `${status === "APPROVED" ? "Persetujuan" : "Penolakan"} ${shortMoney(item.amount)} berhasil dicatat.`,
         );
@@ -298,7 +375,24 @@ export function ApprovalsTab({
               ))}
             </section>
 
-            <ApprovalBudgetContext item={presentedApproval} />
+            {presentedApproval.type === "inventory_opening" ? (
+              <>
+                <InventoryOpeningApprovalItems item={presentedApproval} />
+                <section className="overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+                  <div className="px-4 py-3.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-on-surface-variant/65">
+                      Dampak stok
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-on-surface">
+                      Setelah disetujui, stok dan nilai inventory bertambah.
+                      Kas, utang vendor, dan actual cost proyek tidak berubah.
+                    </p>
+                  </div>
+                </section>
+              </>
+            ) : (
+              <ApprovalBudgetContext item={presentedApproval} />
+            )}
             {presentedApproval.receiptImageUrl ? (
               <section className="space-y-2.5">
                 <h3 className="px-1 text-[10px] font-bold uppercase tracking-[0.11em] text-on-surface">
@@ -321,12 +415,47 @@ export function ApprovalsTab({
       <ConfirmationSheet
         open={decision?.status === "APPROVED"}
         title="Setujui pengajuan?"
-        description="Dampak budget sudah ditampilkan di detail. Keputusan ini akan dicatat dalam audit log."
+        description={
+          decision?.item.type === "inventory_opening"
+            ? "Pastikan jumlah fisik, harga per unit, dan subtotal sudah sesuai. Keputusan dicatat dalam audit log."
+            : "Dampak budget sudah ditampilkan di detail. Keputusan ini akan dicatat dalam audit log."
+        }
         confirmLabel="Setujui"
         pending={pending}
+        disabled={
+          (decision?.item.type === "inventory_opening" &&
+            approvalRequiresOpeningReason(
+              decision.item,
+              canEmergencyOverride,
+            ) &&
+            approvalReason.trim().length < 10) ||
+          (Boolean(
+            decision?.item &&
+            approvalRequiresEmergencyOverride(
+              decision.item,
+              canEmergencyOverride,
+            ),
+          ) &&
+            (!emergencyOverride || emergencyReason.trim().length < 10))
+        }
         onClose={closeDecision}
         onConfirm={confirmDecision}
-      />
+      >
+        {decision?.item ? (
+          <ApprovalDecisionReasonFields
+            item={decision.item}
+            canEmergencyOverride={canEmergencyOverride}
+            approvalReason={approvalReason}
+            emergencyOverride={emergencyOverride}
+            emergencyReason={emergencyReason}
+            pending={pending}
+            idPrefix="dashboard-approval"
+            onApprovalReasonChange={setApprovalReason}
+            onEmergencyOverrideChange={setEmergencyOverride}
+            onEmergencyReasonChange={setEmergencyReason}
+          />
+        ) : null}
+      </ConfirmationSheet>
 
       <BottomSheet
         open={decision?.status === "REJECTED"}
@@ -355,16 +484,23 @@ export function ApprovalsTab({
               placeholder="Contoh: nominal belum sesuai dengan progres pekerjaan"
               className="mt-2"
               aria-invalid={
-                rejectionReason.length > 0 && rejectionReason.trim().length < 5
+                rejectionReason.length > 0 &&
+                rejectionReason.trim().length <
+                  (decision?.item.type === "inventory_opening" ? 10 : 5)
               }
             />
             <p className="mt-1 px-1 text-[10px] text-on-surface-variant">
-              Minimal 5 karakter.
+              Minimal {decision?.item.type === "inventory_opening" ? 10 : 5}{" "}
+              karakter.
             </p>
           </div>
           <button
             type="button"
-            disabled={pending || rejectionReason.trim().length < 5}
+            disabled={
+              pending ||
+              rejectionReason.trim().length <
+                (decision?.item.type === "inventory_opening" ? 10 : 5)
+            }
             onClick={confirmDecision}
             className="min-h-12 w-full rounded-full bg-error px-5 text-xs font-bold text-white disabled:opacity-40"
           >

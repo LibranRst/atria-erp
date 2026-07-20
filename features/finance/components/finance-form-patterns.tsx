@@ -82,10 +82,10 @@ export function FinanceSuccessSheet({
           <p className="text-lg font-bold text-on-surface">{success?.title}</p>
           <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-on-surface-variant">{success?.description}</p>
         </div>
-        <dl className="divide-y divide-outline-variant/35 rounded-2xl bg-surface-container-low px-4 text-left">
+        <dl className="divide-y divide-outline-variant/15 rounded-[22px] bg-white ring-1 ring-black/[0.035] px-4 text-left overflow-hidden">
           {success?.facts.map((fact) => (
-            <div key={fact.label} className="flex items-start justify-between gap-4 py-3">
-              <dt className="text-xs text-on-surface-variant">{fact.label}</dt>
+            <div key={fact.label} className="flex items-start justify-between gap-4 py-3.5">
+              <dt className="text-xs text-on-surface-variant font-medium">{fact.label}</dt>
               <dd className="text-right text-xs font-bold text-on-surface">{fact.value}</dd>
             </div>
           ))}

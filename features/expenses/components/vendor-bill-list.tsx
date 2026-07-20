@@ -75,8 +75,26 @@ export function VendorBillList({
 }: VendorBillListProps): React.JSX.Element {
   const router = useRouter();
   const [subTab, setSubTab] = useState<VendorBillSubTab>("BILLS");
+  const [billFilter, setBillFilter] = useState<"ACTIVE" | "PAID" | "ALL">("ACTIVE");
+  const [paymentFilter, setPaymentFilter] = useState<"ACTIVE" | "COMPLETED" | "ALL">("ACTIVE");
   const [visibleLimit, setVisibleLimit] = useState(20);
   const [isPending, startTransition] = useTransition();
+  const pendingScrollYRef = React.useRef<number | null>(null);
+  const resultsRef = React.useRef<HTMLDivElement | null>(null);
+  const [resultsMinHeight, setResultsMinHeight] = useState<number | null>(null);
+
+  React.useLayoutEffect(() => {
+    const pendingScrollY = pendingScrollYRef.current;
+    if (pendingScrollY === null) return;
+    window.scrollTo({ top: pendingScrollY, behavior: "auto" });
+    pendingScrollYRef.current = null;
+  }, [billFilter, paymentFilter, subTab]);
+
+  const preserveScrollPosition = (): void => {
+    const currentResultsHeight = resultsRef.current?.getBoundingClientRect().height ?? 0;
+    setResultsMinHeight((current) => Math.max(current ?? 0, currentResultsHeight));
+    pendingScrollYRef.current = window.scrollY;
+  };
 
   // Modal / Drawer visibility states
   const [selectedBillForSchedule, setSelectedBillForSchedule] = useState<VendorListBill | null>(null);
@@ -122,6 +140,22 @@ export function VendorBillList({
     .filter((payment) => payment.status === "COMPLETED")
     .reduce((sum, payment) => sum + Number(payment.amountPaid), 0);
   const openBillCount = vendorBills.filter((bill) => bill.status !== "PAID" && bill.status !== "VOID").length;
+
+  const filteredBills = React.useMemo(() => {
+    return vendorBills.filter((bill) => {
+      if (billFilter === "ACTIVE") return bill.status !== "PAID" && bill.status !== "VOID";
+      if (billFilter === "PAID") return bill.status === "PAID";
+      return true;
+    });
+  }, [vendorBills, billFilter]);
+
+  const filteredPayments = React.useMemo(() => {
+    return vendorPayments.filter((payment) => {
+      if (paymentFilter === "ACTIVE") return payment.status !== "COMPLETED";
+      if (paymentFilter === "COMPLETED") return payment.status === "COMPLETED";
+      return true;
+    });
+  }, [vendorPayments, paymentFilter]);
 
   const openAddBillForm = React.useCallback((): void => {
     updateUrlSearchParam("new-vendor-bill", "true", "push");
@@ -291,83 +325,127 @@ export function VendorBillList({
             <button
               type="button"
               onClick={openAddBillForm}
-              className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#007AFF]/[0.08] px-3 text-[10px] font-semibold text-[#007AFF] outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] active:bg-[#007AFF]/[0.14] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30"
+              className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#007AFF]/[0.08] px-3 text-[10px] font-semibold leading-4 text-[#007AFF] outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] active:bg-[#007AFF]/[0.14] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30"
             >
-              <span className="material-symbols-outlined text-[14px]">add</span>
+              <span className="material-symbols-outlined text-[14px] leading-none" aria-hidden="true">add</span>
               Tambah
             </button>
           ) : undefined}
         >
           <div className="min-w-0">
-            <p className="text-[9px] font-semibold text-on-surface-variant/60">Total tagihan tercatat</p>
+            <p className="text-[9px] font-semibold leading-3 text-on-surface-variant/60">Total tagihan tercatat</p>
             <MoneyValue amount={totalBillAmount} variant="compactWithFull" size="lg" className="mt-1" />
           </div>
           <div className="mt-3.5 grid grid-cols-2 divide-x divide-black/[0.055] rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
             <div className="min-w-0 pr-3">
-              <p className="text-[9px] font-semibold text-on-surface-variant/60">Dalam antrean</p>
+              <p className="text-[9px] font-semibold leading-3 text-on-surface-variant/60">Dalam antrean</p>
               <MoneyValue amount={scheduledAmount} variant="compactWithFull" size="sm" className="mt-1" />
             </div>
             <div className="min-w-0 pl-3 text-right">
-              <p className="text-[9px] font-semibold text-on-surface-variant/60">Sudah dibayar</p>
+              <p className="text-[9px] font-semibold leading-3 text-on-surface-variant/60">Sudah dibayar</p>
               <MoneyValue amount={paidAmount} variant="compactWithFull" size="sm" align="right" className="mt-1" />
             </div>
           </div>
         </ExpensesSummarySurface>
       </div>
 
-      <SegmentedTabs
-        value={subTab}
-        onChange={(value) => {
-          setSubTab(value);
-          setVisibleLimit(20);
-        }}
-        ariaLabel="Tampilan tagihan vendor"
-        density="compact"
-        options={[
-          { value: "BILLS", label: "Tagihan", count: vendorBills.length, icon: <span className="material-symbols-outlined text-[16px]">request_quote</span> },
-          { value: "PAYMENTS", label: "Rencana Bayar", count: vendorPayments.length, icon: <span className="material-symbols-outlined text-[16px]">payments</span> },
-        ]}
-      />
+      <div className="space-y-2.5">
+        <SegmentedTabs
+          value={subTab}
+          onChange={(value) => {
+            preserveScrollPosition();
+            setSubTab(value);
+            setVisibleLimit(20);
+          }}
+          ariaLabel="Tampilan tagihan vendor"
+          density="compact"
+          options={[
+            { value: "BILLS", label: "Tagihan", count: vendorBills.filter(b => b.status !== "PAID" && b.status !== "VOID").length, icon: <span className="material-symbols-outlined text-[16px] leading-none">request_quote</span> },
+            { value: "PAYMENTS", label: "Rencana Bayar", count: vendorPayments.filter(p => p.status !== "COMPLETED").length, icon: <span className="material-symbols-outlined text-[16px] leading-none">payments</span> },
+          ]}
+        />
 
-      {subTab === "BILLS" && (
-        <div className="space-y-3">
-          <ExpensesSectionHeader title="Daftar tagihan" meta={`${vendorBills.length} item`} />
-          {vendorBills.length === 0 ? (
-            <ExpensesGroupSurface><EmptyState icon="payments" title="Tidak Ada Tagihan" description="Belum ada tagihan pembelian material/vendor yang tercatat." /></ExpensesGroupSurface>
-          ) : (
-            <ExpensesGroupSurface>
-              <div className="divide-y divide-black/[0.055]">
-                {vendorBills.slice(0, visibleLimit).map((bill) => (
-                  <VendorBillCard key={bill.id} bill={bill} isOwnerOrFinance={isOwnerOrFinance} onScheduleClick={handleScheduleClick} />
-                ))}
-              </div>
-            </ExpensesGroupSurface>
-          )}
-          {vendorBills.length > visibleLimit ? (
-            <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
-          ) : null}
-        </div>
-      )}
+        {subTab === "BILLS" && (
+          <SegmentedTabs
+            value={billFilter}
+            onChange={(val) => {
+              preserveScrollPosition();
+              setBillFilter(val as "ACTIVE" | "PAID" | "ALL");
+              setVisibleLimit(20);
+            }}
+            ariaLabel="Filter status tagihan"
+            density="compact"
+            options={[
+              { value: "ACTIVE", label: "Belum Lunas", count: vendorBills.filter(b => b.status !== "PAID" && b.status !== "VOID").length },
+              { value: "PAID", label: "Lunas", count: vendorBills.filter(b => b.status === "PAID").length },
+              { value: "ALL", label: "Semua", count: vendorBills.length },
+            ]}
+          />
+        )}
 
-      {subTab === "PAYMENTS" && (
-        <div className="space-y-3">
-          <ExpensesSectionHeader title="Rencana pembayaran" meta={`${vendorPayments.length} item`} />
-          {vendorPayments.length === 0 ? (
-            <ExpensesGroupSurface><EmptyState icon="schedule" title="Tidak Ada Rencana Pembayaran" description="Belum ada rencana atau mutasi pembayaran vendor yang terdaftar." /></ExpensesGroupSurface>
-          ) : (
-            <ExpensesGroupSurface>
-              <div className="divide-y divide-black/[0.055]">
-                {vendorPayments.slice(0, visibleLimit).map((payment) => (
-                  <VendorPaymentCard key={payment.id} payment={payment} isOwnerOrFinance={isOwnerOrFinance} onDisburseClick={handleDisburseClick} />
-                ))}
-              </div>
-            </ExpensesGroupSurface>
-          )}
-          {vendorPayments.length > visibleLimit ? (
-            <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
-          ) : null}
-        </div>
-      )}
+        {subTab === "PAYMENTS" && (
+          <SegmentedTabs
+            value={paymentFilter}
+            onChange={(val) => {
+              preserveScrollPosition();
+              setPaymentFilter(val as "ACTIVE" | "COMPLETED" | "ALL");
+              setVisibleLimit(20);
+            }}
+            ariaLabel="Filter status rencana bayar"
+            density="compact"
+            options={[
+              { value: "ACTIVE", label: "Belum Cair", count: vendorPayments.filter(p => p.status !== "COMPLETED").length },
+              { value: "COMPLETED", label: "Selesai Cair", count: vendorPayments.filter(p => p.status === "COMPLETED").length },
+              { value: "ALL", label: "Semua", count: vendorPayments.length },
+            ]}
+          />
+        )}
+      </div>
+
+      <div
+        ref={resultsRef}
+        style={resultsMinHeight === null ? undefined : { minHeight: `${resultsMinHeight}px` }}
+      >
+        {subTab === "BILLS" && (
+          <div className="space-y-3">
+            <ExpensesSectionHeader title="Daftar tagihan" meta={`${filteredBills.length} item`} />
+            {filteredBills.length === 0 ? (
+              <ExpensesGroupSurface><EmptyState icon="payments" title="Tidak Ada Tagihan" description="Belum ada tagihan pembelian material/vendor yang tercatat." /></ExpensesGroupSurface>
+            ) : (
+              <ExpensesGroupSurface>
+                <div className="divide-y divide-black/[0.055]">
+                  {filteredBills.slice(0, visibleLimit).map((bill) => (
+                    <VendorBillCard key={bill.id} bill={bill} isOwnerOrFinance={isOwnerOrFinance} onScheduleClick={handleScheduleClick} />
+                  ))}
+                </div>
+              </ExpensesGroupSurface>
+            )}
+            {filteredBills.length > visibleLimit ? (
+              <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
+            ) : null}
+          </div>
+        )}
+
+        {subTab === "PAYMENTS" && (
+          <div className="space-y-3">
+            <ExpensesSectionHeader title="Rencana pembayaran" meta={`${filteredPayments.length} item`} />
+            {filteredPayments.length === 0 ? (
+              <ExpensesGroupSurface><EmptyState icon="schedule" title="Tidak Ada Rencana Pembayaran" description="Belum ada rencana atau mutasi pembayaran vendor yang terdaftar." /></ExpensesGroupSurface>
+            ) : (
+              <ExpensesGroupSurface>
+                <div className="divide-y divide-black/[0.055]">
+                  {filteredPayments.slice(0, visibleLimit).map((payment) => (
+                    <VendorPaymentCard key={payment.id} payment={payment} isOwnerOrFinance={isOwnerOrFinance} onDisburseClick={handleDisburseClick} />
+                  ))}
+                </div>
+              </ExpensesGroupSurface>
+            )}
+            {filteredPayments.length > visibleLimit ? (
+              <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
+            ) : null}
+          </div>
+        )}
+      </div>
 
       <VendorSchedulePaymentSheet
         key={selectedBillForSchedule?.id ?? "vendor-schedule-closed"}
@@ -412,7 +490,7 @@ function BatchButton({ onClick }: { readonly onClick: () => void }): React.JSX.E
     <button
       type="button"
       onClick={onClick}
-      className="min-h-12 w-full rounded-full bg-surface-container text-xs font-bold text-on-surface"
+      className="min-h-12 w-full rounded-full bg-surface-container text-xs font-bold leading-4 text-on-surface"
     >
       Tampilkan 20 berikutnya
     </button>
