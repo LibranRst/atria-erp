@@ -338,11 +338,11 @@ export function ApprovalsTab({
                 </p>
               </div>
               {presentedApproval.notes ? (
-                <div className="border-t border-outline-variant/20 bg-surface-container-low/55 px-4 py-3">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-on-surface-variant/65">
+                <div className="border-t border-outline-variant/20 bg-surface-container-lowest px-4 py-3">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.1em] leading-5 text-on-surface-variant/65">
                     Catatan pengajuan
                   </p>
-                  <p className="mt-1 text-xs leading-[1.4] text-on-surface-variant">
+                  <p className="text-xs leading-4 text-on-surface-variant">
                     {presentedApproval.notes}
                   </p>
                 </div>
@@ -441,7 +441,7 @@ export function ApprovalsTab({
         onClose={closeDecision}
         onConfirm={confirmDecision}
       >
-        {decision?.item ? (
+        {decision?.item && (approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride) || approvalRequiresOpeningReason(decision.item, canEmergencyOverride)) ? (
           <ApprovalDecisionReasonFields
             item={decision.item}
             canEmergencyOverride={canEmergencyOverride}

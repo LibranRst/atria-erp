@@ -20,9 +20,7 @@ export function PageHeader({
   className = "",
 }: PageHeaderProps): JSX.Element {
   return (
-    <header
-      className={`flex items-start justify-between gap-4 ${className}`}
-    >
+    <header className={`flex items-start justify-between gap-4 ${className}`}>
       <div className="min-w-0">
         {eyebrow && (
           <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.16em] text-primary">
@@ -162,11 +160,11 @@ export function MoneyValue({
   if (variant === "fullDynamic") {
     return (
       <span
-        className={`money-value-dynamic ${moneyDynamicSizeClass(size)} ${alignClass} ${className}`}
+        className={`money-value-dynamic leading-5 ${moneyDynamicSizeClass(size)} ${alignClass} ${className}`}
         title={fullValue}
       >
         <span
-          className={`financial-amount money-value-dynamic__text block font-mono font-bold tabular-nums ${valueClass}`}
+          className={`financial-amount money-value-dynamic__text leading-4 block font-mono font-bold tabular-nums ${valueClass}`}
         >
           {fullValue}
         </span>
@@ -175,16 +173,18 @@ export function MoneyValue({
   }
 
   return (
-    <span className={`money-value-compact block min-w-0 ${alignClass} ${className}`}>
+    <span
+      className={`money-value-compact block min-w-0 ${alignClass} ${className}`}
+    >
       <span
-        className={`financial-amount block whitespace-nowrap font-mono font-bold tabular-nums ${moneyCompactSizeClass(size)} ${valueClass}`}
+        className={`financial-amount block whitespace-nowrap font-mono font-bold tabular-nums leading-5 ${moneyCompactSizeClass(size)} ${valueClass}`}
         title={fullValue}
       >
         {compactValue}
       </span>
       {compactValue !== fullValue && (
         <span
-          className={`financial-amount money-value-exact mt-1 block font-mono tabular-nums ${moneySecondarySizeClass(size)} ${moneySecondaryToneClass(tone)}`}
+          className={`financial-amount money-value-exact leading-4 block font-mono tabular-nums ${moneySecondarySizeClass(size)} ${moneySecondaryToneClass(tone)}`}
         >
           {fullValue}
         </span>

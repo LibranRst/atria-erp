@@ -434,7 +434,7 @@ export function ProjectOverview({
         }
       >
         {selectedCategory ? (
-          <div className="overflow-hidden rounded-[22px] bg-surface-container-low">
+          <div className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
             <DetailMoneyRow
               label="Budget"
               amount={selectedCategory.allocatedAmount}

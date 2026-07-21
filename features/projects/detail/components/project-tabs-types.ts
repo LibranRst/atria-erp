@@ -9,9 +9,7 @@ import type {
   VendorListProject,
   VendorListVendor,
 } from "@/features/expenses/components/vendor-bill-list";
-import type {
-  ClientInvoiceItem,
-} from "@/features/projects/detail/components/invoices/project-invoices";
+import type { ClientInvoiceItem } from "@/features/projects/detail/components/invoices/project-invoices";
 import type {
   MaterialOption,
   PricingTemplateOption,

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { AlertTriangle, ArrowRight, ChevronRight, RefreshCw } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import { getActivityDetail } from "@/app/actions/activity-detail";
 import { BottomSheet } from "@/components/ui";
@@ -72,6 +72,8 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
 
 export function ActivityDetailProvider({ children }: { readonly children: React.ReactNode }): React.JSX.Element {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [request, setRequest] = React.useState<ActivityDetailRequest | null>(null);
   const [presentedRequest, setPresentedRequest] = React.useState<ActivityDetailRequest | null>(null);
   const [detail, setDetail] = React.useState<ActivityDetailView | null>(null);
@@ -94,5 +96,20 @@ export function ActivityDetailProvider({ children }: { readonly children: React.
 
   const context = React.useMemo(() => ({ openActivityDetail }), [openActivityDetail]);
   const source = detail?.source ?? null;
-  return <ActivityDetailContext.Provider value={context}>{children}<BottomSheet open={request !== null} title="Detail aktivitas" onClose={() => { requestSequence.current += 1; setRequest(null); }} onExitComplete={() => { if (!request) { setPresentedRequest(null); setDetail(null); setError(null); } }} footer={source ? <button type="button" onClick={() => { setRequest(null); router.push(source.href); }} className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary/30">{source.label}</button> : undefined}>{loading ? <DetailSkeleton /> : error ? <div className="rounded-[24px] bg-white px-4 py-5 text-center shadow-[0_10px_28px_rgba(17,17,17,0.04)]"><AlertTriangle className="mx-auto h-5 w-5 text-error" aria-hidden="true" /><p className="mt-2 text-sm font-semibold text-on-surface">Detail belum dapat dimuat</p><p className="mt-1 text-[11px] leading-4 text-on-surface-variant">{error}</p><button type="button" onClick={() => { if (presentedRequest) void load(presentedRequest); }} className="mt-3 inline-flex min-h-12 items-center gap-2 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"><RefreshCw className="h-4 w-4" aria-hidden="true" /> Coba lagi</button></div> : detail ? <DetailContent detail={detail} /> : <DetailSkeleton />}</BottomSheet></ActivityDetailContext.Provider>;
+
+  const isAlreadyOnSourcePage = React.useMemo(() => {
+    if (!source) return false;
+    try {
+      const url = new URL(source.href, "http://localhost");
+      if (url.pathname !== pathname) return false;
+      for (const [key, value] of url.searchParams.entries()) {
+        if (searchParams.get(key) !== value) return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }, [source, pathname, searchParams]);
+
+  return <ActivityDetailContext.Provider value={context}>{children}<BottomSheet open={request !== null} title="Detail aktivitas" onClose={() => { requestSequence.current += 1; setRequest(null); }} onExitComplete={() => { if (!request) { setPresentedRequest(null); setDetail(null); setError(null); } }} footer={source && !isAlreadyOnSourcePage ? <button type="button" onClick={() => { setRequest(null); router.push(source.href); }} className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary/30">{source.label}</button> : undefined}>{loading ? <DetailSkeleton /> : error ? <div className="rounded-[24px] bg-white px-4 py-5 text-center shadow-[0_10px_28px_rgba(17,17,17,0.04)]"><AlertTriangle className="mx-auto h-5 w-5 text-error" aria-hidden="true" /><p className="mt-2 text-sm font-semibold text-on-surface">Detail belum dapat dimuat</p><p className="mt-1 text-[11px] leading-4 text-on-surface-variant">{error}</p><button type="button" onClick={() => { if (presentedRequest) void load(presentedRequest); }} className="mt-3 inline-flex min-h-12 items-center gap-2 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"><RefreshCw className="h-4 w-4" aria-hidden="true" /> Coba lagi</button></div> : detail ? <DetailContent detail={detail} /> : <DetailSkeleton />}</BottomSheet></ActivityDetailContext.Provider>;
 }

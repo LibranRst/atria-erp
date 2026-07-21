@@ -84,17 +84,17 @@ export function ProjectCreatedSuccess({
                 onClose();
                 onNavigate(action.href);
               }}
-              className="flex min-h-16 w-full items-center justify-between rounded-full border border-outline-variant/30 bg-surface-container-low px-5 py-3 text-left transition-transform hover:border-primary/40 active:scale-[0.99]"
+              className="flex min-h-16 w-full items-center justify-between rounded-full bg-white shadow-[0_12px_28px_rgba(17,17,17,0.05)] px-5 py-3 text-left transition-transform active:scale-[0.99]"
             >
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary">
                   {action.icon}
                 </span>
-                <div>
-                  <span className="block text-xs font-bold text-on-surface">
+                <div className="flex flex-col">
+                  <span className="block text-xs font-bold leading-5 text-on-surface">
                     {action.title}
                   </span>
-                  <span className="text-[10px] text-on-surface-variant">
+                  <span className="text-[10px] leading-4 text-on-surface-variant">
                     {action.description}
                   </span>
                 </div>

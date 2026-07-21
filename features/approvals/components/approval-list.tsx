@@ -558,7 +558,7 @@ export function ApprovalList({
         onClose={closeDecision}
         onConfirm={confirmDecision}
       >
-        {decision?.item ? (
+        {decision?.item && (approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride) || approvalRequiresOpeningReason(decision.item, canEmergencyOverride)) ? (
           <ApprovalDecisionReasonFields
             item={decision.item}
             canEmergencyOverride={canEmergencyOverride}

@@ -63,7 +63,7 @@ export function StockImpactRow({
           {deltaLabel}
         </p>
       </div>
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-outline-variant/15 bg-surface-container-low/60 px-4 py-3 text-center">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-outline-variant/15 bg-surface-container-lowest px-4 py-3 text-center">
         <div>
           <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
             Sebelum
@@ -151,7 +151,9 @@ export function MaterialSuccessSheet({
               key={fact.label}
               className="flex items-start justify-between gap-4 py-3.5"
             >
-              <dt className="text-xs text-on-surface-variant font-medium">{fact.label}</dt>
+              <dt className="text-xs text-on-surface-variant font-medium">
+                {fact.label}
+              </dt>
               <dd className="text-right text-xs font-bold text-on-surface">
                 {fact.value}
               </dd>

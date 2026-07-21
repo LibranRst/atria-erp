@@ -114,36 +114,35 @@ export function VendorBillCard({
           </p>
         </div>
       )}
-
-      {bill.status !== "PAID" && bill.status !== "VOID" ? (
+      {bill.status !== "PAID" && bill.status !== "VOID" && (isOwnerOrFinance || isFullyScheduledOrPaid) ? (
         <div className="mt-2 flex min-h-8 items-center justify-end gap-2 pl-12 pr-8">
           {isOwnerOrFinance ? (
-          isFullyScheduledOrPaid ? (
-            hasPending ? (
-              <span className="flex items-center gap-1 text-[9px] font-bold leading-3 text-warning">
-                <span className="material-symbols-outlined text-[13px] leading-none" aria-hidden="true">schedule</span>
-                Menunggu pencairan
-              </span>
+            isFullyScheduledOrPaid ? (
+              hasPending ? (
+                <span className="flex items-center gap-1 text-[9px] font-bold leading-3 text-warning">
+                  <span className="material-symbols-outlined text-[13px] leading-none" aria-hidden="true">schedule</span>
+                  Menunggu pencairan
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-[9px] font-bold leading-3 text-primary">
+                  <span className="material-symbols-outlined text-[13px] leading-none" aria-hidden="true">event_available</span>
+                  Terjadwal penuh
+                </span>
+              )
             ) : (
-              <span className="flex items-center gap-1 text-[9px] font-bold leading-3 text-primary">
-                <span className="material-symbols-outlined text-[13px] leading-none" aria-hidden="true">event_available</span>
-                Terjadwal penuh
-              </span>
+              <motion.button
+                type="button"
+                onClick={(event) => { event.stopPropagation(); onScheduleClick(bill); }}
+                whileTap={reduceMotion ? undefined : payablePressScale}
+                transition={transitionSpringSnappy}
+                className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] font-bold leading-4 text-on-primary outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30"
+              >
+                {totalScheduledOrPaid > 0 ? "Jadwalkan Sisa" : "Jadwalkan Bayar"}
+              </motion.button>
             )
           ) : (
-            <motion.button
-              type="button"
-              onClick={(event) => { event.stopPropagation(); onScheduleClick(bill); }}
-              whileTap={reduceMotion ? undefined : payablePressScale}
-              transition={transitionSpringSnappy}
-              className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] font-bold leading-4 text-on-primary outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30"
-            >
-              {totalScheduledOrPaid > 0 ? "Jadwalkan Sisa" : "Jadwalkan Bayar"}
-            </motion.button>
-          )
-        ) : isFullyScheduledOrPaid ? (
-          <span className="text-[9px] font-bold leading-3 text-primary">Terjadwal penuh</span>
-        ) : null}
+            <span className="text-[9px] font-bold leading-3 text-primary">Terjadwal penuh</span>
+          )}
         </div>
       ) : null}
     </div>

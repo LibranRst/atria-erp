@@ -76,7 +76,7 @@ export function ProjectIdentityHeader({
           <button
             type="button"
             onClick={() => setDetailOpen(true)}
-            className="absolute right-3 top-3 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/55 text-white shadow-[0_6px_18px_rgba(0,0,0,0.18)] outline-none transition-colors hover:bg-black/70 focus-visible:ring-2 focus-visible:ring-white/60 active:bg-black/80"
+            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.1)] backdrop-blur-2xl"
             aria-label="Lihat detail proyek"
           >
             <span className="material-symbols-outlined text-[20px]">info</span>
@@ -123,7 +123,7 @@ export function ProjectIdentityHeader({
         title="Detail Proyek"
         onClose={() => setDetailOpen(false)}
       >
-        <div className="overflow-hidden rounded-[22px] bg-surface-container-low">
+        <div className="overflow-hidden rounded-[22px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
           <DetailRow
             label="Klien"
             value={project.client?.name ?? "Belum diisi"}
@@ -153,8 +153,9 @@ export function ProjectIdentityHeader({
           <DetailRow
             label="Area / Tipe"
             value={
-              [project.roomArea, project.projectType].filter(Boolean).join(" · ") ||
-              "Belum diisi"
+              [project.roomArea, project.projectType]
+                .filter(Boolean)
+                .join(" · ") || "Belum diisi"
             }
           />
           <DetailRow
@@ -199,7 +200,7 @@ function HeroStatusPill({
 
   return (
     <span
-      className={`inline-flex min-h-6 items-center rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide shadow-[0_4px_14px_rgba(0,0,0,0.12)] ${tone}`}
+      className={`inline-flex min-h-6 items-center rounded-full border px-2.5 text-[9px] font-bold uppercase tracking-wide shadow-[0_4px_14px_rgba(0,0,0,0.12)] ${tone}`}
       title={title}
     >
       {label}

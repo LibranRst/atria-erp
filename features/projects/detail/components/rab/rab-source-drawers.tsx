@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 import {
   ChoiceRow,
@@ -13,10 +13,11 @@ import {
   MoneyInput,
   NumericInput,
   OperationalFormSheet,
+  SwitchRow,
   Textarea,
   TextInput,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
 import type {
   ManualQuotationLine,
   ProjectCategoryPlanItemView,
@@ -64,6 +65,19 @@ export function RabSourcePickerDrawer({
   const [showManualEntry, setShowManualEntry] = React.useState(
     () => manualQuotationLine.clientLabel.trim().length > 0,
   );
+
+  function handleToggleManualEntry(checked: boolean): void {
+    setShowManualEntry(checked);
+    if (!checked) {
+      setManualQuotationLine({
+        clientLabel: "",
+        description: "",
+        quantity: "1.00",
+        unit: "ls",
+        unitPrice: "0.00",
+      });
+    }
+  }
 
   function toggleSelection(currentIds: readonly string[], id: string): string[] {
     return currentIds.includes(id)
@@ -137,68 +151,73 @@ export function RabSourcePickerDrawer({
         )}
         {!rabEstimate && (
           <FormSection title="Item manual" helper="Opsional untuk biaya yang tidak berasal dari RAP atau paket kerja.">
-            <div className="mb-sm">
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.97 }}
-                transition={transitionSpringSnappy}
-                onClick={() => setShowManualEntry((current) => !current)}
-                className="flex min-h-12 w-full items-center justify-between rounded-full bg-surface-container-low px-5 text-left text-xs font-bold text-primary ring-1 ring-outline-variant/15"
-                aria-expanded={showManualEntry}
-              >
-                {showManualEntry ? "Sembunyikan item manual" : "Tambahkan item manual"}
-                <span className="material-symbols-outlined text-[18px]">{showManualEntry ? "expand_less" : "add"}</span>
-              </motion.button>
+            <div className="bg-surface-container-lowest px-4 py-3">
+              <SwitchRow
+                checked={showManualEntry}
+                onChange={handleToggleManualEntry}
+                title="Tambahkan item manual"
+                description="Masukkan baris quotation kustom tambahan yang aman untuk klien."
+              />
             </div>
-            {showManualEntry ? (
-              <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                <FormField label="Nama item">
-                  <TextInput
-                    value={manualQuotationLine.clientLabel}
-                    onChange={(value) =>
-                      setManualQuotationLine((curr) => ({
-                        ...curr,
-                        clientLabel: value,
-                      }))
-                    }
-                    placeholder="Contoh: Biaya koordinasi"
-                  />
-                </FormField>
-                <FormField label="Jumlah">
-                  <NumericInput
-                    min={0.01}
-                    value={manualQuotationLine.quantity}
-                    onChange={(value) =>
-                      setManualQuotationLine((curr) => ({
-                        ...curr,
-                        quantity: value,
-                      }))
-                    }
-                  />
-                </FormField>
-                <ComboboxField
-                  label="Satuan"
-                  value={manualQuotationLine.unit}
-                  onChange={(value) =>
-                    setManualQuotationLine((curr) => ({ ...curr, unit: value }))
-                  }
-                  options={COMMON_UNIT_OPTIONS}
-                  placeholder="Pilih satuan"
-                />
-                <FormField label="Harga satuan klien">
-                  <MoneyInput
-                    value={manualQuotationLine.unitPrice}
-                    onChange={(value) =>
-                      setManualQuotationLine((curr) => ({
-                        ...curr,
-                        unitPrice: value,
-                      }))
-                    }
-                    showPreview={false}
-                  />
-                </FormField>
-              </div>
-            ) : null}
+            <AnimatePresence initial={false}>
+              {showManualEntry && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={transitionSpringSmooth}
+                  className="overflow-hidden"
+                >
+                  <div className="grid grid-cols-1 divide-y divide-outline-variant/20 border-t border-outline-variant/20">
+                    <FormField label="Nama item" required>
+                      <TextInput
+                        value={manualQuotationLine.clientLabel}
+                        onChange={(value) =>
+                          setManualQuotationLine((curr) => ({
+                            ...curr,
+                            clientLabel: value,
+                          }))
+                        }
+                        placeholder="Contoh: Koordinasi Design"
+                      />
+                    </FormField>
+                    <FormField label="Jumlah">
+                      <NumericInput
+                        min={0.01}
+                        value={manualQuotationLine.quantity}
+                        onChange={(value) =>
+                          setManualQuotationLine((curr) => ({
+                            ...curr,
+                            quantity: value,
+                          }))
+                        }
+                      />
+                    </FormField>
+                    <ComboboxField
+                      label="Satuan"
+                      value={manualQuotationLine.unit}
+                      onChange={(value) =>
+                        setManualQuotationLine((curr) => ({ ...curr, unit: value }))
+                      }
+                      options={COMMON_UNIT_OPTIONS}
+                      placeholder="Pilih satuan"
+                    />
+                    <FormField label="Harga satuan klien">
+                      <MoneyInput
+                        value={manualQuotationLine.unitPrice}
+                        onChange={(value) =>
+                          setManualQuotationLine((curr) => ({
+                            ...curr,
+                            unitPrice: value,
+                          }))
+                        }
+                        showPreview={false}
+                      />
+                    </FormField>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </FormSection>
         )}
       </div>

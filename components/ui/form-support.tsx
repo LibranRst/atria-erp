@@ -107,7 +107,7 @@ export function ValuePreviewStrip({
               classes.shell,
             )}
           >
-            <p className="truncate text-[9px] font-bold uppercase tracking-wide">
+            <p className="truncate text-[9px] font-bold uppercase leading-5 tracking-wide">
               {item.label}
             </p>
             {typeof item.amount === "number" ? (
@@ -127,7 +127,7 @@ export function ValuePreviewStrip({
                 className="mt-1"
               />
             ) : (
-              <p className="mt-1 min-w-0 break-words text-xs font-bold leading-4">
+              <p className="min-w-0 break-words text-xs font-bold leading-4">
                 {item.value ?? "-"}
               </p>
             )}
