@@ -47,16 +47,16 @@ export function ProjectListCard({
         : "text-success";
 
   return (
-    <article className="group relative overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[24px]">
+    <article className="group relative overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl">
       <Link
         href={`/projects/${project.id}`}
-        className="focus-visible:ring-primary/30 block p-3.5 outline-none focus-visible:ring-2 focus-visible:ring-inset active:bg-black/[0.018]"
+        className="block p-3.5 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-inset active:bg-black/[0.018]"
         aria-label={`Buka project ${project.name}`}
       >
         <div className={`flex min-h-10 min-w-0 ${isAllowedToCreate && editable ? "pr-11" : ""}`}>
-          <span className="bg-surface-container-low/70 text-on-surface-variant/70 inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[8px] font-semibold ring-1 ring-black/2.5">
+          <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full bg-surface-container-low/70 px-2.5 text-[8px] font-semibold text-on-surface-variant/70 ring-1 ring-black/2.5">
             {projectStatusLabel(project.status)}
-            <span className="bg-outline-variant/55 h-2 w-px shrink-0" aria-hidden="true" />
+            <span className="h-2 w-px shrink-0 bg-outline-variant/55" aria-hidden="true" />
             <span className={`inline-flex min-w-0 items-center gap-1 font-bold ${healthClass}`}>
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" />
               <span className="truncate">{healthLabel}</span>
@@ -67,13 +67,13 @@ export function ProjectListCard({
         <div className="mt-1.5 flex items-start gap-3">
           <ProjectCover project={project} />
           <div className="min-w-0 flex-1">
-            <h2 className="text-on-surface line-clamp-2 text-[15px] leading-5 font-bold tracking-[-0.01em]">
+            <h2 className="line-clamp-2 text-[15px] leading-5 font-bold tracking-[-0.01em] text-on-surface">
               {project.name}
             </h2>
-            <p className="text-on-surface-variant mt-1 truncate text-[10px] leading-4">
+            <p className="mt-1 truncate text-[10px] leading-4 text-on-surface-variant">
               {project.clientName}
             </p>
-            <p className="text-on-surface-variant/65 truncate text-[9px] leading-4">
+            <p className="truncate text-[9px] leading-4 text-on-surface-variant/65">
               {project.location || "Lokasi belum diisi"}
             </p>
           </div>
@@ -82,7 +82,7 @@ export function ProjectListCard({
         <div className="mt-3 border-t border-black/5.5 pt-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-on-surface-variant/60 text-[9px] font-semibold">Nilai project</p>
+              <p className="text-[9px] font-semibold text-on-surface-variant/60">Nilai project</p>
               <MoneyValue
                 amount={project.totalContractValue}
                 variant="compactWithFull"
@@ -91,14 +91,14 @@ export function ProjectListCard({
               />
             </div>
             <div className="min-w-0 text-right">
-              <p className="text-on-surface-variant/60 text-[9px] font-semibold">Status budget</p>
-              <p className="text-on-surface mt-1 truncate text-[10px] font-bold">
+              <p className="text-[9px] font-semibold text-on-surface-variant/60">Status budget</p>
+              <p className="mt-1 truncate text-[10px] font-bold text-on-surface">
                 {budgetStatusLabel(project.budgetStatus)}
               </p>
             </div>
           </div>
 
-          <div className="bg-surface-container-low/65 mt-3 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5">
+          <div className="mt-3 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
             <ProjectMoneyMetric label="Aktual" amount={project.actualCost} />
             <ProjectMoneyMetric
               label={hasOverrun ? "Melebihi budget" : "Sisa budget"}
@@ -135,7 +135,7 @@ export function ProjectListCard({
               ) : null}
             </div>
           ) : (
-            <div className="text-on-surface-variant/70 mt-3 flex min-h-8 items-center justify-between gap-3 px-1 text-[9px] font-semibold">
+            <div className="mt-3 flex min-h-8 items-center justify-between gap-3 px-1 text-[9px] font-semibold text-on-surface-variant/70">
               <span className="inline-flex min-w-0 items-center gap-1.5">
                 <span
                   className={`material-symbols-outlined text-[15px] ${hasBudget ? "text-success" : "text-on-surface-variant/55"}`}
@@ -153,7 +153,7 @@ export function ProjectListCard({
             </div>
           )}
 
-          <div className="text-on-surface-variant/65 mt-1 flex min-h-10 items-center justify-between gap-3 px-1 text-[9px]">
+          <div className="mt-1 flex min-h-10 items-center justify-between gap-3 px-1 text-[9px] text-on-surface-variant/65">
             <span className="truncate">PM {project.pmName}</span>
             <span className="inline-flex h-8 shrink-0 items-center gap-0.5 rounded-full bg-[#007AFF]/8 px-3 text-[10px] font-semibold text-[#007AFF] group-active:bg-[#007AFF]/[0.14]">
               Buka project
@@ -169,7 +169,7 @@ export function ProjectListCard({
         <button
           type="button"
           onClick={() => onEdit(project)}
-          className="bg-surface-container-low/95 text-on-surface-variant focus-visible:ring-primary/30 active:bg-surface-container absolute top-3.5 right-3.5 flex h-10 w-10 items-center justify-center rounded-full shadow-[0_6px_16px_rgba(17,17,17,0.08)] outline-none after:absolute after:-inset-1 after:rounded-full focus-visible:ring-2"
+          className="absolute top-3.5 right-3.5 flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-low/95 text-on-surface-variant shadow-[0_6px_16px_rgba(17,17,17,0.08)] outline-none after:absolute after:-inset-1 after:rounded-full focus-visible:ring-2 focus-visible:ring-primary/30 active:bg-surface-container"
           aria-label={`Edit ${project.name}`}
         >
           <span className="material-symbols-outlined text-[19px]" aria-hidden="true">
@@ -188,14 +188,14 @@ function ProjectCover({ project }: { readonly project: ProjectItem }): React.JSX
       <img
         src={project.coverImageUrl}
         alt={`Cover ${project.name}`}
-        className="bg-surface-container h-[74px] w-[74px] shrink-0 rounded-[20px] object-cover ring-1 ring-black/4"
+        className="h-18.5 w-18.5 shrink-0 rounded-[20px] bg-surface-container object-cover ring-1 ring-black/4"
       />
     );
   }
 
   const initial = project.name.trim().charAt(0).toUpperCase() || "P";
   return (
-    <span className="flex h-[74px] w-[74px] shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-[#1b1c1e] text-white shadow-[0_8px_18px_rgba(17,17,17,0.12)]">
+    <span className="flex h-18.5 w-18.5 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-[#1b1c1e] text-white shadow-[0_8px_18px_rgba(17,17,17,0.12)]">
       <span className="font-mono text-[28px] leading-none font-black text-white/90">{initial}</span>
     </span>
   );
@@ -216,7 +216,7 @@ function ProjectMoneyMetric({
     <div
       className={`min-w-0 px-2.5 first:pl-0 last:pr-0 ${align === "right" ? "text-right" : "text-left"}`}
     >
-      <p className="text-on-surface-variant/60 truncate text-[9px] font-semibold">{label}</p>
+      <p className="truncate text-[9px] font-semibold text-on-surface-variant/60">{label}</p>
       <MoneyValue
         amount={amount}
         variant="compactWithFull"

@@ -47,12 +47,12 @@ export function RabRevisionHistoryPanel({
             type="button"
             onClick={() => openActivityDetail({ kind: "RAB_REVISION", id: revision.id })}
             key={revision.id}
-            className={`bg-surface-container-low focus-visible:ring-primary/25 min-h-12 w-full rounded-2xl p-3 text-left outline-none focus-visible:ring-2 ${
+            className={`min-h-12 w-full rounded-2xl bg-surface-container-low p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
               revision.status === "VOID" ? "opacity-65" : ""
             }`}
           >
             <div className="flex items-center gap-3">
-              <span className="text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold text-primary">
                 R{revision.revision}
               </span>
               <span className="min-w-0 flex-1">
@@ -62,7 +62,7 @@ export function RabRevisionHistoryPanel({
                     : formatBusinessLabel(revision.status)}
                 </span>
                 {revision.voidReason && (
-                  <span className="text-on-surface-variant block truncate text-[10px] leading-4">
+                  <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
                     {revision.voidReason}
                   </span>
                 )}
@@ -77,7 +77,7 @@ export function RabRevisionHistoryPanel({
         {changeOrders.map((order) => (
           <div
             key={order.id}
-            className="bg-primary/5 flex min-h-14 items-center gap-2 rounded-2xl p-2"
+            className="flex min-h-14 items-center gap-2 rounded-2xl bg-primary/5 p-2"
           >
             <button
               type="button"
@@ -88,7 +88,7 @@ export function RabRevisionHistoryPanel({
               <span className="min-w-0 flex-1 truncate text-xs font-bold">
                 Change Order R{order.baseRevision} ke R{order.revisedRevision}
               </span>
-              <span className="text-primary font-mono text-[10px] font-bold">
+              <span className="font-mono text-[10px] font-bold text-primary">
                 {Number(order.valueDelta) >= 0 ? "+" : ""}
                 {formatShortRp(Number(order.valueDelta))}
               </span>
@@ -98,7 +98,7 @@ export function RabRevisionHistoryPanel({
                 type="button"
                 disabled={pendingId === order.id}
                 onClick={() => void approve(order.id)}
-                className="bg-primary min-h-12 shrink-0 rounded-full px-4 text-[10px] font-bold text-white disabled:opacity-50"
+                className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-[10px] font-bold text-white disabled:opacity-50"
               >
                 {pendingId === order.id ? "Memproses" : "Setujui"}
               </button>

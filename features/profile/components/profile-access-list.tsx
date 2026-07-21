@@ -17,7 +17,7 @@ export function ProfileAccessList({
 
   return (
     <>
-      <div className="relative isolate overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[24px]">
+      <div className="relative isolate overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl">
         <div className="divide-y divide-black/5.5">
           {groups.map((group) => {
             const activeCount = group.activePermissionDescriptions.length;
@@ -28,7 +28,7 @@ export function ProfileAccessList({
                 key={group.key}
                 type="button"
                 onClick={() => setSelectedKey(group.key)}
-                className="active:bg-surface-container-low focus-visible:bg-surface-container-low focus-visible:ring-primary/25 flex min-h-[68px] w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                className="flex min-h-17 w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-inset active:bg-surface-container-low"
                 aria-label={`Tinjau akses ${group.title}`}
               >
                 <span
@@ -40,10 +40,10 @@ export function ProfileAccessList({
                   </span>
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="text-on-surface block truncate text-[13px] leading-4 font-bold">
+                  <span className="block truncate text-[13px] leading-4 font-bold text-on-surface">
                     {group.title}
                   </span>
-                  <span className="text-on-surface-variant mt-1 line-clamp-1 block text-[10px] leading-[1.3]">
+                  <span className="mt-1 line-clamp-1 block text-[10px] leading-[1.3] text-on-surface-variant">
                     {group.description}
                   </span>
                 </span>
@@ -53,12 +53,12 @@ export function ProfileAccessList({
                   >
                     {hasAccess ? "Tersedia" : "Tidak tersedia"}
                   </span>
-                  <span className="text-on-surface-variant mt-1 block font-mono text-[9px] font-bold tabular-nums">
+                  <span className="mt-1 block font-mono text-[9px] font-bold text-on-surface-variant tabular-nums">
                     {activeCount}/{group.permissions.length}
                   </span>
                 </span>
                 <span
-                  className="material-symbols-outlined text-on-surface-variant/50 shrink-0 text-[18px] leading-none"
+                  className="material-symbols-outlined shrink-0 text-[18px] leading-none text-on-surface-variant/50"
                   aria-hidden="true"
                 >
                   chevron_right
@@ -76,9 +76,9 @@ export function ProfileAccessList({
       >
         {selectedGroup ? (
           <div className="space-y-4">
-            <div className="bg-surface-container-low flex min-w-0 items-start gap-3 rounded-[22px] p-3.5">
+            <div className="flex min-w-0 items-start gap-3 rounded-[22px] bg-surface-container-low p-3.5">
               <span
-                className="text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white shadow-sm"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white text-primary shadow-sm"
                 aria-hidden="true"
               >
                 <span className="material-symbols-outlined text-[20px] leading-none">
@@ -86,12 +86,12 @@ export function ProfileAccessList({
                 </span>
               </span>
               <div className="min-w-0">
-                <p className="text-on-surface text-[13px] leading-4 font-bold">
+                <p className="text-[13px] leading-4 font-bold text-on-surface">
                   {selectedGroup.activePermissionDescriptions.length > 0
                     ? `${selectedGroup.activePermissionDescriptions.length} hak tersedia`
                     : "Belum tersedia untuk peran ini"}
                 </p>
-                <p className="text-on-surface-variant mt-1 text-[11px] leading-[1.4]">
+                <p className="mt-1 text-[11px] leading-[1.4] text-on-surface-variant">
                   {selectedGroup.activePermissionDescriptions.length > 0
                     ? `Akses mengikuti peran ${roleLabel}.`
                     : `Peran ${roleLabel} tidak memiliki akses aktif pada modul ini.`}
@@ -108,12 +108,12 @@ export function ProfileAccessList({
                       className="flex min-h-12 items-center gap-2.5 px-3.5 py-2.5"
                     >
                       <span
-                        className="material-symbols-outlined text-success shrink-0 text-[17px] leading-none"
+                        className="material-symbols-outlined shrink-0 text-[17px] leading-none text-success"
                         aria-hidden="true"
                       >
                         check_circle
                       </span>
-                      <span className="text-on-surface text-[11px] leading-[1.35] font-semibold">
+                      <span className="text-[11px] leading-[1.35] font-semibold text-on-surface">
                         {permission}
                       </span>
                     </div>

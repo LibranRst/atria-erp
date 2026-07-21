@@ -82,11 +82,11 @@ export function OnboardingFinanceReview({
     return (
       <section className="w-full space-y-5 px-1">
         <div className="rounded-[28px] bg-white px-5 py-8 text-center ring-1 ring-black/4">
-          <span className="material-symbols-outlined text-success text-[34px]" aria-hidden="true">
+          <span className="material-symbols-outlined text-[34px] text-success" aria-hidden="true">
             task_alt
           </span>
-          <h1 className="text-on-surface mt-3 text-xl font-bold">Semua setup sudah diperiksa</h1>
-          <p className="text-on-surface-variant mt-2 text-xs leading-5">
+          <h1 className="mt-3 text-xl font-bold text-on-surface">Semua setup sudah diperiksa</h1>
+          <p className="mt-2 text-xs leading-5 text-on-surface-variant">
             Tidak ada saldo awal onboarding yang menunggu keputusan.
           </p>
           {simulated ? (
@@ -94,7 +94,7 @@ export function OnboardingFinanceReview({
               type="button"
               disabled={pending}
               onClick={returnOwner}
-              className="bg-primary text-on-primary mt-5 min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-45"
+              className="mt-5 min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary disabled:opacity-45"
             >
               Kembali ke Owner
             </button>
@@ -102,7 +102,7 @@ export function OnboardingFinanceReview({
             <button
               type="button"
               onClick={() => router.replace("/ledger")}
-              className="bg-primary text-on-primary mt-5 min-h-12 w-full rounded-full px-5 text-xs font-bold"
+              className="mt-5 min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
             >
               Masuk Dashboard
             </button>
@@ -121,35 +121,35 @@ export function OnboardingFinanceReview({
         </div>
       ) : null}
       <header>
-        <p className="text-on-surface-variant text-[9px] font-bold tracking-[0.14em] uppercase">
+        <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
           Onboarding Review
         </p>
-        <h1 className="text-on-surface mt-1.5 text-[26px] font-bold tracking-[-0.035em]">
+        <h1 className="mt-1.5 text-[26px] font-bold tracking-[-0.035em] text-on-surface">
           Periksa saldo awal
         </h1>
-        <p className="text-on-surface-variant mt-2 text-[12px] leading-5">
+        <p className="mt-2 text-[12px] leading-5 text-on-surface-variant">
           Surface ini hanya memuat setup approval pending. Tidak ada editor budget, rekening, tim,
           atau margin Owner.
         </p>
       </header>
-      <div className="overflow-hidden rounded-[24px] bg-white ring-1 ring-black/4">
-        <div className="divide-outline-variant/20 divide-y">
+      <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-black/4">
+        <div className="divide-y divide-outline-variant/20">
           <div className="flex items-center justify-between gap-3 px-4 py-3.5">
-            <span className="text-on-surface-variant text-xs font-semibold">Batch</span>
-            <span className="text-on-surface text-xs font-bold">{active.batchNumber}</span>
+            <span className="text-xs font-semibold text-on-surface-variant">Batch</span>
+            <span className="text-xs font-bold text-on-surface">{active.batchNumber}</span>
           </div>
           <div className="flex items-center justify-between gap-3 px-4 py-3.5">
-            <span className="text-on-surface-variant text-xs font-semibold">Pengaju</span>
-            <span className="text-on-surface text-xs font-bold">{active.requestedByName}</span>
+            <span className="text-xs font-semibold text-on-surface-variant">Pengaju</span>
+            <span className="text-xs font-bold text-on-surface">{active.requestedByName}</span>
           </div>
           <div className="flex items-center justify-between gap-3 px-4 py-3.5">
-            <span className="text-on-surface-variant text-xs font-semibold">Dokumen sumber</span>
-            <span className="text-on-surface max-w-[55%] text-right text-xs font-bold">
+            <span className="text-xs font-semibold text-on-surface-variant">Dokumen sumber</span>
+            <span className="max-w-[55%] text-right text-xs font-bold text-on-surface">
               {active.referenceNumber ?? "Tidak dilampirkan"}
             </span>
           </div>
           <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3.5">
-            <span className="text-on-surface-variant shrink-0 text-xs font-semibold">Total</span>
+            <span className="shrink-0 text-xs font-semibold text-on-surface-variant">Total</span>
             <MoneyValue
               amount={active.totalValue}
               variant="fullDynamic"
@@ -161,9 +161,9 @@ export function OnboardingFinanceReview({
         </div>
       </div>
       <InventoryOpeningApprovalItems item={itemSource} />
-      <div className="rounded-[24px] bg-white p-4 ring-1 ring-black/4">
-        <p className="text-on-surface text-xs font-bold">Dampak jika disetujui</p>
-        <p className="text-on-surface-variant mt-1 text-[10px] leading-4">
+      <div className="rounded-3xl bg-white p-4 ring-1 ring-black/4">
+        <p className="text-xs font-bold text-on-surface">Dampak jika disetujui</p>
+        <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
           Mencatat pergerakan saldo awal stok, lalu mengisi stok fisik dan harga rata-rata. Kas,
           utang vendor, dan biaya aktual proyek tidak berubah.
         </p>
@@ -171,7 +171,7 @@ export function OnboardingFinanceReview({
       <div>
         <label
           htmlFor="onboarding-decision-reason"
-          className="text-on-surface px-1 text-xs font-bold"
+          className="px-1 text-xs font-bold text-on-surface"
         >
           Alasan keputusan
         </label>
@@ -190,7 +190,7 @@ export function OnboardingFinanceReview({
           type="button"
           disabled={pending || reason.trim().length < 10}
           onClick={() => decide("REJECT")}
-          className="text-error ring-error/15 min-h-12 rounded-full bg-white px-4 text-xs font-bold ring-1 disabled:opacity-40"
+          className="min-h-12 rounded-full bg-white px-4 text-xs font-bold text-error ring-1 ring-error/15 disabled:opacity-40"
         >
           Tolak
         </button>
@@ -198,7 +198,7 @@ export function OnboardingFinanceReview({
           type="button"
           disabled={pending || reason.trim().length < 10}
           onClick={() => decide("APPROVE")}
-          className="bg-primary text-on-primary min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-40"
+          className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
         >
           Setujui & posting
         </button>
@@ -208,7 +208,7 @@ export function OnboardingFinanceReview({
           type="button"
           disabled={pending}
           onClick={returnOwner}
-          className="text-on-surface-variant min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-40"
+          className="min-h-12 w-full rounded-full px-5 text-xs font-bold text-on-surface-variant disabled:opacity-40"
         >
           Kembali ke Owner tanpa keputusan
         </button>

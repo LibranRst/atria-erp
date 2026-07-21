@@ -88,28 +88,28 @@ export function ApprovalWorkbenchRow({
                 {item.priority === "NORMAL" ? approvalLabel : item.priorityReason}
               </span>
             </div>
-            <p className="text-on-surface mt-1 line-clamp-1 text-[12px] font-semibold">
+            <p className="mt-1 line-clamp-1 text-[12px] font-semibold text-on-surface">
               {item.description}
             </p>
-            <p className="text-on-surface-variant/75 mt-0.5 truncate text-[10px]">
+            <p className="mt-0.5 truncate text-[10px] text-on-surface-variant/75">
               {item.projectName}
             </p>
           </div>
           <span
-            className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
             aria-hidden="true"
           >
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           </span>
         </div>
-        <div className="text-on-surface-variant/70 mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold">
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
           <span className="max-w-full truncate">{counterpartyLabel}</span>
-          <span className="bg-outline-variant/60 h-1 w-1 rounded-full" aria-hidden="true" />
+          <span className="h-1 w-1 rounded-full bg-outline-variant/60" aria-hidden="true" />
           <span className="max-w-full truncate">{item.budgetItemName}</span>
           {item.receiptImageUrl ? (
             <>
-              <span className="bg-outline-variant/60 h-1 w-1 rounded-full" aria-hidden="true" />
-              <span className="text-primary inline-flex items-center gap-1">
+              <span className="h-1 w-1 rounded-full bg-outline-variant/60" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1 text-primary">
                 <span className="material-symbols-outlined text-[13px]">receipt_long</span>
                 Nota
               </span>
@@ -139,13 +139,13 @@ export function ApprovalBudgetContext({
       : "Masih dalam batas budget";
 
   return (
-    <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
+    <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
       <div className="flex items-center justify-between gap-3 px-4 py-3.5">
         <div className="min-w-0">
-          <p className="text-on-surface-variant/60 truncate text-[10px] font-extrabold tracking-wide uppercase">
+          <p className="truncate text-[10px] font-extrabold tracking-wide text-on-surface-variant/60 uppercase">
             Konteks budget
           </p>
-          <p className="text-on-surface mt-1 truncate text-xs font-bold">{item.budgetItemName}</p>
+          <p className="mt-1 truncate text-xs font-bold text-on-surface">{item.budgetItemName}</p>
         </div>
         <span
           className={`financial-amount shrink-0 font-mono text-xs font-black ${critical ? "text-error" : "text-on-surface"}`}
@@ -153,7 +153,7 @@ export function ApprovalBudgetContext({
           {impact.afterPercentage.toFixed(0)}%
         </span>
       </div>
-      <div className="border-outline-variant/20 bg-surface-container-low/55 text-on-surface-variant grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-t px-4 py-3.5 text-[10px] font-semibold">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-t border-outline-variant/20 bg-surface-container-low/55 px-4 py-3.5 text-[10px] font-semibold text-on-surface-variant">
         <div className="min-w-0">
           <span>Sekarang</span>
           <MoneyValue
@@ -167,7 +167,7 @@ export function ApprovalBudgetContext({
           </p>
         </div>
         <span
-          className="bg-surface-container-lowest text-on-surface-variant/55 ring-outline-variant/15 flex h-7 w-7 items-center justify-center rounded-full ring-1"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-on-surface-variant/55 ring-1 ring-outline-variant/15"
           aria-hidden="true"
         >
           <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
@@ -190,7 +190,7 @@ export function ApprovalBudgetContext({
         </div>
       </div>
       <div
-        className={`border-outline-variant/20 flex min-h-10 items-center justify-between gap-2 border-t px-4 py-2.5 text-[9px] font-bold ${critical ? "bg-error-container/15 text-error" : warning ? "bg-warning-light/55 text-warning" : "bg-primary/5 text-primary"}`}
+        className={`flex min-h-10 items-center justify-between gap-2 border-t border-outline-variant/20 px-4 py-2.5 text-[9px] font-bold ${critical ? "bg-error-container/15 text-error" : warning ? "bg-warning-light/55 text-warning" : "bg-primary/5 text-primary"}`}
       >
         <span className="inline-flex min-w-0 items-center gap-1.5">
           <span className="material-symbols-outlined shrink-0 text-[14px]" aria-hidden="true">
@@ -214,8 +214,8 @@ export function MiniSignal({
   readonly danger?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="border-outline-variant/45 min-w-0 border-l px-3 py-1 first:border-l-0">
-      <p className="text-on-surface-variant/60 truncate text-[8px] font-extrabold tracking-wide uppercase">
+    <div className="min-w-0 border-l border-outline-variant/45 px-3 py-1 first:border-l-0">
+      <p className="truncate text-[8px] font-extrabold tracking-wide text-on-surface-variant/60 uppercase">
         {label}
       </p>
       <p
@@ -233,7 +233,7 @@ export function DashboardTabEmpty({
   readonly children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <div className="text-on-surface-variant px-4 py-8 text-center text-xs leading-5">
+    <div className="px-4 py-8 text-center text-xs leading-5 text-on-surface-variant">
       {children}
     </div>
   );
@@ -269,7 +269,7 @@ export function ProjectRiskRow({
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-on-surface truncate text-[13px] leading-4 font-semibold tracking-[-0.01em]">
+                <p className="truncate text-[13px] leading-4 font-semibold tracking-[-0.01em] text-on-surface">
                   {project.projectName}
                 </p>
                 <span
@@ -278,21 +278,21 @@ export function ProjectRiskRow({
                   {projectHealthLabel(project.effectiveHealth)}
                 </span>
               </div>
-              <p className="text-on-surface-variant/75 mt-0.5 truncate text-[10px] leading-4">
+              <p className="mt-0.5 truncate text-[10px] leading-4 text-on-surface-variant/75">
                 {project.riskReason}
               </p>
             </div>
             <span
-              className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
               aria-hidden="true"
             >
               <span className="material-symbols-outlined text-[16px]">chevron_right</span>
             </span>
           </div>
 
-          <div className="bg-surface-container-low/70 mt-3 grid grid-cols-2 divide-x divide-black/6 rounded-[17px] px-3 py-2.5">
+          <div className="mt-3 grid grid-cols-2 divide-x divide-black/6 rounded-[17px] bg-surface-container-low/70 px-3 py-2.5">
             <div className="min-w-0 pr-3">
-              <p className="text-on-surface-variant/55 text-[8px] font-semibold tracking-[0.08em] uppercase">
+              <p className="text-[8px] font-semibold tracking-[0.08em] text-on-surface-variant/55 uppercase">
                 Aktual
               </p>
               <MoneyValue
@@ -303,7 +303,7 @@ export function ProjectRiskRow({
               />
             </div>
             <div className="min-w-0 pl-3 text-right">
-              <p className="text-on-surface-variant/55 text-[8px] font-semibold tracking-[0.08em] uppercase">
+              <p className="text-[8px] font-semibold tracking-[0.08em] text-on-surface-variant/55 uppercase">
                 Internal budget
               </p>
               <MoneyValue
@@ -349,7 +349,7 @@ export function ProjectRiskRow({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-on-surface truncate text-[13px] leading-4 font-semibold tracking-[-0.01em]">
+              <p className="truncate text-[13px] leading-4 font-semibold tracking-[-0.01em] text-on-surface">
                 {project.projectName}
               </p>
               <span
@@ -358,19 +358,19 @@ export function ProjectRiskRow({
                 {projectHealthLabel(project.effectiveHealth)}
               </span>
             </div>
-            <p className="text-on-surface-variant/75 mt-0.5 line-clamp-2 text-[10px] leading-4">
+            <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant/75">
               {project.riskReason}
             </p>
           </div>
           <span
-            className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
             aria-hidden="true"
           >
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           </span>
         </div>
         <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="text-on-surface-variant text-[10px] font-bold">
+          <span className="text-[10px] font-bold text-on-surface-variant">
             Budget terpakai {project.usedPercentage.toFixed(0)}%
           </span>
           <MoneyValue
@@ -387,7 +387,7 @@ export function ProjectRiskRow({
           danger={overBudget}
           tone={project.effectiveHealth === "CRITICAL" ? "critical" : "warning"}
         />
-        <div className="text-on-surface-variant mt-3 grid grid-cols-2 gap-3 text-[10px] font-semibold">
+        <div className="mt-3 grid grid-cols-2 gap-3 text-[10px] font-semibold text-on-surface-variant">
           <span>
             Aktual
             <MoneyValue
@@ -408,7 +408,7 @@ export function ProjectRiskRow({
             />
           </span>
         </div>
-        <div className="border-outline-variant/35 text-on-surface-variant mt-2 flex items-center justify-between border-t pt-2 text-[10px] font-semibold">
+        <div className="mt-2 flex items-center justify-between border-t border-outline-variant/35 pt-2 text-[10px] font-semibold text-on-surface-variant">
           <span>Margin target {project.targetMarginPercentage.toFixed(1)}%</span>
           <span
             className={
@@ -425,7 +425,7 @@ export function ProjectRiskRow({
             {project.riskyCategories.map((category) => (
               <span
                 key={category.code}
-                className="bg-warning-light text-warning rounded-full px-2.5 py-1 text-[9px] font-bold"
+                className="rounded-full bg-warning-light px-2.5 py-1 text-[9px] font-bold text-warning"
               >
                 {category.name} {category.usedPercentage.toFixed(0)}%
               </span>
@@ -457,20 +457,20 @@ export function CategoryUsageRow({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-on-surface truncate text-[13px] font-semibold">{category.name}</p>
+              <p className="truncate text-[13px] font-semibold text-on-surface">{category.name}</p>
               <span
                 className={`shrink-0 text-[9px] font-semibold ${danger ? "text-error" : category.status === "WATCH" ? "text-warning" : "text-success"}`}
               >
                 {categoryStatusLabel(category.status)}
               </span>
             </div>
-            <p className="text-on-surface-variant/75 mt-0.5 text-[10px] font-semibold">
+            <p className="mt-0.5 text-[10px] font-semibold text-on-surface-variant/75">
               Terpakai {category.usedPercentage.toFixed(0)}% dari alokasi
             </p>
           </div>
         </div>
         <div className="mt-2 flex items-center justify-between gap-3 pl-12">
-          <span className="text-on-surface-variant text-[10px] font-bold">Sisa budget</span>
+          <span className="text-[10px] font-bold text-on-surface-variant">Sisa budget</span>
           <MoneyValue
             amount={category.remainingAmount}
             variant="compactWithFull"
@@ -524,10 +524,10 @@ export function CashDueRow({
         className="grid grid-cols-[38px_minmax(0,1fr)] gap-3 rounded-[20px] px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 focus-visible:ring-inset active:bg-black/2.5 max-[430px]:px-3 max-[430px]:py-3"
       >
         <span className="relative flex flex-col items-start pt-0.5 text-left" aria-hidden="true">
-          <span className="text-on-surface font-mono text-[13px] leading-none font-black">
+          <span className="font-mono text-[13px] leading-none font-black text-on-surface">
             {dueDay}
           </span>
-          <span className="text-on-surface-variant mt-1 text-[8px] font-bold uppercase">
+          <span className="mt-1 text-[8px] font-bold text-on-surface-variant uppercase">
             {dueMonth}
           </span>
           <span
@@ -542,10 +542,10 @@ export function CashDueRow({
               >
                 {item.type === "payable" ? "Hutang vendor" : "Piutang klien"}
               </p>
-              <p className="text-on-surface mt-1.5 truncate text-sm font-semibold tracking-[-0.01em] max-[430px]:text-[13px]">
+              <p className="mt-1.5 truncate text-sm font-semibold tracking-[-0.01em] text-on-surface max-[430px]:text-[13px]">
                 {item.documentNumber}
               </p>
-              <p className="text-on-surface-variant mt-1 truncate text-[11px]">
+              <p className="mt-1 truncate text-[11px] text-on-surface-variant">
                 {item.projectName} • {item.counterpartyName}
               </p>
             </div>
@@ -563,7 +563,7 @@ export function CashDueRow({
                   {timing}
                 </span>
                 <span
-                  className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
                   aria-hidden="true"
                 >
                   <span className="material-symbols-outlined text-[16px] leading-none">
@@ -574,7 +574,7 @@ export function CashDueRow({
             </div>
           </div>
           {!compact ? (
-            <div className="text-on-surface-variant mt-2 flex items-center justify-between gap-3 text-[10px] font-semibold">
+            <div className="mt-2 flex items-center justify-between gap-3 text-[10px] font-semibold text-on-surface-variant">
               <span>Jatuh tempo {formatShortDate(item.dueDate)}</span>
               <span className="text-right">
                 Dibayar
@@ -653,31 +653,31 @@ export function MaterialIssueRow({
                   {label}
                 </p>
                 {quantityLabel ? (
-                  <span className="financial-amount text-on-surface shrink-0 font-mono text-[10px] font-bold">
+                  <span className="financial-amount shrink-0 font-mono text-[10px] font-bold text-on-surface">
                     Kurang {quantityLabel}
                   </span>
                 ) : null}
               </div>
-              <p className="text-on-surface mt-1 truncate text-[13px] font-semibold tracking-[-0.01em]">
+              <p className="mt-1 truncate text-[13px] font-semibold tracking-[-0.01em] text-on-surface">
                 {item.materialName}
               </p>
-              <p className="text-on-surface-variant/75 mt-0.5 truncate text-[10px]">
+              <p className="mt-0.5 truncate text-[10px] text-on-surface-variant/75">
                 {item.description}
               </p>
             </div>
           </div>
 
-          <div className="bg-surface-container-low/70 text-on-surface-variant mt-3 flex min-h-9 items-center gap-3 rounded-[15px] px-3 py-2 text-[9px] font-semibold">
+          <div className="mt-3 flex min-h-9 items-center gap-3 rounded-[15px] bg-surface-container-low/70 px-3 py-2 text-[9px] font-semibold text-on-surface-variant">
             <span className="min-w-0 flex-1 truncate">
               Tersedia{" "}
-              <strong className="text-on-surface font-mono">
+              <strong className="font-mono text-on-surface">
                 {item.availableStock.toLocaleString("id-ID")} {item.unit}
               </strong>
             </span>
             {fulfillmentTarget !== null ? (
               <span className="shrink-0">
                 Dibutuhkan{" "}
-                <strong className="text-on-surface font-mono">
+                <strong className="font-mono text-on-surface">
                   {fulfillmentTarget.toLocaleString("id-ID")} {item.unit}
                 </strong>
               </span>
@@ -727,26 +727,26 @@ export function MaterialIssueRow({
                 {label}
               </p>
               {quantityLabel ? (
-                <span className="financial-amount text-on-surface shrink-0 font-mono text-[10px] font-bold">
+                <span className="financial-amount shrink-0 font-mono text-[10px] font-bold text-on-surface">
                   {quantityLabel}
                 </span>
               ) : null}
             </div>
-            <p className="text-on-surface mt-1 truncate text-[13px] font-semibold tracking-[-0.01em]">
+            <p className="mt-1 truncate text-[13px] font-semibold tracking-[-0.01em] text-on-surface">
               {item.materialName}
             </p>
-            <p className="text-on-surface-variant/75 mt-0.5 line-clamp-2 text-[10px] leading-4">
+            <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant/75">
               {item.description}
             </p>
           </div>
           <span
-            className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
             aria-hidden="true"
           >
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           </span>
         </div>
-        <div className="text-on-surface-variant/70 mt-2 flex items-center justify-between gap-3 pl-12 text-[9px] font-semibold">
+        <div className="mt-2 flex items-center justify-between gap-3 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
           <span className="truncate">{item.projectName ?? item.locationName ?? "-"}</span>
           <span className="shrink-0">
             {item.type === "RAP_SHORTAGE"

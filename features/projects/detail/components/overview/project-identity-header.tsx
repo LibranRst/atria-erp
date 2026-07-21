@@ -52,8 +52,8 @@ export function ProjectIdentityHeader({
 
   return (
     <>
-      <section className="bg-primary overflow-hidden rounded-[28px] shadow-[0_16px_38px_rgba(17,17,17,0.11)] ring-1 ring-black/4">
-        <div className="bg-primary relative aspect-square overflow-hidden">
+      <section className="overflow-hidden rounded-[28px] bg-primary shadow-[0_16px_38px_rgba(17,17,17,0.11)] ring-1 ring-black/4">
+        <div className="relative aspect-square overflow-hidden bg-primary">
           {showCover && project.coverImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -98,7 +98,7 @@ export function ProjectIdentityHeader({
                 />
               </div>
             </div>
-            <h1 className="mt-2 line-clamp-2 max-w-[95%] text-[21px] leading-[26px] font-bold tracking-tight text-white">
+            <h1 className="mt-2 line-clamp-2 max-w-[95%] text-[21px] leading-6.5 font-bold tracking-tight text-white">
               {project.name}
             </h1>
             <p className="mt-2 flex min-w-0 items-center gap-1.5 truncate text-[10px] font-medium text-white/65">
@@ -113,7 +113,7 @@ export function ProjectIdentityHeader({
         </div>
       </section>
       <BottomSheet open={detailOpen} title="Detail Proyek" onClose={() => setDetailOpen(false)}>
-        <div className="ring-outline-variant/15 overflow-hidden rounded-[22px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
+        <div className="overflow-hidden rounded-[22px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
           <DetailRow
             label="Klien"
             value={project.client?.name ?? "Belum diisi"}
@@ -196,8 +196,8 @@ function HeroStatusPill({
 
 function ProjectCoverFallback({ initial }: { readonly initial: string }): React.JSX.Element {
   return (
-    <div className="bg-primary text-on-primary relative flex h-full w-full items-center justify-center overflow-hidden">
-      <span className="relative flex h-20 w-20 -translate-y-5 items-center justify-center rounded-[24px] bg-white/10 text-[32px] leading-none font-semibold text-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.16)] ring-1 ring-white/12">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-primary text-on-primary">
+      <span className="relative flex h-20 w-20 -translate-y-5 items-center justify-center rounded-3xl bg-white/10 text-[32px] leading-none font-semibold text-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.16)] ring-1 ring-white/12">
         {initial}
       </span>
     </div>

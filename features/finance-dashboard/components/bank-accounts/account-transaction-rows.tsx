@@ -35,7 +35,7 @@ export function AccountTransactionRows({
           type="button"
           onClick={() => openActivityDetail({ kind: "CASH_TRANSACTION", id: transaction.id })}
           key={transaction.id}
-          className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 flex min-h-[58px] w-full items-center gap-3 px-4 py-3 text-left outline-none"
+          className="flex min-h-14.5 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
         >
           <span
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
@@ -45,10 +45,10 @@ export function AccountTransactionRows({
             {transactionIcon(transaction)}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="text-on-surface block truncate text-xs font-bold">
+            <span className="block truncate text-xs font-bold text-on-surface">
               {transaction.description}
             </span>
-            <span className="text-on-surface-variant mt-0.5 block truncate text-[10px]">
+            <span className="mt-0.5 block truncate text-[10px] text-on-surface-variant">
               {formatBusinessLabel(transaction.category, "FINANCE")} •{" "}
               {transaction.createdAt.toLocaleDateString("id-ID")}
             </span>

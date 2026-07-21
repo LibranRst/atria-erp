@@ -32,8 +32,8 @@ function OpeningDetailRow({
 }): React.JSX.Element {
   return (
     <div className="flex min-w-0 items-start justify-between gap-4 px-4 py-3.5 text-xs">
-      <span className="text-on-surface-variant shrink-0 leading-5 font-medium">{label}</span>
-      <strong className="text-on-surface min-w-0 flex-1 text-right leading-5 font-bold wrap-anywhere wrap-break-word">
+      <span className="shrink-0 leading-5 font-medium text-on-surface-variant">{label}</span>
+      <strong className="min-w-0 flex-1 text-right leading-5 font-bold wrap-anywhere wrap-break-word text-on-surface">
         {children}
       </strong>
     </div>
@@ -64,7 +64,6 @@ export function InitialStockSetupPanel({
     React.useState<InventoryOpeningBatchView | null>(null);
   const [simulationPending, startSimulationTransition] = React.useTransition();
   const eligible = candidates.filter((row) => row.eligible).length;
-  const pending = batches.filter((batch) => batch.status === "PENDING_APPROVAL").length;
   const financeTarget = simulation?.onboardingReviewTargets?.[0];
 
   function confirmFinanceSimulation(): void {
@@ -95,24 +94,24 @@ export function InitialStockSetupPanel({
           <button
             type="button"
             onClick={onNoLegacyStock}
-            className="active:bg-surface-container-low focus-visible:bg-surface-container-low flex min-h-[66px] w-full items-center gap-3 px-4 py-3 text-left outline-none"
+            className="flex min-h-16.5 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
           >
             <span
-              className="material-symbols-outlined bg-success/9 text-success flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] text-[18px]"
+              className="material-symbols-outlined flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-success/9 text-[18px] text-success"
               aria-hidden="true"
             >
               check
             </span>
             <span className="min-w-0 flex-1">
-              <span className="text-on-surface block text-[12px] leading-5 font-bold">
+              <span className="block text-[12px] leading-5 font-bold text-on-surface">
                 Tidak ada stok lama
               </span>
-              <span className="text-on-surface-variant block text-[9px] leading-4">
+              <span className="block text-[9px] leading-4 text-on-surface-variant">
                 Mulai inventory dari nol.
               </span>
             </span>
             <span
-              className="material-symbols-outlined text-on-surface-variant/55 text-[17px]"
+              className="material-symbols-outlined text-[17px] text-on-surface-variant/55"
               aria-hidden="true"
             >
               chevron_right
@@ -122,7 +121,7 @@ export function InitialStockSetupPanel({
             type="button"
             disabled={eligible === 0}
             onClick={() => setComposerOpen(true)}
-            className="active:bg-surface-container-low focus-visible:bg-surface-container-low flex min-h-[66px] w-full items-center gap-3 px-4 py-3 text-left outline-none disabled:opacity-40"
+            className="flex min-h-16.5 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low disabled:opacity-40"
           >
             <span
               className="material-symbols-outlined flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-[#007AFF]/8 text-[18px] text-[#007AFF]"
@@ -131,15 +130,15 @@ export function InitialStockSetupPanel({
               inventory
             </span>
             <span className="min-w-0 flex-1">
-              <span className="text-on-surface block text-[12px] leading-5 font-bold">
+              <span className="block text-[12px] leading-5 font-bold text-on-surface">
                 Ada stok lama
               </span>
-              <span className="text-on-surface-variant block text-[9px] leading-4">
+              <span className="block text-[9px] leading-4 text-on-surface-variant">
                 Catat manual atau import CSV.
               </span>
             </span>
             <span
-              className="material-symbols-outlined text-on-surface-variant/55 text-[17px]"
+              className="material-symbols-outlined text-[17px] text-on-surface-variant/55"
               aria-hidden="true"
             >
               chevron_right
@@ -148,24 +147,24 @@ export function InitialStockSetupPanel({
           <button
             type="button"
             onClick={onSkip}
-            className="active:bg-surface-container-low focus-visible:bg-surface-container-low flex min-h-[66px] w-full items-center gap-3 px-4 py-3 text-left outline-none"
+            className="flex min-h-16.5 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
           >
             <span
-              className="material-symbols-outlined bg-surface-container-low text-on-surface-variant flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] text-[18px]"
+              className="material-symbols-outlined flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
               aria-hidden="true"
             >
               schedule
             </span>
             <span className="min-w-0 flex-1">
-              <span className="text-on-surface block text-[12px] leading-5 font-bold">
+              <span className="block text-[12px] leading-5 font-bold text-on-surface">
                 Isi nanti
               </span>
-              <span className="text-on-surface-variant block text-[9px] leading-4">
+              <span className="block text-[9px] leading-4 text-on-surface-variant">
                 Tetap tercatat sebagai gap setup.
               </span>
             </span>
             <span
-              className="material-symbols-outlined text-on-surface-variant/55 text-[17px]"
+              className="material-symbols-outlined text-[17px] text-on-surface-variant/55"
               aria-hidden="true"
             >
               chevron_right
@@ -181,19 +180,19 @@ export function InitialStockSetupPanel({
                 <button
                   type="button"
                   onClick={() => setDetailBatch(batch)}
-                  className="flex min-h-[52px] w-full items-center gap-3 text-left"
+                  className="flex min-h-13 w-full items-center gap-3 text-left"
                 >
                   <span
-                    className="material-symbols-outlined bg-surface-container-low text-on-surface-variant flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] text-[18px]"
+                    className="material-symbols-outlined flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
                     aria-hidden="true"
                   >
                     inventory
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="text-on-surface block truncate text-[11px] leading-5 font-bold">
+                    <span className="block truncate text-[11px] leading-5 font-bold text-on-surface">
                       {batch.batchNumber}
                     </span>
-                    <span className="text-on-surface-variant block text-[9px] leading-4">
+                    <span className="block text-[9px] leading-4 text-on-surface-variant">
                       {batch.itemCount} item · {batchStatus(batch.status)}
                     </span>
                   </span>
@@ -204,7 +203,7 @@ export function InitialStockSetupPanel({
                     align="right"
                   />
                   <span
-                    className="material-symbols-outlined text-on-surface-variant text-[18px]"
+                    className="material-symbols-outlined text-[18px] text-on-surface-variant"
                     aria-hidden="true"
                   >
                     chevron_right
@@ -261,8 +260,8 @@ export function InitialStockSetupPanel({
       >
         {detailBatch ? (
           <div className="space-y-4 pb-2">
-            <div className="overflow-hidden rounded-[24px] bg-white">
-              <div className="divide-outline-variant/20 divide-y">
+            <div className="overflow-hidden rounded-3xl bg-white">
+              <div className="divide-y divide-outline-variant/20">
                 <OpeningDetailRow label="Status">
                   {batchStatus(detailBatch.status)}
                 </OpeningDetailRow>
@@ -280,10 +279,10 @@ export function InitialStockSetupPanel({
               </div>
             </div>
             {detailBatch.items.map((item) => (
-              <div key={item.id} className="rounded-[24px] bg-white px-4 py-3.5">
+              <div key={item.id} className="rounded-3xl bg-white px-4 py-3.5">
                 <p className="text-xs font-bold">{item.materialName}</p>
-                <p className="text-on-surface-variant mt-0.5 text-[10px]">{item.locationName}</p>
-                <div className="border-outline-variant/20 mt-3 grid grid-cols-2 gap-3 border-t pt-3 text-[10px]">
+                <p className="mt-0.5 text-[10px] text-on-surface-variant">{item.locationName}</p>
+                <div className="mt-3 grid grid-cols-2 gap-3 border-t border-outline-variant/20 pt-3 text-[10px]">
                   <span>
                     Jumlah fisik
                     <br />
@@ -328,23 +327,23 @@ export function InitialStockSetupPanel({
         onConfirm={confirmFinanceSimulation}
       >
         {financeTarget && simulationConfirmationBatch ? (
-          <div className="divide-outline-variant/20 divide-y text-left">
+          <div className="divide-y divide-outline-variant/20 text-left">
             <div className="py-2 first:pt-0">
-              <p className="text-on-surface-variant text-[9px] font-bold tracking-[0.12em] uppercase">
+              <p className="text-[9px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
                 Akun efektif
               </p>
-              <p className="text-on-surface mt-1 text-xs leading-4 font-bold">
+              <p className="mt-1 text-xs leading-4 font-bold text-on-surface">
                 {financeTarget.name} · Finance Admin
               </p>
-              <p className="text-on-surface-variant mt-0.5 truncate text-[10px] leading-4">
+              <p className="mt-0.5 truncate text-[10px] leading-4 text-on-surface-variant">
                 {financeTarget.email}
               </p>
             </div>
             <div className="py-2.5 last:pb-0">
-              <p className="text-on-surface-variant text-[9px] font-bold tracking-[0.12em] uppercase">
+              <p className="text-[9px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
                 Konsekuensi audit
               </p>
-              <p className="text-on-surface-variant mt-1 text-[10px] leading-4">
+              <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
                 Keputusan untuk batch {simulationConfirmationBatch.batchNumber} tercatat atas
                 identitas Finance ini. Anda dapat kembali ke Owner tanpa membuat keputusan.
               </p>

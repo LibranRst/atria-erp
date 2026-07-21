@@ -67,7 +67,7 @@ export function VendorBillCard({
         }
       }}
       aria-label={`Lihat detail tagihan ${bill.billNumber}`}
-      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 min-h-[92px] px-3 py-3.5 text-left transition-colors outline-none hover:bg-black/1.5 max-[430px]:px-2.5"
+      className="min-h-23 px-3 py-3.5 text-left transition-colors outline-none hover:bg-black/1.5 focus-visible:bg-surface-container-low active:bg-surface-container-low/70 max-[430px]:px-2.5"
     >
       <div className="flex items-start gap-3">
         <span
@@ -89,7 +89,7 @@ export function VendorBillCard({
             <span className={`truncate text-[9px] leading-3 font-bold ${statusTone}`}>
               {vendorBillStatusLabel(statusMapping)}
             </span>
-            <span className="text-on-surface-variant/60 shrink-0 text-[9px] leading-3 font-semibold">
+            <span className="shrink-0 text-[9px] leading-3 font-semibold text-on-surface-variant/60">
               Jatuh tempo{" "}
               {new Date(bill.dueDate).toLocaleDateString("id-ID", {
                 day: "numeric",
@@ -98,7 +98,7 @@ export function VendorBillCard({
             </span>
           </div>
           <div className="mt-1 flex min-w-0 items-start justify-between gap-3">
-            <h3 className="text-on-surface min-w-0 flex-1 truncate text-[13px] leading-4 font-bold tracking-[-0.01em]">
+            <h3 className="min-w-0 flex-1 truncate text-[13px] leading-4 font-bold tracking-[-0.01em] text-on-surface">
               {bill.vendor?.name || "Vendor"}
             </h3>
             <MoneyValue
@@ -109,11 +109,11 @@ export function VendorBillCard({
               className={`shrink-0 ${bill.status === "PAID" ? "text-on-surface-variant/65" : "text-on-surface"}`}
             />
           </div>
-          <p className="text-on-surface-variant/75 mt-1 truncate text-[10px] leading-4 font-medium">
+          <p className="mt-1 truncate text-[10px] leading-4 font-medium text-on-surface-variant/75">
             {bill.project?.name || "Proyek"} · {bill.billNumber}
           </p>
           {bill.budgetItem?.name ? (
-            <p className="text-on-surface-variant/55 mt-0.5 truncate text-[9px] leading-3 font-medium">
+            <p className="mt-0.5 truncate text-[9px] leading-3 font-medium text-on-surface-variant/55">
               Budget {bill.budgetItem.name}
             </p>
           ) : null}
@@ -123,20 +123,20 @@ export function VendorBillCard({
 
       {totalScheduledOrPaid > 0 && bill.status !== "PAID" && !isFullyScheduledOrPaid && (
         <div className="mt-2.5 pr-8 pl-12">
-          <div className="text-primary flex items-center justify-between gap-3 text-[9px] leading-3 font-bold">
+          <div className="flex items-center justify-between gap-3 text-[9px] leading-3 font-bold text-primary">
             <span>Sudah dijadwalkan</span>
             <span className="shrink-0 tabular-nums">{scheduledPercentage.toFixed(0)}%</span>
           </div>
-          <div className="bg-primary/10 mt-1.5 h-1.5 w-full overflow-hidden rounded-full">
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-primary/10">
             <motion.div
               initial={false}
               animate={reduceMotion ? undefined : { width: `${scheduledPercentage}%` }}
               style={reduceMotion ? { width: `${scheduledPercentage}%` } : undefined}
               transition={transitionSpringSmooth}
-              className="bg-primary h-full rounded-full"
+              className="h-full rounded-full bg-primary"
             />
           </div>
-          <p className="text-on-surface-variant/55 mt-1 truncate text-[9px] leading-3 font-medium">
+          <p className="mt-1 truncate text-[9px] leading-3 font-medium text-on-surface-variant/55">
             Rp {totalScheduledOrPaid.toLocaleString("id-ID")} dari Rp{" "}
             {amountNum.toLocaleString("id-ID")}
           </p>
@@ -149,7 +149,7 @@ export function VendorBillCard({
           {isOwnerOrFinance ? (
             isFullyScheduledOrPaid ? (
               hasPending ? (
-                <span className="text-warning flex items-center gap-1 text-[9px] leading-3 font-bold">
+                <span className="flex items-center gap-1 text-[9px] leading-3 font-bold text-warning">
                   <span
                     className="material-symbols-outlined text-[13px] leading-none"
                     aria-hidden="true"
@@ -159,7 +159,7 @@ export function VendorBillCard({
                   Menunggu pencairan
                 </span>
               ) : (
-                <span className="text-primary flex items-center gap-1 text-[9px] leading-3 font-bold">
+                <span className="flex items-center gap-1 text-[9px] leading-3 font-bold text-primary">
                   <span
                     className="material-symbols-outlined text-[13px] leading-none"
                     aria-hidden="true"
@@ -178,13 +178,13 @@ export function VendorBillCard({
                 }}
                 whileTap={reduceMotion ? undefined : payablePressScale}
                 transition={transitionSpringSnappy}
-                className="bg-primary text-on-primary focus-visible:ring-primary/30 relative h-8 shrink-0 rounded-full px-3 text-[10px] leading-4 font-bold outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2"
+                className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30"
               >
                 {totalScheduledOrPaid > 0 ? "Jadwalkan Sisa" : "Jadwalkan Bayar"}
               </motion.button>
             )
           ) : (
-            <span className="text-primary text-[9px] leading-3 font-bold">Terjadwal penuh</span>
+            <span className="text-[9px] leading-3 font-bold text-primary">Terjadwal penuh</span>
           )}
         </div>
       ) : null}
@@ -230,7 +230,7 @@ export function VendorPaymentCard({
         }
       }}
       aria-label={`Lihat detail pembayaran ${payment.vendorBill?.billNumber ?? "vendor"}`}
-      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 min-h-[88px] px-3 py-3.5 text-left transition-colors outline-none hover:bg-black/1.5 max-[430px]:px-2.5"
+      className="min-h-22 px-3 py-3.5 text-left transition-colors outline-none hover:bg-black/1.5 focus-visible:bg-surface-container-low active:bg-surface-container-low/70 max-[430px]:px-2.5"
     >
       <div className="flex items-start gap-3">
         <span
@@ -258,7 +258,7 @@ export function VendorPaymentCard({
             <span className={`truncate text-[9px] leading-3 font-bold ${statusTone}`}>
               {presentation.label}
             </span>
-            <span className="text-on-surface-variant/60 shrink-0 text-[9px] leading-3 font-semibold">
+            <span className="shrink-0 text-[9px] leading-3 font-semibold text-on-surface-variant/60">
               {isCompleted ? "Dicairkan" : "Rencana"}{" "}
               {new Date(payment.paymentDate).toLocaleDateString("id-ID", {
                 day: "numeric",
@@ -267,7 +267,7 @@ export function VendorPaymentCard({
             </span>
           </div>
           <div className="mt-1 flex min-w-0 items-start justify-between gap-3">
-            <h4 className="text-on-surface min-w-0 flex-1 truncate text-[13px] leading-4 font-bold tracking-[-0.01em]">
+            <h4 className="min-w-0 flex-1 truncate text-[13px] leading-4 font-bold tracking-[-0.01em] text-on-surface">
               {payment.vendorBill?.vendor?.name || "Vendor"}
             </h4>
             <MoneyValue
@@ -278,11 +278,11 @@ export function VendorPaymentCard({
               className={`shrink-0 ${isCompleted ? "text-on-surface-variant/65" : "text-on-surface"}`}
             />
           </div>
-          <p className="text-on-surface-variant/75 mt-1 truncate text-[10px] leading-4 font-medium">
+          <p className="mt-1 truncate text-[10px] leading-4 font-medium text-on-surface-variant/75">
             {payment.vendorBill?.project?.name || "Proyek"} · {payment.vendorBill?.billNumber}
           </p>
           {payment.bankAccount?.name || payment.referenceNumber ? (
-            <p className="text-on-surface-variant/55 mt-0.5 truncate text-[9px] leading-3 font-medium">
+            <p className="mt-0.5 truncate text-[9px] leading-3 font-medium text-on-surface-variant/55">
               {payment.bankAccount?.name ?? "Rekening"}
               {payment.referenceNumber ? ` · Ref ${payment.referenceNumber}` : ""}
             </p>
@@ -308,12 +308,12 @@ export function VendorPaymentCard({
               }}
               whileTap={reduceMotion ? undefined : payablePressScale}
               transition={transitionSpringSnappy}
-              className="bg-primary text-on-primary focus-visible:ring-primary/30 relative h-8 shrink-0 rounded-full px-3 text-[10px] leading-4 font-bold outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2"
+              className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30"
             >
               Cairkan
             </motion.button>
           ) : (
-            <span className="text-primary flex items-center gap-1 text-[9px] leading-3 font-bold">
+            <span className="flex items-center gap-1 text-[9px] leading-3 font-bold text-primary">
               <span
                 className="material-symbols-outlined text-[13px] leading-none"
                 aria-hidden="true"

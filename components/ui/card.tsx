@@ -14,7 +14,7 @@ type CardProps = ComponentPropsWithoutRef<"div"> & {
 export function Card({ className, variant = "surface", ...props }: CardProps): React.JSX.Element {
   return (
     <div
-      className={`border-border rounded-2xl border p-4 shadow-[0_4px_12px_rgba(0,0,0,0.15)] ${cardVariants[variant]} ${className ?? ""}`}
+      className={`rounded-2xl border border-border p-4 shadow-[0_4px_12px_rgba(0,0,0,0.15)] ${cardVariants[variant]} ${className ?? ""}`}
       {...props}
     />
   );
@@ -33,7 +33,7 @@ export function CardTitle({
 }: ComponentPropsWithoutRef<"h2">): React.JSX.Element {
   return (
     <h2
-      className={`text-text-primary text-lg font-semibold tracking-tight ${className ?? ""}`}
+      className={`text-lg font-semibold tracking-tight text-text-primary ${className ?? ""}`}
       {...props}
     />
   );
@@ -43,14 +43,14 @@ export function CardDescription({
   className,
   ...props
 }: ComponentPropsWithoutRef<"p">): React.JSX.Element {
-  return <p className={`text-secondary text-sm ${className ?? ""}`} {...props} />;
+  return <p className={`text-sm text-secondary ${className ?? ""}`} {...props} />;
 }
 
 export function CardContent({
   className,
   ...props
 }: ComponentPropsWithoutRef<"div">): React.JSX.Element {
-  return <div className={`text-text-primary text-sm ${className ?? ""}`} {...props} />;
+  return <div className={`text-sm text-text-primary ${className ?? ""}`} {...props} />;
 }
 
 export function CardFooter({
@@ -59,7 +59,7 @@ export function CardFooter({
 }: ComponentPropsWithoutRef<"div">): React.JSX.Element {
   return (
     <div
-      className={`border-border text-muted mt-4 flex items-center gap-2 border-t pt-4 text-sm ${className ?? ""}`}
+      className={`mt-4 flex items-center gap-2 border-t border-border pt-4 text-sm text-muted ${className ?? ""}`}
       {...props}
     />
   );

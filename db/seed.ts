@@ -67,6 +67,7 @@ import {
   calculateUsedPercentage,
   getBudgetCategoryStatus,
 } from "@/lib/budget/excel-budget";
+import { OWNER_ONBOARDING_CONFIG_KEY } from "@/lib/onboarding/owner-onboarding";
 
 async function main(): Promise<void> {
   console.log("Starting clean sandbox database seeding...");
@@ -515,6 +516,101 @@ async function main(): Promise<void> {
       },
     ]);
 
+    // 4B. Seed Inventory Opening Batch (so that onboarding is complete & stock history is valid)
+    console.log("Seeding inventory opening batch...");
+    await tx.insert(inventoryOpeningBatch).values({
+      id: "95959595-9595-9595-9595-959595959501",
+      batchNumber: "OPB-2026-06-0001",
+      cutoverDate: new Date("2026-06-01T00:00:00Z"),
+      status: "POSTED",
+      note: "Saldo awal cutover Go-Live Atria ERP Dekoria.",
+      requestedById: "11111111-1111-1111-1111-111111111111", // Ronald
+      approvedById: "11111111-1111-1111-1111-111111111111",
+      approvedAt: new Date("2026-06-01T08:00:00Z"),
+      postedAt: new Date("2026-06-01T08:00:00Z"),
+    });
+
+    const stockItems = [
+      {
+        invId: "15151515-1515-1515-1515-151515151501",
+        matId: "13131313-1313-1313-1313-131313131301",
+        qty: "35.00",
+        cost: "245000.00",
+      },
+      {
+        invId: "15151515-1515-1515-1515-151515151502",
+        matId: "13131313-1313-1313-1313-131313131302",
+        qty: "12.00",
+        cost: "190000.00",
+      },
+      {
+        invId: "15151515-1515-1515-1515-151515151503",
+        matId: "13131313-1313-1313-1313-131313131303",
+        qty: "4.00",
+        cost: "1950000.00",
+      },
+      {
+        invId: "15151515-1515-1515-1515-151515151504",
+        matId: "13131313-1313-1313-1313-131313131304",
+        qty: "18.00",
+        cost: "180000.00",
+      },
+      {
+        invId: "15151515-1515-1515-1515-151515151505",
+        matId: "13131313-1313-1313-1313-131313131305",
+        qty: "24.00",
+        cost: "725000.00",
+      },
+      {
+        invId: "15151515-1515-1515-1515-151515151506",
+        matId: "13131313-1313-1313-1313-131313131306",
+        qty: "3.00",
+        cost: "3800000.00",
+      },
+      {
+        invId: "15151515-1515-1515-1515-151515151507",
+        matId: "13131313-1313-1313-1313-131313131307",
+        qty: "35.00",
+        cost: "210000.00",
+      },
+      {
+        invId: "15151515-1515-1515-1515-151515151508",
+        matId: "13131313-1313-1313-1313-131313131308",
+        qty: "8.00",
+        cost: "475000.00",
+      },
+    ];
+
+    for (let i = 0; i < stockItems.length; i++) {
+      const item = stockItems[i];
+      const moveId = `85858585-8585-8585-8585-85858585850${i + 1}`;
+      const itemId = `75757575-7575-7575-7575-75757575750${i + 1}`;
+
+      await tx.insert(stockMovement).values({
+        id: moveId,
+        materialId: item.matId,
+        inventoryLocationId: "14141414-1414-1414-1414-141414141401",
+        movementType: "OPENING_BALANCE",
+        movementDirection: "IN",
+        referenceType: "inventory_opening_batch",
+        referenceId: "95959595-9595-9595-9595-959595959501",
+        quantity: item.qty,
+        unitCost: item.cost,
+        createdById: "11111111-1111-1111-1111-111111111111",
+        createdAt: new Date("2026-06-01T08:00:00Z"),
+      });
+
+      await tx.insert(inventoryOpeningItem).values({
+        id: itemId,
+        batchId: "95959595-9595-9595-9595-959595959501",
+        materialInventoryId: item.invId,
+        quantity: item.qty,
+        unitCost: item.cost,
+        stockMovementId: moveId,
+        createdAt: new Date("2026-06-01T08:00:00Z"),
+      });
+    }
+
     // 5. Seed Bank Accounts
     console.log("Seeding bank accounts...");
     await tx.insert(bankAccount).values([
@@ -576,6 +672,30 @@ async function main(): Promise<void> {
     );
 
     console.log("Seeding Settings defaults...");
+    await tx.insert(appConfig).values({
+      key: OWNER_ONBOARDING_CONFIG_KEY,
+      value: JSON.stringify({
+        version: 1,
+        status: "COMPLETED",
+        currentStep: "summary",
+        reviewedSteps: [
+          "welcome",
+          "financial_defaults",
+          "team_vendors",
+          "bank_accounts",
+          "material_foundation",
+          "item_library",
+          "initial_stock",
+          "summary",
+        ],
+        skippedSteps: [],
+        completedAt: "2026-06-01T08:00:00Z",
+        initialStockDecision: "HAS_LEGACY_STOCK",
+      }),
+      description: "Progress onboarding Owner untuk fondasi operasional Atria.",
+      updatedById: "11111111-1111-1111-1111-111111111111",
+    });
+
     await tx.insert(budgetAllocationSetting).values({
       id: "41414141-4141-4141-4141-414141414101",
       name: "Default Project Budget Allocation",

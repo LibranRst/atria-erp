@@ -9,7 +9,11 @@
     "start": "next start",
     "lint": "eslint",
     "db:reset": "bun scripts/reset-database.ts",
-    "db:seed": "bun db/seed.ts"
+    "db:seed": "bun db/seed.ts",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown",
+    "tailwind:canonical": "bunx @laststance/tailwind-suggest-canonical-classes@latest \"app/**/*.{js,jsx,ts,tsx}\" \"components/**/*.{js,jsx,ts,tsx}\" \"features/**/*.{js,jsx,ts,tsx}\" \"src/**/*.{js,jsx,ts,tsx}\"",
+    "tailwind:format": "bun run tailwind:canonical && prettier --write \"{app,components,features,src}/**/*.{js,jsx,ts,tsx}\""
   },
   "dependencies": {
     "@google/genai": "^2.8.0",
@@ -34,7 +38,7 @@
     "@types/react-dom": "^19",
     "bun-types": "^1.3.14",
     "drizzle-kit": "^0.31.10",
-    "eslint": "^10.7.0",
+    "eslint": "^9.20.0",
     "eslint-config-next": "^16.2.10",
     "pg": "^8.21.0",
     "prettier": "^3.9.5",

@@ -103,15 +103,13 @@ export async function generateRabFromRap(
           }),
         ),
       );
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "GENERATE_RAB_DRAFT_FROM_RAP",
-          targetTable: "rab_estimate",
-          targetId: estimate.id,
-          newState: JSON.stringify({ estimate, sourceRapId: rap.id, itemCount: rap.items.length }),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "GENERATE_RAB_DRAFT_FROM_RAP",
+        targetTable: "rab_estimate",
+        targetId: estimate.id,
+        newState: JSON.stringify({ estimate, sourceRapId: rap.id, itemCount: rap.items.length }),
+      });
 
       return estimate;
     });
@@ -371,20 +369,18 @@ export async function generateRabFromSelectedSources(
         }
       }
 
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "GENERATE_RAB_DRAFT_FROM_SELECTED_SOURCES",
-          targetTable: "rab_estimate",
-          targetId: estimate.id,
-          newState: JSON.stringify({
-            estimate,
-            itemCount: insertedItems.length,
-            sourceRapItemIds: validation.data.projectRapItemIds,
-            sourceCategoryPlanItemIds: validation.data.projectCategoryPlanItemIds,
-          }),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "GENERATE_RAB_DRAFT_FROM_SELECTED_SOURCES",
+        targetTable: "rab_estimate",
+        targetId: estimate.id,
+        newState: JSON.stringify({
+          estimate,
+          itemCount: insertedItems.length,
+          sourceRapItemIds: validation.data.projectRapItemIds,
+          sourceCategoryPlanItemIds: validation.data.projectCategoryPlanItemIds,
+        }),
+      });
 
       return estimate;
     });

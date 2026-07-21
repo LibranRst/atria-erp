@@ -90,15 +90,13 @@ export async function createProjectRap(
           notes: validation.data.notes ?? null,
         })
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "CREATE_RAP_DRAFT",
-          targetTable: "project_rap",
-          targetId: row.id,
-          newState: JSON.stringify(row),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "CREATE_RAP_DRAFT",
+        targetTable: "project_rap",
+        targetId: row.id,
+        newState: JSON.stringify(row),
+      });
       return row;
     });
 
@@ -137,15 +135,13 @@ export async function addProjectRapItem(
         .insert(projectRapItem)
         .values({ projectRapId: rap.id, ...values })
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "CREATE_RAP_ITEM_DRAFT",
-          targetTable: "project_rap_item",
-          targetId: row.id,
-          newState: JSON.stringify(row),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "CREATE_RAP_ITEM_DRAFT",
+        targetTable: "project_rap_item",
+        targetId: row.id,
+        newState: JSON.stringify(row),
+      });
       return row;
     });
 
@@ -189,16 +185,14 @@ export async function updateProjectRapItem(
         })
         .where(eq(projectRapItem.id, item.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "UPDATE_RAP_ITEM_DRAFT",
-          targetTable: "project_rap_item",
-          targetId: item.id,
-          originalState: JSON.stringify(item),
-          newState: JSON.stringify(row),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "UPDATE_RAP_ITEM_DRAFT",
+        targetTable: "project_rap_item",
+        targetId: item.id,
+        originalState: JSON.stringify(item),
+        newState: JSON.stringify(row),
+      });
       return row;
     });
 
@@ -234,15 +228,13 @@ export async function deleteProjectRapItem(
 
     await db.transaction(async (tx) => {
       await tx.delete(projectRapItem).where(eq(projectRapItem.id, item.id));
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "DELETE_RAP_ITEM_DRAFT",
-          targetTable: "project_rap_item",
-          targetId: item.id,
-          originalState: JSON.stringify(item),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "DELETE_RAP_ITEM_DRAFT",
+        targetTable: "project_rap_item",
+        targetId: item.id,
+        originalState: JSON.stringify(item),
+      });
     });
     return { success: true, data: { deletedId: item.id } };
   } catch (error) {
@@ -377,16 +369,14 @@ export async function updateRabEstimateItem(
         })
         .where(eq(rabEstimateItem.id, item.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "UPDATE_RAB_ITEM_DRAFT",
-          targetTable: "rab_estimate_item",
-          targetId: item.id,
-          originalState: JSON.stringify(item),
-          newState: JSON.stringify(row),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "UPDATE_RAB_ITEM_DRAFT",
+        targetTable: "rab_estimate_item",
+        targetId: item.id,
+        originalState: JSON.stringify(item),
+        newState: JSON.stringify(row),
+      });
       return row;
     });
 

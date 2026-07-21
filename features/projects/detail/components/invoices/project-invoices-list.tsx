@@ -26,18 +26,18 @@ export function ProjectInvoicesList({
   return (
     <section className="space-y-2.5">
       <header className="px-1">
-        <h2 className="text-on-surface text-[17px] leading-6 font-semibold">Termin penagihan</h2>
-        <p className="text-on-surface-variant mt-0.5 text-[11px] leading-4">
+        <h2 className="text-[17px] leading-6 font-semibold text-on-surface">Termin penagihan</h2>
+        <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">
           Urut berdasarkan tanggal jatuh tempo.
         </p>
       </header>
       {orderedInvoices.length === 0 ? (
-        <div className="text-on-surface-variant rounded-[22px] bg-white px-4 py-4 text-xs leading-5 shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
-          <span className="text-on-surface font-bold">Belum ada invoice.</span> Buat termin saat
+        <div className="rounded-[22px] bg-white px-4 py-4 text-xs leading-5 text-on-surface-variant shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
+          <span className="font-bold text-on-surface">Belum ada invoice.</span> Buat termin saat
           jadwal penagihan klien sudah siap.
         </div>
       ) : (
-        <div className="rounded-[24px] bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+        <div className="rounded-3xl bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
           {orderedInvoices.map((invoice, index) => (
             <ProjectInvoiceTimelineRow
               key={invoice.id}
@@ -81,28 +81,28 @@ function ProjectInvoiceTimelineRow({
           openActivityDetail({ kind: "CLIENT_INVOICE", id: invoice.id });
         }
       }}
-      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 relative flex min-h-12 gap-3 py-3 outline-none"
+      className="relative flex min-h-12 gap-3 py-3 outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
       aria-label={`Lihat detail invoice ${invoice.invoiceNumber}`}
     >
       {connected ? (
         <span
-          className="-bottom-sm bg-outline-variant/45 absolute top-11 left-[17px] w-px"
+          className="absolute top-11 -bottom-sm left-4.25 w-px bg-outline-variant/45"
           aria-hidden="true"
         />
       ) : null}
-      <div className="bg-surface-container-low relative z-10 flex w-9 shrink-0 flex-col items-center gap-0.5 rounded-[12px] py-1 ring-4 ring-white">
+      <div className="relative z-10 flex w-9 shrink-0 flex-col items-center gap-0.5 rounded-xl bg-surface-container-low py-1 ring-4 ring-white">
         <span className="font-mono text-[12px] font-black">
           {due.toLocaleDateString("id-ID", { day: "2-digit" })}
         </span>
-        <span className="text-on-surface-variant text-[7px] font-bold uppercase">
+        <span className="text-[7px] font-bold text-on-surface-variant uppercase">
           {due.toLocaleDateString("id-ID", { month: "short" })}
         </span>
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-on-surface truncate text-xs font-bold">{invoice.invoiceNumber}</p>
-            <p className="text-on-surface-variant mt-0.5 text-[10px]">
+            <p className="truncate text-xs font-bold text-on-surface">{invoice.invoiceNumber}</p>
+            <p className="mt-0.5 text-[10px] text-on-surface-variant">
               Jatuh tempo{" "}
               {due.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
             </p>
@@ -121,7 +121,7 @@ function ProjectInvoiceTimelineRow({
         </div>
         <div className="mt-2 flex items-end justify-between gap-3">
           <div>
-            <p className="text-on-surface-variant text-[8px] font-bold tracking-wide uppercase">
+            <p className="text-[8px] font-bold tracking-wide text-on-surface-variant uppercase">
               Sisa dari tagihan
             </p>
             <MoneyValue
@@ -138,7 +138,7 @@ function ProjectInvoiceTimelineRow({
                 event.stopPropagation();
                 onRecordPayment(invoice);
               }}
-              className="bg-primary/7 text-primary inline-flex min-h-12 shrink-0 items-center rounded-full px-4 text-[11px] font-bold"
+              className="inline-flex min-h-12 shrink-0 items-center rounded-full bg-primary/7 px-4 text-[11px] font-bold text-primary"
             >
               Catat bayar
             </button>
@@ -148,7 +148,7 @@ function ProjectInvoiceTimelineRow({
         </div>
         {invoice.payments.length > 0 ? (
           <div className="mt-2 space-y-1">
-            <p className="text-on-surface-variant text-[9px]">
+            <p className="text-[9px] text-on-surface-variant">
               {invoice.payments.length} pembayaran · diterima Rp {totalPaid.toLocaleString("id-ID")}
             </p>
             {invoice.payments.map((payment) => (
@@ -159,7 +159,7 @@ function ProjectInvoiceTimelineRow({
                   event.stopPropagation();
                   openActivityDetail({ kind: "CLIENT_PAYMENT", id: payment.id });
                 }}
-                className="bg-surface-container-low text-on-surface focus-visible:ring-primary/25 flex min-h-12 w-full items-center justify-between gap-3 rounded-full px-3 text-left text-[10px] font-semibold outline-none focus-visible:ring-2"
+                className="flex min-h-12 w-full items-center justify-between gap-3 rounded-full bg-surface-container-low px-3 text-left text-[10px] font-semibold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
               >
                 <span>
                   {new Date(payment.paymentDate).toLocaleDateString("id-ID", {
@@ -177,7 +177,7 @@ function ProjectInvoiceTimelineRow({
           </div>
         ) : null}
         {totalPaid > amount ? (
-          <p className="text-error mt-2 text-[10px] font-bold">
+          <p className="mt-2 text-[10px] font-bold text-error">
             Pembayaran melebihi nominal invoice.
           </p>
         ) : null}

@@ -109,16 +109,16 @@ function FactRow({
   readonly detail: string;
 }): React.JSX.Element {
   return (
-    <div className="flex min-h-[70px] items-center gap-3 px-4 py-3">
+    <div className="flex min-h-17.5 items-center gap-3 px-4 py-3">
       <span
-        className="material-symbols-outlined bg-surface-container-low text-primary flex! h-10 w-10 shrink-0 items-center justify-center rounded-[14px] text-[20px]"
+        className="material-symbols-outlined flex! h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-[20px] text-primary"
         aria-hidden="true"
       >
         {icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="text-on-surface block text-[13px] font-bold">{title}</span>
-        <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-4">{detail}</span>
+        <span className="block text-[13px] font-bold text-on-surface">{title}</span>
+        <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">{detail}</span>
       </span>
     </div>
   );
@@ -133,16 +133,16 @@ function SourceError({
 }): React.JSX.Element | null {
   if (source.status !== "error") return null;
   return (
-    <div className="rounded-[24px] bg-white px-5 py-6 text-center ring-1 ring-black/4">
-      <span className="material-symbols-outlined text-warning text-[28px]" aria-hidden="true">
+    <div className="rounded-3xl bg-white px-5 py-6 text-center ring-1 ring-black/4">
+      <span className="material-symbols-outlined text-[28px] text-warning" aria-hidden="true">
         sync_problem
       </span>
-      <p className="text-on-surface mt-2 text-[13px] font-bold">Data step belum dapat dimuat</p>
-      <p className="text-on-surface-variant mt-1 text-[10px] leading-4">{source.message}</p>
+      <p className="mt-2 text-[13px] font-bold text-on-surface">Data step belum dapat dimuat</p>
+      <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">{source.message}</p>
       <button
         type="button"
         onClick={retry}
-        className="bg-surface-container-low text-on-surface mt-4 min-h-12 rounded-full px-5 text-xs font-bold"
+        className="mt-4 min-h-12 rounded-full bg-surface-container-low px-5 text-xs font-bold text-on-surface"
       >
         Coba lagi
       </button>
@@ -236,7 +236,7 @@ export function OwnerOnboardingWorkspace({
                 whileTap={reduceMotion ? undefined : { scale: 0.97 }}
                 type="button"
                 onClick={() => navigate(ONBOARDING_STEP_IDS[stepIndex - 1])}
-                className="text-on-surface ring-outline-variant/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_5px_16px_rgba(17,17,17,0.08)] ring-1 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-on-surface shadow-[0_5px_16px_rgba(17,17,17,0.08)] ring-1 ring-outline-variant/15 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
                 aria-label="Kembali ke langkah sebelumnya"
               >
                 <span className="material-symbols-outlined text-[24px]" aria-hidden="true">
@@ -248,10 +248,10 @@ export function OwnerOnboardingWorkspace({
             )}
           </div>
           <div className="min-w-0 text-center">
-            <p className="text-on-surface-variant text-[9px] leading-5 font-bold tracking-[0.14em] uppercase">
+            <p className="text-[9px] leading-5 font-bold tracking-[0.14em] text-on-surface-variant uppercase">
               Setup Atria
             </p>
-            <p className="text-on-surface truncate text-[11px] leading-4 font-semibold">
+            <p className="truncate text-[11px] leading-4 font-semibold text-on-surface">
               {progress.label}
             </p>
           </div>
@@ -261,7 +261,7 @@ export function OwnerOnboardingWorkspace({
               type="button"
               disabled={busy}
               onClick={() => setShowExitConfirm(true)}
-              className="text-on-surface ring-outline-variant/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_5px_16px_rgba(17,17,17,0.08)] ring-1 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:opacity-45"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-on-surface shadow-[0_5px_16px_rgba(17,17,17,0.08)] ring-1 ring-outline-variant/15 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:opacity-45"
               aria-label="Jeda dan keluar onboarding"
               title="Jeda dan keluar"
             >
@@ -272,11 +272,11 @@ export function OwnerOnboardingWorkspace({
           </div>
         </div>
         <div
-          className="bg-surface-container-high h-1.5 overflow-hidden rounded-full"
+          className="h-1.5 overflow-hidden rounded-full bg-surface-container-high"
           aria-label={`Progress setup ${Math.round(progress.percentage)} persen`}
         >
           <motion.div
-            className="bg-primary h-full rounded-full"
+            className="h-full rounded-full bg-primary"
             initial={false}
             animate={{ width: `${progress.percentage}%` }}
             transition={reduceMotion ? { duration: 0 } : transitionSpringSnappy}
@@ -284,18 +284,18 @@ export function OwnerOnboardingWorkspace({
         </div>
         <div className="px-1">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-on-surface-variant text-[9px] font-bold tracking-[0.14em] uppercase">
+            <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
               {copy.eyebrow}
             </p>
             {refreshing ? (
-              <span className="text-on-surface-variant text-[9px] font-semibold">Memperbarui…</span>
+              <span className="text-[9px] font-semibold text-on-surface-variant">Memperbarui…</span>
             ) : null}
           </div>
-          <h1 className="text-on-surface mt-1.5 text-[26px] leading-8 font-bold tracking-[-0.035em]">
+          <h1 className="mt-1.5 text-[26px] leading-8 font-bold tracking-[-0.035em] text-on-surface">
             {copy.title}
           </h1>
           {copy.description ? (
-            <p className="text-on-surface-variant mt-2 text-[13px] leading-5">{copy.description}</p>
+            <p className="mt-2 text-[13px] leading-5 text-on-surface-variant">{copy.description}</p>
           ) : null}
         </div>
       </header>
@@ -402,34 +402,34 @@ export function OwnerOnboardingWorkspace({
         <div className="space-y-4">
           {overview.blockers.length > 0 ? (
             <section>
-              <h2 className="text-on-surface mb-2 px-1 text-[12px] font-bold">
+              <h2 className="mb-2 px-1 text-[12px] font-bold text-on-surface">
                 Wajib diselesaikan
               </h2>
-              <div className="overflow-hidden rounded-[24px] bg-white ring-1 ring-black/[0.035]">
-                <div className="divide-outline-variant/20 divide-y">
+              <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-black/[0.035]">
+                <div className="divide-y divide-outline-variant/20">
                   {overview.blockers.map((issue) => (
                     <button
                       key={`${issue.stepId}-${issue.label}`}
                       type="button"
                       onClick={() => navigate(issue.stepId)}
-                      className="flex min-h-[68px] w-full items-center gap-3 px-4 py-3 text-left"
+                      className="flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left"
                     >
                       <span
-                        className="material-symbols-outlined text-warning text-[20px]"
+                        className="material-symbols-outlined text-[20px] text-warning"
                         aria-hidden="true"
                       >
                         priority_high
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="text-on-surface block text-[12px] font-bold">
+                        <span className="block text-[12px] font-bold text-on-surface">
                           {issue.label}
                         </span>
-                        <span className="text-on-surface-variant mt-0.5 block text-[9px] leading-4">
+                        <span className="mt-0.5 block text-[9px] leading-4 text-on-surface-variant">
                           {issue.detail}
                         </span>
                       </span>
                       <span
-                        className="material-symbols-outlined text-on-surface-variant text-[18px]"
+                        className="material-symbols-outlined text-[18px] text-on-surface-variant"
                         aria-hidden="true"
                       >
                         chevron_right
@@ -442,29 +442,29 @@ export function OwnerOnboardingWorkspace({
           ) : null}
           {overview.warnings.length > 0 ? (
             <section>
-              <h2 className="text-on-surface mb-2 px-1 text-[12px] font-bold">
+              <h2 className="mb-2 px-1 text-[12px] font-bold text-on-surface">
                 Boleh dilengkapi nanti
               </h2>
-              <div className="overflow-hidden rounded-[24px] bg-white ring-1 ring-black/[0.035]">
-                <div className="divide-outline-variant/20 divide-y">
+              <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-black/[0.035]">
+                <div className="divide-y divide-outline-variant/20">
                   {overview.warnings.map((issue) => (
                     <button
                       key={`${issue.stepId}-${issue.label}`}
                       type="button"
                       onClick={() => navigate(issue.stepId)}
-                      className="flex min-h-[64px] w-full items-center gap-3 px-4 py-3 text-left"
+                      className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left"
                     >
                       <span
-                        className="material-symbols-outlined text-on-surface-variant text-[19px]"
+                        className="material-symbols-outlined text-[19px] text-on-surface-variant"
                         aria-hidden="true"
                       >
                         info
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="text-on-surface block text-[11px] font-bold">
+                        <span className="block text-[11px] font-bold text-on-surface">
                           {issue.label}
                         </span>
-                        <span className="text-on-surface-variant mt-0.5 block text-[9px] leading-4">
+                        <span className="mt-0.5 block text-[9px] leading-4 text-on-surface-variant">
                           {issue.detail}
                         </span>
                       </span>
@@ -483,7 +483,7 @@ export function OwnerOnboardingWorkspace({
                     key={item.id}
                     type="button"
                     onClick={() => navigate(item.id)}
-                    className="active:bg-surface-container-low focus-visible:bg-surface-container-low flex min-h-[68px] w-full items-center gap-3 px-4 py-3 text-left outline-none"
+                    className="flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
                   >
                     <span
                       className={`material-symbols-outlined flex! h-9 w-9 shrink-0 items-center justify-center rounded-full text-[18px] ${statusClass(item.status)}`}
@@ -496,10 +496,10 @@ export function OwnerOnboardingWorkspace({
                           : "priority_high"}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="text-on-surface block text-[13px] font-bold">
+                      <span className="block text-[13px] font-bold text-on-surface">
                         {item.label}
                       </span>
-                      <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-4">
+                      <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
                         {item.detail}
                       </span>
                     </span>
@@ -526,7 +526,7 @@ export function OwnerOnboardingWorkspace({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => markAndContinue("REVIEWED")}
-              className="bg-primary text-on-primary min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-45"
+              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary disabled:opacity-45"
             >
               {step === "welcome" ? "Mulai setup" : "Lanjut"}
             </motion.button>
@@ -535,7 +535,7 @@ export function OwnerOnboardingWorkspace({
                 type="button"
                 disabled={busy}
                 onClick={() => markAndContinue("SKIPPED")}
-                className="text-on-surface-variant min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-45"
+                className="min-h-12 w-full rounded-full px-5 text-xs font-bold text-on-surface-variant disabled:opacity-45"
               >
                 Lewati step ini
               </button>
@@ -557,7 +557,7 @@ export function OwnerOnboardingWorkspace({
                   : undefined,
               )
             }
-            className="bg-primary text-on-primary min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-45"
+            className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary disabled:opacity-45"
           >
             Lanjut ke Ringkasan
           </motion.button>
@@ -570,7 +570,7 @@ export function OwnerOnboardingWorkspace({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => finish("project")}
-              className="bg-primary text-on-primary min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-40"
+              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary disabled:opacity-40"
             >
               Buat proyek pertama
             </motion.button>
@@ -578,7 +578,7 @@ export function OwnerOnboardingWorkspace({
               type="button"
               disabled={busy || !overview.canComplete}
               onClick={() => finish("dashboard")}
-              className="text-on-surface min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold ring-1 ring-black/5.5 disabled:opacity-40"
+              className="min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold text-on-surface ring-1 ring-black/5.5 disabled:opacity-40"
             >
               Masuk Dashboard
             </button>
@@ -598,7 +598,7 @@ export function OwnerOnboardingWorkspace({
               whileTap={reduceMotion ? undefined : { scale: 0.97 }}
               type="button"
               onClick={() => setShowExitConfirm(false)}
-              className="bg-surface-container text-on-surface min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
             >
               Kembali
             </motion.button>
@@ -610,7 +610,7 @@ export function OwnerOnboardingWorkspace({
                 setShowExitConfirm(false);
                 pause();
               }}
-              className="bg-primary text-on-primary min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
+              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-45"
             >
               Jeda & Keluar
             </motion.button>

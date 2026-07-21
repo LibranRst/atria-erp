@@ -256,8 +256,8 @@ function ReviewFact({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

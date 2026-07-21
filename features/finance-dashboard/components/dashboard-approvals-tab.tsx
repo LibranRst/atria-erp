@@ -175,15 +175,15 @@ export function ApprovalsTab({
       >
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-on-surface font-mono text-[30px] leading-none font-black max-[430px]:text-[27px]">
+            <p className="font-mono text-[30px] leading-none font-black text-on-surface max-[430px]:text-[27px]">
               {approvalCount}
             </p>
-            <p className="text-on-surface-variant mt-1 text-[10px] font-semibold">
+            <p className="mt-1 text-[10px] font-semibold text-on-surface-variant">
               persetujuan menunggu keputusan
             </p>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-on-surface-variant/60 text-[8px] font-semibold">Total antrean</p>
+            <p className="text-[8px] font-semibold text-on-surface-variant/60">Total antrean</p>
             <MoneyValue
               amount={visibleAmount}
               variant="compactWithFull"
@@ -193,9 +193,9 @@ export function ApprovalsTab({
             />
           </div>
         </div>
-        <div className="bg-surface-container-low/65 mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5 max-[430px]:gap-0">
+        <div className="mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5 max-[430px]:gap-0">
           <div>
-            <p className="text-on-surface-variant/60 text-[9px] font-semibold">Prioritas kritis</p>
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">Prioritas kritis</p>
             <p
               className={`mt-1 font-mono text-sm font-black ${criticalCount > 0 ? "text-error" : "text-on-surface"}`}
             >
@@ -203,8 +203,8 @@ export function ApprovalsTab({
             </p>
           </div>
           <div className="pl-3 text-right">
-            <p className="text-on-surface-variant/60 text-[9px] font-semibold">Urutan otomatis</p>
-            <p className="text-on-surface mt-1 text-[10px] font-bold">Risiko &amp; urgensi</p>
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">Urutan otomatis</p>
+            <p className="mt-1 text-[10px] font-bold text-on-surface">Risiko &amp; urgensi</p>
           </div>
         </div>
       </DashboardSummarySurface>
@@ -216,7 +216,7 @@ export function ApprovalsTab({
           </DashboardTabEmpty>
         ) : (
           <>
-            <div className="bg-surface-container-low/65 text-on-surface-variant mx-3 mt-3 rounded-[15px] px-3 py-2 text-[10px] leading-4">
+            <div className="mx-3 mt-3 rounded-[15px] bg-surface-container-low/65 px-3 py-2 text-[10px] leading-4 text-on-surface-variant">
               Diurutkan berdasarkan risiko budget, jatuh tempo, lama menunggu, dan nominal.
             </div>
             <DashboardRowGroup>
@@ -245,7 +245,7 @@ export function ApprovalsTab({
                 type="button"
                 disabled={pending}
                 onClick={() => requestDecision(presentedApproval, "REJECTED")}
-                className="bg-error-container/30 text-error min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
+                className="min-h-12 rounded-full bg-error-container/30 px-4 text-xs font-bold text-error disabled:opacity-45"
               >
                 Tolak
               </button>
@@ -253,7 +253,7 @@ export function ApprovalsTab({
                 type="button"
                 disabled={pending}
                 onClick={() => requestDecision(presentedApproval, "APPROVED")}
-                className="bg-primary text-on-primary min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
+                className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-45"
               >
                 Setujui
               </button>
@@ -263,7 +263,7 @@ export function ApprovalsTab({
       >
         {presentedApproval ? (
           <div className="space-y-md">
-            <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
+            <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
               <div className="p-4">
                 <div className="flex items-center justify-between gap-3">
                   <span
@@ -271,11 +271,11 @@ export function ApprovalsTab({
                   >
                     {presentedApproval.priorityReason}
                   </span>
-                  <span className="text-on-surface-variant shrink-0 text-[10px] font-semibold">
+                  <span className="shrink-0 text-[10px] font-semibold text-on-surface-variant">
                     {formatShortDate(presentedApproval.createdAt)}
                   </span>
                 </div>
-                <p className="text-on-surface-variant/65 mt-4 text-[9px] font-bold tracking-[0.12em] uppercase">
+                <p className="mt-4 text-[9px] font-bold tracking-[0.12em] text-on-surface-variant/65 uppercase">
                   Nominal pengajuan
                 </p>
                 <MoneyValue
@@ -284,23 +284,23 @@ export function ApprovalsTab({
                   size="hero"
                   className="mt-1"
                 />
-                <p className="text-on-surface mt-3 text-sm leading-[1.3] font-semibold">
+                <p className="mt-3 text-sm leading-[1.3] font-semibold text-on-surface">
                   {presentedApproval.description}
                 </p>
               </div>
               {presentedApproval.notes ? (
-                <div className="border-outline-variant/20 bg-surface-container-lowest border-t px-4 py-3">
-                  <p className="text-on-surface-variant/65 text-[9px] leading-5 font-bold tracking-widest uppercase">
+                <div className="border-t border-outline-variant/20 bg-surface-container-lowest px-4 py-3">
+                  <p className="text-[9px] leading-5 font-bold tracking-widest text-on-surface-variant/65 uppercase">
                     Catatan pengajuan
                   </p>
-                  <p className="text-on-surface-variant text-xs leading-4">
+                  <p className="text-xs leading-4 text-on-surface-variant">
                     {presentedApproval.notes}
                   </p>
                 </div>
               ) : null}
             </section>
 
-            <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
+            <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
               {[
                 ["Proyek", presentedApproval.projectName],
                 ["Pengaju", presentedApproval.requestedBy],
@@ -314,12 +314,12 @@ export function ApprovalsTab({
               ].map(([label, value]) => (
                 <div
                   key={label}
-                  className="border-outline-variant/20 flex min-h-12 items-center justify-between gap-4 border-b px-4 py-3 last:border-b-0"
+                  className="flex min-h-12 items-center justify-between gap-4 border-b border-outline-variant/20 px-4 py-3 last:border-b-0"
                 >
-                  <p className="text-on-surface-variant shrink-0 text-[10px] font-medium">
+                  <p className="shrink-0 text-[10px] font-medium text-on-surface-variant">
                     {label}
                   </p>
-                  <p className="text-on-surface min-w-0 truncate text-right text-xs font-semibold">
+                  <p className="min-w-0 truncate text-right text-xs font-semibold text-on-surface">
                     {value}
                   </p>
                 </div>
@@ -329,12 +329,12 @@ export function ApprovalsTab({
             {presentedApproval.type === "inventory_opening" ? (
               <>
                 <InventoryOpeningApprovalItems item={presentedApproval} />
-                <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
+                <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
                   <div className="px-4 py-3.5">
-                    <p className="text-on-surface-variant/65 text-[10px] font-bold tracking-widest uppercase">
+                    <p className="text-[10px] font-bold tracking-widest text-on-surface-variant/65 uppercase">
                       Dampak stok
                     </p>
-                    <p className="text-on-surface mt-1 text-xs leading-5">
+                    <p className="mt-1 text-xs leading-5 text-on-surface">
                       Setelah disetujui, stok dan nilai inventory bertambah. Kas, utang vendor, dan
                       actual cost proyek tidak berubah.
                     </p>
@@ -346,15 +346,15 @@ export function ApprovalsTab({
             )}
             {presentedApproval.receiptImageUrl ? (
               <section className="space-y-2.5">
-                <h3 className="text-on-surface px-1 text-[10px] font-bold tracking-[0.11em] uppercase">
+                <h3 className="px-1 text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
                   Bukti pengajuan
                 </h3>
-                <div className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
+                <div className="overflow-hidden rounded-3xl bg-surface-container-lowest p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={presentedApproval.receiptImageUrl}
                     alt="Bukti pengajuan"
-                    className="bg-surface-container-low max-h-[280px] w-full rounded-[16px] object-contain"
+                    className="max-h-70 w-full rounded-2xl bg-surface-container-low object-contain"
                   />
                 </div>
               </section>
@@ -410,14 +410,14 @@ export function ApprovalsTab({
         onClose={closeDecision}
       >
         <div className="space-y-md">
-          <div className="bg-error-container/25 text-error rounded-[20px] p-4 text-xs leading-5">
+          <div className="rounded-[20px] bg-error-container/25 p-4 text-xs leading-5 text-error">
             Pengajuan tidak akan dilanjutkan. Jelaskan alasan yang dapat ditindaklanjuti oleh
             pengaju.
           </div>
           <div>
             <label
               htmlFor="dashboard-rejection-reason"
-              className="text-on-surface px-1 text-xs font-bold"
+              className="px-1 text-xs font-bold text-on-surface"
             >
               Alasan penolakan
             </label>
@@ -436,7 +436,7 @@ export function ApprovalsTab({
                   (decision?.item.type === "inventory_opening" ? 10 : 5)
               }
             />
-            <p className="text-on-surface-variant mt-1 px-1 text-[10px]">
+            <p className="mt-1 px-1 text-[10px] text-on-surface-variant">
               Minimal {decision?.item.type === "inventory_opening" ? 10 : 5} karakter.
             </p>
           </div>
@@ -447,7 +447,7 @@ export function ApprovalsTab({
               rejectionReason.trim().length < (decision?.item.type === "inventory_opening" ? 10 : 5)
             }
             onClick={confirmDecision}
-            className="bg-error min-h-12 w-full rounded-full px-5 text-xs font-bold text-white disabled:opacity-40"
+            className="min-h-12 w-full rounded-full bg-error px-5 text-xs font-bold text-white disabled:opacity-40"
           >
             {pending ? "Menyimpan penolakan" : "Tolak pengajuan"}
           </button>

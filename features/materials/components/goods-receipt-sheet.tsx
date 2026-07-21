@@ -33,7 +33,7 @@ import {
 } from "@/features/materials/lib/goods-receipt-prefill";
 import { createClientId } from "@/lib/utils/client-id";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { updateUrlSearchParam, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 
 type RapOption = {
   readonly id: string;
@@ -326,8 +326,8 @@ export function GoodsReceiptSheet({
           onClick={launch}
           className={
             compact
-              ? "text-primary ring-primary/15 min-h-12 rounded-full bg-white px-4 text-xs font-bold ring-1"
-              : "bg-primary text-on-primary flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 text-xs font-bold"
+              ? "min-h-12 rounded-full bg-white px-4 text-xs font-bold text-primary ring-1 ring-primary/15"
+              : "flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
           }
         >
           {!compact ? <Plus className="h-4 w-4" aria-hidden="true" /> : null} Terima Barang
@@ -348,16 +348,16 @@ export function GoodsReceiptSheet({
       >
         {reviewing ? (
           <div className="space-y-md">
-            <div className="bg-primary/5 rounded-2xl px-4 py-3">
-              <p className="text-primary text-[10px] font-bold tracking-wide uppercase">
+            <div className="rounded-2xl bg-primary/5 px-4 py-3">
+              <p className="text-[10px] font-bold tracking-wide text-primary uppercase">
                 Penerimaan
               </p>
               <p className="mt-1 text-sm font-bold">{selectedProject?.name}</p>
-              <p className="text-on-surface-variant mt-0.5 text-xs">
+              <p className="mt-0.5 text-xs text-on-surface-variant">
                 {locations.find((row) => row.id === locationId)?.name} · {receiptNumber}
               </p>
               {selectedVendorBill ? (
-                <p className="text-on-surface-variant mt-1 text-[10px] font-semibold">
+                <p className="mt-1 text-[10px] font-semibold text-on-surface-variant">
                   Tagihan {selectedVendorBill.name} · {selectedVendorBill.vendorName}
                 </p>
               ) : null}
@@ -389,7 +389,7 @@ export function GoodsReceiptSheet({
           <div className="space-y-md">
             {message ? (
               <p
-                className="bg-error-container/30 text-error rounded-2xl p-3 text-xs leading-5"
+                className="rounded-2xl bg-error-container/30 p-3 text-xs leading-5 text-error"
                 role="alert"
               >
                 {message}
@@ -459,11 +459,11 @@ export function GoodsReceiptSheet({
                   <p className="text-[10px] leading-[1.15] font-bold tracking-wide uppercase">
                     Material diterima
                   </p>
-                  <p className="text-on-surface-variant text-[10px] leading-tight">
+                  <p className="text-[10px] leading-tight text-on-surface-variant">
                     Buka item untuk mengubah detail.
                   </p>
                 </div>
-                <p className="text-on-surface shrink-0 font-mono text-xs font-bold tabular-nums">
+                <p className="shrink-0 font-mono text-xs font-bold text-on-surface tabular-nums">
                   {money.format(total)}
                 </p>
               </div>
@@ -475,14 +475,14 @@ export function GoodsReceiptSheet({
                 return (
                   <div
                     key={item.key}
-                    className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1"
+                    className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
                   >
                     <button
                       type="button"
                       onClick={() =>
                         setEditingKey((current) => (current === item.key ? null : item.key))
                       }
-                      className="active:bg-surface-container-low flex min-h-[68px] w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-inset"
+                      className="flex min-h-17 w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-inset active:bg-surface-container-low"
                       aria-expanded={editingKey === item.key}
                     >
                       <span
@@ -504,7 +504,7 @@ export function GoodsReceiptSheet({
                             {complete ? "Lengkap" : "Lengkapi"}
                           </span>
                         </span>
-                        <span className="text-on-surface-variant truncate text-[10px] leading-tight">
+                        <span className="truncate text-[10px] leading-tight text-on-surface-variant">
                           {complete
                             ? `${item.quantity.toLocaleString("id-ID")} ${material?.unit ?? "unit"} × ${money.format(item.unitCost)}`
                             : "Pilih material, jumlah, dan harga"}
@@ -514,7 +514,7 @@ export function GoodsReceiptSheet({
                         <span className="font-mono text-xs font-bold tabular-nums">
                           {money.format(item.quantity * item.unitCost)}
                         </span>
-                        <span className="bg-surface-container-low text-on-surface-variant flex h-8 w-8 items-center justify-center rounded-full">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant">
                           <ChevronDown
                             className={`h-3.5 w-3.5 transition-transform ${editingKey === item.key ? "rotate-180" : ""}`}
                             aria-hidden="true"
@@ -523,7 +523,7 @@ export function GoodsReceiptSheet({
                       </span>
                     </button>
                     {editingKey === item.key ? (
-                      <div className="border-outline-variant/15 bg-surface-container-low/65 space-y-2.5 border-t p-3">
+                      <div className="space-y-2.5 border-t border-outline-variant/15 bg-surface-container-low/65 p-3">
                         <SheetSelect
                           label="Material"
                           value={item.materialId}
@@ -604,7 +604,7 @@ export function GoodsReceiptSheet({
                               setItems((current) => [...current, copy]);
                               setEditingKey(copy.key);
                             }}
-                            className="bg-surface-container flex min-h-12 items-center justify-center gap-2 rounded-full text-xs font-bold"
+                            className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container text-xs font-bold"
                           >
                             <Copy className="h-4 w-4" /> Duplikat
                           </motion.button>
@@ -617,7 +617,7 @@ export function GoodsReceiptSheet({
                               setItems((current) => current.filter((row) => row.key !== item.key));
                               setEditingKey(null);
                             }}
-                            className="bg-error-container/25 text-error flex min-h-12 items-center justify-center gap-2 rounded-full text-xs font-bold disabled:opacity-35"
+                            className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-error-container/25 text-xs font-bold text-error disabled:opacity-35"
                           >
                             <Trash2 className="h-4 w-4" /> Hapus
                           </motion.button>
@@ -636,7 +636,7 @@ export function GoodsReceiptSheet({
                   setItems((current) => [...current, item]);
                   setEditingKey(item.key);
                 }}
-                className="bg-surface-container-lowest text-on-surface ring-outline-variant/15 flex min-h-12 w-full items-center justify-center gap-2 rounded-full text-xs font-bold shadow-[0_5px_16px_rgba(17,17,17,0.035)] ring-1"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest text-xs font-bold text-on-surface shadow-[0_5px_16px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
               >
                 <Plus className="h-4 w-4 text-blue-600" aria-hidden="true" /> Tambah Material
               </motion.button>

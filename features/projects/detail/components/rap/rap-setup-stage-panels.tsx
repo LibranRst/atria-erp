@@ -55,14 +55,14 @@ export function MaterialRapStagePanel({
             key={item.id}
             type="button"
             onClick={() => setRapDetailItemId(item.id)}
-            className="bg-surface-container-low flex min-h-16 w-full items-center gap-3 rounded-2xl p-3 text-left"
+            className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-surface-container-low p-3 text-left"
           >
-            <span className="text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-primary">
               <span className="material-symbols-outlined text-[19px]">inventory_2</span>
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm leading-5 font-bold">{item.name}</span>
-              <span className="text-on-surface-variant block truncate text-[10px] leading-4">
+              <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
                 {item.area} - {item.totalQuantity} {item.unit}
               </span>
             </span>
@@ -82,7 +82,7 @@ export function MaterialRapStagePanel({
         ))}
       </div>
       {rap.items.length === 0 && (
-        <div className="mt-sm bg-surface-container-low p-md text-on-surface-variant rounded-2xl text-center text-xs">
+        <div className="mt-sm rounded-2xl bg-surface-container-low p-md text-center text-xs text-on-surface-variant">
           Belum ada material. Tambahkan item pertama untuk memulai baseline.
         </div>
       )}
@@ -90,7 +90,7 @@ export function MaterialRapStagePanel({
         <button
           type="button"
           onClick={openAddRapForm}
-          className="mt-sm bg-primary text-on-primary min-h-12 w-full rounded-full text-xs font-bold"
+          className="mt-sm min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary"
         >
           Tambah Material
         </button>
@@ -99,7 +99,7 @@ export function MaterialRapStagePanel({
         type="button"
         onClick={() => handleAdvanceRapSetup("TUKANG")}
         disabled={isPending || rap.items.length === 0 || rap.setupStage !== "MATERIAL"}
-        className="bg-on-surface text-surface mt-2 min-h-12 w-full rounded-full text-xs font-bold disabled:opacity-35"
+        className="mt-2 min-h-12 w-full rounded-full bg-on-surface text-xs font-bold text-surface disabled:opacity-35"
       >
         {rap.setupStage === "MATERIAL" ? "Lanjut ke Tukang" : "Tahap Tukang Sudah Terbuka"}
       </button>
@@ -171,7 +171,7 @@ export function PackageSetupStagePanel({
           !currentSetupStage ||
           (!skipped && (items.length === 0 || items.some((item) => item.status === "DRAFT")))
         }
-        className="mt-sm bg-on-surface text-surface min-h-12 w-full rounded-full text-xs font-bold disabled:opacity-35"
+        className="mt-sm min-h-12 w-full rounded-full bg-on-surface text-xs font-bold text-surface disabled:opacity-35"
       >
         {currentSetupStage
           ? stage === "TUKANG"
@@ -255,7 +255,7 @@ export function ReviewInternalPlanPanel({
             key={row.stage}
             type="button"
             onClick={() => setActiveRapStage(row.stage)}
-            className="bg-surface-container-low flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-left"
+            className="flex min-h-12 w-full items-center gap-3 rounded-2xl bg-surface-container-low px-3 text-left"
           >
             <span
               className={`material-symbols-outlined ${row.ready ? "text-primary" : "text-warning"}`}
@@ -263,12 +263,12 @@ export function ReviewInternalPlanPanel({
               {row.ready ? "check_circle" : "warning"}
             </span>
             <span className="flex-1 text-xs font-bold">{row.label}</span>
-            <span className="text-on-surface-variant text-[10px]">Edit</span>
+            <span className="text-[10px] text-on-surface-variant">Edit</span>
           </button>
         ))}
       </div>
       {!canFinalizeRap && (
-        <p className="mt-sm bg-primary/5 text-primary rounded-2xl p-3 text-[10px] leading-4">
+        <p className="mt-sm rounded-2xl bg-primary/5 p-3 text-[10px] leading-4 text-primary">
           Menunggu Owner/Finance untuk finalisasi. Progress tetap dapat dilihat semua role.
         </p>
       )}
@@ -276,7 +276,7 @@ export function ReviewInternalPlanPanel({
         type="button"
         onClick={handleFinalizeInternalPlan}
         disabled={isPending || !canFinalizeRap}
-        className="mt-sm bg-primary text-on-primary min-h-12 w-full rounded-full text-xs font-bold disabled:opacity-35"
+        className="mt-sm min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary disabled:opacity-35"
       >
         Finalisasi Internal Plan
       </button>

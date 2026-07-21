@@ -345,7 +345,7 @@ export function BottomSheet({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.08, bottom: 0.04 }}
             onDragEnd={handleDragEnd}
-            className="bg-background ring-outline-variant/20 fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] shadow-[0_-24px_80px_rgba(0,0,0,0.28)] ring-1 outline-none"
+            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-background shadow-[0_-24px_80px_rgba(0,0,0,0.28)] ring-1 ring-outline-variant/20 outline-none"
             style={{
               zIndex: zIndex + 1,
               maxHeight: `calc(100dvh - ${SHEET_TOP_GAP}px)`,
@@ -354,7 +354,7 @@ export function BottomSheet({
             aria-modal="true"
             aria-label={title}
           >
-            <div className="bg-background/95 z-10 flex h-5 shrink-0 items-center justify-center pt-2">
+            <div className="z-10 flex h-5 shrink-0 items-center justify-center bg-background/95 pt-2">
               <button
                 ref={handleRef}
                 type="button"
@@ -363,7 +363,7 @@ export function BottomSheet({
                   if (!canResize) return;
                   dragControls.start(event);
                 }}
-                className="focus-visible:ring-primary/30 flex h-5 w-16 cursor-grab items-center justify-center rounded-full outline-none focus-visible:ring-2 active:cursor-grabbing disabled:cursor-default"
+                className="flex h-5 w-16 cursor-grab items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:cursor-grabbing disabled:cursor-default"
                 aria-label={expanded ? "Turunkan drawer" : "Perbesar drawer"}
                 disabled={!canResize}
                 style={{ touchAction: "none" }}
@@ -379,32 +379,32 @@ export function BottomSheet({
 
             <header
               ref={headerRef}
-              className="bg-background px-margin-mobile relative z-10 flex h-14 shrink-0 items-center backdrop-blur-md"
+              className="relative z-10 flex h-14 shrink-0 items-center bg-background px-margin-mobile backdrop-blur-md"
             >
               <button
                 ref={closeButtonRef}
                 type="button"
                 onClick={() => onCloseRef.current()}
-                className="left-margin-mobile bg-surface-container-lowest text-on-surface ring-outline-variant/15 active-scale absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full shadow-[0_5px_16px_rgba(17,17,17,0.08)] ring-1 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+                className="active-scale absolute top-1/2 left-margin-mobile z-10 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface-container-lowest text-on-surface shadow-[0_5px_16px_rgba(17,17,17,0.08)] ring-1 ring-outline-variant/15 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
                 aria-label="Tutup"
               >
                 <span className="material-symbols-outlined text-[24px] leading-none">close</span>
               </button>
 
               <div className="pointer-events-none absolute top-1/2 left-1/2 w-[min(58vw,15rem)] -translate-x-1/2 -translate-y-1/2 text-center">
-                <h2 className="text-on-surface truncate font-sans text-[18px] leading-tight font-semibold">
+                <h2 className="truncate font-sans text-[18px] leading-tight font-semibold text-on-surface">
                   {title}
                 </h2>
               </div>
 
-              <div className="right-margin-mobile absolute top-1/2 z-10 flex -translate-y-1/2 items-center justify-end gap-1.5">
+              <div className="absolute top-1/2 right-margin-mobile z-10 flex -translate-y-1/2 items-center justify-end gap-1.5">
                 {action}
               </div>
             </header>
 
             <div
               ref={bodyRef}
-              className={`px-margin-mobile py-md no-scrollbar min-h-0 flex-1 ${
+              className={`no-scrollbar min-h-0 flex-1 px-margin-mobile py-md ${
                 contentOverflows ? "overflow-y-auto" : "overflow-y-hidden"
               }`}
             >
@@ -413,7 +413,7 @@ export function BottomSheet({
             {footer && (
               <div
                 ref={footerRef}
-                className="border-outline-variant/15 bg-background px-margin-mobile pt-sm shrink-0 border-t pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md"
+                className="shrink-0 border-t border-outline-variant/15 bg-background px-margin-mobile pt-sm pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md"
               >
                 {footer}
               </div>
@@ -553,7 +553,7 @@ export function ConfirmationModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 10 }}
               transition={transitionSpringSmooth}
-              className="bg-background no-scrollbar pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-[360px] overflow-y-auto rounded-[28px] p-5 shadow-[0_28px_90px_rgba(0,0,0,0.32)] ring-1 ring-white/10 outline-none"
+              className="no-scrollbar pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-90 overflow-y-auto rounded-[28px] bg-background p-5 shadow-[0_28px_90px_rgba(0,0,0,0.32)] ring-1 ring-white/10 outline-none"
             >
               <div
                 className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}
@@ -565,20 +565,20 @@ export function ConfirmationModal({
                 )}
               </div>
               <div className="mt-4 text-center">
-                <h2 id={titleId} className="text-on-surface text-lg leading-6 font-bold">
+                <h2 id={titleId} className="text-lg leading-6 font-bold text-on-surface">
                   {title}
                 </h2>
                 {description ? (
                   <p
                     id={descriptionId}
-                    className="text-on-surface-variant mx-auto mt-2 max-w-[300px] text-sm leading-5"
+                    className="mx-auto mt-2 max-w-75 text-sm leading-5 text-on-surface-variant"
                   >
                     {description}
                   </p>
                 ) : null}
               </div>
               {children ? (
-                <div className="bg-surface-container-lowest ring-outline-variant/15 mt-4 rounded-[22px] p-4 ring-1">
+                <div className="mt-4 rounded-[22px] bg-surface-container-lowest p-4 ring-1 ring-outline-variant/15">
                   {children}
                 </div>
               ) : null}
@@ -631,7 +631,7 @@ export function ConfirmationSheet({
             whileTap={{ scale: 0.97 }}
             transition={transitionSpringSnappy}
             onClick={onClose}
-            className="bg-surface-container text-on-surface focus-visible:ring-primary/25 min-h-12 rounded-full px-4 text-xs font-bold outline-none focus-visible:ring-2"
+            className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           >
             Batal
           </motion.button>

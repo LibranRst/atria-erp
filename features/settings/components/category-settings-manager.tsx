@@ -112,7 +112,7 @@ export function CategorySettingsManager({
         />
       )}
       {message && (
-        <p className="bg-primary/5 text-primary ring-primary/15 rounded-2xl px-3 py-2.5 text-[11px] leading-4 ring-1">
+        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-[11px] leading-4 text-primary ring-1 ring-primary/15">
           {message}
         </p>
       )}
@@ -123,23 +123,23 @@ export function CategorySettingsManager({
               key={category.id}
               type="button"
               onClick={() => openEditor(category)}
-              className="focus-visible:bg-surface-container-low active:bg-surface-container-low/75 flex min-h-[86px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none"
+              className="flex min-h-21.5 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
               aria-label={`${canManage ? "Edit" : "Lihat"} ${category.name}`}
             >
-              <span className="bg-surface-container-low text-on-surface-variant flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
                 <LockKeyhole className="h-4 w-4" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex min-w-0 items-center gap-2">
-                  <span className="text-on-surface truncate text-[13px] font-bold">
+                  <span className="truncate text-[13px] font-bold text-on-surface">
                     {category.name}
                   </span>
                   <SettingsStatusLabel label={category.code} tone="neutral" />
                 </span>
-                <span className="text-on-surface-variant mt-1 line-clamp-2 block text-[10px] leading-[1.3]">
+                <span className="mt-1 line-clamp-2 block text-[10px] leading-[1.3] text-on-surface-variant">
                   {category.description || "Belum ada deskripsi kategori."}
                 </span>
-                <span className="text-on-surface-variant/70 mt-1.5 block text-[9px] font-semibold">
+                <span className="mt-1.5 block text-[9px] font-semibold text-on-surface-variant/70">
                   Kode dan status aktif dilindungi
                 </span>
               </span>
@@ -180,18 +180,18 @@ export function CategorySettingsManager({
             helper="Nama dan penjelasan tampil di budget, transaksi, dan laporan."
           >
             <div className="flex min-h-14 items-center gap-3 px-4 py-2.5">
-              <span className="bg-surface-container-low text-on-surface-variant flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
                 <LockKeyhole className="h-4 w-4" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
+                <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
                   Kode kategori
                 </p>
-                <p className="text-on-surface mt-1 text-sm leading-none font-bold">
+                <p className="mt-1 text-sm leading-none font-bold text-on-surface">
                   {editing.code}
                 </p>
               </div>
-              <span className="bg-surface-container-low text-on-surface-variant shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold">
+              <span className="shrink-0 rounded-full bg-surface-container-low px-2.5 py-1 text-[9px] font-bold text-on-surface-variant">
                 Dilindungi
               </span>
             </div>
@@ -239,7 +239,7 @@ export function CategorySettingsManager({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmClose(false)}
-              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
             >
               Lanjut Mengedit
             </motion.button>
@@ -252,7 +252,7 @@ export function CategorySettingsManager({
                 setEditingBaseline(null);
                 setConfirmClose(false);
               }}
-              className="bg-error min-h-12 rounded-full px-4 text-xs font-bold text-white"
+              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
             >
               Buang Perubahan
             </motion.button>

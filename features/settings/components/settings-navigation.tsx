@@ -58,7 +58,7 @@ export function SettingsNavigation({
         padding: stickyActive ? 8 : 0,
       }}
       transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
-      className={`${WORKSPACE_STICKY_CONTROLS_ENABLED ? "sticky top-16 z-20 [overflow-anchor:none]" : "relative"} ${stickyActive ? "overflow-hidden rounded-[24px]" : ""}`}
+      className={`${WORKSPACE_STICKY_CONTROLS_ENABLED ? "sticky top-16 z-20 [overflow-anchor:none]" : "relative"} ${stickyActive ? "overflow-hidden rounded-3xl" : ""}`}
     >
       <AnimatePresence initial={false}>
         {stickyActive ? (
@@ -68,7 +68,7 @@ export function SettingsNavigation({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={reduceMotion ? { duration: 0 } : transitionEaseSmooth}
-            className="pointer-events-none absolute inset-0 rounded-[24px] bg-white/96 shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
+            className="pointer-events-none absolute inset-0 rounded-3xl bg-white/96 shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
             aria-hidden="true"
           />
         ) : null}
@@ -90,7 +90,7 @@ export function SettingsNavigation({
             return {
               value: module.value,
               label: module.shortLabel,
-              icon: <Icon className="h-[15px] w-[15px]" aria-hidden="true" />,
+              icon: <Icon className="h-3.75 w-3.75" aria-hidden="true" />,
             };
           })}
         />

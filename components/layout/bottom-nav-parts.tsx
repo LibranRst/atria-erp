@@ -28,11 +28,11 @@ export function BottomTabBar({
   return (
     <nav
       aria-label="Primary mobile navigation"
-      className="border-outline-variant/20 pointer-events-auto relative z-10 flex h-full flex-1 items-center justify-center rounded-full border bg-white p-1 shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+      className="pointer-events-auto relative z-10 flex h-full flex-1 items-center justify-center rounded-full border border-outline-variant/20 bg-white p-1 shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
     >
       {activeIndex !== -1 && (
         <motion.div
-          className="bg-primary absolute top-1 bottom-1 rounded-full"
+          className="absolute top-1 bottom-1 rounded-full bg-primary"
           initial={false}
           animate={{
             left: `calc(4px + (100% - 8px) * ${activeIndex} / ${items.length})`,
@@ -65,7 +65,7 @@ export function BottomTabBar({
             >
               {item.iconName}
             </span>
-            <span className="relative z-10 font-sans text-[8px] leading-[16px] font-bold tracking-wider uppercase">
+            <span className="relative z-10 font-sans text-[8px] leading-4 font-bold tracking-wider uppercase">
               {item.label}
             </span>
           </Link>
@@ -118,7 +118,7 @@ export function QuickActionFab({
           transition={transitionEaseSmooth}
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
         >
-          <span className="material-symbols-outlined text-primary text-[32px]">add</span>
+          <span className="material-symbols-outlined text-[32px] text-primary">add</span>
         </motion.div>
 
         <motion.div
@@ -128,7 +128,7 @@ export function QuickActionFab({
             scale: isOpen ? 1 : 0.95,
           }}
           transition={transitionEaseSmooth}
-          className={`flex w-[240px] flex-col p-3 ${
+          className={`flex w-60 flex-col p-3 ${
             isOpen ? "pointer-events-auto" : "pointer-events-none"
           }`}
         >
@@ -163,7 +163,7 @@ export function QuickActionFab({
                   >
                     {action.label}
                   </span>
-                  <span className="text-on-surface-variant block truncate text-[10px] font-semibold">
+                  <span className="block truncate text-[10px] font-semibold text-on-surface-variant">
                     {action.description}
                   </span>
                 </span>

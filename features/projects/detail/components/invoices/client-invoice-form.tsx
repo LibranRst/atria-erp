@@ -194,7 +194,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
         <div className="space-y-md">
           {error ? (
             <div
-              className="bg-error-container/20 text-error rounded-2xl p-3 text-xs font-medium"
+              className="rounded-2xl bg-error-container/20 p-3 text-xs font-medium text-error"
               role="alert"
             >
               {error}
@@ -221,7 +221,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                 secara terpisah.
               </FormRiskNotice>
               {draft.payload.notes ? (
-                <p className="bg-surface-container-low rounded-2xl px-4 py-3 text-xs leading-5">
+                <p className="rounded-2xl bg-surface-container-low px-4 py-3 text-xs leading-5">
                   {draft.payload.notes}
                 </p>
               ) : null}
@@ -238,7 +238,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                 title="Identitas invoice"
                 helper="Nomor disiapkan otomatis dan tetap dapat diubah."
               >
-                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
                   <FormField label="Nomor Invoice" required>
                     <TextInput
                       value={draft.payload.invoiceNumber}
@@ -259,7 +259,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                 </div>
               </FormSection>
               <FormSection title="Nilai dan tenggat" helper="Nominal tidak ditebak oleh sistem.">
-                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
                   <FormField label="Nominal Tagihan" required>
                     <MoneyInput
                       value={draft.payload.amount}
@@ -328,8 +328,8 @@ function ReviewFact({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

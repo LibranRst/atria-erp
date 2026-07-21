@@ -25,13 +25,13 @@ export function SettingsModuleHeader({
   return (
     <header className="flex min-w-0 items-end justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-on-surface-variant/65 text-[9px] font-bold tracking-[0.14em] uppercase">
+        <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant/65 uppercase">
           {eyebrow}
         </p>
-        <h2 className="text-on-surface mt-1 text-[19px] leading-[1.12] font-semibold tracking-[-0.02em]">
+        <h2 className="mt-1 text-[19px] leading-[1.12] font-semibold tracking-[-0.02em] text-on-surface">
           {title}
         </h2>
-        <p className="text-on-surface-variant mt-1 max-w-lg text-[11px] leading-[1.35]">
+        <p className="mt-1 max-w-lg text-[11px] leading-[1.35] text-on-surface-variant">
           {description}
         </p>
       </div>
@@ -61,7 +61,7 @@ export function SettingsGroupSurface({
 }): React.JSX.Element {
   return (
     <div
-      className={`overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-[24px] ${className}`}
+      className={`overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl ${className}`}
     >
       {children}
     </div>
@@ -101,7 +101,7 @@ export function SettingsStatusLabel({
 export function SettingsRowChevron(): React.JSX.Element {
   return (
     <span
-      className="bg-surface-container-low flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-[#007AFF]"
       aria-hidden="true"
     >
       <ChevronRight className="h-4 w-4" />

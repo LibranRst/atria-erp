@@ -205,7 +205,7 @@ export function StockOperationSheet({
             key={key}
             type="button"
             onClick={() => open(key)}
-            className={`min-h-12 rounded-full px-3 text-xs font-bold ${key === "WASTE" ? "bg-error-container/25 text-error" : "text-primary ring-primary/15 bg-white ring-1"}`}
+            className={`min-h-12 rounded-full px-3 text-xs font-bold ${key === "WASTE" ? "bg-error-container/25 text-error" : "bg-white text-primary ring-1 ring-primary/15"}`}
           >
             {LABELS[key]}
           </button>
@@ -277,7 +277,7 @@ export function StockOperationSheet({
         ) : (
           <div className="space-y-md">
             {message && (
-              <p className="bg-error-container/30 text-error rounded-2xl p-3 text-xs leading-5">
+              <p className="rounded-2xl bg-error-container/30 p-3 text-xs leading-5 text-error">
                 {message}
               </p>
             )}
@@ -429,8 +429,8 @@ function ReviewFact({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

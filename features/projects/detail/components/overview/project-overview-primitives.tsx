@@ -29,8 +29,8 @@ export function DetailMetric({
   readonly danger?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="bg-surface-container-low min-w-0 rounded-2xl p-3">
-      <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-wide uppercase">
+    <div className="min-w-0 rounded-2xl bg-surface-container-low p-3">
+      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
         {label}
       </p>
       <MoneyValue
@@ -53,13 +53,13 @@ export function DetailRow({
   readonly detail?: string;
 }): React.JSX.Element {
   return (
-    <div className="border-outline-variant/25 border-t px-4 py-3 first:border-t-0">
-      <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
+    <div className="border-t border-outline-variant/25 px-4 py-3 first:border-t-0">
+      <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
         {label}
       </p>
-      <p className="text-on-surface mt-1 text-sm leading-5 font-bold">{value}</p>
+      <p className="mt-1 text-sm leading-5 font-bold text-on-surface">{value}</p>
       {detail && (
-        <p className="text-on-surface-variant mt-1 text-[10px] leading-4 wrap-break-word">
+        <p className="mt-1 text-[10px] leading-4 wrap-break-word text-on-surface-variant">
           {detail}
         </p>
       )}

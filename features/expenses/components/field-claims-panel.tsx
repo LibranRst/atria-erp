@@ -152,7 +152,7 @@ export function FieldClaimsPanel({
               <button
                 type="button"
                 onClick={() => setVisibleLimit((current) => current + 20)}
-                className="bg-surface-container text-on-surface min-h-12 w-full rounded-full text-xs leading-4 font-bold"
+                className="min-h-12 w-full rounded-full bg-surface-container text-xs leading-4 font-bold text-on-surface"
               >
                 Tampilkan 20 berikutnya
               </button>
@@ -210,7 +210,7 @@ function FieldClaimsSummary({
     >
       <div className="flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-on-surface-variant/60 text-[9px] leading-3 font-semibold">
+          <p className="text-[9px] leading-3 font-semibold text-on-surface-variant/60">
             Total aktif
           </p>
           <MoneyValue
@@ -220,11 +220,11 @@ function FieldClaimsSummary({
             className="mt-1"
           />
         </div>
-        <p className="text-on-surface-variant/70 max-w-[145px] text-right text-[10px] leading-4">
+        <p className="max-w-36.25 text-right text-[10px] leading-4 text-on-surface-variant/70">
           Dana yang masih berada dalam alur verifikasi hingga pencairan.
         </p>
       </div>
-      <div className="bg-surface-container-low/65 mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5">
+      <div className="mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
         <InboxMetric label="Butuh aksi" value={String(needsActionCount)} />
         <InboxMetric label="Siap dicairkan" value={String(readyToPayCount)} />
       </div>
@@ -241,10 +241,10 @@ function InboxMetric({
 }): React.JSX.Element {
   return (
     <div className="min-w-0 px-2.5 first:pl-0 last:pr-0">
-      <p className="text-on-surface-variant/60 truncate text-[9px] leading-3 font-semibold">
+      <p className="truncate text-[9px] leading-3 font-semibold text-on-surface-variant/60">
         {label}
       </p>
-      <p className="text-on-surface mt-1 font-mono text-sm leading-5 font-bold">{value}</p>
+      <p className="mt-1 font-mono text-sm leading-5 font-bold text-on-surface">{value}</p>
     </div>
   );
 }

@@ -31,15 +31,17 @@ function SectionHeader({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-10 items-center justify-between gap-3 px-1">
-      <h2 className="text-on-surface min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] max-[430px]:text-[15px] max-[430px]:leading-5">
+      <h2 className="min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5">
         {title}
       </h2>
       {meta ? (
-        <span className="text-on-surface-variant/65 shrink-0 text-[9px] font-semibold">{meta}</span>
+        <span className="shrink-0 text-[9px] font-semibold text-on-surface-variant/65">{meta}</span>
       ) : null}
     </div>
   );
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function ProfilePage(): Promise<React.JSX.Element> {
   const session = await requireServerSession();
@@ -58,11 +60,11 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
     <section className="space-y-5 pb-8 max-[430px]:-mx-1 max-[430px]:space-y-4 max-[430px]:pb-6">
       <header className="px-1">
         <div className="min-w-0">
-          <p className="text-primary text-[9px] font-bold tracking-[0.16em] uppercase">Akun</p>
-          <h1 className="text-on-surface mt-1 text-[25px] leading-7 font-bold tracking-tight max-[430px]:text-[22px] max-[430px]:leading-6">
+          <p className="text-[9px] font-bold tracking-[0.16em] text-primary uppercase">Akun</p>
+          <h1 className="mt-1 text-[25px] leading-7 font-bold tracking-tight text-on-surface max-[430px]:text-[22px] max-[430px]:leading-6">
             Profil saya
           </h1>
-          <p className="text-on-surface-variant mt-1.5 max-w-[290px] text-[11px] leading-[1.4]">
+          <p className="mt-1.5 max-w-72.5 text-[11px] leading-[1.4] text-on-surface-variant">
             Identitas akun dan akses ERP yang tersedia untuk peran Anda.
           </p>
         </div>
@@ -82,11 +84,11 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
 
       <section className="space-y-2">
         <SectionHeader title="Akun & akses" />
-        <div className="relative isolate overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[24px]">
+        <div className="relative isolate overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl">
           <div className="divide-y divide-black/5.5">
-            <div className="flex min-h-[64px] min-w-0 items-center gap-3 px-3.5 py-3">
+            <div className="flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3">
               <span
-                className="bg-surface-container-high/65 text-on-surface-variant flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ring-black/[0.035]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-high/65 text-on-surface-variant ring-1 ring-black/[0.035]"
                 aria-hidden="true"
               >
                 <span className="material-symbols-outlined text-[18px] leading-none">
@@ -94,17 +96,17 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                 </span>
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-on-surface truncate text-[13px] leading-4 font-bold">
+                <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
                   Peran autentikasi
                 </p>
-                <p className="text-on-surface-variant mt-1 truncate text-[10px] leading-[1.3]">
+                <p className="mt-1 truncate text-[10px] leading-[1.3] text-on-surface-variant">
                   Menentukan menu dan tindakan yang tersedia.
                 </p>
               </div>
-              <span className="text-on-surface shrink-0 text-[10px] font-bold">{roleLabel}</span>
+              <span className="shrink-0 text-[10px] font-bold text-on-surface">{roleLabel}</span>
             </div>
 
-            <div className="flex min-h-[64px] min-w-0 items-center gap-3 px-3.5 py-3">
+            <div className="flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3">
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${session.user.isActive ? "bg-success/[0.07] text-success ring-success/6" : "bg-error/[0.07] text-error ring-error/6"}`}
                 aria-hidden="true"
@@ -114,10 +116,10 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                 </span>
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-on-surface truncate text-[13px] leading-4 font-bold">
+                <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
                   Status akun
                 </p>
-                <p className="text-on-surface-variant mt-1 truncate text-[10px] leading-[1.3]">
+                <p className="mt-1 truncate text-[10px] leading-[1.3] text-on-surface-variant">
                   Akses masuk dan aktivitas ERP.
                 </p>
               </div>
@@ -131,24 +133,24 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
             {canAccessSettings ? (
               <Link
                 href="/settings"
-                className="active:bg-surface-container-low focus-visible:bg-surface-container-low focus-visible:ring-primary/25 flex min-h-[64px] min-w-0 items-center gap-3 px-3.5 py-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                className="flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3 transition-colors outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-inset active:bg-surface-container-low"
               >
                 <span
-                  className="bg-primary/6.5 text-primary ring-primary/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/6.5 text-primary ring-1 ring-primary/6"
                   aria-hidden="true"
                 >
                   <span className="material-symbols-outlined text-[18px] leading-none">tune</span>
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-on-surface truncate text-[13px] leading-4 font-bold">
+                  <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
                     Pengaturan ERP
                   </p>
-                  <p className="text-on-surface-variant mt-1 truncate text-[10px] leading-[1.3]">
+                  <p className="mt-1 truncate text-[10px] leading-[1.3] text-on-surface-variant">
                     Kelola default dan master data sesuai akses.
                   </p>
                 </div>
                 <span
-                  className="material-symbols-outlined text-primary shrink-0 text-[18px] leading-none"
+                  className="material-symbols-outlined shrink-0 text-[18px] leading-none text-primary"
                   aria-hidden="true"
                 >
                   chevron_right
@@ -173,7 +175,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
 
       <section className="space-y-2">
         <SectionHeader title="Sesi" />
-        <div className="overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[24px]">
+        <div className="overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl">
           <LogoutButton />
         </div>
       </section>

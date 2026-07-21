@@ -30,15 +30,15 @@ export function SettingsHeader({
     <header className="min-w-0">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-on-surface-variant/65 text-[9px] font-bold tracking-[0.15em] uppercase">
+          <p className="text-[9px] font-bold tracking-[0.15em] text-on-surface-variant/65 uppercase">
             {eyebrow}
           </p>
-          <h1 className="text-on-surface mt-1.5 text-[24px] leading-[1.12] font-semibold tracking-tight max-[360px]:text-[22px]">
+          <h1 className="mt-1.5 text-[24px] leading-[1.12] font-semibold tracking-tight text-on-surface max-[360px]:text-[22px]">
             {title}
           </h1>
-          <p className="text-on-surface-variant mt-1 text-[11px] leading-[1.35]">{description}</p>
+          <p className="mt-1 text-[11px] leading-[1.35] text-on-surface-variant">{description}</p>
         </div>
-        <span className="bg-surface-container-low text-on-surface-variant mt-0.5 shrink-0 rounded-full px-2.5 py-1.5 text-[8px] font-extrabold tracking-[0.08em] uppercase">
+        <span className="mt-0.5 shrink-0 rounded-full bg-surface-container-low px-2.5 py-1.5 text-[8px] font-extrabold tracking-[0.08em] text-on-surface-variant uppercase">
           {canManage === false ? "Hanya baca" : role}
         </span>
       </div>
@@ -75,8 +75,8 @@ export function CompactMetric({
           ? "text-error"
           : "text-on-surface";
   return (
-    <div className="bg-surface-container-low min-w-0 rounded-2xl px-3 py-2.5">
-      <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-wide uppercase">
+    <div className="min-w-0 rounded-2xl bg-surface-container-low px-3 py-2.5">
+      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
         {label}
       </p>
       {typeof amount === "number" ? (
@@ -111,7 +111,7 @@ export function CompactMetric({
         </p>
       )}
       {typeof amount !== "number" && fullValue && fullValue !== value && (
-        <p className="financial-amount text-on-surface-variant/75 mt-1 font-mono text-[9px] wrap-anywhere wrap-break-word tabular-nums">
+        <p className="financial-amount mt-1 font-mono text-[9px] wrap-anywhere wrap-break-word text-on-surface-variant/75 tabular-nums">
           {fullValue}
         </p>
       )}
@@ -130,12 +130,12 @@ export function Field({
 }): React.JSX.Element {
   return (
     <div className="min-w-0 space-y-1.5">
-      <label className="text-on-surface-variant block text-[9px] font-bold tracking-[0.12em] uppercase">
+      <label className="block text-[9px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
         {label}
       </label>
       {children}
       {hint && (
-        <span className="text-on-surface-variant block text-[10px] leading-4 font-normal">
+        <span className="block text-[10px] leading-4 font-normal text-on-surface-variant">
           {hint}
         </span>
       )}
@@ -150,10 +150,10 @@ export const textareaClass =
 
 export function SettingsNotice(): React.JSX.Element {
   return (
-    <div className="bg-primary/5 text-on-surface-variant ring-primary/15 flex min-w-0 items-start gap-2.5 rounded-2xl px-3 py-2.5 text-[11px] leading-4 ring-1">
-      <Info className="text-primary mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+    <div className="flex min-w-0 items-start gap-2.5 rounded-2xl bg-primary/5 px-3 py-2.5 text-[11px] leading-4 text-on-surface-variant ring-1 ring-primary/15">
+      <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
       <p className="min-w-0">
-        <strong className="text-on-surface font-bold">Untuk proyek baru.</strong> Default ini tidak
+        <strong className="font-bold text-on-surface">Untuk proyek baru.</strong> Default ini tidak
         mengubah budget proyek yang sudah aktif.
       </p>
     </div>

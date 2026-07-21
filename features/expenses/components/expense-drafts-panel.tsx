@@ -72,21 +72,21 @@ export function ExpenseDraftsPanel({
 
   return (
     <>
-      <section className="overflow-hidden rounded-[24px] bg-white/88 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5 backdrop-blur-xl">
+      <section className="overflow-hidden rounded-3xl bg-white/88 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5 backdrop-blur-xl">
         <button
           type="button"
           onClick={() => setExpanded((current) => !current)}
-          className="focus-visible:ring-primary/30 flex min-h-14 w-full items-center gap-3 px-3 py-2.5 text-left outline-none focus-visible:ring-2"
+          className="flex min-h-14 w-full items-center gap-3 px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           aria-expanded={expanded}
         >
-          <span className="bg-primary/9 text-primary ring-primary/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/9 text-primary ring-1 ring-primary/6">
             <span className="material-symbols-outlined text-[18px]">edit_note</span>
           </span>
           <span className="grid min-w-0 flex-1 gap-0.5">
-            <span className="text-on-surface block text-xs leading-[1.15] font-bold">
+            <span className="block text-xs leading-[1.15] font-bold text-on-surface">
               {visibleDrafts.length} draft siap dilanjutkan
             </span>
-            <span className="text-on-surface-variant block truncate text-[10px] leading-[1.2]">
+            <span className="block truncate text-[10px] leading-[1.2] text-on-surface-variant">
               Terakhir: {visibleDrafts[0]?.projectName} ·{" "}
               {savedTimeLabel(visibleDrafts[0]?.lastSavedAt ?? new Date())}
             </span>
@@ -94,7 +94,7 @@ export function ExpenseDraftsPanel({
           <motion.span
             animate={{ rotate: expanded ? 180 : 0 }}
             transition={transitionSpringSnappy}
-            className="material-symbols-outlined text-on-surface-variant text-[20px]"
+            className="material-symbols-outlined text-[20px] text-on-surface-variant"
           >
             expand_more
           </motion.span>
@@ -107,7 +107,7 @@ export function ExpenseDraftsPanel({
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={transitionSpringSmooth}
-              className="border-outline-variant/12 overflow-hidden border-t"
+              className="overflow-hidden border-t border-outline-variant/12"
             >
               <div className="space-y-1 p-2">
                 {visibleDrafts.map((draft) => (
@@ -115,7 +115,7 @@ export function ExpenseDraftsPanel({
                     layout
                     key={draft.id}
                     transition={transitionSpringSnappy}
-                    className="bg-surface-container-low/65 flex min-h-14 items-center gap-2 rounded-[20px] px-2 py-1.5"
+                    className="flex min-h-14 items-center gap-2 rounded-[20px] bg-surface-container-low/65 px-2 py-1.5"
                   >
                     <button
                       type="button"
@@ -123,12 +123,12 @@ export function ExpenseDraftsPanel({
                         updateUrlSearchParam("expense-draft", draft.id, "replace");
                         updateUrlSearchParam("new-expense", "true", "push");
                       }}
-                      className="focus-visible:ring-primary/30 min-w-0 flex-1 rounded-2xl px-2 py-1 text-left outline-none focus-visible:ring-2"
+                      className="min-w-0 flex-1 rounded-2xl px-2 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                     >
-                      <span className="text-on-surface block truncate text-xs font-bold">
+                      <span className="block truncate text-xs font-bold text-on-surface">
                         {draft.projectName}
                       </span>
-                      <span className="text-on-surface-variant mt-0.5 block truncate text-[11px]">
+                      <span className="mt-0.5 block truncate text-[11px] text-on-surface-variant">
                         {draft.itemCount} item · Rp {draft.totalAmount.toLocaleString("id-ID")} ·{" "}
                         {savedTimeLabel(draft.lastSavedAt)}
                       </span>
@@ -136,7 +136,7 @@ export function ExpenseDraftsPanel({
                     <button
                       type="button"
                       onClick={() => setDiscardTarget(draft)}
-                      className="text-error focus-visible:ring-error/30 flex h-12 w-12 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2"
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-error outline-none focus-visible:ring-2 focus-visible:ring-error/30"
                       aria-label={`Buang draft ${draft.projectName}`}
                     >
                       <span className="material-symbols-outlined text-[19px]">delete</span>

@@ -57,23 +57,23 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
   };
 
   return (
-    <div className="px-margin-mobile pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 mx-auto w-full max-w-md">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 mx-auto w-full max-w-md px-margin-mobile">
       <aside
-        className="pointer-events-auto relative isolate flex min-h-[60px] min-w-0 items-center gap-2 overflow-hidden rounded-[22px] bg-white/88 p-1.5 pl-2 shadow-[0_1px_2px_rgba(17,17,17,0.035),0_14px_36px_rgba(17,17,17,0.14)] ring-1 ring-black/[0.035] backdrop-blur-xl"
+        className="pointer-events-auto relative isolate flex min-h-15 min-w-0 items-center gap-2 overflow-hidden rounded-[22px] bg-white/88 p-1.5 pl-2 shadow-[0_1px_2px_rgba(17,17,17,0.035),0_14px_36px_rgba(17,17,17,0.14)] ring-1 ring-black/[0.035] backdrop-blur-xl"
         aria-live="polite"
         aria-label="Mode simulasi developer aktif"
       >
         <span
-          className="bg-warning/10 text-warning ring-warning/8 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/10 text-warning ring-1 ring-warning/8"
           aria-hidden="true"
         >
           <span className="material-symbols-outlined text-[18px] leading-none">developer_mode</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="text-on-surface block truncate text-[11px] leading-5 font-bold">
+          <span className="block truncate text-[11px] leading-5 font-bold text-on-surface">
             Simulasi · {simulation.roleLabel}
           </span>
-          <span className="text-on-surface-variant block truncate text-[10px] leading-4">
+          <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
             {simulation.userName}
           </span>
         </span>
@@ -83,9 +83,9 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
           disabled={pending}
           whileTap={pending ? undefined : { scale: 0.97 }}
           transition={transitionSpringSnappy}
-          className="focus-visible:ring-primary/30 flex min-h-12 shrink-0 items-center rounded-full outline-none focus-visible:ring-2 disabled:opacity-55"
+          className="flex min-h-12 shrink-0 items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-55"
         >
-          <span className="bg-on-surface flex h-10 items-center rounded-full px-3.5 text-[10px] font-bold text-white shadow-[0_5px_14px_rgba(17,17,17,0.14)]">
+          <span className="flex h-10 items-center rounded-full bg-on-surface px-3.5 text-[10px] font-bold text-white shadow-[0_5px_14px_rgba(17,17,17,0.14)]">
             {pending ? "Memulihkan…" : "Kembali"}
           </span>
         </motion.button>

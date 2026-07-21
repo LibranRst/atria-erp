@@ -6,6 +6,8 @@ import { getPendingApprovalDetails, rankPendingApprovals } from "@/lib/finance/a
 import { requireServerSession } from "@/lib/server/session";
 import React from "react";
 
+export const dynamic = "force-dynamic";
+
 export default async function ApprovalsPage(): Promise<React.JSX.Element> {
   // 1. Get session
   const session = await requireServerSession();

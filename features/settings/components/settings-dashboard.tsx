@@ -80,7 +80,7 @@ export function SettingsDashboard({
         batches={openingBatches}
       />
     ) : (
-      <p className="text-on-surface-variant rounded-[24px] bg-white p-5 text-xs">
+      <p className="rounded-3xl bg-white p-5 text-xs text-on-surface-variant">
         Kesiapan setup hanya tersedia untuk Owner.
       </p>
     );
@@ -141,7 +141,7 @@ export function SettingsDashboard({
   }
 
   return (
-    <section className="space-y-lg min-w-0 pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
+    <section className="min-w-0 space-y-lg pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
       <SettingsHeader
         eyebrow="Pusat kontrol"
         title="Pengaturan ERP"

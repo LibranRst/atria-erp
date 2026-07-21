@@ -5,6 +5,8 @@ import { requireServerSession } from "@/lib/server/session";
 import { redirect } from "next/navigation";
 import { hasPendingOnboardingSetupApproval } from "@/app/actions/onboarding-review";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home(): Promise<never> {
   const session = await requireServerSession();
 

@@ -70,12 +70,12 @@ export function SettingsFilterBar<TValue extends string>({
               onSearchChange("");
               setFilterOpen(true);
             }}
-            className="text-on-surface focus-visible:ring-primary/25 relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/96 shadow-[0_8px_22px_rgba(17,17,17,0.055)] ring-1 ring-black/4 outline-none focus-visible:ring-2"
+            className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/96 text-on-surface shadow-[0_8px_22px_rgba(17,17,17,0.055)] ring-1 ring-black/4 outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
             aria-label={`Buka ${filterTitle.toLowerCase()}`}
           >
-            <SlidersHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
+            <SlidersHorizontal className="h-4.5 w-4.5" aria-hidden="true" />
             {filterCount > 0 ? (
-              <span className="bg-primary absolute -top-0.5 -right-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full font-mono text-[8px] leading-none font-black text-white">
+              <span className="absolute -top-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary font-mono text-[8px] leading-none font-black text-white">
                 {filterCount}
               </span>
             ) : null}
@@ -91,14 +91,14 @@ export function SettingsFilterBar<TValue extends string>({
             <button
               type="button"
               onClick={onResetFilters}
-              className="bg-surface-container text-on-surface min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
             >
               Reset
             </button>
             <button
               type="button"
               onClick={() => setFilterOpen(false)}
-              className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white"
+              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white"
             >
               Terapkan filter
             </button>

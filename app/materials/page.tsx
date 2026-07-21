@@ -7,6 +7,8 @@ import {
 } from "@/features/materials/components/material-page-primitives";
 import { MaterialsControlCenter } from "@/features/materials/components/materials-control-center";
 
+export const dynamic = "force-dynamic";
+
 export default async function MaterialsPage(): Promise<React.JSX.Element> {
   const result = await getMaterialOperationsDashboard();
   if (!result.success) {

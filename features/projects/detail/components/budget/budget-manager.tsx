@@ -276,7 +276,7 @@ export function BudgetManager({
 
       {/* PANEL AKSI DRAFT & REJECTED: PM / OWNER BISA TAMBAH ITEM & AJUKAN */}
       {isEditable && canManage && (
-        <div className="space-y-md border-outline-variant/10 pt-md border-t">
+        <div className="space-y-md border-t border-outline-variant/10 pt-md">
           <BudgetItemForm
             open={showItemForm}
             form={budgetItemForm}
@@ -301,7 +301,7 @@ export function BudgetManager({
             type="button"
             disabled={isPending}
             onClick={() => setShowItemForm(true)}
-            className="bg-surface-container-low text-primary ring-primary/15 min-h-12 w-full rounded-full px-5 text-xs font-bold ring-1 disabled:opacity-40"
+            className="min-h-12 w-full rounded-full bg-surface-container-low px-5 text-xs font-bold text-primary ring-1 ring-primary/15 disabled:opacity-40"
           >
             Tambah Item Project Budget
           </button>

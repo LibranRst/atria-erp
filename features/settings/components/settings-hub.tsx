@@ -77,7 +77,7 @@ export function SettingsHub({
   const bufferWidth = Math.min(100, Math.max(0, data.unallocatedBufferRatio * 100));
 
   return (
-    <section className="space-y-lg min-w-0 max-[430px]:space-y-5">
+    <section className="min-w-0 space-y-lg max-[430px]:space-y-5">
       <SettingsModuleHeader
         eyebrow="Posisi default"
         title="Default proyek baru"
@@ -150,7 +150,7 @@ export function SettingsHub({
       {readiness.length > 0 ? (
         <section className="space-y-2">
           <div className="flex min-h-10 items-center justify-between gap-3">
-            <h3 className="text-on-surface text-[17px] font-semibold tracking-[-0.015em]">
+            <h3 className="text-[17px] font-semibold tracking-[-0.015em] text-on-surface">
               Kesiapan production
             </h3>
             <SettingsStatusLabel
@@ -167,17 +167,17 @@ export function SettingsHub({
               {readiness.map((item) => {
                 const Icon = item.ready ? CheckCircle2 : CircleAlert;
                 return (
-                  <div key={item.id} className="flex min-h-[68px] items-center gap-3 px-3.5 py-3">
+                  <div key={item.id} className="flex min-h-17 items-center gap-3 px-3.5 py-3">
                     <span
                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.ready ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="text-on-surface block text-[13px] font-bold">
+                      <span className="block text-[13px] font-bold text-on-surface">
                         {item.label}
                       </span>
-                      <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-[1.35]">
+                      <span className="mt-0.5 block text-[10px] leading-[1.35] text-on-surface-variant">
                         {item.detail}
                       </span>
                     </span>
@@ -195,7 +195,7 @@ export function SettingsHub({
 
       <section className="space-y-2">
         <div className="flex min-h-10 items-center">
-          <h3 className="text-on-surface text-[17px] font-semibold tracking-[-0.015em]">
+          <h3 className="text-[17px] font-semibold tracking-[-0.015em] text-on-surface">
             Modul pengaturan
           </h3>
         </div>
@@ -208,14 +208,14 @@ export function SettingsHub({
                   key={module.tab}
                   type="button"
                   onClick={() => onSelectTab(module.tab)}
-                  className="focus-visible:bg-surface-container-low active:bg-surface-container-low/75 flex min-h-[82px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none"
+                  className="flex min-h-20.5 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
                 >
-                  <span className="bg-surface-container-low text-on-surface flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface">
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-center gap-2">
-                      <span className="text-on-surface truncate text-[13px] leading-4 font-bold">
+                      <span className="truncate text-[13px] leading-4 font-bold text-on-surface">
                         {module.title}
                       </span>
                       <SettingsStatusLabel
@@ -223,12 +223,12 @@ export function SettingsHub({
                         tone={module.access ? "positive" : "inactive"}
                       />
                     </span>
-                    <span className="text-on-surface-variant mt-1 block truncate text-[10px] leading-[1.3]">
+                    <span className="mt-1 block truncate text-[10px] leading-[1.3] text-on-surface-variant">
                       {module.description}
                     </span>
-                    <span className="text-on-surface mt-1.5 block font-mono text-[10px] font-bold tabular-nums">
+                    <span className="mt-1.5 block font-mono text-[10px] font-bold text-on-surface tabular-nums">
                       {module.metric}{" "}
-                      <span className="text-on-surface-variant font-sans font-medium">
+                      <span className="font-sans font-medium text-on-surface-variant">
                         {module.label}
                       </span>
                     </span>

@@ -61,9 +61,9 @@ function SectionHeading({
 }): React.JSX.Element {
   return (
     <header className="px-1">
-      <h2 className="text-on-surface text-[17px] leading-6 font-semibold">{title}</h2>
+      <h2 className="text-[17px] leading-6 font-semibold text-on-surface">{title}</h2>
       {supporting ? (
-        <p className="text-on-surface-variant mt-0.5 text-[11px] leading-4">{supporting}</p>
+        <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">{supporting}</p>
       ) : null}
     </header>
   );
@@ -136,7 +136,7 @@ export function ProjectOverview({
   return (
     <div className="space-y-lg max-[430px]:space-y-5">
       {!budget ? (
-        <section className="bg-primary text-on-primary rounded-[28px] p-5 shadow-[0_16px_38px_rgba(17,17,17,0.14)] max-[430px]:p-4">
+        <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.14)] max-[430px]:p-4">
           <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
             Posisi proyek
           </p>
@@ -149,13 +149,13 @@ export function ProjectOverview({
           <button
             type="button"
             onClick={() => onNavigate("rap")}
-            className="text-primary mt-4 min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold"
+            className="mt-4 min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold text-primary"
           >
             Mulai dari RAP
           </button>
         </section>
       ) : (
-        <section className="bg-primary text-on-primary rounded-[28px] p-5 shadow-[0_16px_38px_rgba(17,17,17,0.14)] max-[430px]:p-4">
+        <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.14)] max-[430px]:p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
@@ -202,15 +202,15 @@ export function ProjectOverview({
           title="Kesiapan proyek"
           supporting="Status dasar sebelum pekerjaan dan transaksi dilanjutkan."
         />
-        <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+        <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
           {readiness.map((item, index) => (
             <button
               key={item.id}
               type="button"
               onClick={() => onNavigate(item.tab)}
-              className={`focus-visible:bg-surface-container-low active:bg-surface-container-low flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left outline-none ${index > 0 ? "border-outline-variant/20 border-t" : ""}`}
+              className={`flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
             >
-              <span className="bg-surface-container-low text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-primary">
                 <span className="material-symbols-outlined text-[18px]">
                   {item.tone === "APPROVED"
                     ? "check"
@@ -221,10 +221,10 @@ export function ProjectOverview({
               </span>
               <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
                 <span className="grid min-w-0 gap-0.5">
-                  <span className="text-on-surface truncate text-xs leading-4 font-bold">
+                  <span className="truncate text-xs leading-4 font-bold text-on-surface">
                     {item.label}
                   </span>
-                  <span className="text-on-surface-variant block truncate text-[10px] leading-4">
+                  <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
                     {item.detail}
                   </span>
                 </span>
@@ -232,7 +232,7 @@ export function ProjectOverview({
                   {item.value}
                 </Badge>
               </span>
-              <span className="material-symbols-outlined text-on-surface-variant/55 shrink-0 text-[18px]">
+              <span className="material-symbols-outlined shrink-0 text-[18px] text-on-surface-variant/55">
                 chevron_right
               </span>
             </button>
@@ -250,20 +250,20 @@ export function ProjectOverview({
           }
         />
         {actions.length === 0 ? (
-          <div className="text-primary rounded-[22px] bg-white px-4 py-4 text-xs font-medium shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
+          <div className="rounded-[22px] bg-white px-4 py-4 text-xs font-medium text-primary shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
             <span className="material-symbols-outlined mr-2 align-middle text-[18px]">
               check_circle
             </span>
             Proyek berjalan tanpa blocker aktif.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+          <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
             {actions.slice(0, 3).map((action, index) => (
               <button
                 key={action.id}
                 type="button"
                 onClick={() => onNavigate(action.tab)}
-                className={`focus-visible:bg-surface-container-low active:bg-surface-container-low flex min-h-[68px] w-full items-center gap-3 px-4 py-3 text-left outline-none ${index > 0 ? "border-outline-variant/20 border-t" : ""}`}
+                className={`flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
               >
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${action.severity === "CRITICAL" ? "bg-error-container/28 text-error" : action.severity === "WARNING" ? "bg-secondary-container/30 text-secondary" : "bg-primary/8 text-primary"}`}
@@ -273,10 +273,10 @@ export function ProjectOverview({
                   </span>
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="text-on-surface block truncate text-xs leading-4 font-bold">
+                  <span className="block truncate text-xs leading-4 font-bold text-on-surface">
                     {action.title}
                   </span>
-                  <span className="text-on-surface-variant mt-0.5 line-clamp-2 block text-[10px] leading-4">
+                  <span className="mt-0.5 line-clamp-2 block text-[10px] leading-4 text-on-surface-variant">
                     {action.description}
                   </span>
                 </span>
@@ -304,24 +304,24 @@ export function ProjectOverview({
               <button
                 type="button"
                 onClick={openReallocation}
-                className="text-primary min-h-12 rounded-full px-3 text-[10px] font-bold"
+                className="min-h-12 rounded-full px-3 text-[10px] font-bold text-primary"
               >
                 Atur alokasi
               </button>
             ) : null}
           </div>
-          <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+          <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
             {budget.categories.map((category, index) => (
               <button
                 key={category.id}
                 type="button"
                 onClick={() => setSelectedCategoryId(category.id)}
-                className={`focus-visible:bg-surface-container-low active:bg-surface-container-low block min-h-[78px] w-full px-4 py-3 text-left outline-none ${index > 0 ? "border-outline-variant/20 border-t" : ""}`}
+                className={`block min-h-19.5 w-full px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
               >
                 <span className="flex items-start justify-between gap-3">
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
-                      <span className="text-on-surface truncate text-xs font-bold">
+                      <span className="truncate text-xs font-bold text-on-surface">
                         {category.name}
                       </span>
                       <Badge status={statusTone(category.status)}>
@@ -347,7 +347,7 @@ export function ProjectOverview({
                       align="right"
                       size="sm"
                     />
-                    <span className="text-on-surface-variant mt-1 block text-right font-mono text-[9px] font-bold">
+                    <span className="mt-1 block text-right font-mono text-[9px] font-bold text-on-surface-variant">
                       {category.usedPercentage.toFixed(1)}%
                     </span>
                   </span>
@@ -371,7 +371,7 @@ export function ProjectOverview({
                 setSelectedCategoryId(null);
                 onNavigate(tab);
               }}
-              className="bg-primary text-on-primary min-h-12 w-full rounded-full px-5 text-xs font-bold"
+              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
             >
               {selectedCategory.code === "OPERASIONAL" || selectedCategory.code === "LAIN_LAIN"
                 ? "Buka pengeluaran"
@@ -381,7 +381,7 @@ export function ProjectOverview({
         }
       >
         {selectedCategory ? (
-          <div className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
+          <div className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
             <DetailMoneyRow label="Budget" amount={selectedCategory.allocatedAmount} />
             <DetailMoneyRow label="Realisasi" amount={selectedCategory.actualAmount} />
             <DetailMoneyRow label="Menunggu" amount={selectedCategory.pendingAmount} />
@@ -391,7 +391,7 @@ export function ProjectOverview({
               amount={selectedCategory.remainingAmount}
               danger={selectedCategory.remainingAmount < 0}
             />
-            <div className="border-outline-variant/25 border-t px-4 py-3">
+            <div className="border-t border-outline-variant/25 px-4 py-3">
               <div className="flex justify-between text-xs font-bold">
                 <span>Budget terpakai</span>
                 <span>{selectedCategory.usedPercentage.toFixed(1)}%</span>
@@ -425,7 +425,7 @@ export function ProjectOverview({
                 (budget?.status === "APPROVED" && reallocationReason.trim().length < 10)
               }
               onClick={() => void saveReallocation()}
-              className="bg-primary min-h-12 w-full rounded-full text-xs font-bold text-white disabled:opacity-40"
+              className="min-h-12 w-full rounded-full bg-primary text-xs font-bold text-white disabled:opacity-40"
             >
               {savingAllocation ? "Menyimpan…" : "Simpan alokasi"}
             </button>
@@ -520,8 +520,8 @@ function DetailMoneyRow({
   readonly danger?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="border-outline-variant/25 flex min-h-14 items-center justify-between gap-3 border-t px-4 py-3 first:border-t-0">
-      <span className="text-on-surface-variant text-xs font-semibold">{label}</span>
+    <div className="flex min-h-14 items-center justify-between gap-3 border-t border-outline-variant/25 px-4 py-3 first:border-t-0">
+      <span className="text-xs font-semibold text-on-surface-variant">{label}</span>
       <MoneyValue
         amount={amount}
         variant="compactWithFull"

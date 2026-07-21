@@ -414,29 +414,25 @@ export async function createStaffUser(
           temporaryPasswordIssuedAt: new Date(),
         })
         .returning();
-      await tx
-        .insert(account)
-        .values({
-          id: `credential-${row.id}`,
-          accountId: row.id,
-          providerId: "credential",
-          userId: row.id,
-          password: passwordHash,
-        });
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "CREATE_STAFF_USER",
-          targetTable: "user",
-          targetId: row.id,
-          newState: JSON.stringify({
-            name: row.name,
-            email: row.email,
-            roleId: row.roleId,
-            mustChangePassword: true,
-          }),
-        });
+      await tx.insert(account).values({
+        id: `credential-${row.id}`,
+        accountId: row.id,
+        providerId: "credential",
+        userId: row.id,
+        password: passwordHash,
+      });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "CREATE_STAFF_USER",
+        targetTable: "user",
+        targetId: row.id,
+        newState: JSON.stringify({
+          name: row.name,
+          email: row.email,
+          roleId: row.roleId,
+          mustChangePassword: true,
+        }),
+      });
       return row;
     });
     revalidatePath("/settings");
@@ -503,16 +499,14 @@ export async function updateStaffUser(
         .where(eq(user.id, existing.id))
         .returning();
       if (!updated.isActive) await tx.delete(session).where(eq(session.userId, updated.id));
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "UPDATE_STAFF_USER",
-          targetTable: "user",
-          targetId: updated.id,
-          originalState: JSON.stringify(existing),
-          newState: JSON.stringify(updated),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "UPDATE_STAFF_USER",
+        targetTable: "user",
+        targetId: updated.id,
+        originalState: JSON.stringify(existing),
+        newState: JSON.stringify(updated),
+      });
     });
     revalidatePath("/settings");
     return { success: true, data: { id: validation.data.userId } };
@@ -581,15 +575,13 @@ export async function changeTemporaryPassword(
       .set({ mustChangePassword: false, temporaryPasswordIssuedAt: null, updatedAt: new Date() })
       .where(eq(user.id, actor.id));
     await tx.delete(session).where(and(eq(session.userId, actor.id), ne(session.id, "")));
-    await tx
-      .insert(auditLog)
-      .values({
-        userId: actor.id,
-        action: "CHANGE_TEMPORARY_PASSWORD",
-        targetTable: "user",
-        targetId: actor.id,
-        newState: JSON.stringify({ mustChangePassword: false }),
-      });
+    await tx.insert(auditLog).values({
+      userId: actor.id,
+      action: "CHANGE_TEMPORARY_PASSWORD",
+      targetTable: "user",
+      targetId: actor.id,
+      newState: JSON.stringify({ mustChangePassword: false }),
+    });
   });
   return { success: true, data: { changed: true } };
 }
@@ -633,28 +625,24 @@ export async function saveVendor(
           .set(values)
           .where(eq(vendor.id, existing.id))
           .returning();
-        await tx
-          .insert(auditLog)
-          .values({
-            userId: actor.id,
-            action: "UPDATE_VENDOR",
-            targetTable: "vendor",
-            targetId: updated.id,
-            originalState: JSON.stringify(existing),
-            newState: JSON.stringify(updated),
-          });
+        await tx.insert(auditLog).values({
+          userId: actor.id,
+          action: "UPDATE_VENDOR",
+          targetTable: "vendor",
+          targetId: updated.id,
+          originalState: JSON.stringify(existing),
+          newState: JSON.stringify(updated),
+        });
         return updated;
       }
       const [created] = await tx.insert(vendor).values(values).returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "CREATE_VENDOR",
-          targetTable: "vendor",
-          targetId: created.id,
-          newState: JSON.stringify(created),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "CREATE_VENDOR",
+        targetTable: "vendor",
+        targetId: created.id,
+        newState: JSON.stringify(created),
+      });
       return created;
     });
     revalidatePath("/settings");

@@ -137,8 +137,8 @@ export function MaterialImportSheet({
     >
       <div className="space-y-4">
         <section className="rounded-[26px] bg-white p-4 shadow-sm ring-1 ring-black/4">
-          <p className="text-on-surface text-[13px] font-bold">Template CSV</p>
-          <p className="text-on-surface-variant mt-1 text-[10px] leading-4">
+          <p className="text-[13px] font-bold text-on-surface">Template CSV</p>
+          <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
             Wajib: name, category, unit, location. Opsional: minimum_stock, last_purchase_price,
             vendor, specification, brand, code, color.
           </p>
@@ -149,7 +149,7 @@ export function MaterialImportSheet({
           >
             Unduh template CSV
           </button>
-          <label className="bg-surface-container-low text-on-surface mt-4 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-xs font-bold ring-1 ring-black/4">
+          <label className="mt-4 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-surface-container-low px-5 text-xs font-bold text-on-surface ring-1 ring-black/4">
             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               upload_file
             </span>
@@ -170,18 +170,15 @@ export function MaterialImportSheet({
           <SettingsGroupSurface>
             <div className="divide-y divide-black/5.5">
               {preview.items.map((item) => (
-                <div
-                  key={item.rowNumber}
-                  className="flex min-h-[62px] items-center gap-3 px-4 py-3"
-                >
+                <div key={item.rowNumber} className="flex min-h-15.5 items-center gap-3 px-4 py-3">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700">
                     {item.rowNumber}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="text-on-surface block truncate text-[12px] font-bold">
+                    <span className="block truncate text-[12px] font-bold text-on-surface">
                       {item.name}
                     </span>
-                    <span className="text-on-surface-variant mt-0.5 block truncate text-[10px]">
+                    <span className="mt-0.5 block truncate text-[10px] text-on-surface-variant">
                       {item.categoryName} · {item.locationName} · {item.unit}
                     </span>
                   </span>
@@ -190,12 +187,12 @@ export function MaterialImportSheet({
               {preview.errors.map((error) => (
                 <div
                   key={`${error.rowNumber}-${error.message}`}
-                  className="bg-error/[0.035] flex min-h-[58px] items-center gap-3 px-4 py-3"
+                  className="flex min-h-14.5 items-center gap-3 bg-error/[0.035] px-4 py-3"
                 >
-                  <span className="bg-error/10 text-error flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-error/10 text-[10px] font-bold text-error">
                     {error.rowNumber}
                   </span>
-                  <p className="text-error text-[10px] leading-4">{error.message}</p>
+                  <p className="text-[10px] leading-4 text-error">{error.message}</p>
                 </div>
               ))}
             </div>

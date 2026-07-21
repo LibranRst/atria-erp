@@ -1,11 +1,11 @@
 function SkeletonLine({ className }: { readonly className: string }): React.JSX.Element {
-  return <div className={`bg-surface-container rounded-full ${className}`} aria-hidden="true" />;
+  return <div className={`rounded-full bg-surface-container ${className}`} aria-hidden="true" />;
 }
 
 export default function ProjectDetailLoading(): React.JSX.Element {
   return (
     <div className="space-y-md pb-8" aria-label="Memuat detail proyek" role="status">
-      <section className="bg-primary/90 relative aspect-square overflow-hidden rounded-[28px]">
+      <section className="relative aspect-square overflow-hidden rounded-[28px] bg-primary/90">
         <div className="absolute top-3 right-3 h-12 w-12 rounded-full bg-white/10" />
         <div className="absolute inset-x-0 bottom-0 space-y-2 p-4">
           <div className="flex justify-between gap-3">
@@ -17,15 +17,15 @@ export default function ProjectDetailLoading(): React.JSX.Element {
         </div>
       </section>
 
-      <div className="bg-background/95 space-y-2 rounded-[26px] p-1">
-        <div className="bg-surface-container-low grid h-12 grid-cols-4 gap-1 rounded-full p-1">
+      <div className="space-y-2 rounded-[26px] bg-background/95 p-1">
+        <div className="grid h-12 grid-cols-4 gap-1 rounded-full bg-surface-container-low p-1">
           {["overview", "planning", "operations", "finance"].map((item) => (
             <div key={item} className="rounded-full bg-white/70" />
           ))}
         </div>
       </div>
 
-      <section className="bg-primary rounded-[28px] p-4">
+      <section className="rounded-[28px] bg-primary p-4">
         <SkeletonLine className="h-2.5 w-28 bg-white/15" />
         <SkeletonLine className="mt-2 h-8 w-48 bg-white/20" />
         <div className="mt-4 h-2 rounded-full bg-white/15" />
@@ -42,16 +42,16 @@ export default function ProjectDetailLoading(): React.JSX.Element {
       {["readiness", "actions"].map((section) => (
         <section key={section} className="space-y-2.5">
           <SkeletonLine className="h-5 w-32" />
-          <div className="overflow-hidden rounded-[24px] bg-white px-4 shadow-[0_12px_30px_rgba(17,17,17,0.04)]">
+          <div className="overflow-hidden rounded-3xl bg-white px-4 shadow-[0_12px_30px_rgba(17,17,17,0.04)]">
             {["one", "two", "three"].map((row, index) => (
               <div
                 key={row}
-                className={`flex h-16 items-center gap-3 ${index > 0 ? "border-outline-variant/20 border-t" : ""}`}
+                className={`flex h-16 items-center gap-3 ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
               >
-                <div className="bg-surface-container-low h-9 w-9 rounded-[13px]" />
+                <div className="h-9 w-9 rounded-[13px] bg-surface-container-low" />
                 <div className="flex-1 space-y-2">
                   <SkeletonLine className="h-3 w-3/5" />
-                  <SkeletonLine className="bg-surface-container-low h-2.5 w-4/5" />
+                  <SkeletonLine className="h-2.5 w-4/5 bg-surface-container-low" />
                 </div>
               </div>
             ))}

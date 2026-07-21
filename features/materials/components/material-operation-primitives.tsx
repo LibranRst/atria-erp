@@ -24,8 +24,8 @@ export function Mini({
   readonly amount?: number;
 }): React.JSX.Element {
   return (
-    <div className="bg-surface-container-low min-w-0 rounded-2xl p-3">
-      <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-wide uppercase">
+    <div className="min-w-0 rounded-2xl bg-surface-container-low p-3">
+      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
         {label}
       </p>
       {typeof amount === "number" ? (
@@ -61,7 +61,7 @@ export function MovementRow({ row }: { readonly row: MaterialMovementView }): Re
     <button
       type="button"
       onClick={() => openActivityDetail({ kind: "STOCK_MOVEMENT", id: row.id })}
-      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 flex min-h-[64px] w-full items-center gap-3 py-2.5 text-left outline-none"
+      className="flex min-h-16 w-full items-center gap-3 py-2.5 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
       aria-label={`Lihat detail mutasi ${row.materialName}`}
     >
       <span
@@ -71,11 +71,11 @@ export function MovementRow({ row }: { readonly row: MaterialMovementView }): Re
       </span>
       <span className="grid min-w-0 flex-1 gap-1">
         <span className="block truncate text-[13px] leading-4 font-bold">{row.materialName}</span>
-        <span className="text-on-surface-variant block truncate text-[10px] leading-[1.3]">
+        <span className="block truncate text-[10px] leading-[1.3] text-on-surface-variant">
           {formatMovementType(row.movementType)} · {row.locationName}
           {row.projectName ? ` · ${row.projectName}` : ""}
         </span>
-        <span className="text-on-surface-variant/65 block truncate text-[9px] leading-3">
+        <span className="block truncate text-[9px] leading-3 text-on-surface-variant/65">
           {formatMaterialDate(row.createdAt)} · {row.createdByName}
         </span>
       </span>
@@ -128,12 +128,12 @@ export function ApprovalRow({
   return (
     <div className="px-3.5 py-3">
       <div className="flex items-start gap-3">
-        <span className="bg-warning/9 text-warning ring-warning/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/9 text-warning ring-1 ring-warning/6">
           <span className="material-symbols-outlined text-[18px]">priority_high</span>
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-xs leading-4 font-bold">{title}</span>
-          <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-[1.3]">
+          <span className="mt-0.5 block text-[10px] leading-[1.3] text-on-surface-variant">
             {description}
           </span>
           {typeof amount === "number" && (
@@ -145,14 +145,14 @@ export function ApprovalRow({
         <button
           type="button"
           onClick={onReject}
-          className="bg-error-container/20 text-error min-h-12 rounded-full text-[10px] font-bold transition active:scale-[0.97]"
+          className="min-h-12 rounded-full bg-error-container/20 text-[10px] font-bold text-error transition active:scale-[0.97]"
         >
           Tolak
         </button>
         <button
           type="button"
           onClick={onApprove}
-          className="bg-primary text-on-primary min-h-12 rounded-full text-[10px] font-bold transition active:scale-[0.97]"
+          className="min-h-12 rounded-full bg-primary text-[10px] font-bold text-on-primary transition active:scale-[0.97]"
         >
           Setujui
         </button>
@@ -162,5 +162,5 @@ export function ApprovalRow({
 }
 
 export function Error({ text }: { readonly text: string }): React.JSX.Element {
-  return <p className="bg-error-container/20 text-error rounded-2xl p-3 text-xs">{text}</p>;
+  return <p className="rounded-2xl bg-error-container/20 p-3 text-xs text-error">{text}</p>;
 }

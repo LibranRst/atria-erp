@@ -175,7 +175,7 @@ export function MaterialOverviewTab({
                   key={item.id}
                   type="button"
                   onClick={() => onNavigate(item.tab)}
-                  className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left outline-none"
+                  className="flex min-h-18 w-full items-center gap-3 px-1 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
                 >
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${attentionIconClass(item.tone)}`}
@@ -185,14 +185,14 @@ export function MaterialOverviewTab({
                     </span>
                   </span>
                   <span className="grid min-w-0 flex-1 gap-1">
-                    <span className="text-on-surface truncate text-[13px] leading-4 font-bold">
+                    <span className="truncate text-[13px] leading-4 font-bold text-on-surface">
                       {item.title}
                     </span>
-                    <span className="text-on-surface-variant truncate text-[10px] leading-[1.3]">
+                    <span className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
                       {item.detail}
                     </span>
                   </span>
-                  <span className="text-on-surface shrink-0 font-mono text-[13px] font-black tabular-nums">
+                  <span className="shrink-0 font-mono text-[13px] font-black text-on-surface tabular-nums">
                     {item.value}
                   </span>
                   <span

@@ -26,7 +26,7 @@ export function BudgetDraftActions({
         transition={transitionSpringSnappy}
         onClick={() => setConfirmSubmit(true)}
         disabled={isPending}
-        className="bg-secondary text-on-secondary flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-xs font-bold shadow-lg disabled:opacity-50"
+        className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-secondary px-5 text-xs font-bold text-on-secondary shadow-lg disabled:opacity-50"
       >
         <span className="material-symbols-outlined text-[18px]">publish</span>
         <span>Tinjau & Ajukan Project Budget</span>
@@ -44,7 +44,7 @@ export function BudgetDraftActions({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmSubmit(false)}
-              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
             >
               Kembali
             </motion.button>
@@ -57,7 +57,7 @@ export function BudgetDraftActions({
                 setConfirmSubmit(false);
                 onSubmitBudget();
               }}
-              className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white disabled:opacity-40"
+              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white disabled:opacity-40"
             >
               Ajukan Budget
             </motion.button>
@@ -87,13 +87,13 @@ export function BudgetApprovalPanel({
 }): React.JSX.Element {
   const [confirmApprove, setConfirmApprove] = React.useState(false);
   return (
-    <div className="space-y-sm border-outline-variant/10 pt-md border-t">
-      <div className="gap-md flex">
+    <div className="space-y-sm border-t border-outline-variant/10 pt-md">
+      <div className="flex gap-md">
         <button
           type="button"
           onClick={() => setShowRejectForm(true)}
           disabled={isPending}
-          className="border-error text-error flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full border text-xs font-bold transition active:scale-[0.98] disabled:opacity-50"
+          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-error text-xs font-bold text-error transition active:scale-[0.98] disabled:opacity-50"
         >
           <span className="material-symbols-outlined text-[18px]">close</span>
           <span>Tolak Budget</span>
@@ -103,7 +103,7 @@ export function BudgetApprovalPanel({
           type="button"
           onClick={() => setConfirmApprove(true)}
           disabled={isPending}
-          className="bg-primary flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-xs font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
+          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-primary text-xs font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
         >
           <span className="material-symbols-outlined text-[18px]">done</span>
           <span>Setujui Project Budget</span>
@@ -121,7 +121,7 @@ export function BudgetApprovalPanel({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmApprove(false)}
-              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
             >
               Batal
             </motion.button>
@@ -134,7 +134,7 @@ export function BudgetApprovalPanel({
                 setConfirmApprove(false);
                 onApproveBudget();
               }}
-              className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white disabled:opacity-40"
+              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white disabled:opacity-40"
             >
               Setujui Budget
             </motion.button>
@@ -165,7 +165,7 @@ export function BudgetApprovalPanel({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => setShowRejectForm(false)}
-                className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
+                className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
               >
                 Batal
               </motion.button>
@@ -174,7 +174,7 @@ export function BudgetApprovalPanel({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 disabled={isPending || rejectionNotes.trim().length < 3}
-                className="bg-error min-h-12 rounded-full px-4 text-xs font-bold text-white disabled:opacity-40"
+                className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white disabled:opacity-40"
               >
                 {isPending ? "Mengirim…" : "Tolak Budget"}
               </motion.button>

@@ -31,7 +31,7 @@ export function useActivityDetail(): ActivityDetailContextValue {
 
 export function ActivityDetailChevron(): React.JSX.Element {
   return (
-    <ChevronRight className="text-on-surface-variant/45 h-4 w-4 shrink-0" aria-hidden="true" />
+    <ChevronRight className="h-4 w-4 shrink-0 text-on-surface-variant/45" aria-hidden="true" />
   );
 }
 
@@ -73,7 +73,7 @@ function Value({
   if (value.type === "QUANTITY")
     return (
       <span
-        className={`${align === "right" ? "text-right" : "text-left"} text-on-surface font-mono text-xs font-bold whitespace-nowrap tabular-nums`}
+        className={`${align === "right" ? "text-right" : "text-left"} font-mono text-xs font-bold whitespace-nowrap text-on-surface tabular-nums`}
       >
         {value.value.toLocaleString("id-ID", { maximumFractionDigits: 2 })}
         {value.unit ? ` ${value.unit}` : ""}
@@ -82,14 +82,14 @@ function Value({
   if (value.type === "DATE")
     return (
       <span
-        className={`${align === "right" ? "text-right" : "text-left"} text-on-surface text-xs leading-4 font-semibold`}
+        className={`${align === "right" ? "text-right" : "text-left"} text-xs leading-4 font-semibold text-on-surface`}
       >
         {formatDate(value.value)}
       </span>
     );
   return (
     <span
-      className={`${align === "right" ? "text-right" : "text-left"} text-on-surface min-w-0 text-xs leading-5 font-semibold wrap-break-word whitespace-pre-wrap`}
+      className={`${align === "right" ? "text-right" : "text-left"} min-w-0 text-xs leading-5 font-semibold wrap-break-word whitespace-pre-wrap text-on-surface`}
     >
       {value.value}
     </span>
@@ -99,14 +99,14 @@ function Value({
 function Facts({ facts }: { readonly facts: readonly ActivityFact[] }): React.JSX.Element | null {
   if (facts.length === 0) return null;
   return (
-    <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1 ring-black/2.5">
-      <div className="divide-outline-variant/20 divide-y">
+    <div className="overflow-hidden rounded-3xl bg-white shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1 ring-black/2.5">
+      <div className="divide-y divide-outline-variant/20">
         {facts.map((item, index) => (
           <div
             key={`${item.label}-${index}`}
             className="grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] items-center gap-3 px-4 py-3"
           >
-            <span className="text-on-surface-variant text-[11px] leading-4 font-semibold">
+            <span className="text-[11px] leading-4 font-semibold text-on-surface-variant">
               {item.label}
             </span>
             <Value value={item.value} />
@@ -125,24 +125,24 @@ function ComparisonRows({
   if (comparisons.length === 0) return null;
   return (
     <section className="space-y-2">
-      <h3 className="text-on-surface-variant px-1 text-[10px] font-bold tracking-[0.12em] uppercase">
+      <h3 className="px-1 text-[10px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
         Perubahan
       </h3>
-      <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1 ring-black/2.5">
-        <div className="divide-outline-variant/20 divide-y">
+      <div className="overflow-hidden rounded-3xl bg-white shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1 ring-black/2.5">
+        <div className="divide-y divide-outline-variant/20">
           {comparisons.map((item, index) => (
             <div key={`${item.label}-${index}`} className="px-4 py-3">
-              <p className="text-on-surface-variant text-[11px] font-semibold">{item.label}</p>
+              <p className="text-[11px] font-semibold text-on-surface-variant">{item.label}</p>
               <div className="mt-2 grid grid-cols-[minmax(0,1fr)_20px_minmax(0,1fr)] items-center gap-2">
-                <div className="bg-surface-container-low rounded-[16px] px-3 py-2">
-                  <p className="text-on-surface-variant mb-1 text-[8px] font-bold tracking-wide uppercase">
+                <div className="rounded-2xl bg-surface-container-low px-3 py-2">
+                  <p className="mb-1 text-[8px] font-bold tracking-wide text-on-surface-variant uppercase">
                     Sebelum
                   </p>
                   <Value value={item.before} align="left" />
                 </div>
-                <ArrowRight className="text-on-surface-variant/50 h-4 w-4" aria-hidden="true" />
-                <div className="bg-primary/5.5 rounded-[16px] px-3 py-2">
-                  <p className="text-primary mb-1 text-[8px] font-bold tracking-wide uppercase">
+                <ArrowRight className="h-4 w-4 text-on-surface-variant/50" aria-hidden="true" />
+                <div className="rounded-2xl bg-primary/5.5 px-3 py-2">
+                  <p className="mb-1 text-[8px] font-bold tracking-wide text-primary uppercase">
                     Sesudah
                   </p>
                   <Value value={item.after} align="left" />
@@ -159,16 +159,16 @@ function ComparisonRows({
 function DetailSkeleton(): React.JSX.Element {
   return (
     <div className="space-y-4" aria-label="Memuat detail aktivitas">
-      <div className="rounded-[24px] bg-white p-4">
-        <div className="bg-surface-container h-4 w-32 animate-pulse rounded-full" />
-        <div className="bg-surface-container-low mt-2 h-3 w-48 animate-pulse rounded-full" />
+      <div className="rounded-3xl bg-white p-4">
+        <div className="h-4 w-32 animate-pulse rounded-full bg-surface-container" />
+        <div className="mt-2 h-3 w-48 animate-pulse rounded-full bg-surface-container-low" />
       </div>
-      <div className="overflow-hidden rounded-[24px] bg-white">
-        <div className="divide-outline-variant/20 divide-y">
+      <div className="overflow-hidden rounded-3xl bg-white">
+        <div className="divide-y divide-outline-variant/20">
           {[0, 1, 2, 3].map((item) => (
             <div key={item} className="flex min-h-14 items-center justify-between gap-4 px-4">
-              <div className="bg-surface-container h-3 w-20 animate-pulse rounded-full" />
-              <div className="bg-surface-container h-3 w-28 animate-pulse rounded-full" />
+              <div className="h-3 w-20 animate-pulse rounded-full bg-surface-container" />
+              <div className="h-3 w-28 animate-pulse rounded-full bg-surface-container" />
             </div>
           ))}
         </div>
@@ -180,13 +180,13 @@ function DetailSkeleton(): React.JSX.Element {
 function DetailContent({ detail }: { readonly detail: ActivityDetailView }): React.JSX.Element {
   return (
     <div className="space-y-4 pb-1">
-      <section className="rounded-[24px] bg-white px-4 py-3.5 shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1 ring-black/2.5">
+      <section className="rounded-3xl bg-white px-4 py-3.5 shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1 ring-black/2.5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-on-surface text-[15px] leading-5 font-semibold wrap-break-word">
+            <p className="text-[15px] leading-5 font-semibold wrap-break-word text-on-surface">
               {detail.title}
             </p>
-            <p className="text-on-surface-variant mt-0.5 text-[11px] leading-4">
+            <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">
               {detail.subtitle}
             </p>
           </div>
@@ -196,27 +196,27 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
             {formatBusinessLabel(detail.status)}
           </span>
         </div>
-        <div className="border-outline-variant/20 mt-3 grid grid-cols-2 gap-3 border-t pt-3">
+        <div className="mt-3 grid grid-cols-2 gap-3 border-t border-outline-variant/20 pt-3">
           <div>
-            <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
+            <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
               Pelaku
             </p>
-            <p className="text-on-surface mt-0.5 truncate text-xs font-semibold">
+            <p className="mt-0.5 truncate text-xs font-semibold text-on-surface">
               {detail.actorName}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
+            <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
               Waktu
             </p>
-            <p className="text-on-surface mt-0.5 text-[10px] leading-4 font-semibold">
+            <p className="mt-0.5 text-[10px] leading-4 font-semibold text-on-surface">
               {formatDate(detail.occurredAt)}
             </p>
           </div>
         </div>
       </section>
       <section className="space-y-2">
-        <h3 className="text-on-surface-variant px-1 text-[10px] font-bold tracking-[0.12em] uppercase">
+        <h3 className="px-1 text-[10px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
           Fakta transaksi
         </h3>
         <Facts facts={detail.facts} />
@@ -224,7 +224,7 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
       <ComparisonRows comparisons={detail.comparisons} />
       {detail.impacts.length > 0 ? (
         <section className="space-y-2">
-          <h3 className="text-on-surface-variant px-1 text-[10px] font-bold tracking-[0.12em] uppercase">
+          <h3 className="px-1 text-[10px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
             Dampak bisnis
           </h3>
           <Facts facts={detail.impacts} />
@@ -232,14 +232,14 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
       ) : null}
       {detail.notes.length > 0 ? (
         <section className="space-y-2">
-          <h3 className="text-on-surface-variant px-1 text-[10px] font-bold tracking-[0.12em] uppercase">
+          <h3 className="px-1 text-[10px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
             Catatan & bukti
           </h3>
           <Facts facts={detail.notes} />
         </section>
       ) : null}
       {detail.evidenceIncomplete ? (
-        <div className="bg-warning-light text-warning flex gap-3 rounded-[20px] px-3.5 py-3">
+        <div className="flex gap-3 rounded-[20px] bg-warning-light px-3.5 py-3 text-warning">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <p className="text-[11px] leading-4">
             Data perubahan historis belum tercatat lengkap. Nilai yang ditampilkan hanya fakta yang
@@ -251,6 +251,42 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
   );
 }
 
+function ActivityDetailSourceButton({
+  source,
+  pathname,
+  onNavigate,
+}: {
+  readonly source: NonNullable<ActivityDetailView["source"]>;
+  readonly pathname: string;
+  readonly onNavigate: () => void;
+}): React.JSX.Element | null {
+  const searchParams = useSearchParams();
+  const isAlreadyOnSourcePage = React.useMemo(() => {
+    try {
+      const url = new URL(source.href, "http://localhost");
+      if (url.pathname !== pathname) return false;
+      for (const [key, value] of url.searchParams.entries()) {
+        if (searchParams.get(key) !== value) return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }, [source, pathname, searchParams]);
+
+  if (isAlreadyOnSourcePage) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={onNavigate}
+      className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+    >
+      {source.label}
+    </button>
+  );
+}
+
 export function ActivityDetailProvider({
   children,
 }: {
@@ -258,7 +294,6 @@ export function ActivityDetailProvider({
 }): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [request, setRequest] = React.useState<ActivityDetailRequest | null>(null);
   const [presentedRequest, setPresentedRequest] = React.useState<ActivityDetailRequest | null>(
     null,
@@ -292,20 +327,6 @@ export function ActivityDetailProvider({
   const context = React.useMemo(() => ({ openActivityDetail }), [openActivityDetail]);
   const source = detail?.source ?? null;
 
-  const isAlreadyOnSourcePage = React.useMemo(() => {
-    if (!source) return false;
-    try {
-      const url = new URL(source.href, "http://localhost");
-      if (url.pathname !== pathname) return false;
-      for (const [key, value] of url.searchParams.entries()) {
-        if (searchParams.get(key) !== value) return false;
-      }
-      return true;
-    } catch {
-      return false;
-    }
-  }, [source, pathname, searchParams]);
-
   return (
     <ActivityDetailContext.Provider value={context}>
       {children}
@@ -324,33 +345,33 @@ export function ActivityDetailProvider({
           }
         }}
         footer={
-          source && !isAlreadyOnSourcePage ? (
-            <button
-              type="button"
-              onClick={() => {
-                setRequest(null);
-                router.push(source.href);
-              }}
-              className="bg-primary focus-visible:ring-primary/30 min-h-12 w-full rounded-full px-5 text-xs font-bold text-white outline-none focus-visible:ring-2"
-            >
-              {source.label}
-            </button>
+          source ? (
+            <React.Suspense fallback={null}>
+              <ActivityDetailSourceButton
+                source={source}
+                pathname={pathname}
+                onNavigate={() => {
+                  setRequest(null);
+                  router.push(source.href);
+                }}
+              />
+            </React.Suspense>
           ) : undefined
         }
       >
         {loading ? (
           <DetailSkeleton />
         ) : error ? (
-          <div className="rounded-[24px] bg-white px-4 py-5 text-center shadow-[0_10px_28px_rgba(17,17,17,0.04)]">
-            <AlertTriangle className="text-error mx-auto h-5 w-5" aria-hidden="true" />
-            <p className="text-on-surface mt-2 text-sm font-semibold">Detail belum dapat dimuat</p>
-            <p className="text-on-surface-variant mt-1 text-[11px] leading-4">{error}</p>
+          <div className="rounded-3xl bg-white px-4 py-5 text-center shadow-[0_10px_28px_rgba(17,17,17,0.04)]">
+            <AlertTriangle className="mx-auto h-5 w-5 text-error" aria-hidden="true" />
+            <p className="mt-2 text-sm font-semibold text-on-surface">Detail belum dapat dimuat</p>
+            <p className="mt-1 text-[11px] leading-4 text-on-surface-variant">{error}</p>
             <button
               type="button"
               onClick={() => {
                 if (presentedRequest) void load(presentedRequest);
               }}
-              className="bg-surface-container text-on-surface mt-3 inline-flex min-h-12 items-center gap-2 rounded-full px-4 text-xs font-bold"
+              className="mt-3 inline-flex min-h-12 items-center gap-2 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
             >
               <RefreshCw className="h-4 w-4" aria-hidden="true" /> Coba lagi
             </button>

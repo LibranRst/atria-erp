@@ -51,7 +51,7 @@ export function ExpenseReceiptUpload({
   return (
     <div className="space-y-2.5">
       {attachment ? (
-        <div className="bg-surface-container-low ring-outline-variant/15 space-y-2 rounded-[22px] p-2 ring-1">
+        <div className="space-y-2 rounded-[22px] bg-surface-container-low p-2 ring-1 ring-outline-variant/15">
           <div className="flex min-h-14 items-center gap-3 rounded-2xl px-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -60,8 +60,8 @@ export function ExpenseReceiptUpload({
               className="h-11 w-11 shrink-0 rounded-2xl object-cover"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-on-surface truncate text-xs font-bold">{attachment.fileName}</p>
-              <p className="text-on-surface-variant truncate text-[11px]">
+              <p className="truncate text-xs font-bold text-on-surface">{attachment.fileName}</p>
+              <p className="truncate text-[11px] text-on-surface-variant">
                 {(attachment.size / 1024 / 1024).toLocaleString("id-ID", {
                   maximumFractionDigits: 1,
                 })}{" "}
@@ -72,7 +72,7 @@ export function ExpenseReceiptUpload({
               type="button"
               onClick={onClearReceipt}
               disabled={disabled}
-              className="text-error focus-visible:ring-error/30 min-h-12 rounded-full px-3 text-xs font-bold outline-none focus-visible:ring-2 disabled:opacity-40"
+              className="min-h-12 rounded-full px-3 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-error/30 disabled:opacity-40"
             >
               Hapus
             </button>
@@ -85,7 +85,7 @@ export function ExpenseReceiptUpload({
           />
         </div>
       ) : (
-        <div className="bg-surface-container-lowest ring-outline-variant/15 space-y-2 rounded-[24px] p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
+        <div className="space-y-2 rounded-3xl bg-surface-container-lowest p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
           <div className="grid grid-cols-2 gap-2">
             <ReceiptUploadOption
               icon="photo_camera"
@@ -102,7 +102,7 @@ export function ExpenseReceiptUpload({
             />
           </div>
           {!selectedProjectId ? (
-            <p className="text-on-surface-variant px-1 text-[11px] leading-[1.35]">
+            <p className="px-1 text-[11px] leading-[1.35] text-on-surface-variant">
               Pilih proyek terlebih dahulu agar hasil scan memakai kategori yang benar.
             </p>
           ) : null}
@@ -110,17 +110,17 @@ export function ExpenseReceiptUpload({
       )}
 
       {busy ? (
-        <div className="bg-primary/8 ring-primary/15 rounded-2xl px-4 py-3 ring-1" role="status">
-          <div className="text-primary flex items-center justify-between gap-3 text-[11px] font-semibold">
+        <div className="rounded-2xl bg-primary/8 px-4 py-3 ring-1 ring-primary/15" role="status">
+          <div className="flex items-center justify-between gap-3 text-[11px] font-semibold text-primary">
             <span>{isUploading ? "Mengunggah nota…" : "Membaca isi nota…"}</span>
             <span>{isUploading ? "35%" : "72%"}</span>
           </div>
-          <div className="bg-primary/10 mt-2 h-1.5 overflow-hidden rounded-full">
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-primary/10">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: isUploading ? "35%" : "72%" }}
               transition={transitionSpringSnappy}
-              className="bg-primary h-full rounded-full"
+              className="h-full rounded-full bg-primary"
             />
           </div>
         </div>
@@ -128,7 +128,7 @@ export function ExpenseReceiptUpload({
 
       {uploadError ? (
         <div
-          className="bg-error-container/20 text-error ring-error/20 flex min-h-12 items-center gap-3 rounded-2xl px-4 text-xs ring-1"
+          className="flex min-h-12 items-center gap-3 rounded-2xl bg-error-container/20 px-4 text-xs text-error ring-1 ring-error/20"
           role="alert"
         >
           <span className="min-w-0 flex-1 leading-4">{uploadError}</span>
@@ -164,7 +164,7 @@ function ReceiptUploadOption({
     <motion.label
       whileTap={disabled ? undefined : { scale: 0.97 }}
       transition={transitionSpringSnappy}
-      className={`bg-surface-container-low text-on-surface ring-outline-variant/10 flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full px-3 ring-1 focus-within:ring-2 focus-within:ring-blue-500/25 ${disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
+      className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-surface-container-low px-3 text-on-surface ring-1 ring-outline-variant/10 focus-within:ring-2 focus-within:ring-blue-500/25 ${disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
     >
       <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
         {icon}

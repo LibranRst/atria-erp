@@ -62,20 +62,20 @@ export function RabBundleDrawer({
         <div className="space-y-md">
           <div className="flex items-start justify-between gap-3 px-1">
             <div className="min-w-0">
-              <p className="text-on-surface text-base font-bold">{bundleForm.clientLabel}</p>
-              <p className="text-on-surface-variant mt-0.5 text-xs">
+              <p className="text-base font-bold text-on-surface">{bundleForm.clientLabel}</p>
+              <p className="mt-0.5 text-xs text-on-surface-variant">
                 Paket RAB · {bundleItems.length} item terbundel
               </p>
             </div>
           </div>
 
-          <div className="bg-surface-container-lowest ring-outline-variant/15 divide-outline-variant/15 divide-y overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
+          <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
             {bundleForm.description && (
               <div className="bg-surface-container-low/20 px-4 py-3.5">
-                <p className="text-on-surface-variant text-[10px] font-bold tracking-wide uppercase">
+                <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
                   Deskripsi Paket
                 </p>
-                <p className="text-on-surface mt-1 text-xs leading-relaxed">
+                <p className="mt-1 text-xs leading-relaxed text-on-surface">
                   {bundleForm.description}
                 </p>
               </div>
@@ -109,8 +109,8 @@ export function RabBundleDrawer({
 
           {bundleItems.length > 0 && (
             <div className="space-y-sm">
-              <p className="text-on-surface-variant px-1 text-xs font-bold">Item Anggota Paket</p>
-              <div className="bg-surface-container-lowest ring-outline-variant/15 divide-outline-variant/15 divide-y overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
+              <p className="px-1 text-xs font-bold text-on-surface-variant">Item Anggota Paket</p>
+              <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
                 {bundleItems.map((item) => (
                   <DetailRow
                     key={item.id}
@@ -162,7 +162,7 @@ export function RabBundleDrawer({
             title="Tampilan paket"
             helper="Nama dan deskripsi ini akan dibaca klien di RAB."
           >
-            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
               <FormField label="Nama paket">
                 <TextInput
                   value={bundleForm.clientLabel}
@@ -185,7 +185,7 @@ export function RabBundleDrawer({
             title="Jumlah & harga"
             helper="Harga paket menggantikan tampilan harga tiap item anggota."
           >
-            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
               <FormField label="Jumlah">
                 <NumericInput
                   min={0.01}
@@ -250,7 +250,7 @@ export function RabBundleDrawer({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => setConfirmDelete(true)}
-                className="bg-error-container/25 text-error min-h-12 w-full rounded-full px-5 text-xs font-bold"
+                className="min-h-12 w-full rounded-full bg-error-container/25 px-5 text-xs font-bold text-error"
               >
                 Bongkar Paket
               </motion.button>
@@ -271,7 +271,7 @@ export function RabBundleDrawer({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmDelete(false)}
-              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
             >
               Batal
             </motion.button>
@@ -285,7 +285,7 @@ export function RabBundleDrawer({
                 setConfirmDelete(false);
                 setBundleEditorOpen(false);
               }}
-              className="bg-error min-h-12 rounded-full px-4 text-xs font-bold text-white disabled:opacity-40"
+              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white disabled:opacity-40"
             >
               Bongkar Paket
             </motion.button>
@@ -305,8 +305,8 @@ function DetailRow({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3.5 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

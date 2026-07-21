@@ -82,15 +82,13 @@ export async function createInventoryLocation(
         await tx
           .insert(materialInventory)
           .values(materials.map((material) => ({ materialId: material.id, locationId: row.id })));
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "CREATE_INVENTORY_LOCATION",
-          targetTable: "inventory_location",
-          targetId: row.id,
-          newState: JSON.stringify({ ...row, initializedMaterials: materials.length }),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "CREATE_INVENTORY_LOCATION",
+        targetTable: "inventory_location",
+        targetId: row.id,
+        newState: JSON.stringify({ ...row, initializedMaterials: materials.length }),
+      });
       return row;
     });
     refresh();
@@ -206,26 +204,22 @@ export async function createStockTransfer(input: unknown): Promise<ActionRespons
             createdById: actor.id,
           })
           .returning();
-        await tx
-          .insert(stockTransferItem)
-          .values({
-            stockTransferId: header.id,
-            materialId: item.materialId,
-            quantity: item.quantity.toFixed(2),
-            unitCost: unitCost.toFixed(2),
-            outMovementId: out.id,
-            inMovementId: inside.id,
-          });
-      }
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "POST_STOCK_TRANSFER",
-          targetTable: "stock_transfer",
-          targetId: header.id,
-          newState: JSON.stringify({ ...header, items: parsed.data.items }),
+        await tx.insert(stockTransferItem).values({
+          stockTransferId: header.id,
+          materialId: item.materialId,
+          quantity: item.quantity.toFixed(2),
+          unitCost: unitCost.toFixed(2),
+          outMovementId: out.id,
+          inMovementId: inside.id,
         });
+      }
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "POST_STOCK_TRANSFER",
+        targetTable: "stock_transfer",
+        targetId: header.id,
+        newState: JSON.stringify({ ...header, items: parsed.data.items }),
+      });
       return header;
     });
     refresh();
@@ -308,15 +302,13 @@ export async function saveStockCount(input: unknown): Promise<ActionResponse<Cou
           };
         }),
       );
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "SAVE_STOCK_COUNT_DRAFT",
-          targetTable: "stock_count",
-          targetId: header.id,
-          newState: JSON.stringify({ ...header, items: parsed.data.items }),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "SAVE_STOCK_COUNT_DRAFT",
+        targetTable: "stock_count",
+        targetId: header.id,
+        newState: JSON.stringify({ ...header, items: parsed.data.items }),
+      });
       return header;
     });
     refresh();
@@ -356,16 +348,14 @@ async function changeCountStatus(
         .set({ status, submittedAt: new Date(), updatedAt: new Date() })
         .where(eq(stockCount.id, existing.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "SUBMIT_STOCK_COUNT",
-          targetTable: "stock_count",
-          targetId: existing.id,
-          originalState: JSON.stringify(existing),
-          newState: JSON.stringify(rows[0]),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "SUBMIT_STOCK_COUNT",
+        targetTable: "stock_count",
+        targetId: existing.id,
+        originalState: JSON.stringify(existing),
+        newState: JSON.stringify(rows[0]),
+      });
       return rows;
     });
     refresh();
@@ -459,19 +449,17 @@ export async function approveStockCount(input: unknown): Promise<ActionResponse<
         })
         .where(eq(stockCount.id, count.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: selfApproval ? "EMERGENCY_SELF_APPROVE_STOCK_COUNT" : "APPROVE_STOCK_COUNT",
-          targetTable: "stock_count",
-          targetId: count.id,
-          originalState: JSON.stringify(count),
-          newState: JSON.stringify({
-            ...updated,
-            emergencyReason: selfApproval ? parsed.data.reason : null,
-          }),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: selfApproval ? "EMERGENCY_SELF_APPROVE_STOCK_COUNT" : "APPROVE_STOCK_COUNT",
+        targetTable: "stock_count",
+        targetId: count.id,
+        originalState: JSON.stringify(count),
+        newState: JSON.stringify({
+          ...updated,
+          emergencyReason: selfApproval ? parsed.data.reason : null,
+        }),
+      });
       return updated;
     });
     refresh();
@@ -513,16 +501,14 @@ export async function rejectStockCount(input: unknown): Promise<ActionResponse<C
         })
         .where(eq(stockCount.id, existing.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "REJECT_STOCK_COUNT",
-          targetTable: "stock_count",
-          targetId: existing.id,
-          originalState: JSON.stringify(existing),
-          newState: JSON.stringify(rows[0]),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "REJECT_STOCK_COUNT",
+        targetTable: "stock_count",
+        targetId: existing.id,
+        originalState: JSON.stringify(existing),
+        newState: JSON.stringify(rows[0]),
+      });
       return rows;
     });
     refresh();
@@ -566,16 +552,14 @@ export async function requestGoodsReceiptReversal(
         })
         .where(eq(goodsReceipt.id, existing.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "REQUEST_GOODS_RECEIPT_REVERSAL",
-          targetTable: "goods_receipt",
-          targetId: existing.id,
-          originalState: JSON.stringify(existing),
-          newState: JSON.stringify(rows[0]),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "REQUEST_GOODS_RECEIPT_REVERSAL",
+        targetTable: "goods_receipt",
+        targetId: existing.id,
+        originalState: JSON.stringify(existing),
+        newState: JSON.stringify(rows[0]),
+      });
       return rows;
     });
     refresh();
@@ -675,21 +659,19 @@ export async function approveGoodsReceiptReversal(
         })
         .where(eq(goodsReceipt.id, receipt.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: selfApproval
-            ? "EMERGENCY_SELF_APPROVE_GOODS_RECEIPT_REVERSAL"
-            : "APPROVE_GOODS_RECEIPT_REVERSAL",
-          targetTable: "goods_receipt",
-          targetId: receipt.id,
-          originalState: JSON.stringify(receipt),
-          newState: JSON.stringify({
-            ...updated,
-            emergencyReason: selfApproval ? parsed.data.reason : null,
-          }),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: selfApproval
+          ? "EMERGENCY_SELF_APPROVE_GOODS_RECEIPT_REVERSAL"
+          : "APPROVE_GOODS_RECEIPT_REVERSAL",
+        targetTable: "goods_receipt",
+        targetId: receipt.id,
+        originalState: JSON.stringify(receipt),
+        newState: JSON.stringify({
+          ...updated,
+          emergencyReason: selfApproval ? parsed.data.reason : null,
+        }),
+      });
       return updated;
     });
     refresh();
@@ -729,16 +711,14 @@ export async function rejectGoodsReceiptReversal(input: unknown): Promise<Action
         })
         .where(eq(goodsReceipt.id, existing.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "REJECT_GOODS_RECEIPT_REVERSAL",
-          targetTable: "goods_receipt",
-          targetId: existing.id,
-          originalState: JSON.stringify(existing),
-          newState: JSON.stringify({ ...rows[0], rejectionReason: parsed.data.reason }),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "REJECT_GOODS_RECEIPT_REVERSAL",
+        targetTable: "goods_receipt",
+        targetId: existing.id,
+        originalState: JSON.stringify(existing),
+        newState: JSON.stringify({ ...rows[0], rejectionReason: parsed.data.reason }),
+      });
       return rows;
     });
     refresh();
@@ -801,16 +781,14 @@ export async function emergencyAdjustStock(
           createdById: actor.id,
         })
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: actor.id,
-          action: "EMERGENCY_STOCK_ADJUSTMENT",
-          targetTable: "material_inventory",
-          targetId: inventory.id,
-          originalState: JSON.stringify(inventory),
-          newState: JSON.stringify({ currentStock: next, movementId: movement.id }),
-        });
+      await tx.insert(auditLog).values({
+        userId: actor.id,
+        action: "EMERGENCY_STOCK_ADJUSTMENT",
+        targetTable: "material_inventory",
+        targetId: inventory.id,
+        originalState: JSON.stringify(inventory),
+        newState: JSON.stringify({ currentStock: next, movementId: movement.id }),
+      });
       return movement;
     });
     refresh();

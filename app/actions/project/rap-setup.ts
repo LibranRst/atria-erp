@@ -104,16 +104,14 @@ export async function advanceProjectRapSetup(input: unknown): Promise<ActionResp
         })
         .where(eq(projectRap.id, rap.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "ADVANCE_RAP_SETUP",
-          targetTable: "project_rap",
-          targetId: rap.id,
-          originalState: JSON.stringify(rap),
-          newState: JSON.stringify(rows[0]),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "ADVANCE_RAP_SETUP",
+        targetTable: "project_rap",
+        targetId: rap.id,
+        originalState: JSON.stringify(rap),
+        newState: JSON.stringify(rows[0]),
+      });
       return rows;
     });
     revalidatePath(`/projects/${rap.projectId}`);
@@ -157,16 +155,14 @@ export async function setProjectRapScopeSkipped(input: unknown): Promise<ActionR
         .set({ ...changes, setupUpdatedById: user.id, updatedAt: new Date() })
         .where(eq(projectRap.id, rap.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: parsed.data.skipped ? "SKIP_RAP_SCOPE" : "RESTORE_RAP_SCOPE",
-          targetTable: "project_rap",
-          targetId: rap.id,
-          originalState: JSON.stringify(rap),
-          newState: JSON.stringify({ ...rows[0], categoryCode: parsed.data.categoryCode }),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: parsed.data.skipped ? "SKIP_RAP_SCOPE" : "RESTORE_RAP_SCOPE",
+        targetTable: "project_rap",
+        targetId: rap.id,
+        originalState: JSON.stringify(rap),
+        newState: JSON.stringify({ ...rows[0], categoryCode: parsed.data.categoryCode }),
+      });
       return rows;
     });
     revalidatePath(`/projects/${rap.projectId}`);
@@ -198,16 +194,14 @@ export async function markProjectCategoryPlanItemDraft(
         .set({ status: "DRAFT", updatedAt: new Date() })
         .where(eq(projectCategoryPlanItem.id, item.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "REOPEN_CATEGORY_PLAN_PACKAGE",
-          targetTable: "project_category_plan_item",
-          targetId: item.id,
-          originalState: JSON.stringify(item),
-          newState: JSON.stringify(rows[0]),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "REOPEN_CATEGORY_PLAN_PACKAGE",
+        targetTable: "project_category_plan_item",
+        targetId: item.id,
+        originalState: JSON.stringify(item),
+        newState: JSON.stringify(rows[0]),
+      });
       return rows;
     });
     revalidatePath(`/projects/${item.projectId}`);
@@ -256,16 +250,14 @@ export async function finalizeProjectInternalPlan(input: unknown): Promise<Actio
         })
         .where(eq(projectRap.id, rap.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "FINALIZE_PROJECT_INTERNAL_PLAN",
-          targetTable: "project_rap",
-          targetId: rap.id,
-          originalState: JSON.stringify(rap),
-          newState: JSON.stringify(updated),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "FINALIZE_PROJECT_INTERNAL_PLAN",
+        targetTable: "project_rap",
+        targetId: rap.id,
+        originalState: JSON.stringify(rap),
+        newState: JSON.stringify(updated),
+      });
       return updated;
     });
     revalidatePath(`/projects/${result.projectId}`);

@@ -172,7 +172,7 @@ export function MaterialsControlCenter({
         />
         {message && (
           <div
-            className="text-primary flex min-h-10 items-center gap-2 px-1 text-[10px] leading-[1.3] font-semibold"
+            className="flex min-h-10 items-center gap-2 px-1 text-[10px] leading-[1.3] font-semibold text-primary"
             role="status"
           >
             <span className="material-symbols-outlined text-[16px]" aria-hidden="true">

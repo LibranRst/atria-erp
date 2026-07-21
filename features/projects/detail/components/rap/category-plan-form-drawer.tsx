@@ -123,7 +123,7 @@ export function CategoryPlanFormDrawer({
                       })),
                   ]}
                 />
-                <p className="text-on-surface-variant px-4 pt-1 pb-3 text-[10px] leading-4">
+                <p className="px-4 pt-1 pb-3 text-[10px] leading-4 text-on-surface-variant">
                   Template disalin sebagai snapshot. Edit setelahnya tidak mengubah Library.
                 </p>
               </div>
@@ -134,7 +134,7 @@ export function CategoryPlanFormDrawer({
             title="Identitas & lingkup"
             helper="Kategori menentukan hubungan paket dengan budget Tukang atau Subcon."
           >
-            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
               <SheetSelect
                 label="Kategori Budget"
                 value={categoryPlanForm.projectBudgetCategoryId}
@@ -198,7 +198,7 @@ export function CategoryPlanFormDrawer({
             title="Jumlah & biaya"
             helper="Estimasi ini hanya untuk kontrol internal; RAB klien dibuat dari salinan yang aman."
           >
-            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
               <FormField label="Jumlah">
                 <NumericInput
                   value={categoryPlanForm.quantity}

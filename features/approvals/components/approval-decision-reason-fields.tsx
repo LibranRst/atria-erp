@@ -62,7 +62,7 @@ export function ApprovalDecisionReasonFields({
         <div>
           <label
             htmlFor={`${idPrefix}-approval-reason`}
-            className="text-on-surface px-1 text-xs font-bold"
+            className="px-1 text-xs font-bold text-on-surface"
           >
             Alasan persetujuan
           </label>
@@ -77,7 +77,7 @@ export function ApprovalDecisionReasonFields({
             className="mt-2"
             aria-invalid={approvalReason.length > 0 && approvalReason.trim().length < 10}
           />
-          <p className="text-on-surface-variant mt-1 px-1 text-[10px]">
+          <p className="mt-1 px-1 text-[10px] text-on-surface-variant">
             Wajib diisi minimal 10 karakter. Alasan dicatat di audit log.
           </p>
         </div>

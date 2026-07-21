@@ -384,17 +384,17 @@ export function MaterialSettingsManager({
         />
       )}
       {message && (
-        <p className="bg-primary/5 text-primary ring-primary/15 rounded-2xl px-3 py-2.5 text-[11px] leading-4 ring-1">
+        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-[11px] leading-4 text-primary ring-1 ring-primary/15">
           {message}
         </p>
       )}
       {presentation === "onboarding" ? (
         <div className="flex min-w-0 items-center justify-between gap-3 px-1">
           <span className="min-w-0">
-            <span className="text-on-surface block text-[13px] leading-5 font-bold">
+            <span className="block text-[13px] leading-5 font-bold text-on-surface">
               Material Master
             </span>
-            <span className="text-on-surface-variant block text-[9px] leading-4">
+            <span className="block text-[9px] leading-4 text-on-surface-variant">
               {materials.filter((row) => row.isActive).length} material aktif
             </span>
           </span>
@@ -478,23 +478,23 @@ export function MaterialSettingsManager({
                 type="button"
                 key={material.id}
                 onClick={() => setSelectedMaterial(material)}
-                className="focus-visible:bg-surface-container-low active:bg-surface-container-low/75 flex min-h-[88px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none"
+                className="flex min-h-22 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
               >
-                <span className="bg-surface-container-low text-on-surface flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface">
                   <Warehouse className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className="text-on-surface truncate text-[13px] leading-5 font-bold">
+                    <span className="truncate text-[13px] leading-5 font-bold text-on-surface">
                       {material.name}
                     </span>
                   </span>
-                  <span className="text-on-surface-variant mt-1 block truncate text-[10px] leading-4">
+                  <span className="mt-1 block truncate text-[10px] leading-4 text-on-surface-variant">
                     {[material.brand, material.code, material.color, material.unit]
                       .filter(Boolean)
                       .join(" · ") || "Detail material belum dilengkapi"}
                   </span>
-                  <span className="text-on-surface-variant flex min-w-0 items-center gap-2 text-[9px] leading-4">
+                  <span className="flex min-w-0 items-center gap-2 text-[9px] leading-4 text-on-surface-variant">
                     <span className="truncate">{material.inventory.length} lokasi default</span>
                     {material.defaultVendorName ? (
                       <>
@@ -559,7 +559,7 @@ export function MaterialSettingsManager({
                   });
                   setSelectedMaterial(null);
                 }}
-                className="bg-primary focus-visible:ring-primary/30 flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full px-4 text-xs font-bold text-white outline-none focus-visible:ring-2"
+                className="flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
                 <Pencil className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span className="truncate">Edit identitas</span>
@@ -569,7 +569,7 @@ export function MaterialSettingsManager({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => setConfirmMaterial(selectedMaterial)}
-                className="text-error focus-visible:ring-error/20 flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-xs font-bold outline-none focus-visible:ring-2"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-error/20"
               >
                 {selectedMaterial.isActive ? (
                   <Archive className="h-4 w-4" aria-hidden="true" />
@@ -584,11 +584,11 @@ export function MaterialSettingsManager({
       >
         {selectedMaterial ? (
           <div className="space-y-lg">
-            <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1">
+            <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/15">
               <div className="p-4">
                 <div className="min-w-0">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-widest uppercase">
+                    <p className="truncate text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
                       {selectedMaterial.categoryName}
                     </p>
                     <SettingsStatusLabel
@@ -596,10 +596,10 @@ export function MaterialSettingsManager({
                       tone={selectedMaterial.isActive ? "positive" : "inactive"}
                     />
                   </div>
-                  <h3 className="text-on-surface mt-1.5 text-[17px] leading-[1.12] font-bold tracking-[-0.015em]">
+                  <h3 className="mt-1.5 text-[17px] leading-[1.12] font-bold tracking-[-0.015em] text-on-surface">
                     {selectedMaterial.name}
                   </h3>
-                  <p className="text-on-surface-variant mt-1 text-[10px] leading-[1.3]">
+                  <p className="mt-1 text-[10px] leading-[1.3] text-on-surface-variant">
                     {[
                       selectedMaterial.brand,
                       selectedMaterial.code,
@@ -613,23 +613,23 @@ export function MaterialSettingsManager({
               </div>
 
               {selectedMaterial.specification || selectedMaterial.defaultVendorName ? (
-                <div className="divide-outline-variant/15 border-outline-variant/15 divide-y border-t">
+                <div className="divide-y divide-outline-variant/15 border-t border-outline-variant/15">
                   {selectedMaterial.specification ? (
                     <div className="grid min-h-12 grid-cols-[5.25rem_minmax(0,1fr)] items-start gap-3 px-4 py-3">
-                      <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
+                      <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
                         Spesifikasi
                       </p>
-                      <p className="text-on-surface line-clamp-2 text-right text-[10px] leading-[1.35]">
+                      <p className="line-clamp-2 text-right text-[10px] leading-[1.35] text-on-surface">
                         {selectedMaterial.specification}
                       </p>
                     </div>
                   ) : null}
                   {selectedMaterial.defaultVendorName ? (
                     <div className="grid min-h-12 grid-cols-[5.25rem_minmax(0,1fr)] items-center gap-3 px-4 py-3">
-                      <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
+                      <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
                         Vendor
                       </p>
-                      <p className="text-on-surface truncate text-right text-[10px] font-semibold">
+                      <p className="truncate text-right text-[10px] font-semibold text-on-surface">
                         {selectedMaterial.defaultVendorName}
                       </p>
                     </div>
@@ -640,10 +640,10 @@ export function MaterialSettingsManager({
 
             <section className="space-y-2.5">
               <div>
-                <h3 className="text-on-surface text-[10px] font-bold tracking-[0.11em] uppercase">
+                <h3 className="text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
                   Default inventori
                 </h3>
-                <p className="text-on-surface-variant mt-0.5 text-[10px] leading-4">
+                <p className="mt-0.5 text-[10px] leading-4 text-on-surface-variant">
                   Batas stok dan harga referensi per lokasi.
                 </p>
               </div>
@@ -667,17 +667,17 @@ export function MaterialSettingsManager({
                         });
                         setSelectedMaterial(null);
                       }}
-                      className="focus-visible:bg-surface-container-low flex min-h-[76px] w-full items-center gap-3 px-4 py-3 text-left outline-none disabled:cursor-default"
+                      className="flex min-h-19 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low disabled:cursor-default"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="text-on-surface block truncate text-xs leading-[1.15] font-bold">
+                        <span className="block truncate text-xs leading-[1.15] font-bold text-on-surface">
                           {inventory.locationName}
                         </span>
-                        <span className="text-on-surface-variant mt-1 block text-[10px] leading-[1.2]">
+                        <span className="mt-1 block text-[10px] leading-[1.2] text-on-surface-variant">
                           Minimum {inventory.minimumStock.toLocaleString("id-ID")} · Harga acuan Rp{" "}
                           {inventory.lastPurchasePrice.toLocaleString("id-ID")}
                         </span>
-                        <span className="text-on-surface-variant/70 mt-1 block text-[9px] leading-[1.2]">
+                        <span className="mt-1 block text-[9px] leading-[1.2] text-on-surface-variant/70">
                           Stok {inventory.currentStock.toLocaleString("id-ID")} · Reservasi{" "}
                           {inventory.reservedStock.toLocaleString("id-ID")}
                         </span>
@@ -690,7 +690,7 @@ export function MaterialSettingsManager({
             </section>
 
             {!canManage ? (
-              <p className="text-on-surface-variant px-1 text-[10px] leading-[1.35]">
+              <p className="px-1 text-[10px] leading-[1.35] text-on-surface-variant">
                 Akun ini hanya dapat melihat default Material Master.
               </p>
             ) : null}
@@ -920,10 +920,10 @@ export function MaterialSettingsManager({
               <FormField label="Lokasi inventori" readOnly>
                 <div className="flex min-h-8 items-center gap-2.5">
                   <Warehouse
-                    className="text-on-surface-variant h-4 w-4 shrink-0"
+                    className="h-4 w-4 shrink-0 text-on-surface-variant"
                     aria-hidden="true"
                   />
-                  <span className="text-on-surface truncate text-sm font-bold">
+                  <span className="truncate text-sm font-bold text-on-surface">
                     {inventoryEdit.locationName}
                   </span>
                 </div>
@@ -953,32 +953,32 @@ export function MaterialSettingsManager({
               </FormField>
             </FormSection>
             {inventoryOriginal && inventoryDirty ? (
-              <div className="bg-surface-container-lowest ring-outline-variant/15 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-[20px] px-3.5 py-3 ring-1">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-[20px] bg-surface-container-lowest px-3.5 py-3 ring-1 ring-outline-variant/15">
                 <div>
-                  <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
+                  <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
                     Sebelum
                   </p>
                   <p className="mt-1 text-[11px] font-bold tabular-nums">
                     Min. {inventoryOriginal.minimumStock.toLocaleString("id-ID")}
                   </p>
-                  <p className="text-on-surface-variant mt-0.5 truncate text-[9px] tabular-nums">
+                  <p className="mt-0.5 truncate text-[9px] text-on-surface-variant tabular-nums">
                     Rp {inventoryOriginal.lastPurchasePrice.toLocaleString("id-ID")}
                   </p>
                 </div>
                 <span
-                  className="material-symbols-outlined text-on-surface-variant text-[18px] leading-none"
+                  className="material-symbols-outlined text-[18px] leading-none text-on-surface-variant"
                   aria-hidden="true"
                 >
                   arrow_forward
                 </span>
                 <div className="text-right">
-                  <p className="text-primary text-[9px] font-bold tracking-wide uppercase">
+                  <p className="text-[9px] font-bold tracking-wide text-primary uppercase">
                     Sesudah
                   </p>
-                  <p className="text-primary mt-1 text-[11px] font-bold tabular-nums">
+                  <p className="mt-1 text-[11px] font-bold text-primary tabular-nums">
                     Min. {inventoryEdit.minimumStock.toLocaleString("id-ID")}
                   </p>
-                  <p className="text-primary mt-0.5 truncate text-[9px] tabular-nums">
+                  <p className="mt-0.5 truncate text-[9px] text-primary tabular-nums">
                     Rp {inventoryEdit.lastPurchasePrice.toLocaleString("id-ID")}
                   </p>
                 </div>
@@ -1018,7 +1018,7 @@ export function MaterialSettingsManager({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setPendingClose(null)}
-              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
             >
               Lanjut Mengedit
             </motion.button>
@@ -1038,7 +1038,7 @@ export function MaterialSettingsManager({
                 }
                 setPendingClose(null);
               }}
-              className="bg-error min-h-12 rounded-full px-4 text-xs font-bold text-white"
+              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
             >
               Buang Perubahan
             </motion.button>

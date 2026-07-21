@@ -38,7 +38,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
   return (
     <div className="space-y-lg max-[430px]:space-y-5">
       <section
-        className="relative isolate overflow-hidden rounded-[24px] bg-white/92 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[22px] max-[430px]:p-3.5"
+        className="relative isolate overflow-hidden rounded-3xl bg-white/92 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[22px] max-[430px]:p-3.5"
         aria-label="Posisi kebutuhan material"
       >
         <span
@@ -47,12 +47,12 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
         />
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="bg-warning/9 text-warning ring-warning/6 flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] ring-1">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-warning/9 text-warning ring-1 ring-warning/6">
               <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
                 production_quantity_limits
               </span>
             </span>
-            <p className="text-on-surface-variant/60 truncate text-[10px] font-bold tracking-[0.13em] uppercase">
+            <p className="truncate text-[10px] font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
               Kebutuhan belum tertutup
             </p>
           </div>
@@ -60,15 +60,15 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
         </div>
         <div className="mt-4 flex items-end justify-between gap-4">
           <div>
-            <p className="text-on-surface font-mono text-[26px] leading-7 font-black tabular-nums">
+            <p className="font-mono text-[26px] leading-7 font-black text-on-surface tabular-nums">
               {shortages.length}
             </p>
-            <p className="text-on-surface-variant mt-1 text-[10px] leading-[1.3] font-semibold">
+            <p className="mt-1 text-[10px] leading-[1.3] font-semibold text-on-surface-variant">
               material pada {anchors.length} project
             </p>
           </div>
           <div className="min-w-0 text-right">
-            <p className="text-on-surface-variant/60 text-[8px] font-bold tracking-wide uppercase">
+            <p className="text-[8px] font-bold tracking-wide text-on-surface-variant/60 uppercase">
               Estimasi pengadaan
             </p>
             <MoneyValue
@@ -96,10 +96,10 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
               <MaterialGroupSurface key={anchor.projectRapId}>
                 <div className="flex items-start justify-between gap-3 px-3.5 py-3.5">
                   <div className="grid min-w-0 flex-1 gap-1">
-                    <p className="text-on-surface line-clamp-2 text-[14px] leading-[1.12] font-bold">
+                    <p className="line-clamp-2 text-[14px] leading-[1.12] font-bold text-on-surface">
                       {project?.name ?? "Project material"}
                     </p>
-                    <p className="text-on-surface-variant text-[10px] leading-[1.3]">
+                    <p className="text-[10px] leading-[1.3] text-on-surface-variant">
                       {rows.length} material belum tertutup · estimasi pengadaan
                     </p>
                   </div>
@@ -115,24 +115,24 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
                   {rows.map((row) => (
                     <div
                       key={row.projectRapItemId}
-                      className="flex min-h-[76px] items-center gap-3 px-0.5 py-3"
+                      className="flex min-h-19 items-center gap-3 px-0.5 py-3"
                     >
-                      <span className="bg-warning/9 text-warning ring-warning/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/9 text-warning ring-1 ring-warning/6">
                         <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
                           shopping_cart_checkout
                         </span>
                       </span>
                       <div className="grid min-w-0 flex-1 gap-1">
-                        <p className="text-on-surface truncate text-[13px] leading-4 font-bold">
+                        <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
                           {row.materialName}
                         </p>
-                        <p className="text-on-surface-variant truncate text-[10px] leading-[1.3]">
+                        <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
                           {row.area} · tersedia {formatMaterialQuantity(row.availableStock)} dari{" "}
                           {formatMaterialQuantity(row.totalQuantity)}
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="text-warning font-mono text-[12px] leading-4 font-black tabular-nums">
+                        <p className="font-mono text-[12px] leading-4 font-black text-warning tabular-nums">
                           Kurang {formatMaterialQuantity(row.needToBuy)}
                         </p>
                         <MoneyValue

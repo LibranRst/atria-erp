@@ -41,10 +41,10 @@ export function ReceiptDetailSheet({
         <div className="space-y-4 pb-2">
           <div className="flex items-start justify-between gap-3 px-1">
             <div className="min-w-0">
-              <p className="text-on-surface text-base font-bold">
+              <p className="text-base font-bold text-on-surface">
                 {presentedReceipt.receiptNumber}
               </p>
-              <p className="text-on-surface-variant mt-0.5 text-xs">Dokumen Penerimaan Barang</p>
+              <p className="mt-0.5 text-xs text-on-surface-variant">Dokumen Penerimaan Barang</p>
             </div>
             <Badge status={materialBadgeTone(presentedReceipt.status)}>
               {formatMaterialStatus(presentedReceipt.status)}
@@ -52,7 +52,7 @@ export function ReceiptDetailSheet({
           </div>
 
           <SheetSection title="Rincian Dokumen">
-            <div className="divide-outline-variant/15 divide-y px-3">
+            <div className="divide-y divide-outline-variant/15 px-3">
               <DetailRow label="Proyek Penerima" value={presentedReceipt.projectName} />
               <DetailRow
                 label="Total Nilai Material"
@@ -71,17 +71,17 @@ export function ReceiptDetailSheet({
 
           {presentedReceipt.items.length > 0 && (
             <SheetSection title="Item Material Diterima">
-              <div className="divide-outline-variant/15 divide-y px-3">
+              <div className="divide-y divide-outline-variant/15 px-3">
                 {presentedReceipt.items.map((item) => (
                   <div
                     key={`${item.materialName}-${item.quantity}`}
-                    className="flex min-h-[64px] items-center justify-between gap-3 py-3"
+                    className="flex min-h-16 items-center justify-between gap-3 py-3"
                   >
                     <div className="grid min-w-0 flex-1 gap-1">
-                      <p className="text-on-surface truncate text-[13px] leading-4 font-bold">
+                      <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
                         {item.materialName}
                       </p>
-                      <p className="text-on-surface-variant truncate text-[10px] leading-[1.3]">
+                      <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
                         Jumlah: {formatMaterialQuantity(item.quantity)}
                       </p>
                     </div>
@@ -91,9 +91,9 @@ export function ReceiptDetailSheet({
                         variant="compactWithFull"
                         align="right"
                         size="sm"
-                        className="text-on-surface font-bold"
+                        className="font-bold text-on-surface"
                       />
-                      <p className="text-on-surface-variant mt-1 text-[10px]">
+                      <p className="mt-1 text-[10px] text-on-surface-variant">
                         @ Rp {Number(item.unitCost).toLocaleString("id-ID")}
                       </p>
                     </div>
@@ -107,7 +107,7 @@ export function ReceiptDetailSheet({
             <button
               type="button"
               onClick={() => onRequestReversal(presentedReceipt.id)}
-              className="bg-error-container/20 text-error active:bg-error-container/30 min-h-12 w-full rounded-full text-xs font-bold transition-colors"
+              className="min-h-12 w-full rounded-full bg-error-container/20 text-xs font-bold text-error transition-colors active:bg-error-container/30"
             >
               Minta Pembatalan Penerimaan
             </button>
@@ -127,7 +127,7 @@ function SheetSection({
 }): React.JSX.Element {
   return (
     <section className="space-y-2">
-      <h3 className="text-on-surface-variant px-1 text-[12px] font-bold tracking-wide uppercase">
+      <h3 className="px-1 text-[12px] font-bold tracking-wide text-on-surface-variant uppercase">
         {title}
       </h3>
       <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-black/[0.035]">
@@ -146,8 +146,8 @@ function DetailRow({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 py-3.5 text-xs">
-      <span className="text-on-surface-variant shrink-0 font-medium">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 font-medium text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

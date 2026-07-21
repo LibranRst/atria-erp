@@ -21,45 +21,45 @@ function AccountBalanceImpact({
   return (
     <section className="min-w-0 space-y-2.5">
       <header className="min-w-0 px-1">
-        <h3 className="text-on-surface text-[10px] font-bold tracking-[0.11em] uppercase">
+        <h3 className="text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
           Dampak saldo
         </h3>
-        <p className="text-on-surface-variant mt-1 text-[11px] leading-4">
+        <p className="mt-1 text-[11px] leading-4 text-on-surface-variant">
           Periksa perubahan kas sebelum rekening dibuat.
         </p>
       </header>
-      <div className="divide-outline-variant/20 ring-outline-variant/15 min-w-0 divide-y overflow-hidden rounded-[24px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
+      <div className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
         <div className="flex min-w-0 items-center gap-3 px-4 py-3.5">
           <span
-            className="material-symbols-outlined bg-primary/8 text-primary flex! h-9 w-9 shrink-0 items-center justify-center rounded-[14px] text-[19px] leading-none"
+            className="material-symbols-outlined flex! h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-primary/8 text-[19px] leading-none text-primary"
             aria-hidden="true"
           >
             account_balance_wallet
           </span>
           <span className="min-w-0 flex-1">
-            <span className="text-on-surface block text-[13px] leading-5 font-bold">
+            <span className="block text-[13px] leading-5 font-bold text-on-surface">
               Saldo awal rekening
             </span>
-            <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-4">
+            <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
               Dicatat satu kali sebagai mutasi pembukaan.
             </span>
           </span>
         </div>
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3.5 py-4">
           <div className="min-w-0">
-            <p className="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">
+            <p className="text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
               Sebelum
             </p>
             <MoneyValue amount={0} variant="fullDynamic" size="sm" className="mt-1" />
           </div>
           <span
-            className="material-symbols-outlined text-on-surface-variant/65 text-[20px] leading-none"
+            className="material-symbols-outlined text-[20px] leading-none text-on-surface-variant/65"
             aria-hidden="true"
           >
             arrow_forward
           </span>
           <div className="min-w-0 text-right">
-            <p className="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">
+            <p className="text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
               Sesudah
             </p>
             <MoneyValue
@@ -88,11 +88,11 @@ function AccountReviewRow({
 }): React.JSX.Element {
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] items-start gap-4 px-4 py-3.5">
-      <dt className="text-on-surface-variant pt-0.5 text-[10px] leading-4 font-semibold">
+      <dt className="pt-0.5 text-[10px] leading-4 font-semibold text-on-surface-variant">
         {label}
       </dt>
       <dd
-        className={`text-on-surface min-w-0 text-right text-[13px] leading-5 font-bold wrap-break-word ${
+        className={`min-w-0 text-right text-[13px] leading-5 font-bold wrap-break-word text-on-surface ${
           tabular ? "font-numeral tabular-nums" : ""
         }`}
       >
@@ -106,14 +106,14 @@ function AccountIdentityReview({ draft }: { readonly draft: AccountDraft }): Rea
   return (
     <section className="min-w-0 space-y-2.5">
       <header className="min-w-0 px-1">
-        <h3 className="text-on-surface text-[10px] font-bold tracking-[0.11em] uppercase">
+        <h3 className="text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
           Identitas rekening
         </h3>
-        <p className="text-on-surface-variant mt-1 text-[11px] leading-4">
+        <p className="mt-1 text-[11px] leading-4 text-on-surface-variant">
           Periksa data yang akan tampil di selector kas, kartu rekening, dan ledger.
         </p>
       </header>
-      <dl className="divide-outline-variant/20 ring-outline-variant/15 min-w-0 divide-y overflow-hidden rounded-[24px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
+      <dl className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
         <AccountReviewRow label="Bank" value={draft.bankName} />
         <AccountReviewRow label="Nama rekening" value={draft.name} />
         <AccountReviewRow label="Nomor rekening" value={draft.accountNumber} tabular />

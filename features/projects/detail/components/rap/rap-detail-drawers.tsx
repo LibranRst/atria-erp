@@ -56,7 +56,7 @@ export function RapItemDetailDrawer({
                 setRapDetailItemId(null);
                 openEditRapForm(item);
               }}
-              className="bg-surface-container min-h-12 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
+              className="min-h-12 rounded-full bg-surface-container text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
             >
               Edit Material
             </button>
@@ -67,7 +67,7 @@ export function RapItemDetailDrawer({
                 setRapDetailItemId(null);
                 handleDeleteRapItem(item.id);
               }}
-              className="bg-error-container/25 text-error min-h-12 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
+              className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error transition active:scale-[0.97] disabled:opacity-50"
             >
               Hapus
             </button>
@@ -78,21 +78,21 @@ export function RapItemDetailDrawer({
       <div className="space-y-md">
         <div className="flex items-start justify-between gap-3 px-1">
           <div className="min-w-0">
-            <p className="text-on-surface text-base font-bold">{item.name}</p>
-            <p className="text-on-surface-variant mt-0.5 text-xs">
+            <p className="text-base font-bold text-on-surface">{item.name}</p>
+            <p className="mt-0.5 text-xs text-on-surface-variant">
               {item.area} · {item.materialName}
             </p>
           </div>
           <Badge status={toBadgeStatus(item.status)}>{formatBusinessLabel(item.status)}</Badge>
         </div>
 
-        <div className="bg-surface-container-lowest ring-outline-variant/15 divide-outline-variant/15 divide-y overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
+        <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
           {item.description && (
             <div className="bg-surface-container-low/20 px-4 py-3.5">
-              <p className="text-on-surface-variant text-[10px] font-bold tracking-wide uppercase">
+              <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
                 Spesifikasi / Penggunaan
               </p>
-              <p className="text-on-surface mt-1 text-xs leading-relaxed">{item.description}</p>
+              <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.description}</p>
             </div>
           )}
 
@@ -123,10 +123,10 @@ export function RapItemDetailDrawer({
 
           {item.internalNote && (
             <div className="px-4 py-3.5">
-              <p className="text-on-surface-variant text-[10px] font-bold tracking-wide uppercase">
+              <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
                 Catatan Internal
               </p>
-              <p className="text-on-surface mt-1 text-xs leading-relaxed">{item.internalNote}</p>
+              <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.internalNote}</p>
             </div>
           )}
         </div>
@@ -184,7 +184,7 @@ export function PackageDetailDrawer({
                     setPackageDetailItemId(null);
                     openEditCategoryPlanForm(item);
                   }}
-                  className="bg-surface-container min-h-12 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
+                  className="min-h-12 rounded-full bg-surface-container text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
                 >
                   Edit
                 </button>
@@ -194,7 +194,7 @@ export function PackageDetailDrawer({
                   onClick={() => {
                     handleMarkCategoryPlanActive(item.id);
                   }}
-                  className="bg-primary text-on-primary flex min-h-12 items-center justify-center gap-2 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
+                  className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary text-xs font-bold text-on-primary transition active:scale-[0.97] disabled:opacity-50"
                 >
                   {pending ? "Memproses…" : "Tandai Siap"}
                 </button>
@@ -208,7 +208,7 @@ export function PackageDetailDrawer({
                   setPackageDetailItemId(null);
                   handleDeleteCategoryPlanItem(item.id);
                 }}
-                className="bg-error-container/25 text-error min-h-12 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
+                className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error transition active:scale-[0.97] disabled:opacity-50"
               >
                 Hapus Paket
               </button>
@@ -220,7 +220,7 @@ export function PackageDetailDrawer({
                 onClick={() => {
                   handleReopenPackage(item.id);
                 }}
-                className="bg-primary/10 text-primary flex min-h-12 items-center justify-center gap-2 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary/10 text-xs font-bold text-primary transition active:scale-[0.97] disabled:opacity-50"
               >
                 {pending ? "Memproses…" : "Edit Lagi"}
               </button>
@@ -232,8 +232,8 @@ export function PackageDetailDrawer({
       <div className="space-y-md">
         <div className="flex items-start justify-between gap-3 px-1">
           <div className="min-w-0">
-            <p className="text-on-surface text-base font-bold">{item.name}</p>
-            <p className="text-on-surface-variant mt-0.5 text-xs">
+            <p className="text-base font-bold text-on-surface">{item.name}</p>
+            <p className="mt-0.5 text-xs text-on-surface-variant">
               {item.expenseCategoryName} · {item.area}
             </p>
           </div>
@@ -242,13 +242,13 @@ export function PackageDetailDrawer({
           </Badge>
         </div>
 
-        <div className="bg-surface-container-lowest ring-outline-variant/15 divide-outline-variant/15 divide-y overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
+        <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
           {item.scopeDescription && (
             <div className="bg-surface-container-low/20 px-4 py-3.5">
-              <p className="text-on-surface-variant text-[10px] font-bold tracking-wide uppercase">
+              <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
                 Lingkup Pekerjaan
               </p>
-              <p className="text-on-surface mt-1 text-xs leading-relaxed">
+              <p className="mt-1 text-xs leading-relaxed text-on-surface">
                 {item.scopeDescription}
               </p>
             </div>
@@ -305,8 +305,8 @@ function DetailRow({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3.5 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

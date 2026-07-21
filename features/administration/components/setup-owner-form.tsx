@@ -50,13 +50,13 @@ export function SetupOwnerForm(): React.JSX.Element {
   return (
     <section className="flex min-h-[calc(100dvh-3rem)] flex-col justify-center py-6">
       <header className="mb-5 px-1">
-        <p className="text-primary text-[9px] font-bold tracking-[0.16em] uppercase">
+        <p className="text-[9px] font-bold tracking-[0.16em] text-primary uppercase">
           Setup production
         </p>
-        <h1 className="text-on-surface mt-1 text-[26px] font-bold tracking-tight">
+        <h1 className="mt-1 text-[26px] font-bold tracking-tight text-on-surface">
           Buat Owner pertama
         </h1>
-        <p className="text-on-surface-variant mt-2 text-[12px] leading-5">
+        <p className="mt-2 text-[12px] leading-5 text-on-surface-variant">
           Langkah ini hanya tersedia satu kali. Sistem juga menyiapkan role dan kategori budget
           canonical tanpa data transaksi contoh.
         </p>
@@ -121,7 +121,7 @@ export function SetupOwnerForm(): React.JSX.Element {
               disabled={pending}
               whileTap={pending ? undefined : { scale: 0.97 }}
               transition={transitionSpringSnappy}
-              className="bg-primary min-h-12 w-full rounded-full px-6 text-sm font-bold text-white disabled:opacity-50"
+              className="min-h-12 w-full rounded-full bg-primary px-6 text-sm font-bold text-white disabled:opacity-50"
             >
               {pending ? "Menyiapkan…" : "Selesaikan setup"}
             </motion.button>

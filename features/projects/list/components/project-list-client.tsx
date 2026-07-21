@@ -133,11 +133,11 @@ export function ProjectListClient({
             <div className="flex min-h-10 items-center justify-between gap-3 px-1">
               <h2
                 id="project-list-title"
-                className="text-on-surface text-[17px] leading-6 font-bold tracking-[-0.015em] max-[430px]:text-[15px]"
+                className="text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px]"
               >
                 Daftar proyek
               </h2>
-              <span className="text-on-surface-variant/65 shrink-0 text-[9px] font-semibold">
+              <span className="shrink-0 text-[9px] font-semibold text-on-surface-variant/65">
                 {filteredProjects.length} dari {projects.length}
               </span>
             </div>

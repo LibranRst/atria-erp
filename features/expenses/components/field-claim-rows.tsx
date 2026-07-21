@@ -63,7 +63,7 @@ export function FieldClaimRow({
           openActivityDetail({ kind: "PROJECT_COST", id: cost.id });
         }
       }}
-      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 min-h-[96px] px-3 py-3.5 text-left transition-colors outline-none hover:bg-black/1.5 max-[430px]:px-2.5"
+      className="min-h-24 px-3 py-3.5 text-left transition-colors outline-none hover:bg-black/1.5 focus-visible:bg-surface-container-low active:bg-surface-container-low/70 max-[430px]:px-2.5"
       aria-label={`Lihat detail pengeluaran ${cost.description}`}
     >
       <div className="flex items-start gap-3">
@@ -79,7 +79,7 @@ export function FieldClaimRow({
             <span className={`truncate text-[9px] leading-3 font-bold ${statusTone}`}>
               {fieldClaimStatusLabel(cost.status)}
             </span>
-            <span className="text-on-surface-variant/60 shrink-0 text-[9px] leading-3 font-semibold">
+            <span className="shrink-0 text-[9px] leading-3 font-semibold text-on-surface-variant/60">
               {new Date(cost.createdAt).toLocaleDateString("id-ID", {
                 month: "short",
                 day: "numeric",
@@ -89,7 +89,7 @@ export function FieldClaimRow({
             </span>
           </div>
           <div className="mt-1 flex items-start justify-between gap-3">
-            <p className="text-on-surface line-clamp-2 min-w-0 flex-1 text-[13px] leading-5 font-semibold tracking-[-0.01em]">
+            <p className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-5 font-semibold tracking-[-0.01em] text-on-surface">
               {cost.description}
             </p>
             <MoneyValue
@@ -100,11 +100,11 @@ export function FieldClaimRow({
               className="shrink-0"
             />
           </div>
-          <p className="text-on-surface-variant/75 mt-0.5 truncate text-[10px] leading-4 font-medium">
+          <p className="mt-0.5 truncate text-[10px] leading-4 font-medium text-on-surface-variant/75">
             {cost.project?.name || "Proyek"} · {cost.budgetItem?.name || "Belum ditentukan"}
           </p>
           {showBudgetRisk ? (
-            <p className="text-error mt-1 flex min-w-0 items-center gap-1 text-[9px] leading-3 font-bold">
+            <p className="mt-1 flex min-w-0 items-center gap-1 text-[9px] leading-3 font-bold text-error">
               <span
                 className="material-symbols-outlined shrink-0 text-[13px] leading-none"
                 aria-hidden="true"
@@ -122,7 +122,7 @@ export function FieldClaimRow({
       </div>
 
       <div className="mt-2 flex min-h-8 items-center gap-2 pr-8 pl-12">
-        <span className="text-on-surface-variant/60 min-w-0 flex-1 truncate text-[9px] leading-3 font-semibold">
+        <span className="min-w-0 flex-1 truncate text-[9px] leading-3 font-semibold text-on-surface-variant/60">
           Diajukan {cost.requestedBy?.name || "-"}
         </span>
         {cost.receiptImageUrl ? (
@@ -138,7 +138,7 @@ export function FieldClaimRow({
             disabled={pending}
             whileTap={reduceMotion ? undefined : expenseRowPressScale}
             transition={transitionSpringSnappy}
-            className="bg-primary text-on-primary focus-visible:ring-primary/30 relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full px-3 text-[10px] leading-4 font-bold outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 disabled:opacity-50"
+            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-[14px] leading-none" aria-hidden="true">
               fact_check
@@ -157,7 +157,7 @@ export function FieldClaimRow({
             disabled={pending}
             whileTap={reduceMotion ? undefined : expenseRowPressScale}
             transition={transitionSpringSnappy}
-            className="bg-primary text-on-primary focus-visible:ring-primary/30 relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full px-3 text-[10px] leading-4 font-bold outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 disabled:opacity-50"
+            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-[14px] leading-none" aria-hidden="true">
               payments
@@ -192,26 +192,26 @@ export function FieldClaimHistory({
         onClick={() => onExpandedChange(!expanded)}
         whileTap={reduceMotion ? undefined : expenseRowPressScale}
         transition={transitionSpringSnappy}
-        className="bg-surface-container-low/70 flex min-h-12 w-full items-center justify-between rounded-full px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
+        className="flex min-h-12 w-full items-center justify-between rounded-full bg-surface-container-low/70 px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
       >
         <div className="flex min-w-0 items-center gap-2.5">
           <span
-            className="material-symbols-outlined text-on-surface-variant text-[18px] leading-none"
+            className="material-symbols-outlined text-[18px] leading-none text-on-surface-variant"
             aria-hidden="true"
           >
             history
           </span>
-          <span className="text-on-surface truncate text-xs leading-4 font-semibold">
+          <span className="truncate text-xs leading-4 font-semibold text-on-surface">
             Riwayat pengeluaran
           </span>
-          <span className="bg-outline-variant/20 text-on-surface-variant inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] leading-4 font-bold">
+          <span className="inline-flex items-center justify-center rounded-full bg-outline-variant/20 px-1.5 py-0.5 text-[10px] leading-4 font-bold text-on-surface-variant">
             {historyCosts.length}
           </span>
         </div>
         <motion.span
           animate={reduceMotion ? undefined : { rotate: expanded ? 180 : 0 }}
           transition={transitionSpringSnappy}
-          className="material-symbols-outlined text-on-surface-variant text-[18px] leading-none"
+          className="material-symbols-outlined text-[18px] leading-none text-on-surface-variant"
         >
           keyboard_arrow_down
         </motion.span>
@@ -257,7 +257,7 @@ function CompactClaimRow({
           openActivityDetail({ kind: "PROJECT_COST", id: cost.id });
         }
       }}
-      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 min-h-[78px] w-full px-3 py-3 text-left transition-colors outline-none hover:bg-black/1.5"
+      className="min-h-19.5 w-full px-3 py-3 text-left transition-colors outline-none hover:bg-black/1.5 focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
       aria-label={`Lihat detail pengeluaran ${cost.description}`}
     >
       <div className="flex min-w-0 items-start gap-3">
@@ -267,7 +267,7 @@ function CompactClaimRow({
             <span className={`truncate text-[9px] leading-3 font-bold ${statusTone}`}>
               {cost.status === "PAID" ? "Lunas" : "Ditolak"}
             </span>
-            <span className="text-on-surface-variant/60 shrink-0 text-[9px] leading-3 font-semibold">
+            <span className="shrink-0 text-[9px] leading-3 font-semibold text-on-surface-variant/60">
               {new Date(cost.createdAt).toLocaleDateString("id-ID", {
                 month: "short",
                 day: "numeric",
@@ -275,7 +275,7 @@ function CompactClaimRow({
             </span>
           </div>
           <div className="mt-1 flex min-w-0 items-start justify-between gap-3">
-            <p className="text-on-surface min-w-0 flex-1 truncate text-xs leading-4 font-semibold">
+            <p className="min-w-0 flex-1 truncate text-xs leading-4 font-semibold text-on-surface">
               {cost.description}
             </p>
             <MoneyValue
@@ -286,7 +286,7 @@ function CompactClaimRow({
               className="shrink-0"
             />
           </div>
-          <p className="text-on-surface-variant/70 mt-0.5 truncate text-[10px] leading-4 font-medium">
+          <p className="mt-0.5 truncate text-[10px] leading-4 font-medium text-on-surface-variant/70">
             {cost.project?.name || "Proyek"}
           </p>
         </div>
@@ -334,7 +334,7 @@ function ReceiptButton({
       }}
       whileTap={reduceMotion ? undefined : expenseRowPressScale}
       transition={transitionSpringSnappy}
-      className="bg-surface-container-high/70 relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#007AFF] outline-none after:absolute after:-inset-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
+      className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF] outline-none after:absolute after:-inset-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
       title="Lihat Nota"
       aria-label="Lihat nota"
     >

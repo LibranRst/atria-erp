@@ -116,7 +116,7 @@ export function RapMaterialFormDrawer({
                       })),
                   ]}
                 />
-                <p className="text-on-surface-variant px-4 pt-1 pb-3 text-[10px] leading-4">
+                <p className="px-4 pt-1 pb-3 text-[10px] leading-4 text-on-surface-variant">
                   Biaya dan rekomendasi harga klien berasal dari rincian Library, lalu disimpan
                   sebagai snapshot proyek.
                 </p>
@@ -143,7 +143,7 @@ export function RapMaterialFormDrawer({
             title="Identitas & penggunaan"
             helper="Nama dan area akan menjadi konteks utama saat item muncul di daftar RAP."
           >
-            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
               <ComboboxField
                 label="Area / Ruangan"
                 value={rapForm.area}

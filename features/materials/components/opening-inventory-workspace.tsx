@@ -354,11 +354,11 @@ export function OpeningInventoryWorkspace({
     <section className={`space-y-5 ${embedded ? "" : "pb-8"}`}>
       {showHeader ? (
         <header className="space-y-1 px-1">
-          <p className="text-on-surface-variant text-[9px] font-bold tracking-[0.14em] uppercase">
+          <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
             Fondasi inventory
           </p>
-          <h2 className="text-on-surface text-[20px] font-bold tracking-tight">Saldo awal stok</h2>
-          <p className="text-on-surface-variant text-[11px] leading-4">
+          <h2 className="text-[20px] font-bold tracking-tight text-on-surface">Saldo awal stok</h2>
+          <p className="text-[11px] leading-4 text-on-surface-variant">
             Catat stok fisik yang sudah dimiliki sebelum aktivitas gudang berjalan di Atria.
           </p>
         </header>
@@ -377,19 +377,19 @@ export function OpeningInventoryWorkspace({
                 .map((row) => (
                   <div
                     key={row.inventoryId}
-                    className="flex min-h-[58px] items-center gap-3 px-4 py-3"
+                    className="flex min-h-14.5 items-center gap-3 px-4 py-3"
                   >
                     <span
-                      className="material-symbols-outlined bg-surface-container-low text-on-surface-variant flex! h-8 w-8 shrink-0 items-center justify-center rounded-full text-[16px]"
+                      className="material-symbols-outlined flex! h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-[16px] text-on-surface-variant"
                       aria-hidden="true"
                     >
                       lock
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="text-on-surface block truncate text-[11px] leading-5 font-bold">
+                      <span className="block truncate text-[11px] leading-5 font-bold text-on-surface">
                         {row.materialName} · {row.locationName}
                       </span>
-                      <span className="text-on-surface-variant block text-[9px] leading-3">
+                      <span className="block text-[9px] leading-3 text-on-surface-variant">
                         {row.ineligibleReason}
                       </span>
                     </span>
@@ -409,20 +409,20 @@ export function OpeningInventoryWorkspace({
             tone="warning"
           />
           {setupOnly ? (
-            <p className="text-on-surface-variant border-t border-black/5.5 px-4 py-3 text-[10px] leading-4">
+            <p className="border-t border-black/5.5 px-4 py-3 text-[10px] leading-4 text-on-surface-variant">
               Kembali ke tab Lokasi & Material pada onboarding untuk melengkapi prasyarat.
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-2 border-t border-black/5.5 p-3">
               <Link
                 href="/materials?action=LOCATION"
-                className="text-on-surface flex min-h-12 items-center justify-center rounded-full bg-white px-3 text-[10px] font-bold ring-1 ring-black/5.5"
+                className="flex min-h-12 items-center justify-center rounded-full bg-white px-3 text-[10px] font-bold text-on-surface ring-1 ring-black/5.5"
               >
                 Buat lokasi
               </Link>
               <Link
                 href="/settings?tab=materials"
-                className="bg-primary text-on-primary flex min-h-12 items-center justify-center rounded-full px-3 text-[10px] font-bold"
+                className="flex min-h-12 items-center justify-center rounded-full bg-primary px-3 text-[10px] font-bold text-on-primary"
               >
                 Material Master
               </Link>
@@ -464,7 +464,7 @@ export function OpeningInventoryWorkspace({
                     transition={transitionSpringSnappy}
                     onClick={() => setLines((current) => [...current, newLine()])}
                     disabled={pending || !canAddManualLine}
-                    className="disabled:text-on-surface-variant flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#007AFF]/8 px-5 text-xs font-bold text-[#007AFF] outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 disabled:opacity-55"
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#007AFF]/8 px-5 text-xs font-bold text-[#007AFF] outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 disabled:text-on-surface-variant disabled:opacity-55"
                   >
                     <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                       add
@@ -502,7 +502,7 @@ export function OpeningInventoryWorkspace({
                             onClick={() =>
                               setLines((current) => current.filter((item) => item.key !== line.key))
                             }
-                            className="text-error focus-visible:ring-error/25 min-h-12 rounded-full px-3 text-[10px] font-bold outline-none focus-visible:ring-2"
+                            className="min-h-12 rounded-full px-3 text-[10px] font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-error/25"
                           >
                             Hapus
                           </button>
@@ -567,16 +567,16 @@ export function OpeningInventoryWorkspace({
                   transition={transitionSpringSnappy}
                   onClick={() => setLines((current) => [...current, newLine()])}
                   disabled={pending}
-                  className="text-on-surface min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold ring-1 ring-black/5.5 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 disabled:opacity-40"
+                  className="min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold text-on-surface ring-1 ring-black/5.5 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 disabled:opacity-40"
                 >
                   Tambah item stok lainnya
                 </motion.button>
               ) : allEligibleSelected ? (
-                <p className="text-on-surface-variant px-3 text-center text-[10px] leading-4">
+                <p className="px-3 text-center text-[10px] leading-4 text-on-surface-variant">
                   Semua inventory yang memenuhi syarat sudah tersedia di batch ini.
                 </p>
               ) : (
-                <p className="text-on-surface-variant px-3 text-center text-[10px] leading-4">
+                <p className="px-3 text-center text-[10px] leading-4 text-on-surface-variant">
                   Pilih material dan lokasi pada baris yang tersedia sebelum menambah data lain.
                 </p>
               )}
@@ -584,8 +584,8 @@ export function OpeningInventoryWorkspace({
           ) : (
             <section className="space-y-3">
               <div className="rounded-[26px] bg-white p-4 shadow-sm ring-1 ring-black/4">
-                <p className="text-on-surface text-[13px] font-bold">Upload CSV saldo stok</p>
-                <p className="text-on-surface-variant mt-1 text-[10px] leading-4">
+                <p className="text-[13px] font-bold text-on-surface">Upload CSV saldo stok</p>
+                <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
                   Header: material_name atau material_code, location_name, quantity, unit_cost.
                 </p>
                 <button
@@ -595,7 +595,7 @@ export function OpeningInventoryWorkspace({
                 >
                   Unduh template CSV
                 </button>
-                <label className="bg-surface-container-low text-on-surface mt-4 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-xs font-bold ring-1 ring-black/4">
+                <label className="mt-4 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-surface-container-low px-5 text-xs font-bold text-on-surface ring-1 ring-black/4">
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                     upload_file
                   </span>
@@ -618,16 +618,16 @@ export function OpeningInventoryWorkspace({
                     {preview.items.map((item) => (
                       <div
                         key={`${item.rowNumber}-${item.materialInventoryId}`}
-                        className="flex min-h-[64px] items-center gap-3 px-4 py-3"
+                        className="flex min-h-16 items-center gap-3 px-4 py-3"
                       >
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700">
                           {item.rowNumber}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="text-on-surface block truncate text-[12px] font-bold">
+                          <span className="block truncate text-[12px] font-bold text-on-surface">
                             {item.materialName}
                           </span>
-                          <span className="text-on-surface-variant mt-0.5 block text-[10px]">
+                          <span className="mt-0.5 block text-[10px] text-on-surface-variant">
                             {item.locationName} · {item.quantity.toLocaleString("id-ID")}
                           </span>
                         </span>
@@ -642,12 +642,12 @@ export function OpeningInventoryWorkspace({
                     {preview.errors.map((error) => (
                       <div
                         key={`${error.rowNumber}-${error.message}`}
-                        className="bg-error/[0.035] flex min-h-[58px] items-center gap-3 px-4 py-3"
+                        className="flex min-h-14.5 items-center gap-3 bg-error/[0.035] px-4 py-3"
                       >
-                        <span className="bg-error/10 text-error flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-error/10 text-[10px] font-bold text-error">
                           {error.rowNumber}
                         </span>
-                        <p className="text-error text-[10px] leading-4">{error.message}</p>
+                        <p className="text-[10px] leading-4 text-error">{error.message}</p>
                       </div>
                     ))}
                   </div>
@@ -658,18 +658,18 @@ export function OpeningInventoryWorkspace({
 
           <MaterialGroupSurface>
             <div className="divide-y divide-black/5.5">
-              <div className="flex min-h-[76px] items-center gap-3 px-4 py-3.5">
+              <div className="flex min-h-19 items-center gap-3 px-4 py-3.5">
                 <span
-                  className="bg-primary/8 text-primary ring-primary/6 flex h-10 w-10 shrink-0 items-center justify-center rounded-[15px] ring-1"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[15px] bg-primary/8 text-primary ring-1 ring-primary/6"
                   aria-hidden="true"
                 >
                   <span className="material-symbols-outlined text-[20px]">inventory_2</span>
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="text-on-surface block text-[12px] leading-4 font-bold">
+                  <span className="block text-[12px] leading-4 font-bold text-on-surface">
                     Total saldo awal
                   </span>
-                  <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-4">
+                  <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
                     {submittedItems.length} item siap diajukan
                   </span>
                 </span>
@@ -681,18 +681,18 @@ export function OpeningInventoryWorkspace({
                   className="shrink-0"
                 />
               </div>
-              <div className="flex min-h-[64px] items-start gap-3 px-4 py-3.5">
+              <div className="flex min-h-16 items-start gap-3 px-4 py-3.5">
                 <span
-                  className="material-symbols-outlined text-on-surface-variant/65 mt-0.5 shrink-0 text-[18px]"
+                  className="material-symbols-outlined mt-0.5 shrink-0 text-[18px] text-on-surface-variant/65"
                   aria-hidden="true"
                 >
                   info
                 </span>
                 <span className="min-w-0">
-                  <span className="text-on-surface block text-[11px] leading-4 font-semibold">
+                  <span className="block text-[11px] leading-4 font-semibold text-on-surface">
                     Belum ada mutasi yang diposting
                   </span>
-                  <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-4">
+                  <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
                     Stok, kas, utang vendor, dan biaya aktual proyek tetap sama sampai pengajuan
                     disetujui.
                   </span>
@@ -705,9 +705,9 @@ export function OpeningInventoryWorkspace({
             tidak dapat menyetujui pengajuannya sendiri.
           </FormRiskNotice>
           {!formComplete && submitDisabledReason ? (
-            <p className="bg-warning/8 text-on-surface-variant ring-warning/8 flex min-h-12 items-center gap-2 rounded-[18px] px-3.5 py-2.5 text-[10px] leading-4 ring-1">
+            <p className="flex min-h-12 items-center gap-2 rounded-[18px] bg-warning/8 px-3.5 py-2.5 text-[10px] leading-4 text-on-surface-variant ring-1 ring-warning/8">
               <span
-                className="material-symbols-outlined text-warning shrink-0 text-[17px]"
+                className="material-symbols-outlined shrink-0 text-[17px] text-warning"
                 aria-hidden="true"
               >
                 info
@@ -720,7 +720,7 @@ export function OpeningInventoryWorkspace({
             whileTap={pending || !formComplete ? undefined : { scale: 0.97 }}
             transition={transitionSpringSnappy}
             disabled={pending || !formComplete}
-            className="bg-primary text-on-primary min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-40"
+            className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary disabled:opacity-40"
           >
             {pending ? "Mengajukan…" : "Ajukan saldo awal"}
           </motion.button>
@@ -745,19 +745,19 @@ export function OpeningInventoryWorkspace({
                       type="button"
                       key={batch.id}
                       onClick={() => setSelectedBatch(batch)}
-                      className="active:bg-surface-container-low focus-visible:bg-surface-container-low flex min-h-[76px] w-full items-center gap-3 px-4 py-3 text-left outline-none"
+                      className="flex min-h-19 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
                     >
                       <span
-                        className="material-symbols-outlined bg-surface-container-low text-primary flex! h-10 w-10 shrink-0 items-center justify-center rounded-[14px] text-[20px]"
+                        className="material-symbols-outlined flex! h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-[20px] text-primary"
                         aria-hidden="true"
                       >
                         inventory
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="text-on-surface block truncate text-[12px] font-bold">
+                        <span className="block truncate text-[12px] font-bold text-on-surface">
                           {batch.batchNumber}
                         </span>
-                        <span className="text-on-surface-variant mt-0.5 block text-[10px]">
+                        <span className="mt-0.5 block text-[10px] text-on-surface-variant">
                           {batch.itemCount} item ·{" "}
                           {new Intl.DateTimeFormat("id-ID", {
                             dateStyle: "medium",
@@ -776,7 +776,7 @@ export function OpeningInventoryWorkspace({
                         align="right"
                       />
                       <span
-                        className="material-symbols-outlined text-on-surface-variant/60 shrink-0 text-[18px]"
+                        className="material-symbols-outlined shrink-0 text-[18px] text-on-surface-variant/60"
                         aria-hidden="true"
                       >
                         chevron_right
@@ -816,16 +816,16 @@ export function OpeningInventoryWorkspace({
           <div className="space-y-4 pb-1">
             <div className="flex items-center gap-3 px-1">
               <span
-                className="material-symbols-outlined bg-surface-container-low text-primary flex! h-10 w-10 shrink-0 items-center justify-center rounded-[14px] text-[20px]"
+                className="material-symbols-outlined flex! h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-[20px] text-primary"
                 aria-hidden="true"
               >
                 inventory
               </span>
               <span className="min-w-0 flex-1">
-                <span className="text-on-surface block truncate text-[14px] leading-5 font-bold">
+                <span className="block truncate text-[14px] leading-5 font-bold text-on-surface">
                   Saldo awal stok
                 </span>
-                <span className="text-on-surface-variant mt-0.5 block truncate text-[10px] leading-4">
+                <span className="mt-0.5 block truncate text-[10px] leading-4 text-on-surface-variant">
                   {new Intl.DateTimeFormat("id-ID", {
                     dateStyle: "long",
                   }).format(new Date(presentedBatch.cutoverDate))}
@@ -838,7 +838,7 @@ export function OpeningInventoryWorkspace({
             </div>
 
             <OpeningDetailSection title="Ringkasan batch">
-              <div className="divide-outline-variant/15 divide-y px-3">
+              <div className="divide-y divide-outline-variant/15 px-3">
                 <OpeningDetailRow label="Nomor batch" value={presentedBatch.batchNumber} />
                 <OpeningDetailRow label="Jumlah item" value={`${presentedBatch.itemCount} item`} />
                 <OpeningDetailRow
@@ -857,7 +857,7 @@ export function OpeningInventoryWorkspace({
 
             <OpeningDetailSection title="Item stok awal">
               {presentedBatch.items.length > 0 ? (
-                <div className="divide-outline-variant/15 divide-y px-3">
+                <div className="divide-y divide-outline-variant/15 px-3">
                   {presentedBatch.items.map((item) => (
                     <OpeningBatchItemRow key={item.id} item={item} />
                   ))}
@@ -873,7 +873,7 @@ export function OpeningInventoryWorkspace({
             </OpeningDetailSection>
 
             <OpeningDetailSection title="Sumber & audit">
-              <div className="divide-outline-variant/15 divide-y px-3">
+              <div className="divide-y divide-outline-variant/15 px-3">
                 <OpeningDetailRow
                   label="Dokumen"
                   value={presentedBatch.referenceNumber || "Tidak ada"}
@@ -891,8 +891,8 @@ export function OpeningInventoryWorkspace({
                   <OpeningDetailRow label="Dibalik oleh" value={presentedBatch.reversedByName} />
                 ) : null}
                 <div className="py-3.5">
-                  <p className="text-on-surface-variant text-[10px] font-medium">Catatan sumber</p>
-                  <p className="text-on-surface mt-1.5 text-[12px] leading-5 font-semibold whitespace-pre-wrap">
+                  <p className="text-[10px] font-medium text-on-surface-variant">Catatan sumber</p>
+                  <p className="mt-1.5 text-[12px] leading-5 font-semibold whitespace-pre-wrap text-on-surface">
                     {presentedBatch.note}
                   </p>
                 </div>
@@ -933,7 +933,7 @@ export function OpeningInventoryWorkspace({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => setReversalMode(true)}
-                className="bg-error/10 text-error focus-visible:ring-error/30 min-h-12 w-full rounded-full px-5 text-xs font-bold outline-none focus-visible:ring-2"
+                className="min-h-12 w-full rounded-full bg-error/10 px-5 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-error/30"
               >
                 Balik saldo awal
               </motion.button>
@@ -954,7 +954,7 @@ function OpeningDetailSection({
 }): React.JSX.Element {
   return (
     <section className="space-y-2">
-      <h3 className="text-on-surface-variant px-1 text-[12px] font-bold tracking-wide uppercase">
+      <h3 className="px-1 text-[12px] font-bold tracking-wide text-on-surface-variant uppercase">
         {title}
       </h3>
       <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-black/[0.035]">
@@ -973,8 +973,8 @@ function OpeningDetailRow({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-12 items-start justify-between gap-4 py-3.5 text-xs">
-      <span className="text-on-surface-variant shrink-0 font-medium">{label}</span>
-      <span className="text-on-surface min-w-0 text-right font-bold">{value}</span>
+      <span className="shrink-0 font-medium text-on-surface-variant">{label}</span>
+      <span className="min-w-0 text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }
@@ -985,18 +985,18 @@ function OpeningBatchItemRow({
   readonly item: InventoryOpeningBatchView["items"][number];
 }): React.JSX.Element {
   return (
-    <div className="flex min-h-[72px] items-center justify-between gap-3 py-3">
+    <div className="flex min-h-18 items-center justify-between gap-3 py-3">
       <div className="grid min-w-0 flex-1 gap-1">
-        <p className="text-on-surface truncate text-[13px] leading-4 font-bold">
+        <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
           {item.materialName}
         </p>
-        <p className="text-on-surface-variant truncate text-[10px] leading-[1.3]">
+        <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
           {item.locationName} · {formatOpeningQuantity(item.quantity)} {item.unit}
         </p>
       </div>
       <div className="max-w-[46%] shrink-0 text-right">
         <MoneyValue amount={item.totalValue} variant="compactWithFull" align="right" size="sm" />
-        <p className="text-on-surface-variant mt-1 truncate text-[9px] tabular-nums">
+        <p className="mt-1 truncate text-[9px] text-on-surface-variant tabular-nums">
           @ Rp {item.unitCost.toLocaleString("id-ID")}/{item.unit}
         </p>
       </div>

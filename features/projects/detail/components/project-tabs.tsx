@@ -171,7 +171,7 @@ export function ProjectTabs({
 
       <div
         ref={contentRef}
-        className="min-h-[400px] [overflow-anchor:none]"
+        className="min-h-100 [overflow-anchor:none]"
         style={
           contentMinHeight === null
             ? undefined

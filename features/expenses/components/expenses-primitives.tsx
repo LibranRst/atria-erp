@@ -28,7 +28,7 @@ export function ExpensesSummarySurface({
 }): React.JSX.Element {
   return (
     <section
-      className="relative isolate overflow-hidden rounded-[26px] bg-white/88 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[24px] max-[430px]:p-3.5"
+      className="relative isolate overflow-hidden rounded-[26px] bg-white/88 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5"
       aria-label={ariaLabel}
     >
       <span
@@ -37,12 +37,12 @@ export function ExpensesSummarySurface({
       />
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="bg-surface-container-high/65 text-on-surface-variant flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] ring-1 ring-black/[0.035]">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-container-high/65 text-on-surface-variant ring-1 ring-black/[0.035]">
             <span className="material-symbols-outlined text-[17px] leading-none" aria-hidden="true">
               {icon}
             </span>
           </span>
-          <p className="text-on-surface-variant/60 min-w-0 truncate text-[10px] leading-4 font-bold tracking-[0.13em] uppercase">
+          <p className="min-w-0 truncate text-[10px] leading-4 font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
             {eyebrow}
           </p>
         </div>
@@ -70,7 +70,7 @@ export function ExpensesGroupSurface({
 }): React.JSX.Element {
   return (
     <div
-      className={`relative isolate overflow-hidden rounded-[26px] bg-white/88 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[24px] ${className}`}
+      className={`relative isolate overflow-hidden rounded-[26px] bg-white/88 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl ${className}`}
     >
       {children}
     </div>
@@ -86,11 +86,11 @@ export function ExpensesSectionHeader({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-10 items-center justify-between gap-3 px-1">
-      <h2 className="text-on-surface min-w-0 truncate text-[17px] leading-5 font-bold tracking-[-0.015em] max-[430px]:text-[15px]">
+      <h2 className="min-w-0 truncate text-[17px] leading-5 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px]">
         {title}
       </h2>
       {meta ? (
-        <span className="text-on-surface-variant/65 shrink-0 text-[9px] leading-3 font-semibold">
+        <span className="shrink-0 text-[9px] leading-3 font-semibold text-on-surface-variant/65">
           {meta}
         </span>
       ) : null}

@@ -126,7 +126,7 @@ export function TransferSheet({
                 <FieldContextLine>
                   {draft.transactionDate} · {draft.referenceNumber || "Tanpa nomor referensi"}
                 </FieldContextLine>
-                <p className="bg-surface-container-low text-on-surface rounded-2xl px-4 py-3 text-xs leading-5">
+                <p className="rounded-2xl bg-surface-container-low px-4 py-3 text-xs leading-5 text-on-surface">
                   {draft.description}
                 </p>
               </FormSection>

@@ -49,7 +49,7 @@ function SummaryFact({
           : "text-on-surface";
   return (
     <div className="min-w-0">
-      <p className="text-on-surface-variant/55 truncate text-[9px] font-bold tracking-wide uppercase">
+      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant/55 uppercase">
         {label}
       </p>
       <p className={`mt-1 truncate font-mono text-sm font-black ${toneClass}`}>{value}</p>
@@ -71,12 +71,12 @@ export function DashboardOverviewTab({
     .filter((item) => item.severity !== "INFO")
     .slice(0, 3);
   const showOnboardingCard = onboarding && onboarding.state.status !== "COMPLETED";
-  const missingSteps = onboarding
-    ? onboarding.readiness.filter((item) => !item.ready && item.id !== "summary").length
-    : 0;
-  const setupSteps = onboarding ? onboarding.readiness.filter((item) => item.id !== "summary") : [];
+  const setupSteps = onboarding
+    ? onboarding.readiness.filter((item) => item.id !== "welcome" && item.id !== "summary")
+    : [];
+  const missingSteps = setupSteps.filter((item) => !item.ready).length;
   const activeStepItem = onboarding
-    ? setupSteps.find((item) => item.id === onboarding.state.currentStep)
+    ? onboarding.readiness.find((item) => item.id === onboarding.state.currentStep)
     : null;
 
   return (
@@ -214,9 +214,9 @@ export function BudgetRiskTab({
         status={budgetDanger ? "Perlu tindakan" : "Terkendali"}
         statusTone={budgetDanger ? "critical" : "positive"}
       >
-        <div className="bg-surface-container-low/65 grid grid-cols-2 divide-x divide-black/5.5 rounded-[20px] px-3.5 py-3">
+        <div className="grid grid-cols-2 divide-x divide-black/5.5 rounded-[20px] bg-surface-container-low/65 px-3.5 py-3">
           <div className="min-w-0 pr-3">
-            <p className="text-on-surface-variant/60 text-[9px] font-semibold">Internal budget</p>
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">Internal budget</p>
             <MoneyValue
               amount={data.summary.internalBudget}
               variant="compactWithFull"
@@ -225,7 +225,7 @@ export function BudgetRiskTab({
             />
           </div>
           <div className="min-w-0 pl-3 text-right">
-            <p className="text-on-surface-variant/60 text-[9px] font-semibold">Aktual terpakai</p>
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">Aktual terpakai</p>
             <MoneyValue
               amount={data.summary.actualCost}
               variant="compactWithFull"
@@ -278,7 +278,7 @@ export function BudgetRiskTab({
           <DashboardTabEmpty>Budget kategori project aktif belum tersedia.</DashboardTabEmpty>
         ) : (
           <>
-            <div className="border-outline-variant/35 text-on-surface-variant border-b px-4 py-2.5 text-[10px] font-semibold">
+            <div className="border-b border-outline-variant/35 px-4 py-2.5 text-[10px] font-semibold text-on-surface-variant">
               {criticalCategories.length > 0
                 ? `${criticalCategories.length} kategori perlu perhatian di seluruh project.`
                 : "Semua kategori masih terkendali."}
@@ -339,7 +339,7 @@ export function CashDueTab({
       >
         <div className="flex items-end justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-on-surface-variant/60 text-[9px] font-semibold">
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">
               Outstanding 7 hari
             </p>
             <MoneyValue
@@ -350,8 +350,8 @@ export function CashDueTab({
               className="mt-1"
             />
           </div>
-          <div className="bg-surface-container-low/70 shrink-0 rounded-[16px] px-3 py-2 text-right">
-            <p className="text-on-surface-variant/60 text-[8px] font-semibold">Cakupan kas</p>
+          <div className="shrink-0 rounded-2xl bg-surface-container-low/70 px-3 py-2 text-right">
+            <p className="text-[8px] font-semibold text-on-surface-variant/60">Cakupan kas</p>
             <p
               className={`mt-1 font-mono text-sm font-black ${coverage !== null && coverage < 1 ? "text-error" : "text-success"}`}
             >
@@ -359,7 +359,7 @@ export function CashDueTab({
             </p>
           </div>
         </div>
-        <div className="bg-surface-container-low/65 mt-3.5 grid grid-cols-3 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5">
+        <div className="mt-3.5 grid grid-cols-3 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
           <SummaryFact
             label="Terlambat"
             value={String(overdue?.count ?? 0)}
@@ -393,7 +393,7 @@ export function CashDueTab({
             href={group.bucket === "LATER" ? "/expenses?view=vendor-bills" : undefined}
             actionLabel="Lihat semua"
           >
-            <div className="bg-surface-container-low/65 text-on-surface-variant mx-3 mt-3 flex items-center justify-between rounded-[15px] px-3 py-2 text-[10px] font-semibold">
+            <div className="mx-3 mt-3 flex items-center justify-between rounded-[15px] bg-surface-container-low/65 px-3 py-2 text-[10px] font-semibold text-on-surface-variant">
               <span>{group.count} dokumen</span>
               <MoneyValue
                 amount={group.totalOutstanding}
@@ -450,9 +450,9 @@ export function MaterialsTab({
             : "positive"
         }
       >
-        <div className="bg-surface-container-low/65 grid grid-cols-2 divide-x divide-black/5.5 rounded-[20px] px-3.5 py-3">
+        <div className="grid grid-cols-2 divide-x divide-black/5.5 rounded-[20px] bg-surface-container-low/65 px-3.5 py-3">
           <div className="min-w-0">
-            <p className="text-on-surface-variant/60 text-[9px] font-semibold">Stok tersedia</p>
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">Stok tersedia</p>
             <MoneyValue
               amount={data.stockIssues.reusableStockValue}
               variant="compactWithFull"
@@ -461,7 +461,7 @@ export function MaterialsTab({
             />
           </div>
           <div className="min-w-0 pl-3 text-right">
-            <p className="text-on-surface-variant/60 text-[9px] font-semibold">Total nilai stok</p>
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">Total nilai stok</p>
             <MoneyValue
               amount={data.stockIssues.totalStockValue}
               variant="compactWithFull"

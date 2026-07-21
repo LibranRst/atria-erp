@@ -128,15 +128,13 @@ export async function createRabBundle(
         .update(rabEstimateItem)
         .set({ bundleId: bundle.id, isBundle: true, updatedAt: new Date() })
         .where(inArray(rabEstimateItem.id, uniqueIds));
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "CREATE_RAB_BUNDLE",
-          targetTable: "rab_estimate_bundle",
-          targetId: bundle.id,
-          newState: JSON.stringify({ ...bundle, itemIds: uniqueIds }),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "CREATE_RAB_BUNDLE",
+        targetTable: "rab_estimate_bundle",
+        targetId: bundle.id,
+        newState: JSON.stringify({ ...bundle, itemIds: uniqueIds }),
+      });
       return bundle;
     });
     return { success: true, data: created };
@@ -183,16 +181,14 @@ export async function updateRabBundle(
         })
         .where(eq(rabEstimateBundle.id, bundle.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "UPDATE_RAB_BUNDLE",
-          targetTable: "rab_estimate_bundle",
-          targetId: row.id,
-          originalState: JSON.stringify(bundle),
-          newState: JSON.stringify(row),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "UPDATE_RAB_BUNDLE",
+        targetTable: "rab_estimate_bundle",
+        targetId: row.id,
+        originalState: JSON.stringify(bundle),
+        newState: JSON.stringify(row),
+      });
       return row;
     });
     return { success: true, data: updated };
@@ -228,15 +224,13 @@ export async function deleteRabBundle(
         .set({ bundleId: null, isBundle: false, updatedAt: new Date() })
         .where(eq(rabEstimateItem.bundleId, bundle.id));
       await tx.delete(rabEstimateBundle).where(eq(rabEstimateBundle.id, bundle.id));
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "DELETE_RAB_BUNDLE",
-          targetTable: "rab_estimate_bundle",
-          targetId: bundle.id,
-          originalState: JSON.stringify(bundle),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "DELETE_RAB_BUNDLE",
+        targetTable: "rab_estimate_bundle",
+        targetId: bundle.id,
+        originalState: JSON.stringify(bundle),
+      });
       return { id: bundle.id };
     });
     return { success: true, data: removed };

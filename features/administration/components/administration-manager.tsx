@@ -269,10 +269,10 @@ export function AdministrationManager({
       {presentation === "onboarding" ? (
         <div className="flex min-w-0 items-center justify-between gap-3 px-1">
           <span className="min-w-0">
-            <span className="text-on-surface block text-[13px] leading-5 font-bold">
+            <span className="block text-[13px] leading-5 font-bold text-on-surface">
               {activeTab === "USERS" ? "Tim internal" : "Vendor"}
             </span>
-            <span className="text-on-surface-variant block text-[9px] leading-4">
+            <span className="block text-[9px] leading-4 text-on-surface-variant">
               {activeTab === "USERS"
                 ? `${activeUserCount} akun aktif`
                 : `${activeVendorCount} vendor aktif`}
@@ -292,15 +292,15 @@ export function AdministrationManager({
         <section className="space-y-2">
           {presentation === "settings" ? (
             <div className="flex min-h-8 items-center justify-between gap-3 px-1">
-              <h3 className="text-on-surface text-[15px] leading-5 font-bold">Tim internal</h3>
-              <span className="text-on-surface-variant text-[9px] leading-4 font-semibold">
+              <h3 className="text-[15px] leading-5 font-bold text-on-surface">Tim internal</h3>
+              <span className="text-[9px] leading-4 font-semibold text-on-surface-variant">
                 {activeUserCount} aktif dari {data.users.length}
               </span>
             </div>
           ) : null}
           <SettingsGroupSurface>
             {data.users.length > 0 ? (
-              <div className="divide-outline-variant/20 divide-y">
+              <div className="divide-y divide-outline-variant/20">
                 {data.users.map((row) => (
                   <motion.button
                     key={row.id}
@@ -317,19 +317,19 @@ export function AdministrationManager({
                     }}
                     whileTap={reduceMotion ? undefined : { scale: 0.985 }}
                     transition={transitionSpringSnappy}
-                    className="active:bg-surface-container-low/70 flex min-h-[72px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 focus-visible:ring-inset"
+                    className="flex min-h-18 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 focus-visible:ring-inset active:bg-surface-container-low/70"
                   >
                     <span
-                      className="bg-surface-container-low text-on-surface-variant flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px]"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant"
                       aria-hidden="true"
                     >
-                      <UsersRound className="h-[18px] w-[18px]" />
+                      <UsersRound className="h-4.5 w-4.5" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="text-on-surface block truncate text-[13px] leading-5 font-bold">
+                      <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
                         {row.name}
                       </span>
-                      <span className="text-on-surface-variant block truncate text-[10px] leading-4">
+                      <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
                         {row.email} · {roleLabel[row.roleName] ?? formatBusinessLabel(row.roleName)}
                       </span>
                       {row.mustChangePassword ? (
@@ -344,7 +344,7 @@ export function AdministrationManager({
                         tone={row.isActive ? "positive" : "inactive"}
                       />
                       <ChevronRight
-                        className="text-on-surface-variant/55 h-4 w-4 shrink-0"
+                        className="h-4 w-4 shrink-0 text-on-surface-variant/55"
                         aria-hidden="true"
                       />
                     </div>
@@ -354,11 +354,11 @@ export function AdministrationManager({
             ) : (
               <div className="px-5 py-8 text-center">
                 <UsersRound
-                  className="text-on-surface-variant/55 mx-auto h-5 w-5"
+                  className="mx-auto h-5 w-5 text-on-surface-variant/55"
                   aria-hidden="true"
                 />
-                <p className="text-on-surface mt-2 text-xs font-bold">Belum ada user internal</p>
-                <p className="text-on-surface-variant mt-1 text-[10px] leading-4">
+                <p className="mt-2 text-xs font-bold text-on-surface">Belum ada user internal</p>
+                <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
                   Tambahkan akun sesuai tanggung jawab operasional.
                 </p>
               </div>
@@ -369,15 +369,15 @@ export function AdministrationManager({
         <section className="space-y-2">
           {presentation === "settings" ? (
             <div className="flex min-h-8 items-center justify-between gap-3 px-1">
-              <h3 className="text-on-surface text-[15px] font-bold">Daftar vendor</h3>
-              <span className="text-on-surface-variant text-[9px] font-semibold">
+              <h3 className="text-[15px] font-bold text-on-surface">Daftar vendor</h3>
+              <span className="text-[9px] font-semibold text-on-surface-variant">
                 {activeVendorCount} aktif dari {data.vendors.length}
               </span>
             </div>
           ) : null}
           <SettingsGroupSurface>
             {data.vendors.length > 0 ? (
-              <div className="divide-outline-variant/20 divide-y">
+              <div className="divide-y divide-outline-variant/20">
                 {data.vendors.map((row) => (
                   <motion.button
                     key={row.id}
@@ -397,19 +397,19 @@ export function AdministrationManager({
                     }}
                     whileTap={reduceMotion ? undefined : { scale: 0.985 }}
                     transition={transitionSpringSnappy}
-                    className="active:bg-surface-container-low/70 flex min-h-[68px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 focus-visible:ring-inset"
+                    className="flex min-h-17 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 focus-visible:ring-inset active:bg-surface-container-low/70"
                   >
                     <span
-                      className="bg-surface-container-low text-on-surface-variant flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px]"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant"
                       aria-hidden="true"
                     >
-                      <Building2 className="h-[18px] w-[18px]" />
+                      <Building2 className="h-4.5 w-4.5" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="text-on-surface block truncate text-[13px] leading-5 font-bold">
+                      <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
                         {row.name}
                       </span>
-                      <span className="text-on-surface-variant block truncate text-[10px] leading-4">
+                      <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
                         {row.phone}
                         {row.bankName ? ` · ${row.bankName}` : ""}
                       </span>
@@ -420,7 +420,7 @@ export function AdministrationManager({
                         tone={row.isActive ? "positive" : "inactive"}
                       />
                       <ChevronRight
-                        className="text-on-surface-variant/55 h-4 w-4 shrink-0"
+                        className="h-4 w-4 shrink-0 text-on-surface-variant/55"
                         aria-hidden="true"
                       />
                     </div>
@@ -430,11 +430,11 @@ export function AdministrationManager({
             ) : (
               <div className="px-5 py-8 text-center">
                 <Building2
-                  className="text-on-surface-variant/55 mx-auto h-5 w-5"
+                  className="mx-auto h-5 w-5 text-on-surface-variant/55"
                   aria-hidden="true"
                 />
-                <p className="text-on-surface mt-2 text-xs font-bold">Belum ada vendor</p>
-                <p className="text-on-surface-variant mt-1 text-[10px] leading-4">
+                <p className="mt-2 text-xs font-bold text-on-surface">Belum ada vendor</p>
+                <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
                   Vendor aktif dapat dipakai pada tagihan dan konteks material.
                 </p>
               </div>
@@ -460,7 +460,7 @@ export function AdministrationManager({
                 type="button"
                 disabled={pending}
                 onClick={() => void toggleSelectedUser()}
-                className="bg-error-container/25 text-error min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
+                className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error disabled:opacity-45"
               >
                 {selectedUser.isActive ? "Nonaktifkan" : "Aktifkan"}
               </button>
@@ -469,7 +469,7 @@ export function AdministrationManager({
               type="submit"
               form="administration-user-form"
               disabled={pending}
-              className="bg-primary text-on-primary min-h-12 w-full rounded-full px-4 text-xs font-bold disabled:opacity-45"
+              className="min-h-12 w-full rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-45"
             >
               {pending ? "Menyimpan…" : editorMode === "EDIT_USER" ? "Simpan" : "Tambah"}
             </button>
@@ -565,7 +565,7 @@ export function AdministrationManager({
             ) : null}
           </FormSection>
           {editorMode === "NEW_USER" ? (
-            <div className="bg-warning/8 text-warning ring-warning/8 flex items-start gap-3 rounded-[20px] px-4 py-3 ring-1">
+            <div className="flex items-start gap-3 rounded-[20px] bg-warning/8 px-4 py-3 text-warning ring-1 ring-warning/8">
               <KeyRound className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <p className="text-[10px] leading-4">
                 User wajib mengganti password sementara saat pertama kali login.
@@ -586,7 +586,7 @@ export function AdministrationManager({
                 type="button"
                 disabled={pending}
                 onClick={() => void toggleSelectedVendor()}
-                className="bg-error-container/25 text-error min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
+                className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error disabled:opacity-45"
               >
                 {selectedVendor.isActive ? "Arsipkan" : "Aktifkan"}
               </button>
@@ -595,7 +595,7 @@ export function AdministrationManager({
               type="submit"
               form="administration-vendor-form"
               disabled={pending}
-              className="bg-primary text-on-primary min-h-12 w-full rounded-full px-4 text-xs font-bold disabled:opacity-45"
+              className="min-h-12 w-full rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-45"
             >
               {pending ? "Menyimpan…" : editorMode === "EDIT_VENDOR" ? "Simpan" : "Tambah"}
             </button>

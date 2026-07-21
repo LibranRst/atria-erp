@@ -14,14 +14,14 @@ export function BudgetAlerts({
   return (
     <>
       {error && (
-        <div className="border-error/30 bg-error-container/20 text-error flex items-start gap-3 rounded-xl border p-3.5 text-xs font-medium">
-          <span className="material-symbols-outlined text-error text-[18px]">error</span>
+        <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs font-medium text-error">
+          <span className="material-symbols-outlined text-[18px] text-error">error</span>
           <div className="leading-relaxed">{error}</div>
         </div>
       )}
       {success && (
-        <div className="border-primary/30 bg-surface-container-low text-primary flex items-start gap-3 rounded-xl border p-3.5 text-xs font-medium">
-          <span className="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+        <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-surface-container-low p-3.5 text-xs font-medium text-primary">
+          <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
           <div className="leading-relaxed">{success}</div>
         </div>
       )}

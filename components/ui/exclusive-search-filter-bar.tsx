@@ -91,7 +91,7 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
         initial={false}
         animate={{ width: mode === "search" ? "100%" : 48 }}
         transition={layoutTransition}
-        className="focus-within:ring-primary/20 absolute inset-y-0 right-0 z-10 overflow-hidden rounded-full bg-white/96 shadow-[0_8px_22px_rgba(17,17,17,0.055)] ring-1 ring-black/4 focus-within:ring-2"
+        className="absolute inset-y-0 right-0 z-10 overflow-hidden rounded-full bg-white/96 shadow-[0_8px_22px_rgba(17,17,17,0.055)] ring-1 ring-black/4 focus-within:ring-2 focus-within:ring-primary/20"
       >
         <AnimatePresence initial={false} mode="sync">
           {mode === "filter" ? (
@@ -104,10 +104,10 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
               onClick={() => onModeChange("search")}
               whileTap={reduceMotion ? undefined : { scale: 0.96 }}
               transition={transitionSpringSnappy}
-              className="text-on-surface focus-visible:ring-primary/30 absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-full outline-none focus-visible:ring-2"
+              className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-full text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               aria-label={`Buka ${searchAriaLabel.toLowerCase()}`}
             >
-              <Search className="h-[18px] w-[18px]" aria-hidden="true" />
+              <Search className="h-4.5 w-4.5" aria-hidden="true" />
             </motion.button>
           ) : (
             <motion.div
@@ -118,10 +118,7 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
               transition={contentTransition}
               className="flex h-12 w-full items-center gap-2 pr-1 pl-4"
             >
-              <Search
-                className="text-on-surface-variant h-[18px] w-[18px] shrink-0"
-                aria-hidden="true"
-              />
+              <Search className="h-4.5 w-4.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
               <input
                 ref={inputRef}
                 type="search"
@@ -132,14 +129,14 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
                 }}
                 placeholder={searchPlaceholder}
                 aria-label={searchAriaLabel}
-                className="placeholder:text-on-surface-variant/55 min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
+                className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-on-surface-variant/55"
               />
               <motion.button
                 type="button"
                 onClick={closeSearch}
                 whileTap={reduceMotion ? undefined : { scale: 0.94 }}
                 transition={transitionSpringSnappy}
-                className="text-on-surface-variant focus-visible:bg-surface-container focus-visible:ring-primary/25 flex h-10 w-10 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant outline-none focus-visible:bg-surface-container focus-visible:ring-2 focus-visible:ring-primary/25"
                 aria-label="Tutup pencarian"
               >
                 <X className="h-4 w-4" aria-hidden="true" />

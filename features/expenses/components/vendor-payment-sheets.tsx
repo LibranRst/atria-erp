@@ -14,10 +14,7 @@ import {
   useSheetPresenceValue,
   WorkflowFormSheet,
 } from "@/components/ui";
-import {
-  FinanceUnsavedChangesModal,
-  MoneyImpactRow,
-} from "@/features/finance/components/finance-form-patterns";
+import { FinanceUnsavedChangesModal } from "@/features/finance/components/finance-form-patterns";
 import type {
   VendorListBankAccount,
   VendorListBill,
@@ -122,7 +119,7 @@ export function VendorSchedulePaymentSheet({
                 title="Rencana yang akan dibuat"
                 helper="Penjadwalan belum mengurangi saldo rekening."
               >
-                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
                   <ReviewFact
                     label="Rekening rencana"
                     value={
@@ -165,7 +162,7 @@ export function VendorSchedulePaymentSheet({
                 title="Rencana Pembayaran"
                 helper="Jadwalkan pembayaran untuk dicatat sebagai kewajiban kas masa depan."
               >
-                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
                   <SheetSelect
                     label="Rekening Rencana"
                     value={selectedBankId}
@@ -307,13 +304,13 @@ export function VendorDisbursePaymentSheet({
                 title="Dampak Keuangan"
                 helper="Periksa dampak pencairan dana pada saldo kas rekening."
               >
-                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
                   <ReviewFact label="Rekening Sumber" value={selectedAccount?.name ?? "–"} />
                   <ReviewFact
                     label="Saldo Rekening"
                     value={
                       <span
-                        className={after < 0 ? "text-error font-bold" : "text-primary font-bold"}
+                        className={after < 0 ? "font-bold text-error" : "font-bold text-primary"}
                       >
                         Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
                       </span>
@@ -339,7 +336,7 @@ export function VendorDisbursePaymentSheet({
                 title="Pencairan Pembayaran"
                 helper="Pilih rekening bank sumber dan masukkan bukti transfer."
               >
-                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
                   <SheetSelect
                     label="Rekening Sumber Dana"
                     value={disburseBankId}
@@ -386,7 +383,7 @@ function PaymentError({ error }: { readonly error: string | null }): React.JSX.E
   if (!error) return null;
   return (
     <div
-      className="bg-error-container/20 text-error flex items-start gap-3 rounded-2xl p-3 text-xs font-medium"
+      className="flex items-start gap-3 rounded-2xl bg-error-container/20 p-3 text-xs font-medium text-error"
       role="alert"
     >
       <span className="material-symbols-outlined text-[18px]">error</span>
@@ -404,8 +401,8 @@ function ReviewFact({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

@@ -3,6 +3,8 @@ import React from "react";
 import { ExpenseList } from "@/features/expenses/components/expense-list";
 import { getExpensesPageData } from "@/features/expenses/server/expenses-page-data";
 
+export const dynamic = "force-dynamic";
+
 export default async function ExpensesPage(): Promise<React.JSX.Element> {
   const data = await getExpensesPageData();
 

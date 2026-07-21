@@ -66,7 +66,7 @@ export function RabClientSummaryPanel({
     rabEstimate.bundles.filter((bundle) => !bundle.isHidden).length;
 
   return (
-    <section className="bg-primary text-on-primary rounded-[28px] p-5 shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
+    <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
@@ -100,14 +100,14 @@ export function RabClientSummaryPanel({
         </div>
       )}
       {rabEstimate.status === "DRAFT" && staleSourceLabels.length > 0 && (
-        <div className="bg-warning/15 ring-warning/25 mt-4 rounded-[18px] p-3 text-white ring-1">
+        <div className="mt-4 rounded-[18px] bg-warning/15 p-3 text-white ring-1 ring-warning/25">
           <p className="text-xs font-bold">{staleSourceLabels.length} sumber berubah</p>
           <p className="mt-1 text-[10px]">Perbarui jumlah dan harga tanpa mengubah label klien.</p>
           <button
             type="button"
             onClick={handleRefreshRabSources}
             disabled={isPending}
-            className="text-primary mt-3 min-h-12 w-full rounded-full bg-white text-xs font-bold"
+            className="mt-3 min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary"
           >
             Perbarui sumber
           </button>
@@ -185,7 +185,7 @@ export function RabItemsPanel({
           <button
             type="button"
             onClick={() => setManualLineOpen(true)}
-            className="bg-primary text-on-primary flex h-12 w-12 items-center justify-center rounded-full"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-on-primary"
             aria-label="Tambah item manual"
           >
             <span className="material-symbols-outlined">add</span>
@@ -195,7 +195,7 @@ export function RabItemsPanel({
     >
       <div
         id="rab-items"
-        className="divide-outline-variant/25 bg-surface-container-low divide-y overflow-hidden rounded-[20px]"
+        className="divide-y divide-outline-variant/25 overflow-hidden rounded-[20px] bg-surface-container-low"
       >
         {rabEstimate.bundles.map((bundle) => (
           <RabBundleRow
@@ -211,7 +211,7 @@ export function RabItemsPanel({
             <RabItemRow key={item.id} item={item} setRabItemEditorId={setRabItemEditorId} />
           ))}
         {rabEstimate.items.length === 0 && (
-          <div className="bg-surface-container-low p-md text-on-surface-variant rounded-2xl text-center text-xs">
+          <div className="rounded-2xl bg-surface-container-low p-md text-center text-xs text-on-surface-variant">
             Belum ada item RAB.
           </div>
         )}
@@ -220,7 +220,7 @@ export function RabItemsPanel({
         <button
           type="button"
           onClick={openCreateBundle}
-          className="mt-sm text-primary ring-primary/15 min-h-12 w-full rounded-full bg-white text-xs font-bold ring-1"
+          className="mt-sm min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary ring-1 ring-primary/15"
         >
           Buat paket RAB
         </button>
@@ -258,21 +258,21 @@ export function RabDraftActionsPanel({
               onClick={() =>
                 document.getElementById("rab-items")?.scrollIntoView({ behavior: "smooth" })
               }
-              className="bg-surface-container-low min-h-12 w-full rounded-full text-xs font-bold"
+              className="min-h-12 w-full rounded-full bg-surface-container-low text-xs font-bold"
             >
               Lanjut edit
             </button>
             <button
               type="button"
               onClick={() => setChangeOrderOpen(true)}
-              className="bg-primary text-on-primary min-h-12 w-full rounded-full text-xs font-bold"
+              className="min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary"
             >
               Proses change order
             </button>
             <button
               type="button"
               onClick={() => setVoidRevisionOpen(true)}
-              className="bg-error-container/25 text-error min-h-12 w-full rounded-full text-xs font-bold"
+              className="min-h-12 w-full rounded-full bg-error-container/25 text-xs font-bold text-error"
             >
               Batalkan revisi
             </button>
@@ -282,7 +282,7 @@ export function RabDraftActionsPanel({
             type="button"
             onClick={() => setConfirmApprove(true)}
             disabled={isPending || rabEstimate.items.length === 0}
-            className="bg-primary text-on-primary min-h-12 w-full rounded-full text-xs font-bold disabled:opacity-40"
+            className="min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary disabled:opacity-40"
           >
             Tinjau & Setujui RAB
           </button>
@@ -301,7 +301,7 @@ export function RabDraftActionsPanel({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmApprove(false)}
-              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
             >
               Kembali
             </motion.button>
@@ -314,7 +314,7 @@ export function RabDraftActionsPanel({
                 setConfirmApprove(false);
                 handleApproveRab();
               }}
-              className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white disabled:opacity-40"
+              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white disabled:opacity-40"
             >
               Setujui RAB
             </motion.button>
@@ -338,19 +338,19 @@ function RabBundleRow({
     <button
       type="button"
       onClick={() => isDraft && openEditBundle(bundle)}
-      className="focus-visible:bg-primary/5 active:bg-primary/5 w-full p-3 text-left outline-none"
+      className="w-full p-3 text-left outline-none focus-visible:bg-primary/5 active:bg-primary/5"
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="bg-primary text-on-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary">
           <span className="material-symbols-outlined text-[19px]">inventory_2</span>
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-bold">{bundle.clientLabel}</span>
-          <span className="text-on-surface-variant block text-[10px]">
+          <span className="block text-[10px] text-on-surface-variant">
             Paket - {bundle.itemIds.length} item - {bundle.quantity} {bundle.unit}
           </span>
         </span>
-        <span className="text-primary shrink-0 font-mono text-[11px] font-bold">
+        <span className="shrink-0 font-mono text-[11px] font-bold text-primary">
           {formatShortRp(Number(bundle.lineTotal))}
         </span>
       </div>
@@ -372,18 +372,18 @@ function RabItemRow({
       className="w-full p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75 text-primary">
           <span className="material-symbols-outlined text-[19px]">
             {item.sourceType === "MANUAL" ? "edit_note" : "format_list_bulleted"}
           </span>
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-bold">{item.clientLabel}</span>
-          <span className="text-on-surface-variant block truncate text-[10px]">
+          <span className="block truncate text-[10px] text-on-surface-variant">
             {rabSourceLabel(item.sourceType)} - {item.quantity} {item.unit}
           </span>
           {item.isHidden && (
-            <span className="bg-error-container/30 text-error mt-1 inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold">
+            <span className="mt-1 inline-flex rounded-full bg-error-container/30 px-2 py-0.5 text-[9px] font-bold text-error">
               Disembunyikan
             </span>
           )}

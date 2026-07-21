@@ -32,7 +32,7 @@ export function ProjectRiskCard({
   return (
     <Link
       href={`/projects/${project.projectId}?tab=overview`}
-      className="ring-outline-variant/10 block w-[240px] shrink-0 snap-start rounded-2xl bg-white p-3.5 shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 transition hover:bg-white active:scale-[0.99]"
+      className="block w-60 shrink-0 snap-start rounded-2xl bg-white p-3.5 shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/10 transition hover:bg-white active:scale-[0.99]"
     >
       <div className="flex min-w-0 items-center gap-2">
         <span
@@ -41,7 +41,7 @@ export function ProjectRiskCard({
           {initial}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-on-surface truncate text-xs leading-tight font-extrabold">
+          <p className="truncate text-xs leading-tight font-extrabold text-on-surface">
             {project.projectName}
           </p>
         </div>
@@ -59,18 +59,18 @@ export function ProjectRiskCard({
       </div>
 
       <div className="mt-3">
-        <div className="text-on-surface-variant/60 mb-1 flex items-center justify-between text-[8px] leading-none font-bold tracking-wider uppercase">
+        <div className="mb-1 flex items-center justify-between text-[8px] leading-none font-bold tracking-wider text-on-surface-variant/60 uppercase">
           <span>Budget Terpakai</span>
-          <span className="text-on-surface font-mono leading-none font-extrabold">
+          <span className="font-mono leading-none font-extrabold text-on-surface">
             {project.usedPercentage.toFixed(0)}%
           </span>
         </div>
         <ProgressBar value={project.usedPercentage} tone={tone} className="mt-0" />
       </div>
 
-      <div className="border-on-surface-variant/10 mt-3.5 flex items-center justify-between border-t pt-2.5">
+      <div className="mt-3.5 flex items-center justify-between border-t border-on-surface-variant/10 pt-2.5">
         <div className="min-w-0 flex-1">
-          <span className="text-on-surface-variant/50 block text-[8px] leading-none font-bold tracking-wide uppercase">
+          <span className="block text-[8px] leading-none font-bold tracking-wide text-on-surface-variant/50 uppercase">
             Sisa budget
           </span>
           <MoneyValue
@@ -82,13 +82,13 @@ export function ProjectRiskCard({
           />
         </div>
 
-        <span className="bg-on-surface-variant/10 mx-2.5 h-5 w-px shrink-0" />
+        <span className="mx-2.5 h-5 w-px shrink-0 bg-on-surface-variant/10" />
 
         <div className="min-w-0 flex-1 text-right">
-          <span className="text-on-surface-variant/50 block text-[8px] leading-none font-bold tracking-wide uppercase">
+          <span className="block text-[8px] leading-none font-bold tracking-wide text-on-surface-variant/50 uppercase">
             Margin
           </span>
-          <span className="financial-amount text-on-surface mt-1 block font-mono text-[10px] leading-none font-extrabold">
+          <span className="financial-amount mt-1 block font-mono text-[10px] leading-none font-extrabold text-on-surface">
             {project.projectedMarginPercentage.toFixed(1)}%
           </span>
         </div>
@@ -167,7 +167,7 @@ export function BankAccountCard({
     </div>
   ) : (
     <div
-      className={`relative flex min-h-[120px] w-[240px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl p-4 text-left shadow-[0_12px_28px_rgba(17,17,17,0.04)] transition active:scale-[0.99] ${textClass} ${inactiveClass}`}
+      className={`relative flex min-h-30 w-60 shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl p-4 text-left shadow-[0_12px_28px_rgba(17,17,17,0.04)] transition active:scale-[0.99] ${textClass} ${inactiveClass}`}
       style={{
         backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
       }}
@@ -209,7 +209,7 @@ export function BankAccountCard({
     <button
       type="button"
       onClick={() => onSelect(account)}
-      className={`focus-visible:ring-primary/30 shrink-0 text-left outline-none focus-visible:ring-2 ${
+      className={`shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
         full ? "w-full rounded-[28px]" : "rounded-2xl"
       }`}
       aria-label={`Buka rekening ${account.name}`}
@@ -285,7 +285,7 @@ function CircularProgress({
           cy={size / 2}
         />
       </svg>
-      <span className="text-on-surface absolute font-mono text-[9px] leading-none font-bold">
+      <span className="absolute font-mono text-[9px] leading-none font-bold text-on-surface">
         {Math.round(percentage)}%
       </span>
     </div>
@@ -304,7 +304,7 @@ export function CategoryHealthMeter({
 
   return (
     <div
-      className={`border-outline-variant/20 top-11/12 flex flex-col justify-between gap-3 rounded-2xl border bg-white p-2 shadow-[0_14px_34px_rgba(17,17,17,0.05)] ${
+      className={`top-11/12 flex flex-col justify-between gap-3 rounded-2xl border border-outline-variant/20 bg-white p-2 shadow-[0_14px_34px_rgba(17,17,17,0.05)] ${
         isFullWidth ? "col-span-2" : "col-span-1"
       }`}
     >
@@ -313,7 +313,7 @@ export function CategoryHealthMeter({
           <span className="material-symbols-outlined text-[15px]">{icon}</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="text-on-surface block truncate text-[11px] leading-tight font-extrabold">
+          <span className="block truncate text-[11px] leading-tight font-extrabold text-on-surface">
             {category.name}
           </span>
         </span>
@@ -329,7 +329,7 @@ export function CategoryHealthMeter({
             align="right"
             size="xs"
           />
-          <span className="text-on-surface-variant/50 mt-0.5 block text-[8px] leading-none font-bold tracking-wider uppercase">
+          <span className="mt-0.5 block text-[8px] leading-none font-bold tracking-wider text-on-surface-variant/50 uppercase">
             tersisa
           </span>
         </div>

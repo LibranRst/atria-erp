@@ -134,13 +134,13 @@ export function RiskThresholdRail({
       role="img"
       aria-label={`Penggunaan budget ${value.toFixed(0)} persen. Batas perhatian ${RISK_WARNING_THRESHOLD} persen dan batas budget ${RISK_LIMIT_THRESHOLD} persen.`}
     >
-      <div className="bg-outline-variant/55 absolute inset-x-0 top-2 h-px" aria-hidden="true" />
+      <div className="absolute inset-x-0 top-2 h-px bg-outline-variant/55" aria-hidden="true" />
       <span
-        className="bg-warning/70 absolute top-0 h-4 w-px"
+        className="absolute top-0 h-4 w-px bg-warning/70"
         style={{ left: `${RISK_WARNING_THRESHOLD}%` }}
         aria-hidden="true"
       />
-      <span className="bg-error/70 absolute top-0 right-0 h-4 w-px" aria-hidden="true" />
+      <span className="absolute top-0 right-0 h-4 w-px bg-error/70" aria-hidden="true" />
       <span
         className={`absolute top-1 h-2.5 w-2.5 rounded-full ring-2 ring-white ${markerClass}`}
         style={{
@@ -155,16 +155,16 @@ export function RiskThresholdRail({
         aria-hidden="true"
       />
       <span
-        className="text-warning absolute top-4 -translate-x-1/2 font-mono text-[8px] font-bold"
+        className="absolute top-4 -translate-x-1/2 font-mono text-[8px] font-bold text-warning"
         style={{ left: `${RISK_WARNING_THRESHOLD}%` }}
       >
         {RISK_WARNING_THRESHOLD}
       </span>
-      <span className="text-error absolute top-4 right-0 font-mono text-[8px] font-bold">
+      <span className="absolute top-4 right-0 font-mono text-[8px] font-bold text-error">
         {RISK_LIMIT_THRESHOLD}
       </span>
       {geometry.overflowPercentage > 0 ? (
-        <span className="text-error absolute -top-2 right-0 font-mono text-[8px] font-black">
+        <span className="absolute -top-2 right-0 font-mono text-[8px] font-black text-error">
           +{geometry.overflowPercentage.toFixed(0)}%
         </span>
       ) : null}
@@ -191,7 +191,7 @@ export function UsageBlockMeter({
         return (
           <span
             key={index}
-            className="bg-surface-container-high h-2 min-w-0 flex-1 overflow-hidden rounded-[3px]"
+            className="h-2 min-w-0 flex-1 overflow-hidden rounded-[3px] bg-surface-container-high"
             aria-hidden="true"
           >
             <span className={`block h-full ${fillClass}`} style={{ width: `${fill}%` }} />

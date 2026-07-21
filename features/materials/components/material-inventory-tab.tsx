@@ -139,7 +139,7 @@ function InventoryMaterialRow({
     <button
       type="button"
       onClick={() => onOpenMaterial(material.id)}
-      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 w-full px-3.5 py-3.5 text-left outline-none"
+      className="w-full px-3.5 py-3.5 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
       aria-label={`Buka detail ${material.name}`}
     >
       <div className="flex min-w-0 items-start gap-3">
@@ -149,10 +149,10 @@ function InventoryMaterialRow({
           <Package className="h-4 w-4" aria-hidden="true" />
         </span>
         <span className="grid min-w-0 flex-1 gap-1">
-          <span className="text-on-surface truncate text-[13px] leading-4 font-bold">
+          <span className="truncate text-[13px] leading-4 font-bold text-on-surface">
             {material.name}
           </span>
-          <span className="text-on-surface-variant truncate text-[10px] leading-[1.3]">
+          <span className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
             {material.categoryName}
             {metadata.length > 0 ? ` · ${metadata.join(" · ")}` : ""}
           </span>
@@ -160,7 +160,7 @@ function InventoryMaterialRow({
         <MaterialStatusLabel label={statusPresentation.label} tone={statusPresentation.tone} />
       </div>
 
-      <div className="bg-surface-container-low/65 mt-3 grid grid-cols-3 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5">
+      <div className="mt-3 grid grid-cols-3 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
         <InventoryMetric label="Tersedia" value={formatMaterialQuantity(summary.availableStock)} />
         <InventoryMetric
           label="Terreservasi"
@@ -175,7 +175,7 @@ function InventoryMaterialRow({
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3 px-1">
-        <span className="text-on-surface-variant inline-flex min-w-0 items-center gap-1.5 truncate text-[10px] font-semibold">
+        <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[10px] font-semibold text-on-surface-variant">
           <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {summary.locationCount} lokasi · {primaryRow?.locationName ?? "Lokasi belum diatur"}
         </span>
@@ -208,10 +208,10 @@ function InventoryMetric({
     align === "right" ? "text-right pl-2" : align === "center" ? "text-center px-2" : "pr-2";
   return (
     <span className={`min-w-0 ${alignment}`}>
-      <span className="text-on-surface-variant/65 block truncate text-[8px] font-bold tracking-wide uppercase">
+      <span className="block truncate text-[8px] font-bold tracking-wide text-on-surface-variant/65 uppercase">
         {label}
       </span>
-      <span className="text-on-surface mt-1 block truncate font-mono text-[12px] leading-4 font-extrabold tabular-nums">
+      <span className="mt-1 block truncate font-mono text-[12px] leading-4 font-extrabold text-on-surface tabular-nums">
         {value}
       </span>
     </span>

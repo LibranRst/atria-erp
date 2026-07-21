@@ -45,7 +45,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="leading-lg text-on-surface min-h-full bg-[#fcf9f8] font-sans text-[16px] font-normal">
+      <body className="min-h-full bg-[#fcf9f8] font-sans text-[16px] leading-lg font-normal text-on-surface">
         <MobileShell>{children}</MobileShell>
         <Toaster position="top-center" offset={72} mobileOffset={72} richColors />
       </body>

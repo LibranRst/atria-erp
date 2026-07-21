@@ -161,9 +161,9 @@ export function StockCountSheet({
                 bukti pemeriksaan.
               </FormRiskNotice>
             ) : (
-              <div className="bg-surface-container-lowest ring-outline-variant/15 divide-outline-variant/15 divide-y overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
+              <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
                 <div className="bg-surface-container-low/50 px-4 py-2.5">
-                  <p className="text-on-surface-variant text-[10px] font-bold tracking-wide uppercase">
+                  <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
                     Rincian Selisih ({changedRows.length} item)
                   </p>
                 </div>
@@ -173,10 +173,10 @@ export function StockCountSheet({
                     className="flex items-center justify-between gap-3 px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="text-on-surface truncate text-xs font-bold">
+                      <p className="truncate text-xs font-bold text-on-surface">
                         {row.materialName}
                       </p>
-                      <p className="text-on-surface-variant mt-0.5 text-[10px]">
+                      <p className="mt-0.5 text-[10px] text-on-surface-variant">
                         Sistem {formatMaterialQuantity(row.currentStock)} → fisik{" "}
                         {formatMaterialQuantity(row.countedQuantity)} {row.unit}
                       </p>
@@ -200,7 +200,7 @@ export function StockCountSheet({
           <div className="space-y-md">
             {!stockCountId && existingDrafts.length > 0 ? (
               <section className="space-y-2">
-                <p className="text-on-surface-variant px-1 text-[10px] font-bold tracking-wide uppercase">
+                <p className="px-1 text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
                   Draft yang dapat dilanjutkan
                 </p>
                 {existingDrafts.map((draft) => (
@@ -208,17 +208,17 @@ export function StockCountSheet({
                     key={draft.id}
                     type="button"
                     onClick={() => onLoadDraft(draft.id)}
-                    className="bg-primary/5 ring-primary/10 flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left ring-1"
+                    className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl bg-primary/5 px-4 py-3 text-left ring-1 ring-primary/10"
                   >
                     <span className="min-w-0">
-                      <span className="text-primary block truncate text-xs font-bold">
+                      <span className="block truncate text-xs font-bold text-primary">
                         {draft.countNumber}
                       </span>
-                      <span className="text-on-surface-variant mt-0.5 block text-[10px]">
+                      <span className="mt-0.5 block text-[10px] text-on-surface-variant">
                         {draft.locationName} · {draft.items.length} material
                       </span>
                     </span>
-                    <span className="text-primary text-xs font-bold">Lanjutkan</span>
+                    <span className="text-xs font-bold text-primary">Lanjutkan</span>
                   </button>
                 ))}
               </section>
@@ -251,7 +251,7 @@ export function StockCountSheet({
                 title="Jumlah fisik"
                 helper="Nilai awal mengikuti snapshot sistem. Ubah hanya jika hasil hitung berbeda."
                 action={
-                  <span className="text-primary shrink-0 text-[10px] font-bold">
+                  <span className="shrink-0 text-[10px] font-bold text-primary">
                     {changedRows.length} berubah
                   </span>
                 }
@@ -263,7 +263,7 @@ export function StockCountSheet({
                         <p className="truncate text-xs leading-[1.15] font-bold">
                           {row.materialName}
                         </p>
-                        <p className="text-on-surface-variant mt-0.5 truncate text-[10px] leading-tight">
+                        <p className="mt-0.5 truncate text-[10px] leading-tight text-on-surface-variant">
                           Sistem {formatMaterialQuantity(row.currentStock)} · reservasi{" "}
                           {formatMaterialQuantity(row.reservedStock)} {row.unit}
                         </p>
@@ -320,8 +320,8 @@ function ReviewFact({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

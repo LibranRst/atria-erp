@@ -55,12 +55,12 @@ export function ProjectCreatedSuccess({
 
   return (
     <div className="space-y-lg py-6 text-center">
-      <div className="border-primary bg-primary/10 text-primary mx-auto flex h-16 w-16 items-center justify-center rounded-full border">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary bg-primary/10 text-primary">
         <span className="material-symbols-outlined text-[36px]">check_circle</span>
       </div>
       <div className="space-y-sm">
-        <h3 className="text-on-surface text-lg font-bold">Proyek Berhasil Dibuat!</h3>
-        <p className="text-on-surface-variant mx-auto max-w-xs text-xs leading-relaxed">
+        <h3 className="text-lg font-bold text-on-surface">Proyek Berhasil Dibuat!</h3>
+        <p className="mx-auto max-w-xs text-xs leading-relaxed text-on-surface-variant">
           Proyek dibuat sebagai Draft dan anggaran awal kategori (Tukang, Material, Operasional,
           dll.) telah disiapkan berdasarkan setelan sistem. Lengkapi setup lalu aktifkan proyek
           sebelum operasional.
@@ -68,7 +68,7 @@ export function ProjectCreatedSuccess({
       </div>
 
       <div className="space-y-sm text-left">
-        <p className="text-on-surface-variant px-1 font-sans text-[8px] leading-[16px] font-bold tracking-wider uppercase">
+        <p className="px-1 font-sans text-[8px] leading-4 font-bold tracking-wider text-on-surface-variant uppercase">
           Langkah Berikutnya:
         </p>
         <div className="space-y-xs">
@@ -85,15 +85,15 @@ export function ProjectCreatedSuccess({
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary">{action.icon}</span>
                 <div className="flex flex-col">
-                  <span className="text-on-surface block text-xs leading-5 font-bold">
+                  <span className="block text-xs leading-5 font-bold text-on-surface">
                     {action.title}
                   </span>
-                  <span className="text-on-surface-variant text-[10px] leading-4">
+                  <span className="text-[10px] leading-4 text-on-surface-variant">
                     {action.description}
                   </span>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-outline-variant text-[20px]">
+              <span className="material-symbols-outlined text-[20px] text-outline-variant">
                 chevron_right
               </span>
             </button>
@@ -105,7 +105,7 @@ export function ProjectCreatedSuccess({
         <button
           type="button"
           onClick={onReturn}
-          className="bg-primary text-on-primary min-h-12 w-full cursor-pointer rounded-full font-bold transition-transform active:scale-[0.98]"
+          className="min-h-12 w-full cursor-pointer rounded-full bg-primary font-bold text-on-primary transition-transform active:scale-[0.98]"
         >
           Kembali ke Daftar Proyek
         </button>
@@ -133,7 +133,7 @@ export function ProjectCoverField({
     <FormField label="Cover proyek" optional>
       {coverImageUrl ? (
         <div className="space-y-2.5">
-          <div className="bg-surface-container-low ring-outline-variant/20 relative aspect-video overflow-hidden rounded-[24px] ring-1">
+          <div className="relative aspect-video overflow-hidden rounded-3xl bg-surface-container-low ring-1 ring-outline-variant/20">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={coverImageUrl} alt="Cover proyek" className="h-full w-full object-cover" />
             {isUploading ? (
@@ -148,7 +148,7 @@ export function ProjectCoverField({
               whileTap={busy ? undefined : { scale: 0.97 }}
               transition={transitionSpringSnappy}
               aria-disabled={busy}
-              className="bg-primary text-on-primary focus-within:ring-primary/25 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-xs font-bold focus-within:ring-2 aria-disabled:pointer-events-none aria-disabled:opacity-45"
+              className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary focus-within:ring-2 focus-within:ring-primary/25 aria-disabled:pointer-events-none aria-disabled:opacity-45"
             >
               <ImagePlus className="h-4 w-4" />
               Ganti gambar
@@ -171,7 +171,7 @@ export function ProjectCoverField({
               disabled={busy}
               onClick={onClear}
               aria-label="Hapus cover proyek"
-              className="bg-error-container/25 text-error flex min-h-12 min-w-12 items-center justify-center rounded-full px-4 disabled:opacity-45"
+              className="flex min-h-12 min-w-12 items-center justify-center rounded-full bg-error-container/25 px-4 text-error disabled:opacity-45"
             >
               <Trash2 className="h-4 w-4" />
             </motion.button>
@@ -184,14 +184,14 @@ export function ProjectCoverField({
           aria-disabled={busy}
           className="group flex min-h-12 cursor-pointer items-center gap-3 bg-transparent py-1 focus-within:text-blue-600 aria-disabled:pointer-events-none aria-disabled:opacity-45"
         >
-          <span className="bg-primary/8 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary">
             <ImagePlus className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="text-on-surface block text-xs leading-[1.15] font-bold">
+            <span className="block text-xs leading-[1.15] font-bold text-on-surface">
               {isUploading ? "Mengunggah cover…" : "Tambahkan cover proyek"}
             </span>
-            <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-tight">
+            <span className="mt-0.5 block text-[10px] leading-tight text-on-surface-variant">
               {isUploading ? "Mohon tunggu" : "JPG atau PNG · Maks. 8 MB"}
             </span>
           </span>
@@ -242,7 +242,7 @@ export function ProjectClientFields({
   readonly onNewClientAddressChange: (value: string) => void;
 }): React.JSX.Element {
   return (
-    <div className="divide-outline-variant/20 divide-y">
+    <div className="divide-y divide-outline-variant/20">
       <SheetSelect
         label="Jenis klien"
         value={isNewClient ? "new" : "existing"}
@@ -254,7 +254,7 @@ export function ProjectClientFields({
       />
 
       {isNewClient ? (
-        <div className="divide-outline-variant/20 divide-y">
+        <div className="divide-y divide-outline-variant/20">
           <FormField label="Nama Klien" required>
             <TextInput
               value={newClientName}
@@ -323,7 +323,7 @@ export function ProjectDetailFields({
   readonly onProjectTypeChange: (value: string) => void;
 }): React.JSX.Element {
   return (
-    <div className="divide-outline-variant/20 divide-y">
+    <div className="divide-y divide-outline-variant/20">
       <DatePickerField label="Tanggal Mulai" value={startDate} onChange={onStartDateChange} />
       <DatePickerField label="Tanggal Selesai" value={endDate} onChange={onEndDateChange} />
       <FormField label="Lokasi">
@@ -362,7 +362,7 @@ export function ProjectEditStateFields({
     (option) => option.value !== "COMPLETED" || status === "COMPLETED",
   );
   return (
-    <div className="divide-outline-variant/20 divide-y">
+    <div className="divide-y divide-outline-variant/20">
       <SheetSelect
         label="Status Proyek"
         value={status}

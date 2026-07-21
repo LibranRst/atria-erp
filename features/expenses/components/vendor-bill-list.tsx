@@ -367,7 +367,7 @@ export function VendorBillList({
           }
         >
           <div className="min-w-0">
-            <p className="text-on-surface-variant/60 text-[9px] leading-3 font-semibold">
+            <p className="text-[9px] leading-3 font-semibold text-on-surface-variant/60">
               Total tagihan tercatat
             </p>
             <MoneyValue
@@ -377,9 +377,9 @@ export function VendorBillList({
               className="mt-1"
             />
           </div>
-          <div className="bg-surface-container-low/65 mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5">
+          <div className="mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
             <div className="min-w-0 pr-3">
-              <p className="text-on-surface-variant/60 text-[9px] leading-3 font-semibold">
+              <p className="text-[9px] leading-3 font-semibold text-on-surface-variant/60">
                 Dalam antrean
               </p>
               <MoneyValue
@@ -390,7 +390,7 @@ export function VendorBillList({
               />
             </div>
             <div className="min-w-0 pl-3 text-right">
-              <p className="text-on-surface-variant/60 text-[9px] leading-3 font-semibold">
+              <p className="text-[9px] leading-3 font-semibold text-on-surface-variant/60">
                 Sudah dibayar
               </p>
               <MoneyValue
@@ -619,7 +619,7 @@ function BatchButton({ onClick }: { readonly onClick: () => void }): React.JSX.E
     <button
       type="button"
       onClick={onClick}
-      className="bg-surface-container text-on-surface min-h-12 w-full rounded-full text-xs leading-4 font-bold"
+      className="min-h-12 w-full rounded-full bg-surface-container text-xs leading-4 font-bold text-on-surface"
     >
       Tampilkan 20 berikutnya
     </button>

@@ -44,20 +44,20 @@ export function DeveloperAccountSwitcher({
       <div className="flex min-h-10 items-center justify-between gap-3 px-1">
         <h2
           id="developer-simulation-title"
-          className="text-on-surface min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] max-[430px]:text-[15px] max-[430px]:leading-5"
+          className="min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5"
         >
           Simulasi developer
         </h2>
-        <span className="text-warning shrink-0 text-[9px] font-bold tracking-[0.12em] uppercase">
+        <span className="shrink-0 text-[9px] font-bold tracking-[0.12em] text-warning uppercase">
           Development
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-[26px] bg-white/94 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-[24px]">
+      <div className="overflow-hidden rounded-[26px] bg-white/94 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl">
         <div className="divide-y divide-black/5.5">
-          <div className="bg-warning/5.5 flex min-h-[72px] items-start gap-3 px-3.5 py-3.5">
+          <div className="flex min-h-18 items-start gap-3 bg-warning/5.5 px-3.5 py-3.5">
             <span
-              className="bg-warning/11 text-warning ring-warning/8 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/11 text-warning ring-1 ring-warning/8"
               aria-hidden="true"
             >
               <span className="material-symbols-outlined text-[18px] leading-none">
@@ -65,10 +65,10 @@ export function DeveloperAccountSwitcher({
               </span>
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-on-surface text-[13px] leading-4 font-bold">
+              <p className="text-[13px] leading-4 font-bold text-on-surface">
                 Uji akses sebagai akun tim
               </p>
-              <p className="text-on-surface-variant mt-1 text-[10px] leading-[1.45]">
+              <p className="mt-1 text-[10px] leading-[1.45] text-on-surface-variant">
                 Session ini benar-benar memakai role terpilih. Password akun tidak dibaca atau
                 diubah.
               </p>
@@ -77,14 +77,14 @@ export function DeveloperAccountSwitcher({
 
           {state.blockers.length > 0
             ? state.blockers.map((blocker) => (
-                <div key={blocker} className="flex min-h-[60px] items-center gap-3 px-3.5 py-3">
+                <div key={blocker} className="flex min-h-15 items-center gap-3 px-3.5 py-3">
                   <span
-                    className="material-symbols-outlined text-warning shrink-0 text-[18px]"
+                    className="material-symbols-outlined shrink-0 text-[18px] text-warning"
                     aria-hidden="true"
                   >
                     lock
                   </span>
-                  <p className="text-on-surface-variant text-[11px] leading-[1.45]">{blocker}</p>
+                  <p className="text-[11px] leading-[1.45] text-on-surface-variant">{blocker}</p>
                 </div>
               ))
             : state.targets.map((target) => (
@@ -95,11 +95,11 @@ export function DeveloperAccountSwitcher({
                   transition={transitionSpringSnappy}
                   onClick={() => setSelected(target)}
                   disabled={pending}
-                  className="active:bg-surface-container-low focus-visible:bg-surface-container-low focus-visible:ring-primary/25 flex min-h-[68px] w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset disabled:opacity-55"
+                  className="flex min-h-17 w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-inset active:bg-surface-container-low disabled:opacity-55"
                   aria-label={`Simulasikan akun ${target.name}, ${getDeveloperSimulationRoleLabel(target.roleName)}`}
                 >
                   <span
-                    className="bg-primary/6.5 text-primary ring-primary/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/6.5 text-primary ring-1 ring-primary/6"
                     aria-hidden="true"
                   >
                     <span className="material-symbols-outlined text-[18px] leading-none">
@@ -107,19 +107,19 @@ export function DeveloperAccountSwitcher({
                     </span>
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="text-on-surface block truncate text-[13px] leading-4 font-bold">
+                    <span className="block truncate text-[13px] leading-4 font-bold text-on-surface">
                       {target.name}
                     </span>
-                    <span className="text-on-surface-variant mt-1 block truncate text-[10px] leading-[1.3]">
+                    <span className="mt-1 block truncate text-[10px] leading-[1.3] text-on-surface-variant">
                       {target.email}
                     </span>
                   </span>
                   <span className="shrink-0 text-right">
-                    <span className="text-on-surface block text-[10px] font-bold">
+                    <span className="block text-[10px] font-bold text-on-surface">
                       {getDeveloperSimulationRoleLabel(target.roleName)}
                     </span>
                     {target.mustChangePassword ? (
-                      <span className="bg-warning/9 text-warning ring-warning/8 mt-1 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[8px] leading-none font-bold ring-1">
+                      <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-warning/9 px-2 py-1 text-[8px] leading-none font-bold text-warning ring-1 ring-warning/8">
                         <span
                           className="material-symbols-outlined text-[11px] leading-none"
                           aria-hidden="true"
@@ -130,7 +130,7 @@ export function DeveloperAccountSwitcher({
                       </span>
                     ) : (
                       <span
-                        className="material-symbols-outlined text-primary mt-0.5 block text-[17px] leading-none"
+                        className="material-symbols-outlined mt-0.5 block text-[17px] leading-none text-primary"
                         aria-hidden="true"
                       >
                         chevron_right

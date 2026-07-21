@@ -68,21 +68,21 @@ export function RabItemEditDrawer({
         <div className="space-y-md">
           <div className="flex items-start justify-between gap-3 px-1">
             <div className="min-w-0">
-              <p className="text-on-surface text-base font-bold">{item.clientLabel}</p>
-              <p className="text-on-surface-variant mt-0.5 text-xs">
+              <p className="text-base font-bold text-on-surface">{item.clientLabel}</p>
+              <p className="mt-0.5 text-xs text-on-surface-variant">
                 Sumber: {rabSourceLabel(item.sourceType)} · aman untuk klien
               </p>
             </div>
             {item.isHidden && <Badge status="WARNING">Tersembunyi</Badge>}
           </div>
 
-          <div className="bg-surface-container-lowest ring-outline-variant/15 divide-outline-variant/15 divide-y overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
+          <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
             {item.description && (
               <div className="bg-surface-container-low/20 px-4 py-3.5">
-                <p className="text-on-surface-variant text-[10px] font-bold tracking-wide uppercase">
+                <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
                   Deskripsi Pekerjaan
                 </p>
-                <p className="text-on-surface mt-1 text-xs leading-relaxed">{item.description}</p>
+                <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.description}</p>
               </div>
             )}
 
@@ -140,7 +140,7 @@ export function RabItemEditDrawer({
           title="Tampilan untuk klien"
           helper="Hanya nama, deskripsi, jumlah, satuan, dan harga di bagian ini yang masuk ke RAB klien."
         >
-          <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
             <FormField label="Nama item" required>
               <TextInput
                 disabled={!editable}
@@ -165,7 +165,7 @@ export function RabItemEditDrawer({
           title="Jumlah & harga"
           helper="Subtotal diperbarui langsung sebelum perubahan disimpan."
         >
-          <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
             <FormField label="Jumlah">
               <NumericInput
                 value={draft.quantity}
@@ -223,8 +223,8 @@ function DetailRow({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3.5 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

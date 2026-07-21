@@ -23,14 +23,14 @@ export function PageHeader({
     <header className={`flex items-start justify-between gap-4 ${className}`}>
       <div className="min-w-0">
         {eyebrow && (
-          <p className="text-primary mb-1 text-[9px] font-bold tracking-[0.16em] uppercase">
+          <p className="mb-1 text-[9px] font-bold tracking-[0.16em] text-primary uppercase">
             {eyebrow}
           </p>
         )}
-        <h1 className="text-on-surface text-[28px] leading-8 font-semibold tracking-tight">
+        <h1 className="text-[28px] leading-8 font-semibold tracking-tight text-on-surface">
           {title}
         </h1>
-        {subtitle && <p className="text-on-surface-variant mt-1 text-xs leading-4">{subtitle}</p>}
+        {subtitle && <p className="mt-1 text-xs leading-4 text-on-surface-variant">{subtitle}</p>}
       </div>
       {(action || badge) && <div className="shrink-0 pt-1">{action ?? badge}</div>}
     </header>
@@ -57,18 +57,18 @@ export function NativeSection({
   const hasHeader = Boolean(eyebrow || title || action);
   return (
     <section
-      className={`p-md rounded-[28px] bg-white shadow-[0_14px_34px_rgba(17,17,17,0.045)] ${className}`}
+      className={`rounded-[28px] bg-white p-md shadow-[0_14px_34px_rgba(17,17,17,0.045)] ${className}`}
     >
       {hasHeader && (
         <div className="mb-sm flex items-center justify-between gap-3">
           <div className="min-w-0">
             {eyebrow && (
-              <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
+              <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
                 {eyebrow}
               </p>
             )}
             {title && (
-              <h2 className="text-on-surface text-[17px] leading-6 font-semibold">{title}</h2>
+              <h2 className="text-[17px] leading-6 font-semibold text-on-surface">{title}</h2>
             )}
           </div>
           {action}
@@ -213,8 +213,8 @@ export function MetricPill({
   const wrapClass = wrapMode === "truncate" ? "truncate" : "wrap-break-word wrap-anywhere";
 
   return (
-    <div className={`bg-surface-container-low min-w-0 rounded-2xl px-3 py-2.5 ${alignClass}`}>
-      <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-wide uppercase">
+    <div className={`min-w-0 rounded-2xl bg-surface-container-low px-3 py-2.5 ${alignClass}`}>
+      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
         {label}
       </p>
       <p
@@ -223,7 +223,7 @@ export function MetricPill({
         {value}
       </p>
       {fullValue && fullValue !== value && (
-        <p className="financial-amount text-on-surface-variant/75 mt-1 font-mono text-[9px] leading-3 wrap-anywhere wrap-break-word tabular-nums">
+        <p className="financial-amount mt-1 font-mono text-[9px] leading-3 wrap-anywhere wrap-break-word text-on-surface-variant/75 tabular-nums">
           {fullValue}
         </p>
       )}
@@ -258,9 +258,9 @@ export function MoneyMetricPill({
 
   return (
     <div
-      className={`bg-surface-container-low min-w-0 rounded-2xl px-3 py-2.5 ${alignClass} ${className}`}
+      className={`min-w-0 rounded-2xl bg-surface-container-low px-3 py-2.5 ${alignClass} ${className}`}
     >
-      <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-wide uppercase">
+      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
         {label}
       </p>
       <MoneyValue
@@ -273,7 +273,7 @@ export function MoneyMetricPill({
         className="mt-0.5"
       />
       {detail && (
-        <p className="text-on-surface-variant/75 mt-1 text-[9px] leading-3 font-bold wrap-anywhere wrap-break-word">
+        <p className="mt-1 text-[9px] leading-3 font-bold wrap-anywhere wrap-break-word text-on-surface-variant/75">
           {detail}
         </p>
       )}
@@ -355,7 +355,7 @@ export function PillTabs<TValue extends string>({
             className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-[11px] font-bold transition active:scale-95 disabled:opacity-50 ${
               active
                 ? "bg-primary text-on-primary shadow-sm"
-                : "bg-surface-container text-on-surface-variant ring-outline-variant/35 hover:text-on-surface ring-1"
+                : "bg-surface-container text-on-surface-variant ring-1 ring-outline-variant/35 hover:text-on-surface"
             }`}
           >
             {option.icon}
@@ -397,11 +397,11 @@ export function EmptyState({
     <div
       className={`flex flex-col items-center justify-center rounded-[28px] bg-white px-6 py-14 text-center shadow-[0_14px_34px_rgba(17,17,17,0.045)] ${className}`}
     >
-      <div className="bg-surface-container-low text-on-surface-variant flex h-14 w-14 items-center justify-center rounded-3xl shadow-sm">
+      <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-surface-container-low text-on-surface-variant shadow-sm">
         <span className="material-symbols-outlined text-[28px]">{icon}</span>
       </div>
-      <h3 className="text-on-surface mt-5 text-lg leading-6 font-semibold">{title}</h3>
-      <p className="text-on-surface-variant mx-auto mt-2 max-w-xs text-sm leading-6">
+      <h3 className="mt-5 text-lg leading-6 font-semibold text-on-surface">{title}</h3>
+      <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-on-surface-variant">
         {description}
       </p>
     </div>

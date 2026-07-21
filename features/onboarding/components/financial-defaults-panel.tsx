@@ -57,26 +57,26 @@ export function FinancialDefaultsPanel({
           <OnboardingSurface>
             <div className="grid grid-cols-3 divide-x divide-black/5.5 px-2 py-4 text-center">
               <div className="min-w-0 px-1">
-                <p className="text-on-surface-variant/65 text-[8px] font-bold tracking-[0.08em] uppercase">
+                <p className="text-[8px] font-bold tracking-[0.08em] text-on-surface-variant/65 uppercase">
                   Internal
                 </p>
-                <p className="font-numeral text-on-surface mt-1 text-[17px] font-bold tabular-nums">
+                <p className="font-numeral mt-1 text-[17px] font-bold text-on-surface tabular-nums">
                   {Math.round((budget?.budgetCapRatio ?? 0) * 100)}%
                 </p>
               </div>
               <div className="min-w-0 px-1">
-                <p className="text-on-surface-variant/65 text-[8px] font-bold tracking-[0.08em] uppercase">
+                <p className="text-[8px] font-bold tracking-[0.08em] text-on-surface-variant/65 uppercase">
                   Terbagi
                 </p>
-                <p className="font-numeral text-on-surface mt-1 text-[17px] font-bold tabular-nums">
+                <p className="font-numeral mt-1 text-[17px] font-bold text-on-surface tabular-nums">
                   {Math.round(allocation * 100)}%
                 </p>
               </div>
               <div className="min-w-0 px-1">
-                <p className="text-on-surface-variant/65 text-[8px] font-bold tracking-[0.08em] uppercase">
+                <p className="text-[8px] font-bold tracking-[0.08em] text-on-surface-variant/65 uppercase">
                   Buffer
                 </p>
-                <p className="font-numeral text-warning mt-1 text-[17px] font-bold tabular-nums">
+                <p className="font-numeral mt-1 text-[17px] font-bold text-warning tabular-nums">
                   {Math.round(buffer * 100)}%
                 </p>
               </div>
@@ -132,7 +132,7 @@ export function FinancialDefaultsPanel({
             <button
               type="button"
               onClick={() => setConfirmClose(false)}
-              className="bg-surface-container-low text-on-surface min-h-12 flex-1 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 flex-1 rounded-full bg-surface-container-low px-4 text-xs font-bold text-on-surface"
             >
               Lanjut edit
             </button>
@@ -143,7 +143,7 @@ export function FinancialDefaultsPanel({
                 setBudgetDirty(false);
                 setEditingBudget(false);
               }}
-              className="bg-warning min-h-12 flex-1 rounded-full px-4 text-xs font-bold text-white"
+              className="min-h-12 flex-1 rounded-full bg-warning px-4 text-xs font-bold text-white"
             >
               Buang perubahan
             </button>

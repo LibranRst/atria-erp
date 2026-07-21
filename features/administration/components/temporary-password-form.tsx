@@ -38,11 +38,11 @@ export function TemporaryPasswordForm(): React.JSX.Element {
   return (
     <section className="flex min-h-[calc(100dvh-3rem)] flex-col justify-center py-6">
       <header className="mb-5">
-        <p className="text-primary text-[9px] font-bold tracking-[0.16em] uppercase">
+        <p className="text-[9px] font-bold tracking-[0.16em] text-primary uppercase">
           Keamanan akun
         </p>
         <h1 className="mt-1 text-[25px] font-bold tracking-tight">Ganti password sementara</h1>
-        <p className="text-on-surface-variant mt-2 text-[12px] leading-5">
+        <p className="mt-2 text-[12px] leading-5 text-on-surface-variant">
           Buat password pribadi sebelum mengakses data operasional.
         </p>
       </header>
@@ -87,7 +87,7 @@ export function TemporaryPasswordForm(): React.JSX.Element {
               disabled={pending}
               whileTap={pending ? undefined : { scale: 0.97 }}
               transition={transitionSpringSnappy}
-              className="bg-primary min-h-12 w-full rounded-full text-sm font-bold text-white disabled:opacity-50"
+              className="min-h-12 w-full rounded-full bg-primary text-sm font-bold text-white disabled:opacity-50"
             >
               {pending ? "Menyimpan…" : "Simpan password baru"}
             </motion.button>

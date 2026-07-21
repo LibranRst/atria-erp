@@ -503,10 +503,10 @@ export function ExpenseForm({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => applyProjectChange(lastProjectSuggestion.id)}
-                className="bg-surface-container-lowest active:bg-surface-container-low flex min-h-14 w-full min-w-0 items-center gap-3 px-4 py-2.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-inset"
+                className="flex min-h-14 w-full min-w-0 items-center gap-3 bg-surface-container-lowest px-4 py-2.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-inset active:bg-surface-container-low"
               >
                 <span
-                  className="bg-surface-container-low text-on-surface-variant flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant"
                   aria-hidden="true"
                 >
                   <span className="material-symbols-outlined text-[18px] leading-none">
@@ -514,10 +514,10 @@ export function ExpenseForm({
                   </span>
                 </span>
                 <span className="grid min-w-0 flex-1 gap-0.5">
-                  <span className="text-on-surface-variant block text-[10px] leading-[1.15] font-semibold">
+                  <span className="block text-[10px] leading-[1.15] font-semibold text-on-surface-variant">
                     Proyek terakhir
                   </span>
-                  <span className="text-on-surface block truncate text-xs leading-[1.15] font-bold">
+                  <span className="block truncate text-xs leading-[1.15] font-bold text-on-surface">
                     {lastProjectSuggestion.name}
                   </span>
                 </span>
@@ -615,7 +615,7 @@ export function ExpenseForm({
             title="Rincian Pengeluaran"
             helper="Periksa kembali proyek dan kelengkapan dokumen pengeluaran."
           >
-            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
               <ReviewFact label="Proyek" value={selectedProject?.name ?? "–"} />
               <ReviewFact
                 label="Dokumen"
@@ -648,7 +648,7 @@ export function ExpenseForm({
               title="Dampak Budget"
               helper="Kondisi overbudget akan mengharuskan persetujuan khusus Owner."
             >
-              <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+              <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
                 {categorySummaries.map(({ category, amount }) => {
                   const before = Number(category.remainingAmount);
                   const after = before - amount;
@@ -656,12 +656,12 @@ export function ExpenseForm({
                     <div key={category.id} className="px-4 py-3 text-xs">
                       <div className="flex items-center justify-between gap-3 font-semibold">
                         <span className="text-on-surface">{category.name}</span>
-                        <span className="text-primary font-bold tabular-nums">
+                        <span className="font-bold text-primary tabular-nums">
                           Rp {amount.toLocaleString("id-ID")}
                         </span>
                       </div>
                       <p
-                        className={`mt-1 text-[11px] font-medium ${after < 0 ? "text-error font-bold" : "text-on-surface-variant"}`}
+                        className={`mt-1 text-[11px] font-medium ${after < 0 ? "font-bold text-error" : "text-on-surface-variant"}`}
                       >
                         Sisa: Rp {before.toLocaleString("id-ID")} → Rp{" "}
                         {after.toLocaleString("id-ID")}
@@ -696,7 +696,7 @@ export function ExpenseForm({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => void saveConflictCopy()}
-              className="bg-primary min-h-12 w-full rounded-full px-5 text-xs font-bold text-white"
+              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white"
             >
               Simpan sebagai Draft Baru
             </motion.button>
@@ -705,7 +705,7 @@ export function ExpenseForm({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => void loadServerVersion()}
-              className="bg-surface-container text-on-surface min-h-12 w-full rounded-full px-5 text-xs font-bold"
+              className="min-h-12 w-full rounded-full bg-surface-container px-5 text-xs font-bold text-on-surface"
             >
               Muat Versi Server
             </motion.button>
@@ -732,7 +732,7 @@ export function ExpenseForm({
                 }));
                 setPendingOcr(null);
               }}
-              className="bg-primary min-h-12 w-full rounded-full px-5 text-xs font-bold text-white"
+              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white"
             >
               Tambahkan Hasil Scan
             </motion.button>
@@ -748,7 +748,7 @@ export function ExpenseForm({
                 }));
                 setPendingOcr(null);
               }}
-              className="bg-surface-container text-on-surface min-h-12 w-full rounded-full px-5 text-xs font-bold"
+              className="min-h-12 w-full rounded-full bg-surface-container px-5 text-xs font-bold text-on-surface"
             >
               Ganti Item Saat Ini
             </motion.button>
@@ -769,7 +769,7 @@ export function ExpenseForm({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setProjectChange(null)}
-              className="bg-surface-container text-on-surface min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
             >
               Pertahankan
             </motion.button>
@@ -780,7 +780,7 @@ export function ExpenseForm({
               onClick={() => {
                 if (projectChange) applyProjectChange(projectChange);
               }}
-              className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white"
+              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white"
             >
               Ganti Proyek
             </motion.button>
@@ -818,12 +818,12 @@ export function ExpenseForm({
         }}
       >
         <div className="space-y-3 py-4 text-center">
-          <div className="bg-primary/10 text-primary mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
             <span className="material-symbols-outlined text-[30px]">check_circle</span>
           </div>
           <div>
-            <p className="text-on-surface text-sm font-bold">Menunggu verifikasi Finance</p>
-            <p className="text-on-surface-variant mt-1 text-xs leading-5">
+            <p className="text-sm font-bold text-on-surface">Menunggu verifikasi Finance</p>
+            <p className="mt-1 text-xs leading-5 text-on-surface-variant">
               Data final tidak dapat diedit langsung. Koreksi berikutnya mengikuti proses reject,
               salin draft, void, atau reversal.
             </p>
@@ -834,7 +834,7 @@ export function ExpenseForm({
               setSuccess(null);
               closeForm();
             }}
-            className="text-on-surface min-h-12 w-full rounded-full text-sm font-bold"
+            className="min-h-12 w-full rounded-full text-sm font-bold text-on-surface"
           >
             Selesai
           </button>
@@ -853,8 +853,8 @@ function ReviewFact({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="text-on-surface-variant shrink-0 font-semibold">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 font-semibold text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

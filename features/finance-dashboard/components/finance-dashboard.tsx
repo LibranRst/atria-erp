@@ -133,7 +133,7 @@ export function FinancialPosition({
   const budgetDanger = summary.remainingBudget < 0 || summary.usedPercentage >= 100;
   return (
     <section
-      className="text-on-primary relative isolate overflow-hidden rounded-[30px] bg-[#151719] px-5 py-5 shadow-[0_2px_4px_rgba(17,17,17,0.12),0_20px_48px_rgba(17,17,17,0.16)] ring-1 ring-white/8 max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
+      className="relative isolate overflow-hidden rounded-[30px] bg-[#151719] px-5 py-5 text-on-primary shadow-[0_2px_4px_rgba(17,17,17,0.12),0_20px_48px_rgba(17,17,17,0.16)] ring-1 ring-white/8 max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
       aria-label="Posisi finansial"
     >
       <span
@@ -227,7 +227,7 @@ function DataStatus({
 
   return (
     <div
-      className="text-warning flex h-8 items-center gap-2 px-1"
+      className="flex h-8 items-center gap-2 px-1 text-warning"
       role="status"
       aria-live="polite"
       aria-label={status.accessibleLabel}
@@ -241,7 +241,7 @@ function DataStatus({
         disabled={refreshing}
         onClick={onRefresh}
         aria-label="Perbarui data Dashboard"
-        className="text-warning focus-visible:ring-warning/30 relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full outline-none after:absolute after:-inset-2 after:content-[''] focus-visible:ring-2 disabled:opacity-45"
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-warning outline-none after:absolute after:-inset-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-warning/30 disabled:opacity-45"
       >
         <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
           {refreshing ? "sync" : "refresh"}

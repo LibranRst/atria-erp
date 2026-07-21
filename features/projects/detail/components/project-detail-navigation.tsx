@@ -110,7 +110,7 @@ export function ProjectDetailNavigation({
         padding: stickyActive ? 8 : 0,
       }}
       transition={stickyTransition}
-      className={`${WORKSPACE_STICKY_CONTROLS_ENABLED ? "sticky top-16 z-20 [overflow-anchor:none]" : "relative"} ${stickyActive ? "overflow-hidden rounded-[24px]" : ""}`}
+      className={`${WORKSPACE_STICKY_CONTROLS_ENABLED ? "sticky top-16 z-20 [overflow-anchor:none]" : "relative"} ${stickyActive ? "overflow-hidden rounded-3xl" : ""}`}
     >
       <AnimatePresence initial={false}>
         {stickyActive ? (
@@ -120,7 +120,7 @@ export function ProjectDetailNavigation({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={surfaceTransition}
-            className="pointer-events-none absolute inset-0 rounded-[24px] bg-white/96 shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
+            className="pointer-events-none absolute inset-0 rounded-3xl bg-white/96 shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
             aria-hidden="true"
           />
         ) : null}

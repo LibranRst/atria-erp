@@ -188,7 +188,7 @@ export function TransferSheet({
                 </div>
               ))}
             </div>
-            <p className="text-on-surface-variant px-1 text-xs leading-5">
+            <p className="px-1 text-xs leading-5 text-on-surface-variant">
               Posting akan membuat movement keluar dan masuk dalam satu transaksi. Transfer yang
               sudah diposting tidak dapat diedit langsung.
             </p>
@@ -204,7 +204,7 @@ export function TransferSheet({
                   <TextInput
                     value={newLocationName}
                     onChange={onNewLocationNameChange}
-                    className="bg-surface-container-lowest min-h-12 flex-1"
+                    className="min-h-12 flex-1 bg-surface-container-lowest"
                     placeholder="Nama lokasi baru"
                     aria-label="Nama lokasi inventory baru"
                   />
@@ -212,7 +212,7 @@ export function TransferSheet({
                     type="button"
                     onClick={onAddLocation}
                     disabled={pending || newLocationName.trim().length < 3}
-                    className="bg-primary text-on-primary min-h-12 shrink-0 rounded-full px-4 text-xs font-bold disabled:opacity-40"
+                    className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
                   >
                     Tambah
                   </button>
@@ -231,7 +231,7 @@ export function TransferSheet({
               </FormField>
             </FormSection>
             <FormSection title="Lokasi transfer" helper="Sumber dan tujuan harus berbeda.">
-              <div className="divide-outline-variant/20 grid grid-cols-2 divide-x">
+              <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
                 <SheetSelect
                   label="Dari"
                   value={fromLocationId}
@@ -288,8 +288,8 @@ function ReviewFact({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

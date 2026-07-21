@@ -35,14 +35,14 @@ export function RiskBriefList({
   readonly actions: readonly DashboardAction[];
 }): React.JSX.Element {
   return (
-    <div className="divide-outline-variant/35 bg-surface-container-low divide-y overflow-hidden rounded-2xl">
+    <div className="divide-y divide-outline-variant/35 overflow-hidden rounded-2xl bg-surface-container-low">
       {actions.map((action) => {
         const classes = dashboardToneClasses(severityTone(action.severity));
         return (
           <Link
             key={action.id}
             href={action.href}
-            className="hover:bg-surface-container/30 active:bg-surface-container flex min-h-12 items-center gap-2.5 px-3 py-2.5 transition"
+            className="flex min-h-12 items-center gap-2.5 px-3 py-2.5 transition hover:bg-surface-container/30 active:bg-surface-container"
           >
             <span
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${classes.icon}`}
@@ -52,10 +52,10 @@ export function RiskBriefList({
               </span>
             </span>
             <span className="min-w-0 flex-1">
-              <span className="text-on-surface block truncate text-xs font-bold">
+              <span className="block truncate text-xs font-bold text-on-surface">
                 {action.title}
               </span>
-              <span className="text-on-surface-variant mt-0.5 block truncate text-[10px]">
+              <span className="mt-0.5 block truncate text-[10px] text-on-surface-variant">
                 {action.description}
               </span>
             </span>
@@ -88,7 +88,7 @@ export function OverviewPriorityList({
           >
             <Link
               href={action.href}
-              className="flex min-h-[64px] items-center gap-3 rounded-[20px] px-1.5 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 active:bg-black/2.5 max-[430px]:min-h-[60px] max-[430px]:gap-2.5"
+              className="flex min-h-16 items-center gap-3 rounded-[20px] px-1.5 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 active:bg-black/2.5 max-[430px]:min-h-15 max-[430px]:gap-2.5"
             >
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${isCritical ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
@@ -98,10 +98,10 @@ export function OverviewPriorityList({
                 </span>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="text-on-surface block truncate text-[13px] leading-normal font-semibold tracking-[-0.01em]">
+                <span className="block truncate text-[13px] leading-normal font-semibold tracking-[-0.01em] text-on-surface">
                   {action.title}
                 </span>
-                <span className="text-on-surface-variant/75 mt-0.5 block truncate text-[10px] leading-normal">
+                <span className="mt-0.5 block truncate text-[10px] leading-normal text-on-surface-variant/75">
                   {action.description}
                 </span>
               </span>
@@ -112,7 +112,7 @@ export function OverviewPriorityList({
                   {isCritical ? "Kritis" : "Perhatian"}
                 </span>
                 <span
-                  className="bg-surface-container-high/70 flex h-7 w-7 items-center justify-center rounded-full text-[#007AFF]"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
                   aria-hidden="true"
                 >
                   <span className="material-symbols-outlined text-[16px]">chevron_right</span>
@@ -132,8 +132,8 @@ export function OverviewPreviewEmpty({
   readonly children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <div className="text-on-surface-variant flex min-h-16 items-center gap-2.5 px-4 py-3 text-xs leading-5">
-      <span className="material-symbols-outlined text-success text-[18px]" aria-hidden="true">
+    <div className="flex min-h-16 items-center gap-2.5 px-4 py-3 text-xs leading-5 text-on-surface-variant">
+      <span className="material-symbols-outlined text-[18px] text-success" aria-hidden="true">
         check_circle
       </span>
       <span>{children}</span>
@@ -159,13 +159,13 @@ export function OverviewCashRows({
             type="button"
             onClick={() => openActivityDetail({ kind: "CASH_TRANSACTION", id: transaction.id })}
             key={transaction.id}
-            className={`${rowClassName} focus-visible:bg-surface-container-low active:bg-surface-container-low/70 w-full px-1 text-left outline-none`}
+            className={`${rowClassName} w-full px-1 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70`}
           >
             <span
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
                 incoming
-                  ? "bg-primary/9 text-primary ring-primary/6 ring-1"
-                  : "bg-error/8 text-error ring-error/5 ring-1"
+                  ? "bg-primary/9 text-primary ring-1 ring-primary/6"
+                  : "bg-error/8 text-error ring-1 ring-error/5"
               }`}
             >
               <span className="material-symbols-outlined text-[16px]">
@@ -173,10 +173,10 @@ export function OverviewCashRows({
               </span>
             </span>
             <span className="min-w-0 flex-1">
-              <span className="text-on-surface block truncate text-[13px] leading-4 font-semibold tracking-[-0.01em]">
+              <span className="block truncate text-[13px] leading-4 font-semibold tracking-[-0.01em] text-on-surface">
                 {transaction.description}
               </span>
-              <span className="text-on-surface-variant/70 mt-0.5 block text-[10px] leading-4 font-semibold">
+              <span className="mt-0.5 block text-[10px] leading-4 font-semibold text-on-surface-variant/70">
                 {formatShortDate(transaction.createdAt)}
               </span>
             </span>
@@ -199,7 +199,7 @@ export function OverviewCashRows({
 
 export function EmptyRow({ children }: { readonly children: React.ReactNode }): React.JSX.Element {
   return (
-    <div className="bg-surface-container-low text-on-surface-variant rounded-2xl py-8 text-center text-xs leading-5">
+    <div className="rounded-2xl bg-surface-container-low py-8 text-center text-xs leading-5 text-on-surface-variant">
       {children}
     </div>
   );

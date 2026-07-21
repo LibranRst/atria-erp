@@ -131,15 +131,13 @@ export async function createProjectCategoryPlanItem(
           displayOrder: validation.data.displayOrder ?? 0,
         })
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "CREATE_CATEGORY_PLAN_DRAFT",
-          targetTable: "project_category_plan_item",
-          targetId: row.id,
-          newState: JSON.stringify(row),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "CREATE_CATEGORY_PLAN_DRAFT",
+        targetTable: "project_category_plan_item",
+        targetId: row.id,
+        newState: JSON.stringify(row),
+      });
       return row;
     });
 
@@ -204,16 +202,14 @@ export async function updateProjectCategoryPlanItem(
         })
         .where(eq(projectCategoryPlanItem.id, existing.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "UPDATE_CATEGORY_PLAN_DRAFT",
-          targetTable: "project_category_plan_item",
-          targetId: existing.id,
-          originalState: JSON.stringify(existing),
-          newState: JSON.stringify(row),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "UPDATE_CATEGORY_PLAN_DRAFT",
+        targetTable: "project_category_plan_item",
+        targetId: existing.id,
+        originalState: JSON.stringify(existing),
+        newState: JSON.stringify(row),
+      });
       return row;
     });
 
@@ -254,16 +250,14 @@ export async function markProjectCategoryPlanItemActive(
         .set({ status: "ACTIVE", updatedAt: new Date() })
         .where(eq(projectCategoryPlanItem.id, existing.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "MARK_CATEGORY_PLAN_PACKAGE_READY",
-          targetTable: "project_category_plan_item",
-          targetId: existing.id,
-          originalState: JSON.stringify(existing),
-          newState: JSON.stringify(rows[0]),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "MARK_CATEGORY_PLAN_PACKAGE_READY",
+        targetTable: "project_category_plan_item",
+        targetId: existing.id,
+        originalState: JSON.stringify(existing),
+        newState: JSON.stringify(rows[0]),
+      });
       return rows;
     });
 
@@ -300,15 +294,13 @@ export async function deleteProjectCategoryPlanItem(
 
     await db.transaction(async (tx) => {
       await tx.delete(projectCategoryPlanItem).where(eq(projectCategoryPlanItem.id, existing.id));
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "DELETE_CATEGORY_PLAN_DRAFT",
-          targetTable: "project_category_plan_item",
-          targetId: existing.id,
-          originalState: JSON.stringify(existing),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "DELETE_CATEGORY_PLAN_DRAFT",
+        targetTable: "project_category_plan_item",
+        targetId: existing.id,
+        originalState: JSON.stringify(existing),
+      });
     });
     return { success: true, data: { deletedId: existing.id } };
   } catch (error) {

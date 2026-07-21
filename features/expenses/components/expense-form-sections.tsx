@@ -46,7 +46,7 @@ export function ExpenseFormNotice({
         <button
           type="button"
           onClick={onDismiss}
-          className="focus-visible:ring-primary/30 flex h-8 w-8 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           aria-label="Tutup pemberitahuan"
         >
           <span className="material-symbols-outlined text-[17px]">close</span>
@@ -133,14 +133,14 @@ export function ExpenseItemsSection({
               layout
               key={line.key}
               transition={transitionSpringSnappy}
-              className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] p-2 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1"
+              className="overflow-hidden rounded-3xl bg-surface-container-lowest p-2 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
             >
               <button
                 type="button"
                 data-expense-incomplete={complete ? undefined : "true"}
                 onClick={() => setEditingKey(line.key)}
                 disabled={disabled}
-                className="focus-visible:ring-primary/30 flex min-h-14 w-full items-center gap-3 rounded-2xl px-2 text-left outline-none focus-visible:ring-2 disabled:opacity-50"
+                className="flex min-h-14 w-full items-center gap-3 rounded-2xl px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50"
               >
                 <span
                   className={`h-2.5 w-2.5 shrink-0 rounded-full ${complete ? "bg-primary" : "bg-warning"}`}
@@ -148,23 +148,23 @@ export function ExpenseItemsSection({
                 />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2">
-                    <span className="text-on-surface truncate text-xs font-bold">
+                    <span className="truncate text-xs font-bold text-on-surface">
                       {line.description.trim() || `Item ${index + 1}`}
                     </span>
-                    <span className="text-on-surface-variant shrink-0 text-[10px] font-semibold">
+                    <span className="shrink-0 text-[10px] font-semibold text-on-surface-variant">
                       {category?.name ?? "Pilih kategori"}
                     </span>
                   </span>
-                  <span className="text-on-surface-variant mt-0.5 block truncate text-[11px]">
+                  <span className="mt-0.5 block truncate text-[11px] text-on-surface-variant">
                     {quantity || "–"} × Rp {unitPrice.toLocaleString("id-ID")} ·{" "}
                     {complete ? "Lengkap" : "Perlu diperiksa"}
                   </span>
                 </span>
                 <span className="shrink-0 text-right">
-                  <span className="text-on-surface block text-xs font-bold tabular-nums">
+                  <span className="block text-xs font-bold text-on-surface tabular-nums">
                     Rp {(Number(line.amount) || 0).toLocaleString("id-ID")}
                   </span>
-                  <span className="material-symbols-outlined text-on-surface-variant text-[18px]">
+                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant">
                     chevron_right
                   </span>
                 </span>
@@ -202,12 +202,12 @@ export function ExpenseItemsSection({
       </div>
 
       {removed ? (
-        <div className="bg-on-surface text-surface flex min-h-12 items-center justify-between rounded-full px-4 text-xs">
+        <div className="flex min-h-12 items-center justify-between rounded-full bg-on-surface px-4 text-xs text-surface">
           <span>Item dihapus</span>
           <button
             type="button"
             onClick={undoRemove}
-            className="text-primary-container min-h-10 rounded-full px-3 font-bold"
+            className="min-h-10 rounded-full px-3 font-bold text-primary-container"
           >
             Urungkan
           </button>
@@ -220,7 +220,7 @@ export function ExpenseItemsSection({
         transition={transitionSpringSnappy}
         onClick={onAdd}
         disabled={!selectedProjectId || disabled}
-        className="bg-surface-container text-primary focus-visible:ring-primary/30 min-h-12 w-full rounded-full px-5 text-sm font-bold outline-none focus-visible:ring-2 disabled:opacity-45"
+        className="min-h-12 w-full rounded-full bg-surface-container px-5 text-sm font-bold text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-45"
       >
         Tambahkan Item
       </motion.button>
@@ -265,7 +265,7 @@ function RowAction({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`focus-visible:ring-primary/30 flex h-12 w-12 items-center justify-center rounded-full outline-none focus-visible:ring-2 disabled:opacity-25 ${danger ? "text-error" : "text-on-surface-variant"}`}
+      className={`flex h-12 w-12 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-25 ${danger ? "text-error" : "text-on-surface-variant"}`}
       aria-label={label}
       title={label}
     >

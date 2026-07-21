@@ -95,7 +95,7 @@ export function SetupReadinessManager({
         {overview.canManageOnboarding ? (
           <Link
             href={`/onboarding?step=${overview.state.currentStep}`}
-            className="text-primary mt-4 flex min-h-12 w-full items-center justify-center rounded-full bg-white px-5 text-xs font-bold"
+            className="mt-4 flex min-h-12 w-full items-center justify-center rounded-full bg-white px-5 text-xs font-bold text-primary"
           >
             {legacyReview
               ? "Mulai review setup"
@@ -139,7 +139,7 @@ export function SetupReadinessManager({
                 <Link
                   key={item.id}
                   href={href}
-                  className="active:bg-surface-container-low focus-visible:bg-surface-container-low flex min-h-[72px] items-center gap-3 px-3.5 py-3 outline-none"
+                  className="flex min-h-18 items-center gap-3 px-3.5 py-3 outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
                 >
                   <span
                     className={`material-symbols-outlined flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] text-[18px] ${item.ready ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
@@ -152,10 +152,10 @@ export function SetupReadinessManager({
                         : "priority_high"}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="text-on-surface block text-[13px] font-bold">
+                    <span className="block text-[13px] font-bold text-on-surface">
                       {item.label}
                     </span>
-                    <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-4">
+                    <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
                       {item.detail}
                     </span>
                   </span>

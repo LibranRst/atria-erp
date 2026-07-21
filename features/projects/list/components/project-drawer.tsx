@@ -429,7 +429,7 @@ export function ProjectDrawer({
         statusTone={projectBlockers.length ? "warning" : "success"}
         error={
           error ? (
-            <div className="border-error bg-error-container/10 text-error flex items-start gap-2 rounded-2xl border p-3 text-xs">
+            <div className="flex items-start gap-2 rounded-2xl border border-error bg-error-container/10 p-3 text-xs text-error">
               <span className="material-symbols-outlined text-[18px]">error</span>
               <span className="leading-normal">{error}</span>
             </div>
@@ -621,7 +621,7 @@ export function ProjectDrawer({
                 setConfirmClose(false);
                 handleClose();
               }}
-              className="bg-primary min-h-12 w-full rounded-full px-5 text-xs font-bold text-white"
+              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white"
             >
               Simpan Lokal & Tutup
             </motion.button>
@@ -635,7 +635,7 @@ export function ProjectDrawer({
                   setConfirmClose(false);
                   handleClose();
                 }}
-                className="bg-error-container/25 text-error min-h-12 rounded-full px-4 text-xs font-bold"
+                className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error"
               >
                 Buang Perubahan
               </motion.button>
@@ -644,7 +644,7 @@ export function ProjectDrawer({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => setConfirmClose(false)}
-                className="bg-surface-container text-on-surface min-h-12 rounded-full px-4 text-xs font-bold"
+                className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
               >
                 Lanjut Mengisi
               </motion.button>
@@ -665,8 +665,8 @@ function ReviewFact({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

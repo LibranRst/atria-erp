@@ -58,8 +58,8 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
         isMenuOpen ? "z-90" : "z-50"
       }`}
     >
-      <div className="px-margin-mobile mx-auto flex h-full w-full max-w-md items-center justify-between">
-        <div className="relative h-10 w-[88px] shrink-0">
+      <div className="mx-auto flex h-full w-full max-w-md items-center justify-between px-margin-mobile">
+        <div className="relative h-10 w-22 shrink-0">
           <AnimatePresence>
             {hasBackButton && (
               <motion.button
@@ -70,7 +70,7 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.7 }}
                 transition={hasBackButton ? transitionSpringBouncy : transitionSpringSmooth}
-                className="border-outline-variant/15 text-on-surface-variant hover:bg-surface-container-low absolute top-0 left-0 z-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border bg-white shadow-[0_10px_24px_rgba(17,17,17,0.10)] transition-colors duration-200 active:scale-95"
+                className="absolute top-0 left-0 z-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-[0_10px_24px_rgba(17,17,17,0.10)] transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
                 aria-label="Go back"
               >
                 <span className="material-symbols-outlined text-[28px]">chevron_left</span>
@@ -83,7 +83,7 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
             onClick={() => toast("AI Chat segera hadir.")}
             animate={{ x: hasBackButton ? 46 : 0 }}
             transition={hasBackButton ? transitionSpringBouncy : transitionSpringSmooth}
-            className="border-outline-variant/15 text-on-surface-variant hover:bg-surface-container-low absolute top-0 left-0 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border bg-white shadow-[0_10px_24px_rgba(17,17,17,0.10)] transition-colors duration-200 active:scale-95"
+            className="absolute top-0 left-0 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-[0_10px_24px_rgba(17,17,17,0.10)] transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
             aria-label="AI Chat segera hadir"
           >
             <MessageCircle aria-hidden="true" className="h-5 w-5" />
@@ -100,10 +100,10 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
           onClose={() => setOpenRouteKey(null)}
         />
 
-        <div className="flex h-10 w-[88px] shrink-0 items-center justify-end">
+        <div className="flex h-10 w-22 shrink-0 items-center justify-end">
           <Link
             href="/profile"
-            className="border-outline-variant h-8 w-8 shrink-0 overflow-hidden rounded-full border transition-transform active:scale-95"
+            className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-outline-variant transition-transform active:scale-95"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -143,11 +143,11 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
   return (
     <ProjectStateProvider>
       <ActivityDetailProvider>
-        <div className="bg-background text-on-surface min-h-screen font-sans">
+        <div className="min-h-screen bg-background font-sans text-on-surface">
           {/* Top AppBar - Fixed, contents centered to match page width */}
           {!isLoginPage && (
             <Suspense
-              fallback={<div className="bg-surface border-outline-variant/10 h-14 border-b" />}
+              fallback={<div className="h-14 border-b border-outline-variant/10 bg-surface" />}
             >
               <MobileHeader isRootRoute={isRootRoute} />
             </Suspense>
@@ -157,7 +157,7 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
 
           {/* Screen Content - Space-y-lg handles margins between widgets automatically */}
           <main
-            className={`px-margin-mobile mx-auto w-full max-w-md ${
+            className={`mx-auto w-full max-w-md px-margin-mobile ${
               isLoginPage
                 ? "flex min-h-screen flex-col justify-center pt-6 pb-6"
                 : "space-y-lg pt-20 pb-[calc(10rem+env(safe-area-inset-bottom))]"

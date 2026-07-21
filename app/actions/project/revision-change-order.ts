@@ -332,15 +332,13 @@ export async function createProjectChangeOrder(
           createdById: user.id,
         })
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "CREATE_CHANGE_ORDER",
-          targetTable: "project_change_order",
-          targetId: changeOrder.id,
-          newState: JSON.stringify(changeOrder),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "CREATE_CHANGE_ORDER",
+        targetTable: "project_change_order",
+        targetId: changeOrder.id,
+        newState: JSON.stringify(changeOrder),
+      });
       return changeOrder;
     });
     revalidatePath(`/projects/${result.projectId}`);
@@ -384,16 +382,14 @@ export async function confirmChangeOrderClient(
         })
         .where(eq(projectChangeOrder.id, existing.id))
         .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: user.id,
-          action: "CONFIRM_CHANGE_ORDER_CLIENT",
-          targetTable: "project_change_order",
-          targetId: existing.id,
-          originalState: JSON.stringify(existing),
-          newState: JSON.stringify(rows[0]),
-        });
+      await tx.insert(auditLog).values({
+        userId: user.id,
+        action: "CONFIRM_CHANGE_ORDER_CLIENT",
+        targetTable: "project_change_order",
+        targetId: existing.id,
+        originalState: JSON.stringify(existing),
+        newState: JSON.stringify(rows[0]),
+      });
       return rows;
     });
     revalidatePath(`/projects/${updated.projectId}`);

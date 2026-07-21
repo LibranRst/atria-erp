@@ -68,7 +68,7 @@ export function HeaderMorphMenu({
         )}
       </AnimatePresence>
 
-      <div className="pointer-events-none relative z-80 flex h-10 w-[220px] items-start justify-center">
+      <div className="pointer-events-none relative z-80 flex h-10 w-55 items-start justify-center">
         <motion.div
           animate={{
             width: isOpen ? 292 : closedWidth,
@@ -76,7 +76,7 @@ export function HeaderMorphMenu({
             borderRadius: isOpen ? 28 : 20,
           }}
           transition={isOpen ? transitionSpringBouncy : transitionSpringSmooth}
-          className="border-outline-variant/20 pointer-events-auto absolute top-0 left-1/2 max-h-[calc(100dvh-5.5rem)] max-w-[calc(100vw-2rem)] overflow-hidden border bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+          className="pointer-events-auto absolute top-0 left-1/2 max-h-[calc(100dvh-5.5rem)] max-w-[calc(100vw-2rem)] overflow-hidden border border-outline-variant/20 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
           style={{ x: "-50%" }}
         >
           <motion.button
@@ -93,7 +93,7 @@ export function HeaderMorphMenu({
               y: isOpen ? activeTitleY : 0,
             }}
             transition={isOpen ? transitionSpringBouncy : transitionSpringSmooth}
-            className={`text-on-surface focus-visible:ring-primary/30 absolute inset-x-0 top-0 flex h-10 w-full cursor-pointer items-center justify-center px-5 text-center text-sm font-semibold tracking-tight will-change-[opacity,transform] outline-none focus-visible:ring-2 ${
+            className={`absolute inset-x-0 top-0 flex h-10 w-full cursor-pointer items-center justify-center px-5 text-center text-sm font-semibold tracking-tight text-on-surface will-change-[opacity,transform] outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
               isOpen ? "pointer-events-none" : "pointer-events-auto"
             }`}
           >

@@ -79,16 +79,16 @@ export function MaterialFoundationPanel({
                 {locations.map((location) => (
                   <div key={location.id} className="flex min-h-14 items-center gap-3 px-4 py-3">
                     <span
-                      className="material-symbols-outlined bg-surface-container-low text-on-surface-variant flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] text-[18px]"
+                      className="material-symbols-outlined flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
                       aria-hidden="true"
                     >
                       warehouse
                     </span>
-                    <span className="text-on-surface min-w-0 flex-1 truncate text-[12px] font-bold">
+                    <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-on-surface">
                       {location.name}
                     </span>
                     <span
-                      className="material-symbols-outlined text-success text-[17px]"
+                      className="material-symbols-outlined text-[17px] text-success"
                       aria-hidden="true"
                     >
                       check
@@ -118,7 +118,7 @@ export function MaterialFoundationPanel({
               setTab("LOCATIONS");
               setLocationOpen(true);
             }}
-            className="bg-primary text-on-primary min-h-12 w-full rounded-full px-5 text-xs font-bold"
+            className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
           >
             Buat lokasi pertama
           </button>

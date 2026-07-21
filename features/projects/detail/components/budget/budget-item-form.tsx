@@ -60,7 +60,7 @@ export function BudgetItemForm({
     >
       <form id="project-budget-item-form" onSubmit={onSubmit} className="space-y-md">
         <div className="space-y-sm text-xs">
-          <div className="gap-md grid grid-cols-1 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
             <FormField label="Nama Item Anggaran">
               <TextInput
                 value={form.itemName}
@@ -80,7 +80,7 @@ export function BudgetItemForm({
             </FormField>
           </div>
 
-          <div className="gap-md grid grid-cols-1 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
             <SheetSelect
               label="Kategori Budget"
               value={form.selectedCategoryId}
@@ -104,7 +104,7 @@ export function BudgetItemForm({
             />
           </div>
 
-          <div className="gap-md grid grid-cols-1 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
             <FormField label={form.unit ? `Kuantitas (${form.unit})` : "Kuantitas (Volume)"}>
               <QuantityStepper
                 value={form.quantity}
@@ -125,7 +125,7 @@ export function BudgetItemForm({
           </div>
 
           {form.quantity !== "" && form.unitPrice !== "" && (
-            <div className="border-primary/20 bg-surface-container-low text-primary rounded-full border p-2.5 text-center text-xs font-bold">
+            <div className="rounded-full border border-primary/20 bg-surface-container-low p-2.5 text-center text-xs font-bold text-primary">
               Subtotal item: Rp{" "}
               {(Number(form.quantity) * Number(form.unitPrice)).toLocaleString("id-ID")}
             </div>

@@ -511,23 +511,23 @@ export function LibrarySettingsManager({
         />
       )}
       {presentation === "settings" ? (
-        <p className="text-on-surface-variant text-[10px] leading-[1.35]">
-          <strong className="text-on-surface font-bold">Harga tersimpan sebagai snapshot.</strong>{" "}
+        <p className="text-[10px] leading-[1.35] text-on-surface-variant">
+          <strong className="font-bold text-on-surface">Harga tersimpan sebagai snapshot.</strong>{" "}
           Perubahan Library tidak mengubah RAB lama secara diam-diam.
         </p>
       ) : null}
       {message && (
-        <p className="bg-primary/5 text-primary ring-primary/15 rounded-2xl px-3 py-2.5 text-[11px] leading-4 ring-1">
+        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-[11px] leading-4 text-primary ring-1 ring-primary/15">
           {message}
         </p>
       )}
       {presentation === "onboarding" ? (
         <div className="flex min-w-0 items-center justify-between gap-3 px-1">
           <span className="min-w-0">
-            <span className="text-on-surface block text-[13px] leading-5 font-bold">
+            <span className="block text-[13px] leading-5 font-bold text-on-surface">
               Template tersimpan
             </span>
-            <span className="text-on-surface-variant block text-[9px] leading-4">
+            <span className="block text-[9px] leading-4 text-on-surface-variant">
               {items.filter((row) => row.isActive).length} template aktif
             </span>
           </span>
@@ -591,22 +591,22 @@ export function LibrarySettingsManager({
                   type="button"
                   key={item.id}
                   onClick={() => openDraft(toDraft(item))}
-                  className={`focus-visible:bg-surface-container-low active:bg-surface-container-low/75 flex w-full items-center gap-3 px-3.5 py-3 text-left outline-none ${presentation === "onboarding" ? "min-h-[76px]" : "min-h-[104px]"}`}
+                  className={`flex w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75 ${presentation === "onboarding" ? "min-h-19" : "min-h-26"}`}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-center gap-2">
-                      <span className="text-on-surface truncate text-[13px] leading-5 font-bold">
+                      <span className="truncate text-[13px] leading-5 font-bold text-on-surface">
                         {item.name}
                       </span>
                     </span>
-                    <span className="text-on-surface-variant block truncate text-[10px] leading-4">
+                    <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
                       {item.itemCategory} · {item.unit}
                       {item.code ? ` · ${item.code}` : ""}
                     </span>
                     {presentation === "settings" ? (
                       <span className="mt-2 grid grid-cols-2 gap-3">
                         <span className="min-w-0">
-                          <span className="text-on-surface-variant/60 block text-[8px] font-bold tracking-wide uppercase">
+                          <span className="block text-[8px] font-bold tracking-wide text-on-surface-variant/60 uppercase">
                             Harga klien
                           </span>
                           <MoneyValue
@@ -618,7 +618,7 @@ export function LibrarySettingsManager({
                           />
                         </span>
                         <span className="min-w-0 text-right">
-                          <span className="text-on-surface-variant/60 block text-[8px] font-bold tracking-wide uppercase">
+                          <span className="block text-[8px] font-bold tracking-wide text-on-surface-variant/60 uppercase">
                             Biaya internal
                           </span>
                           <MoneyValue
@@ -640,12 +640,12 @@ export function LibrarySettingsManager({
                       />
                     )}
                     {presentation === "settings" ? (
-                      <span className="text-on-surface-variant mt-2 flex justify-between gap-3 text-[9px]">
+                      <span className="mt-2 flex justify-between gap-3 text-[9px] text-on-surface-variant">
                         <span className="truncate">
                           {item.components.length} komponen ·{" "}
                           {priceSourceLabel(item.priceSourceType)}
                         </span>
-                        <span className="text-primary shrink-0 font-bold">
+                        <span className="shrink-0 font-bold text-primary">
                           Margin{" "}
                           {margin.toLocaleString("id-ID", {
                             maximumFractionDigits: 1,
@@ -798,27 +798,27 @@ export function LibrarySettingsManager({
                     whileTap={{ scale: 0.985 }}
                     transition={transitionSpringSnappy}
                     onClick={() => openComponent(component)}
-                    className="focus-visible:bg-surface-container-low flex min-h-16 w-full items-center gap-3 px-4 py-2.5 text-left outline-none"
+                    className="flex min-h-16 w-full items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:bg-surface-container-low"
                   >
                     <span
                       className={`h-2.5 w-2.5 shrink-0 rounded-full ${complete ? "bg-primary" : "bg-warning"}`}
                       aria-hidden="true"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="text-on-surface block truncate text-xs leading-[1.15] font-bold">
+                      <span className="block truncate text-xs leading-[1.15] font-bold text-on-surface">
                         {component.label.trim() || `Komponen ${index + 1}`}
                       </span>
-                      <span className="text-on-surface-variant mt-1 block truncate text-[10px] leading-[1.2]">
+                      <span className="mt-1 block truncate text-[10px] leading-[1.2] text-on-surface-variant">
                         {component.quantity} {component.unit} ·{" "}
                         {COMPONENT_TYPE_LABELS[component.componentType]} ·{" "}
                         {complete ? "Lengkap" : "Perlu diperiksa"}
                       </span>
                     </span>
-                    <span className="text-on-surface max-w-[32%] shrink-0 truncate text-right text-xs font-bold tabular-nums">
+                    <span className="max-w-[32%] shrink-0 truncate text-right text-xs font-bold text-on-surface tabular-nums">
                       {fullMoney(component.quantity * component.unitCost)}
                     </span>
                     <span
-                      className="material-symbols-outlined text-on-surface-variant shrink-0 text-[18px]"
+                      className="material-symbols-outlined shrink-0 text-[18px] text-on-surface-variant"
                       aria-hidden="true"
                     >
                       chevron_right
@@ -883,10 +883,10 @@ export function LibrarySettingsManager({
                 </FormField>
               )}
               <div className="p-3">
-                <div className="bg-surface-container-low ring-outline-variant/10 overflow-hidden rounded-[20px] ring-1">
-                  <div className="divide-outline-variant/20 grid grid-cols-2 divide-x">
+                <div className="overflow-hidden rounded-[20px] bg-surface-container-low ring-1 ring-outline-variant/10">
+                  <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
                     <div className="min-w-0 p-3">
-                      <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-wide uppercase">
+                      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
                         Biaya internal
                       </p>
                       <MoneyValue
@@ -897,7 +897,7 @@ export function LibrarySettingsManager({
                       />
                     </div>
                     <div className="min-w-0 p-3">
-                      <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-wide uppercase">
+                      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
                         Harga klien
                       </p>
                       <MoneyValue
@@ -909,8 +909,8 @@ export function LibrarySettingsManager({
                       />
                     </div>
                   </div>
-                  <div className="border-outline-variant/20 flex min-h-11 items-center justify-between gap-3 border-t px-3 py-2.5">
-                    <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
+                  <div className="flex min-h-11 items-center justify-between gap-3 border-t border-outline-variant/20 px-3 py-2.5">
+                    <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
                       Margin kotor
                     </p>
                     <p
@@ -1033,7 +1033,7 @@ export function LibrarySettingsManager({
                   const item = items.find((row) => row.id === draft.id);
                   if (item) setConfirmItem(item);
                 }}
-                className="bg-error-container/20 text-error min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-35"
+                className="min-h-12 w-full rounded-full bg-error-container/20 px-5 text-xs font-bold text-error disabled:opacity-35"
               >
                 {draft.isActive ? "Arsipkan template" : "Aktifkan kembali"}
               </motion.button>
@@ -1146,7 +1146,7 @@ export function LibrarySettingsManager({
                 transition={transitionSpringSnappy}
                 disabled={(draft?.components.length ?? 0) <= 1}
                 onClick={deleteComponent}
-                className="bg-error-container/20 text-error min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-35"
+                className="min-h-12 w-full rounded-full bg-error-container/20 px-5 text-xs font-bold text-error disabled:opacity-35"
               >
                 <Trash2 className="mr-1.5 inline h-4 w-4" /> Hapus Komponen
               </motion.button>
@@ -1181,7 +1181,7 @@ export function LibrarySettingsManager({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmClose(false)}
-              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
             >
               Lanjut Mengedit
             </motion.button>
@@ -1194,7 +1194,7 @@ export function LibrarySettingsManager({
                 setDraftBaseline("");
                 setConfirmClose(false);
               }}
-              className="bg-error min-h-12 rounded-full px-4 text-xs font-bold text-white"
+              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
             >
               Buang Perubahan
             </motion.button>
@@ -1214,7 +1214,7 @@ export function LibrarySettingsManager({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmComponentClose(false)}
-              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
             >
               Lanjut Mengedit
             </motion.button>
@@ -1227,7 +1227,7 @@ export function LibrarySettingsManager({
                 setComponentEditorBaseline("");
                 setConfirmComponentClose(false);
               }}
-              className="bg-error min-h-12 rounded-full px-4 text-xs font-bold text-white"
+              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
             >
               Buang Perubahan
             </motion.button>

@@ -3,6 +3,8 @@ import React from "react";
 import { ProjectTabs } from "@/features/projects/detail/components/project-tabs";
 import { getProjectDetailData } from "@/features/projects/detail/server/project-detail-data";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

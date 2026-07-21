@@ -305,15 +305,15 @@ export function ApprovalList({
       >
         <div className="flex items-end justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-on-surface font-mono text-[30px] leading-none font-black max-[430px]:text-[27px]">
+            <p className="font-mono text-[30px] leading-none font-black text-on-surface max-[430px]:text-[27px]">
               {approvals.length}
             </p>
-            <p className="text-on-surface-variant mt-1 text-[10px] font-semibold">
+            <p className="mt-1 text-[10px] font-semibold text-on-surface-variant">
               persetujuan menunggu keputusan
             </p>
           </div>
           <div className="min-w-0 shrink-0 text-right">
-            <p className="text-on-surface-variant/60 text-[8px] font-semibold">Total antrean</p>
+            <p className="text-[8px] font-semibold text-on-surface-variant/60">Total antrean</p>
             <MoneyValue
               amount={totalAmount}
               variant="compactWithFull"
@@ -324,7 +324,7 @@ export function ApprovalList({
           </div>
         </div>
 
-        <div className="bg-surface-container-low/65 mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5">
+        <div className="mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
           <QueueMetric
             label="Prioritas kritis"
             value={String(counts.critical)}
@@ -359,7 +359,7 @@ export function ApprovalList({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={surfaceTransition}
-                className="pointer-events-none absolute inset-0 rounded-[24px] bg-white/96 shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
+                className="pointer-events-none absolute inset-0 rounded-3xl bg-white/96 shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
                 aria-hidden="true"
               />
             ) : null}
@@ -460,7 +460,7 @@ export function ApprovalList({
           <button
             type="button"
             onClick={() => setVisibleLimit((current) => current + 20)}
-            className="bg-surface-container text-on-surface focus-visible:ring-primary/25 min-h-12 w-full rounded-full text-xs font-bold outline-none focus-visible:ring-2"
+            className="min-h-12 w-full rounded-full bg-surface-container text-xs font-bold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           >
             Tampilkan 20 berikutnya
           </button>
@@ -524,14 +524,14 @@ export function ApprovalList({
         onClose={closeDecision}
       >
         <div className="space-y-md">
-          <div className="bg-error-container/25 text-error rounded-[20px] p-4 text-xs leading-5">
+          <div className="rounded-[20px] bg-error-container/25 p-4 text-xs leading-5 text-error">
             Pengajuan tidak akan dilanjutkan. Jelaskan alasan yang dapat ditindaklanjuti oleh
             pengaju.
           </div>
           <div>
             <label
               htmlFor="approval-rejection-reason"
-              className="text-on-surface px-1 text-xs font-bold"
+              className="px-1 text-xs font-bold text-on-surface"
             >
               Alasan penolakan
             </label>
@@ -548,7 +548,7 @@ export function ApprovalList({
                 rejectionReason.length > 0 && rejectionReason.trim().length < rejectionMinimum
               }
             />
-            <p className="text-on-surface-variant mt-1 px-1 text-[10px]">
+            <p className="mt-1 px-1 text-[10px] text-on-surface-variant">
               Minimal {rejectionMinimum} karakter.
             </p>
           </div>
@@ -556,7 +556,7 @@ export function ApprovalList({
             type="button"
             disabled={pending || rejectionReason.trim().length < rejectionMinimum}
             onClick={confirmDecision}
-            className="bg-error focus-visible:ring-error/25 min-h-12 w-full rounded-full px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 disabled:opacity-40"
+            className="min-h-12 w-full rounded-full bg-error px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-error/25 disabled:opacity-40"
           >
             {pending ? "Menyimpan penolakan" : "Tolak pengajuan"}
           </button>
@@ -573,7 +573,7 @@ export function ApprovalList({
           <img
             src={activeImage}
             alt="Bukti pengajuan"
-            className="bg-surface-container max-h-[68dvh] w-full rounded-[24px] object-contain"
+            className="max-h-[68dvh] w-full rounded-3xl bg-surface-container object-contain"
           />
         ) : null}
       </BottomSheet>
@@ -596,7 +596,7 @@ function QueueMetric({
     <div
       className={`min-w-0 px-2.5 first:pl-0 last:pr-0 ${align === "right" ? "text-right" : "text-left"}`}
     >
-      <p className="text-on-surface-variant/60 truncate text-[9px] font-semibold">{label}</p>
+      <p className="truncate text-[9px] font-semibold text-on-surface-variant/60">{label}</p>
       <p
         className={`mt-1 truncate font-mono text-[11px] font-bold ${danger ? "text-error" : "text-on-surface"}`}
       >
@@ -667,25 +667,25 @@ function ApprovalQueueRow({
                 {priorityLabel}
               </span>
             </div>
-            <p className="text-on-surface mt-1 line-clamp-1 text-[12px] leading-5 font-semibold">
+            <p className="mt-1 line-clamp-1 text-[12px] leading-5 font-semibold text-on-surface">
               {item.description}
             </p>
-            <p className="text-on-surface-variant/75 mt-0.5 truncate text-[10px] leading-4">
+            <p className="mt-0.5 truncate text-[10px] leading-4 text-on-surface-variant/75">
               {item.projectName}
             </p>
           </div>
           <span
-            className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
             aria-hidden="true"
           >
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           </span>
         </div>
-        <div className="text-on-surface-variant/70 mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold">
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
           <span className="max-w-full truncate">{item.requestedBy}</span>
-          <span className="bg-outline-variant/60 h-1 w-1 rounded-full" aria-hidden="true" />
+          <span className="h-1 w-1 rounded-full bg-outline-variant/60" aria-hidden="true" />
           <span className="max-w-full truncate">{item.budgetItemName}</span>
-          <span className="bg-outline-variant/60 h-1 w-1 rounded-full" aria-hidden="true" />
+          <span className="h-1 w-1 rounded-full bg-outline-variant/60" aria-hidden="true" />
           <span className="shrink-0">{formatQueueTime(item.createdAt)}</span>
         </div>
       </motion.button>
@@ -759,7 +759,7 @@ export function ApprovalDetailContent({
       <section className="overflow-hidden rounded-[26px] bg-[#171819] px-4 pt-3.5 pb-4 text-white shadow-[0_16px_34px_rgba(17,17,17,0.16)]">
         <div className="flex items-center justify-between gap-3">
           <span className="inline-flex min-w-0 items-center gap-2 text-[10px] font-bold text-white/70">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] bg-white/10 text-white">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
               <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
                 {typeIcon}
               </span>
@@ -796,10 +796,10 @@ export function ApprovalDetailContent({
       </section>
 
       <section aria-labelledby="approval-context-title">
-        <h3 id="approval-context-title" className="text-on-surface mb-2 px-1 text-[13px] font-bold">
+        <h3 id="approval-context-title" className="mb-2 px-1 text-[13px] font-bold text-on-surface">
           Konteks pengajuan
         </h3>
-        <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/2.5">
+        <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/2.5">
           <ApprovalContextRow
             icon={item.type === "inventory_opening" ? "warehouse" : "folder_open"}
             label={item.type === "inventory_opening" ? "Ruang kerja" : "Project"}
@@ -823,23 +823,23 @@ export function ApprovalDetailContent({
             <button
               type="button"
               onClick={() => onOpenReceipt(item.receiptImageUrl ?? "")}
-              className="border-outline-variant/20 focus-visible:ring-primary/25 flex min-h-12 w-full items-center gap-3 border-t px-3.5 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset active:bg-black/2"
+              className="flex min-h-12 w-full items-center gap-3 border-t border-outline-variant/20 px-3.5 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-inset active:bg-black/2"
             >
-              <span className="bg-primary/7.5 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/7.5 text-primary">
                 <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                   image
                 </span>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="text-on-surface-variant/60 block text-[9px] font-semibold">
+                <span className="block text-[9px] font-semibold text-on-surface-variant/60">
                   Dokumen pendukung
                 </span>
-                <span className="text-on-surface mt-0.5 block text-[12px] font-bold">
+                <span className="mt-0.5 block text-[12px] font-bold text-on-surface">
                   Lihat bukti pengajuan
                 </span>
               </span>
               <span
-                className="material-symbols-outlined text-primary text-[18px]"
+                className="material-symbols-outlined text-[18px] text-primary"
                 aria-hidden="true"
               >
                 chevron_right
@@ -868,16 +868,16 @@ function ApprovalContextRow({
   readonly multiline?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="border-outline-variant/20 flex min-h-12 items-center gap-3 border-b px-3.5 py-2.5 last:border-b-0">
-      <span className="bg-surface-container-low text-on-surface-variant flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
+    <div className="flex min-h-12 items-center gap-3 border-b border-outline-variant/20 px-3.5 py-2.5 last:border-b-0">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
         <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
           {icon}
         </span>
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-on-surface-variant/60 text-[9px] font-semibold">{label}</p>
+        <p className="text-[9px] font-semibold text-on-surface-variant/60">{label}</p>
         <p
-          className={`text-on-surface mt-0.5 text-[12px] leading-4 font-semibold ${multiline ? "whitespace-pre-wrap" : "truncate"}`}
+          className={`mt-0.5 text-[12px] leading-4 font-semibold text-on-surface ${multiline ? "whitespace-pre-wrap" : "truncate"}`}
           title={value}
         >
           {value}
@@ -891,10 +891,10 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
   if (item.type === "inventory_opening") {
     return (
       <section aria-labelledby="approval-impact-title">
-        <h3 id="approval-impact-title" className="text-on-surface mb-2 px-1 text-[13px] font-bold">
+        <h3 id="approval-impact-title" className="mb-2 px-1 text-[13px] font-bold text-on-surface">
           Dampak setelah disetujui
         </h3>
-        <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/2.5">
+        <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/2.5">
           <ApprovalContextRow
             icon="add_box"
             label="Inventory"
@@ -938,10 +938,10 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
     <section aria-labelledby="approval-impact-title">
       <div className="mb-2 flex items-end justify-between gap-3 px-1">
         <div className="min-w-0">
-          <h3 id="approval-impact-title" className="text-on-surface text-[13px] font-bold">
+          <h3 id="approval-impact-title" className="text-[13px] font-bold text-on-surface">
             Dampak ke budget
           </h3>
-          <p className="text-on-surface-variant mt-0.5 truncate text-[10px]">
+          <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
             {item.budgetItemName}
           </p>
         </div>
@@ -952,10 +952,10 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/2.5">
+      <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/2.5">
         <div className="px-4 py-3.5">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-on-surface-variant/60 text-[9px] font-semibold">
+            <span className="text-[9px] font-semibold text-on-surface-variant/60">
               Budget kategori
             </span>
             <MoneyValue
@@ -967,25 +967,25 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
           </div>
           <div className="mt-3 grid grid-cols-[minmax(0,1fr)_28px_minmax(0,1fr)] items-center gap-2">
             <div className="min-w-0">
-              <p className="text-on-surface-variant/60 text-[9px] font-semibold">Saat ini</p>
+              <p className="text-[9px] font-semibold text-on-surface-variant/60">Saat ini</p>
               <MoneyValue
                 amount={item.actualSpent}
                 variant="compactWithFull"
                 size="lg"
                 className="mt-1"
               />
-              <p className="text-on-surface-variant mt-1 font-mono text-[9px] font-bold">
+              <p className="mt-1 font-mono text-[9px] font-bold text-on-surface-variant">
                 {impact.beforePercentage.toFixed(0)}% terpakai
               </p>
             </div>
             <span
-              className="bg-surface-container-low text-on-surface-variant flex h-7 w-7 items-center justify-center rounded-full"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant"
               aria-hidden="true"
             >
               <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
             </span>
             <div className="min-w-0 text-right">
-              <p className="text-on-surface-variant/60 text-[9px] font-semibold">Jika disetujui</p>
+              <p className="text-[9px] font-semibold text-on-surface-variant/60">Jika disetujui</p>
               <MoneyValue
                 amount={nextSpent}
                 variant="compactWithFull"
@@ -1030,7 +1030,7 @@ function ApprovalDecisionFooter({
         type="button"
         disabled={pending}
         onClick={() => onDecision(item, "REJECTED")}
-        className="bg-error-container/25 text-error focus-visible:ring-error/25 min-h-12 rounded-full px-4 text-xs font-bold outline-none focus-visible:ring-2 disabled:opacity-45"
+        className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-error/25 disabled:opacity-45"
       >
         Tolak
       </button>
@@ -1038,7 +1038,7 @@ function ApprovalDecisionFooter({
         type="button"
         disabled={pending}
         onClick={() => onDecision(item, "APPROVED")}
-        className="bg-primary text-on-primary focus-visible:ring-primary/25 min-h-12 rounded-full px-4 text-xs font-bold shadow-[0_8px_18px_rgba(0,122,255,0.18)] outline-none focus-visible:ring-2 disabled:opacity-45"
+        className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-on-primary shadow-[0_8px_18px_rgba(0,122,255,0.18)] outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:opacity-45"
       >
         Setujui pengajuan
       </button>

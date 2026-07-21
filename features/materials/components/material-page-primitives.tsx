@@ -19,7 +19,7 @@ export function MaterialGroupSurface({
 }): React.JSX.Element {
   return (
     <div
-      className={`relative isolate overflow-hidden rounded-[24px] bg-white/92 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[22px] ${className}`}
+      className={`relative isolate overflow-hidden rounded-3xl bg-white/92 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[22px] ${className}`}
     >
       {children}
     </div>
@@ -37,12 +37,12 @@ export function MaterialSectionHeader({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-10 items-center justify-between gap-3">
-      <h2 className="text-on-surface min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] max-[430px]:text-[15px] max-[430px]:leading-5">
+      <h2 className="min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5">
         {title}
       </h2>
       {action ??
         (meta ? (
-          <span className="text-on-surface-variant/65 shrink-0 text-[9px] font-semibold">
+          <span className="shrink-0 text-[9px] font-semibold text-on-surface-variant/65">
             {meta}
           </span>
         ) : null)}
@@ -102,7 +102,7 @@ export function MaterialInlineState({
   readonly tone?: MaterialTone;
 }): React.JSX.Element {
   return (
-    <div className="flex min-h-[76px] items-center gap-3 px-3.5 py-3">
+    <div className="flex min-h-19 items-center gap-3 px-3.5 py-3">
       <span
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${toneClasses[tone]}`}
       >
@@ -111,8 +111,8 @@ export function MaterialInlineState({
         </span>
       </span>
       <span className="grid min-w-0 flex-1 gap-1">
-        <span className="text-on-surface text-[13px] leading-4 font-bold">{title}</span>
-        <span className="text-on-surface-variant text-[11px] leading-[1.3]">{description}</span>
+        <span className="text-[13px] leading-4 font-bold text-on-surface">{title}</span>
+        <span className="text-[11px] leading-[1.3] text-on-surface-variant">{description}</span>
       </span>
     </div>
   );

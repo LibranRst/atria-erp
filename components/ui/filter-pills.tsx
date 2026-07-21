@@ -37,7 +37,7 @@ export function FilterPills({
             className={`h-9 shrink-0 rounded-full px-4 text-[11px] font-bold transition active:scale-95 ${
               value === option.value
                 ? "bg-primary text-on-primary"
-                : "bg-surface-container text-on-surface-variant ring-outline-variant/35 ring-1"
+                : "bg-surface-container text-on-surface-variant ring-1 ring-outline-variant/35"
             }`}
           >
             {option.label}

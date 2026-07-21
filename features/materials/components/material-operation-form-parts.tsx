@@ -54,12 +54,12 @@ export function ItemRows({
       {items.map((item, index) => (
         <div
           key={item.key}
-          className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1"
+          className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
         >
           <button
             type="button"
             onClick={() => setEditingKey((current) => (current === item.key ? null : item.key))}
-            className="focus-visible:ring-primary/30 flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset"
+            className="flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-inset"
             aria-expanded={editingKey === item.key}
           >
             <span
@@ -70,21 +70,21 @@ export function ItemRows({
                 {materials.find((row) => row.id === item.materialId)?.name ??
                   `Material ${index + 1}`}
               </span>
-              <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-[1.2]">
+              <span className="mt-0.5 block text-[10px] leading-[1.2] text-on-surface-variant">
                 {item.materialId && Number(item.quantity) > 0
                   ? `${Number(item.quantity).toLocaleString("id-ID", { maximumFractionDigits: 2 })} unit`
                   : "Lengkapi material dan jumlah"}
               </span>
             </span>
             <ChevronDown
-              className={`text-on-surface-variant h-4 w-4 shrink-0 ${editingKey === item.key ? "rotate-180" : ""}`}
+              className={`h-4 w-4 shrink-0 text-on-surface-variant ${editingKey === item.key ? "rotate-180" : ""}`}
               aria-hidden="true"
             />
           </button>
           {editingKey === item.key ? (
-            <div className="border-outline-variant/15 border-t">
+            <div className="border-t border-outline-variant/15">
               <FormPresentationProvider presentation="grouped">
-                <div className="divide-outline-variant/20 divide-y">
+                <div className="divide-y divide-outline-variant/20">
                   <SheetSelect
                     label="Material"
                     value={item.materialId}
@@ -115,13 +115,13 @@ export function ItemRows({
                 </div>
               </FormPresentationProvider>
               {!single ? (
-                <div className="border-outline-variant/15 bg-surface-container-low/45 grid grid-cols-2 gap-2 border-t p-3">
+                <div className="grid grid-cols-2 gap-2 border-t border-outline-variant/15 bg-surface-container-low/45 p-3">
                   <motion.button
                     type="button"
                     whileTap={{ scale: 0.97 }}
                     transition={transitionSpringSnappy}
                     onClick={() => setItems([...items, { ...item, key: createItem().key }])}
-                    className="bg-surface-container-lowest text-on-surface ring-outline-variant/15 flex min-h-12 items-center justify-center gap-2 rounded-full text-xs font-bold ring-1"
+                    className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-lowest text-xs font-bold text-on-surface ring-1 ring-outline-variant/15"
                   >
                     <Copy className="h-4 w-4" aria-hidden="true" /> Duplikat
                   </motion.button>
@@ -134,7 +134,7 @@ export function ItemRows({
                       setItems(items.filter((row) => row.key !== item.key));
                       setEditingKey(null);
                     }}
-                    className="bg-error-container/20 text-error flex min-h-12 items-center justify-center gap-2 rounded-full text-xs font-bold disabled:opacity-35"
+                    className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-error-container/20 text-xs font-bold text-error disabled:opacity-35"
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" /> Hapus
                   </motion.button>
@@ -154,7 +154,7 @@ export function ItemRows({
             setItems([...items, next]);
             setEditingKey(next.key);
           }}
-          className="bg-surface-container-lowest text-primary ring-primary/15 min-h-12 w-full rounded-full text-xs font-bold shadow-[0_6px_18px_rgba(17,17,17,0.025)] ring-1"
+          className="min-h-12 w-full rounded-full bg-surface-container-lowest text-xs font-bold text-primary shadow-[0_6px_18px_rgba(17,17,17,0.025)] ring-1 ring-primary/15"
         >
           Tambah Material
         </motion.button>

@@ -12,10 +12,7 @@ import {
   useSheetPresenceValue,
   WorkflowFormSheet,
 } from "@/components/ui";
-import {
-  FinanceUnsavedChangesModal,
-  MoneyImpactRow,
-} from "@/features/finance/components/finance-form-patterns";
+import { FinanceUnsavedChangesModal } from "@/features/finance/components/finance-form-patterns";
 import type {
   BankAccountItem,
   ExpenseCostItem,
@@ -35,7 +32,7 @@ export function ReceiptImageLightbox({
   return (
     <div
       onClick={onClose}
-      className="p-md fixed inset-0 z-100 flex items-center justify-center bg-black/95 transition-opacity duration-200"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/95 p-md transition-opacity duration-200"
     >
       <div className="relative max-h-full max-w-full" onClick={(event) => event.stopPropagation()}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -143,19 +140,19 @@ export function FieldDisbursementSheet({
       >
         <div className="space-y-md">
           {error && (
-            <div className="border-error/30 bg-error-container/20 text-error flex items-start gap-3 rounded-xl border p-3.5 text-xs font-medium">
-              <span className="material-symbols-outlined text-error text-[18px]">error</span>
+            <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs font-medium text-error">
+              <span className="material-symbols-outlined text-[18px] text-error">error</span>
               <div className="leading-relaxed">{error}</div>
             </div>
           )}
           {success ? <FieldContextLine tone="success">{success}</FieldContextLine> : null}
 
           <FormSection title="Rincian Pengeluaran">
-            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
               <ReviewFact
                 label="Jumlah Pencairan"
                 value={
-                  <span className="font-numeral text-primary text-[14px] font-bold">
+                  <span className="font-numeral text-[14px] font-bold text-primary">
                     Rp {Number(presentedCost.amount).toLocaleString("id-ID")}
                   </span>
                 }
@@ -174,13 +171,13 @@ export function FieldDisbursementSheet({
                 title="Dampak Keuangan"
                 helper="Periksa dampak pencairan dana pada saldo kas rekening."
               >
-                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
                   <ReviewFact label="Rekening Sumber" value={selectedAccount?.name ?? "–"} />
                   <ReviewFact
                     label="Saldo Rekening"
                     value={
                       <span
-                        className={after < 0 ? "text-error font-bold" : "text-primary font-bold"}
+                        className={after < 0 ? "font-bold text-error" : "font-bold text-primary"}
                       >
                         Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
                       </span>
@@ -207,7 +204,7 @@ export function FieldDisbursementSheet({
                 title="Pencairan Pengeluaran"
                 helper="Pilih rekening bank sumber kas kecil proyek dan isi nomor referensi transfer."
               >
-                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
                   <SheetSelect
                     label="Rekening Sumber Dana"
                     value={selectedBankId}
@@ -260,8 +257,8 @@ function ReviewFact({
 }): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-on-surface text-right font-bold">{value}</span>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );
 }

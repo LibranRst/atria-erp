@@ -7,6 +7,8 @@ import { ExpenseForm } from "@/features/expenses/components/expense-form";
 import { requireServerSession } from "@/lib/server/session";
 import React from "react";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewExpensePage(): Promise<React.JSX.Element> {
   // 1. Dapatkan session server-side
   const session = await requireServerSession();

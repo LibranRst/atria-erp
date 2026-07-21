@@ -45,8 +45,8 @@ export function OnboardingToolbar({
   return (
     <div className="flex min-w-0 items-center justify-between gap-3 px-1">
       <span className="min-w-0">
-        <span className="text-on-surface block text-[13px] leading-5 font-bold">{title}</span>
-        <span className="text-on-surface-variant mt-0.5 block text-[9px] leading-4">{detail}</span>
+        <span className="block text-[13px] leading-5 font-bold text-on-surface">{title}</span>
+        <span className="mt-0.5 block text-[9px] leading-4 text-on-surface-variant">{detail}</span>
       </span>
       <motion.button
         type="button"
@@ -74,13 +74,13 @@ export function OnboardingEmpty({
   return (
     <div className="px-5 py-7 text-center">
       <span
-        className="material-symbols-outlined text-on-surface-variant/45 text-[26px]"
+        className="material-symbols-outlined text-[26px] text-on-surface-variant/45"
         aria-hidden="true"
       >
         {icon}
       </span>
-      <p className="text-on-surface mt-2 text-[12px] font-bold">{title}</p>
-      <p className="text-on-surface-variant mx-auto mt-1 max-w-68 text-[10px] leading-4">
+      <p className="mt-2 text-[12px] font-bold text-on-surface">{title}</p>
+      <p className="mx-auto mt-1 max-w-68 text-[10px] leading-4 text-on-surface-variant">
         {detail}
       </p>
     </div>

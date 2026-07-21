@@ -29,7 +29,7 @@ export function DashboardSummarySurface({
 }): React.JSX.Element {
   return (
     <section
-      className="relative isolate overflow-hidden rounded-[26px] bg-white/88 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[24px] max-[430px]:p-3.5"
+      className="relative isolate overflow-hidden rounded-[26px] bg-white/88 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5"
       aria-label={ariaLabel}
     >
       <span
@@ -38,12 +38,12 @@ export function DashboardSummarySurface({
       />
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="bg-surface-container-high/65 text-on-surface-variant flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] ring-1 ring-black/[0.035]">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-container-high/65 text-on-surface-variant ring-1 ring-black/[0.035]">
             <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
               {icon}
             </span>
           </span>
-          <p className="text-on-surface-variant/60 min-w-0 truncate text-[10px] font-bold tracking-[0.13em] uppercase">
+          <p className="min-w-0 truncate text-[10px] font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
             {eyebrow}
           </p>
         </div>
@@ -98,7 +98,7 @@ export function OverviewPreviewSection({
     <section className="space-y-2">
       <div className="flex min-h-11 items-center justify-between gap-3 px-1 max-[430px]:min-h-10">
         <div className="flex min-w-0 items-center gap-2">
-          <h2 className="text-on-surface truncate text-[17px] leading-6 font-bold tracking-[-0.015em] max-[430px]:text-[15px] max-[430px]:leading-5">
+          <h2 className="truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5">
             {title}
           </h2>
           {action}
@@ -106,7 +106,7 @@ export function OverviewPreviewSection({
         <SectionAction href={href} label="Lihat semua" />
       </div>
       <div
-        className={`relative isolate overflow-hidden rounded-[26px] bg-white/88 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[24px] ${contentClassName}`}
+        className={`relative isolate overflow-hidden rounded-[26px] bg-white/88 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl ${contentClassName}`}
       >
         {children}
       </div>
@@ -130,13 +130,13 @@ export function DashboardDetailSection({
   return (
     <section className="space-y-2">
       <div className="flex min-h-11 items-center justify-between gap-3 px-1 max-[430px]:min-h-10">
-        <h2 className="text-on-surface min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] max-[430px]:text-[15px] max-[430px]:leading-5">
+        <h2 className="min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5">
           {title}
         </h2>
         {href ? <SectionAction href={href} label={actionLabel} /> : null}
       </div>
       <div
-        className={`relative isolate overflow-hidden rounded-[26px] bg-white/88 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[24px] ${contentClassName}`}
+        className={`relative isolate overflow-hidden rounded-[26px] bg-white/88 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl ${contentClassName}`}
       >
         {children}
       </div>
@@ -155,7 +155,7 @@ export function DashboardRowGroup({
     return (
       <div className="relative">
         <span
-          className="pointer-events-none absolute inset-y-0 left-[54px] w-px bg-black/11 max-[430px]:left-[50px]"
+          className="pointer-events-none absolute inset-y-0 left-13.5 w-px bg-black/11 max-[430px]:left-12.5"
           aria-hidden="true"
         />
         <div className="relative">{children}</div>

@@ -236,7 +236,7 @@ export async function getOwnerOnboardingOverview(): Promise<
     }),
   ]);
 
-  const state = persisted.state ?? DEFAULT_OWNER_ONBOARDING_STATE;
+  const rawState = persisted.state ?? DEFAULT_OWNER_ONBOARDING_STATE;
   const roleIds = new Set(users.map((row) => row.roleId));
   const teamReady = SYSTEM_ROLES.slice(1, 4).every((role) => roleIds.has(role.id));
   const categoryCodes = new Set(categories.map((row) => row.code));
@@ -245,11 +245,57 @@ export async function getOwnerOnboardingOverview(): Promise<
     DEFAULT_EXPENSE_CATEGORIES.every((category) => categoryCodes.has(category.code));
   const materialReady = locations.length > 0 && materials.length > 0;
   const initialStockNotApplicable =
-    state.initialStockDecision === "NO_LEGACY_STOCK" &&
+    rawState.initialStockDecision === "NO_LEGACY_STOCK" &&
     pendingBatches.length === 0 &&
     postedBatches.length === 0 &&
     rejectedBatches.length === 0;
   const initialStockReady = postedBatches.length > 0 || initialStockNotApplicable;
+
+  const preReadinessMap: Record<OnboardingStepId, boolean> = {
+    welcome: rawState.reviewedSteps.includes("welcome"),
+    financial_defaults: financeReady,
+    team_vendors: teamReady,
+    bank_accounts: accounts.length > 0,
+    material_foundation: materialReady,
+    item_library: libraryItems.length > 0,
+    initial_stock: initialStockReady,
+    summary: rawState.status === "COMPLETED",
+  };
+
+  const setupStepIds: readonly OnboardingStepId[] = [
+    "financial_defaults",
+    "team_vendors",
+    "bank_accounts",
+    "material_foundation",
+    "item_library",
+    "initial_stock",
+  ];
+  const firstUnreadySetupStepId = setupStepIds.find((id) => !preReadinessMap[id]);
+  const isCurrentStepReady = preReadinessMap[rawState.currentStep];
+
+  const effectiveCurrentStep: OnboardingStepId = (() => {
+    if (rawState.status === "COMPLETED") return "summary";
+    if (
+      isCurrentStepReady ||
+      (rawState.currentStep === "welcome" &&
+        firstUnreadySetupStepId &&
+        firstUnreadySetupStepId !== "welcome")
+    ) {
+      return firstUnreadySetupStepId ?? "summary";
+    }
+    return rawState.currentStep;
+  })();
+
+  const state: OwnerOnboardingState = {
+    ...rawState,
+    currentStep: effectiveCurrentStep,
+    reviewedSteps: uniqueSteps(
+      effectiveCurrentStep !== "welcome" && !rawState.reviewedSteps.includes("welcome")
+        ? [...rawState.reviewedSteps, "welcome"]
+        : rawState.reviewedSteps,
+    ),
+  };
+
   const gates = deriveOwnerOnboardingGates({
     financeDefaultsReady: financeReady,
     teamReady,
@@ -513,21 +559,19 @@ export async function advanceOwnerOnboardingStep(input: unknown): Promise<
               updatedById: current.id,
             })
             .returning();
-      await tx
-        .insert(auditLog)
-        .values({
-          userId: current.id,
-          action: "ADVANCE_OWNER_ONBOARDING_STEP",
-          targetTable: "app_config",
-          targetId: saved.id,
-          originalState: existing?.value ?? null,
-          newState: JSON.stringify({
-            state,
-            disposition: validation.data.disposition,
-            sourceStep: validation.data.stepId,
-            destination,
-          }),
-        });
+      await tx.insert(auditLog).values({
+        userId: current.id,
+        action: "ADVANCE_OWNER_ONBOARDING_STEP",
+        targetTable: "app_config",
+        targetId: saved.id,
+        originalState: existing?.value ?? null,
+        newState: JSON.stringify({
+          state,
+          disposition: validation.data.disposition,
+          sourceStep: validation.data.stepId,
+          destination,
+        }),
+      });
       return state;
     });
     revalidatePath("/");

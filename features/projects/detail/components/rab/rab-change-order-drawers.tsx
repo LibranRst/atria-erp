@@ -156,7 +156,7 @@ export function ChangeOrderDrawer({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmApprove(false)}
-              className="bg-surface-container text-on-surface min-h-12 rounded-full px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
             >
               Kembali
             </motion.button>
@@ -169,7 +169,7 @@ export function ChangeOrderDrawer({
                 setConfirmApprove(false);
                 handleApproveChangeOrder();
               }}
-              className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white disabled:opacity-40"
+              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white disabled:opacity-40"
             >
               Setujui Perubahan
             </motion.button>
@@ -256,20 +256,20 @@ export function ChangeOrderDetailDrawer({
           <RabMoneyBlock label="Selisih" value={Number(order.valueDelta)} />
           <RabMoneyBlock label="Sesudah" value={Number(order.revisedContractValue)} />
         </MetricGrid>
-        <div className="bg-primary/5 text-primary rounded-2xl p-3 text-xs font-bold">
+        <div className="rounded-2xl bg-primary/5 p-3 text-xs font-bold text-primary">
           Sumber: {order.sourceRevisionSummary}
         </div>
-        <div className="bg-surface-container-low rounded-2xl p-3">
-          <p className="text-on-surface-variant text-[9px] font-bold uppercase">Alasan</p>
+        <div className="rounded-2xl bg-surface-container-low p-3">
+          <p className="text-[9px] font-bold text-on-surface-variant uppercase">Alasan</p>
           <p className="mt-1 text-xs leading-5">{order.reason}</p>
         </div>
-        <div className="bg-surface-container-low rounded-2xl p-3">
-          <p className="text-on-surface-variant text-[9px] font-bold uppercase">
+        <div className="rounded-2xl bg-surface-container-low p-3">
+          <p className="text-[9px] font-bold text-on-surface-variant uppercase">
             Scope R{order.baseRevision} → R{order.revisedRevision}
           </p>
           <p className="mt-1 text-xs leading-5">{order.scopeSummary}</p>
         </div>
-        <div className="bg-surface-container-low rounded-2xl p-3 text-xs leading-5">
+        <div className="rounded-2xl bg-surface-container-low p-3 text-xs leading-5">
           <p>
             <strong>Bukti persetujuan klien:</strong>{" "}
             {order.clientConfirmationReference ?? "Belum ada"}

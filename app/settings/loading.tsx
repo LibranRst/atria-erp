@@ -1,5 +1,5 @@
 function SkeletonLine({ className }: { readonly className: string }): React.JSX.Element {
-  return <div className={`bg-surface-container rounded-full ${className}`} aria-hidden="true" />;
+  return <div className={`rounded-full bg-surface-container ${className}`} aria-hidden="true" />;
 }
 
 export default function SettingsLoading(): React.JSX.Element {
@@ -10,11 +10,11 @@ export default function SettingsLoading(): React.JSX.Element {
       role="status"
     >
       <div className="space-y-2">
-        <SkeletonLine className="bg-surface-container-low h-2.5 w-24" />
+        <SkeletonLine className="h-2.5 w-24 bg-surface-container-low" />
         <SkeletonLine className="h-7 w-44" />
-        <SkeletonLine className="bg-surface-container-low h-3 w-64" />
+        <SkeletonLine className="h-3 w-64 bg-surface-container-low" />
       </div>
-      <div className="bg-surface-container-low flex h-12 gap-1 overflow-hidden rounded-full p-1">
+      <div className="flex h-12 gap-1 overflow-hidden rounded-full bg-surface-container-low p-1">
         {[96, 82, 88, 82].map((width, index) => (
           <div
             key={`${width}-${index}`}
@@ -24,9 +24,9 @@ export default function SettingsLoading(): React.JSX.Element {
         ))}
       </div>
       <div className="space-y-2">
-        <SkeletonLine className="bg-surface-container-low h-2 w-24" />
+        <SkeletonLine className="h-2 w-24 bg-surface-container-low" />
         <SkeletonLine className="h-5 w-40" />
-        <SkeletonLine className="bg-surface-container-low h-3 w-60" />
+        <SkeletonLine className="h-3 w-60 bg-surface-container-low" />
       </div>
       <section className="rounded-[30px] bg-[#111315] p-5 max-[430px]:rounded-[26px] max-[430px]:p-4">
         <SkeletonLine className="h-2 w-24 bg-white/15" />
@@ -49,14 +49,14 @@ export default function SettingsLoading(): React.JSX.Element {
           {[0, 1, 2].map((row) => (
             <div
               key={row}
-              className="flex min-h-[82px] items-center gap-3 border-t border-black/5.5 px-3.5 first:border-t-0"
+              className="flex min-h-20.5 items-center gap-3 border-t border-black/5.5 px-3.5 first:border-t-0"
             >
-              <div className="bg-surface-container h-9 w-9 rounded-[13px]" />
+              <div className="h-9 w-9 rounded-[13px] bg-surface-container" />
               <div className="min-w-0 flex-1 space-y-2">
                 <SkeletonLine className="h-3 w-40" />
-                <SkeletonLine className="bg-surface-container-low h-2.5 w-full" />
+                <SkeletonLine className="h-2.5 w-full bg-surface-container-low" />
               </div>
-              <div className="bg-surface-container-low h-9 w-9 rounded-full" />
+              <div className="h-9 w-9 rounded-full bg-surface-container-low" />
             </div>
           ))}
         </div>

@@ -222,7 +222,7 @@ export function ExpenseLineEditor({
           ) : null}
 
           {isMaterial ? (
-            <div className="border-outline-variant/15 space-y-3 border-t pt-4">
+            <div className="space-y-3 border-t border-outline-variant/15 pt-4">
               <OptionChoiceGroup
                 label="Perlakuan Stok"
                 value={draft.stockHandling}
@@ -301,7 +301,7 @@ export function ExpenseLineEditor({
           ) : null}
 
           {isPackage ? (
-            <div className="border-outline-variant/15 border-t pt-4">
+            <div className="border-t border-outline-variant/15 pt-4">
               <SheetSelect
                 label={packageLabel}
                 value={draft.projectCategoryPlanItemId}

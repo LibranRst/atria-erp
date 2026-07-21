@@ -125,19 +125,19 @@ export function SetupBankAccountsPanel({
                 key={account.id}
                 type="button"
                 onClick={() => edit(account)}
-                className="active:bg-surface-container-low focus-visible:bg-surface-container-low flex min-h-[70px] w-full items-center gap-3 px-4 py-3 text-left outline-none"
+                className="flex min-h-17.5 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
               >
                 <span
-                  className="material-symbols-outlined bg-surface-container-low text-on-surface-variant flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] text-[18px]"
+                  className="material-symbols-outlined flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
                   aria-hidden="true"
                 >
                   account_balance
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="text-on-surface block truncate text-[12px] leading-5 font-bold">
+                  <span className="block truncate text-[12px] leading-5 font-bold text-on-surface">
                     {account.name}
                   </span>
-                  <span className="text-on-surface-variant block truncate text-[9px] leading-4">
+                  <span className="block truncate text-[9px] leading-4 text-on-surface-variant">
                     {account.bankName} · {account.accountNumber}
                   </span>
                   {!account.isActive ? (
@@ -151,7 +151,7 @@ export function SetupBankAccountsPanel({
                   align="right"
                 />
                 <span
-                  className="material-symbols-outlined text-on-surface-variant/55 shrink-0 text-[17px]"
+                  className="material-symbols-outlined shrink-0 text-[17px] text-on-surface-variant/55"
                   aria-hidden="true"
                 >
                   chevron_right

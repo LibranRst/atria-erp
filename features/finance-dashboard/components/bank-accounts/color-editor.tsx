@@ -22,7 +22,7 @@ function ColorInput({
         className={
           grouped
             ? "flex min-h-9 items-center gap-3 bg-transparent"
-            : "border-outline-variant/35 bg-surface-container-lowest flex min-h-12 items-center gap-3 rounded-full border px-5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15"
+            : "flex min-h-12 items-center gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15"
         }
       >
         <span
@@ -30,7 +30,7 @@ function ColorInput({
           style={{ backgroundColor: value }}
           aria-hidden="true"
         />
-        <span className="text-on-surface min-w-0 flex-1 font-mono text-xs font-bold">
+        <span className="min-w-0 flex-1 font-mono text-xs font-bold text-on-surface">
           {value.toUpperCase()}
         </span>
         <input
@@ -118,7 +118,7 @@ export function ColorEditor({
               }
               className={`min-h-12 rounded-full px-2 text-[9px] font-black transition active:scale-[0.97] ${
                 preset.text === "dark" ? "text-[#141414]" : "text-white"
-              } ${active ? "ring-primary ring-offset-background ring-2 ring-offset-2" : ""}`}
+              } ${active ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
               style={{
                 backgroundImage: `linear-gradient(135deg, ${preset.from}, ${preset.to})`,
               }}
@@ -151,7 +151,7 @@ export function ColorEditor({
               cardColorTo: draft.cardColorFrom,
             })
           }
-          className="bg-surface-container-low text-on-surface flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-[10px] font-bold active:scale-[0.97]"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
         >
           <Repeat2 className="h-4 w-4" />
           Balik warna
@@ -165,7 +165,7 @@ export function ColorEditor({
               cardTextColor: CARD_PRESETS[0].text,
             })
           }
-          className="bg-surface-container-low text-on-surface flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-[10px] font-bold active:scale-[0.97]"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
         >
           <RotateCcw className="h-4 w-4" />
           Atur ulang
@@ -177,7 +177,7 @@ export function ColorEditor({
               cardTextColor: draft.cardTextColor === "light" ? "dark" : "light",
             })
           }
-          className="bg-surface-container-low text-on-surface min-h-12 rounded-full px-4 text-[10px] font-bold active:scale-[0.97]"
+          className="min-h-12 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
         >
           Teks {draft.cardTextColor === "light" ? "Terang" : "Gelap"}
         </button>

@@ -27,6 +27,8 @@ function toFinancialHealth(status: string): "HEALTHY" | "WARNING" | "CRITICAL" {
   return "HEALTHY";
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectsPage(): Promise<React.JSX.Element> {
   const session = await requireServerSession();
 

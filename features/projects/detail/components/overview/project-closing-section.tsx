@@ -26,14 +26,14 @@ export function ProjectClosingSection({
   readonly handleCompleteProject: () => void;
 }): React.JSX.Element {
   return (
-    <section className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
-      <p className="text-on-surface-variant text-[9px] font-bold tracking-[0.14em] uppercase">
+    <section className="rounded-3xl bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+      <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
         Penutupan finansial
       </p>
-      <h2 className="text-on-surface mt-0.5 text-[17px] leading-6 font-semibold">
+      <h2 className="mt-0.5 text-[17px] leading-6 font-semibold text-on-surface">
         Checklist penutupan proyek
       </h2>
-      <p className="text-on-surface-variant mt-1 text-xs leading-5">
+      <p className="mt-1 text-xs leading-5 text-on-surface-variant">
         Proyek hanya dapat diselesaikan setelah tagihan, biaya, RAB, change order, reservasi stok,
         dan budget sudah final.
       </p>
@@ -41,18 +41,18 @@ export function ProjectClosingSection({
         type="button"
         onClick={loadClosingChecklist}
         disabled={closingPending}
-        className="bg-surface-container-low text-primary mt-4 min-h-12 w-full rounded-full px-4 text-xs font-bold disabled:opacity-40"
+        className="mt-4 min-h-12 w-full rounded-full bg-surface-container-low px-4 text-xs font-bold text-primary disabled:opacity-40"
       >
         {closingPending ? "Memeriksa…" : "Periksa kesiapan closing"}
       </button>
       {closingMessage && (
-        <p className="bg-primary/5 text-primary mt-2 rounded-2xl p-3 text-[11px] leading-4">
+        <p className="mt-2 rounded-2xl bg-primary/5 p-3 text-[11px] leading-4 text-primary">
           {closingMessage}
         </p>
       )}
       {closingChecklist && (
         <div className="mt-sm space-y-sm">
-          <div className="bg-surface-container-low overflow-hidden rounded-[20px]">
+          <div className="overflow-hidden rounded-[20px] bg-surface-container-low">
             <ClosingFact label="Biaya final saat ini" amount={closingChecklist.actualCost} />
             <ClosingFact
               label={`Margin realisasi · ${closingChecklist.realizedMarginPercentage.toFixed(2)}%`}
@@ -61,9 +61,9 @@ export function ProjectClosingSection({
             <ClosingFact label="Posisi kas" amount={closingChecklist.cashPosition} />
           </div>
           {closingChecklist.blockers.length > 0 ? (
-            <div className="bg-error-container/25 rounded-2xl p-3">
-              <p className="text-error text-xs font-bold">Belum dapat ditutup</p>
-              <ul className="text-error mt-2 space-y-1 text-[11px] leading-4">
+            <div className="rounded-2xl bg-error-container/25 p-3">
+              <p className="text-xs font-bold text-error">Belum dapat ditutup</p>
+              <ul className="mt-2 space-y-1 text-[11px] leading-4 text-error">
                 {closingChecklist.blockers.map((blocker) => (
                   <li key={blocker}>• {blocker}</li>
                 ))}
@@ -94,7 +94,7 @@ export function ProjectClosingSection({
                 disabled={
                   closingPending || closingNote.trim().length < 10 || projectStatus === "COMPLETED"
                 }
-                className="bg-primary text-on-primary min-h-12 w-full rounded-full px-4 text-xs font-bold disabled:opacity-40"
+                className="min-h-12 w-full rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
               >
                 Selesaikan proyek dan simpan snapshot final
               </button>
@@ -114,8 +114,8 @@ function ClosingFact({
   readonly amount: number;
 }): React.JSX.Element {
   return (
-    <div className="border-outline-variant/25 flex min-h-14 items-center justify-between gap-3 border-t px-3 py-2.5 first:border-t-0">
-      <span className="text-on-surface-variant text-[10px] font-semibold">{label}</span>
+    <div className="flex min-h-14 items-center justify-between gap-3 border-t border-outline-variant/25 px-3 py-2.5 first:border-t-0">
+      <span className="text-[10px] font-semibold text-on-surface-variant">{label}</span>
       <MoneyValue
         amount={amount}
         variant="compactWithFull"

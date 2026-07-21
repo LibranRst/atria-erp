@@ -31,7 +31,7 @@ export function ProjectInvoicesSummary({
 }): React.JSX.Element {
   const billedCoverage = contractValue > 0 ? (totalInvoiceAmount / contractValue) * 100 : 0;
   return (
-    <section className="bg-primary rounded-[28px] p-5 text-white shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
+    <section className="rounded-[28px] bg-primary p-5 text-white shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
@@ -52,7 +52,7 @@ export function ProjectInvoicesSummary({
           <button
             type="button"
             onClick={onCreateInvoiceClick}
-            className="text-primary inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-full bg-white px-4 text-[11px] font-bold"
+            className="inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-full bg-white px-4 text-[11px] font-bold text-primary"
           >
             <span className="material-symbols-outlined text-[17px]">add</span> Invoice
           </button>
@@ -75,7 +75,7 @@ export function ProjectInvoicesSummary({
       ) : null}
       {createError || createSuccess ? (
         <p
-          className={`mt-3 rounded-[16px] px-3 py-2 text-[11px] ${createError ? "bg-error/18 text-[#ffb5ae]" : "bg-white/10 text-white"}`}
+          className={`mt-3 rounded-2xl px-3 py-2 text-[11px] ${createError ? "bg-error/18 text-[#ffb5ae]" : "bg-white/10 text-white"}`}
         >
           {createError ?? createSuccess}
         </p>

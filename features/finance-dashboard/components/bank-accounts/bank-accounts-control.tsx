@@ -104,22 +104,22 @@ function EmptyAccountsState({
   readonly onCreate: () => void;
 }): React.JSX.Element {
   return (
-    <div className="ring-outline-variant/10 rounded-[28px] bg-white px-5 py-6 text-center shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1">
+    <div className="rounded-[28px] bg-white px-5 py-6 text-center shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/10">
       <span
-        className="material-symbols-outlined bg-primary/8 text-primary mx-auto flex! h-12 w-12 items-center justify-center rounded-full text-[24px] leading-none"
+        className="material-symbols-outlined mx-auto flex! h-12 w-12 items-center justify-center rounded-full bg-primary/8 text-[24px] leading-none text-primary"
         aria-hidden="true"
       >
         account_balance
       </span>
-      <h3 className="text-on-surface mt-3 text-base font-bold">Belum ada rekening</h3>
-      <p className="text-on-surface-variant mx-auto mt-1 max-w-[260px] text-xs leading-5">
+      <h3 className="mt-3 text-base font-bold text-on-surface">Belum ada rekening</h3>
+      <p className="mx-auto mt-1 max-w-65 text-xs leading-5 text-on-surface-variant">
         Tambahkan rekening kas perusahaan untuk mulai mencatat saldo dan mutasi.
       </p>
       <button
         type="button"
         disabled={!canCreate}
         onClick={onCreate}
-        className="bg-primary text-on-primary mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-xs font-bold active:scale-[0.97] disabled:opacity-45"
+        className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.97] disabled:opacity-45"
       >
         <Plus className="h-4 w-4" />
         Tambah rekening
@@ -452,15 +452,15 @@ export function BankAccountsControl({
               tone={totalCash < 0 ? "danger" : "default"}
               className="mt-1"
             />
-            <div className="bg-surface-container-low/65 mt-3.5 grid grid-cols-3 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5">
+            <div className="mt-3.5 grid grid-cols-3 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
               <div>
-                <p className="text-on-surface-variant/60 text-[9px] font-semibold">
+                <p className="text-[9px] font-semibold text-on-surface-variant/60">
                   Rekening aktif
                 </p>
                 <p className="mt-1 font-mono text-sm font-black">{activeAccounts}</p>
               </div>
               <div className="pl-3">
-                <p className="text-on-surface-variant/60 text-[9px] font-semibold max-[430px]:text-[8px]">
+                <p className="text-[9px] font-semibold text-on-surface-variant/60 max-[430px]:text-[8px]">
                   Rekonsiliasi
                 </p>
                 <p
@@ -470,7 +470,7 @@ export function BankAccountsControl({
                 </p>
               </div>
               <div className="pl-3">
-                <p className="text-on-surface-variant/60 text-[9px] font-semibold">Cakupan dekat</p>
+                <p className="text-[9px] font-semibold text-on-surface-variant/60">Cakupan dekat</p>
                 <p
                   className={`mt-1 font-mono text-sm font-black ${coverage !== null && coverage < 1 ? "text-error" : "text-success"}`}
                 >
@@ -483,10 +483,10 @@ export function BankAccountsControl({
           <section className="space-y-2.5">
             <div className="flex min-h-12 items-center justify-between gap-3 px-1">
               <div className="min-w-0">
-                <h2 className="text-on-surface truncate text-[18px] font-semibold tracking-[-0.015em] max-[430px]:text-[17px]">
+                <h2 className="truncate text-[18px] font-semibold tracking-[-0.015em] text-on-surface max-[430px]:text-[17px]">
                   Posisi rekening
                 </h2>
-                <p className="text-on-surface-variant mt-0.5 text-[10px] leading-tight">
+                <p className="mt-0.5 text-[10px] leading-tight text-on-surface-variant">
                   Pilih rekening untuk melihat transaksi dan tindakan.
                 </p>
               </div>
@@ -513,7 +513,7 @@ export function BankAccountsControl({
                     aria-label={`Buka rekening ${account.name}`}
                     whileTap={reduceMotion ? undefined : accountCardPressScale}
                     transition={transitionSpringSnappy}
-                    className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] px-5 py-4.5 text-left shadow-[0_3px_6px_rgba(17,17,17,0.08),0_18px_42px_rgba(17,17,17,0.13)] ring-1 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/45 max-[430px]:rounded-[24px] max-[430px]:px-4 max-[430px]:py-4 ${account.cardTextColor === "dark" ? "text-[#141414] ring-black/[0.07]" : "text-white ring-white/16"} ${account.isActive ? "" : "opacity-60 grayscale"}`}
+                    className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] px-5 py-4.5 text-left shadow-[0_3px_6px_rgba(17,17,17,0.08),0_18px_42px_rgba(17,17,17,0.13)] ring-1 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/45 max-[430px]:rounded-3xl max-[430px]:px-4 max-[430px]:py-4 ${account.cardTextColor === "dark" ? "text-[#141414] ring-black/[0.07]" : "text-white ring-white/16"} ${account.isActive ? "" : "opacity-60 grayscale"}`}
                     style={{
                       backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
                     }}

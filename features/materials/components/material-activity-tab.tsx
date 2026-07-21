@@ -138,19 +138,19 @@ export function MaterialActivityTab({
                   key={row.id}
                   type="button"
                   onClick={() => onOpenReceipt(row)}
-                  className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 flex min-h-[76px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none"
+                  className="flex min-h-19 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
                 >
-                  <span className="bg-success/8 text-success ring-success/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-success/8 text-success ring-1 ring-success/6">
                     <ArrowDownToLine className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="grid min-w-0 flex-1 gap-1">
-                    <span className="text-on-surface truncate text-[13px] leading-4 font-bold">
+                    <span className="truncate text-[13px] leading-4 font-bold text-on-surface">
                       {row.receiptNumber}
                     </span>
-                    <span className="text-on-surface-variant truncate text-[10px] leading-[1.3]">
+                    <span className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
                       {row.projectName} · {row.locationName}
                     </span>
-                    <span className="text-on-surface-variant/65 truncate text-[9px] leading-3">
+                    <span className="truncate text-[9px] leading-3 text-on-surface-variant/65">
                       {formatMaterialDate(row.receivedAt)} · {row.receivedByName}
                     </span>
                   </span>
@@ -255,17 +255,17 @@ function TransferRow({
     <button
       type="button"
       onClick={onOpen}
-      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 flex min-h-[68px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none"
+      className="flex min-h-17 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
       aria-label={`Lihat detail transfer ${row.transferNumber}`}
     >
-      <span className="bg-primary/8 text-primary ring-primary/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/8 text-primary ring-1 ring-primary/6">
         <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
       </span>
       <div className="grid min-w-0 flex-1 gap-1">
-        <p className="text-on-surface truncate text-[13px] leading-4 font-bold">
+        <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
           {row.transferNumber}
         </p>
-        <p className="text-on-surface-variant truncate text-[10px] leading-[1.3]">
+        <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
           {row.fromLocationName} → {row.toLocationName} · {row.items.length} material
         </p>
       </div>
@@ -285,20 +285,20 @@ function CountRow({
     <button
       type="button"
       onClick={onOpen}
-      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 flex min-h-[68px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none"
+      className="flex min-h-17 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
       aria-label={`Lihat detail opname ${row.countNumber}`}
     >
-      <span className="bg-warning/9 text-warning ring-warning/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/9 text-warning ring-1 ring-warning/6">
         <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
       </span>
       <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-center justify-between gap-2">
-          <p className="text-on-surface truncate text-[13px] leading-4 font-bold">
+          <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
             {row.countNumber}
           </p>
           <Badge status={materialBadgeTone(row.status)}>{formatMaterialStatus(row.status)}</Badge>
         </div>
-        <p className="text-on-surface-variant truncate text-[10px] leading-[1.3]">
+        <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
           {row.locationName} · {row.items.length} material · {formatMaterialDate(row.countedAt)}
         </p>
       </div>

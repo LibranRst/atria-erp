@@ -17,7 +17,7 @@ import {
   Textarea,
   TextInput,
 } from "@/components/ui";
-import { transitionSpringSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSmooth } from "@/lib/utils/motion";
 import type {
   ManualQuotationLine,
   ProjectCategoryPlanItemView,
@@ -179,7 +179,7 @@ export function RabSourcePickerDrawer({
                   transition={transitionSpringSmooth}
                   className="overflow-hidden"
                 >
-                  <div className="divide-outline-variant/20 border-outline-variant/20 grid grid-cols-1 divide-y border-t">
+                  <div className="grid grid-cols-1 divide-y divide-outline-variant/20 border-t border-outline-variant/20">
                     <FormField label="Nama item" required>
                       <TextInput
                         value={manualQuotationLine.clientLabel}
@@ -284,7 +284,7 @@ export function ManualRabLineDrawer({
           title="Tampilan untuk klien"
           helper="Gunakan nama yang singkat dan mudah dipahami tanpa konteks internal."
         >
-          <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
             <FormField label="Nama item">
               <TextInput
                 value={manualQuotationLine.clientLabel}
@@ -310,7 +310,7 @@ export function ManualRabLineDrawer({
           title="Jumlah & harga"
           helper="Subtotal muncul langsung di ringkasan bawah sebelum item ditambahkan."
         >
-          <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
             <FormField label="Jumlah">
               <NumericInput
                 min={0.01}

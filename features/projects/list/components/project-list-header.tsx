@@ -25,26 +25,26 @@ export function ProjectListHeader({
   return (
     <div className="space-y-4">
       <header className="px-1">
-        <h1 className="text-on-surface text-[28px] leading-8 font-semibold tracking-tight">
+        <h1 className="text-[28px] leading-8 font-semibold tracking-tight text-on-surface">
           Proyek
         </h1>
-        <p className="text-on-surface-variant mt-1 text-xs leading-5">
+        <p className="mt-1 text-xs leading-5 text-on-surface-variant">
           Pantau pekerjaan aktif dan kesehatan budget project.
         </p>
       </header>
 
       <section
-        className="relative isolate overflow-hidden rounded-[26px] bg-white/88 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[24px] max-[430px]:p-3.5"
+        className="relative isolate overflow-hidden rounded-[26px] bg-white/88 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5"
         aria-label="Portfolio proyek aktif"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="bg-surface-container-high/65 text-on-surface-variant flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] ring-1 ring-black/[0.035]">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-container-high/65 text-on-surface-variant ring-1 ring-black/[0.035]">
               <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
                 folder_open
               </span>
             </span>
-            <p className="text-on-surface-variant/60 truncate text-[10px] font-bold tracking-[0.13em] uppercase">
+            <p className="truncate text-[10px] font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
               Aktif
             </p>
           </div>
@@ -58,15 +58,15 @@ export function ProjectListHeader({
 
         <div className="mt-4 flex items-end justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-on-surface font-mono text-[29px] font-black max-[430px]:text-[27px]">
+            <p className="font-mono text-[29px] font-black text-on-surface max-[430px]:text-[27px]">
               {summary.activeCount}
             </p>
-            <p className="text-on-surface-variant mt-1 text-[10px] font-semibold">
+            <p className="mt-1 text-[10px] font-semibold text-on-surface-variant">
               proyek sedang berjalan
             </p>
           </div>
           <div className="min-w-0 text-right">
-            <p className="text-on-surface-variant/60 text-[9px] font-semibold">
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">
               Nilai kontrak aktif
             </p>
             <MoneyValue
@@ -79,7 +79,7 @@ export function ProjectListHeader({
           </div>
         </div>
 
-        <div className="bg-surface-container-low/65 mt-3.5 grid grid-cols-3 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5">
+        <div className="mt-3.5 grid grid-cols-3 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
           <ProjectPortfolioMetric label="Budget" amount={summary.activeInternalBudget} />
           <ProjectPortfolioMetric label="Aktual" amount={summary.activeActualCost} align="center" />
           <ProjectPortfolioMetric
@@ -109,7 +109,7 @@ function ProjectPortfolioMetric({
     align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left";
   return (
     <div className={`min-w-0 px-2 first:pl-0 last:pr-0 ${alignClass}`}>
-      <p className="text-on-surface-variant/60 truncate text-[9px] font-semibold">{label}</p>
+      <p className="truncate text-[9px] font-semibold text-on-surface-variant/60">{label}</p>
       <p
         className={`mt-1 truncate font-mono text-[10px] font-black tabular-nums max-[430px]:text-[9px] ${danger ? "text-error" : "text-on-surface"}`}
         title={formatIdr(amount)}
@@ -210,7 +210,7 @@ export function ProjectSearchAndFilters({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={surfaceTransition}
-            className="pointer-events-none absolute inset-0 rounded-[24px] bg-white/96 shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
+            className="pointer-events-none absolute inset-0 rounded-3xl bg-white/96 shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
             aria-hidden="true"
           />
         ) : null}
