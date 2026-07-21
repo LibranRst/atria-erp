@@ -2,10 +2,7 @@ import { resolveRoleName } from "@/lib/auth/permissions";
 import { ApprovalList } from "@/features/approvals/components/approval-list";
 import { PageState } from "@/components/ui";
 import { PageHeader } from "@/components/ui/page-primitives";
-import {
-  getPendingApprovalDetails,
-  rankPendingApprovals,
-} from "@/lib/finance/approval-details";
+import { getPendingApprovalDetails, rankPendingApprovals } from "@/lib/finance/approval-details";
 import { requireServerSession } from "@/lib/server/session";
 import React from "react";
 
@@ -25,13 +22,11 @@ export default async function ApprovalsPage(): Promise<React.JSX.Element> {
     );
   }
 
-  const allApprovals = rankPendingApprovals(
-    await getPendingApprovalDetails(),
-    new Date(),
-  );
-  const resolvedApprovals = roleName === "FINANCE_ADMIN"
-    ? allApprovals.filter((item) => item.type === "inventory_opening")
-    : allApprovals;
+  const allApprovals = rankPendingApprovals(await getPendingApprovalDetails(), new Date());
+  const resolvedApprovals =
+    roleName === "FINANCE_ADMIN"
+      ? allApprovals.filter((item) => item.type === "inventory_opening")
+      : allApprovals;
 
   return (
     <section className="space-y-lg px-1 pb-8 select-none max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
@@ -39,7 +34,10 @@ export default async function ApprovalsPage(): Promise<React.JSX.Element> {
         title="Persetujuan"
         subtitle="Tinjau dampak budget, kas, atau stok sebelum memberi keputusan."
       />
-      <ApprovalList initialApprovals={resolvedApprovals} canEmergencyOverride={roleName === "OWNER"} />
+      <ApprovalList
+        initialApprovals={resolvedApprovals}
+        canEmergencyOverride={roleName === "OWNER"}
+      />
     </section>
   );
 }

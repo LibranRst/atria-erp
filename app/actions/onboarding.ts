@@ -125,8 +125,7 @@ async function saveState(
           .values({
             key: OWNER_ONBOARDING_CONFIG_KEY,
             value,
-            description:
-              "Progress onboarding Owner untuk fondasi operasional Atria.",
+            description: "Progress onboarding Owner untuk fondasi operasional Atria.",
             updatedById: current.id,
           })
           .returning();
@@ -239,21 +238,18 @@ export async function getOwnerOnboardingOverview(): Promise<
 
   const state = persisted.state ?? DEFAULT_OWNER_ONBOARDING_STATE;
   const roleIds = new Set(users.map((row) => row.roleId));
-  const teamReady = SYSTEM_ROLES.slice(1, 4).every((role) =>
-    roleIds.has(role.id),
-  );
+  const teamReady = SYSTEM_ROLES.slice(1, 4).every((role) => roleIds.has(role.id));
   const categoryCodes = new Set(categories.map((row) => row.code));
-  const financeReady = Boolean(budget) && DEFAULT_EXPENSE_CATEGORIES.every(
-    (category) => categoryCodes.has(category.code),
-  );
+  const financeReady =
+    Boolean(budget) &&
+    DEFAULT_EXPENSE_CATEGORIES.every((category) => categoryCodes.has(category.code));
   const materialReady = locations.length > 0 && materials.length > 0;
   const initialStockNotApplicable =
     state.initialStockDecision === "NO_LEGACY_STOCK" &&
     pendingBatches.length === 0 &&
     postedBatches.length === 0 &&
     rejectedBatches.length === 0;
-  const initialStockReady =
-    postedBatches.length > 0 || initialStockNotApplicable;
+  const initialStockReady = postedBatches.length > 0 || initialStockNotApplicable;
   const gates = deriveOwnerOnboardingGates({
     financeDefaultsReady: financeReady,
     teamReady,
@@ -280,11 +276,7 @@ export async function getOwnerOnboardingOverview(): Promise<
       label: "Pengenalan setup",
       detail: "Tujuan dan dampak setup sudah dipahami.",
       ready: state.reviewedSteps.includes("welcome"),
-      status: statusFor(
-        "welcome",
-        state.reviewedSteps.includes("welcome"),
-        state,
-      ),
+      status: statusFor("welcome", state.reviewedSteps.includes("welcome"), state),
       href: "/onboarding?step=welcome",
     },
     {
@@ -298,12 +290,11 @@ export async function getOwnerOnboardingOverview(): Promise<
     {
       id: "team_vendors",
       label: "Tim & Vendor",
-      detail:
-        teamReady
-          ? vendors.length > 0
-            ? "Tiga role inti dan vendor aktif tersedia."
-            : "Tiga role inti siap; vendor dapat ditambahkan nanti."
-          : "Lengkapi akun aktif Finance, PM, dan Purchasing.",
+      detail: teamReady
+        ? vendors.length > 0
+          ? "Tiga role inti dan vendor aktif tersedia."
+          : "Tiga role inti siap; vendor dapat ditambahkan nanti."
+        : "Lengkapi akun aktif Finance, PM, dan Purchasing.",
       ready: teamReady,
       status: statusFor("team_vendors", teamReady, state),
       href: "/onboarding?step=team_vendors",
@@ -461,12 +452,12 @@ export async function getOwnerOnboardingBankAccounts(): Promise<
   }
 }
 
-export async function advanceOwnerOnboardingStep(
-  input: unknown,
-): Promise<ActionResponse<{
-  readonly state: OwnerOnboardingState;
-  readonly nextStep: OnboardingStepId;
-}>> {
+export async function advanceOwnerOnboardingStep(input: unknown): Promise<
+  ActionResponse<{
+    readonly state: OwnerOnboardingState;
+    readonly nextStep: OnboardingStepId;
+  }>
+> {
   const validation = advanceOwnerOnboardingStepSchema.safeParse(input);
   if (!validation.success)
     return {
@@ -480,14 +471,20 @@ export async function advanceOwnerOnboardingStep(
     const current = await requireOwner();
     const destination = nextOnboardingStep(validation.data.stepId);
     const next = await db.transaction(async (tx) => {
-      const [existing] = await tx.select().from(appConfig).where(eq(appConfig.key, OWNER_ONBOARDING_CONFIG_KEY)).for("update");
+      const [existing] = await tx
+        .select()
+        .from(appConfig)
+        .where(eq(appConfig.key, OWNER_ONBOARDING_CONFIG_KEY))
+        .for("update");
       const base = parseOwnerOnboardingState(existing?.value) ?? DEFAULT_OWNER_ONBOARDING_STATE;
-      const reviewed = validation.data.disposition === "REVIEWED"
-        ? uniqueSteps([...base.reviewedSteps, validation.data.stepId])
-        : base.reviewedSteps.filter((step) => step !== validation.data.stepId);
-      const skipped = validation.data.disposition === "SKIPPED"
-        ? uniqueSteps([...base.skippedSteps, validation.data.stepId])
-        : base.skippedSteps.filter((step) => step !== validation.data.stepId);
+      const reviewed =
+        validation.data.disposition === "REVIEWED"
+          ? uniqueSteps([...base.reviewedSteps, validation.data.stepId])
+          : base.reviewedSteps.filter((step) => step !== validation.data.stepId);
+      const skipped =
+        validation.data.disposition === "SKIPPED"
+          ? uniqueSteps([...base.skippedSteps, validation.data.stepId])
+          : base.skippedSteps.filter((step) => step !== validation.data.stepId);
       const state: OwnerOnboardingState = {
         ...base,
         status: "IN_PROGRESS",
@@ -495,15 +492,42 @@ export async function advanceOwnerOnboardingStep(
         reviewedSteps: reviewed,
         skippedSteps: skipped,
         completedAt: null,
-        initialStockDecision: validation.data.stepId === "initial_stock"
-          ? validation.data.initialStockDecision ?? base.initialStockDecision
-          : base.initialStockDecision,
+        initialStockDecision:
+          validation.data.stepId === "initial_stock"
+            ? (validation.data.initialStockDecision ?? base.initialStockDecision)
+            : base.initialStockDecision,
       };
       const value = JSON.stringify(state);
       const [saved] = existing
-        ? await tx.update(appConfig).set({ value, updatedAt: new Date(), updatedById: current.id }).where(eq(appConfig.id, existing.id)).returning()
-        : await tx.insert(appConfig).values({ key: OWNER_ONBOARDING_CONFIG_KEY, value, description: "Progress onboarding Owner untuk fondasi operasional Atria.", updatedById: current.id }).returning();
-      await tx.insert(auditLog).values({ userId: current.id, action: "ADVANCE_OWNER_ONBOARDING_STEP", targetTable: "app_config", targetId: saved.id, originalState: existing?.value ?? null, newState: JSON.stringify({ state, disposition: validation.data.disposition, sourceStep: validation.data.stepId, destination }) });
+        ? await tx
+            .update(appConfig)
+            .set({ value, updatedAt: new Date(), updatedById: current.id })
+            .where(eq(appConfig.id, existing.id))
+            .returning()
+        : await tx
+            .insert(appConfig)
+            .values({
+              key: OWNER_ONBOARDING_CONFIG_KEY,
+              value,
+              description: "Progress onboarding Owner untuk fondasi operasional Atria.",
+              updatedById: current.id,
+            })
+            .returning();
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: current.id,
+          action: "ADVANCE_OWNER_ONBOARDING_STEP",
+          targetTable: "app_config",
+          targetId: saved.id,
+          originalState: existing?.value ?? null,
+          newState: JSON.stringify({
+            state,
+            disposition: validation.data.disposition,
+            sourceStep: validation.data.stepId,
+            destination,
+          }),
+        });
       return state;
     });
     revalidatePath("/");
@@ -554,9 +578,7 @@ export async function pauseOwnerOnboarding(
   }
 }
 
-export async function completeOwnerOnboarding(): Promise<
-  ActionResponse<OwnerOnboardingState>
-> {
+export async function completeOwnerOnboarding(): Promise<ActionResponse<OwnerOnboardingState>> {
   try {
     const current = await requireOwner();
     const overview = await getOwnerOnboardingOverview();

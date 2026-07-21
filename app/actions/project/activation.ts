@@ -6,13 +6,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
-import {
-  auditLog,
-  project,
-  projectBudgets,
-  projectRap,
-  rabEstimate,
-} from "@/db/schema";
+import { auditLog, project, projectBudgets, projectRap, rabEstimate } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { getProjectActivationReadiness } from "@/lib/project/activation-readiness";
@@ -46,7 +40,10 @@ export async function activateProjectAction(
   if (!parsed.success) {
     return {
       success: false,
-      error: { code: "VALIDATION_ERROR", message: parsed.error.issues[0]?.message ?? "Aktivasi proyek tidak valid." },
+      error: {
+        code: "VALIDATION_ERROR",
+        message: parsed.error.issues[0]?.message ?? "Aktivasi proyek tidak valid.",
+      },
     };
   }
 
@@ -59,7 +56,10 @@ export async function activateProjectAction(
   if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN") {
     return {
       success: false,
-      error: { code: "FORBIDDEN", message: "Hanya Owner dan Finance Admin yang dapat mengaktifkan proyek." },
+      error: {
+        code: "FORBIDDEN",
+        message: "Hanya Owner dan Finance Admin yang dapat mengaktifkan proyek.",
+      },
     };
   }
 
@@ -125,8 +125,15 @@ export async function activateProjectAction(
     const message = error instanceof Error ? error.message : "Gagal mengaktifkan proyek.";
     const errors: Record<string, ActivationError> = {
       PROJECT_NOT_FOUND: { code: "NOT_FOUND", message: "Proyek tidak ditemukan." },
-      PROJECT_NOT_DRAFT: { code: "FORBIDDEN", message: "Hanya proyek Draft yang dapat diaktifkan melalui langkah ini." },
-      PROJECT_ACTIVATION_NOT_READY: { code: "FORBIDDEN", message: "Proyek belum siap diaktifkan. Pastikan Budget disetujui, RAP terkunci, dan RAB klien disetujui." },
+      PROJECT_NOT_DRAFT: {
+        code: "FORBIDDEN",
+        message: "Hanya proyek Draft yang dapat diaktifkan melalui langkah ini.",
+      },
+      PROJECT_ACTIVATION_NOT_READY: {
+        code: "FORBIDDEN",
+        message:
+          "Proyek belum siap diaktifkan. Pastikan Budget disetujui, RAP terkunci, dan RAB klien disetujui.",
+      },
     };
     return {
       success: false,

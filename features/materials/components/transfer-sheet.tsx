@@ -19,10 +19,7 @@ import type {
   MaterialOption,
   SelectOption,
 } from "@/features/materials/components/material-operation-dialog-types";
-import {
-  createSimpleItem,
-  type SimpleItem,
-} from "@/features/materials/lib/material-ui-utils";
+import { createSimpleItem, type SimpleItem } from "@/features/materials/lib/material-ui-utils";
 
 type TransferSheetProps = {
   readonly open: boolean;
@@ -78,12 +75,10 @@ export function TransferSheet({
     items.filter((item) => item.materialId).length;
   const itemImpacts = items.map((item) => {
     const source = inventory.find(
-      (row) =>
-        row.locationId === fromLocationId && row.materialId === item.materialId,
+      (row) => row.locationId === fromLocationId && row.materialId === item.materialId,
     );
     const destination = inventory.find(
-      (row) =>
-        row.locationId === toLocationId && row.materialId === item.materialId,
+      (row) => row.locationId === toLocationId && row.materialId === item.materialId,
     );
     const quantity = Number(item.quantity || 0);
     return {
@@ -91,9 +86,7 @@ export function TransferSheet({
       source,
       destination,
       quantity,
-      unsafe: Boolean(
-        source && source.currentStock - quantity < source.reservedStock,
-      ),
+      unsafe: Boolean(source && source.currentStock - quantity < source.reservedStock),
     };
   });
   const valid =
@@ -104,9 +97,7 @@ export function TransferSheet({
     note.trim().length >= 10 &&
     !items.some((row) => !row.materialId || Number(row.quantity) <= 0) &&
     !duplicateMaterial &&
-    !itemImpacts.some(
-      (impact) => !impact.source || !impact.destination || impact.unsafe,
-    );
+    !itemImpacts.some((impact) => !impact.source || !impact.destination || impact.unsafe);
   const disabledReason =
     locations.length < 2
       ? "Transfer membutuhkan minimal dua lokasi aktif."
@@ -120,27 +111,16 @@ export function TransferSheet({
               ? "Audit note minimal 10 karakter."
               : duplicateMaterial
                 ? "Satu material hanya boleh muncul sekali dalam transfer."
-                : items.some(
-                      (row) => !row.materialId || Number(row.quantity) <= 0,
-                    )
+                : items.some((row) => !row.materialId || Number(row.quantity) <= 0)
                   ? "Setiap item harus punya material dan quantity lebih dari 0."
                   : itemImpacts.some((impact) => impact.unsafe)
                     ? "Jumlah transfer memakai stok yang sudah direservasi. Kurangi jumlahnya."
-                    : itemImpacts.some(
-                          (impact) => !impact.source || !impact.destination,
-                        )
+                    : itemImpacts.some((impact) => !impact.source || !impact.destination)
                       ? "Inventory material belum tersedia di lokasi sumber atau tujuan."
                       : undefined;
-  const fromLocationName = locationOptions.find(
-    (option) => option.value === fromLocationId,
-  )?.label;
-  const toLocationName = locationOptions.find(
-    (option) => option.value === toLocationId,
-  )?.label;
-  const totalQuantity = items.reduce(
-    (sum, item) => sum + Number(item.quantity || 0),
-    0,
-  );
+  const fromLocationName = locationOptions.find((option) => option.value === fromLocationId)?.label;
+  const toLocationName = locationOptions.find((option) => option.value === toLocationId)?.label;
+  const totalQuantity = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
   return (
     <>
@@ -161,9 +141,7 @@ export function TransferSheet({
         pending={pending}
         disabled={!valid}
         disabledReason={disabledReason}
-        primaryLabel={
-          reviewing ? "Posting" : "Tinjau"
-        }
+        primaryLabel={reviewing ? "Posting" : "Tinjau"}
         secondaryLabel={reviewing ? "Ubah" : undefined}
         pendingLabel="Memposting…"
         onPrimary={() => {
@@ -176,10 +154,16 @@ export function TransferSheet({
       >
         {reviewing ? (
           <div className="space-y-md">
-            <FormSection title="Tinjau rencana transfer" helper="Periksa detail perpindahan sebelum memposting.">
+            <FormSection
+              title="Tinjau rencana transfer"
+              helper="Periksa detail perpindahan sebelum memposting."
+            >
               <ReviewFact label="Lokasi asal" value={fromLocationName ?? "–"} />
               <ReviewFact label="Lokasi tujuan" value={toLocationName ?? "–"} />
-              <ReviewFact label="Total barang" value={`${items.length} material · ${totalQuantity.toLocaleString("id-ID")} unit`} />
+              <ReviewFact
+                label="Total barang"
+                value={`${items.length} material · ${totalQuantity.toLocaleString("id-ID")} unit`}
+              />
               {note.trim() && <ReviewFact label="Catatan" value={note} />}
             </FormSection>
             <div className="space-y-2">
@@ -204,27 +188,23 @@ export function TransferSheet({
                 </div>
               ))}
             </div>
-            <p className="px-1 text-xs leading-5 text-on-surface-variant">
-              Posting akan membuat movement keluar dan masuk dalam satu
-              transaksi. Transfer yang sudah diposting tidak dapat diedit
-              langsung.
+            <p className="text-on-surface-variant px-1 text-xs leading-5">
+              Posting akan membuat movement keluar dan masuk dalam satu transaksi. Transfer yang
+              sudah diposting tidak dapat diedit langsung.
             </p>
           </div>
         ) : (
           <div className="space-y-md">
             {locations.length < 2 && (
               <section className="space-y-2.5">
-                <FormRiskNotice
-                  title="Lokasi transfer belum cukup"
-                  tone="warning"
-                >
+                <FormRiskNotice title="Lokasi transfer belum cukup" tone="warning">
                   Tambahkan satu lokasi aktif lagi sebelum memindahkan stok.
                 </FormRiskNotice>
                 <div className="flex items-center gap-2">
                   <TextInput
                     value={newLocationName}
                     onChange={onNewLocationNameChange}
-                    className="min-h-12 flex-1 bg-surface-container-lowest"
+                    className="bg-surface-container-lowest min-h-12 flex-1"
                     placeholder="Nama lokasi baru"
                     aria-label="Nama lokasi inventory baru"
                   />
@@ -232,7 +212,7 @@ export function TransferSheet({
                     type="button"
                     onClick={onAddLocation}
                     disabled={pending || newLocationName.trim().length < 3}
-                    className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
+                    className="bg-primary text-on-primary min-h-12 shrink-0 rounded-full px-4 text-xs font-bold disabled:opacity-40"
                   >
                     Tambah
                   </button>
@@ -244,20 +224,14 @@ export function TransferSheet({
               helper="Catatan audit wajib untuk transfer stok."
             >
               <FormField label="Nomor dokumen">
-                <TextInput
-                  value={documentNumber}
-                  onChange={onDocumentNumberChange}
-                />
+                <TextInput value={documentNumber} onChange={onDocumentNumberChange} />
               </FormField>
               <FormField label="Catatan audit">
                 <Textarea rows={3} value={note} onChange={onNoteChange} />
               </FormField>
             </FormSection>
-            <FormSection
-              title="Lokasi transfer"
-              helper="Sumber dan tujuan harus berbeda."
-            >
-              <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
+            <FormSection title="Lokasi transfer" helper="Sumber dan tujuan harus berbeda.">
+              <div className="divide-outline-variant/20 grid grid-cols-2 divide-x">
                 <SheetSelect
                   label="Dari"
                   value={fromLocationId}
@@ -305,11 +279,17 @@ export function TransferSheet({
   );
 }
 
-function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+function ReviewFact({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: React.ReactNode;
+}): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
       <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
+      <span className="text-on-surface text-right font-bold">{value}</span>
     </div>
   );
 }

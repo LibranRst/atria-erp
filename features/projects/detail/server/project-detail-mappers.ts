@@ -6,10 +6,7 @@ type ProjectCostListRow = Omit<ExpenseCostItem, "status"> & {
   readonly status: string;
 };
 
-type ClientInvoicePaymentRow = Omit<
-  ClientInvoiceItem["payments"][number],
-  "referenceNumber"
-> & {
+type ClientInvoicePaymentRow = Omit<ClientInvoiceItem["payments"][number], "referenceNumber"> & {
   readonly referenceNumber: string | null;
 };
 
@@ -126,9 +123,7 @@ function toExpenseCostStatus(status: string): ExpenseCostItem["status"] {
   }
 }
 
-export function mapCostsForList(
-  costs: readonly ProjectCostListRow[],
-): ProjectTabsProps["costs"] {
+export function mapCostsForList(costs: readonly ProjectCostListRow[]): ProjectTabsProps["costs"] {
   return costs.map((cost) => ({
     ...cost,
     status: toExpenseCostStatus(cost.status),
@@ -157,9 +152,7 @@ export function mapMaterialMasterCatalog(
     unit: material.unit,
     lastPurchasePrice: String(material.inventory[0]?.lastPurchasePrice ?? "0"),
     availableStock: material.inventory.reduce((sum, inventory) => {
-      return (
-        sum + Number(inventory.currentStock) - Number(inventory.reservedStock)
-      );
+      return sum + Number(inventory.currentStock) - Number(inventory.reservedStock);
     }, 0),
     categoryName: material.category?.name ?? "Lain-lain",
     inventories: material.inventory.map((inventory) => ({
@@ -168,8 +161,7 @@ export function mapMaterialMasterCatalog(
       locationName: inventory.location.name,
       currentStock: Number(inventory.currentStock),
       reservedStock: Number(inventory.reservedStock),
-      availableStock:
-        Number(inventory.currentStock) - Number(inventory.reservedStock),
+      availableStock: Number(inventory.currentStock) - Number(inventory.reservedStock),
       averageCost: Number(inventory.averageCost),
     })),
   }));

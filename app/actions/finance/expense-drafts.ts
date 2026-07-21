@@ -63,15 +63,12 @@ async function deleteImageKitFile(fileId: string): Promise<void> {
   const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
   if (!privateKey || !fileId) return;
 
-  const response = await fetch(
-    `https://api.imagekit.io/v1/files/${encodeURIComponent(fileId)}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${privateKey}:`).toString("base64")}`,
-      },
+  const response = await fetch(`https://api.imagekit.io/v1/files/${encodeURIComponent(fileId)}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${privateKey}:`).toString("base64")}`,
     },
-  );
+  });
 
   if (!response.ok && response.status !== 404) {
     throw new Error(`IMAGEKIT_DELETE_FAILED_${response.status}`);
@@ -155,10 +152,7 @@ export async function listExpenseDrafts(): Promise<ActionResponse<readonly Expen
       projectId: parsed.data.projectId,
       projectName: draft.project?.name ?? "Proyek belum dipilih",
       itemCount: parsed.data.lines.length,
-      totalAmount: parsed.data.lines.reduce(
-        (total, line) => total + Number(line.amount || 0),
-        0,
-      ),
+      totalAmount: parsed.data.lines.reduce((total, line) => total + Number(line.amount || 0), 0),
       hasReceipt: Boolean(parsed.data.receipt),
       lastSavedAt: draft.lastSavedAt,
     });
@@ -317,7 +311,9 @@ export async function saveExpenseDraft(
   };
 }
 
-export async function discardExpenseDraft(input: unknown): Promise<ActionResponse<{ readonly draftId: string }>> {
+export async function discardExpenseDraft(
+  input: unknown,
+): Promise<ActionResponse<{ readonly draftId: string }>> {
   const validation = expenseDraftIdSchema.safeParse(input);
   if (!validation.success) {
     return {
@@ -446,13 +442,13 @@ export async function submitExpenseDraft(
       const costs: Array<typeof projectCost.$inferSelect> = [];
       for (const item of submission.data.items) {
         const cost = await createSubmittedFieldRequestTx(tx, {
-            projectId: submission.data.projectId,
-            requestedById: scoped.data.user.id,
-            receiptImageUrl: submission.data.receiptImageUrl,
-            receiptGroupId,
-            item,
-            includeApprovalCategoryLabel: true,
-          });
+          projectId: submission.data.projectId,
+          requestedById: scoped.data.user.id,
+          receiptImageUrl: submission.data.receiptImageUrl,
+          receiptGroupId,
+          item,
+          includeApprovalCategoryLabel: true,
+        });
         costs.push(cost);
         await writeFieldRequestAuditTx(tx, {
           userId: scoped.data.user.id,
@@ -524,7 +520,9 @@ export async function submitExpenseDraft(
       success: false,
       error: {
         code: "TRANSACTION_FAILED",
-        message: businessMessages[errorMessage] ?? "Pengeluaran belum berhasil diajukan. Draft tetap aman untuk dicoba kembali.",
+        message:
+          businessMessages[errorMessage] ??
+          "Pengeluaran belum berhasil diajukan. Draft tetap aman untuk dicoba kembali.",
       },
     };
   }

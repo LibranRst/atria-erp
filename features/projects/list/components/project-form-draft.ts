@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-import type {
-  ProjectFinancialHealthOption,
-  ProjectStatusOption,
-} from "./project-drawer-options";
+import type { ProjectFinancialHealthOption, ProjectStatusOption } from "./project-drawer-options";
 
 export const projectFormDraftSchema = z.object({
   name: z.string(),
@@ -58,7 +55,7 @@ export function createProjectFormDraft(
     newClientEmail: "",
     newClientPhone: "",
     newClientAddress: "",
-    projectManagerId: project?.projectManagerId ?? (users.length === 1 ? users[0]?.id ?? "" : ""),
+    projectManagerId: project?.projectManagerId ?? (users.length === 1 ? (users[0]?.id ?? "") : ""),
     startDate: toDateInputValue(project?.startDate),
     endDate: toDateInputValue(project?.endDate),
     location: project?.location ?? "",
@@ -71,12 +68,7 @@ export function createProjectFormDraft(
   };
 }
 
-export function getProjectDateError(
-  startDate: string,
-  endDate: string,
-): string | null {
+export function getProjectDateError(startDate: string, endDate: string): string | null {
   if (!startDate || !endDate) return null;
-  return endDate < startDate
-    ? "Tanggal selesai tidak boleh lebih awal dari tanggal mulai."
-    : null;
+  return endDate < startDate ? "Tanggal selesai tidak boleh lebih awal dari tanggal mulai." : null;
 }

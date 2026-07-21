@@ -40,7 +40,9 @@ export type StockMovementInsertArgs = {
   createdById: string;
 };
 
-export async function getSessionUser(): Promise<ActionResponse<{ user: SessionUser; roleName: string }>> {
+export async function getSessionUser(): Promise<
+  ActionResponse<{ user: SessionUser; roleName: string }>
+> {
   const session = await auth.api.getSession({
     headers: {
       cookie: (await (await import("next/headers")).cookies()).toString(),
@@ -70,7 +72,7 @@ export async function getSessionUser(): Promise<ActionResponse<{ user: SessionUs
 export async function assertProjectScopeForMaterialAction(
   projectId: string | null | undefined,
   userId: string,
-  roleName: string
+  roleName: string,
 ): Promise<void> {
   if (!projectId) return;
   if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN" && roleName !== "PURCHASING") {
@@ -108,7 +110,7 @@ export function ensureNonNegativeStock(value: bigint, message: string): void {
 export async function findLockedInventory(
   tx: MaterialInventoryTx,
   materialId: string,
-  locationId: string
+  locationId: string,
 ): Promise<typeof materialInventory.$inferSelect> {
   const [inventory] = await tx
     .select()
@@ -116,8 +118,8 @@ export async function findLockedInventory(
     .where(
       and(
         eq(materialInventory.materialId, materialId),
-        eq(materialInventory.locationId, locationId)
-      )
+        eq(materialInventory.locationId, locationId),
+      ),
     )
     .for("update");
 
@@ -130,7 +132,7 @@ export async function findLockedInventory(
 
 export async function insertStockMovement(
   tx: MaterialInventoryTx,
-  args: StockMovementInsertArgs
+  args: StockMovementInsertArgs,
 ): Promise<typeof stockMovement.$inferSelect> {
   const [movement] = await tx.insert(stockMovement).values(args).returning();
   return movement;
@@ -144,7 +146,7 @@ export async function writeStockMovementAuditTx(
     inventoryId: string;
     originalState: object;
     newState: object;
-  }
+  },
 ): Promise<void> {
   await tx.insert(auditLog).values({
     userId: args.userId,
@@ -200,25 +202,43 @@ export async function recordStandaloneStockProjectCostTx(
   await syncProjectBudgetCategory({ tx, projectBudgetCategoryId: category.id });
 }
 
-export function mapStockError<T>(
-  error: unknown,
-  fallbackMessage: string
-): ActionResponse<T> {
+export function mapStockError<T>(error: unknown, fallbackMessage: string): ActionResponse<T> {
   const message = error instanceof Error ? error.message : fallbackMessage;
   if (message === "INVENTORY_NOT_FOUND") {
-    return { success: false, error: { code: "NOT_FOUND", message: "Inventory material tidak ditemukan." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Inventory material tidak ditemukan." },
+    };
   }
   if (message === "INSUFFICIENT_AVAILABLE_STOCK") {
-    return { success: false, error: { code: "FORBIDDEN", message: "Stock tersedia tidak cukup untuk reservasi." } };
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "Stock tersedia tidak cukup untuk reservasi." },
+    };
   }
   if (message === "INSUFFICIENT_CURRENT_STOCK") {
-    return { success: false, error: { code: "FORBIDDEN", message: "Stock fisik tidak cukup untuk aksi ini." } };
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "Stock fisik tidak cukup untuk aksi ini." },
+    };
   }
   if (message === "STOCK_RESERVED_FOR_OTHER_PROJECTS") {
-    return { success: false, error: { code: "FORBIDDEN", message: "Aksi ini akan memakai stock yang direservasi untuk project lain." } };
+    return {
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Aksi ini akan memakai stock yang direservasi untuk project lain.",
+      },
+    };
   }
   if (message === "RETURN_EXCEEDS_PROJECT_USAGE") {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Jumlah return melebihi pemakaian bersih material pada proyek." } };
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Jumlah return melebihi pemakaian bersih material pada proyek.",
+      },
+    };
   }
   return {
     success: false,

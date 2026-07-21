@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
-import { assertRabRevisionCanBeVoided, getNextRabRevision, isOpenChangeOrderStatus, selectApprovedRabEstimate, selectCurrentRabEstimate } from "./rab-selection";
+import {
+  assertRabRevisionCanBeVoided,
+  getNextRabRevision,
+  isOpenChangeOrderStatus,
+  selectApprovedRabEstimate,
+  selectCurrentRabEstimate,
+} from "./rab-selection";
 
 const estimates = [
   { id: "r1", status: "APPROVED", revision: 1 },
@@ -30,10 +36,18 @@ describe("RAB selection", () => {
   });
 
   test("allows cancellation only for a draft revision", () => {
-    expect(() => assertRabRevisionCanBeVoided({ status: "DRAFT", supersedesRabEstimateId: "r1" })).not.toThrow();
-    expect(() => assertRabRevisionCanBeVoided({ status: "DRAFT", supersedesRabEstimateId: null })).toThrow();
-    expect(() => assertRabRevisionCanBeVoided({ status: "APPROVED", supersedesRabEstimateId: "r1" })).toThrow();
-    expect(() => assertRabRevisionCanBeVoided({ status: "VOID", supersedesRabEstimateId: "r1" })).toThrow();
+    expect(() =>
+      assertRabRevisionCanBeVoided({ status: "DRAFT", supersedesRabEstimateId: "r1" }),
+    ).not.toThrow();
+    expect(() =>
+      assertRabRevisionCanBeVoided({ status: "DRAFT", supersedesRabEstimateId: null }),
+    ).toThrow();
+    expect(() =>
+      assertRabRevisionCanBeVoided({ status: "APPROVED", supersedesRabEstimateId: "r1" }),
+    ).toThrow();
+    expect(() =>
+      assertRabRevisionCanBeVoided({ status: "VOID", supersedesRabEstimateId: "r1" }),
+    ).toThrow();
   });
 
   test("treats cancelled Change Orders as closed", () => {

@@ -12,10 +12,7 @@ import {
   vendorBill,
   vendorPayment,
 } from "@/db/schema";
-import type {
-  BankAccountItem,
-  ExpenseCostItem,
-} from "../components/expense-list";
+import type { BankAccountItem, ExpenseCostItem } from "../components/expense-list";
 import type {
   VendorListBill,
   VendorListPayment,
@@ -101,14 +98,8 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
           ? inArray(vendorPayment.vendorBillId, pmBillIds)
           : eq(vendorPayment.id, "00000000-0000-0000-0000-000000000000");
     } else {
-      vendorBillFilter = eq(
-        vendorBill.id,
-        "00000000-0000-0000-0000-000000000000",
-      );
-      vendorPaymentFilter = eq(
-        vendorPayment.id,
-        "00000000-0000-0000-0000-000000000000",
-      );
+      vendorBillFilter = eq(vendorBill.id, "00000000-0000-0000-0000-000000000000");
+      vendorPaymentFilter = eq(vendorPayment.id, "00000000-0000-0000-0000-000000000000");
     }
   }
 
@@ -156,9 +147,7 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
   });
 
   const paymentsForList = vendorPaymentsData.map((pay) => {
-    const approvalRecord = vendorPaymentsApprovals.find(
-      (record) => record.referenceId === pay.id,
-    );
+    const approvalRecord = vendorPaymentsApprovals.find((record) => record.referenceId === pay.id);
     return {
       ...pay,
       approvalStatus: approvalRecord ? approvalRecord.status : "APPROVED",
@@ -173,9 +162,7 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
     orderBy: [desc(vendor.name)],
   });
 
-  const pmProjectFilter = isPM
-    ? eq(project.projectManagerId, session.user.id)
-    : undefined;
+  const pmProjectFilter = isPM ? eq(project.projectManagerId, session.user.id) : undefined;
   const projectsData = await db.query.project.findMany({
     where: pmProjectFilter
       ? and(eq(project.status, "ACTIVE"), pmProjectFilter)
@@ -223,9 +210,7 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
     name: material.name,
     unit: material.unit,
     availableStock: material.inventory.reduce((sum, inventory) => {
-      return (
-        sum + Number(inventory.currentStock) - Number(inventory.reservedStock)
-      );
+      return sum + Number(inventory.currentStock) - Number(inventory.reservedStock);
     }, 0),
   }));
 
@@ -280,9 +265,8 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
     })),
   }));
 
-  const pendingApprovalsCount = roleName === "OWNER"
-    ? (await getPendingApprovalDetails()).length
-    : 0;
+  const pendingApprovalsCount =
+    roleName === "OWNER" ? (await getPendingApprovalDetails()).length : 0;
 
   return {
     initialCosts: costsForList,

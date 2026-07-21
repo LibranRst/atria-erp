@@ -20,11 +20,13 @@ describe("material operational form calculations", () => {
   });
 
   test("summarizes positive and negative opname variances", () => {
-    expect(summarizeStockCountVariance([
-      { systemQuantity: 10, countedQuantity: 12, unitCost: 5_000 },
-      { systemQuantity: 8, countedQuantity: 7, unitCost: 20_000 },
-      { systemQuantity: 3, countedQuantity: 3, unitCost: 1_000 },
-    ])).toEqual({ changedCount: 2, totalQuantity: 1, totalValue: -10_000 });
+    expect(
+      summarizeStockCountVariance([
+        { systemQuantity: 10, countedQuantity: 12, unitCost: 5_000 },
+        { systemQuantity: 8, countedQuantity: 7, unitCost: 20_000 },
+        { systemQuantity: 3, countedQuantity: 3, unitCost: 1_000 },
+      ]),
+    ).toEqual({ changedCount: 2, totalQuantity: 1, totalValue: -10_000 });
   });
 
   test("uses concise Indonesian labels for stock and audit states", () => {

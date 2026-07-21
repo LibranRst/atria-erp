@@ -7,11 +7,7 @@ export {
   projectTone,
   severityTone,
 } from "./dashboard-tone";
-export {
-  BankAccountCard,
-  CategoryHealthMeter,
-  ProjectRiskCard,
-} from "./dashboard-overview-cards";
+export { BankAccountCard, CategoryHealthMeter, ProjectRiskCard } from "./dashboard-overview-cards";
 export {
   EmptyRow,
   OverviewCashRows,

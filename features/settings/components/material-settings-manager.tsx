@@ -3,13 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import {
-  Archive,
-  Pencil,
-  RotateCcw,
-  SlidersHorizontal,
-  Warehouse,
-} from "lucide-react";
+import { Archive, Pencil, RotateCcw, SlidersHorizontal, Warehouse } from "lucide-react";
 import {
   createMaterialCategorySetting,
   createMaterialWithInventoryDefaults,
@@ -18,12 +12,7 @@ import {
   updateMaterialSettingDefaults,
   type MaterialSettingRow,
 } from "@/app/actions/settings/system";
-import {
-  BottomSheet,
-  ConfirmationSheet,
-  EmptyState,
-  SettingsHeader,
-} from "./settings-ui";
+import { BottomSheet, ConfirmationSheet, EmptyState, SettingsHeader } from "./settings-ui";
 import {
   COMMON_UNIT_OPTIONS,
   ComboboxField,
@@ -107,21 +96,14 @@ export function MaterialSettingsManager({
   const [materials, setMaterials] = React.useState(initialMaterials);
   const [categories, setCategories] = React.useState(initialCategories);
   const [draft, setDraft] = React.useState<MaterialDraft | null>(null);
-  const [inventoryEdit, setInventoryEdit] =
-    React.useState<InventoryDraft | null>(null);
+  const [inventoryEdit, setInventoryEdit] = React.useState<InventoryDraft | null>(null);
   const [draftBaseline, setDraftBaseline] = React.useState("");
   const [inventoryBaseline, setInventoryBaseline] = React.useState("");
-  const [inventoryOriginal, setInventoryOriginal] =
-    React.useState<InventoryDraft | null>(null);
-  const [pendingClose, setPendingClose] = React.useState<
-    "MATERIAL" | "INVENTORY" | null
-  >(null);
-  const [confirmMaterial, setConfirmMaterial] =
-    React.useState<MaterialSettingRow | null>(null);
-  const [selectedMaterial, setSelectedMaterial] =
-    React.useState<MaterialSettingRow | null>(null);
-  const [detailNextAction, setDetailNextAction] =
-    React.useState<DetailNextAction | null>(null);
+  const [inventoryOriginal, setInventoryOriginal] = React.useState<InventoryDraft | null>(null);
+  const [pendingClose, setPendingClose] = React.useState<"MATERIAL" | "INVENTORY" | null>(null);
+  const [confirmMaterial, setConfirmMaterial] = React.useState<MaterialSettingRow | null>(null);
+  const [selectedMaterial, setSelectedMaterial] = React.useState<MaterialSettingRow | null>(null);
+  const [detailNextAction, setDetailNextAction] = React.useState<DetailNextAction | null>(null);
   const [showCategoryComposer, setShowCategoryComposer] = React.useState(false);
   const [showMaterialDetails, setShowMaterialDetails] = React.useState(false);
   const [categoryName, setCategoryName] = React.useState("");
@@ -156,39 +138,31 @@ export function MaterialSettingsManager({
         .includes(search.toLowerCase()) &&
       (categoryFilter === "ALL" || material.categoryId === categoryFilter) &&
       (vendorFilter === "ALL" || material.defaultVendorId === vendorFilter) &&
-      (status === "ALL" ||
-        (status === "ACTIVE" ? material.isActive : !material.isActive)),
+      (status === "ALL" || (status === "ACTIVE" ? material.isActive : !material.isActive)),
   );
-  const activeFilterCount =
-    Number(categoryFilter !== "ALL") + Number(vendorFilter !== "ALL");
+  const activeFilterCount = Number(categoryFilter !== "ALL") + Number(vendorFilter !== "ALL");
   const materialCompletionItems = draft
     ? [
-        draft.categoryId &&
-          categories.some((category) => category.id === draft.categoryId),
+        draft.categoryId && categories.some((category) => category.id === draft.categoryId),
         draft.name.trim().length > 0,
         draft.unit.trim().length > 0,
         Boolean(draft.id) ||
-          (draft.locationId &&
-            locations.some((location) => location.id === draft.locationId)),
+          (draft.locationId && locations.some((location) => location.id === draft.locationId)),
       ]
     : [];
   const materialCompletedCount = materialCompletionItems.filter(Boolean).length;
   const materialCompletionTotal = materialCompletionItems.length || 1;
-  const canSaveMaterial = Boolean(
-    draft && materialCompletedCount === materialCompletionTotal,
-  );
+  const canSaveMaterial = Boolean(draft && materialCompletedCount === materialCompletionTotal);
   const materialDisabledReason = !draft
     ? undefined
-    : !draft.categoryId ||
-        !categories.some((category) => category.id === draft.categoryId)
+    : !draft.categoryId || !categories.some((category) => category.id === draft.categoryId)
       ? "Pilih kategori material yang valid."
       : !draft.name.trim()
         ? "Isi nama material."
         : !draft.unit.trim()
           ? "Isi unit material."
           : !draft.id &&
-              (!draft.locationId ||
-                !locations.some((location) => location.id === draft.locationId))
+              (!draft.locationId || !locations.some((location) => location.id === draft.locationId))
             ? "Pilih lokasi awal agar default inventory tidak salah tempat."
             : undefined;
   const inventoryDirty = Boolean(
@@ -231,8 +205,7 @@ export function MaterialSettingsManager({
     setInventoryBaseline(JSON.stringify(next));
   }
   function closeMaterial(): void {
-    if (draft && JSON.stringify(draft) !== draftBaseline)
-      setPendingClose("MATERIAL");
+    if (draft && JSON.stringify(draft) !== draftBaseline) setPendingClose("MATERIAL");
     else {
       setDraft(null);
       setShowCategoryComposer(false);
@@ -265,9 +238,7 @@ export function MaterialSettingsManager({
         });
         if (result.success) {
           setMaterials((current) =>
-            current.map((row) =>
-              row.id === result.data.id ? result.data : row,
-            ),
+            current.map((row) => (row.id === result.data.id ? result.data : row)),
           );
           setDraft(null);
           setDraftBaseline("");
@@ -320,9 +291,7 @@ export function MaterialSettingsManager({
       if (result.success) {
         setMaterials((current) =>
           current.map((row) =>
-            row.id === target.id
-              ? { ...row, isActive: result.data.isActive }
-              : row,
+            row.id === target.id ? { ...row, isActive: result.data.isActive } : row,
           ),
         );
         setSelectedMaterial(null);
@@ -380,9 +349,7 @@ export function MaterialSettingsManager({
       });
       if (result.success) {
         setCategories((current) =>
-          [...current, result.data].sort((a, b) =>
-            a.name.localeCompare(b.name),
-          ),
+          [...current, result.data].sort((a, b) => a.name.localeCompare(b.name)),
         );
         if (draft) setDraft({ ...draft, categoryId: result.data.id });
         setCategoryName("");
@@ -397,9 +364,7 @@ export function MaterialSettingsManager({
   }
 
   return (
-    <section
-      className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-lg"}`}
-    >
+    <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-lg"}`}>
       {presentation === "onboarding" ? null : hideHeader ? (
         <SettingsModuleHeader
           eyebrow="Identitas dan default"
@@ -419,17 +384,17 @@ export function MaterialSettingsManager({
         />
       )}
       {message && (
-        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-[11px] leading-4 text-primary ring-1 ring-primary/15">
+        <p className="bg-primary/5 text-primary ring-primary/15 rounded-2xl px-3 py-2.5 text-[11px] leading-4 ring-1">
           {message}
         </p>
       )}
       {presentation === "onboarding" ? (
         <div className="flex min-w-0 items-center justify-between gap-3 px-1">
           <span className="min-w-0">
-            <span className="block text-[13px] leading-5 font-bold text-on-surface">
+            <span className="text-on-surface block text-[13px] leading-5 font-bold">
               Material Master
             </span>
-            <span className="block text-[9px] leading-4 text-on-surface-variant">
+            <span className="text-on-surface-variant block text-[9px] leading-4">
               {materials.filter((row) => row.isActive).length} material aktif
             </span>
           </span>
@@ -438,7 +403,7 @@ export function MaterialSettingsManager({
               type="button"
               onClick={() => setShowImport(true)}
               disabled={!canManage}
-              className="relative min-h-10 rounded-full px-3 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] disabled:opacity-40"
+              className="relative min-h-10 rounded-full px-3 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
             >
               Import
             </button>
@@ -446,7 +411,7 @@ export function MaterialSettingsManager({
               type="button"
               onClick={() => openMaterial(blank())}
               disabled={!canManage}
-              className="relative min-h-10 rounded-full bg-[#007AFF]/[0.08] px-3.5 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] disabled:opacity-40"
+              className="relative min-h-10 rounded-full bg-[#007AFF]/8 px-3.5 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
             >
               Tambah
             </button>
@@ -456,12 +421,9 @@ export function MaterialSettingsManager({
         <button
           type="button"
           onClick={() => setShowImport(true)}
-          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-4 text-[10px] font-bold text-[#007AFF] shadow-sm ring-1 ring-black/[0.04]"
+          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-4 text-[10px] font-bold text-[#007AFF] shadow-sm ring-1 ring-black/4"
         >
-          <span
-            className="material-symbols-outlined text-[17px]"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
             upload_file
           </span>
           Import CSV
@@ -501,11 +463,7 @@ export function MaterialSettingsManager({
       ) : null}
       {filtered.length === 0 ? (
         <EmptyState
-          title={
-            materials.length === 0
-              ? "Belum ada material"
-              : "Material tidak ditemukan"
-          }
+          title={materials.length === 0 ? "Belum ada material" : "Material tidak ditemukan"}
           description={
             materials.length === 0
               ? "Tambahkan Material Master pertama untuk menyiapkan default inventori."
@@ -514,52 +472,41 @@ export function MaterialSettingsManager({
         />
       ) : (
         <SettingsGroupSurface>
-          <div className="divide-y divide-black/[0.055]">
+          <div className="divide-y divide-black/5.5">
             {filtered.map((material) => (
               <button
                 type="button"
                 key={material.id}
                 onClick={() => setSelectedMaterial(material)}
-                className="flex min-h-[88px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
+                className="focus-visible:bg-surface-container-low active:bg-surface-container-low/75 flex min-h-[88px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface">
+                <span className="bg-surface-container-low text-on-surface flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
                   <Warehouse className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className="truncate text-[13px] leading-5 font-bold text-on-surface">
+                    <span className="text-on-surface truncate text-[13px] leading-5 font-bold">
                       {material.name}
                     </span>
                   </span>
-                  <span className="mt-1 block truncate text-[10px] leading-4 text-on-surface-variant">
-                    {[
-                      material.brand,
-                      material.code,
-                      material.color,
-                      material.unit,
-                    ]
+                  <span className="text-on-surface-variant mt-1 block truncate text-[10px] leading-4">
+                    {[material.brand, material.code, material.color, material.unit]
                       .filter(Boolean)
                       .join(" · ") || "Detail material belum dilengkapi"}
                   </span>
-                  <span className="flex min-w-0 items-center gap-2 leading-4 text-[9px] text-on-surface-variant">
-                    <span className="truncate">
-                      {material.inventory.length} lokasi default
-                    </span>
+                  <span className="text-on-surface-variant flex min-w-0 items-center gap-2 text-[9px] leading-4">
+                    <span className="truncate">{material.inventory.length} lokasi default</span>
                     {material.defaultVendorName ? (
                       <>
                         <span aria-hidden="true">·</span>
-                        <span className="truncate">
-                          {material.defaultVendorName}
-                        </span>
+                        <span className="truncate">{material.defaultVendorName}</span>
                       </>
                     ) : null}
                   </span>
                 </span>
                 <div className="flex min-w-0 items-center gap-2">
                   <SettingsStatusLabel
-                    label={
-                      material.isActive ? material.categoryName : "Diarsipkan"
-                    }
+                    label={material.isActive ? material.categoryName : "Diarsipkan"}
                     tone={material.isActive ? "neutral" : "inactive"}
                   />
                   <SettingsRowChevron />
@@ -612,7 +559,7 @@ export function MaterialSettingsManager({
                   });
                   setSelectedMaterial(null);
                 }}
-                className="flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="bg-primary focus-visible:ring-primary/30 flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full px-4 text-xs font-bold text-white outline-none focus-visible:ring-2"
               >
                 <Pencil className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span className="truncate">Edit identitas</span>
@@ -622,16 +569,14 @@ export function MaterialSettingsManager({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => setConfirmMaterial(selectedMaterial)}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-error/20"
+                className="text-error focus-visible:ring-error/20 flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-xs font-bold outline-none focus-visible:ring-2"
               >
                 {selectedMaterial.isActive ? (
                   <Archive className="h-4 w-4" aria-hidden="true" />
                 ) : (
                   <RotateCcw className="h-4 w-4" aria-hidden="true" />
                 )}
-                <span>
-                  {selectedMaterial.isActive ? "Arsipkan" : "Aktifkan"}
-                </span>
+                <span>{selectedMaterial.isActive ? "Arsipkan" : "Aktifkan"}</span>
               </motion.button>
             </div>
           ) : undefined
@@ -639,11 +584,11 @@ export function MaterialSettingsManager({
       >
         {selectedMaterial ? (
           <div className="space-y-lg">
-            <section className="overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/15">
+            <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1">
               <div className="p-4">
                 <div className="min-w-0">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <p className="truncate text-[9px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">
+                    <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-widest uppercase">
                       {selectedMaterial.categoryName}
                     </p>
                     <SettingsStatusLabel
@@ -651,10 +596,10 @@ export function MaterialSettingsManager({
                       tone={selectedMaterial.isActive ? "positive" : "inactive"}
                     />
                   </div>
-                  <h3 className="mt-1.5 text-[17px] font-bold leading-[1.12] tracking-[-0.015em] text-on-surface">
+                  <h3 className="text-on-surface mt-1.5 text-[17px] leading-[1.12] font-bold tracking-[-0.015em]">
                     {selectedMaterial.name}
                   </h3>
-                  <p className="mt-1 text-[10px] leading-[1.3] text-on-surface-variant">
+                  <p className="text-on-surface-variant mt-1 text-[10px] leading-[1.3]">
                     {[
                       selectedMaterial.brand,
                       selectedMaterial.code,
@@ -667,25 +612,24 @@ export function MaterialSettingsManager({
                 </div>
               </div>
 
-              {selectedMaterial.specification ||
-              selectedMaterial.defaultVendorName ? (
-                <div className="divide-y divide-outline-variant/15 border-t border-outline-variant/15">
+              {selectedMaterial.specification || selectedMaterial.defaultVendorName ? (
+                <div className="divide-outline-variant/15 border-outline-variant/15 divide-y border-t">
                   {selectedMaterial.specification ? (
                     <div className="grid min-h-12 grid-cols-[5.25rem_minmax(0,1fr)] items-start gap-3 px-4 py-3">
-                      <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                      <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
                         Spesifikasi
                       </p>
-                      <p className="line-clamp-2 text-right text-[10px] leading-[1.35] text-on-surface">
+                      <p className="text-on-surface line-clamp-2 text-right text-[10px] leading-[1.35]">
                         {selectedMaterial.specification}
                       </p>
                     </div>
                   ) : null}
                   {selectedMaterial.defaultVendorName ? (
                     <div className="grid min-h-12 grid-cols-[5.25rem_minmax(0,1fr)] items-center gap-3 px-4 py-3">
-                      <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                      <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
                         Vendor
                       </p>
-                      <p className="truncate text-right text-[10px] font-semibold text-on-surface">
+                      <p className="text-on-surface truncate text-right text-[10px] font-semibold">
                         {selectedMaterial.defaultVendorName}
                       </p>
                     </div>
@@ -696,15 +640,15 @@ export function MaterialSettingsManager({
 
             <section className="space-y-2.5">
               <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-[0.11em] text-on-surface">
+                <h3 className="text-on-surface text-[10px] font-bold tracking-[0.11em] uppercase">
                   Default inventori
                 </h3>
-                <p className="mt-0.5 text-[10px] leading-4 text-on-surface-variant">
+                <p className="text-on-surface-variant mt-0.5 text-[10px] leading-4">
                   Batas stok dan harga referensi per lokasi.
                 </p>
               </div>
               <SettingsGroupSurface>
-                <div className="divide-y divide-black/[0.055]">
+                <div className="divide-y divide-black/5.5">
                   {selectedMaterial.inventory.map((inventory) => (
                     <button
                       type="button"
@@ -723,21 +667,18 @@ export function MaterialSettingsManager({
                         });
                         setSelectedMaterial(null);
                       }}
-                      className="flex min-h-[76px] w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low disabled:cursor-default"
+                      className="focus-visible:bg-surface-container-low flex min-h-[76px] w-full items-center gap-3 px-4 py-3 text-left outline-none disabled:cursor-default"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-bold leading-[1.15] text-on-surface">
+                        <span className="text-on-surface block truncate text-xs leading-[1.15] font-bold">
                           {inventory.locationName}
                         </span>
-                        <span className="mt-1 block text-[10px] leading-[1.2] text-on-surface-variant">
-                          Minimum{" "}
-                          {inventory.minimumStock.toLocaleString("id-ID")} ·
-                          Harga acuan Rp{" "}
+                        <span className="text-on-surface-variant mt-1 block text-[10px] leading-[1.2]">
+                          Minimum {inventory.minimumStock.toLocaleString("id-ID")} · Harga acuan Rp{" "}
                           {inventory.lastPurchasePrice.toLocaleString("id-ID")}
                         </span>
-                        <span className="mt-1 block text-[9px] leading-[1.2] text-on-surface-variant/70">
-                          Stok {inventory.currentStock.toLocaleString("id-ID")}{" "}
-                          · Reservasi{" "}
+                        <span className="text-on-surface-variant/70 mt-1 block text-[9px] leading-[1.2]">
+                          Stok {inventory.currentStock.toLocaleString("id-ID")} · Reservasi{" "}
                           {inventory.reservedStock.toLocaleString("id-ID")}
                         </span>
                       </span>
@@ -749,7 +690,7 @@ export function MaterialSettingsManager({
             </section>
 
             {!canManage ? (
-              <p className="px-1 text-[10px] leading-[1.35] text-on-surface-variant">
+              <p className="text-on-surface-variant px-1 text-[10px] leading-[1.35]">
                 Akun ini hanya dapat melihat default Material Master.
               </p>
             ) : null}
@@ -757,10 +698,7 @@ export function MaterialSettingsManager({
         ) : null}
       </BottomSheet>
 
-      <MaterialImportSheet
-        open={showImport}
-        onClose={() => setShowImport(false)}
-      />
+      <MaterialImportSheet open={showImport} onClose={() => setShowImport(false)} />
 
       <OperationalFormSheet
         actionPlacement="header"
@@ -796,16 +734,12 @@ export function MaterialSettingsManager({
                 }))}
                 createActionLabel="Buat kategori material"
                 createActionDescription="Tambahkan kategori baru ke daftar pilihan."
-                onCreateAction={
-                  canManage ? () => setShowCategoryComposer(true) : undefined
-                }
+                onCreateAction={canManage ? () => setShowCategoryComposer(true) : undefined}
               />
               <FormField
                 label="Nama material"
                 required
-                error={
-                  !draft.name.trim() ? "Nama material wajib diisi." : undefined
-                }
+                error={!draft.name.trim() ? "Nama material wajib diisi." : undefined}
               >
                 <TextInput
                   value={draft.name}
@@ -866,9 +800,7 @@ export function MaterialSettingsManager({
                 <SheetSelect
                   label="Vendor default"
                   value={draft.defaultVendorId ?? ""}
-                  onChange={(value) =>
-                    setDraft({ ...draft, defaultVendorId: value || null })
-                  }
+                  onChange={(value) => setDraft({ ...draft, defaultVendorId: value || null })}
                   options={[
                     { value: "", label: "Tanpa vendor default" },
                     ...vendors.map((row) => ({
@@ -880,9 +812,7 @@ export function MaterialSettingsManager({
                 <FormField label="Spesifikasi" optional>
                   <Textarea
                     value={draft.specification}
-                    onChange={(value) =>
-                      setDraft({ ...draft, specification: value })
-                    }
+                    onChange={(value) => setDraft({ ...draft, specification: value })}
                     rows={2}
                   />
                 </FormField>
@@ -897,9 +827,7 @@ export function MaterialSettingsManager({
                 <SheetSelect
                   label="Lokasi"
                   value={draft.locationId}
-                  onChange={(value) =>
-                    setDraft({ ...draft, locationId: value })
-                  }
+                  onChange={(value) => setDraft({ ...draft, locationId: value })}
                   options={locations.map((row) => ({
                     value: row.id,
                     label: row.name,
@@ -914,9 +842,7 @@ export function MaterialSettingsManager({
                   <NumericInput
                     min={0}
                     value={draft.minimumStock}
-                    onChange={(value) =>
-                      setDraft({ ...draft, minimumStock: Number(value || 0) })
-                    }
+                    onChange={(value) => setDraft({ ...draft, minimumStock: Number(value || 0) })}
                   />
                 </FormField>
                 <FormField label="Harga acuan">
@@ -946,9 +872,7 @@ export function MaterialSettingsManager({
         }}
         pending={pending}
         disabled={!categoryName.trim()}
-        disabledReason={
-          !categoryName.trim() ? "Isi nama kategori material." : undefined
-        }
+        disabledReason={!categoryName.trim() ? "Isi nama kategori material." : undefined}
         submitLabel="Tambah"
         submittingLabel="Menambahkan…"
         onSubmit={addCategory}
@@ -980,15 +904,11 @@ export function MaterialSettingsManager({
         onClose={closeInventory}
         pending={pending}
         disabled={!inventoryDirty}
-        disabledReason={
-          !inventoryDirty ? "Belum ada perubahan untuk disimpan." : undefined
-        }
+        disabledReason={!inventoryDirty ? "Belum ada perubahan untuk disimpan." : undefined}
         submitLabel="Simpan"
         submittingLabel="Menyimpan…"
         onSubmit={saveInventory}
-        statusText={
-          inventoryDirty ? "Perubahan default siap disimpan." : undefined
-        }
+        statusText={inventoryDirty ? "Perubahan default siap disimpan." : undefined}
         statusTone={inventoryDirty ? "success" : "default"}
       >
         {inventoryEdit && (
@@ -1000,10 +920,10 @@ export function MaterialSettingsManager({
               <FormField label="Lokasi inventori" readOnly>
                 <div className="flex min-h-8 items-center gap-2.5">
                   <Warehouse
-                    className="h-4 w-4 shrink-0 text-on-surface-variant"
+                    className="text-on-surface-variant h-4 w-4 shrink-0"
                     aria-hidden="true"
                   />
-                  <span className="truncate text-sm font-bold text-on-surface">
+                  <span className="text-on-surface truncate text-sm font-bold">
                     {inventoryEdit.locationName}
                   </span>
                 </div>
@@ -1033,36 +953,32 @@ export function MaterialSettingsManager({
               </FormField>
             </FormSection>
             {inventoryOriginal && inventoryDirty ? (
-              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-[20px] bg-surface-container-lowest px-3.5 py-3 ring-1 ring-outline-variant/15">
+              <div className="bg-surface-container-lowest ring-outline-variant/15 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-[20px] px-3.5 py-3 ring-1">
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                  <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
                     Sebelum
                   </p>
                   <p className="mt-1 text-[11px] font-bold tabular-nums">
-                    Min.{" "}
-                    {inventoryOriginal.minimumStock.toLocaleString("id-ID")}
+                    Min. {inventoryOriginal.minimumStock.toLocaleString("id-ID")}
                   </p>
-                  <p className="mt-0.5 truncate text-[9px] tabular-nums text-on-surface-variant">
-                    Rp{" "}
-                    {inventoryOriginal.lastPurchasePrice.toLocaleString(
-                      "id-ID",
-                    )}
+                  <p className="text-on-surface-variant mt-0.5 truncate text-[9px] tabular-nums">
+                    Rp {inventoryOriginal.lastPurchasePrice.toLocaleString("id-ID")}
                   </p>
                 </div>
                 <span
-                  className="material-symbols-outlined text-[18px] leading-none text-on-surface-variant"
+                  className="material-symbols-outlined text-on-surface-variant text-[18px] leading-none"
                   aria-hidden="true"
                 >
                   arrow_forward
                 </span>
                 <div className="text-right">
-                  <p className="text-[9px] font-bold uppercase tracking-wide text-primary">
+                  <p className="text-primary text-[9px] font-bold tracking-wide uppercase">
                     Sesudah
                   </p>
-                  <p className="mt-1 text-[11px] font-bold tabular-nums text-primary">
+                  <p className="text-primary mt-1 text-[11px] font-bold tabular-nums">
                     Min. {inventoryEdit.minimumStock.toLocaleString("id-ID")}
                   </p>
-                  <p className="mt-0.5 truncate text-[9px] tabular-nums text-primary">
+                  <p className="text-primary mt-0.5 truncate text-[9px] tabular-nums">
                     Rp {inventoryEdit.lastPurchasePrice.toLocaleString("id-ID")}
                   </p>
                 </div>
@@ -1073,11 +989,7 @@ export function MaterialSettingsManager({
       </OperationalFormSheet>
       <ConfirmationSheet
         open={Boolean(confirmMaterial)}
-        title={
-          confirmMaterial?.isActive
-            ? "Arsipkan material?"
-            : "Aktifkan kembali material?"
-        }
+        title={confirmMaterial?.isActive ? "Arsipkan material?" : "Aktifkan kembali material?"}
         description={
           confirmMaterial
             ? `${confirmMaterial.name} ${confirmMaterial.isActive ? "tidak akan muncul sebagai pilihan aktif." : "akan kembali tersedia sebagai pilihan."}`
@@ -1106,7 +1018,7 @@ export function MaterialSettingsManager({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setPendingClose(null)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
+              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
             >
               Lanjut Mengedit
             </motion.button>
@@ -1126,7 +1038,7 @@ export function MaterialSettingsManager({
                 }
                 setPendingClose(null);
               }}
-              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
+              className="bg-error min-h-12 rounded-full px-4 text-xs font-bold text-white"
             >
               Buang Perubahan
             </motion.button>

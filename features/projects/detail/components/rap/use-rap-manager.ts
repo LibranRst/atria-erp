@@ -7,10 +7,7 @@ import type {
   ProjectPlanBudgetCategory,
   ProjectCategoryPlanItemView,
 } from "../shared/rap-rab-types";
-import {
-  getRapManagerDerivedValues,
-  getRapPermissions,
-} from "./rap-manager-utils";
+import { getRapManagerDerivedValues, getRapPermissions } from "./rap-manager-utils";
 import { useRapManagerActions } from "./use-rap-manager-actions";
 import { useRapManagerForms } from "./use-rap-manager-forms";
 
@@ -79,8 +76,7 @@ export function useRapManager({
     closeCategoryPlanForm,
   });
 
-  const { canEditRap, canEditCategoryPlan, canFinalizeRap } =
-    getRapPermissions(userRole);
+  const { canEditRap, canEditCategoryPlan, canFinalizeRap } = getRapPermissions(userRole);
   const {
     plannedCost,
     needToBuy,

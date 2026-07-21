@@ -1,47 +1,23 @@
 "use client";
 
 import React from "react";
-import {
-  RapRabManager,
-} from "./shared/rap-rab-manager";
+import { RapRabManager } from "./shared/rap-rab-manager";
 import { ProjectInvoices } from "./invoices/project-invoices";
-import {
-  ExpenseList,
-} from "@/features/expenses/components/expense-list";
+import { ExpenseList } from "@/features/expenses/components/expense-list";
 import { useProjectState } from "./project-state-context";
-import {
-  ProjectIdentityHeader,
-  ProjectOverview,
-} from "./overview/project-overview";
-import {
-  ProjectDetailNavigation,
-} from "./project-detail-navigation";
-import {
-  LockedTabState,
-  RabPrerequisiteState,
-} from "./project-tab-states";
+import { ProjectIdentityHeader, ProjectOverview } from "./overview/project-overview";
+import { ProjectDetailNavigation } from "./project-detail-navigation";
+import { LockedTabState, RabPrerequisiteState } from "./project-tab-states";
 import { StockControlPanel } from "./stock/stock-control-panel";
 import { ProfitabilityPanel } from "./overview/profitability-panel";
-import {
-  toTabId,
-  type ProjectTabsProps,
-  type TabId,
-} from "./project-tabs-types";
+import { toTabId, type ProjectTabsProps, type TabId } from "./project-tabs-types";
 import { buildProjectTabsViewModel } from "./project-tabs-view-model";
-import {
-  updateBrowserUrl,
-  useUrlSearchParam,
-} from "@/lib/utils/use-url-search-param";
+import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { resolveEffectiveProjectHealth } from "@/lib/project/effective-health";
 import { getProjectActivationReadiness } from "@/lib/project/activation-readiness";
 import { ProjectActivationSheet } from "./project-activation-sheet";
 
-export type {
-  ProjectData,
-  ProjectTabsProps,
-  StockMovement,
-  TabId,
-} from "./project-tabs-types";
+export type { ProjectData, ProjectTabsProps, StockMovement, TabId } from "./project-tabs-types";
 
 export function ProjectTabs({
   project,
@@ -59,14 +35,11 @@ export function ProjectTabs({
   pricingTemplateCatalog,
 }: ProjectTabsProps): React.JSX.Element {
   const tabParam = useUrlSearchParam("tab");
-  const isLocked =
-    !projectBudgetDashboard || projectBudgetDashboard.status !== "APPROVED";
+  const isLocked = !projectBudgetDashboard || projectBudgetDashboard.status !== "APPROVED";
   const { setProjectState } = useProjectState();
   const contentRef = React.useRef<HTMLDivElement | null>(null);
   const pendingScrollPositionRef = React.useRef<number | null>(null);
-  const [contentMinHeight, setContentMinHeight] = React.useState<number | null>(
-    null,
-  );
+  const [contentMinHeight, setContentMinHeight] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     setProjectState({
@@ -100,8 +73,7 @@ export function ProjectTabs({
     window.addEventListener("scroll", releasePreservedHeight, {
       passive: true,
     });
-    return () =>
-      window.removeEventListener("scroll", releasePreservedHeight);
+    return () => window.removeEventListener("scroll", releasePreservedHeight);
   }, [contentMinHeight]);
 
   const health = resolveEffectiveProjectHealth({
@@ -118,8 +90,7 @@ export function ProjectTabs({
     raps: project.raps,
     rabEstimates: project.rabEstimates,
   });
-  const canActivateProject =
-    userRole === "OWNER" || userRole === "FINANCE_ADMIN";
+  const canActivateProject = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
 
   const {
     contractValue,
@@ -161,10 +132,7 @@ export function ProjectTabs({
     const currentContentRect = contentRef.current?.getBoundingClientRect();
     if (currentScrollY > 80 && currentContentRect) {
       const contentTop = currentContentRect.top + currentScrollY;
-      const viewportRequiredHeight = Math.max(
-        0,
-        currentScrollY + window.innerHeight - contentTop,
-      );
+      const viewportRequiredHeight = Math.max(0, currentScrollY + window.innerHeight - contentTop);
       setContentMinHeight((current) =>
         Math.max(current ?? 0, currentContentRect.height, viewportRequiredHeight),
       );
@@ -177,10 +145,7 @@ export function ProjectTabs({
     if (tabId === defaultTab) params.delete("tab");
     else params.set("tab", tabId);
     const query = params.toString();
-    updateBrowserUrl(
-      `${window.location.pathname}${query ? `?${query}` : ""}`,
-      "replace",
-    );
+    updateBrowserUrl(`${window.location.pathname}${query ? `?${query}` : ""}`, "replace");
   }
 
   return (

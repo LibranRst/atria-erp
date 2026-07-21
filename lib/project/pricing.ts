@@ -5,7 +5,10 @@ export const DEFAULT_TEMPLATE_GROSS_MARGIN: Readonly<Record<string, number>> = {
   CLIENT_LINE: 0.4,
 };
 
-export function calculateSuggestedClientPrice(internalCost: number, grossMarginRatio: number): number {
+export function calculateSuggestedClientPrice(
+  internalCost: number,
+  grossMarginRatio: number,
+): number {
   if (!Number.isFinite(internalCost) || internalCost < 0) {
     throw new Error("Internal cost harus berupa angka non-negatif.");
   }

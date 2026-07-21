@@ -22,8 +22,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: "Dashboard",
     href: "/ledger",
     iconName: "dashboard",
-    match: (path, params): boolean =>
-      path === "/ledger" && params.get("brief") !== "true",
+    match: (path, params): boolean => path === "/ledger" && params.get("brief") !== "true",
   },
   {
     label: "Projects",
@@ -52,34 +51,18 @@ export function getRoleNavItems(roleName: string | null): readonly NavItem[] {
     }
 
     if (roleName === "OWNER" || roleName === "FINANCE_ADMIN") {
-      return (
-        item.label === "Dashboard" ||
-        item.label === "Projects" ||
-        item.label === "Expenses"
-      );
+      return item.label === "Dashboard" || item.label === "Projects" || item.label === "Expenses";
     }
 
     if (roleName === "PURCHASING") {
-      return (
-        item.label === "Materials" ||
-        item.label === "Expenses" ||
-        item.label === "Projects"
-      );
+      return item.label === "Materials" || item.label === "Expenses" || item.label === "Projects";
     }
 
     if (roleName === "PROJECT_MANAGER") {
-      return (
-        item.label === "Projects" ||
-        item.label === "Expenses" ||
-        item.label === "Materials"
-      );
+      return item.label === "Projects" || item.label === "Expenses" || item.label === "Materials";
     }
 
-    return (
-      item.label === "Projects" ||
-      item.label === "Expenses" ||
-      item.label === "Materials"
-    );
+    return item.label === "Projects" || item.label === "Expenses" || item.label === "Materials";
   });
 }
 
@@ -96,8 +79,7 @@ export function buildFabActions({
   readonly isCurrentProjectLocked: boolean;
   readonly withQuery: (key: string, value?: string, targetPath?: string) => string;
 }): readonly FabAction[] {
-  const isOwnerOrFinance =
-    roleName === "OWNER" || roleName === "FINANCE_ADMIN";
+  const isOwnerOrFinance = roleName === "OWNER" || roleName === "FINANCE_ADMIN";
   const isPurchasing = roleName === "PURCHASING";
   const isOperational = isOwnerOrFinance || isPurchasing;
   const isMaterialsPage = pathname.startsWith("/materials");
@@ -263,48 +245,58 @@ export function buildFabActions({
   if (isExpensesPage) {
     return [
       ...(canSubmitExpense
-        ? [{
-            label: "Expense Lapangan",
-            description: "Klaim biaya proyek",
-            iconName: "receipt_long",
-            href: withQuery("new-expense"),
-          }]
+        ? [
+            {
+              label: "Expense Lapangan",
+              description: "Klaim biaya proyek",
+              iconName: "receipt_long",
+              href: withQuery("new-expense"),
+            },
+          ]
         : []),
       ...(canCreateVendorBill
-        ? [{
-            label: "Tagihan Vendor",
-            description: "Invoice supplier",
-            iconName: "request_quote",
-            href: withQuery("new-vendor-bill"),
-          }]
+        ? [
+            {
+              label: "Tagihan Vendor",
+              description: "Invoice supplier",
+              iconName: "request_quote",
+              href: withQuery("new-vendor-bill"),
+            },
+          ]
         : []),
     ];
   }
 
   return [
     ...(canSubmitExpense
-      ? [{
-          label: "Expense Lapangan",
-          description: "Klaim biaya proyek",
-          iconName: "receipt_long",
-          href: withQuery("new-expense", "true", "/expenses"),
-        }]
+      ? [
+          {
+            label: "Expense Lapangan",
+            description: "Klaim biaya proyek",
+            iconName: "receipt_long",
+            href: withQuery("new-expense", "true", "/expenses"),
+          },
+        ]
       : []),
     ...(canCreateVendorBill
-      ? [{
-          label: "Tagihan Vendor",
-          description: "Invoice supplier",
-          iconName: "request_quote",
-          href: withQuery("new-vendor-bill", "true", "/expenses"),
-        }]
+      ? [
+          {
+            label: "Tagihan Vendor",
+            description: "Invoice supplier",
+            iconName: "request_quote",
+            href: withQuery("new-vendor-bill", "true", "/expenses"),
+          },
+        ]
       : []),
     ...(isOwnerOrFinance
-      ? [{
-          label: "Project Baru",
-          description: "Buat workspace",
-          iconName: "folder_open",
-          href: withQuery("new-project", "true", "/projects"),
-        }]
+      ? [
+          {
+            label: "Project Baru",
+            description: "Buat workspace",
+            iconName: "folder_open",
+            href: withQuery("new-project", "true", "/projects"),
+          },
+        ]
       : []),
   ];
 }

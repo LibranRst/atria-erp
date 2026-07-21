@@ -228,7 +228,8 @@ export function buildProjectBudgetDashboardFromBudget(
   const remainingBudget = internalBudget - actualCost;
   const usedPercentage = calculateUsedPercentage(actualCost, internalBudget);
   const projectedMarginAmount = contractValue - Math.max(actualCost, internalBudget);
-  const projectedMarginPercentage = contractValue > 0 ? (projectedMarginAmount / contractValue) * 100 : 0;
+  const projectedMarginPercentage =
+    contractValue > 0 ? (projectedMarginAmount / contractValue) * 100 : 0;
 
   return {
     projectId: budget.projectId,
@@ -252,7 +253,9 @@ export function buildProjectBudgetDashboardFromBudget(
   };
 }
 
-export async function buildProjectBudgetDashboard(projectId: string): Promise<ProjectBudgetDashboard | null> {
+export async function buildProjectBudgetDashboard(
+  projectId: string,
+): Promise<ProjectBudgetDashboard | null> {
   const budget = await db.query.projectBudgets.findFirst({
     where: eq(projectBudgets.projectId, projectId),
     with: {
@@ -315,9 +318,12 @@ export function aggregateOwnerBudgetDashboard(
     remainingBudget,
     usedPercentage: calculateUsedPercentage(consumedBudget, totalBudget),
     projectedMarginAmount,
-    projectedMarginPercentage: totalProjectValue > 0 ? (projectedMarginAmount / totalProjectValue) * 100 : 0,
+    projectedMarginPercentage:
+      totalProjectValue > 0 ? (projectedMarginAmount / totalProjectValue) * 100 : 0,
     projectsOverBudget: projects.filter((item) => item.usedPercentage > 100).length,
-    categoriesNearLimit: projects.flatMap((item) => item.categories).filter((item) => item.status !== "SAFE").length,
+    categoriesNearLimit: projects
+      .flatMap((item) => item.categories)
+      .filter((item) => item.status !== "SAFE").length,
     categories: Array.from(categoryMap.values()).sort((a, b) => a.sortOrder - b.sortOrder),
     projects,
   };

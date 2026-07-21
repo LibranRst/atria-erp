@@ -59,11 +59,7 @@ export function useUrlSearchParam(key: string): string | null {
   const nextSearchParams = useSearchParams();
   const serverSearch = `?${nextSearchParams.toString()}`;
   const getServerSnapshot = useCallback(() => serverSearch, [serverSearch]);
-  const search = useSyncExternalStore(
-    subscribeToUrl,
-    getUrlSnapshot,
-    getServerSnapshot,
-  );
+  const search = useSyncExternalStore(subscribeToUrl, getUrlSnapshot, getServerSnapshot);
 
   return new URLSearchParams(search).get(key);
 }
@@ -73,15 +69,9 @@ export function useBrowserUrlSearchParam(
   initialValue: string | null = null,
 ): string | null {
   const getServerSnapshot = useCallback(() => {
-    return initialValue === null
-      ? ""
-      : `?${new URLSearchParams([[key, initialValue]]).toString()}`;
+    return initialValue === null ? "" : `?${new URLSearchParams([[key, initialValue]]).toString()}`;
   }, [initialValue, key]);
-  const search = useSyncExternalStore(
-    subscribeToUrl,
-    getUrlSnapshot,
-    getServerSnapshot,
-  );
+  const search = useSyncExternalStore(subscribeToUrl, getUrlSnapshot, getServerSnapshot);
 
   return new URLSearchParams(search).get(key);
 }
@@ -107,10 +97,7 @@ export function updateUrlSearchParam(
   return nextUrl;
 }
 
-export function updateBrowserUrl(
-  nextUrl: string,
-  mode: "push" | "replace" = "push",
-): void {
+export function updateBrowserUrl(nextUrl: string, mode: "push" | "replace" = "push"): void {
   if (mode === "replace") {
     window.history.replaceState({}, "", nextUrl);
   } else {

@@ -2,10 +2,7 @@
 
 import React from "react";
 
-import {
-  EmptyState,
-  MoneyValue,
-} from "@/components/ui/page-primitives";
+import { EmptyState, MoneyValue } from "@/components/ui/page-primitives";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import {
   ExpensesGroupSurface,
@@ -16,10 +13,7 @@ import type {
   ExpenseCostItem,
   FilterStatus,
 } from "@/features/expenses/components/expense-list-types";
-import {
-  FieldClaimHistory,
-  FieldClaimRow,
-} from "@/features/expenses/components/field-claim-rows";
+import { FieldClaimHistory, FieldClaimRow } from "@/features/expenses/components/field-claim-rows";
 
 type FilterTab = {
   readonly label: string;
@@ -72,8 +66,7 @@ export function FieldClaimsPanel({
   const [resultsMinHeight, setResultsMinHeight] = React.useState<number | null>(null);
   const resultsRef = React.useRef<HTMLDivElement | null>(null);
   const pendingScrollYRef = React.useRef<number | null>(null);
-  const hasNoRows =
-    filter === "ALL" ? initialCosts.length === 0 : filteredCosts.length === 0;
+  const hasNoRows = filter === "ALL" ? initialCosts.length === 0 : filteredCosts.length === 0;
   const visibleCosts = filteredCosts.slice(0, visibleLimit);
 
   React.useLayoutEffect(() => {
@@ -132,11 +125,15 @@ export function FieldClaimsPanel({
         ) : (
           <div className="space-y-3">
             <ExpensesSectionHeader
-              title={filter === "ALL" ? "Pengeluaran aktif" : filterTabs.find((tab) => tab.value === filter)?.label ?? "Pengeluaran"}
+              title={
+                filter === "ALL"
+                  ? "Pengeluaran aktif"
+                  : (filterTabs.find((tab) => tab.value === filter)?.label ?? "Pengeluaran")
+              }
               meta={`${filteredCosts.length} item`}
             />
             <ExpensesGroupSurface>
-              <div className="divide-y divide-black/[0.055]">
+              <div className="divide-y divide-black/5.5">
                 {visibleCosts.map((cost) => (
                   <FieldClaimRow
                     key={cost.id}
@@ -155,7 +152,7 @@ export function FieldClaimsPanel({
               <button
                 type="button"
                 onClick={() => setVisibleLimit((current) => current + 20)}
-                className="min-h-12 w-full rounded-full bg-surface-container text-xs font-bold leading-4 text-on-surface"
+                className="bg-surface-container text-on-surface min-h-12 w-full rounded-full text-xs leading-4 font-bold"
               >
                 Tampilkan 20 berikutnya
               </button>
@@ -196,25 +193,38 @@ function FieldClaimsSummary({
       icon="receipt_long"
       status={needsActionCount > 0 ? `${needsActionCount} perlu aksi` : "Terkendali"}
       statusTone={needsActionCount > 0 ? "warning" : "positive"}
-      action={projectId ? (
-        <button
-          type="button"
-          onClick={onOpenExpenseDrawer}
-          className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#007AFF]/[0.08] px-3 text-[10px] font-semibold leading-4 text-[#007AFF] outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] active:bg-[#007AFF]/[0.14] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30"
-        >
-          <span className="material-symbols-outlined text-[14px] leading-none" aria-hidden="true">add</span>
-          Tambah
-        </button>
-      ) : undefined}
+      action={
+        projectId ? (
+          <button
+            type="button"
+            onClick={onOpenExpenseDrawer}
+            className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#007AFF]/8 px-3 text-[10px] leading-4 font-semibold text-[#007AFF] outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 active:bg-[#007AFF]/[0.14]"
+          >
+            <span className="material-symbols-outlined text-[14px] leading-none" aria-hidden="true">
+              add
+            </span>
+            Tambah
+          </button>
+        ) : undefined
+      }
     >
       <div className="flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[9px] font-semibold leading-3 text-on-surface-variant/60">Total aktif</p>
-          <MoneyValue amount={activeClaimTotal} variant="compactWithFull" size="lg" className="mt-1" />
+          <p className="text-on-surface-variant/60 text-[9px] leading-3 font-semibold">
+            Total aktif
+          </p>
+          <MoneyValue
+            amount={activeClaimTotal}
+            variant="compactWithFull"
+            size="lg"
+            className="mt-1"
+          />
         </div>
-        <p className="max-w-[145px] text-right text-[10px] leading-4 text-on-surface-variant/70">Dana yang masih berada dalam alur verifikasi hingga pencairan.</p>
+        <p className="text-on-surface-variant/70 max-w-[145px] text-right text-[10px] leading-4">
+          Dana yang masih berada dalam alur verifikasi hingga pencairan.
+        </p>
       </div>
-      <div className="mt-3.5 grid grid-cols-2 divide-x divide-black/[0.055] rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
+      <div className="bg-surface-container-low/65 mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5">
         <InboxMetric label="Butuh aksi" value={String(needsActionCount)} />
         <InboxMetric label="Siap dicairkan" value={String(readyToPayCount)} />
       </div>
@@ -231,8 +241,10 @@ function InboxMetric({
 }): React.JSX.Element {
   return (
     <div className="min-w-0 px-2.5 first:pl-0 last:pr-0">
-      <p className="truncate text-[9px] font-semibold leading-3 text-on-surface-variant/60">{label}</p>
-      <p className="mt-1 font-mono text-sm font-bold leading-5 text-on-surface">{value}</p>
+      <p className="text-on-surface-variant/60 truncate text-[9px] leading-3 font-semibold">
+        {label}
+      </p>
+      <p className="text-on-surface mt-1 font-mono text-sm leading-5 font-bold">{value}</p>
     </div>
   );
 }

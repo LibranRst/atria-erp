@@ -17,10 +17,7 @@ import {
   TextInput,
   ValuePreviewStrip,
 } from "@/components/ui";
-import {
-  formatIdr as formatRp,
-  formatShortIdr as formatShortRp,
-} from "@/lib/utils/money";
+import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import type {
   CategoryPlanFormState,
   PricingTemplateOption,
@@ -46,9 +43,7 @@ export function CategoryPlanFormDrawer({
   readonly closeCategoryPlanForm: () => void;
   readonly editingCategoryPlanItemId: string | null;
   readonly categoryPlanForm: CategoryPlanFormState;
-  readonly setCategoryPlanForm: React.Dispatch<
-    React.SetStateAction<CategoryPlanFormState>
-  >;
+  readonly setCategoryPlanForm: React.Dispatch<React.SetStateAction<CategoryPlanFormState>>;
   readonly pricingTemplates: readonly PricingTemplateOption[];
   readonly budgetCategories: readonly ProjectPlanBudgetCategory[];
   readonly vendors: readonly VendorOption[];
@@ -66,14 +61,32 @@ export function CategoryPlanFormDrawer({
       submitLabel={editingCategoryPlanItemId ? "Perbarui" : "Tambah"}
       submittingLabel="Menyimpan…"
       pending={isPending}
-      disabled={!categoryPlanForm.projectBudgetCategoryId || !categoryPlanForm.name || !categoryPlanForm.area || !categoryPlanForm.unit}
-      disabledReason={!categoryPlanForm.projectBudgetCategoryId || !categoryPlanForm.name || !categoryPlanForm.area || !categoryPlanForm.unit ? "Lengkapi kategori, nama paket, area, dan satuan." : undefined}
+      disabled={
+        !categoryPlanForm.projectBudgetCategoryId ||
+        !categoryPlanForm.name ||
+        !categoryPlanForm.area ||
+        !categoryPlanForm.unit
+      }
+      disabledReason={
+        !categoryPlanForm.projectBudgetCategoryId ||
+        !categoryPlanForm.name ||
+        !categoryPlanForm.area ||
+        !categoryPlanForm.unit
+          ? "Lengkapi kategori, nama paket, area, dan satuan."
+          : undefined
+      }
       statusText={`${categoryPlanForm.name || "Paket belum diisi"} · ${formatRp(categoryFormEstimatedTotal)}`}
-      statusTone={categoryPlanForm.name && categoryPlanForm.projectBudgetCategoryId ? "success" : "warning"}
+      statusTone={
+        categoryPlanForm.name && categoryPlanForm.projectBudgetCategoryId ? "success" : "warning"
+      }
     >
       <div className="space-y-md">
         <FieldContextLine tone={categoryFormEstimatedTotal > 0 ? "success" : "default"}>
-          {categoryPlanForm.name || "Paket belum diisi"} · {budgetCategories.find((category) => category.id === categoryPlanForm.projectBudgetCategoryId)?.name ?? "kategori belum dipilih"} · {formatRp(categoryFormEstimatedTotal)}
+          {categoryPlanForm.name || "Paket belum diisi"} ·{" "}
+          {budgetCategories.find(
+            (category) => category.id === categoryPlanForm.projectBudgetCategoryId,
+          )?.name ?? "kategori belum dipilih"}{" "}
+          · {formatRp(categoryFormEstimatedTotal)}
         </FieldContextLine>
         <form
           id="category-plan-item-form"
@@ -99,8 +112,7 @@ export function CategoryPlanFormDrawer({
                     ...pricingTemplates
                       .filter(
                         (item) =>
-                          item.itemType === "WORK_PACKAGE" ||
-                          item.itemType === "SUBCON_PACKAGE",
+                          item.itemType === "WORK_PACKAGE" || item.itemType === "SUBCON_PACKAGE",
                       )
                       .map((item) => ({
                         value: item.id,
@@ -111,9 +123,8 @@ export function CategoryPlanFormDrawer({
                       })),
                   ]}
                 />
-                <p className="px-4 pb-3 pt-1 text-[10px] leading-4 text-on-surface-variant">
-                  Template disalin sebagai snapshot. Edit setelahnya tidak
-                  mengubah Library.
+                <p className="text-on-surface-variant px-4 pt-1 pb-3 text-[10px] leading-4">
+                  Template disalin sebagai snapshot. Edit setelahnya tidak mengubah Library.
                 </p>
               </div>
             </FormSection>
@@ -123,7 +134,7 @@ export function CategoryPlanFormDrawer({
             title="Identitas & lingkup"
             helper="Kategori menentukan hubungan paket dengan budget Tukang atau Subcon."
           >
-            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
               <SheetSelect
                 label="Kategori Budget"
                 value={categoryPlanForm.projectBudgetCategoryId}
@@ -143,9 +154,7 @@ export function CategoryPlanFormDrawer({
               <ComboboxField
                 label="Area / Lingkup"
                 value={categoryPlanForm.area}
-                onChange={(value) =>
-                  setCategoryPlanForm((curr) => ({ ...curr, area: value }))
-                }
+                onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, area: value }))}
                 options={COMMON_ROOM_OPTIONS}
                 placeholder="Pilih atau ketik area"
               />
@@ -153,9 +162,7 @@ export function CategoryPlanFormDrawer({
                 label="Vendor"
                 optional
                 value={categoryPlanForm.vendorId}
-                onChange={(value) =>
-                  setCategoryPlanForm((curr) => ({ ...curr, vendorId: value }))
-                }
+                onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, vendorId: value }))}
                 options={[
                   { value: "", label: "Tanpa vendor" },
                   ...vendors.map((vendor) => ({
@@ -167,9 +174,7 @@ export function CategoryPlanFormDrawer({
               <FormField label="Nama Paket">
                 <TextInput
                   value={categoryPlanForm.name}
-                  onChange={(value) =>
-                    setCategoryPlanForm((curr) => ({ ...curr, name: value }))
-                  }
+                  onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, name: value }))}
                   placeholder="Nama paket kerja"
                 />
               </FormField>
@@ -193,7 +198,7 @@ export function CategoryPlanFormDrawer({
             title="Jumlah & biaya"
             helper="Estimasi ini hanya untuk kontrol internal; RAB klien dibuat dari salinan yang aman."
           >
-            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
               <FormField label="Jumlah">
                 <NumericInput
                   value={categoryPlanForm.quantity}
@@ -209,9 +214,7 @@ export function CategoryPlanFormDrawer({
               <ComboboxField
                 label="Satuan"
                 value={categoryPlanForm.unit}
-                onChange={(value) =>
-                  setCategoryPlanForm((curr) => ({ ...curr, unit: value }))
-                }
+                onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, unit: value }))}
                 options={COMMON_UNIT_OPTIONS}
                 placeholder="Pilih satuan"
               />
@@ -245,8 +248,15 @@ export function CategoryPlanFormDrawer({
             <div className="p-3">
               <ValuePreviewStrip
                 items={[
-                  { label: "Jumlah", value: `${categoryPlanForm.quantity || 0} ${categoryPlanForm.unit}` },
-                  { label: "Estimasi paket", amount: categoryFormEstimatedTotal, tone: categoryFormEstimatedTotal > 0 ? "success" : "default" },
+                  {
+                    label: "Jumlah",
+                    value: `${categoryPlanForm.quantity || 0} ${categoryPlanForm.unit}`,
+                  },
+                  {
+                    label: "Estimasi paket",
+                    amount: categoryFormEstimatedTotal,
+                    tone: categoryFormEstimatedTotal > 0 ? "success" : "default",
+                  },
                 ]}
               />
             </div>

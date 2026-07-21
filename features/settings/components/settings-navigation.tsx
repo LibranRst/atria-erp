@@ -8,7 +8,17 @@ import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/ui/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import { SETTINGS_TABS, type SettingsTab } from "./settings-tabs-config";
 
-export function SettingsNavigation({ value, onChange, showAdministration = false, showSetup = false }: { readonly value: SettingsTab; readonly onChange: (value: SettingsTab) => void; readonly showAdministration?: boolean; readonly showSetup?: boolean }): React.JSX.Element {
+export function SettingsNavigation({
+  value,
+  onChange,
+  showAdministration = false,
+  showSetup = false,
+}: {
+  readonly value: SettingsTab;
+  readonly onChange: (value: SettingsTab) => void;
+  readonly showAdministration?: boolean;
+  readonly showSetup?: boolean;
+}): React.JSX.Element {
   const ref = React.useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = React.useState(false);
   const stickyActive = WORKSPACE_STICKY_CONTROLS_ENABLED && isSticky;
@@ -25,7 +35,7 @@ export function SettingsNavigation({ value, onChange, showAdministration = false
       frame = window.requestAnimationFrame(() => {
         frame = null;
         const next = window.scrollY > 0 && node.getBoundingClientRect().top <= 64.5;
-        setIsSticky((current) => current === next ? current : next);
+        setIsSticky((current) => (current === next ? current : next));
       });
     };
     update();
@@ -42,7 +52,11 @@ export function SettingsNavigation({ value, onChange, showAdministration = false
     <motion.div
       ref={ref}
       data-sticky={stickyActive ? "true" : "false"}
-      animate={{ marginLeft: stickyActive ? -8 : 0, marginRight: stickyActive ? -8 : 0, padding: stickyActive ? 8 : 0 }}
+      animate={{
+        marginLeft: stickyActive ? -8 : 0,
+        marginRight: stickyActive ? -8 : 0,
+        padding: stickyActive ? 8 : 0,
+      }}
       transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
       className={`${WORKSPACE_STICKY_CONTROLS_ENABLED ? "sticky top-16 z-20 [overflow-anchor:none]" : "relative"} ${stickyActive ? "overflow-hidden rounded-[24px]" : ""}`}
     >
@@ -54,7 +68,7 @@ export function SettingsNavigation({ value, onChange, showAdministration = false
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={reduceMotion ? { duration: 0 } : transitionEaseSmooth}
-            className="pointer-events-none absolute inset-0 rounded-[24px] bg-white/[0.96] shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
+            className="pointer-events-none absolute inset-0 rounded-[24px] bg-white/96 shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
             aria-hidden="true"
           />
         ) : null}
@@ -67,9 +81,17 @@ export function SettingsNavigation({ value, onChange, showAdministration = false
           layoutId="settings-main-tabs"
           scrollable
           density="compact"
-          options={SETTINGS_TABS.filter((module) => (module.value !== "administration" || showAdministration) && (module.value !== "setup" || showSetup)).map((module) => {
+          options={SETTINGS_TABS.filter(
+            (module) =>
+              (module.value !== "administration" || showAdministration) &&
+              (module.value !== "setup" || showSetup),
+          ).map((module) => {
             const Icon = module.icon;
-            return { value: module.value, label: module.shortLabel, icon: <Icon className="h-[15px] w-[15px]" aria-hidden="true" /> };
+            return {
+              value: module.value,
+              label: module.shortLabel,
+              icon: <Icon className="h-[15px] w-[15px]" aria-hidden="true" />,
+            };
           })}
         />
       </div>

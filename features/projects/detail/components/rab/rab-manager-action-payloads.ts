@@ -1,8 +1,4 @@
-import type {
-  ManualQuotationLine,
-  RabEstimateView,
-  RabItemView,
-} from "../shared/rap-rab-types";
+import type { ManualQuotationLine, RabEstimateView, RabItemView } from "../shared/rap-rab-types";
 import type { RabBundleForm, RabChangeOrderForm } from "./rab-drawer-types";
 import { buildManualQuotationLines } from "./rab-manager-utils";
 

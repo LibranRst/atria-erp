@@ -26,9 +26,7 @@ import {
   mapProjectsForForms,
 } from "./project-detail-mappers";
 
-export async function getProjectDetailData(
-  projectId: string,
-): Promise<ProjectTabsProps> {
+export async function getProjectDetailData(projectId: string): Promise<ProjectTabsProps> {
   const session = await requireServerSession();
   const roleName = (await resolveRoleName(session.user.roleId)) ?? "UNKNOWN";
   const isFinanceOperator = roleName === "OWNER" || roleName === "FINANCE_ADMIN";
@@ -100,8 +98,7 @@ export async function getProjectDetailData(
     notFound();
   }
 
-  const projectBudgetDashboardResult =
-    await getProjectBudgetDashboard(projectId);
+  const projectBudgetDashboardResult = await getProjectBudgetDashboard(projectId);
   const projectBudgetDashboard = projectBudgetDashboardResult.success
     ? projectBudgetDashboardResult.data
     : null;
@@ -183,9 +180,7 @@ export async function getProjectDetailData(
   });
 
   const isPM = roleName === "PROJECT_MANAGER";
-  const pmProjectFilter = isPM
-    ? eq(project.projectManagerId, session.user.id)
-    : undefined;
+  const pmProjectFilter = isPM ? eq(project.projectManagerId, session.user.id) : undefined;
   const projectsData = await db.query.project.findMany({
     where: pmProjectFilter
       ? and(eq(project.status, "ACTIVE"), pmProjectFilter)
@@ -230,8 +225,7 @@ export async function getProjectDetailData(
     },
   });
 
-  const materialMasterCatalog =
-    mapMaterialMasterCatalog(materialOptionsData);
+  const materialMasterCatalog = mapMaterialMasterCatalog(materialOptionsData);
 
   const pricingTemplateCatalog = await db.query.itemPriceLibrary.findMany({
     where: eq(itemPriceLibrary.isActive, true),

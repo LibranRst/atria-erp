@@ -34,5 +34,13 @@ export function GlobalExpenseDrawer(): React.JSX.Element | null {
     updateUrlSearchParam("expense-draft", null, "replace");
   }, []);
 
-  return <ExpenseForm open={showDrawer} onClose={handleClose} projects={projects} inventoryLocations={projects[0]?.inventoryLocations ?? []} requestedDraftId={requestedDraftId} />;
+  return (
+    <ExpenseForm
+      open={showDrawer}
+      onClose={handleClose}
+      projects={projects}
+      inventoryLocations={projects[0]?.inventoryLocations ?? []}
+      requestedDraftId={requestedDraftId}
+    />
+  );
 }

@@ -3,12 +3,12 @@
 import { db } from "@/db";
 import { projectCost } from "@/db/schema";
 import { ActionResponse } from "@/lib/types/action-response";
-import { 
-  submitFieldRequestSchema, 
-  ApproveFieldRequestInput, 
+import {
+  submitFieldRequestSchema,
+  ApproveFieldRequestInput,
   SubmitFieldRequestInput,
   submitFieldRequestsSchema,
-  SubmitFieldRequestsInput
+  SubmitFieldRequestsInput,
 } from "@/lib/validations/finance";
 import crypto from "crypto";
 import { authorizeFieldRequestAction } from "./field-request-auth";
@@ -19,21 +19,22 @@ import {
   verifyFieldRequest as verifyFieldRequestWrite,
 } from "./field-request-review";
 import { createSubmittedFieldRequestTx } from "./field-request-submit";
-import {
-  mapSubmitFieldRequestError,
-} from "./field-request-utils";
+import { mapSubmitFieldRequestError } from "./field-request-utils";
 
 /**
  * PM mengajukan biaya pengeluaran lapangan baru (Project Cost / Field Claim).
  */
 export async function submitFieldRequest(
-  input: SubmitFieldRequestInput
+  input: SubmitFieldRequestInput,
 ): Promise<ActionResponse<typeof projectCost.$inferSelect>> {
   const validation = submitFieldRequestSchema.safeParse(input);
   if (!validation.success) {
     return {
       success: false,
-      error: { code: "VALIDATION_ERROR", message: "Parameter pengajuan biaya lapangan tidak valid." },
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Parameter pengajuan biaya lapangan tidak valid.",
+      },
     };
   }
 
@@ -69,13 +70,16 @@ export async function submitFieldRequest(
  * PM mengajukan beberapa biaya pengeluaran lapangan sekaligus (Multi-Item) di bawah satu nota.
  */
 export async function submitFieldRequests(
-  input: SubmitFieldRequestsInput
+  input: SubmitFieldRequestsInput,
 ): Promise<ActionResponse<Array<typeof projectCost.$inferSelect>>> {
   const validation = submitFieldRequestsSchema.safeParse(input);
   if (!validation.success) {
     return {
       success: false,
-      error: { code: "VALIDATION_ERROR", message: "Parameter pengajuan biaya lapangan tidak valid." },
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Parameter pengajuan biaya lapangan tidak valid.",
+      },
     };
   }
 
@@ -123,7 +127,7 @@ export async function submitFieldRequests(
  * Admin atau PM Senior memverifikasi biaya lapangan (dari SUBMITTED ke VERIFIED).
  */
 export async function verifyFieldRequest(
-  projectCostId: string
+  projectCostId: string,
 ): Promise<ActionResponse<typeof projectCost.$inferSelect>> {
   return verifyFieldRequestWrite(projectCostId);
 }
@@ -132,7 +136,7 @@ export async function verifyFieldRequest(
  * Owner menyetujui atau menolak pengajuan pengeluaran lapangan.
  */
 export async function approveFieldRequest(
-  input: ApproveFieldRequestInput
+  input: ApproveFieldRequestInput,
 ): Promise<ActionResponse<typeof projectCost.$inferSelect>> {
   return approveFieldRequestWrite(input);
 }
@@ -143,7 +147,7 @@ export async function approveFieldRequest(
 export async function payFieldRequest(
   projectCostId: string,
   bankAccountId: string,
-  referenceNumber: string
+  referenceNumber: string,
 ): Promise<ActionResponse<{ costId: string; nextBalance: number }>> {
   return payFieldRequestWrite(projectCostId, bankAccountId, referenceNumber);
 }

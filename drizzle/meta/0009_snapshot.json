@@ -111,12 +111,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -210,12 +206,8 @@
           "name": "ai_run_run_by_id_user_id_fk",
           "tableFrom": "ai_run",
           "tableTo": "user",
-          "columnsFrom": [
-            "run_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["run_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -275,12 +267,8 @@
           "name": "app_config_updated_by_id_user_id_fk",
           "tableFrom": "app_config",
           "tableTo": "user",
-          "columnsFrom": [
-            "updated_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -290,9 +278,7 @@
         "app_config_key_unique": {
           "name": "app_config_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "key"
-          ]
+          "columns": ["key"]
         }
       },
       "policies": {},
@@ -391,12 +377,8 @@
           "name": "approval_approver_id_user_id_fk",
           "tableFrom": "approval",
           "tableTo": "user",
-          "columnsFrom": [
-            "approver_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["approver_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -496,12 +478,8 @@
           "name": "attachment_uploaded_by_id_user_id_fk",
           "tableFrom": "attachment",
           "tableTo": "user",
-          "columnsFrom": [
-            "uploaded_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["uploaded_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -622,12 +600,8 @@
           "name": "audit_log_user_id_user_id_fk",
           "tableFrom": "audit_log",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -702,9 +676,7 @@
         "bank_account_account_number_unique": {
           "name": "bank_account_account_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "account_number"
-          ]
+          "columns": ["account_number"]
         }
       },
       "policies": {},
@@ -788,12 +760,8 @@
           "name": "bank_statement_import_bank_account_id_bank_account_id_fk",
           "tableFrom": "bank_statement_import",
           "tableTo": "bank_account",
-          "columnsFrom": [
-            "bank_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bank_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -801,12 +769,8 @@
           "name": "bank_statement_import_imported_by_id_user_id_fk",
           "tableFrom": "bank_statement_import",
           "tableTo": "user",
-          "columnsFrom": [
-            "imported_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["imported_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -916,12 +880,8 @@
           "name": "bank_statement_row_import_id_bank_statement_import_id_fk",
           "tableFrom": "bank_statement_row",
           "tableTo": "bank_statement_import",
-          "columnsFrom": [
-            "import_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["import_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -929,12 +889,8 @@
           "name": "bank_statement_row_matched_cash_transaction_id_cash_transaction_id_fk",
           "tableFrom": "bank_statement_row",
           "tableTo": "cash_transaction",
-          "columnsFrom": [
-            "matched_cash_transaction_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["matched_cash_transaction_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1075,12 +1031,8 @@
           "name": "cash_transaction_bank_account_id_bank_account_id_fk",
           "tableFrom": "cash_transaction",
           "tableTo": "bank_account",
-          "columnsFrom": [
-            "bank_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bank_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1088,12 +1040,8 @@
           "name": "cash_transaction_reconciled_by_id_user_id_fk",
           "tableFrom": "cash_transaction",
           "tableTo": "user",
-          "columnsFrom": [
-            "reconciled_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reconciled_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1167,9 +1115,7 @@
         "client_email_unique": {
           "name": "client_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1266,12 +1212,8 @@
           "name": "client_invoice_project_id_project_id_fk",
           "tableFrom": "client_invoice",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1281,9 +1223,7 @@
         "client_invoice_invoice_number_unique": {
           "name": "client_invoice_invoice_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "invoice_number"
-          ]
+          "columns": ["invoice_number"]
         }
       },
       "policies": {},
@@ -1403,12 +1343,8 @@
           "name": "client_payment_client_invoice_id_client_invoice_id_fk",
           "tableFrom": "client_payment",
           "tableTo": "client_invoice",
-          "columnsFrom": [
-            "client_invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["client_invoice_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1416,12 +1352,8 @@
           "name": "client_payment_bank_account_id_bank_account_id_fk",
           "tableFrom": "client_payment",
           "tableTo": "bank_account",
-          "columnsFrom": [
-            "bank_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bank_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1429,12 +1361,8 @@
           "name": "client_payment_cash_transaction_id_cash_transaction_id_fk",
           "tableFrom": "client_payment",
           "tableTo": "cash_transaction",
-          "columnsFrom": [
-            "cash_transaction_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cash_transaction_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1442,12 +1370,8 @@
           "name": "client_payment_received_by_id_user_id_fk",
           "tableFrom": "client_payment",
           "tableTo": "user",
-          "columnsFrom": [
-            "received_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["received_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1546,9 +1470,7 @@
         "expense_category_code_unique": {
           "name": "expense_category_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -1607,9 +1529,7 @@
         "inventory_location_name_unique": {
           "name": "inventory_location_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -1654,9 +1574,7 @@
         "material_category_name_unique": {
           "name": "material_category_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -1794,12 +1712,8 @@
           "name": "material_inventory_material_id_material_master_id_fk",
           "tableFrom": "material_inventory",
           "tableTo": "material_master",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1807,12 +1721,8 @@
           "name": "material_inventory_location_id_inventory_location_id_fk",
           "tableFrom": "material_inventory",
           "tableTo": "inventory_location",
-          "columnsFrom": [
-            "location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["location_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1956,12 +1866,8 @@
           "name": "material_master_category_id_material_category_id_fk",
           "tableFrom": "material_master",
           "tableTo": "material_category",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1969,12 +1875,8 @@
           "name": "material_master_default_vendor_id_vendor_id_fk",
           "tableFrom": "material_master",
           "tableTo": "vendor",
-          "columnsFrom": [
-            "default_vendor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["default_vendor_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2085,12 +1987,8 @@
           "name": "notification_user_id_user_id_fk",
           "tableFrom": "notification",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2213,12 +2111,8 @@
           "name": "project_client_id_client_id_fk",
           "tableFrom": "project",
           "tableTo": "client",
-          "columnsFrom": [
-            "client_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["client_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2226,12 +2120,8 @@
           "name": "project_project_manager_id_user_id_fk",
           "tableFrom": "project",
           "tableTo": "user",
-          "columnsFrom": [
-            "project_manager_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_manager_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2320,12 +2210,8 @@
           "name": "project_budget_project_id_project_id_fk",
           "tableFrom": "project_budget",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2333,12 +2219,8 @@
           "name": "project_budget_approved_by_id_user_id_fk",
           "tableFrom": "project_budget",
           "tableTo": "user",
-          "columnsFrom": [
-            "approved_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["approved_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2551,12 +2433,8 @@
           "name": "project_budget_category_project_budget_id_project_budgets_id_fk",
           "tableFrom": "project_budget_category",
           "tableTo": "project_budgets",
-          "columnsFrom": [
-            "project_budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2564,12 +2442,8 @@
           "name": "project_budget_category_expense_category_id_expense_category_id_fk",
           "tableFrom": "project_budget_category",
           "tableTo": "expense_category",
-          "columnsFrom": [
-            "expense_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2577,12 +2451,8 @@
           "name": "project_budget_category_legacy_project_budget_item_id_project_budget_item_id_fk",
           "tableFrom": "project_budget_category",
           "tableTo": "project_budget_item",
-          "columnsFrom": [
-            "legacy_project_budget_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["legacy_project_budget_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2715,12 +2585,8 @@
           "name": "project_budget_item_project_budget_id_project_budget_id_fk",
           "tableFrom": "project_budget_item",
           "tableTo": "project_budget",
-          "columnsFrom": [
-            "project_budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2728,12 +2594,8 @@
           "name": "project_budget_item_cost_category_id_project_cost_category_id_fk",
           "tableFrom": "project_budget_item",
           "tableTo": "project_cost_category",
-          "columnsFrom": [
-            "cost_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cost_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2906,12 +2768,8 @@
           "name": "project_budgets_project_id_project_id_fk",
           "tableFrom": "project_budgets",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2919,12 +2777,8 @@
           "name": "project_budgets_legacy_project_budget_id_project_budget_id_fk",
           "tableFrom": "project_budgets",
           "tableTo": "project_budget",
-          "columnsFrom": [
-            "legacy_project_budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["legacy_project_budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2932,12 +2786,8 @@
           "name": "project_budgets_approved_by_id_user_id_fk",
           "tableFrom": "project_budgets",
           "tableTo": "user",
-          "columnsFrom": [
-            "approved_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["approved_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3168,12 +3018,8 @@
           "name": "project_category_plan_item_project_id_project_id_fk",
           "tableFrom": "project_category_plan_item",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3181,12 +3027,8 @@
           "name": "project_category_plan_item_project_budget_id_project_budgets_id_fk",
           "tableFrom": "project_category_plan_item",
           "tableTo": "project_budgets",
-          "columnsFrom": [
-            "project_budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3194,12 +3036,8 @@
           "name": "project_category_plan_item_project_budget_category_id_project_budget_category_id_fk",
           "tableFrom": "project_category_plan_item",
           "tableTo": "project_budget_category",
-          "columnsFrom": [
-            "project_budget_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3207,12 +3045,8 @@
           "name": "project_category_plan_item_expense_category_id_expense_category_id_fk",
           "tableFrom": "project_category_plan_item",
           "tableTo": "expense_category",
-          "columnsFrom": [
-            "expense_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3220,12 +3054,8 @@
           "name": "project_category_plan_item_vendor_id_vendor_id_fk",
           "tableFrom": "project_category_plan_item",
           "tableTo": "vendor",
-          "columnsFrom": [
-            "vendor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["vendor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3569,12 +3399,8 @@
           "name": "project_cost_project_id_project_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3582,12 +3408,8 @@
           "name": "project_cost_project_budget_item_id_project_budget_item_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "project_budget_item",
-          "columnsFrom": [
-            "project_budget_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3595,12 +3417,8 @@
           "name": "project_cost_project_budget_category_id_project_budget_category_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "project_budget_category",
-          "columnsFrom": [
-            "project_budget_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3608,12 +3426,8 @@
           "name": "project_cost_material_id_material_master_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "material_master",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3621,12 +3435,8 @@
           "name": "project_cost_project_rap_item_id_project_rap_item_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "project_rap_item",
-          "columnsFrom": [
-            "project_rap_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_rap_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3634,12 +3444,8 @@
           "name": "project_cost_requested_by_id_user_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "user",
-          "columnsFrom": [
-            "requested_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["requested_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3647,12 +3453,8 @@
           "name": "project_cost_bank_account_id_bank_account_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "bank_account",
-          "columnsFrom": [
-            "bank_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bank_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3660,12 +3462,8 @@
           "name": "project_cost_cash_transaction_id_cash_transaction_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "cash_transaction",
-          "columnsFrom": [
-            "cash_transaction_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cash_transaction_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3673,12 +3471,8 @@
           "name": "project_cost_verified_by_id_user_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "user",
-          "columnsFrom": [
-            "verified_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["verified_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3686,12 +3480,8 @@
           "name": "project_cost_approved_by_id_user_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "user",
-          "columnsFrom": [
-            "approved_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["approved_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3699,12 +3489,8 @@
           "name": "project_cost_paid_by_id_user_id_fk",
           "tableFrom": "project_cost",
           "tableTo": "user",
-          "columnsFrom": [
-            "paid_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paid_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3753,9 +3539,7 @@
         "project_cost_category_name_unique": {
           "name": "project_cost_category_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -4091,12 +3875,8 @@
           "name": "project_expenses_project_id_project_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4104,12 +3884,8 @@
           "name": "project_expenses_project_budget_id_project_budgets_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "project_budgets",
-          "columnsFrom": [
-            "project_budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4117,12 +3893,8 @@
           "name": "project_expenses_project_budget_category_id_project_budget_category_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "project_budget_category",
-          "columnsFrom": [
-            "project_budget_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4130,12 +3902,8 @@
           "name": "project_expenses_expense_category_id_expense_category_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "expense_category",
-          "columnsFrom": [
-            "expense_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4143,12 +3911,8 @@
           "name": "project_expenses_legacy_project_cost_id_project_cost_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "project_cost",
-          "columnsFrom": [
-            "legacy_project_cost_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["legacy_project_cost_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -4156,12 +3920,8 @@
           "name": "project_expenses_vendor_id_vendor_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "vendor",
-          "columnsFrom": [
-            "vendor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["vendor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4169,12 +3929,8 @@
           "name": "project_expenses_vendor_bill_id_vendor_bill_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "vendor_bill",
-          "columnsFrom": [
-            "vendor_bill_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["vendor_bill_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -4182,12 +3938,8 @@
           "name": "project_expenses_material_id_material_master_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "material_master",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4195,12 +3947,8 @@
           "name": "project_expenses_project_rap_item_id_project_rap_item_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "project_rap_item",
-          "columnsFrom": [
-            "project_rap_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_rap_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4208,12 +3956,8 @@
           "name": "project_expenses_project_category_plan_item_id_project_category_plan_item_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "project_category_plan_item",
-          "columnsFrom": [
-            "project_category_plan_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_category_plan_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4221,12 +3965,8 @@
           "name": "project_expenses_stock_movement_id_stock_movement_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "stock_movement",
-          "columnsFrom": [
-            "stock_movement_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["stock_movement_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -4234,12 +3974,8 @@
           "name": "project_expenses_requested_by_id_user_id_fk",
           "tableFrom": "project_expenses",
           "tableTo": "user",
-          "columnsFrom": [
-            "requested_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["requested_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4488,12 +4224,8 @@
           "name": "project_profitability_snapshot_project_id_project_id_fk",
           "tableFrom": "project_profitability_snapshot",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4501,12 +4233,8 @@
           "name": "project_profitability_snapshot_project_budget_id_project_budgets_id_fk",
           "tableFrom": "project_profitability_snapshot",
           "tableTo": "project_budgets",
-          "columnsFrom": [
-            "project_budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4618,12 +4346,8 @@
           "name": "project_rap_project_id_project_id_fk",
           "tableFrom": "project_rap",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4631,12 +4355,8 @@
           "name": "project_rap_locked_by_id_user_id_fk",
           "tableFrom": "project_rap",
           "tableTo": "user",
-          "columnsFrom": [
-            "locked_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["locked_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4815,12 +4535,8 @@
           "name": "project_rap_item_project_rap_id_project_rap_id_fk",
           "tableFrom": "project_rap_item",
           "tableTo": "project_rap",
-          "columnsFrom": [
-            "project_rap_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_rap_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4828,12 +4544,8 @@
           "name": "project_rap_item_material_id_material_master_id_fk",
           "tableFrom": "project_rap_item",
           "tableTo": "material_master",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4973,12 +4685,8 @@
           "name": "rab_estimate_project_id_project_id_fk",
           "tableFrom": "rab_estimate",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4986,12 +4694,8 @@
           "name": "rab_estimate_source_project_rap_id_project_rap_id_fk",
           "tableFrom": "rab_estimate",
           "tableTo": "project_rap",
-          "columnsFrom": [
-            "source_project_rap_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_project_rap_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -5177,12 +4881,8 @@
           "name": "rab_estimate_item_rab_estimate_id_rab_estimate_id_fk",
           "tableFrom": "rab_estimate_item",
           "tableTo": "rab_estimate",
-          "columnsFrom": [
-            "rab_estimate_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["rab_estimate_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5190,12 +4890,8 @@
           "name": "rab_estimate_item_source_project_rap_item_id_project_rap_item_id_fk",
           "tableFrom": "rab_estimate_item",
           "tableTo": "project_rap_item",
-          "columnsFrom": [
-            "source_project_rap_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_project_rap_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -5203,12 +4899,8 @@
           "name": "rab_estimate_item_source_project_category_plan_item_id_project_category_plan_item_id_fk",
           "tableFrom": "rab_estimate_item",
           "tableTo": "project_category_plan_item",
-          "columnsFrom": [
-            "source_project_category_plan_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_project_category_plan_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -5257,9 +4949,7 @@
         "role_name_unique": {
           "name": "role_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -5343,12 +5033,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5358,9 +5044,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -5580,12 +5264,8 @@
           "name": "stock_movement_material_id_material_master_id_fk",
           "tableFrom": "stock_movement",
           "tableTo": "material_master",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5593,12 +5273,8 @@
           "name": "stock_movement_inventory_location_id_inventory_location_id_fk",
           "tableFrom": "stock_movement",
           "tableTo": "inventory_location",
-          "columnsFrom": [
-            "inventory_location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["inventory_location_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5606,12 +5282,8 @@
           "name": "stock_movement_project_id_project_id_fk",
           "tableFrom": "stock_movement",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5619,12 +5291,8 @@
           "name": "stock_movement_project_rap_item_id_project_rap_item_id_fk",
           "tableFrom": "stock_movement",
           "tableTo": "project_rap_item",
-          "columnsFrom": [
-            "project_rap_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_rap_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5632,12 +5300,8 @@
           "name": "stock_movement_project_cost_id_project_cost_id_fk",
           "tableFrom": "stock_movement",
           "tableTo": "project_cost",
-          "columnsFrom": [
-            "project_cost_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_cost_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5645,12 +5309,8 @@
           "name": "stock_movement_vendor_bill_id_vendor_bill_id_fk",
           "tableFrom": "stock_movement",
           "tableTo": "vendor_bill",
-          "columnsFrom": [
-            "vendor_bill_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["vendor_bill_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5658,12 +5318,8 @@
           "name": "stock_movement_created_by_id_user_id_fk",
           "tableFrom": "stock_movement",
           "tableTo": "user",
-          "columnsFrom": [
-            "created_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5760,12 +5416,8 @@
           "name": "user_role_id_role_id_fk",
           "tableFrom": "user",
           "tableTo": "role",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5775,9 +5427,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -5859,9 +5509,7 @@
         "vendor_email_unique": {
           "name": "vendor_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -6078,12 +5726,8 @@
           "name": "vendor_bill_vendor_id_vendor_id_fk",
           "tableFrom": "vendor_bill",
           "tableTo": "vendor",
-          "columnsFrom": [
-            "vendor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["vendor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6091,12 +5735,8 @@
           "name": "vendor_bill_project_id_project_id_fk",
           "tableFrom": "vendor_bill",
           "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6104,12 +5744,8 @@
           "name": "vendor_bill_project_budget_item_id_project_budget_item_id_fk",
           "tableFrom": "vendor_bill",
           "tableTo": "project_budget_item",
-          "columnsFrom": [
-            "project_budget_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -6117,12 +5753,8 @@
           "name": "vendor_bill_project_budget_category_id_project_budget_category_id_fk",
           "tableFrom": "vendor_bill",
           "tableTo": "project_budget_category",
-          "columnsFrom": [
-            "project_budget_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_budget_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6130,12 +5762,8 @@
           "name": "vendor_bill_material_id_material_master_id_fk",
           "tableFrom": "vendor_bill",
           "tableTo": "material_master",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6143,12 +5771,8 @@
           "name": "vendor_bill_project_rap_item_id_project_rap_item_id_fk",
           "tableFrom": "vendor_bill",
           "tableTo": "project_rap_item",
-          "columnsFrom": [
-            "project_rap_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_rap_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6156,12 +5780,8 @@
           "name": "vendor_bill_project_category_plan_item_id_project_category_plan_item_id_fk",
           "tableFrom": "vendor_bill",
           "tableTo": "project_category_plan_item",
-          "columnsFrom": [
-            "project_category_plan_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_category_plan_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6171,9 +5791,7 @@
         "vendor_bill_bill_number_unique": {
           "name": "vendor_bill_bill_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "bill_number"
-          ]
+          "columns": ["bill_number"]
         }
       },
       "policies": {},
@@ -6300,12 +5918,8 @@
           "name": "vendor_payment_vendor_bill_id_vendor_bill_id_fk",
           "tableFrom": "vendor_payment",
           "tableTo": "vendor_bill",
-          "columnsFrom": [
-            "vendor_bill_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["vendor_bill_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6313,12 +5927,8 @@
           "name": "vendor_payment_bank_account_id_bank_account_id_fk",
           "tableFrom": "vendor_payment",
           "tableTo": "bank_account",
-          "columnsFrom": [
-            "bank_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bank_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6326,12 +5936,8 @@
           "name": "vendor_payment_cash_transaction_id_cash_transaction_id_fk",
           "tableFrom": "vendor_payment",
           "tableTo": "cash_transaction",
-          "columnsFrom": [
-            "cash_transaction_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cash_transaction_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6339,12 +5945,8 @@
           "name": "vendor_payment_paid_by_id_user_id_fk",
           "tableFrom": "vendor_payment",
           "tableTo": "user",
-          "columnsFrom": [
-            "paid_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paid_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }

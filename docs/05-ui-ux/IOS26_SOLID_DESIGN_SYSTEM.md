@@ -5,9 +5,11 @@ For page composition, density, grouped rows, financial formatting, loading state
 Load `.agents/skills/atria-ui-ux/SKILL.md` before any UI/UX implementation or review. It is the mandatory workflow entrypoint and links the live visual references to these component rules.
 
 ## Direction
+
 The interface should feel premium, calm, modern, operational, and trustworthy. It should be inspired by modern iOS interaction patterns but remain solid and readable, not overly glassy or decorative.
 
 ## Principles
+
 - Mobile-first.
 - Clear hierarchy over visual noise.
 - Purposeful focal and grouped surfaces with subtle shadows and soft rings.
@@ -17,6 +19,7 @@ The interface should feel premium, calm, modern, operational, and trustworthy. I
 - Contextual comparisons and indicators that help decisions.
 
 ## Avoid
+
 - Dense spreadsheet-like screens on mobile.
 - Excessive gradients, glassmorphism, blur, or animation.
 - Generic admin dashboard compositions.
@@ -25,6 +28,7 @@ The interface should feel premium, calm, modern, operational, and trustworthy. I
 - Client-facing screens that expose internal cost/margin data.
 
 ## Components
+
 - One focal surface for a dominant summary when justified.
 - Grouped surfaces and soft dividers for repeated rows.
 - Individual cards only for independently interactive units.
@@ -49,13 +53,16 @@ The current Dashboard, all six Dashboard tabs, and the approved operational form
 Inspect these implementations before adding a new main page. Share primitives when semantics match, but keep each domain's content pattern functional rather than visually cloned.
 
 ## Material-Control Visual Language
+
 - `READY`: stable/success treatment.
 - `SHORTAGE` and `LOW_STOCK`: warning treatment.
 - `CRITICAL`, `WASTE`, and overbudget states: error treatment.
 - `WAITING_PURCHASE`: neutral or warning treatment depending on urgency.
 
 ## iOS-Inspired Contextual Form Style (Paten)
+
 Interactive controls remain fully rounded when they stand alone. Grouped data-entry forms use native iOS row composition instead of nesting capsules:
+
 - **Standalone Inputs & Selects**: Text inputs, DatePickers, Comboboxes, and Select fields use a white `rounded-full` control with `min-h-12` (48px) and `px-5`.
 - **Grouped Forms**: `FormSection` owns one white panel with a 24–28px radius. Its fields are borderless rows with visible labels, compact 52–56px posture where content permits, and subtle internal dividers.
 - **Textareas**: Standalone textareas use `rounded-2xl`; grouped textareas grow inside their row without a second container.
@@ -67,7 +74,9 @@ Interactive controls remain fully rounded when they stand alone. Grouped data-en
 - **Content Surfaces**: Focal and grouped content use soft large radii; repeated rows use dividers and must not become nested capsules.
 
 ## Unified Motion & Animation Tokens
+
 All animations must use Framer Motion and reference the unified animation presets in `lib/utils/motion.ts`:
+
 - **Drawers & Sheets sliding up**: Use `slideUpDrawerVariants` with `transitionSpringSmooth` (`stiffness: 300, damping: 32`) for smooth sliding physics.
 - **Backdrops & Fades**: Use `fadeVariants` with `transitionEaseSmooth` (`ease: [0.32, 0.94, 0.6, 1]`, `duration: 0.35`) for translucent fades.
 - **Snappy Micro-interactions**: Use `transitionSpringSnappy` (`stiffness: 380, damping: 30, mass: 0.8`) with active tap scale effects (e.g. `whileTap={{ scale: 0.97 }}`).

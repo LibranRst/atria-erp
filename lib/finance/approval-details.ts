@@ -1,12 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import {
-  approval,
-  inventoryOpeningBatch,
-  projectCost,
-  vendorPayment,
-} from "@/db/schema";
+import { approval, inventoryOpeningBatch, projectCost, vendorPayment } from "@/db/schema";
 import type {
   ApprovalDetail,
   FinanceApprovalDetail,
@@ -88,9 +83,7 @@ export function mapProjectCostApprovalDetail(
   currentUserId?: string | null,
   isOwner?: boolean,
 ): FinanceApprovalDetail {
-  const selfApproval = currentUserId
-    ? input.cost.requestedById === currentUserId
-    : false;
+  const selfApproval = currentUserId ? input.cost.requestedById === currentUserId : false;
   const canEmergencyOverride = Boolean(isOwner && selfApproval);
   return {
     id: input.approval.id,
@@ -108,22 +101,16 @@ export function mapProjectCostApprovalDetail(
       input.cost.budgetItem?.name ??
       "Kategori Belum Ditentukan",
     allocatedAmount: Number(
-      input.cost.budgetCategory?.allocatedAmount ??
-        input.cost.budgetItem?.allocatedAmount ??
-        0,
+      input.cost.budgetCategory?.allocatedAmount ?? input.cost.budgetItem?.allocatedAmount ?? 0,
     ),
     actualSpent: Number(
-      input.cost.budgetCategory?.actualAmount ??
-        input.cost.budgetItem?.actualSpent ??
-        0,
+      input.cost.budgetCategory?.actualAmount ?? input.cost.budgetItem?.actualSpent ?? 0,
     ),
     requestedBy: input.cost.requestedBy?.name ?? "Project Manager",
     canEmergencyOverride,
     budgetOverrun: input.cost.budgetOverrun,
     priority: input.cost.budgetOverrun ? "CRITICAL" : "NORMAL",
-    priorityReason: input.cost.budgetOverrun
-      ? "Melewati batas budget"
-      : "Perlu keputusan Owner",
+    priorityReason: input.cost.budgetOverrun ? "Melewati batas budget" : "Perlu keputusan Owner",
   };
 }
 
@@ -133,9 +120,7 @@ export function mapVendorPaymentApprovalDetail(
   isOwner?: boolean,
 ): FinanceApprovalDetail {
   const bill = input.payment.vendorBill;
-  const selfApproval = currentUserId
-    ? input.payment.paidById === currentUserId
-    : false;
+  const selfApproval = currentUserId ? input.payment.paidById === currentUserId : false;
   const canEmergencyOverride = Boolean(isOwner && selfApproval);
   return {
     id: input.approval.id,
@@ -145,8 +130,7 @@ export function mapVendorPaymentApprovalDetail(
     type: "vendor_payment",
     referenceId: input.approval.referenceId,
     amount: Number(input.payment.amountPaid),
-    description:
-      bill?.notes ?? `Pembayaran Tagihan Vendor #${bill?.billNumber ?? "-"}`,
+    description: bill?.notes ?? `Pembayaran Tagihan Vendor #${bill?.billNumber ?? "-"}`,
     receiptImageUrl: null,
     projectName: bill?.project?.name ?? "Proyek Tidak Dikenal",
     budgetItemName:
@@ -154,13 +138,9 @@ export function mapVendorPaymentApprovalDetail(
       bill?.budgetItem?.name ??
       "Kategori Belum Ditentukan",
     allocatedAmount: Number(
-      bill?.budgetCategory?.allocatedAmount ??
-        bill?.budgetItem?.allocatedAmount ??
-        0,
+      bill?.budgetCategory?.allocatedAmount ?? bill?.budgetItem?.allocatedAmount ?? 0,
     ),
-    actualSpent: Number(
-      bill?.budgetCategory?.actualAmount ?? bill?.budgetItem?.actualSpent ?? 0,
-    ),
+    actualSpent: Number(bill?.budgetCategory?.actualAmount ?? bill?.budgetItem?.actualSpent ?? 0),
     requestedBy: bill?.vendor?.name ?? "Vendor Supplier",
     canEmergencyOverride,
     budgetOverrun: false,
@@ -225,10 +205,7 @@ export function rankPendingApprovals(
   return approvals
     .map((item): ApprovalDetail => {
       const urgency = approvalUrgency(item, now);
-      const waitingDays = Math.max(
-        0,
-        -dashboardDueDayOffset(item.createdAt, now),
-      );
+      const waitingDays = Math.max(0, -dashboardDueDayOffset(item.createdAt, now));
       if (item.budgetOverrun) {
         return {
           ...item,
@@ -237,10 +214,7 @@ export function rankPendingApprovals(
         };
       }
       if (urgency === 3) {
-        const lateDays = Math.max(
-          1,
-          -dashboardDueDayOffset(item.dueDate ?? now, now),
-        );
+        const lateDays = Math.max(1, -dashboardDueDayOffset(item.dueDate ?? now, now));
         return {
           ...item,
           priority: "CRITICAL",
@@ -311,11 +285,7 @@ export async function resolveApprovalDetail(
     });
 
     if (!cost || cost.status !== "VERIFIED") return null;
-    return mapProjectCostApprovalDetail(
-      { approval: record, cost },
-      currentUserId,
-      isOwner,
-    );
+    return mapProjectCostApprovalDetail({ approval: record, cost }, currentUserId, isOwner);
   }
 
   if (record.referenceType === "vendor_payment") {
@@ -338,11 +308,7 @@ export async function resolveApprovalDetail(
     });
 
     if (!payment?.vendorBill) return null;
-    return mapVendorPaymentApprovalDetail(
-      { approval: record, payment },
-      currentUserId,
-      isOwner,
-    );
+    return mapVendorPaymentApprovalDetail({ approval: record, payment }, currentUserId, isOwner);
   }
 
   return null;
@@ -353,9 +319,7 @@ export async function getPendingApprovalDetails(
 ): Promise<readonly ApprovalDetail[]> {
   const session = await getServerSession();
   const currentUserId = session?.user?.id ?? null;
-  const roleName = session?.user?.roleId
-    ? await resolveRoleName(session.user.roleId)
-    : null;
+  const roleName = session?.user?.roleId ? await resolveRoleName(session.user.roleId) : null;
   const isOwner = roleName === "OWNER";
 
   const records = await db.query.approval.findMany({
@@ -400,9 +364,7 @@ export async function getPendingApprovalDetails(
     orderBy: (table, { desc: descending }) => [descending(table.createdAt)],
   });
   for (const batch of openingBatches) {
-    details.push(
-      mapInventoryOpeningApprovalDetail({ batch }),
-    );
+    details.push(mapInventoryOpeningApprovalDetail({ batch }));
   }
 
   return details.slice(0, limit ?? details.length);

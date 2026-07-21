@@ -15,7 +15,10 @@ import {
 } from "@/features/expenses/components/expenses-primitives";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { toast } from "sonner";
-import { VendorBillCard, VendorPaymentCard } from "@/features/expenses/components/vendor-bill-cards";
+import {
+  VendorBillCard,
+  VendorPaymentCard,
+} from "@/features/expenses/components/vendor-bill-cards";
 import {
   VendorDisbursePaymentSheet,
   VendorSchedulePaymentSheet,
@@ -29,7 +32,10 @@ import type {
   VendorListVendor,
 } from "@/features/expenses/components/vendor-bill-list-types";
 import { getBillPaymentSummary } from "@/features/expenses/components/vendor-bill-list-utils";
-import { FinanceSuccessSheet, type FinanceOperationSuccess } from "@/features/finance/components/finance-form-patterns";
+import {
+  FinanceSuccessSheet,
+  type FinanceOperationSuccess,
+} from "@/features/finance/components/finance-form-patterns";
 import { useLocalFormRecovery } from "@/features/forms/use-local-form-recovery";
 
 const vendorScheduleRecoverySchema = z.object({
@@ -97,29 +103,38 @@ export function VendorBillList({
   };
 
   // Modal / Drawer visibility states
-  const [selectedBillForSchedule, setSelectedBillForSchedule] = useState<VendorListBill | null>(null);
-  const [selectedPaymentForDisburse, setSelectedPaymentForDisburse] = useState<VendorListPayment | null>(null);
+  const [selectedBillForSchedule, setSelectedBillForSchedule] = useState<VendorListBill | null>(
+    null,
+  );
+  const [selectedPaymentForDisburse, setSelectedPaymentForDisburse] =
+    useState<VendorListPayment | null>(null);
 
   // Error / Success feedback
   const [error, setError] = useState<string | null>(null);
   const [operationSuccess, setOperationSuccess] = useState<FinanceOperationSuccess | null>(null);
 
-  const initialScheduleRecovery = React.useCallback(() => ({
-    billId: "",
-    selectedBankId: bankAccounts[0]?.id ?? "",
-    scheduleAmount: "",
-    scheduleDate: new Date().toISOString().split("T")[0],
-  }), [bankAccounts]);
+  const initialScheduleRecovery = React.useCallback(
+    () => ({
+      billId: "",
+      selectedBankId: bankAccounts[0]?.id ?? "",
+      scheduleAmount: "",
+      scheduleDate: new Date().toISOString().split("T")[0],
+    }),
+    [bankAccounts],
+  );
   const scheduleRecovery = useLocalFormRecovery({
     storageKey: `atria:finance:vendor-schedule:${projectId ?? "inbox"}`,
     schema: vendorScheduleRecoverySchema,
     initialPayload: initialScheduleRecovery,
   });
-  const initialDisburseRecovery = React.useCallback(() => ({
-    paymentId: "",
-    disburseBankId: "",
-    refNumber: "",
-  }), []);
+  const initialDisburseRecovery = React.useCallback(
+    () => ({
+      paymentId: "",
+      disburseBankId: "",
+      refNumber: "",
+    }),
+    [],
+  );
   const disburseRecovery = useLocalFormRecovery({
     storageKey: `atria:finance:vendor-disburse:${projectId ?? "inbox"}`,
     schema: vendorDisburseRecoverySchema,
@@ -139,7 +154,9 @@ export function VendorBillList({
   const paidAmount = vendorPayments
     .filter((payment) => payment.status === "COMPLETED")
     .reduce((sum, payment) => sum + Number(payment.amountPaid), 0);
-  const openBillCount = vendorBills.filter((bill) => bill.status !== "PAID" && bill.status !== "VOID").length;
+  const openBillCount = vendorBills.filter(
+    (bill) => bill.status !== "PAID" && bill.status !== "VOID",
+  ).length;
 
   const filteredBills = React.useMemo(() => {
     return vendorBills.filter((bill) => {
@@ -224,9 +241,10 @@ export function VendorBillList({
         router.refresh();
         setOperationSuccess({
           title: "Pembayaran vendor dijadwalkan",
-          description: Number(scheduleAmount) >= 5_000_000
-            ? "Rencana dibuat dan menunggu persetujuan Owner sebelum dapat dicairkan."
-            : "Rencana dibuat. Saldo rekening belum berubah sampai pembayaran dicairkan.",
+          description:
+            Number(scheduleAmount) >= 5_000_000
+              ? "Rencana dibuat dan menunggu persetujuan Owner sebelum dapat dicairkan."
+              : "Rencana dibuat. Saldo rekening belum berubah sampai pembayaran dicairkan.",
           facts: [
             { label: "Tagihan", value: billForSchedule.billNumber },
             { label: "Nominal", value: `Rp ${Number(scheduleAmount).toLocaleString("id-ID")}` },
@@ -294,10 +312,17 @@ export function VendorBillList({
         const account = bankAccounts.find((item) => item.id === disburseBankId);
         setOperationSuccess({
           title: "Pembayaran vendor selesai",
-          description: "Saldo rekening, ledger, status pembayaran, dan budget proyek telah diperbarui bersama.",
+          description:
+            "Saldo rekening, ledger, status pembayaran, dan budget proyek telah diperbarui bersama.",
           facts: [
-            { label: "Tagihan", value: paymentForDisburse.vendorBill?.billNumber ?? "Tagihan vendor" },
-            { label: "Nominal", value: `Rp ${Number(paymentForDisburse.amountPaid).toLocaleString("id-ID")}` },
+            {
+              label: "Tagihan",
+              value: paymentForDisburse.vendorBill?.billNumber ?? "Tagihan vendor",
+            },
+            {
+              label: "Nominal",
+              value: `Rp ${Number(paymentForDisburse.amountPaid).toLocaleString("id-ID")}`,
+            },
             { label: "Rekening", value: account?.name ?? "Rekening sumber" },
           ],
         });
@@ -319,31 +344,62 @@ export function VendorBillList({
           ariaLabel="Posisi tagihan vendor"
           eyebrow="Tagihan vendor"
           icon="request_quote"
-          status={openBillCount > 0 ? `${openBillCount} tagihan terbuka` : "Tidak ada tagihan terbuka"}
+          status={
+            openBillCount > 0 ? `${openBillCount} tagihan terbuka` : "Tidak ada tagihan terbuka"
+          }
           statusTone={openBillCount > 0 ? "warning" : "positive"}
-          action={projectId && canCreateVendorBill ? (
-            <button
-              type="button"
-              onClick={openAddBillForm}
-              className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#007AFF]/[0.08] px-3 text-[10px] font-semibold leading-4 text-[#007AFF] outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] active:bg-[#007AFF]/[0.14] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30"
-            >
-              <span className="material-symbols-outlined text-[14px] leading-none" aria-hidden="true">add</span>
-              Tambah
-            </button>
-          ) : undefined}
+          action={
+            projectId && canCreateVendorBill ? (
+              <button
+                type="button"
+                onClick={openAddBillForm}
+                className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#007AFF]/8 px-3 text-[10px] leading-4 font-semibold text-[#007AFF] outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 active:bg-[#007AFF]/[0.14]"
+              >
+                <span
+                  className="material-symbols-outlined text-[14px] leading-none"
+                  aria-hidden="true"
+                >
+                  add
+                </span>
+                Tambah
+              </button>
+            ) : undefined
+          }
         >
           <div className="min-w-0">
-            <p className="text-[9px] font-semibold leading-3 text-on-surface-variant/60">Total tagihan tercatat</p>
-            <MoneyValue amount={totalBillAmount} variant="compactWithFull" size="lg" className="mt-1" />
+            <p className="text-on-surface-variant/60 text-[9px] leading-3 font-semibold">
+              Total tagihan tercatat
+            </p>
+            <MoneyValue
+              amount={totalBillAmount}
+              variant="compactWithFull"
+              size="lg"
+              className="mt-1"
+            />
           </div>
-          <div className="mt-3.5 grid grid-cols-2 divide-x divide-black/[0.055] rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
+          <div className="bg-surface-container-low/65 mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5">
             <div className="min-w-0 pr-3">
-              <p className="text-[9px] font-semibold leading-3 text-on-surface-variant/60">Dalam antrean</p>
-              <MoneyValue amount={scheduledAmount} variant="compactWithFull" size="sm" className="mt-1" />
+              <p className="text-on-surface-variant/60 text-[9px] leading-3 font-semibold">
+                Dalam antrean
+              </p>
+              <MoneyValue
+                amount={scheduledAmount}
+                variant="compactWithFull"
+                size="sm"
+                className="mt-1"
+              />
             </div>
             <div className="min-w-0 pl-3 text-right">
-              <p className="text-[9px] font-semibold leading-3 text-on-surface-variant/60">Sudah dibayar</p>
-              <MoneyValue amount={paidAmount} variant="compactWithFull" size="sm" align="right" className="mt-1" />
+              <p className="text-on-surface-variant/60 text-[9px] leading-3 font-semibold">
+                Sudah dibayar
+              </p>
+              <MoneyValue
+                amount={paidAmount}
+                variant="compactWithFull"
+                size="sm"
+                align="right"
+                className="mt-1"
+              />
             </div>
           </div>
         </ExpensesSummarySurface>
@@ -360,8 +416,24 @@ export function VendorBillList({
           ariaLabel="Tampilan tagihan vendor"
           density="compact"
           options={[
-            { value: "BILLS", label: "Tagihan", count: vendorBills.filter(b => b.status !== "PAID" && b.status !== "VOID").length, icon: <span className="material-symbols-outlined text-[16px] leading-none">request_quote</span> },
-            { value: "PAYMENTS", label: "Rencana Bayar", count: vendorPayments.filter(p => p.status !== "COMPLETED").length, icon: <span className="material-symbols-outlined text-[16px] leading-none">payments</span> },
+            {
+              value: "BILLS",
+              label: "Tagihan",
+              count: vendorBills.filter((b) => b.status !== "PAID" && b.status !== "VOID").length,
+              icon: (
+                <span className="material-symbols-outlined text-[16px] leading-none">
+                  request_quote
+                </span>
+              ),
+            },
+            {
+              value: "PAYMENTS",
+              label: "Rencana Bayar",
+              count: vendorPayments.filter((p) => p.status !== "COMPLETED").length,
+              icon: (
+                <span className="material-symbols-outlined text-[16px] leading-none">payments</span>
+              ),
+            },
           ]}
         />
 
@@ -376,8 +448,16 @@ export function VendorBillList({
             ariaLabel="Filter status tagihan"
             density="compact"
             options={[
-              { value: "ACTIVE", label: "Belum Lunas", count: vendorBills.filter(b => b.status !== "PAID" && b.status !== "VOID").length },
-              { value: "PAID", label: "Lunas", count: vendorBills.filter(b => b.status === "PAID").length },
+              {
+                value: "ACTIVE",
+                label: "Belum Lunas",
+                count: vendorBills.filter((b) => b.status !== "PAID" && b.status !== "VOID").length,
+              },
+              {
+                value: "PAID",
+                label: "Lunas",
+                count: vendorBills.filter((b) => b.status === "PAID").length,
+              },
               { value: "ALL", label: "Semua", count: vendorBills.length },
             ]}
           />
@@ -394,8 +474,16 @@ export function VendorBillList({
             ariaLabel="Filter status rencana bayar"
             density="compact"
             options={[
-              { value: "ACTIVE", label: "Belum Cair", count: vendorPayments.filter(p => p.status !== "COMPLETED").length },
-              { value: "COMPLETED", label: "Selesai Cair", count: vendorPayments.filter(p => p.status === "COMPLETED").length },
+              {
+                value: "ACTIVE",
+                label: "Belum Cair",
+                count: vendorPayments.filter((p) => p.status !== "COMPLETED").length,
+              },
+              {
+                value: "COMPLETED",
+                label: "Selesai Cair",
+                count: vendorPayments.filter((p) => p.status === "COMPLETED").length,
+              },
               { value: "ALL", label: "Semua", count: vendorPayments.length },
             ]}
           />
@@ -410,12 +498,23 @@ export function VendorBillList({
           <div className="space-y-3">
             <ExpensesSectionHeader title="Daftar tagihan" meta={`${filteredBills.length} item`} />
             {filteredBills.length === 0 ? (
-              <ExpensesGroupSurface><EmptyState icon="payments" title="Tidak Ada Tagihan" description="Belum ada tagihan pembelian material/vendor yang tercatat." /></ExpensesGroupSurface>
+              <ExpensesGroupSurface>
+                <EmptyState
+                  icon="payments"
+                  title="Tidak Ada Tagihan"
+                  description="Belum ada tagihan pembelian material/vendor yang tercatat."
+                />
+              </ExpensesGroupSurface>
             ) : (
               <ExpensesGroupSurface>
-                <div className="divide-y divide-black/[0.055]">
+                <div className="divide-y divide-black/5.5">
                   {filteredBills.slice(0, visibleLimit).map((bill) => (
-                    <VendorBillCard key={bill.id} bill={bill} isOwnerOrFinance={isOwnerOrFinance} onScheduleClick={handleScheduleClick} />
+                    <VendorBillCard
+                      key={bill.id}
+                      bill={bill}
+                      isOwnerOrFinance={isOwnerOrFinance}
+                      onScheduleClick={handleScheduleClick}
+                    />
                   ))}
                 </div>
               </ExpensesGroupSurface>
@@ -428,14 +527,28 @@ export function VendorBillList({
 
         {subTab === "PAYMENTS" && (
           <div className="space-y-3">
-            <ExpensesSectionHeader title="Rencana pembayaran" meta={`${filteredPayments.length} item`} />
+            <ExpensesSectionHeader
+              title="Rencana pembayaran"
+              meta={`${filteredPayments.length} item`}
+            />
             {filteredPayments.length === 0 ? (
-              <ExpensesGroupSurface><EmptyState icon="schedule" title="Tidak Ada Rencana Pembayaran" description="Belum ada rencana atau mutasi pembayaran vendor yang terdaftar." /></ExpensesGroupSurface>
+              <ExpensesGroupSurface>
+                <EmptyState
+                  icon="schedule"
+                  title="Tidak Ada Rencana Pembayaran"
+                  description="Belum ada rencana atau mutasi pembayaran vendor yang terdaftar."
+                />
+              </ExpensesGroupSurface>
             ) : (
               <ExpensesGroupSurface>
-                <div className="divide-y divide-black/[0.055]">
+                <div className="divide-y divide-black/5.5">
                   {filteredPayments.slice(0, visibleLimit).map((payment) => (
-                    <VendorPaymentCard key={payment.id} payment={payment} isOwnerOrFinance={isOwnerOrFinance} onDisburseClick={handleDisburseClick} />
+                    <VendorPaymentCard
+                      key={payment.id}
+                      payment={payment}
+                      isOwnerOrFinance={isOwnerOrFinance}
+                      onDisburseClick={handleDisburseClick}
+                    />
                   ))}
                 </div>
               </ExpensesGroupSurface>
@@ -458,11 +571,20 @@ export function VendorBillList({
         scheduleDate={scheduleDate}
         isDirty={scheduleRecovery.isDirty}
         onClose={closeScheduleForm}
-        onDiscard={() => { scheduleRecovery.reset(); closeScheduleForm(); }}
+        onDiscard={() => {
+          scheduleRecovery.reset();
+          closeScheduleForm();
+        }}
         onSubmit={handleScheduleSubmit}
-        onSelectedBankIdChange={(value) => scheduleRecovery.setPayload((current) => ({ ...current, selectedBankId: value }))}
-        onScheduleAmountChange={(value) => scheduleRecovery.setPayload((current) => ({ ...current, scheduleAmount: value }))}
-        onScheduleDateChange={(value) => scheduleRecovery.setPayload((current) => ({ ...current, scheduleDate: value }))}
+        onSelectedBankIdChange={(value) =>
+          scheduleRecovery.setPayload((current) => ({ ...current, selectedBankId: value }))
+        }
+        onScheduleAmountChange={(value) =>
+          scheduleRecovery.setPayload((current) => ({ ...current, scheduleAmount: value }))
+        }
+        onScheduleDateChange={(value) =>
+          scheduleRecovery.setPayload((current) => ({ ...current, scheduleDate: value }))
+        }
       />
 
       <VendorDisbursePaymentSheet
@@ -475,10 +597,17 @@ export function VendorBillList({
         refNumber={refNumber}
         isDirty={disburseRecovery.isDirty}
         onClose={closeDisburseForm}
-        onDiscard={() => { disburseRecovery.reset(); closeDisburseForm(); }}
+        onDiscard={() => {
+          disburseRecovery.reset();
+          closeDisburseForm();
+        }}
         onSubmit={handleDisburseSubmit}
-        onDisburseBankIdChange={(value) => disburseRecovery.setPayload((current) => ({ ...current, disburseBankId: value }))}
-        onRefNumberChange={(value) => disburseRecovery.setPayload((current) => ({ ...current, refNumber: value }))}
+        onDisburseBankIdChange={(value) =>
+          disburseRecovery.setPayload((current) => ({ ...current, disburseBankId: value }))
+        }
+        onRefNumberChange={(value) =>
+          disburseRecovery.setPayload((current) => ({ ...current, refNumber: value }))
+        }
       />
       <FinanceSuccessSheet success={operationSuccess} onClose={() => setOperationSuccess(null)} />
     </div>
@@ -490,7 +619,7 @@ function BatchButton({ onClick }: { readonly onClick: () => void }): React.JSX.E
     <button
       type="button"
       onClick={onClick}
-      className="min-h-12 w-full rounded-full bg-surface-container text-xs font-bold leading-4 text-on-surface"
+      className="bg-surface-container text-on-surface min-h-12 w-full rounded-full text-xs leading-4 font-bold"
     >
       Tampilkan 20 berikutnya
     </button>

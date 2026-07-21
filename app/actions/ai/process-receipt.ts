@@ -51,7 +51,7 @@ const parsedReceiptSchema = z.object({
  * @returns Status respons aksi dan hasil data ekstraksi
  */
 export async function processReceipt(
-  receiptImageUrl: string
+  receiptImageUrl: string,
 ): Promise<ActionResponse<ParsedReceipt>> {
   if (!receiptImageUrl) {
     return {
@@ -81,7 +81,10 @@ export async function processReceipt(
     } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
+        error: {
+          code: "FORBIDDEN",
+          message: err instanceof Error ? err.message : "Akses ditolak.",
+        },
       };
     }
 
@@ -129,7 +132,7 @@ export async function processReceipt(
               mimeType,
             },
           },
-          "Ekstrak rincian bukti transaksi dari foto nota/struk belanja di atas. Pastikan format tanggal berupa ISO 8601 UTC string (contoh: 2026-06-10T00:00:00.000Z). Jika nama barang di nota ditulis tidak lengkap, lengkapi sebisanya sesuai konteks belanja."
+          "Ekstrak rincian bukti transaksi dari foto nota/struk belanja di atas. Pastikan format tanggal berupa ISO 8601 UTC string (contoh: 2026-06-10T00:00:00.000Z). Jika nama barang di nota ditulis tidak lengkap, lengkapi sebisanya sesuai konteks belanja.",
         ],
         config: {
           responseMimeType: "application/json",
@@ -173,7 +176,10 @@ export async function processReceipt(
           .update(aiRun)
           .set({
             status: "FAILED",
-            errorMessage: getErrorMessage(parseError, "Gemini mengembalikan JSON nota yang tidak valid."),
+            errorMessage: getErrorMessage(
+              parseError,
+              "Gemini mengembalikan JSON nota yang tidak valid.",
+            ),
           })
           .where(eq(aiRun.id, runLog.id));
 
@@ -181,7 +187,8 @@ export async function processReceipt(
           success: false,
           error: {
             code: "VALIDATION_ERROR",
-            message: "Gemini mengembalikan format JSON nota yang tidak valid. Silakan isi formulir secara manual.",
+            message:
+              "Gemini mengembalikan format JSON nota yang tidak valid. Silakan isi formulir secara manual.",
           },
         };
       }
@@ -200,7 +207,8 @@ export async function processReceipt(
           success: false,
           error: {
             code: "VALIDATION_ERROR",
-            message: "Gemini tidak berhasil membaca struktur nota secara lengkap. Silakan isi formulir secara manual.",
+            message:
+              "Gemini tidak berhasil membaca struktur nota secara lengkap. Silakan isi formulir secara manual.",
           },
         };
       }
@@ -237,7 +245,10 @@ export async function processReceipt(
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: getErrorMessage(error, "Terjadi kesalahan internal saat memproses nota belanja dengan AI."),
+        message: getErrorMessage(
+          error,
+          "Terjadi kesalahan internal saat memproses nota belanja dengan AI.",
+        ),
       },
     };
   }

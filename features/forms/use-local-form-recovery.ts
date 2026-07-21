@@ -42,9 +42,10 @@ export function useLocalFormRecovery<TPayload>({
   const setPayload = React.useCallback<React.Dispatch<React.SetStateAction<TPayload>>>(
     (update) => {
       setPayloadState((current) => {
-        const next = typeof update === "function"
-          ? (update as (value: TPayload) => TPayload)(current)
-          : update;
+        const next =
+          typeof update === "function"
+            ? (update as (value: TPayload) => TPayload)(current)
+            : update;
         if (typeof window !== "undefined") {
           window.localStorage.setItem(
             storageKey,

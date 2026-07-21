@@ -185,9 +185,7 @@ export function summarizeProfileAccess(
   }));
 }
 
-export function countAccessibleProfileModules(
-  groups: readonly ProfileAccessGroup[],
-): number {
+export function countAccessibleProfileModules(groups: readonly ProfileAccessGroup[]): number {
   return groups.filter((group) => group.activePermissionDescriptions.length > 0).length;
 }
 

@@ -7,9 +7,7 @@ export type ApprovalGroup = {
 
 export function approvalIsCritical(item: ApprovalDetail): boolean {
   const nextSpent = item.actualSpent + item.amount;
-  const utilization = item.allocatedAmount > 0
-    ? (nextSpent / item.allocatedAmount) * 100
-    : 0;
+  const utilization = item.allocatedAmount > 0 ? (nextSpent / item.allocatedAmount) * 100 : 0;
   return item.priority === "CRITICAL" || item.budgetOverrun || utilization >= 100;
 }
 

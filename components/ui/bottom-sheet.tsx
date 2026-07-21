@@ -166,19 +166,14 @@ export function BottomSheet({
   const updateSheetMetrics = React.useCallback((): void => {
     if (typeof window === "undefined") return;
 
-    const nextViewportHeight =
-      window.visualViewport?.height ?? window.innerHeight;
+    const nextViewportHeight = window.visualViewport?.height ?? window.innerHeight;
     const handleHeight = handleRef.current?.offsetHeight ?? 20;
     const headerHeight = headerRef.current?.offsetHeight ?? 56;
-    const bodyStyle = bodyRef.current
-      ? window.getComputedStyle(bodyRef.current)
-      : null;
+    const bodyStyle = bodyRef.current ? window.getComputedStyle(bodyRef.current) : null;
     const bodyPadding = bodyStyle
-      ? Number.parseFloat(bodyStyle.paddingTop) +
-        Number.parseFloat(bodyStyle.paddingBottom)
+      ? Number.parseFloat(bodyStyle.paddingTop) + Number.parseFloat(bodyStyle.paddingBottom)
       : 0;
-    const bodyHeight =
-      (bodyContentRef.current?.scrollHeight ?? 0) + bodyPadding;
+    const bodyHeight = (bodyContentRef.current?.scrollHeight ?? 0) + bodyPadding;
     const footerHeight = footerRef.current?.offsetHeight ?? 0;
     const metrics = calculateBottomSheetMetrics({
       viewportHeight: nextViewportHeight,
@@ -249,9 +244,7 @@ export function BottomSheet({
     if (!open) return undefined;
     const activeSheetId = sheetId;
     const previousFocus =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const releaseBodyScroll = lockBodyScroll();
 
     function onKeyDown(event: KeyboardEvent): void {
@@ -298,12 +291,8 @@ export function BottomSheet({
 
   if (portalNode === null) return null;
 
-  const expandedHeight = Math.max(
-    MIN_SHEET_HEIGHT,
-    viewportHeight - SHEET_TOP_GAP,
-  );
-  const canResize =
-    !contentOverflows && expandedHeight - naturalHeight > MIN_RESIZE_DISTANCE;
+  const expandedHeight = Math.max(MIN_SHEET_HEIGHT, viewportHeight - SHEET_TOP_GAP);
+  const canResize = !contentOverflows && expandedHeight - naturalHeight > MIN_RESIZE_DISTANCE;
   const activeHeight = expanded && canResize ? expandedHeight : naturalHeight;
 
   function toggleExpanded(): void {
@@ -311,10 +300,7 @@ export function BottomSheet({
     setExpanded((current) => !current);
   }
 
-  function handleDragEnd(
-    _: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo,
-  ): void {
+  function handleDragEnd(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo): void {
     if (!canResize) return;
 
     if (info.offset.y < -SNAP_DISTANCE || info.velocity.y < -SNAP_VELOCITY) {
@@ -359,7 +345,7 @@ export function BottomSheet({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.08, bottom: 0.04 }}
             onDragEnd={handleDragEnd}
-            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-background shadow-[0_-24px_80px_rgba(0,0,0,0.28)] ring-1 ring-outline-variant/20 outline-none"
+            className="bg-background ring-outline-variant/20 fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] shadow-[0_-24px_80px_rgba(0,0,0,0.28)] ring-1 outline-none"
             style={{
               zIndex: zIndex + 1,
               maxHeight: `calc(100dvh - ${SHEET_TOP_GAP}px)`,
@@ -368,7 +354,7 @@ export function BottomSheet({
             aria-modal="true"
             aria-label={title}
           >
-            <div className="z-10 flex h-5 shrink-0 items-center justify-center bg-background/95 pt-2">
+            <div className="bg-background/95 z-10 flex h-5 shrink-0 items-center justify-center pt-2">
               <button
                 ref={handleRef}
                 type="button"
@@ -377,16 +363,14 @@ export function BottomSheet({
                   if (!canResize) return;
                   dragControls.start(event);
                 }}
-                className="flex h-5 w-16 cursor-grab items-center justify-center rounded-full outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-default"
+                className="focus-visible:ring-primary/30 flex h-5 w-16 cursor-grab items-center justify-center rounded-full outline-none focus-visible:ring-2 active:cursor-grabbing disabled:cursor-default"
                 aria-label={expanded ? "Turunkan drawer" : "Perbesar drawer"}
                 disabled={!canResize}
                 style={{ touchAction: "none" }}
               >
                 <span
                   className={`h-1 w-10 rounded-full transition-colors ${
-                    canResize
-                      ? "bg-outline-variant/70"
-                      : "bg-outline-variant/35"
+                    canResize ? "bg-outline-variant/70" : "bg-outline-variant/35"
                   }`}
                   aria-hidden="true"
                 />
@@ -395,34 +379,32 @@ export function BottomSheet({
 
             <header
               ref={headerRef}
-              className="relative z-10 flex h-14 shrink-0 bg-background items-center px-margin-mobile backdrop-blur-md"
+              className="bg-background px-margin-mobile relative z-10 flex h-14 shrink-0 items-center backdrop-blur-md"
             >
               <button
                 ref={closeButtonRef}
                 type="button"
                 onClick={() => onCloseRef.current()}
-                className="absolute left-margin-mobile top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface-container-lowest text-on-surface shadow-[0_5px_16px_rgba(17,17,17,0.08)] ring-1 ring-outline-variant/15 outline-none active-scale focus-visible:ring-2 focus-visible:ring-blue-500/30"
+                className="left-margin-mobile bg-surface-container-lowest text-on-surface ring-outline-variant/15 active-scale absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full shadow-[0_5px_16px_rgba(17,17,17,0.08)] ring-1 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
                 aria-label="Tutup"
               >
-                <span className="material-symbols-outlined text-[24px] leading-none">
-                  close
-                </span>
+                <span className="material-symbols-outlined text-[24px] leading-none">close</span>
               </button>
 
-              <div className="pointer-events-none absolute left-1/2 top-1/2 w-[min(58vw,15rem)] -translate-x-1/2 -translate-y-1/2 text-center">
-                <h2 className="truncate font-sans text-[18px] font-semibold leading-tight text-on-surface">
+              <div className="pointer-events-none absolute top-1/2 left-1/2 w-[min(58vw,15rem)] -translate-x-1/2 -translate-y-1/2 text-center">
+                <h2 className="text-on-surface truncate font-sans text-[18px] leading-tight font-semibold">
                   {title}
                 </h2>
               </div>
 
-              <div className="absolute right-margin-mobile top-1/2 z-10 flex -translate-y-1/2 items-center justify-end gap-1.5">
+              <div className="right-margin-mobile absolute top-1/2 z-10 flex -translate-y-1/2 items-center justify-end gap-1.5">
                 {action}
               </div>
             </header>
 
             <div
               ref={bodyRef}
-              className={`min-h-0 flex-1 px-margin-mobile py-md no-scrollbar ${
+              className={`px-margin-mobile py-md no-scrollbar min-h-0 flex-1 ${
                 contentOverflows ? "overflow-y-auto" : "overflow-y-hidden"
               }`}
             >
@@ -431,7 +413,7 @@ export function BottomSheet({
             {footer && (
               <div
                 ref={footerRef}
-                className="shrink-0 border-t border-outline-variant/15 bg-background px-margin-mobile pb-[calc(1rem+env(safe-area-inset-bottom))] pt-sm backdrop-blur-md"
+                className="border-outline-variant/15 bg-background px-margin-mobile pt-sm shrink-0 border-t pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md"
               >
                 {footer}
               </div>
@@ -486,9 +468,7 @@ export function ConfirmationModal({
     if (!open) return undefined;
     const activeDialogId = dialogId;
     const previousFocus =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const layer = promoteSheet(activeDialogId);
     const releaseBodyScroll = lockBodyScroll();
     const animationFrame = window.requestAnimationFrame(() => {
@@ -531,8 +511,7 @@ export function ConfirmationModal({
       window.removeEventListener("keydown", onKeyDown);
       deactivateSheet(activeDialogId);
       releaseBodyScroll();
-      if (previousFocus?.isConnected)
-        previousFocus.focus({ preventScroll: true });
+      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };
   }, [dialogId, open]);
 
@@ -574,7 +553,7 @@ export function ConfirmationModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 10 }}
               transition={transitionSpringSmooth}
-              className="pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-[360px] overflow-y-auto rounded-[28px] bg-background p-5 shadow-[0_28px_90px_rgba(0,0,0,0.32)] ring-1 ring-white/10 outline-none no-scrollbar"
+              className="bg-background no-scrollbar pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-[360px] overflow-y-auto rounded-[28px] p-5 shadow-[0_28px_90px_rgba(0,0,0,0.32)] ring-1 ring-white/10 outline-none"
             >
               <div
                 className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}
@@ -586,23 +565,20 @@ export function ConfirmationModal({
                 )}
               </div>
               <div className="mt-4 text-center">
-                <h2
-                  id={titleId}
-                  className="text-lg font-bold leading-6 text-on-surface"
-                >
+                <h2 id={titleId} className="text-on-surface text-lg leading-6 font-bold">
                   {title}
                 </h2>
                 {description ? (
                   <p
                     id={descriptionId}
-                    className="mx-auto mt-2 max-w-[300px] text-sm leading-5 text-on-surface-variant"
+                    className="text-on-surface-variant mx-auto mt-2 max-w-[300px] text-sm leading-5"
                   >
                     {description}
                   </p>
                 ) : null}
               </div>
               {children ? (
-                <div className="mt-4 rounded-[22px] bg-surface-container-lowest p-4 ring-1 ring-outline-variant/15">
+                <div className="bg-surface-container-lowest ring-outline-variant/15 mt-4 rounded-[22px] p-4 ring-1">
                   {children}
                 </div>
               ) : null}
@@ -655,7 +631,7 @@ export function ConfirmationSheet({
             whileTap={{ scale: 0.97 }}
             transition={transitionSpringSnappy}
             onClick={onClose}
-            className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            className="bg-surface-container text-on-surface focus-visible:ring-primary/25 min-h-12 rounded-full px-4 text-xs font-bold outline-none focus-visible:ring-2"
           >
             Batal
           </motion.button>
@@ -665,7 +641,7 @@ export function ConfirmationSheet({
             transition={transitionSpringSnappy}
             disabled={pending || disabled}
             onClick={onConfirm}
-            className={`min-h-12 rounded-full px-4 py-2 text-xs font-bold leading-4 text-white outline-none focus-visible:ring-2 disabled:opacity-40 ${danger ? "bg-error focus-visible:ring-error/25" : "bg-primary focus-visible:ring-primary/25"}`}
+            className={`min-h-12 rounded-full px-4 py-2 text-xs leading-4 font-bold text-white outline-none focus-visible:ring-2 disabled:opacity-40 ${danger ? "bg-error focus-visible:ring-error/25" : "bg-primary focus-visible:ring-primary/25"}`}
           >
             {pending ? "Memproses…" : confirmLabel}
           </motion.button>

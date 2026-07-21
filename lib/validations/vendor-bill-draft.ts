@@ -3,7 +3,12 @@ import { z } from "zod";
 import { submitVendorBillSchema } from "@/lib/validations/finance";
 import { zodIssuesToDetails } from "@/lib/validations/expense-draft";
 
-const uuid = z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, "ID tidak valid.");
+const uuid = z
+  .string()
+  .regex(
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+    "ID tidak valid.",
+  );
 const optionalUuid = z.union([uuid, z.literal("")]);
 
 export const vendorBillDraftPayloadSchema = z.object({
@@ -34,7 +39,9 @@ export type VendorBillDraftPayload = z.infer<typeof vendorBillDraftPayloadSchema
 export type SaveVendorBillDraftInput = z.infer<typeof saveVendorBillDraftSchema>;
 export type SubmitVendorBillDraftInput = z.infer<typeof submitVendorBillDraftSchema>;
 
-export function toVendorBillSubmission(payload: VendorBillDraftPayload): ReturnType<typeof submitVendorBillSchema.safeParse> {
+export function toVendorBillSubmission(
+  payload: VendorBillDraftPayload,
+): ReturnType<typeof submitVendorBillSchema.safeParse> {
   return submitVendorBillSchema.safeParse({
     vendorId: payload.vendorId,
     projectId: payload.projectId,

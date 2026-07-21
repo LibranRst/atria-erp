@@ -54,37 +54,48 @@ export function MaterialOverviewTab({
 }: OverviewTabProps): React.JSX.Element {
   const shortageCount = data.shortages.filter((row) => row.needToBuy > 0).length;
   const reservedValue = Math.max(totalStockValue - availableValue, 0);
-  const availableRatio = totalStockValue > 0
-    ? Math.min(Math.max((availableValue / totalStockValue) * 100, 0), 100)
-    : 0;
+  const availableRatio =
+    totalStockValue > 0 ? Math.min(Math.max((availableValue / totalStockValue) * 100, 0), 100) : 0;
   const attention: readonly AttentionItem[] = [
-    ...(shortageCount > 0 ? [{
-      id: "shortage",
-      title: "Kebutuhan RAP belum terpenuhi",
-      detail: `${shortageCount} material perlu ditutup sebelum pekerjaan dilanjutkan.`,
-      value: shortageCount,
-      icon: "production_quantity_limits",
-      tone: "critical" as const,
-      tab: "needs" as const,
-    }] : []),
-    ...(lowCount > 0 ? [{
-      id: "low-stock",
-      title: "Stok menyentuh batas minimum",
-      detail: `${lowCount} material perlu diperiksa sebelum reservasi berikutnya.`,
-      value: lowCount,
-      icon: "inventory_2",
-      tone: "warning" as const,
-      tab: "inventory" as const,
-    }] : []),
-    ...(pendingApprovals > 0 ? [{
-      id: "approval",
-      title: "Keputusan stok menunggu",
-      detail: `${pendingApprovals} dokumen belum mengubah posisi stok.`,
-      value: pendingApprovals,
-      icon: "approval",
-      tone: "pending" as const,
-      tab: "overview" as const,
-    }] : []),
+    ...(shortageCount > 0
+      ? [
+          {
+            id: "shortage",
+            title: "Kebutuhan RAP belum terpenuhi",
+            detail: `${shortageCount} material perlu ditutup sebelum pekerjaan dilanjutkan.`,
+            value: shortageCount,
+            icon: "production_quantity_limits",
+            tone: "critical" as const,
+            tab: "needs" as const,
+          },
+        ]
+      : []),
+    ...(lowCount > 0
+      ? [
+          {
+            id: "low-stock",
+            title: "Stok menyentuh batas minimum",
+            detail: `${lowCount} material perlu diperiksa sebelum reservasi berikutnya.`,
+            value: lowCount,
+            icon: "inventory_2",
+            tone: "warning" as const,
+            tab: "inventory" as const,
+          },
+        ]
+      : []),
+    ...(pendingApprovals > 0
+      ? [
+          {
+            id: "approval",
+            title: "Keputusan stok menunggu",
+            detail: `${pendingApprovals} dokumen belum mengubah posisi stok.`,
+            value: pendingApprovals,
+            icon: "approval",
+            tone: "pending" as const,
+            tab: "overview" as const,
+          },
+        ]
+      : []),
   ].slice(0, 3);
 
   const pendingCounts = data.counts.filter((row) => row.status === "PENDING_APPROVAL");
@@ -93,11 +104,14 @@ export function MaterialOverviewTab({
   return (
     <div className="space-y-lg max-[430px]:space-y-5">
       <section
-        className="relative isolate overflow-hidden rounded-[30px] bg-[#151719] px-5 py-5 text-white shadow-[0_2px_4px_rgba(17,17,17,0.12),0_20px_48px_rgba(17,17,17,0.16)] ring-1 ring-white/[0.08] max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
+        className="relative isolate overflow-hidden rounded-[30px] bg-[#151719] px-5 py-5 text-white shadow-[0_2px_4px_rgba(17,17,17,0.12),0_20px_48px_rgba(17,17,17,0.16)] ring-1 ring-white/8 max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
         aria-label="Posisi stok"
       >
-        <span className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/20" aria-hidden="true" />
-        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/52">Nilai stok</p>
+        <span
+          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/20"
+          aria-hidden="true"
+        />
+        <p className="text-[9px] font-bold tracking-[0.18em] text-white/52 uppercase">Nilai stok</p>
         <MoneyValue
           amount={totalStockValue}
           variant="fullDynamic"
@@ -106,15 +120,32 @@ export function MaterialOverviewTab({
           className="mt-1.5"
         />
 
-        <div className="mt-5 rounded-[22px] bg-white/[0.075] p-3.5 ring-1 ring-white/[0.06] max-[430px]:mt-4 max-[430px]:rounded-[20px] max-[430px]:p-3">
+        <div className="mt-5 rounded-[22px] bg-white/7.5 p-3.5 ring-1 ring-white/6 max-[430px]:mt-4 max-[430px]:rounded-[20px] max-[430px]:p-3">
           <div className="flex items-end justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-wide text-white/50">Siap dipakai</p>
-              <MoneyValue amount={availableValue} variant="compactWithFull" tone="inverse" size="lg" className="mt-1" />
+              <p className="text-[9px] font-bold tracking-wide text-white/50 uppercase">
+                Siap dipakai
+              </p>
+              <MoneyValue
+                amount={availableValue}
+                variant="compactWithFull"
+                tone="inverse"
+                size="lg"
+                className="mt-1"
+              />
             </div>
             <div className="min-w-0 text-right">
-              <p className="text-[9px] font-bold uppercase tracking-wide text-white/50">Terikat / reserved</p>
-              <MoneyValue amount={reservedValue} variant="compactWithFull" tone="inverse" align="right" size="sm" className="mt-1" />
+              <p className="text-[9px] font-bold tracking-wide text-white/50 uppercase">
+                Terikat / reserved
+              </p>
+              <MoneyValue
+                amount={reservedValue}
+                variant="compactWithFull"
+                tone="inverse"
+                align="right"
+                size="sm"
+                className="mt-1"
+              />
             </div>
           </div>
           <StockAvailabilitySplit value={availableRatio} />
@@ -125,7 +156,10 @@ export function MaterialOverviewTab({
         </div>
       </section>
 
-      <MaterialSection title="Perlu perhatian" meta={attention.length > 0 ? `${attention.length} prioritas` : "Terkendali"}>
+      <MaterialSection
+        title="Perlu perhatian"
+        meta={attention.length > 0 ? `${attention.length} prioritas` : "Terkendali"}
+      >
         <MaterialGroupSurface>
           {attention.length === 0 ? (
             <MaterialInlineState
@@ -135,23 +169,38 @@ export function MaterialOverviewTab({
               tone="positive"
             />
           ) : (
-            <div className="divide-y divide-black/[0.055] px-3">
+            <div className="divide-y divide-black/5.5 px-3">
               {attention.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => onNavigate(item.tab)}
-                  className="flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
+                  className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left outline-none"
                 >
-                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${attentionIconClass(item.tone)}`}>
-                    <span className="material-symbols-outlined text-[17px]" aria-hidden="true">{item.icon}</span>
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${attentionIconClass(item.tone)}`}
+                  >
+                    <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
+                      {item.icon}
+                    </span>
                   </span>
                   <span className="grid min-w-0 flex-1 gap-1">
-                    <span className="truncate text-[13px] font-bold leading-4 text-on-surface">{item.title}</span>
-                    <span className="truncate text-[10px] leading-[1.3] text-on-surface-variant">{item.detail}</span>
+                    <span className="text-on-surface truncate text-[13px] leading-4 font-bold">
+                      {item.title}
+                    </span>
+                    <span className="text-on-surface-variant truncate text-[10px] leading-[1.3]">
+                      {item.detail}
+                    </span>
                   </span>
-                  <span className="shrink-0 font-mono text-[13px] font-black tabular-nums text-on-surface">{item.value}</span>
-                  <span className="material-symbols-outlined shrink-0 text-[18px] text-[#007AFF]" aria-hidden="true">chevron_right</span>
+                  <span className="text-on-surface shrink-0 font-mono text-[13px] font-black tabular-nums">
+                    {item.value}
+                  </span>
+                  <span
+                    className="material-symbols-outlined shrink-0 text-[18px] text-[#007AFF]"
+                    aria-hidden="true"
+                  >
+                    chevron_right
+                  </span>
                 </button>
               ))}
             </div>
@@ -162,7 +211,7 @@ export function MaterialOverviewTab({
       {pendingApprovals > 0 ? (
         <MaterialSection title="Perlu keputusan" meta={`${pendingApprovals} menunggu`}>
           <MaterialGroupSurface>
-            <div className="divide-y divide-black/[0.055]">
+            <div className="divide-y divide-black/5.5">
               {pendingCounts.map((row) => (
                 <ApprovalRow
                   key={row.id}
@@ -190,7 +239,11 @@ export function MaterialOverviewTab({
       <MaterialSection
         title="Aktivitas terbaru"
         meta={movements.length > 0 ? `${Math.min(movements.length, 5)} terbaru` : undefined}
-        action={movements.length > 0 ? <MaterialTextAction label="Lihat semua" onClick={() => onNavigate("activity")} /> : undefined}
+        action={
+          movements.length > 0 ? (
+            <MaterialTextAction label="Lihat semua" onClick={() => onNavigate("activity")} />
+          ) : undefined
+        }
       >
         <MaterialGroupSurface>
           {movements.length === 0 ? (
@@ -200,8 +253,10 @@ export function MaterialOverviewTab({
               description="Penerimaan, pemakaian, transfer, dan penyesuaian akan muncul di sini."
             />
           ) : (
-            <div className="divide-y divide-black/[0.055] px-3">
-              {movements.slice(0, 5).map((row) => <MovementRow key={row.id} row={row} />)}
+            <div className="divide-y divide-black/5.5 px-3">
+              {movements.slice(0, 5).map((row) => (
+                <MovementRow key={row.id} row={row} />
+              ))}
             </div>
           )}
         </MaterialGroupSurface>
@@ -214,11 +269,11 @@ function StockAvailabilitySplit({ value }: { readonly value: number }): React.JS
   const clamped = Math.min(Math.max(value, 0), 100);
   return (
     <div className="mt-3" aria-label={`Stok siap dipakai ${value.toFixed(1)} persen`}>
-      <div className="flex h-2 overflow-hidden rounded-full bg-white/[0.12] ring-1 ring-white/[0.05]">
+      <div className="flex h-2 overflow-hidden rounded-full bg-white/12 ring-1 ring-white/5">
         <span className="h-full bg-white" style={{ width: `${clamped}%` }} aria-hidden="true" />
-        <span className="h-full flex-1 bg-white/[0.18]" aria-hidden="true" />
+        <span className="h-full flex-1 bg-white/18" aria-hidden="true" />
       </div>
-      <div className="mt-1.5 flex justify-between text-[8px] font-bold uppercase tracking-wide text-white/45">
+      <div className="mt-1.5 flex justify-between text-[8px] font-bold tracking-wide text-white/45 uppercase">
         <span>Siap dipakai</span>
         <span>Terikat</span>
       </div>
@@ -227,8 +282,8 @@ function StockAvailabilitySplit({ value }: { readonly value: number }): React.JS
 }
 
 function attentionIconClass(tone: MaterialTone): string {
-  if (tone === "critical") return "bg-error/[0.08] text-error ring-1 ring-error/[0.06]";
-  if (tone === "warning") return "bg-warning/[0.09] text-warning ring-1 ring-warning/[0.06]";
-  if (tone === "pending") return "bg-primary/[0.08] text-primary ring-1 ring-primary/[0.06]";
+  if (tone === "critical") return "bg-error/8 text-error ring-1 ring-error/6";
+  if (tone === "warning") return "bg-warning/9 text-warning ring-1 ring-warning/6";
+  if (tone === "pending") return "bg-primary/8 text-primary ring-1 ring-primary/6";
   return "bg-surface-container text-on-surface-variant";
 }

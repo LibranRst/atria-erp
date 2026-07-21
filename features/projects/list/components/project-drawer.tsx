@@ -3,10 +3,7 @@
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  createProjectAction,
-  updateProjectAction,
-} from "@/app/actions/project/crud";
+import { createProjectAction, updateProjectAction } from "@/app/actions/project/crud";
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import {
@@ -132,9 +129,7 @@ export function ProjectDrawer({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
-  const [showOperationalDetails, setShowOperationalDetails] = useState<
-    boolean | null
-  >(null);
+  const [showOperationalDetails, setShowOperationalDetails] = useState<boolean | null>(null);
 
   // Error/Success state
   const [error, setError] = useState<string | null>(null);
@@ -155,16 +150,14 @@ export function ProjectDrawer({
   }));
   const selectedClientName = isNewClient
     ? newClientName.trim() || "Klien baru"
-    : (clients.find((client) => client.id === clientId)?.name ??
-      "Belum dipilih");
+    : (clients.find((client) => client.id === clientId)?.name ?? "Belum dipilih");
   const selectedPmName =
     users.find((user) => user.id === projectManagerId)?.name ?? "Belum dipilih";
   const selectedStatusLabel =
-    PROJECT_STATUS_OPTIONS.find((option) => option.value === status)?.label ??
-    status;
+    PROJECT_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
   const selectedHealthLabel =
-    FINANCIAL_HEALTH_OPTIONS.find((option) => option.value === financialHealth)
-      ?.label ?? financialHealth;
+    FINANCIAL_HEALTH_OPTIONS.find((option) => option.value === financialHealth)?.label ??
+    financialHealth;
   const operationalDetailCount = [
     startDate,
     endDate,
@@ -174,18 +167,13 @@ export function ProjectDrawer({
     coverImageUrl,
     notes,
   ].filter((value) => Boolean(value)).length;
-  const hasOperationalDetails = Boolean(
-    editProject || operationalDetailCount > 0,
-  );
-  const operationalDetailsVisible =
-    showOperationalDetails ?? hasOperationalDetails;
+  const hasOperationalDetails = Boolean(editProject || operationalDetailCount > 0);
+  const operationalDetailsVisible = showOperationalDetails ?? hasOperationalDetails;
   const dateError = getProjectDateError(startDate, endDate);
   const projectBlockers = [
     !name.trim() ? "Nama proyek" : "",
     !editProject && !isNewClient && !clientId ? "Klien terdaftar" : "",
-    !editProject && isNewClient && !newClientName.trim()
-      ? "Nama klien baru"
-      : "",
+    !editProject && isNewClient && !newClientName.trim() ? "Nama klien baru" : "",
     !projectManagerId ? "Project Manager" : "",
     dateError ? "Urutan tanggal" : "",
   ].filter(Boolean);
@@ -195,9 +183,7 @@ export function ProjectDrawer({
     Boolean(projectManagerId),
   ].filter(Boolean).length;
   const disabledReason =
-    projectBlockers.length > 0
-      ? `Belum bisa disimpan: ${projectBlockers.join(", ")}.`
-      : undefined;
+    projectBlockers.length > 0 ? `Belum bisa disimpan: ${projectBlockers.join(", ")}.` : undefined;
 
   const handleClose = React.useCallback(() => {
     if (createdProjectId) {
@@ -223,28 +209,20 @@ export function ProjectDrawer({
 
   const setName = (value: string): void => patch({ name: value });
   const setClientId = (value: string): void => patch({ clientId: value });
-  const setIsNewClient = (value: boolean): void =>
-    patch({ isNewClient: value });
-  const setNewClientName = (value: string): void =>
-    patch({ newClientName: value });
-  const setNewClientEmail = (value: string): void =>
-    patch({ newClientEmail: value });
-  const setNewClientPhone = (value: string): void =>
-    patch({ newClientPhone: value });
-  const setNewClientAddress = (value: string): void =>
-    patch({ newClientAddress: value });
-  const setProjectManagerId = (value: string): void =>
-    patch({ projectManagerId: value });
+  const setIsNewClient = (value: boolean): void => patch({ isNewClient: value });
+  const setNewClientName = (value: string): void => patch({ newClientName: value });
+  const setNewClientEmail = (value: string): void => patch({ newClientEmail: value });
+  const setNewClientPhone = (value: string): void => patch({ newClientPhone: value });
+  const setNewClientAddress = (value: string): void => patch({ newClientAddress: value });
+  const setProjectManagerId = (value: string): void => patch({ projectManagerId: value });
   const setStartDate = (value: string): void => patch({ startDate: value });
   const setEndDate = (value: string): void => patch({ endDate: value });
   const setLocation = (value: string): void => patch({ location: value });
   const setRoomArea = (value: string): void => patch({ roomArea: value });
   const setProjectType = (value: string): void => patch({ projectType: value });
-  const setCoverImageUrl = (value: string): void =>
-    patch({ coverImageUrl: value });
+  const setCoverImageUrl = (value: string): void => patch({ coverImageUrl: value });
   const setNotes = (value: string): void => patch({ notes: value });
-  const setStatus = (value: ProjectStatusOption): void =>
-    patch({ status: value });
+  const setStatus = (value: ProjectStatusOption): void => patch({ status: value });
   const setFinancialHealth = (value: ProjectFinancialHealthOption): void =>
     patch({ financialHealth: value });
 
@@ -263,9 +241,7 @@ export function ProjectDrawer({
     try {
       const signRes = await signImagekit();
       if (!signRes.success) {
-        throw new Error(
-          signRes.error.message || "Gagal melakukan otentikasi unggah cover.",
-        );
+        throw new Error(signRes.error.message || "Gagal melakukan otentikasi unggah cover.");
       }
 
       const { token, expire, signature } = signRes.data;
@@ -275,21 +251,17 @@ export function ProjectDrawer({
       formData.append("fileName", safeFileName);
       formData.append(
         "publicKey",
-        process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY ||
-          "public_PRvr9hXwFetaQx4ZejdGwJ1Ue8=",
+        process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "public_PRvr9hXwFetaQx4ZejdGwJ1Ue8=",
       );
       formData.append("signature", signature);
       formData.append("token", token);
       formData.append("expire", expire.toString());
       formData.append("folder", "/project-covers");
 
-      const uploadRes = await fetch(
-        "https://upload.imagekit.io/api/v1/files/upload",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const uploadRes = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!uploadRes.ok) {
         const errorData = (await uploadRes.json()) as {
@@ -302,10 +274,7 @@ export function ProjectDrawer({
       patch({ coverImageUrl: uploadData.url });
       toast.success("Cover proyek berhasil diunggah.");
     } catch (err: unknown) {
-      const errMsg = getErrorMessage(
-        err,
-        "Terjadi kesalahan saat mengunggah cover proyek.",
-      );
+      const errMsg = getErrorMessage(err, "Terjadi kesalahan saat mengunggah cover proyek.");
       setError(errMsg);
       toast.error(errMsg);
     } finally {
@@ -460,20 +429,14 @@ export function ProjectDrawer({
         statusTone={projectBlockers.length ? "warning" : "success"}
         error={
           error ? (
-            <div className="flex items-start gap-2 rounded-2xl border border-error bg-error-container/10 p-3 text-xs text-error">
-              <span className="material-symbols-outlined text-[18px]">
-                error
-              </span>
+            <div className="border-error bg-error-container/10 text-error flex items-start gap-2 rounded-2xl border p-3 text-xs">
+              <span className="material-symbols-outlined text-[18px]">error</span>
               <span className="leading-normal">{error}</span>
             </div>
           ) : null
         }
       >
-        <form
-          id="project-drawer-form"
-          onSubmit={prepareReview}
-          className="space-y-md"
-        >
+        <form id="project-drawer-form" onSubmit={prepareReview} className="space-y-md">
           <FormSection
             title="Identitas inti"
             helper="Nama, klien, dan PM menentukan ownership proyek."
@@ -514,8 +477,7 @@ export function ProjectDrawer({
             />
             {users.length === 1 && projectManagerId ? (
               <SmartDefaultHint>
-                Project Manager otomatis dipilih karena hanya ada satu opsi
-                aktif.
+                Project Manager otomatis dipilih karena hanya ada satu opsi aktif.
               </SmartDefaultHint>
             ) : null}
           </FormSection>
@@ -539,23 +501,14 @@ export function ProjectDrawer({
             description="Jadwal, lokasi, cover, dan catatan proyek"
             variant="compact"
             icon={
-              <span
-                className="material-symbols-outlined text-[18px]"
-                aria-hidden="true"
-              >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                 tune
               </span>
             }
-            summary={
-              operationalDetailCount > 0
-                ? `${operationalDetailCount} terisi`
-                : "Opsional"
-            }
+            summary={operationalDetailCount > 0 ? `${operationalDetailCount} terisi` : "Opsional"}
             expanded={operationalDetailsVisible}
             onToggle={() =>
-              setShowOperationalDetails(
-                (current) => !(current ?? hasOperationalDetails),
-              )
+              setShowOperationalDetails((current) => !(current ?? hasOperationalDetails))
             }
           >
             <div className="space-y-md">
@@ -602,9 +555,7 @@ export function ProjectDrawer({
           </FormDisclosure>
 
           {recovery.recoveredAt ? (
-            <SmartDefaultHint>
-              Isian sebelumnya dipulihkan dari perangkat ini.
-            </SmartDefaultHint>
+            <SmartDefaultHint>Isian sebelumnya dipulihkan dari perangkat ini.</SmartDefaultHint>
           ) : null}
         </form>
       </OperationalFormSheet>
@@ -629,17 +580,20 @@ export function ProjectDrawer({
             <ReviewFact label="Nama Proyek" value={name.trim()} />
             <ReviewFact label="Klien" value={selectedClientName ?? "–"} />
             <ReviewFact label="Project Manager" value={selectedPmName ?? "–"} />
-            <ReviewFact label="Lokasi & Area" value={[location, roomArea].filter(Boolean).join(" · ") || "–"} />
+            <ReviewFact
+              label="Lokasi & Area"
+              value={[location, roomArea].filter(Boolean).join(" · ") || "–"}
+            />
             <ReviewFact
               label="Periode"
               value={
-                startDate || endDate
-                  ? `${startDate || "–"}${endDate ? ` → ${endDate}` : ""}`
-                  : "–"
+                startDate || endDate ? `${startDate || "–"}${endDate ? ` → ${endDate}` : ""}` : "–"
               }
             />
             <ReviewFact label="Status Proyek" value={selectedStatusLabel ?? "–"} />
-            {editProject && <ReviewFact label="Kesehatan Finansial" value={selectedHealthLabel ?? "–"} />}
+            {editProject && (
+              <ReviewFact label="Kesehatan Finansial" value={selectedHealthLabel ?? "–"} />
+            )}
           </FormSection>
           <FormRiskNotice
             title={editProject ? "Dampak perubahan" : "Yang disiapkan otomatis"}
@@ -667,7 +621,7 @@ export function ProjectDrawer({
                 setConfirmClose(false);
                 handleClose();
               }}
-              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white"
+              className="bg-primary min-h-12 w-full rounded-full px-5 text-xs font-bold text-white"
             >
               Simpan Lokal & Tutup
             </motion.button>
@@ -681,7 +635,7 @@ export function ProjectDrawer({
                   setConfirmClose(false);
                   handleClose();
                 }}
-                className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error"
+                className="bg-error-container/25 text-error min-h-12 rounded-full px-4 text-xs font-bold"
               >
                 Buang Perubahan
               </motion.button>
@@ -690,7 +644,7 @@ export function ProjectDrawer({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => setConfirmClose(false)}
-                className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
+                className="bg-surface-container text-on-surface min-h-12 rounded-full px-4 text-xs font-bold"
               >
                 Lanjut Mengisi
               </motion.button>
@@ -702,11 +656,17 @@ export function ProjectDrawer({
   );
 }
 
-function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+function ReviewFact({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: React.ReactNode;
+}): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
       <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
+      <span className="text-on-surface text-right font-bold">{value}</span>
     </div>
   );
 }

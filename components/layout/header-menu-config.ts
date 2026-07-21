@@ -2,10 +2,7 @@ export type HeaderMenuItem = {
   readonly label: string;
   readonly href: string;
   readonly iconName: string;
-  readonly match: (
-    pathname: string,
-    searchParams: URLSearchParams,
-  ) => boolean;
+  readonly match: (pathname: string, searchParams: URLSearchParams) => boolean;
 };
 
 const HEADER_MENU_ITEMS: readonly HeaderMenuItem[] = [
@@ -53,9 +50,7 @@ const HEADER_MENU_ITEMS: readonly HeaderMenuItem[] = [
   },
 ];
 
-export function getHeaderMenuItems(
-  roleName: string | null,
-): readonly HeaderMenuItem[] {
+export function getHeaderMenuItems(roleName: string | null): readonly HeaderMenuItem[] {
   return HEADER_MENU_ITEMS.filter((item) => {
     if (!roleName) return false;
 
@@ -68,11 +63,7 @@ export function getHeaderMenuItems(
     }
 
     if (item.label === "Pengaturan ERP") {
-      return (
-        roleName === "OWNER" ||
-        roleName === "FINANCE_ADMIN" ||
-        roleName === "PURCHASING"
-      );
+      return roleName === "OWNER" || roleName === "FINANCE_ADMIN" || roleName === "PURCHASING";
     }
 
     return true;

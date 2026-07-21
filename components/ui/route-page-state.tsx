@@ -15,11 +15,7 @@ export function RoutePageLoading(): React.JSX.Element {
   );
 }
 
-export function RoutePageError({
-  reset,
-}: {
-  readonly reset: () => void;
-}): React.JSX.Element {
+export function RoutePageError({ reset }: { readonly reset: () => void }): React.JSX.Element {
   return (
     <PageState
       kind="error"

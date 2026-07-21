@@ -5,12 +5,15 @@ export interface RabSelectionCandidate {
 }
 
 function latestByRevision<T extends RabSelectionCandidate>(rows: readonly T[]): T | null {
-  return rows.reduce<T | null>((latest, row) => (
-    latest === null || row.revision > latest.revision ? row : latest
-  ), null);
+  return rows.reduce<T | null>(
+    (latest, row) => (latest === null || row.revision > latest.revision ? row : latest),
+    null,
+  );
 }
 
-export function selectCurrentRabEstimate<T extends RabSelectionCandidate>(estimates: readonly T[]): T | null {
+export function selectCurrentRabEstimate<T extends RabSelectionCandidate>(
+  estimates: readonly T[],
+): T | null {
   const draft = latestByRevision(estimates.filter((estimate) => estimate.status === "DRAFT"));
   if (draft) return draft;
   const approved = latestByRevision(estimates.filter((estimate) => estimate.status === "APPROVED"));
@@ -18,7 +21,9 @@ export function selectCurrentRabEstimate<T extends RabSelectionCandidate>(estima
   return latestByRevision(estimates.filter((estimate) => estimate.status !== "VOID"));
 }
 
-export function selectApprovedRabEstimate<T extends RabSelectionCandidate>(estimates: readonly T[]): T | null {
+export function selectApprovedRabEstimate<T extends RabSelectionCandidate>(
+  estimates: readonly T[],
+): T | null {
   return latestByRevision(estimates.filter((estimate) => estimate.status === "APPROVED"));
 }
 

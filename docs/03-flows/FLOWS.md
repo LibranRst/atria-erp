@@ -7,6 +7,7 @@ The core workflow remains Dekoria's familiar budget-control flow:
 Material control is attached to the Material category as the structured drill-down layer.
 
 ## 1. Owner Opens Dashboard
+
 ```mermaid
 flowchart TD
   A["Owner opens mobile dashboard"] --> B["Server reads Better Auth session"]
@@ -19,6 +20,7 @@ flowchart TD
 Read-only dashboard queries do not write audit logs. Any action triggered from the dashboard must call a protected Server Action.
 
 ## 2. Project Budget Setup from Settings Ratios
+
 ```mermaid
 flowchart TD
   A["Finance/Admin enters project value or approved RAB value"] --> B["System applies default budget cap 90%"]
@@ -35,6 +37,7 @@ Category ratios are percentages of Internal Budget and may total less than 100%;
 Project-level reallocation is a single atomic batch. Approved budgets require Owner/Finance permission and an audit reason.
 
 ## 3. Expense Tracker by Category
+
 ```mermaid
 flowchart TD
   A["Finance/PM opens Add Expense"] --> B["Select project and category"]
@@ -53,6 +56,7 @@ Expense category is mandatory. Material linkage is progressive and only valid fo
 PM may submit expenses but may not verify their own submission. Verification is restricted to Owner or Finance Admin; payment remains a separate explicit finance action.
 
 ## 4. Budget Dashboard Rollup
+
 ```mermaid
 flowchart TD
   A["Read approved project budget categories"] --> B["Aggregate approved/paid expenses by category"]
@@ -65,6 +69,7 @@ flowchart TD
 This replaces spreadsheet `SUMIFS` behavior with a structured database read model.
 
 ## 5. Project Budget to RAP
+
 ```mermaid
 flowchart TD
   A["Finance/Admin creates Project Budget"] --> B["PM/Purchasing creates RAP material plan"]
@@ -78,6 +83,7 @@ flowchart TD
 Project Budget is the high-level control layer. RAP is the internal material/cost plan for the Material category. Locked RAP is compared with Material budget, actual material cost, and estimated remaining material cost.
 
 ## 6. Inventory Check and Purchase Need
+
 ```mermaid
 flowchart TD
   A["Open RAP / Material Plan"] --> B["Read material_inventory by material and location"]
@@ -91,6 +97,7 @@ Need to Buy is a calculated operational signal, not an accounting liability. Ven
 Goods Receipt is the explicit physical receipt action. It updates stock and weighted average cost but does not pay the vendor.
 
 ## 6B. Approved Scope Revision
+
 ```mermaid
 flowchart TD
   A["Approved RAB and locked sources"] --> B["Create RAP/package revision"]
@@ -105,9 +112,11 @@ Direct approval is rejected when a current approved RAB already exists.
 A draft RAB revision may be cancelled before approval. Cancellation marks the revision `VOID`, cancels any linked open Change Order, preserves the approved baseline and revision number history, and does not update contract, budget, RAP, or package locks.
 
 ## 6C. Project Closing
+
 Completion runs only through the closing action. It validates client invoices, vendor liabilities, expenses, open revisions/change orders, stock reservations, and canonical budget synchronization, then writes the final realized-margin/cash-position snapshot.
 
 ## 7. Reserve Material for Project
+
 ```mermaid
 flowchart TD
   A["Purchasing chooses material and project/RAP item"] --> B["Validate stock availability and permission"]
@@ -123,6 +132,7 @@ Reservation does not create a cash transaction. It only changes inventory commit
 Use, waste, and project closing calculate the outstanding reservation for the same project, material, location, and RAP item. One project must never release another project's reserved stock.
 
 ## 8. Use Material for Project
+
 ```mermaid
 flowchart TD
   A["Project/Purchasing marks material used"] --> B["Validate project access and quantity"]
@@ -138,6 +148,7 @@ Material usage affects project material status and estimated remaining material 
 Use or waste is rejected if it would reduce current stock below reservations that remain outstanding for other work.
 
 ## 9. Stock In from Purchase
+
 ```mermaid
 flowchart TD
   A["Finance/Purchasing records vendor bill or purchase"] --> B["User records Stock In after material arrives"]
@@ -166,6 +177,7 @@ Transfer cannot consume reserved stock. Stock counts reject stale snapshots or c
 Scheduling vendor payments reserves only the bill's remaining payable amount across pending and completed schedules. Execution rechecks the bill under lock, accepts only a pending schedule, and mutates the bank balance through the audited finance helper. Client receipts likewise reject amounts above the invoice's remaining balance.
 
 ## 10. Generate Client Estimate / Quotation from Selected Sources
+
 ```mermaid
 flowchart TD
   A["User selects quotation sources"] --> B["Include RAP Material, Tukang packages, Subcon packages, and manual lines"]
@@ -178,4 +190,5 @@ flowchart TD
 Client-facing RAB output must never include internal unit cost, margin formula, stock availability, vendor notes, or internal notes.
 
 ## 11. AI Finance & Material Brief
+
 Deferred. The current release has no AI CFO Dashboard surface, briefing route, or active financial-briefing cron. Historical `ai_run` data and AI OCR remain preserved for a later phase.

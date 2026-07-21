@@ -28,11 +28,11 @@ export function BottomTabBar({
   return (
     <nav
       aria-label="Primary mobile navigation"
-      className="pointer-events-auto relative z-10 flex h-full flex-1 items-center justify-center rounded-full border border-outline-variant/20 bg-white p-1 shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+      className="border-outline-variant/20 pointer-events-auto relative z-10 flex h-full flex-1 items-center justify-center rounded-full border bg-white p-1 shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
     >
       {activeIndex !== -1 && (
         <motion.div
-          className="absolute bottom-1 top-1 rounded-full bg-primary"
+          className="bg-primary absolute top-1 bottom-1 rounded-full"
           initial={false}
           animate={{
             left: `calc(4px + (100% - 8px) * ${activeIndex} / ${items.length})`,
@@ -65,7 +65,7 @@ export function BottomTabBar({
             >
               {item.iconName}
             </span>
-            <span className="relative z-10 font-sans text-[8px] font-bold uppercase leading-[16px] tracking-wider">
+            <span className="relative z-10 font-sans text-[8px] leading-[16px] font-bold tracking-wider uppercase">
               {item.label}
             </span>
           </Link>
@@ -104,12 +104,11 @@ export function QuickActionFab({
           bottom: isOpen ? 68 : 0,
         }}
         transition={isOpen ? transitionSpringBouncy : transitionSpringSmooth}
-        className={`pointer-events-auto absolute right-0 z-50 origin-bottom-right cursor-pointer select-none overflow-hidden rounded-[28px] border transition-colors duration-300
-          ${
-            isOpen
-              ? "border-outline-variant/20 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
-              : "border-outline-variant/20 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
-          }`}
+        className={`pointer-events-auto absolute right-0 z-50 origin-bottom-right cursor-pointer overflow-hidden rounded-[28px] border transition-colors duration-300 select-none ${
+          isOpen
+            ? "border-outline-variant/20 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+            : "border-outline-variant/20 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+        }`}
       >
         <motion.div
           animate={{
@@ -119,9 +118,7 @@ export function QuickActionFab({
           transition={transitionEaseSmooth}
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
         >
-          <span className="material-symbols-outlined text-[32px] text-primary">
-            add
-          </span>
+          <span className="material-symbols-outlined text-primary text-[32px]">add</span>
         </motion.div>
 
         <motion.div
@@ -158,9 +155,7 @@ export function QuickActionFab({
                       : "bg-primary/10 text-primary"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[20px]">
-                    {action.iconName}
-                  </span>
+                  <span className="material-symbols-outlined text-[20px]">{action.iconName}</span>
                 </span>
                 <span className="min-w-0 flex-1">
                   <span
@@ -168,7 +163,7 @@ export function QuickActionFab({
                   >
                     {action.label}
                   </span>
-                  <span className="block truncate text-[10px] font-semibold text-on-surface-variant">
+                  <span className="text-on-surface-variant block truncate text-[10px] font-semibold">
                     {action.description}
                   </span>
                 </span>

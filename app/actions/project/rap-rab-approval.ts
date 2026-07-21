@@ -16,22 +16,22 @@ import { getBudgetCategoryStatus } from "@/lib/budget/excel-budget";
 import { calculateQuotationTotal } from "@/lib/project/quotation-total";
 import type { ActionResponse } from "@/lib/types/action-response";
 import { approveRabEstimateSchema } from "@/lib/validations/rap-rab";
-import {
-  assertProjectMutationAccess,
-  getSessionUser,
-  toError,
-} from "./rap-rab-utils";
+import { assertProjectMutationAccess, getSessionUser, toError } from "./rap-rab-utils";
 
 export async function approveRabEstimate(
-  rabEstimateId: string
+  rabEstimateId: string,
 ): Promise<ActionResponse<typeof rabEstimate.$inferSelect>> {
   const validation = approveRabEstimateSchema.safeParse({ rabEstimateId });
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "ID RAB estimate tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID RAB estimate tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -59,7 +59,8 @@ export async function approveRabEstimate(
 
       const approvedValue = calculateQuotationTotal(estimate.items, estimate.bundles);
 
-      const [updated] = await tx.update(rabEstimate)
+      const [updated] = await tx
+        .update(rabEstimate)
         .set({
           status: "APPROVED",
           approvedValue: approvedValue.toFixed(2),
@@ -69,7 +70,8 @@ export async function approveRabEstimate(
         .where(eq(rabEstimate.id, estimate.id))
         .returning();
 
-      await tx.update(project)
+      await tx
+        .update(project)
         .set({
           totalContractValue: approvedValue.toFixed(2),
           updatedAt: new Date(),
@@ -87,13 +89,15 @@ export async function approveRabEstimate(
         const internalBudget = approvedValue * ratio;
         const targetGrossAmount = approvedValue - internalBudget;
 
-        await tx.update(projectBudgets)
+        await tx
+          .update(projectBudgets)
           .set({
             contractValue: approvedValue.toFixed(2),
             approvedRabValue: approvedValue.toFixed(2),
             internalBudget: internalBudget.toFixed(2),
             targetGrossAmount: targetGrossAmount.toFixed(2),
-            targetGrossPercentage: approvedValue > 0 ? ((targetGrossAmount / approvedValue) * 100).toFixed(4) : "0.0000",
+            targetGrossPercentage:
+              approvedValue > 0 ? ((targetGrossAmount / approvedValue) * 100).toFixed(4) : "0.0000",
             status: "APPROVED",
             updatedAt: new Date(),
           })
@@ -106,7 +110,8 @@ export async function approveRabEstimate(
             const actualAmount = Number(cat.actualAmount);
             const usedPercentage = allocatedAmount > 0 ? (actualAmount / allocatedAmount) * 100 : 0;
 
-            await tx.update(projectBudgetCategory)
+            await tx
+              .update(projectBudgetCategory)
               .set({
                 allocatedAmount: allocatedAmount.toFixed(2),
                 remainingAmount: (allocatedAmount - actualAmount).toFixed(2),
@@ -123,20 +128,26 @@ export async function approveRabEstimate(
         .map((item) => item.sourceProjectCategoryPlanItemId)
         .filter((id): id is string => Boolean(id));
       if (categoryPlanIds.length > 0) {
-        await tx.update(projectCategoryPlanItem).set({
-          status: "LOCKED",
-          lockedById: user.id,
-          lockedAt: new Date(),
-          updatedAt: new Date(),
-        }).where(inArray(projectCategoryPlanItem.id, categoryPlanIds));
+        await tx
+          .update(projectCategoryPlanItem)
+          .set({
+            status: "LOCKED",
+            lockedById: user.id,
+            lockedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(inArray(projectCategoryPlanItem.id, categoryPlanIds));
       }
       if (estimate.sourceProjectRapId) {
-        await tx.update(projectRap).set({
-          status: "LOCKED",
-          lockedById: user.id,
-          lockedAt: new Date(),
-          updatedAt: new Date(),
-        }).where(eq(projectRap.id, estimate.sourceProjectRapId));
+        await tx
+          .update(projectRap)
+          .set({
+            status: "LOCKED",
+            lockedById: user.id,
+            lockedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(projectRap.id, estimate.sourceProjectRapId));
       }
       await tx.insert(auditLog).values({
         userId: user.id,

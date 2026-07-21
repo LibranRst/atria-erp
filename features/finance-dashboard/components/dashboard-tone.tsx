@@ -51,15 +51,13 @@ export function severityTone(severity: string): DashboardTone {
 }
 
 export function projectTone(project: DashboardRiskyProject): DashboardTone {
-  if (project.effectiveHealth === "CRITICAL")
-    return "critical";
+  if (project.effectiveHealth === "CRITICAL") return "critical";
   if (project.effectiveHealth === "HEALTHY") return "positive";
   return "warning";
 }
 
 export function categoryTone(category: DashboardCategory): DashboardTone {
-  if (category.status === "OVER_BUDGET" || category.status === "CRITICAL")
-    return "critical";
+  if (category.status === "OVER_BUDGET" || category.status === "CRITICAL") return "critical";
   if (category.status === "WATCH") return "warning";
   return "positive";
 }
@@ -75,9 +73,7 @@ export function ProgressBar({
 }): React.JSX.Element {
   const classes = dashboardToneClasses(tone);
   return (
-    <div
-      className={`${className} h-1.5 overflow-hidden rounded-full bg-white/90`}
-    >
+    <div className={`${className} h-1.5 overflow-hidden rounded-full bg-white/90`}>
       <div
         className={`h-full rounded-full ${classes.progress}`}
         style={{ width: `${Math.min(Math.max(value, 0), 100)}%` }}

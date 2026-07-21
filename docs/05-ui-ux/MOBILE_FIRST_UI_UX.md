@@ -3,6 +3,7 @@
 For the active visual grammar established by Dashboard and Expenses, read `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md`. This guide defines workflow priorities; the main-surface guide governs page hierarchy, density, surfaces, rows, tabs, values, loading states, and visual acceptance.
 
 ## Product Feel
+
 The app should feel calm, premium, operational, and trustworthy. It must not feel like a dense spreadsheet or generic admin dashboard.
 
 It should feel like: **Project Budget Control upgraded into a real ERP with material stock visibility.**
@@ -10,13 +11,16 @@ It should feel like: **Project Budget Control upgraded into a real ERP with mate
 The workbook is source material for category logic and familiar workflow only. Do not use "Excel" as a visible screen label, section title, navigation item, badge, or empty-state copy.
 
 ## Mobile Priorities
+
 - Owner understands project value, budget, consumed budget, remaining budget, category usage, margin risk, and material issues within 30 seconds.
 - Finance/Admin inputs expenses quickly.
 - Purchasing records stock movement without confusion.
 - Project team sees material readiness without asking through chat.
 
 ## Navigation
+
 Mobile navigation should prioritize:
+
 - Dashboard
 - Projects
 - Materials
@@ -27,6 +31,7 @@ Mobile navigation should prioritize:
 Role filtering can hide destinations that are irrelevant or forbidden.
 
 ## Screen Patterns
+
 - Start with the current position or workload, then attention, next actions, and drill-down detail.
 - Use one focal summary only when the page has a genuinely dominant state.
 - Group repeated rows inside one soft surface with dividers. Use individual cards only for independent interactive units.
@@ -54,6 +59,7 @@ Dashboard (`/ledger`) and Expenses (`/expenses`) are the current reference imple
 Copy the design grammar, not the exact arrangement. Approval remains a decision queue, due dates remain a timeline, accounts retain their configured gradient identity, and material views remain quantity/risk oriented.
 
 ## Settings Pattern
+
 - Settings is a source-of-truth workspace, not a technical database editor.
 - Use clear sections: Budget Allocation, Expense Categories, Item & Price Library, Material Master.
 - Budget ratios should be edited as human-readable percentages.
@@ -79,6 +85,7 @@ Copy the design grammar, not the exact arrangement. Approval remains a decision 
 - Project Overview uses a compact identity header, one financial health summary, RAB/RAP/Material/Tagihan readiness, no more than three blockers, and compact category rows whose full values open in a bottom sheet.
 
 ## Core Screens
+
 - Owner Dashboard
 - Project Budget List
 - Project Budget Detail
@@ -107,7 +114,9 @@ Copy the design grammar, not the exact arrangement. Approval remains a decision 
 - Settings: Budget Allocation, Expense Categories, Item & Price Library, Material Master
 
 ## Category Budget Card Pattern
+
 Each Project Budget Detail screen must show category budget status before material drill-down. It may use a grouped row, comparison surface, or independent card according to interaction needs:
+
 - Category name: Tukang, Material, Operasional, Lain-lain, or Subcon.
 - Budget: allocated amount.
 - Actual: approved/paid spend.
@@ -117,6 +126,7 @@ Each Project Budget Detail screen must show category budget status before materi
 - Drill-down: Material opens material usage; other categories open filtered expenses.
 
 Example:
+
 ```text
 Material
 Budget: Rp87.500.000
@@ -130,6 +140,7 @@ Action: View Material Usage
 Material stock cards must appear as supporting detail after the Material budget card, not instead of the budget card.
 
 ## Category Detail Pattern
+
 - Material opens RAP Material Plan and stock-control detail.
 - Tukang opens Work Packages: area/scope, estimated package cost, actual linked expense, variance, status.
 - Subcon opens Subcon Packages: vendor/scope, estimated package cost, vendor bill/expense linkage, variance, status.
@@ -137,6 +148,7 @@ Material stock cards must appear as supporting detail after the Material budget 
 - Do not label Tukang/Subcon packages as RAP or BoQ in the primary UI.
 
 ## Client-Facing RAB UX Rule
+
 Client-facing RAB preview must only show client-safe labels, descriptions, quantities, units, prices, totals, discounts, and notes intended for the client. It must not show internal cost, margin, markup, stock availability, vendor note, or internal note.
 
 Quotation generation should let users select source rows from RAP Material Plan, Tukang Work Packages, Subcon Packages, and manual client-safe lines before creating the draft.

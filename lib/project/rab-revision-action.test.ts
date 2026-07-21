@@ -4,7 +4,14 @@ import { and, eq } from "drizzle-orm";
 import { createProjectAction } from "@/app/actions/project/crud";
 import { voidRabRevision } from "@/app/actions/project/revision-change-order";
 import { db } from "@/db";
-import { auditLog, project, projectBudgetCategory, projectBudgets, projectChangeOrder, rabEstimate } from "@/db/schema";
+import {
+  auditLog,
+  project,
+  projectBudgetCategory,
+  projectBudgets,
+  projectChangeOrder,
+  rabEstimate,
+} from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 mock.module("next/headers", () => ({ cookies: () => ({ toString: () => "mocked-cookies" }) }));
@@ -20,13 +27,25 @@ const owner = {
 
 function mockOwnerSession(): void {
   (auth.api as unknown as { getSession: unknown }).getSession = async () => ({
-    session: { id: "rab-void-session", userId: owner.id, expiresAt: new Date(Date.now() + 3600000) },
-    user: { ...owner, emailVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date() },
+    session: {
+      id: "rab-void-session",
+      userId: owner.id,
+      expiresAt: new Date(Date.now() + 3600000),
+    },
+    user: {
+      ...owner,
+      emailVerified: true,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
   });
 }
 
 describe("voidRabRevision", () => {
-  afterAll(() => { (auth.api as unknown as { getSession: unknown }).getSession = originalGetSession; });
+  afterAll(() => {
+    (auth.api as unknown as { getSession: unknown }).getSession = originalGetSession;
+  });
 
   test("voids a draft revision and cancels its open Change Order without changing the approved baseline", async () => {
     mockOwnerSession();
@@ -47,8 +66,23 @@ describe("voidRabRevision", () => {
     const changeOrderId = crypto.randomUUID();
     try {
       await db.insert(rabEstimate).values([
-        { id: baseId, projectId, status: "APPROVED", revision: 1, title: "RAB Approved", approvedValue: "100000000.00", approvedAt: new Date() },
-        { id: revisionId, projectId, supersedesRabEstimateId: baseId, status: "DRAFT", revision: 2, title: "RAB Revision" },
+        {
+          id: baseId,
+          projectId,
+          status: "APPROVED",
+          revision: 1,
+          title: "RAB Approved",
+          approvedValue: "100000000.00",
+          approvedAt: new Date(),
+        },
+        {
+          id: revisionId,
+          projectId,
+          supersedesRabEstimateId: baseId,
+          status: "DRAFT",
+          revision: 2,
+          title: "RAB Revision",
+        },
       ]);
       await db.insert(projectChangeOrder).values({
         id: changeOrderId,
@@ -66,13 +100,22 @@ describe("voidRabRevision", () => {
         createdById: owner.id,
       });
 
-      const result = await voidRabRevision({ rabEstimateId: revisionId, reason: "Client membatalkan perubahan" });
+      const result = await voidRabRevision({
+        rabEstimateId: revisionId,
+        reason: "Client membatalkan perubahan",
+      });
       if (!result.success) throw new Error(result.error.message);
       expect(result.success).toBeTrue();
       const base = await db.query.rabEstimate.findFirst({ where: eq(rabEstimate.id, baseId) });
-      const revision = await db.query.rabEstimate.findFirst({ where: eq(rabEstimate.id, revisionId) });
-      const changeOrder = await db.query.projectChangeOrder.findFirst({ where: eq(projectChangeOrder.id, changeOrderId) });
-      const audit = await db.query.auditLog.findFirst({ where: and(eq(auditLog.targetId, revisionId), eq(auditLog.action, "VOID_RAB_REVISION")) });
+      const revision = await db.query.rabEstimate.findFirst({
+        where: eq(rabEstimate.id, revisionId),
+      });
+      const changeOrder = await db.query.projectChangeOrder.findFirst({
+        where: eq(projectChangeOrder.id, changeOrderId),
+      });
+      const audit = await db.query.auditLog.findFirst({
+        where: and(eq(auditLog.targetId, revisionId), eq(auditLog.action, "VOID_RAB_REVISION")),
+      });
       expect(base?.status).toBe("APPROVED");
       expect(revision?.status).toBe("VOID");
       expect(revision?.voidReason).toBe("Client membatalkan perubahan");
@@ -84,9 +127,13 @@ describe("voidRabRevision", () => {
       await db.delete(auditLog).where(eq(auditLog.targetId, changeOrderId));
       await db.delete(projectChangeOrder).where(eq(projectChangeOrder.projectId, projectId));
       await db.delete(rabEstimate).where(eq(rabEstimate.projectId, projectId));
-      const budget = await db.query.projectBudgets.findFirst({ where: eq(projectBudgets.projectId, projectId) });
+      const budget = await db.query.projectBudgets.findFirst({
+        where: eq(projectBudgets.projectId, projectId),
+      });
       if (budget) {
-        await db.delete(projectBudgetCategory).where(eq(projectBudgetCategory.projectBudgetId, budget.id));
+        await db
+          .delete(projectBudgetCategory)
+          .where(eq(projectBudgetCategory.projectBudgetId, budget.id));
         await db.delete(projectBudgets).where(eq(projectBudgets.id, budget.id));
       }
       await db.delete(project).where(eq(project.id, projectId));

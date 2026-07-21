@@ -8,7 +8,10 @@ import {
   ExpensesSummarySurface,
 } from "@/features/expenses/components/expenses-primitives";
 import { FieldClaimRow } from "@/features/expenses/components/field-claim-rows";
-import { VendorBillCard, VendorPaymentCard } from "@/features/expenses/components/vendor-bill-cards";
+import {
+  VendorBillCard,
+  VendorPaymentCard,
+} from "@/features/expenses/components/vendor-bill-cards";
 
 describe("Expenses Dashboard visual language", () => {
   test("renders a contextual financial summary without changing its values", () => {
@@ -33,7 +36,9 @@ describe("Expenses Dashboard visual language", () => {
     const html = renderToStaticMarkup(
       <>
         <ExpensesSectionHeader title="Pengeluaran aktif" meta="14 item" />
-        <ExpensesGroupSurface><div>Baris pengeluaran</div></ExpensesGroupSurface>
+        <ExpensesGroupSurface>
+          <div>Baris pengeluaran</div>
+        </ExpensesGroupSurface>
       </>,
     );
 
@@ -67,15 +72,17 @@ describe("Expenses Dashboard visual language", () => {
           vendor: { name: "PT Kayu Rapi" },
           project: { name: "Rumah Kemang" },
           budgetItem: { name: "Material" },
-          payments: [{
-            id: "payment-1",
-            vendorBillId: "bill-1",
-            bankAccountId: "bank-1",
-            amountPaid: "5000000",
-            status: "PENDING",
-            paymentDate: new Date("2026-07-24T00:00:00.000Z"),
-            referenceNumber: null,
-          }],
+          payments: [
+            {
+              id: "payment-1",
+              vendorBillId: "bill-1",
+              bankAccountId: "bank-1",
+              amountPaid: "5000000",
+              status: "PENDING",
+              paymentDate: new Date("2026-07-24T00:00:00.000Z"),
+              referenceNumber: null,
+            },
+          ],
         }}
         isOwnerOrFinance
         onScheduleClick={() => undefined}

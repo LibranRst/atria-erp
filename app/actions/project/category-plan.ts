@@ -45,7 +45,10 @@ function toError<T>(error: unknown, fallbackMessage: string): ActionResponse<T> 
   return { success: false, error: { code: "TRANSACTION_FAILED", message } };
 }
 
-async function assertCategoryPlanMutationAccess(user: SessionUser, projectId: string): Promise<void> {
+async function assertCategoryPlanMutationAccess(
+  user: SessionUser,
+  projectId: string,
+): Promise<void> {
   await assertPermission(user, "update:budget");
   const roleName = await resolveRoleName(user.roleId ?? "");
   await assertProjectAccess(projectId, user.id, roleName);
@@ -80,18 +83,24 @@ async function resolveAllowedPlanCategory(input: {
 }
 
 export async function createProjectCategoryPlanItem(
-  input: CreateProjectCategoryPlanItemInput
+  input: CreateProjectCategoryPlanItemInput,
 ): Promise<ActionResponse<CategoryPlanItem>> {
   const validation = createProjectCategoryPlanItemSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data detail plan kategori tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data detail plan kategori tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
-    const proj = await db.query.project.findFirst({ where: eq(project.id, validation.data.projectId) });
+    const proj = await db.query.project.findFirst({
+      where: eq(project.id, validation.data.projectId),
+    });
     if (!proj) throw new Error("PROJECT_NOT_FOUND");
     await assertCategoryPlanMutationAccess(user, validation.data.projectId);
 
@@ -102,10 +111,35 @@ export async function createProjectCategoryPlanItem(
     const estimatedTotalCost = validation.data.quantity * validation.data.estimatedUnitCost;
 
     const created = await db.transaction(async (tx) => {
-      const [row] = await tx.insert(projectCategoryPlanItem).values({
-        projectId: validation.data.projectId, projectBudgetId: category.projectBudgetId, projectBudgetCategoryId: validation.data.projectBudgetCategoryId, expenseCategoryId: category.expenseCategoryId, vendorId: validation.data.vendorId ?? null, name: validation.data.name, scopeDescription: validation.data.scopeDescription ?? null, area: validation.data.area, quantity: validation.data.quantity.toFixed(2), unit: validation.data.unit, estimatedUnitCost: validation.data.estimatedUnitCost.toFixed(2), estimatedTotalCost: estimatedTotalCost.toFixed(2), status: "DRAFT", internalNote: validation.data.internalNote ?? null, displayOrder: validation.data.displayOrder ?? 0,
-      }).returning();
-      await tx.insert(auditLog).values({ userId: user.id, action: "CREATE_CATEGORY_PLAN_DRAFT", targetTable: "project_category_plan_item", targetId: row.id, newState: JSON.stringify(row) });
+      const [row] = await tx
+        .insert(projectCategoryPlanItem)
+        .values({
+          projectId: validation.data.projectId,
+          projectBudgetId: category.projectBudgetId,
+          projectBudgetCategoryId: validation.data.projectBudgetCategoryId,
+          expenseCategoryId: category.expenseCategoryId,
+          vendorId: validation.data.vendorId ?? null,
+          name: validation.data.name,
+          scopeDescription: validation.data.scopeDescription ?? null,
+          area: validation.data.area,
+          quantity: validation.data.quantity.toFixed(2),
+          unit: validation.data.unit,
+          estimatedUnitCost: validation.data.estimatedUnitCost.toFixed(2),
+          estimatedTotalCost: estimatedTotalCost.toFixed(2),
+          status: "DRAFT",
+          internalNote: validation.data.internalNote ?? null,
+          displayOrder: validation.data.displayOrder ?? 0,
+        })
+        .returning();
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "CREATE_CATEGORY_PLAN_DRAFT",
+          targetTable: "project_category_plan_item",
+          targetId: row.id,
+          newState: JSON.stringify(row),
+        });
       return row;
     });
 
@@ -116,22 +150,27 @@ export async function createProjectCategoryPlanItem(
 }
 
 export async function updateProjectCategoryPlanItem(
-  input: UpdateProjectCategoryPlanItemInput
+  input: UpdateProjectCategoryPlanItemInput,
 ): Promise<ActionResponse<CategoryPlanItem>> {
   const validation = updateProjectCategoryPlanItemSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data detail plan kategori tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data detail plan kategori tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const existing = await db.query.projectCategoryPlanItem.findFirst({
       where: eq(projectCategoryPlanItem.id, validation.data.projectCategoryPlanItemId),
     });
     if (!existing) throw new Error("CATEGORY_PLAN_ITEM_NOT_FOUND");
-    if (existing.status !== "DRAFT") throw new Error("Package harus DRAFT. Pilih Edit Lagi sebelum mengubah package Siap.");
+    if (existing.status !== "DRAFT")
+      throw new Error("Package harus DRAFT. Pilih Edit Lagi sebelum mengubah package Siap.");
     await assertCategoryPlanMutationAccess(user, existing.projectId);
 
     const category = await resolveAllowedPlanCategory({
@@ -144,26 +183,37 @@ export async function updateProjectCategoryPlanItem(
     const estimatedTotalCost = validation.data.quantity * validation.data.estimatedUnitCost;
 
     const updated = await db.transaction(async (tx) => {
-      const [row] = await tx.update(projectCategoryPlanItem).set({
-        projectBudgetId: category.projectBudgetId,
-        projectBudgetCategoryId: validation.data.projectBudgetCategoryId,
-        expenseCategoryId: category.expenseCategoryId,
-        vendorId: validation.data.vendorId ?? null,
-        name: validation.data.name,
-        scopeDescription: validation.data.scopeDescription ?? null,
-        area: validation.data.area,
-        quantity: validation.data.quantity.toFixed(2),
-        unit: validation.data.unit,
-        estimatedUnitCost: validation.data.estimatedUnitCost.toFixed(2),
-        estimatedTotalCost: estimatedTotalCost.toFixed(2),
-        status: validation.data.status ?? existing.status,
-        internalNote: validation.data.internalNote ?? null,
-        displayOrder: validation.data.displayOrder ?? existing.displayOrder,
-        updatedAt: new Date(),
-      })
-      .where(eq(projectCategoryPlanItem.id, existing.id))
-      .returning();
-      await tx.insert(auditLog).values({ userId: user.id, action: "UPDATE_CATEGORY_PLAN_DRAFT", targetTable: "project_category_plan_item", targetId: existing.id, originalState: JSON.stringify(existing), newState: JSON.stringify(row) });
+      const [row] = await tx
+        .update(projectCategoryPlanItem)
+        .set({
+          projectBudgetId: category.projectBudgetId,
+          projectBudgetCategoryId: validation.data.projectBudgetCategoryId,
+          expenseCategoryId: category.expenseCategoryId,
+          vendorId: validation.data.vendorId ?? null,
+          name: validation.data.name,
+          scopeDescription: validation.data.scopeDescription ?? null,
+          area: validation.data.area,
+          quantity: validation.data.quantity.toFixed(2),
+          unit: validation.data.unit,
+          estimatedUnitCost: validation.data.estimatedUnitCost.toFixed(2),
+          estimatedTotalCost: estimatedTotalCost.toFixed(2),
+          status: validation.data.status ?? existing.status,
+          internalNote: validation.data.internalNote ?? null,
+          displayOrder: validation.data.displayOrder ?? existing.displayOrder,
+          updatedAt: new Date(),
+        })
+        .where(eq(projectCategoryPlanItem.id, existing.id))
+        .returning();
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "UPDATE_CATEGORY_PLAN_DRAFT",
+          targetTable: "project_category_plan_item",
+          targetId: existing.id,
+          originalState: JSON.stringify(existing),
+          newState: JSON.stringify(row),
+        });
       return row;
     });
 
@@ -174,15 +224,21 @@ export async function updateProjectCategoryPlanItem(
 }
 
 export async function markProjectCategoryPlanItemActive(
-  projectCategoryPlanItemId: string
+  projectCategoryPlanItemId: string,
 ): Promise<ActionResponse<CategoryPlanItem>> {
-  const validation = markProjectCategoryPlanItemActiveSchema.safeParse({ projectCategoryPlanItemId });
+  const validation = markProjectCategoryPlanItemActiveSchema.safeParse({
+    projectCategoryPlanItemId,
+  });
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "ID detail plan kategori tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID detail plan kategori tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const existing = await db.query.projectCategoryPlanItem.findFirst({
@@ -193,11 +249,21 @@ export async function markProjectCategoryPlanItemActive(
     await assertCategoryPlanMutationAccess(user, existing.projectId);
 
     const [updated] = await db.transaction(async (tx) => {
-      const rows = await tx.update(projectCategoryPlanItem)
+      const rows = await tx
+        .update(projectCategoryPlanItem)
         .set({ status: "ACTIVE", updatedAt: new Date() })
         .where(eq(projectCategoryPlanItem.id, existing.id))
         .returning();
-      await tx.insert(auditLog).values({ userId: user.id, action: "MARK_CATEGORY_PLAN_PACKAGE_READY", targetTable: "project_category_plan_item", targetId: existing.id, originalState: JSON.stringify(existing), newState: JSON.stringify(rows[0]) });
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "MARK_CATEGORY_PLAN_PACKAGE_READY",
+          targetTable: "project_category_plan_item",
+          targetId: existing.id,
+          originalState: JSON.stringify(existing),
+          newState: JSON.stringify(rows[0]),
+        });
       return rows;
     });
 
@@ -208,15 +274,19 @@ export async function markProjectCategoryPlanItemActive(
 }
 
 export async function deleteProjectCategoryPlanItem(
-  projectCategoryPlanItemId: string
+  projectCategoryPlanItemId: string,
 ): Promise<ActionResponse<{ readonly deletedId: string }>> {
   const validation = deleteProjectCategoryPlanItemSchema.safeParse({ projectCategoryPlanItemId });
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "ID detail plan kategori tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID detail plan kategori tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const existing = await db.query.projectCategoryPlanItem.findFirst({
@@ -230,7 +300,15 @@ export async function deleteProjectCategoryPlanItem(
 
     await db.transaction(async (tx) => {
       await tx.delete(projectCategoryPlanItem).where(eq(projectCategoryPlanItem.id, existing.id));
-      await tx.insert(auditLog).values({ userId: user.id, action: "DELETE_CATEGORY_PLAN_DRAFT", targetTable: "project_category_plan_item", targetId: existing.id, originalState: JSON.stringify(existing) });
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "DELETE_CATEGORY_PLAN_DRAFT",
+          targetTable: "project_category_plan_item",
+          targetId: existing.id,
+          originalState: JSON.stringify(existing),
+        });
     });
     return { success: true, data: { deletedId: existing.id } };
   } catch (error) {
@@ -239,10 +317,11 @@ export async function deleteProjectCategoryPlanItem(
 }
 
 export async function getProjectCategoryPlanItems(
-  projectId: string
+  projectId: string,
 ): Promise<ActionResponse<CategoryPlanItem[]>> {
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     await assertPermission(user, "view:budget");

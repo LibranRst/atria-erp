@@ -47,10 +47,18 @@ export async function wasteMaterialForProject(
 
   try {
     await assertPermission(sessionResult.data.user, "waste:stock");
-    await assertProjectScopeForMaterialAction(validation.data.projectId, sessionResult.data.user.id, sessionResult.data.roleName);
+    await assertProjectScopeForMaterialAction(
+      validation.data.projectId,
+      sessionResult.data.user.id,
+      sessionResult.data.roleName,
+    );
 
     const result = await db.transaction(async (tx) => {
-      const inventory = await findLockedInventory(tx, validation.data.materialId, validation.data.inventoryLocationId);
+      const inventory = await findLockedInventory(
+        tx,
+        validation.data.materialId,
+        validation.data.inventoryLocationId,
+      );
       const projectMovements = await tx.query.stockMovement.findMany({
         where: and(
           eq(stockMovement.projectId, validation.data.projectId),
@@ -60,7 +68,9 @@ export async function wasteMaterialForProject(
         orderBy: [asc(stockMovement.createdAt), asc(stockMovement.id)],
       });
       const matchingMovements = validation.data.projectRapItemId
-        ? projectMovements.filter((movement) => movement.projectRapItemId === validation.data.projectRapItemId)
+        ? projectMovements.filter(
+            (movement) => movement.projectRapItemId === validation.data.projectRapItemId,
+          )
         : projectMovements.filter((movement) => !movement.projectRapItemId);
       const outstandingReservation = calculateOutstandingProjectReservations(matchingMovements);
       const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
@@ -129,11 +139,14 @@ export async function wasteMaterialForProject(
 }
 
 export async function useMaterialForProject(
-  input: UseMaterialInput
+  input: UseMaterialInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const validation = useMaterialSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data pemakaian material tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data pemakaian material tidak valid." },
+    };
   }
 
   const sessionResult = await getSessionUser();
@@ -141,10 +154,18 @@ export async function useMaterialForProject(
 
   try {
     await assertPermission(sessionResult.data.user, "use:stock");
-    await assertProjectScopeForMaterialAction(validation.data.projectId, sessionResult.data.user.id, sessionResult.data.roleName);
+    await assertProjectScopeForMaterialAction(
+      validation.data.projectId,
+      sessionResult.data.user.id,
+      sessionResult.data.roleName,
+    );
 
     const result = await db.transaction(async (tx) => {
-      const inventory = await findLockedInventory(tx, validation.data.materialId, validation.data.inventoryLocationId);
+      const inventory = await findLockedInventory(
+        tx,
+        validation.data.materialId,
+        validation.data.inventoryLocationId,
+      );
       const projectMovements = await tx.query.stockMovement.findMany({
         where: and(
           eq(stockMovement.projectId, validation.data.projectId),
@@ -154,7 +175,9 @@ export async function useMaterialForProject(
         orderBy: [asc(stockMovement.createdAt), asc(stockMovement.id)],
       });
       const matchingMovements = validation.data.projectRapItemId
-        ? projectMovements.filter((movement) => movement.projectRapItemId === validation.data.projectRapItemId)
+        ? projectMovements.filter(
+            (movement) => movement.projectRapItemId === validation.data.projectRapItemId,
+          )
         : projectMovements.filter((movement) => !movement.projectRapItemId);
       const outstandingReservation = calculateOutstandingProjectReservations(matchingMovements);
       const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
@@ -203,8 +226,15 @@ export async function useMaterialForProject(
         userId: sessionResult.data.user.id,
         action: "USE_MATERIAL",
         inventoryId: inventory.id,
-        originalState: { currentStock: inventory.currentStock, reservedStock: inventory.reservedStock },
-        newState: { currentStock: updated.currentStock, reservedStock: updated.reservedStock, stockMovementId: movement.id },
+        originalState: {
+          currentStock: inventory.currentStock,
+          reservedStock: inventory.reservedStock,
+        },
+        newState: {
+          currentStock: updated.currentStock,
+          reservedStock: updated.reservedStock,
+          stockMovementId: movement.id,
+        },
       });
 
       return movement;
@@ -217,11 +247,14 @@ export async function useMaterialForProject(
 }
 
 export async function returnMaterialFromProject(
-  input: ReturnMaterialInput
+  input: ReturnMaterialInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const validation = returnMaterialSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data leftover material tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data leftover material tidak valid." },
+    };
   }
 
   const sessionResult = await getSessionUser();
@@ -229,10 +262,18 @@ export async function returnMaterialFromProject(
 
   try {
     await assertPermission(sessionResult.data.user, "use:stock");
-    await assertProjectScopeForMaterialAction(validation.data.projectId, sessionResult.data.user.id, sessionResult.data.roleName);
+    await assertProjectScopeForMaterialAction(
+      validation.data.projectId,
+      sessionResult.data.user.id,
+      sessionResult.data.roleName,
+    );
 
     const result = await db.transaction(async (tx) => {
-      const inventory = await findLockedInventory(tx, validation.data.materialId, validation.data.inventoryLocationId);
+      const inventory = await findLockedInventory(
+        tx,
+        validation.data.materialId,
+        validation.data.inventoryLocationId,
+      );
       const projectMovements = await tx.query.stockMovement.findMany({
         where: and(
           eq(stockMovement.projectId, validation.data.projectId),
@@ -242,7 +283,9 @@ export async function returnMaterialFromProject(
         orderBy: [asc(stockMovement.createdAt), asc(stockMovement.id)],
       });
       const matchingMovements = validation.data.projectRapItemId
-        ? projectMovements.filter((movement) => movement.projectRapItemId === validation.data.projectRapItemId)
+        ? projectMovements.filter(
+            (movement) => movement.projectRapItemId === validation.data.projectRapItemId,
+          )
         : projectMovements.filter((movement) => !movement.projectRapItemId);
       const netUsed = matchingMovements.reduce((total, movement) => {
         if (movement.movementType === "USE") return total + Number(movement.quantity);

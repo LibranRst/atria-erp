@@ -58,8 +58,11 @@ export function VendorSchedulePaymentSheet({
   onScheduleAmountChange,
   onScheduleDateChange,
 }: VendorSchedulePaymentSheetProps): React.JSX.Element | null {
-  const { presentedValue: presentedBill, open, handleExitComplete } =
-    useSheetPresenceValue(bill, bill?.id);
+  const {
+    presentedValue: presentedBill,
+    open,
+    handleExitComplete,
+  } = useSheetPresenceValue(bill, bill?.id);
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
   if (!presentedBill) return null;
@@ -80,8 +83,14 @@ export function VendorSchedulePaymentSheet({
           : undefined;
 
   function requestClose(): void {
-    if (reviewing) { setReviewing(false); return; }
-    if (isDirty) { setConfirmClose(true); return; }
+    if (reviewing) {
+      setReviewing(false);
+      return;
+    }
+    if (isDirty) {
+      setConfirmClose(true);
+      return;
+    }
     onClose();
   }
 
@@ -98,32 +107,65 @@ export function VendorSchedulePaymentSheet({
         disabledReason={disabledReason}
         primaryLabel={reviewing ? "Jadwalkan" : "Tinjau"}
         secondaryLabel={reviewing ? "Ubah" : undefined}
-        onPrimary={() => reviewing ? onSubmit() : setReviewing(true)}
+        onPrimary={() => (reviewing ? onSubmit() : setReviewing(true))}
         onSecondary={() => setReviewing(false)}
       >
         <div className="space-y-md">
           <PaymentError error={error} />
-          <FieldContextLine>{presentedBill.vendor?.name} · Tagihan {presentedBill.billNumber} · Sisa Rp {remaining.toLocaleString("id-ID")}</FieldContextLine>
+          <FieldContextLine>
+            {presentedBill.vendor?.name} · Tagihan {presentedBill.billNumber} · Sisa Rp{" "}
+            {remaining.toLocaleString("id-ID")}
+          </FieldContextLine>
           {reviewing ? (
             <div className="space-y-3">
-              <FormSection title="Rencana yang akan dibuat" helper="Penjadwalan belum mengurangi saldo rekening.">
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <ReviewFact label="Rekening rencana" value={selectedAccount ? `${selectedAccount.bankName} · ${selectedAccount.name}` : "–"} />
-                  <ReviewFact label="Tanggal" value={new Date(scheduleDate).toLocaleDateString("id-ID", { dateStyle: "long" })} />
+              <FormSection
+                title="Rencana yang akan dibuat"
+                helper="Penjadwalan belum mengurangi saldo rekening."
+              >
+                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                  <ReviewFact
+                    label="Rekening rencana"
+                    value={
+                      selectedAccount
+                        ? `${selectedAccount.bankName} · ${selectedAccount.name}`
+                        : "–"
+                    }
+                  />
+                  <ReviewFact
+                    label="Tanggal"
+                    value={new Date(scheduleDate).toLocaleDateString("id-ID", {
+                      dateStyle: "long",
+                    })}
+                  />
                   <ReviewFact label="Nominal" value={`Rp ${amount.toLocaleString("id-ID")}`} />
-                  <ReviewFact label="Sisa setelah dijadwalkan" value={`Rp ${Math.max(0, remaining - amount).toLocaleString("id-ID")}`} />
+                  <ReviewFact
+                    label="Sisa setelah dijadwalkan"
+                    value={`Rp ${Math.max(0, remaining - amount).toLocaleString("id-ID")}`}
+                  />
                 </div>
               </FormSection>
-              <FormRiskNotice title={amount >= 5_000_000 ? "Memerlukan persetujuan Owner" : "Saldo belum berubah"} tone={amount >= 5_000_000 ? "warning" : "default"}>
+              <FormRiskNotice
+                title={amount >= 5_000_000 ? "Memerlukan persetujuan Owner" : "Saldo belum berubah"}
+                tone={amount >= 5_000_000 ? "warning" : "default"}
+              >
                 {amount >= 5_000_000
                   ? "Nominal ini membuat approval sebelum pembayaran dapat dicairkan."
                   : "Saldo baru berkurang ketika pembayaran dicairkan dengan bukti transfer."}
               </FormRiskNotice>
             </div>
           ) : (
-            <form onSubmit={(event) => { event.preventDefault(); setReviewing(true); }} className="space-y-md">
-              <FormSection title="Rencana Pembayaran" helper="Jadwalkan pembayaran untuk dicatat sebagai kewajiban kas masa depan.">
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                setReviewing(true);
+              }}
+              className="space-y-md"
+            >
+              <FormSection
+                title="Rencana Pembayaran"
+                helper="Jadwalkan pembayaran untuk dicatat sebagai kewajiban kas masa depan."
+              >
+                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
                   <SheetSelect
                     label="Rekening Rencana"
                     value={selectedBankId}
@@ -136,9 +178,20 @@ export function VendorSchedulePaymentSheet({
                     }))}
                     required
                   />
-                  <DatePickerField label="Tanggal Pembayaran" value={scheduleDate} disabled={isPending} onChange={onScheduleDateChange} required />
+                  <DatePickerField
+                    label="Tanggal Pembayaran"
+                    value={scheduleDate}
+                    disabled={isPending}
+                    onChange={onScheduleDateChange}
+                    required
+                  />
                   <FormField label="Nominal Pembayaran" required>
-                    <MoneyInput value={scheduleAmount} disabled={isPending} onChange={onScheduleAmountChange} placeholder="Masukkan nominal" />
+                    <MoneyInput
+                      value={scheduleAmount}
+                      disabled={isPending}
+                      onChange={onScheduleAmountChange}
+                      placeholder="Masukkan nominal"
+                    />
                   </FormField>
                 </div>
               </FormSection>
@@ -146,7 +199,18 @@ export function VendorSchedulePaymentSheet({
           )}
         </div>
       </WorkflowFormSheet>
-      <FinanceUnsavedChangesModal open={confirmClose} onKeep={() => { setConfirmClose(false); onClose(); }} onDiscard={() => { setConfirmClose(false); onDiscard(); }} onContinue={() => setConfirmClose(false)} />
+      <FinanceUnsavedChangesModal
+        open={confirmClose}
+        onKeep={() => {
+          setConfirmClose(false);
+          onClose();
+        }}
+        onDiscard={() => {
+          setConfirmClose(false);
+          onDiscard();
+        }}
+        onContinue={() => setConfirmClose(false)}
+      />
     </>
   );
 }
@@ -180,8 +244,11 @@ export function VendorDisbursePaymentSheet({
   onDisburseBankIdChange,
   onRefNumberChange,
 }: VendorDisbursePaymentSheetProps): React.JSX.Element | null {
-  const { presentedValue: presentedPayment, open, handleExitComplete } =
-    useSheetPresenceValue(payment, payment?.id);
+  const {
+    presentedValue: presentedPayment,
+    open,
+    handleExitComplete,
+  } = useSheetPresenceValue(payment, payment?.id);
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
   if (!presentedPayment) return null;
@@ -200,8 +267,14 @@ export function VendorDisbursePaymentSheet({
         : undefined;
 
   function requestClose(): void {
-    if (reviewing) { setReviewing(false); return; }
-    if (isDirty) { setConfirmClose(true); return; }
+    if (reviewing) {
+      setReviewing(false);
+      return;
+    }
+    if (isDirty) {
+      setConfirmClose(true);
+      return;
+    }
     onClose();
   }
 
@@ -219,21 +292,29 @@ export function VendorDisbursePaymentSheet({
         danger={reviewing}
         primaryLabel={reviewing ? "Bayar" : "Tinjau"}
         secondaryLabel={reviewing ? "Ubah" : undefined}
-        onPrimary={() => reviewing ? onSubmit() : setReviewing(true)}
+        onPrimary={() => (reviewing ? onSubmit() : setReviewing(true))}
         onSecondary={() => setReviewing(false)}
       >
         <div className="space-y-md">
           <PaymentError error={error} />
-          <FieldContextLine>{presentedPayment.vendorBill?.vendor?.name} · {presentedPayment.vendorBill?.billNumber} · Rp {amount.toLocaleString("id-ID")}</FieldContextLine>
+          <FieldContextLine>
+            {presentedPayment.vendorBill?.vendor?.name} · {presentedPayment.vendorBill?.billNumber}{" "}
+            · Rp {amount.toLocaleString("id-ID")}
+          </FieldContextLine>
           {reviewing ? (
             <div className="space-y-3">
-              <FormSection title="Dampak Keuangan" helper="Periksa dampak pencairan dana pada saldo kas rekening.">
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+              <FormSection
+                title="Dampak Keuangan"
+                helper="Periksa dampak pencairan dana pada saldo kas rekening."
+              >
+                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
                   <ReviewFact label="Rekening Sumber" value={selectedAccount?.name ?? "–"} />
                   <ReviewFact
                     label="Saldo Rekening"
                     value={
-                      <span className={after < 0 ? "text-error font-bold" : "text-primary font-bold"}>
+                      <span
+                        className={after < 0 ? "text-error font-bold" : "text-primary font-bold"}
+                      >
                         Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
                       </span>
                     }
@@ -242,23 +323,42 @@ export function VendorDisbursePaymentSheet({
                 </div>
               </FormSection>
               <FormRiskNotice title="Transaksi kas final" tone="warning">
-                Setelah dikonfirmasi, sistem mencatat ledger rekonsiliasi dan menandai pembayaran selesai. Koreksi dilakukan dengan transaksi pembalik, bukan mengedit mutasi ini.
+                Setelah dikonfirmasi, sistem mencatat ledger rekonsiliasi dan menandai pembayaran
+                selesai. Koreksi dilakukan dengan transaksi pembalik, bukan mengedit mutasi ini.
               </FormRiskNotice>
             </div>
           ) : (
-            <form onSubmit={(event) => { event.preventDefault(); setReviewing(true); }} className="space-y-md">
-              <FormSection title="Pencairan Pembayaran" helper="Pilih rekening bank sumber dan masukkan bukti transfer.">
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                setReviewing(true);
+              }}
+              className="space-y-md"
+            >
+              <FormSection
+                title="Pencairan Pembayaran"
+                helper="Pilih rekening bank sumber dan masukkan bukti transfer."
+              >
+                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
                   <SheetSelect
                     label="Rekening Sumber Dana"
                     value={disburseBankId}
                     disabled={isPending}
                     onChange={onDisburseBankIdChange}
-                    options={bankAccounts.map((account) => ({ value: account.id, label: `${account.bankName} - ${account.name}`, description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}` }))}
+                    options={bankAccounts.map((account) => ({
+                      value: account.id,
+                      label: `${account.bankName} - ${account.name}`,
+                      description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}`,
+                    }))}
                     required
                   />
                   <FormField label="Nomor Referensi Bukti Transfer" required>
-                    <TextInput value={refNumber} disabled={isPending} onChange={onRefNumberChange} placeholder="Contoh: TRF-BCA-55203" />
+                    <TextInput
+                      value={refNumber}
+                      disabled={isPending}
+                      onChange={onRefNumberChange}
+                      placeholder="Contoh: TRF-BCA-55203"
+                    />
                   </FormField>
                 </div>
               </FormSection>
@@ -266,7 +366,18 @@ export function VendorDisbursePaymentSheet({
           )}
         </div>
       </WorkflowFormSheet>
-      <FinanceUnsavedChangesModal open={confirmClose} onKeep={() => { setConfirmClose(false); onClose(); }} onDiscard={() => { setConfirmClose(false); onDiscard(); }} onContinue={() => setConfirmClose(false)} />
+      <FinanceUnsavedChangesModal
+        open={confirmClose}
+        onKeep={() => {
+          setConfirmClose(false);
+          onClose();
+        }}
+        onDiscard={() => {
+          setConfirmClose(false);
+          onDiscard();
+        }}
+        onContinue={() => setConfirmClose(false)}
+      />
     </>
   );
 }
@@ -274,18 +385,27 @@ export function VendorDisbursePaymentSheet({
 function PaymentError({ error }: { readonly error: string | null }): React.JSX.Element | null {
   if (!error) return null;
   return (
-    <div className="flex items-start gap-3 rounded-2xl bg-error-container/20 p-3 text-xs font-medium text-error" role="alert">
+    <div
+      className="bg-error-container/20 text-error flex items-start gap-3 rounded-2xl p-3 text-xs font-medium"
+      role="alert"
+    >
       <span className="material-symbols-outlined text-[18px]">error</span>
       <div className="leading-relaxed">{error}</div>
     </div>
   );
 }
 
-function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+function ReviewFact({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: React.ReactNode;
+}): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
       <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
+      <span className="text-on-surface text-right font-bold">{value}</span>
     </div>
   );
 }

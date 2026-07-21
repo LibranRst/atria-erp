@@ -117,7 +117,7 @@ export function StockControlPanel({
             material di tab RAP terlebih dahulu.
           </div>
         ) : (
-          <div className="divide-y divide-black/[0.04] rounded-[24px] bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
+          <div className="divide-y divide-black/4 rounded-[24px] bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
             {rap.items.map((item) => {
               const shortage = item.needToBuy > 0;
               return (
@@ -189,7 +189,7 @@ export function StockControlPanel({
             material pertama akan muncul setelah operasi stok dicatat.
           </div>
         ) : (
-          <div className="rounded-[24px] bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
+          <div className="rounded-[24px] bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
             {stockMovements.map((move, index) => (
               <button
                 type="button"
@@ -200,7 +200,7 @@ export function StockControlPanel({
               >
                 {index < stockMovements.length - 1 ? (
                   <span
-                    className="bg-outline-variant/45 absolute top-11 bottom-[-12px] left-[17px] w-px"
+                    className="bg-outline-variant/45 -bottom-sm absolute top-11 left-[17px] w-px"
                     aria-hidden="true"
                   />
                 ) : null}

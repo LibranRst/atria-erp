@@ -1,22 +1,23 @@
 # Operational Form Audit — 2026-07-13
 
-| Flow group | Frequency | Risk | Current friction | Target phase |
-|---|---:|---:|---|---|
-| Expense + receipt OCR | Very high | High | Full editors are stacked, mixed-language copy, no recovery, icon-only submit, OCR can replace work | Phase 1 |
-| Expense verification/payment | High | Critical | Feedback and confirmations vary; submitted records lack a clear immutable/edit policy | Phase 1/3 |
-| Goods Receipt | High | Critical | Long repeated item cards, mixed copy, no input draft, review hidden behind icon action | Phase 2 |
-| Project stock reserve/use/return/waste | High | Critical | Select-heavy flows, inconsistent before/after stock preview, uneven confirmation | Phase 2 |
-| Transfer, adjustment, stock count | Medium | Critical | Draft behavior exists only for stock count; audit copy and review patterns differ | Phase 2 |
-| Vendor bill + payment scheduling | High | Critical | No recoverable input draft, generic validation, no consistent balance/category review | Phase 3 |
-| Client invoice + receipt | Medium | Critical | Form feedback and review differ from vendor/cash flows | Phase 3 |
-| Bank account, movement, transfer | Medium | Critical | Good local previews but inconsistent close protection and success handling | Phase 3 |
-| Project create/edit | Medium | High | Safe defaults exist, but upload and unsaved-change behavior are isolated | Phase 4 |
-| Budget setup and approval | Medium | Critical | Business draft exists, but field validation/review patterns are not unified | Phase 4 |
-| RAP Material + Tukang/Subcon packages | Medium | High | Long sheets, mixed language, repeated fields remain expanded | Phase 4 |
-| RAB source, item, bundle, revision | Medium | Critical | Several nested editors and inconsistent save/review surfaces | Phase 4 |
-| Settings masters and defaults | Low/Medium | High | Shared controls exist, but copy, destructive actions, and dirty guards vary | Phase 4 |
+| Flow group                             |  Frequency |     Risk | Current friction                                                                                   | Target phase |
+| -------------------------------------- | ---------: | -------: | -------------------------------------------------------------------------------------------------- | ------------ |
+| Expense + receipt OCR                  |  Very high |     High | Full editors are stacked, mixed-language copy, no recovery, icon-only submit, OCR can replace work | Phase 1      |
+| Expense verification/payment           |       High | Critical | Feedback and confirmations vary; submitted records lack a clear immutable/edit policy              | Phase 1/3    |
+| Goods Receipt                          |       High | Critical | Long repeated item cards, mixed copy, no input draft, review hidden behind icon action             | Phase 2      |
+| Project stock reserve/use/return/waste |       High | Critical | Select-heavy flows, inconsistent before/after stock preview, uneven confirmation                   | Phase 2      |
+| Transfer, adjustment, stock count      |     Medium | Critical | Draft behavior exists only for stock count; audit copy and review patterns differ                  | Phase 2      |
+| Vendor bill + payment scheduling       |       High | Critical | No recoverable input draft, generic validation, no consistent balance/category review              | Phase 3      |
+| Client invoice + receipt               |     Medium | Critical | Form feedback and review differ from vendor/cash flows                                             | Phase 3      |
+| Bank account, movement, transfer       |     Medium | Critical | Good local previews but inconsistent close protection and success handling                         | Phase 3      |
+| Project create/edit                    |     Medium |     High | Safe defaults exist, but upload and unsaved-change behavior are isolated                           | Phase 4      |
+| Budget setup and approval              |     Medium | Critical | Business draft exists, but field validation/review patterns are not unified                        | Phase 4      |
+| RAP Material + Tukang/Subcon packages  |     Medium |     High | Long sheets, mixed language, repeated fields remain expanded                                       | Phase 4      |
+| RAB source, item, bundle, revision     |     Medium | Critical | Several nested editors and inconsistent save/review surfaces                                       | Phase 4      |
+| Settings masters and defaults          | Low/Medium |     High | Shared controls exist, but copy, destructive actions, and dirty guards vary                        | Phase 4      |
 
 ## Cross-cutting findings
+
 - `OperationalFormSheet` and shared controls provide a useful base, but primary actions are often icon-only and form completion states are inconsistent.
 - `DRAFT` business statuses do not recover partially completed input; there is no general local/server draft contract.
 - Repeated Expense and Goods Receipt items are rendered as fully expanded cards, creating long mobile scroll and weak scanability.
@@ -26,6 +27,7 @@
 - Existing finance and stock transaction helpers are sound boundaries and must remain the only path that mutates balances or inventory.
 
 ## Migration order
+
 1. Shared draft/workflow foundation and Expense vertical slice.
 2. Material operational forms.
 3. Finance documents and cash actions.
@@ -42,13 +44,13 @@
 
 ## Phase status
 
-| Phase | Status | Verification |
-|---|---|---|
-| Phase 1 — Expense | Stable | Server/local draft recovery, OCR merge handling, compact line items, atomic submit, browser and regression gates complete |
-| Phase 2 — Material operations | Stable | Before/after stock review, compact repeated items, explicit posting/reversal behavior, browser and regression gates complete |
-| Phase 3 — Finance documents and cash | Stable | Vendor server draft, local recovery for short forms, prepare/review/final actions, durable success, 127 tests and production build complete |
-| Phase 4 — Project, budget, RAP/RAB, Settings | Stable | Project recovery/review, progressive RAP/RAB and Settings forms, centered confirmations, immutable status guards, 129-test full suite, lint, production build, and browser QA at 320/390/430 px passed |
-| Phase 5 — Final consistency audit | Pending | Dashboard redesign remains out of scope |
+| Phase                                        | Status  | Verification                                                                                                                                                                                           |
+| -------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Phase 1 — Expense                            | Stable  | Server/local draft recovery, OCR merge handling, compact line items, atomic submit, browser and regression gates complete                                                                              |
+| Phase 2 — Material operations                | Stable  | Before/after stock review, compact repeated items, explicit posting/reversal behavior, browser and regression gates complete                                                                           |
+| Phase 3 — Finance documents and cash         | Stable  | Vendor server draft, local recovery for short forms, prepare/review/final actions, durable success, 127 tests and production build complete                                                            |
+| Phase 4 — Project, budget, RAP/RAB, Settings | Stable  | Project recovery/review, progressive RAP/RAB and Settings forms, centered confirmations, immutable status guards, 129-test full suite, lint, production build, and browser QA at 320/390/430 px passed |
+| Phase 5 — Final consistency audit            | Pending | Dashboard redesign remains out of scope                                                                                                                                                                |
 
 ## Stabilization gate before Phase 4
 

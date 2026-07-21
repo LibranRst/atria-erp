@@ -62,9 +62,7 @@ export function SheetSelect({
       `${option.label} ${option.description ?? ""} ${option.meta ?? ""} ${option.group ?? ""}`.toLowerCase();
     return text.includes(query.toLowerCase());
   });
-  const groups = Array.from(
-    new Set(filtered.map((option) => option.group ?? "")),
-  );
+  const groups = Array.from(new Set(filtered.map((option) => option.group ?? "")));
 
   return (
     <FormField
@@ -89,7 +87,7 @@ export function SheetSelect({
         className={cx(
           grouped
             ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55"
-            : "flex w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition active:scale-[0.99] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55",
+            : "border-outline-variant/35 bg-surface-container-lowest flex w-full min-w-0 items-center justify-between gap-3 rounded-full border px-5 text-left transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
           !grouped && (compact ? "min-h-11" : "min-h-12"),
           !grouped && compact && "bg-surface-container-low",
           readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
@@ -98,19 +96,19 @@ export function SheetSelect({
         <span className="min-w-0">
           <span
             className={cx(
-              "block truncate text-sm font-bold leading-4",
+              "block truncate text-sm leading-4 font-bold",
               selected ? "text-on-surface" : "text-on-surface-variant/65",
             )}
           >
             {selected?.label || placeholder}
           </span>
           {(selected?.description || selected?.meta) && (
-            <span className="mt-0.5 block truncate text-[10px] leading-4 text-on-surface-variant">
+            <span className="text-on-surface-variant mt-0.5 block truncate text-[10px] leading-4">
               {selected.description ?? selected.meta}
             </span>
           )}
         </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-on-surface-variant" />
+        <ChevronDown className="text-on-surface-variant h-4 w-4 shrink-0" />
       </button>
       <BottomSheet
         open={open}
@@ -130,25 +128,21 @@ export function SheetSelect({
       >
         <div className="space-y-sm">
           {searchable && (
-            <SearchField
-              value={query}
-              onChange={setQuery}
-              placeholder={searchPlaceholder}
-            />
+            <SearchField value={query} onChange={setQuery} placeholder={searchPlaceholder} />
           )}
           {filtered.length === 0 ? (
-            <p className="rounded-2xl bg-surface-container-low p-4 text-center text-xs text-on-surface-variant">
+            <p className="bg-surface-container-low text-on-surface-variant rounded-2xl p-4 text-center text-xs">
               {emptyText}
             </p>
           ) : (
             groups.map((group) => (
               <div key={group || "ungrouped"} className="space-y-2">
                 {group && (
-                  <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                  <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
                     {group}
                   </p>
                 )}
-                <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-outline-variant/15">
+                <div className="divide-outline-variant/20 bg-surface-container-lowest ring-outline-variant/15 divide-y overflow-hidden rounded-[22px] ring-1">
                   {filtered
                     .filter((option) => (option.group ?? "") === group)
                     .map((option) => {
@@ -163,29 +157,21 @@ export function SheetSelect({
                             setOpen(false);
                           }}
                           className={cx(
-                            "flex min-h-14 w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition active:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50",
-                            active
-                              ? "bg-blue-50 text-blue-600"
-                              : "text-on-surface",
+                            "active:bg-surface-container-low flex min-h-14 w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-50",
+                            active ? "bg-blue-50 text-blue-600" : "text-on-surface",
                           )}
                         >
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-xs font-bold leading-4">
+                            <span className="block truncate text-xs leading-4 font-bold">
                               {option.label}
                             </span>
-                            {option.description ||
-                            option.meta ||
-                            option.disabledReason ? (
-                              <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
-                                {option.disabledReason ??
-                                  option.description ??
-                                  option.meta}
+                            {option.description || option.meta || option.disabledReason ? (
+                              <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-4">
+                                {option.disabledReason ?? option.description ?? option.meta}
                               </span>
                             ) : null}
                           </span>
-                          {active ? (
-                            <Check className="h-4 w-4 shrink-0" />
-                          ) : null}
+                          {active ? <Check className="h-4 w-4 shrink-0" /> : null}
                         </button>
                       );
                     })}
@@ -201,25 +187,22 @@ export function SheetSelect({
                 setPendingCreateAction(true);
                 setOpen(false);
               }}
-              className="flex min-h-14 w-full min-w-0 items-center gap-3 rounded-[22px] bg-surface-container-lowest px-4 py-3 text-left text-blue-600 outline-none ring-1 ring-outline-variant/15 transition active:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500/25"
+              className="bg-surface-container-lowest ring-outline-variant/15 flex min-h-14 w-full min-w-0 items-center gap-3 rounded-[22px] px-4 py-3 text-left text-blue-600 ring-1 transition outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 active:bg-blue-50"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50">
                 <Plus className="h-4 w-4" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-bold leading-[1.15]">
+                <span className="block truncate text-xs leading-[1.15] font-bold">
                   {createActionLabel}
                 </span>
                 {createActionDescription ? (
-                  <span className="mt-1 block truncate text-[10px] leading-[1.2] text-on-surface-variant">
+                  <span className="text-on-surface-variant mt-1 block truncate text-[10px] leading-[1.2]">
                     {createActionDescription}
                   </span>
                 ) : null}
               </span>
-              <span
-                className="material-symbols-outlined shrink-0 text-[18px]"
-                aria-hidden="true"
-              >
+              <span className="material-symbols-outlined shrink-0 text-[18px]" aria-hidden="true">
                 chevron_right
               </span>
             </button>
@@ -257,22 +240,16 @@ export function ComboboxField({
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [pendingValue, setPendingValue] = React.useState<string | null>(null);
-  const uniqueOptions = Array.from(
-    new Set([...options, value].filter(Boolean)),
-  );
+  const uniqueOptions = Array.from(new Set([...options, value].filter(Boolean)));
   const normalizedQuery = query.trim().toLowerCase();
   const filteredOptions = normalizedQuery
-    ? uniqueOptions.filter((option) =>
-        option.toLowerCase().includes(normalizedQuery),
-      )
+    ? uniqueOptions.filter((option) => option.toLowerCase().includes(normalizedQuery))
     : uniqueOptions;
   const customValue = query.trim();
   const canUseCustomValue =
     allowCustomValue &&
     customValue.length > 0 &&
-    !uniqueOptions.some(
-      (option) => option.toLowerCase() === customValue.toLowerCase(),
-    );
+    !uniqueOptions.some((option) => option.toLowerCase() === customValue.toLowerCase());
 
   return (
     <FormField label={label} helper={helper} error={error} htmlFor={id}>
@@ -289,7 +266,7 @@ export function ComboboxField({
         className={cx(
           grouped
             ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55"
-            : "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition active:scale-[0.99] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55",
+            : "border-outline-variant/35 bg-surface-container-lowest flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border px-5 text-left transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
         )}
       >
         <span
@@ -300,7 +277,7 @@ export function ComboboxField({
         >
           {value || placeholder}
         </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-on-surface-variant" />
+        <ChevronDown className="text-on-surface-variant h-4 w-4 shrink-0" />
       </button>
       <BottomSheet
         open={open}
@@ -320,12 +297,12 @@ export function ComboboxField({
             placeholder={`Cari ${label.toLowerCase()}...`}
           />
           {filteredOptions.length === 0 && !canUseCustomValue ? (
-            <p className="rounded-2xl bg-surface-container-low p-4 text-center text-xs text-on-surface-variant">
+            <p className="bg-surface-container-low text-on-surface-variant rounded-2xl p-4 text-center text-xs">
               Belum ada pilihan.
             </p>
           ) : null}
           {filteredOptions.length > 0 || canUseCustomValue ? (
-            <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-outline-variant/15">
+            <div className="divide-outline-variant/20 bg-surface-container-lowest ring-outline-variant/15 divide-y overflow-hidden rounded-[22px] ring-1">
               {filteredOptions.map((option) => {
                 const active = option === value;
                 return (
@@ -337,13 +314,11 @@ export function ComboboxField({
                       setOpen(false);
                     }}
                     className={cx(
-                      "flex min-h-12 w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition active:bg-surface-container-low",
+                      "active:bg-surface-container-low flex min-h-12 w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition",
                       active ? "bg-blue-50 text-blue-600" : "text-on-surface",
                     )}
                   >
-                    <span className="min-w-0 flex-1 truncate text-xs font-bold">
-                      {option}
-                    </span>
+                    <span className="min-w-0 flex-1 truncate text-xs font-bold">{option}</span>
                     {active ? <Check className="h-4 w-4 shrink-0" /> : null}
                   </button>
                 );
@@ -395,11 +370,11 @@ export function SearchInput({
   return (
     <div
       className={cx(
-        "flex min-h-12 items-center gap-2 rounded-full bg-surface-container-lowest px-5 shadow-[0_5px_16px_rgba(17,17,17,0.045)] ring-1 ring-outline-variant/20 transition-shadow focus-within:ring-2 focus-within:ring-blue-500/25",
+        "bg-surface-container-lowest ring-outline-variant/20 flex min-h-12 items-center gap-2 rounded-full px-5 shadow-[0_5px_16px_rgba(17,17,17,0.045)] ring-1 transition-shadow focus-within:ring-2 focus-within:ring-blue-500/25",
         className,
       )}
     >
-      <Search className="h-4 w-4 shrink-0 text-on-surface-variant" />
+      <Search className="text-on-surface-variant h-4 w-4 shrink-0" />
       <input
         id={id}
         name={name}
@@ -408,13 +383,13 @@ export function SearchInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel ?? placeholder}
-        className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-on-surface-variant/55"
+        className="placeholder:text-on-surface-variant/55 min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
       />
       {showClear && value ? (
         <button
           type="button"
           onClick={() => onChange("")}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition active:scale-95"
+          className="text-on-surface-variant flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition active:scale-95"
           aria-label={clearLabel}
         >
           <X className="h-4 w-4" />

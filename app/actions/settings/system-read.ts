@@ -68,15 +68,11 @@ export async function getItemPriceLibrary(
   if (accessError) return accessError;
 
   const filters = [
-    validation.data.includeInactive
-      ? undefined
-      : eq(itemPriceLibrary.isActive, true),
+    validation.data.includeInactive ? undefined : eq(itemPriceLibrary.isActive, true),
     validation.data.expenseCategoryId
       ? eq(itemPriceLibrary.expenseCategoryId, validation.data.expenseCategoryId)
       : undefined,
-    validation.data.itemType
-      ? eq(itemPriceLibrary.itemType, validation.data.itemType)
-      : undefined,
+    validation.data.itemType ? eq(itemPriceLibrary.itemType, validation.data.itemType) : undefined,
     validation.data.search
       ? ilike(itemPriceLibrary.name, `%${validation.data.search}%`)
       : undefined,
@@ -109,9 +105,7 @@ async function authorizeSettingsRead(): Promise<
   };
 }
 
-export async function getSettingsHubOverview(): Promise<
-  ActionResponse<SettingsHubOverview>
-> {
+export async function getSettingsHubOverview(): Promise<ActionResponse<SettingsHubOverview>> {
   const authResult = await authorizeSettingsRead();
   if (!authResult.success) return authResult;
 
@@ -134,8 +128,7 @@ export async function getSettingsHubOverview(): Promise<
   ]);
   const allocation =
     setting?.categories.reduce(
-      (total, category) =>
-        total + (category.isEnabled ? Number(category.ratioPercentage) : 0),
+      (total, category) => total + (category.isEnabled ? Number(category.ratioPercentage) : 0),
       0,
     ) ?? 0;
 
@@ -153,9 +146,7 @@ export async function getSettingsHubOverview(): Promise<
   };
 }
 
-export async function getBudgetSettings(): Promise<
-  ActionResponse<BudgetSettingsData>
-> {
+export async function getBudgetSettings(): Promise<ActionResponse<BudgetSettingsData>> {
   const authResult = await authorizeSettingsRead();
   if (!authResult.success) return authResult;
   const setting = await db.query.budgetAllocationSetting.findFirst({
@@ -193,9 +184,7 @@ export async function getExpenseCategorySettings(): Promise<
   };
 }
 
-export async function getItemLibrarySettings(): Promise<
-  ActionResponse<ItemLibrarySettingsData>
-> {
+export async function getItemLibrarySettings(): Promise<ActionResponse<ItemLibrarySettingsData>> {
   const authResult = await authorizeSettingsRead();
   if (!authResult.success) return authResult;
   const [categories, items, materials, vendors] = await Promise.all([
@@ -227,9 +216,7 @@ export async function getItemLibrarySettings(): Promise<
   };
 }
 
-export async function getMaterialSettings(): Promise<
-  ActionResponse<MaterialSettingsData>
-> {
+export async function getMaterialSettings(): Promise<ActionResponse<MaterialSettingsData>> {
   const authResult = await authorizeSettingsRead();
   if (!authResult.success) return authResult;
   const [categories, vendors, locations, materials] = await Promise.all([
@@ -266,9 +253,7 @@ export async function getMaterialSettings(): Promise<
   };
 }
 
-export async function getSettingsOverview(): Promise<
-  ActionResponse<SettingsOverview>
-> {
+export async function getSettingsOverview(): Promise<ActionResponse<SettingsOverview>> {
   const user = await getSessionUser();
   if (!user) {
     return {
@@ -283,59 +268,46 @@ export async function getSettingsOverview(): Promise<
   const roleName = await resolveRoleName(user.roleId ?? "");
   const permissions: SettingsPermissionState = {
     canManageBudgetSettings: await hasPermission(user, "manage:budget_settings"),
-    canManageExpenseCategories: await hasPermission(
-      user,
-      "manage:expense_categories",
-    ),
+    canManageExpenseCategories: await hasPermission(user, "manage:expense_categories"),
     canManageItemLibrary: await hasPermission(user, "manage:item_library"),
-    canManageMaterialSettings: await hasPermission(
-      user,
-      "manage:material_settings",
-    ),
+    canManageMaterialSettings: await hasPermission(user, "manage:material_settings"),
     canManageUsers: await hasPermission(user, "manage:users"),
     canManageVendors: await hasPermission(user, "manage:vendors"),
   };
 
-  const [
-    setting,
-    categories,
-    libraryRows,
-    materialCategories,
-    vendors,
-    locations,
-    materials,
-  ] = await Promise.all([
-    db.query.budgetAllocationSetting.findFirst({
-      where: eq(budgetAllocationSetting.isActive, true),
-      with: {
-        categories: {
-          with: { expenseCategory: true },
-          orderBy: [asc(budgetAllocationSettingCategory.sortOrder)],
+  const [setting, categories, libraryRows, materialCategories, vendors, locations, materials] =
+    await Promise.all([
+      db.query.budgetAllocationSetting.findFirst({
+        where: eq(budgetAllocationSetting.isActive, true),
+        with: {
+          categories: {
+            with: { expenseCategory: true },
+            orderBy: [asc(budgetAllocationSettingCategory.sortOrder)],
+          },
         },
-      },
-    }),
-    db.query.expenseCategory.findMany({
-      orderBy: [asc(expenseCategory.sortOrder)],
-    }),
-    db.query.itemPriceLibrary.findMany({
-      with: { expenseCategory: true, material: true },
-      orderBy: [asc(itemPriceLibrary.itemCategory), asc(itemPriceLibrary.name)],
-    }),
-    db.query.materialCategory.findMany({ orderBy: [asc(materialCategory.name)] }),
-    db.query.vendor.findMany({ orderBy: [asc(vendor.name)] }),
-    db.query.inventoryLocation.findMany({
-      where: eq(inventoryLocation.isActive, true),
-      orderBy: [asc(inventoryLocation.name)],
-    }),
-    db.query.materialMaster.findMany({
-      with: {
-        category: true,
-        defaultVendor: true,
-        inventory: { with: { location: true } },
-      },
-      orderBy: [asc(materialMaster.name)],
-    }),
-  ]);
+      }),
+      db.query.expenseCategory.findMany({
+        orderBy: [asc(expenseCategory.sortOrder)],
+      }),
+      db.query.itemPriceLibrary.findMany({
+        with: { expenseCategory: true, material: true },
+        orderBy: [asc(itemPriceLibrary.itemCategory), asc(itemPriceLibrary.name)],
+      }),
+      db.query.materialCategory.findMany({ orderBy: [asc(materialCategory.name)] }),
+      db.query.vendor.findMany({ orderBy: [asc(vendor.name)] }),
+      db.query.inventoryLocation.findMany({
+        where: eq(inventoryLocation.isActive, true),
+        orderBy: [asc(inventoryLocation.name)],
+      }),
+      db.query.materialMaster.findMany({
+        with: {
+          category: true,
+          defaultVendor: true,
+          inventory: { with: { location: true } },
+        },
+        orderBy: [asc(materialMaster.name)],
+      }),
+    ]);
 
   return {
     success: true,

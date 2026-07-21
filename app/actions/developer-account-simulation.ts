@@ -35,11 +35,7 @@ type SimulationActionResult = {
 };
 
 function toSimulationRole(roleName: string): DeveloperSimulationRole | null {
-  if (
-    roleName === "FINANCE_ADMIN" ||
-    roleName === "PROJECT_MANAGER" ||
-    roleName === "PURCHASING"
-  ) {
+  if (roleName === "FINANCE_ADMIN" || roleName === "PROJECT_MANAGER" || roleName === "PURCHASING") {
     return roleName;
   }
   return null;
@@ -114,10 +110,7 @@ export async function getDeveloperAccountSimulationState(): Promise<
       columns: { value: true },
     }),
     db.query.user.findMany({
-      where: and(
-        eq(user.isActive, true),
-        inArray(user.roleId, REQUIRED_SIMULATION_ROLE_IDS),
-      ),
+      where: and(eq(user.isActive, true), inArray(user.roleId, REQUIRED_SIMULATION_ROLE_IDS)),
       columns: {
         id: true,
         name: true,
@@ -132,9 +125,7 @@ export async function getDeveloperAccountSimulationState(): Promise<
   const onboardingCompleted =
     parseOwnerOnboardingState(onboardingRow?.value)?.status === "COMPLETED";
   const readyRoleIds = new Set(staffRows.map((row) => row.roleId));
-  const teamReady = REQUIRED_SIMULATION_ROLE_IDS.every((roleId) =>
-    readyRoleIds.has(roleId),
-  );
+  const teamReady = REQUIRED_SIMULATION_ROLE_IDS.every((roleId) => readyRoleIds.has(roleId));
   const targets = staffRows
     .map(mapTarget)
     .filter((row): row is DeveloperSimulationTarget => row !== null);
@@ -143,12 +134,9 @@ export async function getDeveloperAccountSimulationState(): Promise<
     .map(mapTarget)
     .filter((row): row is DeveloperSimulationTarget => row !== null);
   const blockers: string[] = [];
-  if (!onboardingCompleted)
-    blockers.push("Selesaikan onboarding Owner terlebih dahulu.");
+  if (!onboardingCompleted) blockers.push("Selesaikan onboarding Owner terlebih dahulu.");
   if (!teamReady) {
-    blockers.push(
-      "Siapkan akun aktif Finance Admin, Project Manager, dan Purchasing.",
-    );
+    blockers.push("Siapkan akun aktif Finance Admin, Project Manager, dan Purchasing.");
   }
 
   return {
@@ -200,16 +188,10 @@ export async function startDeveloperAccountSimulation(
       const [lockedSession] = await tx
         .select()
         .from(session)
-        .where(
-          and(
-            eq(session.id, current.sessionId),
-            eq(session.userId, current.userId),
-          ),
-        )
+        .where(and(eq(session.id, current.sessionId), eq(session.userId, current.userId)))
         .for("update");
       if (!lockedSession) throw new Error("SESSION_NOT_FOUND");
-      if (lockedSession.developerActorUserId)
-        throw new Error("ALREADY_SIMULATING");
+      if (lockedSession.developerActorUserId) throw new Error("ALREADY_SIMULATING");
 
       const actor = await tx.query.user.findFirst({
         where: and(
@@ -225,24 +207,14 @@ export async function startDeveloperAccountSimulation(
           where: eq(appConfig.key, OWNER_ONBOARDING_CONFIG_KEY),
           columns: { value: true },
         });
-        if (
-          parseOwnerOnboardingState(onboardingRow?.value)?.status !==
-          "COMPLETED"
-        )
+        if (parseOwnerOnboardingState(onboardingRow?.value)?.status !== "COMPLETED")
           throw new Error("ONBOARDING_REQUIRED");
         const staffRows = await tx.query.user.findMany({
-          where: and(
-            eq(user.isActive, true),
-            inArray(user.roleId, REQUIRED_SIMULATION_ROLE_IDS),
-          ),
+          where: and(eq(user.isActive, true), inArray(user.roleId, REQUIRED_SIMULATION_ROLE_IDS)),
           columns: { roleId: true },
         });
         const readyRoleIds = new Set(staffRows.map((row) => row.roleId));
-        if (
-          !REQUIRED_SIMULATION_ROLE_IDS.every((roleId) =>
-            readyRoleIds.has(roleId),
-          )
-        )
+        if (!REQUIRED_SIMULATION_ROLE_IDS.every((roleId) => readyRoleIds.has(roleId)))
           throw new Error("TEAM_REQUIRED");
       }
 
@@ -254,9 +226,7 @@ export async function startDeveloperAccountSimulation(
         ),
         with: { role: { columns: { name: true } } },
       });
-      const targetRole = target
-        ? toSimulationRole(target.role.name.toUpperCase())
-        : null;
+      const targetRole = target ? toSimulationRole(target.role.name.toUpperCase()) : null;
       if (!target || !targetRole) throw new Error("TARGET_NOT_FOUND");
       if (
         validation.data.context === "ONBOARDING_SETUP_REVIEW" &&

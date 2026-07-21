@@ -47,20 +47,13 @@ export function resolveEffectiveProjectHealth(
     reasons.add("BUDGET_WATCH");
   }
 
-  if (
-    categoryStatuses.some(
-      (status) => status === "CRITICAL" || status === "OVER_BUDGET",
-    )
-  ) {
+  if (categoryStatuses.some((status) => status === "CRITICAL" || status === "OVER_BUDGET")) {
     reasons.add("CATEGORY_CRITICAL");
   } else if (categoryStatuses.some((status) => status === "WATCH")) {
     reasons.add("CATEGORY_WATCH");
   }
 
-  if (
-    typeof input.projectedMarginPercentage === "number" &&
-    input.projectedMarginPercentage < 0
-  ) {
+  if (typeof input.projectedMarginPercentage === "number" && input.projectedMarginPercentage < 0) {
     reasons.add("NEGATIVE_MARGIN");
   } else if (
     typeof input.projectedMarginPercentage === "number" &&
@@ -75,20 +68,11 @@ export function resolveEffectiveProjectHealth(
 
   const healthReasons = REASON_PRIORITY.filter((reason) => reasons.has(reason));
   const critical = healthReasons.some((reason) =>
-    [
-      "BUDGET_OVERRUN",
-      "CATEGORY_CRITICAL",
-      "NEGATIVE_MARGIN",
-      "STORED_CRITICAL",
-    ].includes(reason),
+    ["BUDGET_OVERRUN", "CATEGORY_CRITICAL", "NEGATIVE_MARGIN", "STORED_CRITICAL"].includes(reason),
   );
 
   return {
-    effectiveHealth: critical
-      ? "CRITICAL"
-      : healthReasons.length > 0
-        ? "WARNING"
-        : "HEALTHY",
+    effectiveHealth: critical ? "CRITICAL" : healthReasons.length > 0 ? "WARNING" : "HEALTHY",
     healthReasons,
   };
 }
@@ -99,9 +83,7 @@ export function projectHealthLabel(health: EffectiveProjectHealth): string {
   return "Sehat";
 }
 
-export function projectHealthReasonLabel(
-  reason: EffectiveProjectHealthReason,
-): string {
+export function projectHealthReasonLabel(reason: EffectiveProjectHealthReason): string {
   switch (reason) {
     case "BUDGET_OVERRUN":
       return "Budget proyek terlampaui";

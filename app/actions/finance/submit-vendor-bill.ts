@@ -12,7 +12,7 @@ import { submitVendorBillSchema, SubmitVendorBillInput } from "@/lib/validations
 import { createVendorBillTx } from "@/lib/finance/vendor-bill-write";
 
 export async function submitVendorBill(
-  input: SubmitVendorBillInput
+  input: SubmitVendorBillInput,
 ): Promise<ActionResponse<typeof vendorBill.$inferSelect>> {
   const validation = submitVendorBillSchema.safeParse(input);
   if (!validation.success) {
@@ -22,16 +22,16 @@ export async function submitVendorBill(
     };
   }
 
-    const {
-      vendorId,
-      projectId,
-      projectBudgetCategoryId,
-      projectCategoryPlanItemId,
-      billNumber,
-      amount,
-      dueDate,
-      notes,
-    } = validation.data;
+  const {
+    vendorId,
+    projectId,
+    projectBudgetCategoryId,
+    projectCategoryPlanItemId,
+    billNumber,
+    amount,
+    dueDate,
+    notes,
+  } = validation.data;
 
   try {
     const session = await auth.api.getSession({
@@ -52,7 +52,10 @@ export async function submitVendorBill(
     } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
+        error: {
+          code: "FORBIDDEN",
+          message: err instanceof Error ? err.message : "Akses ditolak.",
+        },
       };
     }
 
@@ -66,21 +69,26 @@ export async function submitVendorBill(
     } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
+        error: {
+          code: "FORBIDDEN",
+          message: err instanceof Error ? err.message : "Akses ditolak.",
+        },
       };
     }
 
-    const bill = await db.transaction((tx) => createVendorBillTx(tx, {
-      vendorId,
-      projectId,
-      projectBudgetCategoryId,
-      projectCategoryPlanItemId,
-      billNumber,
-      amount,
-      dueDate,
-      notes,
-      requestedById: session.user.id,
-    }));
+    const bill = await db.transaction((tx) =>
+      createVendorBillTx(tx, {
+        vendorId,
+        projectId,
+        projectBudgetCategoryId,
+        projectCategoryPlanItemId,
+        billNumber,
+        amount,
+        dueDate,
+        notes,
+        requestedById: session.user.id,
+      }),
+    );
 
     return {
       success: true,
@@ -88,11 +96,17 @@ export async function submitVendorBill(
     };
   } catch (error) {
     if (error instanceof Error && error.message === "VENDOR_BILL_NUMBER_EXISTS") {
-      return { success: false, error: { code: "CONFLICT", message: "Nomor tagihan ini sudah terdaftar." } };
+      return {
+        success: false,
+        error: { code: "CONFLICT", message: "Nomor tagihan ini sudah terdaftar." },
+      };
     }
     return {
       success: false,
-      error: { code: "INTERNAL_SERVER_ERROR", message: error instanceof Error ? error.message : "Gagal mencatat tagihan." },
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: error instanceof Error ? error.message : "Gagal mencatat tagihan.",
+      },
     };
   }
 }
@@ -148,7 +162,10 @@ export async function getVendorBillFormData(): Promise<ActionResponse<VendorBill
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan server saat mengambil data form tagihan vendor.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan server saat mengambil data form tagihan vendor.",
       },
     };
   }

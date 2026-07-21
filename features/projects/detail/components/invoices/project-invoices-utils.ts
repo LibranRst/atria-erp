@@ -6,10 +6,7 @@ export function formatShortRp(value: number): string {
 }
 
 export function calculateInvoicePaidAmount(invoice: ClientInvoiceItem): number {
-  return invoice.payments.reduce(
-    (sum, payment) => sum + Number(payment.amountPaid),
-    0,
-  );
+  return invoice.payments.reduce((sum, payment) => sum + Number(payment.amountPaid), 0);
 }
 
 export function calculateInvoiceRemaining(invoice: ClientInvoiceItem): number {
@@ -21,10 +18,7 @@ export function calculateInvoiceTotals(invoices: readonly ClientInvoiceItem[]): 
   readonly totalPaidAmount: number;
   readonly unpaidAmount: number;
 } {
-  const totalInvoiceAmount = invoices.reduce(
-    (sum, invoice) => sum + Number(invoice.amount),
-    0,
-  );
+  const totalInvoiceAmount = invoices.reduce((sum, invoice) => sum + Number(invoice.amount), 0);
   const totalPaidAmount = invoices.reduce(
     (sum, invoice) => sum + calculateInvoicePaidAmount(invoice),
     0,

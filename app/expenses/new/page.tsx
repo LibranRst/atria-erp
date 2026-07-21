@@ -17,7 +17,7 @@ export default async function NewExpensePage(): Promise<React.JSX.Element> {
 
   // 3. Kueri proyek aktif yang dapat diakses oleh PM
   const projectsData = await db.query.project.findMany({
-    where: projectFilter 
+    where: projectFilter
       ? and(eq(project.status, "ACTIVE"), projectFilter)
       : eq(project.status, "ACTIVE"),
     with: {
@@ -90,15 +90,17 @@ export default async function NewExpensePage(): Promise<React.JSX.Element> {
       })),
     })),
     materialOptions,
-    rapItems: proj.raps.flatMap((rap) => rap.items.map((item) => ({
-      id: item.id,
-      materialId: item.materialId,
-      label: item.name,
-      area: item.area,
-      quantity: item.totalQuantity,
-      unit: item.unit,
-      status: item.status,
-    }))),
+    rapItems: proj.raps.flatMap((rap) =>
+      rap.items.map((item) => ({
+        id: item.id,
+        materialId: item.materialId,
+        label: item.name,
+        area: item.area,
+        quantity: item.totalQuantity,
+        unit: item.unit,
+        status: item.status,
+      })),
+    ),
     categoryPlanItems: proj.categoryPlanItems.map((item) => ({
       id: item.id,
       projectBudgetCategoryId: item.projectBudgetCategoryId,

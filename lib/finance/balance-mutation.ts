@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 /**
  * Mengonversi desimal numerik berformat string (misal: "150000.50") menjadi satuan sen bigint.
  * Hal ini dilakukan secara aman untuk mencegah kehilangan presisi akibat konversi float.
- * 
+ *
  * @param val String desimal numerik
  * @returns Nilai sen bigint
  */
@@ -13,52 +13,54 @@ export function parseNumericToCents(val: string): bigint {
   const parts = val.split(".");
   const integerPart = parts[0] || "0";
   const absoluteIntegerPart = integerPart.replace("-", "");
-  
+
   let fractionalPart = parts[1] || "";
   fractionalPart = fractionalPart.padEnd(2, "0").slice(0, 2);
-  
+
   const isNegative = integerPart.startsWith("-");
   const cents = BigInt(absoluteIntegerPart) * BigInt(100) + BigInt(fractionalPart);
-  
+
   return isNegative ? -cents : cents;
 }
 
 /**
  * Mengonversi kembali satuan sen bigint menjadi string desimal numerik dengan format dua angka di belakang koma (misal: 15000050n ke "150000.50").
- * 
+ *
  * @param cents Nilai sen bigint
  * @returns String desimal numerik berpresisi (.2 desimal)
  */
 export function fromCents(cents: bigint): string {
   const isNegative = cents < BigInt(0);
   const absoluteCents = isNegative ? -cents : cents;
-  
+
   const integerPart = absoluteCents / BigInt(100);
   const fractionalPart = absoluteCents % BigInt(100);
-  
+
   const formattedFraction = fractionalPart.toString().padStart(2, "0");
   const sign = isNegative ? "-" : "";
-  
+
   return `${sign}${integerPart}.${formattedFraction}`;
 }
 
 /**
  * Memastikan entri transaksi kas tidak diubah/dihapus jika sudah berstatus 'reconciled'.
  * Jika sudah direkonsiliasi, fungsi akan melempar kesalahan (error) dan memicu pembatalan.
- * 
+ *
  * @param tx Drizzle Transaction database instance
  * @param transactionId ID dari cash_transaction yang dicari
  */
 export async function checkReconciledTransaction(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  transactionId: string
+  transactionId: string,
 ): Promise<void> {
   const transaction = await tx.query.cashTransaction.findFirst({
     where: eq(cashTransaction.id, transactionId),
   });
 
   if (transaction?.reconciled) {
-    throw new Error("MUTATION_REJECTED: Transaksi buku besar yang telah direkonsiliasi tidak dapat diubah atau dihapus.");
+    throw new Error(
+      "MUTATION_REJECTED: Transaksi buku besar yang telah direkonsiliasi tidak dapat diubah atau dihapus.",
+    );
   }
 }
 
@@ -86,12 +88,12 @@ interface MutateBalanceArgs {
 /**
  * Melakukan mutasi saldo kas bank secara transaksional dengan penguncian pesimistis.
  * Fungsi ini memperbarui saldo bank, menulis entri buku besar (ledger), dan merekam riwayat audit.
- * 
+ *
  * @param args Parameter mutasi saldo kas bank
  * @returns Data cash_transaction yang berhasil disisipkan
  */
 export async function mutateBalance(
-  args: MutateBalanceArgs
+  args: MutateBalanceArgs,
 ): Promise<typeof cashTransaction.$inferSelect> {
   const {
     tx,
@@ -120,7 +122,9 @@ export async function mutateBalance(
     throw new Error("BANK_ACCOUNT_NOT_FOUND: Akun kas bank tidak ditemukan.");
   }
   if (!account.isActive) {
-    throw new Error("BANK_ACCOUNT_INACTIVE: Rekening yang diarsipkan tidak dapat menerima mutasi baru.");
+    throw new Error(
+      "BANK_ACCOUNT_INACTIVE: Rekening yang diarsipkan tidak dapat menerima mutasi baru.",
+    );
   }
 
   // 2. Hitung saldo baru dengan satuan sen (bigint)
@@ -138,7 +142,9 @@ export async function mutateBalance(
     newBalanceCents = oldBalanceCents - mutationCents;
     // Cek kecukupan saldo untuk mutasi keluar
     if (newBalanceCents < BigInt(0)) {
-      throw new Error("INSUFFICIENT_FUNDS: Saldo kas bank tidak mencukupi untuk melakukan transaksi kredit.");
+      throw new Error(
+        "INSUFFICIENT_FUNDS: Saldo kas bank tidak mencukupi untuk melakukan transaksi kredit.",
+      );
     }
   } else {
     throw new Error("INVALID_MUTATION_TYPE: Tipe mutasi wajib berupa DEBIT atau CREDIT.");

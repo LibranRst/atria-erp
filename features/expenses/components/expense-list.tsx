@@ -4,7 +4,10 @@ import { useRouter } from "next/navigation";
 import React, { useState, useTransition } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { FinanceSuccessSheet, type FinanceOperationSuccess } from "@/features/finance/components/finance-form-patterns";
+import {
+  FinanceSuccessSheet,
+  type FinanceOperationSuccess,
+} from "@/features/finance/components/finance-form-patterns";
 import { useLocalFormRecovery } from "@/features/forms/use-local-form-recovery";
 
 const fieldDisbursementRecoverySchema = z.object({
@@ -13,16 +16,10 @@ const fieldDisbursementRecoverySchema = z.object({
   refNumber: z.string(),
 });
 
-import {
-  payFieldRequest,
-  verifyFieldRequest,
-} from "@/app/actions/finance/field-requests";
+import { payFieldRequest, verifyFieldRequest } from "@/app/actions/finance/field-requests";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import { getErrorMessage } from "@/lib/utils/error-message";
-import {
-  updateUrlSearchParam,
-  useUrlSearchParam,
-} from "@/lib/utils/use-url-search-param";
+import { updateUrlSearchParam, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import {
   FieldDisbursementSheet,
   ReceiptImageLightbox,
@@ -87,11 +84,14 @@ export function ExpenseList({
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [selectedCost, setSelectedCost] = useState<ExpenseCostItem | null>(null);
-  const initialDisbursementRecovery = React.useCallback(() => ({
-    costId: "",
-    selectedBankId: bankAccounts[0]?.id ?? "",
-    refNumber: "",
-  }), [bankAccounts]);
+  const initialDisbursementRecovery = React.useCallback(
+    () => ({
+      costId: "",
+      selectedBankId: bankAccounts[0]?.id ?? "",
+      refNumber: "",
+    }),
+    [bankAccounts],
+  );
   const disbursementRecovery = useLocalFormRecovery({
     storageKey: `atria:finance:field-disbursement:${projectId ?? "inbox"}`,
     schema: fieldDisbursementRecoverySchema,
@@ -109,11 +109,7 @@ export function ExpenseList({
     (nextTab: ExpenseListTab): void => {
       setActiveTab(nextTab);
       if (projectId) return;
-      updateUrlSearchParam(
-        "view",
-        nextTab === "VENDOR_BILLS" ? "vendor-bills" : null,
-        "replace",
-      );
+      updateUrlSearchParam("view", nextTab === "VENDOR_BILLS" ? "vendor-bills" : null, "replace");
     },
     [projectId],
   );
@@ -136,17 +132,9 @@ export function ExpenseList({
   const activeCosts = initialCosts.filter(
     (cost) => cost.status !== "PAID" && cost.status !== "REJECTED",
   );
-  const readyToPayCount = initialCosts.filter(
-    (cost) => cost.status === "APPROVED",
-  ).length;
-  const fieldClaimTotal = initialCosts.reduce(
-    (sum, cost) => sum + Number(cost.amount),
-    0,
-  );
-  const activeClaimTotal = activeCosts.reduce(
-    (sum, cost) => sum + Number(cost.amount),
-    0,
-  );
+  const readyToPayCount = initialCosts.filter((cost) => cost.status === "APPROVED").length;
+  const fieldClaimTotal = initialCosts.reduce((sum, cost) => sum + Number(cost.amount), 0);
+  const activeClaimTotal = activeCosts.reduce((sum, cost) => sum + Number(cost.amount), 0);
   const needsActionCount = initialCosts.filter(
     (cost) => cost.status === "SUBMITTED" || cost.status === "VERIFIED",
   ).length;
@@ -237,11 +225,7 @@ export function ExpenseList({
 
     startTransition(async () => {
       try {
-        const res = await payFieldRequest(
-          selectedCost.id,
-          selectedBankId,
-          refNumber,
-        );
+        const res = await payFieldRequest(selectedCost.id, selectedBankId, refNumber);
         if (!res.success) {
           const errMsg = res.error.message || "Gagal mencairkan pengeluaran.";
           setError(errMsg);
@@ -255,10 +239,14 @@ export function ExpenseList({
         const account = bankAccounts.find((item) => item.id === selectedBankId);
         setOperationSuccess({
           title: "Dana pengeluaran dicairkan",
-          description: "Status pengeluaran, saldo rekening, ledger, dan budget proyek telah diperbarui bersama.",
+          description:
+            "Status pengeluaran, saldo rekening, ledger, dan budget proyek telah diperbarui bersama.",
           facts: [
             { label: "Proyek", value: selectedCost.project?.name ?? "Proyek" },
-            { label: "Nominal", value: `Rp ${Number(selectedCost.amount).toLocaleString("id-ID")}` },
+            {
+              label: "Nominal",
+              value: `Rp ${Number(selectedCost.amount).toLocaleString("id-ID")}`,
+            },
             { label: "Rekening", value: account?.name ?? "Rekening sumber" },
           ],
         });
@@ -275,10 +263,7 @@ export function ExpenseList({
   return (
     <div className="space-y-lg px-1 pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
       {!projectId && (
-        <FinanceInboxHeader
-          activeClaimTotal={activeClaimTotal}
-          fieldClaimTotal={fieldClaimTotal}
-        />
+        <FinanceInboxHeader activeClaimTotal={activeClaimTotal} fieldClaimTotal={fieldClaimTotal} />
       )}
 
       <SegmentedTabs
@@ -290,34 +275,26 @@ export function ExpenseList({
           {
             value: "FIELD_CLAIMS",
             label: "Pengeluaran Lapangan",
-            icon: (
-              <span className="material-symbols-outlined text-[16px]">
-                receipt_long
-              </span>
-            ),
+            icon: <span className="material-symbols-outlined text-[16px]">receipt_long</span>,
           },
           {
             value: "VENDOR_BILLS",
             label: "Tagihan Vendor",
-            icon: (
-              <span className="material-symbols-outlined text-[16px]">
-                request_quote
-              </span>
-            ),
+            icon: <span className="material-symbols-outlined text-[16px]">request_quote</span>,
           },
         ]}
       />
 
       {displayedTab === "FIELD_CLAIMS" ? (
         <FieldClaimsPanel
-          leadingContent={(
+          leadingContent={
             <>
               {userRole === "OWNER" && pendingApprovalsCount > 0 ? (
                 <PendingApprovalsBanner count={pendingApprovalsCount} />
               ) : null}
               <ExpenseDraftsPanel projectId={projectId} />
             </>
-          )}
+          }
           projectId={projectId}
           initialCosts={initialCosts}
           filteredCosts={filteredCosts}
@@ -338,9 +315,11 @@ export function ExpenseList({
         />
       ) : (
         <VendorBillList
-          leadingContent={userRole === "OWNER" && pendingApprovalsCount > 0 ? (
-            <PendingApprovalsBanner count={pendingApprovalsCount} />
-          ) : null}
+          leadingContent={
+            userRole === "OWNER" && pendingApprovalsCount > 0 ? (
+              <PendingApprovalsBanner count={pendingApprovalsCount} />
+            ) : null
+          }
           projectId={projectId}
           vendorBills={vendorBills}
           vendorPayments={vendorPayments}
@@ -351,10 +330,7 @@ export function ExpenseList({
         />
       )}
 
-      <ReceiptImageLightbox
-        imageUrl={activeImage}
-        onClose={() => setActiveImage(null)}
-      />
+      <ReceiptImageLightbox imageUrl={activeImage} onClose={() => setActiveImage(null)} />
       <FieldDisbursementSheet
         key={selectedCost?.id ?? "field-disbursement-closed"}
         selectedCost={selectedCost}
@@ -366,10 +342,17 @@ export function ExpenseList({
         error={error}
         success={success}
         onClose={closeDisburseForm}
-        onDiscard={() => { disbursementRecovery.reset(); closeDisburseForm(); }}
+        onDiscard={() => {
+          disbursementRecovery.reset();
+          closeDisburseForm();
+        }}
         onSubmit={handleConfirmDisburse}
-        onBankChange={(value) => disbursementRecovery.setPayload((current) => ({ ...current, selectedBankId: value }))}
-        onRefNumberChange={(value) => disbursementRecovery.setPayload((current) => ({ ...current, refNumber: value }))}
+        onBankChange={(value) =>
+          disbursementRecovery.setPayload((current) => ({ ...current, selectedBankId: value }))
+        }
+        onRefNumberChange={(value) =>
+          disbursementRecovery.setPayload((current) => ({ ...current, refNumber: value }))
+        }
       />
       <FinanceSuccessSheet success={operationSuccess} onClose={() => setOperationSuccess(null)} />
     </div>

@@ -2,10 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getPricingTemplates } from "@/app/actions/settings/pricing-library";
 import { getSettingsOverview } from "@/app/actions/settings/system";
-import {
-  getAdministrationOverview,
-  getProductionReadiness,
-} from "@/app/actions/administration";
+import { getAdministrationOverview, getProductionReadiness } from "@/app/actions/administration";
 import { getOwnerOnboardingOverview } from "@/app/actions/onboarding";
 import {
   getInitialStockCandidates,
@@ -22,23 +19,42 @@ type SettingsPageContentProps = {
 export async function SettingsPageContent({
   initialTab = "overview",
 }: SettingsPageContentProps): Promise<React.JSX.Element> {
-  const [result, templates, administration, readiness, onboarding, initialStock, openingBatches] = await Promise.all([
-    getSettingsOverview(),
-    getPricingTemplates(true),
-    getAdministrationOverview(),
-    getProductionReadiness(),
-    getOwnerOnboardingOverview(),
-    getInitialStockCandidates(),
-    getInventoryOpeningBatches(),
-  ]);
+  const [result, templates, administration, readiness, onboarding, initialStock, openingBatches] =
+    await Promise.all([
+      getSettingsOverview(),
+      getPricingTemplates(true),
+      getAdministrationOverview(),
+      getProductionReadiness(),
+      getOwnerOnboardingOverview(),
+      getInitialStockCandidates(),
+      getInventoryOpeningBatches(),
+    ]);
 
   if (!result.success) {
     if (result.error.code === "UNAUTHORIZED") redirect("/login");
-    return <PageState kind={result.error.code === "FORBIDDEN" ? "restricted" : "error"} title={result.error.code === "FORBIDDEN" ? "Akses pengaturan dibatasi" : "Pengaturan belum dapat dimuat"} description={result.error.message} compact />;
+    return (
+      <PageState
+        kind={result.error.code === "FORBIDDEN" ? "restricted" : "error"}
+        title={
+          result.error.code === "FORBIDDEN"
+            ? "Akses pengaturan dibatasi"
+            : "Pengaturan belum dapat dimuat"
+        }
+        description={result.error.message}
+        compact
+      />
+    );
   }
 
   if (!templates.success) {
-    return <PageState kind="error" title="Library harga belum dapat dimuat" description={templates.error.message} compact />;
+    return (
+      <PageState
+        kind="error"
+        title="Library harga belum dapat dimuat"
+        description={templates.error.message}
+        compact
+      />
+    );
   }
 
   return (

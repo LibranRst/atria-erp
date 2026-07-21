@@ -7,6 +7,7 @@ This plan describes the redesign of the sidebar navigation to be clean, modern, 
 ### Mobile Shell & Layout
 
 #### [MODIFY] [sidebar.tsx](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/components/layout/sidebar.tsx)
+
 - Constrain the drawer (`aside`) inside a centered mobile bounds wrapper matching the width (`max-w-md mx-auto`) and height of the mobile shell.
 - Redesign the header: Include a minimal "ATRIA ERP" logo/title on the left and a clean, smaller close button on the right.
 - Redesign the User Profile card: Use a soft container (`bg-surface-container-low`), clean font hierarchy, and a refined role badge alignment.
@@ -16,6 +17,7 @@ This plan describes the redesign of the sidebar navigation to be clean, modern, 
 ## Verification Plan
 
 ### Manual Verification
+
 1. Open the application on a desktop browser.
 2. Open the sidebar and verify that it slides in from the left edge of the centered mobile content frame (`max-w-md` boundary) instead of the screen's left edge.
 3. Verify that clicking the backdrop overlay still closes the sidebar.

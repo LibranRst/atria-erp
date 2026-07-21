@@ -31,7 +31,7 @@ async function getSessionUser(): Promise<SessionUser | null> {
 }
 
 export async function createProjectAction(
-  input: CreateProjectInput
+  input: CreateProjectInput,
 ): Promise<ActionResponse<{ id: string }>> {
   const validation = createProjectSchema.safeParse(input);
   if (!validation.success) {
@@ -81,7 +81,9 @@ export async function createProjectAction(
             id: crypto.randomUUID(),
             name: data.newClientName,
             companyName: "",
-            email: data.newClientEmail || `${data.newClientName.toLowerCase().replace(/\s+/g, "")}@example.com`,
+            email:
+              data.newClientEmail ||
+              `${data.newClientName.toLowerCase().replace(/\s+/g, "")}@example.com`,
             phone: data.newClientPhone || "-",
             address: data.newClientAddress || "-",
             createdAt: new Date(),
@@ -143,14 +145,17 @@ export async function createProjectAction(
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan internal saat membuat proyek.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan internal saat membuat proyek.",
       },
     };
   }
 }
 
 export async function updateProjectAction(
-  input: UpdateProjectInput
+  input: UpdateProjectInput,
 ): Promise<ActionResponse<{ id: string }>> {
   const validation = updateProjectSchema.safeParse(input);
   if (!validation.success) {
@@ -198,7 +203,9 @@ export async function updateProjectAction(
         throw new Error("Proyek yang sudah selesai atau dibatalkan tidak dapat diedit langsung.");
       }
       if (data.status === "COMPLETED" && existing.status !== "COMPLETED") {
-        throw new Error("Status COMPLETED hanya dapat ditetapkan melalui Project Closing Checklist.");
+        throw new Error(
+          "Status COMPLETED hanya dapat ditetapkan melalui Project Closing Checklist.",
+        );
       }
 
       // 1. Update project details
@@ -210,7 +217,10 @@ export async function updateProjectAction(
           projectManagerId: data.projectManagerId,
           status: data.status,
           financialHealth: data.financialHealth,
-          totalContractValue: data.totalContractValue !== undefined ? data.totalContractValue.toFixed(2) : existing.totalContractValue,
+          totalContractValue:
+            data.totalContractValue !== undefined
+              ? data.totalContractValue.toFixed(2)
+              : existing.totalContractValue,
           startDate: data.startDate ? new Date(data.startDate) : null,
           endDate: data.endDate ? new Date(data.endDate) : null,
           location: data.location || null,
@@ -227,7 +237,11 @@ export async function updateProjectAction(
         where: eq(projectBudgets.projectId, data.id),
       });
 
-      if (data.totalContractValue !== undefined && currentBudget && currentBudget.status === "DRAFT") {
+      if (
+        data.totalContractValue !== undefined &&
+        currentBudget &&
+        currentBudget.status === "DRAFT"
+      ) {
         const ratio = Number(currentBudget.budgetCapRatio);
         const internalBudget = data.totalContractValue * ratio;
         const targetGrossAmount = data.totalContractValue - internalBudget;
@@ -238,7 +252,10 @@ export async function updateProjectAction(
             contractValue: data.totalContractValue.toFixed(2),
             internalBudget: internalBudget.toFixed(2),
             targetGrossAmount: targetGrossAmount.toFixed(2),
-            targetGrossPercentage: data.totalContractValue > 0 ? ((targetGrossAmount / data.totalContractValue) * 100).toFixed(4) : "0.0000",
+            targetGrossPercentage:
+              data.totalContractValue > 0
+                ? ((targetGrossAmount / data.totalContractValue) * 100).toFixed(4)
+                : "0.0000",
             updatedAt: new Date(),
           })
           .where(eq(projectBudgets.id, currentBudget.id));
@@ -262,13 +279,21 @@ export async function updateProjectAction(
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan internal saat memperbarui proyek.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan internal saat memperbarui proyek.",
       },
     };
   }
 }
 
-export async function getProjectFormData(): Promise<ActionResponse<{ clients: Array<{ id: string; name: string }>; users: Array<{ id: string; name: string }> }>> {
+export async function getProjectFormData(): Promise<
+  ActionResponse<{
+    clients: Array<{ id: string; name: string }>;
+    users: Array<{ id: string; name: string }>;
+  }>
+> {
   const currentUser = await getSessionUser();
   if (!currentUser) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };

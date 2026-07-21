@@ -14,22 +14,18 @@ export function RabEmptyState({
   return (
     <NativePanel eyebrow="RAB Klien" title="Belum ada RAB">
       <div className="py-lg text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <span className="material-symbols-outlined text-[28px]">
-            request_quote
-          </span>
+        <div className="bg-primary/10 text-primary mx-auto flex h-14 w-14 items-center justify-center rounded-2xl">
+          <span className="material-symbols-outlined text-[28px]">request_quote</span>
         </div>
-        <h3 className="mt-4 text-base font-bold">
-          Susun draf yang siap dibaca klien
-        </h3>
-        <p className="mx-auto mt-1 max-w-xs text-xs leading-5 text-on-surface-variant">
+        <h3 className="mt-4 text-base font-bold">Susun draf yang siap dibaca klien</h3>
+        <p className="text-on-surface-variant mx-auto mt-1 max-w-xs text-xs leading-5">
           Pilih material dan paket kerja, lalu rapikan harga serta labelnya.
         </p>
         {canManageRab && (
           <button
             type="button"
             onClick={() => setSourcePickerOpen(true)}
-            className="mt-5 min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
+            className="bg-primary text-on-primary mt-5 min-h-12 w-full rounded-full px-5 text-xs font-bold"
           >
             Buat Draf RAB
           </button>

@@ -75,33 +75,33 @@ async function mockGenerateContent(args: unknown): Promise<{
 }> {
   const { model, contents } = args as GeminiMockArgs;
   if (model === "gemini-3-flash-preview") {
-    const isOCR = Array.isArray(contents) && contents.some((contentPart: unknown) => {
-      return (
-        typeof contentPart === "object" &&
-        contentPart !== null &&
-        "inlineData" in contentPart
-      );
-    });
+    const isOCR =
+      Array.isArray(contents) &&
+      contents.some((contentPart: unknown) => {
+        return (
+          typeof contentPart === "object" && contentPart !== null && "inlineData" in contentPart
+        );
+      });
     if (isOCR) {
       return {
         text: JSON.stringify({
           vendorName: "TB Sinar Maju",
           transactionDate: "2026-06-10T00:00:00.000Z",
-          subtotal: 750000.00,
-          tax: 0.00,
-          totalAmount: 750000.00,
+          subtotal: 750000.0,
+          tax: 0.0,
+          totalAmount: 750000.0,
           items: [
             {
               itemName: "Semen Tiga Roda 50kg",
               quantity: 10,
-              unitPrice: 72000.00,
-              totalPrice: 720000.00,
+              unitPrice: 72000.0,
+              totalPrice: 720000.0,
             },
             {
               itemName: "Paku Kayu 3 Inch",
               quantity: 2,
-              unitPrice: 15000.00,
-              totalPrice: 30000.00,
+              unitPrice: 15000.0,
+              totalPrice: 30000.0,
             },
           ],
         }),
@@ -126,7 +126,7 @@ describe("Atria ERP AI Layer Integration - TSK-009", () => {
           ok: true,
           arrayBuffer: async () => new ArrayBuffer(8),
           headers: {
-            get: (name: string) => name.toLowerCase() === "content-type" ? "image/jpeg" : null,
+            get: (name: string) => (name.toLowerCase() === "content-type" ? "image/jpeg" : null),
           },
         } as unknown as Response;
       }
@@ -154,7 +154,7 @@ describe("Atria ERP AI Layer Integration - TSK-009", () => {
 
       const data = res.data;
       expect(data.vendorName).toBe("TB Sinar Maju");
-      expect(data.totalAmount).toBe(750000.00);
+      expect(data.totalAmount).toBe(750000.0);
       expect(data.items.length).toBe(2);
       expect(data.items[0].itemName).toBe("Semen Tiga Roda 50kg");
 
@@ -213,9 +213,9 @@ describe("Atria ERP AI Layer Integration - TSK-009", () => {
         expect(runLog).toBeDefined();
         expect(runLog!.status).toBe("FAILED");
       } finally {
-        (ai.models as unknown as { generateContent: unknown }).generateContent = mockGenerateContent;
+        (ai.models as unknown as { generateContent: unknown }).generateContent =
+          mockGenerateContent;
       }
     });
   });
-
 });

@@ -5,10 +5,7 @@ import { Check, LockKeyhole, Minus, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { transitionSpringBouncy } from "@/lib/utils/motion";
 
-import {
-  type FormFieldLayout,
-  useFormPresentation,
-} from "./form-presentation-context";
+import { type FormFieldLayout, useFormPresentation } from "./form-presentation-context";
 
 import {
   controlClass,
@@ -57,9 +54,7 @@ export function FormField({
     return (
       <div
         className={cx(
-          grouped
-            ? "group/form min-w-0 bg-surface-container-lowest px-4 py-3"
-            : fieldShell,
+          grouped ? "group/form bg-surface-container-lowest min-w-0 px-4 py-3" : fieldShell,
           error && grouped && "bg-error-container/10",
           className,
         )}
@@ -79,23 +74,20 @@ export function FormField({
               </label>
               {readOnly ? (
                 <LockKeyhole
-                  className="h-3.5 w-3.5 shrink-0 text-on-surface-variant"
+                  className="text-on-surface-variant h-3.5 w-3.5 shrink-0"
                   aria-hidden="true"
                 />
               ) : null}
             </div>
             {message ? (
-              <p
-                id={helperId}
-                className={cx(messageClass, grouped && "ml-0 mt-1")}
-              >
+              <p id={helperId} className={cx(messageClass, grouped && "mt-1 ml-0")}>
                 {message}
               </p>
             ) : null}
           </div>
           <div className="min-w-0 shrink-0">{children}</div>
           {adornment ? (
-            <span className="shrink-0 text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/75">
+            <span className="text-on-surface-variant/75 shrink-0 text-[8px] font-bold tracking-wide uppercase">
               {adornment}
             </span>
           ) : null}
@@ -107,9 +99,7 @@ export function FormField({
   return (
     <div
       className={cx(
-        grouped
-          ? "group/form min-w-0 space-y-1 bg-surface-container-lowest px-4 py-3"
-          : fieldShell,
+        grouped ? "group/form bg-surface-container-lowest min-w-0 space-y-1 px-4 py-3" : fieldShell,
         error && grouped && "bg-error-container/10",
         className,
       )}
@@ -118,8 +108,7 @@ export function FormField({
         <label
           className={cx(
             labelClass,
-            grouped &&
-              "ml-0 transition-colors group-focus-within/form:text-blue-600",
+            grouped && "ml-0 transition-colors group-focus-within/form:text-blue-600",
           )}
           htmlFor={htmlFor}
         >
@@ -127,13 +116,10 @@ export function FormField({
         </label>
         <div className="flex shrink-0 items-center gap-1.5">
           {readOnly && (
-            <LockKeyhole
-              className="h-3.5 w-3.5 text-on-surface-variant"
-              aria-hidden="true"
-            />
+            <LockKeyhole className="text-on-surface-variant h-3.5 w-3.5" aria-hidden="true" />
           )}
           {adornment && (
-            <span className="text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/75">
+            <span className="text-on-surface-variant/75 text-[8px] font-bold tracking-wide uppercase">
               {adornment}
             </span>
           )}
@@ -200,16 +186,14 @@ export function TextInput({
       className={cx(
         grouped
           ? "flex min-h-8 w-full min-w-0 items-center gap-2 border-0 bg-transparent px-0 focus-within:ring-0"
-          : "flex min-h-12 w-full min-w-0 items-center gap-2 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15",
+          : "border-outline-variant/35 bg-surface-container-lowest flex min-h-12 w-full min-w-0 items-center gap-2 rounded-full border px-5 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15",
         disabled && "opacity-55",
         readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
         className,
       )}
     >
       {prefix && (
-        <span className="shrink-0 text-xs font-bold text-on-surface-variant">
-          {prefix}
-        </span>
+        <span className="text-on-surface-variant shrink-0 text-xs font-bold">{prefix}</span>
       )}
       <input
         id={id}
@@ -227,12 +211,10 @@ export function TextInput({
         readOnly={readOnly}
         required={required}
         inputMode={inputMode}
-        className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-on-surface caret-blue-500 outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed"
+        className="text-on-surface placeholder:text-on-surface-variant/55 min-w-0 flex-1 bg-transparent text-sm font-semibold caret-blue-500 outline-none disabled:cursor-not-allowed"
       />
       {suffix && (
-        <span className="shrink-0 text-xs font-bold text-on-surface-variant">
-          {suffix}
-        </span>
+        <span className="text-on-surface-variant shrink-0 text-xs font-bold">{suffix}</span>
       )}
     </div>
   );
@@ -287,10 +269,10 @@ export function Textarea({
       aria-invalid={ariaInvalid}
       className={cx(
         grouped
-          ? "min-h-20 w-full min-w-0 resize-none border-0 bg-transparent px-0 py-1 text-sm font-semibold leading-5 text-on-surface caret-blue-500 outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed disabled:opacity-55"
+          ? "text-on-surface placeholder:text-on-surface-variant/55 min-h-20 w-full min-w-0 resize-none border-0 bg-transparent px-0 py-1 text-sm leading-5 font-semibold caret-blue-500 outline-none disabled:cursor-not-allowed disabled:opacity-55"
           : cx(
               controlClass,
-              "min-h-24 resize-none rounded-2xl bg-surface-container-lowest py-3 placeholder:text-on-surface-variant/55 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15",
+              "bg-surface-container-lowest placeholder:text-on-surface-variant/55 min-h-24 resize-none rounded-2xl py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15",
             ),
         readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
         className,
@@ -401,7 +383,7 @@ export function MoneyInput({
         aria-describedby={ariaDescribedBy}
       />
       {showPreview && (
-        <p className="financial-amount font-mono text-[10px] text-on-surface-variant [overflow-wrap:anywhere]">
+        <p className="financial-amount text-on-surface-variant font-mono text-[10px] wrap-anywhere">
           Rp {numeric.toLocaleString("id-ID")}
         </p>
       )}
@@ -437,15 +419,15 @@ export function QuantityStepper({
       className={cx(
         "grid grid-cols-[44px_1fr_44px] overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/15",
         grouped
-          ? "min-h-10 rounded-full bg-surface-container-low"
-          : "min-h-12 rounded-full border border-outline-variant/35 bg-surface-container-lowest",
+          ? "bg-surface-container-low min-h-10 rounded-full"
+          : "border-outline-variant/35 bg-surface-container-lowest min-h-12 rounded-full border",
       )}
     >
       <button
         type="button"
         disabled={disabled || Number(value || 0) <= min}
         onClick={() => adjust(-step)}
-        className="flex items-center justify-center border-r border-outline-variant/25 text-on-surface-variant transition active:scale-95 disabled:opacity-35"
+        className="border-outline-variant/25 text-on-surface-variant flex items-center justify-center border-r transition active:scale-95 disabled:opacity-35"
       >
         <Minus className="h-4 w-4" />
       </button>
@@ -455,19 +437,17 @@ export function QuantityStepper({
           disabled={disabled}
           inputMode="decimal"
           onChange={(event) => onChange(decimalValue(event.target.value))}
-          className="min-w-0 flex-1 bg-transparent text-center font-mono text-sm font-bold text-on-surface outline-none tabular-nums"
+          className="text-on-surface min-w-0 flex-1 bg-transparent text-center font-mono text-sm font-bold tabular-nums outline-none"
         />
         {unit && (
-          <span className="shrink-0 text-[10px] font-bold text-on-surface-variant">
-            {unit}
-          </span>
+          <span className="text-on-surface-variant shrink-0 text-[10px] font-bold">{unit}</span>
         )}
       </div>
       <button
         type="button"
         disabled={disabled}
         onClick={() => adjust(step)}
-        className="flex items-center justify-center border-l border-outline-variant/25 text-on-surface-variant transition active:scale-95 disabled:opacity-35"
+        className="border-outline-variant/25 text-on-surface-variant flex items-center justify-center border-l transition active:scale-95 disabled:opacity-35"
       >
         <Plus className="h-4 w-4" />
       </button>
@@ -497,7 +477,7 @@ export function ChoiceRow({
       aria-pressed={checked}
       className={cx(
         grouped
-          ? "flex min-h-14 w-full items-center gap-3 bg-surface-container-lowest px-4 py-3 text-left transition active:bg-surface-container-low disabled:opacity-45"
+          ? "bg-surface-container-lowest active:bg-surface-container-low flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition disabled:opacity-45"
           : "flex min-h-12 w-full items-center gap-3 rounded-full border px-5 py-3 text-left transition active:scale-[0.99] disabled:opacity-45",
         checked
           ? grouped
@@ -511,9 +491,7 @@ export function ChoiceRow({
       <span
         className={cx(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
-          checked
-            ? "border-blue-500 bg-blue-500 text-white"
-            : "border-outline-variant bg-surface",
+          checked ? "border-blue-500 bg-blue-500 text-white" : "border-outline-variant bg-surface",
         )}
       >
         {checked && <Check className="h-3 w-3" />}
@@ -521,7 +499,7 @@ export function ChoiceRow({
       <span className="min-w-0 flex-1">
         <span className="block truncate text-xs font-bold">{title}</span>
         {description && (
-          <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
+          <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-4">
             {description}
           </span>
         )}
@@ -547,15 +525,13 @@ export function SwitchRow({
     <div
       className={cx(
         "flex items-center justify-between gap-4 bg-white transition-opacity",
-        disabled && "opacity-45 pointer-events-none",
+        disabled && "pointer-events-none opacity-45",
       )}
     >
       <div className="min-w-0 flex-1 text-left">
-        <span className="block text-[13px] font-bold text-on-surface">
-          {title}
-        </span>
+        <span className="text-on-surface block text-[13px] font-bold">{title}</span>
         {description && (
-          <span className="mt-0.5 block text-[10px] leading-relaxed text-on-surface-variant">
+          <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-relaxed">
             {description}
           </span>
         )}
@@ -565,13 +541,13 @@ export function SwitchRow({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cx(
-          "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+          "focus-visible:outline-primary relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
           checked ? "bg-emerald-500" : "bg-surface-container-high",
         )}
       >
         <motion.span
           transition={transitionSpringBouncy}
-          className="absolute left-0.5 top-0.5 block h-5 w-5 rounded-full bg-white shadow-sm"
+          className="absolute top-0.5 left-0.5 block h-5 w-5 rounded-full bg-white shadow-sm"
           animate={{ x: checked ? 20 : 0 }}
         />
       </button>

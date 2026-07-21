@@ -50,36 +50,27 @@ export function RapSetupPanel({
   readonly canEditRap: boolean;
   readonly openAddRapForm: () => void;
   readonly setRapDetailItemId: (id: string | null) => void;
-  readonly handleAdvanceRapSetup: (
-    stage: "TUKANG" | "SUBCON" | "REVIEW",
-  ) => void;
+  readonly handleAdvanceRapSetup: (stage: "TUKANG" | "SUBCON" | "REVIEW") => void;
   readonly tukangPlanItems: readonly ProjectCategoryPlanItemView[];
   readonly subconPlanItems: readonly ProjectCategoryPlanItemView[];
   readonly canEditCategoryPlan: boolean;
   readonly openAddCategoryPlanForm: (category: "TUKANG" | "SUBCON") => void;
   readonly setPackageDetailItemId: (id: string | null) => void;
-  readonly handleScopeSkip: (
-    categoryCode: "TUKANG" | "SUBCON",
-    skipped: boolean,
-  ) => void;
+  readonly handleScopeSkip: (categoryCode: "TUKANG" | "SUBCON", skipped: boolean) => void;
   readonly canFinalizeRap: boolean;
   readonly handleFinalizeInternalPlan: () => void;
 }): React.JSX.Element {
   return (
     <>
-      <section className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+            <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
               Setup rencana internal
             </p>
-            <p className="text-sm font-bold">
-              {getRapSetupStageLabel(activeRapStage)}
-            </p>
+            <p className="text-sm font-bold">{getRapSetupStageLabel(activeRapStage)}</p>
           </div>
-          <Badge status="DRAFT">
-            Tahap {getRapSetupStageNumber(activeRapStage)} / 4
-          </Badge>
+          <Badge status="DRAFT">Tahap {getRapSetupStageNumber(activeRapStage)} / 4</Badge>
         </div>
         <SegmentedTabs
           value={activeRapStage}

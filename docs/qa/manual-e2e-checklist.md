@@ -3,6 +3,7 @@
 Use this checklist before deploy or after large refactors. Focus on proving the main business workflows still work end to end.
 
 ## Test Setup
+
 - [ ] Run `bun run lint`.
 - [ ] Run `bun run build`.
 - [ ] Start the app locally.
@@ -33,6 +34,7 @@ Use this gate for every new page or substantial visual rework. Dashboard (`/ledg
 - [ ] Confirm the result does not repeat identical cards, progress bars, pills, or decorative patterns across unrelated sections.
 
 ## 1. Login And Role Access
+
 - [ ] Login as Owner.
 - [ ] Confirm Owner can access dashboard, projects, expenses, ledger/approvals, materials, and settings.
 - [ ] Login as Finance Admin.
@@ -44,6 +46,7 @@ Use this gate for every new page or substantial visual rework. Dashboard (`/ledg
 - [ ] Confirm unauthorized pages/actions are not exposed for each role.
 
 ## 2. Project Create/Edit Flow
+
 - [ ] Open `/projects`.
 - [ ] Click create project.
 - [ ] Create `QA Test Project - 2026-07-02`.
@@ -59,11 +62,13 @@ Use this gate for every new page or substantial visual rework. Dashboard (`/ledg
 - [ ] Refresh page and confirm edited values persist.
 
 Expected result:
+
 - [ ] Project is created without errors.
 - [ ] Initial budget/category setup is available.
 - [ ] Project detail route works and does not break tabs.
 
 ## 3. RAP/RAB Project Detail Flow
+
 - [ ] Open the QA project detail page.
 - [ ] Open RAP/RAB or planning tab.
 - [ ] Create RAP draft.
@@ -79,12 +84,14 @@ Expected result:
 - [ ] Approve RAB.
 
 Expected result:
+
 - [ ] RAP moves from draft/setup into locked/finalized state.
 - [ ] RAB is generated without exposing internal notes.
 - [ ] Approved RAB updates project contract value/budget context.
 - [ ] Project tabs still load after approval.
 
 ## 4. Field Expense / Claim Flow
+
 - [ ] Open `/expenses` or open expense drawer from the QA project detail page.
 - [ ] Select the QA project.
 - [ ] Add one manual expense line.
@@ -99,18 +106,21 @@ Expected result:
 - [ ] Pay/disburse the expense.
 
 Optional receipt OCR:
+
 - [ ] Upload receipt image.
 - [ ] Confirm OCR fills expense lines or shows a clear warning.
 - [ ] Manually adjust unmatched lines.
 - [ ] Submit successfully.
 
 Expected result:
+
 - [ ] Status transitions work: `SUBMITTED -> VERIFIED/APPROVED -> PAID`.
 - [ ] Receipt lightbox opens if receipt exists.
 - [ ] Budget/category usage updates after verify/pay.
 - [ ] Dashboard/expense list reflects the paid state.
 
 ## 5. Vendor Bill Flow
+
 - [ ] Open `/expenses`.
 - [ ] Switch to Vendor Bills.
 - [ ] Create a vendor bill for the QA project.
@@ -122,11 +132,13 @@ Expected result:
 - [ ] Pay vendor bill from a bank account.
 
 Expected result:
+
 - [ ] Vendor bill is visible in Finance Inbox.
 - [ ] Payment status updates correctly.
 - [ ] Ledger/cash due view reflects the vendor bill state.
 
 ## 6. Material / Inventory Flow
+
 - [ ] Open `/materials`.
 - [ ] Confirm material control center loads.
 - [ ] Record stock in / goods receipt for a material.
@@ -141,12 +153,14 @@ Expected result:
 - [ ] Confirm stock decreases and note is stored.
 
 Expected result:
+
 - [ ] Every stock-changing action succeeds only with explicit action.
 - [ ] Stock movement history is created.
 - [ ] No cash transaction is created directly by stock reservation/use.
 - [ ] Material usage remains linked to Material budget category only.
 
 ## 7. Finance Dashboard / Ledger Smoke Test
+
 - [ ] Open `/ledger`.
 - [ ] Confirm overview dashboard loads without blank sections.
 - [ ] Check financial position, freshness/partial state, ranked priorities, project risk, nearest due documents, material attention, and recent cash preview.
@@ -159,12 +173,14 @@ Expected result:
 - [ ] Confirm no AI CFO menu, card, `brief=true` page, or daily briefing endpoint remains; AI OCR still works.
 
 Expected result:
+
 - [ ] Dashboard numbers are plausible after QA actions.
 - [ ] Links from dashboard cards go to valid pages.
 - [ ] Tabs and amounts remain readable at 320, 390, and 430px; bottom navigation does not cover actions.
 - [ ] No console/runtime errors appear.
 
 ## 8. Settings Smoke Test
+
 - [ ] Open `/settings`.
 - [ ] Open Budget settings.
 - [ ] Change a non-critical note/name value, then save.
@@ -176,11 +192,13 @@ Expected result:
 - [ ] Create or edit one material/category setting.
 
 Expected result:
+
 - [ ] Settings save successfully.
 - [ ] Settings remain the source of truth for budget allocation, expense categories, item library, and material master.
 - [ ] No environment variables or schema changes are required.
 
 ## 9. Navigation And Mobile Shell
+
 - [ ] Test bottom navigation on mobile viewport.
 - [ ] Confirm nav items match role.
 - [ ] Open quick action FAB.
@@ -189,6 +207,7 @@ Expected result:
 - [ ] Confirm back/close behavior returns to a usable URL.
 
 ## 10. Final Regression Checks
+
 - [ ] Refresh every major page once: `/projects`, project detail, `/expenses`, `/materials`, `/ledger`, `/settings`.
 - [ ] Confirm no blank screens.
 - [ ] Confirm no broken image/upload states.
@@ -198,6 +217,7 @@ Expected result:
 - [ ] Re-run `bun run build`.
 
 ## QA Notes Template
+
 Use this for every issue found.
 
 ```txt
@@ -214,7 +234,9 @@ Severity: Low / Medium / High / Blocker
 ```
 
 ## Deploy Gate
+
 Do not deploy until these are true:
+
 - [ ] `bun run lint` passes.
 - [ ] `bun run build` passes.
 - [ ] Login works.

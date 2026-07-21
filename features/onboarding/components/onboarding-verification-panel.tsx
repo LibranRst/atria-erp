@@ -7,10 +7,7 @@ import type {
   OnboardingStepStatus,
   OnboardingVerificationSnapshot,
 } from "@/lib/onboarding/owner-onboarding";
-import {
-  transitionEaseSmooth,
-  transitionSpringSnappy,
-} from "@/lib/utils/motion";
+import { transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
 
 type VerificationPresentation = {
   readonly icon: string;
@@ -18,9 +15,7 @@ type VerificationPresentation = {
   readonly className: string;
 };
 
-function verificationPresentation(
-  status: OnboardingStepStatus,
-): VerificationPresentation {
+function verificationPresentation(status: OnboardingStepStatus): VerificationPresentation {
   if (status === "READY" || status === "NOT_APPLICABLE") {
     return {
       icon: "verified",
@@ -63,9 +58,7 @@ export function OnboardingVerificationPanel({
   const contentId = `verification-content-${snapshot.kind}`;
   const technicalId = `verification-technical-${snapshot.kind}`;
   const presentation = verificationPresentation(snapshot.status);
-  const disclosureTransition = reduceMotion
-    ? { duration: 0 }
-    : transitionEaseSmooth;
+  const disclosureTransition = reduceMotion ? { duration: 0 } : transitionEaseSmooth;
 
   function toggleExpanded(): void {
     if (expanded) setTechnicalOpen(false);
@@ -84,21 +77,19 @@ export function OnboardingVerificationPanel({
         transition={transitionSpringSnappy}
         aria-expanded={expanded}
         aria-controls={contentId}
-        className="flex min-h-[68px] w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/30"
+        className="focus-visible:ring-primary/30 flex min-h-[68px] w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset"
       >
         <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant"
+          className="bg-surface-container-low text-on-surface-variant flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]"
           aria-hidden="true"
         >
-          <span className="material-symbols-outlined text-[18px]">
-            fact_check
-          </span>
+          <span className="material-symbols-outlined text-[18px]">fact_check</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[12px] font-bold leading-5 text-on-surface">
+          <span className="text-on-surface block text-[12px] leading-5 font-bold">
             Verifikasi data
           </span>
-          <span className="block truncate text-[9px] leading-4 text-on-surface-variant">
+          <span className="text-on-surface-variant block truncate text-[9px] leading-4">
             {snapshot.title} · {snapshot.facts.length} fakta
           </span>
           <span className="sr-only">{presentation.label}.</span>
@@ -107,10 +98,7 @@ export function OnboardingVerificationPanel({
           aria-hidden="true"
           className={`hidden shrink-0 items-center gap-1 text-[9px] font-bold min-[350px]:flex ${presentation.className}`}
         >
-          <span
-            className="material-symbols-outlined text-[14px]"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
             {presentation.icon}
           </span>
           {presentation.label}
@@ -118,7 +106,7 @@ export function OnboardingVerificationPanel({
         <motion.span
           animate={{ rotate: expanded ? 180 : 0 }}
           transition={reduceMotion ? { duration: 0 } : transitionSpringSnappy}
-          className="material-symbols-outlined shrink-0 text-[19px] text-on-surface-variant"
+          className="material-symbols-outlined text-on-surface-variant shrink-0 text-[19px]"
           aria-hidden="true"
         >
           expand_more
@@ -133,9 +121,9 @@ export function OnboardingVerificationPanel({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={disclosureTransition}
-            className="overflow-hidden border-t border-outline-variant/20"
+            className="border-outline-variant/20 overflow-hidden border-t"
           >
-            <div className="divide-y divide-outline-variant/20">
+            <div className="divide-outline-variant/20 divide-y">
               {snapshot.facts.length > 0 ? (
                 snapshot.facts.map((fact, index) => (
                   <div
@@ -143,28 +131,28 @@ export function OnboardingVerificationPanel({
                     className="flex min-h-[58px] items-center justify-between gap-3 px-4 py-3"
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[10px] font-semibold text-on-surface-variant">
+                      <span className="text-on-surface-variant block text-[10px] font-semibold">
                         {fact.label}
                       </span>
                       {fact.detail ? (
-                        <span className="mt-0.5 block text-[9px] leading-4 text-on-surface-variant/75">
+                        <span className="text-on-surface-variant/75 mt-0.5 block text-[9px] leading-4">
                           {fact.detail}
                         </span>
                       ) : null}
                     </span>
-                    <span className="max-w-[48%] break-words text-right text-[11px] font-bold tabular-nums text-on-surface">
+                    <span className="text-on-surface max-w-[48%] text-right text-[11px] font-bold wrap-break-word tabular-nums">
                       {fact.value}
                     </span>
                   </div>
                 ))
               ) : (
-                <div className="px-4 py-4 text-[10px] leading-5 text-on-surface-variant">
+                <div className="text-on-surface-variant px-4 py-4 text-[10px] leading-5">
                   Belum ada record aktual pada step ini.
                 </div>
               )}
             </div>
 
-            <div className="border-t border-outline-variant/20 bg-white px-4 py-2">
+            <div className="border-outline-variant/20 border-t bg-white px-4 py-2">
               {snapshot.technical?.length ? (
                 <>
                   <button
@@ -172,23 +160,21 @@ export function OnboardingVerificationPanel({
                     onClick={() => setTechnicalOpen((current) => !current)}
                     aria-expanded={technicalOpen}
                     aria-controls={technicalId}
-                    className="flex min-h-12 w-full items-center gap-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="focus-visible:ring-primary/30 flex min-h-12 w-full items-center gap-2 text-left outline-none focus-visible:ring-2"
                   >
                     <span
-                      className="material-symbols-outlined text-[16px] text-on-surface-variant"
+                      className="material-symbols-outlined text-on-surface-variant text-[16px]"
                       aria-hidden="true"
                     >
                       code
                     </span>
-                    <span className="min-w-0 flex-1 text-[10px] font-bold text-on-surface-variant">
+                    <span className="text-on-surface-variant min-w-0 flex-1 text-[10px] font-bold">
                       Detail teknis developer
                     </span>
                     <motion.span
                       animate={{ rotate: technicalOpen ? 180 : 0 }}
-                      transition={
-                        reduceMotion ? { duration: 0 } : transitionSpringSnappy
-                      }
-                      className="material-symbols-outlined text-[17px] text-on-surface-variant"
+                      transition={reduceMotion ? { duration: 0 } : transitionSpringSnappy}
+                      className="material-symbols-outlined text-on-surface-variant text-[17px]"
                       aria-hidden="true"
                     >
                       expand_more
@@ -205,20 +191,20 @@ export function OnboardingVerificationPanel({
                         className="overflow-hidden"
                       >
                         <div className="mb-1 overflow-hidden rounded-[18px] bg-white ring-1 ring-black/[0.035]">
-                          <div className="divide-y divide-outline-variant/20">
+                          <div className="divide-outline-variant/20 divide-y">
                             {snapshot.technical.map((fact, index) => (
                               <div
                                 key={`${fact.label}-${fact.value}-${index}`}
                                 className="px-3.5 py-3"
                               >
-                                <p className="text-[9px] font-semibold text-on-surface-variant">
+                                <p className="text-on-surface-variant text-[9px] font-semibold">
                                   {fact.label}
                                 </p>
-                                <p className="mt-1 break-all font-mono text-[9px] text-on-surface">
+                                <p className="text-on-surface mt-1 font-mono text-[9px] break-all">
                                   {fact.value}
                                 </p>
                                 {fact.detail ? (
-                                  <p className="mt-1 break-all font-mono text-[8px] text-on-surface-variant">
+                                  <p className="text-on-surface-variant mt-1 font-mono text-[8px] break-all">
                                     {fact.detail}
                                   </p>
                                 ) : null}
@@ -231,11 +217,8 @@ export function OnboardingVerificationPanel({
                   </AnimatePresence>
                 </>
               ) : (
-                <div className="flex min-h-10 items-center gap-2 text-[9px] font-semibold text-on-surface-variant">
-                  <span
-                    className="material-symbols-outlined text-[15px]"
-                    aria-hidden="true"
-                  >
+                <div className="text-on-surface-variant flex min-h-10 items-center gap-2 text-[9px] font-semibold">
+                  <span className="material-symbols-outlined text-[15px]" aria-hidden="true">
                     database
                   </span>
                   Dibaca langsung dari database

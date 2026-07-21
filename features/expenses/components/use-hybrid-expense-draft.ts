@@ -2,10 +2,7 @@
 
 import React from "react";
 
-import {
-  saveExpenseDraft,
-  type ExpenseDraftRecord,
-} from "@/app/actions/finance/expense-drafts";
+import { saveExpenseDraft, type ExpenseDraftRecord } from "@/app/actions/finance/expense-drafts";
 import type { ExpenseDraftPayload } from "@/features/expenses/components/expense-form-types";
 import { expenseDraftPayloadSchema } from "@/lib/validations/expense-draft";
 
@@ -13,13 +10,7 @@ const LOCAL_KEY_PREFIX = "atria:expense-draft";
 const AUTOSAVE_DELAY_MS = 1_200;
 
 export type ExpenseDraftSyncStatus =
-  | "idle"
-  | "dirty"
-  | "saving"
-  | "saved"
-  | "offline"
-  | "conflict"
-  | "error";
+  "idle" | "dirty" | "saving" | "saved" | "offline" | "conflict" | "error";
 
 type LocalExpenseRecovery = {
   readonly payload: ExpenseDraftPayload;
@@ -52,9 +43,7 @@ export function parseLocalExpenseRecovery(raw: string): LocalExpenseRecovery | n
       draftId: typeof candidate.draftId === "string" ? candidate.draftId : null,
       revision: typeof candidate.revision === "number" ? candidate.revision : null,
       changedAt:
-        typeof candidate.changedAt === "string"
-          ? candidate.changedAt
-          : new Date(0).toISOString(),
+        typeof candidate.changedAt === "string" ? candidate.changedAt : new Date(0).toISOString(),
     };
   } catch {
     return null;
@@ -96,9 +85,7 @@ export function useHybridExpenseDraft(
   readonly errorMessage: string | null;
   readonly isDirty: boolean;
   readonly updatePayload: (
-    update:
-      | ExpenseDraftPayload
-      | ((current: ExpenseDraftPayload) => ExpenseDraftPayload),
+    update: ExpenseDraftPayload | ((current: ExpenseDraftPayload) => ExpenseDraftPayload),
   ) => void;
   readonly hydrate: (record: ExpenseDraftRecord) => void;
   readonly reset: (payload: ExpenseDraftPayload) => void;
@@ -113,15 +100,9 @@ export function useHybridExpenseDraft(
   const [payload, setPayload] = React.useState<ExpenseDraftPayload>(
     () => recovered?.payload ?? initialPayload,
   );
-  const [draftId, setDraftId] = React.useState<string | null>(
-    recovered?.draftId ?? null,
-  );
-  const [revision, setRevision] = React.useState<number | null>(
-    recovered?.revision ?? null,
-  );
-  const [status, setStatus] = React.useState<ExpenseDraftSyncStatus>(
-    recovered ? "dirty" : "idle",
-  );
+  const [draftId, setDraftId] = React.useState<string | null>(recovered?.draftId ?? null);
+  const [revision, setRevision] = React.useState<number | null>(recovered?.revision ?? null);
+  const [status, setStatus] = React.useState<ExpenseDraftSyncStatus>(recovered ? "dirty" : "idle");
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [dirty, setDirty] = React.useState(Boolean(recovered));
   const payloadRef = React.useRef(payload);
@@ -152,12 +133,9 @@ export function useHybridExpenseDraft(
 
   const updatePayload = React.useCallback(
     (
-      update:
-        | ExpenseDraftPayload
-        | ((current: ExpenseDraftPayload) => ExpenseDraftPayload),
+      update: ExpenseDraftPayload | ((current: ExpenseDraftPayload) => ExpenseDraftPayload),
     ): void => {
-      const nextPayload =
-        typeof update === "function" ? update(payloadRef.current) : update;
+      const nextPayload = typeof update === "function" ? update(payloadRef.current) : update;
       payloadRef.current = nextPayload;
       setPayload(nextPayload);
       changeVersionRef.current += 1;
@@ -230,14 +208,8 @@ export function useHybridExpenseDraft(
     [persistLocal],
   );
 
-  const saveNow = React.useCallback(
-    (): Promise<SaveResult> => performSave(false),
-    [performSave],
-  );
-  const saveAsCopy = React.useCallback(
-    (): Promise<SaveResult> => performSave(true),
-    [performSave],
-  );
+  const saveNow = React.useCallback((): Promise<SaveResult> => performSave(false), [performSave]);
+  const saveAsCopy = React.useCallback((): Promise<SaveResult> => performSave(true), [performSave]);
 
   const hydrate = React.useCallback(
     (record: ExpenseDraftRecord): void => {
@@ -269,26 +241,23 @@ export function useHybridExpenseDraft(
     setErrorMessage(null);
   }, []);
 
-  const reset = React.useCallback(
-    (nextPayload: ExpenseDraftPayload): void => {
-      if (typeof window !== "undefined") {
-        window.localStorage.removeItem(storageKey(draftIdRef.current));
-        window.localStorage.removeItem(storageKey(null));
-      }
-      payloadRef.current = nextPayload;
-      draftIdRef.current = null;
-      revisionRef.current = null;
-      changeVersionRef.current = 0;
-      savedVersionRef.current = 0;
-      setPayload(nextPayload);
-      setDraftId(null);
-      setRevision(null);
-      setStatus("idle");
-      setDirty(false);
-      setErrorMessage(null);
-    },
-    [],
-  );
+  const reset = React.useCallback((nextPayload: ExpenseDraftPayload): void => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(storageKey(draftIdRef.current));
+      window.localStorage.removeItem(storageKey(null));
+    }
+    payloadRef.current = nextPayload;
+    draftIdRef.current = null;
+    revisionRef.current = null;
+    changeVersionRef.current = 0;
+    savedVersionRef.current = 0;
+    setPayload(nextPayload);
+    setDraftId(null);
+    setRevision(null);
+    setStatus("idle");
+    setDirty(false);
+    setErrorMessage(null);
+  }, []);
 
   React.useEffect(() => {
     if (status !== "dirty") return undefined;

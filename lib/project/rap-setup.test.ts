@@ -10,14 +10,22 @@ describe("guided RAP setup", () => {
   });
 
   test("requires ready packages or an explicit skip", () => {
-    expect(() => assertRapCategoryReady([{ categoryCode: "TUKANG", status: "ACTIVE" }], "TUKANG", false)).not.toThrow();
-    expect(() => assertRapCategoryReady([{ categoryCode: "TUKANG", status: "DRAFT" }], "TUKANG", false)).toThrow();
+    expect(() =>
+      assertRapCategoryReady([{ categoryCode: "TUKANG", status: "ACTIVE" }], "TUKANG", false),
+    ).not.toThrow();
+    expect(() =>
+      assertRapCategoryReady([{ categoryCode: "TUKANG", status: "DRAFT" }], "TUKANG", false),
+    ).toThrow();
     expect(() => assertRapCategoryReady([], "TUKANG", false)).toThrow();
     expect(() => assertRapCategoryReady([], "TUKANG", true)).not.toThrow();
   });
 
   test("does not allow skipping a category that still has live packages", () => {
-    expect(() => assertRapCategoryReady([{ categoryCode: "SUBCON", status: "ACTIVE" }], "SUBCON", true)).toThrow();
-    expect(() => assertRapCategoryReady([{ categoryCode: "SUBCON", status: "CANCELLED" }], "SUBCON", true)).not.toThrow();
+    expect(() =>
+      assertRapCategoryReady([{ categoryCode: "SUBCON", status: "ACTIVE" }], "SUBCON", true),
+    ).toThrow();
+    expect(() =>
+      assertRapCategoryReady([{ categoryCode: "SUBCON", status: "CANCELLED" }], "SUBCON", true),
+    ).not.toThrow();
   });
 });

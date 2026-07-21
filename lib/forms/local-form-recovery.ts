@@ -30,9 +30,7 @@ export function parseLocalFormRecovery<TPayload>({
     return {
       schemaVersion,
       changedAt:
-        typeof candidate.changedAt === "string"
-          ? candidate.changedAt
-          : new Date(0).toISOString(),
+        typeof candidate.changedAt === "string" ? candidate.changedAt : new Date(0).toISOString(),
       payload: parsed.data,
     };
   } catch {

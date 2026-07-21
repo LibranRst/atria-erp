@@ -6,11 +6,7 @@ import React from "react";
 import { toast } from "sonner";
 
 import { changeTemporaryPassword } from "@/app/actions/administration";
-import {
-  FormField,
-  FormSection,
-  TextInput,
-} from "@/components/ui/form-controls";
+import { FormField, FormSection, TextInput } from "@/components/ui/form-controls";
 import { authClient } from "@/lib/auth-client";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
@@ -19,14 +15,10 @@ export function TemporaryPasswordForm(): React.JSX.Element {
   const [pending, setPending] = React.useState(false);
   const [currentPassword, setCurrentPassword] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
-  async function submit(
-    event: React.FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  async function submit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const submittedCurrentPassword = String(
-      formData.get("currentPassword") ?? "",
-    );
+    const submittedCurrentPassword = String(formData.get("currentPassword") ?? "");
     const submittedNewPassword = String(formData.get("newPassword") ?? "");
     setPending(true);
     const result = await changeTemporaryPassword({
@@ -46,13 +38,11 @@ export function TemporaryPasswordForm(): React.JSX.Element {
   return (
     <section className="flex min-h-[calc(100dvh-3rem)] flex-col justify-center py-6">
       <header className="mb-5">
-        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-primary">
+        <p className="text-primary text-[9px] font-bold tracking-[0.16em] uppercase">
           Keamanan akun
         </p>
-        <h1 className="mt-1 text-[25px] font-bold tracking-[-0.025em]">
-          Ganti password sementara
-        </h1>
-        <p className="mt-2 text-[12px] leading-5 text-on-surface-variant">
+        <h1 className="mt-1 text-[25px] font-bold tracking-tight">Ganti password sementara</h1>
+        <p className="text-on-surface-variant mt-2 text-[12px] leading-5">
           Buat password pribadi sebelum mengakses data operasional.
         </p>
       </header>
@@ -97,7 +87,7 @@ export function TemporaryPasswordForm(): React.JSX.Element {
               disabled={pending}
               whileTap={pending ? undefined : { scale: 0.97 }}
               transition={transitionSpringSnappy}
-              className="min-h-12 w-full rounded-full bg-primary text-sm font-bold text-white disabled:opacity-50"
+              className="bg-primary min-h-12 w-full rounded-full text-sm font-bold text-white disabled:opacity-50"
             >
               {pending ? "Menyimpan…" : "Simpan password baru"}
             </motion.button>

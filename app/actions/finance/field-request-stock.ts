@@ -6,11 +6,7 @@ import { db } from "@/db";
 import { auditLog, materialInventory, stockMovement } from "@/db/schema";
 
 export type FieldRequestTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-export type StockHandling =
-  | "EXPENSE_ONLY"
-  | "STOCK_IN"
-  | "DIRECT_USE"
-  | "RESERVE_FOR_PROJECT";
+export type StockHandling = "EXPENSE_ONLY" | "STOCK_IN" | "DIRECT_USE" | "RESERVE_FOR_PROJECT";
 
 function toDecimal(value: number): string {
   return value.toFixed(2);

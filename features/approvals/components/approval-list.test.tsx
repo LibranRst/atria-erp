@@ -14,9 +14,7 @@ import type {
   InventoryOpeningApprovalDetail,
 } from "@/lib/finance/approval-types";
 
-function approvalItem(
-  overrides: Partial<FinanceApprovalDetail> = {},
-): ApprovalDetail {
+function approvalItem(overrides: Partial<FinanceApprovalDetail> = {}): ApprovalDetail {
   return {
     id: "approval-1",
     createdAt: new Date("2026-07-15T08:00:00+07:00"),
@@ -94,20 +92,14 @@ describe("Approval decision queue presentation", () => {
       now,
     );
 
-    expect(groups.map((group) => group.label)).toEqual([
-      "Hari ini",
-      "Kemarin",
-      "Lebih lama",
-    ]);
+    expect(groups.map((group) => group.label)).toEqual(["Hari ini", "Kemarin", "Lebih lama"]);
     expect(groups.map((group) => group.items.length)).toEqual([1, 1, 1]);
   });
 
   test("derives critical presentation from the post-approval budget", () => {
     expect(approvalIsCritical(approvalItem())).toBe(false);
     expect(approvalIsCritical(approvalItem({ amount: 5_000_000 }))).toBe(true);
-    expect(approvalIsCritical(approvalItem({ priority: "CRITICAL" }))).toBe(
-      true,
-    );
+    expect(approvalIsCritical(approvalItem({ priority: "CRITICAL" }))).toBe(true);
   });
 
   test("uses a route-specific skeleton matching summary, filters, and grouped rows", () => {
@@ -144,10 +136,7 @@ describe("Approval decision queue presentation", () => {
     const openingApproval = openingApprovalItem();
 
     const html = renderToStaticMarkup(
-      <ApprovalDetailContent
-        item={openingApproval}
-        onOpenReceipt={() => undefined}
-      />,
+      <ApprovalDetailContent item={openingApproval} onOpenReceipt={() => undefined} />,
     );
 
     expect(html).toContain("Item stok fisik");

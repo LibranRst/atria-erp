@@ -17,9 +17,18 @@ function payment(status: string, approvalStatus?: string): VendorListPayment {
 
 describe("vendor payment presentation", () => {
   test("only an approved pending payment can be disbursed", () => {
-    expect(getVendorPaymentPresentation(payment("PENDING", "APPROVED"))).toMatchObject({ label: "Siap Cair", canDisburse: true });
+    expect(getVendorPaymentPresentation(payment("PENDING", "APPROVED"))).toMatchObject({
+      label: "Siap Cair",
+      canDisburse: true,
+    });
     expect(getVendorPaymentPresentation(payment("PROCESSING", "APPROVED")).canDisburse).toBe(false);
-    expect(getVendorPaymentPresentation(payment("FAILED", "APPROVED"))).toMatchObject({ label: "Gagal Cair", canDisburse: false });
-    expect(getVendorPaymentPresentation(payment("COMPLETED", "APPROVED"))).toMatchObject({ label: "Selesai Cair", canDisburse: false });
+    expect(getVendorPaymentPresentation(payment("FAILED", "APPROVED"))).toMatchObject({
+      label: "Gagal Cair",
+      canDisburse: false,
+    });
+    expect(getVendorPaymentPresentation(payment("COMPLETED", "APPROVED"))).toMatchObject({
+      label: "Selesai Cair",
+      canDisburse: false,
+    });
   });
 });

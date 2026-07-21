@@ -33,23 +33,20 @@ export function buildGoodsReceiptBillPrefill(
   bill: GoodsReceiptVendorBillOption,
 ): GoodsReceiptBillPrefill {
   const note = bill.notes?.trim() ?? "";
-  const quantity = bill.remainingQuantity && bill.remainingQuantity > 0
-    ? bill.remainingQuantity
-    : bill.rapItemQuantity && bill.rapItemQuantity > 0
-      ? bill.rapItemQuantity
-      : 1;
+  const quantity =
+    bill.remainingQuantity && bill.remainingQuantity > 0
+      ? bill.remainingQuantity
+      : bill.rapItemQuantity && bill.rapItemQuantity > 0
+        ? bill.rapItemQuantity
+        : 1;
   const remainingAmount = bill.remainingAmount ?? bill.amount;
-  const unitCost = quantity > 0
-    ? remainingAmount / quantity
-    : bill.rapItemUnitCost ?? 0;
+  const unitCost = quantity > 0 ? remainingAmount / quantity : (bill.rapItemUnitCost ?? 0);
   return {
     projectId: bill.projectId,
-    receiptNote: note
-      ? `Tagihan ${bill.name} · ${note}`
-      : `Penerimaan untuk tagihan ${bill.name}`,
+    receiptNote: note ? `Tagihan ${bill.name} · ${note}` : `Penerimaan untuk tagihan ${bill.name}`,
     item: {
       materialId: bill.materialId ?? "",
-      projectRapItemId: bill.materialId ? bill.projectRapItemId ?? "" : "",
+      projectRapItemId: bill.materialId ? (bill.projectRapItemId ?? "") : "",
       quantity,
       unitCost,
       note,

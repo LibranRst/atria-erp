@@ -19,11 +19,21 @@ describe("Project Budget default helpers", () => {
       "LAIN_LAIN",
       "SUBCON",
     ]);
-    expect(DEFAULT_EXPENSE_CATEGORIES.find((category) => category.code === "TUKANG")?.defaultRatio).toBe(0.18);
-    expect(DEFAULT_EXPENSE_CATEGORIES.find((category) => category.code === "MATERIAL")?.defaultRatio).toBe(0.35);
-    expect(DEFAULT_EXPENSE_CATEGORIES.find((category) => category.code === "OPERASIONAL")?.defaultRatio).toBe(0.01);
-    expect(DEFAULT_EXPENSE_CATEGORIES.find((category) => category.code === "LAIN_LAIN")?.defaultRatio).toBe(0.005);
-    expect(DEFAULT_EXPENSE_CATEGORIES.find((category) => category.code === "SUBCON")?.defaultRatio).toBe(0);
+    expect(
+      DEFAULT_EXPENSE_CATEGORIES.find((category) => category.code === "TUKANG")?.defaultRatio,
+    ).toBe(0.18);
+    expect(
+      DEFAULT_EXPENSE_CATEGORIES.find((category) => category.code === "MATERIAL")?.defaultRatio,
+    ).toBe(0.35);
+    expect(
+      DEFAULT_EXPENSE_CATEGORIES.find((category) => category.code === "OPERASIONAL")?.defaultRatio,
+    ).toBe(0.01);
+    expect(
+      DEFAULT_EXPENSE_CATEGORIES.find((category) => category.code === "LAIN_LAIN")?.defaultRatio,
+    ).toBe(0.005);
+    expect(
+      DEFAULT_EXPENSE_CATEGORIES.find((category) => category.code === "SUBCON")?.defaultRatio,
+    ).toBe(0);
   });
 
   test("calculates internal budget and target gross from contract value", () => {

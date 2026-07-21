@@ -1,7 +1,14 @@
 "use server";
 
 import { db } from "@/db";
-import { bankAccount, clientInvoice, clientPayment, vendorBill, vendorPayment, project } from "@/db/schema";
+import {
+  bankAccount,
+  clientInvoice,
+  clientPayment,
+  vendorBill,
+  vendorPayment,
+  project,
+} from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
@@ -10,7 +17,7 @@ import { ActionResponse } from "@/lib/types/action-response";
 export interface DashboardStats {
   totalCashBalance: number;
   totalReceivables: number; // Piutang outstanding (Invoice minus payments)
-  totalPayables: number;    // Hutang outstanding (Bill minus payments)
+  totalPayables: number; // Hutang outstanding (Bill minus payments)
   activeProjectsCount: number;
 }
 
@@ -18,7 +25,7 @@ export interface DashboardStats {
  * Mengambil data ringkasan statistik keuangan (dasbor CFO).
  * Menghitung total kas riil, total piutang, total utang, dan proyek aktif.
  * Hanya dapat diakses oleh peran OWNER atau FINANCE_ADMIN.
- * 
+ *
  * @returns Status respons aksi dan data DashboardStats
  */
 export async function getDashboardStats(): Promise<ActionResponse<DashboardStats>> {
@@ -43,19 +50,17 @@ export async function getDashboardStats(): Promise<ActionResponse<DashboardStats
     } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
+        error: {
+          code: "FORBIDDEN",
+          message: err instanceof Error ? err.message : "Akses ditolak.",
+        },
       };
     }
 
     // 3. Hitung total saldo kas riil dari semua bank_account
-    const bankAccounts = await db
-      .select({ balance: bankAccount.balance })
-      .from(bankAccount);
+    const bankAccounts = await db.select({ balance: bankAccount.balance }).from(bankAccount);
 
-    const totalCashBalance = bankAccounts.reduce(
-      (sum, acc) => sum + Number(acc.balance),
-      0
-    );
+    const totalCashBalance = bankAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
 
     // 4. Hitung total piutang outstanding (invoice klien yang belum lunas / tidak void)
     const unpaidInvoices = await db
@@ -65,12 +70,7 @@ export async function getDashboardStats(): Promise<ActionResponse<DashboardStats
         status: clientInvoice.status,
       })
       .from(clientInvoice)
-      .where(
-        and(
-          ne(clientInvoice.status, "PAID"),
-          ne(clientInvoice.status, "VOID")
-        )
-      );
+      .where(and(ne(clientInvoice.status, "PAID"), ne(clientInvoice.status, "VOID")));
 
     let totalReceivables = 0;
     for (const inv of unpaidInvoices) {
@@ -82,7 +82,7 @@ export async function getDashboardStats(): Promise<ActionResponse<DashboardStats
           .select({ amountPaid: clientPayment.amountPaid })
           .from(clientPayment)
           .where(eq(clientPayment.clientInvoiceId, inv.id));
-        
+
         const totalPaid = payments.reduce((sum, p) => sum + Number(p.amountPaid), 0);
         totalReceivables += Math.max(0, Number(inv.amount) - totalPaid);
       }
@@ -96,12 +96,7 @@ export async function getDashboardStats(): Promise<ActionResponse<DashboardStats
         status: vendorBill.status,
       })
       .from(vendorBill)
-      .where(
-        and(
-          ne(vendorBill.status, "PAID"),
-          ne(vendorBill.status, "VOID")
-        )
-      );
+      .where(and(ne(vendorBill.status, "PAID"), ne(vendorBill.status, "VOID")));
 
     let totalPayables = 0;
     for (const bill of unpaidBills) {
@@ -139,7 +134,10 @@ export async function getDashboardStats(): Promise<ActionResponse<DashboardStats
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan internal saat mengambil statistik.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan internal saat mengambil statistik.",
       },
     };
   }

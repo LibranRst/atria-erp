@@ -13,8 +13,7 @@ export const stopDeveloperAccountSimulationSchema = z.object({
 
 export type DeveloperSimulationContext = "GENERAL" | "ONBOARDING_SETUP_REVIEW";
 
-export type DeveloperSimulationRole =
-  "FINANCE_ADMIN" | "PROJECT_MANAGER" | "PURCHASING";
+export type DeveloperSimulationRole = "FINANCE_ADMIN" | "PROJECT_MANAGER" | "PURCHASING";
 
 export type DeveloperSimulationTarget = {
   readonly id: string;
@@ -34,9 +33,7 @@ export type DeveloperAccountSimulationState = {
   readonly onboardingReviewTargets?: readonly DeveloperSimulationTarget[];
 };
 
-export const REQUIRED_SIMULATION_ROLE_IDS = SYSTEM_ROLES.slice(1, 4).map(
-  (role) => role.id,
-);
+export const REQUIRED_SIMULATION_ROLE_IDS = SYSTEM_ROLES.slice(1, 4).map((role) => role.id);
 
 export function isDeveloperAccountSimulationEnabled(
   environment: Readonly<{
@@ -47,9 +44,7 @@ export function isDeveloperAccountSimulationEnabled(
     featureFlag: process.env.ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED,
   },
 ): boolean {
-  return (
-    environment.nodeEnv !== "production" && environment.featureFlag === "true"
-  );
+  return environment.nodeEnv !== "production" && environment.featureFlag === "true";
 }
 
 export function canUseTemporaryPasswordDuringDeveloperSimulation(input: {
@@ -61,15 +56,11 @@ export function canUseTemporaryPasswordDuringDeveloperSimulation(input: {
     input.simulationEnabled &&
     typeof input.developerActorUserId === "string" &&
     input.developerActorUserId.length > 0 &&
-    REQUIRED_SIMULATION_ROLE_IDS.some(
-      (roleId) => roleId === input.effectiveRoleId,
-    )
+    REQUIRED_SIMULATION_ROLE_IDS.some((roleId) => roleId === input.effectiveRoleId)
   );
 }
 
-export function getDeveloperSimulationRoleLabel(
-  roleName: DeveloperSimulationRole,
-): string {
+export function getDeveloperSimulationRoleLabel(roleName: DeveloperSimulationRole): string {
   const labels: Record<DeveloperSimulationRole, string> = {
     FINANCE_ADMIN: "Finance Admin",
     PROJECT_MANAGER: "Project Manager",
@@ -78,9 +69,7 @@ export function getDeveloperSimulationRoleLabel(
   return labels[roleName];
 }
 
-export function getDeveloperSimulationLandingRoute(
-  roleName: DeveloperSimulationRole,
-): string {
+export function getDeveloperSimulationLandingRoute(roleName: DeveloperSimulationRole): string {
   const routes: Record<DeveloperSimulationRole, string> = {
     FINANCE_ADMIN: "/ledger",
     PROJECT_MANAGER: "/projects",

@@ -14,7 +14,8 @@ Rencana ini menjelaskan penambahan kolom `quantity` (kuantitas) dan `unitPrice` 
 ### 1. Skema Database
 
 #### [MODIFY] [schema.ts](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/db/schema.ts)
-* Tambahkan kolom `quantity` dan `unitPrice` pada tabel `projectCost`:
+
+- Tambahkan kolom `quantity` dan `unitPrice` pada tabel `projectCost`:
   ```typescript
   quantity: numeric("quantity", { precision: 12, scale: 2 }).default("1.00").notNull(),
   unitPrice: numeric("unit_price", { precision: 15, scale: 2 }).default("0.00").notNull(),
@@ -23,37 +24,43 @@ Rencana ini menjelaskan penambahan kolom `quantity` (kuantitas) dan `unitPrice` 
 ### 2. Validasi & Server Actions
 
 #### [MODIFY] [finance.ts](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/lib/validations/finance.ts)
-* Perbarui `submitFieldRequestSchema` dan `submitFieldRequestsSchema` agar memvalidasi `quantity` (positif, minimal 0.01) dan `unitPrice` (non-negatif).
+
+- Perbarui `submitFieldRequestSchema` dan `submitFieldRequestsSchema` agar memvalidasi `quantity` (positif, minimal 0.01) dan `unitPrice` (non-negatif).
 
 #### [MODIFY] [field-requests.ts](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/app/actions/finance/field-requests.ts)
-* Perbarui aksi `submitFieldRequest` dan `submitFieldRequests` untuk menerima parameter `quantity` dan `unitPrice` serta menyimpannya ke database.
-* Pastikan nominal total `amount` rill dihitung/divalidasi sebagai hasil perkalian `quantity * unitPrice` untuk menjamin integritas data matematika keuangan.
+
+- Perbarui aksi `submitFieldRequest` dan `submitFieldRequests` untuk menerima parameter `quantity` dan `unitPrice` serta menyimpannya ke database.
+- Pastikan nominal total `amount` rill dihitung/divalidasi sebagai hasil perkalian `quantity * unitPrice` untuk menjamin integritas data matematika keuangan.
 
 ### 3. Database Seeding
 
 #### [MODIFY] [seed.ts](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/db/seed.ts)
-* Perbarui entri seed `projectCost` dengan menyertakan nilai `quantity` dan `unitPrice` yang logis (contoh: 24 lembar Multipleks @ Rp 250.000).
+
+- Perbarui entri seed `projectCost` dengan menyertakan nilai `quantity` dan `unitPrice` yang logis (contoh: 24 lembar Multipleks @ Rp 250.000).
 
 ### 4. Antarmuka UI (User Interface)
 
 #### [MODIFY] [expense-form.tsx](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/components/expense/expense-form.tsx)
-* Perbarui `ExpenseLine` interface agar memuat `quantity` dan `unitPrice`.
-* Ubah tata letak baris input pada formulir agar memiliki input **Kuantitas** (lebar kecil) dan **Harga Satuan** (lebar besar), disandingkan dengan label **Satuan** (contoh: `lembar`, `pcs`, `box`) yang dimuat dari item anggaran yang dipilih.
-* Jumlah total baris dihitung otomatis: `line.amount = line.quantity * line.unitPrice`.
-* Hubungkan parsing Gemini OCR ke kolom baru: hasil AI OCR (`parsedData.items`) akan langsung memetakan `quantity` dan `unitPrice` rill ke form lines secara otomatis.
+
+- Perbarui `ExpenseLine` interface agar memuat `quantity` dan `unitPrice`.
+- Ubah tata letak baris input pada formulir agar memiliki input **Kuantitas** (lebar kecil) dan **Harga Satuan** (lebar besar), disandingkan dengan label **Satuan** (contoh: `lembar`, `pcs`, `box`) yang dimuat dari item anggaran yang dipilih.
+- Jumlah total baris dihitung otomatis: `line.amount = line.quantity * line.unitPrice`.
+- Hubungkan parsing Gemini OCR ke kolom baru: hasil AI OCR (`parsedData.items`) akan langsung memetakan `quantity` dan `unitPrice` rill ke form lines secara otomatis.
 
 ## Verification Plan
 
 ### Automated Tests
-* Jalankan migrasi skema database lokal:
+
+- Jalankan migrasi skema database lokal:
   `bunx drizzle-kit generate`
   `bunx drizzle-kit push --force`
   `bun db:seed`
-* Perbarui unit test di `lib/finance/actions-field.test.ts` untuk memverifikasi payload `quantity` dan `unitPrice`.
-* Jalankan pengujian: `bun test`
-* Jalankan build produksi: `bun run build`
+- Perbarui unit test di `lib/finance/actions-field.test.ts` untuk memverifikasi payload `quantity` dan `unitPrice`.
+- Jalankan pengujian: `bun test`
+- Jalankan build produksi: `bun run build`
 
 ### Manual Verification
+
 1. Buka formulir pengeluaran dengan menekan tombol `+`.
 2. Pilih proyek, lalu unggah struk belanja.
 3. Pastikan AI OCR memecah item struk belanja ke baris form secara individu dengan mengisi kolom Kuantitas dan Harga Satuan secara tepat.

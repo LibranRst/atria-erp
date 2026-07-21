@@ -50,9 +50,6 @@ export function parseIsoDate(value: string): Date | null {
   return new Date(year, month - 1, day);
 }
 
-export function selectedOptionLabel(
-  options: readonly SelectOption[],
-  value: string,
-): string {
+export function selectedOptionLabel(options: readonly SelectOption[], value: string): string {
   return options.find((option) => option.value === value)?.label ?? "";
 }

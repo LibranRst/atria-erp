@@ -20,9 +20,7 @@ export function shortMoney(value: number): string {
   return `${sign}Rp ${absolute.toLocaleString("id-ID")}`;
 }
 
-export function badgeStatus(
-  value: string,
-): "CRITICAL" | "WARNING" | "APPROVED" {
+export function badgeStatus(value: string): "CRITICAL" | "WARNING" | "APPROVED" {
   if (value === "CRITICAL" || value === "OVER_BUDGET") return "CRITICAL";
   if (value === "WARNING" || value === "WATCH") return "WARNING";
   return "APPROVED";

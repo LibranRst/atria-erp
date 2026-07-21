@@ -3,7 +3,9 @@ import { signImagekit } from "@/app/actions/media/sign-imagekit";
 import type { ExpenseLine, ExpenseFormProject } from "./expense-form-types";
 import { inferExpenseCategoryCode } from "./expense-form-utils";
 
-type BudgetCategory = NonNullable<NonNullable<ExpenseFormProject["canonicalBudgets"]>[number]["categories"]>[number];
+type BudgetCategory = NonNullable<
+  NonNullable<ExpenseFormProject["canonicalBudgets"]>[number]["categories"]
+>[number];
 
 type ImageKitUploadResponse = {
   readonly fileId: string;
@@ -43,7 +45,10 @@ export async function uploadAndParseExpenseReceipt({
   const formData = new FormData();
   formData.append("file", file);
   formData.append("fileName", safeFileName);
-  formData.append("publicKey", process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "public_PRvr9hXwFetaQx4ZejdGwJ1Ue8=");
+  formData.append(
+    "publicKey",
+    process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "public_PRvr9hXwFetaQx4ZejdGwJ1Ue8=",
+  );
   formData.append("signature", signature);
   formData.append("token", token);
   formData.append("expire", expire.toString());
@@ -74,7 +79,8 @@ export async function uploadAndParseExpenseReceipt({
     return {
       attachment,
       lines: [],
-      warning: `Nota sudah terunggah, tetapi isinya belum berhasil dibaca. Isi item secara manual atau coba scan lagi. ${ocrRes.error?.message ?? ""}`.trim(),
+      warning:
+        `Nota sudah terunggah, tetapi isinya belum berhasil dibaca. Isi item secara manual atau coba scan lagi. ${ocrRes.error?.message ?? ""}`.trim(),
     };
   }
 
@@ -97,7 +103,7 @@ export async function uploadAndParseExpenseReceipt({
       inventoryLocationId: "",
       quantity: item.quantity || 1,
       unitPrice: item.unitPrice || "",
-      amount: item.totalPrice || (item.unitPrice * item.quantity) || "",
+      amount: item.totalPrice || item.unitPrice * item.quantity || "",
       description: `[OCR] ${item.itemName}`,
     };
   });
@@ -121,9 +127,10 @@ export async function uploadAndParseExpenseReceipt({
 
   let warning: string | null = null;
   if (unmatchedCount > 0) {
-    warning = unmatchedCount === ocrItems.length
-      ? `Semua item nota (${ocrItems.length} item) tidak cocok dengan item anggaran proyek. Silakan pilih item anggaran secara manual.`
-      : `Terdeteksi ${unmatchedCount} dari ${ocrItems.length} item nota yang tidak cocok dengan anggaran proyek. Silakan pilih item anggaran secara manual.`;
+    warning =
+      unmatchedCount === ocrItems.length
+        ? `Semua item nota (${ocrItems.length} item) tidak cocok dengan item anggaran proyek. Silakan pilih item anggaran secara manual.`
+        : `Terdeteksi ${unmatchedCount} dari ${ocrItems.length} item nota yang tidak cocok dengan anggaran proyek. Silakan pilih item anggaran secara manual.`;
   }
 
   return {

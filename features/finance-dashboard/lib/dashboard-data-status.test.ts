@@ -6,13 +6,15 @@ const generatedAt = "2026-07-15T00:00:00.000Z";
 
 describe("dashboard data status", () => {
   test("hides fresh data without leaving a status", () => {
-    expect(resolveDashboardDataStatus({
-      generatedAt,
-      currentTime: new Date("2026-07-15T00:14:59.000Z"),
-      partial: false,
-      unavailableSources: [],
-      refreshing: false,
-    })).toBeNull();
+    expect(
+      resolveDashboardDataStatus({
+        generatedAt,
+        currentTime: new Date("2026-07-15T00:14:59.000Z"),
+        partial: false,
+        unavailableSources: [],
+        refreshing: false,
+      }),
+    ).toBeNull();
   });
 
   test("shows a compact stale status at the fifteen minute boundary", () => {

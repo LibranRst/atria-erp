@@ -34,9 +34,10 @@ export function resolveDashboardDataStatus({
   });
 
   if (partial) {
-    const sourceDetail = unavailableSources.length > 0
-      ? ` Sumber belum tersedia: ${unavailableSources.join(", ")}.`
-      : "";
+    const sourceDetail =
+      unavailableSources.length > 0
+        ? ` Sumber belum tersedia: ${unavailableSources.join(", ")}.`
+        : "";
     return {
       kind: "PARTIAL",
       label: refreshing ? "Memperbarui…" : "Data sebagian",

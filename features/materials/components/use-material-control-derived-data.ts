@@ -60,8 +60,7 @@ export function useMaterialControlDerivedData({
   readonly visibleReceipts: readonly ReceiptView[];
   readonly selectedProject: MaterialOperationsDashboard["projects"][number] | undefined;
   readonly selectedRap:
-    | MaterialOperationsDashboard["projects"][number]["rapItems"][number]
-    | undefined;
+    MaterialOperationsDashboard["projects"][number]["rapItems"][number] | undefined;
   readonly selectedMaterial: MaterialOperationsDashboard["inventory"];
   readonly totalStockValue: number;
   readonly availableValue: number;
@@ -129,8 +128,7 @@ export function useMaterialControlDerivedData({
           text.includes(filters.search.toLowerCase()) &&
           (filters.location === "ALL" ||
             material.rows.some((row) => row.locationId === filters.location)) &&
-          (filters.status === "ALL" ||
-            material.rows.some((row) => row.status === filters.status))
+          (filters.status === "ALL" || material.rows.some((row) => row.status === filters.status))
         );
       }),
     [filters.location, filters.search, filters.status, grouped],
@@ -146,12 +144,9 @@ export function useMaterialControlDerivedData({
       movements.filter((row) => {
         const ageLimit = getActivityAgeLimit(filters.activityPeriod, activityNow);
         return (
-          (filters.activityType === "ALL" ||
-            row.movementType === filters.activityType) &&
-          (filters.activityProject === "ALL" ||
-            row.projectId === filters.activityProject) &&
-          (filters.activityLocation === "ALL" ||
-            row.locationId === filters.activityLocation) &&
+          (filters.activityType === "ALL" || row.movementType === filters.activityType) &&
+          (filters.activityProject === "ALL" || row.projectId === filters.activityProject) &&
+          (filters.activityLocation === "ALL" || row.locationId === filters.activityLocation) &&
           (ageLimit === null || new Date(row.createdAt).getTime() >= ageLimit)
         );
       }),
@@ -188,12 +183,9 @@ export function useMaterialControlDerivedData({
       data.receipts.filter((row) => {
         const ageLimit = getActivityAgeLimit(filters.activityPeriod, activityNow);
         return (
-          (filters.activityType === "ALL" ||
-            filters.activityType === "GOODS_RECEIPT") &&
-          (filters.activityProject === "ALL" ||
-            row.projectId === filters.activityProject) &&
-          (filters.activityLocation === "ALL" ||
-            row.locationId === filters.activityLocation) &&
+          (filters.activityType === "ALL" || filters.activityType === "GOODS_RECEIPT") &&
+          (filters.activityProject === "ALL" || row.projectId === filters.activityProject) &&
+          (filters.activityLocation === "ALL" || row.locationId === filters.activityLocation) &&
           (ageLimit === null || new Date(row.receivedAt).getTime() >= ageLimit)
         );
       }),

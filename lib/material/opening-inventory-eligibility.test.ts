@@ -15,9 +15,7 @@ describe("opening inventory eligibility", () => {
         reservedStock: 0,
         hasMovement: false,
       }),
-    ).toBe(
-      "Inventory sudah ada dalam pengajuan saldo awal yang menunggu persetujuan.",
-    );
+    ).toBe("Inventory sudah ada dalam pengajuan saldo awal yang menunggu persetujuan.");
   });
 
   test("allows untouched zero-balance inventory", () => {

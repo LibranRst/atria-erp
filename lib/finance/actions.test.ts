@@ -2,7 +2,12 @@ import { db } from "@/db";
 import { project, clientInvoice, bankAccount, projectBudget } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { createProjectBudget, createBudgetItem, submitBudgetForApproval, approveBudget } from "@/app/actions/project/budget";
+import {
+  createProjectBudget,
+  createBudgetItem,
+  submitBudgetForApproval,
+  approveBudget,
+} from "@/app/actions/project/budget";
 import { recordClientPayment } from "@/app/actions/finance/record-client-payment";
 import { createClientInvoice } from "@/app/actions/finance/create-client-invoice";
 import { getDashboardStats } from "@/app/actions/finance/get-dashboard-stats";
@@ -294,13 +299,16 @@ describe("Atria ERP Server Actions - TSK-007", () => {
 
     it("harus mengizinkan Owner membuat invoice secara manual dan menulis audit log", async () => {
       mockUserSession(OWNER_USER);
-      const [invoiceProject] = await db.insert(project).values({
-        name: "Test Manual Invoice Project",
-        clientId: "44444444-4444-4444-4444-444444444441",
-        projectManagerId: PM_BUDI_USER.id,
-        status: "DRAFT",
-        totalContractValue: "100000000.00",
-      }).returning();
+      const [invoiceProject] = await db
+        .insert(project)
+        .values({
+          name: "Test Manual Invoice Project",
+          clientId: "44444444-4444-4444-4444-444444444441",
+          projectManagerId: PM_BUDI_USER.id,
+          status: "DRAFT",
+          totalContractValue: "100000000.00",
+        })
+        .returning();
       const invoiceNum = `INV/TEST/${Math.floor(1000 + Math.random() * 9000)}`;
       const res = await createClientInvoice({
         projectId: invoiceProject.id,
@@ -413,10 +421,10 @@ describe("Atria ERP Server Actions - TSK-007", () => {
   describe("getDashboardStats Action", () => {
     it("harus mengembalikan statistik agregasi finansial dasbor secara tepat", async () => {
       mockUserSession(FINANCE_USER);
-      
+
       const res = await getDashboardStats();
       expect(res.success).toBe(true);
-      
+
       if (res.success) {
         const stats = res.data;
         expect(stats.totalCashBalance).toBeGreaterThan(0);

@@ -17,12 +17,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (!session?.user || !session.user.isActive) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
-  const canUseTemporaryPasswordDuringSimulation =
-    canUseTemporaryPasswordDuringDeveloperSimulation({
-      simulationEnabled: isDeveloperAccountSimulationEnabled(),
-      developerActorUserId: session.session.developerActorUserId,
-      effectiveRoleId: session.user.roleId,
-    });
+  const canUseTemporaryPasswordDuringSimulation = canUseTemporaryPasswordDuringDeveloperSimulation({
+    simulationEnabled: isDeveloperAccountSimulationEnabled(),
+    developerActorUserId: session.session.developerActorUserId,
+    effectiveRoleId: session.user.roleId,
+  });
   if (
     session.user.mustChangePassword &&
     request.nextUrl.pathname !== "/profile/password" &&

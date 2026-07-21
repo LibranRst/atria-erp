@@ -38,9 +38,7 @@ export function InventoryLocationSheet({
       pendingLabel="Menambahkan…"
       pending={pending}
       disabled={!valid}
-      disabledReason={
-        valid ? undefined : "Nama lokasi minimal 3 karakter."
-      }
+      disabledReason={valid ? undefined : "Nama lokasi minimal 3 karakter."}
       actionLayout="stacked"
       onClose={onClose}
       onExitComplete={() => onNameChange("")}

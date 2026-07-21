@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
 import { calculateGrossMarginRatio, calculateSuggestedClientPrice } from "@/lib/project/pricing";
-import { reallocateProjectBudgetSchema, upsertPricingTemplateSchema } from "@/lib/validations/workflow-governance";
+import {
+  reallocateProjectBudgetSchema,
+  upsertPricingTemplateSchema,
+} from "@/lib/validations/workflow-governance";
 
 describe("pricing template math", () => {
   test("derives suggested client price from cost and gross margin", () => {
@@ -25,7 +28,12 @@ describe("workflow governance validation", () => {
       ],
     };
     expect(reallocateProjectBudgetSchema.safeParse(base).success).toBe(true);
-    expect(reallocateProjectBudgetSchema.safeParse({ ...base, categories: base.categories.map((category) => ({ ...category, ratioPercentage: 0.6 })) }).success).toBe(false);
+    expect(
+      reallocateProjectBudgetSchema.safeParse({
+        ...base,
+        categories: base.categories.map((category) => ({ ...category, ratioPercentage: 0.6 })),
+      }).success,
+    ).toBe(false);
   });
 
   test("requires cost provenance and at least one component", () => {

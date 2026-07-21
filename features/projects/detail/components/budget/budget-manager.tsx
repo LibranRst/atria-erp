@@ -13,18 +13,11 @@ import {
   rejectBudget,
 } from "@/app/actions/project/budget";
 import { BudgetAlerts } from "./budget-alerts";
-import {
-  BudgetApprovalPanel,
-  BudgetDraftActions,
-} from "./budget-approval-panel";
+import { BudgetApprovalPanel, BudgetDraftActions } from "./budget-approval-panel";
 import { BudgetEmptyState } from "./budget-empty-state";
 import { BudgetItemForm } from "./budget-item-form";
 import { BudgetItemsList } from "./budget-items-list";
-import type {
-  BudgetHeader,
-  BudgetItemFormState,
-  CostCategory,
-} from "./budget-manager-types";
+import type { BudgetHeader, BudgetItemFormState, CostCategory } from "./budget-manager-types";
 import {
   getBudgetItemFormValidationMessage,
   groupBudgetItemsByCategory,
@@ -81,7 +74,13 @@ export function BudgetManager({
     unitPrice,
   };
   const itemsByCategory = groupBudgetItemsByCategory(budgetItems);
-  const itemFormDirty = Boolean(itemName.trim() || budgetCategory.trim() || selectedCategoryId || quantity !== "" || unitPrice !== "");
+  const itemFormDirty = Boolean(
+    itemName.trim() ||
+    budgetCategory.trim() ||
+    selectedCategoryId ||
+    quantity !== "" ||
+    unitPrice !== "",
+  );
 
   // Action: Buat RAB Baru
   const handleCreateBudget = () => {
@@ -277,7 +276,7 @@ export function BudgetManager({
 
       {/* PANEL AKSI DRAFT & REJECTED: PM / OWNER BISA TAMBAH ITEM & AJUKAN */}
       {isEditable && canManage && (
-        <div className="space-y-md border-t border-outline-variant/10 pt-md">
+        <div className="space-y-md border-outline-variant/10 pt-md border-t">
           <BudgetItemForm
             open={showItemForm}
             form={budgetItemForm}
@@ -302,7 +301,7 @@ export function BudgetManager({
             type="button"
             disabled={isPending}
             onClick={() => setShowItemForm(true)}
-            className="min-h-12 w-full rounded-full bg-surface-container-low px-5 text-xs font-bold text-primary ring-1 ring-primary/15 disabled:opacity-40"
+            className="bg-surface-container-low text-primary ring-primary/15 min-h-12 w-full rounded-full px-5 text-xs font-bold ring-1 disabled:opacity-40"
           >
             Tambah Item Project Budget
           </button>

@@ -14,7 +14,7 @@ import { createClientInvoiceSchema, CreateClientInvoiceInput } from "@/lib/valid
  * Terbatas untuk peran OWNER, FINANCE_ADMIN, dan SALES dengan validasi akses proyek (scoping check).
  */
 export async function createClientInvoice(
-  input: CreateClientInvoiceInput
+  input: CreateClientInvoiceInput,
 ): Promise<ActionResponse<typeof clientInvoice.$inferSelect>> {
   const validation = createClientInvoiceSchema.safeParse(input);
   if (!validation.success) {
@@ -45,7 +45,10 @@ export async function createClientInvoice(
     } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
+        error: {
+          code: "FORBIDDEN",
+          message: err instanceof Error ? err.message : "Akses ditolak.",
+        },
       };
     }
 
@@ -59,7 +62,10 @@ export async function createClientInvoice(
     } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
+        error: {
+          code: "FORBIDDEN",
+          message: err instanceof Error ? err.message : "Akses ditolak.",
+        },
       };
     }
 
@@ -76,10 +82,20 @@ export async function createClientInvoice(
     }
 
     const newInvoice = await db.transaction(async (tx) => {
-      const [lockedProject] = await tx.select().from(project).where(eq(project.id, projectId)).for("update");
+      const [lockedProject] = await tx
+        .select()
+        .from(project)
+        .where(eq(project.id, projectId))
+        .for("update");
       if (!lockedProject) throw new Error("PROJECT_NOT_FOUND");
-      const activeInvoices = await tx.query.clientInvoice.findMany({ where: (table, { and, eq: equals, ne: notEqual }) => and(equals(table.projectId, projectId), notEqual(table.status, "VOID")) });
-      const invoicedAmount = activeInvoices.reduce((sum, invoice) => sum + Number(invoice.amount), 0);
+      const activeInvoices = await tx.query.clientInvoice.findMany({
+        where: (table, { and, eq: equals, ne: notEqual }) =>
+          and(equals(table.projectId, projectId), notEqual(table.status, "VOID")),
+      });
+      const invoicedAmount = activeInvoices.reduce(
+        (sum, invoice) => sum + Number(invoice.amount),
+        0,
+      );
       if (invoicedAmount + amount > Number(lockedProject.totalContractValue) + 0.001) {
         throw new Error("INVOICE_EXCEEDS_CONTRACT_VALUE");
       }
@@ -124,7 +140,14 @@ export async function createClientInvoice(
     };
   } catch (error) {
     if (error instanceof Error && error.message === "INVOICE_EXCEEDS_CONTRACT_VALUE") {
-      return { success: false, error: { code: "VALIDATION_ERROR", message: "Total invoice aktif akan melebihi nilai kontrak proyek. Gunakan Change Order sebelum menambah tagihan." } };
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message:
+            "Total invoice aktif akan melebihi nilai kontrak proyek. Gunakan Change Order sebelum menambah tagihan.",
+        },
+      };
     }
     return {
       success: false,

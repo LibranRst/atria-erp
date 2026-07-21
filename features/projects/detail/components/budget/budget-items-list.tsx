@@ -18,15 +18,15 @@ export function BudgetItemsList({
   return (
     <div className="space-y-md">
       <div className="flex items-center justify-between">
-        <h2 className="font-sans text-[8px] font-bold uppercase leading-[16px] tracking-wider text-on-surface-variant">
+        <h2 className="text-on-surface-variant font-sans text-[8px] leading-[16px] font-bold tracking-wider uppercase">
           Rincian Project Budget
         </h2>
         <Badge status={status as BadgeStatus}>{status}</Badge>
       </div>
 
       {budgetItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-[28px] border border-outline-variant/20 bg-white p-md py-8 text-center shadow-[0_14px_34px_rgba(17,17,17,0.045)]">
-          <span className="material-symbols-outlined mb-1 text-[24px] text-on-surface-variant">
+        <div className="border-outline-variant/20 p-md flex flex-col items-center justify-center rounded-[28px] border bg-white py-8 text-center shadow-[0_14px_34px_rgba(17,17,17,0.045)]">
+          <span className="material-symbols-outlined text-on-surface-variant mb-1 text-[24px]">
             list
           </span>
           <p className="font-body-xs text-on-surface-variant">
@@ -56,7 +56,7 @@ function BudgetCategoryGroup({
   return (
     <div className="space-y-sm">
       <div className="flex items-center">
-        <span className="rounded-full border border-outline-variant/20 bg-surface-container px-2.5 py-1 font-sans text-[10px] font-bold uppercase leading-[16px] tracking-wider text-primary">
+        <span className="border-outline-variant/20 bg-surface-container text-primary rounded-full border px-2.5 py-1 font-sans text-[10px] leading-[16px] font-bold tracking-wider uppercase">
           Area pekerjaan: {categoryName}
         </span>
       </div>
@@ -70,11 +70,7 @@ function BudgetCategoryGroup({
   );
 }
 
-function BudgetItemCard({
-  item,
-}: {
-  readonly item: BudgetItem;
-}): React.JSX.Element {
+function BudgetItemCard({ item }: { readonly item: BudgetItem }): React.JSX.Element {
   const allocated = Number(item.allocatedAmount);
   const spent = Number(item.actualSpent);
   const remaining = allocated - spent;
@@ -82,25 +78,25 @@ function BudgetItemCard({
   const isOverrun = spent > allocated;
 
   return (
-    <div className="space-y-md rounded-[28px] border border-outline-variant/20 bg-white p-md shadow-[0_14px_34px_rgba(17,17,17,0.045)] transition-colors hover:bg-surface-container-low">
-      <div className="flex flex-col gap-sm">
-        <div className="flex items-start justify-between gap-md">
-          <div className="min-w-0 space-y-base">
+    <div className="space-y-md border-outline-variant/20 p-md hover:bg-surface-container-low rounded-[28px] border bg-white shadow-[0_14px_34px_rgba(17,17,17,0.045)] transition-colors">
+      <div className="gap-sm flex flex-col">
+        <div className="gap-md flex items-start justify-between">
+          <div className="space-y-base min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="max-w-[200px] truncate font-sans text-[14px] font-bold leading-[20px] text-on-surface">
+              <h3 className="leading-margin-mobile text-on-surface max-w-[200px] truncate font-sans text-[14px] font-bold">
                 {item.name}
               </h3>
               {item.costCategory && (
-                <span className="rounded border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-primary">
+                <span className="border-primary/20 bg-primary/10 text-primary rounded border px-1.5 py-0.5 text-[8px] font-bold tracking-wider uppercase">
                   {item.costCategory.name}
                 </span>
               )}
             </div>
-            <p className="text-[11px] leading-relaxed text-on-surface-variant">
+            <p className="text-on-surface-variant text-[11px] leading-relaxed">
               {Number(item.quantity).toLocaleString("id-ID")} {item.unit} @ Rp{" "}
               {Number(item.unitPrice).toLocaleString("id-ID")}
             </p>
-            <p className="font-sans text-[9px] font-bold uppercase leading-[16px] tracking-tight text-on-surface-variant">
+            <p className="text-on-surface-variant font-sans text-[9px] leading-[16px] font-bold tracking-tight uppercase">
               Total Plafon: Rp {allocated.toLocaleString("id-ID")}
             </p>
           </div>
@@ -113,14 +109,14 @@ function BudgetItemCard({
               align="right"
               size="md"
             />
-            <span className="block font-sans text-[8px] font-bold uppercase leading-[16px] tracking-wider text-on-surface-variant">
+            <span className="text-on-surface-variant block font-sans text-[8px] leading-[16px] font-bold tracking-wider uppercase">
               {isOverrun ? "Overrun" : "Sisa Plafon"}
             </span>
           </div>
         </div>
 
         <div className="space-y-xs">
-          <div className="h-1.5 w-full overflow-hidden rounded-full border border-outline-variant/10 bg-surface-container">
+          <div className="border-outline-variant/10 bg-surface-container h-1.5 w-full overflow-hidden rounded-full border">
             <div
               className={`h-full rounded-full transition-colors duration-300 ${
                 isOverrun ? "bg-error" : percent >= 90 ? "bg-secondary" : "bg-primary"
@@ -128,7 +124,7 @@ function BudgetItemCard({
               style={{ width: `${Math.min(percent, 100)}%` }}
             />
           </div>
-          <div className="flex items-center justify-between text-[10px] text-on-surface-variant">
+          <div className="text-on-surface-variant flex items-center justify-between text-[10px]">
             <span>Realisasi: Rp {spent.toLocaleString("id-ID")}</span>
             <span>{percent.toFixed(1)}% terpakai</span>
           </div>

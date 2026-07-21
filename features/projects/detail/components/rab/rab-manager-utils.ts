@@ -87,8 +87,7 @@ export function getRabManagerDerivedValues({
     visibleRabValue,
     approvedBaseline,
     isRevisionDraft:
-      rabEstimate?.status === "DRAFT" &&
-      Boolean(rabEstimate.supersedesRabEstimateId),
+      rabEstimate?.status === "DRAFT" && Boolean(rabEstimate.supersedesRabEstimateId),
     selectedQuotationSourceCount:
       selectedRapQuotationIds.length +
       selectedCategoryQuotationIds.length +
@@ -97,9 +96,7 @@ export function getRabManagerDerivedValues({
   };
 }
 
-export function buildManualQuotationLines(
-  manualQuotationLine: ManualQuotationLine,
-): {
+export function buildManualQuotationLines(manualQuotationLine: ManualQuotationLine): {
   clientLabel: string;
   description?: string;
   quantity: number;
@@ -151,9 +148,5 @@ export function toggleBundleItemInForm({
 }
 
 function getSortedRabItems(rabEstimate: RabEstimateView | null): RabItemView[] {
-  return (
-    rabEstimate?.items
-      .slice()
-      .sort((a, b) => a.displayOrder - b.displayOrder) ?? []
-  );
+  return rabEstimate?.items.slice().sort((a, b) => a.displayOrder - b.displayOrder) ?? [];
 }

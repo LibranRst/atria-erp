@@ -1,5 +1,11 @@
 import { db } from "@/db";
-import { project, rabEstimate, rabEstimateItem, projectBudgets, projectBudgetCategory } from "@/db/schema";
+import {
+  project,
+  rabEstimate,
+  rabEstimateItem,
+  projectBudgets,
+  projectBudgetCategory,
+} from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { createProjectAction } from "@/app/actions/project/crud";
@@ -115,7 +121,9 @@ describe("Project Workflow Rework - creation and RAB auto-scale", () => {
 
     // Clean up created project and its budget dependencies
     if (budget) {
-      await db.delete(projectBudgetCategory).where(eq(projectBudgetCategory.projectBudgetId, budget.id));
+      await db
+        .delete(projectBudgetCategory)
+        .where(eq(projectBudgetCategory.projectBudgetId, budget.id));
       await db.delete(projectBudgets).where(eq(projectBudgets.id, budget.id));
     }
     await db.delete(project).where(eq(project.id, projectId));
@@ -233,7 +241,9 @@ describe("Project Workflow Rework - creation and RAB auto-scale", () => {
     // Clean up
     await db.delete(rabEstimateItem).where(eq(rabEstimateItem.rabEstimateId, rabId));
     await db.delete(rabEstimate).where(eq(rabEstimate.id, rabId));
-    await db.delete(projectBudgetCategory).where(eq(projectBudgetCategory.projectBudgetId, budget.id));
+    await db
+      .delete(projectBudgetCategory)
+      .where(eq(projectBudgetCategory.projectBudgetId, budget.id));
     await db.delete(projectBudgets).where(eq(projectBudgets.id, budget.id));
     await db.delete(project).where(eq(project.id, projectId));
   });

@@ -89,6 +89,4 @@ export interface ExpenseDraftPayload {
   ocrWarning: string | null;
 }
 
-export type ExpenseLinePatch =
-  | Partial<ExpenseLine>
-  | keyof ExpenseLine;
+export type ExpenseLinePatch = Partial<ExpenseLine> | keyof ExpenseLine;

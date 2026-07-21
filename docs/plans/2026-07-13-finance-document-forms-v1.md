@@ -6,17 +6,17 @@ Finance operators can prepare vendor bills, client invoices, receipts, disbursem
 
 ## Audit findings
 
-| Flow | Frequency | Risk | Finding | Treatment |
-|---|---:|---:|---|---|
-| Vendor bill creation | High | Critical | Writes the final bill and approved canonical expense directly; no recovery or review; auto-closes after submit | Server-backed input draft, local recovery, category impact review, durable success |
-| Vendor payment schedule | High | High | Defaults are helpful but no review of remaining bill or approval path; auto-closes | Local recovery/dirty guard, review, explicit scheduling result |
-| Vendor payment disbursement | High | Critical | Balance mutation is atomic, but UI hides before/after until account is chosen and auto-closes | Balance impact review, insufficient-funds block, durable success |
-| Client invoice creation | Medium | High | Good defaults, but directly creates immutable invoice and auto-closes | Local recovery, explicit review, durable success |
-| Client payment receipt | Medium | Critical | Atomic ledger mutation exists; no overpayment warning or durable result | Remaining-invoice and balance impact review, durable success |
-| Field expense disbursement | High | Critical | Atomic ledger mutation exists; no before/after review and auto-close | Balance impact review, explicit confirmation, durable success |
-| Manual cash movement | Medium | Critical | Before/after preview exists, but primary CTA posts immediately; close loses input; reload is the only success handling | Local recovery, review state, dirty guard, durable success |
-| Account transfer | Medium | Critical | Atomic paired ledger mutation exists, but only source after-balance is prominent; close loses input | Source and destination before/after review, dirty guard, durable success |
-| Bank account create/edit | Low/Medium | High | Opening balance creates ledger entry; form has no close protection | Local recovery/dirty guard and opening-balance consequence review |
+| Flow                        |  Frequency |     Risk | Finding                                                                                                                | Treatment                                                                          |
+| --------------------------- | ---------: | -------: | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Vendor bill creation        |       High | Critical | Writes the final bill and approved canonical expense directly; no recovery or review; auto-closes after submit         | Server-backed input draft, local recovery, category impact review, durable success |
+| Vendor payment schedule     |       High |     High | Defaults are helpful but no review of remaining bill or approval path; auto-closes                                     | Local recovery/dirty guard, review, explicit scheduling result                     |
+| Vendor payment disbursement |       High | Critical | Balance mutation is atomic, but UI hides before/after until account is chosen and auto-closes                          | Balance impact review, insufficient-funds block, durable success                   |
+| Client invoice creation     |     Medium |     High | Good defaults, but directly creates immutable invoice and auto-closes                                                  | Local recovery, explicit review, durable success                                   |
+| Client payment receipt      |     Medium | Critical | Atomic ledger mutation exists; no overpayment warning or durable result                                                | Remaining-invoice and balance impact review, durable success                       |
+| Field expense disbursement  |       High | Critical | Atomic ledger mutation exists; no before/after review and auto-close                                                   | Balance impact review, explicit confirmation, durable success                      |
+| Manual cash movement        |     Medium | Critical | Before/after preview exists, but primary CTA posts immediately; close loses input; reload is the only success handling | Local recovery, review state, dirty guard, durable success                         |
+| Account transfer            |     Medium | Critical | Atomic paired ledger mutation exists, but only source after-balance is prominent; close loses input                    | Source and destination before/after review, dirty guard, durable success           |
+| Bank account create/edit    | Low/Medium |     High | Opening balance creates ledger entry; form has no close protection                                                     | Local recovery/dirty guard and opening-balance consequence review                  |
 
 ## Locked business boundaries
 

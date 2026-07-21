@@ -3,10 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { ProjectDrawer } from "./project-drawer";
 import type { SearchFilterMode } from "@/components/ui/exclusive-search-filter-bar";
-import {
-  updateUrlSearchParam,
-  useUrlSearchParam,
-} from "@/lib/utils/use-url-search-param";
+import { updateUrlSearchParam, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { ProjectListCard } from "./project-list-card";
 import {
   ProjectListEmptyState,
@@ -14,11 +11,7 @@ import {
   ProjectSearchAndFilters,
 } from "./project-list-header";
 import type { ClientData, FilterId, ProjectItem, UserData } from "./project-list-types";
-import {
-  matchesFilter,
-  summarizeProjectPortfolio,
-  toFilterId,
-} from "./project-list-utils";
+import { matchesFilter, summarizeProjectPortfolio, toFilterId } from "./project-list-utils";
 
 interface ProjectListClientProps {
   readonly projects: readonly ProjectItem[];
@@ -34,21 +27,16 @@ export function ProjectListClient({
   isAllowedToCreate,
 }: ProjectListClientProps): React.JSX.Element {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<ProjectItem | null>(
-    null,
-  );
+  const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [controlMode, setControlMode] = useState<SearchFilterMode>("filter");
   const [resultsMinHeight, setResultsMinHeight] = useState<number | null>(null);
   const resultsRef = React.useRef<HTMLDivElement | null>(null);
   const pendingScrollYRef = React.useRef<number | null>(null);
   const activeFilter = toFilterId(useUrlSearchParam("filter"));
-  const clearQueryParam = React.useCallback(
-    (key: string): void => {
-      updateUrlSearchParam(key, null, "replace");
-    },
-    [],
-  );
+  const clearQueryParam = React.useCallback((key: string): void => {
+    updateUrlSearchParam(key, null, "replace");
+  }, []);
 
   const closeProjectDrawer = React.useCallback((): void => {
     setIsDrawerOpen(false);
@@ -56,11 +44,7 @@ export function ProjectListClient({
   }, [clearQueryParam]);
 
   const selectFilter = React.useCallback((filter: FilterId): void => {
-    updateUrlSearchParam(
-      "filter",
-      filter === "ALL" ? null : filter,
-      "replace",
-    );
+    updateUrlSearchParam("filter", filter === "ALL" ? null : filter, "replace");
   }, []);
 
   const filteredProjects = useMemo(() => {
@@ -73,22 +57,23 @@ export function ProjectListClient({
         project.clientName.toLowerCase().includes(normalizedQuery) ||
         (project.location ?? "").toLowerCase().includes(normalizedQuery);
 
-      return controlMode === "search"
-        ? matchesSearch
-        : matchesFilter(project, activeFilter);
+      return controlMode === "search" ? matchesSearch : matchesFilter(project, activeFilter);
     });
   }, [activeFilter, controlMode, projects, searchQuery]);
 
   const summary = useMemo(() => summarizeProjectPortfolio(projects), [projects]);
-  const filterCounts = useMemo<Partial<Record<FilterId, number>>>(() => ({
-    ALL: projects.length,
-    ACTIVE: projects.filter((project) => project.status === "ACTIVE").length,
-    DRAFT: projects.filter((project) => project.status === "DRAFT").length,
-    ON_HOLD: projects.filter((project) => project.status === "ON_HOLD").length,
-    COMPLETED: projects.filter((project) => project.status === "COMPLETED").length,
-    WARNING: projects.filter((project) => project.effectiveHealth === "WARNING").length,
-    CRITICAL: projects.filter((project) => project.effectiveHealth === "CRITICAL").length,
-  }), [projects]);
+  const filterCounts = useMemo<Partial<Record<FilterId, number>>>(
+    () => ({
+      ALL: projects.length,
+      ACTIVE: projects.filter((project) => project.status === "ACTIVE").length,
+      DRAFT: projects.filter((project) => project.status === "DRAFT").length,
+      ON_HOLD: projects.filter((project) => project.status === "ON_HOLD").length,
+      COMPLETED: projects.filter((project) => project.status === "COMPLETED").length,
+      WARNING: projects.filter((project) => project.effectiveHealth === "WARNING").length,
+      CRITICAL: projects.filter((project) => project.effectiveHealth === "CRITICAL").length,
+    }),
+    [projects],
+  );
 
   React.useLayoutEffect(() => {
     const pendingScrollY = pendingScrollYRef.current;
@@ -146,10 +131,13 @@ export function ProjectListClient({
         ) : (
           <section aria-labelledby="project-list-title">
             <div className="flex min-h-10 items-center justify-between gap-3 px-1">
-              <h2 id="project-list-title" className="text-[17px] font-bold leading-6 tracking-[-0.015em] text-on-surface max-[430px]:text-[15px]">
+              <h2
+                id="project-list-title"
+                className="text-on-surface text-[17px] leading-6 font-bold tracking-[-0.015em] max-[430px]:text-[15px]"
+              >
                 Daftar proyek
               </h2>
-              <span className="shrink-0 text-[9px] font-semibold text-on-surface-variant/65">
+              <span className="text-on-surface-variant/65 shrink-0 text-[9px] font-semibold">
                 {filteredProjects.length} dari {projects.length}
               </span>
             </div>

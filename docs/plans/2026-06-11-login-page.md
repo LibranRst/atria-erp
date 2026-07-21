@@ -17,19 +17,21 @@ Rencana ini menjelaskan implementasi Halaman Login `/login` untuk sistem autenti
 ### Komponen: Rute & Halaman Login (Authentication Module)
 
 #### [NEW] [page.tsx](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/app/login/page.tsx)
-* Membuat rute `/login` yang bertindak sebagai gerbang masuk pengguna.
-* Menyediakan form login client-side (`"use client"`) dengan input Email dan Password.
-* Touch target area tap (tombol & input) diatur berukuran minimal **48px** untuk ramah penggunaan mobile satu tangan.
-* Mengintegrasikan login credentials menggunakan `authClient.signIn.email({ email, password })`.
-* Menyertakan feedback error visual yang kontras ketika login gagal (misal: kredensial salah, error jaringan).
-* Menampilkan state loading (spinners/disabled) untuk menghindari submit berulang.
-* Redirect ke halaman utama `/` setelah autentikasi berhasil.
+
+- Membuat rute `/login` yang bertindak sebagai gerbang masuk pengguna.
+- Menyediakan form login client-side (`"use client"`) dengan input Email dan Password.
+- Touch target area tap (tombol & input) diatur berukuran minimal **48px** untuk ramah penggunaan mobile satu tangan.
+- Mengintegrasikan login credentials menggunakan `authClient.signIn.email({ email, password })`.
+- Menyertakan feedback error visual yang kontras ketika login gagal (misal: kredensial salah, error jaringan).
+- Menampilkan state loading (spinners/disabled) untuk menghindari submit berulang.
+- Redirect ke halaman utama `/` setelah autentikasi berhasil.
 
 ---
 
 ## Verification Plan
 
 ### Manual Verification
+
 1. Jalankan server dev (`bun run dev`).
 2. Akses halaman `/ledger` atau `/projects` tanpa login. Sistem harus mengarahkan (redirect 302) secara otomatis ke `/login`.
 3. Coba lakukan login menggunakan kredensial salah (misal: `test@salah.com` / `password`). Pastikan muncul pesan error yang jelas dan mudah dibaca.

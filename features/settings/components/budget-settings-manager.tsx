@@ -27,8 +27,7 @@ import {
 } from "./settings-primitives";
 import { MoneyValue } from "@/components/ui/page-primitives";
 
-const fullMoney = (value: number): string =>
-  `Rp ${Math.round(value).toLocaleString("id-ID")}`;
+const fullMoney = (value: number): string => `Rp ${Math.round(value).toLocaleString("id-ID")}`;
 const percent = (value: number): string =>
   new Intl.NumberFormat("id-ID", {
     style: "percent",
@@ -61,8 +60,7 @@ export function BudgetSettingsManager({
   const [message, setMessage] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
   const allocation = setting.categories.reduce(
-    (sum, category) =>
-      sum + (category.isEnabled ? category.ratioPercentage : 0),
+    (sum, category) => sum + (category.isEnabled ? category.ratioPercentage : 0),
     0,
   );
   const internalBudget = sampleValue * setting.budgetCapRatio;
@@ -103,7 +101,7 @@ export function BudgetSettingsManager({
   }
 
   return (
-    <section className="min-w-0 space-y-lg">
+    <section className="space-y-lg min-w-0">
       {presentation === "onboarding" ? null : hideHeader ? (
         <SettingsModuleHeader
           eyebrow="Default finansial"
@@ -136,7 +134,7 @@ export function BudgetSettingsManager({
             />
           </FormField>
           <SettingsGroupSurface>
-            <dl className="divide-y divide-black/[0.055] px-4">
+            <dl className="divide-y divide-black/5.5 px-4">
               {[
                 {
                   label: "Budget Internal",
@@ -159,9 +157,7 @@ export function BudgetSettingsManager({
                   key={item.label}
                   className="flex min-h-12 items-center justify-between gap-3 py-2.5"
                 >
-                  <dt className="text-[11px] text-on-surface-variant">
-                    {item.label}
-                  </dt>
+                  <dt className="text-on-surface-variant text-[11px]">{item.label}</dt>
                   <dd className="min-w-0">
                     <MoneyValue
                       amount={item.value}
@@ -220,18 +216,12 @@ export function BudgetSettingsManager({
 
       <FormSection
         presentation="plain"
-        title={
-          presentation === "onboarding"
-            ? "Pembagian budget"
-            : "Pembagian kategori"
-        }
+        title={presentation === "onboarding" ? "Pembagian budget" : "Pembagian kategori"}
         helper="Bagikan Budget Internal ke kategori aktif. Total tidak boleh lebih dari 100%."
       >
         <div className="flex min-w-0 items-end justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="text-[17px] font-semibold text-on-surface">
-              Pembagian Budget Internal
-            </h2>
+            <h2 className="text-on-surface text-[17px] font-semibold">Pembagian Budget Internal</h2>
           </div>
           <p
             className={`financial-amount shrink-0 font-mono text-lg font-bold tabular-nums ${overLimit ? "text-error" : "text-on-surface"}`}
@@ -240,7 +230,7 @@ export function BudgetSettingsManager({
           </p>
         </div>
         <div
-          className="mt-sm flex h-2 overflow-hidden rounded-full bg-surface-container"
+          className="mt-sm bg-surface-container flex h-2 overflow-hidden rounded-full"
           aria-label={`Teralokasi ${percent(allocation)}, buffer ${percent(Math.max(0, 1 - allocation))}`}
         >
           <span
@@ -254,18 +244,15 @@ export function BudgetSettingsManager({
             />
           ) : null}
         </div>
-        <div className="mt-2 flex min-w-0 justify-between gap-3 text-[10px] text-on-surface-variant">
+        <div className="text-on-surface-variant mt-2 flex min-w-0 justify-between gap-3 text-[10px]">
           <span className="min-w-0">Teralokasi {fullMoney(allocated)}</span>
-          <span className="shrink-0">
-            Buffer {percent(Math.max(0, 1 - allocation))}
-          </span>
+          <span className="shrink-0">Buffer {percent(Math.max(0, 1 - allocation))}</span>
         </div>
         <SettingsGroupSurface className="mt-md">
-          <div className="divide-y divide-black/[0.055]">
+          <div className="divide-y divide-black/5.5">
             {setting.categories.map((category, index) => {
               const categoryAmount =
-                internalBudget *
-                (category.isEnabled ? category.ratioPercentage : 0);
+                internalBudget * (category.isEnabled ? category.ratioPercentage : 0);
               return (
                 <div
                   key={category.id}
@@ -279,15 +266,13 @@ export function BudgetSettingsManager({
                       aria-label={`${category.isEnabled ? "Nonaktifkan" : "Aktifkan"} ${category.name}`}
                       whileTap={{ scale: 0.96 }}
                       transition={transitionSpringSnappy}
-                      className={`relative h-7 w-12 shrink-0 rounded-full p-1 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${category.isEnabled ? "bg-primary" : "bg-outline-variant/35"}`}
+                      className={`focus-visible:ring-primary/30 relative h-7 w-12 shrink-0 rounded-full p-1 outline-none focus-visible:ring-2 ${category.isEnabled ? "bg-primary" : "bg-outline-variant/35"}`}
                       disabled={!canManage}
                       onClick={() =>
                         setSetting({
                           ...setting,
                           categories: setting.categories.map((row, rowIndex) =>
-                            rowIndex === index
-                              ? { ...row, isEnabled: !row.isEnabled }
-                              : row,
+                            rowIndex === index ? { ...row, isEnabled: !row.isEnabled } : row,
                           ),
                         })
                       }
@@ -299,10 +284,8 @@ export function BudgetSettingsManager({
                       />
                     </motion.button>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-on-surface">
-                        {category.name}
-                      </p>
-                      <p className="truncate text-[9px] uppercase tracking-wide text-on-surface-variant">
+                      <p className="text-on-surface truncate text-sm font-bold">{category.name}</p>
+                      <p className="text-on-surface-variant truncate text-[9px] tracking-wide uppercase">
                         {category.code}
                       </p>
                     </div>
@@ -316,9 +299,7 @@ export function BudgetSettingsManager({
                       <div className="mt-1 flex justify-end">
                         <SettingsStatusLabel
                           label={
-                            category.isEnabled
-                              ? percent(category.ratioPercentage)
-                              : "Nonaktif"
+                            category.isEnabled ? percent(category.ratioPercentage) : "Nonaktif"
                           }
                           tone={category.isEnabled ? "neutral" : "inactive"}
                         />
@@ -335,14 +316,13 @@ export function BudgetSettingsManager({
                         onChange={(value) =>
                           setSetting({
                             ...setting,
-                            categories: setting.categories.map(
-                              (row, rowIndex) =>
-                                rowIndex === index
-                                  ? {
-                                      ...row,
-                                      ratioPercentage: Number(value || 0) / 100,
-                                    }
-                                  : row,
+                            categories: setting.categories.map((row, rowIndex) =>
+                              rowIndex === index
+                                ? {
+                                    ...row,
+                                    ratioPercentage: Number(value || 0) / 100,
+                                  }
+                                : row,
                             ),
                           })
                         }
@@ -361,8 +341,8 @@ export function BudgetSettingsManager({
           </FormRiskNotice>
         ) : (
           <FormRiskNotice title="Buffer tetap terlihat" tone="success">
-            Sisa {percent(Math.max(0, 1 - allocation))} tidak dialokasikan dan
-            tetap menjadi buffer Budget Internal.
+            Sisa {percent(Math.max(0, 1 - allocation))} tidak dialokasikan dan tetap menjadi buffer
+            Budget Internal.
           </FormRiskNotice>
         )}
       </FormSection>
@@ -375,9 +355,9 @@ export function BudgetSettingsManager({
         </p>
       ) : null}
       {canManage && dirty ? (
-        <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 min-w-0 rounded-[22px] bg-white/[0.96] p-2 shadow-[0_12px_32px_rgba(17,17,17,0.13)] ring-1 ring-black/[0.04] backdrop-blur-xl space-y-1">
+        <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 min-w-0 space-y-1 rounded-[22px] bg-white/96 p-2 shadow-[0_12px_32px_rgba(17,17,17,0.13)] ring-1 ring-black/4 backdrop-blur-xl">
           <p
-            className={`px-1 text-[11px] leading-4 ${overLimit ? "font-bold text-error" : "text-on-surface-variant"}`}
+            className={`px-1 text-[11px] leading-4 ${overLimit ? "text-error font-bold" : "text-on-surface-variant"}`}
           >
             {overLimit
               ? "Total kategori melebihi 100%. Kurangi rasio sebelum menyimpan."
@@ -389,7 +369,7 @@ export function BudgetSettingsManager({
             onClick={() => setConfirmSave(true)}
             whileTap={{ scale: 0.97 }}
             transition={transitionSpringSnappy}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
+            className="bg-primary text-on-primary flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-xs font-bold disabled:opacity-40"
           >
             <Save className="h-4 w-4" />
             {pending ? "Menyimpan…" : "Tinjau perubahan"}
@@ -404,22 +384,18 @@ export function BudgetSettingsManager({
         onClose={() => setConfirmSave(false)}
         actions={
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-surface-container-low p-3 text-center">
+            <div className="bg-surface-container-low grid grid-cols-2 gap-2 rounded-2xl p-3 text-center">
               <div>
-                <p className="text-[9px] font-bold uppercase text-on-surface-variant">
+                <p className="text-on-surface-variant text-[9px] font-bold uppercase">
                   Internal budget
                 </p>
-                <p className="mt-1 text-sm font-bold">
-                  {percent(setting.budgetCapRatio)}
-                </p>
+                <p className="mt-1 text-sm font-bold">{percent(setting.budgetCapRatio)}</p>
               </div>
               <div>
-                <p className="text-[9px] font-bold uppercase text-on-surface-variant">
+                <p className="text-on-surface-variant text-[9px] font-bold uppercase">
                   Buffer kategori
                 </p>
-                <p className="mt-1 text-sm font-bold">
-                  {percent(Math.max(0, 1 - allocation))}
-                </p>
+                <p className="mt-1 text-sm font-bold">{percent(Math.max(0, 1 - allocation))}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -428,7 +404,7 @@ export function BudgetSettingsManager({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => setConfirmSave(false)}
-                className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
+                className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
               >
                 Kembali
               </motion.button>
@@ -438,7 +414,7 @@ export function BudgetSettingsManager({
                 transition={transitionSpringSnappy}
                 disabled={pending || overLimit}
                 onClick={save}
-                className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white disabled:opacity-40"
+                className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white disabled:opacity-40"
               >
                 Simpan Default
               </motion.button>

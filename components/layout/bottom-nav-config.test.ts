@@ -8,16 +8,13 @@ function actions(roleName: string, pathname: string) {
     pathname,
     isProjectDetail: /^\/projects\/[^/]+/.test(pathname),
     isCurrentProjectLocked: false,
-    withQuery: (key, value = "true", targetPath = pathname) =>
-      `${targetPath}?${key}=${value}`,
+    withQuery: (key, value = "true", targetPath = pathname) => `${targetPath}?${key}=${value}`,
   });
 }
 
 describe("contextual FAB actions", () => {
   test("keeps Projects focused on adding a project for Owner", () => {
-    expect(actions("OWNER", "/projects").map((item) => item.label)).toEqual([
-      "Project Baru",
-    ]);
+    expect(actions("OWNER", "/projects").map((item) => item.label)).toEqual(["Project Baru"]);
   });
 
   test("keeps Finance focused on expense and vendor bill actions", () => {

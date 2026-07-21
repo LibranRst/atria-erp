@@ -5,6 +5,7 @@ Re-create the database seed data (`db/seed.ts`) to establish a clear, structured
 ## User Review Required
 
 > [!IMPORTANT]
+>
 > - **Unified Active Project**: Focus on a single active project `Menteng Villa - Kitchen & Living Room Fit-Out` to make tracing numbers straightforward.
 > - **Actionable State**:
 >   - **DP 30% (Rp 240M)**: Paid and reconciled.
@@ -18,6 +19,7 @@ Re-create the database seed data (`db/seed.ts`) to establish a clear, structured
 ### Seed Database Changes
 
 #### [MODIFY] [seed.ts](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/db/seed.ts)
+
 - Replace all seeds with clean, grouped dataset representing "PT Dekoria Desain Estetika".
 - Keep static user logins:
   - `ronald@dekoria.com` (Owner)
@@ -28,6 +30,7 @@ Re-create the database seed data (`db/seed.ts`) to establish a clear, structured
 ## Verification Plan
 
 ### Seeding Execution
+
 - Execute database reset and seed:
   ```bash
   bun db:seed

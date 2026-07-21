@@ -9,7 +9,11 @@ import {
   resolveBudgetCategoryForExpense,
   syncProjectBudgetCategory,
 } from "@/lib/budget/budget-sync";
-import { applyExpenseStockHandling, type FieldRequestTx, type StockHandling } from "./field-request-stock";
+import {
+  applyExpenseStockHandling,
+  type FieldRequestTx,
+  type StockHandling,
+} from "./field-request-stock";
 import { createProjectCostApprovalTx } from "./field-request-utils";
 
 export type FieldRequestSubmissionItem = {
@@ -78,9 +82,7 @@ export async function createSubmittedFieldRequestTx(
     await createProjectCostApprovalTx(tx, {
       projectCostId,
       isOverrun,
-      label: args.includeApprovalCategoryLabel
-        ? budgetCategory.expenseCategory.name
-        : undefined,
+      label: args.includeApprovalCategoryLabel ? budgetCategory.expenseCategory.name : undefined,
     });
   }
 

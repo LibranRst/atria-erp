@@ -43,10 +43,10 @@ export function CategorySettingsManager({
   onMutationComplete,
 }: CategorySettingsManagerProps): React.JSX.Element {
   const [categories, setCategories] = React.useState(initialCategories);
-  const [editing, setEditing] =
-    React.useState<ExpenseCategorySettingRow | null>(null);
-  const [editingBaseline, setEditingBaseline] =
-    React.useState<ExpenseCategorySettingRow | null>(null);
+  const [editing, setEditing] = React.useState<ExpenseCategorySettingRow | null>(null);
+  const [editingBaseline, setEditingBaseline] = React.useState<ExpenseCategorySettingRow | null>(
+    null,
+  );
   const [confirmClose, setConfirmClose] = React.useState(false);
   const [message, setMessage] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
@@ -54,8 +54,7 @@ export function CategorySettingsManager({
   const editingDirty = Boolean(
     editing &&
     editingBaseline &&
-    (editing.name !== editingBaseline.name ||
-      editing.description !== editingBaseline.description),
+    (editing.name !== editingBaseline.name || editing.description !== editingBaseline.description),
   );
 
   function openEditor(category: ExpenseCategorySettingRow): void {
@@ -113,34 +112,34 @@ export function CategorySettingsManager({
         />
       )}
       {message && (
-        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-[11px] leading-4 text-primary ring-1 ring-primary/15">
+        <p className="bg-primary/5 text-primary ring-primary/15 rounded-2xl px-3 py-2.5 text-[11px] leading-4 ring-1">
           {message}
         </p>
       )}
       <SettingsGroupSurface>
-        <div className="divide-y divide-black/[0.055]">
+        <div className="divide-y divide-black/5.5">
           {categories.map((category) => (
             <button
               key={category.id}
               type="button"
               onClick={() => openEditor(category)}
-              className="flex min-h-[86px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
+              className="focus-visible:bg-surface-container-low active:bg-surface-container-low/75 flex min-h-[86px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none"
               aria-label={`${canManage ? "Edit" : "Lihat"} ${category.name}`}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
+              <span className="bg-surface-container-low text-on-surface-variant flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
                 <LockKeyhole className="h-4 w-4" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex min-w-0 items-center gap-2">
-                  <span className="truncate text-[13px] font-bold text-on-surface">
+                  <span className="text-on-surface truncate text-[13px] font-bold">
                     {category.name}
                   </span>
                   <SettingsStatusLabel label={category.code} tone="neutral" />
                 </span>
-                <span className="mt-1 block line-clamp-2 text-[10px] leading-[1.3] text-on-surface-variant">
+                <span className="text-on-surface-variant mt-1 line-clamp-2 block text-[10px] leading-[1.3]">
                   {category.description || "Belum ada deskripsi kategori."}
                 </span>
-                <span className="mt-1.5 block text-[9px] font-semibold text-on-surface-variant/70">
+                <span className="text-on-surface-variant/70 mt-1.5 block text-[9px] font-semibold">
                   Kode dan status aktif dilindungi
                 </span>
               </span>
@@ -173,9 +172,7 @@ export function CategorySettingsManager({
             ? `${editing.name.trim() || "Nama belum diisi"} · Kode ${editing.code}`
             : undefined
         }
-        statusTone={
-          !editingNameValid ? "warning" : editingDirty ? "success" : "default"
-        }
+        statusTone={!editingNameValid ? "warning" : editingDirty ? "success" : "default"}
       >
         {editing ? (
           <FormSection
@@ -183,18 +180,18 @@ export function CategorySettingsManager({
             helper="Nama dan penjelasan tampil di budget, transaksi, dan laporan."
           >
             <div className="flex min-h-14 items-center gap-3 px-4 py-2.5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
+              <span className="bg-surface-container-low text-on-surface-variant flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
                 <LockKeyhole className="h-4 w-4" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
                   Kode kategori
                 </p>
-                <p className="mt-1 text-sm font-bold leading-none text-on-surface">
+                <p className="text-on-surface mt-1 text-sm leading-none font-bold">
                   {editing.code}
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-surface-container-low px-2.5 py-1 text-[9px] font-bold text-on-surface-variant">
+              <span className="bg-surface-container-low text-on-surface-variant shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold">
                 Dilindungi
               </span>
             </div>
@@ -202,9 +199,7 @@ export function CategorySettingsManager({
               label="Nama kategori"
               htmlFor="expense-category-name"
               required
-              error={
-                !editingNameValid ? "Nama kategori wajib diisi." : undefined
-              }
+              error={!editingNameValid ? "Nama kategori wajib diisi." : undefined}
             >
               <TextInput
                 id="expense-category-name"
@@ -224,9 +219,7 @@ export function CategorySettingsManager({
                 id="expense-category-description"
                 disabled={!canManage}
                 value={editing.description ?? ""}
-                onChange={(value) =>
-                  setEditing({ ...editing, description: value })
-                }
+                onChange={(value) => setEditing({ ...editing, description: value })}
                 rows={3}
               />
             </FormField>
@@ -246,7 +239,7 @@ export function CategorySettingsManager({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmClose(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
+              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
             >
               Lanjut Mengedit
             </motion.button>
@@ -259,7 +252,7 @@ export function CategorySettingsManager({
                 setEditingBaseline(null);
                 setConfirmClose(false);
               }}
-              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
+              className="bg-error min-h-12 rounded-full px-4 text-xs font-bold text-white"
             >
               Buang Perubahan
             </motion.button>

@@ -31,12 +31,12 @@ function legacyBudgetMutationDisabled<T>(): ActionResponse<T> {
 
 /**
  * Membuat draf anggaran (project_budget) baru untuk proyek tertentu.
- * 
+ *
  * @param projectId ID proyek target
  * @returns Status respons aksi dan data anggaran yang berhasil dibuat
  */
 export async function createProjectBudget(
-  projectId: string
+  projectId: string,
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
   const compatibilityGuard = legacyBudgetMutationDisabled<typeof projectBudget.$inferSelect>();
   if (!compatibilityGuard.success) return compatibilityGuard;
@@ -78,7 +78,10 @@ export async function createProjectBudget(
     if (existingBudget) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: "Rencana anggaran untuk proyek ini sudah dibuat sebelumnya." },
+        error: {
+          code: "FORBIDDEN",
+          message: "Rencana anggaran untuk proyek ini sudah dibuat sebelumnya.",
+        },
       };
     }
 
@@ -104,12 +107,12 @@ export async function createProjectBudget(
 /**
  * Menambahkan item anggaran belanja (BoQ) baru ke dalam rencana anggaran proyek.
  * Hanya diperbolehkan jika status anggaran masih DRAFT atau REJECTED.
- * 
+ *
  * @param input Objek data masukan item anggaran
  * @returns Status respons aksi dan data item anggaran terbuat
  */
 export async function createBudgetItem(
-  input: CreateBudgetItemInput
+  input: CreateBudgetItemInput,
 ): Promise<ActionResponse<typeof projectBudgetItem.$inferSelect>> {
   const compatibilityGuard = legacyBudgetMutationDisabled<typeof projectBudgetItem.$inferSelect>();
   if (!compatibilityGuard.success) return compatibilityGuard;
@@ -121,7 +124,8 @@ export async function createBudgetItem(
     };
   }
 
-  const { projectBudgetId, costCategoryId, name, budgetCategory, quantity, unit, unitPrice } = validation.data;
+  const { projectBudgetId, costCategoryId, name, budgetCategory, quantity, unit, unitPrice } =
+    validation.data;
   const allocatedAmount = quantity * unitPrice;
 
   try {
@@ -193,12 +197,12 @@ export async function createBudgetItem(
 /**
  * Mengajukan draf rencana anggaran (RAB) ke Owner untuk mendapatkan persetujuan.
  * Mengubah status DRAFT/REJECTED menjadi PENDING_APPROVAL.
- * 
+ *
  * @param projectBudgetId ID rencana anggaran proyek
  * @returns Status respons aksi dan data anggaran terbaru
  */
 export async function submitBudgetForApproval(
-  projectBudgetId: string
+  projectBudgetId: string,
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
   const compatibilityGuard = legacyBudgetMutationDisabled<typeof projectBudget.$inferSelect>();
   if (!compatibilityGuard.success) return compatibilityGuard;
@@ -234,7 +238,10 @@ export async function submitBudgetForApproval(
     if (budget.status !== "DRAFT" && budget.status !== "REJECTED") {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: `Anggaran dengan status ${formatBusinessLabel(budget.status)} tidak dapat diajukan.` },
+        error: {
+          code: "FORBIDDEN",
+          message: `Anggaran dengan status ${formatBusinessLabel(budget.status)} tidak dapat diajukan.`,
+        },
       };
     }
 
@@ -259,12 +266,12 @@ export async function submitBudgetForApproval(
 /**
  * Menyetujui rencana anggaran proyek yang sedang berstatus PENDING_APPROVAL.
  * Hanya dapat diakses oleh peran OWNER / FINANCE_ADMIN.
- * 
+ *
  * @param projectBudgetId ID rencana anggaran proyek
  * @returns Status respons aksi dan data anggaran terbaru
  */
 export async function approveBudget(
-  projectBudgetId: string
+  projectBudgetId: string,
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
   const compatibilityGuard = legacyBudgetMutationDisabled<typeof projectBudget.$inferSelect>();
   if (!compatibilityGuard.success) return compatibilityGuard;
@@ -293,7 +300,10 @@ export async function approveBudget(
     if (budget.status !== "PENDING_APPROVAL") {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: "Hanya anggaran berstatus PENDING_APPROVAL yang dapat disetujui." },
+        error: {
+          code: "FORBIDDEN",
+          message: "Hanya anggaran berstatus PENDING_APPROVAL yang dapat disetujui.",
+        },
       };
     }
 
@@ -329,14 +339,14 @@ export async function approveBudget(
 /**
  * Menolak rencana anggaran proyek yang sedang berstatus PENDING_APPROVAL.
  * Mengembalikan anggaran ke status REJECTED disertai catatan penolakan.
- * 
+ *
  * @param projectBudgetId ID rencana anggaran proyek
  * @param notes Catatan/alasan penolakan dari Owner
  * @returns Status respons aksi dan data anggaran terbaru
  */
 export async function rejectBudget(
   projectBudgetId: string,
-  notes: string
+  notes: string,
 ): Promise<ActionResponse<typeof projectBudget.$inferSelect>> {
   const compatibilityGuard = legacyBudgetMutationDisabled<typeof projectBudget.$inferSelect>();
   if (!compatibilityGuard.success) return compatibilityGuard;
@@ -365,7 +375,10 @@ export async function rejectBudget(
     if (budget.status !== "PENDING_APPROVAL") {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: "Hanya anggaran berstatus PENDING_APPROVAL yang dapat ditolak." },
+        error: {
+          code: "FORBIDDEN",
+          message: "Hanya anggaran berstatus PENDING_APPROVAL yang dapat ditolak.",
+        },
       };
     }
 

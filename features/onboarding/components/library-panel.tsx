@@ -17,7 +17,8 @@ export function LibraryPanel({
   return (
     <OnboardingStage>
       <OnboardingNotice>
-        Library adalah template harga untuk RAP/RAB. Ia bukan Material Master dan tidak memiliki stok.
+        Library adalah template harga untuk RAP/RAB. Ia bukan Material Master dan tidak memiliki
+        stok.
       </OnboardingNotice>
       <LibrarySettingsManager
         initialItems={items}

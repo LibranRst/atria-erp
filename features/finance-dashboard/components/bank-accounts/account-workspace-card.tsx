@@ -36,12 +36,8 @@ function QuickActionButton({
       <span className="shrink-0">{icon}</span>
       {compactLabel ? (
         <>
-          <span className="min-w-0 truncate min-[390px]:hidden">
-            {compactLabel}
-          </span>
-          <span className="hidden min-w-0 truncate min-[390px]:inline">
-            {label}
-          </span>
+          <span className="min-w-0 truncate min-[390px]:hidden">{compactLabel}</span>
+          <span className="hidden min-w-0 truncate min-[390px]:inline">{label}</span>
         </>
       ) : (
         <span className="min-w-0 truncate">{label}</span>
@@ -92,11 +88,7 @@ export function AccountWorkspaceCard({
           disabled={!account.isActive || !canTransfer}
           onClick={onTransfer}
         />
-        <QuickActionButton
-          label="Edit"
-          icon={<Pencil className="h-4 w-4" />}
-          onClick={onEdit}
-        />
+        <QuickActionButton label="Edit" icon={<Pencil className="h-4 w-4" />} onClick={onEdit} />
       </div>
     </article>
   );

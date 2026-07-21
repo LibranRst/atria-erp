@@ -3,11 +3,7 @@
 import React from "react";
 
 import { RabEmptyState } from "./rab-empty-state";
-import {
-  RabClientSummaryPanel,
-  RabDraftActionsPanel,
-  RabItemsPanel,
-} from "./rab-client-sections";
+import { RabClientSummaryPanel, RabDraftActionsPanel, RabItemsPanel } from "./rab-client-sections";
 import { RabRevisionHistoryPanel } from "./rab-revision-history-panel";
 import type {
   RapView,
@@ -64,12 +60,7 @@ export function RabClientPanel({
   readonly setHistoryDetailId: (id: string | null) => void;
 }): React.JSX.Element {
   if (!rabEstimate) {
-    return (
-      <RabEmptyState
-        canManageRab={canManageRab}
-        setSourcePickerOpen={setSourcePickerOpen}
-      />
-    );
+    return <RabEmptyState canManageRab={canManageRab} setSourcePickerOpen={setSourcePickerOpen} />;
   }
 
   return (

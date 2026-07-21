@@ -44,20 +44,23 @@ export async function createVendorBillTx(
     projectCategoryPlanItemId: input.projectCategoryPlanItemId,
   });
 
-  const [created] = await tx.insert(vendorBill).values({
-    vendorId: input.vendorId,
-    projectId: input.projectId,
-    projectBudgetCategoryId: budgetContext.projectBudgetCategoryId,
-    projectBudgetItemId: null,
-    projectCategoryPlanItemId: input.projectCategoryPlanItemId ?? null,
-    billNumber: input.billNumber,
-    amount: input.amount.toFixed(2),
-    status: "UNPAID",
-    dueDate: input.dueDate,
-    notes: input.notes || null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }).returning();
+  const [created] = await tx
+    .insert(vendorBill)
+    .values({
+      vendorId: input.vendorId,
+      projectId: input.projectId,
+      projectBudgetCategoryId: budgetContext.projectBudgetCategoryId,
+      projectBudgetItemId: null,
+      projectCategoryPlanItemId: input.projectCategoryPlanItemId ?? null,
+      billNumber: input.billNumber,
+      amount: input.amount.toFixed(2),
+      status: "UNPAID",
+      dueDate: input.dueDate,
+      notes: input.notes || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning();
   if (!created) throw new Error("VENDOR_BILL_CREATE_FAILED");
 
   await tx.insert(projectExpenses).values({
@@ -79,7 +82,10 @@ export async function createVendorBillTx(
     status: budgetContext.categoryCode === "MATERIAL" ? "INVENTORY_ASSET" : "APPROVED",
   });
 
-  await syncProjectBudgetCategory({ tx, projectBudgetCategoryId: budgetContext.projectBudgetCategoryId });
+  await syncProjectBudgetCategory({
+    tx,
+    projectBudgetCategoryId: budgetContext.projectBudgetCategoryId,
+  });
   await tx.insert(auditLog).values({
     userId: input.requestedById,
     action: "CREATE_VENDOR_BILL",

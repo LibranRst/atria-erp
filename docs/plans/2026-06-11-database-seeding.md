@@ -16,9 +16,11 @@ Rencana implementasi ini mendefinisikan langkah-langkah untuk menulis berkas see
 ### 1. Database Seeder Configuration
 
 #### [NEW] [seed.ts](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/db/seed.ts)
+
 Berkas skrip utama untuk mengisi data dummy awal ke PostgreSQL Neon.
 
 #### [MODIFY] [package.json](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/package.json)
+
 Menambahkan skrip dev `"db:seed": "bun db/seed.ts"` agar seeder dapat dijalankan secara instan dengan `bun run db:seed`.
 
 ---
@@ -26,10 +28,11 @@ Menambahkan skrip dev `"db:seed": "bun db/seed.ts"` agar seeder dapat dijalankan
 ## Tasks
 
 ### Task 1: Create Database Seeder Script
+
 - [ ] **Step 1: Write `db/seed.ts`**
-  Tulis berkas `db/seed.ts` dengan mengimpor `db` dari `./index` dan skema tabel dari `./schema`.
+      Tulis berkas `db/seed.ts` dengan mengimpor `db` dari `./index` dan skema tabel dari `./schema`.
 - [ ] **Step 2: Add seed transaction logic**
-  Tulis logika transaksional seeder (`db.transaction(async (tx) => { ... })`) untuk menyisipkan data:
+      Tulis logika transaksional seeder (`db.transaction(async (tx) => { ... })`) untuk menyisipkan data:
   1.  `role` (owner, admin, project_manager)
   2.  `user` (Ronald Wijaya, Lisa Permata, Budi Santoso, Siti Aminah)
   3.  `client` (Alexandra Siregar, Haryanto Wijaya)
@@ -50,16 +53,18 @@ Menambahkan skrip dev `"db:seed": "bun db/seed.ts"` agar seeder dapat dijalankan
   18. `notification` (Warning/critical budget notifications)
   19. `audit_log` (Audit trail log)
 - [ ] **Step 3: Add `db:seed` script in `package.json`**
-  Daftarkan `"db:seed": "bun db/seed.ts"` pada bagian `"scripts"` di `package.json`.
+      Daftarkan `"db:seed": "bun db/seed.ts"` pada bagian `"scripts"` di `package.json`.
 
 ---
 
 ## Verification Plan
 
 ### Automated Tests
+
 - Menjalankan pengeksekusian seeder database secara lokal (memerlukan local database connection atau mock environment):
   `DATABASE_URL="postgresql://postgres:postgres@localhost:5432/atria_erp_mock" bun run db:seed`
-  *Outcome:* Seeder berjalan sukses, mencetak logs seeding untuk setiap entitas, dan diakhiri dengan log "Database seeding completed successfully!" tanpa error type atau foreign key constraints.
+  _Outcome:_ Seeder berjalan sukses, mencetak logs seeding untuk setiap entitas, dan diakhiri dengan log "Database seeding completed successfully!" tanpa error type atau foreign key constraints.
 
 ### Manual Verification
+
 - Memverifikasi keberadaan data pada database lokal atau Neon console pasca eksekusi seeder.

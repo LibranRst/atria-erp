@@ -3,10 +3,7 @@
 import React, { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { LockedTabState } from "../project-tab-states";
-import {
-  CashRealizationSection,
-  ProfitProjectionSection,
-} from "./profitability-summary-sections";
+import { CashRealizationSection, ProfitProjectionSection } from "./profitability-summary-sections";
 import { ProjectClosingSection } from "./project-closing-section";
 import {
   completeProject,
@@ -52,8 +49,7 @@ export function ProfitabilityPanel({
   nextSetupIcon,
   setActiveTab,
 }: ProfitabilityPanelProps): React.JSX.Element {
-  const [closingChecklist, setClosingChecklist] =
-    useState<ProjectClosingChecklist | null>(null);
+  const [closingChecklist, setClosingChecklist] = useState<ProjectClosingChecklist | null>(null);
   const [closingMessage, setClosingMessage] = useState<string | null>(null);
   const [closingNote, setClosingNote] = useState("");
   const [closingPending, startClosingTransition] = useTransition();
@@ -99,8 +95,7 @@ export function ProfitabilityPanel({
         return;
       }
       setClosingChecklist(result.data);
-      const message =
-        "Project selesai dan final profitability snapshot berhasil dibuat.";
+      const message = "Project selesai dan final profitability snapshot berhasil dibuat.";
       setClosingMessage(message);
       toast.success(message);
       window.location.reload();

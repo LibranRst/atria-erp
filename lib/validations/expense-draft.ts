@@ -18,12 +18,7 @@ export const expenseDraftLineSchema = z.object({
   materialId: optionalUuidValue,
   projectRapItemId: optionalUuidValue,
   projectCategoryPlanItemId: optionalUuidValue,
-  stockHandling: z.enum([
-    "EXPENSE_ONLY",
-    "STOCK_IN",
-    "DIRECT_USE",
-    "RESERVE_FOR_PROJECT",
-  ]),
+  stockHandling: z.enum(["EXPENSE_ONLY", "STOCK_IN", "DIRECT_USE", "RESERVE_FOR_PROJECT"]),
   inventoryLocationId: optionalUuidValue,
   quantity: draftNumber,
   unitPrice: draftNumber,
@@ -36,7 +31,11 @@ export const expenseReceiptAttachmentSchema = z.object({
   url: z.string().url(),
   fileName: z.string().min(1).max(255),
   mimeType: z.string().min(1).max(120),
-  size: z.number().int().nonnegative().max(12 * 1024 * 1024),
+  size: z
+    .number()
+    .int()
+    .nonnegative()
+    .max(12 * 1024 * 1024),
 });
 
 export const expenseDraftPayloadSchema = z.object({
@@ -71,7 +70,9 @@ export function nextExpenseDraftRevision(expectedRevision: number): number {
   return expectedRevision + 1;
 }
 
-export function toExpenseSubmission(payload: ExpenseDraftPayloadInput): z.input<typeof submitFieldRequestsSchema> {
+export function toExpenseSubmission(
+  payload: ExpenseDraftPayloadInput,
+): z.input<typeof submitFieldRequestsSchema> {
   return {
     projectId: payload.projectId,
     receiptImageUrl: payload.receipt?.url ?? "",

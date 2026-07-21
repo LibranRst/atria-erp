@@ -55,15 +55,14 @@ export function ProjectActivationSheet({
       onPrimary={activateProject}
     >
       <div className="space-y-4">
-        <div className="rounded-[24px] bg-primary/7 px-4 py-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
+        <div className="bg-primary/7 rounded-[24px] px-4 py-3">
+          <p className="text-primary text-[10px] font-bold tracking-[0.12em] uppercase">
             Keputusan operasional
           </p>
-          <p className="mt-1 text-sm font-bold text-on-surface">
-            {projectName}
-          </p>
-          <p className="mt-1 text-[11px] leading-4 text-on-surface-variant">
-            Setelah aktif, proyek dapat digunakan untuk biaya, tagihan, penerimaan barang, dan pergerakan stok.
+          <p className="text-on-surface mt-1 text-sm font-bold">{projectName}</p>
+          <p className="text-on-surface-variant mt-1 text-[11px] leading-4">
+            Setelah aktif, proyek dapat digunakan untuk biaya, tagihan, penerimaan barang, dan
+            pergerakan stok.
           </p>
         </div>
         <FormSection title="Safeguard sudah lengkap">
@@ -87,13 +86,13 @@ function ReadinessRow({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-12 items-center justify-between gap-3 px-4 py-2.5">
-      <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-on-surface">
-        <span className="material-symbols-outlined text-[18px] text-success" aria-hidden="true">
+      <span className="text-on-surface flex min-w-0 items-center gap-2 text-xs font-medium">
+        <span className="material-symbols-outlined text-success text-[18px]" aria-hidden="true">
           {icon}
         </span>
         {label}
       </span>
-      <span className="shrink-0 text-[11px] font-bold text-success">{value}</span>
+      <span className="text-success shrink-0 text-[11px] font-bold">{value}</span>
     </div>
   );
 }

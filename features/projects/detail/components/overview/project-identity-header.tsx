@@ -48,14 +48,12 @@ export function ProjectIdentityHeader({
   const [detailOpen, setDetailOpen] = useState(false);
   const [failedCoverUrl, setFailedCoverUrl] = useState<string | null>(null);
   const initial = project.name.trim().charAt(0).toUpperCase() || "P";
-  const showCover = Boolean(
-    project.coverImageUrl && failedCoverUrl !== project.coverImageUrl,
-  );
+  const showCover = Boolean(project.coverImageUrl && failedCoverUrl !== project.coverImageUrl);
 
   return (
     <>
-      <section className="overflow-hidden rounded-[28px] bg-primary shadow-[0_16px_38px_rgba(17,17,17,0.11)] ring-1 ring-black/[0.04]">
-        <div className="relative aspect-square overflow-hidden bg-primary">
+      <section className="bg-primary overflow-hidden rounded-[28px] shadow-[0_16px_38px_rgba(17,17,17,0.11)] ring-1 ring-black/4">
+        <div className="bg-primary relative aspect-square overflow-hidden">
           {showCover && project.coverImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -76,7 +74,7 @@ export function ProjectIdentityHeader({
           <button
             type="button"
             onClick={() => setDetailOpen(true)}
-            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.1)] backdrop-blur-2xl"
+            className="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.1)] backdrop-blur-2xl"
             aria-label="Lihat detail proyek"
           >
             <span className="material-symbols-outlined text-[20px]">info</span>
@@ -84,7 +82,7 @@ export function ProjectIdentityHeader({
 
           <div className="absolute inset-x-0 bottom-0 p-4">
             <div className="flex min-w-0 items-center justify-between gap-3">
-              <p className="min-w-0 flex-1 truncate text-[9px] font-bold uppercase tracking-[0.14em] text-white/65">
+              <p className="min-w-0 flex-1 truncate text-[9px] font-bold tracking-[0.14em] text-white/65 uppercase">
                 {project.client?.name ?? "Klien belum diisi"}
               </p>
               <div className="flex shrink-0 items-center gap-1.5">
@@ -100,16 +98,12 @@ export function ProjectIdentityHeader({
                 />
               </div>
             </div>
-            <h1 className="mt-2 line-clamp-2 max-w-[95%] text-[21px] font-bold leading-[26px] tracking-[-0.025em] text-white">
+            <h1 className="mt-2 line-clamp-2 max-w-[95%] text-[21px] leading-[26px] font-bold tracking-tight text-white">
               {project.name}
             </h1>
             <p className="mt-2 flex min-w-0 items-center gap-1.5 truncate text-[10px] font-medium text-white/65">
-              <span className="material-symbols-outlined shrink-0 text-[13px]">
-                location_on
-              </span>
-              <span className="truncate">
-                {project.location || "Lokasi belum diisi"}
-              </span>
+              <span className="material-symbols-outlined shrink-0 text-[13px]">location_on</span>
+              <span className="truncate">{project.location || "Lokasi belum diisi"}</span>
               <span className="shrink-0 text-white/30">·</span>
               <span className="max-w-[42%] shrink-0 truncate">
                 PM {project.projectManager?.name || "belum diisi"}
@@ -118,19 +112,13 @@ export function ProjectIdentityHeader({
           </div>
         </div>
       </section>
-      <BottomSheet
-        open={detailOpen}
-        title="Detail Proyek"
-        onClose={() => setDetailOpen(false)}
-      >
-        <div className="overflow-hidden rounded-[22px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+      <BottomSheet open={detailOpen} title="Detail Proyek" onClose={() => setDetailOpen(false)}>
+        <div className="ring-outline-variant/15 overflow-hidden rounded-[22px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
           <DetailRow
             label="Klien"
             value={project.client?.name ?? "Belum diisi"}
             detail={
-              [project.client?.email, project.client?.phone]
-                .filter(Boolean)
-                .join(" · ") ||
+              [project.client?.email, project.client?.phone].filter(Boolean).join(" · ") ||
               project.client?.address ||
               undefined
             }
@@ -153,9 +141,7 @@ export function ProjectIdentityHeader({
           <DetailRow
             label="Area / Tipe"
             value={
-              [project.roomArea, project.projectType]
-                .filter(Boolean)
-                .join(" · ") || "Belum diisi"
+              [project.roomArea, project.projectType].filter(Boolean).join(" · ") || "Belum diisi"
             }
           />
           <DetailRow
@@ -200,7 +186,7 @@ function HeroStatusPill({
 
   return (
     <span
-      className={`inline-flex min-h-6 items-center rounded-full border px-2.5 text-[9px] font-bold uppercase tracking-wide shadow-[0_4px_14px_rgba(0,0,0,0.12)] ${tone}`}
+      className={`inline-flex min-h-6 items-center rounded-full border px-2.5 text-[9px] font-bold tracking-wide uppercase shadow-[0_4px_14px_rgba(0,0,0,0.12)] ${tone}`}
       title={title}
     >
       {label}
@@ -208,14 +194,10 @@ function HeroStatusPill({
   );
 }
 
-function ProjectCoverFallback({
-  initial,
-}: {
-  readonly initial: string;
-}): React.JSX.Element {
+function ProjectCoverFallback({ initial }: { readonly initial: string }): React.JSX.Element {
   return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-primary text-on-primary">
-      <span className="relative flex h-20 w-20 -translate-y-5 items-center justify-center rounded-[24px] bg-white/10 text-[32px] font-semibold leading-none text-white/90 ring-1 ring-white/12 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
+    <div className="bg-primary text-on-primary relative flex h-full w-full items-center justify-center overflow-hidden">
+      <span className="relative flex h-20 w-20 -translate-y-5 items-center justify-center rounded-[24px] bg-white/10 text-[32px] leading-none font-semibold text-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.16)] ring-1 ring-white/12">
         {initial}
       </span>
     </div>

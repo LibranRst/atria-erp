@@ -30,9 +30,7 @@ describe("iOS grouped form presentation", () => {
   });
 
   test("keeps standalone inputs as white capsules", () => {
-    const html = renderToStaticMarkup(
-      <TextInput value="Atria" onChange={() => undefined} />,
-    );
+    const html = renderToStaticMarkup(<TextInput value="Atria" onChange={() => undefined} />);
 
     expect(html).toContain("min-h-12");
     expect(html).toContain("rounded-full");
@@ -42,11 +40,7 @@ describe("iOS grouped form presentation", () => {
   test("supports explicit inline rows and keeps helper copy inside the row", () => {
     const html = renderToStaticMarkup(
       <FormSection title="Preferensi">
-        <FormField
-          label="Aktif"
-          helper="Tersedia untuk transaksi baru."
-          layout="inline"
-        >
+        <FormField label="Aktif" helper="Tersedia untuk transaksi baru." layout="inline">
           <button type="button">Ya</button>
         </FormField>
       </FormSection>,
@@ -95,9 +89,7 @@ describe("iOS grouped form presentation", () => {
     );
 
     expect(html).toContain("rounded-full");
-    expect(html).toContain(
-      "border-outline-variant/35 bg-surface-container-lowest px-5",
-    );
+    expect(html).toContain("border-outline-variant/35 bg-surface-container-lowest px-5");
     expect(html).not.toContain(
       "group/form min-w-0 space-y-1 bg-surface-container-lowest px-4 py-3",
     );
@@ -105,9 +97,7 @@ describe("iOS grouped form presentation", () => {
 
   test("lets a single value preview occupy the full available row", () => {
     const html = renderToStaticMarkup(
-      <ValuePreviewStrip
-        items={[{ label: "Subtotal komponen", amount: 12000000 }]}
-      />,
+      <ValuePreviewStrip items={[{ label: "Subtotal komponen", amount: 12000000 }]} />,
     );
 
     expect(html).toContain("grid-cols-1");

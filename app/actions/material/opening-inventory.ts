@@ -110,8 +110,7 @@ function failure<T>(error: unknown, fallback: string): ActionResponse<T> {
       success: false,
       error: {
         code: "CONFLICT",
-        message:
-          "Inventory sudah ada dalam pengajuan saldo awal yang menunggu persetujuan.",
+        message: "Inventory sudah ada dalam pengajuan saldo awal yang menunggu persetujuan.",
       },
     };
   if (message === "REVERSAL_HAS_LATER_MOVEMENT")
@@ -119,8 +118,7 @@ function failure<T>(error: unknown, fallback: string): ActionResponse<T> {
       success: false,
       error: {
         code: "CONFLICT",
-        message:
-          "Saldo awal tidak dapat dibalik setelah ada pergerakan stok berikutnya.",
+        message: "Saldo awal tidak dapat dibalik setelah ada pergerakan stok berikutnya.",
       },
     };
   return { success: false, error: { code: "TRANSACTION_FAILED", message } };
@@ -135,8 +133,7 @@ export async function createInventoryOpening(
       success: false,
       error: {
         code: "VALIDATION_ERROR",
-        message:
-          validation.error.issues[0]?.message ?? "Saldo awal stok tidak valid.",
+        message: validation.error.issues[0]?.message ?? "Saldo awal stok tidak valid.",
       },
     };
   const session = await getSessionUser();
@@ -150,14 +147,9 @@ export async function createInventoryOpening(
       const duplicate = await tx.query.inventoryOpeningBatch.findFirst({
         where: eq(inventoryOpeningBatch.batchNumber, batchNumber),
       });
-      if (duplicate)
-        throw new Error(
-          "Referensi saldo awal sudah digunakan. Coba ajukan kembali.",
-        );
+      if (duplicate) throw new Error("Referensi saldo awal sudah digunakan. Coba ajukan kembali.");
 
-      const inventoryIds = validation.data.items
-        .map((item) => item.materialInventoryId)
-        .toSorted();
+      const inventoryIds = validation.data.items.map((item) => item.materialInventoryId).toSorted();
       for (const inventoryId of inventoryIds) {
         const [inventory] = await tx
           .select()
@@ -241,8 +233,7 @@ export async function decideInventoryOpening(
       success: false,
       error: {
         code: "VALIDATION_ERROR",
-        message:
-          validation.error.issues[0]?.message ?? "Keputusan tidak valid.",
+        message: validation.error.issues[0]?.message ?? "Keputusan tidak valid.",
       },
     };
   const session = await getSessionUser();
@@ -403,23 +394,17 @@ export async function reverseInventoryOpening(
         .for("update");
       if (!locked) throw new Error("OPENING_NOT_FOUND");
       if (locked.status !== "POSTED")
-        throw new Error(
-          "Hanya saldo awal berstatus sudah diposting yang dapat dibalik.",
-        );
+        throw new Error("Hanya saldo awal berstatus sudah diposting yang dapat dibalik.");
       const items = await tx.query.inventoryOpeningItem.findMany({
         where: eq(inventoryOpeningItem.batchId, locked.id),
         with: { stockMovement: true },
       });
       for (const item of items) {
-        if (!item.stockMovement)
-          throw new Error("Pergerakan saldo awal tidak ditemukan.");
+        if (!item.stockMovement) throw new Error("Pergerakan saldo awal tidak ditemukan.");
         const later = await tx.query.stockMovement.findFirst({
           where: and(
             eq(stockMovement.materialId, item.stockMovement.materialId),
-            eq(
-              stockMovement.inventoryLocationId,
-              item.stockMovement.inventoryLocationId,
-            ),
+            eq(stockMovement.inventoryLocationId, item.stockMovement.inventoryLocationId),
             gt(stockMovement.createdAt, item.stockMovement.createdAt),
           ),
         });
@@ -434,9 +419,7 @@ export async function reverseInventoryOpening(
           Number(inventory.currentStock) !== Number(item.quantity) ||
           Number(inventory.reservedStock) !== 0
         )
-          throw new Error(
-            "Saldo inventory sudah berubah dan tidak aman untuk reversal.",
-          );
+          throw new Error("Saldo inventory sudah berubah dan tidak aman untuk reversal.");
         await tx
           .update(materialInventory)
           .set({
@@ -523,13 +506,9 @@ export async function getInitialStockCandidates(): Promise<
       },
     }),
   ]);
-  const moved = new Set(
-    movements.map((row) => `${row.materialId}:${row.inventoryLocationId}`),
-  );
+  const moved = new Set(movements.map((row) => `${row.materialId}:${row.inventoryLocationId}`));
   const pendingInventoryIds = new Set(
-    pendingBatches.flatMap((batch) =>
-      batch.items.map((item) => item.materialInventoryId),
-    ),
+    pendingBatches.flatMap((batch) => batch.items.map((item) => item.materialInventoryId)),
   );
   return {
     success: true,
@@ -555,8 +534,7 @@ export async function previewInitialStockImport(
       success: false,
       error: {
         code: "VALIDATION_ERROR",
-        message:
-          validation.error.issues[0]?.message ?? "CSV saldo awal tidak valid.",
+        message: validation.error.issues[0]?.message ?? "CSV saldo awal tidak valid.",
       },
     };
   const session = await getSessionUser();
@@ -586,14 +564,10 @@ export async function previewInitialStockImport(
     const name = row.materialName.toLocaleLowerCase("id-ID");
     const location = row.locationName.toLocaleLowerCase("id-ID");
     const matches = eligible.filter((candidate) => {
-      const sameLocation =
-        candidate.locationName.toLocaleLowerCase("id-ID") === location;
+      const sameLocation = candidate.locationName.toLocaleLowerCase("id-ID") === location;
       if (!sameLocation) return false;
       if (code) return candidate.code?.toLocaleLowerCase("id-ID") === code;
-      return (
-        Boolean(name) &&
-        candidate.materialName.toLocaleLowerCase("id-ID") === name
-      );
+      return Boolean(name) && candidate.materialName.toLocaleLowerCase("id-ID") === name;
     });
     if (matches.length !== 1) {
       errors.push({
@@ -660,13 +634,7 @@ export async function getInventoryOpeningBatches(): Promise<
   return {
     success: true,
     data: rows.map((row) => {
-      const {
-        requestedBy,
-        approvedBy,
-        reversedBy,
-        items: openingItems,
-        ...batch
-      } = row;
+      const { requestedBy, approvedBy, reversedBy, items: openingItems, ...batch } = row;
       const items = openingItems.map((item) => {
         const quantity = Number(item.quantity);
         const unitCost = Number(item.unitCost);

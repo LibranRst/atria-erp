@@ -86,9 +86,7 @@ describe("Material main surface visual language", () => {
     expect(html).toContain('data-material-controls="inline"');
     expect(html).toContain('data-control-mode="filter"');
     expect(html).not.toContain("top-[124px]");
-    expect(html).not.toContain(
-      "shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px",
-    );
+    expect(html).not.toContain("shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px");
   });
 
   test("shows average cost and stock value for every inventory location", () => {
@@ -151,9 +149,7 @@ describe("Material main surface visual language", () => {
     const html = renderToStaticMarkup(<MaterialsLoading />);
 
     expect(html).toContain("Memuat Material dan Stok");
-    expect(html).toContain(
-      "Posisi stok dan aktivitas material sedang disiapkan",
-    );
+    expect(html).toContain("Posisi stok dan aktivitas material sedang disiapkan");
     expect(html).toContain("rounded-[30px]");
     expect(html).not.toContain("spinner");
   });
@@ -162,9 +158,7 @@ describe("Material main surface visual language", () => {
     const html = renderToStaticMarkup(<OpeningInventoryLoading />);
 
     expect(html).toContain("Memuat saldo awal stok");
-    expect(html).toContain(
-      "Form saldo awal dan riwayat pengajuan sedang disiapkan",
-    );
+    expect(html).toContain("Form saldo awal dan riwayat pengajuan sedang disiapkan");
     expect(html).toContain("divide-y");
     expect(html).toContain("bg-primary");
   });

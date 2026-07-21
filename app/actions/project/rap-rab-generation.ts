@@ -31,15 +31,19 @@ import {
 } from "./rap-rab-utils";
 
 export async function generateRabFromRap(
-  input: GenerateRabFromRapInput
+  input: GenerateRabFromRapInput,
 ): Promise<ActionResponse<typeof rabEstimate.$inferSelect>> {
   const validation = generateRabFromRapSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data generate RAB tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data generate RAB tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -53,7 +57,8 @@ export async function generateRabFromRap(
       });
       if (!rap) throw new Error("RAP_NOT_FOUND");
       if (rap.items.length === 0) throw new Error("RAP_EMPTY");
-      if (rap.status !== "LOCKED") throw new Error("RAP harus difinalisasi sebelum menjadi source RAB.");
+      if (rap.status !== "LOCKED")
+        throw new Error("RAP harus difinalisasi sebelum menjadi source RAB.");
       await assertProjectMutationAccess(user, rap.projectId, "create:rab");
 
       const openEstimate = rap.rabEstimates.find((estimate) => estimate.status === "DRAFT");
@@ -72,15 +77,20 @@ export async function generateRabFromRap(
       });
       const revision = (lastEstimate?.revision ?? 0) + 1;
 
-      const [estimate] = await tx.insert(rabEstimate).values({
-        projectId: rap.projectId,
-        sourceProjectRapId: rap.id,
-        supersedesRabEstimateId: currentApproved?.id ?? null,
-        status: "DRAFT",
-        revision,
-        title: validation.data.title ?? `Client Estimate - ${rap.project.name}`,
-        clientNotes: validation.data.clientNotes ?? "Draft estimasi client berdasarkan material plan internal. Silakan review sebelum dikirim.",
-      }).returning();
+      const [estimate] = await tx
+        .insert(rabEstimate)
+        .values({
+          projectId: rap.projectId,
+          sourceProjectRapId: rap.id,
+          supersedesRabEstimateId: currentApproved?.id ?? null,
+          status: "DRAFT",
+          revision,
+          title: validation.data.title ?? `Client Estimate - ${rap.project.name}`,
+          clientNotes:
+            validation.data.clientNotes ??
+            "Draft estimasi client berdasarkan material plan internal. Silakan review sebelum dikirim.",
+        })
+        .returning();
 
       await tx.insert(rabEstimateItem).values(
         rap.items.map((item, index) =>
@@ -93,7 +103,15 @@ export async function generateRabFromRap(
           }),
         ),
       );
-      await tx.insert(auditLog).values({ userId: user.id, action: "GENERATE_RAB_DRAFT_FROM_RAP", targetTable: "rab_estimate", targetId: estimate.id, newState: JSON.stringify({ estimate, sourceRapId: rap.id, itemCount: rap.items.length }) });
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "GENERATE_RAB_DRAFT_FROM_RAP",
+          targetTable: "rab_estimate",
+          targetId: estimate.id,
+          newState: JSON.stringify({ estimate, sourceRapId: rap.id, itemCount: rap.items.length }),
+        });
 
       return estimate;
     });
@@ -105,15 +123,19 @@ export async function generateRabFromRap(
 }
 
 export async function generateRabFromSelectedSources(
-  input: GenerateRabFromSelectedSourcesInput
+  input: GenerateRabFromSelectedSourcesInput,
 ): Promise<ActionResponse<typeof rabEstimate.$inferSelect>> {
   const validation = generateRabFromSelectedSourcesSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data sumber quotation tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data sumber quotation tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -128,7 +150,8 @@ export async function generateRabFromSelectedSources(
 
       const openEstimate = proj.rabEstimates.find((estimate) => estimate.status === "DRAFT");
       if (openEstimate) throw new Error("RAB_DRAFT_EXISTS");
-      const currentApproved = proj.rabEstimates.find((estimate) => estimate.status === "APPROVED") ?? null;
+      const currentApproved =
+        proj.rabEstimates.find((estimate) => estimate.status === "APPROVED") ?? null;
 
       const budget = await tx.query.projectBudgets.findFirst({
         where: eq(projectBudgets.projectId, validation.data.projectId),
@@ -138,32 +161,38 @@ export async function generateRabFromSelectedSources(
 
       const uniqueRapItemIds = Array.from(new Set(validation.data.projectRapItemIds));
       const uniquePlanItemIds = Array.from(new Set(validation.data.projectCategoryPlanItemIds));
-      const rapItems = uniqueRapItemIds.length > 0
-        ? await tx.query.projectRapItem.findMany({
-          where: inArray(projectRapItem.id, uniqueRapItemIds),
-          with: {
-            rap: true,
-          },
-        })
-        : [];
-      const categoryPlanItems = uniquePlanItemIds.length > 0
-        ? await tx.query.projectCategoryPlanItem.findMany({
-          where: inArray(projectCategoryPlanItem.id, uniquePlanItemIds),
-          with: {
-            expenseCategory: true,
-          },
-        })
-        : [];
+      const rapItems =
+        uniqueRapItemIds.length > 0
+          ? await tx.query.projectRapItem.findMany({
+              where: inArray(projectRapItem.id, uniqueRapItemIds),
+              with: {
+                rap: true,
+              },
+            })
+          : [];
+      const categoryPlanItems =
+        uniquePlanItemIds.length > 0
+          ? await tx.query.projectCategoryPlanItem.findMany({
+              where: inArray(projectCategoryPlanItem.id, uniquePlanItemIds),
+              with: {
+                expenseCategory: true,
+              },
+            })
+          : [];
 
       if (rapItems.length !== uniqueRapItemIds.length) throw new Error("RAP_ITEM_NOT_FOUND");
-      if (categoryPlanItems.length !== uniquePlanItemIds.length) throw new Error("CATEGORY_PLAN_ITEM_NOT_FOUND");
+      if (categoryPlanItems.length !== uniquePlanItemIds.length)
+        throw new Error("CATEGORY_PLAN_ITEM_NOT_FOUND");
 
       for (const item of rapItems) {
-        if (item.rap.projectId !== validation.data.projectId) throw new Error("RAP_ITEM_PROJECT_MISMATCH");
-        if (item.rap.status !== "LOCKED") throw new Error("Material RAP harus difinalisasi sebelum menjadi source RAB.");
+        if (item.rap.projectId !== validation.data.projectId)
+          throw new Error("RAP_ITEM_PROJECT_MISMATCH");
+        if (item.rap.status !== "LOCKED")
+          throw new Error("Material RAP harus difinalisasi sebelum menjadi source RAB.");
       }
       for (const item of categoryPlanItems) {
-        if (item.projectId !== validation.data.projectId) throw new Error("CATEGORY_PLAN_ITEM_PROJECT_MISMATCH");
+        if (item.projectId !== validation.data.projectId)
+          throw new Error("CATEGORY_PLAN_ITEM_PROJECT_MISMATCH");
         if (item.expenseCategory.code !== "TUKANG" && item.expenseCategory.code !== "SUBCON") {
           throw new Error("CATEGORY_PLAN_ONLY_ALLOWED_FOR_TUKANG_OR_SUBCON");
         }
@@ -173,15 +202,20 @@ export async function generateRabFromSelectedSources(
       }
 
       const firstRap = rapItems[0]?.rap ?? null;
-      const [estimate] = await tx.insert(rabEstimate).values({
-        projectId: validation.data.projectId,
-        sourceProjectRapId: firstRap?.id ?? null,
-        supersedesRabEstimateId: currentApproved?.id ?? null,
-        status: "DRAFT",
-        revision,
-        title: validation.data.title ?? `Client Estimate / Quotation - ${proj.name}`,
-        clientNotes: validation.data.clientNotes ?? "Draft quotation client. Review label, harga, dan item sebelum dikirim.",
-      }).returning();
+      const [estimate] = await tx
+        .insert(rabEstimate)
+        .values({
+          projectId: validation.data.projectId,
+          sourceProjectRapId: firstRap?.id ?? null,
+          supersedesRabEstimateId: currentApproved?.id ?? null,
+          status: "DRAFT",
+          revision,
+          title: validation.data.title ?? `Client Estimate / Quotation - ${proj.name}`,
+          clientNotes:
+            validation.data.clientNotes ??
+            "Draft quotation client. Review label, harga, dan item sebelum dikirim.",
+        })
+        .returning();
 
       const generatedSourceItems = [
         ...rapItems.map((item, index) =>
@@ -204,23 +238,32 @@ export async function generateRabFromSelectedSources(
 
       const baselineItems = currentApproved
         ? await tx.query.rabEstimateItem.findMany({
-          where: eq(rabEstimateItem.rabEstimateId, currentApproved.id),
-          orderBy: (table, { asc }) => [asc(table.displayOrder)],
-        })
+            where: eq(rabEstimateItem.rabEstimateId, currentApproved.id),
+            orderBy: (table, { asc }) => [asc(table.displayOrder)],
+          })
         : [];
       const baselineBundles = currentApproved
         ? await tx.query.rabEstimateBundle.findMany({
-          where: eq(rabEstimateBundle.rabEstimateId, currentApproved.id),
-          with: { items: true },
-          orderBy: (table, { asc }) => [asc(table.displayOrder)],
-        })
+            where: eq(rabEstimateBundle.rabEstimateId, currentApproved.id),
+            with: { items: true },
+            orderBy: (table, { asc }) => [asc(table.displayOrder)],
+          })
         : [];
 
       const mergedSourceItems = generatedSourceItems.map((generatedItem) => {
         const baselineItem = baselineItems.find((candidate) => {
           if (candidate.sourceType !== generatedItem.sourceType) return false;
-          if (generatedItem.sourceLibraryItemId && candidate.sourceLibraryItemId === generatedItem.sourceLibraryItemId) return true;
-          if (generatedItem.sourceProjectCategoryPlanItemId && candidate.sourceProjectCategoryPlanItemId === generatedItem.sourceProjectCategoryPlanItemId) return true;
+          if (
+            generatedItem.sourceLibraryItemId &&
+            candidate.sourceLibraryItemId === generatedItem.sourceLibraryItemId
+          )
+            return true;
+          if (
+            generatedItem.sourceProjectCategoryPlanItemId &&
+            candidate.sourceProjectCategoryPlanItemId ===
+              generatedItem.sourceProjectCategoryPlanItemId
+          )
+            return true;
           return candidate.clientLabel === generatedItem.clientLabel;
         });
         if (!baselineItem) return generatedItem;
@@ -259,7 +302,9 @@ export async function generateRabFromSelectedSources(
           isBundle: item.isBundle,
         }));
 
-      const baselineManualLabels = new Set(baselineManualItems.map((item) => item.clientLabel.trim().toLowerCase()));
+      const baselineManualLabels = new Set(
+        baselineManualItems.map((item) => item.clientLabel.trim().toLowerCase()),
+      );
       const newManualItems = validation.data.manualLines
         .filter((item) => !baselineManualLabels.has(item.clientLabel.trim().toLowerCase()))
         .map((item, index) => ({
@@ -281,36 +326,65 @@ export async function generateRabFromSelectedSources(
           isBundle: item.isBundle ?? false,
         }));
 
-      const generatedItems = [
-        ...mergedSourceItems,
-        ...baselineManualItems,
-        ...newManualItems,
-      ];
+      const generatedItems = [...mergedSourceItems, ...baselineManualItems, ...newManualItems];
 
       const insertedItems = await tx.insert(rabEstimateItem).values(generatedItems).returning();
       for (const baselineBundle of baselineBundles) {
-        const [bundle] = await tx.insert(rabEstimateBundle).values({
-          rabEstimateId: estimate.id,
-          clientLabel: baselineBundle.clientLabel,
-          description: baselineBundle.description,
-          quantity: baselineBundle.quantity,
-          unit: baselineBundle.unit,
-          unitPrice: baselineBundle.unitPrice,
-          lineTotal: baselineBundle.lineTotal,
-          displayOrder: baselineBundle.displayOrder,
-          isHidden: baselineBundle.isHidden,
-        }).returning();
+        const [bundle] = await tx
+          .insert(rabEstimateBundle)
+          .values({
+            rabEstimateId: estimate.id,
+            clientLabel: baselineBundle.clientLabel,
+            description: baselineBundle.description,
+            quantity: baselineBundle.quantity,
+            unit: baselineBundle.unit,
+            unitPrice: baselineBundle.unitPrice,
+            lineTotal: baselineBundle.lineTotal,
+            displayOrder: baselineBundle.displayOrder,
+            isHidden: baselineBundle.isHidden,
+          })
+          .returning();
         for (const oldMember of baselineBundle.items) {
           const member = insertedItems.find((candidate) => {
-            if (oldMember.sourceProjectRapItemId && candidate.sourceProjectRapItemId === oldMember.sourceProjectRapItemId) return true;
-            if (oldMember.sourceProjectCategoryPlanItemId && candidate.sourceProjectCategoryPlanItemId === oldMember.sourceProjectCategoryPlanItemId) return true;
-            return oldMember.sourceType === "MANUAL" && candidate.sourceType === "MANUAL" && candidate.clientLabel === oldMember.clientLabel;
+            if (
+              oldMember.sourceProjectRapItemId &&
+              candidate.sourceProjectRapItemId === oldMember.sourceProjectRapItemId
+            )
+              return true;
+            if (
+              oldMember.sourceProjectCategoryPlanItemId &&
+              candidate.sourceProjectCategoryPlanItemId ===
+                oldMember.sourceProjectCategoryPlanItemId
+            )
+              return true;
+            return (
+              oldMember.sourceType === "MANUAL" &&
+              candidate.sourceType === "MANUAL" &&
+              candidate.clientLabel === oldMember.clientLabel
+            );
           });
-          if (member) await tx.update(rabEstimateItem).set({ bundleId: bundle.id, isBundle: true }).where(eq(rabEstimateItem.id, member.id));
+          if (member)
+            await tx
+              .update(rabEstimateItem)
+              .set({ bundleId: bundle.id, isBundle: true })
+              .where(eq(rabEstimateItem.id, member.id));
         }
       }
 
-      await tx.insert(auditLog).values({ userId: user.id, action: "GENERATE_RAB_DRAFT_FROM_SELECTED_SOURCES", targetTable: "rab_estimate", targetId: estimate.id, newState: JSON.stringify({ estimate, itemCount: insertedItems.length, sourceRapItemIds: validation.data.projectRapItemIds, sourceCategoryPlanItemIds: validation.data.projectCategoryPlanItemIds }) });
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "GENERATE_RAB_DRAFT_FROM_SELECTED_SOURCES",
+          targetTable: "rab_estimate",
+          targetId: estimate.id,
+          newState: JSON.stringify({
+            estimate,
+            itemCount: insertedItems.length,
+            sourceRapItemIds: validation.data.projectRapItemIds,
+            sourceCategoryPlanItemIds: validation.data.projectCategoryPlanItemIds,
+          }),
+        });
 
       return estimate;
     });

@@ -12,10 +12,7 @@ export default async function Home(): Promise<never> {
 
   if (roleName === "OWNER") {
     const onboarding = await getOwnerOnboardingOverview();
-    if (
-      onboarding.success &&
-      shouldRedirectToOwnerOnboarding(onboarding.data)
-    ) {
+    if (onboarding.success && shouldRedirectToOwnerOnboarding(onboarding.data)) {
       redirect(`/onboarding?step=${onboarding.data.state.currentStep}`);
     }
     redirect("/ledger");

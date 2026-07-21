@@ -36,16 +36,28 @@ export function LogoutButton(): React.JSX.Element {
         transition={transitionSpringSnappy}
         onClick={() => setConfirmOpen(true)}
         disabled={isLoading}
-        className="flex min-h-[64px] w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left outline-none transition-colors active:bg-error/[0.035] focus-visible:bg-error/[0.035] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-error/25 disabled:opacity-55"
+        className="active:bg-error/[0.035] focus-visible:bg-error/[0.035] focus-visible:ring-error/25 flex min-h-[64px] w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset disabled:opacity-55"
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-error/[0.07] text-error ring-1 ring-error/[0.06]" aria-hidden="true">
+        <span
+          className="bg-error/[0.07] text-error ring-error/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1"
+          aria-hidden="true"
+        >
           <span className="material-symbols-outlined text-[18px] leading-none">logout</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] font-bold leading-4 text-error">Keluar dari akun</span>
-          <span className="mt-1 block truncate text-[10px] leading-[1.3] text-on-surface-variant">Akhiri sesi pada perangkat ini.</span>
+          <span className="text-error block truncate text-[13px] leading-4 font-bold">
+            Keluar dari akun
+          </span>
+          <span className="text-on-surface-variant mt-1 block truncate text-[10px] leading-[1.3]">
+            Akhiri sesi pada perangkat ini.
+          </span>
         </span>
-        <span className="material-symbols-outlined shrink-0 text-[18px] leading-none text-error/70" aria-hidden="true">chevron_right</span>
+        <span
+          className="material-symbols-outlined text-error/70 shrink-0 text-[18px] leading-none"
+          aria-hidden="true"
+        >
+          chevron_right
+        </span>
       </motion.button>
 
       <ConfirmationSheet

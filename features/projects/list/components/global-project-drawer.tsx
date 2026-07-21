@@ -45,11 +45,6 @@ export function GlobalProjectDrawer(): React.JSX.Element | null {
   }, []);
 
   return (
-    <ProjectDrawer
-      isOpen={showDrawer}
-      onClose={handleClose}
-      clients={clients}
-      users={users}
-    />
+    <ProjectDrawer isOpen={showDrawer} onClose={handleClose} clients={clients} users={users} />
   );
 }

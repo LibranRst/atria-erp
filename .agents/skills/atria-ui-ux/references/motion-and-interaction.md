@@ -4,17 +4,17 @@ Motion must communicate origin, continuity, state, or feedback. If it does not, 
 
 ## Allowed Motion
 
-| Interaction | Existing token/pattern | Constraint |
-| --- | --- | --- |
-| Drawer or sheet | `transitionSpringSmooth`, existing `BottomSheet` | Slide from its spatial origin; keep body content stable during close |
-| Backdrop | `transitionEaseSmooth` / `fadeVariants` | Fade opacity only; avoid decorative blur changes |
-| Centered modal | smooth fade plus restrained scale/vertical offset | Use existing confirmation primitive rather than new physics |
-| Meaningful morph | `transitionSpringBouncy` or an existing shared-layout pattern | Use only when the same object changes state or geometry within one context |
-| Disclosure | existing height/opacity pattern | Animate the local reveal, not surrounding sections or the page |
-| Tap feedback | `transitionSpringSnappy` | Small active scale on an actual interactive control; disable for reduced motion |
-| Success feedback | restrained `transitionSpringBouncy` | One focal confirmation, never confetti or continuous celebration |
-| Progress change | existing progress token | Animate a real value change; keep exact value visible |
-| Active tab pill | `transitionSpringBouncy` in `SegmentedTabs` | The pill may glide; content swaps instantly without fade, slide, or remount animation |
+| Interaction      | Existing token/pattern                                        | Constraint                                                                            |
+| ---------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Drawer or sheet  | `transitionSpringSmooth`, existing `BottomSheet`              | Slide from its spatial origin; keep body content stable during close                  |
+| Backdrop         | `transitionEaseSmooth` / `fadeVariants`                       | Fade opacity only; avoid decorative blur changes                                      |
+| Centered modal   | smooth fade plus restrained scale/vertical offset             | Use existing confirmation primitive rather than new physics                           |
+| Meaningful morph | `transitionSpringBouncy` or an existing shared-layout pattern | Use only when the same object changes state or geometry within one context            |
+| Disclosure       | existing height/opacity pattern                               | Animate the local reveal, not surrounding sections or the page                        |
+| Tap feedback     | `transitionSpringSnappy`                                      | Small active scale on an actual interactive control; disable for reduced motion       |
+| Success feedback | restrained `transitionSpringBouncy`                           | One focal confirmation, never confetti or continuous celebration                      |
+| Progress change  | existing progress token                                       | Animate a real value change; keep exact value visible                                 |
+| Active tab pill  | `transitionSpringBouncy` in `SegmentedTabs`                   | The pill may glide; content swaps instantly without fade, slide, or remount animation |
 
 ## Forbidden Motion
 

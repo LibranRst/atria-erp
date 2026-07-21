@@ -6,10 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import { MoneyValue } from "@/components/ui/page-primitives";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
-import {
-  formatShortDate,
-  shortMoney,
-} from "@/features/finance-dashboard/lib/dashboard-formatters";
+import { formatShortDate, shortMoney } from "@/features/finance-dashboard/lib/dashboard-formatters";
 import { categoryTone } from "@/features/finance-dashboard/components/dashboard-cards";
 import {
   BudgetSplitIndicator,
@@ -28,9 +25,7 @@ import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 const dashboardRowPressScale = { scale: 0.985 } as const;
 
-function projectHealthLabel(
-  health: DashboardRiskyProject["effectiveHealth"],
-): string {
+function projectHealthLabel(health: DashboardRiskyProject["effectiveHealth"]): string {
   if (health === "CRITICAL") return "Kritis";
   if (health === "WARNING") return "Perhatian";
   return "Terkendali";
@@ -70,16 +65,13 @@ export function ApprovalWorkbenchRow({
         disabled={pending}
         whileTap={reduceMotion ? undefined : dashboardRowPressScale}
         transition={transitionSpringSnappy}
-        className="min-h-12 w-full rounded-[20px] px-2 py-2.5 text-left outline-none active:bg-black/[0.025] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 disabled:opacity-50"
+        className="min-h-12 w-full rounded-[20px] px-2 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 active:bg-black/2.5 disabled:opacity-50"
       >
         <div className="flex items-start gap-3">
           <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${critical ? "bg-error/[0.075] text-error ring-error/[0.05]" : "bg-warning/[0.09] text-warning ring-warning/[0.06]"}`}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${critical ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
           >
-            <span
-              className="material-symbols-outlined text-[18px]"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               {item.type === "project_cost"
                 ? "receipt_long"
                 : item.type === "inventory_opening"
@@ -89,52 +81,36 @@ export function ApprovalWorkbenchRow({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <MoneyValue
-                amount={item.amount}
-                variant="compactWithFull"
-                size="lg"
-              />
+              <MoneyValue amount={item.amount} variant="compactWithFull" size="lg" />
               <span
                 className={`shrink-0 text-[9px] font-semibold ${critical ? "text-error" : "text-warning"}`}
               >
-                {item.priority === "NORMAL"
-                  ? approvalLabel
-                  : item.priorityReason}
+                {item.priority === "NORMAL" ? approvalLabel : item.priorityReason}
               </span>
             </div>
-            <p className="mt-1 line-clamp-1 text-[12px] font-semibold text-on-surface">
+            <p className="text-on-surface mt-1 line-clamp-1 text-[12px] font-semibold">
               {item.description}
             </p>
-            <p className="mt-0.5 truncate text-[10px] text-on-surface-variant/75">
+            <p className="text-on-surface-variant/75 mt-0.5 truncate text-[10px]">
               {item.projectName}
             </p>
           </div>
           <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
+            className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
             aria-hidden="true"
           >
-            <span className="material-symbols-outlined text-[16px]">
-              chevron_right
-            </span>
+            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           </span>
         </div>
-        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
+        <div className="text-on-surface-variant/70 mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold">
           <span className="max-w-full truncate">{counterpartyLabel}</span>
-          <span
-            className="h-1 w-1 rounded-full bg-outline-variant/60"
-            aria-hidden="true"
-          />
+          <span className="bg-outline-variant/60 h-1 w-1 rounded-full" aria-hidden="true" />
           <span className="max-w-full truncate">{item.budgetItemName}</span>
           {item.receiptImageUrl ? (
             <>
-              <span
-                className="h-1 w-1 rounded-full bg-outline-variant/60"
-                aria-hidden="true"
-              />
-              <span className="inline-flex items-center gap-1 text-primary">
-                <span className="material-symbols-outlined text-[13px]">
-                  receipt_long
-                </span>
+              <span className="bg-outline-variant/60 h-1 w-1 rounded-full" aria-hidden="true" />
+              <span className="text-primary inline-flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px]">receipt_long</span>
                 Nota
               </span>
             </>
@@ -151,13 +127,8 @@ export function ApprovalBudgetContext({
   readonly item: ApprovalDetail;
 }): React.JSX.Element {
   const nextSpent = item.actualSpent + item.amount;
-  const impact = getApprovalBudgetImpact(
-    item.allocatedAmount,
-    item.actualSpent,
-    item.amount,
-  );
-  const critical =
-    item.budgetOverrun || impact.afterPercentage >= RISK_LIMIT_THRESHOLD;
+  const impact = getApprovalBudgetImpact(item.allocatedAmount, item.actualSpent, item.amount);
+  const critical = item.budgetOverrun || impact.afterPercentage >= RISK_LIMIT_THRESHOLD;
   const warning = !critical && impact.afterPercentage >= RISK_WARNING_THRESHOLD;
   const impactLabel = critical
     ? impact.overflowPercentage > 0
@@ -168,15 +139,13 @@ export function ApprovalBudgetContext({
       : "Masih dalam batas budget";
 
   return (
-    <section className="overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+    <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
       <div className="flex items-center justify-between gap-3 px-4 py-3.5">
         <div className="min-w-0">
-          <p className="truncate text-[10px] font-extrabold uppercase tracking-wide text-on-surface-variant/60">
+          <p className="text-on-surface-variant/60 truncate text-[10px] font-extrabold tracking-wide uppercase">
             Konteks budget
           </p>
-          <p className="mt-1 truncate text-xs font-bold text-on-surface">
-            {item.budgetItemName}
-          </p>
+          <p className="text-on-surface mt-1 truncate text-xs font-bold">{item.budgetItemName}</p>
         </div>
         <span
           className={`financial-amount shrink-0 font-mono text-xs font-black ${critical ? "text-error" : "text-on-surface"}`}
@@ -184,7 +153,7 @@ export function ApprovalBudgetContext({
           {impact.afterPercentage.toFixed(0)}%
         </span>
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-t border-outline-variant/20 bg-surface-container-low/55 px-4 py-3.5 text-[10px] font-semibold text-on-surface-variant">
+      <div className="border-outline-variant/20 bg-surface-container-low/55 text-on-surface-variant grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-t px-4 py-3.5 text-[10px] font-semibold">
         <div className="min-w-0">
           <span>Sekarang</span>
           <MoneyValue
@@ -198,12 +167,10 @@ export function ApprovalBudgetContext({
           </p>
         </div>
         <span
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-on-surface-variant/55 ring-1 ring-outline-variant/15"
+          className="bg-surface-container-lowest text-on-surface-variant/55 ring-outline-variant/15 flex h-7 w-7 items-center justify-center rounded-full ring-1"
           aria-hidden="true"
         >
-          <span className="material-symbols-outlined text-[15px]">
-            arrow_forward
-          </span>
+          <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
         </span>
         <div className="min-w-0 text-right">
           <span>Setelah disetujui</span>
@@ -223,13 +190,10 @@ export function ApprovalBudgetContext({
         </div>
       </div>
       <div
-        className={`flex min-h-10 items-center justify-between gap-2 border-t border-outline-variant/20 px-4 py-2.5 text-[9px] font-bold ${critical ? "bg-error-container/15 text-error" : warning ? "bg-warning-light/55 text-warning" : "bg-primary/5 text-primary"}`}
+        className={`border-outline-variant/20 flex min-h-10 items-center justify-between gap-2 border-t px-4 py-2.5 text-[9px] font-bold ${critical ? "bg-error-container/15 text-error" : warning ? "bg-warning-light/55 text-warning" : "bg-primary/5 text-primary"}`}
       >
         <span className="inline-flex min-w-0 items-center gap-1.5">
-          <span
-            className="material-symbols-outlined shrink-0 text-[14px]"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined shrink-0 text-[14px]" aria-hidden="true">
             {critical ? "report" : warning ? "warning" : "check_circle"}
           </span>
           <span className="truncate">{impactLabel}</span>
@@ -250,8 +214,8 @@ export function MiniSignal({
   readonly danger?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="min-w-0 border-l border-outline-variant/45 px-3 py-1 first:border-l-0">
-      <p className="truncate text-[8px] font-extrabold uppercase tracking-wide text-on-surface-variant/60">
+    <div className="border-outline-variant/45 min-w-0 border-l px-3 py-1 first:border-l-0">
+      <p className="text-on-surface-variant/60 truncate text-[8px] font-extrabold tracking-wide uppercase">
         {label}
       </p>
       <p
@@ -269,7 +233,7 @@ export function DashboardTabEmpty({
   readonly children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <div className="px-4 py-8 text-center text-xs leading-5 text-on-surface-variant">
+    <div className="text-on-surface-variant px-4 py-8 text-center text-xs leading-5">
       {children}
     </div>
   );
@@ -293,47 +257,42 @@ export function ProjectRiskRow({
       >
         <Link
           href={`/projects/${project.projectId}?tab=overview`}
-          className="block rounded-[22px] px-3.5 py-3 outline-none active:bg-black/[0.025] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 max-[430px]:px-3"
+          className="block rounded-[22px] px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 active:bg-black/2.5 max-[430px]:px-3"
         >
           <div className="flex items-start gap-3">
             <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${overBudget ? "bg-error/[0.075] text-error ring-error/[0.05]" : "bg-warning/[0.09] text-warning ring-warning/[0.06]"}`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${overBudget ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
             >
-              <span
-                className="material-symbols-outlined text-[18px]"
-                aria-hidden="true"
-              >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                 monitoring
               </span>
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-[13px] font-semibold leading-4 tracking-[-0.01em] text-on-surface">
+                <p className="text-on-surface truncate text-[13px] leading-4 font-semibold tracking-[-0.01em]">
                   {project.projectName}
                 </p>
                 <span
-                  className={`shrink-0 text-[9px] font-semibold leading-4 ${overBudget ? "text-error" : "text-warning"}`}
+                  className={`shrink-0 text-[9px] leading-4 font-semibold ${overBudget ? "text-error" : "text-warning"}`}
                 >
                   {projectHealthLabel(project.effectiveHealth)}
                 </span>
               </div>
-              <p className="mt-0.5 truncate text-[10px] leading-4 text-on-surface-variant/75">
+              <p className="text-on-surface-variant/75 mt-0.5 truncate text-[10px] leading-4">
                 {project.riskReason}
               </p>
             </div>
             <span
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
+              className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
               aria-hidden="true"
             >
-              <span className="material-symbols-outlined text-[16px]">
-                chevron_right
-              </span>
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
             </span>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 divide-x divide-black/[0.06] rounded-[17px] bg-surface-container-low/70 px-3 py-2.5">
+          <div className="bg-surface-container-low/70 mt-3 grid grid-cols-2 divide-x divide-black/6 rounded-[17px] px-3 py-2.5">
             <div className="min-w-0 pr-3">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.08em] text-on-surface-variant/55">
+              <p className="text-on-surface-variant/55 text-[8px] font-semibold tracking-[0.08em] uppercase">
                 Aktual
               </p>
               <MoneyValue
@@ -344,7 +303,7 @@ export function ProjectRiskRow({
               />
             </div>
             <div className="min-w-0 pl-3 text-right">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.08em] text-on-surface-variant/55">
+              <p className="text-on-surface-variant/55 text-[8px] font-semibold tracking-[0.08em] uppercase">
                 Internal budget
               </p>
               <MoneyValue
@@ -362,8 +321,7 @@ export function ProjectRiskRow({
               Terpakai {project.usedPercentage.toFixed(0)}%
             </span>
             <span className={overBudget ? "text-error" : "text-on-surface"}>
-              {overBudget ? "Melebihi" : "Sisa"}{" "}
-              {shortMoney(Math.abs(project.remainingBudget))}
+              {overBudget ? "Melebihi" : "Sisa"} {shortMoney(Math.abs(project.remainingBudget))}
             </span>
           </div>
         </Link>
@@ -379,45 +337,40 @@ export function ProjectRiskRow({
     >
       <Link
         href={`/projects/${project.projectId}?tab=overview`}
-        className="block rounded-[20px] px-2 py-2.5 outline-none active:bg-black/[0.025] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
+        className="block rounded-[20px] px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 active:bg-black/2.5"
       >
         <div className="flex items-start gap-3">
           <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${overBudget ? "bg-error/[0.075] text-error ring-error/[0.05]" : "bg-warning/[0.09] text-warning ring-warning/[0.06]"}`}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${overBudget ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
           >
-            <span
-              className="material-symbols-outlined text-[18px]"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               monitoring
             </span>
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-[13px] font-semibold leading-4 tracking-[-0.01em] text-on-surface">
+              <p className="text-on-surface truncate text-[13px] leading-4 font-semibold tracking-[-0.01em]">
                 {project.projectName}
               </p>
               <span
-                className={`shrink-0 text-[9px] font-semibold leading-4 ${overBudget ? "text-error" : "text-warning"}`}
+                className={`shrink-0 text-[9px] leading-4 font-semibold ${overBudget ? "text-error" : "text-warning"}`}
               >
                 {projectHealthLabel(project.effectiveHealth)}
               </span>
             </div>
-            <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant/75">
+            <p className="text-on-surface-variant/75 mt-0.5 line-clamp-2 text-[10px] leading-4">
               {project.riskReason}
             </p>
           </div>
           <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
+            className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
             aria-hidden="true"
           >
-            <span className="material-symbols-outlined text-[16px]">
-              chevron_right
-            </span>
+            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           </span>
         </div>
         <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="text-[10px] font-bold text-on-surface-variant">
+          <span className="text-on-surface-variant text-[10px] font-bold">
             Budget terpakai {project.usedPercentage.toFixed(0)}%
           </span>
           <MoneyValue
@@ -434,7 +387,7 @@ export function ProjectRiskRow({
           danger={overBudget}
           tone={project.effectiveHealth === "CRITICAL" ? "critical" : "warning"}
         />
-        <div className="mt-3 grid grid-cols-2 gap-3 text-[10px] font-semibold text-on-surface-variant">
+        <div className="text-on-surface-variant mt-3 grid grid-cols-2 gap-3 text-[10px] font-semibold">
           <span>
             Aktual
             <MoneyValue
@@ -455,10 +408,8 @@ export function ProjectRiskRow({
             />
           </span>
         </div>
-        <div className="mt-2 flex items-center justify-between border-t border-outline-variant/35 pt-2 text-[10px] font-semibold text-on-surface-variant">
-          <span>
-            Margin target {project.targetMarginPercentage.toFixed(1)}%
-          </span>
+        <div className="border-outline-variant/35 text-on-surface-variant mt-2 flex items-center justify-between border-t pt-2 text-[10px] font-semibold">
+          <span>Margin target {project.targetMarginPercentage.toFixed(1)}%</span>
           <span
             className={
               project.projectedMarginPercentage < project.targetMarginPercentage
@@ -474,7 +425,7 @@ export function ProjectRiskRow({
             {project.riskyCategories.map((category) => (
               <span
                 key={category.code}
-                className="rounded-full bg-warning-light px-2.5 py-1 text-[9px] font-bold text-warning"
+                className="bg-warning-light text-warning rounded-full px-2.5 py-1 text-[9px] font-bold"
               >
                 {category.name} {category.usedPercentage.toFixed(0)}%
               </span>
@@ -492,42 +443,34 @@ export function CategoryUsageRow({
   readonly category: DashboardCategory;
 }): React.JSX.Element {
   const tone = categoryTone(category);
-  const danger =
-    category.status === "OVER_BUDGET" || category.status === "CRITICAL";
+  const danger = category.status === "OVER_BUDGET" || category.status === "CRITICAL";
   return (
     <div className="px-2.5 py-1.5">
       <div className="rounded-[20px] px-2 py-2.5">
         <div className="flex items-start gap-3">
           <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${danger ? "bg-error/[0.075] text-error ring-error/[0.05]" : category.status === "WATCH" ? "bg-warning/[0.09] text-warning ring-warning/[0.06]" : "bg-success/[0.08] text-success ring-success/[0.06]"}`}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${danger ? "bg-error/7.5 text-error ring-error/5" : category.status === "WATCH" ? "bg-warning/9 text-warning ring-warning/6" : "bg-success/8 text-success ring-success/6"}`}
           >
-            <span
-              className="material-symbols-outlined text-[18px]"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               category
             </span>
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-[13px] font-semibold text-on-surface">
-                {category.name}
-              </p>
+              <p className="text-on-surface truncate text-[13px] font-semibold">{category.name}</p>
               <span
                 className={`shrink-0 text-[9px] font-semibold ${danger ? "text-error" : category.status === "WATCH" ? "text-warning" : "text-success"}`}
               >
                 {categoryStatusLabel(category.status)}
               </span>
             </div>
-            <p className="mt-0.5 text-[10px] font-semibold text-on-surface-variant/75">
+            <p className="text-on-surface-variant/75 mt-0.5 text-[10px] font-semibold">
               Terpakai {category.usedPercentage.toFixed(0)}% dari alokasi
             </p>
           </div>
         </div>
         <div className="mt-2 flex items-center justify-between gap-3 pl-12">
-          <span className="text-[10px] font-bold text-on-surface-variant">
-            Sisa budget
-          </span>
+          <span className="text-on-surface-variant text-[10px] font-bold">Sisa budget</span>
           <MoneyValue
             amount={category.remainingAmount}
             variant="compactWithFull"
@@ -578,20 +521,17 @@ export function CashDueRow({
     >
       <Link
         href={item.href}
-        className="grid grid-cols-[38px_minmax(0,1fr)] gap-3 rounded-[20px] px-4 py-3.5 outline-none active:bg-black/[0.025] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#007AFF]/25 max-[430px]:px-3 max-[430px]:py-3"
+        className="grid grid-cols-[38px_minmax(0,1fr)] gap-3 rounded-[20px] px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 focus-visible:ring-inset active:bg-black/2.5 max-[430px]:px-3 max-[430px]:py-3"
       >
-        <span
-          className="relative flex flex-col items-start pt-0.5 text-left"
-          aria-hidden="true"
-        >
-          <span className="font-mono text-[13px] font-black leading-none text-on-surface">
+        <span className="relative flex flex-col items-start pt-0.5 text-left" aria-hidden="true">
+          <span className="text-on-surface font-mono text-[13px] leading-none font-black">
             {dueDay}
           </span>
-          <span className="mt-1 text-[8px] font-bold uppercase text-on-surface-variant">
+          <span className="text-on-surface-variant mt-1 text-[8px] font-bold uppercase">
             {dueMonth}
           </span>
           <span
-            className={`absolute -right-1 top-1.5 z-10 h-2 w-2 rounded-full ring-[3px] ring-white/90 ${item.dayOffset < 0 ? "bg-error" : item.dayOffset <= 7 ? "bg-warning" : "bg-outline"}`}
+            className={`absolute top-1.5 -right-1 z-10 h-2 w-2 rounded-full ring-[3px] ring-white/90 ${item.dayOffset < 0 ? "bg-error" : item.dayOffset <= 7 ? "bg-warning" : "bg-outline"}`}
           />
         </span>
         <div className="min-w-0">
@@ -602,14 +542,14 @@ export function CashDueRow({
               >
                 {item.type === "payable" ? "Hutang vendor" : "Piutang klien"}
               </p>
-              <p className="mt-1.5 truncate text-sm font-semibold tracking-[-0.01em] text-on-surface max-[430px]:text-[13px]">
+              <p className="text-on-surface mt-1.5 truncate text-sm font-semibold tracking-[-0.01em] max-[430px]:text-[13px]">
                 {item.documentNumber}
               </p>
-              <p className="mt-1 truncate text-[11px] text-on-surface-variant">
+              <p className="text-on-surface-variant mt-1 truncate text-[11px]">
                 {item.projectName} • {item.counterpartyName}
               </p>
             </div>
-            <div className="flex shrink-0 self-stretch flex-col items-end justify-between gap-2 text-right">
+            <div className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch text-right">
               <MoneyValue
                 amount={item.outstandingAmount}
                 variant="compactWithFull"
@@ -618,12 +558,12 @@ export function CashDueRow({
               />
               <span className="flex items-center justify-end gap-1.5">
                 <span
-                  className={`text-[9px] font-semibold leading-4 ${item.dayOffset < 0 ? "text-error" : item.dayOffset <= 7 ? "text-warning" : "text-on-surface-variant"}`}
+                  className={`text-[9px] leading-4 font-semibold ${item.dayOffset < 0 ? "text-error" : item.dayOffset <= 7 ? "text-warning" : "text-on-surface-variant"}`}
                 >
                   {timing}
                 </span>
                 <span
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
+                  className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
                   aria-hidden="true"
                 >
                   <span className="material-symbols-outlined text-[16px] leading-none">
@@ -634,7 +574,7 @@ export function CashDueRow({
             </div>
           </div>
           {!compact ? (
-            <div className="mt-2 flex items-center justify-between gap-3 text-[10px] font-semibold text-on-surface-variant">
+            <div className="text-on-surface-variant mt-2 flex items-center justify-between gap-3 text-[10px] font-semibold">
               <span>Jatuh tempo {formatShortDate(item.dueDate)}</span>
               <span className="text-right">
                 Dibayar
@@ -695,16 +635,13 @@ export function MaterialIssueRow({
       >
         <Link
           href={item.href}
-          className="block rounded-[22px] px-3.5 py-3 outline-none active:bg-black/[0.025] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 max-[430px]:px-3"
+          className="block rounded-[22px] px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 active:bg-black/2.5 max-[430px]:px-3"
         >
           <div className="flex items-start gap-3">
             <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${item.severity === "CRITICAL" ? "bg-error/[0.075] text-error ring-error/[0.05]" : "bg-warning/[0.09] text-warning ring-warning/[0.06]"}`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${item.severity === "CRITICAL" ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
             >
-              <span
-                className="material-symbols-outlined text-[18px]"
-                aria-hidden="true"
-              >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                 inventory_2
               </span>
             </span>
@@ -716,31 +653,31 @@ export function MaterialIssueRow({
                   {label}
                 </p>
                 {quantityLabel ? (
-                  <span className="financial-amount shrink-0 font-mono text-[10px] font-bold text-on-surface">
+                  <span className="financial-amount text-on-surface shrink-0 font-mono text-[10px] font-bold">
                     Kurang {quantityLabel}
                   </span>
                 ) : null}
               </div>
-              <p className="mt-1 truncate text-[13px] font-semibold tracking-[-0.01em] text-on-surface">
+              <p className="text-on-surface mt-1 truncate text-[13px] font-semibold tracking-[-0.01em]">
                 {item.materialName}
               </p>
-              <p className="mt-0.5 truncate text-[10px] text-on-surface-variant/75">
+              <p className="text-on-surface-variant/75 mt-0.5 truncate text-[10px]">
                 {item.description}
               </p>
             </div>
           </div>
 
-          <div className="mt-3 flex min-h-9 items-center gap-3 rounded-[15px] bg-surface-container-low/70 px-3 py-2 text-[9px] font-semibold text-on-surface-variant">
+          <div className="bg-surface-container-low/70 text-on-surface-variant mt-3 flex min-h-9 items-center gap-3 rounded-[15px] px-3 py-2 text-[9px] font-semibold">
             <span className="min-w-0 flex-1 truncate">
               Tersedia{" "}
-              <strong className="font-mono text-on-surface">
+              <strong className="text-on-surface font-mono">
                 {item.availableStock.toLocaleString("id-ID")} {item.unit}
               </strong>
             </span>
             {fulfillmentTarget !== null ? (
               <span className="shrink-0">
                 Dibutuhkan{" "}
-                <strong className="font-mono text-on-surface">
+                <strong className="text-on-surface font-mono">
                   {fulfillmentTarget.toLocaleString("id-ID")} {item.unit}
                 </strong>
               </span>
@@ -749,9 +686,7 @@ export function MaterialIssueRow({
               className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[#007AFF] shadow-sm"
               aria-hidden="true"
             >
-              <span className="material-symbols-outlined text-[15px]">
-                chevron_right
-              </span>
+              <span className="material-symbols-outlined text-[15px]">chevron_right</span>
             </span>
           </div>
         </Link>
@@ -761,9 +696,9 @@ export function MaterialIssueRow({
 
   const issueToneClass =
     item.severity === "CRITICAL"
-      ? "bg-error/[0.075] text-error ring-error/[0.05]"
+      ? "bg-error/7.5 text-error ring-error/5"
       : item.severity === "WARNING"
-        ? "bg-warning/[0.09] text-warning ring-warning/[0.06]"
+        ? "bg-warning/9 text-warning ring-warning/6"
         : "bg-surface-container-high/70 text-on-surface-variant ring-black/[0.035]";
 
   return (
@@ -774,19 +709,14 @@ export function MaterialIssueRow({
     >
       <Link
         href={item.href}
-        className="block rounded-[20px] px-2 py-2.5 outline-none active:bg-black/[0.025] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
+        className="block rounded-[20px] px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 active:bg-black/2.5"
       >
         <div className="flex items-start gap-3">
           <span
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${issueToneClass}`}
           >
-            <span
-              className="material-symbols-outlined text-[18px]"
-              aria-hidden="true"
-            >
-              {item.type === "WASTE" || item.type === "ADJUSTMENT"
-                ? "history"
-                : "inventory_2"}
+            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+              {item.type === "WASTE" || item.type === "ADJUSTMENT" ? "history" : "inventory_2"}
             </span>
           </span>
           <div className="min-w-0 flex-1">
@@ -797,31 +727,27 @@ export function MaterialIssueRow({
                 {label}
               </p>
               {quantityLabel ? (
-                <span className="financial-amount shrink-0 font-mono text-[10px] font-bold text-on-surface">
+                <span className="financial-amount text-on-surface shrink-0 font-mono text-[10px] font-bold">
                   {quantityLabel}
                 </span>
               ) : null}
             </div>
-            <p className="mt-1 truncate text-[13px] font-semibold tracking-[-0.01em] text-on-surface">
+            <p className="text-on-surface mt-1 truncate text-[13px] font-semibold tracking-[-0.01em]">
               {item.materialName}
             </p>
-            <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant/75">
+            <p className="text-on-surface-variant/75 mt-0.5 line-clamp-2 text-[10px] leading-4">
               {item.description}
             </p>
           </div>
           <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
+            className="bg-surface-container-high/70 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#007AFF]"
             aria-hidden="true"
           >
-            <span className="material-symbols-outlined text-[16px]">
-              chevron_right
-            </span>
+            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           </span>
         </div>
-        <div className="mt-2 flex items-center justify-between gap-3 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
-          <span className="truncate">
-            {item.projectName ?? item.locationName ?? "-"}
-          </span>
+        <div className="text-on-surface-variant/70 mt-2 flex items-center justify-between gap-3 pl-12 text-[9px] font-semibold">
+          <span className="truncate">{item.projectName ?? item.locationName ?? "-"}</span>
           <span className="shrink-0">
             {item.type === "RAP_SHORTAGE"
               ? `Tersedia ${item.availableStock.toLocaleString("id-ID")}`

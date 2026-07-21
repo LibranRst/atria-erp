@@ -40,10 +40,7 @@ export function MaterialFoundationPanel({
       toast.error(result.error.message);
       return;
     }
-    setLocations((current) => [
-      ...current,
-      { id: result.data.id, name: result.data.name },
-    ]);
+    setLocations((current) => [...current, { id: result.data.id, name: result.data.name }]);
     setLocationOpen(false);
     setLocationName("");
     toast.success("Lokasi inventory ditambahkan.");
@@ -78,16 +75,22 @@ export function MaterialFoundationPanel({
                 detail="Lokasi pertama membuka langkah pembuatan Material Master."
               />
             ) : (
-              <div className="divide-y divide-black/[0.055]">
+              <div className="divide-y divide-black/5.5">
                 {locations.map((location) => (
                   <div key={location.id} className="flex min-h-14 items-center gap-3 px-4 py-3">
-                    <span className="material-symbols-outlined !flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined bg-surface-container-low text-on-surface-variant flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] text-[18px]"
+                      aria-hidden="true"
+                    >
                       warehouse
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-on-surface">
+                    <span className="text-on-surface min-w-0 flex-1 truncate text-[12px] font-bold">
                       {location.name}
                     </span>
-                    <span className="material-symbols-outlined text-[17px] text-success" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-success text-[17px]"
+                      aria-hidden="true"
+                    >
                       check
                     </span>
                   </div>
@@ -96,7 +99,8 @@ export function MaterialFoundationPanel({
             )}
           </OnboardingSurface>
           <OnboardingNotice>
-            Lokasi baru hanya menyiapkan row inventory bersaldo nol. Belum ada stok fisik yang tercatat.
+            Lokasi baru hanya menyiapkan row inventory bersaldo nol. Belum ada stok fisik yang
+            tercatat.
           </OnboardingNotice>
         </div>
       ) : locations.length === 0 ? (
@@ -114,7 +118,7 @@ export function MaterialFoundationPanel({
               setTab("LOCATIONS");
               setLocationOpen(true);
             }}
-            className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
+            className="bg-primary text-on-primary min-h-12 w-full rounded-full px-5 text-xs font-bold"
           >
             Buat lokasi pertama
           </button>

@@ -36,12 +36,9 @@ export function getCategoryPlanTemplateOverride({
   readonly selectedTemplate: PricingTemplateOption | undefined;
   readonly overrideCost: number | undefined;
 } {
-  const selectedTemplate = pricingTemplates.find(
-    (item) => item.id === categoryPlanForm.templateId,
-  );
+  const selectedTemplate = pricingTemplates.find((item) => item.id === categoryPlanForm.templateId);
   const overrideCost =
-    selectedTemplate &&
-    Number(categoryPlanForm.estimatedUnitCost) !== selectedTemplate.internalCost
+    selectedTemplate && Number(categoryPlanForm.estimatedUnitCost) !== selectedTemplate.internalCost
       ? Number(categoryPlanForm.estimatedUnitCost)
       : undefined;
 
@@ -80,12 +77,9 @@ export function getRapTemplateOverride({
   readonly selectedTemplate: PricingTemplateOption | undefined;
   readonly overrideCost: number | undefined;
 } {
-  const selectedTemplate = pricingTemplates.find(
-    (item) => item.id === rapForm.templateId,
-  );
+  const selectedTemplate = pricingTemplates.find((item) => item.id === rapForm.templateId);
   const overrideCost =
-    selectedTemplate &&
-    Number(rapForm.estimatedUnitCost) !== selectedTemplate.internalCost
+    selectedTemplate && Number(rapForm.estimatedUnitCost) !== selectedTemplate.internalCost
       ? Number(rapForm.estimatedUnitCost)
       : undefined;
 

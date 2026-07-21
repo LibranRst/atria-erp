@@ -36,9 +36,7 @@ import {
   type WarehouseAction,
 } from "@/features/materials/lib/material-ui-utils";
 
-type SelectedRap =
-  | MaterialOperationsDashboard["projects"][number]["rapItems"][number]
-  | undefined;
+type SelectedRap = MaterialOperationsDashboard["projects"][number]["rapItems"][number] | undefined;
 
 type UseMaterialControlOperationsInput = {
   readonly data: MaterialOperationsDashboard;
@@ -124,7 +122,9 @@ export function useMaterialControlOperations({
   const [decisionReason, setDecisionReason] = useState("");
   const [emergencyOverride, setEmergencyOverride] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [additionalMovements, setAdditionalMovements] = useState<readonly MaterialMovementView[]>([]);
+  const [additionalMovements, setAdditionalMovements] = useState<readonly MaterialMovementView[]>(
+    [],
+  );
   const movements = useMemo(() => {
     const serverIds = new Set(data.movements.map((movement) => movement.id));
     return [
@@ -134,9 +134,7 @@ export function useMaterialControlOperations({
   }, [additionalMovements, data.movements]);
   const [pending, startTransition] = useTransition();
   const [newLocationName, setNewLocationName] = useState("");
-  const [adjustDirection, setAdjustDirection] = useState<"INCREASE" | "DECREASE">(
-    "INCREASE",
-  );
+  const [adjustDirection, setAdjustDirection] = useState<"INCREASE" | "DECREASE">("INCREASE");
 
   function updateActionInUrl(actionId: string | null): void {
     const params = new URLSearchParams(window.location.search);
@@ -205,12 +203,22 @@ export function useMaterialControlOperations({
         toast.error(result.error.message);
         return;
       }
-      const label = action === "RESERVE" ? "Reservasi" : action === "USE" ? "Pemakaian" : action === "RETURN" ? "Pengembalian" : "Material terbuang";
+      const label =
+        action === "RESERVE"
+          ? "Reservasi"
+          : action === "USE"
+            ? "Pemakaian"
+            : action === "RETURN"
+              ? "Pengembalian"
+              : "Material terbuang";
       finish(`${label} material berhasil dicatat.`, {
         title: `${label} berhasil dicatat`,
         description: "Pergerakan stok dan audit trail telah dibuat dalam satu transaksi.",
         facts: [
-          { label: "Project", value: data.projects.find((row) => row.id === projectId)?.name ?? "Project" },
+          {
+            label: "Project",
+            value: data.projects.find((row) => row.id === projectId)?.name ?? "Project",
+          },
           { label: "Jumlah", value: Number(quantity).toLocaleString("id-ID") },
           { label: "Status", value: "Sudah diposting" },
         ],
@@ -287,16 +295,18 @@ export function useMaterialControlOperations({
     setDocumentNumber(draft.countNumber);
     setLocationId(draft.locationId);
     setNote(draft.note ?? "");
-    setCounted(Object.fromEntries(draft.items.map((item) => [item.materialId, String(item.countedQuantity)])));
+    setCounted(
+      Object.fromEntries(
+        draft.items.map((item) => [item.materialId, String(item.countedQuantity)]),
+      ),
+    );
   }
 
   function runCount(mode: "SAVE" | "SUBMIT"): void {
-    const countItems = Object.entries(counted).map(
-      ([materialId, countedQuantity]) => ({
-        materialId,
-        countedQuantity: Number(countedQuantity),
-      }),
-    );
+    const countItems = Object.entries(counted).map(([materialId, countedQuantity]) => ({
+      materialId,
+      countedQuantity: Number(countedQuantity),
+    }));
     startTransition(async () => {
       const saved = await saveStockCount({
         stockCountId: stockCountId ?? undefined,
@@ -332,7 +342,8 @@ export function useMaterialControlOperations({
       }
       finish("Stock opname dikirim untuk persetujuan.", {
         title: "Stock opname sudah dikirim",
-        description: "Stok belum berubah. Owner atau Finance Admin akan memeriksa snapshot sebelum posting.",
+        description:
+          "Stok belum berubah. Owner atau Finance Admin akan memeriksa snapshot sebelum posting.",
         facts: [
           { label: "Nomor", value: documentNumber },
           { label: "Material", value: `${countItems.length} item` },

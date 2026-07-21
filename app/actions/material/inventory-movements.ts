@@ -35,11 +35,14 @@ import {
 } from "./inventory-project-movements";
 
 export async function recordStockIn(
-  input: RecordStockInInput
+  input: RecordStockInInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const validation = recordStockInSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data stock in tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data stock in tidak valid." },
+    };
   }
 
   const sessionResult = await getSessionUser();
@@ -47,10 +50,18 @@ export async function recordStockIn(
 
   try {
     await assertPermission(sessionResult.data.user, "create:stock_movement");
-    await assertProjectScopeForMaterialAction(validation.data.projectId, sessionResult.data.user.id, sessionResult.data.roleName);
+    await assertProjectScopeForMaterialAction(
+      validation.data.projectId,
+      sessionResult.data.user.id,
+      sessionResult.data.roleName,
+    );
 
     const result = await db.transaction(async (tx) => {
-      const inventory = await findLockedInventory(tx, validation.data.materialId, validation.data.inventoryLocationId);
+      const inventory = await findLockedInventory(
+        tx,
+        validation.data.materialId,
+        validation.data.inventoryLocationId,
+      );
       const oldCurrent = parseNumericToCents(inventory.currentStock);
       const oldAverageCost = Number(inventory.averageCost);
       const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
@@ -58,9 +69,10 @@ export async function recordStockIn(
       const unitCost = validation.data.unitCost ?? 0;
       const currentQty = Number(inventory.currentStock);
       const nextQty = Number(fromCents(nextCurrent));
-      const weightedAverageCost = nextQty > 0
-        ? ((currentQty * oldAverageCost) + (validation.data.quantity * unitCost)) / nextQty
-        : unitCost;
+      const weightedAverageCost =
+        nextQty > 0
+          ? (currentQty * oldAverageCost + validation.data.quantity * unitCost) / nextQty
+          : unitCost;
 
       const [updated] = await tx
         .update(materialInventory)
@@ -86,7 +98,11 @@ export async function recordStockIn(
         action: "RECORD_STOCK_IN",
         inventoryId: inventory.id,
         originalState: { currentStock: inventory.currentStock, averageCost: inventory.averageCost },
-        newState: { currentStock: updated.currentStock, averageCost: updated.averageCost, stockMovementId: movement.id },
+        newState: {
+          currentStock: updated.currentStock,
+          averageCost: updated.averageCost,
+          stockMovementId: movement.id,
+        },
       });
 
       return movement;
@@ -99,11 +115,14 @@ export async function recordStockIn(
 }
 
 export async function reserveMaterialForProject(
-  input: ReserveMaterialInput
+  input: ReserveMaterialInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const validation = reserveMaterialSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data reservasi material tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data reservasi material tidak valid." },
+    };
   }
 
   const sessionResult = await getSessionUser();
@@ -111,10 +130,18 @@ export async function reserveMaterialForProject(
 
   try {
     await assertPermission(sessionResult.data.user, "reserve:stock");
-    await assertProjectScopeForMaterialAction(validation.data.projectId, sessionResult.data.user.id, sessionResult.data.roleName);
+    await assertProjectScopeForMaterialAction(
+      validation.data.projectId,
+      sessionResult.data.user.id,
+      sessionResult.data.roleName,
+    );
 
     const result = await db.transaction(async (tx) => {
-      const inventory = await findLockedInventory(tx, validation.data.materialId, validation.data.inventoryLocationId);
+      const inventory = await findLockedInventory(
+        tx,
+        validation.data.materialId,
+        validation.data.inventoryLocationId,
+      );
       const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
       const currentStock = parseNumericToCents(inventory.currentStock);
       const reservedStock = parseNumericToCents(inventory.reservedStock);
@@ -166,23 +193,26 @@ export async function wasteMaterialForProject(
 }
 
 export async function useMaterialForProject(
-  input: UseMaterialInput
+  input: UseMaterialInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   return recordMaterialUsageForProject(input);
 }
 
 export async function returnMaterialFromProject(
-  input: ReturnMaterialInput
+  input: ReturnMaterialInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   return recordMaterialReturnFromProject(input);
 }
 
 export async function adjustMaterialStock(
-  input: AdjustMaterialStockInput
+  input: AdjustMaterialStockInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const validation = adjustMaterialStockSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data adjustment stock tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data adjustment stock tidak valid." },
+    };
   }
 
   const sessionResult = await getSessionUser();
@@ -192,12 +222,17 @@ export async function adjustMaterialStock(
     await assertPermission(sessionResult.data.user, "adjust:stock");
 
     const result = await db.transaction(async (tx) => {
-      const inventory = await findLockedInventory(tx, validation.data.materialId, validation.data.inventoryLocationId);
+      const inventory = await findLockedInventory(
+        tx,
+        validation.data.materialId,
+        validation.data.inventoryLocationId,
+      );
       const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
       const currentStock = parseNumericToCents(inventory.currentStock);
-      const nextCurrent = validation.data.direction === "INCREASE"
-        ? currentStock + quantity
-        : currentStock - quantity;
+      const nextCurrent =
+        validation.data.direction === "INCREASE"
+          ? currentStock + quantity
+          : currentStock - quantity;
 
       ensureNonNegativeStock(nextCurrent, "INSUFFICIENT_CURRENT_STOCK");
       if (nextCurrent < parseNumericToCents(inventory.reservedStock)) {
@@ -226,7 +261,11 @@ export async function adjustMaterialStock(
         action: "ADJUST_MATERIAL_STOCK",
         inventoryId: inventory.id,
         originalState: { currentStock: inventory.currentStock, note: validation.data.note },
-        newState: { currentStock: updated.currentStock, direction: validation.data.direction, stockMovementId: movement.id },
+        newState: {
+          currentStock: updated.currentStock,
+          direction: validation.data.direction,
+          stockMovementId: movement.id,
+        },
       });
 
       return movement;

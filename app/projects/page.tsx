@@ -6,8 +6,15 @@ import { ProjectListClient } from "@/features/projects/list/components/project-l
 import { requireServerSession } from "@/lib/server/session";
 import { resolveEffectiveProjectHealth } from "@/lib/project/effective-health";
 
-function toProjectStatus(status: string): "DRAFT" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED" {
-  if (status === "ACTIVE" || status === "ON_HOLD" || status === "COMPLETED" || status === "CANCELLED") {
+function toProjectStatus(
+  status: string,
+): "DRAFT" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED" {
+  if (
+    status === "ACTIVE" ||
+    status === "ON_HOLD" ||
+    status === "COMPLETED" ||
+    status === "CANCELLED"
+  ) {
     return status;
   }
   return "DRAFT";
@@ -65,12 +72,12 @@ export default async function ProjectsPage(): Promise<React.JSX.Element> {
     const internalBudget = Number(budget?.internalBudget || contractVal * 0.9);
     const remainingBudget = internalBudget - actualCost;
     const usedPercentage = internalBudget > 0 ? (actualCost / internalBudget) * 100 : 0;
-    const projectedMarginPercentage = contractVal > 0
-      ? ((contractVal - Math.max(internalBudget, actualCost)) / contractVal) * 100
-      : 0;
-    const targetMarginPercentage = contractVal > 0
-      ? (Number(budget?.targetGrossAmount ?? 0) / contractVal) * 100
-      : 0;
+    const projectedMarginPercentage =
+      contractVal > 0
+        ? ((contractVal - Math.max(internalBudget, actualCost)) / contractVal) * 100
+        : 0;
+    const targetMarginPercentage =
+      contractVal > 0 ? (Number(budget?.targetGrossAmount ?? 0) / contractVal) * 100 : 0;
     const health = resolveEffectiveProjectHealth({
       storedHealth: proj.financialHealth,
       remainingBudget,

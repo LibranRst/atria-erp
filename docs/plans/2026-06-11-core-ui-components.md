@@ -46,6 +46,7 @@ The components should feel like **solid finance instrument panels**: dense, dark
 ### Task 1: Create reusable Card primitives
 
 **Files:**
+
 - Create: `components/ui/card.tsx`
 
 - [ ] **Step 1: Create `components/ui/card.tsx` with this complete implementation**
@@ -55,9 +56,10 @@ import type { ComponentPropsWithoutRef } from "react";
 
 type CardVariant = "surface" | "elevated";
 
-type CardProps = ComponentPropsWithoutRef<"section"> & Readonly<{
-  variant?: CardVariant;
-}>;
+type CardProps = ComponentPropsWithoutRef<"section"> &
+  Readonly<{
+    variant?: CardVariant;
+  }>;
 
 type CardPartProps = ComponentPropsWithoutRef<"div">;
 
@@ -83,7 +85,7 @@ export function Card({
   return (
     <section
       className={mergeClassNames(
-        "rounded-2xl border border-border p-4 shadow-[0_4px_12px_rgba(0,0,0,0.15)]",
+        "border-border rounded-2xl border p-4 shadow-[0_4px_12px_rgba(0,0,0,0.15)]",
         CARD_VARIANT_CLASS_NAMES[variant],
         className,
       )}
@@ -94,11 +96,7 @@ export function Card({
   );
 }
 
-export function CardHeader({
-  children,
-  className,
-  ...props
-}: CardPartProps): React.JSX.Element {
+export function CardHeader({ children, className, ...props }: CardPartProps): React.JSX.Element {
   return (
     <div className={mergeClassNames("space-y-1", className)} {...props}>
       {children}
@@ -106,15 +104,11 @@ export function CardHeader({
   );
 }
 
-export function CardTitle({
-  children,
-  className,
-  ...props
-}: CardTitleProps): React.JSX.Element {
+export function CardTitle({ children, className, ...props }: CardTitleProps): React.JSX.Element {
   return (
     <h2
       className={mergeClassNames(
-        "text-lg font-semibold tracking-tight text-text-primary",
+        "text-text-primary text-lg font-semibold tracking-tight",
         className,
       )}
       {...props}
@@ -130,17 +124,13 @@ export function CardDescription({
   ...props
 }: CardDescriptionProps): React.JSX.Element {
   return (
-    <p className={mergeClassNames("text-sm leading-6 text-secondary", className)} {...props}>
+    <p className={mergeClassNames("text-secondary text-sm leading-6", className)} {...props}>
       {children}
     </p>
   );
 }
 
-export function CardContent({
-  children,
-  className,
-  ...props
-}: CardPartProps): React.JSX.Element {
+export function CardContent({ children, className, ...props }: CardPartProps): React.JSX.Element {
   return (
     <div className={mergeClassNames("mt-4", className)} {...props}>
       {children}
@@ -148,15 +138,11 @@ export function CardContent({
   );
 }
 
-export function CardFooter({
-  children,
-  className,
-  ...props
-}: CardPartProps): React.JSX.Element {
+export function CardFooter({ children, className, ...props }: CardPartProps): React.JSX.Element {
   return (
     <div
       className={mergeClassNames(
-        "mt-4 flex items-center justify-between gap-3 border-t border-border pt-4",
+        "border-border mt-4 flex items-center justify-between gap-3 border-t pt-4",
         className,
       )}
       {...props}
@@ -172,20 +158,21 @@ export function CardFooter({
 Check `components/ui/card.tsx` includes:
 
 ```tsx
-"rounded-2xl border border-border p-4 shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+"rounded-2xl border border-border p-4 shadow-[0_4px_12px_rgba(0,0,0,0.15)]";
 ```
 
 Check it does not include:
 
 ```tsx
-backdrop-blur
-blur
-any
+backdrop - blur;
+blur;
+any;
 ```
 
 ### Task 2: Create documented status Badge component
 
 **Files:**
+
 - Create: `components/ui/badge.tsx`
 
 - [ ] **Step 1: Create `components/ui/badge.tsx` with this complete implementation**
@@ -209,10 +196,11 @@ export type BadgeStatus =
 
 export type BadgeVariant = "critical" | "muted" | "primary" | "success" | "warning";
 
-type BadgeProps = Omit<ComponentPropsWithoutRef<"span">, "children"> & Readonly<{
-  status: BadgeStatus;
-  children?: string;
-}>;
+type BadgeProps = Omit<ComponentPropsWithoutRef<"span">, "children"> &
+  Readonly<{
+    status: BadgeStatus;
+    children?: string;
+  }>;
 
 function mergeClassNames(...classNames: readonly (string | undefined)[]): string {
   return classNames.filter(Boolean).join(" ");
@@ -245,19 +233,14 @@ function formatStatusLabel(status: BadgeStatus): string {
   return status.replaceAll("_", " ");
 }
 
-export function Badge({
-  status,
-  children,
-  className,
-  ...props
-}: BadgeProps): React.JSX.Element {
+export function Badge({ status, children, className, ...props }: BadgeProps): React.JSX.Element {
   const variant = STATUS_VARIANTS[status];
   const label = children ?? formatStatusLabel(status);
 
   return (
     <span
       className={mergeClassNames(
-        "inline-flex min-h-6 items-center rounded-lg px-2 py-1 text-[0.625rem] font-bold uppercase leading-none tracking-[0.12em]",
+        "inline-flex min-h-6 items-center rounded-lg px-2 py-1 text-[0.625rem] leading-none font-bold tracking-[0.12em] uppercase",
         status === "VOID" ? "line-through" : undefined,
         VARIANT_CLASS_NAMES[variant],
         className,
@@ -275,15 +258,15 @@ export function Badge({
 Check these mappings are present:
 
 ```tsx
-PAID: "success"
-APPROVED: "success"
-PENDING: "warning"
-SUBMITTED: "warning"
-UNPAID: "warning"
-PARTIALLY_PAID: "primary"
-CRITICAL: "critical"
-OVERDUE: "critical"
-VOID: "muted"
+PAID: "success";
+APPROVED: "success";
+PENDING: "warning";
+SUBMITTED: "warning";
+UNPAID: "warning";
+PARTIALLY_PAID: "primary";
+CRITICAL: "critical";
+OVERDUE: "critical";
+VOID: "muted";
 ```
 
 Check the variant classes use existing semantic tokens:
@@ -299,6 +282,7 @@ bg-elevated text-muted
 ### Task 3: Add UI component barrel exports
 
 **Files:**
+
 - Create: `components/ui/index.ts`
 
 - [ ] **Step 1: Create `components/ui/index.ts` with this complete implementation**
@@ -329,6 +313,7 @@ Expected at this intermediate point: build may fail only if `app/page.tsx` has n
 ### Task 4: Use Card and Badge on the welcome page
 
 **Files:**
+
 - Modify: `app/page.tsx`
 
 - [ ] **Step 1: Replace `app/page.tsx` with this complete implementation**
@@ -342,14 +327,15 @@ export default function Home(): React.JSX.Element {
       <div className="space-y-6">
         <Card className="rounded-3xl p-5 shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
           <CardHeader>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted">
+            <p className="text-muted text-xs font-semibold tracking-[0.24em] uppercase">
               Atria ERP
             </p>
             <CardTitle className="pt-4 text-3xl">
               Finance-first control room for interior projects.
             </CardTitle>
             <CardDescription>
-              Pantau proyek, ledger kas, dan pengeluaran lapangan dari satu shell seluler yang siap dipakai Project Manager di lapangan.
+              Pantau proyek, ledger kas, dan pengeluaran lapangan dari satu shell seluler yang siap
+              dipakai Project Manager di lapangan.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
@@ -361,15 +347,13 @@ export default function Home(): React.JSX.Element {
         <div className="grid gap-3">
           <Card variant="elevated">
             <CardHeader>
-              <p className="text-xs font-medium text-muted">Primary workflow</p>
-              <CardTitle className="text-base">
-                Projects → Ledger → Add Expense → Profile
-              </CardTitle>
+              <p className="text-muted text-xs font-medium">Primary workflow</p>
+              <CardTitle className="text-base">Projects → Ledger → Add Expense → Profile</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader>
-              <p className="text-xs font-medium text-muted">Design foundation</p>
+              <p className="text-muted text-xs font-medium">Design foundation</p>
               <CardTitle className="text-base">
                 iOS 26 Solid tokens, 48px touch targets, and sticky thumb navigation.
               </CardTitle>
@@ -378,7 +362,7 @@ export default function Home(): React.JSX.Element {
         </div>
       </div>
 
-      <p className="pb-2 text-center text-xs leading-5 text-muted">
+      <p className="text-muted pb-2 text-center text-xs leading-5">
         Gunakan navigasi bawah untuk berpindah ke modul utama Atria ERP.
       </p>
     </section>
@@ -391,7 +375,7 @@ export default function Home(): React.JSX.Element {
 Check `app/page.tsx` imports from:
 
 ```tsx
-"@/components/ui"
+"@/components/ui";
 ```
 
 Check it uses at least one `<Card>` and one `<Badge>`.
@@ -399,6 +383,7 @@ Check it uses at least one `<Card>` and one `<Badge>`.
 ### Task 5: Verify linting, build, and dev startup
 
 **Files:**
+
 - No code changes expected unless verification finds a concrete compile or lint error.
 
 - [ ] **Step 1: Run ESLint**
@@ -434,6 +419,7 @@ Expected: Next.js dev server starts and logs `http://localhost:3001`. Stop it af
 ### Task 6: Inspect final diff and commit
 
 **Files:**
+
 - All changed files from prior tasks.
 
 - [ ] **Step 1: Review working tree status**

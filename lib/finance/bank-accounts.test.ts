@@ -109,7 +109,9 @@ describe("Bank account cash control actions", () => {
   afterAll(async () => {
     restoreUserSession();
     if (createdAccountIds.length === 0) return;
-    await db.delete(cashTransaction).where(inArray(cashTransaction.bankAccountId, createdAccountIds));
+    await db
+      .delete(cashTransaction)
+      .where(inArray(cashTransaction.bankAccountId, createdAccountIds));
     await db.delete(auditLog).where(inArray(auditLog.targetId, createdAccountIds));
     await db.delete(bankAccount).where(inArray(bankAccount.id, createdAccountIds));
   });
@@ -141,10 +143,7 @@ describe("Bank account cash control actions", () => {
     });
     const openingLedger = await db.query.cashTransaction.findFirst({
       where: (table, { and, eq }) =>
-        and(
-          eq(table.bankAccountId, accountId),
-          eq(table.referenceType, "opening_balance"),
-        ),
+        and(eq(table.bankAccountId, accountId), eq(table.referenceType, "opening_balance")),
     });
 
     expect(Number(account?.balance ?? 0)).toBe(1250000);
@@ -252,7 +251,10 @@ describe("Bank account cash control actions", () => {
     const accountId = await createOwnedAccount("archive", 0);
 
     mockUserSession(FINANCE_USER);
-    const financeArchive = await setBankAccountActive({ bankAccountId: accountId, isActive: false });
+    const financeArchive = await setBankAccountActive({
+      bankAccountId: accountId,
+      isActive: false,
+    });
     expect(financeArchive.success).toBe(false);
     if (!financeArchive.success) expect(financeArchive.error.code).toBe("FORBIDDEN");
 

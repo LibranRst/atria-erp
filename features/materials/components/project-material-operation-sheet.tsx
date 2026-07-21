@@ -34,55 +34,40 @@ type OperationCopy = {
 const OPERATION_COPY: Record<ProjectOperation, OperationCopy> = {
   RESERVE: {
     label: "Reservasi Material",
-    contextHelper:
-      "Tautkan stok ke kebutuhan RAP proyek dan pilih lokasi penyimpanan.",
-    detailHelper:
-      "Reservasi mengurangi stok tersedia tanpa mengubah stok fisik.",
+    contextHelper: "Tautkan stok ke kebutuhan RAP proyek dan pilih lokasi penyimpanan.",
+    detailHelper: "Reservasi mengurangi stok tersedia tanpa mengubah stok fisik.",
     noteLabel: "Catatan reservasi",
     noteHelper: "Jelaskan tujuan reservasi, minimal 3 karakter.",
     notePlaceholder: "Contoh: Disiapkan untuk pemasangan area utama",
   },
   USE: {
     label: "Pakai Material",
-    contextHelper:
-      "Tautkan pemakaian ke kebutuhan RAP dan lokasi asal yang benar.",
-    detailHelper:
-      "Pemakaian mengurangi stok fisik dan dicatat sebagai biaya proyek.",
+    contextHelper: "Tautkan pemakaian ke kebutuhan RAP dan lokasi asal yang benar.",
+    detailHelper: "Pemakaian mengurangi stok fisik dan dicatat sebagai biaya proyek.",
     noteLabel: "Catatan pemakaian",
     noteHelper: "Jelaskan pemakaian material, minimal 3 karakter.",
     notePlaceholder: "Contoh: Dipasang di area ruang keluarga",
   },
   RETURN: {
     label: "Kembalikan Sisa",
-    contextHelper:
-      "Pilih kebutuhan RAP dan lokasi penerima sisa material proyek.",
-    detailHelper:
-      "Pengembalian menambah stok fisik dan membalik biaya pemakaian terkait.",
+    contextHelper: "Pilih kebutuhan RAP dan lokasi penerima sisa material proyek.",
+    detailHelper: "Pengembalian menambah stok fisik dan membalik biaya pemakaian terkait.",
     noteLabel: "Catatan pengembalian",
     noteHelper: "Jelaskan asal sisa material, minimal 3 karakter.",
     notePlaceholder: "Contoh: Sisa pemasangan dikembalikan ke gudang",
   },
   WASTE: {
     label: "Material Terbuang",
-    contextHelper:
-      "Tautkan material terbuang ke RAP dan lokasi stok yang terdampak.",
-    detailHelper:
-      "Stok fisik berkurang permanen dan alasan disimpan pada audit trail.",
+    contextHelper: "Tautkan material terbuang ke RAP dan lokasi stok yang terdampak.",
+    detailHelper: "Stok fisik berkurang permanen dan alasan disimpan pada audit trail.",
     noteLabel: "Alasan material terbuang",
     noteHelper: "Wajib spesifik, minimal 10 karakter.",
     notePlaceholder: "Jelaskan penyebab, kondisi, dan lokasi material terbuang",
   },
 };
 
-function isProjectOperation(
-  action: WarehouseAction | null,
-): action is ProjectOperation {
-  return (
-    action === "RESERVE" ||
-    action === "USE" ||
-    action === "RETURN" ||
-    action === "WASTE"
-  );
+function isProjectOperation(action: WarehouseAction | null): action is ProjectOperation {
+  return action === "RESERVE" || action === "USE" || action === "RETURN" || action === "WASTE";
 }
 
 type ProjectMaterialOperationSheetProps = {
@@ -92,8 +77,7 @@ type ProjectMaterialOperationSheetProps = {
   readonly valid: boolean;
   readonly message: string | null;
   readonly projects: MaterialOperationsDashboard["projects"];
-  readonly selectedProject:
-    MaterialOperationsDashboard["projects"][number] | undefined;
+  readonly selectedProject: MaterialOperationsDashboard["projects"][number] | undefined;
   readonly selectedMaterial: MaterialOperationsDashboard["inventory"];
   readonly projectId: string;
   readonly rapItemId: string;
@@ -133,17 +117,13 @@ export function ProjectMaterialOperationSheet({
 }: ProjectMaterialOperationSheetProps): React.JSX.Element {
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
-  const inventory = selectedMaterial.find(
-    (row) => row.locationId === locationId,
-  );
+  const inventory = selectedMaterial.find((row) => row.locationId === locationId);
   const numericQuantity = Number(quantity || 0);
   const operation = isProjectOperation(action) ? action : null;
   const operationCopy = operation ? OPERATION_COPY[operation] : null;
   const operationLabel = operationCopy?.label ?? "Operasi Material";
   const impactBefore =
-    action === "RESERVE"
-      ? (inventory?.availableStock ?? 0)
-      : (inventory?.currentStock ?? 0);
+    action === "RESERVE" ? (inventory?.availableStock ?? 0) : (inventory?.currentStock ?? 0);
   const impactDelta = action === "RETURN" ? numericQuantity : -numericQuantity;
   const impactAfter = impactBefore + impactDelta;
   const disabledReason = !projectId
@@ -196,21 +176,13 @@ export function ProjectMaterialOperationSheet({
             >
               <ReviewFact
                 label="Proyek"
-                value={
-                  projects.find((row) => row.id === projectId)?.name ?? "–"
-                }
+                value={projects.find((row) => row.id === projectId)?.name ?? "–"}
               />
               <ReviewFact
                 label="RAP material"
-                value={
-                  selectedProject?.rapItems.find((row) => row.id === rapItemId)
-                    ?.name ?? "–"
-                }
+                value={selectedProject?.rapItems.find((row) => row.id === rapItemId)?.name ?? "–"}
               />
-              <ReviewFact
-                label="Lokasi"
-                value={inventory?.locationName ?? "–"}
-              />
+              <ReviewFact label="Lokasi" value={inventory?.locationName ?? "–"} />
               <ReviewFact
                 label="Jumlah"
                 value={`${formatMaterialQuantity(numericQuantity)} ${inventory?.unit ?? "unit"}`}
@@ -222,9 +194,7 @@ export function ProjectMaterialOperationSheet({
               before={impactBefore}
               delta={impactDelta}
               after={impactAfter}
-              reserved={
-                action === "RESERVE" ? undefined : inventory?.reservedStock
-              }
+              reserved={action === "RESERVE" ? undefined : inventory?.reservedStock}
               unit={inventory?.unit}
             />
             <FormRiskNotice
@@ -233,13 +203,7 @@ export function ProjectMaterialOperationSheet({
                   ? "Material terbuang tercatat permanen"
                   : "Perubahan stok siap dicatat"
               }
-              tone={
-                action === "WASTE"
-                  ? "danger"
-                  : action === "USE"
-                    ? "warning"
-                    : "default"
-              }
+              tone={action === "WASTE" ? "danger" : action === "USE" ? "warning" : "default"}
             >
               {action === "RESERVE"
                 ? "Stok fisik tidak berubah, tetapi stok tersedia untuk proyek lain akan berkurang."
@@ -255,10 +219,7 @@ export function ProjectMaterialOperationSheet({
             {message && <Error text={message} />}
             <FormSection
               title="Proyek dan material"
-              helper={
-                operationCopy?.contextHelper ??
-                "Pilih konteks operasi material."
-              }
+              helper={operationCopy?.contextHelper ?? "Pilih konteks operasi material."}
             >
               <SheetSelect
                 label="Proyek"
@@ -284,11 +245,7 @@ export function ProjectMaterialOperationSheet({
                       description: row.area,
                     })) ?? []
                 }
-                placeholder={
-                  projectId
-                    ? "Pilih kebutuhan material"
-                    : "Pilih proyek lebih dulu"
-                }
+                placeholder={projectId ? "Pilih kebutuhan material" : "Pilih proyek lebih dulu"}
                 disabled={!projectId}
                 required
               />
@@ -302,21 +259,16 @@ export function ProjectMaterialOperationSheet({
                   description: `Tersedia ${formatMaterialQuantity(row.availableStock)} ${row.unit}`,
                   meta: `Fisik ${formatMaterialQuantity(row.currentStock)} · reservasi ${formatMaterialQuantity(row.reservedStock)}`,
                 }))}
-                placeholder={
-                  rapItemId ? "Pilih lokasi" : "Pilih RAP material lebih dulu"
-                }
+                placeholder={rapItemId ? "Pilih lokasi" : "Pilih RAP material lebih dulu"}
                 disabled={!rapItemId}
                 required
               />
             </FormSection>
             {inventory ? (
-              <FieldContextLine
-                tone={inventory.availableStock <= 0 ? "danger" : "success"}
-              >
-                Fisik {formatMaterialQuantity(inventory.currentStock)} ·
-                reservasi {formatMaterialQuantity(inventory.reservedStock)} ·
-                tersedia {formatMaterialQuantity(inventory.availableStock)}{" "}
-                {inventory.unit}
+              <FieldContextLine tone={inventory.availableStock <= 0 ? "danger" : "success"}>
+                Fisik {formatMaterialQuantity(inventory.currentStock)} · reservasi{" "}
+                {formatMaterialQuantity(inventory.reservedStock)} · tersedia{" "}
+                {formatMaterialQuantity(inventory.availableStock)} {inventory.unit}
               </FieldContextLine>
             ) : null}
             {inventory ? (
@@ -325,25 +277,15 @@ export function ProjectMaterialOperationSheet({
                 before={impactBefore}
                 delta={impactDelta}
                 after={impactAfter}
-                reserved={
-                  action === "RESERVE" ? undefined : inventory.reservedStock
-                }
+                reserved={action === "RESERVE" ? undefined : inventory.reservedStock}
                 unit={inventory.unit}
               />
             ) : null}
             <FormSection
               title="Jumlah dan catatan"
-              helper={
-                operationCopy?.detailHelper ??
-                "Lengkapi jumlah dan catatan operasi."
-              }
+              helper={operationCopy?.detailHelper ?? "Lengkapi jumlah dan catatan operasi."}
             >
-              <FormField
-                label={
-                  inventory?.unit ? `Jumlah (${inventory.unit})` : "Jumlah"
-                }
-                required
-              >
+              <FormField label={inventory?.unit ? `Jumlah (${inventory.unit})` : "Jumlah"} required>
                 <QuantityStepper
                   value={quantity}
                   unit={inventory?.unit}
@@ -395,7 +337,7 @@ function ReviewFact({
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
       <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
+      <span className="text-on-surface text-right font-bold">{value}</span>
     </div>
   );
 }

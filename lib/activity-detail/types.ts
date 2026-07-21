@@ -22,12 +22,7 @@ export type ActivityDetailRequest = {
   readonly id: string;
 };
 
-export type ActivityStatusTone =
-  | "NEUTRAL"
-  | "PENDING"
-  | "SUCCESS"
-  | "WARNING"
-  | "DANGER";
+export type ActivityStatusTone = "NEUTRAL" | "PENDING" | "SUCCESS" | "WARNING" | "DANGER";
 
 export type ActivityValue =
   | { readonly type: "TEXT"; readonly value: string }

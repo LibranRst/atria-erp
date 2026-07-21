@@ -64,6 +64,7 @@ siti@dekoria.com    / password123  / project_manager
 ### Task 1: Seed Better Auth credential accounts
 
 **Files:**
+
 - Modify: `db/seed.ts:1-102`
 
 - [ ] **Step 1: Import `account` and `auth`**
@@ -91,7 +92,7 @@ import {
   approval,
   aiRun,
   notification,
-  auditLog
+  auditLog,
 } from "./schema";
 ```
 
@@ -129,20 +130,20 @@ import {
 In the cleanup section, change:
 
 ```ts
-    await tx.delete(vendor);
-    await tx.delete(client);
-    await tx.delete(user);
-    await tx.delete(role);
+await tx.delete(vendor);
+await tx.delete(client);
+await tx.delete(user);
+await tx.delete(role);
 ```
 
 to:
 
 ```ts
-    await tx.delete(vendor);
-    await tx.delete(client);
-    await tx.delete(account);
-    await tx.delete(user);
-    await tx.delete(role);
+await tx.delete(vendor);
+await tx.delete(client);
+await tx.delete(account);
+await tx.delete(user);
+await tx.delete(role);
 ```
 
 This avoids foreign-key failures because `account.userId` references `user.id`.
@@ -152,39 +153,39 @@ This avoids foreign-key failures because `account.userId` references `user.id`.
 Immediately before the existing comment `// 2. Seed Users`, add:
 
 ```ts
-    const defaultPassword = "password123";
-    const hashedDefaultPassword = await auth.$context.then((context) =>
-      context.password.hash(defaultPassword)
-    );
+const defaultPassword = "password123";
+const hashedDefaultPassword = await auth.$context.then((context) =>
+  context.password.hash(defaultPassword),
+);
 ```
 
 Expected placement:
 
 ```ts
-    await tx.insert(role).values([
-      {
-        id: "00000000-0000-0000-0000-000000000001",
-        name: "owner",
-        description: "Pemilik Perusahaan (Full Access & Approver)",
-      },
-      {
-        id: "00000000-0000-0000-0000-000000000002",
-        name: "finance_admin",
-        description: "Finance & Bookkeeper (Verifikator & Rekonsiliasi)",
-      },
-      {
-        id: "00000000-0000-0000-0000-000000000003",
-        name: "project_manager",
-        description: "Manajer Proyek Lapangan (Pengaju Biaya & Operator)",
-      },
-    ]);
+await tx.insert(role).values([
+  {
+    id: "00000000-0000-0000-0000-000000000001",
+    name: "owner",
+    description: "Pemilik Perusahaan (Full Access & Approver)",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000002",
+    name: "finance_admin",
+    description: "Finance & Bookkeeper (Verifikator & Rekonsiliasi)",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000003",
+    name: "project_manager",
+    description: "Manajer Proyek Lapangan (Pengaju Biaya & Operator)",
+  },
+]);
 
-    const defaultPassword = "password123";
-    const hashedDefaultPassword = await auth.$context.then((context) =>
-      context.password.hash(defaultPassword)
-    );
+const defaultPassword = "password123";
+const hashedDefaultPassword = await auth.$context.then((context) =>
+  context.password.hash(defaultPassword),
+);
 
-    // 2. Seed Users
+// 2. Seed Users
 ```
 
 - [ ] **Step 4: Insert credential accounts after inserting users**
@@ -192,106 +193,106 @@ Expected placement:
 Immediately after the existing `await tx.insert(user).values([...]);` block, add:
 
 ```ts
-    console.log("Seeding auth accounts...");
-    await tx.insert(account).values([
-      {
-        id: "account-11111111-1111-1111-1111-111111111111",
-        accountId: "11111111-1111-1111-1111-111111111111",
-        providerId: "credential",
-        userId: "11111111-1111-1111-1111-111111111111",
-        password: hashedDefaultPassword,
-      },
-      {
-        id: "account-22222222-2222-2222-2222-222222222222",
-        accountId: "22222222-2222-2222-2222-222222222222",
-        providerId: "credential",
-        userId: "22222222-2222-2222-2222-222222222222",
-        password: hashedDefaultPassword,
-      },
-      {
-        id: "account-33333333-3333-3333-3333-333333333331",
-        accountId: "33333333-3333-3333-3333-333333333331",
-        providerId: "credential",
-        userId: "33333333-3333-3333-3333-333333333331",
-        password: hashedDefaultPassword,
-      },
-      {
-        id: "account-33333333-3333-3333-3333-333333333332",
-        accountId: "33333333-3333-3333-3333-333333333332",
-        providerId: "credential",
-        userId: "33333333-3333-3333-3333-333333333332",
-        password: hashedDefaultPassword,
-      },
-    ]);
+console.log("Seeding auth accounts...");
+await tx.insert(account).values([
+  {
+    id: "account-11111111-1111-1111-1111-111111111111",
+    accountId: "11111111-1111-1111-1111-111111111111",
+    providerId: "credential",
+    userId: "11111111-1111-1111-1111-111111111111",
+    password: hashedDefaultPassword,
+  },
+  {
+    id: "account-22222222-2222-2222-2222-222222222222",
+    accountId: "22222222-2222-2222-2222-222222222222",
+    providerId: "credential",
+    userId: "22222222-2222-2222-2222-222222222222",
+    password: hashedDefaultPassword,
+  },
+  {
+    id: "account-33333333-3333-3333-3333-333333333331",
+    accountId: "33333333-3333-3333-3333-333333333331",
+    providerId: "credential",
+    userId: "33333333-3333-3333-3333-333333333331",
+    password: hashedDefaultPassword,
+  },
+  {
+    id: "account-33333333-3333-3333-3333-333333333332",
+    accountId: "33333333-3333-3333-3333-333333333332",
+    providerId: "credential",
+    userId: "33333333-3333-3333-3333-333333333332",
+    password: hashedDefaultPassword,
+  },
+]);
 ```
 
 Expected placement:
 
 ```ts
-    await tx.insert(user).values([
-      {
-        id: "11111111-1111-1111-1111-111111111111",
-        name: "Ronald Wijaya",
-        email: "ronald@dekoria.com",
-        emailVerified: true,
-        roleId: "00000000-0000-0000-0000-000000000001",
-      },
-      {
-        id: "22222222-2222-2222-2222-222222222222",
-        name: "Lisa Permata",
-        email: "lisa@dekoria.com",
-        emailVerified: true,
-        roleId: "00000000-0000-0000-0000-000000000002",
-      },
-      {
-        id: "33333333-3333-3333-3333-333333333331",
-        name: "Budi Santoso",
-        email: "budi@dekoria.com",
-        emailVerified: true,
-        roleId: "00000000-0000-0000-0000-000000000003",
-      },
-      {
-        id: "33333333-3333-3333-3333-333333333332",
-        name: "Siti Aminah",
-        email: "siti@dekoria.com",
-        emailVerified: true,
-        roleId: "00000000-0000-0000-0000-000000000003",
-      },
-    ]);
+await tx.insert(user).values([
+  {
+    id: "11111111-1111-1111-1111-111111111111",
+    name: "Ronald Wijaya",
+    email: "ronald@dekoria.com",
+    emailVerified: true,
+    roleId: "00000000-0000-0000-0000-000000000001",
+  },
+  {
+    id: "22222222-2222-2222-2222-222222222222",
+    name: "Lisa Permata",
+    email: "lisa@dekoria.com",
+    emailVerified: true,
+    roleId: "00000000-0000-0000-0000-000000000002",
+  },
+  {
+    id: "33333333-3333-3333-3333-333333333331",
+    name: "Budi Santoso",
+    email: "budi@dekoria.com",
+    emailVerified: true,
+    roleId: "00000000-0000-0000-0000-000000000003",
+  },
+  {
+    id: "33333333-3333-3333-3333-333333333332",
+    name: "Siti Aminah",
+    email: "siti@dekoria.com",
+    emailVerified: true,
+    roleId: "00000000-0000-0000-0000-000000000003",
+  },
+]);
 
-    console.log("Seeding auth accounts...");
-    await tx.insert(account).values([
-      {
-        id: "account-11111111-1111-1111-1111-111111111111",
-        accountId: "11111111-1111-1111-1111-111111111111",
-        providerId: "credential",
-        userId: "11111111-1111-1111-1111-111111111111",
-        password: hashedDefaultPassword,
-      },
-      {
-        id: "account-22222222-2222-2222-2222-222222222222",
-        accountId: "22222222-2222-2222-2222-222222222222",
-        providerId: "credential",
-        userId: "22222222-2222-2222-2222-222222222222",
-        password: hashedDefaultPassword,
-      },
-      {
-        id: "account-33333333-3333-3333-3333-333333333331",
-        accountId: "33333333-3333-3333-3333-333333333331",
-        providerId: "credential",
-        userId: "33333333-3333-3333-3333-333333333331",
-        password: hashedDefaultPassword,
-      },
-      {
-        id: "account-33333333-3333-3333-3333-333333333332",
-        accountId: "33333333-3333-3333-3333-333333333332",
-        providerId: "credential",
-        userId: "33333333-3333-3333-3333-333333333332",
-        password: hashedDefaultPassword,
-      },
-    ]);
+console.log("Seeding auth accounts...");
+await tx.insert(account).values([
+  {
+    id: "account-11111111-1111-1111-1111-111111111111",
+    accountId: "11111111-1111-1111-1111-111111111111",
+    providerId: "credential",
+    userId: "11111111-1111-1111-1111-111111111111",
+    password: hashedDefaultPassword,
+  },
+  {
+    id: "account-22222222-2222-2222-2222-222222222222",
+    accountId: "22222222-2222-2222-2222-222222222222",
+    providerId: "credential",
+    userId: "22222222-2222-2222-2222-222222222222",
+    password: hashedDefaultPassword,
+  },
+  {
+    id: "account-33333333-3333-3333-3333-333333333331",
+    accountId: "33333333-3333-3333-3333-333333333331",
+    providerId: "credential",
+    userId: "33333333-3333-3333-3333-333333333331",
+    password: hashedDefaultPassword,
+  },
+  {
+    id: "account-33333333-3333-3333-3333-333333333332",
+    accountId: "33333333-3333-3333-3333-333333333332",
+    providerId: "credential",
+    userId: "33333333-3333-3333-3333-333333333332",
+    password: hashedDefaultPassword,
+  },
+]);
 
-    // 3. Seed Clients
+// 3. Seed Clients
 ```
 
 - [ ] **Step 5: Print safe login hints at the end of the seed**
@@ -299,11 +300,11 @@ Expected placement:
 Near the end of `db/seed.ts`, after the existing success log line, add these lines:
 
 ```ts
-  console.log("Default development login credentials:");
-  console.log("- ronald@dekoria.com / password123 (owner)");
-  console.log("- lisa@dekoria.com / password123 (finance_admin)");
-  console.log("- budi@dekoria.com / password123 (project_manager)");
-  console.log("- siti@dekoria.com / password123 (project_manager)");
+console.log("Default development login credentials:");
+console.log("- ronald@dekoria.com / password123 (owner)");
+console.log("- lisa@dekoria.com / password123 (finance_admin)");
+console.log("- budi@dekoria.com / password123 (project_manager)");
+console.log("- siti@dekoria.com / password123 (project_manager)");
 ```
 
 If the current ending is:
@@ -410,15 +411,18 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ## Self-Review
 
 **Spec coverage:**
+
 - User needs a way to log in: Task 1 adds Better Auth credential accounts for all seeded users.
 - Unknown email/password problem: the plan documents exact default credentials and prints them after seeding.
 - Better Auth compatibility: the plan follows Better Auth v1.6.11 docs for credential account shape and password hashing.
 
 **Placeholder scan:**
+
 - No `TBD`, `TODO`, `implement later`, or vague test instructions remain.
 - Every code-changing step includes exact code.
 
 **Type consistency:**
+
 - Uses existing `account` export from `db/schema.ts`.
 - Uses existing `auth` export from `lib/auth.ts`.
 - Account `userId` values match seeded `user.id` values.

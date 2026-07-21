@@ -59,20 +59,31 @@ const manualRabLineSchema = z.object({
   isBundle: z.boolean().optional(),
 });
 
-export const generateRabFromSelectedSourcesSchema = z.object({
-  projectId: uuidSchema("ID proyek tidak valid."),
-  projectRapItemIds: z.array(uuidSchema("ID item RAP tidak valid.")).default([]),
-  projectCategoryPlanItemIds: z.array(uuidSchema("ID detail plan kategori tidak valid.")).default([]),
-  manualLines: z.array(manualRabLineSchema).default([]),
-  title: z.string().min(3).max(255).optional(),
-  clientNotes: z.string().max(1000).optional().nullable(),
-}).refine((value) => (
-  value.projectRapItemIds.length + value.projectCategoryPlanItemIds.length + value.manualLines.length
-) > 0, {
-  message: "Pilih minimal satu sumber quotation.",
-});
+export const generateRabFromSelectedSourcesSchema = z
+  .object({
+    projectId: uuidSchema("ID proyek tidak valid."),
+    projectRapItemIds: z.array(uuidSchema("ID item RAP tidak valid.")).default([]),
+    projectCategoryPlanItemIds: z
+      .array(uuidSchema("ID detail plan kategori tidak valid."))
+      .default([]),
+    manualLines: z.array(manualRabLineSchema).default([]),
+    title: z.string().min(3).max(255).optional(),
+    clientNotes: z.string().max(1000).optional().nullable(),
+  })
+  .refine(
+    (value) =>
+      value.projectRapItemIds.length +
+        value.projectCategoryPlanItemIds.length +
+        value.manualLines.length >
+      0,
+    {
+      message: "Pilih minimal satu sumber quotation.",
+    },
+  );
 
-export type GenerateRabFromSelectedSourcesInput = z.infer<typeof generateRabFromSelectedSourcesSchema>;
+export type GenerateRabFromSelectedSourcesInput = z.infer<
+  typeof generateRabFromSelectedSourcesSchema
+>;
 
 export const updateRabEstimateItemSchema = z.object({
   rabEstimateItemId: uuidSchema("ID item RAB tidak valid."),
@@ -107,7 +118,9 @@ export const approveRabEstimateSchema = z.object({
 
 export const createRabBundleSchema = z.object({
   rabEstimateId: uuidSchema("ID RAB estimate tidak valid."),
-  itemIds: z.array(uuidSchema("ID item RAB tidak valid.")).min(2, "Pilih minimal dua quotation line."),
+  itemIds: z
+    .array(uuidSchema("ID item RAB tidak valid."))
+    .min(2, "Pilih minimal dua quotation line."),
   clientLabel: z.string().min(3, "Nama paket minimal 3 karakter.").max(255),
   description: z.string().max(1000).optional().nullable(),
   quantity: z.number().positive("Quantity wajib lebih besar dari 0."),
@@ -115,12 +128,16 @@ export const createRabBundleSchema = z.object({
   unitPrice: z.number().nonnegative("Harga paket tidak boleh negatif."),
 });
 
-export const updateRabBundleSchema = createRabBundleSchema.omit({ rabEstimateId: true, itemIds: true }).extend({
-  bundleId: uuidSchema("ID paket RAB tidak valid."),
-  isHidden: z.boolean().optional(),
-});
+export const updateRabBundleSchema = createRabBundleSchema
+  .omit({ rabEstimateId: true, itemIds: true })
+  .extend({
+    bundleId: uuidSchema("ID paket RAB tidak valid."),
+    isHidden: z.boolean().optional(),
+  });
 
-export const deleteRabBundleSchema = z.object({ bundleId: uuidSchema("ID paket RAB tidak valid.") });
+export const deleteRabBundleSchema = z.object({
+  bundleId: uuidSchema("ID paket RAB tidak valid."),
+});
 
 export type CreateRabBundleInput = z.infer<typeof createRabBundleSchema>;
 export type UpdateRabBundleInput = z.infer<typeof updateRabBundleSchema>;

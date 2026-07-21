@@ -11,9 +11,9 @@ import {
 
 describe("owner onboarding state", () => {
   test("parses the versioned state", () => {
-    expect(
-      parseOwnerOnboardingState(JSON.stringify(DEFAULT_OWNER_ONBOARDING_STATE)),
-    ).toEqual(DEFAULT_OWNER_ONBOARDING_STATE);
+    expect(parseOwnerOnboardingState(JSON.stringify(DEFAULT_OWNER_ONBOARDING_STATE))).toEqual(
+      DEFAULT_OWNER_ONBOARDING_STATE,
+    );
   });
 
   test("blocks every hard requirement but keeps vendor and library optional", () => {
@@ -38,10 +38,7 @@ describe("owner onboarding state", () => {
       "material_foundation",
       "initial_stock",
     ]);
-    expect(gates.warnings.map((row) => row.stepId)).toEqual([
-      "team_vendors",
-      "item_library",
-    ]);
+    expect(gates.warnings.map((row) => row.stepId)).toEqual(["team_vendors", "item_library"]);
   });
 
   test("allows completion with posted stock or explicit no-stock decision", () => {
@@ -93,9 +90,7 @@ describe("owner onboarding state", () => {
   test("rejects malformed and future state", () => {
     expect(parseOwnerOnboardingState("not-json")).toBeNull();
     expect(
-      parseOwnerOnboardingState(
-        JSON.stringify({ ...DEFAULT_OWNER_ONBOARDING_STATE, version: 2 }),
-      ),
+      parseOwnerOnboardingState(JSON.stringify({ ...DEFAULT_OWNER_ONBOARDING_STATE, version: 2 })),
     ).toBeNull();
   });
 

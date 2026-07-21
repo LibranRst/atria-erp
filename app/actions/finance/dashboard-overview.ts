@@ -49,14 +49,19 @@ function optionalData<T>(
   return fallback;
 }
 
-const DUE_GROUPS: readonly { readonly bucket: FinanceDashboardCashDueItem["bucket"]; readonly label: string }[] = [
+const DUE_GROUPS: readonly {
+  readonly bucket: FinanceDashboardCashDueItem["bucket"];
+  readonly label: string;
+}[] = [
   { bucket: "OVERDUE", label: "Terlambat" },
   { bucket: "TODAY", label: "Hari ini" },
   { bucket: "NEXT_7_DAYS", label: "7 hari ke depan" },
   { bucket: "LATER", label: "Berikutnya" },
 ];
 
-function buildCashDueGroups(items: readonly FinanceDashboardCashDueItem[]): readonly FinanceDashboardCashDueGroup[] {
+function buildCashDueGroups(
+  items: readonly FinanceDashboardCashDueItem[],
+): readonly FinanceDashboardCashDueGroup[] {
   return DUE_GROUPS.map((group) => {
     const matches = items.filter((item) => item.bucket === group.bucket);
     return {
@@ -115,8 +120,7 @@ export async function getFinanceDashboardOverview(): Promise<
       activeProjectIds.length === 0
         ? Promise.resolve([])
         : db.query.projectBudgets.findMany({
-            where: (table, operators) =>
-              operators.inArray(table.projectId, activeProjectIds),
+            where: (table, operators) => operators.inArray(table.projectId, activeProjectIds),
             with: {
               project: true,
               categories: { with: { expenseCategory: true } },
@@ -141,7 +145,12 @@ export async function getFinanceDashboardOverview(): Promise<
         limit: 5,
       }),
       db.query.stockMovement.findMany({
-        where: inArray(stockMovement.movementType, ["WASTE", "ADJUSTMENT", "EMERGENCY_ADJUSTMENT", "STOCK_COUNT_ADJUSTMENT"]),
+        where: inArray(stockMovement.movementType, [
+          "WASTE",
+          "ADJUSTMENT",
+          "EMERGENCY_ADJUSTMENT",
+          "STOCK_COUNT_ADJUSTMENT",
+        ]),
         with: { material: true, location: true, project: true },
         orderBy: [desc(stockMovement.createdAt)],
         limit: 5,
@@ -152,8 +161,18 @@ export async function getFinanceDashboardOverview(): Promise<
     const inventoryRows = optionalData(optionalResults[1], "inventori", [], unavailableSources);
     const rapItems = optionalData(optionalResults[2], "kebutuhan RAP", [], unavailableSources);
     const transactions = optionalData(optionalResults[3], "aktivitas kas", [], unavailableSources);
-    const reversalReceipts = optionalData(optionalResults[4], "penerimaan material", [], unavailableSources);
-    const materialMovements = optionalData(optionalResults[5], "pergerakan material", [], unavailableSources);
+    const reversalReceipts = optionalData(
+      optionalResults[4],
+      "penerimaan material",
+      [],
+      unavailableSources,
+    );
+    const materialMovements = optionalData(
+      optionalResults[5],
+      "pergerakan material",
+      [],
+      unavailableSources,
+    );
     const now = new Date();
     const rankedApprovalDetails = rankPendingApprovals(approvalDetails, now);
     const pendingApprovalCount = rankedApprovalDetails.length;
@@ -170,22 +189,16 @@ export async function getFinanceDashboardOverview(): Promise<
       0,
     );
     const lowStockCount = inventoryRows.filter(
-      (item) =>
-        Number(item.currentStock) - Number(item.reservedStock) <=
-        Number(item.minimumStock),
+      (item) => Number(item.currentStock) - Number(item.reservedStock) <= Number(item.minimumStock),
     ).length;
     const liveRapItems = rapItems.filter(
-      (item) =>
-        activeProjectIds.includes(item.rap.projectId) &&
-        item.rap.status !== "SUPERSEDED",
+      (item) => activeProjectIds.includes(item.rap.projectId) && item.rap.status !== "SUPERSEDED",
     );
     const materialShortageCount = liveRapItems.filter((item) => {
       const available =
         item.material?.inventory.reduce(
           (sum, inventory) =>
-            sum +
-            Number(inventory.currentStock) -
-            Number(inventory.reservedStock),
+            sum + Number(inventory.currentStock) - Number(inventory.reservedStock),
           0,
         ) ?? 0;
       return Number(item.totalQuantity) > available;
@@ -195,11 +208,7 @@ export async function getFinanceDashboardOverview(): Promise<
         const paidAmount = bill.payments
           .filter((payment) => payment.status === "COMPLETED")
           .reduce((sum, payment) => sum + Number(payment.amountPaid), 0);
-        const outstanding = outstandingAmount(
-          Number(bill.amount),
-          paidAmount,
-          bill.status,
-        );
+        const outstanding = outstandingAmount(Number(bill.amount), paidAmount, bill.status);
         if (outstanding <= 0) return null;
         return {
           id: bill.id,
@@ -222,11 +231,7 @@ export async function getFinanceDashboardOverview(): Promise<
           (sum, payment) => sum + Number(payment.amountPaid),
           0,
         );
-        const outstanding = outstandingAmount(
-          Number(invoice.amount),
-          paidAmount,
-          invoice.status,
-        );
+        const outstanding = outstandingAmount(Number(invoice.amount), paidAmount, invoice.status);
         if (outstanding <= 0) return null;
         return {
           id: invoice.id,
@@ -253,9 +258,7 @@ export async function getFinanceDashboardOverview(): Promise<
         const available =
           item.material?.inventory.reduce(
             (sum, inventory) =>
-              sum +
-              Number(inventory.currentStock) -
-              Number(inventory.reservedStock),
+              sum + Number(inventory.currentStock) - Number(inventory.reservedStock),
             0,
           ) ?? 0;
         const required = Number(item.totalQuantity);
@@ -278,8 +281,7 @@ export async function getFinanceDashboardOverview(): Promise<
         };
       }),
       ...inventoryRows.map((item): FinanceDashboardMaterialIssue | null => {
-        const available =
-          Number(item.currentStock) - Number(item.reservedStock);
+        const available = Number(item.currentStock) - Number(item.reservedStock);
         const minimum = Number(item.minimumStock);
         if (available > minimum) return null;
         return {
@@ -328,15 +330,22 @@ export async function getFinanceDashboardOverview(): Promise<
         quantity: Number(movement.quantity),
         createdAt: movement.createdAt,
         unit: movement.material?.unit ?? "unit",
-        description: movement.note ?? (movement.movementType === "WASTE" ? "Material terbuang tercatat." : "Penyesuaian stok tercatat."),
+        description:
+          movement.note ??
+          (movement.movementType === "WASTE"
+            ? "Material terbuang tercatat."
+            : "Penyesuaian stok tercatat."),
         href: "/materials?tab=activity",
       })),
     ]
       .filter((item): item is FinanceDashboardMaterialIssue => item !== null)
       .sort((a, b) => {
-        const rank = (severity: FinanceDashboardMaterialIssue["severity"]): number => severity === "CRITICAL" ? 2 : severity === "WARNING" ? 1 : 0;
-        return rank(b.severity) - rank(a.severity)
-          || (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
+        const rank = (severity: FinanceDashboardMaterialIssue["severity"]): number =>
+          severity === "CRITICAL" ? 2 : severity === "WARNING" ? 1 : 0;
+        return (
+          rank(b.severity) - rank(a.severity) ||
+          (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0)
+        );
       });
 
     const projectInputs: DashboardProjectInput[] = budgets.map((budget) => ({
@@ -359,16 +368,10 @@ export async function getFinanceDashboardOverview(): Promise<
 
     const core = buildFinanceDashboardCore({
       role,
-      cashAvailable: accounts.reduce(
-        (sum, account) => sum + Number(account.balance),
-        0,
-      ),
+      cashAvailable: accounts.reduce((sum, account) => sum + Number(account.balance), 0),
       receivables: invoices.map((invoice) => ({
         amount: Number(invoice.amount),
-        paidAmount: invoice.payments.reduce(
-          (sum, payment) => sum + Number(payment.amountPaid),
-          0,
-        ),
+        paidAmount: invoice.payments.reduce((sum, payment) => sum + Number(payment.amountPaid), 0),
         status: invoice.status,
         dueDate: invoice.dueDate,
       })),
@@ -428,23 +431,11 @@ export async function getFinanceDashboardOverview(): Promise<
           },
         },
         dashboardDetails: {
-          approvals: limitDashboardTabDetails(
-            rankedApprovalDetails,
-            DASHBOARD_TAB_DETAIL_LIMIT,
-          ),
-          cashDue: limitDashboardTabDetails(
-            cashDue,
-            DASHBOARD_TAB_DETAIL_LIMIT,
-          ),
+          approvals: limitDashboardTabDetails(rankedApprovalDetails, DASHBOARD_TAB_DETAIL_LIMIT),
+          cashDue: limitDashboardTabDetails(cashDue, DASHBOARD_TAB_DETAIL_LIMIT),
           cashDueGroups: buildCashDueGroups(cashDue),
-          budgetRisks: limitDashboardTabDetails(
-            core.riskyProjects,
-            DASHBOARD_TAB_DETAIL_LIMIT,
-          ),
-          materials: limitDashboardTabDetails(
-            materialIssues,
-            DASHBOARD_TAB_DETAIL_LIMIT,
-          ),
+          budgetRisks: limitDashboardTabDetails(core.riskyProjects, DASHBOARD_TAB_DETAIL_LIMIT),
+          materials: limitDashboardTabDetails(materialIssues, DASHBOARD_TAB_DETAIL_LIMIT),
         },
         stockIssues: {
           materialShortageCount,

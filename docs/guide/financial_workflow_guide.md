@@ -134,12 +134,12 @@ Gunakan refresh browser setelah mencatat hasil instan. Nilai setelah refresh har
 | Budget             | `/ledger?tab=budget` dan `/projects/<id>?tab=overview` | Project value, Internal Budget, Actual/Consumed, Paid, Remaining, Used %, margin dan category risk    |
 | Jatuh tempo        | `/ledger?tab=cash`                                     | Vendor bill/client invoice outstanding dan tanggal jatuh tempo                                        |
 | Rekening           | `/ledger?tab=accounts`                                 | Saldo tiap rekening, total cash, dan transaksi kas terbaru                                            |
-| Expenses           | `/expenses` → **Pengeluaran**                          | Diajukan/Terverifikasi/Disetujui/Lunas, antrean, biaya aktual, nilai dibayar, rekening pencairan       |
+| Expenses           | `/expenses` → **Pengeluaran**                          | Diajukan/Terverifikasi/Disetujui/Lunas, antrean, biaya aktual, nilai dibayar, rekening pencairan      |
 | Tagihan vendor     | `/expenses` → **Tagihan**                              | Belum dibayar/Dibayar sebagian/Lunas, nominal bill, terjadwal, dibayar, dan sisa                      |
-| Rencana bayar      | `/expenses` → **Rencana Bayar**                        | Menunggu/Sedang diproses/Selesai/Gagal, approval, tanggal rencana, rekening, dan referensi             |
+| Rencana bayar      | `/expenses` → **Rencana Bayar**                        | Menunggu/Sedang diproses/Selesai/Gagal, approval, tanggal rencana, rekening, dan referensi            |
 | Material ringkas   | `/materials` → **Ringkasan**                           | Total nilai stok, stok tersedia, shortage, low stock, pending approval                                |
 | Kebutuhan material | `/materials?tab=needs`                                 | Kebutuhan RAP, stok diamankan proyek, perlu dibeli, status Siap/Kekurangan                            |
-| Inventory          | `/materials?tab=inventory`                             | Stok fisik, direservasi, tersedia, harga rata-rata, dan nilai inventori per lokasi                     |
+| Inventory          | `/materials?tab=inventory`                             | Stok fisik, direservasi, tersedia, harga rata-rata, dan nilai inventori per lokasi                    |
 | Aktivitas material | `/materials?tab=activity`                              | Movement type, qty, project, lokasi, reference dan waktu                                              |
 | Stok project       | `/projects/<id>?tab=stok`                              | Required, secured, reserved outstanding, received/bought, used, returned, waste, leftover, shortage   |
 | Invoice client     | `/projects/<id>` → tab pembayaran/invoice              | Invoice amount, paid amount, outstanding, status dan cash receipt                                     |
@@ -159,17 +159,17 @@ Urutan pemeriksaan di drawer:
 5. **Catatan & bukti**: periksa alasan approval/rejection/reversal dan nomor referensi. Pesan “Data perubahan historis belum tercatat lengkap” berarti sistem sengaja tidak mengarang data lama.
 6. Gunakan CTA bagian bawah untuk membuka sumber yang diizinkan bagi role aktif. CTA yang tidak muncul bukan bukti record hilang; akses sumber dapat dibatasi RBAC.
 
-| Row yang diketuk | Detail utama yang harus cocok | Dampak yang harus diperiksa |
-| --- | --- | --- |
-| Materials → Pergerakan stok / Project → Aktivitas stok | Material, lokasi, quantity, unit cost, movement type, actor | Stok lokasi naik/turun; reserve/use/return/waste tidak membuat cash movement sendiri |
-| Materials → Transfer | Lokasi asal/tujuan, item, quantity, nilai | Asal turun, tujuan naik, net stock global nol, kas tetap |
-| Materials → Stock opname | System quantity, counted quantity, variance, checker, alasan | Adjustment stock/value hanya setelah posted/approved, kas tetap |
-| Materials → Saldo awal | Seluruh item, unit cost, subtotal, total, checker | Stock dan inventory value naik setelah POSTED; kas, utang, actual proyek tetap |
-| Expenses → Riwayat pengeluaran | Quantity, unit cost, subtotal, kategori, pengaju/checker | Actual/paid mengikuti status; kas hanya berubah setelah PAID |
-| Expenses → Tagihan/Rencana bayar | Bill, vendor, scheduled/paid, rekening, reference | Utang dan kas berubah pada tahap yang tepat |
-| Dashboard/Rekening → Transaksi terbaru | DEBIT/CREDIT, amount, rekening, sumber, rekonsiliasi | DEBIT menambah kas; CREDIT mengurangi kas |
-| Project → Invoice/pembayaran | Invoice, paid, outstanding, rekening, reference | Pembayaran mengurangi piutang dan menambah kas |
-| Project → Riwayat RAB/Change Order | Revisi, nilai sebelum/sesudah, delta, actor, alasan | Nilai kontrak hanya berubah lewat workflow Change Order yang disetujui |
+| Row yang diketuk                                       | Detail utama yang harus cocok                                | Dampak yang harus diperiksa                                                          |
+| ------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Materials → Pergerakan stok / Project → Aktivitas stok | Material, lokasi, quantity, unit cost, movement type, actor  | Stok lokasi naik/turun; reserve/use/return/waste tidak membuat cash movement sendiri |
+| Materials → Transfer                                   | Lokasi asal/tujuan, item, quantity, nilai                    | Asal turun, tujuan naik, net stock global nol, kas tetap                             |
+| Materials → Stock opname                               | System quantity, counted quantity, variance, checker, alasan | Adjustment stock/value hanya setelah posted/approved, kas tetap                      |
+| Materials → Saldo awal                                 | Seluruh item, unit cost, subtotal, total, checker            | Stock dan inventory value naik setelah POSTED; kas, utang, actual proyek tetap       |
+| Expenses → Riwayat pengeluaran                         | Quantity, unit cost, subtotal, kategori, pengaju/checker     | Actual/paid mengikuti status; kas hanya berubah setelah PAID                         |
+| Expenses → Tagihan/Rencana bayar                       | Bill, vendor, scheduled/paid, rekening, reference            | Utang dan kas berubah pada tahap yang tepat                                          |
+| Dashboard/Rekening → Transaksi terbaru                 | DEBIT/CREDIT, amount, rekening, sumber, rekonsiliasi         | DEBIT menambah kas; CREDIT mengurangi kas                                            |
+| Project → Invoice/pembayaran                           | Invoice, paid, outstanding, rekening, reference              | Pembayaran mengurangi piutang dan menambah kas                                       |
+| Project → Riwayat RAB/Change Order                     | Revisi, nilai sebelum/sesudah, delta, actor, alasan          | Nilai kontrak hanya berubah lewat workflow Change Order yang disetujui               |
 
 ### 4.2 Matriks efek mutation yang benar
 
@@ -1277,13 +1277,13 @@ Rekonsiliasi kas:
 
 Expected category final untuk base scenario:
 
-| Kategori    |  Allocation |      Actual |        Paid |   Remaining |    Used | Status      |
-| ----------- | ----------: | ----------: | ----------: | ----------: | ------: | ----------- |
-| Material    | Rp5.814.000 | Rp2.000.000 | Rp5.000.000 | Rp3.814.000 |  34,40% | Aman              |
-| Tukang      | Rp4.284.000 | Rp4.000.000 | Rp4.000.000 |   Rp284.000 |  93,37% | Perlu dipantau    |
-| Operasional |   Rp612.000 |   Rp700.000 |   Rp700.000 |   -Rp88.000 | 114,38% | Melebihi budget   |
-| Lain-lain   |   Rp306.000 |         Rp0 |         Rp0 |   Rp306.000 |      0% | Aman              |
-| Subcon      | Rp3.060.000 | Rp3.000.000 | Rp3.000.000 |    Rp60.000 |  98,04% | Kritis            |
+| Kategori    |  Allocation |      Actual |        Paid |   Remaining |    Used | Status          |
+| ----------- | ----------: | ----------: | ----------: | ----------: | ------: | --------------- |
+| Material    | Rp5.814.000 | Rp2.000.000 | Rp5.000.000 | Rp3.814.000 |  34,40% | Aman            |
+| Tukang      | Rp4.284.000 | Rp4.000.000 | Rp4.000.000 |   Rp284.000 |  93,37% | Perlu dipantau  |
+| Operasional |   Rp612.000 |   Rp700.000 |   Rp700.000 |   -Rp88.000 | 114,38% | Melebihi budget |
+| Lain-lain   |   Rp306.000 |         Rp0 |         Rp0 |   Rp306.000 |      0% | Aman            |
+| Subcon      | Rp3.060.000 | Rp3.000.000 | Rp3.000.000 |    Rp60.000 |  98,04% | Kritis          |
 
 Expected project totals:
 

@@ -29,17 +29,13 @@ interface UseRabManagerFormsProps {
 
 interface UseRabManagerFormsResult {
   readonly rabDraftEdits: Record<string, RabItemView>;
-  readonly setRabDraftEdits: Dispatch<
-    SetStateAction<Record<string, RabItemView>>
-  >;
+  readonly setRabDraftEdits: Dispatch<SetStateAction<Record<string, RabItemView>>>;
   readonly selectedRapQuotationIds: string[];
   readonly setSelectedRapQuotationIds: Dispatch<SetStateAction<string[]>>;
   readonly selectedCategoryQuotationIds: string[];
   readonly setSelectedCategoryQuotationIds: Dispatch<SetStateAction<string[]>>;
   readonly manualQuotationLine: ManualQuotationLine;
-  readonly setManualQuotationLine: Dispatch<
-    SetStateAction<ManualQuotationLine>
-  >;
+  readonly setManualQuotationLine: Dispatch<SetStateAction<ManualQuotationLine>>;
   readonly changeOrderForm: RabChangeOrderForm;
   readonly setChangeOrderForm: Dispatch<SetStateAction<RabChangeOrderForm>>;
   readonly bundleEditorOpen: boolean;
@@ -62,10 +58,7 @@ interface UseRabManagerFormsResult {
   readonly setVoidRevisionOpen: (open: boolean) => void;
   readonly voidReason: string;
   readonly setVoidReason: (reason: string) => void;
-  readonly handleRabEditChange: (
-    item: RabItemView,
-    updates: Partial<RabItemView>,
-  ) => void;
+  readonly handleRabEditChange: (item: RabItemView, updates: Partial<RabItemView>) => void;
   readonly closeRabItemEditor: () => void;
   readonly openCreateBundle: () => void;
   readonly openEditBundle: (bundle: RabBundleView) => void;
@@ -77,21 +70,16 @@ export function useRabManagerForms({
   rabEstimate,
   categoryPlanItems,
 }: UseRabManagerFormsProps): UseRabManagerFormsResult {
-  const [rabDraftEdits, setRabDraftEdits] = useState<
-    Record<string, RabItemView>
-  >({});
-  const [selectedRapQuotationIds, setSelectedRapQuotationIds] = useState<
-    string[]
-  >(() => getInitialSelectedRapQuotationIds(rap));
-  const [selectedCategoryQuotationIds, setSelectedCategoryQuotationIds] =
-    useState<string[]>(() =>
-      getInitialSelectedCategoryQuotationIds(categoryPlanItems),
-    );
+  const [rabDraftEdits, setRabDraftEdits] = useState<Record<string, RabItemView>>({});
+  const [selectedRapQuotationIds, setSelectedRapQuotationIds] = useState<string[]>(() =>
+    getInitialSelectedRapQuotationIds(rap),
+  );
+  const [selectedCategoryQuotationIds, setSelectedCategoryQuotationIds] = useState<string[]>(() =>
+    getInitialSelectedCategoryQuotationIds(categoryPlanItems),
+  );
   const [manualQuotationLine, setManualQuotationLine] =
     useState<ManualQuotationLine>(emptyManualQuotationLine);
-  const [changeOrderForm, setChangeOrderForm] = useState(
-    createEmptyRabChangeOrderForm,
-  );
+  const [changeOrderForm, setChangeOrderForm] = useState(createEmptyRabChangeOrderForm);
   const [bundleEditorOpen, setBundleEditorOpen] = useState(false);
   const [editingBundleId, setEditingBundleId] = useState<string | null>(null);
   const [bundleForm, setBundleForm] = useState(emptyRabBundleForm);
@@ -103,10 +91,7 @@ export function useRabManagerForms({
   const [voidRevisionOpen, setVoidRevisionOpen] = useState(false);
   const [voidReason, setVoidReason] = useState("");
 
-  function handleRabEditChange(
-    item: RabItemView,
-    updates: Partial<RabItemView>,
-  ): void {
+  function handleRabEditChange(item: RabItemView, updates: Partial<RabItemView>): void {
     setRabDraftEdits((current) => ({
       ...current,
       [item.id]: {
@@ -140,9 +125,7 @@ export function useRabManagerForms({
   }
 
   function toggleBundleItem(id: string): void {
-    setBundleForm((current) =>
-      toggleBundleItemInForm({ current, itemId: id, rabEstimate }),
-    );
+    setBundleForm((current) => toggleBundleItemInForm({ current, itemId: id, rabEstimate }));
   }
 
   return {

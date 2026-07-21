@@ -1,6 +1,7 @@
 # Follow-up Architecture Audit Cleanup
 
 ## Scope
+
 - Move generic sheet primitives out of the Settings feature into shared UI ownership.
 - Keep existing sheet behavior, styling, focus management, body scroll locking, and motion unchanged.
 - Split the finance dashboard approval workflow out of the broad dashboard tabs file.
@@ -47,6 +48,7 @@
 - Update imports only where needed and preserve route/product behavior.
 
 ## Safety
+
 - No database, schema, server action, route, or environment variable changes.
 - Existing Settings imports keep a compatibility re-export while current consumers move to shared UI imports.
 - Verify with the existing Bun scripts: `bun run lint` and `bun run build`.

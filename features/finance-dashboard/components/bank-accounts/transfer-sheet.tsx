@@ -13,7 +13,10 @@ import {
   TextInput,
   type SelectOption,
 } from "@/components/ui";
-import { FinanceUnsavedChangesModal, MoneyImpactRow } from "@/features/finance/components/finance-form-patterns";
+import {
+  FinanceUnsavedChangesModal,
+  MoneyImpactRow,
+} from "@/features/finance/components/finance-form-patterns";
 import { shortMoney } from "@/features/finance-dashboard/lib/dashboard-formatters";
 import { InfoPill } from "./info-pill";
 import type { BankAccount, TransferDraft } from "./types";
@@ -63,97 +66,135 @@ export function TransferSheet({
       ? "Isi nominal transfer lebih dari 0."
       : draft.description.trim().length < 5
         ? "Tambahkan deskripsi minimal 5 karakter agar transfer mudah diaudit."
-      : undefined;
+        : undefined;
   function requestClose(): void {
-    if (reviewing) { setReviewing(false); return; }
-    if (isDirty) { setConfirmClose(true); return; }
+    if (reviewing) {
+      setReviewing(false);
+      return;
+    }
+    if (isDirty) {
+      setConfirmClose(true);
+      return;
+    }
     onClose();
   }
 
   return (
     <>
-    <WorkflowFormSheet
-      open={open}
-      title={reviewing ? "Tinjau transfer rekening" : "Transfer rekening"}
-      onClose={requestClose}
-      pending={pending}
-      disabledReason={disabledReason}
-      primaryLabel={reviewing ? "Transfer" : "Tinjau"}
-      secondaryLabel={reviewing ? "Ubah" : undefined}
-      pendingLabel="Mencatat…"
-      disabled={pending || !canSave || projectedSourceBalance < 0}
-      statusText={projectedSourceBalance < 0 ? "Saldo rekening sumber tidak mencukupi." : undefined}
-      statusTone={projectedSourceBalance < 0 ? "danger" : "default"}
-      onPrimary={() => reviewing ? onSave() : setReviewing(true)}
-      onSecondary={() => setReviewing(false)}
-    >
-      <div className="space-y-md">
-        {account ? (
-          <InfoPill
-            label="Dari rekening"
-            value={`${account.name} • ${shortMoney(account.balance)}`}
-          />
-        ) : null}
-        {reviewing ? (
-          <>
-            <MoneyImpactRow label={`Sumber · ${account?.name ?? "Rekening"}`} before={account?.balance ?? 0} delta={-amount} after={projectedSourceBalance} />
-            <MoneyImpactRow label={`Tujuan · ${selectedTarget?.label ?? "Rekening"}`} before={targetBefore} delta={amount} after={targetBefore + amount} />
-            <FormSection title="Referensi transfer" helper="Sistem mencatat dua baris ledger berpasangan.">
-              <FieldContextLine>{draft.transactionDate} · {draft.referenceNumber || "Tanpa nomor referensi"}</FieldContextLine>
-              <p className="rounded-2xl bg-surface-container-low px-4 py-3 text-xs leading-5 text-on-surface">{draft.description}</p>
-            </FormSection>
-          </>
-        ) : <>
-        {amount > 0 ? (
-          <FormRiskNotice title="Cegah transfer salah rekening" tone={projectedSourceBalance < 0 ? "danger" : "warning"}>
-            Pastikan rekening tujuan dan nominal sudah sesuai agar saldo sumber tidak terkoreksi manual setelah dicatat.
-          </FormRiskNotice>
-        ) : null}
-        <SheetSelect
-          label="Ke rekening"
-          value={draft.toBankAccountId}
-          onChange={(value) => patch({ toBankAccountId: value })}
-          options={options}
-        />
-        <FormField label="Nominal">
-          <MoneyInput
-            value={draft.amount}
-            onChange={(value) => patch({ amount: value })}
-          />
-        </FormField>
-        <FieldContextLine tone={projectedSourceBalance < 0 ? "danger" : "default"}>
-          Tujuan: {selectedTarget?.label ?? "belum dipilih"} · Sumber {shortMoney(account?.balance ?? 0)} -&gt; {shortMoney(projectedSourceBalance)}
-        </FieldContextLine>
-        <FormSection title="Referensi audit" helper="Tanggal, referensi, dan deskripsi untuk rekonsiliasi.">
-        <DatePickerField
-          label="Tanggal"
-          value={draft.transactionDate}
-          onChange={(value) => patch({ transactionDate: value })}
-        />
-        <FormField label="Nomor referensi" optional>
-          <TextInput
-            value={draft.referenceNumber}
-            onChange={(value) => patch({ referenceNumber: value })}
-            placeholder="Opsional"
-          />
-        </FormField>
-        <FormField label="Deskripsi">
-          <Textarea
-            value={draft.description}
-            onChange={(value) => patch({ description: value })}
-            placeholder="Contoh: transfer kas kecil PM Budi"
-          />
-        </FormField>
-        </FormSection>
-        </>}
-      </div>
-    </WorkflowFormSheet>
-    <FinanceUnsavedChangesModal
-      open={confirmClose}
-      onKeep={() => { setConfirmClose(false); onClose(); }}
-      onDiscard={() => { setConfirmClose(false); onDiscard(); }}
-      onContinue={() => setConfirmClose(false)}
-    />
+      <WorkflowFormSheet
+        open={open}
+        title={reviewing ? "Tinjau transfer rekening" : "Transfer rekening"}
+        onClose={requestClose}
+        pending={pending}
+        disabledReason={disabledReason}
+        primaryLabel={reviewing ? "Transfer" : "Tinjau"}
+        secondaryLabel={reviewing ? "Ubah" : undefined}
+        pendingLabel="Mencatat…"
+        disabled={pending || !canSave || projectedSourceBalance < 0}
+        statusText={
+          projectedSourceBalance < 0 ? "Saldo rekening sumber tidak mencukupi." : undefined
+        }
+        statusTone={projectedSourceBalance < 0 ? "danger" : "default"}
+        onPrimary={() => (reviewing ? onSave() : setReviewing(true))}
+        onSecondary={() => setReviewing(false)}
+      >
+        <div className="space-y-md">
+          {account ? (
+            <InfoPill
+              label="Dari rekening"
+              value={`${account.name} • ${shortMoney(account.balance)}`}
+            />
+          ) : null}
+          {reviewing ? (
+            <>
+              <MoneyImpactRow
+                label={`Sumber · ${account?.name ?? "Rekening"}`}
+                before={account?.balance ?? 0}
+                delta={-amount}
+                after={projectedSourceBalance}
+              />
+              <MoneyImpactRow
+                label={`Tujuan · ${selectedTarget?.label ?? "Rekening"}`}
+                before={targetBefore}
+                delta={amount}
+                after={targetBefore + amount}
+              />
+              <FormSection
+                title="Referensi transfer"
+                helper="Sistem mencatat dua baris ledger berpasangan."
+              >
+                <FieldContextLine>
+                  {draft.transactionDate} · {draft.referenceNumber || "Tanpa nomor referensi"}
+                </FieldContextLine>
+                <p className="bg-surface-container-low text-on-surface rounded-2xl px-4 py-3 text-xs leading-5">
+                  {draft.description}
+                </p>
+              </FormSection>
+            </>
+          ) : (
+            <>
+              {amount > 0 ? (
+                <FormRiskNotice
+                  title="Cegah transfer salah rekening"
+                  tone={projectedSourceBalance < 0 ? "danger" : "warning"}
+                >
+                  Pastikan rekening tujuan dan nominal sudah sesuai agar saldo sumber tidak
+                  terkoreksi manual setelah dicatat.
+                </FormRiskNotice>
+              ) : null}
+              <SheetSelect
+                label="Ke rekening"
+                value={draft.toBankAccountId}
+                onChange={(value) => patch({ toBankAccountId: value })}
+                options={options}
+              />
+              <FormField label="Nominal">
+                <MoneyInput value={draft.amount} onChange={(value) => patch({ amount: value })} />
+              </FormField>
+              <FieldContextLine tone={projectedSourceBalance < 0 ? "danger" : "default"}>
+                Tujuan: {selectedTarget?.label ?? "belum dipilih"} · Sumber{" "}
+                {shortMoney(account?.balance ?? 0)} -&gt; {shortMoney(projectedSourceBalance)}
+              </FieldContextLine>
+              <FormSection
+                title="Referensi audit"
+                helper="Tanggal, referensi, dan deskripsi untuk rekonsiliasi."
+              >
+                <DatePickerField
+                  label="Tanggal"
+                  value={draft.transactionDate}
+                  onChange={(value) => patch({ transactionDate: value })}
+                />
+                <FormField label="Nomor referensi" optional>
+                  <TextInput
+                    value={draft.referenceNumber}
+                    onChange={(value) => patch({ referenceNumber: value })}
+                    placeholder="Opsional"
+                  />
+                </FormField>
+                <FormField label="Deskripsi">
+                  <Textarea
+                    value={draft.description}
+                    onChange={(value) => patch({ description: value })}
+                    placeholder="Contoh: transfer kas kecil PM Budi"
+                  />
+                </FormField>
+              </FormSection>
+            </>
+          )}
+        </div>
+      </WorkflowFormSheet>
+      <FinanceUnsavedChangesModal
+        open={confirmClose}
+        onKeep={() => {
+          setConfirmClose(false);
+          onClose();
+        }}
+        onDiscard={() => {
+          setConfirmClose(false);
+          onDiscard();
+        }}
+        onContinue={() => setConfirmClose(false)}
+      />
     </>
   );
 }

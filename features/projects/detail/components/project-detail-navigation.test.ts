@@ -1,9 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import {
-  defaultTabForDomain,
-  projectDomainForTab,
-} from "./project-detail-navigation";
+import { defaultTabForDomain, projectDomainForTab } from "./project-detail-navigation";
 
 describe("project detail domain navigation", () => {
   it("maps every legacy tab query to its visible domain", () => {

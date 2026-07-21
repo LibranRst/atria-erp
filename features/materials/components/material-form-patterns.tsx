@@ -5,10 +5,7 @@ import { motion } from "framer-motion";
 
 import { ConfirmationModal, WorkflowFormSheet } from "@/components/ui";
 import { cx } from "@/components/ui/form-control-utils";
-import {
-  transitionSpringBouncy,
-  transitionSpringSnappy,
-} from "@/lib/utils/motion";
+import { transitionSpringBouncy, transitionSpringSnappy } from "@/lib/utils/motion";
 import { calculateStockImpact } from "@/features/materials/lib/material-ui-utils";
 
 export type MaterialOperationSuccess = {
@@ -34,8 +31,7 @@ export function StockImpactRow({
 }): React.JSX.Element {
   const impact = calculateStockImpact({ before, delta, reserved });
   const unsafe = !impact.safe;
-  const normalizeZero = (value: number): number =>
-    Math.abs(value) < Number.EPSILON ? 0 : value;
+  const normalizeZero = (value: number): number => (Math.abs(value) < Number.EPSILON ? 0 : value);
   const normalizedDelta = normalizeZero(delta);
   const quantity = (value: number): string =>
     `${normalizeZero(value).toLocaleString("id-ID", { maximumFractionDigits: 2 })}${unit ? ` ${unit}` : ""}`;
@@ -45,11 +41,9 @@ export function StockImpactRow({
       : `${normalizedDelta > 0 ? "+" : ""}${quantity(normalizedDelta)}`;
 
   return (
-    <section className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+    <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
       <div className="flex min-h-12 items-center justify-between gap-3 px-4 py-2.5">
-        <p className="min-w-0 truncate text-xs font-bold text-on-surface">
-          {label}
-        </p>
+        <p className="text-on-surface min-w-0 truncate text-xs font-bold">{label}</p>
         <p
           className={cx(
             "shrink-0 text-[10px] font-bold",
@@ -63,28 +57,28 @@ export function StockImpactRow({
           {deltaLabel}
         </p>
       </div>
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-outline-variant/15 bg-surface-container-lowest px-4 py-3 text-center">
+      <div className="border-outline-variant/15 bg-surface-container-lowest grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t px-4 py-3 text-center">
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+          <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
             Sebelum
           </p>
-          <p className="mt-1 whitespace-nowrap font-mono text-[13px] font-bold tabular-nums">
+          <p className="mt-1 font-mono text-[13px] font-bold whitespace-nowrap tabular-nums">
             {quantity(before)}
           </p>
         </div>
         <span
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-sm text-on-surface-variant ring-1 ring-outline-variant/15"
+          className="bg-surface-container-lowest text-on-surface-variant ring-outline-variant/15 flex h-7 w-7 items-center justify-center rounded-full text-sm ring-1"
           aria-hidden="true"
         >
           →
         </span>
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+          <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
             Sesudah
           </p>
           <p
             className={cx(
-              "mt-1 whitespace-nowrap font-mono text-[13px] font-bold tabular-nums",
+              "mt-1 font-mono text-[13px] font-bold whitespace-nowrap tabular-nums",
               unsafe ? "text-error" : "text-on-surface",
             )}
           >
@@ -95,10 +89,8 @@ export function StockImpactRow({
       {typeof reserved === "number" ? (
         <p
           className={cx(
-            "border-t border-outline-variant/15 px-4 py-2.5 text-[10px] leading-4",
-            unsafe
-              ? "bg-error-container/10 text-error"
-              : "text-on-surface-variant",
+            "border-outline-variant/15 border-t px-4 py-2.5 text-[10px] leading-4",
+            unsafe ? "bg-error-container/10 text-error" : "text-on-surface-variant",
           )}
         >
           Stok terreservasi {quantity(reserved)}
@@ -135,28 +127,21 @@ export function MaterialSuccessSheet({
           initial={{ scale: 0.75, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={transitionSpringBouncy}
-          className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"
+          className="bg-primary/10 text-primary mx-auto flex h-16 w-16 items-center justify-center rounded-full"
         >
           <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
         </motion.div>
         <div>
-          <p className="text-lg font-bold text-on-surface">{success?.title}</p>
-          <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-on-surface-variant">
+          <p className="text-on-surface text-lg font-bold">{success?.title}</p>
+          <p className="text-on-surface-variant mx-auto mt-1 max-w-sm text-sm leading-5">
             {success?.description}
           </p>
         </div>
-        <dl className="divide-y divide-outline-variant/15 rounded-[22px] bg-white ring-1 ring-black/[0.035] px-4 text-left overflow-hidden">
+        <dl className="divide-outline-variant/15 divide-y overflow-hidden rounded-[22px] bg-white px-4 text-left ring-1 ring-black/[0.035]">
           {success?.facts.map((fact) => (
-            <div
-              key={fact.label}
-              className="flex items-start justify-between gap-4 py-3.5"
-            >
-              <dt className="text-xs text-on-surface-variant font-medium">
-                {fact.label}
-              </dt>
-              <dd className="text-right text-xs font-bold text-on-surface">
-                {fact.value}
-              </dd>
+            <div key={fact.label} className="flex items-start justify-between gap-4 py-3.5">
+              <dt className="text-on-surface-variant text-xs font-medium">{fact.label}</dt>
+              <dd className="text-on-surface text-right text-xs font-bold">{fact.value}</dd>
             </div>
           ))}
         </dl>
@@ -193,7 +178,7 @@ export function MaterialUnsavedChangesModal({
             transition={transitionSpringSnappy}
             disabled={pending}
             onClick={onSave}
-            className="min-h-12 w-full rounded-full bg-primary px-5 text-sm font-bold text-white disabled:opacity-45"
+            className="bg-primary min-h-12 w-full rounded-full px-5 text-sm font-bold text-white disabled:opacity-45"
           >
             {pending ? "Menyimpan…" : "Simpan Draft & Tutup"}
           </motion.button>
@@ -204,7 +189,7 @@ export function MaterialUnsavedChangesModal({
               transition={transitionSpringSnappy}
               disabled={pending}
               onClick={onDiscard}
-              className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error disabled:opacity-45"
+              className="bg-error-container/25 text-error min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
             >
               Buang Perubahan
             </motion.button>
@@ -214,7 +199,7 @@ export function MaterialUnsavedChangesModal({
               transition={transitionSpringSnappy}
               disabled={pending}
               onClick={onContinue}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface disabled:opacity-45"
+              className="bg-surface-container text-on-surface min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
             >
               Lanjut Mengisi
             </motion.button>

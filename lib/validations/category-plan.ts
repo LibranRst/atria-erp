@@ -19,14 +19,18 @@ export const createProjectCategoryPlanItemSchema = z.object({
   displayOrder: z.number().int().min(0).optional(),
 });
 
-export type CreateProjectCategoryPlanItemInput = z.infer<typeof createProjectCategoryPlanItemSchema>;
+export type CreateProjectCategoryPlanItemInput = z.infer<
+  typeof createProjectCategoryPlanItemSchema
+>;
 
 export const updateProjectCategoryPlanItemSchema = createProjectCategoryPlanItemSchema.extend({
   projectCategoryPlanItemId: uuidSchema("ID detail plan kategori tidak valid."),
   status: projectCategoryPlanItemStatusSchema.optional(),
 });
 
-export type UpdateProjectCategoryPlanItemInput = z.infer<typeof updateProjectCategoryPlanItemSchema>;
+export type UpdateProjectCategoryPlanItemInput = z.infer<
+  typeof updateProjectCategoryPlanItemSchema
+>;
 
 export const deleteProjectCategoryPlanItemSchema = z.object({
   projectCategoryPlanItemId: uuidSchema("ID detail plan kategori tidak valid."),

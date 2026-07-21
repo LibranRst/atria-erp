@@ -12,19 +12,19 @@
 
 ## Route audit
 
-| Route | Workflow assessment | Follow-up |
-|---|---|---|
-| `/` | Owner budget overview remains the correct first screen. | P1: add explicit realized-vs-cash legend when final snapshots exist. |
-| `/projects` | Current mobile list/create flow is consistent. | P2: add filter for closing blockers. |
-| `/projects/[id]` | P0 integrity fixed for Library snapshots, revisions, Change Order, stock cost, invoice schedule, and closing. | P1: dedicated Change Order history and category-plan revision UI; P1 stock-operation history grouped by RAP item. |
-| `/expenses` | Finance spine remains useful; fixed mobile sheets. | P1: multi-line vendor bill with document upload and Goods Receipt status chip. |
-| `/expenses/new` | Fast non-material entry preserved; Material drill-down remains optional. | P1: delay stock mutation until Finance verification or expose pending movement state. |
-| `/materials` | Mobile operational control center: grouped inventory, shortage, history, Goods Receipt, project operations, transfer, opname approval, and receipt reversal. | P2: add barcode scanning when physical warehouse hardware is selected. |
-| `/approvals` | Existing owner approval remains useful. | P1: add Change Order approval cards/history when approval is not completed inline. |
-| `/ledger` | Correctly remains cash ledger, not profitability. | P2: filters for project/reference and stock-cost explainer link. |
-| `/settings/*` | Mobile-first source-of-truth workspace; Library provenance implemented. | P1: template version history and vendor quote attachment. |
-| `/profile` | No finance-integrity blocker found. | P3 visual polish only. |
-| `/login` | No workflow gap found. | P3 visual polish only. |
+| Route            | Workflow assessment                                                                                                                                          | Follow-up                                                                                                         |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `/`              | Owner budget overview remains the correct first screen.                                                                                                      | P1: add explicit realized-vs-cash legend when final snapshots exist.                                              |
+| `/projects`      | Current mobile list/create flow is consistent.                                                                                                               | P2: add filter for closing blockers.                                                                              |
+| `/projects/[id]` | P0 integrity fixed for Library snapshots, revisions, Change Order, stock cost, invoice schedule, and closing.                                                | P1: dedicated Change Order history and category-plan revision UI; P1 stock-operation history grouped by RAP item. |
+| `/expenses`      | Finance spine remains useful; fixed mobile sheets.                                                                                                           | P1: multi-line vendor bill with document upload and Goods Receipt status chip.                                    |
+| `/expenses/new`  | Fast non-material entry preserved; Material drill-down remains optional.                                                                                     | P1: delay stock mutation until Finance verification or expose pending movement state.                             |
+| `/materials`     | Mobile operational control center: grouped inventory, shortage, history, Goods Receipt, project operations, transfer, opname approval, and receipt reversal. | P2: add barcode scanning when physical warehouse hardware is selected.                                            |
+| `/approvals`     | Existing owner approval remains useful.                                                                                                                      | P1: add Change Order approval cards/history when approval is not completed inline.                                |
+| `/ledger`        | Correctly remains cash ledger, not profitability.                                                                                                            | P2: filters for project/reference and stock-cost explainer link.                                                  |
+| `/settings/*`    | Mobile-first source-of-truth workspace; Library provenance implemented.                                                                                      | P1: template version history and vendor quote attachment.                                                         |
+| `/profile`       | No finance-integrity blocker found.                                                                                                                          | P3 visual polish only.                                                                                            |
+| `/login`         | No workflow gap found.                                                                                                                                       | P3 visual polish only.                                                                                            |
 
 ## Remaining risks
 

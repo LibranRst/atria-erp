@@ -59,9 +59,7 @@ export function newTransferDraft(
   accounts: readonly BankAccount[],
   selected: BankAccount | null,
 ): TransferDraft {
-  const nextAccount = accounts.find(
-    (account) => account.isActive && account.id !== selected?.id,
-  );
+  const nextAccount = accounts.find((account) => account.isActive && account.id !== selected?.id);
   return {
     toBankAccountId: nextAccount?.id ?? "",
     amount: "",

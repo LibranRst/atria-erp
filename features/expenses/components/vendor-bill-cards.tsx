@@ -14,7 +14,10 @@ import {
   getVendorPaymentPresentation,
 } from "@/features/expenses/components/vendor-bill-list-utils";
 import { transitionSpringSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
-import { ActivityDetailChevron, useActivityDetail } from "@/features/activity-detail/components/activity-detail-provider";
+import {
+  ActivityDetailChevron,
+  useActivityDetail,
+} from "@/features/activity-detail/components/activity-detail-provider";
 
 const payablePressScale = { scale: 0.975 } as const;
 
@@ -41,27 +44,41 @@ export function VendorBillCard({
   const amountNum = Number(bill.amount);
   const statusMapping = getVendorBillStatus(bill.status);
   const { totalScheduledOrPaid, isFullyScheduledOrPaid, hasPending } = getBillPaymentSummary(bill);
-  const scheduledPercentage = amountNum > 0
-    ? Math.min(100, (totalScheduledOrPaid / amountNum) * 100)
-    : 0;
-  const statusTone = bill.status === "PAID"
-    ? "text-success"
-    : bill.status === "VOID"
-      ? "text-on-surface-variant/55"
-      : bill.status === "PARTIALLY_PAID"
-        ? "text-primary"
-        : "text-warning";
+  const scheduledPercentage =
+    amountNum > 0 ? Math.min(100, (totalScheduledOrPaid / amountNum) * 100) : 0;
+  const statusTone =
+    bill.status === "PAID"
+      ? "text-success"
+      : bill.status === "VOID"
+        ? "text-on-surface-variant/55"
+        : bill.status === "PARTIALLY_PAID"
+          ? "text-primary"
+          : "text-warning";
 
   return (
-    <div role="button" tabIndex={0} onClick={() => openActivityDetail({ kind: "VENDOR_BILL", id: bill.id })} onKeyDown={(event) => { if ((event.key === "Enter" || event.key === " ") && event.currentTarget === event.target) { event.preventDefault(); openActivityDetail({ kind: "VENDOR_BILL", id: bill.id }); } }} aria-label={`Lihat detail tagihan ${bill.billNumber}`} className="min-h-[92px] px-3 py-3.5 text-left outline-none transition-colors hover:bg-black/[0.015] focus-visible:bg-surface-container-low active:bg-surface-container-low/70 max-[430px]:px-2.5">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => openActivityDetail({ kind: "VENDOR_BILL", id: bill.id })}
+      onKeyDown={(event) => {
+        if ((event.key === "Enter" || event.key === " ") && event.currentTarget === event.target) {
+          event.preventDefault();
+          openActivityDetail({ kind: "VENDOR_BILL", id: bill.id });
+        }
+      }}
+      aria-label={`Lihat detail tagihan ${bill.billNumber}`}
+      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 min-h-[92px] px-3 py-3.5 text-left transition-colors outline-none hover:bg-black/1.5 max-[430px]:px-2.5"
+    >
       <div className="flex items-start gap-3">
-        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${
-          bill.status === "PAID"
-            ? "bg-success/[0.08] text-success ring-success/[0.06]"
-            : bill.status === "PARTIALLY_PAID"
-            ? "bg-primary/[0.08] text-primary ring-primary/[0.06]"
-            : "bg-warning/[0.09] text-warning ring-warning/[0.06]"
-        }`}>
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${
+            bill.status === "PAID"
+              ? "bg-success/8 text-success ring-success/6"
+              : bill.status === "PARTIALLY_PAID"
+                ? "bg-primary/8 text-primary ring-primary/6"
+                : "bg-warning/9 text-warning ring-warning/6"
+          }`}
+        >
           <span className="material-symbols-outlined text-[18px] leading-none" aria-hidden="true">
             {bill.status === "PAID" ? "check_circle" : "request_quote"}
           </span>
@@ -69,24 +86,34 @@ export function VendorBillCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center justify-between gap-2">
-            <span className={`truncate text-[9px] font-bold leading-3 ${statusTone}`}>
+            <span className={`truncate text-[9px] leading-3 font-bold ${statusTone}`}>
               {vendorBillStatusLabel(statusMapping)}
             </span>
-            <span className="shrink-0 text-[9px] font-semibold leading-3 text-on-surface-variant/60">
-              Jatuh tempo {new Date(bill.dueDate).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+            <span className="text-on-surface-variant/60 shrink-0 text-[9px] leading-3 font-semibold">
+              Jatuh tempo{" "}
+              {new Date(bill.dueDate).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+              })}
             </span>
           </div>
           <div className="mt-1 flex min-w-0 items-start justify-between gap-3">
-            <h3 className="min-w-0 flex-1 truncate text-[13px] font-bold leading-4 tracking-[-0.01em] text-on-surface">
+            <h3 className="text-on-surface min-w-0 flex-1 truncate text-[13px] leading-4 font-bold tracking-[-0.01em]">
               {bill.vendor?.name || "Vendor"}
             </h3>
-            <MoneyValue amount={amountNum} variant="compactWithFull" align="right" size="sm" className={`shrink-0 ${bill.status === "PAID" ? "text-on-surface-variant/65" : "text-on-surface"}`} />
+            <MoneyValue
+              amount={amountNum}
+              variant="compactWithFull"
+              align="right"
+              size="sm"
+              className={`shrink-0 ${bill.status === "PAID" ? "text-on-surface-variant/65" : "text-on-surface"}`}
+            />
           </div>
-          <p className="mt-1 truncate text-[10px] font-medium leading-4 text-on-surface-variant/75">
+          <p className="text-on-surface-variant/75 mt-1 truncate text-[10px] leading-4 font-medium">
             {bill.project?.name || "Proyek"} · {bill.billNumber}
           </p>
           {bill.budgetItem?.name ? (
-            <p className="mt-0.5 truncate text-[9px] font-medium leading-3 text-on-surface-variant/55">
+            <p className="text-on-surface-variant/55 mt-0.5 truncate text-[9px] leading-3 font-medium">
               Budget {bill.budgetItem.name}
             </p>
           ) : null}
@@ -95,53 +122,69 @@ export function VendorBillCard({
       </div>
 
       {totalScheduledOrPaid > 0 && bill.status !== "PAID" && !isFullyScheduledOrPaid && (
-        <div className="mt-2.5 pl-12 pr-8">
-          <div className="flex items-center justify-between gap-3 text-[9px] font-bold leading-3 text-primary">
+        <div className="mt-2.5 pr-8 pl-12">
+          <div className="text-primary flex items-center justify-between gap-3 text-[9px] leading-3 font-bold">
             <span>Sudah dijadwalkan</span>
             <span className="shrink-0 tabular-nums">{scheduledPercentage.toFixed(0)}%</span>
           </div>
-          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-primary/10">
+          <div className="bg-primary/10 mt-1.5 h-1.5 w-full overflow-hidden rounded-full">
             <motion.div
               initial={false}
               animate={reduceMotion ? undefined : { width: `${scheduledPercentage}%` }}
               style={reduceMotion ? { width: `${scheduledPercentage}%` } : undefined}
               transition={transitionSpringSmooth}
-              className="h-full rounded-full bg-primary"
+              className="bg-primary h-full rounded-full"
             />
           </div>
-          <p className="mt-1 truncate text-[9px] font-medium leading-3 text-on-surface-variant/55">
-            Rp {totalScheduledOrPaid.toLocaleString("id-ID")} dari Rp {amountNum.toLocaleString("id-ID")}
+          <p className="text-on-surface-variant/55 mt-1 truncate text-[9px] leading-3 font-medium">
+            Rp {totalScheduledOrPaid.toLocaleString("id-ID")} dari Rp{" "}
+            {amountNum.toLocaleString("id-ID")}
           </p>
         </div>
       )}
-      {bill.status !== "PAID" && bill.status !== "VOID" && (isOwnerOrFinance || isFullyScheduledOrPaid) ? (
-        <div className="mt-2 flex min-h-8 items-center justify-end gap-2 pl-12 pr-8">
+      {bill.status !== "PAID" &&
+      bill.status !== "VOID" &&
+      (isOwnerOrFinance || isFullyScheduledOrPaid) ? (
+        <div className="mt-2 flex min-h-8 items-center justify-end gap-2 pr-8 pl-12">
           {isOwnerOrFinance ? (
             isFullyScheduledOrPaid ? (
               hasPending ? (
-                <span className="flex items-center gap-1 text-[9px] font-bold leading-3 text-warning">
-                  <span className="material-symbols-outlined text-[13px] leading-none" aria-hidden="true">schedule</span>
+                <span className="text-warning flex items-center gap-1 text-[9px] leading-3 font-bold">
+                  <span
+                    className="material-symbols-outlined text-[13px] leading-none"
+                    aria-hidden="true"
+                  >
+                    schedule
+                  </span>
                   Menunggu pencairan
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[9px] font-bold leading-3 text-primary">
-                  <span className="material-symbols-outlined text-[13px] leading-none" aria-hidden="true">event_available</span>
+                <span className="text-primary flex items-center gap-1 text-[9px] leading-3 font-bold">
+                  <span
+                    className="material-symbols-outlined text-[13px] leading-none"
+                    aria-hidden="true"
+                  >
+                    event_available
+                  </span>
                   Terjadwal penuh
                 </span>
               )
             ) : (
               <motion.button
                 type="button"
-                onClick={(event) => { event.stopPropagation(); onScheduleClick(bill); }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onScheduleClick(bill);
+                }}
                 whileTap={reduceMotion ? undefined : payablePressScale}
                 transition={transitionSpringSnappy}
-                className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] font-bold leading-4 text-on-primary outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="bg-primary text-on-primary focus-visible:ring-primary/30 relative h-8 shrink-0 rounded-full px-3 text-[10px] leading-4 font-bold outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2"
               >
                 {totalScheduledOrPaid > 0 ? "Jadwalkan Sisa" : "Jadwalkan Bayar"}
               </motion.button>
             )
           ) : (
-            <span className="text-[9px] font-bold leading-3 text-primary">Terjadwal penuh</span>
+            <span className="text-primary text-[9px] leading-3 font-bold">Terjadwal penuh</span>
           )}
         </div>
       ) : null}
@@ -166,52 +209,82 @@ export function VendorPaymentCard({
   const isCompleted = payment.status === "COMPLETED";
 
   const presentation = getVendorPaymentPresentation(payment);
-  const statusTone = presentation.status === "REJECTED"
-    ? "text-error"
-    : isCompleted
-      ? "text-success"
-      : presentation.status === "PENDING"
-        ? "text-warning"
-        : "text-primary";
+  const statusTone =
+    presentation.status === "REJECTED"
+      ? "text-error"
+      : isCompleted
+        ? "text-success"
+        : presentation.status === "PENDING"
+          ? "text-warning"
+          : "text-primary";
 
   return (
-    <div role="button" tabIndex={0} onClick={() => openActivityDetail({ kind: "VENDOR_PAYMENT", id: payment.id })} onKeyDown={(event) => { if ((event.key === "Enter" || event.key === " ") && event.currentTarget === event.target) { event.preventDefault(); openActivityDetail({ kind: "VENDOR_PAYMENT", id: payment.id }); } }} aria-label={`Lihat detail pembayaran ${payment.vendorBill?.billNumber ?? "vendor"}`} className="min-h-[88px] px-3 py-3.5 text-left outline-none transition-colors hover:bg-black/[0.015] focus-visible:bg-surface-container-low active:bg-surface-container-low/70 max-[430px]:px-2.5">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => openActivityDetail({ kind: "VENDOR_PAYMENT", id: payment.id })}
+      onKeyDown={(event) => {
+        if ((event.key === "Enter" || event.key === " ") && event.currentTarget === event.target) {
+          event.preventDefault();
+          openActivityDetail({ kind: "VENDOR_PAYMENT", id: payment.id });
+        }
+      }}
+      aria-label={`Lihat detail pembayaran ${payment.vendorBill?.billNumber ?? "vendor"}`}
+      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 min-h-[88px] px-3 py-3.5 text-left transition-colors outline-none hover:bg-black/1.5 max-[430px]:px-2.5"
+    >
       <div className="flex items-start gap-3">
-        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${
-          isCompleted
-            ? "bg-success/[0.08] text-success ring-success/[0.06]"
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${
+            isCompleted
+              ? "bg-success/8 text-success ring-success/6"
               : presentation.status === "PENDING"
-            ? "bg-warning/[0.09] text-warning ring-warning/[0.06]"
-            : presentation.status === "REJECTED"
-            ? "bg-error/[0.08] text-error ring-error/[0.06]"
-            : "bg-primary/[0.09] text-primary ring-primary/[0.06]"
-        }`}>
+                ? "bg-warning/9 text-warning ring-warning/6"
+                : presentation.status === "REJECTED"
+                  ? "bg-error/8 text-error ring-error/6"
+                  : "bg-primary/9 text-primary ring-primary/6"
+          }`}
+        >
           <span className="material-symbols-outlined text-[18px] leading-none" aria-hidden="true">
-            {isCompleted ? "check_circle" : presentation.status === "PENDING" ? "schedule" : "payments"}
+            {isCompleted
+              ? "check_circle"
+              : presentation.status === "PENDING"
+                ? "schedule"
+                : "payments"}
           </span>
         </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center justify-between gap-2">
-            <span className={`truncate text-[9px] font-bold leading-3 ${statusTone}`}>
+            <span className={`truncate text-[9px] leading-3 font-bold ${statusTone}`}>
               {presentation.label}
             </span>
-            <span className="shrink-0 text-[9px] font-semibold leading-3 text-on-surface-variant/60">
-              {isCompleted ? "Dicairkan" : "Rencana"} {new Date(payment.paymentDate).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+            <span className="text-on-surface-variant/60 shrink-0 text-[9px] leading-3 font-semibold">
+              {isCompleted ? "Dicairkan" : "Rencana"}{" "}
+              {new Date(payment.paymentDate).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+              })}
             </span>
           </div>
           <div className="mt-1 flex min-w-0 items-start justify-between gap-3">
-            <h4 className="min-w-0 flex-1 truncate text-[13px] font-bold leading-4 tracking-[-0.01em] text-on-surface">
+            <h4 className="text-on-surface min-w-0 flex-1 truncate text-[13px] leading-4 font-bold tracking-[-0.01em]">
               {payment.vendorBill?.vendor?.name || "Vendor"}
             </h4>
-            <MoneyValue amount={amountPaidNum} variant="compactWithFull" align="right" size="sm" className={`shrink-0 ${isCompleted ? "text-on-surface-variant/65" : "text-on-surface"}`} />
+            <MoneyValue
+              amount={amountPaidNum}
+              variant="compactWithFull"
+              align="right"
+              size="sm"
+              className={`shrink-0 ${isCompleted ? "text-on-surface-variant/65" : "text-on-surface"}`}
+            />
           </div>
-          <p className="mt-1 truncate text-[10px] font-medium leading-4 text-on-surface-variant/75">
+          <p className="text-on-surface-variant/75 mt-1 truncate text-[10px] leading-4 font-medium">
             {payment.vendorBill?.project?.name || "Proyek"} · {payment.vendorBill?.billNumber}
           </p>
           {payment.bankAccount?.name || payment.referenceNumber ? (
-            <p className="mt-0.5 truncate text-[9px] font-medium leading-3 text-on-surface-variant/55">
-              {payment.bankAccount?.name ?? "Rekening"}{payment.referenceNumber ? ` · Ref ${payment.referenceNumber}` : ""}
+            <p className="text-on-surface-variant/55 mt-0.5 truncate text-[9px] leading-3 font-medium">
+              {payment.bankAccount?.name ?? "Rekening"}
+              {payment.referenceNumber ? ` · Ref ${payment.referenceNumber}` : ""}
             </p>
           ) : null}
         </div>
@@ -219,25 +292,37 @@ export function VendorPaymentCard({
       </div>
 
       {!isCompleted ? (
-        <div className="mt-2 flex min-h-8 items-center justify-end gap-2 pl-12 pr-8">
+        <div className="mt-2 flex min-h-8 items-center justify-end gap-2 pr-8 pl-12">
           {!presentation.canDisburse ? (
-          <span className={`text-[9px] font-bold leading-3 ${presentation.status === "REJECTED" ? "text-error" : "text-warning"}`}>{presentation.label}</span>
+            <span
+              className={`text-[9px] leading-3 font-bold ${presentation.status === "REJECTED" ? "text-error" : "text-warning"}`}
+            >
+              {presentation.label}
+            </span>
           ) : isOwnerOrFinance ? (
-          <motion.button
-            type="button"
-            onClick={(event) => { event.stopPropagation(); onDisburseClick(payment); }}
-            whileTap={reduceMotion ? undefined : payablePressScale}
-            transition={transitionSpringSnappy}
-            className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] font-bold leading-4 text-on-primary outline-none after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30"
-          >
-            Cairkan
-          </motion.button>
-        ) : (
-          <span className="flex items-center gap-1 text-[9px] font-bold leading-3 text-primary">
-            <span className="material-symbols-outlined text-[13px] leading-none" aria-hidden="true">schedule</span>
-            Dalam antrean
-          </span>
-        )}
+            <motion.button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDisburseClick(payment);
+              }}
+              whileTap={reduceMotion ? undefined : payablePressScale}
+              transition={transitionSpringSnappy}
+              className="bg-primary text-on-primary focus-visible:ring-primary/30 relative h-8 shrink-0 rounded-full px-3 text-[10px] leading-4 font-bold outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2"
+            >
+              Cairkan
+            </motion.button>
+          ) : (
+            <span className="text-primary flex items-center gap-1 text-[9px] leading-3 font-bold">
+              <span
+                className="material-symbols-outlined text-[13px] leading-none"
+                aria-hidden="true"
+              >
+                schedule
+              </span>
+              Dalam antrean
+            </span>
+          )}
         </div>
       ) : null}
     </div>

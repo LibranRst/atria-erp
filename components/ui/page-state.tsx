@@ -5,12 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { fadeVariants, transitionSpringSnappy } from "@/lib/utils/motion";
 
-export type PageStateTone =
-  | "neutral"
-  | "info"
-  | "success"
-  | "warning"
-  | "critical";
+export type PageStateTone = "neutral" | "info" | "success" | "warning" | "critical";
 
 export type PageStateKind =
   | "loading"
@@ -36,10 +31,7 @@ type PageStateProps = {
   readonly className?: string;
 };
 
-const STATE_META: Record<
-  PageStateKind,
-  { readonly icon: string; readonly tone: PageStateTone }
-> = {
+const STATE_META: Record<PageStateKind, { readonly icon: string; readonly tone: PageStateTone }> = {
   loading: { icon: "progress_activity", tone: "neutral" },
   "first-use": { icon: "add_circle", tone: "info" },
   "filtered-empty": { icon: "filter_alt_off", tone: "neutral" },
@@ -75,7 +67,7 @@ export function PageState({
 
   return (
     <section
-      className={`rounded-[28px] border border-outline-variant/15 bg-white text-center shadow-[0_14px_34px_rgba(17,17,17,0.04)] ${
+      className={`border-outline-variant/15 rounded-[28px] border bg-white text-center shadow-[0_14px_34px_rgba(17,17,17,0.04)] ${
         compact ? "px-4 py-6" : "px-6 py-12"
       } ${className}`}
       role={kind === "error" || kind === "restricted" ? "alert" : "status"}
@@ -88,10 +80,12 @@ export function PageState({
           {meta.icon}
         </span>
       </span>
-      <h2 className={`${compact ? "mt-3 text-sm" : "mt-5 text-lg"} font-semibold text-on-surface`}>
+      <h2 className={`${compact ? "mt-3 text-sm" : "mt-5 text-lg"} text-on-surface font-semibold`}>
         {title}
       </h2>
-      <p className={`mx-auto max-w-xs text-on-surface-variant ${compact ? "mt-1 text-xs leading-5" : "mt-2 text-sm leading-6"}`}>
+      <p
+        className={`text-on-surface-variant mx-auto max-w-xs ${compact ? "mt-1 text-xs leading-5" : "mt-2 text-sm leading-6"}`}
+      >
         {description}
       </p>
       {actionLabel && onAction ? (
@@ -100,7 +94,7 @@ export function PageState({
           whileTap={{ scale: 0.97 }}
           transition={transitionSpringSnappy}
           onClick={onAction}
-          className="mt-5 min-h-12 rounded-full bg-primary px-6 text-xs font-bold text-on-primary outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          className="bg-primary text-on-primary focus-visible:ring-primary/30 mt-5 min-h-12 rounded-full px-6 text-xs font-bold outline-none focus-visible:ring-2"
         >
           {actionLabel}
         </motion.button>
@@ -132,7 +126,7 @@ export function ConnectivityBanner(): React.JSX.Element | null {
           animate="visible"
           exit="exit"
           role="status"
-          className="fixed inset-x-0 top-16 z-40 mx-auto flex w-[calc(100%-2.5rem)] max-w-sm items-center gap-2 rounded-full bg-warning px-4 py-2 text-[11px] font-bold leading-4 text-white shadow-lg"
+          className="bg-warning fixed inset-x-0 top-16 z-40 mx-auto flex w-[calc(100%-2.5rem)] max-w-sm items-center gap-2 rounded-full px-4 py-2 text-[11px] leading-4 font-bold text-white shadow-lg"
         >
           <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
             cloud_off

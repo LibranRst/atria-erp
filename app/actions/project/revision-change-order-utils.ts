@@ -19,10 +19,7 @@ export async function getRevisionActionUser(): Promise<RevisionActionUser | null
   return session?.user ? (session.user as RevisionActionUser) : null;
 }
 
-export function revisionActionFailure<T>(
-  error: unknown,
-  fallback: string,
-): ActionResponse<T> {
+export function revisionActionFailure<T>(error: unknown, fallback: string): ActionResponse<T> {
   const message = error instanceof Error ? error.message : fallback;
   if (message.includes("FORBIDDEN") || message.includes("Akses")) {
     return { success: false, error: { code: "FORBIDDEN", message } };

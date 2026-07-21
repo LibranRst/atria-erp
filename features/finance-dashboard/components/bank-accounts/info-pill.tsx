@@ -8,11 +8,11 @@ export function InfoPill({
   readonly value: string;
 }): React.JSX.Element {
   return (
-    <div className="min-w-0 rounded-2xl bg-surface-container-low px-3 py-2.5">
-      <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+    <div className="bg-surface-container-low min-w-0 rounded-2xl px-3 py-2.5">
+      <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
         {label}
       </p>
-      <p className="mt-1 truncate text-xs font-bold text-on-surface">{value}</p>
+      <p className="text-on-surface mt-1 truncate text-xs font-bold">{value}</p>
     </div>
   );
 }

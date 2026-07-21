@@ -34,10 +34,7 @@ import {
   mergeExpenseLines,
   STOCK_HANDLING_OPTIONS,
 } from "./expense-form-utils";
-import {
-  uploadAndParseExpenseReceipt,
-  type ExpenseReceiptOcrResult,
-} from "./expense-receipt-ocr";
+import { uploadAndParseExpenseReceipt, type ExpenseReceiptOcrResult } from "./expense-receipt-ocr";
 import { useHybridExpenseDraft } from "./use-hybrid-expense-draft";
 import { createClientId } from "@/lib/utils/client-id";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
@@ -61,9 +58,7 @@ function routeProjectId(pathname: string): string {
 
 function hasMeaningfulLine(line: ExpenseLine): boolean {
   return Boolean(
-    line.projectBudgetCategoryId ||
-      line.description.trim() ||
-      Number(line.amount) > 0,
+    line.projectBudgetCategoryId || line.description.trim() || Number(line.amount) > 0,
   );
 }
 
@@ -135,19 +130,14 @@ export function ExpenseForm({
     };
   }, [hydrateDraft, open, requestedDraftId]);
 
-  const selectedProject = projects.find(
-    (project) => project.id === draft.payload.projectId,
-  );
+  const selectedProject = projects.find((project) => project.id === draft.payload.projectId);
   const budgetCategories =
     selectedProject?.canonicalBudgets?.[0]?.categories
       ?.slice()
       .sort((left, right) => left.sortOrder - right.sortOrder) ?? [];
-  const selectedProjectApproved =
-    selectedProject?.canonicalBudgets?.[0]?.status === "APPROVED";
+  const selectedProjectApproved = selectedProject?.canonicalBudgets?.[0]?.status === "APPROVED";
   const lineCompleteness = draft.payload.lines.map((line) => {
-    const category = budgetCategories.find(
-      (item) => item.id === line.projectBudgetCategoryId,
-    );
+    const category = budgetCategories.find((item) => item.id === line.projectBudgetCategoryId);
     return isExpenseLineComplete(line, category?.code);
   });
   const incompleteCount = lineCompleteness.filter((complete) => !complete).length;
@@ -157,7 +147,8 @@ export function ExpenseForm({
   );
   const loadingDraft = Boolean(open && requestedDraftId && loadedDraftId !== requestedDraftId);
   const busy = loadingDraft || uploading || processingOcr || submitting || discarding;
-  const canReview = Boolean(draft.payload.projectId) && selectedProjectApproved && incompleteCount === 0;
+  const canReview =
+    Boolean(draft.payload.projectId) && selectedProjectApproved && incompleteCount === 0;
   const reviewDisabledReason = !draft.payload.projectId
     ? "Pilih proyek agar kategori budget dan jalur approval dapat disiapkan."
     : !selectedProjectApproved
@@ -171,11 +162,11 @@ export function ExpenseForm({
     return {
       value: project.id,
       label: project.name,
-      description: approved ? "Budget disetujui · siap mencatat pengeluaran" : "Budget belum disetujui",
+      description: approved
+        ? "Budget disetujui · siap mencatat pengeluaran"
+        : "Budget belum disetujui",
       disabled: !approved,
-      disabledReason: approved
-        ? undefined
-        : "Setujui budget proyek sebelum mencatat pengeluaran.",
+      disabledReason: approved ? undefined : "Setujui budget proyek sebelum mencatat pengeluaran.",
     };
   });
 
@@ -195,9 +186,7 @@ export function ExpenseForm({
     closeForm();
   }
 
-  function updatePayload(
-    change: (payload: ExpenseDraftPayload) => ExpenseDraftPayload,
-  ): void {
+  function updatePayload(change: (payload: ExpenseDraftPayload) => ExpenseDraftPayload): void {
     setFormError(null);
     draft.updatePayload(change);
   }
@@ -240,9 +229,7 @@ export function ExpenseForm({
   function updateLine(nextLine: ExpenseLine): void {
     updatePayload((current) => ({
       ...current,
-      lines: current.lines.map((line) =>
-        line.key === nextLine.key ? nextLine : line,
-      ),
+      lines: current.lines.map((line) => (line.key === nextLine.key ? nextLine : line)),
     }));
   }
 
@@ -440,9 +427,7 @@ export function ExpenseForm({
       return { category, amount };
     })
     .filter((summary) => summary.amount > 0);
-  const stockLines = draft.payload.lines.filter(
-    (line) => line.stockHandling !== "EXPENSE_ONLY",
-  );
+  const stockLines = draft.payload.lines.filter((line) => line.stockHandling !== "EXPENSE_ONLY");
   const online = typeof navigator === "undefined" || navigator.onLine;
   const submitBlocked =
     submitting ||
@@ -518,14 +503,21 @@ export function ExpenseForm({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={() => applyProjectChange(lastProjectSuggestion.id)}
-                className="flex min-h-14 w-full min-w-0 items-center gap-3 bg-surface-container-lowest px-4 py-2.5 text-left outline-none transition-colors active:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/25"
+                className="bg-surface-container-lowest active:bg-surface-container-low flex min-h-14 w-full min-w-0 items-center gap-3 px-4 py-2.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-inset"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant" aria-hidden="true">
-                  <span className="material-symbols-outlined text-[18px] leading-none">history</span>
+                <span
+                  className="bg-surface-container-low text-on-surface-variant flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                  aria-hidden="true"
+                >
+                  <span className="material-symbols-outlined text-[18px] leading-none">
+                    history
+                  </span>
                 </span>
                 <span className="grid min-w-0 flex-1 gap-0.5">
-                  <span className="block text-[10px] font-semibold leading-[1.15] text-on-surface-variant">Proyek terakhir</span>
-                  <span className="block truncate text-xs font-bold leading-[1.15] text-on-surface">
+                  <span className="text-on-surface-variant block text-[10px] leading-[1.15] font-semibold">
+                    Proyek terakhir
+                  </span>
+                  <span className="text-on-surface block truncate text-xs leading-[1.15] font-bold">
                     {lastProjectSuggestion.name}
                   </span>
                 </span>
@@ -534,7 +526,8 @@ export function ExpenseForm({
             ) : null}
             {selectedProject && !selectedProjectApproved ? (
               <FormRiskNotice title="Budget belum disetujui" tone="warning">
-                Pengeluaran dapat disiapkan sebagai draft, tetapi belum dapat ditinjau atau diajukan.
+                Pengeluaran dapat disiapkan sebagai draft, tetapi belum dapat ditinjau atau
+                diajukan.
               </FormRiskNotice>
             ) : null}
           </FormSection>
@@ -606,14 +599,23 @@ export function ExpenseForm({
               : undefined
         }
         statusText={`${draft.payload.lines.length} item · Rp ${totalAmount.toLocaleString("id-ID")}`}
-        statusTone={categorySummaries.some(({ category, amount }) => amount > Number(category.remainingAmount)) ? "danger" : "success"}
+        statusTone={
+          categorySummaries.some(
+            ({ category, amount }) => amount > Number(category.remainingAmount),
+          )
+            ? "danger"
+            : "success"
+        }
         onClose={() => setReviewOpen(false)}
         onSecondary={() => setReviewOpen(false)}
         onPrimary={() => void submitDraft()}
       >
         <div className="space-y-4">
-          <FormSection title="Rincian Pengeluaran" helper="Periksa kembali proyek dan kelengkapan dokumen pengeluaran.">
-            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+          <FormSection
+            title="Rincian Pengeluaran"
+            helper="Periksa kembali proyek dan kelengkapan dokumen pengeluaran."
+          >
+            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
               <ReviewFact label="Proyek" value={selectedProject?.name ?? "–"} />
               <ReviewFact
                 label="Dokumen"
@@ -625,7 +627,12 @@ export function ExpenseForm({
                   stockLines.length === 0
                     ? "Tidak ada perubahan stok"
                     : stockLines
-                        .map((line) => STOCK_HANDLING_OPTIONS.find((option) => option.value === line.stockHandling)?.label ?? line.stockHandling)
+                        .map(
+                          (line) =>
+                            STOCK_HANDLING_OPTIONS.find(
+                              (option) => option.value === line.stockHandling,
+                            )?.label ?? line.stockHandling,
+                        )
                         .join(" · ")
                 }
               />
@@ -637,8 +644,11 @@ export function ExpenseForm({
           </FormSection>
 
           {categorySummaries.length > 0 && (
-            <FormSection title="Dampak Budget" helper="Kondisi overbudget akan mengharuskan persetujuan khusus Owner.">
-              <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+            <FormSection
+              title="Dampak Budget"
+              helper="Kondisi overbudget akan mengharuskan persetujuan khusus Owner."
+            >
+              <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
                 {categorySummaries.map(({ category, amount }) => {
                   const before = Number(category.remainingAmount);
                   const after = before - amount;
@@ -646,10 +656,15 @@ export function ExpenseForm({
                     <div key={category.id} className="px-4 py-3 text-xs">
                       <div className="flex items-center justify-between gap-3 font-semibold">
                         <span className="text-on-surface">{category.name}</span>
-                        <span className="tabular-nums text-primary font-bold">Rp {amount.toLocaleString("id-ID")}</span>
+                        <span className="text-primary font-bold tabular-nums">
+                          Rp {amount.toLocaleString("id-ID")}
+                        </span>
                       </div>
-                      <p className={`mt-1 text-[11px] font-medium ${after < 0 ? "text-error font-bold" : "text-on-surface-variant"}`}>
-                        Sisa: Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
+                      <p
+                        className={`mt-1 text-[11px] font-medium ${after < 0 ? "text-error font-bold" : "text-on-surface-variant"}`}
+                      >
+                        Sisa: Rp {before.toLocaleString("id-ID")} → Rp{" "}
+                        {after.toLocaleString("id-ID")}
                       </p>
                     </div>
                   );
@@ -674,12 +689,28 @@ export function ExpenseForm({
         description="Draft ini diperbarui dari sesi lain. Muat versi server atau pertahankan isian lokal sebagai draft terpisah."
         tone="warning"
         onClose={() => setConflictOpen(false)}
-        actions={(
+        actions={
           <div className="space-y-2">
-            <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => void saveConflictCopy()} className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white">Simpan sebagai Draft Baru</motion.button>
-            <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => void loadServerVersion()} className="min-h-12 w-full rounded-full bg-surface-container px-5 text-xs font-bold text-on-surface">Muat Versi Server</motion.button>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              onClick={() => void saveConflictCopy()}
+              className="bg-primary min-h-12 w-full rounded-full px-5 text-xs font-bold text-white"
+            >
+              Simpan sebagai Draft Baru
+            </motion.button>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              onClick={() => void loadServerVersion()}
+              className="bg-surface-container text-on-surface min-h-12 w-full rounded-full px-5 text-xs font-bold"
+            >
+              Muat Versi Server
+            </motion.button>
           </div>
-        )}
+        }
       />
 
       <ConfirmationModal
@@ -687,20 +718,42 @@ export function ExpenseForm({
         title="Gabungkan Hasil Scan"
         description={`${pendingOcr?.lines.length ?? 0} item terdeteksi. Item yang sudah Anda isi tidak akan diubah tanpa pilihan eksplisit.`}
         onClose={() => setPendingOcr(null)}
-        actions={(
+        actions={
           <div className="space-y-2">
-            <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => {
-              if (!pendingOcr) return;
-              updatePayload((current) => ({ ...current, lines: mergeExpenseLines(current.lines, pendingOcr.lines, "APPEND") }));
-              setPendingOcr(null);
-            }} className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white">Tambahkan Hasil Scan</motion.button>
-            <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => {
-              if (!pendingOcr) return;
-              updatePayload((current) => ({ ...current, lines: mergeExpenseLines(current.lines, pendingOcr.lines, "REPLACE") }));
-              setPendingOcr(null);
-            }} className="min-h-12 w-full rounded-full bg-surface-container px-5 text-xs font-bold text-on-surface">Ganti Item Saat Ini</motion.button>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              onClick={() => {
+                if (!pendingOcr) return;
+                updatePayload((current) => ({
+                  ...current,
+                  lines: mergeExpenseLines(current.lines, pendingOcr.lines, "APPEND"),
+                }));
+                setPendingOcr(null);
+              }}
+              className="bg-primary min-h-12 w-full rounded-full px-5 text-xs font-bold text-white"
+            >
+              Tambahkan Hasil Scan
+            </motion.button>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              onClick={() => {
+                if (!pendingOcr) return;
+                updatePayload((current) => ({
+                  ...current,
+                  lines: mergeExpenseLines(current.lines, pendingOcr.lines, "REPLACE"),
+                }));
+                setPendingOcr(null);
+              }}
+              className="bg-surface-container text-on-surface min-h-12 w-full rounded-full px-5 text-xs font-bold"
+            >
+              Ganti Item Saat Ini
+            </motion.button>
           </div>
-        )}
+        }
       />
 
       <ConfirmationModal
@@ -709,12 +762,30 @@ export function ExpenseForm({
         description="Kategori, tautan RAP, material, paket, dan lokasi stok akan dikosongkan. Nominal dan keterangan tetap aman."
         tone="warning"
         onClose={() => setProjectChange(null)}
-        actions={(
+        actions={
           <div className="grid grid-cols-2 gap-2">
-            <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => setProjectChange(null)} className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface">Pertahankan</motion.button>
-            <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => { if (projectChange) applyProjectChange(projectChange); }} className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white">Ganti Proyek</motion.button>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              onClick={() => setProjectChange(null)}
+              className="bg-surface-container text-on-surface min-h-12 rounded-full px-4 text-xs font-bold"
+            >
+              Pertahankan
+            </motion.button>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              onClick={() => {
+                if (projectChange) applyProjectChange(projectChange);
+              }}
+              className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white"
+            >
+              Ganti Proyek
+            </motion.button>
           </div>
-        )}
+        }
       />
 
       <WorkflowFormSheet
@@ -722,7 +793,11 @@ export function ExpenseForm({
         title="Pengeluaran Diajukan"
         primaryLabel="Lihat"
         secondaryLabel="Tambah"
-        statusText={success ? `${success.itemCount} item · Rp ${success.totalAmount.toLocaleString("id-ID")}` : undefined}
+        statusText={
+          success
+            ? `${success.itemCount} item · Rp ${success.totalAmount.toLocaleString("id-ID")}`
+            : undefined
+        }
         statusTone="success"
         onClose={() => {
           setSuccess(null);
@@ -743,13 +818,14 @@ export function ExpenseForm({
         }}
       >
         <div className="space-y-3 py-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <div className="bg-primary/10 text-primary mx-auto flex h-16 w-16 items-center justify-center rounded-full">
             <span className="material-symbols-outlined text-[30px]">check_circle</span>
           </div>
           <div>
-            <p className="text-sm font-bold text-on-surface">Menunggu verifikasi Finance</p>
-            <p className="mt-1 text-xs leading-5 text-on-surface-variant">
-              Data final tidak dapat diedit langsung. Koreksi berikutnya mengikuti proses reject, salin draft, void, atau reversal.
+            <p className="text-on-surface text-sm font-bold">Menunggu verifikasi Finance</p>
+            <p className="text-on-surface-variant mt-1 text-xs leading-5">
+              Data final tidak dapat diedit langsung. Koreksi berikutnya mengikuti proses reject,
+              salin draft, void, atau reversal.
             </p>
           </div>
           <button
@@ -758,7 +834,7 @@ export function ExpenseForm({
               setSuccess(null);
               closeForm();
             }}
-            className="min-h-12 w-full rounded-full text-sm font-bold text-on-surface"
+            className="text-on-surface min-h-12 w-full rounded-full text-sm font-bold"
           >
             Selesai
           </button>
@@ -778,7 +854,7 @@ function ReviewFact({
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
       <span className="text-on-surface-variant shrink-0 font-semibold">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
+      <span className="text-on-surface text-right font-bold">{value}</span>
     </div>
   );
 }

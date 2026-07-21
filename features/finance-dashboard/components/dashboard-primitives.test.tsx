@@ -18,7 +18,7 @@ describe("native editorial dashboard sections", () => {
     expect(html).toContain('href="/ledger?tab=budget"');
     expect(html).toContain("h-8");
     expect(html).toContain("after:-inset-y-2");
-    expect(html).toContain("bg-[#007AFF]/[0.08]");
+    expect(html).toContain("bg-[#007AFF]/8");
     expect(html).toContain("chevron_right");
     expect(html).not.toContain("bg-primary/5");
   });

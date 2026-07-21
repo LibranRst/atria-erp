@@ -49,18 +49,24 @@ import {
 } from "./rap-rab-generation";
 
 export async function createProjectRap(
-  input: CreateProjectRapInput
+  input: CreateProjectRapInput,
 ): Promise<ActionResponse<typeof projectRap.$inferSelect>> {
   const validation = createProjectRapSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data RAP tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data RAP tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
-    const proj = await db.query.project.findFirst({ where: eq(project.id, validation.data.projectId) });
+    const proj = await db.query.project.findFirst({
+      where: eq(project.id, validation.data.projectId),
+    });
     if (!proj) throw new Error("PROJECT_NOT_FOUND");
     await assertProjectMutationAccess(user, validation.data.projectId, "create:rap");
 
@@ -68,12 +74,31 @@ export async function createProjectRap(
       where: eq(projectRap.projectId, validation.data.projectId),
     });
     if (existingDraft) {
-      return { success: false, error: { code: "FORBIDDEN", message: "RAP proyek sudah tersedia." } };
+      return {
+        success: false,
+        error: { code: "FORBIDDEN", message: "RAP proyek sudah tersedia." },
+      };
     }
 
     const created = await db.transaction(async (tx) => {
-      const [row] = await tx.insert(projectRap).values({ projectId: validation.data.projectId, status: "DRAFT", revision: 1, notes: validation.data.notes ?? null }).returning();
-      await tx.insert(auditLog).values({ userId: user.id, action: "CREATE_RAP_DRAFT", targetTable: "project_rap", targetId: row.id, newState: JSON.stringify(row) });
+      const [row] = await tx
+        .insert(projectRap)
+        .values({
+          projectId: validation.data.projectId,
+          status: "DRAFT",
+          revision: 1,
+          notes: validation.data.notes ?? null,
+        })
+        .returning();
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "CREATE_RAP_DRAFT",
+          targetTable: "project_rap",
+          targetId: row.id,
+          newState: JSON.stringify(row),
+        });
       return row;
     });
 
@@ -84,15 +109,19 @@ export async function createProjectRap(
 }
 
 export async function addProjectRapItem(
-  input: AddProjectRapItemInput
+  input: AddProjectRapItemInput,
 ): Promise<ActionResponse<typeof projectRapItem.$inferSelect>> {
   const validation = addProjectRapItemSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data item RAP tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data item RAP tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const rap = await db.query.projectRap.findFirst({
@@ -104,8 +133,19 @@ export async function addProjectRapItem(
 
     const values = await buildRapItemValues(validation.data);
     const created = await db.transaction(async (tx) => {
-      const [row] = await tx.insert(projectRapItem).values({ projectRapId: rap.id, ...values }).returning();
-      await tx.insert(auditLog).values({ userId: user.id, action: "CREATE_RAP_ITEM_DRAFT", targetTable: "project_rap_item", targetId: row.id, newState: JSON.stringify(row) });
+      const [row] = await tx
+        .insert(projectRapItem)
+        .values({ projectRapId: rap.id, ...values })
+        .returning();
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "CREATE_RAP_ITEM_DRAFT",
+          targetTable: "project_rap_item",
+          targetId: row.id,
+          newState: JSON.stringify(row),
+        });
       return row;
     });
 
@@ -116,15 +156,19 @@ export async function addProjectRapItem(
 }
 
 export async function updateProjectRapItem(
-  input: UpdateProjectRapItemInput
+  input: UpdateProjectRapItemInput,
 ): Promise<ActionResponse<typeof projectRapItem.$inferSelect>> {
   const validation = updateProjectRapItemSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data item RAP tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data item RAP tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const item = await db.query.projectRapItem.findFirst({
@@ -137,13 +181,24 @@ export async function updateProjectRapItem(
 
     const values = await buildRapItemValues(validation.data);
     const updated = await db.transaction(async (tx) => {
-      const [row] = await tx.update(projectRapItem).set({
-        ...values,
-        updatedAt: new Date(),
-      })
-      .where(eq(projectRapItem.id, item.id))
-      .returning();
-      await tx.insert(auditLog).values({ userId: user.id, action: "UPDATE_RAP_ITEM_DRAFT", targetTable: "project_rap_item", targetId: item.id, originalState: JSON.stringify(item), newState: JSON.stringify(row) });
+      const [row] = await tx
+        .update(projectRapItem)
+        .set({
+          ...values,
+          updatedAt: new Date(),
+        })
+        .where(eq(projectRapItem.id, item.id))
+        .returning();
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "UPDATE_RAP_ITEM_DRAFT",
+          targetTable: "project_rap_item",
+          targetId: item.id,
+          originalState: JSON.stringify(item),
+          newState: JSON.stringify(row),
+        });
       return row;
     });
 
@@ -154,15 +209,19 @@ export async function updateProjectRapItem(
 }
 
 export async function deleteProjectRapItem(
-  projectRapItemId: string
+  projectRapItemId: string,
 ): Promise<ActionResponse<{ readonly deletedId: string }>> {
   const validation = deleteProjectRapItemSchema.safeParse({ projectRapItemId });
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "ID item RAP tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID item RAP tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const item = await db.query.projectRapItem.findFirst({
@@ -175,7 +234,15 @@ export async function deleteProjectRapItem(
 
     await db.transaction(async (tx) => {
       await tx.delete(projectRapItem).where(eq(projectRapItem.id, item.id));
-      await tx.insert(auditLog).values({ userId: user.id, action: "DELETE_RAP_ITEM_DRAFT", targetTable: "project_rap_item", targetId: item.id, originalState: JSON.stringify(item) });
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "DELETE_RAP_ITEM_DRAFT",
+          targetTable: "project_rap_item",
+          targetId: item.id,
+          originalState: JSON.stringify(item),
+        });
     });
     return { success: true, data: { deletedId: item.id } };
   } catch (error) {
@@ -184,7 +251,7 @@ export async function deleteProjectRapItem(
 }
 
 export async function lockProjectRap(
-  projectRapId: string
+  projectRapId: string,
 ): Promise<ActionResponse<typeof projectRap.$inferSelect>> {
   const validation = lockProjectRapSchema.safeParse({ projectRapId });
   if (!validation.success) {
@@ -192,7 +259,8 @@ export async function lockProjectRap(
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -203,14 +271,24 @@ export async function lockProjectRap(
       if (!rap) throw new Error("RAP_NOT_FOUND");
       if (rap.status !== "DRAFT") throw new Error("RAP_NOT_DRAFT");
       if (rap.items.length === 0) throw new Error("RAP_EMPTY");
-      if (rap.setupStage !== "REVIEW") throw new Error("Selesaikan tahap Material, Tukang, Subcon, dan Review sebelum finalisasi.");
+      if (rap.setupStage !== "REVIEW")
+        throw new Error(
+          "Selesaikan tahap Material, Tukang, Subcon, dan Review sebelum finalisasi.",
+        );
       await assertProjectMutationAccess(user, rap.projectId, "lock:rap");
-      const packages = await tx.query.projectCategoryPlanItem.findMany({ where: eq(projectCategoryPlanItem.projectId, rap.projectId), with: { expenseCategory: true } });
-      const setupRows = packages.map((row) => ({ categoryCode: row.expenseCategory.code, status: row.status }));
+      const packages = await tx.query.projectCategoryPlanItem.findMany({
+        where: eq(projectCategoryPlanItem.projectId, rap.projectId),
+        with: { expenseCategory: true },
+      });
+      const setupRows = packages.map((row) => ({
+        categoryCode: row.expenseCategory.code,
+        status: row.status,
+      }));
       assertRapCategoryReady(setupRows, "TUKANG", rap.tukangScopeSkipped);
       assertRapCategoryReady(setupRows, "SUBCON", rap.subconScopeSkipped);
 
-      const [updated] = await tx.update(projectRap)
+      const [updated] = await tx
+        .update(projectRap)
         .set({
           status: "LOCKED",
           setupStage: "COMPLETE",
@@ -241,19 +319,19 @@ export async function lockProjectRap(
 }
 
 export async function generateRabFromRap(
-  input: GenerateRabFromRapInput
+  input: GenerateRabFromRapInput,
 ): Promise<ActionResponse<typeof rabEstimate.$inferSelect>> {
   return generateRabFromRapWrite(input);
 }
 
 export async function generateRabFromSelectedSources(
-  input: GenerateRabFromSelectedSourcesInput
+  input: GenerateRabFromSelectedSourcesInput,
 ): Promise<ActionResponse<typeof rabEstimate.$inferSelect>> {
   return generateRabFromSelectedSourcesWrite(input);
 }
 
 export async function updateRabEstimateItem(
-  input: UpdateRabEstimateItemInput
+  input: UpdateRabEstimateItemInput,
 ): Promise<ActionResponse<typeof rabEstimateItem.$inferSelect>> {
   const validation = updateRabEstimateItemSchema.safeParse(input);
   if (!validation.success) {
@@ -267,7 +345,8 @@ export async function updateRabEstimateItem(
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const item = await db.query.rabEstimateItem.findFirst({
@@ -282,21 +361,32 @@ export async function updateRabEstimateItem(
 
     const lineTotal = validation.data.quantity * validation.data.unitPrice;
     const updated = await db.transaction(async (tx) => {
-      const [row] = await tx.update(rabEstimateItem).set({
-        clientLabel: validation.data.clientLabel,
-        description: validation.data.description ?? null,
-        quantity: validation.data.quantity.toFixed(2),
-        unit: validation.data.unit,
-        unitPrice: validation.data.unitPrice.toFixed(2),
-        lineTotal: lineTotal.toFixed(2),
-        displayOrder: validation.data.displayOrder ?? item.displayOrder,
-        isHidden: validation.data.isHidden ?? item.isHidden,
-        isBundle: validation.data.isBundle ?? item.isBundle,
-        updatedAt: new Date(),
-      })
-      .where(eq(rabEstimateItem.id, item.id))
-      .returning();
-      await tx.insert(auditLog).values({ userId: user.id, action: "UPDATE_RAB_ITEM_DRAFT", targetTable: "rab_estimate_item", targetId: item.id, originalState: JSON.stringify(item), newState: JSON.stringify(row) });
+      const [row] = await tx
+        .update(rabEstimateItem)
+        .set({
+          clientLabel: validation.data.clientLabel,
+          description: validation.data.description ?? null,
+          quantity: validation.data.quantity.toFixed(2),
+          unit: validation.data.unit,
+          unitPrice: validation.data.unitPrice.toFixed(2),
+          lineTotal: lineTotal.toFixed(2),
+          displayOrder: validation.data.displayOrder ?? item.displayOrder,
+          isHidden: validation.data.isHidden ?? item.isHidden,
+          isBundle: validation.data.isBundle ?? item.isBundle,
+          updatedAt: new Date(),
+        })
+        .where(eq(rabEstimateItem.id, item.id))
+        .returning();
+      await tx
+        .insert(auditLog)
+        .values({
+          userId: user.id,
+          action: "UPDATE_RAB_ITEM_DRAFT",
+          targetTable: "rab_estimate_item",
+          targetId: item.id,
+          originalState: JSON.stringify(item),
+          newState: JSON.stringify(row),
+        });
       return row;
     });
 
@@ -312,20 +402,26 @@ export async function addRabManualItem(
   return addRabManualItemWrite(input);
 }
 
-export async function createRabBundle(input: unknown): Promise<ActionResponse<typeof rabEstimateBundle.$inferSelect>> {
+export async function createRabBundle(
+  input: unknown,
+): Promise<ActionResponse<typeof rabEstimateBundle.$inferSelect>> {
   return createRabBundleWrite(input);
 }
 
-export async function updateRabBundle(input: unknown): Promise<ActionResponse<typeof rabEstimateBundle.$inferSelect>> {
+export async function updateRabBundle(
+  input: unknown,
+): Promise<ActionResponse<typeof rabEstimateBundle.$inferSelect>> {
   return updateRabBundleWrite(input);
 }
 
-export async function deleteRabBundle(input: unknown): Promise<ActionResponse<{ readonly id: string }>> {
+export async function deleteRabBundle(
+  input: unknown,
+): Promise<ActionResponse<{ readonly id: string }>> {
   return deleteRabBundleWrite(input);
 }
 
 export async function approveRabEstimate(
-  rabEstimateId: string
+  rabEstimateId: string,
 ): Promise<ActionResponse<typeof rabEstimate.$inferSelect>> {
   return approveRabEstimateWrite(rabEstimateId);
 }

@@ -32,7 +32,7 @@ export function ProjectRiskCard({
   return (
     <Link
       href={`/projects/${project.projectId}?tab=overview`}
-      className="block w-[240px] shrink-0 snap-start rounded-2xl bg-white p-3.5 shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/10 transition hover:bg-white active:scale-[0.99]"
+      className="ring-outline-variant/10 block w-[240px] shrink-0 snap-start rounded-2xl bg-white p-3.5 shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 transition hover:bg-white active:scale-[0.99]"
     >
       <div className="flex min-w-0 items-center gap-2">
         <span
@@ -41,12 +41,12 @@ export function ProjectRiskCard({
           {initial}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-extrabold leading-tight text-on-surface">
+          <p className="text-on-surface truncate text-xs leading-tight font-extrabold">
             {project.projectName}
           </p>
         </div>
         <span
-          className={`inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[7px] font-extrabold uppercase leading-none tracking-wider ${
+          className={`inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[7px] leading-none font-extrabold tracking-wider uppercase ${
             project.effectiveHealth === "CRITICAL"
               ? "bg-error/10 text-error"
               : project.effectiveHealth === "WARNING"
@@ -59,22 +59,18 @@ export function ProjectRiskCard({
       </div>
 
       <div className="mt-3">
-        <div className="mb-1 flex items-center justify-between text-[8px] font-bold uppercase leading-none tracking-wider text-on-surface-variant/60">
+        <div className="text-on-surface-variant/60 mb-1 flex items-center justify-between text-[8px] leading-none font-bold tracking-wider uppercase">
           <span>Budget Terpakai</span>
-          <span className="font-mono font-extrabold leading-none text-on-surface">
+          <span className="text-on-surface font-mono leading-none font-extrabold">
             {project.usedPercentage.toFixed(0)}%
           </span>
         </div>
-        <ProgressBar
-          value={project.usedPercentage}
-          tone={tone}
-          className="mt-0"
-        />
+        <ProgressBar value={project.usedPercentage} tone={tone} className="mt-0" />
       </div>
 
-      <div className="mt-3.5 flex items-center justify-between border-t border-on-surface-variant/10 pt-2.5">
+      <div className="border-on-surface-variant/10 mt-3.5 flex items-center justify-between border-t pt-2.5">
         <div className="min-w-0 flex-1">
-          <span className="block text-[8px] font-bold uppercase leading-none tracking-wide text-on-surface-variant/50">
+          <span className="text-on-surface-variant/50 block text-[8px] leading-none font-bold tracking-wide uppercase">
             Sisa budget
           </span>
           <MoneyValue
@@ -86,13 +82,13 @@ export function ProjectRiskCard({
           />
         </div>
 
-        <span className="mx-2.5 h-5 w-px shrink-0 bg-on-surface-variant/10" />
+        <span className="bg-on-surface-variant/10 mx-2.5 h-5 w-px shrink-0" />
 
         <div className="min-w-0 flex-1 text-right">
-          <span className="block text-[8px] font-bold uppercase leading-none tracking-wide text-on-surface-variant/50">
+          <span className="text-on-surface-variant/50 block text-[8px] leading-none font-bold tracking-wide uppercase">
             Margin
           </span>
-          <span className="financial-amount mt-1 block font-mono text-[10px] font-extrabold leading-none text-on-surface">
+          <span className="financial-amount text-on-surface mt-1 block font-mono text-[10px] leading-none font-extrabold">
             {project.projectedMarginPercentage.toFixed(1)}%
           </span>
         </div>
@@ -107,41 +103,35 @@ export function BankAccountCard({
   variant = "compact",
 }: {
   readonly account: FinanceDashboardOverview["bankAccounts"][number];
-  readonly onSelect?: (
-    account: FinanceDashboardOverview["bankAccounts"][number],
-  ) => void;
+  readonly onSelect?: (account: FinanceDashboardOverview["bankAccounts"][number]) => void;
   readonly variant?: "compact" | "full";
 }): React.JSX.Element {
-  const textClass =
-    account.cardTextColor === "dark" ? "text-[#141414]" : "text-white";
+  const textClass = account.cardTextColor === "dark" ? "text-[#141414]" : "text-white";
   const inactiveClass = account.isActive ? "" : "opacity-60 grayscale";
   const full = variant === "full";
 
   const content = full ? (
     <div
-      className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 text-left shadow-[0_3px_6px_rgba(17,17,17,0.08),0_18px_42px_rgba(17,17,17,0.13)] ring-1 ${textClass} ${inactiveClass} ${account.cardTextColor === "dark" ? "ring-black/[0.07]" : "ring-white/[0.16]"}`}
+      className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 text-left shadow-[0_3px_6px_rgba(17,17,17,0.08),0_18px_42px_rgba(17,17,17,0.13)] ring-1 ${textClass} ${inactiveClass} ${account.cardTextColor === "dark" ? "ring-black/[0.07]" : "ring-white/16"}`}
       style={{
         backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
       }}
     >
       <span
-        className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-white/[0.12] blur-2xl"
+        className="pointer-events-none absolute top-0 right-0 h-32 w-32 rounded-full bg-white/12 blur-2xl"
         aria-hidden="true"
       />
       <div className="relative flex items-start gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-white/14 ring-1 ring-white/15 backdrop-blur-sm">
-          <span
-            className="material-symbols-outlined text-[21px]"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined text-[21px]" aria-hidden="true">
             account_balance
           </span>
         </span>
         <div className="min-w-0 flex-1 pt-0.5">
-          <h3 className="truncate text-sm font-semibold leading-[1.15] tracking-[-0.01em]">
+          <h3 className="truncate text-sm leading-[1.15] font-semibold tracking-[-0.01em]">
             {account.name}
           </h3>
-          <p className="mt-1 truncate text-[10px] font-medium uppercase leading-[1.2] tracking-[0.08em] opacity-65">
+          <p className="mt-1 truncate text-[10px] leading-[1.2] font-medium tracking-[0.08em] uppercase opacity-65">
             {account.bankName}
           </p>
         </div>
@@ -154,7 +144,7 @@ export function BankAccountCard({
       </div>
 
       <div className="relative mt-auto pt-3">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.13em] opacity-60">
+        <p className="text-[9px] font-semibold tracking-[0.13em] uppercase opacity-60">
           Saldo tersedia
         </p>
         <MoneyValue
@@ -170,7 +160,7 @@ export function BankAccountCard({
         <p className="font-mono text-[11px] font-semibold tracking-[0.16em] opacity-75">
           •••• {account.accountNumber.slice(-4)}
         </p>
-        <p className="min-w-0 max-w-[55%] truncate text-right text-[9px] font-semibold uppercase tracking-[0.1em] opacity-60">
+        <p className="max-w-[55%] min-w-0 truncate text-right text-[9px] font-semibold tracking-widest uppercase opacity-60">
           {account.holderName}
         </p>
       </div>
@@ -185,10 +175,10 @@ export function BankAccountCard({
       <div className="relative z-10 flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[9px] font-bold uppercase leading-none tracking-wider opacity-75">
+            <p className="truncate text-[9px] leading-none font-bold tracking-wider uppercase opacity-75">
               {account.bankName}
             </p>
-            <h3 className="mt-1 truncate text-xs font-black leading-normal tracking-tight">
+            <h3 className="mt-1 truncate text-xs leading-normal font-black tracking-tight">
               {account.name}
             </h3>
           </div>
@@ -219,7 +209,7 @@ export function BankAccountCard({
     <button
       type="button"
       onClick={() => onSelect(account)}
-      className={`shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+      className={`focus-visible:ring-primary/30 shrink-0 text-left outline-none focus-visible:ring-2 ${
         full ? "w-full rounded-[28px]" : "rounded-2xl"
       }`}
       aria-label={`Buka rekening ${account.name}`}
@@ -272,7 +262,7 @@ function CircularProgress({
       className="relative flex shrink-0 items-center justify-center"
       style={{ width: size, height: size }}
     >
-      <svg width={size} height={size} className="rotate-[-90deg]">
+      <svg width={size} height={size} className="-rotate-90">
         <circle
           className="stroke-outline-variant/40"
           fill="transparent"
@@ -295,7 +285,7 @@ function CircularProgress({
           cy={size / 2}
         />
       </svg>
-      <span className="absolute font-mono text-[9px] font-bold leading-none text-on-surface">
+      <span className="text-on-surface absolute font-mono text-[9px] leading-none font-bold">
         {Math.round(percentage)}%
       </span>
     </div>
@@ -314,30 +304,23 @@ export function CategoryHealthMeter({
 
   return (
     <div
-      className={`flex flex-col justify-between gap-3 top-11/12 p-2 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.05)] border border-outline-variant/20 rounded-2xl ${
+      className={`border-outline-variant/20 top-11/12 flex flex-col justify-between gap-3 rounded-2xl border bg-white p-2 shadow-[0_14px_34px_rgba(17,17,17,0.05)] ${
         isFullWidth ? "col-span-2" : "col-span-1"
       }`}
     >
       <div className="flex items-center gap-2">
-        <span
-          className={`flex h-7 w-7 items-center justify-center rounded-full ${color}`}
-        >
+        <span className={`flex h-7 w-7 items-center justify-center rounded-full ${color}`}>
           <span className="material-symbols-outlined text-[15px]">{icon}</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[11px] font-extrabold leading-tight text-on-surface">
+          <span className="text-on-surface block truncate text-[11px] leading-tight font-extrabold">
             {category.name}
           </span>
         </span>
       </div>
 
       <div className="mt-0.5 flex items-center justify-between gap-3">
-        <CircularProgress
-          value={category.usedPercentage}
-          tone={tone}
-          size={40}
-          strokeWidth={3}
-        />
+        <CircularProgress value={category.usedPercentage} tone={tone} size={40} strokeWidth={3} />
         <div className="min-w-0 text-right">
           <MoneyValue
             amount={category.remainingAmount}
@@ -346,7 +329,7 @@ export function CategoryHealthMeter({
             align="right"
             size="xs"
           />
-          <span className="mt-0.5 block text-[8px] font-bold uppercase leading-none tracking-wider text-on-surface-variant/50">
+          <span className="text-on-surface-variant/50 mt-0.5 block text-[8px] leading-none font-bold tracking-wider uppercase">
             tersisa
           </span>
         </div>

@@ -96,9 +96,7 @@ const BUSINESS_LABELS: Readonly<Record<string, string>> = {
 
 export type BusinessLabelDomain = "FINANCE" | "INVENTORY";
 
-const DOMAIN_LABELS: Readonly<
-  Record<BusinessLabelDomain, Readonly<Record<string, string>>>
-> = {
+const DOMAIN_LABELS: Readonly<Record<BusinessLabelDomain, Readonly<Record<string, string>>>> = {
   FINANCE: { OPENING_BALANCE: "Saldo awal rekening" },
   INVENTORY: { OPENING_BALANCE: "Saldo awal stok" },
 };

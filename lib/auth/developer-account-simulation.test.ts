@@ -36,9 +36,7 @@ describe("developer account simulation guard", () => {
 
   test("validates general and onboarding review contexts", () => {
     const targetUserId = "11111111-1111-4111-8111-111111111111";
-    expect(
-      developerAccountSimulationSchema.parse({ targetUserId }).context,
-    ).toBe("GENERAL");
+    expect(developerAccountSimulationSchema.parse({ targetUserId }).context).toBe("GENERAL");
     expect(
       developerAccountSimulationSchema.parse({
         targetUserId,
@@ -55,9 +53,7 @@ describe("developer account simulation guard", () => {
 
   test("lands each simulated role on its real operational route", () => {
     expect(getDeveloperSimulationLandingRoute("FINANCE_ADMIN")).toBe("/ledger");
-    expect(getDeveloperSimulationLandingRoute("PROJECT_MANAGER")).toBe(
-      "/projects",
-    );
+    expect(getDeveloperSimulationLandingRoute("PROJECT_MANAGER")).toBe("/projects");
     expect(getDeveloperSimulationLandingRoute("PURCHASING")).toBe("/materials");
   });
 

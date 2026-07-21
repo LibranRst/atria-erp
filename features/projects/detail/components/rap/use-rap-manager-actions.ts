@@ -63,8 +63,7 @@ export function useRapManagerActions({
 }: UseRapManagerActionsProps): UseRapManagerActionsResult {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const { error, success, resetMessages, showError, showSuccess } =
-    useRapActionFeedback();
+  const { error, success, resetMessages, showError, showSuccess } = useRapActionFeedback();
 
   function handleCreateRap(): void {
     resetMessages();
@@ -89,11 +88,10 @@ export function useRapManagerActions({
     const payload = buildCategoryPlanPayload({ projectId, categoryPlanForm });
 
     startTransition(async () => {
-      const { selectedTemplate, overrideCost } =
-        getCategoryPlanTemplateOverride({
-          categoryPlanForm,
-          pricingTemplates,
-        });
+      const { selectedTemplate, overrideCost } = getCategoryPlanTemplateOverride({
+        categoryPlanForm,
+        pricingTemplates,
+      });
       const res = editingCategoryPlanItemId
         ? await updateProjectCategoryPlanItem({
             ...payload,
@@ -108,9 +106,7 @@ export function useRapManagerActions({
               quantity: Number(categoryPlanForm.quantity),
               overrideUnitCost: overrideCost,
               overrideReason:
-                overrideCost !== undefined
-                  ? categoryPlanForm.internalNote
-                  : undefined,
+                overrideCost !== undefined ? categoryPlanForm.internalNote : undefined,
             })
           : await createProjectCategoryPlanItem(payload);
       if (!res.success) {
@@ -118,23 +114,17 @@ export function useRapManagerActions({
         return;
       }
       showSuccess(
-        editingCategoryPlanItemId
-          ? "Package berhasil diperbarui."
-          : "Package berhasil dibuat.",
+        editingCategoryPlanItemId ? "Package berhasil diperbarui." : "Package berhasil dibuat.",
       );
       closeCategoryPlanForm();
       router.refresh();
     });
   }
 
-  function handleMarkCategoryPlanActive(
-    projectCategoryPlanItemId: string,
-  ): void {
+  function handleMarkCategoryPlanActive(projectCategoryPlanItemId: string): void {
     resetMessages();
     startTransition(async () => {
-      const res = await markProjectCategoryPlanItemActive(
-        projectCategoryPlanItemId,
-      );
+      const res = await markProjectCategoryPlanItemActive(projectCategoryPlanItemId);
       if (!res.success) {
         showError(res.error.message);
         return;
@@ -145,14 +135,10 @@ export function useRapManagerActions({
     });
   }
 
-  function handleDeleteCategoryPlanItem(
-    projectCategoryPlanItemId: string,
-  ): void {
+  function handleDeleteCategoryPlanItem(projectCategoryPlanItemId: string): void {
     resetMessages();
     startTransition(async () => {
-      const res = await deleteProjectCategoryPlanItem(
-        projectCategoryPlanItemId,
-      );
+      const res = await deleteProjectCategoryPlanItem(projectCategoryPlanItemId);
       if (!res.success) {
         showError(res.error.message);
         return;
@@ -190,8 +176,7 @@ export function useRapManagerActions({
               bufferQuantity: Number(rapForm.bufferQuantity) || 0,
               source: rapForm.source,
               overrideUnitCost: overrideCost,
-              overrideReason:
-                overrideCost !== undefined ? rapForm.internalNote : undefined,
+              overrideReason: overrideCost !== undefined ? rapForm.internalNote : undefined,
             })
           : await addProjectRapItem(payload);
       if (!res.success) {
@@ -221,9 +206,7 @@ export function useRapManagerActions({
     });
   }
 
-  function handleAdvanceRapSetup(
-    targetStage: "TUKANG" | "SUBCON" | "REVIEW",
-  ): void {
+  function handleAdvanceRapSetup(targetStage: "TUKANG" | "SUBCON" | "REVIEW"): void {
     if (!rap) return;
     resetMessages();
     startTransition(async () => {
@@ -243,10 +226,7 @@ export function useRapManagerActions({
     });
   }
 
-  function handleScopeSkip(
-    categoryCode: "TUKANG" | "SUBCON",
-    skipped: boolean,
-  ): void {
+  function handleScopeSkip(categoryCode: "TUKANG" | "SUBCON", skipped: boolean): void {
     if (!rap) return;
     resetMessages();
     startTransition(async () => {
@@ -326,9 +306,7 @@ export function useRapManagerActions({
       setInternalRevisionReason("");
       setReviseMaterial(false);
       setRevisionPackageIds([]);
-      showSuccess(
-        "Draft revisi internal plan berhasil dibuat untuk scope terpilih.",
-      );
+      showSuccess("Draft revisi internal plan berhasil dibuat untuk scope terpilih.");
       router.refresh();
     });
   }

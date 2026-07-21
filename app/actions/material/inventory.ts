@@ -27,10 +27,7 @@ import {
   createMaterialSchema,
   materialInventoryQuerySchema,
 } from "@/lib/validations/material";
-import {
-  calculateInventoryStatus,
-  getSessionUser,
-} from "./inventory-utils";
+import { calculateInventoryStatus, getSessionUser } from "./inventory-utils";
 import {
   adjustMaterialStock as adjustMaterialStockWrite,
   recordStockIn as recordStockInWrite,
@@ -62,11 +59,14 @@ export interface MaterialInventoryRow {
 }
 
 export async function createMaterialCategory(
-  input: CreateMaterialCategoryInput
+  input: CreateMaterialCategoryInput,
 ): Promise<ActionResponse<typeof materialCategory.$inferSelect>> {
   const validation = createMaterialCategorySchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data kategori material tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data kategori material tidak valid." },
+    };
   }
 
   const sessionResult = await getSessionUser();
@@ -90,11 +90,14 @@ export async function createMaterialCategory(
 }
 
 export async function createMaterial(
-  input: CreateMaterialInput
+  input: CreateMaterialInput,
 ): Promise<ActionResponse<typeof materialMaster.$inferSelect>> {
   const validation = createMaterialSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Data material tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Data material tidak valid." },
+    };
   }
 
   const sessionResult = await getSessionUser();
@@ -129,11 +132,14 @@ export async function createMaterial(
 }
 
 export async function getMaterialInventory(
-  input: MaterialInventoryQueryInput = {}
+  input: MaterialInventoryQueryInput = {},
 ): Promise<ActionResponse<MaterialInventoryRow[]>> {
   const validation = materialInventoryQuerySchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Filter inventory tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Filter inventory tidak valid." },
+    };
   }
 
   const sessionResult = await getSessionUser();
@@ -143,8 +149,10 @@ export async function getMaterialInventory(
     await assertPermission(sessionResult.data.user, "view:inventory");
 
     const filters = [];
-    if (validation.data.materialId) filters.push(eq(materialInventory.materialId, validation.data.materialId));
-    if (validation.data.locationId) filters.push(eq(materialInventory.locationId, validation.data.locationId));
+    if (validation.data.materialId)
+      filters.push(eq(materialInventory.materialId, validation.data.materialId));
+    if (validation.data.locationId)
+      filters.push(eq(materialInventory.locationId, validation.data.locationId));
 
     const inventoryRows = await db.query.materialInventory.findMany({
       where: filters.length > 0 ? and(...filters) : undefined,
@@ -169,7 +177,9 @@ export async function getMaterialInventory(
           row.material.code ?? "",
           row.material.color ?? "",
           row.material.category.name,
-        ].join(" ").toLowerCase();
+        ]
+          .join(" ")
+          .toLowerCase();
         return haystack.includes(search);
       })
       .map((row): MaterialInventoryRow => {
@@ -212,7 +222,7 @@ export async function getMaterialInventory(
 }
 
 export async function recordStockIn(
-  input: RecordStockInInput
+  input: RecordStockInInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const result = await recordStockInWrite(input);
   if (result.success) {
@@ -223,7 +233,7 @@ export async function recordStockIn(
 }
 
 export async function reserveMaterialForProject(
-  input: ReserveMaterialInput
+  input: ReserveMaterialInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const result = await reserveMaterialForProjectWrite(input);
   if (result.success) {
@@ -245,7 +255,7 @@ export async function wasteMaterialForProject(
 }
 
 export async function useMaterialForProject(
-  input: UseMaterialInput
+  input: UseMaterialInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const result = await recordMaterialUsageForProject(input);
   if (result.success) {
@@ -256,7 +266,7 @@ export async function useMaterialForProject(
 }
 
 export async function returnMaterialFromProject(
-  input: ReturnMaterialInput
+  input: ReturnMaterialInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const result = await returnMaterialFromProjectWrite(input);
   if (result.success) {
@@ -267,7 +277,7 @@ export async function returnMaterialFromProject(
 }
 
 export async function adjustMaterialStock(
-  input: AdjustMaterialStockInput
+  input: AdjustMaterialStockInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const result = await adjustMaterialStockWrite(input);
   if (result.success) {
@@ -293,7 +303,7 @@ export interface MaterialShortageRow {
 }
 
 export async function getMaterialShortages(
-  projectRapId?: string
+  projectRapId?: string,
 ): Promise<ActionResponse<MaterialShortageRow[]>> {
   const sessionResult = await getSessionUser();
   if (!sessionResult.success) return sessionResult;
@@ -314,37 +324,40 @@ export async function getMaterialShortages(
       },
     });
 
-    const rows = rapItems.filter((item) => item.rap.status !== "SUPERSEDED").map((item): MaterialShortageRow => {
-      const totalQuantity = Number(item.totalQuantity);
-      const availableStock = item.material?.inventory.reduce((sum, inv) => {
-        return sum + Number(inv.currentStock) - Number(inv.reservedStock);
-      }, 0) ?? 0;
+    const rows = rapItems
+      .filter((item) => item.rap.status !== "SUPERSEDED")
+      .map((item): MaterialShortageRow => {
+        const totalQuantity = Number(item.totalQuantity);
+        const availableStock =
+          item.material?.inventory.reduce((sum, inv) => {
+            return sum + Number(inv.currentStock) - Number(inv.reservedStock);
+          }, 0) ?? 0;
 
-      const materialProjection = projectMaterialProjection(
-        item.stockMovements ?? [],
-        totalQuantity,
-      );
+        const materialProjection = projectMaterialProjection(
+          item.stockMovements ?? [],
+          totalQuantity,
+        );
 
-      return {
-        projectRapItemId: item.id,
-        projectRapId: item.projectRapId,
-        materialId: item.materialId,
-        materialName: item.material?.name ?? item.name,
-        area: item.area,
-        requiredQuantity: Number(item.requiredQuantity),
-        bufferQuantity: Number(item.bufferQuantity),
-        totalQuantity,
-        availableStock,
-        needToBuy: materialProjection.needToBuy,
-        estimatedTotalCost: Number(item.estimatedTotalCost),
-        status:
-          item.status === "PLANNED" || item.status === "DRAFT"
-            ? item.status
-            : materialProjection.needToBuy > 0
-              ? "SHORTAGE"
-              : "READY",
-      };
-    });
+        return {
+          projectRapItemId: item.id,
+          projectRapId: item.projectRapId,
+          materialId: item.materialId,
+          materialName: item.material?.name ?? item.name,
+          area: item.area,
+          requiredQuantity: Number(item.requiredQuantity),
+          bufferQuantity: Number(item.bufferQuantity),
+          totalQuantity,
+          availableStock,
+          needToBuy: materialProjection.needToBuy,
+          estimatedTotalCost: Number(item.estimatedTotalCost),
+          status:
+            item.status === "PLANNED" || item.status === "DRAFT"
+              ? item.status
+              : materialProjection.needToBuy > 0
+                ? "SHORTAGE"
+                : "READY",
+        };
+      });
 
     return { success: true, data: rows };
   } catch (error) {

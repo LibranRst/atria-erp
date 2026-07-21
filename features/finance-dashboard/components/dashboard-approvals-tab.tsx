@@ -3,17 +3,9 @@
 import { useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "sonner";
-import {
-  approveFieldRequest,
-  approveVendorPayment,
-} from "@/app/actions/finance/field-requests";
+import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
 import { decideInventoryOpening } from "@/app/actions/material/opening-inventory";
-import {
-  BottomSheet,
-  ConfirmationSheet,
-  Textarea,
-  useSheetPresenceValue,
-} from "@/components/ui";
+import { BottomSheet, ConfirmationSheet, Textarea, useSheetPresenceValue } from "@/components/ui";
 import { MoneyValue } from "@/components/ui/page-primitives";
 import {
   ApprovalDecisionReasonFields,
@@ -31,10 +23,7 @@ import {
   ApprovalWorkbenchRow,
   DashboardTabEmpty,
 } from "@/features/finance-dashboard/components/dashboard-rows";
-import {
-  formatShortDate,
-  shortMoney,
-} from "@/features/finance-dashboard/lib/dashboard-formatters";
+import { formatShortDate, shortMoney } from "@/features/finance-dashboard/lib/dashboard-formatters";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
 import { getErrorMessage } from "@/lib/utils/error-message";
 
@@ -46,9 +35,7 @@ type ApprovalDecision = {
 type ApprovalsTabProps = {
   readonly approvals: readonly ApprovalDetail[];
   readonly approvalCount: number;
-  readonly setApprovals: React.Dispatch<
-    React.SetStateAction<readonly ApprovalDetail[]>
-  >;
+  readonly setApprovals: React.Dispatch<React.SetStateAction<readonly ApprovalDetail[]>>;
   readonly setApprovalCount: React.Dispatch<React.SetStateAction<number>>;
   readonly canEmergencyOverride?: boolean;
 };
@@ -61,8 +48,7 @@ export function ApprovalsTab({
   canEmergencyOverride = false,
 }: ApprovalsTabProps): React.JSX.Element {
   const router = useRouter();
-  const [selectedApproval, setSelectedApproval] =
-    React.useState<ApprovalDetail | null>(null);
+  const [selectedApproval, setSelectedApproval] = React.useState<ApprovalDetail | null>(null);
   const {
     presentedValue: presentedApproval,
     open: approvalOpen,
@@ -74,15 +60,10 @@ export function ApprovalsTab({
   const [emergencyOverride, setEmergencyOverride] = React.useState(false);
   const [emergencyReason, setEmergencyReason] = React.useState("");
   const [pending, startTransition] = React.useTransition();
-  const criticalCount = approvals.filter(
-    (item) => item.priority === "CRITICAL",
-  ).length;
+  const criticalCount = approvals.filter((item) => item.priority === "CRITICAL").length;
   const visibleAmount = approvals.reduce((sum, item) => sum + item.amount, 0);
 
-  function requestDecision(
-    item: ApprovalDetail,
-    status: ApprovalDecision["status"],
-  ): void {
+  function requestDecision(item: ApprovalDetail, status: ApprovalDecision["status"]): void {
     setDecision({ item, status });
     if (status === "REJECTED") setRejectionReason("");
     if (status === "APPROVED") {
@@ -113,8 +94,7 @@ export function ApprovalsTab({
     );
     if (
       decision.status === "REJECTED" &&
-      rejectionReason.trim().length <
-        (decision.item.type === "inventory_opening" ? 10 : 5)
+      rejectionReason.trim().length < (decision.item.type === "inventory_opening" ? 10 : 5)
     ) {
       toast.error(
         `Tuliskan alasan penolakan minimal ${decision.item.type === "inventory_opening" ? 10 : 5} karakter.`,
@@ -129,19 +109,11 @@ export function ApprovalsTab({
       toast.error("Alasan persetujuan minimal 10 karakter.");
       return;
     }
-    if (
-      decision.status === "APPROVED" &&
-      requiresEmergencyOverride &&
-      !emergencyOverride
-    ) {
+    if (decision.status === "APPROVED" && requiresEmergencyOverride && !emergencyOverride) {
       toast.error("Aktifkan emergency override untuk persetujuan sendiri.");
       return;
     }
-    if (
-      decision.status === "APPROVED" &&
-      emergencyOverride &&
-      emergencyReason.trim().length < 10
-    ) {
+    if (decision.status === "APPROVED" && emergencyOverride && emergencyReason.trim().length < 10) {
       toast.error("Alasan emergency override minimal 10 karakter.");
       return;
     }
@@ -171,17 +143,10 @@ export function ApprovalsTab({
                   notes,
                   emergencyOverride,
                 })
-              : await approveVendorPayment(
-                  item.referenceId,
-                  notes,
-                  status,
-                  emergencyOverride,
-                );
+              : await approveVendorPayment(item.referenceId, notes, status, emergencyOverride);
         if (!result.success) throw new Error(result.error.message);
 
-        setApprovals((current) =>
-          current.filter((approval) => approval.id !== item.id),
-        );
+        setApprovals((current) => current.filter((approval) => approval.id !== item.id));
         setApprovalCount((current) => Math.max(0, current - 1));
         setSelectedApproval(null);
         setDecision(null);
@@ -210,17 +175,15 @@ export function ApprovalsTab({
       >
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="font-mono text-[30px] font-black leading-none text-on-surface max-[430px]:text-[27px]">
+            <p className="text-on-surface font-mono text-[30px] leading-none font-black max-[430px]:text-[27px]">
               {approvalCount}
             </p>
-            <p className="mt-1 text-[10px] font-semibold text-on-surface-variant">
+            <p className="text-on-surface-variant mt-1 text-[10px] font-semibold">
               persetujuan menunggu keputusan
             </p>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-[8px] font-semibold text-on-surface-variant/60">
-              Total antrean
-            </p>
+            <p className="text-on-surface-variant/60 text-[8px] font-semibold">Total antrean</p>
             <MoneyValue
               amount={visibleAmount}
               variant="compactWithFull"
@@ -230,11 +193,9 @@ export function ApprovalsTab({
             />
           </div>
         </div>
-        <div className="mt-3.5 grid grid-cols-2 divide-x divide-black/[0.055] rounded-[18px] bg-surface-container-low/65 px-3 py-2.5 max-[430px]:gap-0">
+        <div className="bg-surface-container-low/65 mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] px-3 py-2.5 max-[430px]:gap-0">
           <div>
-            <p className="text-[9px] font-semibold text-on-surface-variant/60">
-              Prioritas kritis
-            </p>
+            <p className="text-on-surface-variant/60 text-[9px] font-semibold">Prioritas kritis</p>
             <p
               className={`mt-1 font-mono text-sm font-black ${criticalCount > 0 ? "text-error" : "text-on-surface"}`}
             >
@@ -242,31 +203,21 @@ export function ApprovalsTab({
             </p>
           </div>
           <div className="pl-3 text-right">
-            <p className="text-[9px] font-semibold text-on-surface-variant/60">
-              Urutan otomatis
-            </p>
-            <p className="mt-1 text-[10px] font-bold text-on-surface">
-              Risiko &amp; urgensi
-            </p>
+            <p className="text-on-surface-variant/60 text-[9px] font-semibold">Urutan otomatis</p>
+            <p className="text-on-surface mt-1 text-[10px] font-bold">Risiko &amp; urgensi</p>
           </div>
         </div>
       </DashboardSummarySurface>
 
-      <DashboardDetailSection
-        title="Urutan prioritas"
-        href="/approvals"
-        actionLabel="Buka semua"
-      >
+      <DashboardDetailSection title="Urutan prioritas" href="/approvals" actionLabel="Buka semua">
         {approvals.length === 0 ? (
           <DashboardTabEmpty>
-            Tidak ada persetujuan tertunda. Semua keputusan saat ini sudah
-            ditangani.
+            Tidak ada persetujuan tertunda. Semua keputusan saat ini sudah ditangani.
           </DashboardTabEmpty>
         ) : (
           <>
-            <div className="mx-3 mt-3 rounded-[15px] bg-surface-container-low/65 px-3 py-2 text-[10px] leading-4 text-on-surface-variant">
-              Diurutkan berdasarkan risiko budget, jatuh tempo, lama menunggu,
-              dan nominal.
+            <div className="bg-surface-container-low/65 text-on-surface-variant mx-3 mt-3 rounded-[15px] px-3 py-2 text-[10px] leading-4">
+              Diurutkan berdasarkan risiko budget, jatuh tempo, lama menunggu, dan nominal.
             </div>
             <DashboardRowGroup>
               {approvals.map((item) => (
@@ -294,7 +245,7 @@ export function ApprovalsTab({
                 type="button"
                 disabled={pending}
                 onClick={() => requestDecision(presentedApproval, "REJECTED")}
-                className="min-h-12 rounded-full bg-error-container/30 px-4 text-xs font-bold text-error disabled:opacity-45"
+                className="bg-error-container/30 text-error min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
               >
                 Tolak
               </button>
@@ -302,7 +253,7 @@ export function ApprovalsTab({
                 type="button"
                 disabled={pending}
                 onClick={() => requestDecision(presentedApproval, "APPROVED")}
-                className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-45"
+                className="bg-primary text-on-primary min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
               >
                 Setujui
               </button>
@@ -312,7 +263,7 @@ export function ApprovalsTab({
       >
         {presentedApproval ? (
           <div className="space-y-md">
-            <section className="overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+            <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
               <div className="p-4">
                 <div className="flex items-center justify-between gap-3">
                   <span
@@ -320,11 +271,11 @@ export function ApprovalsTab({
                   >
                     {presentedApproval.priorityReason}
                   </span>
-                  <span className="shrink-0 text-[10px] font-semibold text-on-surface-variant">
+                  <span className="text-on-surface-variant shrink-0 text-[10px] font-semibold">
                     {formatShortDate(presentedApproval.createdAt)}
                   </span>
                 </div>
-                <p className="mt-4 text-[9px] font-bold uppercase tracking-[0.12em] text-on-surface-variant/65">
+                <p className="text-on-surface-variant/65 mt-4 text-[9px] font-bold tracking-[0.12em] uppercase">
                   Nominal pengajuan
                 </p>
                 <MoneyValue
@@ -333,23 +284,23 @@ export function ApprovalsTab({
                   size="hero"
                   className="mt-1"
                 />
-                <p className="mt-3 text-sm font-semibold leading-[1.3] text-on-surface">
+                <p className="text-on-surface mt-3 text-sm leading-[1.3] font-semibold">
                   {presentedApproval.description}
                 </p>
               </div>
               {presentedApproval.notes ? (
-                <div className="border-t border-outline-variant/20 bg-surface-container-lowest px-4 py-3">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.1em] leading-5 text-on-surface-variant/65">
+                <div className="border-outline-variant/20 bg-surface-container-lowest border-t px-4 py-3">
+                  <p className="text-on-surface-variant/65 text-[9px] leading-5 font-bold tracking-widest uppercase">
                     Catatan pengajuan
                   </p>
-                  <p className="text-xs leading-4 text-on-surface-variant">
+                  <p className="text-on-surface-variant text-xs leading-4">
                     {presentedApproval.notes}
                   </p>
                 </div>
               ) : null}
             </section>
 
-            <section className="overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+            <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
               {[
                 ["Proyek", presentedApproval.projectName],
                 ["Pengaju", presentedApproval.requestedBy],
@@ -363,12 +314,12 @@ export function ApprovalsTab({
               ].map(([label, value]) => (
                 <div
                   key={label}
-                  className="flex min-h-12 items-center justify-between gap-4 border-b border-outline-variant/20 px-4 py-3 last:border-b-0"
+                  className="border-outline-variant/20 flex min-h-12 items-center justify-between gap-4 border-b px-4 py-3 last:border-b-0"
                 >
-                  <p className="shrink-0 text-[10px] font-medium text-on-surface-variant">
+                  <p className="text-on-surface-variant shrink-0 text-[10px] font-medium">
                     {label}
                   </p>
-                  <p className="min-w-0 truncate text-right text-xs font-semibold text-on-surface">
+                  <p className="text-on-surface min-w-0 truncate text-right text-xs font-semibold">
                     {value}
                   </p>
                 </div>
@@ -378,14 +329,14 @@ export function ApprovalsTab({
             {presentedApproval.type === "inventory_opening" ? (
               <>
                 <InventoryOpeningApprovalItems item={presentedApproval} />
-                <section className="overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+                <section className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
                   <div className="px-4 py-3.5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-on-surface-variant/65">
+                    <p className="text-on-surface-variant/65 text-[10px] font-bold tracking-widest uppercase">
                       Dampak stok
                     </p>
-                    <p className="mt-1 text-xs leading-5 text-on-surface">
-                      Setelah disetujui, stok dan nilai inventory bertambah.
-                      Kas, utang vendor, dan actual cost proyek tidak berubah.
+                    <p className="text-on-surface mt-1 text-xs leading-5">
+                      Setelah disetujui, stok dan nilai inventory bertambah. Kas, utang vendor, dan
+                      actual cost proyek tidak berubah.
                     </p>
                   </div>
                 </section>
@@ -395,15 +346,15 @@ export function ApprovalsTab({
             )}
             {presentedApproval.receiptImageUrl ? (
               <section className="space-y-2.5">
-                <h3 className="px-1 text-[10px] font-bold uppercase tracking-[0.11em] text-on-surface">
+                <h3 className="text-on-surface px-1 text-[10px] font-bold tracking-[0.11em] uppercase">
                   Bukti pengajuan
                 </h3>
-                <div className="overflow-hidden rounded-[24px] bg-surface-container-lowest p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+                <div className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[24px] p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={presentedApproval.receiptImageUrl}
                     alt="Bukti pengajuan"
-                    className="max-h-[280px] w-full rounded-[16px] bg-surface-container-low object-contain"
+                    className="bg-surface-container-low max-h-[280px] w-full rounded-[16px] object-contain"
                   />
                 </div>
               </section>
@@ -424,24 +375,20 @@ export function ApprovalsTab({
         pending={pending}
         disabled={
           (decision?.item.type === "inventory_opening" &&
-            approvalRequiresOpeningReason(
-              decision.item,
-              canEmergencyOverride,
-            ) &&
+            approvalRequiresOpeningReason(decision.item, canEmergencyOverride) &&
             approvalReason.trim().length < 10) ||
           (Boolean(
             decision?.item &&
-            approvalRequiresEmergencyOverride(
-              decision.item,
-              canEmergencyOverride,
-            ),
+            approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride),
           ) &&
             (!emergencyOverride || emergencyReason.trim().length < 10))
         }
         onClose={closeDecision}
         onConfirm={confirmDecision}
       >
-        {decision?.item && (approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride) || approvalRequiresOpeningReason(decision.item, canEmergencyOverride)) ? (
+        {decision?.item &&
+        (approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride) ||
+          approvalRequiresOpeningReason(decision.item, canEmergencyOverride)) ? (
           <ApprovalDecisionReasonFields
             item={decision.item}
             canEmergencyOverride={canEmergencyOverride}
@@ -463,14 +410,14 @@ export function ApprovalsTab({
         onClose={closeDecision}
       >
         <div className="space-y-md">
-          <div className="rounded-[20px] bg-error-container/25 p-4 text-xs leading-5 text-error">
-            Pengajuan tidak akan dilanjutkan. Jelaskan alasan yang dapat
-            ditindaklanjuti oleh pengaju.
+          <div className="bg-error-container/25 text-error rounded-[20px] p-4 text-xs leading-5">
+            Pengajuan tidak akan dilanjutkan. Jelaskan alasan yang dapat ditindaklanjuti oleh
+            pengaju.
           </div>
           <div>
             <label
               htmlFor="dashboard-rejection-reason"
-              className="px-1 text-xs font-bold text-on-surface"
+              className="text-on-surface px-1 text-xs font-bold"
             >
               Alasan penolakan
             </label>
@@ -489,20 +436,18 @@ export function ApprovalsTab({
                   (decision?.item.type === "inventory_opening" ? 10 : 5)
               }
             />
-            <p className="mt-1 px-1 text-[10px] text-on-surface-variant">
-              Minimal {decision?.item.type === "inventory_opening" ? 10 : 5}{" "}
-              karakter.
+            <p className="text-on-surface-variant mt-1 px-1 text-[10px]">
+              Minimal {decision?.item.type === "inventory_opening" ? 10 : 5} karakter.
             </p>
           </div>
           <button
             type="button"
             disabled={
               pending ||
-              rejectionReason.trim().length <
-                (decision?.item.type === "inventory_opening" ? 10 : 5)
+              rejectionReason.trim().length < (decision?.item.type === "inventory_opening" ? 10 : 5)
             }
             onClick={confirmDecision}
-            className="min-h-12 w-full rounded-full bg-error px-5 text-xs font-bold text-white disabled:opacity-40"
+            className="bg-error min-h-12 w-full rounded-full px-5 text-xs font-bold text-white disabled:opacity-40"
           >
             {pending ? "Menyimpan penolakan" : "Tolak pengajuan"}
           </button>

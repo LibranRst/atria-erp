@@ -65,15 +65,19 @@ async function getSessionUser(): Promise<SessionUser | null> {
 
 function toFailure<T>(error: unknown, fallback: string): ActionResponse<T> {
   const message = error instanceof Error ? error.message : fallback;
-  if (message.includes("FORBIDDEN")) return { success: false, error: { code: "FORBIDDEN", message } };
-  if (message.includes("NOT_FOUND")) return { success: false, error: { code: "NOT_FOUND", message: fallback } };
+  if (message.includes("FORBIDDEN"))
+    return { success: false, error: { code: "FORBIDDEN", message } };
+  if (message.includes("NOT_FOUND"))
+    return { success: false, error: { code: "NOT_FOUND", message: fallback } };
   return { success: false, error: { code: "TRANSACTION_FAILED", message } };
 }
 
-function mapTemplate(row: typeof itemPriceLibrary.$inferSelect & {
-  readonly expenseCategory: typeof expenseCategory.$inferSelect;
-  readonly costComponents: readonly (typeof itemPriceLibraryCostComponent.$inferSelect)[];
-}): PricingTemplateRow {
+function mapTemplate(
+  row: typeof itemPriceLibrary.$inferSelect & {
+    readonly expenseCategory: typeof expenseCategory.$inferSelect;
+    readonly costComponents: readonly (typeof itemPriceLibraryCostComponent.$inferSelect)[];
+  },
+): PricingTemplateRow {
   return {
     id: row.id,
     expenseCategoryId: row.expenseCategoryId,
@@ -109,14 +113,20 @@ function mapTemplate(row: typeof itemPriceLibrary.$inferSelect & {
   };
 }
 
-export async function getPricingTemplates(includeInactive = false): Promise<ActionResponse<readonly PricingTemplateRow[]>> {
+export async function getPricingTemplates(
+  includeInactive = false,
+): Promise<ActionResponse<readonly PricingTemplateRow[]>> {
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
     await assertPermission(user, "view:settings");
     const rows = await db.query.itemPriceLibrary.findMany({
       where: includeInactive ? undefined : eq(itemPriceLibrary.isActive, true),
-      with: { expenseCategory: true, costComponents: { orderBy: [asc(itemPriceLibraryCostComponent.displayOrder)] } },
+      with: {
+        expenseCategory: true,
+        costComponents: { orderBy: [asc(itemPriceLibraryCostComponent.displayOrder)] },
+      },
       orderBy: [asc(itemPriceLibrary.itemType), asc(itemPriceLibrary.name)],
     });
     return { success: true, data: rows.map(mapTemplate) };
@@ -126,7 +136,9 @@ export async function getPricingTemplates(includeInactive = false): Promise<Acti
 }
 
 async function validateReferences(input: UpsertPricingTemplateInput): Promise<void> {
-  const category = await db.query.expenseCategory.findFirst({ where: eq(expenseCategory.id, input.expenseCategoryId) });
+  const category = await db.query.expenseCategory.findFirst({
+    where: eq(expenseCategory.id, input.expenseCategoryId),
+  });
   if (!category) throw new Error("EXPENSE_CATEGORY_NOT_FOUND");
   const requiredCategory: Readonly<Record<string, string>> = {
     MATERIAL_ITEM: "MATERIAL",
@@ -138,13 +150,17 @@ async function validateReferences(input: UpsertPricingTemplateInput): Promise<vo
     throw new Error(`Tipe ${input.itemType} wajib memakai kategori ${expectedCode}.`);
   }
   if (input.materialId) {
-    const material = await db.query.materialMaster.findFirst({ where: eq(materialMaster.id, input.materialId) });
+    const material = await db.query.materialMaster.findFirst({
+      where: eq(materialMaster.id, input.materialId),
+    });
     if (!material) throw new Error("MATERIAL_NOT_FOUND");
   }
-  const vendorIds = new Set([
-    input.defaultVendorId ?? undefined,
-    ...input.components.map((component) => component.vendorId ?? undefined),
-  ].filter((id): id is string => Boolean(id)));
+  const vendorIds = new Set(
+    [
+      input.defaultVendorId ?? undefined,
+      ...input.components.map((component) => component.vendorId ?? undefined),
+    ].filter((id): id is string => Boolean(id)),
+  );
   for (const vendorId of vendorIds) {
     const existingVendor = await db.query.vendor.findFirst({ where: eq(vendor.id, vendorId) });
     if (!existingVendor) throw new Error("VENDOR_NOT_FOUND");
@@ -156,27 +172,40 @@ export async function upsertPricingTemplate(
 ): Promise<ActionResponse<PricingTemplateRow>> {
   const validation = upsertPricingTemplateSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: validation.error.issues[0]?.message ?? "Template harga tidak valid." } };
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: validation.error.issues[0]?.message ?? "Template harga tidak valid.",
+      },
+    };
   }
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     await assertPermission(user, "manage:item_library");
     await validateReferences(validation.data);
-    const totalInternalCost = roundMoney(validation.data.components.reduce(
-      (sum, component) => sum + component.quantity * component.unitCost,
-      0,
-    ));
-    const suggestedPrice = validation.data.pricingMode === "MARGIN_BASED"
-      ? calculateSuggestedClientPrice(totalInternalCost, validation.data.targetGrossPercentage)
-      : validation.data.fixedClientPrice ?? 0;
+    const totalInternalCost = roundMoney(
+      validation.data.components.reduce(
+        (sum, component) => sum + component.quantity * component.unitCost,
+        0,
+      ),
+    );
+    const suggestedPrice =
+      validation.data.pricingMode === "MARGIN_BASED"
+        ? calculateSuggestedClientPrice(totalInternalCost, validation.data.targetGrossPercentage)
+        : (validation.data.fixedClientPrice ?? 0);
 
     const templateId = await db.transaction(async (tx) => {
       const existing = validation.data.itemPriceLibraryId
-        ? await tx.query.itemPriceLibrary.findFirst({ where: eq(itemPriceLibrary.id, validation.data.itemPriceLibraryId) })
+        ? await tx.query.itemPriceLibrary.findFirst({
+            where: eq(itemPriceLibrary.id, validation.data.itemPriceLibraryId),
+          })
         : null;
-      if (validation.data.itemPriceLibraryId && !existing) throw new Error("ITEM_PRICE_LIBRARY_NOT_FOUND");
+      if (validation.data.itemPriceLibraryId && !existing)
+        throw new Error("ITEM_PRICE_LIBRARY_NOT_FOUND");
 
       const values = {
         expenseCategoryId: validation.data.expenseCategoryId,
@@ -201,23 +230,30 @@ export async function upsertPricingTemplate(
       };
 
       const [saved] = existing
-        ? await tx.update(itemPriceLibrary).set(values).where(eq(itemPriceLibrary.id, existing.id)).returning()
+        ? await tx
+            .update(itemPriceLibrary)
+            .set(values)
+            .where(eq(itemPriceLibrary.id, existing.id))
+            .returning()
         : await tx.insert(itemPriceLibrary).values(values).returning();
 
-      await tx.delete(itemPriceLibraryCostComponent)
+      await tx
+        .delete(itemPriceLibraryCostComponent)
         .where(eq(itemPriceLibraryCostComponent.itemPriceLibraryId, saved.id));
-      await tx.insert(itemPriceLibraryCostComponent).values(validation.data.components.map((component, index) => ({
-        itemPriceLibraryId: saved.id,
-        vendorId: component.vendorId ?? null,
-        componentType: component.componentType,
-        label: component.label,
-        quantity: component.quantity.toFixed(2),
-        unit: component.unit,
-        unitCost: component.unitCost.toFixed(2),
-        totalCost: roundMoney(component.quantity * component.unitCost).toFixed(2),
-        note: component.note ?? null,
-        displayOrder: component.displayOrder ?? index,
-      })));
+      await tx.insert(itemPriceLibraryCostComponent).values(
+        validation.data.components.map((component, index) => ({
+          itemPriceLibraryId: saved.id,
+          vendorId: component.vendorId ?? null,
+          componentType: component.componentType,
+          label: component.label,
+          quantity: component.quantity.toFixed(2),
+          unit: component.unit,
+          unitCost: component.unitCost.toFixed(2),
+          totalCost: roundMoney(component.quantity * component.unitCost).toFixed(2),
+          note: component.note ?? null,
+          displayOrder: component.displayOrder ?? index,
+        })),
+      );
       await tx.insert(auditLog).values({
         userId: user.id,
         action: existing ? "UPDATE_PRICING_TEMPLATE" : "CREATE_PRICING_TEMPLATE",
@@ -233,7 +269,10 @@ export async function upsertPricingTemplate(
     revalidatePath("/settings/library");
     const rows = await db.query.itemPriceLibrary.findFirst({
       where: eq(itemPriceLibrary.id, templateId),
-      with: { expenseCategory: true, costComponents: { orderBy: [asc(itemPriceLibraryCostComponent.displayOrder)] } },
+      with: {
+        expenseCategory: true,
+        costComponents: { orderBy: [asc(itemPriceLibraryCostComponent.displayOrder)] },
+      },
     });
     if (!rows) throw new Error("ITEM_PRICE_LIBRARY_NOT_FOUND");
     return { success: true, data: mapTemplate(rows) };

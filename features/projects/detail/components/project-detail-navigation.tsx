@@ -5,17 +5,10 @@ import React from "react";
 
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/ui/presentation-flags";
-import {
-  transitionEaseSmooth,
-  transitionSpringSmooth,
-} from "@/lib/utils/motion";
+import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import type { TabId } from "./project-tabs-types";
 
-export type ProjectDomainId =
-  | "overview"
-  | "planning"
-  | "operations"
-  | "finance";
+export type ProjectDomainId = "overview" | "planning" | "operations" | "finance";
 
 const DOMAIN_OPTIONS = [
   { value: "overview", label: "Ringkasan", icon: "space_dashboard" },
@@ -24,11 +17,16 @@ const DOMAIN_OPTIONS = [
   { value: "finance", label: "Keuangan", icon: "account_balance_wallet" },
 ] as const;
 
-const DOMAIN_TABS: Readonly<Record<Exclude<ProjectDomainId, "overview">, readonly {
-  value: TabId;
-  label: string;
-  icon: string;
-}[]>> = {
+const DOMAIN_TABS: Readonly<
+  Record<
+    Exclude<ProjectDomainId, "overview">,
+    readonly {
+      value: TabId;
+      label: string;
+      icon: string;
+    }[]
+  >
+> = {
   planning: [
     { value: "rap", label: "RAP", icon: "architecture" },
     { value: "rab", label: "RAB", icon: "request_quote" },
@@ -50,10 +48,7 @@ export function projectDomainForTab(tab: TabId): ProjectDomainId {
   return "finance";
 }
 
-export function defaultTabForDomain(
-  domain: ProjectDomainId,
-  isLocked: boolean,
-): TabId {
+export function defaultTabForDomain(domain: ProjectDomainId, isLocked: boolean): TabId {
   if (domain === "overview") return "overview";
   if (domain === "planning") return "rap";
   if (domain === "operations") return isLocked ? "rap" : "stok";
@@ -74,14 +69,9 @@ export function ProjectDetailNavigation({
   const stickyActive = WORKSPACE_STICKY_CONTROLS_ENABLED && isSticky;
   const shouldReduceMotion = useReducedMotion();
   const activeDomain = projectDomainForTab(activeTab);
-  const childOptions =
-    activeDomain === "overview" ? null : DOMAIN_TABS[activeDomain];
-  const stickyTransition = shouldReduceMotion
-    ? { duration: 0 }
-    : transitionSpringSmooth;
-  const surfaceTransition = shouldReduceMotion
-    ? { duration: 0 }
-    : transitionEaseSmooth;
+  const childOptions = activeDomain === "overview" ? null : DOMAIN_TABS[activeDomain];
+  const stickyTransition = shouldReduceMotion ? { duration: 0 } : transitionSpringSmooth;
+  const surfaceTransition = shouldReduceMotion ? { duration: 0 } : transitionEaseSmooth;
 
   React.useEffect(() => {
     if (!WORKSPACE_STICKY_CONTROLS_ENABLED) return;
@@ -94,12 +84,8 @@ export function ProjectDetailNavigation({
       if (frameId !== null) return;
       frameId = window.requestAnimationFrame(() => {
         frameId = null;
-        const nextSticky =
-          window.scrollY > 0 &&
-          stickyControl.getBoundingClientRect().top <= 64.5;
-        setIsSticky((current) =>
-          current === nextSticky ? current : nextSticky,
-        );
+        const nextSticky = window.scrollY > 0 && stickyControl.getBoundingClientRect().top <= 64.5;
+        setIsSticky((current) => (current === nextSticky ? current : nextSticky));
       });
     };
 
@@ -134,7 +120,7 @@ export function ProjectDetailNavigation({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={surfaceTransition}
-            className="pointer-events-none absolute inset-0 rounded-[24px] bg-white/[0.96] shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
+            className="pointer-events-none absolute inset-0 rounded-[24px] bg-white/96 shadow-[0_1px_2px_rgba(17,17,17,0.03),0_12px_30px_rgba(17,17,17,0.08)] ring-1 ring-black/[0.035] backdrop-blur-xl"
             aria-hidden="true"
           />
         ) : null}
@@ -142,19 +128,13 @@ export function ProjectDetailNavigation({
       <div className="relative space-y-2">
         <SegmentedTabs
           value={activeDomain}
-          onChange={(domain) =>
-            onTabChange(defaultTabForDomain(domain, isLocked))
-          }
+          onChange={(domain) => onTabChange(defaultTabForDomain(domain, isLocked))}
           ariaLabel="Kelompok detail proyek"
           layoutId="project-detail-domain"
           options={DOMAIN_OPTIONS.map((domain) => ({
             value: domain.value,
             label: domain.label,
-            icon: (
-              <span className="material-symbols-outlined text-[15px]">
-                {domain.icon}
-              </span>
-            ),
+            icon: <span className="material-symbols-outlined text-[15px]">{domain.icon}</span>,
           }))}
           scrollable
           fillAvailableSpace

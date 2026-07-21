@@ -1,7 +1,16 @@
 "use server";
 
 import { db } from "@/db";
-import { vendorBill, vendorPayment, bankAccount, project, projectBudgetCategory, projectExpenses, auditLog, approval } from "@/db/schema";
+import {
+  vendorBill,
+  vendorPayment,
+  bankAccount,
+  project,
+  projectBudgetCategory,
+  projectExpenses,
+  auditLog,
+  approval,
+} from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
@@ -13,7 +22,7 @@ import { mutateBalance } from "@/lib/finance/balance-mutation";
 import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
 
 export async function payVendorBill(
-  input: PayVendorBillInput
+  input: PayVendorBillInput,
 ): Promise<ActionResponse<{ paymentId: string; nextBalance: number }>> {
   const validation = payVendorBillSchema.safeParse(input);
   if (!validation.success) {
@@ -39,7 +48,13 @@ export async function payVendorBill(
     try {
       await assertPermission(session.user, "pay:vendor_bill");
     } catch (err) {
-      return { success: false, error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." } };
+      return {
+        success: false,
+        error: {
+          code: "FORBIDDEN",
+          message: err instanceof Error ? err.message : "Akses ditolak.",
+        },
+      };
     }
 
     // Execute inside a database transaction block (Option A)
@@ -56,7 +71,9 @@ export async function payVendorBill(
       }
 
       if (payment.status !== "PENDING") {
-        throw new Error(payment.status === "COMPLETED" ? "PAYMENT_ALREADY_COMPLETED" : "PAYMENT_NOT_PENDING");
+        throw new Error(
+          payment.status === "COMPLETED" ? "PAYMENT_ALREADY_COMPLETED" : "PAYMENT_NOT_PENDING",
+        );
       }
 
       // 2. Fetch and lock the vendor bill so concurrent payments cannot overpay it.
@@ -110,7 +127,7 @@ export async function payVendorBill(
         const appRecord = await tx.query.approval.findFirst({
           where: and(
             eq(approval.referenceType, "vendor_payment"),
-            eq(approval.referenceId, payment.id)
+            eq(approval.referenceId, payment.id),
           ),
         });
 
@@ -218,7 +235,8 @@ export async function payVendorBill(
     };
   } catch (error: unknown) {
     const errMsg = getErrorMessage(error, "");
-    let code: "NOT_FOUND" | "INSUFFICIENT_FUNDS" | "FORBIDDEN" | "TRANSACTION_FAILED" = "TRANSACTION_FAILED";
+    let code: "NOT_FOUND" | "INSUFFICIENT_FUNDS" | "FORBIDDEN" | "TRANSACTION_FAILED" =
+      "TRANSACTION_FAILED";
     let displayMessage = errMsg;
 
     if (
@@ -232,15 +250,22 @@ export async function payVendorBill(
     } else if (errMsg.startsWith("INSUFFICIENT_FUNDS")) {
       code = "INSUFFICIENT_FUNDS";
       displayMessage = "Pencairan dibatalkan: Saldo akun bank perusahaan tidak mencukupi.";
-    } else if (errMsg === "PAYMENT_ALREADY_COMPLETED" || errMsg === "PAYMENT_NOT_PENDING" || errMsg === "PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING" || errMsg === "APPROVAL_REQUIRED_BUT_PENDING" || errMsg === "APPROVAL_RECORD_MISSING") {
+    } else if (
+      errMsg === "PAYMENT_ALREADY_COMPLETED" ||
+      errMsg === "PAYMENT_NOT_PENDING" ||
+      errMsg === "PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING" ||
+      errMsg === "APPROVAL_REQUIRED_BUT_PENDING" ||
+      errMsg === "APPROVAL_RECORD_MISSING"
+    ) {
       code = "FORBIDDEN";
-      displayMessage = errMsg === "PAYMENT_ALREADY_COMPLETED"
-        ? "Pembayaran ini sudah diselesaikan sebelumnya."
-        : errMsg === "PAYMENT_NOT_PENDING"
-          ? "Pembayaran ini sudah ditolak atau tidak lagi menunggu pencairan."
-          : errMsg === "PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING"
-            ? "Nominal pembayaran melebihi sisa tagihan vendor."
-        : "Pembayaran memerlukan persetujuan Owner dan belum disetujui.";
+      displayMessage =
+        errMsg === "PAYMENT_ALREADY_COMPLETED"
+          ? "Pembayaran ini sudah diselesaikan sebelumnya."
+          : errMsg === "PAYMENT_NOT_PENDING"
+            ? "Pembayaran ini sudah ditolak atau tidak lagi menunggu pencairan."
+            : errMsg === "PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING"
+              ? "Nominal pembayaran melebihi sisa tagihan vendor."
+              : "Pembayaran memerlukan persetujuan Owner dan belum disetujui.";
     }
 
     return {

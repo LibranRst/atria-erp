@@ -5,16 +5,10 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { BottomSheet, SheetActionButton } from "./bottom-sheet";
 import { cx } from "./form-control-utils";
-import {
-  type FormPresentation,
-  FormPresentationProvider,
-} from "./form-presentation-context";
+import { type FormPresentation, FormPresentationProvider } from "./form-presentation-context";
 import type { FormRiskTone } from "./form-support";
 import { formatShortIdr } from "@/lib/utils/money";
-import {
-  transitionEaseSmooth,
-  transitionSpringSnappy,
-} from "@/lib/utils/motion";
+import { transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
 
 export type MicroStatusItem = {
   readonly label: string;
@@ -42,11 +36,7 @@ export function FormSheetPresentationBoundary({
 }: {
   readonly children: React.ReactNode;
 }): React.JSX.Element {
-  return (
-    <FormPresentationProvider presentation="standalone">
-      {children}
-    </FormPresentationProvider>
-  );
+  return <FormPresentationProvider presentation="standalone">{children}</FormPresentationProvider>;
 }
 
 export function OperationalFormSheet({
@@ -122,10 +112,7 @@ export function OperationalFormSheet({
       <div className="space-y-2">
         {statusText ? (
           <p
-            className={cx(
-              "px-1 text-[11px] font-medium leading-4",
-              textClass[statusTone],
-            )}
+            className={cx("px-1 text-[11px] leading-4 font-medium", textClass[statusTone])}
             role={statusTone === "danger" ? "alert" : "status"}
           >
             {statusText}
@@ -136,7 +123,7 @@ export function OperationalFormSheet({
           review
         ) : null}
         {disabledReason ? (
-          <p className="px-1 text-[10px] font-medium leading-4 text-on-surface-variant">
+          <p className="text-on-surface-variant px-1 text-[10px] leading-4 font-medium">
             {disabledReason}
           </p>
         ) : null}
@@ -206,9 +193,9 @@ export function FormDisclosure({
         transition={transitionSpringSnappy}
         onClick={onToggle}
         className={cx(
-          "flex w-full items-center text-left outline-none ring-1 focus-visible:ring-2 focus-visible:ring-primary/30",
+          "focus-visible:ring-primary/30 flex w-full items-center text-left ring-1 outline-none focus-visible:ring-2",
           compact
-            ? "min-h-12 gap-2.5 rounded-[22px] bg-surface-container-lowest px-3 py-2.5 shadow-[0_8px_24px_rgba(17,17,17,0.035)]"
+            ? "bg-surface-container-lowest min-h-12 gap-2.5 rounded-[22px] px-3 py-2.5 shadow-[0_8px_24px_rgba(17,17,17,0.035)]"
             : "min-h-14 gap-3 rounded-full px-3.5 py-2.5",
           compact
             ? expanded
@@ -241,17 +228,14 @@ export function FormDisclosure({
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 items-center gap-2 leading-none">
             <span
-              className={cx(
-                "truncate text-xs font-bold",
-                compact ? "leading-[1.15]" : "leading-4",
-              )}
+              className={cx("truncate text-xs font-bold", compact ? "leading-[1.15]" : "leading-4")}
             >
               {title}
             </span>
             {summary ? (
               <span
                 className={cx(
-                  "shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold leading-[1.1]",
+                  "shrink-0 rounded-full px-2 py-0.5 text-[9px] leading-[1.1] font-bold",
                   compact && expanded
                     ? "bg-primary/8 text-primary"
                     : "bg-surface-container-low text-on-surface-variant",
@@ -264,7 +248,7 @@ export function FormDisclosure({
           {description ? (
             <span
               className={cx(
-                "mt-0.5 block truncate text-[10px] text-on-surface-variant",
+                "text-on-surface-variant mt-0.5 block truncate text-[10px]",
                 compact ? "leading-[1.2]" : "leading-4",
               )}
             >
@@ -276,7 +260,7 @@ export function FormDisclosure({
           animate={{ rotate: expanded ? 180 : 0 }}
           transition={transitionSpringSnappy}
           className={cx(
-            "material-symbols-outlined shrink-0 text-on-surface-variant",
+            "material-symbols-outlined text-on-surface-variant shrink-0",
             compact ? "text-[18px]" : "text-[20px]",
           )}
           aria-hidden="true"
@@ -301,8 +285,7 @@ export function FormDisclosure({
   );
 }
 
-export type CompactEditableItemStatus =
-  "complete" | "warning" | "danger" | "neutral";
+export type CompactEditableItemStatus = "complete" | "warning" | "danger" | "neutral";
 
 const compactStatusClass: Record<CompactEditableItemStatus, string> = {
   complete: "bg-primary",
@@ -343,31 +326,26 @@ export function CompactEditableItemRow({
       transition={transitionSpringSnappy}
       disabled={disabled}
       onClick={onClick}
-      className="flex min-h-16 w-full items-center gap-3 rounded-[22px] bg-surface-container-low/70 px-4 py-2.5 text-left outline-none ring-1 ring-outline-variant/15 focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-45"
+      className="bg-surface-container-low/70 ring-outline-variant/15 focus-visible:ring-primary/30 flex min-h-16 w-full items-center gap-3 rounded-[22px] px-4 py-2.5 text-left ring-1 outline-none focus-visible:ring-2 disabled:opacity-45"
       aria-label={`${title}. ${statusLabel}. ${meta}`}
     >
       <span
-        className={cx(
-          "h-2.5 w-2.5 shrink-0 rounded-full",
-          compactStatusClass[status],
-        )}
+        className={cx("h-2.5 w-2.5 shrink-0 rounded-full", compactStatusClass[status])}
         aria-hidden="true"
       />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-xs font-bold leading-4 text-on-surface">
-          {title}
-        </span>
-        <span className="mt-0.5 block truncate text-[10px] leading-4 text-on-surface-variant">
+        <span className="text-on-surface block truncate text-xs leading-4 font-bold">{title}</span>
+        <span className="text-on-surface-variant mt-0.5 block truncate text-[10px] leading-4">
           {meta} · {statusLabel}
         </span>
       </span>
       {value ? (
-        <span className="max-w-[36%] shrink-0 truncate text-right text-xs font-bold tabular-nums text-on-surface">
+        <span className="text-on-surface max-w-[36%] shrink-0 truncate text-right text-xs font-bold tabular-nums">
           {value}
         </span>
       ) : null}
       <span
-        className="material-symbols-outlined shrink-0 text-[18px] text-on-surface-variant"
+        className="material-symbols-outlined text-on-surface-variant shrink-0 text-[18px]"
         aria-hidden="true"
       >
         chevron_right
@@ -396,24 +374,22 @@ export function FormSection({
     <section className={cx("min-w-0 space-y-2.5", className)}>
       <div className="flex min-w-0 items-end justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-[10px] font-bold uppercase tracking-[0.11em] text-on-surface">
+          <h3 className="text-on-surface truncate text-[10px] font-bold tracking-[0.11em] uppercase">
             {title}
           </h3>
           {helper ? (
-            <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant">
+            <p className="text-on-surface-variant mt-0.5 line-clamp-2 text-[10px] leading-4">
               {helper}
             </p>
           ) : null}
         </div>
         {action}
       </div>
-      <FormPresentationProvider
-        presentation={grouped ? "grouped" : "standalone"}
-      >
+      <FormPresentationProvider presentation={grouped ? "grouped" : "standalone"}>
         <div
           className={cx(
             grouped
-              ? "min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
+              ? "divide-outline-variant/20 bg-surface-container-lowest ring-outline-variant/15 min-w-0 divide-y overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1"
               : "space-y-2.5",
           )}
         >
@@ -431,35 +407,25 @@ export function MicroStatusDock({
 }): React.JSX.Element {
   const visibleItems = items.slice(0, 3);
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-surface-container-low px-3 py-2 text-[10px] leading-4 ring-1 ring-outline-variant/10">
+    <div className="bg-surface-container-low ring-outline-variant/10 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl px-3 py-2 text-[10px] leading-4 ring-1">
       {visibleItems.map((item, index) => {
         const tone = item.tone ?? "default";
         const renderedValue =
-          typeof item.amount === "number"
-            ? formatShortIdr(item.amount)
-            : (item.value ?? "-");
+          typeof item.amount === "number" ? formatShortIdr(item.amount) : (item.value ?? "-");
 
         return (
           <span
             key={`${item.label}-${index}`}
-            className="inline-flex min-w-0 max-w-full items-baseline gap-1.5"
+            className="inline-flex max-w-full min-w-0 items-baseline gap-1.5"
           >
             <span
-              className={cx(
-                "h-1.5 w-1.5 shrink-0 self-center rounded-full",
-                dotClass[tone],
-              )}
+              className={cx("h-1.5 w-1.5 shrink-0 self-center rounded-full", dotClass[tone])}
               aria-hidden="true"
             />
-            <span className="shrink-0 font-bold uppercase tracking-wide text-on-surface-variant">
+            <span className="text-on-surface-variant shrink-0 font-bold tracking-wide uppercase">
               {item.label}
             </span>
-            <span
-              className={cx(
-                "min-w-0 break-words font-semibold",
-                textClass[tone],
-              )}
-            >
+            <span className={cx("min-w-0 font-semibold wrap-break-word", textClass[tone])}>
               {renderedValue}
             </span>
           </span>
@@ -477,14 +443,7 @@ export function FieldContextLine({
   readonly tone?: FormRiskTone;
 }): React.JSX.Element {
   return (
-    <p
-      className={cx(
-        "min-w-0 text-[10px] font-medium leading-4",
-        textClass[tone],
-      )}
-    >
-      {children}
-    </p>
+    <p className={cx("min-w-0 text-[10px] leading-4 font-medium", textClass[tone])}>{children}</p>
   );
 }
 
@@ -563,23 +522,18 @@ export function WorkflowFormSheet({
         <div className="space-y-1">
           {statusText ? (
             <p
-              className={cx(
-                "px-1 text-[11px] font-medium leading-4",
-                textClass[statusTone],
-              )}
+              className={cx("px-1 text-[11px] leading-4 font-medium", textClass[statusTone])}
               role={statusTone === "danger" ? "alert" : "status"}
             >
               {statusText}
             </p>
           ) : null}
           {disabledReason ? (
-            <p className="px-1 text-[11px] leading-4 text-on-surface-variant">
-              {disabledReason}
-            </p>
+            <p className="text-on-surface-variant px-1 text-[11px] leading-4">{disabledReason}</p>
           ) : null}
           <div
             className={cx(
-              "grid gap-2 mt-2",
+              "mt-2 grid gap-2",
               secondaryLabel && actionLayout === "split"
                 ? "grid-cols-[0.8fr_1.2fr]"
                 : "grid-cols-1",
@@ -592,7 +546,7 @@ export function WorkflowFormSheet({
                 transition={transitionSpringSnappy}
                 onClick={onSecondary}
                 disabled={pending || secondaryDisabled}
-                className="min-h-12 rounded-full bg-surface-container px-5 text-sm font-bold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-45"
+                className="bg-surface-container text-on-surface focus-visible:ring-primary/30 min-h-12 rounded-full px-5 text-sm font-bold outline-none focus-visible:ring-2 disabled:opacity-45"
               >
                 {secondaryLabel}
               </motion.button>
@@ -604,7 +558,7 @@ export function WorkflowFormSheet({
               onClick={onPrimary}
               disabled={blocked}
               className={cx(
-                "min-h-12 rounded-full px-5 text-sm font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-45",
+                "focus-visible:ring-primary/30 min-h-12 rounded-full px-5 text-sm font-bold text-white outline-none focus-visible:ring-2 disabled:opacity-45",
                 danger ? "bg-error" : "bg-primary",
               )}
             >
@@ -636,7 +590,7 @@ export function OptionChoiceGroup<TValue extends string>({
 }): React.JSX.Element {
   return (
     <fieldset className="space-y-2">
-      <legend className="text-xs font-semibold text-on-surface">{label}</legend>
+      <legend className="text-on-surface text-xs font-semibold">{label}</legend>
       <div className="space-y-2">
         {options.map((option) => {
           const selected = option.value === value;
@@ -648,7 +602,7 @@ export function OptionChoiceGroup<TValue extends string>({
               transition={transitionSpringSnappy}
               onClick={() => onChange(option.value)}
               className={cx(
-                "flex min-h-12 w-full items-center gap-3 rounded-full px-5 text-left outline-none ring-1 focus-visible:ring-2 focus-visible:ring-primary/30",
+                "focus-visible:ring-primary/30 flex min-h-12 w-full items-center gap-3 rounded-full px-5 text-left ring-1 outline-none focus-visible:ring-2",
                 selected
                   ? "bg-primary/10 text-primary ring-primary/35"
                   : "bg-surface-container-low text-on-surface ring-outline-variant/20",
@@ -656,11 +610,9 @@ export function OptionChoiceGroup<TValue extends string>({
               aria-pressed={selected}
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold leading-5">
-                  {option.label}
-                </span>
+                <span className="block text-sm leading-5 font-bold">{option.label}</span>
                 {option.description ? (
-                  <span className="block truncate text-[11px] leading-4 text-on-surface-variant">
+                  <span className="text-on-surface-variant block truncate text-[11px] leading-4">
                     {option.description}
                   </span>
                 ) : null}

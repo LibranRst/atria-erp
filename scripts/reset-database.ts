@@ -68,7 +68,9 @@ async function verifyTablesAreEmpty(
 ): Promise<void> {
   for (const tableName of tableNames) {
     const qualifiedTable = `${quoteIdentifier(DATA_SCHEMA)}.${quoteIdentifier(tableName)}`;
-    const result = await client.query<{ count: string }>(`select count(*)::text as count from ${qualifiedTable}`);
+    const result = await client.query<{ count: string }>(
+      `select count(*)::text as count from ${qualifiedTable}`,
+    );
     if (result.rows[0]?.count !== "0") {
       throw new Error(`Verifikasi gagal: ${DATA_SCHEMA}.${tableName} masih memiliki data.`);
     }
@@ -117,7 +119,9 @@ async function resetDatabase(): Promise<void> {
 
     await verifyTablesAreEmpty(client, tableNames);
     console.log("Database berhasil dikosongkan dan sudah diverifikasi.");
-    console.log("Schema serta metadata migration tetap dipertahankan. Buka /setup untuk membuat Owner pertama.");
+    console.log(
+      "Schema serta metadata migration tetap dipertahankan. Buka /setup untuk membuat Owner pertama.",
+    );
   } finally {
     client.release();
     await pool.end();

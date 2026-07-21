@@ -21,9 +21,7 @@ async function getActionUser(): Promise<FieldRequestUser | null> {
     },
   });
 
-  return session?.user
-    ? { id: session.user.id, roleId: session.user.roleId }
-    : null;
+  return session?.user ? { id: session.user.id, roleId: session.user.roleId } : null;
 }
 
 export async function authorizeFieldRequestAction({
@@ -87,8 +85,7 @@ export async function authorizeOwnerVendorApproval(): Promise<AuthResult> {
       success: false,
       error: {
         code: "FORBIDDEN",
-        message:
-          "Hanya Owner yang dapat menyetujui/menolak pembayaran vendor.",
+        message: "Hanya Owner yang dapat menyetujui/menolak pembayaran vendor.",
       },
     };
   }

@@ -35,7 +35,9 @@ async function getActionUser(): Promise<SessionUser | null> {
   return session?.user ? { id: session.user.id, roleId: session.user.roleId } : null;
 }
 
-async function authorize(permission: PermissionKey): Promise<ActionResponse<{ readonly user: SessionUser }>> {
+async function authorize(
+  permission: PermissionKey,
+): Promise<ActionResponse<{ readonly user: SessionUser }>> {
   const user = await getActionUser();
   if (!user) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
@@ -47,7 +49,10 @@ async function authorize(permission: PermissionKey): Promise<ActionResponse<{ re
   } catch (error) {
     return {
       success: false,
-      error: { code: "FORBIDDEN", message: error instanceof Error ? error.message : "Akses ditolak." },
+      error: {
+        code: "FORBIDDEN",
+        message: error instanceof Error ? error.message : "Akses ditolak.",
+      },
     };
   }
 }
@@ -62,23 +67,40 @@ function revalidateFinanceViews(): void {
   revalidatePath("/projects");
 }
 
-function bankAccountPayload(row: BankAccountRow): BankAccountRow & { readonly balanceNumber: number } {
+function bankAccountPayload(
+  row: BankAccountRow,
+): BankAccountRow & { readonly balanceNumber: number } {
   return { ...row, balanceNumber: Number(row.balance) };
 }
 
 function mapFinanceError(error: unknown, fallback: string): ActionResponse<never> {
   const message = error instanceof Error ? error.message : fallback;
   if (message.includes("INSUFFICIENT_FUNDS")) {
-    return { success: false, error: { code: "INSUFFICIENT_FUNDS", message: "Saldo rekening tidak mencukupi." } };
+    return {
+      success: false,
+      error: { code: "INSUFFICIENT_FUNDS", message: "Saldo rekening tidak mencukupi." },
+    };
   }
   if (message.includes("BANK_ACCOUNT_NOT_FOUND")) {
-    return { success: false, error: { code: "NOT_FOUND", message: "Rekening bank tidak ditemukan." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Rekening bank tidak ditemukan." },
+    };
   }
   if (message.includes("BANK_ACCOUNT_STATUS_FORBIDDEN")) {
-    return { success: false, error: { code: "FORBIDDEN", message: "Hanya Owner yang dapat mengarsipkan atau mengaktifkan rekening." } };
+    return {
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Hanya Owner yang dapat mengarsipkan atau mengaktifkan rekening.",
+      },
+    };
   }
   if (message.includes("duplicate key") || message.includes("unique")) {
-    return { success: false, error: { code: "TRANSACTION_FAILED", message: "Nomor rekening sudah terdaftar." } };
+    return {
+      success: false,
+      error: { code: "TRANSACTION_FAILED", message: "Nomor rekening sudah terdaftar." },
+    };
   }
   if (message.includes("Failed query")) {
     return { success: false, error: { code: "TRANSACTION_FAILED", message: fallback } };
@@ -91,7 +113,13 @@ export async function createBankAccount(
 ): Promise<ActionResponse<ReturnType<typeof bankAccountPayload>>> {
   const validation = createBankAccountSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: validation.error.issues[0]?.message ?? "Data rekening tidak valid." } };
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: validation.error.issues[0]?.message ?? "Data rekening tidak valid.",
+      },
+    };
   }
 
   const authResult = await authorize("create:bank_account");
@@ -99,17 +127,20 @@ export async function createBankAccount(
 
   try {
     const result = await db.transaction(async (tx) => {
-      const [created] = await tx.insert(bankAccount).values({
-        name: validation.data.name.trim(),
-        accountNumber: validation.data.accountNumber.trim(),
-        bankName: validation.data.bankName.trim(),
-        holderName: validation.data.holderName.trim(),
-        balance: "0.00",
-        cardColorFrom: validation.data.cardColorFrom,
-        cardColorTo: validation.data.cardColorTo,
-        cardTextColor: validation.data.cardTextColor,
-        isActive: true,
-      }).returning();
+      const [created] = await tx
+        .insert(bankAccount)
+        .values({
+          name: validation.data.name.trim(),
+          accountNumber: validation.data.accountNumber.trim(),
+          bankName: validation.data.bankName.trim(),
+          holderName: validation.data.holderName.trim(),
+          balance: "0.00",
+          cardColorFrom: validation.data.cardColorFrom,
+          cardColorTo: validation.data.cardColorTo,
+          cardTextColor: validation.data.cardTextColor,
+          isActive: true,
+        })
+        .returning();
 
       if (!created) throw new Error("BANK_ACCOUNT_CREATE_FAILED");
 
@@ -136,7 +167,9 @@ export async function createBankAccount(
         });
       }
 
-      const latest = await tx.query.bankAccount.findFirst({ where: eq(bankAccount.id, created.id) });
+      const latest = await tx.query.bankAccount.findFirst({
+        where: eq(bankAccount.id, created.id),
+      });
       if (!latest) throw new Error("BANK_ACCOUNT_NOT_FOUND");
       return latest;
     });
@@ -153,7 +186,13 @@ export async function updateBankAccount(
 ): Promise<ActionResponse<ReturnType<typeof bankAccountPayload>>> {
   const validation = updateBankAccountSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: validation.error.issues[0]?.message ?? "Data rekening tidak valid." } };
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: validation.error.issues[0]?.message ?? "Data rekening tidak valid.",
+      },
+    };
   }
 
   const authResult = await authorize("update:bank_account");
@@ -173,17 +212,21 @@ export async function updateBankAccount(
         }
       }
 
-      const [row] = await tx.update(bankAccount).set({
-        name: validation.data.name.trim(),
-        accountNumber: validation.data.accountNumber.trim(),
-        bankName: validation.data.bankName.trim(),
-        holderName: validation.data.holderName.trim(),
-        cardColorFrom: validation.data.cardColorFrom,
-        cardColorTo: validation.data.cardColorTo,
-        cardTextColor: validation.data.cardTextColor,
-        isActive: validation.data.isActive,
-        updatedAt: new Date(),
-      }).where(eq(bankAccount.id, validation.data.bankAccountId)).returning();
+      const [row] = await tx
+        .update(bankAccount)
+        .set({
+          name: validation.data.name.trim(),
+          accountNumber: validation.data.accountNumber.trim(),
+          bankName: validation.data.bankName.trim(),
+          holderName: validation.data.holderName.trim(),
+          cardColorFrom: validation.data.cardColorFrom,
+          cardColorTo: validation.data.cardColorTo,
+          cardTextColor: validation.data.cardTextColor,
+          isActive: validation.data.isActive,
+          updatedAt: new Date(),
+        })
+        .where(eq(bankAccount.id, validation.data.bankAccountId))
+        .returning();
 
       if (!row) throw new Error("BANK_ACCOUNT_UPDATE_FAILED");
 
@@ -205,12 +248,18 @@ export async function updateBankAccount(
   }
 }
 
-export async function setBankAccountActive(
-  input: { readonly bankAccountId: string; readonly isActive: boolean },
-): Promise<ActionResponse<{ readonly id: string; readonly isActive: boolean }>> {
-  const validation = updateBankAccountSchema.pick({ bankAccountId: true, isActive: true }).safeParse(input);
+export async function setBankAccountActive(input: {
+  readonly bankAccountId: string;
+  readonly isActive: boolean;
+}): Promise<ActionResponse<{ readonly id: string; readonly isActive: boolean }>> {
+  const validation = updateBankAccountSchema
+    .pick({ bankAccountId: true, isActive: true })
+    .safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Status rekening tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Status rekening tidak valid." },
+    };
   }
 
   const authResult = await authorize("delete:bank_account");
@@ -223,7 +272,8 @@ export async function setBankAccountActive(
       });
       if (!existing) throw new Error("BANK_ACCOUNT_NOT_FOUND");
 
-      const [row] = await tx.update(bankAccount)
+      const [row] = await tx
+        .update(bankAccount)
         .set({ isActive: validation.data.isActive, updatedAt: new Date() })
         .where(eq(bankAccount.id, validation.data.bankAccountId))
         .returning();
@@ -252,7 +302,13 @@ export async function postManualCashMovement(
 ): Promise<ActionResponse<typeof cashTransaction.$inferSelect>> {
   const validation = postManualCashMovementSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: validation.error.issues[0]?.message ?? "Mutasi kas tidak valid." } };
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: validation.error.issues[0]?.message ?? "Mutasi kas tidak valid.",
+      },
+    };
   }
 
   const authResult = await authorize("create:ledger");
@@ -261,7 +317,10 @@ export async function postManualCashMovement(
   try {
     const result = await db.transaction(async (tx) => {
       const account = await tx.query.bankAccount.findFirst({
-        where: and(eq(bankAccount.id, validation.data.bankAccountId), eq(bankAccount.isActive, true)),
+        where: and(
+          eq(bankAccount.id, validation.data.bankAccountId),
+          eq(bankAccount.isActive, true),
+        ),
       });
       if (!account) throw new Error("BANK_ACCOUNT_NOT_FOUND");
 
@@ -293,7 +352,13 @@ export async function transferBetweenBankAccounts(
 ): Promise<ActionResponse<{ readonly transferId: string }>> {
   const validation = transferBetweenBankAccountsSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: validation.error.issues[0]?.message ?? "Transfer rekening tidak valid." } };
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: validation.error.issues[0]?.message ?? "Transfer rekening tidak valid.",
+      },
+    };
   }
 
   const authResult = await authorize("create:ledger");
@@ -305,10 +370,15 @@ export async function transferBetweenBankAccounts(
       const accounts = await tx.query.bankAccount.findMany({
         where: and(
           eq(bankAccount.isActive, true),
-          inArray(bankAccount.id, [validation.data.fromBankAccountId, validation.data.toBankAccountId]),
+          inArray(bankAccount.id, [
+            validation.data.fromBankAccountId,
+            validation.data.toBankAccountId,
+          ]),
         ),
       });
-      const fromAccount = accounts.find((account) => account.id === validation.data.fromBankAccountId);
+      const fromAccount = accounts.find(
+        (account) => account.id === validation.data.fromBankAccountId,
+      );
       const toAccount = accounts.find((account) => account.id === validation.data.toBankAccountId);
       if (!fromAccount || !toAccount) throw new Error("BANK_ACCOUNT_NOT_FOUND");
 

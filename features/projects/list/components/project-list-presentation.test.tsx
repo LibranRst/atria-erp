@@ -33,11 +33,7 @@ function project(overrides: Partial<ProjectItem> = {}): ProjectItem {
 describe("project list presentation", () => {
   test("uses a compact independent project card", () => {
     const html = renderToStaticMarkup(
-      <ProjectListCard
-        project={project()}
-        isAllowedToCreate
-        onEdit={() => undefined}
-      />,
+      <ProjectListCard project={project()} isAllowedToCreate onEdit={() => undefined} />,
     );
 
     expect(html).toContain("h-[74px]");
@@ -47,11 +43,11 @@ describe("project list presentation", () => {
     expect(html).toContain("flex min-h-10 min-w-0 pr-11");
     expect(html).toContain("inline-flex h-6 shrink-0 items-center");
     expect(html).toContain("bg-surface-container-low/70");
-    expect(html).not.toContain("bg-success/[0.08]");
+    expect(html).not.toContain("bg-success/8");
     expect(html).not.toContain("folder_open");
     expect(html).toContain("Budget masih terkendali");
     expect(html).toContain("Buka project");
-    expect(html).toContain("bg-[#007AFF]/[0.08]");
+    expect(html).toContain("bg-[#007AFF]/8");
     expect(html).toContain("rounded-full");
     expect(html).not.toContain("h-40");
     expect(html).not.toContain("progressbar");
@@ -94,7 +90,7 @@ describe("project list presentation", () => {
     expect(html).toContain('data-density="inline"');
     expect(html).toContain('data-control-mode="filter"');
     expect(html).toContain('aria-label="Buka cari proyek"');
-    expect(html).toContain("bg-white/[0.96]");
+    expect(html).toContain("bg-white/96");
     expect(html).not.toContain("sticky-search-surface");
     expect(html).not.toContain('class="h-px"');
   });

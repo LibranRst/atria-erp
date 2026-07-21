@@ -47,6 +47,7 @@ The visual direction is **luxury field-ops minimalism**: dark solid surfaces, hi
 ### Task 1: Install the icon dependency
 
 **Files:**
+
 - Modify: `package.json`
 - Modify: `bun.lock`
 
@@ -78,6 +79,7 @@ The exact `lucide-react` version should be whatever Bun resolves.
 ### Task 2: Create the route-aware sticky bottom navigation
 
 **Files:**
+
 - Create: `components/layout/bottom-nav.tsx`
 
 - [ ] **Step 1: Create `components/layout/bottom-nav.tsx` with this complete implementation**
@@ -132,7 +134,7 @@ export function BottomNav(): React.JSX.Element {
   return (
     <nav
       aria-label="Primary mobile navigation"
-      className="sticky bottom-0 z-20 h-16 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,0.24)]"
+      className="border-border bg-surface sticky bottom-0 z-20 h-16 border-t px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,0.24)]"
     >
       <ul className="grid h-full grid-cols-4 items-center gap-1">
         {NAV_ITEMS.map((item: NavItem): React.JSX.Element => {
@@ -144,7 +146,7 @@ export function BottomNav(): React.JSX.Element {
               <Link
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex min-h-12 min-w-12 flex-col items-center justify-center gap-1 rounded-2xl px-2 text-[0.68rem] font-semibold leading-none transition-colors duration-150 ${
+                className={`flex min-h-12 min-w-12 flex-col items-center justify-center gap-1 rounded-2xl px-2 text-[0.68rem] leading-none font-semibold transition-colors duration-150 ${
                   isActive
                     ? "bg-primary-light text-primary"
                     : "text-muted hover:bg-elevated hover:text-secondary"
@@ -167,13 +169,13 @@ export function BottomNav(): React.JSX.Element {
 Check the code includes:
 
 ```tsx
-className="sticky bottom-0 ... h-16 border-t border-border bg-surface ..."
+className = "sticky bottom-0 ... h-16 border-t border-border bg-surface ...";
 ```
 
 Check every navigation `Link` includes at least:
 
 ```tsx
-className="flex min-h-12 min-w-12 ..."
+className = "flex min-h-12 min-w-12 ...";
 ```
 
 This makes each tab target at least `48px` in both dimensions.
@@ -181,6 +183,7 @@ This makes each tab target at least `48px` in both dimensions.
 ### Task 3: Create the mobile app shell wrapper
 
 **Files:**
+
 - Create: `components/layout/mobile-shell.tsx`
 
 - [ ] **Step 1: Create `components/layout/mobile-shell.tsx` with this complete implementation**
@@ -194,11 +197,9 @@ type MobileShellProps = Readonly<{
 
 export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
   return (
-    <div className="min-h-dvh bg-deep text-text-primary">
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden border-x border-border bg-deep shadow-2xl shadow-black/30">
-        <main className="flex-1 overflow-y-auto px-4 pb-6 pt-6">
-          {children}
-        </main>
+    <div className="bg-deep text-text-primary min-h-dvh">
+      <div className="border-border bg-deep mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden border-x shadow-2xl shadow-black/30">
+        <main className="flex-1 overflow-y-auto px-4 pt-6 pb-6">{children}</main>
         <BottomNav />
       </div>
     </div>
@@ -211,13 +212,13 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
 Confirm the outer frame includes:
 
 ```tsx
-className="mx-auto flex min-h-dvh w-full max-w-md flex-col ..."
+className = "mx-auto flex min-h-dvh w-full max-w-md flex-col ...";
 ```
 
 Confirm the content area includes:
 
 ```tsx
-className="flex-1 overflow-y-auto ..."
+className = "flex-1 overflow-y-auto ...";
 ```
 
 This keeps content vertically scrollable without being covered by the sticky navigation.
@@ -225,6 +226,7 @@ This keeps content vertically scrollable without being covered by the sticky nav
 ### Task 4: Integrate the mobile shell into the root layout
 
 **Files:**
+
 - Modify: `app/layout.tsx`
 
 - [ ] **Step 1: Replace `app/layout.tsx` with this complete implementation**
@@ -256,11 +258,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>): React.JSX.Element {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full bg-deep">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <body className="bg-deep min-h-full">
         <MobileShell>{children}</MobileShell>
       </body>
     </html>
@@ -279,6 +278,7 @@ export default function RootLayout(...): React.JSX.Element
 ### Task 5: Replace the home page with shell-native welcome content
 
 **Files:**
+
 - Modify: `app/page.tsx`
 
 - [ ] **Step 1: Replace `app/page.tsx` with this complete implementation**
@@ -288,37 +288,36 @@ export default function Home(): React.JSX.Element {
   return (
     <section className="flex min-h-[calc(100dvh-7rem)] flex-col justify-between gap-8">
       <div className="space-y-6">
-        <div className="rounded-3xl border border-border bg-surface p-5 shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted">
-            Atria ERP
-          </p>
+        <div className="border-border bg-surface rounded-3xl border p-5 shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
+          <p className="text-muted text-xs font-semibold tracking-[0.24em] uppercase">Atria ERP</p>
           <div className="mt-5 space-y-3">
-            <h1 className="text-3xl font-bold tracking-tight text-text-primary">
+            <h1 className="text-text-primary text-3xl font-bold tracking-tight">
               Finance-first control room for interior projects.
             </h1>
-            <p className="text-sm leading-6 text-secondary">
-              Pantau proyek, ledger kas, dan pengeluaran lapangan dari satu shell seluler yang siap dipakai Project Manager di lapangan.
+            <p className="text-secondary text-sm leading-6">
+              Pantau proyek, ledger kas, dan pengeluaran lapangan dari satu shell seluler yang siap
+              dipakai Project Manager di lapangan.
             </p>
           </div>
         </div>
 
         <div className="grid gap-3">
-          <div className="rounded-2xl border border-border bg-elevated p-4">
-            <p className="text-xs font-medium text-muted">Primary workflow</p>
-            <p className="mt-1 text-base font-semibold text-text-primary">
+          <div className="border-border bg-elevated rounded-2xl border p-4">
+            <p className="text-muted text-xs font-medium">Primary workflow</p>
+            <p className="text-text-primary mt-1 text-base font-semibold">
               Projects → Ledger → Add Expense → Profile
             </p>
           </div>
-          <div className="rounded-2xl border border-border bg-surface p-4">
-            <p className="text-xs font-medium text-muted">Design foundation</p>
-            <p className="mt-1 text-base font-semibold text-text-primary">
+          <div className="border-border bg-surface rounded-2xl border p-4">
+            <p className="text-muted text-xs font-medium">Design foundation</p>
+            <p className="text-text-primary mt-1 text-base font-semibold">
               iOS 26 Solid tokens, 48px touch targets, and sticky thumb navigation.
             </p>
           </div>
         </div>
       </div>
 
-      <p className="pb-2 text-center text-xs leading-5 text-muted">
+      <p className="text-muted pb-2 text-center text-xs leading-5">
         Gunakan navigasi bawah untuk berpindah ke modul utama Atria ERP.
       </p>
     </section>
@@ -331,9 +330,9 @@ export default function Home(): React.JSX.Element {
 Check the page no longer contains generic boilerplate classes such as:
 
 ```tsx
-bg-zinc-50
-text-black
-dark:bg-black
+bg - zinc - 50;
+text - black;
+dark: bg - black;
 ```
 
 The page should use token classes such as `bg-surface`, `bg-elevated`, `border-border`, `text-text-primary`, `text-secondary`, and `text-muted`.
@@ -341,6 +340,7 @@ The page should use token classes such as `bg-surface`, `bg-elevated`, `border-b
 ### Task 6: Verify linting, build, and local dev startup
 
 **Files:**
+
 - No code changes expected unless verification finds a concrete compile or lint error.
 
 - [ ] **Step 1: Run ESLint**
@@ -386,6 +386,7 @@ Expected: Next.js dev server starts on `http://localhost:3001`. Stop the server 
 ### Task 7: Inspect the final diff and commit
 
 **Files:**
+
 - All changed files from prior tasks.
 
 - [ ] **Step 1: Review working tree status**

@@ -33,11 +33,6 @@ export interface BankAccountItem {
 }
 
 export type FilterStatus =
-  | "ALL"
-  | "NEEDS_VERIFICATION"
-  | "NEEDS_APPROVAL"
-  | "READY_TO_PAY"
-  | "PAID"
-  | "REJECTED";
+  "ALL" | "NEEDS_VERIFICATION" | "NEEDS_APPROVAL" | "READY_TO_PAY" | "PAID" | "REJECTED";
 
 export type ExpenseListTab = "FIELD_CLAIMS" | "VENDOR_BILLS";

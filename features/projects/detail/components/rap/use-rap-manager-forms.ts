@@ -45,9 +45,7 @@ export function useRapManagerForms({
   readonly rapForm: RapFormState;
   readonly setRapForm: Dispatch<SetStateAction<RapFormState>>;
   readonly categoryPlanForm: CategoryPlanFormState;
-  readonly setCategoryPlanForm: Dispatch<
-    SetStateAction<CategoryPlanFormState>
-  >;
+  readonly setCategoryPlanForm: Dispatch<SetStateAction<CategoryPlanFormState>>;
   readonly editingRapItemId: string | null;
   readonly editingCategoryPlanItemId: string | null;
   readonly activeRapStage: RapSetupStage;
@@ -83,27 +81,22 @@ export function useRapManagerForms({
   const [categoryPlanForm, setCategoryPlanForm] =
     useState<CategoryPlanFormState>(emptyCategoryPlanForm);
   const [editingRapItemId, setEditingRapItemId] = useState<string | null>(null);
-  const [editingCategoryPlanItemId, setEditingCategoryPlanItemId] = useState<
-    string | null
-  >(null);
+  const [editingCategoryPlanItemId, setEditingCategoryPlanItemId] = useState<string | null>(null);
   const [activeRapStage, setActiveRapStage] = useState<RapSetupStage>(() =>
     getInitialRapStage(rap),
   );
-  const [rapOverviewFilter, setRapOverviewFilter] =
-    useState<RapOverviewFilter>(getInitialRapOverviewFilter);
-  const [rapDetailItemId, setRapDetailItemId] = useState<string | null>(null);
-  const [packageDetailItemId, setPackageDetailItemId] = useState<string | null>(
-    null,
+  const [rapOverviewFilter, setRapOverviewFilter] = useState<RapOverviewFilter>(
+    getInitialRapOverviewFilter,
   );
+  const [rapDetailItemId, setRapDetailItemId] = useState<string | null>(null);
+  const [packageDetailItemId, setPackageDetailItemId] = useState<string | null>(null);
   const [internalRevisionOpen, setInternalRevisionOpen] = useState(false);
   const [internalRevisionReason, setInternalRevisionReason] = useState("");
   const [reviseMaterial, setReviseMaterial] = useState(false);
   const [revisionPackageIds, setRevisionPackageIds] = useState<string[]>([]);
 
   function handleMaterialChange(materialId: string): void {
-    setRapForm((current) =>
-      applyMaterialToRapForm({ current, materialId, materials }),
-    );
+    setRapForm((current) => applyMaterialToRapForm({ current, materialId, materials }));
   }
 
   function handleRapTemplateChange(templateId: string): void {
@@ -148,9 +141,7 @@ export function useRapManagerForms({
 
   function openAddCategoryPlanForm(categoryCode: "TUKANG" | "SUBCON"): void {
     setEditingCategoryPlanItemId(null);
-    setCategoryPlanForm(
-      buildNewCategoryPlanForm({ categoryCode, budgetCategories }),
-    );
+    setCategoryPlanForm(buildNewCategoryPlanForm({ categoryCode, budgetCategories }));
     setShowCategoryPlanForm(true);
   }
 
@@ -168,9 +159,7 @@ export function useRapManagerForms({
 
   function toggleRevisionPackage(id: string): void {
     setRevisionPackageIds((current) =>
-      current.includes(id)
-        ? current.filter((itemId) => itemId !== id)
-        : [...current, id],
+      current.includes(id) ? current.filter((itemId) => itemId !== id) : [...current, id],
     );
   }
 

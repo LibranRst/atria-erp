@@ -7,4 +7,5 @@ export type DashboardCategory = FinanceDashboardOverview["categories"][number];
 export type DashboardTransaction = FinanceDashboardOverview["recentTransactions"][number];
 export type DashboardPageTab = FinanceDashboardOverview["dashboardTabs"]["defaultTab"];
 export type DashboardCashDue = FinanceDashboardOverview["dashboardDetails"]["cashDue"][number];
-export type DashboardMaterialIssue = FinanceDashboardOverview["dashboardDetails"]["materials"][number];
+export type DashboardMaterialIssue =
+  FinanceDashboardOverview["dashboardDetails"]["materials"][number];

@@ -29,21 +29,14 @@ export function summarizeProjectPortfolio(
 
   return {
     activeCount: activeProjects.length,
-    attentionCount: operationalProjects.filter(
-      (project) => project.effectiveHealth !== "HEALTHY",
-    ).length,
+    attentionCount: operationalProjects.filter((project) => project.effectiveHealth !== "HEALTHY")
+      .length,
     activeContractValue: activeProjects.reduce(
       (sum, project) => sum + project.totalContractValue,
       0,
     ),
-    activeInternalBudget: activeProjects.reduce(
-      (sum, project) => sum + project.internalBudget,
-      0,
-    ),
-    activeActualCost: activeProjects.reduce(
-      (sum, project) => sum + project.actualCost,
-      0,
-    ),
+    activeInternalBudget: activeProjects.reduce((sum, project) => sum + project.internalBudget, 0),
+    activeActualCost: activeProjects.reduce((sum, project) => sum + project.actualCost, 0),
     activeRemainingBudget: activeProjects.reduce(
       (sum, project) => sum + project.remainingBudget,
       0,
@@ -56,8 +49,7 @@ export function formatRp(value: number): string {
 }
 
 export function formatCompactRp(value: number): string {
-  if (value >= 1_000_000_000)
-    return `Rp ${(value / 1_000_000_000).toFixed(1)}M`;
+  if (value >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(1)}M`;
   if (value >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(1)}jt`;
   return formatRp(value);
 }
@@ -72,7 +64,5 @@ export function matchesFilter(project: ProjectItem, filter: FilterId): boolean {
 }
 
 export function toFilterId(value: string | null): FilterId {
-  return PROJECT_FILTERS.some((filter) => filter.id === value)
-    ? value as FilterId
-    : "ALL";
+  return PROJECT_FILTERS.some((filter) => filter.id === value) ? (value as FilterId) : "ALL";
 }

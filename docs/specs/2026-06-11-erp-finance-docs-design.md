@@ -1,12 +1,15 @@
 # Design Specification: Finance-First ERP Documentation System
+
 **Date**: 2026-06-11
 **Status**: APPROVED
 **Author**: Tech Lead / Architect
 
 ## 1. Overview
+
 Rebuilding an internal ERP application for an interior design and contractor company from scratch, shifting the focus from a previous project-management-centric design to a **finance-first** mobile UX operational system.
 
 ## 2. Key Architectural & Product Decisions
+
 - **Ledger-Based Transaction Model**: Every financial movement (client receipt, vendor payment, petty cash expense) will be recorded as a transaction mapped to bank accounts and specific BoQ budget items. This ensures high accuracy and auditability.
 - **Mobile-First Interface**: Primary UX is optimized for single-hand mobile usage (bottom navigation, large tap targets, bottom sheets for inputs, cards instead of complex tables).
 - **Flexible Billing**: Client invoices support milestone-based terms as well as ad-hoc billings.
@@ -14,7 +17,9 @@ Rebuilding an internal ERP application for an interior design and contractor com
 - **Gemini-Powered AI Briefing**: Daily owner briefing summarizing profitability, cash flows, and suggesting actionable steps without direct write permissions to the database.
 
 ## 3. Documentation Structure
+
 The project will be fully documented using the following file tree:
+
 - `/README.md`
 - `/AGENTS.md`
 - `/docs/01-product/PRD.md`

@@ -7,9 +7,7 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function ProjectDetailPage({
-  params,
-}: PageProps): Promise<React.JSX.Element> {
+export default async function ProjectDetailPage({ params }: PageProps): Promise<React.JSX.Element> {
   const { id: projectId } = await params;
   const projectTabsProps = await getProjectDetailData(projectId);
 

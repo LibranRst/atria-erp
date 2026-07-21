@@ -14,11 +14,7 @@ import {
   vendor,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import {
-  assertPermission,
-  resolveRoleName,
-  type PermissionKey,
-} from "@/lib/auth/permissions";
+import { assertPermission, resolveRoleName, type PermissionKey } from "@/lib/auth/permissions";
 import type { ActionResponse } from "@/lib/types/action-response";
 import type {
   BudgetAllocationSettingRow,
@@ -76,8 +72,7 @@ export async function assertSettingsPermission(
       success: false,
       error: {
         code: "FORBIDDEN",
-        message:
-          error instanceof Error ? error.message : "Akses Settings ditolak.",
+        message: error instanceof Error ? error.message : "Akses Settings ditolak.",
       },
     };
   }
@@ -220,25 +215,14 @@ export function mapMaterial(
   };
 }
 
-export async function getSettingsContextForUser(
-  user: SessionUser,
-): Promise<SettingsContext> {
+export async function getSettingsContextForUser(user: SessionUser): Promise<SettingsContext> {
   return {
     roleName: await resolveRoleName(user.roleId ?? ""),
     permissions: {
-      canManageBudgetSettings: await hasPermission(
-        user,
-        "manage:budget_settings",
-      ),
-      canManageExpenseCategories: await hasPermission(
-        user,
-        "manage:expense_categories",
-      ),
+      canManageBudgetSettings: await hasPermission(user, "manage:budget_settings"),
+      canManageExpenseCategories: await hasPermission(user, "manage:expense_categories"),
       canManageItemLibrary: await hasPermission(user, "manage:item_library"),
-      canManageMaterialSettings: await hasPermission(
-        user,
-        "manage:material_settings",
-      ),
+      canManageMaterialSettings: await hasPermission(user, "manage:material_settings"),
       canManageUsers: await hasPermission(user, "manage:users"),
       canManageVendors: await hasPermission(user, "manage:vendors"),
     },

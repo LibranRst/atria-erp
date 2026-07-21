@@ -3,11 +3,7 @@
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import {
-  approval,
-  bankAccount,
-  projectCost,
-} from "@/db/schema";
+import { approval, bankAccount, projectCost } from "@/db/schema";
 import {
   ensureCanonicalExpenseForProjectCost,
   syncProjectBudgetCategory,
@@ -15,15 +11,12 @@ import {
 import type { ActionResponse } from "@/lib/types/action-response";
 import { mutateBalance } from "@/lib/finance/balance-mutation";
 import { authorizeFieldRequestAction } from "./field-request-auth";
-import {
-  mapPayFieldRequestError,
-  writeFieldRequestAuditTx,
-} from "./field-request-utils";
+import { mapPayFieldRequestError, writeFieldRequestAuditTx } from "./field-request-utils";
 
 export async function payFieldRequest(
   projectCostId: string,
   bankAccountId: string,
-  referenceNumber: string
+  referenceNumber: string,
 ): Promise<ActionResponse<{ costId: string; nextBalance: number }>> {
   try {
     const authResult = await authorizeFieldRequestAction({
@@ -58,7 +51,7 @@ export async function payFieldRequest(
         const appRecord = await tx.query.approval.findFirst({
           where: and(
             eq(approval.referenceType, "project_cost"),
-            eq(approval.referenceId, projectCostId)
+            eq(approval.referenceId, projectCostId),
           ),
         });
 
@@ -67,7 +60,9 @@ export async function payFieldRequest(
         }
       }
 
-      const accountBefore = await tx.query.bankAccount.findFirst({ where: eq(bankAccount.id, bankAccountId) });
+      const accountBefore = await tx.query.bankAccount.findFirst({
+        where: eq(bankAccount.id, bankAccountId),
+      });
       if (!accountBefore) throw new Error("BANK_ACCOUNT_NOT_FOUND");
       const oldBalance = Number(accountBefore.balance);
       const ledgerTx = await mutateBalance({
@@ -81,7 +76,9 @@ export async function payFieldRequest(
         referenceId: cost.id,
         userId: currentUser.id,
       });
-      const accountAfter = await tx.query.bankAccount.findFirst({ where: eq(bankAccount.id, bankAccountId) });
+      const accountAfter = await tx.query.bankAccount.findFirst({
+        where: eq(bankAccount.id, bankAccountId),
+      });
       if (!accountAfter) throw new Error("BANK_ACCOUNT_NOT_FOUND");
       const newBalance = Number(accountAfter.balance);
 

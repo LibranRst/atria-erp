@@ -9,14 +9,11 @@ import {
   submitExpenseDraft,
 } from "@/app/actions/finance/expense-drafts";
 import { db } from "@/db";
+import { approval, auditLog, formDraft, projectCost, projectExpenses } from "@/db/schema";
 import {
-  approval,
-  auditLog,
-  formDraft,
-  projectCost,
-  projectExpenses,
-} from "@/db/schema";
-import { createBlankExpenseDraft, createBlankExpenseLine } from "@/features/expenses/components/expense-form-utils";
+  createBlankExpenseDraft,
+  createBlankExpenseLine,
+} from "@/features/expenses/components/expense-form-utils";
 import type { ExpenseDraftPayload } from "@/features/expenses/components/expense-form-types";
 import { auth } from "@/lib/auth";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
@@ -94,7 +91,9 @@ describe("expense draft actions", () => {
     if (createdCostIds.length > 0) {
       await db.delete(approval).where(inArray(approval.referenceId, createdCostIds));
       await db.delete(auditLog).where(inArray(auditLog.targetId, createdCostIds));
-      await db.delete(projectExpenses).where(inArray(projectExpenses.legacyProjectCostId, createdCostIds));
+      await db
+        .delete(projectExpenses)
+        .where(inArray(projectExpenses.legacyProjectCostId, createdCostIds));
       await db.delete(projectCost).where(inArray(projectCost.id, createdCostIds));
       await db.transaction(async (tx) => {
         await syncProjectBudgetCategory({
@@ -137,7 +136,9 @@ describe("expense draft actions", () => {
     const listed = await listExpenseDrafts();
     expect(listed.success).toBe(true);
     if (listed.success) {
-      expect(listed.data.filter((draft) => [first.data.id, second.data.id].includes(draft.id))).toHaveLength(2);
+      expect(
+        listed.data.filter((draft) => [first.data.id, second.data.id].includes(draft.id)),
+      ).toHaveLength(2);
     }
 
     const discarded = await discardExpenseDraft({ draftId: second.data.id });

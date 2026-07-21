@@ -1,6 +1,7 @@
 # API and Server Actions
 
 ## Standards
+
 - Every mutation uses a Next.js Server Action.
 - Every input payload is validated with Zod.
 - Every mutation reads the active user session from Better Auth on the server.
@@ -10,6 +11,7 @@
 - Responses use `ActionResponse<T>`.
 
 ## Existing Finance Actions to Preserve
+
 - `submitFieldRequest`, `submitFieldRequests`, `verifyFieldRequest`, `approveFieldRequest`, `payFieldRequest`
 - `submitVendorBill`, `scheduleVendorBillPayment`, `payVendorBill`
 - `recordClientPayment`
@@ -19,6 +21,7 @@
 ## Project Budget Control Actions
 
 Expense and vendor bill write paths are category-first. `projectBudgetCategoryId` is required. Legacy `projectBudgetItemId` may still be read from compatibility records, but active writes must store it as `null` and must not use it for budget mutation.
+
 - `createProjectBudgetFromRatios(projectId, contractValue, ratioPresetId?)`
 - `updateProjectBudgetCategoryAllocation(projectBudgetCategoryId, ratioPercent | allocatedAmount)`
 - `approveProjectBudget(projectBudgetId)`
@@ -33,6 +36,7 @@ The legacy mutation exports `createProjectBudget`, `createBudgetItem`, `submitBu
 `createProjectBudgetFromRatios` reads the active Budget Allocation Setting. Code constants are fallback/seed defaults only.
 
 ## Settings Actions
+
 - `getSettingsOverview()`
 - `getSettingsHubOverview()`, `getBudgetSettings()`, `getExpenseCategorySettings()`, `getItemLibrarySettings()`, `getMaterialSettings()`
 - `updateBudgetAllocationDefaults(input)` (atomic aggregate save; enabled category total must be `<= 1`)
@@ -74,6 +78,7 @@ The feature requires `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED=true` and is hard-disab
 - PM/Designer/Sales have no Settings mutation access in v1.
 
 ## New Material-Control Actions
+
 - `createMaterialCategory`
 - `createMaterial`
 - `updateMaterial`
@@ -106,6 +111,7 @@ The feature requires `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED=true` and is hard-disab
 - `generateClientInvoiceSchedule`
 
 ## Tukang/Subcon Package Actions
+
 - `createProjectCategoryPlanItem`
 - `updateProjectCategoryPlanItem`
 - `deleteProjectCategoryPlanItem`
@@ -115,6 +121,7 @@ The feature requires `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED=true` and is hard-disab
 These actions create lightweight internal package plans only for `TUKANG` and `SUBCON`. Material remains in RAP Material Plan. Operasional and Lain-lain remain fast expense categories.
 
 ## Required Validation Rules
+
 - UUID fields must be validated.
 - Quantities must be positive for stock in/reserve/use/return and non-zero for adjustments.
 - Monetary fields must be non-negative unless explicitly representing a discount.
@@ -132,6 +139,7 @@ These actions create lightweight internal package plans only for `TUKANG` and `S
 - Budget ratio percentages must be between 0 and 1, and allocated amounts must be non-negative.
 
 ## Transaction Rules
+
 - `recordStockIn`: increases `material_inventory.current_stock`, updates cost context, inserts `stock_movement`, writes `audit_log`.
 - `reserveMaterialForProject`: checks available stock, increases `reserved_stock`, inserts movement, writes audit.
 - `useMaterialForProject`: decreases stock/reservation, inserts movement/audit, and creates non-cash project cost for standalone stock use without duplicating direct-use expense.
@@ -139,10 +147,12 @@ These actions create lightweight internal package plans only for `TUKANG` and `S
 - `adjustMaterialStock`: changes stock only with note and permission, inserts movement, writes audit.
 
 ## Expense and Vendor Bill Links
+
 Canonical `project_expenses`, legacy `project_cost`, and `vendor_bill` may optionally link to `material_master`, `project_rap_item`, and `stock_movement`. These links must not be required for non-material operational expenses and must be rejected when the category is not `MATERIAL`.
 
 Tukang/Subcon expense and vendor bill flows may optionally link to `project_category_plan_item`. Operasional and Lain-lain should not expose package selectors in v1.
 
 ## Dashboard Read Models
+
 - `getProjectBudgetDashboard` returns contract value, internal budget, actual cost, remaining budget, used percentage, projected margin, and category usage cards.
 - `getOwnerBudgetDashboard` returns portfolio totals, category totals, risky projects, near-limit categories, material shortage, reusable stock, due bills, and recent expenses.

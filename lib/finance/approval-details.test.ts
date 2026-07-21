@@ -210,10 +210,7 @@ describe("approval detail mapping", () => {
       priority: "NORMAL" as const,
       priorityReason: "Perlu keputusan Owner",
     };
-    const ranked = rankPendingApprovals(
-      [overdue, overrun],
-      new Date("2026-06-25T00:00:00.000Z"),
-    );
+    const ranked = rankPendingApprovals([overdue, overrun], new Date("2026-06-25T00:00:00.000Z"));
     expect(ranked[0]?.id).toBe(overrun.id);
     expect(ranked[0]?.priorityReason).toBe("Melewati batas budget");
     expect(ranked[1]?.priority).toBe("CRITICAL");

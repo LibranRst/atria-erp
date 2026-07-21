@@ -1,9 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  createProjectFormDraft,
-  getProjectDateError,
-} from "./project-form-draft";
+import { createProjectFormDraft, getProjectDateError } from "./project-form-draft";
 import { createProjectSchema } from "@/lib/validations/project";
 
 describe("project form draft", () => {

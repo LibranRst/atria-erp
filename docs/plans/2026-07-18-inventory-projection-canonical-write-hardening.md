@@ -30,4 +30,3 @@ Close the material-control correctness holes found after the recent Antigravity 
 - TypeScript and targeted ESLint.
 - Relevant material, approval, finance, draft-validation, and UI presentation tests.
 - Production build if the targeted checks pass.
-

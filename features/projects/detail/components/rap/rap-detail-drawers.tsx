@@ -6,15 +6,10 @@ import { BottomSheet, useSheetPresenceValue } from "@/components/ui";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { Badge, type BadgeStatus } from "@/components/ui/badge";
 import { MoneyValue } from "@/components/ui/page-primitives";
-import type {
-  ProjectCategoryPlanItemView,
-  RapItemView,
-  RapView,
-} from "../shared/rap-rab-manager";
+import type { ProjectCategoryPlanItemView, RapItemView, RapView } from "../shared/rap-rab-manager";
 
 function toBadgeStatus(status: string): BadgeStatus {
-  if (status === "LOCKED" || status === "READY" || status === "APPROVED")
-    return "APPROVED";
+  if (status === "LOCKED" || status === "READY" || status === "APPROVED") return "APPROVED";
   if (status === "SHORTAGE" || status === "WAITING_PURCHASE") return "WARNING";
   if (status === "DRAFT" || status === "PLANNED") return "DRAFT";
   return "PRIMARY";
@@ -61,7 +56,7 @@ export function RapItemDetailDrawer({
                 setRapDetailItemId(null);
                 openEditRapForm(item);
               }}
-              className="min-h-12 rounded-full bg-surface-container text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
+              className="bg-surface-container min-h-12 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
             >
               Edit Material
             </button>
@@ -72,7 +67,7 @@ export function RapItemDetailDrawer({
                 setRapDetailItemId(null);
                 handleDeleteRapItem(item.id);
               }}
-              className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error transition active:scale-[0.97] disabled:opacity-50"
+              className="bg-error-container/25 text-error min-h-12 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
             >
               Hapus
             </button>
@@ -83,46 +78,55 @@ export function RapItemDetailDrawer({
       <div className="space-y-md">
         <div className="flex items-start justify-between gap-3 px-1">
           <div className="min-w-0">
-            <p className="text-base font-bold text-on-surface">{item.name}</p>
-            <p className="mt-0.5 text-xs text-on-surface-variant">
+            <p className="text-on-surface text-base font-bold">{item.name}</p>
+            <p className="text-on-surface-variant mt-0.5 text-xs">
               {item.area} · {item.materialName}
             </p>
           </div>
-          <Badge status={toBadgeStatus(item.status)}>
-            {formatBusinessLabel(item.status)}
-          </Badge>
+          <Badge status={toBadgeStatus(item.status)}>{formatBusinessLabel(item.status)}</Badge>
         </div>
 
-        <div className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15 divide-y divide-outline-variant/15">
+        <div className="bg-surface-container-lowest ring-outline-variant/15 divide-outline-variant/15 divide-y overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
           {item.description && (
-            <div className="px-4 py-3.5 bg-surface-container-low/20">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Spesifikasi / Penggunaan</p>
-              <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.description}</p>
+            <div className="bg-surface-container-low/20 px-4 py-3.5">
+              <p className="text-on-surface-variant text-[10px] font-bold tracking-wide uppercase">
+                Spesifikasi / Penggunaan
+              </p>
+              <p className="text-on-surface mt-1 text-xs leading-relaxed">{item.description}</p>
             </div>
           )}
 
           <DetailRow label="Total Kebutuhan" value={`${item.totalQuantity} ${item.unit}`} />
-          <DetailRow 
-            label="Perlu Dibeli" 
+          <DetailRow
+            label="Perlu Dibeli"
             value={
               <span className={item.needToBuy > 0 ? "text-error" : "text-on-surface"}>
                 {item.needToBuy} {item.unit}
               </span>
-            } 
+            }
           />
           <DetailRow label="Stok Fisik Tersedia" value={`${item.availableStock} ${item.unit}`} />
           <DetailRow label="Stok Terreservasi" value={`${item.reservedQuantity} ${item.unit}`} />
           <DetailRow label="Stok Terpakai" value={`${item.usedQuantity} ${item.unit}`} />
-          
-          <DetailRow 
-            label="Estimasi Internal" 
-            value={<MoneyValue amount={Number(item.estimatedTotalCost)} variant="compactWithFull" size="sm" align="right" />} 
+
+          <DetailRow
+            label="Estimasi Internal"
+            value={
+              <MoneyValue
+                amount={Number(item.estimatedTotalCost)}
+                variant="compactWithFull"
+                size="sm"
+                align="right"
+              />
+            }
           />
 
           {item.internalNote && (
             <div className="px-4 py-3.5">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Catatan Internal</p>
-              <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.internalNote}</p>
+              <p className="text-on-surface-variant text-[10px] font-bold tracking-wide uppercase">
+                Catatan Internal
+              </p>
+              <p className="text-on-surface mt-1 text-xs leading-relaxed">{item.internalNote}</p>
             </div>
           )}
         </div>
@@ -180,7 +184,7 @@ export function PackageDetailDrawer({
                     setPackageDetailItemId(null);
                     openEditCategoryPlanForm(item);
                   }}
-                  className="min-h-12 rounded-full bg-surface-container text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
+                  className="bg-surface-container min-h-12 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
                 >
                   Edit
                 </button>
@@ -190,7 +194,7 @@ export function PackageDetailDrawer({
                   onClick={() => {
                     handleMarkCategoryPlanActive(item.id);
                   }}
-                  className="min-h-12 rounded-full bg-primary text-xs font-bold text-on-primary transition active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="bg-primary text-on-primary flex min-h-12 items-center justify-center gap-2 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
                 >
                   {pending ? "Memproses…" : "Tandai Siap"}
                 </button>
@@ -204,7 +208,7 @@ export function PackageDetailDrawer({
                   setPackageDetailItemId(null);
                   handleDeleteCategoryPlanItem(item.id);
                 }}
-                className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error transition active:scale-[0.97] disabled:opacity-50"
+                className="bg-error-container/25 text-error min-h-12 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
               >
                 Hapus Paket
               </button>
@@ -216,7 +220,7 @@ export function PackageDetailDrawer({
                 onClick={() => {
                   handleReopenPackage(item.id);
                 }}
-                className="min-h-12 rounded-full bg-primary/10 text-xs font-bold text-primary transition active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-2"
+                className="bg-primary/10 text-primary flex min-h-12 items-center justify-center gap-2 rounded-full text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
               >
                 {pending ? "Memproses…" : "Edit Lagi"}
               </button>
@@ -228,8 +232,8 @@ export function PackageDetailDrawer({
       <div className="space-y-md">
         <div className="flex items-start justify-between gap-3 px-1">
           <div className="min-w-0">
-            <p className="text-base font-bold text-on-surface">{item.name}</p>
-            <p className="mt-0.5 text-xs text-on-surface-variant">
+            <p className="text-on-surface text-base font-bold">{item.name}</p>
+            <p className="text-on-surface-variant mt-0.5 text-xs">
               {item.expenseCategoryName} · {item.area}
             </p>
           </div>
@@ -238,49 +242,71 @@ export function PackageDetailDrawer({
           </Badge>
         </div>
 
-        <div className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15 divide-y divide-outline-variant/15">
+        <div className="bg-surface-container-lowest ring-outline-variant/15 divide-outline-variant/15 divide-y overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
           {item.scopeDescription && (
-            <div className="px-4 py-3.5 bg-surface-container-low/20">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Lingkup Pekerjaan</p>
-              <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.scopeDescription}</p>
+            <div className="bg-surface-container-low/20 px-4 py-3.5">
+              <p className="text-on-surface-variant text-[10px] font-bold tracking-wide uppercase">
+                Lingkup Pekerjaan
+              </p>
+              <p className="text-on-surface mt-1 text-xs leading-relaxed">
+                {item.scopeDescription}
+              </p>
             </div>
           )}
 
-          <DetailRow 
-            label="Estimasi Paket" 
-            value={<MoneyValue amount={Number(item.estimatedTotalCost)} variant="compactWithFull" size="sm" align="right" />} 
-          />
-          <DetailRow 
-            label="Realisasi Aktual" 
-            value={<MoneyValue amount={item.actualCost} variant="compactWithFull" size="sm" align="right" />} 
-          />
-          <DetailRow 
-            label="Sisa Estimasi" 
+          <DetailRow
+            label="Estimasi Paket"
             value={
-              <MoneyValue 
-                amount={-item.variance} 
-                variant="compactWithFull" 
-                size="sm" 
-                align="right" 
-                tone={item.variance > 0 ? "danger" : "default"} 
+              <MoneyValue
+                amount={Number(item.estimatedTotalCost)}
+                variant="compactWithFull"
+                size="sm"
+                align="right"
               />
-            } 
+            }
+          />
+          <DetailRow
+            label="Realisasi Aktual"
+            value={
+              <MoneyValue
+                amount={item.actualCost}
+                variant="compactWithFull"
+                size="sm"
+                align="right"
+              />
+            }
+          />
+          <DetailRow
+            label="Sisa Estimasi"
+            value={
+              <MoneyValue
+                amount={-item.variance}
+                variant="compactWithFull"
+                size="sm"
+                align="right"
+                tone={item.variance > 0 ? "danger" : "default"}
+              />
+            }
           />
 
-          {item.vendorName && (
-            <DetailRow label="Vendor Utama" value={item.vendorName} />
-          )}
+          {item.vendorName && <DetailRow label="Vendor Utama" value={item.vendorName} />}
         </div>
       </div>
     </BottomSheet>
   );
 }
 
-function DetailRow({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+function DetailRow({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: React.ReactNode;
+}): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3.5 text-xs">
       <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
+      <span className="text-on-surface text-right font-bold">{value}</span>
     </div>
   );
 }

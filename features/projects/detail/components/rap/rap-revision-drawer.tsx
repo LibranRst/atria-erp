@@ -2,7 +2,14 @@
 
 import React from "react";
 
-import { ChoiceRow, FormField, FormRiskNotice, FormSection, OperationalFormSheet, Textarea } from "@/components/ui";
+import {
+  ChoiceRow,
+  FormField,
+  FormRiskNotice,
+  FormSection,
+  OperationalFormSheet,
+  Textarea,
+} from "@/components/ui";
 import type { ProjectCategoryPlanItemView } from "../shared/rap-rab-manager";
 
 export function InternalRevisionDrawer({
@@ -38,46 +45,61 @@ export function InternalRevisionDrawer({
       submitLabel="Buat"
       submittingLabel="Membuat…"
       pending={isPending}
-      disabled={internalRevisionReason.trim().length < 10 || (!reviseMaterial && revisionPackageIds.length === 0)}
-      disabledReason={internalRevisionReason.trim().length < 10 ? "Jelaskan alasan revisi minimal 10 karakter." : !reviseMaterial && revisionPackageIds.length === 0 ? "Pilih minimal satu bagian yang akan direvisi." : undefined}
+      disabled={
+        internalRevisionReason.trim().length < 10 ||
+        (!reviseMaterial && revisionPackageIds.length === 0)
+      }
+      disabledReason={
+        internalRevisionReason.trim().length < 10
+          ? "Jelaskan alasan revisi minimal 10 karakter."
+          : !reviseMaterial && revisionPackageIds.length === 0
+            ? "Pilih minimal satu bagian yang akan direvisi."
+            : undefined
+      }
       onSubmit={handleCreateInternalPlanRevision}
       statusText={`${internalRevisionReason.trim().length}/10 karakter · ${(reviseMaterial ? 1 : 0) + revisionPackageIds.length} bagian dipilih`}
-      statusTone={internalRevisionReason.trim().length >= 10 && (reviseMaterial || revisionPackageIds.length > 0) ? "success" : "warning"}
+      statusTone={
+        internalRevisionReason.trim().length >= 10 &&
+        (reviseMaterial || revisionPackageIds.length > 0)
+          ? "success"
+          : "warning"
+      }
     >
       <div className="space-y-md">
-        <FormRiskNotice title="RAP lama tetap terkunci" tone="default">Aplikasi membuat draft revisi baru. Data yang sudah disetujui tidak diedit langsung.</FormRiskNotice>
-        <FormSection title="Alasan revisi" helper="Alasan disimpan dalam audit dan membantu reviewer memahami perubahan.">
-        <FormField
-          label="Alasan revisi"
-          helper="Minimal 10 karakter dan tersimpan dalam audit."
+        <FormRiskNotice title="RAP lama tetap terkunci" tone="default">
+          Aplikasi membuat draft revisi baru. Data yang sudah disetujui tidak diedit langsung.
+        </FormRiskNotice>
+        <FormSection
+          title="Alasan revisi"
+          helper="Alasan disimpan dalam audit dan membantu reviewer memahami perubahan."
         >
-          <Textarea
-            rows={3}
-            value={internalRevisionReason}
-            onChange={setInternalRevisionReason}
-            placeholder="Contoh: Perubahan lingkup area dapur"
-          />
-        </FormField>
+          <FormField label="Alasan revisi" helper="Minimal 10 karakter dan tersimpan dalam audit.">
+            <Textarea
+              rows={3}
+              value={internalRevisionReason}
+              onChange={setInternalRevisionReason}
+              placeholder="Contoh: Perubahan lingkup area dapur"
+            />
+          </FormField>
         </FormSection>
-        <FormSection title="Bagian yang direvisi" helper="Pilih hanya material atau paket yang benar-benar perlu disesuaikan.">
-        <fieldset className="space-y-2">
-          <ChoiceRow
-            checked={reviseMaterial}
-            onChange={setReviseMaterial}
-            title="Material RAP"
-          />
-          {categoryPlanItems
-            .filter((item) => item.status === "LOCKED")
-            .map((item) => (
-              <ChoiceRow
-                key={item.id}
-                checked={revisionPackageIds.includes(item.id)}
-                onChange={() => toggleRevisionPackage(item.id)}
-                title={item.name}
-                description={item.expenseCategoryName}
-              />
-            ))}
-        </fieldset>
+        <FormSection
+          title="Bagian yang direvisi"
+          helper="Pilih hanya material atau paket yang benar-benar perlu disesuaikan."
+        >
+          <fieldset className="space-y-2">
+            <ChoiceRow checked={reviseMaterial} onChange={setReviseMaterial} title="Material RAP" />
+            {categoryPlanItems
+              .filter((item) => item.status === "LOCKED")
+              .map((item) => (
+                <ChoiceRow
+                  key={item.id}
+                  checked={revisionPackageIds.includes(item.id)}
+                  onChange={() => toggleRevisionPackage(item.id)}
+                  title={item.name}
+                  description={item.expenseCategoryName}
+                />
+              ))}
+          </fieldset>
         </FormSection>
       </div>
     </OperationalFormSheet>

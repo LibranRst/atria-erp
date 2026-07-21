@@ -20,11 +20,7 @@ import {
   voidRabRevision,
 } from "@/app/actions/project/revision-change-order";
 import { formatIdr as formatRp } from "@/lib/utils/money";
-import type {
-  ManualQuotationLine,
-  RabEstimateView,
-  RabItemView,
-} from "../shared/rap-rab-types";
+import type { ManualQuotationLine, RabEstimateView, RabItemView } from "../shared/rap-rab-types";
 import type { RabBundleForm, RabChangeOrderForm } from "./rab-drawer-types";
 import {
   buildBundleCommonPayload,
@@ -146,9 +142,7 @@ export function useRabManagerActions({
         showError(res.error.message);
         return;
       }
-      showSuccess(
-        "Draft quotation client berhasil dibuat dari sumber terpilih.",
-      );
+      showSuccess("Draft quotation client berhasil dibuat dari sumber terpilih.");
       setSourcePickerOpen(false);
       setManualQuotationLine(emptyManualQuotationLine);
       router.refresh();
@@ -177,9 +171,7 @@ export function useRabManagerActions({
         delete next[item.id];
         return next;
       });
-      toast.success(
-        `Tersimpan · Total item ${formatRp(Number(res.data.lineTotal))}`,
-      );
+      toast.success(`Tersimpan · Total item ${formatRp(Number(res.data.lineTotal))}`);
       setRabItemEditorId(null);
       router.refresh();
     });
@@ -196,9 +188,7 @@ export function useRabManagerActions({
         showError(result.error.message);
         return;
       }
-      showSuccess(
-        `Manual quotation line ditambahkan · ${formatRp(Number(result.data.lineTotal))}`,
-      );
+      showSuccess(`Manual quotation line ditambahkan · ${formatRp(Number(result.data.lineTotal))}`);
       setManualQuotationLine(emptyManualQuotationLine);
       setManualLineOpen(false);
       router.refresh();
@@ -277,9 +267,7 @@ export function useRabManagerActions({
         showError(result.error.message);
         return;
       }
-      showSuccess(
-        "Paket dibongkar; member kembali menjadi standalone quotation lines.",
-      );
+      showSuccess("Paket dibongkar; member kembali menjadi standalone quotation lines.");
       router.refresh();
     });
   }
@@ -331,9 +319,7 @@ export function useRabManagerActions({
       }
       setVoidReason("");
       setVoidRevisionOpen(false);
-      showSuccess(
-        `Revisi R${rabEstimate.revision} dibatalkan. RAB approved tetap aktif.`,
-      );
+      showSuccess(`Revisi R${rabEstimate.revision} dibatalkan. RAB approved tetap aktif.`);
       router.refresh();
     });
   }

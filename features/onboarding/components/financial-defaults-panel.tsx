@@ -55,35 +55,36 @@ export function FinancialDefaultsPanel({
             onAction={() => setEditingBudget(true)}
           />
           <OnboardingSurface>
-            <div className="grid grid-cols-3 divide-x divide-black/[0.055] px-2 py-4 text-center">
+            <div className="grid grid-cols-3 divide-x divide-black/5.5 px-2 py-4 text-center">
               <div className="min-w-0 px-1">
-                <p className="text-[8px] font-bold uppercase tracking-[0.08em] text-on-surface-variant/65">
+                <p className="text-on-surface-variant/65 text-[8px] font-bold tracking-[0.08em] uppercase">
                   Internal
                 </p>
-                <p className="mt-1 font-numeral text-[17px] font-bold tabular-nums text-on-surface">
+                <p className="font-numeral text-on-surface mt-1 text-[17px] font-bold tabular-nums">
                   {Math.round((budget?.budgetCapRatio ?? 0) * 100)}%
                 </p>
               </div>
               <div className="min-w-0 px-1">
-                <p className="text-[8px] font-bold uppercase tracking-[0.08em] text-on-surface-variant/65">
+                <p className="text-on-surface-variant/65 text-[8px] font-bold tracking-[0.08em] uppercase">
                   Terbagi
                 </p>
-                <p className="mt-1 font-numeral text-[17px] font-bold tabular-nums text-on-surface">
+                <p className="font-numeral text-on-surface mt-1 text-[17px] font-bold tabular-nums">
                   {Math.round(allocation * 100)}%
                 </p>
               </div>
               <div className="min-w-0 px-1">
-                <p className="text-[8px] font-bold uppercase tracking-[0.08em] text-on-surface-variant/65">
+                <p className="text-on-surface-variant/65 text-[8px] font-bold tracking-[0.08em] uppercase">
                   Buffer
                 </p>
-                <p className="mt-1 font-numeral text-[17px] font-bold tabular-nums text-warning">
+                <p className="font-numeral text-warning mt-1 text-[17px] font-bold tabular-nums">
                   {Math.round(buffer * 100)}%
                 </p>
               </div>
             </div>
           </OnboardingSurface>
           <OnboardingNotice>
-            Nilai ini tidak mengubah proyek aktif. Ia hanya menjadi titik awal saat proyek baru dibuat.
+            Nilai ini tidak mengubah proyek aktif. Ia hanya menjadi titik awal saat proyek baru
+            dibuat.
           </OnboardingNotice>
         </div>
       ) : (
@@ -102,9 +103,7 @@ export function FinancialDefaultsPanel({
           open={editingBudget}
           title="Sesuaikan default budget"
           initialExpanded
-          onClose={() =>
-            budgetDirty ? setConfirmClose(true) : setEditingBudget(false)
-          }
+          onClose={() => (budgetDirty ? setConfirmClose(true) : setEditingBudget(false))}
         >
           <BudgetSettingsManager
             initialSetting={budget}
@@ -133,7 +132,7 @@ export function FinancialDefaultsPanel({
             <button
               type="button"
               onClick={() => setConfirmClose(false)}
-              className="min-h-12 flex-1 rounded-full bg-surface-container-low px-4 text-xs font-bold text-on-surface"
+              className="bg-surface-container-low text-on-surface min-h-12 flex-1 rounded-full px-4 text-xs font-bold"
             >
               Lanjut edit
             </button>
@@ -144,7 +143,7 @@ export function FinancialDefaultsPanel({
                 setBudgetDirty(false);
                 setEditingBudget(false);
               }}
-              className="min-h-12 flex-1 rounded-full bg-warning px-4 text-xs font-bold text-white"
+              className="bg-warning min-h-12 flex-1 rounded-full px-4 text-xs font-bold text-white"
             >
               Buang perubahan
             </button>

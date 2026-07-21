@@ -38,20 +38,24 @@ import {
   toRatio,
   writeSettingsAudit,
 } from "./system-utils";
-import {
-  getBudgetSettings,
-  getSettingsOverview,
-} from "./system-read";
+import { getBudgetSettings, getSettingsOverview } from "./system-read";
 
 export async function updateBudgetAllocationDefaults(
   input: UpdateBudgetAllocationDefaultsInput,
 ): Promise<ActionResponse<BudgetAllocationSettingRow>> {
   const validation = updateBudgetAllocationDefaultsSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: validation.error.issues[0]?.message ?? "Alokasi budget tidak valid." } };
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: validation.error.issues[0]?.message ?? "Alokasi budget tidak valid.",
+      },
+    };
   }
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   const accessError = await assertSettingsPermission(user, "manage:budget_settings");
   if (accessError) return accessError;
 
@@ -59,34 +63,64 @@ export async function updateBudgetAllocationDefaults(
     where: eq(budgetAllocationSetting.id, validation.data.budgetAllocationSettingId),
     with: { categories: { with: { expenseCategory: true } } },
   });
-  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Setting budget tidak ditemukan." } };
+  if (!existing)
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Setting budget tidak ditemukan." },
+    };
 
   const expectedIds = new Set(existing.categories.map((category) => category.id));
-  if (validation.data.categories.length !== expectedIds.size || validation.data.categories.some((category) => !expectedIds.has(category.budgetAllocationSettingCategoryId))) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Daftar kategori budget tidak lengkap atau tidak sesuai." } };
+  if (
+    validation.data.categories.length !== expectedIds.size ||
+    validation.data.categories.some(
+      (category) => !expectedIds.has(category.budgetAllocationSettingCategoryId),
+    )
+  ) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Daftar kategori budget tidak lengkap atau tidak sesuai.",
+      },
+    };
   }
 
   await db.transaction(async (tx) => {
-    const [updatedSetting] = await tx.update(budgetAllocationSetting).set({
-      name: validation.data.name.trim(),
-      budgetCapRatio: toRatio(validation.data.budgetCapRatio),
-      notes: toNullableText(validation.data.notes),
-      updatedById: user.id,
-      updatedAt: new Date(),
-    }).where(eq(budgetAllocationSetting.id, existing.id)).returning();
+    const [updatedSetting] = await tx
+      .update(budgetAllocationSetting)
+      .set({
+        name: validation.data.name.trim(),
+        budgetCapRatio: toRatio(validation.data.budgetCapRatio),
+        notes: toNullableText(validation.data.notes),
+        updatedById: user.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(budgetAllocationSetting.id, existing.id))
+      .returning();
 
     for (const inputCategory of validation.data.categories) {
-      const currentCategory = existing.categories.find((category) => category.id === inputCategory.budgetAllocationSettingCategoryId);
+      const currentCategory = existing.categories.find(
+        (category) => category.id === inputCategory.budgetAllocationSettingCategoryId,
+      );
       if (!currentCategory) continue;
-      const [updatedCategory] = await tx.update(budgetAllocationSettingCategory).set({
-        ratioPercentage: toRatio(inputCategory.ratioPercentage),
-        isEnabled: inputCategory.isEnabled,
-        updatedAt: new Date(),
-      }).where(eq(budgetAllocationSettingCategory.id, inputCategory.budgetAllocationSettingCategoryId)).returning();
-      await tx.update(expenseCategory).set({
-        defaultRatio: toRatio(inputCategory.ratioPercentage),
-        updatedAt: new Date(),
-      }).where(eq(expenseCategory.id, currentCategory.expenseCategoryId));
+      const [updatedCategory] = await tx
+        .update(budgetAllocationSettingCategory)
+        .set({
+          ratioPercentage: toRatio(inputCategory.ratioPercentage),
+          isEnabled: inputCategory.isEnabled,
+          updatedAt: new Date(),
+        })
+        .where(
+          eq(budgetAllocationSettingCategory.id, inputCategory.budgetAllocationSettingCategoryId),
+        )
+        .returning();
+      await tx
+        .update(expenseCategory)
+        .set({
+          defaultRatio: toRatio(inputCategory.ratioPercentage),
+          updatedAt: new Date(),
+        })
+        .where(eq(expenseCategory.id, currentCategory.expenseCategoryId));
       await tx.insert(auditLog).values({
         userId: user.id,
         action: "UPDATE_BUDGET_ALLOCATION_CATEGORY",
@@ -110,21 +144,31 @@ export async function updateBudgetAllocationDefaults(
   revalidateSettings();
   const refreshed = await getBudgetSettings();
   if (!refreshed.success || !refreshed.data.budgetAllocationSetting) {
-    return { success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "Alokasi tersimpan tetapi gagal dibaca kembali." } };
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Alokasi tersimpan tetapi gagal dibaca kembali.",
+      },
+    };
   }
   return { success: true, data: refreshed.data.budgetAllocationSetting };
 }
 
 export async function updateBudgetAllocationSetting(
-  input: UpdateBudgetAllocationSettingInput
+  input: UpdateBudgetAllocationSettingInput,
 ): Promise<ActionResponse<BudgetAllocationSettingRow>> {
   const validation = updateBudgetAllocationSettingSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Setting budget tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Setting budget tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   const accessError = await assertSettingsPermission(user, "manage:budget_settings");
   if (accessError) return accessError;
@@ -132,9 +176,14 @@ export async function updateBudgetAllocationSetting(
   const existing = await db.query.budgetAllocationSetting.findFirst({
     where: eq(budgetAllocationSetting.id, validation.data.budgetAllocationSettingId),
   });
-  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Setting budget tidak ditemukan." } };
+  if (!existing)
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Setting budget tidak ditemukan." },
+    };
 
-  const [updated] = await db.update(budgetAllocationSetting)
+  const [updated] = await db
+    .update(budgetAllocationSetting)
     .set({
       name: validation.data.name.trim(),
       budgetCapRatio: toRatio(validation.data.budgetCapRatio),
@@ -157,42 +206,60 @@ export async function updateBudgetAllocationSetting(
   revalidatePath("/settings");
   const overview = await getSettingsOverview();
   if (!overview.success || !overview.data.budgetAllocationSetting) {
-    return { success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "Setting terupdate tetapi gagal dibaca." } };
+    return {
+      success: false,
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Setting terupdate tetapi gagal dibaca." },
+    };
   }
   return { success: true, data: overview.data.budgetAllocationSetting };
 }
 
 export async function updateBudgetAllocationCategoryRatio(
-  input: UpdateBudgetAllocationCategoryRatioInput
+  input: UpdateBudgetAllocationCategoryRatioInput,
 ): Promise<ActionResponse<BudgetAllocationCategoryRow>> {
   const validation = updateBudgetAllocationCategoryRatioSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Ratio kategori tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Ratio kategori tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   const accessError = await assertSettingsPermission(user, "manage:budget_settings");
   if (accessError) return accessError;
 
   const existing = await db.query.budgetAllocationSettingCategory.findFirst({
-    where: eq(budgetAllocationSettingCategory.id, validation.data.budgetAllocationSettingCategoryId),
+    where: eq(
+      budgetAllocationSettingCategory.id,
+      validation.data.budgetAllocationSettingCategoryId,
+    ),
     with: { expenseCategory: true },
   });
-  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Kategori allocation tidak ditemukan." } };
+  if (!existing)
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Kategori allocation tidak ditemukan." },
+    };
 
   const [updated] = await db.transaction(async (tx) => {
-    const [category] = await tx.update(budgetAllocationSettingCategory)
+    const [category] = await tx
+      .update(budgetAllocationSettingCategory)
       .set({
         ratioPercentage: toRatio(validation.data.ratioPercentage),
         isEnabled: validation.data.isEnabled,
         updatedAt: new Date(),
       })
-      .where(eq(budgetAllocationSettingCategory.id, validation.data.budgetAllocationSettingCategoryId))
+      .where(
+        eq(budgetAllocationSettingCategory.id, validation.data.budgetAllocationSettingCategoryId),
+      )
       .returning();
 
-    await tx.update(expenseCategory)
+    await tx
+      .update(expenseCategory)
       .set({
         defaultRatio: toRatio(validation.data.ratioPercentage),
         updatedAt: new Date(),
@@ -227,23 +294,34 @@ export async function updateBudgetAllocationCategoryRatio(
 }
 
 export async function updateExpenseCategorySetting(
-  input: UpdateExpenseCategorySettingInput
+  input: UpdateExpenseCategorySettingInput,
 ): Promise<ActionResponse<ExpenseCategorySettingRow>> {
   const validation = updateExpenseCategorySettingSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Kategori expense tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Kategori expense tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   const accessError = await assertSettingsPermission(user, "manage:expense_categories");
   if (accessError) return accessError;
 
-  const existing = await db.query.expenseCategory.findFirst({ where: eq(expenseCategory.id, validation.data.expenseCategoryId) });
-  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Kategori expense tidak ditemukan." } };
+  const existing = await db.query.expenseCategory.findFirst({
+    where: eq(expenseCategory.id, validation.data.expenseCategoryId),
+  });
+  if (!existing)
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Kategori expense tidak ditemukan." },
+    };
 
-  const [updated] = await db.update(expenseCategory)
+  const [updated] = await db
+    .update(expenseCategory)
     .set({
       name: validation.data.name.trim(),
       description: toNullableText(validation.data.description),
@@ -283,20 +361,34 @@ export async function updateExpenseCategoryDetails(
   input: UpdateExpenseCategoryDetailsInput,
 ): Promise<ActionResponse<ExpenseCategorySettingRow>> {
   const validation = updateExpenseCategoryDetailsSchema.safeParse(input);
-  if (!validation.success) return { success: false, error: { code: "VALIDATION_ERROR", message: "Detail kategori tidak valid." } };
+  if (!validation.success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Detail kategori tidak valid." },
+    };
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   const accessError = await assertSettingsPermission(user, "manage:expense_categories");
   if (accessError) return accessError;
-  const existing = await db.query.expenseCategory.findFirst({ where: eq(expenseCategory.id, validation.data.expenseCategoryId) });
+  const existing = await db.query.expenseCategory.findFirst({
+    where: eq(expenseCategory.id, validation.data.expenseCategoryId),
+  });
   if (!existing || !CORE_EXPENSE_CATEGORY_CODES.has(existing.code)) {
-    return { success: false, error: { code: "NOT_FOUND", message: "Kategori canonical tidak ditemukan." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Kategori canonical tidak ditemukan." },
+    };
   }
-  const [updated] = await db.update(expenseCategory).set({
-    name: validation.data.name.trim(),
-    description: toNullableText(validation.data.description),
-    updatedAt: new Date(),
-  }).where(eq(expenseCategory.id, existing.id)).returning();
+  const [updated] = await db
+    .update(expenseCategory)
+    .set({
+      name: validation.data.name.trim(),
+      description: toNullableText(validation.data.description),
+      updatedAt: new Date(),
+    })
+    .where(eq(expenseCategory.id, existing.id))
+    .returning();
   await writeSettingsAudit({
     userId: user.id,
     action: "UPDATE_EXPENSE_CATEGORY_DETAILS",

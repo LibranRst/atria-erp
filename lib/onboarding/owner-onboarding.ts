@@ -32,9 +32,7 @@ export type OwnerOnboardingProgress = {
   readonly label: string;
 };
 
-export function getOwnerOnboardingProgress(
-  stepId: OnboardingStepId,
-): OwnerOnboardingProgress {
+export function getOwnerOnboardingProgress(stepId: OnboardingStepId): OwnerOnboardingProgress {
   const total = OWNER_ONBOARDING_SETUP_STEP_IDS.length;
   if (stepId === "welcome") {
     return {
@@ -71,12 +69,7 @@ export const ownerOnboardingStateSchema = z.object({
 
 export type OwnerOnboardingState = z.infer<typeof ownerOnboardingStateSchema>;
 export type OnboardingStepStatus =
-  | "READY"
-  | "INCOMPLETE"
-  | "SKIPPED"
-  | "REVIEWED"
-  | "PENDING_APPROVAL"
-  | "NOT_APPLICABLE";
+  "READY" | "INCOMPLETE" | "SKIPPED" | "REVIEWED" | "PENDING_APPROVAL" | "NOT_APPLICABLE";
 
 export type OwnerOnboardingReadiness = {
   readonly id: OnboardingStepId;
@@ -136,9 +129,7 @@ export const advanceOwnerOnboardingStepSchema = z
   .object({
     stepId: onboardingStepIdSchema,
     disposition: z.enum(["REVIEWED", "SKIPPED"]),
-    initialStockDecision: z
-      .enum(["NO_LEGACY_STOCK", "HAS_LEGACY_STOCK", "SKIPPED"])
-      .optional(),
+    initialStockDecision: z.enum(["NO_LEGACY_STOCK", "HAS_LEGACY_STOCK", "SKIPPED"]).optional(),
   })
   .superRefine((value, context) => {
     if (value.initialStockDecision && value.stepId !== "initial_stock")
@@ -178,9 +169,7 @@ export function parseOwnerOnboardingState(
 
 export function nextOnboardingStep(stepId: OnboardingStepId): OnboardingStepId {
   const index = ONBOARDING_STEP_IDS.indexOf(stepId);
-  return ONBOARDING_STEP_IDS[
-    Math.min(index + 1, ONBOARDING_STEP_IDS.length - 1)
-  ];
+  return ONBOARDING_STEP_IDS[Math.min(index + 1, ONBOARDING_STEP_IDS.length - 1)];
 }
 
 export type OwnerOnboardingGateInput = {
@@ -214,8 +203,7 @@ export function deriveOwnerOnboardingGates(input: OwnerOnboardingGateInput): {
     blockers.push({
       stepId: "team_vendors",
       label: "Tim inti belum lengkap",
-      detail:
-        "Akun aktif Finance Admin, Project Manager, dan Purchasing wajib tersedia.",
+      detail: "Akun aktif Finance Admin, Project Manager, dan Purchasing wajib tersedia.",
     });
   if (!input.bankReady)
     blockers.push({
@@ -233,11 +221,9 @@ export function deriveOwnerOnboardingGates(input: OwnerOnboardingGateInput): {
     blockers.push({
       stepId: "initial_stock",
       label: "Saldo awal masih menunggu persetujuan",
-      detail:
-        "Finance Admin harus memutus semua batch pending sebelum onboarding selesai.",
+      detail: "Finance Admin harus memutus semua batch pending sebelum onboarding selesai.",
     });
-  const initialStockFinal =
-    input.postedInitialStockBatches > 0 || input.noLegacyStockConfirmed;
+  const initialStockFinal = input.postedInitialStockBatches > 0 || input.noLegacyStockConfirmed;
   if (!initialStockFinal && input.pendingInitialStockBatches === 0) {
     blockers.push({
       stepId: "initial_stock",
@@ -254,24 +240,19 @@ export function deriveOwnerOnboardingGates(input: OwnerOnboardingGateInput): {
     warnings.push({
       stepId: "team_vendors",
       label: "Vendor belum ditambahkan",
-      detail:
-        "Opsional saat onboarding dan dapat dilengkapi sebelum transaksi pembelian.",
+      detail: "Opsional saat onboarding dan dapat dilengkapi sebelum transaksi pembelian.",
     });
   if (!input.itemLibraryReady)
     warnings.push({
       stepId: "item_library",
       label: "Library Item & Harga masih kosong",
-      detail:
-        "Opsional; template dapat ditambahkan saat mulai menyusun RAP/RAB.",
+      detail: "Opsional; template dapat ditambahkan saat mulai menyusun RAP/RAB.",
     });
   return { blockers, warnings, canComplete: blockers.length === 0 };
 }
 
 export function shouldRedirectToOwnerOnboarding(
-  overview: Pick<
-    OwnerOnboardingOverview,
-    "shouldAutoOpen" | "hasPersistedState" | "state"
-  >,
+  overview: Pick<OwnerOnboardingOverview, "shouldAutoOpen" | "hasPersistedState" | "state">,
 ): boolean {
   return (
     overview.shouldAutoOpen ||

@@ -1,11 +1,27 @@
 import { db } from "@/db";
-import { projectBudgetItem, vendorBill, projectCost, bankAccount, approval, materialInventory, stockMovement, projectExpenses } from "@/db/schema";
+import {
+  projectBudgetItem,
+  vendorBill,
+  projectCost,
+  bankAccount,
+  approval,
+  materialInventory,
+  stockMovement,
+  projectExpenses,
+} from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { submitVendorBill } from "@/app/actions/finance/submit-vendor-bill";
 import { scheduleVendorBillPayment } from "@/app/actions/finance/schedule-vendor-bill";
 import { payVendorBill } from "@/app/actions/finance/pay-vendor-bill";
-import { submitFieldRequest, submitFieldRequests, verifyFieldRequest, approveFieldRequest, payFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
+import {
+  submitFieldRequest,
+  submitFieldRequests,
+  verifyFieldRequest,
+  approveFieldRequest,
+  payFieldRequest,
+  approveVendorPayment,
+} from "@/app/actions/finance/field-requests";
 import { describe, it, expect, afterAll, mock } from "bun:test";
 
 // Mock next/headers untuk mencegah error cookies() di luar server Next.js
@@ -191,16 +207,16 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const appRecord = await db.query.approval.findFirst({
         where: and(
           eq(approval.referenceType, "vendor_payment"),
-          eq(approval.referenceId, scheduleRes.data.id)
+          eq(approval.referenceId, scheduleRes.data.id),
         ),
       });
 
       expect(appRecord).toBeDefined();
       expect(appRecord!.status).toBe("PENDING");
       expect(
-        appRecord!.notes?.includes("Rp 5.000.000") || 
-        appRecord!.notes?.includes("plafon") || 
-        appRecord!.notes?.includes("Overrun")
+        appRecord!.notes?.includes("Rp 5.000.000") ||
+          appRecord!.notes?.includes("plafon") ||
+          appRecord!.notes?.includes("Overrun"),
       ).toBe(true);
     });
 
@@ -404,7 +420,11 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       }
 
       mockUserSession(FINANCE_USER);
-      const paySubmittedRes = await payFieldRequest(costRes.data.id, BCA_ACC_ID, "TRF-SHOULD-FAIL-SUBMITTED");
+      const paySubmittedRes = await payFieldRequest(
+        costRes.data.id,
+        BCA_ACC_ID,
+        "TRF-SHOULD-FAIL-SUBMITTED",
+      );
       expect(paySubmittedRes.success).toBe(false);
       if (!paySubmittedRes.success) {
         expect(paySubmittedRes.error.code).toBe("FORBIDDEN");
@@ -413,7 +433,11 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const verifyRes = await verifyFieldRequest(costRes.data.id);
       expect(verifyRes.success).toBe(true);
 
-      const payVerifiedRes = await payFieldRequest(costRes.data.id, BCA_ACC_ID, "TRF-SHOULD-FAIL-VERIFIED");
+      const payVerifiedRes = await payFieldRequest(
+        costRes.data.id,
+        BCA_ACC_ID,
+        "TRF-SHOULD-FAIL-VERIFIED",
+      );
       expect(payVerifiedRes.success).toBe(false);
       if (!payVerifiedRes.success) {
         expect(payVerifiedRes.error.code).toBe("FORBIDDEN");
@@ -428,7 +452,11 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       expect(rejectRes.success).toBe(true);
 
       mockUserSession(FINANCE_USER);
-      const payRejectedRes = await payFieldRequest(costRes.data.id, BCA_ACC_ID, "TRF-SHOULD-FAIL-REJECTED");
+      const payRejectedRes = await payFieldRequest(
+        costRes.data.id,
+        BCA_ACC_ID,
+        "TRF-SHOULD-FAIL-REJECTED",
+      );
       expect(payRejectedRes.success).toBe(false);
       if (!payRejectedRes.success) {
         expect(payRejectedRes.error.code).toBe("FORBIDDEN");
@@ -437,7 +465,8 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
 
     it("harus menyetujui pengajuan klaim lapangan PM Budi, memicu approval PENDING jika overrun, dan memproses pencairan kas kecil", async () => {
       // Reset BCA bank account balance to ensure sufficient funds
-      await db.update(bankAccount)
+      await db
+        .update(bankAccount)
         .set({ balance: "735000000.00" })
         .where(eq(bankAccount.id, BCA_ACC_ID));
 
@@ -448,7 +477,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       expect(budgetItem).toBeDefined();
 
       mockUserSession(PM_BUDI_USER);
-      
+
       // Ajukan klaim melebihi plafon category Material.
       const costRes = await submitFieldRequest({
         projectId: MENTENG_PROJECT_ID,
@@ -470,7 +499,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const appRecord = await db.query.approval.findFirst({
         where: and(
           eq(approval.referenceType, "project_cost"),
-          eq(approval.referenceId, costRes.data.id)
+          eq(approval.referenceId, costRes.data.id),
         ),
       });
       expect(appRecord).toBeDefined();
@@ -496,7 +525,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const appRecordUpdated = await db.query.approval.findFirst({
         where: and(
           eq(approval.referenceType, "project_cost"),
-          eq(approval.referenceId, costRes.data.id)
+          eq(approval.referenceId, costRes.data.id),
         ),
       });
       expect(appRecordUpdated!.status).toBe("APPROVED");
@@ -545,7 +574,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
             quantity: 2,
             unitPrice: 250000,
             amount: 500000,
-            description: "Belanja gypsum & paku besi"
+            description: "Belanja gypsum & paku besi",
           },
           {
             projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
@@ -553,9 +582,9 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
             quantity: 1,
             unitPrice: 750000,
             amount: 750000,
-            description: "Sewa tangga & transport belanja"
-          }
-        ]
+            description: "Sewa tangga & transport belanja",
+          },
+        ],
       });
 
       expect(res.success).toBe(true);
@@ -578,7 +607,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const inventoryBefore = await db.query.materialInventory.findFirst({
         where: and(
           eq(materialInventory.materialId, MATERIAL_PLYWOOD_ID),
-          eq(materialInventory.locationId, WAREHOUSE_LOCATION_ID)
+          eq(materialInventory.locationId, WAREHOUSE_LOCATION_ID),
         ),
       });
       expect(inventoryBefore).toBeDefined();
@@ -607,7 +636,7 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
       const movement = await db.query.stockMovement.findFirst({
         where: and(
           eq(stockMovement.projectCostId, res.data.id),
-          eq(stockMovement.movementType, "STOCK_IN")
+          eq(stockMovement.movementType, "STOCK_IN"),
         ),
       });
       expect(movement).toBeDefined();

@@ -74,7 +74,10 @@ export function calculateUsedPercentage(actualAmount: number, allocatedAmount: n
   return (actualAmount / allocatedAmount) * 100;
 }
 
-export function calculateTargetGross(contractValue: number, internalBudget: number): {
+export function calculateTargetGross(
+  contractValue: number,
+  internalBudget: number,
+): {
   readonly amount: number;
   readonly percentage: number;
 } {

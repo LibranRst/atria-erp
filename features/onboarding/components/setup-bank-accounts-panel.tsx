@@ -3,10 +3,7 @@
 import React from "react";
 import { toast } from "sonner";
 
-import {
-  createBankAccount,
-  updateBankAccount,
-} from "@/app/actions/finance/bank-accounts";
+import { createBankAccount, updateBankAccount } from "@/app/actions/finance/bank-accounts";
 import type { OwnerOnboardingBankAccount } from "@/app/actions/onboarding";
 import { MoneyValue } from "@/components/ui/page-primitives";
 import { AccountFormSheet } from "@/features/finance-dashboard/components/bank-accounts/account-form-sheet";
@@ -34,8 +31,7 @@ export function SetupBankAccountsPanel({
   const [accounts, setAccounts] = React.useState(initialAccounts);
   const [open, setOpen] = React.useState(false);
   const [draft, setDraft] = React.useState<AccountDraft>(newAccountDraft());
-  const [baseline, setBaseline] =
-    React.useState<AccountDraft>(newAccountDraft());
+  const [baseline, setBaseline] = React.useState<AccountDraft>(newAccountDraft());
   const [pending, setPending] = React.useState(false);
 
   function create(): void {
@@ -123,33 +119,29 @@ export function SetupBankAccountsPanel({
             detail="Satu rekening aktif sudah cukup untuk memulai workflow kas."
           />
         ) : (
-          <div className="divide-y divide-black/[0.055]">
+          <div className="divide-y divide-black/5.5">
             {accounts.map((account) => (
               <button
                 key={account.id}
                 type="button"
                 onClick={() => edit(account)}
-                className="flex min-h-[70px] w-full items-center gap-3 px-4 py-3 text-left outline-none active:bg-surface-container-low focus-visible:bg-surface-container-low"
+                className="active:bg-surface-container-low focus-visible:bg-surface-container-low flex min-h-[70px] w-full items-center gap-3 px-4 py-3 text-left outline-none"
               >
                 <span
-                  className="material-symbols-outlined !flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
+                  className="material-symbols-outlined bg-surface-container-low text-on-surface-variant flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] text-[18px]"
                   aria-hidden="true"
                 >
                   account_balance
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[12px] leading-5 font-bold text-on-surface">
+                  <span className="text-on-surface block truncate text-[12px] leading-5 font-bold">
                     {account.name}
                   </span>
-                  <span className="block truncate text-[9px] leading-4 text-on-surface-variant">
+                  <span className="text-on-surface-variant block truncate text-[9px] leading-4">
                     {account.bankName} · {account.accountNumber}
                   </span>
                   {!account.isActive ? (
-                    <SettingsStatusLabel
-                      label="Diarsipkan"
-                      tone="inactive"
-                      className="mt-1"
-                    />
+                    <SettingsStatusLabel label="Diarsipkan" tone="inactive" className="mt-1" />
                   ) : null}
                 </span>
                 <MoneyValue
@@ -159,7 +151,7 @@ export function SetupBankAccountsPanel({
                   align="right"
                 />
                 <span
-                  className="material-symbols-outlined shrink-0 text-[17px] text-on-surface-variant/55"
+                  className="material-symbols-outlined text-on-surface-variant/55 shrink-0 text-[17px]"
                   aria-hidden="true"
                 >
                   chevron_right
@@ -170,8 +162,7 @@ export function SetupBankAccountsPanel({
         )}
       </OnboardingSurface>
       <OnboardingNotice icon="shield" tone="positive">
-        Transfer, rekonsiliasi, dan mutasi manual sengaja tidak ditampilkan
-        selama setup.
+        Transfer, rekonsiliasi, dan mutasi manual sengaja tidak ditampilkan selama setup.
       </OnboardingNotice>
       <AccountFormSheet
         open={open}

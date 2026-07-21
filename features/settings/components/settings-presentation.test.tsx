@@ -48,7 +48,9 @@ describe("Settings presentation", () => {
   });
 
   test("keeps five peer modules in overflow-capable document-flow navigation", () => {
-    const html = renderToStaticMarkup(<SettingsNavigation value="overview" onChange={() => undefined} />);
+    const html = renderToStaticMarkup(
+      <SettingsNavigation value="overview" onChange={() => undefined} />,
+    );
     expect(html).toContain('data-sticky="false"');
     expect(html).toContain("Ringkasan");
     expect(html).toContain("Budget");
@@ -60,7 +62,11 @@ describe("Settings presentation", () => {
     const html = renderToStaticMarkup(
       <SettingsFilterBar
         status="ACTIVE"
-        statusOptions={[{ value: "ACTIVE", label: "Aktif" }, { value: "INACTIVE", label: "Arsip" }, { value: "ALL", label: "Semua" }]}
+        statusOptions={[
+          { value: "ACTIVE", label: "Aktif" },
+          { value: "INACTIVE", label: "Arsip" },
+          { value: "ALL", label: "Semua" },
+        ]}
         search=""
         filterCount={2}
         searchPlaceholder="Cari data"

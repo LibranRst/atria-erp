@@ -8,4 +8,3 @@ export default async function SetupPage(): Promise<React.JSX.Element> {
   if (!status.success || !status.data.required) redirect("/login");
   return <SetupOwnerForm />;
 }
-

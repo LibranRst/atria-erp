@@ -27,10 +27,7 @@ export const STOCK_HANDLING_OPTIONS: ReadonlyArray<{
   },
 ];
 
-export function isExpenseLineComplete(
-  line: ExpenseLine,
-  categoryCode?: string,
-): boolean {
+export function isExpenseLineComplete(line: ExpenseLine, categoryCode?: string): boolean {
   const baseComplete =
     Boolean(line.projectBudgetCategoryId) &&
     line.description.trim().length >= 5 &&
@@ -107,9 +104,20 @@ export function cleanLeadingZeros(value: string): string {
 
 export function inferExpenseCategoryCode(itemName: string): string {
   const source = itemName.toUpperCase();
-  if (["MATERIAL", "BAHAN", "KAYU", "KACA", "CAT", "SEMEN", "BESI"].some((keyword) => source.includes(keyword))) return "MATERIAL";
-  if (["TUKANG", "LABOR", "PEKERJA", "MANDOR", "UPAH"].some((keyword) => source.includes(keyword))) return "TUKANG";
-  if (["OPERASIONAL", "OPERATIONAL", "BENSIN", "TOLL", "PARKIR", "KIRIM"].some((keyword) => source.includes(keyword))) return "OPERASIONAL";
+  if (
+    ["MATERIAL", "BAHAN", "KAYU", "KACA", "CAT", "SEMEN", "BESI"].some((keyword) =>
+      source.includes(keyword),
+    )
+  )
+    return "MATERIAL";
+  if (["TUKANG", "LABOR", "PEKERJA", "MANDOR", "UPAH"].some((keyword) => source.includes(keyword)))
+    return "TUKANG";
+  if (
+    ["OPERASIONAL", "OPERATIONAL", "BENSIN", "TOLL", "PARKIR", "KIRIM"].some((keyword) =>
+      source.includes(keyword),
+    )
+  )
+    return "OPERASIONAL";
   if (source.includes("SUBCON") || source.includes("SUBKON")) return "SUBCON";
   return "LAIN_LAIN";
 }

@@ -34,23 +34,31 @@ import {
 import { getSettingsOverview } from "./system-read";
 
 export async function updateMaterial(
-  input: UpdateMaterialInput
+  input: UpdateMaterialInput,
 ): Promise<ActionResponse<MaterialSettingRow>> {
   const validation = updateMaterialSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Material tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Material tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
 
-  const existing = await db.query.materialMaster.findFirst({ where: eq(materialMaster.id, validation.data.materialId) });
-  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Material tidak ditemukan." } };
+  const existing = await db.query.materialMaster.findFirst({
+    where: eq(materialMaster.id, validation.data.materialId),
+  });
+  if (!existing)
+    return { success: false, error: { code: "NOT_FOUND", message: "Material tidak ditemukan." } };
 
-  const [updated] = await db.update(materialMaster)
+  const [updated] = await db
+    .update(materialMaster)
     .set({
       categoryId: validation.data.categoryId,
       defaultVendorId: validation.data.defaultVendorId ?? null,
@@ -80,20 +88,28 @@ export async function updateMaterial(
   const overview = await getSettingsOverview();
   if (!overview.success) return overview;
   const material = overview.data.materials.find((row) => row.id === updated.id);
-  if (!material) return { success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "Material terupdate tetapi gagal dibaca." } };
+  if (!material)
+    return {
+      success: false,
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Material terupdate tetapi gagal dibaca." },
+    };
   return { success: true, data: material };
 }
 
 export async function updateMaterialInventoryDefaults(
-  input: UpdateMaterialInventoryDefaultsInput
+  input: UpdateMaterialInventoryDefaultsInput,
 ): Promise<ActionResponse<MaterialInventorySettingRow>> {
   const validation = updateMaterialInventoryDefaultsSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Default inventory tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Default inventory tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
@@ -102,9 +118,14 @@ export async function updateMaterialInventoryDefaults(
     where: eq(materialInventory.id, validation.data.materialInventoryId),
     with: { location: true },
   });
-  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Inventory material tidak ditemukan." } };
+  if (!existing)
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Inventory material tidak ditemukan." },
+    };
 
-  const [updated] = await db.update(materialInventory)
+  const [updated] = await db
+    .update(materialInventory)
     .set({
       minimumStock: validation.data.minimumStock.toFixed(2),
       averageCost: toMoney(validation.data.averageCost),
@@ -141,25 +162,31 @@ export async function updateMaterialInventoryDefaults(
 }
 
 export async function archiveMaterial(
-  input: ArchiveMaterialInput
+  input: ArchiveMaterialInput,
 ): Promise<ActionResponse<{ readonly id: string }>> {
   const validation = archiveMaterialSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "ID material tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID material tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
 
-  const [updated] = await db.update(materialMaster)
+  const [updated] = await db
+    .update(materialMaster)
     .set({ isActive: false, updatedAt: new Date() })
     .where(eq(materialMaster.id, validation.data.materialId))
     .returning();
 
-  if (!updated) return { success: false, error: { code: "NOT_FOUND", message: "Material tidak ditemukan." } };
+  if (!updated)
+    return { success: false, error: { code: "NOT_FOUND", message: "Material tidak ditemukan." } };
 
   await writeSettingsAudit({
     userId: user.id,
@@ -179,39 +206,54 @@ export async function createMaterialWithInventoryDefaults(
 ): Promise<ActionResponse<{ readonly id: string }>> {
   const validation = createMaterialWithInventoryDefaultsSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: validation.error.issues[0]?.message ?? "Material tidak valid." } };
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: validation.error.issues[0]?.message ?? "Material tidak valid.",
+      },
+    };
   }
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
 
   const createdId = await db.transaction(async (tx) => {
-    const [created] = await tx.insert(materialMaster).values({
-      categoryId: validation.data.categoryId,
-      defaultVendorId: validation.data.defaultVendorId ?? null,
-      name: validation.data.name.trim(),
-      specification: toNullableText(validation.data.specification),
-      brand: toNullableText(validation.data.brand),
-      code: toNullableText(validation.data.code),
-      color: toNullableText(validation.data.color),
-      unit: validation.data.unit.trim(),
-    }).returning();
-    await tx.insert(materialInventory).values(validation.data.inventoryDefaults.map((inventory) => ({
-      materialId: created.id,
-      locationId: inventory.inventoryLocationId,
-      currentStock: "0.00",
-      reservedStock: "0.00",
-      minimumStock: inventory.minimumStock.toFixed(2),
-      averageCost: "0.00",
-      lastPurchasePrice: toMoney(inventory.lastPurchasePrice),
-    })));
+    const [created] = await tx
+      .insert(materialMaster)
+      .values({
+        categoryId: validation.data.categoryId,
+        defaultVendorId: validation.data.defaultVendorId ?? null,
+        name: validation.data.name.trim(),
+        specification: toNullableText(validation.data.specification),
+        brand: toNullableText(validation.data.brand),
+        code: toNullableText(validation.data.code),
+        color: toNullableText(validation.data.color),
+        unit: validation.data.unit.trim(),
+      })
+      .returning();
+    await tx.insert(materialInventory).values(
+      validation.data.inventoryDefaults.map((inventory) => ({
+        materialId: created.id,
+        locationId: inventory.inventoryLocationId,
+        currentStock: "0.00",
+        reservedStock: "0.00",
+        minimumStock: inventory.minimumStock.toFixed(2),
+        averageCost: "0.00",
+        lastPurchasePrice: toMoney(inventory.lastPurchasePrice),
+      })),
+    );
     await tx.insert(auditLog).values({
       userId: user.id,
       action: "CREATE_MATERIAL_WITH_INVENTORY_DEFAULTS",
       targetTable: "material_master",
       targetId: created.id,
-      newState: JSON.stringify({ material: created, inventoryDefaults: validation.data.inventoryDefaults }),
+      newState: JSON.stringify({
+        material: created,
+        inventoryDefaults: validation.data.inventoryDefaults,
+      }),
     });
     return created.id;
   });
@@ -224,21 +266,34 @@ export async function updateMaterialSettingDefaults(
   input: UpdateMaterialSettingDefaultsInput,
 ): Promise<ActionResponse<MaterialInventorySettingRow>> {
   const validation = updateMaterialSettingDefaultsSchema.safeParse(input);
-  if (!validation.success) return { success: false, error: { code: "VALIDATION_ERROR", message: "Default inventory tidak valid." } };
+  if (!validation.success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Default inventory tidak valid." },
+    };
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
   const existing = await db.query.materialInventory.findFirst({
     where: eq(materialInventory.id, validation.data.materialInventoryId),
     with: { location: true },
   });
-  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Inventory material tidak ditemukan." } };
-  const [updated] = await db.update(materialInventory).set({
-    minimumStock: validation.data.minimumStock.toFixed(2),
-    lastPurchasePrice: toMoney(validation.data.lastPurchasePrice),
-    updatedAt: new Date(),
-  }).where(eq(materialInventory.id, existing.id)).returning();
+  if (!existing)
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Inventory material tidak ditemukan." },
+    };
+  const [updated] = await db
+    .update(materialInventory)
+    .set({
+      minimumStock: validation.data.minimumStock.toFixed(2),
+      lastPurchasePrice: toMoney(validation.data.lastPurchasePrice),
+      updatedAt: new Date(),
+    })
+    .where(eq(materialInventory.id, existing.id))
+    .returning();
   await writeSettingsAudit({
     userId: user.id,
     action: "UPDATE_MATERIAL_SETTING_DEFAULTS",
@@ -267,15 +322,26 @@ export async function setMaterialActive(
   input: SetMaterialActiveInput,
 ): Promise<ActionResponse<{ readonly id: string; readonly isActive: boolean }>> {
   const validation = setMaterialActiveSchema.safeParse(input);
-  if (!validation.success) return { success: false, error: { code: "VALIDATION_ERROR", message: "Status material tidak valid." } };
+  if (!validation.success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Status material tidak valid." },
+    };
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
-  const existing = await db.query.materialMaster.findFirst({ where: eq(materialMaster.id, validation.data.materialId) });
-  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Material tidak ditemukan." } };
-  const [updated] = await db.update(materialMaster).set({ isActive: validation.data.isActive, updatedAt: new Date() })
-    .where(eq(materialMaster.id, existing.id)).returning();
+  const existing = await db.query.materialMaster.findFirst({
+    where: eq(materialMaster.id, validation.data.materialId),
+  });
+  if (!existing)
+    return { success: false, error: { code: "NOT_FOUND", message: "Material tidak ditemukan." } };
+  const [updated] = await db
+    .update(materialMaster)
+    .set({ isActive: validation.data.isActive, updatedAt: new Date() })
+    .where(eq(materialMaster.id, existing.id))
+    .returning();
   await writeSettingsAudit({
     userId: user.id,
     action: validation.data.isActive ? "REACTIVATE_MATERIAL_SETTING" : "ARCHIVE_MATERIAL_SETTING",
@@ -293,15 +359,23 @@ export async function createMaterialCategorySetting(
   input: CreateMaterialCategorySettingInput,
 ): Promise<ActionResponse<{ readonly id: string; readonly name: string }>> {
   const validation = createMaterialCategorySettingSchema.safeParse(input);
-  if (!validation.success) return { success: false, error: { code: "VALIDATION_ERROR", message: "Kategori material tidak valid." } };
+  if (!validation.success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Kategori material tidak valid." },
+    };
   const user = await getSessionUser();
-  if (!user) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  if (!user)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
-  const [created] = await db.insert(materialCategory).values({
-    name: validation.data.name.trim(),
-    description: toNullableText(validation.data.description),
-  }).returning();
+  const [created] = await db
+    .insert(materialCategory)
+    .values({
+      name: validation.data.name.trim(),
+      description: toNullableText(validation.data.description),
+    })
+    .returning();
   await writeSettingsAudit({
     userId: user.id,
     action: "CREATE_MATERIAL_CATEGORY_SETTING",

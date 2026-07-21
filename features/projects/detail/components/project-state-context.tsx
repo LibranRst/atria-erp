@@ -38,14 +38,10 @@ export function ProjectStateProvider({
       isLocked: state.isLocked,
       setProjectState,
     }),
-    [state.projectId, state.isLocked, setProjectState]
+    [state.projectId, state.isLocked, setProjectState],
   );
 
-  return (
-    <ProjectStateContext.Provider value={value}>
-      {children}
-    </ProjectStateContext.Provider>
-  );
+  return <ProjectStateContext.Provider value={value}>{children}</ProjectStateContext.Provider>;
 }
 
 export function useProjectState(): ProjectStateContextValue {

@@ -48,10 +48,7 @@ export function HeaderMorphMenu({
     0,
   );
   const closedWidth = Math.min(Math.max(title.length * 8 + 56, 124), 220);
-  const openHeight = Math.min(
-    24 + items.length * 48 + Math.max(items.length - 1, 0) * 4,
-    520,
-  );
+  const openHeight = Math.min(24 + items.length * 48 + Math.max(items.length - 1, 0) * 4, 520);
   const activeTitleY = 16 + activeIndex * 52;
 
   return (
@@ -66,12 +63,12 @@ export function HeaderMorphMenu({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={transitionEaseSmooth}
-            className="fixed inset-0 z-[70] cursor-pointer bg-black/20 backdrop-blur-[2px]"
+            className="fixed inset-0 z-70 cursor-pointer bg-black/20 backdrop-blur-[2px]"
           />
         )}
       </AnimatePresence>
 
-      <div className="pointer-events-none relative z-[80] flex h-10 w-[220px] items-start justify-center">
+      <div className="pointer-events-none relative z-80 flex h-10 w-[220px] items-start justify-center">
         <motion.div
           animate={{
             width: isOpen ? 292 : closedWidth,
@@ -79,7 +76,7 @@ export function HeaderMorphMenu({
             borderRadius: isOpen ? 28 : 20,
           }}
           transition={isOpen ? transitionSpringBouncy : transitionSpringSmooth}
-          className="pointer-events-auto absolute left-1/2 top-0 max-h-[calc(100dvh-5.5rem)] max-w-[calc(100vw-2rem)] overflow-hidden border border-outline-variant/20 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+          className="border-outline-variant/20 pointer-events-auto absolute top-0 left-1/2 max-h-[calc(100dvh-5.5rem)] max-w-[calc(100vw-2rem)] overflow-hidden border bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
           style={{ x: "-50%" }}
         >
           <motion.button
@@ -96,7 +93,7 @@ export function HeaderMorphMenu({
               y: isOpen ? activeTitleY : 0,
             }}
             transition={isOpen ? transitionSpringBouncy : transitionSpringSmooth}
-            className={`absolute inset-x-0 top-0 flex h-10 w-full cursor-pointer items-center justify-center px-5 text-center text-sm font-semibold tracking-tight text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/30 [will-change:opacity,transform] ${
+            className={`text-on-surface focus-visible:ring-primary/30 absolute inset-x-0 top-0 flex h-10 w-full cursor-pointer items-center justify-center px-5 text-center text-sm font-semibold tracking-tight will-change-[opacity,transform] outline-none focus-visible:ring-2 ${
               isOpen ? "pointer-events-none" : "pointer-events-auto"
             }`}
           >
@@ -114,7 +111,7 @@ export function HeaderMorphMenu({
                 ? { ...transitionEaseSmooth, delay: 0.08, duration: 0.22 }
                 : { ...transitionEaseSmooth, duration: 0.1 }
             }
-            className={`max-h-[calc(100dvh-5.5rem)] overflow-y-auto p-3 no-scrollbar [will-change:opacity,transform] ${
+            className={`no-scrollbar max-h-[calc(100dvh-5.5rem)] overflow-y-auto p-3 will-change-[opacity,transform] ${
               isOpen ? "pointer-events-auto" : "pointer-events-none"
             }`}
             aria-hidden={!isOpen}
@@ -138,18 +135,14 @@ export function HeaderMorphMenu({
                         : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
                     }`}
                   >
-                    <span className="min-w-0 truncate text-sm font-bold">
-                      {item.label}
-                    </span>
+                    <span className="min-w-0 truncate text-sm font-bold">{item.label}</span>
                     <span
                       aria-hidden="true"
                       className={`material-symbols-outlined shrink-0 text-[18px] ${
                         isActive ? "text-on-primary" : "text-on-surface-variant/55"
                       }`}
                       style={{
-                        fontVariationSettings: isActive
-                          ? "'FILL' 1"
-                          : "'FILL' 0",
+                        fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0",
                       }}
                     >
                       {item.iconName}

@@ -25,9 +25,7 @@ export function approvalRequiresEmergencyOverride(
   canEmergencyOverride: boolean,
 ): boolean {
   return Boolean(
-    item.type !== "inventory_opening" &&
-      canEmergencyOverride &&
-      item.canEmergencyOverride,
+    item.type !== "inventory_opening" && canEmergencyOverride && item.canEmergencyOverride,
   );
 }
 
@@ -53,14 +51,8 @@ export function ApprovalDecisionReasonFields({
   onEmergencyOverrideChange,
   onEmergencyReasonChange,
 }: ApprovalDecisionReasonFieldsProps): JSX.Element | null {
-  const requiresEmergencyOverride = approvalRequiresEmergencyOverride(
-    item,
-    canEmergencyOverride,
-  );
-  const needsOpeningReason = approvalRequiresOpeningReason(
-    item,
-    canEmergencyOverride,
-  );
+  const requiresEmergencyOverride = approvalRequiresEmergencyOverride(item, canEmergencyOverride);
+  const needsOpeningReason = approvalRequiresOpeningReason(item, canEmergencyOverride);
 
   if (!needsOpeningReason && !requiresEmergencyOverride) return null;
 
@@ -70,7 +62,7 @@ export function ApprovalDecisionReasonFields({
         <div>
           <label
             htmlFor={`${idPrefix}-approval-reason`}
-            className="px-1 text-xs font-bold text-on-surface"
+            className="text-on-surface px-1 text-xs font-bold"
           >
             Alasan persetujuan
           </label>
@@ -83,11 +75,9 @@ export function ApprovalDecisionReasonFields({
             disabled={pending}
             placeholder="Contoh: saldo fisik dan harga pokok sesuai dokumen stock opname"
             className="mt-2"
-            aria-invalid={
-              approvalReason.length > 0 && approvalReason.trim().length < 10
-            }
+            aria-invalid={approvalReason.length > 0 && approvalReason.trim().length < 10}
           />
-          <p className="mt-1 px-1 text-[10px] text-on-surface-variant">
+          <p className="text-on-surface-variant mt-1 px-1 text-[10px]">
             Wajib diisi minimal 10 karakter. Alasan dicatat di audit log.
           </p>
         </div>
@@ -119,10 +109,7 @@ export function ApprovalDecisionReasonFields({
                     disabled={pending}
                     placeholder="Jelaskan alasan override, minimal 10 karakter"
                     aria-label="Alasan emergency override"
-                    aria-invalid={
-                      emergencyReason.length > 0 &&
-                      emergencyReason.trim().length < 10
-                    }
+                    aria-invalid={emergencyReason.length > 0 && emergencyReason.trim().length < 10}
                   />
                 </div>
               </motion.div>

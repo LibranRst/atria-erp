@@ -98,9 +98,9 @@ export function ExpenseLineEditor({
   function requestCategoryChange(categoryId: string): void {
     const losesLinks = Boolean(
       draft.materialId ||
-        draft.projectRapItemId ||
-        draft.projectCategoryPlanItemId ||
-        draft.inventoryLocationId,
+      draft.projectRapItemId ||
+      draft.projectCategoryPlanItemId ||
+      draft.inventoryLocationId,
     );
     if (draft.projectBudgetCategoryId && losesLinks) {
       setPendingCategoryId(categoryId);
@@ -132,8 +132,16 @@ export function ExpenseLineEditor({
         title={`Item ${index + 1}`}
         primaryLabel="Simpan"
         disabled={!complete}
-        disabledReason={!complete ? "Lengkapi kategori, keterangan, jumlah, harga, dan kebutuhan stok." : undefined}
-        statusText={overBudget ? "Subtotal melebihi sisa kategori." : `Subtotal Rp ${amount.toLocaleString("id-ID")}`}
+        disabledReason={
+          !complete
+            ? "Lengkapi kategori, keterangan, jumlah, harga, dan kebutuhan stok."
+            : undefined
+        }
+        statusText={
+          overBudget
+            ? "Subtotal melebihi sisa kategori."
+            : `Subtotal Rp ${amount.toLocaleString("id-ID")}`
+        }
         statusTone={overBudget ? "danger" : complete ? "success" : "warning"}
         onClose={onClose}
         onPrimary={() => onSave(draft)}
@@ -152,7 +160,11 @@ export function ExpenseLineEditor({
           <FormField
             label="Keterangan"
             required
-            error={draft.description.trim().length < 5 ? "Tulis keterangan minimal 5 karakter." : undefined}
+            error={
+              draft.description.trim().length < 5
+                ? "Tulis keterangan minimal 5 karakter."
+                : undefined
+            }
           >
             <Textarea
               value={draft.description}
@@ -166,7 +178,11 @@ export function ExpenseLineEditor({
             <FormField
               label={selectedMaterial ? `Jumlah (${selectedMaterial.unit})` : "Jumlah"}
               required
-              error={draft.quantity === "" || Number(draft.quantity) <= 0 ? "Jumlah harus lebih dari 0." : undefined}
+              error={
+                draft.quantity === "" || Number(draft.quantity) <= 0
+                  ? "Jumlah harus lebih dari 0."
+                  : undefined
+              }
             >
               <QuantityStepper
                 value={draft.quantity}
@@ -195,7 +211,8 @@ export function ExpenseLineEditor({
 
           {selectedCategory ? (
             <FieldContextLine tone={overBudget ? "danger" : "success"}>
-              Rp {amount.toLocaleString("id-ID")} dari sisa Rp {remaining.toLocaleString("id-ID")} kategori {selectedCategory.name}.
+              Rp {amount.toLocaleString("id-ID")} dari sisa Rp {remaining.toLocaleString("id-ID")}{" "}
+              kategori {selectedCategory.name}.
             </FieldContextLine>
           ) : null}
           {overBudget ? (
@@ -205,7 +222,7 @@ export function ExpenseLineEditor({
           ) : null}
 
           {isMaterial ? (
-            <div className="space-y-3 border-t border-outline-variant/15 pt-4">
+            <div className="border-outline-variant/15 space-y-3 border-t pt-4">
               <OptionChoiceGroup
                 label="Perlakuan Stok"
                 value={draft.stockHandling}
@@ -228,14 +245,21 @@ export function ExpenseLineEditor({
                 placeholder="Pilih material"
                 required={draft.stockHandling !== "EXPENSE_ONLY"}
                 optional={draft.stockHandling === "EXPENSE_ONLY"}
-                error={draft.stockHandling !== "EXPENSE_ONLY" && !draft.materialId ? "Pilih material untuk perubahan stok." : undefined}
+                error={
+                  draft.stockHandling !== "EXPENSE_ONLY" && !draft.materialId
+                    ? "Pilih material untuk perubahan stok."
+                    : undefined
+                }
               />
               {draft.stockHandling !== "EXPENSE_ONLY" ? (
                 <SheetSelect
                   label="Lokasi Stok"
                   value={draft.inventoryLocationId}
                   onChange={(inventoryLocationId) => patch({ inventoryLocationId })}
-                  options={inventoryLocations.map((location) => ({ value: location.id, label: location.name }))}
+                  options={inventoryLocations.map((location) => ({
+                    value: location.id,
+                    label: location.name,
+                  }))}
                   placeholder="Pilih lokasi"
                   required
                   error={!draft.inventoryLocationId ? "Pilih lokasi stok." : undefined}
@@ -261,15 +285,23 @@ export function ExpenseLineEditor({
                 optional
               />
               {selectedMaterial && draft.quantity !== "" ? (
-                <FieldContextLine tone={selectedMaterial.availableStock >= Number(draft.quantity) ? "success" : "warning"}>
-                  Stok tersedia {selectedMaterial.availableStock.toLocaleString("id-ID")} {selectedMaterial.unit}; kebutuhan {Number(draft.quantity).toLocaleString("id-ID")} {selectedMaterial.unit}.
+                <FieldContextLine
+                  tone={
+                    selectedMaterial.availableStock >= Number(draft.quantity)
+                      ? "success"
+                      : "warning"
+                  }
+                >
+                  Stok tersedia {selectedMaterial.availableStock.toLocaleString("id-ID")}{" "}
+                  {selectedMaterial.unit}; kebutuhan{" "}
+                  {Number(draft.quantity).toLocaleString("id-ID")} {selectedMaterial.unit}.
                 </FieldContextLine>
               ) : null}
             </div>
           ) : null}
 
           {isPackage ? (
-            <div className="border-t border-outline-variant/15 pt-4">
+            <div className="border-outline-variant/15 border-t pt-4">
               <SheetSelect
                 label={packageLabel}
                 value={draft.projectCategoryPlanItemId}
@@ -277,7 +309,9 @@ export function ExpenseLineEditor({
                 options={[
                   { value: "", label: "Tidak ditautkan" },
                   ...categoryPlanItems
-                    .filter((item) => item.projectBudgetCategoryId === draft.projectBudgetCategoryId)
+                    .filter(
+                      (item) => item.projectBudgetCategoryId === draft.projectBudgetCategoryId,
+                    )
                     .map((item) => ({
                       value: item.id,
                       label: `${item.area} · ${item.label}`,

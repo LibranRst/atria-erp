@@ -65,16 +65,16 @@ Production sekarang gagal start bila `BETTER_AUTH_SECRET` tidak dikonfigurasi. F
 
 ## Invariant yang sekarang harus selalu benar
 
-| Domain | Invariant |
-|---|---|
-| Kas | Saldo hanya berubah melalui explicit action di dalam transaction dan menghasilkan ledger serta audit log. |
-| Client invoice | Total client payment tidak boleh melebihi nominal invoice. |
-| Vendor bill | Total payment pending/completed tidak boleh melebihi nominal bill. |
-| Approval | PM tidak dapat memverifikasi expense sendiri; Owner memutus approval high-risk. |
-| Inventory | `currentStock >= reservedStock >= 0`. |
-| Reservation | Use/waste hanya melepas reservasi milik project/RAP terkait. |
-| RAB | Approved RAB immutable; perubahan berikutnya harus lewat revision dan Change Order. |
-| Closing | Project tidak dapat `COMPLETED` lewat edit biasa dan harus melewati checklist. |
+| Domain         | Invariant                                                                                                 |
+| -------------- | --------------------------------------------------------------------------------------------------------- |
+| Kas            | Saldo hanya berubah melalui explicit action di dalam transaction dan menghasilkan ledger serta audit log. |
+| Client invoice | Total client payment tidak boleh melebihi nominal invoice.                                                |
+| Vendor bill    | Total payment pending/completed tidak boleh melebihi nominal bill.                                        |
+| Approval       | PM tidak dapat memverifikasi expense sendiri; Owner memutus approval high-risk.                           |
+| Inventory      | `currentStock >= reservedStock >= 0`.                                                                     |
+| Reservation    | Use/waste hanya melepas reservasi milik project/RAP terkait.                                              |
+| RAB            | Approved RAB immutable; perubahan berikutnya harus lewat revision dan Change Order.                       |
+| Closing        | Project tidak dapat `COMPLETED` lewat edit biasa dan harus melewati checklist.                            |
 
 ## Status gap production setelah remediation
 

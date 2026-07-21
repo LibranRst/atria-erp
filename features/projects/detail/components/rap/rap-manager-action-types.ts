@@ -34,21 +34,12 @@ export interface UseRapManagerActionsResult {
   readonly success: string | null;
   readonly handleCreateRap: () => void;
   readonly handleSubmitCategoryPlanItem: (event: FormEvent) => void;
-  readonly handleMarkCategoryPlanActive: (
-    projectCategoryPlanItemId: string,
-  ) => void;
-  readonly handleDeleteCategoryPlanItem: (
-    projectCategoryPlanItemId: string,
-  ) => void;
+  readonly handleMarkCategoryPlanActive: (projectCategoryPlanItemId: string) => void;
+  readonly handleDeleteCategoryPlanItem: (projectCategoryPlanItemId: string) => void;
   readonly handleSubmitRapItem: (event: FormEvent) => void;
   readonly handleDeleteRapItem: (projectRapItemId: string) => void;
-  readonly handleAdvanceRapSetup: (
-    targetStage: "TUKANG" | "SUBCON" | "REVIEW",
-  ) => void;
-  readonly handleScopeSkip: (
-    categoryCode: "TUKANG" | "SUBCON",
-    skipped: boolean,
-  ) => void;
+  readonly handleAdvanceRapSetup: (targetStage: "TUKANG" | "SUBCON" | "REVIEW") => void;
+  readonly handleScopeSkip: (categoryCode: "TUKANG" | "SUBCON", skipped: boolean) => void;
   readonly handleReopenPackage: (itemId: string) => void;
   readonly handleFinalizeInternalPlan: () => void;
   readonly handleCreateInternalPlanRevision: () => void;

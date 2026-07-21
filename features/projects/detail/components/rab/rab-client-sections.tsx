@@ -9,10 +9,7 @@ import { MoneyValue } from "@/components/ui/page-primitives";
 import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import {
-  NativePanel,
-  rabSourceLabel,
-} from "../shared/rap-rab-primitives";
+import { NativePanel, rabSourceLabel } from "../shared/rap-rab-primitives";
 import type {
   RabBundleView,
   RabEstimateView,
@@ -69,41 +66,48 @@ export function RabClientSummaryPanel({
     rabEstimate.bundles.filter((bundle) => !bundle.isHidden).length;
 
   return (
-    <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
+    <section className="bg-primary text-on-primary rounded-[28px] p-5 shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">{isRevisionDraft ? `Revisi RAB R${rabEstimate.revision}` : "Nilai RAB klien"}</p>
-        <MoneyValue
-          amount={visibleRabValue}
-          variant="fullDynamic"
-          tone="inverse"
-          size="hero"
-          className="mt-1"
-        />
+          <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
+            {isRevisionDraft ? `Revisi RAB R${rabEstimate.revision}` : "Nilai RAB klien"}
+          </p>
+          <MoneyValue
+            amount={visibleRabValue}
+            variant="fullDynamic"
+            tone="inverse"
+            size="hero"
+            className="mt-1"
+          />
         </div>
-        <Badge status={toBadgeStatus(rabEstimate.status)}>{rabStatusLabel(rabEstimate.status)}</Badge>
+        <Badge status={toBadgeStatus(rabEstimate.status)}>
+          {rabStatusLabel(rabEstimate.status)}
+        </Badge>
       </div>
-      <p className="mt-1 truncate text-[10px] text-white/60">{rabEstimate.title} · {visibleItemCount} item tampil</p>
+      <p className="mt-1 truncate text-[10px] text-white/60">
+        {rabEstimate.title} · {visibleItemCount} item tampil
+      </p>
       {isRevisionDraft && approvedBaseline && (
         <div className="mt-4 grid grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-4">
           <RabFact label="Disetujui" value={approvedBaseline.value} />
           <RabFact label="Revisi" value={visibleRabValue} align="center" />
-          <RabFact label="Selisih" value={visibleRabValue - approvedBaseline.value} align="right" danger={visibleRabValue < approvedBaseline.value} />
+          <RabFact
+            label="Selisih"
+            value={visibleRabValue - approvedBaseline.value}
+            align="right"
+            danger={visibleRabValue < approvedBaseline.value}
+          />
         </div>
       )}
       {rabEstimate.status === "DRAFT" && staleSourceLabels.length > 0 && (
-        <div className="mt-4 rounded-[18px] bg-warning/15 p-3 text-white ring-1 ring-warning/25">
-          <p className="text-xs font-bold">
-            {staleSourceLabels.length} sumber berubah
-          </p>
-          <p className="mt-1 text-[10px]">
-            Perbarui jumlah dan harga tanpa mengubah label klien.
-          </p>
+        <div className="bg-warning/15 ring-warning/25 mt-4 rounded-[18px] p-3 text-white ring-1">
+          <p className="text-xs font-bold">{staleSourceLabels.length} sumber berubah</p>
+          <p className="mt-1 text-[10px]">Perbarui jumlah dan harga tanpa mengubah label klien.</p>
           <button
             type="button"
             onClick={handleRefreshRabSources}
             disabled={isPending}
-            className="mt-3 min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary"
+            className="text-primary mt-3 min-h-12 w-full rounded-full bg-white text-xs font-bold"
           >
             Perbarui sumber
           </button>
@@ -122,9 +126,32 @@ export function RabClientSummaryPanel({
   );
 }
 
-function RabFact({ label, value, align = "left", danger = false }: { readonly label: string; readonly value: number; readonly align?: "left" | "center" | "right"; readonly danger?: boolean }): React.JSX.Element {
-  const className = align === "center" ? "px-2 text-center" : align === "right" ? "pl-2 text-right" : "pr-2";
-  return <div className={className}><p className="truncate text-[8px] font-bold uppercase tracking-wide text-white/50">{label}</p><MoneyValue amount={value} variant="compactWithFull" tone={danger ? "danger" : "inverse"} size="xs" align={align === "right" ? "right" : "left"} className={align === "center" ? "text-center" : ""} /></div>;
+function RabFact({
+  label,
+  value,
+  align = "left",
+  danger = false,
+}: {
+  readonly label: string;
+  readonly value: number;
+  readonly align?: "left" | "center" | "right";
+  readonly danger?: boolean;
+}): React.JSX.Element {
+  const className =
+    align === "center" ? "px-2 text-center" : align === "right" ? "pl-2 text-right" : "pr-2";
+  return (
+    <div className={className}>
+      <p className="truncate text-[8px] font-bold tracking-wide text-white/50 uppercase">{label}</p>
+      <MoneyValue
+        amount={value}
+        variant="compactWithFull"
+        tone={danger ? "danger" : "inverse"}
+        size="xs"
+        align={align === "right" ? "right" : "left"}
+        className={align === "center" ? "text-center" : ""}
+      />
+    </div>
+  );
 }
 
 export function RabItemsPanel({
@@ -147,8 +174,7 @@ export function RabItemsPanel({
   const canBundle =
     canManageRab &&
     rabEstimate.status === "DRAFT" &&
-    rabEstimate.items.filter((item) => !item.isHidden && !item.bundleId)
-      .length >= 2;
+    rabEstimate.items.filter((item) => !item.isHidden && !item.bundleId).length >= 2;
 
   return (
     <NativePanel
@@ -159,7 +185,7 @@ export function RabItemsPanel({
           <button
             type="button"
             onClick={() => setManualLineOpen(true)}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-on-primary"
+            className="bg-primary text-on-primary flex h-12 w-12 items-center justify-center rounded-full"
             aria-label="Tambah item manual"
           >
             <span className="material-symbols-outlined">add</span>
@@ -167,7 +193,10 @@ export function RabItemsPanel({
         ) : undefined
       }
     >
-      <div id="rab-items" className="divide-y divide-outline-variant/25 overflow-hidden rounded-[20px] bg-surface-container-low">
+      <div
+        id="rab-items"
+        className="divide-outline-variant/25 bg-surface-container-low divide-y overflow-hidden rounded-[20px]"
+      >
         {rabEstimate.bundles.map((bundle) => (
           <RabBundleRow
             key={bundle.id}
@@ -179,14 +208,10 @@ export function RabItemsPanel({
         {sortedRabItems
           .filter((item) => !item.bundleId)
           .map((item) => (
-            <RabItemRow
-              key={item.id}
-              item={item}
-              setRabItemEditorId={setRabItemEditorId}
-            />
+            <RabItemRow key={item.id} item={item} setRabItemEditorId={setRabItemEditorId} />
           ))}
         {rabEstimate.items.length === 0 && (
-          <div className="rounded-2xl bg-surface-container-low p-md text-center text-xs text-on-surface-variant">
+          <div className="bg-surface-container-low p-md text-on-surface-variant rounded-2xl text-center text-xs">
             Belum ada item RAB.
           </div>
         )}
@@ -195,7 +220,7 @@ export function RabItemsPanel({
         <button
           type="button"
           onClick={openCreateBundle}
-          className="mt-sm min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary ring-1 ring-primary/15"
+          className="mt-sm text-primary ring-primary/15 min-h-12 w-full rounded-full bg-white text-xs font-bold ring-1"
         >
           Buat paket RAB
         </button>
@@ -222,62 +247,80 @@ export function RabDraftActionsPanel({
   const [confirmApprove, setConfirmApprove] = React.useState(false);
   return (
     <>
-    <NativePanel
-      eyebrow="Keputusan draf"
-      title={isRevisionDraft ? "Selesaikan revisi" : "Selesaikan RAB"}
-    >
-      {isRevisionDraft ? (
-        <div className="space-y-2">
+      <NativePanel
+        eyebrow="Keputusan draf"
+        title={isRevisionDraft ? "Selesaikan revisi" : "Selesaikan RAB"}
+      >
+        {isRevisionDraft ? (
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() =>
+                document.getElementById("rab-items")?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="bg-surface-container-low min-h-12 w-full rounded-full text-xs font-bold"
+            >
+              Lanjut edit
+            </button>
+            <button
+              type="button"
+              onClick={() => setChangeOrderOpen(true)}
+              className="bg-primary text-on-primary min-h-12 w-full rounded-full text-xs font-bold"
+            >
+              Proses change order
+            </button>
+            <button
+              type="button"
+              onClick={() => setVoidRevisionOpen(true)}
+              className="bg-error-container/25 text-error min-h-12 w-full rounded-full text-xs font-bold"
+            >
+              Batalkan revisi
+            </button>
+          </div>
+        ) : (
           <button
             type="button"
-            onClick={() =>
-              document
-                .getElementById("rab-items")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-            className="min-h-12 w-full rounded-full bg-surface-container-low text-xs font-bold"
+            onClick={() => setConfirmApprove(true)}
+            disabled={isPending || rabEstimate.items.length === 0}
+            className="bg-primary text-on-primary min-h-12 w-full rounded-full text-xs font-bold disabled:opacity-40"
           >
-            Lanjut edit
+            Tinjau & Setujui RAB
           </button>
-          <button
-            type="button"
-            onClick={() => setChangeOrderOpen(true)}
-            className="min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary"
-          >
-            Proses change order
-          </button>
-          <button
-            type="button"
-            onClick={() => setVoidRevisionOpen(true)}
-            className="min-h-12 w-full rounded-full bg-error-container/25 text-xs font-bold text-error"
-          >
-            Batalkan revisi
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setConfirmApprove(true)}
-          disabled={isPending || rabEstimate.items.length === 0}
-          className="min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary disabled:opacity-40"
-        >
-          Tinjau & Setujui RAB
-        </button>
-      )}
-    </NativePanel>
-    <ConfirmationModal
-      open={confirmApprove}
-      title="Setujui RAB klien?"
-      description="RAB menjadi baseline klien yang tidak dapat diedit langsung. Perubahan berikutnya harus melalui revisi dan Change Order."
-      tone="warning"
-      onClose={() => setConfirmApprove(false)}
-      actions={(
-        <div className="grid grid-cols-2 gap-2">
-          <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} onClick={() => setConfirmApprove(false)} className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold">Kembali</motion.button>
-          <motion.button type="button" whileTap={{ scale: 0.97 }} transition={transitionSpringSnappy} disabled={isPending} onClick={() => { setConfirmApprove(false); handleApproveRab(); }} className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white disabled:opacity-40">Setujui RAB</motion.button>
-        </div>
-      )}
-    />
+        )}
+      </NativePanel>
+      <ConfirmationModal
+        open={confirmApprove}
+        title="Setujui RAB klien?"
+        description="RAB menjadi baseline klien yang tidak dapat diedit langsung. Perubahan berikutnya harus melalui revisi dan Change Order."
+        tone="warning"
+        onClose={() => setConfirmApprove(false)}
+        actions={
+          <div className="grid grid-cols-2 gap-2">
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              onClick={() => setConfirmApprove(false)}
+              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
+            >
+              Kembali
+            </motion.button>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={transitionSpringSnappy}
+              disabled={isPending}
+              onClick={() => {
+                setConfirmApprove(false);
+                handleApproveRab();
+              }}
+              className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white disabled:opacity-40"
+            >
+              Setujui RAB
+            </motion.button>
+          </div>
+        }
+      />
     </>
   );
 }
@@ -295,24 +338,19 @@ function RabBundleRow({
     <button
       type="button"
       onClick={() => isDraft && openEditBundle(bundle)}
-      className="w-full p-3 text-left outline-none focus-visible:bg-primary/5 active:bg-primary/5"
+      className="focus-visible:bg-primary/5 active:bg-primary/5 w-full p-3 text-left outline-none"
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary">
-          <span className="material-symbols-outlined text-[19px]">
-            inventory_2
-          </span>
+        <span className="bg-primary text-on-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+          <span className="material-symbols-outlined text-[19px]">inventory_2</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-bold">
-            {bundle.clientLabel}
-          </span>
-          <span className="block text-[10px] text-on-surface-variant">
-            Paket - {bundle.itemIds.length} item - {bundle.quantity}{" "}
-            {bundle.unit}
+          <span className="block truncate text-sm font-bold">{bundle.clientLabel}</span>
+          <span className="text-on-surface-variant block text-[10px]">
+            Paket - {bundle.itemIds.length} item - {bundle.quantity} {bundle.unit}
           </span>
         </span>
-        <span className="shrink-0 font-mono text-[11px] font-bold text-primary">
+        <span className="text-primary shrink-0 font-mono text-[11px] font-bold">
           {formatShortRp(Number(bundle.lineTotal))}
         </span>
       </div>
@@ -334,20 +372,18 @@ function RabItemRow({
       className="w-full p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75 text-primary">
+        <span className="text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75">
           <span className="material-symbols-outlined text-[19px]">
             {item.sourceType === "MANUAL" ? "edit_note" : "format_list_bulleted"}
           </span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-bold">
-            {item.clientLabel}
-          </span>
-          <span className="block truncate text-[10px] text-on-surface-variant">
+          <span className="block truncate text-sm font-bold">{item.clientLabel}</span>
+          <span className="text-on-surface-variant block truncate text-[10px]">
             {rabSourceLabel(item.sourceType)} - {item.quantity} {item.unit}
           </span>
           {item.isHidden && (
-            <span className="mt-1 inline-flex rounded-full bg-error-container/30 px-2 py-0.5 text-[9px] font-bold text-error">
+            <span className="bg-error-container/30 text-error mt-1 inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold">
               Disembunyikan
             </span>
           )}

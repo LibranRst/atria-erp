@@ -19,9 +19,7 @@ export async function getServerSession(): Promise<ServerSession> {
   }
 }
 
-export async function requireServerSession(
-  redirectTo = "/login",
-): Promise<RequiredServerSession> {
+export async function requireServerSession(redirectTo = "/login"): Promise<RequiredServerSession> {
   const session = await getServerSession();
   if (!session?.user) {
     redirect(redirectTo);

@@ -53,18 +53,13 @@ type BadgeProps = Omit<ComponentPropsWithoutRef<"span">, "children"> & {
   children?: ReactNode;
 };
 
-export function Badge({
-  className,
-  status,
-  children,
-  ...props
-}: BadgeProps): React.JSX.Element {
+export function Badge({ className, status, children, ...props }: BadgeProps): React.JSX.Element {
   const variant = statusVariantMap[status];
   const voidClass = status === "VOID" ? "line-through" : "";
 
   return (
     <span
-      className={`inline-flex min-h-5 items-center rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${variantClasses[variant]} ${voidClass} ${className ?? ""}`}
+      className={`inline-flex min-h-5 items-center rounded-full px-2.5 py-0.5 text-[9px] font-bold tracking-wide uppercase ${variantClasses[variant]} ${voidClass} ${className ?? ""}`}
       {...props}
     >
       {typeof children === "string" ? formatStatus(children) : (children ?? formatStatus(status))}

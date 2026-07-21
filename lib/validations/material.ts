@@ -85,20 +85,31 @@ export const adjustMaterialStockSchema = stockMovementBaseSchema.extend({
 
 export type AdjustMaterialStockInput = z.infer<typeof adjustMaterialStockSchema>;
 
-export const createInventoryOpeningSchema = z.object({
-  batchNumber: z.string().trim().min(3).max(100).optional(),
-  cutoverDate: z.coerce.date(),
-  note: z.string().trim().min(10, "Catatan sumber data minimal 10 karakter.").max(1_000),
-  referenceNumber: z.string().trim().max(100).optional().nullable(),
-  items: z.array(z.object({
-    materialInventoryId: uuidSchema("ID inventory material tidak valid."),
-    quantity: z.number().positive("Quantity awal harus lebih besar dari 0."),
-    unitCost: z.number().positive("Average cost awal harus lebih besar dari 0."),
-  })).min(1, "Minimal satu item saldo awal stok."),
-}).superRefine((value, context) => {
-  const ids = value.items.map((item) => item.materialInventoryId);
-  if (new Set(ids).size !== ids.length) context.addIssue({ code: "custom", path: ["items"], message: "Inventory tidak boleh duplikat." });
-});
+export const createInventoryOpeningSchema = z
+  .object({
+    batchNumber: z.string().trim().min(3).max(100).optional(),
+    cutoverDate: z.coerce.date(),
+    note: z.string().trim().min(10, "Catatan sumber data minimal 10 karakter.").max(1_000),
+    referenceNumber: z.string().trim().max(100).optional().nullable(),
+    items: z
+      .array(
+        z.object({
+          materialInventoryId: uuidSchema("ID inventory material tidak valid."),
+          quantity: z.number().positive("Quantity awal harus lebih besar dari 0."),
+          unitCost: z.number().positive("Average cost awal harus lebih besar dari 0."),
+        }),
+      )
+      .min(1, "Minimal satu item saldo awal stok."),
+  })
+  .superRefine((value, context) => {
+    const ids = value.items.map((item) => item.materialInventoryId);
+    if (new Set(ids).size !== ids.length)
+      context.addIssue({
+        code: "custom",
+        path: ["items"],
+        message: "Inventory tidak boleh duplikat.",
+      });
+  });
 
 export const decideInventoryOpeningSchema = z.object({
   batchId: uuidSchema("ID batch tidak valid."),
@@ -117,14 +128,18 @@ export type DecideInventoryOpeningInput = z.infer<typeof decideInventoryOpeningS
 export type ReverseInventoryOpeningInput = z.infer<typeof reverseInventoryOpeningSchema>;
 
 export const previewInitialStockImportSchema = z.object({
-  rows: z.array(z.object({
-    rowNumber: z.number().int().positive(),
-    materialName: z.string().trim().max(255).optional().default(""),
-    materialCode: z.string().trim().max(100).optional().default(""),
-    locationName: z.string().trim().max(100),
-    quantity: z.number(),
-    unitCost: z.number(),
-  })).min(1, "CSV belum memiliki data."),
+  rows: z
+    .array(
+      z.object({
+        rowNumber: z.number().int().positive(),
+        materialName: z.string().trim().max(255).optional().default(""),
+        materialCode: z.string().trim().max(100).optional().default(""),
+        locationName: z.string().trim().max(100),
+        quantity: z.number(),
+        unitCost: z.number(),
+      }),
+    )
+    .min(1, "CSV belum memiliki data."),
 });
 
 export type PreviewInitialStockImportInput = z.infer<typeof previewInitialStockImportSchema>;

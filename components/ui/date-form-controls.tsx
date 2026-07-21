@@ -5,12 +5,7 @@ import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { BottomSheet } from "./bottom-sheet";
 import { FormField } from "./basic-form-controls";
-import {
-  cx,
-  formatDateLabel,
-  formatIsoDate,
-  parseIsoDate,
-} from "./form-control-utils";
+import { cx, formatDateLabel, formatIsoDate, parseIsoDate } from "./form-control-utils";
 import { useFormPresentation } from "./form-presentation-context";
 
 export function DatePickerField({
@@ -39,11 +34,7 @@ export function DatePickerField({
   const [open, setOpen] = React.useState(false);
   const [viewDate, setViewDate] = React.useState<Date>(parsed ?? new Date());
   const monthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-  const daysInMonth = new Date(
-    viewDate.getFullYear(),
-    viewDate.getMonth() + 1,
-    0,
-  ).getDate();
+  const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
   const blanks = monthStart.getDay();
   const monthLabel = new Intl.DateTimeFormat("id-ID", {
     month: "long",
@@ -52,13 +43,7 @@ export function DatePickerField({
   const selectedDate = parsed ? formatIsoDate(parsed) : "";
 
   return (
-    <FormField
-      label={label}
-      helper={helper}
-      error={error}
-      htmlFor={id}
-      required={required}
-    >
+    <FormField label={label} helper={helper} error={error} htmlFor={id} required={required}>
       <button
         id={id}
         type="button"
@@ -69,7 +54,7 @@ export function DatePickerField({
         className={cx(
           grouped
             ? "flex min-h-8 w-full items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55"
-            : "flex min-h-12 w-full items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition active:scale-[0.99] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-55",
+            : "border-outline-variant/35 bg-surface-container-lowest flex min-h-12 w-full items-center justify-between gap-3 rounded-full border px-5 text-left transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
         )}
       >
         <span
@@ -80,30 +65,26 @@ export function DatePickerField({
         >
           {value ? formatDateLabel(value) : placeholder}
         </span>
-        <CalendarDays className="h-4 w-4 text-on-surface-variant" />
+        <CalendarDays className="text-on-surface-variant h-4 w-4" />
       </button>
       <BottomSheet open={open} title={label} onClose={() => setOpen(false)}>
-        <div className="rounded-[24px] bg-surface-container-lowest p-3 ring-1 ring-outline-variant/15">
+        <div className="bg-surface-container-lowest ring-outline-variant/15 rounded-[24px] p-3 ring-1">
           <div className="flex items-center justify-between">
             <button
               type="button"
               onClick={() =>
-                setViewDate(
-                  new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1),
-                )
+                setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
               }
               className="flex h-11 w-11 items-center justify-center rounded-full text-blue-600 transition active:bg-blue-50"
               aria-label="Bulan sebelumnya"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <p className="text-sm font-bold text-on-surface">{monthLabel}</p>
+            <p className="text-on-surface text-sm font-bold">{monthLabel}</p>
             <button
               type="button"
               onClick={() =>
-                setViewDate(
-                  new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1),
-                )
+                setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
               }
               className="flex h-11 w-11 items-center justify-center rounded-full text-blue-600 transition active:bg-blue-50"
               aria-label="Bulan berikutnya"
@@ -111,7 +92,7 @@ export function DatePickerField({
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase text-on-surface-variant">
+          <div className="text-on-surface-variant grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase">
             {["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].map((day) => (
               <span key={day} className="py-2">
                 {day}
@@ -124,11 +105,7 @@ export function DatePickerField({
             ))}
             {Array.from({ length: daysInMonth }).map((_, index) => {
               const day = index + 1;
-              const date = new Date(
-                viewDate.getFullYear(),
-                viewDate.getMonth(),
-                day,
-              );
+              const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
               const iso = formatIsoDate(date);
               const active = iso === selectedDate;
               return (

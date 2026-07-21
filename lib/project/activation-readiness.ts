@@ -27,16 +27,11 @@ export function getProjectActivationReadiness({
   readonly rabEstimates: readonly ActivationRab[];
 }): ProjectActivationReadiness {
   const approvedRabs = rabEstimates.filter(
-    (estimate) =>
-      estimate.status === "APPROVED" &&
-      estimate.sourceProjectRapId !== null,
+    (estimate) => estimate.status === "APPROVED" && estimate.sourceProjectRapId !== null,
   );
   const rabApproved = approvedRabs.length > 0;
   const rapLocked = approvedRabs.some((estimate) =>
-    raps.some(
-      (rap) =>
-        rap.id === estimate.sourceProjectRapId && rap.status === "LOCKED",
-    ),
+    raps.some((rap) => rap.id === estimate.sourceProjectRapId && rap.status === "LOCKED"),
   );
   const budgetApproved = budgetStatus === "APPROVED";
 
@@ -44,10 +39,6 @@ export function getProjectActivationReadiness({
     budgetApproved,
     rabApproved,
     rapLocked,
-    isReady:
-      projectStatus === "DRAFT" &&
-      budgetApproved &&
-      rabApproved &&
-      rapLocked,
+    isReady: projectStatus === "DRAFT" && budgetApproved && rabApproved && rapLocked,
   };
 }

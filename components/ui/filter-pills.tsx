@@ -24,7 +24,7 @@ export function FilterPills({
     <div className="min-w-0">
       <p className="sr-only">{label}</p>
       <div
-        className="flex w-full gap-2 overflow-x-auto pb-1 no-scrollbar"
+        className="no-scrollbar flex w-full gap-2 overflow-x-auto pb-1"
         role="group"
         aria-label={label}
       >
@@ -37,7 +37,7 @@ export function FilterPills({
             className={`h-9 shrink-0 rounded-full px-4 text-[11px] font-bold transition active:scale-95 ${
               value === option.value
                 ? "bg-primary text-on-primary"
-                : "bg-surface-container text-on-surface-variant ring-1 ring-outline-variant/35"
+                : "bg-surface-container text-on-surface-variant ring-outline-variant/35 ring-1"
             }`}
           >
             {option.label}

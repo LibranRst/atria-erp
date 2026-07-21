@@ -14,8 +14,7 @@ mock.module("next/cache", () => ({
 }));
 
 const PROJECT_ID = "77777777-7777-7777-7777-777777777771";
-const originalGetSession = (auth.api as unknown as { getSession: unknown })
-  .getSession;
+const originalGetSession = (auth.api as unknown as { getSession: unknown }).getSession;
 
 afterEach(async () => {
   (auth.api as unknown as { getSession: unknown }).getSession = originalGetSession;

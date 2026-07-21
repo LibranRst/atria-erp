@@ -19,4 +19,3 @@
 - Tambahkan presentation tests untuk navigation, focal summary, grouped rows, filter/search, read-only, dirty state, loading, dan empty state.
 - Browser-check Owner, Finance Admin, dan Purchasing pada 320, 360, 390, dan 430 px.
 - Jalankan TypeScript, ESLint, relevant tests, seluruh Bun tests, production build, serta console check.
-

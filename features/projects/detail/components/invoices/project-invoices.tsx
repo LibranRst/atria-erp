@@ -18,7 +18,10 @@ import {
   defaultPaymentDate,
   formatShortRp,
 } from "./project-invoices-utils";
-import { FinanceSuccessSheet, type FinanceOperationSuccess } from "@/features/finance/components/finance-form-patterns";
+import {
+  FinanceSuccessSheet,
+  type FinanceOperationSuccess,
+} from "@/features/finance/components/finance-form-patterns";
 import { useLocalFormRecovery } from "@/features/forms/use-local-form-recovery";
 
 const clientPaymentRecoverySchema = z.object({
@@ -67,13 +70,16 @@ export function ProjectInvoices({
   const closeRecordModal = React.useCallback(() => {
     setSelectedInvoice(null);
   }, []);
-  const initialPaymentRecovery = React.useCallback((): ClientPaymentRecovery => ({
-    invoiceId: "",
-    amountPaid: "",
-    selectedBankId: bankAccounts[0]?.id ?? "",
-    refNumber: "",
-    paymentDate: defaultPaymentDate(),
-  }), [bankAccounts]);
+  const initialPaymentRecovery = React.useCallback(
+    (): ClientPaymentRecovery => ({
+      invoiceId: "",
+      amountPaid: "",
+      selectedBankId: bankAccounts[0]?.id ?? "",
+      refNumber: "",
+      paymentDate: defaultPaymentDate(),
+    }),
+    [bankAccounts],
+  );
   const paymentRecovery = useLocalFormRecovery({
     storageKey: `atria:finance:client-payment:${projectId}`,
     schema: clientPaymentRecoverySchema,
@@ -86,8 +92,7 @@ export function ProjectInvoices({
   const [operationSuccess, setOperationSuccess] = useState<FinanceOperationSuccess | null>(null);
 
   const isOwnerOrFinance = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
-  const { totalInvoiceAmount, totalPaidAmount, unpaidAmount } =
-    calculateInvoiceTotals(invoices);
+  const { totalInvoiceAmount, totalPaidAmount, unpaidAmount } = calculateInvoiceTotals(invoices);
 
   function handleGenerateSchedule(): void {
     setCreateError(null);
@@ -102,7 +107,11 @@ export function ProjectInvoices({
           { label: "Pelunasan", percentage: 0.1 },
         ],
       });
-      if (!result.success) { setCreateError(result.error.message); toast.error(result.error.message); return; }
+      if (!result.success) {
+        setCreateError(result.error.message);
+        toast.error(result.error.message);
+        return;
+      }
       const message = `Empat termin dibuat dari nilai kontrak ${formatShortRp(contractValue)}.`;
       setCreateSuccess(message);
       toast.success(message);
@@ -220,19 +229,30 @@ export function ProjectInvoices({
         selectedInvoice={selectedInvoice}
         bankAccounts={bankAccounts}
         amountPaid={amountPaid}
-        setAmountPaid={(value) => paymentRecovery.setPayload((current) => ({ ...current, amountPaid: value }))}
+        setAmountPaid={(value) =>
+          paymentRecovery.setPayload((current) => ({ ...current, amountPaid: value }))
+        }
         selectedBankId={selectedBankId}
-        setSelectedBankId={(value) => paymentRecovery.setPayload((current) => ({ ...current, selectedBankId: value }))}
+        setSelectedBankId={(value) =>
+          paymentRecovery.setPayload((current) => ({ ...current, selectedBankId: value }))
+        }
         refNumber={refNumber}
-        setRefNumber={(value) => paymentRecovery.setPayload((current) => ({ ...current, refNumber: value }))}
+        setRefNumber={(value) =>
+          paymentRecovery.setPayload((current) => ({ ...current, refNumber: value }))
+        }
         paymentDate={paymentDate}
-        setPaymentDate={(value) => paymentRecovery.setPayload((current) => ({ ...current, paymentDate: value }))}
+        setPaymentDate={(value) =>
+          paymentRecovery.setPayload((current) => ({ ...current, paymentDate: value }))
+        }
         isDirty={paymentRecovery.isDirty}
         isPending={isPending}
         error={error}
         success={success}
         onClose={closeRecordModal}
-        onDiscard={() => { paymentRecovery.reset(); closeRecordModal(); }}
+        onDiscard={() => {
+          paymentRecovery.reset();
+          closeRecordModal();
+        }}
         onSubmit={handleSubmit}
       />
       <FinanceSuccessSheet success={operationSuccess} onClose={() => setOperationSuccess(null)} />

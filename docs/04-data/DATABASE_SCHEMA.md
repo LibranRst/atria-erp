@@ -1,9 +1,11 @@
 # Database Schema - Project Budget Control & Material Visibility
 
 ## Overview
+
 The database keeps the existing finance spine, introduces canonical project budget/category tables informed by the old workbook ratios, and keeps material-control entities as the Material category drill-down. Existing tables for auth, projects, legacy budgets, costs, vendor bills, client invoices, ledger, approvals, AI runs, notifications, and audit logs remain useful and should be preserved during migration.
 
 ## Preserved Finance Tables
+
 - `role`, `user`, `session`, `account`, `verification`
 - `client`, `project`
 - `project_budget`, `project_budget_item`, `project_cost_category`
@@ -18,7 +20,9 @@ The database keeps the existing finance spine, introduces canonical project budg
 ## Project Budget Control Tables
 
 ### `budget_allocation_setting`
+
 Owner/Admin-managed default used when creating a new Project Budget.
+
 - `id`
 - `name`
 - `status`: `ACTIVE`, `INACTIVE`
@@ -29,8 +33,10 @@ Owner/Admin-managed default used when creating a new Project Budget.
 - timestamps
 
 ### `budget_allocation_setting_category`
+
 Default ratio per expense category for the active budget allocation setting.
 `ratio_percentage` is interpreted as a percentage of Internal Budget. Enabled rows may sum to less than `1.0`; the difference is Unallocated Buffer. Gross margin is not stored as a category ratio.
+
 - `id`
 - `budget_allocation_setting_id`
 - `expense_category_id`
@@ -42,7 +48,9 @@ Default ratio per expense category for the active budget allocation setting.
 Project-level overrides are stored in `project_budget_categories`; changing Settings does not rewrite existing approved project budgets.
 
 ### `expense_category`
+
 Canonical budget buckets used by Project Budget, Expense Tracker, Dashboard, and AI Brief.
+
 - `id`
 - `code`: `MATERIAL`, `TUKANG`, `OPERASIONAL`, `LAIN_LAIN`, `SUBCON`
 - `name`
@@ -53,7 +61,9 @@ Canonical budget buckets used by Project Budget, Expense Tracker, Dashboard, and
 - timestamps
 
 ### `project_budgets`
+
 Canonical project budget setup, replacing overloaded legacy budget semantics over time.
+
 - `id`
 - `project_id`
 - `legacy_project_budget_id`
@@ -71,7 +81,9 @@ Canonical project budget setup, replacing overloaded legacy budget semantics ove
 - timestamps
 
 ### `project_budget_categories`
+
 Per-project category allocations.
+
 - `id`
 - `project_budget_id`
 - `expense_category_id`
@@ -90,7 +102,9 @@ Per-project category allocations.
 Actual/remaining/used fields are stored as a dashboard-friendly snapshot and recalculated by protected actions whenever category expense totals change.
 
 ### `item_price_library`
+
 Reusable item/service reference for estimation, RAP, work packages, Subcon packages, and client-safe quotation lines.
+
 - `id`
 - `expense_category_id`
 - `material_id`
@@ -112,10 +126,13 @@ Reusable item/service reference for estimation, RAP, work packages, Subcon packa
 Archived library items stay available for historical references but should not appear as new defaults.
 
 ### `item_price_library_cost_component`
+
 Traceable component rows (`LABOR`, `MATERIAL`, `EQUIPMENT`, `LOGISTICS`, `OVERHEAD`, `OTHER`) with quantity, unit, unit cost, total cost, optional vendor, and notes. `default_internal_cost` is synchronized to the component total; margin-based client price uses `cost / (1 - gross_margin)`.
 
 ### `project_expenses`
+
 Canonical category expense tracker record. It coexists with `project_cost` during migration.
+
 - `id`
 - `project_id`
 - `project_budget_category_id`
@@ -144,7 +161,9 @@ Canonical category expense tracker record. It coexists with `project_cost` durin
 Material/RAP/stock links are valid only when the expense category is `MATERIAL`. `project_category_plan_item_id` is valid only for Tukang and Subcon package tracking.
 
 ### `project_category_plan_item`
+
 Lightweight internal package plan for non-material categories that need detail without stock behavior.
+
 - `id`
 - `project_id`
 - `project_budget_id`
@@ -170,7 +189,9 @@ Lightweight internal package plan for non-material categories that need detail w
 Material uses `project_rap_item`, not this table. Operasional and Lain-lain remain fast category expense records in v1.
 
 ### `project_profitability_snapshots`
+
 Cached read model for owner dashboard and AI brief.
+
 - `id`
 - `project_id`
 - `project_budget_id`
@@ -204,14 +225,18 @@ Snapshots are read models, not authoritative accounting records.
 ## New Material-Control Tables
 
 ### `material_category`
+
 Master category for material grouping.
+
 - `id`
 - `name`
 - `description`
 - `created_at`
 
 ### `material_master`
+
 Structured material list.
+
 - `id`
 - `category_id`
 - `default_vendor_id`
@@ -225,7 +250,9 @@ Structured material list.
 - timestamps
 
 ### `inventory_location`
+
 Locations where stock is held.
+
 - `id`
 - `name`
 - `description`
@@ -233,7 +260,9 @@ Locations where stock is held.
 - timestamps
 
 ### `material_inventory`
+
 Current stock state per material and location.
+
 - `id`
 - `material_id`
 - `location_id`
@@ -249,7 +278,9 @@ Available stock is derived in queries:
 `available_stock = current_stock - reserved_stock`
 
 ### `project_rap`
+
 Internal execution/material plan header.
+
 - `id`
 - `project_id`
 - `supersedes_project_rap_id`
@@ -261,7 +292,9 @@ Internal execution/material plan header.
 - timestamps
 
 ### `project_rap_item`
+
 Internal RAP line item.
+
 - `id`
 - `project_rap_id`
 - `material_id`
@@ -282,7 +315,9 @@ Internal RAP line item.
 - timestamps
 
 ### `stock_movement`
+
 Auditable inventory movement.
+
 - `id`
 - `material_id`
 - `inventory_location_id`
@@ -304,18 +339,23 @@ Stock-changing actions must run in a transaction and write `audit_log`.
 Standalone project `USE` creates a non-cash canonical expense at average cost; `RETURN` creates a reversal. A USE already linked to a direct-use `project_cost` is not counted twice.
 
 ### `goods_receipt` and `goods_receipt_item`
+
 Physical receipt is separate from payment. Posting updates inventory/weighted average cost, inserts stock movements, and writes audit logs without moving cash.
 
 Receipt headers retain reversal request/approval metadata; receipt items link the compensating movement.
 
 ### `stock_transfer` and `stock_transfer_item`
+
 Batch document for atomic multi-item movement between two inventory locations. Item rows preserve quantity, source unit cost, and paired OUT/IN movement references.
 
 ### `stock_count` and `stock_count_item`
+
 Physical-count document with location, lifecycle, creator/approver, system quantity snapshot, counted quantity, variance, valuation, and optional posted adjustment movement.
 
 ### `rab_estimate`
+
 Client-facing estimate/proposal header.
+
 - `id`
 - `project_id`
 - `source_project_rap_id`
@@ -330,7 +370,9 @@ Client-facing estimate/proposal header.
 - timestamps
 
 ### `rab_estimate_item`
+
 Client-facing estimate item.
+
 - `id`
 - `rab_estimate_id`
 - `source_type`: `RAP_MATERIAL`, `CATEGORY_PLAN`, or `MANUAL`
@@ -351,15 +393,18 @@ Client-facing estimate item.
 Client-facing RAB rows must not expose internal RAP cost, margin, markup, vendor notes, or internal notes.
 
 ### `project_change_order`
+
 Formal post-approval revision with baseline/revised RAB, reason, scope summary, old/delta/new contract values, client confirmation reference/date, and internal approval metadata. Approval atomically supersedes the old RAB, approves the revision, updates contract/budget, locks source revisions, and writes audit logs.
 
 ## Extensions to Existing Tables
+
 - `project_cost` requires canonical `project_budget_category`; legacy `project_budget_item` remains optional detail linkage.
 - `vendor_bill` requires canonical `project_budget_category`; legacy `project_budget_item` remains optional detail linkage.
 
 These links are optional because operational expenses and non-material bills must remain fast to record.
 
 ## Relationship Summary
+
 ```mermaid
 erDiagram
   project ||--o{ project_budget : has
@@ -389,4 +434,5 @@ erDiagram
   project_rap ||--o{ rab_estimate : source
   rab_estimate ||--o{ rab_estimate_item : contains
 ```
+
 - Guided setup fields: `setup_stage`, `tukang_scope_skipped`, `subcon_scope_skipped`, and `setup_updated_by_id`.

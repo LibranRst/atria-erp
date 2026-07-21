@@ -55,24 +55,20 @@ export function ProjectCreatedSuccess({
 
   return (
     <div className="space-y-lg py-6 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary bg-primary/10 text-primary">
-        <span className="material-symbols-outlined text-[36px]">
-          check_circle
-        </span>
+      <div className="border-primary bg-primary/10 text-primary mx-auto flex h-16 w-16 items-center justify-center rounded-full border">
+        <span className="material-symbols-outlined text-[36px]">check_circle</span>
       </div>
       <div className="space-y-sm">
-        <h3 className="text-lg font-bold text-on-surface">
-          Proyek Berhasil Dibuat!
-        </h3>
-        <p className="mx-auto max-w-xs text-xs leading-relaxed text-on-surface-variant">
-          Proyek dibuat sebagai Draft dan anggaran awal kategori (Tukang,
-          Material, Operasional, dll.) telah disiapkan berdasarkan setelan
-          sistem. Lengkapi setup lalu aktifkan proyek sebelum operasional.
+        <h3 className="text-on-surface text-lg font-bold">Proyek Berhasil Dibuat!</h3>
+        <p className="text-on-surface-variant mx-auto max-w-xs text-xs leading-relaxed">
+          Proyek dibuat sebagai Draft dan anggaran awal kategori (Tukang, Material, Operasional,
+          dll.) telah disiapkan berdasarkan setelan sistem. Lengkapi setup lalu aktifkan proyek
+          sebelum operasional.
         </p>
       </div>
 
       <div className="space-y-sm text-left">
-        <p className="px-1 font-sans text-[8px] font-bold uppercase leading-[16px] tracking-wider text-on-surface-variant">
+        <p className="text-on-surface-variant px-1 font-sans text-[8px] leading-[16px] font-bold tracking-wider uppercase">
           Langkah Berikutnya:
         </p>
         <div className="space-y-xs">
@@ -84,22 +80,20 @@ export function ProjectCreatedSuccess({
                 onClose();
                 onNavigate(action.href);
               }}
-              className="flex min-h-16 w-full items-center justify-between rounded-full bg-white shadow-[0_12px_28px_rgba(17,17,17,0.05)] px-5 py-3 text-left transition-transform active:scale-[0.99]"
+              className="flex min-h-16 w-full items-center justify-between rounded-full bg-white px-5 py-3 text-left shadow-[0_12px_28px_rgba(17,17,17,0.05)] transition-transform active:scale-[0.99]"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary">
-                  {action.icon}
-                </span>
+                <span className="material-symbols-outlined text-primary">{action.icon}</span>
                 <div className="flex flex-col">
-                  <span className="block text-xs font-bold leading-5 text-on-surface">
+                  <span className="text-on-surface block text-xs leading-5 font-bold">
                     {action.title}
                   </span>
-                  <span className="text-[10px] leading-4 text-on-surface-variant">
+                  <span className="text-on-surface-variant text-[10px] leading-4">
                     {action.description}
                   </span>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-[20px] text-outline-variant">
+              <span className="material-symbols-outlined text-outline-variant text-[20px]">
                 chevron_right
               </span>
             </button>
@@ -111,7 +105,7 @@ export function ProjectCreatedSuccess({
         <button
           type="button"
           onClick={onReturn}
-          className="min-h-12 w-full cursor-pointer rounded-full bg-primary font-bold text-on-primary transition-transform active:scale-[0.98]"
+          className="bg-primary text-on-primary min-h-12 w-full cursor-pointer rounded-full font-bold transition-transform active:scale-[0.98]"
         >
           Kembali ke Daftar Proyek
         </button>
@@ -139,13 +133,9 @@ export function ProjectCoverField({
     <FormField label="Cover proyek" optional>
       {coverImageUrl ? (
         <div className="space-y-2.5">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-[24px] bg-surface-container-low ring-1 ring-outline-variant/20">
+          <div className="bg-surface-container-low ring-outline-variant/20 relative aspect-video overflow-hidden rounded-[24px] ring-1">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={coverImageUrl}
-              alt="Cover proyek"
-              className="h-full w-full object-cover"
-            />
+            <img src={coverImageUrl} alt="Cover proyek" className="h-full w-full object-cover" />
             {isUploading ? (
               <div className="absolute inset-0 flex items-center justify-center bg-black/55 px-5 text-center text-white">
                 <p className="text-xs font-bold">Mengunggah cover…</p>
@@ -158,7 +148,7 @@ export function ProjectCoverField({
               whileTap={busy ? undefined : { scale: 0.97 }}
               transition={transitionSpringSnappy}
               aria-disabled={busy}
-              className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary focus-within:ring-2 focus-within:ring-primary/25 aria-disabled:pointer-events-none aria-disabled:opacity-45"
+              className="bg-primary text-on-primary focus-within:ring-primary/25 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-xs font-bold focus-within:ring-2 aria-disabled:pointer-events-none aria-disabled:opacity-45"
             >
               <ImagePlus className="h-4 w-4" />
               Ganti gambar
@@ -181,7 +171,7 @@ export function ProjectCoverField({
               disabled={busy}
               onClick={onClear}
               aria-label="Hapus cover proyek"
-              className="flex min-h-12 min-w-12 items-center justify-center rounded-full bg-error-container/25 px-4 text-error disabled:opacity-45"
+              className="bg-error-container/25 text-error flex min-h-12 min-w-12 items-center justify-center rounded-full px-4 disabled:opacity-45"
             >
               <Trash2 className="h-4 w-4" />
             </motion.button>
@@ -194,14 +184,14 @@ export function ProjectCoverField({
           aria-disabled={busy}
           className="group flex min-h-12 cursor-pointer items-center gap-3 bg-transparent py-1 focus-within:text-blue-600 aria-disabled:pointer-events-none aria-disabled:opacity-45"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary">
+          <span className="bg-primary/8 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
             <ImagePlus className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-xs font-bold leading-[1.15] text-on-surface">
+            <span className="text-on-surface block text-xs leading-[1.15] font-bold">
               {isUploading ? "Mengunggah cover…" : "Tambahkan cover proyek"}
             </span>
-            <span className="mt-0.5 block text-[10px] leading-[1.25] text-on-surface-variant">
+            <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-tight">
               {isUploading ? "Mohon tunggu" : "JPG atau PNG · Maks. 8 MB"}
             </span>
           </span>
@@ -252,7 +242,7 @@ export function ProjectClientFields({
   readonly onNewClientAddressChange: (value: string) => void;
 }): React.JSX.Element {
   return (
-    <div className="divide-y divide-outline-variant/20">
+    <div className="divide-outline-variant/20 divide-y">
       <SheetSelect
         label="Jenis klien"
         value={isNewClient ? "new" : "existing"}
@@ -264,7 +254,7 @@ export function ProjectClientFields({
       />
 
       {isNewClient ? (
-        <div className="divide-y divide-outline-variant/20">
+        <div className="divide-outline-variant/20 divide-y">
           <FormField label="Nama Klien" required>
             <TextInput
               value={newClientName}
@@ -333,23 +323,11 @@ export function ProjectDetailFields({
   readonly onProjectTypeChange: (value: string) => void;
 }): React.JSX.Element {
   return (
-    <div className="divide-y divide-outline-variant/20">
-      <DatePickerField
-        label="Tanggal Mulai"
-        value={startDate}
-        onChange={onStartDateChange}
-      />
-      <DatePickerField
-        label="Tanggal Selesai"
-        value={endDate}
-        onChange={onEndDateChange}
-      />
+    <div className="divide-outline-variant/20 divide-y">
+      <DatePickerField label="Tanggal Mulai" value={startDate} onChange={onStartDateChange} />
+      <DatePickerField label="Tanggal Selesai" value={endDate} onChange={onEndDateChange} />
       <FormField label="Lokasi">
-        <TextInput
-          value={location}
-          onChange={onLocationChange}
-          placeholder="Menteng"
-        />
+        <TextInput value={location} onChange={onLocationChange} placeholder="Menteng" />
       </FormField>
       <ComboboxField
         label="Ruangan/Area"
@@ -378,15 +356,13 @@ export function ProjectEditStateFields({
   readonly status: ProjectStatusOption;
   readonly financialHealth: ProjectFinancialHealthOption;
   readonly onStatusChange: (value: ProjectStatusOption) => void;
-  readonly onFinancialHealthChange: (
-    value: ProjectFinancialHealthOption,
-  ) => void;
+  readonly onFinancialHealthChange: (value: ProjectFinancialHealthOption) => void;
 }): React.JSX.Element {
   const statusOptions = PROJECT_STATUS_OPTIONS.filter(
     (option) => option.value !== "COMPLETED" || status === "COMPLETED",
   );
   return (
-    <div className="divide-y divide-outline-variant/20">
+    <div className="divide-outline-variant/20 divide-y">
       <SheetSelect
         label="Status Proyek"
         value={status}
@@ -396,9 +372,7 @@ export function ProjectEditStateFields({
       <SheetSelect
         label="Kesehatan Finansial"
         value={financialHealth}
-        onChange={(value) =>
-          onFinancialHealthChange(value as ProjectFinancialHealthOption)
-        }
+        onChange={(value) => onFinancialHealthChange(value as ProjectFinancialHealthOption)}
         options={FINANCIAL_HEALTH_OPTIONS}
       />
     </div>

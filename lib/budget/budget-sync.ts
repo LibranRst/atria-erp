@@ -46,22 +46,32 @@ function mapLegacyCategoryToCanonicalCode(input: {
   readonly budgetItemName?: string | null;
   readonly budgetCategory?: string | null;
 }): ExpenseCategoryCode {
-  const normalized = [
-    input.legacyCategoryName,
-    input.budgetCategory,
-    input.budgetItemName,
-  ]
+  const normalized = [input.legacyCategoryName, input.budgetCategory, input.budgetItemName]
     .filter((value): value is string => Boolean(value))
     .join(" ")
     .toUpperCase();
 
-  if (normalized.includes("MATERIAL") || normalized.includes("BAHAN") || normalized.includes("KAYU") || normalized.includes("KACA")) {
+  if (
+    normalized.includes("MATERIAL") ||
+    normalized.includes("BAHAN") ||
+    normalized.includes("KAYU") ||
+    normalized.includes("KACA")
+  ) {
     return "MATERIAL";
   }
-  if (normalized.includes("TUKANG") || normalized.includes("LABOR") || normalized.includes("PEKERJA")) {
+  if (
+    normalized.includes("TUKANG") ||
+    normalized.includes("LABOR") ||
+    normalized.includes("PEKERJA")
+  ) {
     return "TUKANG";
   }
-  if (normalized.includes("OPERASIONAL") || normalized.includes("OPERATIONAL") || normalized.includes("BENSIN") || normalized.includes("TOLL")) {
+  if (
+    normalized.includes("OPERASIONAL") ||
+    normalized.includes("OPERATIONAL") ||
+    normalized.includes("BENSIN") ||
+    normalized.includes("TOLL")
+  ) {
     return "OPERASIONAL";
   }
   if (normalized.includes("SUBCON") || normalized.includes("SUBKON")) {
@@ -155,7 +165,9 @@ export function assertMaterialLinksAllowed(input: {
   readonly projectRapItemId?: string | null;
   readonly stockMovementId?: string | null;
 }): void {
-  const hasMaterialLink = Boolean(input.materialId || input.projectRapItemId || input.stockMovementId);
+  const hasMaterialLink = Boolean(
+    input.materialId || input.projectRapItemId || input.stockMovementId,
+  );
   if (input.categoryCode !== "MATERIAL" && hasMaterialLink) {
     throw new Error("MATERIAL_LINKS_ONLY_ALLOWED_FOR_MATERIAL_CATEGORY");
   }
@@ -220,7 +232,8 @@ export async function createCanonicalExpenseForProjectCost(input: {
       .set({
         status: input.status,
         paymentStatus: input.status === "PAID" ? "PAID" : "UNPAID",
-        projectCategoryPlanItemId: input.projectCategoryPlanItemId ?? existing.projectCategoryPlanItemId,
+        projectCategoryPlanItemId:
+          input.projectCategoryPlanItemId ?? existing.projectCategoryPlanItemId,
         updatedAt: new Date(),
       })
       .where(eq(projectExpenses.id, existing.id));
@@ -307,18 +320,19 @@ export async function syncProjectBudgetCategory(input: {
   const vendorBillIds = expenses
     .map((expense) => expense.vendorBillId)
     .filter((id): id is string => Boolean(id));
-  const payments = vendorBillIds.length > 0
-    ? await input.tx.query.vendorPayment.findMany({
-      where: inArray(vendorPayment.vendorBillId, vendorBillIds),
-    })
-    : [];
+  const payments =
+    vendorBillIds.length > 0
+      ? await input.tx.query.vendorPayment.findMany({
+          where: inArray(vendorPayment.vendorBillId, vendorBillIds),
+        })
+      : [];
 
   const paidByVendorBill = new Map<string, number>();
   for (const payment of payments) {
     if (payment.status !== "COMPLETED") continue;
     paidByVendorBill.set(
       payment.vendorBillId,
-      (paidByVendorBill.get(payment.vendorBillId) ?? 0) + Number(payment.amountPaid)
+      (paidByVendorBill.get(payment.vendorBillId) ?? 0) + Number(payment.amountPaid),
     );
   }
 

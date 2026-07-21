@@ -17,9 +17,7 @@ const snapshot: OnboardingVerificationSnapshot = {
 
 describe("onboarding verification disclosure", () => {
   test("starts collapsed while keeping its status and summary discoverable", () => {
-    const html = renderToStaticMarkup(
-      <OnboardingVerificationPanel snapshot={snapshot} />,
-    );
+    const html = renderToStaticMarkup(<OnboardingVerificationPanel snapshot={snapshot} />);
 
     expect(html).toContain("Verifikasi data");
     expect(html).toContain("Rekening dan dampak kas · 2 fakta");

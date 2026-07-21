@@ -24,34 +24,38 @@ export async function insertCanonicalProjectBudgetTx(args: {
   if (args.allocation.categories.length === 0) throw new Error("EXPENSE_CATEGORY_NOT_CONFIGURED");
   const internalBudget = args.contractValue * args.allocation.budgetCapRatio;
   const gross = calculateTargetGross(args.contractValue, internalBudget);
-  const [budget] = await args.tx.insert(projectBudgets).values({
-    projectId: args.projectId,
-    status: "DRAFT",
-    contractValue: args.contractValue.toFixed(2),
-    approvedRabValue: (args.approvedRabValue ?? args.contractValue).toFixed(2),
-    internalBudget: internalBudget.toFixed(2),
-    budgetCapRatio: args.allocation.budgetCapRatio.toFixed(6),
-    targetGrossAmount: gross.amount.toFixed(2),
-    targetGrossPercentage: gross.percentage.toFixed(4),
-    projectProgressPercentage: "0.0000",
-    notes: args.notes ?? null,
-  }).returning();
-  await args.tx.insert(projectBudgetCategory).values(args.allocation.categories.map((category) => {
-    const allocatedAmount = internalBudget * category.ratioPercentage;
-    return {
-      projectBudgetId: budget.id,
-      expenseCategoryId: category.expenseCategoryId,
-      ratioPercentage: category.ratioPercentage.toFixed(6),
-      allocatedAmount: allocatedAmount.toFixed(2),
-      pendingAmount: "0.00",
-      actualAmount: "0.00",
-      paidAmount: "0.00",
-      remainingAmount: allocatedAmount.toFixed(2),
-      usedPercentage: "0.0000",
-      status: "SAFE",
-      sortOrder: category.sortOrder,
-    };
-  }));
+  const [budget] = await args.tx
+    .insert(projectBudgets)
+    .values({
+      projectId: args.projectId,
+      status: "DRAFT",
+      contractValue: args.contractValue.toFixed(2),
+      approvedRabValue: (args.approvedRabValue ?? args.contractValue).toFixed(2),
+      internalBudget: internalBudget.toFixed(2),
+      budgetCapRatio: args.allocation.budgetCapRatio.toFixed(6),
+      targetGrossAmount: gross.amount.toFixed(2),
+      targetGrossPercentage: gross.percentage.toFixed(4),
+      projectProgressPercentage: "0.0000",
+      notes: args.notes ?? null,
+    })
+    .returning();
+  await args.tx.insert(projectBudgetCategory).values(
+    args.allocation.categories.map((category) => {
+      const allocatedAmount = internalBudget * category.ratioPercentage;
+      return {
+        projectBudgetId: budget.id,
+        expenseCategoryId: category.expenseCategoryId,
+        ratioPercentage: category.ratioPercentage.toFixed(6),
+        allocatedAmount: allocatedAmount.toFixed(2),
+        pendingAmount: "0.00",
+        actualAmount: "0.00",
+        paidAmount: "0.00",
+        remainingAmount: allocatedAmount.toFixed(2),
+        usedPercentage: "0.0000",
+        status: "SAFE",
+        sortOrder: category.sortOrder,
+      };
+    }),
+  );
   return budget;
 }
-

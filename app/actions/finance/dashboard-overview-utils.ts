@@ -114,13 +114,7 @@ export type FinanceDashboardOverview = {
       readonly accounts: number;
       readonly materials: number;
     };
-    readonly defaultTab:
-      | "overview"
-      | "approvals"
-      | "budget"
-      | "cash"
-      | "accounts"
-      | "materials";
+    readonly defaultTab: "overview" | "approvals" | "budget" | "cash" | "accounts" | "materials";
     readonly detailLimit: number;
   };
   readonly dashboardDetails: FinanceDashboardTabDetails;
@@ -146,11 +140,7 @@ export function toCategoryCode(value: string): ExpenseCategoryCode {
   }
 }
 
-export function outstandingAmount(
-  amount: number,
-  paidAmount: number,
-  status: string,
-): number {
+export function outstandingAmount(amount: number, paidAmount: number, status: string): number {
   if (status === "PAID" || status === "VOID") return 0;
   return Math.max(0, amount - paidAmount);
 }

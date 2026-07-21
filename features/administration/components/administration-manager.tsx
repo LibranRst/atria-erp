@@ -31,8 +31,7 @@ import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 type AdministrationTab = "USERS" | "VENDORS";
-type EditorMode =
-  "NEW_USER" | "EDIT_USER" | "NEW_VENDOR" | "EDIT_VENDOR" | null;
+type EditorMode = "NEW_USER" | "EDIT_USER" | "NEW_VENDOR" | "EDIT_VENDOR" | null;
 type UserFormState = {
   readonly name: string;
   readonly email: string;
@@ -91,27 +90,17 @@ export function AdministrationManager({
   const [activeTab, setActiveTab] = React.useState<AdministrationTab>("USERS");
   const [editorMode, setEditorMode] = React.useState<EditorMode>(null);
   const [pending, setPending] = React.useState(false);
-  const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
-    null,
-  );
-  const [selectedVendorId, setSelectedVendorId] = React.useState<string | null>(
-    null,
-  );
-  const [userForm, setUserForm] =
-    React.useState<UserFormState>(EMPTY_USER_FORM);
-  const [vendorForm, setVendorForm] =
-    React.useState<VendorFormState>(EMPTY_VENDOR_FORM);
+  const [selectedUserId, setSelectedUserId] = React.useState<string | null>(null);
+  const [selectedVendorId, setSelectedVendorId] = React.useState<string | null>(null);
+  const [userForm, setUserForm] = React.useState<UserFormState>(EMPTY_USER_FORM);
+  const [vendorForm, setVendorForm] = React.useState<VendorFormState>(EMPTY_VENDOR_FORM);
   const reduceMotion = useReducedMotion();
   const selectedUser = data.users.find((row) => row.id === selectedUserId);
-  const selectedVendor = data.vendors.find(
-    (row) => row.id === selectedVendorId,
-  );
+  const selectedVendor = data.vendors.find((row) => row.id === selectedVendorId);
   const activeUserCount = data.users.filter((row) => row.isActive).length;
   const activeVendorCount = data.vendors.filter((row) => row.isActive).length;
-  const userEditorOpen =
-    editorMode === "NEW_USER" || editorMode === "EDIT_USER";
-  const vendorEditorOpen =
-    editorMode === "NEW_VENDOR" || editorMode === "EDIT_VENDOR";
+  const userEditorOpen = editorMode === "NEW_USER" || editorMode === "EDIT_USER";
+  const vendorEditorOpen = editorMode === "NEW_VENDOR" || editorMode === "EDIT_VENDOR";
 
   function closeEditor(): void {
     if (pending) return;
@@ -148,9 +137,7 @@ export function AdministrationManager({
     window.location.reload();
   }
 
-  async function submitUser(
-    event: React.FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  async function submitUser(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setPending(true);
     const result =
@@ -173,16 +160,12 @@ export function AdministrationManager({
       return;
     }
     toast.success(
-      editorMode === "EDIT_USER"
-        ? "User diperbarui."
-        : "User dibuat dengan password sementara.",
+      editorMode === "EDIT_USER" ? "User diperbarui." : "User dibuat dengan password sementara.",
     );
     await refreshAfterMutation();
   }
 
-  async function submitVendor(
-    event: React.FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  async function submitVendor(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setPending(true);
     const result = await saveVendor({
@@ -243,9 +226,7 @@ export function AdministrationManager({
     setData((current) => ({
       ...current,
       vendors: current.vendors.map((row) =>
-        row.id === selectedVendor.id
-          ? { ...row, isActive: !row.isActive }
-          : row,
+        row.id === selectedVendor.id ? { ...row, isActive: !row.isActive } : row,
       ),
     }));
     setEditorMode(null);
@@ -265,9 +246,7 @@ export function AdministrationManager({
   ];
 
   return (
-    <section
-      className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-4"}`}
-    >
+    <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-4"}`}>
       {presentation === "settings" ? (
         <SettingsModuleHeader
           eyebrow="Kontrol akses"
@@ -290,10 +269,10 @@ export function AdministrationManager({
       {presentation === "onboarding" ? (
         <div className="flex min-w-0 items-center justify-between gap-3 px-1">
           <span className="min-w-0">
-            <span className="block text-[13px] font-bold leading-5 text-on-surface">
+            <span className="text-on-surface block text-[13px] leading-5 font-bold">
               {activeTab === "USERS" ? "Tim internal" : "Vendor"}
             </span>
-            <span className="block text-[9px] leading-4 text-on-surface-variant">
+            <span className="text-on-surface-variant block text-[9px] leading-4">
               {activeTab === "USERS"
                 ? `${activeUserCount} akun aktif`
                 : `${activeVendorCount} vendor aktif`}
@@ -302,7 +281,7 @@ export function AdministrationManager({
           <button
             type="button"
             onClick={openCreate}
-            className="relative min-h-10 shrink-0 rounded-full bg-[#007AFF]/[0.08] px-3.5 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
+            className="relative min-h-10 shrink-0 rounded-full bg-[#007AFF]/8 px-3.5 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
           >
             {activeTab === "USERS" ? "Tambah user" : "Tambah vendor"}
           </button>
@@ -313,17 +292,15 @@ export function AdministrationManager({
         <section className="space-y-2">
           {presentation === "settings" ? (
             <div className="flex min-h-8 items-center justify-between gap-3 px-1">
-              <h3 className="text-[15px] leading-5 font-bold text-on-surface">
-                Tim internal
-              </h3>
-              <span className="text-[9px] font-semibold leading-4 text-on-surface-variant">
+              <h3 className="text-on-surface text-[15px] leading-5 font-bold">Tim internal</h3>
+              <span className="text-on-surface-variant text-[9px] leading-4 font-semibold">
                 {activeUserCount} aktif dari {data.users.length}
               </span>
             </div>
           ) : null}
           <SettingsGroupSurface>
             {data.users.length > 0 ? (
-              <div className="divide-y divide-outline-variant/20">
+              <div className="divide-outline-variant/20 divide-y">
                 {data.users.map((row) => (
                   <motion.button
                     key={row.id}
@@ -340,27 +317,24 @@ export function AdministrationManager({
                     }}
                     whileTap={reduceMotion ? undefined : { scale: 0.985 }}
                     transition={transitionSpringSnappy}
-                    className="flex min-h-[72px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none active:bg-surface-container-low/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#007AFF]/25"
+                    className="active:bg-surface-container-low/70 flex min-h-[72px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 focus-visible:ring-inset"
                   >
                     <span
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant"
+                      className="bg-surface-container-low text-on-surface-variant flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px]"
                       aria-hidden="true"
                     >
                       <UsersRound className="h-[18px] w-[18px]" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate leading-5 text-[13px] font-bold text-on-surface">
+                      <span className="text-on-surface block truncate text-[13px] leading-5 font-bold">
                         {row.name}
                       </span>
-                      <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+                      <span className="text-on-surface-variant block truncate text-[10px] leading-4">
                         {row.email} · {roleLabel[row.roleName] ?? formatBusinessLabel(row.roleName)}
                       </span>
                       {row.mustChangePassword ? (
                         <span className="mt-1.5 flex min-w-0 flex-wrap gap-1.5">
-                          <SettingsStatusLabel
-                            label="Ganti password"
-                            tone="warning"
-                          />
+                          <SettingsStatusLabel label="Ganti password" tone="warning" />
                         </span>
                       ) : null}
                     </span>
@@ -370,7 +344,7 @@ export function AdministrationManager({
                         tone={row.isActive ? "positive" : "inactive"}
                       />
                       <ChevronRight
-                        className="h-4 w-4 shrink-0 text-on-surface-variant/55"
+                        className="text-on-surface-variant/55 h-4 w-4 shrink-0"
                         aria-hidden="true"
                       />
                     </div>
@@ -380,13 +354,11 @@ export function AdministrationManager({
             ) : (
               <div className="px-5 py-8 text-center">
                 <UsersRound
-                  className="mx-auto h-5 w-5 text-on-surface-variant/55"
+                  className="text-on-surface-variant/55 mx-auto h-5 w-5"
                   aria-hidden="true"
                 />
-                <p className="mt-2 text-xs font-bold text-on-surface">
-                  Belum ada user internal
-                </p>
-                <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
+                <p className="text-on-surface mt-2 text-xs font-bold">Belum ada user internal</p>
+                <p className="text-on-surface-variant mt-1 text-[10px] leading-4">
                   Tambahkan akun sesuai tanggung jawab operasional.
                 </p>
               </div>
@@ -397,17 +369,15 @@ export function AdministrationManager({
         <section className="space-y-2">
           {presentation === "settings" ? (
             <div className="flex min-h-8 items-center justify-between gap-3 px-1">
-              <h3 className="text-[15px] font-bold text-on-surface">
-                Daftar vendor
-              </h3>
-              <span className="text-[9px] font-semibold text-on-surface-variant">
+              <h3 className="text-on-surface text-[15px] font-bold">Daftar vendor</h3>
+              <span className="text-on-surface-variant text-[9px] font-semibold">
                 {activeVendorCount} aktif dari {data.vendors.length}
               </span>
             </div>
           ) : null}
           <SettingsGroupSurface>
             {data.vendors.length > 0 ? (
-              <div className="divide-y divide-outline-variant/20">
+              <div className="divide-outline-variant/20 divide-y">
                 {data.vendors.map((row) => (
                   <motion.button
                     key={row.id}
@@ -427,19 +397,19 @@ export function AdministrationManager({
                     }}
                     whileTap={reduceMotion ? undefined : { scale: 0.985 }}
                     transition={transitionSpringSnappy}
-                    className="flex min-h-[68px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none active:bg-surface-container-low/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#007AFF]/25"
+                    className="active:bg-surface-container-low/70 flex min-h-[68px] w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 focus-visible:ring-inset"
                   >
                     <span
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant"
+                      className="bg-surface-container-low text-on-surface-variant flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px]"
                       aria-hidden="true"
                     >
                       <Building2 className="h-[18px] w-[18px]" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
+                      <span className="text-on-surface block truncate text-[13px] leading-5 font-bold">
                         {row.name}
                       </span>
-                      <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+                      <span className="text-on-surface-variant block truncate text-[10px] leading-4">
                         {row.phone}
                         {row.bankName ? ` · ${row.bankName}` : ""}
                       </span>
@@ -450,7 +420,7 @@ export function AdministrationManager({
                         tone={row.isActive ? "positive" : "inactive"}
                       />
                       <ChevronRight
-                        className="h-4 w-4 shrink-0 text-on-surface-variant/55"
+                        className="text-on-surface-variant/55 h-4 w-4 shrink-0"
                         aria-hidden="true"
                       />
                     </div>
@@ -460,13 +430,11 @@ export function AdministrationManager({
             ) : (
               <div className="px-5 py-8 text-center">
                 <Building2
-                  className="mx-auto h-5 w-5 text-on-surface-variant/55"
+                  className="text-on-surface-variant/55 mx-auto h-5 w-5"
                   aria-hidden="true"
                 />
-                <p className="mt-2 text-xs font-bold text-on-surface">
-                  Belum ada vendor
-                </p>
-                <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
+                <p className="text-on-surface mt-2 text-xs font-bold">Belum ada vendor</p>
+                <p className="text-on-surface-variant mt-1 text-[10px] leading-4">
                   Vendor aktif dapat dipakai pada tagihan dan konteks material.
                 </p>
               </div>
@@ -487,14 +455,12 @@ export function AdministrationManager({
                 : ""
             }
           >
-            {editorMode === "EDIT_USER" &&
-            selectedUser &&
-            selectedUser.roleName !== "OWNER" ? (
+            {editorMode === "EDIT_USER" && selectedUser && selectedUser.roleName !== "OWNER" ? (
               <button
                 type="button"
                 disabled={pending}
                 onClick={() => void toggleSelectedUser()}
-                className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error disabled:opacity-45"
+                className="bg-error-container/25 text-error min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
               >
                 {selectedUser.isActive ? "Nonaktifkan" : "Aktifkan"}
               </button>
@@ -503,22 +469,14 @@ export function AdministrationManager({
               type="submit"
               form="administration-user-form"
               disabled={pending}
-              className="min-h-12 w-full rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-45"
+              className="bg-primary text-on-primary min-h-12 w-full rounded-full px-4 text-xs font-bold disabled:opacity-45"
             >
-              {pending
-                ? "Menyimpan…"
-                : editorMode === "EDIT_USER"
-                  ? "Simpan"
-                  : "Tambah"}
+              {pending ? "Menyimpan…" : editorMode === "EDIT_USER" ? "Simpan" : "Tambah"}
             </button>
           </div>
         }
       >
-        <form
-          id="administration-user-form"
-          onSubmit={submitUser}
-          className="space-y-md"
-        >
+        <form id="administration-user-form" onSubmit={submitUser} className="space-y-md">
           <FormSection
             title="Informasi akun"
             helper={
@@ -527,49 +485,29 @@ export function AdministrationManager({
                 : "Perubahan nama dan role dicatat dalam audit log."
             }
           >
-            <FormField
-              label="Nama user"
-              htmlFor="administration-user-name"
-              required
-            >
+            <FormField label="Nama user" htmlFor="administration-user-name" required>
               <TextInput
                 id="administration-user-name"
                 name="name"
                 value={userForm.name}
-                onChange={(value) =>
-                  setUserForm((current) => ({ ...current, name: value }))
-                }
+                onChange={(value) => setUserForm((current) => ({ ...current, name: value }))}
                 placeholder="Contoh: Budi Santoso"
                 autoComplete="name"
                 required
               />
             </FormField>
             {editorMode === "EDIT_USER" && selectedUser ? (
-              <FormField
-                label="Email akun"
-                htmlFor="administration-user-email"
-                readOnly
-              >
-                <TextInput
-                  id="administration-user-email"
-                  value={userForm.email}
-                  readOnly
-                />
+              <FormField label="Email akun" htmlFor="administration-user-email" readOnly>
+                <TextInput id="administration-user-email" value={userForm.email} readOnly />
               </FormField>
             ) : (
-              <FormField
-                label="Email"
-                htmlFor="administration-user-email"
-                required
-              >
+              <FormField label="Email" htmlFor="administration-user-email" required>
                 <TextInput
                   id="administration-user-email"
                   name="email"
                   type="email"
                   value={userForm.email}
-                  onChange={(value) =>
-                    setUserForm((current) => ({ ...current, email: value }))
-                  }
+                  onChange={(value) => setUserForm((current) => ({ ...current, email: value }))}
                   placeholder="nama@dekoria.com"
                   autoComplete="email"
                   required
@@ -583,20 +521,14 @@ export function AdministrationManager({
                 helper="Role Owner tidak dapat diubah dari akun ini."
                 readOnly
               >
-                <TextInput
-                  id="administration-user-role-fixed"
-                  value="Owner"
-                  readOnly
-                />
+                <TextInput id="administration-user-role-fixed" value="Owner" readOnly />
               </FormField>
             ) : (
               <SheetSelect
                 id="administration-user-role"
                 label="Role"
                 value={userForm.roleId}
-                onChange={(value) =>
-                  setUserForm((current) => ({ ...current, roleId: value }))
-                }
+                onChange={(value) => setUserForm((current) => ({ ...current, roleId: value }))}
                 options={data.roles.map((row) => ({
                   value: row.id,
                   label: roleLabel[row.name] ?? row.name,
@@ -633,11 +565,8 @@ export function AdministrationManager({
             ) : null}
           </FormSection>
           {editorMode === "NEW_USER" ? (
-            <div className="flex items-start gap-3 rounded-[20px] bg-warning/[0.08] px-4 py-3 text-warning ring-1 ring-warning/[0.08]">
-              <KeyRound
-                className="mt-0.5 h-4 w-4 shrink-0"
-                aria-hidden="true"
-              />
+            <div className="bg-warning/8 text-warning ring-warning/8 flex items-start gap-3 rounded-[20px] px-4 py-3 ring-1">
+              <KeyRound className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <p className="text-[10px] leading-4">
                 User wajib mengganti password sementara saat pertama kali login.
               </p>
@@ -651,17 +580,13 @@ export function AdministrationManager({
         title={editorMode === "EDIT_VENDOR" ? "Edit vendor" : "Tambah vendor"}
         onClose={closeEditor}
         footer={
-          <div
-            className={
-              editorMode === "EDIT_VENDOR" ? "grid grid-cols-2 gap-2" : ""
-            }
-          >
+          <div className={editorMode === "EDIT_VENDOR" ? "grid grid-cols-2 gap-2" : ""}>
             {editorMode === "EDIT_VENDOR" && selectedVendor ? (
               <button
                 type="button"
                 disabled={pending}
                 onClick={() => void toggleSelectedVendor()}
-                className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error disabled:opacity-45"
+                className="bg-error-container/25 text-error min-h-12 rounded-full px-4 text-xs font-bold disabled:opacity-45"
               >
                 {selectedVendor.isActive ? "Arsipkan" : "Aktifkan"}
               </button>
@@ -670,89 +595,57 @@ export function AdministrationManager({
               type="submit"
               form="administration-vendor-form"
               disabled={pending}
-              className="min-h-12 w-full rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-45"
+              className="bg-primary text-on-primary min-h-12 w-full rounded-full px-4 text-xs font-bold disabled:opacity-45"
             >
-              {pending
-                ? "Menyimpan…"
-                : editorMode === "EDIT_VENDOR"
-                  ? "Simpan"
-                  : "Tambah"}
+              {pending ? "Menyimpan…" : editorMode === "EDIT_VENDOR" ? "Simpan" : "Tambah"}
             </button>
           </div>
         }
       >
-        <form
-          id="administration-vendor-form"
-          onSubmit={submitVendor}
-          className="space-y-md"
-        >
+        <form id="administration-vendor-form" onSubmit={submitVendor} className="space-y-md">
           <FormSection
             title="Identitas vendor"
             helper="Kontak ini digunakan saat menyiapkan tagihan dan pembelian."
           >
-            <FormField
-              label="Nama vendor"
-              htmlFor="administration-vendor-name"
-              required
-            >
+            <FormField label="Nama vendor" htmlFor="administration-vendor-name" required>
               <TextInput
                 id="administration-vendor-name"
                 name="name"
                 value={vendorForm.name}
-                onChange={(value) =>
-                  setVendorForm((current) => ({ ...current, name: value }))
-                }
+                onChange={(value) => setVendorForm((current) => ({ ...current, name: value }))}
                 placeholder="Contoh: PT Sumber Interior"
                 required
               />
             </FormField>
-            <FormField
-              label="Telepon"
-              htmlFor="administration-vendor-phone"
-              required
-            >
+            <FormField label="Telepon" htmlFor="administration-vendor-phone" required>
               <TextInput
                 id="administration-vendor-phone"
                 name="phone"
                 type="tel"
                 value={vendorForm.phone}
-                onChange={(value) =>
-                  setVendorForm((current) => ({ ...current, phone: value }))
-                }
+                onChange={(value) => setVendorForm((current) => ({ ...current, phone: value }))}
                 placeholder="Contoh: 0812 3456 7890"
                 autoComplete="tel"
                 required
               />
             </FormField>
-            <FormField
-              label="Email"
-              htmlFor="administration-vendor-email"
-              optional
-            >
+            <FormField label="Email" htmlFor="administration-vendor-email" optional>
               <TextInput
                 id="administration-vendor-email"
                 name="email"
                 type="email"
                 value={vendorForm.email}
-                onChange={(value) =>
-                  setVendorForm((current) => ({ ...current, email: value }))
-                }
+                onChange={(value) => setVendorForm((current) => ({ ...current, email: value }))}
                 placeholder="vendor@perusahaan.com"
                 autoComplete="email"
               />
             </FormField>
-            <FormField
-              label="Alamat"
-              htmlFor="administration-vendor-address"
-              optional
-            >
+            <FormField label="Alamat" htmlFor="administration-vendor-address" optional>
               <Textarea
                 id="administration-vendor-address"
                 name="address"
                 value={vendorForm.address}
-                onChange={(value) =>
-                  setVendorForm((current) => ({ ...current, address: value }))
-                }
+                onChange={(value) => setVendorForm((current) => ({ ...current, address: value }))}
                 placeholder="Alamat kantor atau gudang vendor"
                 rows={2}
               />
@@ -762,18 +655,12 @@ export function AdministrationManager({
             title="Rekening pembayaran"
             helper="Opsional. Isi sesuai rekening tujuan pembayaran vendor."
           >
-            <FormField
-              label="Bank"
-              htmlFor="administration-vendor-bank"
-              optional
-            >
+            <FormField label="Bank" htmlFor="administration-vendor-bank" optional>
               <TextInput
                 id="administration-vendor-bank"
                 name="bankName"
                 value={vendorForm.bankName}
-                onChange={(value) =>
-                  setVendorForm((current) => ({ ...current, bankName: value }))
-                }
+                onChange={(value) => setVendorForm((current) => ({ ...current, bankName: value }))}
                 placeholder="Contoh: BCA"
               />
             </FormField>

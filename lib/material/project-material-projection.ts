@@ -31,7 +31,8 @@ function chronologicalMovements(
     .sort((left, right) => {
       const leftTime = left.movement.createdAt?.getTime();
       const rightTime = right.movement.createdAt?.getTime();
-      if (leftTime !== undefined && rightTime !== undefined && leftTime !== rightTime) return leftTime - rightTime;
+      if (leftTime !== undefined && rightTime !== undefined && leftTime !== rightTime)
+        return leftTime - rightTime;
       if (leftTime !== undefined && rightTime === undefined) return -1;
       if (leftTime === undefined && rightTime !== undefined) return 1;
       if (left.movement.id && right.movement.id && left.movement.id !== right.movement.id) {
@@ -62,7 +63,8 @@ export function calculateOutstandingProjectReservations(
 
 function sumMovement(movements: readonly ProjectMaterialMovement[], movementType: string): number {
   return movements.reduce(
-    (sum, movement) => movement.movementType === movementType ? sum + Number(movement.quantity) : sum,
+    (sum, movement) =>
+      movement.movementType === movementType ? sum + Number(movement.quantity) : sum,
     0,
   );
 }
@@ -74,7 +76,9 @@ export function projectMaterialProjection(
   const reservedQuantity = calculateOutstandingProjectReservations(movements);
   const boughtQuantity = Math.max(
     0,
-    sumMovement(movements, "STOCK_IN") + sumMovement(movements, "GOODS_RECEIPT") - sumMovement(movements, "GOODS_RECEIPT_REVERSAL"),
+    sumMovement(movements, "STOCK_IN") +
+      sumMovement(movements, "GOODS_RECEIPT") -
+      sumMovement(movements, "GOODS_RECEIPT_REVERSAL"),
   );
   const grossUsedQuantity = sumMovement(movements, "USE");
   const returnedQuantity = sumMovement(movements, "RETURN");
@@ -96,4 +100,3 @@ export function projectMaterialProjection(
     needToBuy: Math.max(0, totalRequiredQuantity - securedQuantity),
   };
 }
-

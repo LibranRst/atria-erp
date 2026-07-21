@@ -25,6 +25,4 @@ function getClientBaseURL(): string | undefined {
 
 const clientBaseURL = getClientBaseURL();
 
-export const authClient = createAuthClient(
-  clientBaseURL ? { baseURL: clientBaseURL } : undefined,
-);
+export const authClient = createAuthClient(clientBaseURL ? { baseURL: clientBaseURL } : undefined);

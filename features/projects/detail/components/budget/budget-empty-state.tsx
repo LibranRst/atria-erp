@@ -14,13 +14,13 @@ export function BudgetEmptyState({
   readonly onCreateBudget: () => void;
 }): React.JSX.Element {
   return (
-    <div className="flex select-none flex-col items-center justify-center space-y-md rounded-[28px] border border-outline-variant/20 bg-white p-md py-10 text-center shadow-[0_14px_34px_rgba(17,17,17,0.045)]">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container text-on-surface-variant">
+    <div className="space-y-md border-outline-variant/20 p-md flex flex-col items-center justify-center rounded-[28px] border bg-white py-10 text-center shadow-[0_14px_34px_rgba(17,17,17,0.045)] select-none">
+      <div className="bg-surface-container text-on-surface-variant flex h-12 w-12 items-center justify-center rounded-full">
         <span className="material-symbols-outlined text-[28px]">description</span>
       </div>
       <div className="space-y-xs">
         <h3 className="font-title-md text-on-surface">RAB Belum Tersedia</h3>
-        <p className="max-w-[280px] font-sans text-[14px] font-normal leading-[20px] text-on-surface-variant">
+        <p className="leading-margin-mobile text-on-surface-variant max-w-[280px] font-sans text-[14px] font-normal">
           Rencana Anggaran Biaya (RAB) proyek belum dibuat untuk proyek ini.
         </p>
       </div>
@@ -29,7 +29,7 @@ export function BudgetEmptyState({
           type="button"
           onClick={onCreateBudget}
           disabled={isPending}
-          className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-6 text-xs font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
+          className="bg-primary flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-6 text-xs font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
         >
           {isPending ? (
             <span className="animate-pulse">Membuat Draf...</span>
@@ -41,7 +41,7 @@ export function BudgetEmptyState({
           )}
         </button>
       )}
-      {error && <p className="text-xs font-medium text-error">{error}</p>}
+      {error && <p className="text-error text-xs font-medium">{error}</p>}
     </div>
   );
 }

@@ -24,27 +24,17 @@ export function calculateBottomSheetMetrics({
   bodyHeight,
   footerHeight,
 }: BottomSheetMetricsInput): BottomSheetMetrics {
-  const maximumHeight = Math.max(
-    MIN_SHEET_HEIGHT,
-    Math.floor(viewportHeight - SHEET_TOP_GAP),
-  );
-  const measuredHeight = Math.ceil(
-    handleHeight + headerHeight + bodyHeight + footerHeight,
-  );
+  const maximumHeight = Math.max(MIN_SHEET_HEIGHT, Math.floor(viewportHeight - SHEET_TOP_GAP));
+  const measuredHeight = Math.ceil(handleHeight + headerHeight + bodyHeight + footerHeight);
   const contentOverflows = measuredHeight > maximumHeight;
   const naturalHeight = contentOverflows
     ? maximumHeight
-    : Math.min(
-        maximumHeight,
-        Math.max(MIN_SHEET_HEIGHT, measuredHeight),
-      );
+    : Math.min(maximumHeight, Math.max(MIN_SHEET_HEIGHT, measuredHeight));
 
   return {
     naturalHeight,
     maximumHeight,
     contentOverflows,
-    canResize:
-      !contentOverflows &&
-      maximumHeight - naturalHeight > MIN_RESIZE_DISTANCE,
+    canResize: !contentOverflows && maximumHeight - naturalHeight > MIN_RESIZE_DISTANCE,
   };
 }

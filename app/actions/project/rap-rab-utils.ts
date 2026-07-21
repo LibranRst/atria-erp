@@ -28,22 +28,14 @@ export async function assertProjectMutationAccess(
   user: SessionUser,
   projectId: string,
   permission:
-    | "create:rap"
-    | "update:rap"
-    | "lock:rap"
-    | "create:rab"
-    | "update:rab"
-    | "approve:rab",
+    "create:rap" | "update:rap" | "lock:rap" | "create:rab" | "update:rab" | "approve:rab",
 ): Promise<void> {
   await assertPermission(user, permission);
   const roleName = await resolveRoleName(user.roleId ?? "");
   await assertProjectAccess(projectId, user.id, roleName);
 }
 
-export function toError<T>(
-  error: unknown,
-  fallbackMessage: string,
-): ActionResponse<T> {
+export function toError<T>(error: unknown, fallbackMessage: string): ActionResponse<T> {
   const message = error instanceof Error ? error.message : fallbackMessage;
   if (message.includes("FORBIDDEN") || message.includes("Akses")) {
     return { success: false, error: { code: "FORBIDDEN", message } };
@@ -69,9 +61,7 @@ export async function getAvailableStockForMaterial(
   });
   return (
     material?.inventory.reduce((sum, inventory) => {
-      return (
-        sum + Number(inventory.currentStock) - Number(inventory.reservedStock)
-      );
+      return sum + Number(inventory.currentStock) - Number(inventory.reservedStock);
     }, 0) ?? 0
   );
 }

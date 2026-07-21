@@ -5,13 +5,8 @@ import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
 import { Badge } from "@/components/ui/badge";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
-import {
-  NativePanel,
-} from "../shared/rap-rab-primitives";
-import {
-  formatIdr as formatRp,
-  formatShortIdr as formatShortRp,
-} from "@/lib/utils/money";
+import { NativePanel } from "../shared/rap-rab-primitives";
+import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import type {
   RapView,
   RabEstimateView,
@@ -50,29 +45,27 @@ export function InternalPlanOverview({
 }): React.JSX.Element {
   return (
     <>
-      <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
-        <div className="flex items-start justify-between gap-3"><div className="min-w-0 flex-1"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">Total rencana internal</p>
-          <p className="mt-1 font-mono text-[22px] font-bold">
-            {formatRp(
-              plannedCost +
-                tukangPlanItems.reduce(
-                  (sum, item) => sum + Number(item.estimatedTotalCost),
-                  0,
-                ) +
-                subconPlanItems.reduce(
-                  (sum, item) => sum + Number(item.estimatedTotalCost),
-                  0,
-                ),
-            )}
-          </p>
-        </div><Badge status="APPROVED">Terkunci</Badge></div>
-          <div className="mt-4 flex justify-between border-t border-white/12 pt-4 text-[10px] text-white/70">
-            <span>{rap.items.length} material</span>
-            <span>{packageItemCount} paket</span>
-            <span>
-              {needToBuy > 0 ? `${needToBuy} perlu dibeli` : "Material siap"}
-            </span>
+      <section className="bg-primary text-on-primary rounded-[28px] p-5 shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
+              Total rencana internal
+            </p>
+            <p className="mt-1 font-mono text-[22px] font-bold">
+              {formatRp(
+                plannedCost +
+                  tukangPlanItems.reduce((sum, item) => sum + Number(item.estimatedTotalCost), 0) +
+                  subconPlanItems.reduce((sum, item) => sum + Number(item.estimatedTotalCost), 0),
+              )}
+            </p>
           </div>
+          <Badge status="APPROVED">Terkunci</Badge>
+        </div>
+        <div className="mt-4 flex justify-between border-t border-white/12 pt-4 text-[10px] text-white/70">
+          <span>{rap.items.length} material</span>
+          <span>{packageItemCount} paket</span>
+          <span>{needToBuy > 0 ? `${needToBuy} perlu dibeli` : "Material siap"}</span>
+        </div>
         {canEditRap && rabEstimate?.status === "APPROVED" && (
           <button
             type="button"
@@ -87,26 +80,19 @@ export function InternalPlanOverview({
         value={rapOverviewFilter}
         onChange={setRapOverviewFilter}
         ariaLabel="Detail RAP"
-        options={(["MATERIAL", "TUKANG", "SUBCON"] as RapOverviewFilter[]).map(
-          (filter) => ({
-            value: filter,
-            label:
-              filter === "MATERIAL"
-                ? "Material"
+        options={(["MATERIAL", "TUKANG", "SUBCON"] as RapOverviewFilter[]).map((filter) => ({
+          value: filter,
+          label: filter === "MATERIAL" ? "Material" : filter === "TUKANG" ? "Tukang" : "Subcon",
+          icon: (
+            <span className="material-symbols-outlined text-[16px]">
+              {filter === "MATERIAL"
+                ? "inventory_2"
                 : filter === "TUKANG"
-                  ? "Tukang"
-                  : "Subcon",
-            icon: (
-              <span className="material-symbols-outlined text-[16px]">
-                {filter === "MATERIAL"
-                  ? "inventory_2"
-                  : filter === "TUKANG"
-                    ? "engineering"
-                    : "domain"}
-              </span>
-            ),
-          }),
-        )}
+                  ? "engineering"
+                  : "domain"}
+            </span>
+          ),
+        }))}
       />
       <NativePanel
         eyebrow="Rincian operasional"
@@ -118,7 +104,7 @@ export function InternalPlanOverview({
               : "Paket Subcon"
         }
       >
-        <div className="divide-y divide-outline-variant/25 overflow-hidden rounded-[20px] bg-surface-container-low">
+        <div className="divide-outline-variant/25 bg-surface-container-low divide-y overflow-hidden rounded-[20px]">
           {rapOverviewFilter === "MATERIAL"
             ? rap.items.map((item) => (
                 <button
@@ -128,22 +114,17 @@ export function InternalPlanOverview({
                   className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold">
-                      {item.name}
-                    </span>
-                    <span className="block text-[10px] text-on-surface-variant">
+                    <span className="block truncate text-sm font-bold">{item.name}</span>
+                    <span className="text-on-surface-variant block text-[10px]">
                       {item.area} - {item.totalQuantity} {item.unit}
                     </span>
                   </span>
-                  <span className="financial-amount max-w-[38%] shrink-0 break-words text-right font-mono text-[10px] font-bold [overflow-wrap:anywhere]">
+                  <span className="financial-amount max-w-[38%] shrink-0 text-right font-mono text-[10px] font-bold wrap-anywhere wrap-break-word">
                     {formatShortRp(Number(item.estimatedTotalCost))}
                   </span>
                 </button>
               ))
-            : (rapOverviewFilter === "TUKANG"
-                ? tukangPlanItems
-                : subconPlanItems
-              ).map((item) => (
+            : (rapOverviewFilter === "TUKANG" ? tukangPlanItems : subconPlanItems).map((item) => (
                 <button
                   key={item.id}
                   type="button"
@@ -151,19 +132,17 @@ export function InternalPlanOverview({
                   className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold">
-                      {item.name}
-                    </span>
-                    <span className="block text-[10px] text-on-surface-variant">
+                    <span className="block truncate text-sm font-bold">{item.name}</span>
+                    <span className="text-on-surface-variant block text-[10px]">
                       {item.area}
                       {item.vendorName ? ` - ${item.vendorName}` : ""}
                     </span>
                   </span>
                   <span className="max-w-[38%] shrink-0 text-right">
-                    <span className="financial-amount block break-words font-mono text-[10px] font-bold [overflow-wrap:anywhere]">
+                    <span className="financial-amount block font-mono text-[10px] font-bold wrap-anywhere wrap-break-word">
                       {formatShortRp(Number(item.estimatedTotalCost))}
                     </span>
-                    <span className="block text-[9px] font-bold text-primary">
+                    <span className="text-primary block text-[9px] font-bold">
                       {item.status === "ACTIVE" ? "Siap" : formatBusinessLabel(item.status)}
                     </span>
                   </span>

@@ -1,25 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
-const workspacePath = new URL(
-  "./owner-onboarding-workspace.tsx",
-  import.meta.url,
-);
-const accountPanelPath = new URL(
-  "./components/setup-bank-accounts-panel.tsx",
-  import.meta.url,
-);
-const financialPanelPath = new URL(
-  "./components/financial-defaults-panel.tsx",
-  import.meta.url,
-);
-const loaderPath = new URL(
-  "./server/get-owner-onboarding-workspace-data.ts",
-  import.meta.url,
-);
-const financeReviewPath = new URL(
-  "./onboarding-finance-review.tsx",
-  import.meta.url,
-);
+const workspacePath = new URL("./owner-onboarding-workspace.tsx", import.meta.url);
+const accountPanelPath = new URL("./components/setup-bank-accounts-panel.tsx", import.meta.url);
+const financialPanelPath = new URL("./components/financial-defaults-panel.tsx", import.meta.url);
+const loaderPath = new URL("./server/get-owner-onboarding-workspace-data.ts", import.meta.url);
+const financeReviewPath = new URL("./onboarding-finance-review.tsx", import.meta.url);
 const verificationPanelPath = new URL(
   "./components/onboarding-verification-panel.tsx",
   import.meta.url,
@@ -82,9 +67,7 @@ describe("inline owner onboarding workspace", () => {
     const source = await Bun.file(financeReviewPath).text();
     expect(source).toContain("decideInventoryOpening");
     expect(source).toContain("Alasan keputusan");
-    expect(source).toContain(
-      "Kas, utang vendor, dan biaya aktual proyek tidak berubah",
-    );
+    expect(source).toContain("Kas, utang vendor, dan biaya aktual proyek tidak berubah");
     expect(source).not.toContain("update(materialInventory)");
     expect(source).toContain("amount={active.totalValue}");
     expect(source).toContain('className="min-w-0 flex-1"');
@@ -115,11 +98,9 @@ describe("inline owner onboarding workspace", () => {
     const detailSheetStart = source.indexOf('title="Detail saldo awal"');
     const detailSheetTagEnd = source.indexOf(">", detailSheetStart);
     expect(detailSheetStart).toBeGreaterThan(-1);
-    expect(source.slice(detailSheetStart, detailSheetTagEnd)).not.toContain(
-      "initialExpanded",
-    );
+    expect(source.slice(detailSheetStart, detailSheetTagEnd)).not.toContain("initialExpanded");
     expect(source).toContain("OpeningDetailRow");
     expect(source).toContain('label="Alasan keputusan"');
-    expect(source).toContain("[overflow-wrap:anywhere]");
+    expect(source).toContain("wrap-anywhere");
   });
 });

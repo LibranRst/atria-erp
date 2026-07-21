@@ -85,17 +85,30 @@ export async function createApprovalInvoicesIfNeededTx(
 
   if (hasInvoices || contractValue <= 0) return;
 
-  const globalCountResult = await tx
-    .select({ count: sql<number>`count(*)` })
-    .from(clientInvoice);
+  const globalCountResult = await tx.select({ count: sql<number>`count(*)` }).from(clientInvoice);
   const nextIndex = Number(globalCountResult[0]?.count ?? 0) + 1;
   const seqStr = nextIndex.toString().padStart(3, "0");
   const year = new Date().getFullYear();
 
   const stages = [
-    { stage: "DP", pct: 0.3, days: 7, desc: "Down Payment (DP) 30% otomatis terbit setelah RAB disetujui" },
-    { stage: "PROGRESS_1", pct: 0.5, days: 30, desc: "Termin Progress 50% otomatis terbit setelah RAB disetujui" },
-    { stage: "PELUNASAN", pct: 0.2, days: 60, desc: "Termin Pelunasan 20% otomatis terbit setelah RAB disetujui" },
+    {
+      stage: "DP",
+      pct: 0.3,
+      days: 7,
+      desc: "Down Payment (DP) 30% otomatis terbit setelah RAB disetujui",
+    },
+    {
+      stage: "PROGRESS_1",
+      pct: 0.5,
+      days: 30,
+      desc: "Termin Progress 50% otomatis terbit setelah RAB disetujui",
+    },
+    {
+      stage: "PELUNASAN",
+      pct: 0.2,
+      days: 60,
+      desc: "Termin Pelunasan 20% otomatis terbit setelah RAB disetujui",
+    },
   ] as const;
 
   for (const stage of stages) {

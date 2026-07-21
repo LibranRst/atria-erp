@@ -22,7 +22,7 @@ function ColorInput({
         className={
           grouped
             ? "flex min-h-9 items-center gap-3 bg-transparent"
-            : "flex min-h-12 items-center gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15"
+            : "border-outline-variant/35 bg-surface-container-lowest flex min-h-12 items-center gap-3 rounded-full border px-5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15"
         }
       >
         <span
@@ -30,7 +30,7 @@ function ColorInput({
           style={{ backgroundColor: value }}
           aria-hidden="true"
         />
-        <span className="min-w-0 flex-1 font-mono text-xs font-bold text-on-surface">
+        <span className="text-on-surface min-w-0 flex-1 font-mono text-xs font-bold">
           {value.toUpperCase()}
         </span>
         <input
@@ -67,38 +67,33 @@ export function ColorEditor({
         }}
       >
         <span
-          className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-white/[0.12] blur-2xl"
+          className="pointer-events-none absolute top-0 right-0 h-32 w-32 rounded-full bg-white/12 blur-2xl"
           aria-hidden="true"
         />
         <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-semibold leading-[1.15]">
+            <h3 className="truncate text-sm leading-[1.15] font-semibold">
               {draft.name || "Nama rekening"}
             </h3>
-            <p className="mt-1 truncate text-[10px] font-medium uppercase tracking-[0.08em] opacity-65">
+            <p className="mt-1 truncate text-[10px] font-medium tracking-[0.08em] uppercase opacity-65">
               {draft.bankName || "Nama bank"}
             </p>
           </div>
-          <span
-            className="material-symbols-outlined text-[23px] opacity-65"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined text-[23px] opacity-65" aria-hidden="true">
             contactless
           </span>
         </div>
         <div className="relative mt-auto">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.13em] opacity-60">
+          <p className="text-[9px] font-semibold tracking-[0.13em] uppercase opacity-60">
             Saldo tersedia
           </p>
-          <p className="mt-1.5 whitespace-nowrap font-mono text-lg font-bold tabular-nums">
-            Rp 0
-          </p>
+          <p className="mt-1.5 font-mono text-lg font-bold whitespace-nowrap tabular-nums">Rp 0</p>
         </div>
         <div className="relative mt-4 flex items-center justify-between gap-3">
           <p className="font-mono text-[11px] font-semibold tracking-[0.16em] opacity-75">
             •••• {(draft.accountNumber || "0000").slice(-4)}
           </p>
-          <p className="min-w-0 max-w-[55%] truncate text-right text-[9px] font-semibold uppercase tracking-[0.1em] opacity-60">
+          <p className="max-w-[55%] min-w-0 truncate text-right text-[9px] font-semibold tracking-widest uppercase opacity-60">
             {draft.holderName || "Pemegang"}
           </p>
         </div>
@@ -123,11 +118,7 @@ export function ColorEditor({
               }
               className={`min-h-12 rounded-full px-2 text-[9px] font-black transition active:scale-[0.97] ${
                 preset.text === "dark" ? "text-[#141414]" : "text-white"
-              } ${
-                active
-                  ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                  : ""
-              }`}
+              } ${active ? "ring-primary ring-offset-background ring-2 ring-offset-2" : ""}`}
               style={{
                 backgroundImage: `linear-gradient(135deg, ${preset.from}, ${preset.to})`,
               }}
@@ -160,7 +151,7 @@ export function ColorEditor({
               cardColorTo: draft.cardColorFrom,
             })
           }
-          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
+          className="bg-surface-container-low text-on-surface flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-[10px] font-bold active:scale-[0.97]"
         >
           <Repeat2 className="h-4 w-4" />
           Balik warna
@@ -174,7 +165,7 @@ export function ColorEditor({
               cardTextColor: CARD_PRESETS[0].text,
             })
           }
-          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
+          className="bg-surface-container-low text-on-surface flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-[10px] font-bold active:scale-[0.97]"
         >
           <RotateCcw className="h-4 w-4" />
           Atur ulang
@@ -186,7 +177,7 @@ export function ColorEditor({
               cardTextColor: draft.cardTextColor === "light" ? "dark" : "light",
             })
           }
-          className="min-h-12 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
+          className="bg-surface-container-low text-on-surface min-h-12 rounded-full px-4 text-[10px] font-bold active:scale-[0.97]"
         >
           Teks {draft.cardTextColor === "light" ? "Terang" : "Gelap"}
         </button>

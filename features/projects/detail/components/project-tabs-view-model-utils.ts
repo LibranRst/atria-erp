@@ -4,8 +4,7 @@ import type { ProjectReadinessItem } from "./overview/project-overview";
 import { buildRapForManager } from "./project-tabs-mappers";
 import type { ProjectTabsProps } from "./project-tabs-types";
 
-type RabEstimateForSelection =
-  ProjectTabsProps["project"]["rabEstimates"][number] | null;
+type RabEstimateForSelection = ProjectTabsProps["project"]["rabEstimates"][number] | null;
 
 export function calculateBudgetTotals(
   project: ProjectTabsProps["project"],
@@ -25,29 +24,21 @@ export function calculateBudgetTotals(
 
   totalAllocated = projectBudgetDashboard?.internalBudget ?? totalAllocated;
   totalSpent = projectBudgetDashboard?.actualCost ?? totalSpent;
-  const totalRemaining =
-    projectBudgetDashboard?.remainingBudget ?? totalAllocated - totalSpent;
+  const totalRemaining = projectBudgetDashboard?.remainingBudget ?? totalAllocated - totalSpent;
 
   return { totalAllocated, totalSpent, totalRemaining };
 }
 
-export function calculateTotalReceived(
-  invoices: ProjectTabsProps["invoices"],
-): number {
+export function calculateTotalReceived(invoices: ProjectTabsProps["invoices"]): number {
   return invoices.reduce(
     (sum, invoice) =>
       sum +
-      invoice.payments.reduce(
-        (paymentSum, payment) => paymentSum + Number(payment.amountPaid),
-        0,
-      ),
+      invoice.payments.reduce((paymentSum, payment) => paymentSum + Number(payment.amountPaid), 0),
     0,
   );
 }
 
-export function calculateInvoiceOutstanding(
-  invoices: ProjectTabsProps["invoices"],
-): number {
+export function calculateInvoiceOutstanding(invoices: ProjectTabsProps["invoices"]): number {
   return invoices.reduce(
     (sum, invoice) =>
       sum +
@@ -56,10 +47,7 @@ export function calculateInvoiceOutstanding(
         : Math.max(
             0,
             Number(invoice.amount) -
-              invoice.payments.reduce(
-                (paid, payment) => paid + Number(payment.amountPaid),
-                0,
-              ),
+              invoice.payments.reduce((paid, payment) => paid + Number(payment.amountPaid), 0),
           )),
     0,
   );
@@ -91,9 +79,7 @@ export function buildReadiness({
             ? "Draft"
             : latestRabEstimate.status
         : "Belum ada",
-      detail: latestRabEstimate
-        ? `Revisi ${latestRabEstimate.revision}`
-        : "Butuh quotation client",
+      detail: latestRabEstimate ? `Revisi ${latestRabEstimate.revision}` : "Butuh quotation client",
       tab: "rab",
       tone:
         latestRabEstimate?.status === "APPROVED"
@@ -126,22 +112,14 @@ export function buildReadiness({
     {
       id: "material",
       label: "Material",
-      value: !rapForManager
-        ? "Belum ada"
-        : shortageCount > 0
-          ? `${shortageCount} kurang`
-          : "Siap",
+      value: !rapForManager ? "Belum ada" : shortageCount > 0 ? `${shortageCount} kurang` : "Siap",
       detail: !rapForManager
         ? "Menunggu RAP"
         : shortageCount > 0
           ? "Perlu pembelian"
           : "Kebutuhan tertutup",
       tab: "stok",
-      tone: !rapForManager
-        ? "DRAFT"
-        : shortageCount > 0
-          ? "WARNING"
-          : "APPROVED",
+      tone: !rapForManager ? "DRAFT" : shortageCount > 0 ? "WARNING" : "APPROVED",
     },
     {
       id: "billing",
@@ -157,12 +135,7 @@ export function buildReadiness({
           ? `${formatShortIdr(invoiceOutstanding)} belum diterima`
           : "Tidak ada piutang terbuka",
       tab: "payments",
-      tone:
-        overdueInvoiceCount > 0
-          ? "CRITICAL"
-          : invoiceOutstanding > 0
-            ? "WARNING"
-            : "APPROVED",
+      tone: overdueInvoiceCount > 0 ? "CRITICAL" : invoiceOutstanding > 0 ? "WARNING" : "APPROVED",
     },
   ];
 }

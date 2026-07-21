@@ -17,12 +17,12 @@ import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
  * Mencatat penerimaan kas masuk termin dari klien.
  * Mengubah saldo rekening kas (DEBIT), menyisipkan entri jurnal ledger,
  * membuat rekaman client_payment, dan memperbarui status invoice.
- * 
+ *
  * @param input Objek data masukan pembayaran klien
  * @returns Status respons aksi dan ID pembayaran beserta saldo baru
  */
 export async function recordClientPayment(
-  input: RecordClientPaymentInput
+  input: RecordClientPaymentInput,
 ): Promise<ActionResponse<{ paymentId: string; newBalance: string }>> {
   const validation = recordClientPaymentSchema.safeParse(input);
   if (!validation.success) {
@@ -32,7 +32,8 @@ export async function recordClientPayment(
     };
   }
 
-  const { clientInvoiceId, bankAccountId, amountPaid, paymentDate, referenceNumber } = validation.data;
+  const { clientInvoiceId, bankAccountId, amountPaid, paymentDate, referenceNumber } =
+    validation.data;
 
   try {
     // 1. Verifikasi Sesi
@@ -80,7 +81,9 @@ export async function recordClientPayment(
       assertProjectStatusIsOperational(invoiceProject?.status);
 
       if (invoice.status === "PAID" || invoice.status === "VOID") {
-        throw new Error(`INVOICE_CLOSED: Tagihan berstatus ${formatBusinessLabel(invoice.status)} tidak dapat menerima pembayaran.`);
+        throw new Error(
+          `INVOICE_CLOSED: Tagihan berstatus ${formatBusinessLabel(invoice.status)} tidak dapat menerima pembayaran.`,
+        );
       }
 
       const existingPayments = await tx
@@ -94,7 +97,9 @@ export async function recordClientPayment(
       const invoiceAmountCents = parseNumericToCents(invoice.amount);
       const paymentCents = parseNumericToCents(amountPaid.toFixed(2));
       if (paymentCents > invoiceAmountCents - alreadyPaidCents) {
-        throw new Error("PAYMENT_EXCEEDS_INVOICE_OUTSTANDING: Nominal pembayaran melebihi sisa piutang invoice.");
+        throw new Error(
+          "PAYMENT_EXCEEDS_INVOICE_OUTSTANDING: Nominal pembayaran melebihi sisa piutang invoice.",
+        );
       }
 
       // 3.2 Pre-generate UUID untuk clientPayment agar siklus referensi kueri bersih
@@ -150,7 +155,7 @@ export async function recordClientPayment(
 
       const totalPaidCents = previousPayments.reduce(
         (sum, p) => sum + parseNumericToCents(p.amountPaid),
-        BigInt(0)
+        BigInt(0),
       );
 
       // Update status invoice (PAID jika total pembayaran >= nominal invoice)
@@ -187,7 +192,14 @@ export async function recordClientPayment(
     };
   } catch (error: unknown) {
     const errMsg = getErrorMessage(error, "Gagal mencatatkan pembayaran termin klien.");
-    let errorCode: "UNAUTHORIZED" | "FORBIDDEN" | "VALIDATION_ERROR" | "INSUFFICIENT_FUNDS" | "TRANSACTION_FAILED" | "NOT_FOUND" | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
+    let errorCode:
+      | "UNAUTHORIZED"
+      | "FORBIDDEN"
+      | "VALIDATION_ERROR"
+      | "INSUFFICIENT_FUNDS"
+      | "TRANSACTION_FAILED"
+      | "NOT_FOUND"
+      | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
     if (errMsg.startsWith("INVOICE_NOT_FOUND")) {
       errorCode = "NOT_FOUND";
     } else if (errMsg.startsWith("INVOICE_CLOSED")) {

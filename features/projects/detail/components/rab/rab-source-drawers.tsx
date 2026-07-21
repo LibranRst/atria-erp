@@ -46,17 +46,11 @@ export function RabSourcePickerDrawer({
   readonly rap: RapView | null;
   readonly categoryPlanItems: readonly ProjectCategoryPlanItemView[];
   readonly selectedRapQuotationIds: readonly string[];
-  readonly setSelectedRapQuotationIds: React.Dispatch<
-    React.SetStateAction<string[]>
-  >;
+  readonly setSelectedRapQuotationIds: React.Dispatch<React.SetStateAction<string[]>>;
   readonly selectedCategoryQuotationIds: readonly string[];
-  readonly setSelectedCategoryQuotationIds: React.Dispatch<
-    React.SetStateAction<string[]>
-  >;
+  readonly setSelectedCategoryQuotationIds: React.Dispatch<React.SetStateAction<string[]>>;
   readonly manualQuotationLine: ManualQuotationLine;
-  readonly setManualQuotationLine: React.Dispatch<
-    React.SetStateAction<ManualQuotationLine>
-  >;
+  readonly setManualQuotationLine: React.Dispatch<React.SetStateAction<ManualQuotationLine>>;
   readonly handleGenerateRab: () => void;
   readonly isPending: boolean;
   readonly selectedQuotationSourceCount: number;
@@ -88,34 +82,45 @@ export function RabSourcePickerDrawer({
   return (
     <OperationalFormSheet
       open={sourcePickerOpen}
-      title={
-        rabEstimate?.status === "APPROVED" ? "Buat Revisi RAB" : "Pilih Sumber RAB"
-      }
+      title={rabEstimate?.status === "APPROVED" ? "Buat Revisi RAB" : "Pilih Sumber RAB"}
       onClose={() => setSourcePickerOpen(false)}
       submitLabel={rabEstimate?.status === "APPROVED" ? "Revisi" : "Buat"}
       submittingLabel="Membuat draft…"
       pending={isPending}
       disabled={selectedQuotationSourceCount === 0}
-      disabledReason={selectedQuotationSourceCount === 0 ? "Pilih minimal satu sumber untuk menyusun RAB." : undefined}
+      disabledReason={
+        selectedQuotationSourceCount === 0
+          ? "Pilih minimal satu sumber untuk menyusun RAB."
+          : undefined
+      }
       onSubmit={handleGenerateRab}
       statusText={`${selectedQuotationSourceCount} sumber dipilih · ${selectedRapQuotationIds.length} material · ${selectedCategoryQuotationIds.length} paket`}
       statusTone={selectedQuotationSourceCount > 0 ? "success" : "warning"}
     >
       <div className="space-y-md">
-        <FormRiskNotice title={selectedQuotationSourceCount > 0 ? `${selectedQuotationSourceCount} sumber siap disalin` : "Pilih sumber RAB"} tone={selectedQuotationSourceCount > 0 ? "success" : "default"}>
-          Sumber hanya disalin sebagai snapshot. Perubahan berikutnya di RAP tidak mengubah RAB ini secara diam-diam.
+        <FormRiskNotice
+          title={
+            selectedQuotationSourceCount > 0
+              ? `${selectedQuotationSourceCount} sumber siap disalin`
+              : "Pilih sumber RAB"
+          }
+          tone={selectedQuotationSourceCount > 0 ? "success" : "default"}
+        >
+          Sumber hanya disalin sebagai snapshot. Perubahan berikutnya di RAP tidak mengubah RAB ini
+          secara diam-diam.
         </FormRiskNotice>
         {rap && rap.items.length > 0 && (
-          <FormSection title="Material RAP" helper={`${selectedRapQuotationIds.length} dari ${rap.items.length} material dipilih.`}>
+          <FormSection
+            title="Material RAP"
+            helper={`${selectedRapQuotationIds.length} dari ${rap.items.length} material dipilih.`}
+          >
             <fieldset className="space-y-2">
               {rap.items.map((item) => (
                 <ChoiceRow
                   key={item.id}
                   checked={selectedRapQuotationIds.includes(item.id)}
                   onChange={() =>
-                    setSelectedRapQuotationIds((current) =>
-                      toggleSelection(current, item.id),
-                    )
+                    setSelectedRapQuotationIds((current) => toggleSelection(current, item.id))
                   }
                   title={item.name}
                   description={`${item.area} - ${item.totalQuantity} ${item.unit}`}
@@ -125,7 +130,10 @@ export function RabSourcePickerDrawer({
           </FormSection>
         )}
         {categoryPlanItems.length > 0 && (
-          <FormSection title="Paket kerja" helper={`${selectedCategoryQuotationIds.length} paket dipilih. Paket yang belum aktif tidak dapat disalin.`}>
+          <FormSection
+            title="Paket kerja"
+            helper={`${selectedCategoryQuotationIds.length} paket dipilih. Paket yang belum aktif tidak dapat disalin.`}
+          >
             <fieldset className="space-y-2">
               {categoryPlanItems.map((item) => {
                 const ready = item.status === "ACTIVE" || item.status === "LOCKED";
@@ -150,7 +158,10 @@ export function RabSourcePickerDrawer({
           </FormSection>
         )}
         {!rabEstimate && (
-          <FormSection title="Item manual" helper="Opsional untuk biaya yang tidak berasal dari RAP atau paket kerja.">
+          <FormSection
+            title="Item manual"
+            helper="Opsional untuk biaya yang tidak berasal dari RAP atau paket kerja."
+          >
             <div className="bg-surface-container-lowest px-4 py-3">
               <SwitchRow
                 checked={showManualEntry}
@@ -168,7 +179,7 @@ export function RabSourcePickerDrawer({
                   transition={transitionSpringSmooth}
                   className="overflow-hidden"
                 >
-                  <div className="grid grid-cols-1 divide-y divide-outline-variant/20 border-t border-outline-variant/20">
+                  <div className="divide-outline-variant/20 border-outline-variant/20 grid grid-cols-1 divide-y border-t">
                     <FormField label="Nama item" required>
                       <TextInput
                         value={manualQuotationLine.clientLabel}
@@ -236,9 +247,7 @@ export function ManualRabLineDrawer({
   readonly manualLineOpen: boolean;
   readonly setManualLineOpen: (open: boolean) => void;
   readonly manualQuotationLine: ManualQuotationLine;
-  readonly setManualQuotationLine: React.Dispatch<
-    React.SetStateAction<ManualQuotationLine>
-  >;
+  readonly setManualQuotationLine: React.Dispatch<React.SetStateAction<ManualQuotationLine>>;
   readonly handleAddManualRabItem: () => void;
   readonly isPending: boolean;
 }): React.JSX.Element {
@@ -250,15 +259,32 @@ export function ManualRabLineDrawer({
       submitLabel="Tambah"
       submittingLabel="Menambahkan…"
       pending={isPending}
-      disabled={manualQuotationLine.clientLabel.trim().length < 3 || Number(manualQuotationLine.quantity) <= 0}
-      disabledReason={manualQuotationLine.clientLabel.trim().length < 3 ? "Isi nama item minimal 3 karakter." : Number(manualQuotationLine.quantity) <= 0 ? "Jumlah harus lebih dari 0." : undefined}
+      disabled={
+        manualQuotationLine.clientLabel.trim().length < 3 ||
+        Number(manualQuotationLine.quantity) <= 0
+      }
+      disabledReason={
+        manualQuotationLine.clientLabel.trim().length < 3
+          ? "Isi nama item minimal 3 karakter."
+          : Number(manualQuotationLine.quantity) <= 0
+            ? "Jumlah harus lebih dari 0."
+            : undefined
+      }
       onSubmit={handleAddManualRabItem}
       statusText={`${manualQuotationLine.clientLabel.trim() || "Item belum diisi"} · ${manualQuotationLine.quantity || 0} ${manualQuotationLine.unit} · Rp ${(Number(manualQuotationLine.quantity) * Number(manualQuotationLine.unitPrice)).toLocaleString("id-ID")}`}
-      statusTone={manualQuotationLine.clientLabel.trim().length >= 3 && Number(manualQuotationLine.quantity) > 0 ? "success" : "warning"}
+      statusTone={
+        manualQuotationLine.clientLabel.trim().length >= 3 &&
+        Number(manualQuotationLine.quantity) > 0
+          ? "success"
+          : "warning"
+      }
     >
       <div className="space-y-md">
-        <FormSection title="Tampilan untuk klien" helper="Gunakan nama yang singkat dan mudah dipahami tanpa konteks internal.">
-          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+        <FormSection
+          title="Tampilan untuk klien"
+          helper="Gunakan nama yang singkat dan mudah dipahami tanpa konteks internal."
+        >
+          <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
             <FormField label="Nama item">
               <TextInput
                 value={manualQuotationLine.clientLabel}
@@ -280,8 +306,11 @@ export function ManualRabLineDrawer({
             </FormField>
           </div>
         </FormSection>
-        <FormSection title="Jumlah & harga" helper="Subtotal muncul langsung di ringkasan bawah sebelum item ditambahkan.">
-          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+        <FormSection
+          title="Jumlah & harga"
+          helper="Subtotal muncul langsung di ringkasan bawah sebelum item ditambahkan."
+        >
+          <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
             <FormField label="Jumlah">
               <NumericInput
                 min={0.01}
@@ -294,9 +323,7 @@ export function ManualRabLineDrawer({
             <ComboboxField
               label="Satuan"
               value={manualQuotationLine.unit}
-              onChange={(value) =>
-                setManualQuotationLine((curr) => ({ ...curr, unit: value }))
-              }
+              onChange={(value) => setManualQuotationLine((curr) => ({ ...curr, unit: value }))}
               options={COMMON_UNIT_OPTIONS}
               placeholder="Pilih satuan"
             />

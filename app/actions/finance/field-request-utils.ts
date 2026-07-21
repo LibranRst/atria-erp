@@ -58,10 +58,7 @@ export async function upsertApprovalTx(
 ): Promise<void> {
   const existing = await tx.query.approval.findFirst({
     where: (table, { and, eq }) =>
-      and(
-        eq(table.referenceType, args.referenceType),
-        eq(table.referenceId, args.referenceId),
-      ),
+      and(eq(table.referenceType, args.referenceType), eq(table.referenceId, args.referenceId)),
   });
 
   if (existing) {
@@ -107,9 +104,7 @@ export async function writeFieldRequestAuditTx(
   });
 }
 
-export function mapSubmitFieldRequestError(
-  error: unknown,
-): ActionResponse<never> {
+export function mapSubmitFieldRequestError(error: unknown): ActionResponse<never> {
   const errMsg = getErrorMessage(error, "Gagal mencatat pengajuan biaya lapangan.");
   const isMissingSupport = errMsg === "BUDGET_ITEM_NOT_FOUND" || errMsg === "OWNER_USER_NOT_FOUND";
 
@@ -122,25 +117,30 @@ export function mapSubmitFieldRequestError(
   };
 }
 
-export function mapVerifyFieldRequestError(
-  error: unknown,
-): ActionResponse<never> {
+export function mapVerifyFieldRequestError(error: unknown): ActionResponse<never> {
   const errMsg = getErrorMessage(error, "Gagal memverifikasi biaya proyek.");
   if (errMsg === "PROJECT_COST_NOT_FOUND") {
-    return { success: false, error: { code: "NOT_FOUND", message: "Biaya proyek tidak ditemukan." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Biaya proyek tidak ditemukan." },
+    };
   }
   if (errMsg === "COST_NOT_IN_SUBMITTED_STATE") {
-    return { success: false, error: { code: "FORBIDDEN", message: "Biaya proyek tidak berada dalam status SUBMITTED." } };
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "Biaya proyek tidak berada dalam status SUBMITTED." },
+    };
   }
   return { success: false, error: { code: "TRANSACTION_FAILED", message: errMsg } };
 }
 
-export function mapApproveFieldRequestError(
-  error: unknown,
-): ActionResponse<never> {
+export function mapApproveFieldRequestError(error: unknown): ActionResponse<never> {
   const errMsg = getErrorMessage(error, "Gagal memproses persetujuan biaya proyek.");
   if (errMsg === "PROJECT_COST_NOT_FOUND") {
-    return { success: false, error: { code: "NOT_FOUND", message: "Biaya proyek tidak ditemukan." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Biaya proyek tidak ditemukan." },
+    };
   }
   if (errMsg === "COST_NOT_IN_VERIFIED_STATE") {
     return {
@@ -152,14 +152,19 @@ export function mapApproveFieldRequestError(
     };
   }
   if (errMsg === "MAKER_CHECKER_REQUIRED") {
-    return { success: false, error: { code: "FORBIDDEN", message: "Pembuat transaksi tidak dapat menyetujui sendiri tanpa emergency override dan alasan audit." } };
+    return {
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message:
+          "Pembuat transaksi tidak dapat menyetujui sendiri tanpa emergency override dan alasan audit.",
+      },
+    };
   }
   return { success: false, error: { code: "TRANSACTION_FAILED", message: errMsg } };
 }
 
-export function mapPayFieldRequestError(
-  error: unknown,
-): ActionResponse<never> {
+export function mapPayFieldRequestError(error: unknown): ActionResponse<never> {
   const errMsg = getErrorMessage(error, "");
   if (
     errMsg === "PROJECT_COST_NOT_FOUND" ||
@@ -184,10 +189,22 @@ export function mapPayFieldRequestError(
     };
   }
   if (errMsg === "COST_ALREADY_PAID") {
-    return { success: false, error: { code: "FORBIDDEN", message: "Pengeluaran lapangan ini sudah dibayarkan sebelumnya." } };
+    return {
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Pengeluaran lapangan ini sudah dibayarkan sebelumnya.",
+      },
+    };
   }
   if (errMsg === "COST_NOT_APPROVED") {
-    return { success: false, error: { code: "FORBIDDEN", message: "Pengeluaran lapangan harus berstatus APPROVED sebelum dapat dicairkan." } };
+    return {
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Pengeluaran lapangan harus berstatus APPROVED sebelum dapat dicairkan.",
+      },
+    };
   }
   if (errMsg === "APPROVAL_REQUIRED_BUT_PENDING") {
     return {
@@ -201,15 +218,23 @@ export function mapPayFieldRequestError(
   return { success: false, error: { code: "TRANSACTION_FAILED", message: errMsg } };
 }
 
-export function mapApproveVendorPaymentError(
-  error: unknown,
-): ActionResponse<never> {
+export function mapApproveVendorPaymentError(error: unknown): ActionResponse<never> {
   const errMsg = getErrorMessage(error, "Gagal memproses persetujuan pembayaran vendor.");
   if (errMsg === "PAYMENT_RECORD_NOT_FOUND") {
-    return { success: false, error: { code: "NOT_FOUND", message: "Record pembayaran vendor tidak ditemukan." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Record pembayaran vendor tidak ditemukan." },
+    };
   }
   if (errMsg === "MAKER_CHECKER_REQUIRED") {
-    return { success: false, error: { code: "FORBIDDEN", message: "Pembuat jadwal pembayaran tidak dapat menyetujui sendiri tanpa emergency override dan alasan audit." } };
+    return {
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message:
+          "Pembuat jadwal pembayaran tidak dapat menyetujui sendiri tanpa emergency override dan alasan audit.",
+      },
+    };
   }
   return { success: false, error: { code: "TRANSACTION_FAILED", message: errMsg } };
 }

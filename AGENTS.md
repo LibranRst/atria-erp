@@ -5,6 +5,7 @@ You are working on Atria ERP for Dekoria, an interior design and build company. 
 The product promise is: **Project Budget Control upgraded into a real ERP with material stock visibility.** Workbook logic is source material for ratios and team habits, but user-facing screens must not be labeled as Excel.
 
 ## Planning and Documentation
+
 1. Read existing schema, actions, docs, and UI before changing code.
 2. Before major executable changes, write or update a plan under `docs/plans/`.
 3. Keep documentation aligned with the current product direction.
@@ -14,6 +15,7 @@ The product promise is: **Project Budget Control upgraded into a real ERP with m
 7. Treat Settings as the source of truth for budget allocation defaults, expense categories, item/price library, and material master settings.
 
 ## Product Vocabulary
+
 - Project Budget: ERP internal budget setup with project value, approved RAB value, internal budget cap, category allocations, pending review, consumed budget, paid amount, remaining budget, used percentage, and margin visibility.
 - Expense Categories: canonical budget buckets are Material, Tukang, Operasional, Lain-lain, and Subcon.
 - Settings: owner/admin-controlled defaults for Budget Allocation, Expense Categories, Item & Price Library, and Material Master. Code constants are seed/fallback values, not the long-term source of truth.
@@ -27,17 +29,20 @@ The product promise is: **Project Budget Control upgraded into a real ERP with m
 - Stock Movement: stock in, stock out, reserve, use, return, transfer, adjustment, and waste.
 
 ## Preserve Useful Work
+
 Do not blindly delete or rewrite existing auth, RBAC, project scoping, ledger, bank mutation helper, project budget, expenses, vendor bills, client payments, approvals, AI OCR/briefing, mobile shell, project pages, or reusable components.
 
 When replacing the budget model, introduce canonical tables additively and preserve compatibility with legacy `project_budget`, `project_budget_item`, and `project_cost` until reads, writes, tests, approvals, vendor bills, and dashboards have been migrated.
 
 ## Strict TypeScript
+
 - Do not introduce `any`.
 - Give function arguments and return types explicit types.
 - Avoid type assertions unless interfacing with untyped third-party data.
 - Use Zod for Server Action input validation.
 
 ## Drizzle and Finance Safety
+
 - Do not execute raw SQL in application code.
 - Use Drizzle query APIs and query builder.
 - Balance-changing actions must run in `db.transaction`.
@@ -46,6 +51,7 @@ When replacing the budget model, introduce canonical tables additively and prese
 - Money movement requires explicit user action and appropriate permission.
 
 ## Material-Control Safety
+
 - Material control is attached to the Material budget category. It must not replace Tukang, Operasional, Lain-lain, Subcon, or project margin tracking.
 - Material/RAP/stock links are allowed only for Material category expenses.
 - Tukang/Subcon package links are allowed only for their matching category and project.
@@ -58,6 +64,7 @@ When replacing the budget model, introduce canonical tables additively and prese
 - Adjustments and waste require an audit note.
 
 ## RBAC and Scoping
+
 - Mutations must read the Better Auth session server-side.
 - Do not trust client-provided user IDs.
 - PMs may only access projects assigned to them.
@@ -66,6 +73,7 @@ When replacing the budget model, introduce canonical tables additively and prese
 - Owner and Finance Admin can manage finance Settings; Purchasing can manage Material Master settings but must not change budget formula or margin defaults.
 
 ## AI Guardrails
+
 - AI can analyze, summarize, suggest, and prefill forms.
 - AI must analyze category budget usage before or alongside material shortage details.
 - AI must not mutate finance/material data without explicit human approval.
@@ -74,6 +82,7 @@ When replacing the budget model, introduce canonical tables additively and prese
 - AI must not expose internal RAP cost/margin/markup/vendor notes/internal notes in client-facing RAB output.
 
 ## UI/UX Rules
+
 - Before planning, implementing, styling, redesigning, reworking, auditing, or reviewing any UI, load `.agents/skills/atria-ui-ux/SKILL.md` and follow its required references, motion decision, and verification workflow.
 - `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md` is the active source of truth for main-page composition, density, surfaces, rows, tabs, financial values, loading states, and visual QA.
 - Treat the current Dashboard (`/ledger`) and Expenses (`/expenses`) as reference implementations. Reuse their design grammar and shared primitives; do not copy either page's layout blindly into another workflow.
@@ -92,7 +101,9 @@ When replacing the budget model, introduce canonical tables additively and prese
 - Keep the UI calm, premium, operational, and trustworthy.
 
 ### iOS-Inspired Contextual Form Style (Paten)
+
 We enforce a contextual iOS form style for a premium, native-app feel:
+
 - **Standalone Inputs & Dropdowns**: Text inputs, date pickers, and selectors outside grouped forms MUST use a white fully rounded control (`rounded-full`) with a minimum height of `min-h-12` (48px) and side padding `px-5`.
 - **Grouped Forms**: Controls inside `FormSection` MUST render as borderless rows on one white grouped surface. Apply the radius to the outer panel, use subtle dividers between rows, keep labels visible, and do not nest a capsule around every value.
 - **Textareas**: Standalone textareas use `rounded-2xl`; grouped textareas grow inside their row without an additional rounded container.
@@ -100,7 +111,9 @@ We enforce a contextual iOS form style for a premium, native-app feel:
 - **Drawers & Sheets**: Sliding bottom drawers and bottom sheets use a `surface-container-low` canvas, white grouped content surfaces, large soft rounded top corners (`rounded-t-[28px]`), and a pull bar where applicable.
 
 ### Unified Motion & Animation Tokens
+
 All animations MUST use Framer Motion and reference the unified animation presets in `lib/utils/motion.ts` to ensure consistency:
+
 - **Drawers & Sheets sliding up**: Use `slideUpDrawerVariants` with `transitionSpringSmooth` (`type: "spring", stiffness: 300, damping: 32`) to achieve a natural sliding momentum.
 - **Backdrops & Fades**: Use `fadeVariants` with `transitionEaseSmooth` (`type: "tween", ease: [0.32, 0.94, 0.6, 1], duration: 0.35`) for a smooth translucent fade-in/fade-out overlay.
 - **Snappy Micro-interactions**: For tap active scales, hover effects, or quick popovers, use `transitionSpringSnappy` (`type: "spring", stiffness: 380, damping: 30, mass: 0.8`) e.g. with `whileTap={{ scale: 0.97 }}` or `scale: [1, 1.02]`.

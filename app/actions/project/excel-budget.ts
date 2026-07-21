@@ -3,11 +3,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import {
-  project,
-  projectBudgetCategory,
-  projectBudgets,
-} from "@/db/schema";
+import { project, projectBudgetCategory, projectBudgets } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
 import {
   calculateTargetGross,
@@ -41,7 +37,7 @@ export type {
 } from "./excel-budget-utils";
 
 export async function createProjectBudgetFromRatios(
-  input: CreateProjectBudgetFromRatiosInput
+  input: CreateProjectBudgetFromRatiosInput,
 ): Promise<ActionResponse<ProjectBudgetDashboard>> {
   const validation = createProjectBudgetFromRatiosSchema.safeParse(input);
   if (!validation.success) {
@@ -56,8 +52,13 @@ export async function createProjectBudgetFromRatios(
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   }
 
-  const { projectId, contractValue, approvedRabValue, projectProgressPercentage, notes } = validation.data;
-  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(user, projectId, "create:budget");
+  const { projectId, contractValue, approvedRabValue, projectProgressPercentage, notes } =
+    validation.data;
+  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(
+    user,
+    projectId,
+    "create:budget",
+  );
   if (accessError) return accessError;
 
   const proj = await db.query.project.findFirst({ where: eq(project.id, projectId) });
@@ -69,13 +70,19 @@ export async function createProjectBudgetFromRatios(
     where: eq(projectBudgets.projectId, projectId),
   });
   if (existing) {
-    return { success: false, error: { code: "FORBIDDEN", message: "Budget proyek canonical sudah ada." } };
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "Budget proyek canonical sudah ada." },
+    };
   }
 
   const allocationDefault = await getBudgetAllocationDefault();
 
   if (allocationDefault.categories.length === 0) {
-    return { success: false, error: { code: "NOT_FOUND", message: "Expense category belum tersedia." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Expense category belum tersedia." },
+    };
   }
 
   const internalBudget = contractValue * allocationDefault.budgetCapRatio;
@@ -114,20 +121,26 @@ export async function createProjectBudgetFromRatios(
           status: "SAFE",
           sortOrder: category.sortOrder,
         };
-      })
+      }),
     );
   });
 
   const dashboard = await buildProjectBudgetDashboard(projectId);
   if (!dashboard) {
-    return { success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "Budget dibuat tetapi dashboard gagal dibaca." } };
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Budget dibuat tetapi dashboard gagal dibaca.",
+      },
+    };
   }
 
   return { success: true, data: dashboard };
 }
 
 export async function updateProjectBudgetCategoryAllocation(
-  input: UpdateProjectBudgetCategoryAllocationInput
+  input: UpdateProjectBudgetCategoryAllocationInput,
 ): Promise<ActionResponse<ProjectBudgetDashboard>> {
   const validation = updateProjectBudgetCategoryAllocationSchema.safeParse(input);
   if (!validation.success) {
@@ -150,18 +163,33 @@ export async function updateProjectBudgetCategoryAllocation(
   });
 
   if (!category) {
-    return { success: false, error: { code: "NOT_FOUND", message: "Kategori budget proyek tidak ditemukan." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Kategori budget proyek tidak ditemukan." },
+    };
   }
 
-  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(user, category.budget.projectId, "update:budget");
+  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(
+    user,
+    category.budget.projectId,
+    "update:budget",
+  );
   if (accessError) return accessError;
 
-  const allocatedAmount = validation.data.allocatedAmount ?? Number(category.budget.internalBudget) * (validation.data.ratioPercentage ?? Number(category.ratioPercentage));
-  const ratioPercentage = validation.data.ratioPercentage ?? (Number(category.budget.internalBudget) > 0 ? allocatedAmount / Number(category.budget.internalBudget) : 0);
+  const allocatedAmount =
+    validation.data.allocatedAmount ??
+    Number(category.budget.internalBudget) *
+      (validation.data.ratioPercentage ?? Number(category.ratioPercentage));
+  const ratioPercentage =
+    validation.data.ratioPercentage ??
+    (Number(category.budget.internalBudget) > 0
+      ? allocatedAmount / Number(category.budget.internalBudget)
+      : 0);
   const actualAmount = Number(category.actualAmount);
   const usedPercentage = calculateUsedPercentage(actualAmount, allocatedAmount);
 
-  await db.update(projectBudgetCategory)
+  await db
+    .update(projectBudgetCategory)
     .set({
       ratioPercentage: ratioPercentage.toFixed(6),
       allocatedAmount: allocatedAmount.toFixed(2),
@@ -177,16 +205,24 @@ export async function updateProjectBudgetCategoryAllocation(
 
   const dashboard = await buildProjectBudgetDashboard(category.budget.projectId);
   if (!dashboard) {
-    return { success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "Dashboard budget gagal dibaca." } };
+    return {
+      success: false,
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Dashboard budget gagal dibaca." },
+    };
   }
 
   return { success: true, data: dashboard };
 }
 
-export async function approveProjectBudget(projectBudgetId: string): Promise<ActionResponse<ProjectBudgetDashboard>> {
+export async function approveProjectBudget(
+  projectBudgetId: string,
+): Promise<ActionResponse<ProjectBudgetDashboard>> {
   const validation = approveCanonicalProjectBudgetSchema.safeParse({ projectBudgetId });
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "ID budget proyek tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID budget proyek tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
@@ -198,13 +234,21 @@ export async function approveProjectBudget(projectBudgetId: string): Promise<Act
     where: eq(projectBudgets.id, validation.data.projectBudgetId),
   });
   if (!budget) {
-    return { success: false, error: { code: "NOT_FOUND", message: "Budget proyek tidak ditemukan." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Budget proyek tidak ditemukan." },
+    };
   }
 
-  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(user, budget.projectId, "approve:budget");
+  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(
+    user,
+    budget.projectId,
+    "approve:budget",
+  );
   if (accessError) return accessError;
 
-  await db.update(projectBudgets)
+  await db
+    .update(projectBudgets)
     .set({
       status: "APPROVED",
       approvedById: user.id,
@@ -215,16 +259,24 @@ export async function approveProjectBudget(projectBudgetId: string): Promise<Act
 
   const dashboard = await buildProjectBudgetDashboard(budget.projectId);
   if (!dashboard) {
-    return { success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "Dashboard budget gagal dibaca." } };
+    return {
+      success: false,
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Dashboard budget gagal dibaca." },
+    };
   }
 
   return { success: true, data: dashboard };
 }
 
-export async function recalculateProjectBudgetCategories(projectBudgetId: string): Promise<ActionResponse<ProjectBudgetDashboard>> {
+export async function recalculateProjectBudgetCategories(
+  projectBudgetId: string,
+): Promise<ActionResponse<ProjectBudgetDashboard>> {
   const validation = approveCanonicalProjectBudgetSchema.safeParse({ projectBudgetId });
   if (!validation.success) {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "ID budget proyek tidak valid." } };
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID budget proyek tidak valid." },
+    };
   }
 
   const user = await getSessionUser();
@@ -236,10 +288,17 @@ export async function recalculateProjectBudgetCategories(projectBudgetId: string
     where: eq(projectBudgets.id, validation.data.projectBudgetId),
   });
   if (!budget) {
-    return { success: false, error: { code: "NOT_FOUND", message: "Budget proyek tidak ditemukan." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Budget proyek tidak ditemukan." },
+    };
   }
 
-  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(user, budget.projectId, "update:budget");
+  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(
+    user,
+    budget.projectId,
+    "update:budget",
+  );
   if (accessError) return accessError;
 
   await db.transaction(async (tx) => {
@@ -254,24 +313,36 @@ export async function recalculateProjectBudgetCategories(projectBudgetId: string
 
   const dashboard = await buildProjectBudgetDashboard(budget.projectId);
   if (!dashboard) {
-    return { success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "Dashboard budget gagal dibaca." } };
+    return {
+      success: false,
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Dashboard budget gagal dibaca." },
+    };
   }
 
   return { success: true, data: dashboard };
 }
 
-export async function getProjectBudgetDashboard(projectId: string): Promise<ActionResponse<ProjectBudgetDashboard>> {
+export async function getProjectBudgetDashboard(
+  projectId: string,
+): Promise<ActionResponse<ProjectBudgetDashboard>> {
   const user = await getSessionUser();
   if (!user) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   }
 
-  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(user, projectId, "view:budget");
+  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(
+    user,
+    projectId,
+    "view:budget",
+  );
   if (accessError) return accessError;
 
   const dashboard = await buildProjectBudgetDashboard(projectId);
   if (!dashboard) {
-    return { success: false, error: { code: "NOT_FOUND", message: "Dashboard budget proyek belum tersedia." } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Dashboard budget proyek belum tersedia." },
+    };
   }
 
   return { success: true, data: dashboard };

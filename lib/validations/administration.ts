@@ -3,10 +3,7 @@ import { z } from "zod";
 const uuid = z.string().uuid("ID tidak valid.");
 const canonicalRoleId = z
   .string()
-  .regex(
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    "ID role tidak valid.",
-  );
+  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "ID role tidak valid.");
 const password = z
   .string()
   .min(12, "Password minimal 12 karakter.")
@@ -50,14 +47,7 @@ export const changeTemporaryPasswordSchema = z
 export const vendorAdministrationSchema = z.object({
   vendorId: uuid.optional(),
   name: z.string().trim().min(2).max(255),
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .email()
-    .optional()
-    .nullable()
-    .or(z.literal("")),
+  email: z.string().trim().toLowerCase().email().optional().nullable().or(z.literal("")),
   phone: z.string().trim().min(3).max(50),
   address: z.string().trim().max(1_000).optional().nullable(),
   bankName: z.string().trim().max(100).optional().nullable(),
@@ -74,9 +64,5 @@ export const setVendorActiveSchema = z.object({
 export type BootstrapOwnerInput = z.infer<typeof bootstrapOwnerSchema>;
 export type CreateStaffUserInput = z.infer<typeof createStaffUserSchema>;
 export type UpdateStaffUserInput = z.infer<typeof updateStaffUserSchema>;
-export type ChangeTemporaryPasswordInput = z.infer<
-  typeof changeTemporaryPasswordSchema
->;
-export type VendorAdministrationInput = z.input<
-  typeof vendorAdministrationSchema
->;
+export type ChangeTemporaryPasswordInput = z.infer<typeof changeTemporaryPasswordSchema>;
+export type VendorAdministrationInput = z.input<typeof vendorAdministrationSchema>;

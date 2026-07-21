@@ -70,9 +70,7 @@ function readLocal(): LocalPayload | null {
   }
 }
 
-export function useHybridVendorBillDraft(
-  initialPayload: VendorBillDraftPayload,
-): {
+export function useHybridVendorBillDraft(initialPayload: VendorBillDraftPayload): {
   readonly payload: VendorBillDraftPayload;
   readonly draftId: string | null;
   readonly revision: number | null;
@@ -80,9 +78,7 @@ export function useHybridVendorBillDraft(
   readonly statusLabel: string;
   readonly errorMessage: string | null;
   readonly isDirty: boolean;
-  readonly updatePayload: React.Dispatch<
-    React.SetStateAction<VendorBillDraftPayload>
-  >;
+  readonly updatePayload: React.Dispatch<React.SetStateAction<VendorBillDraftPayload>>;
   readonly hydrate: (record: VendorBillDraftRecord) => void;
   readonly saveNow: () => Promise<SaveResult>;
   readonly saveAsCopy: () => Promise<SaveResult>;
@@ -90,18 +86,10 @@ export function useHybridVendorBillDraft(
   readonly clear: () => void;
 } {
   const recovered = React.useMemo(() => readLocal(), []);
-  const [payload, setPayload] = React.useState(
-    recovered?.form ?? initialPayload,
-  );
-  const [draftId, setDraftId] = React.useState<string | null>(
-    recovered?.draftId ?? null,
-  );
-  const [revision, setRevision] = React.useState<number | null>(
-    recovered?.revision ?? null,
-  );
-  const [status, setStatus] = React.useState<VendorBillDraftStatus>(
-    recovered ? "dirty" : "idle",
-  );
+  const [payload, setPayload] = React.useState(recovered?.form ?? initialPayload);
+  const [draftId, setDraftId] = React.useState<string | null>(recovered?.draftId ?? null);
+  const [revision, setRevision] = React.useState<number | null>(recovered?.revision ?? null);
+  const [status, setStatus] = React.useState<VendorBillDraftStatus>(recovered ? "dirty" : "idle");
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [dirty, setDirty] = React.useState(Boolean(recovered));
   const payloadRef = React.useRef(payload);
@@ -112,11 +100,7 @@ export function useHybridVendorBillDraft(
   const inFlightRef = React.useRef<Promise<SaveResult> | null>(null);
 
   const persist = React.useCallback(
-    (
-      form: VendorBillDraftPayload,
-      id: string | null,
-      rev: number | null,
-    ): void => {
+    (form: VendorBillDraftPayload, id: string | null, rev: number | null): void => {
       if (typeof window === "undefined") return;
       window.localStorage.setItem(
         storageKey(),
@@ -133,18 +117,13 @@ export function useHybridVendorBillDraft(
     React.Dispatch<React.SetStateAction<VendorBillDraftPayload>>
   >(
     (update) => {
-      const next =
-        typeof update === "function" ? update(payloadRef.current) : update;
+      const next = typeof update === "function" ? update(payloadRef.current) : update;
       payloadRef.current = next;
       setPayload(next);
       versionRef.current += 1;
       setDirty(true);
       setErrorMessage(null);
-      setStatus(
-        typeof navigator !== "undefined" && !navigator.onLine
-          ? "offline"
-          : "dirty",
-      );
+      setStatus(typeof navigator !== "undefined" && !navigator.onLine ? "offline" : "dirty");
       persist(next, draftIdRef.current, revisionRef.current);
     },
     [persist],
@@ -165,9 +144,7 @@ export function useHybridVendorBillDraft(
       setStatus("saving");
       const request = saveVendorBillDraft({
         draftId: asCopy ? undefined : (draftIdRef.current ?? undefined),
-        expectedRevision: asCopy
-          ? undefined
-          : (revisionRef.current ?? undefined),
+        expectedRevision: asCopy ? undefined : (revisionRef.current ?? undefined),
         payload: payloadRef.current,
       }).then<SaveResult>((response) => {
         if (!response.success) {
@@ -218,8 +195,7 @@ export function useHybridVendorBillDraft(
   );
 
   const clear = React.useCallback((): void => {
-    if (typeof window !== "undefined")
-      window.localStorage.removeItem(storageKey());
+    if (typeof window !== "undefined") window.localStorage.removeItem(storageKey());
     setDirty(false);
     setStatus("idle");
     setErrorMessage(null);

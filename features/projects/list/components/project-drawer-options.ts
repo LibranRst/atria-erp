@@ -2,7 +2,11 @@ export const PROJECT_STATUS_OPTIONS = [
   { value: "DRAFT", label: "Draft", description: "Belum aktif untuk eksekusi." },
   { value: "ACTIVE", label: "Aktif", description: "Proyek sedang berjalan." },
   { value: "ON_HOLD", label: "Ditahan", description: "Operasional dihentikan sementara." },
-  { value: "COMPLETED", label: "Selesai", description: "Hanya melalui checklist penutupan proyek." },
+  {
+    value: "COMPLETED",
+    label: "Selesai",
+    description: "Hanya melalui checklist penutupan proyek.",
+  },
   { value: "CANCELLED", label: "Dibatalkan", description: "Proyek tidak dilanjutkan." },
 ] as const;
 

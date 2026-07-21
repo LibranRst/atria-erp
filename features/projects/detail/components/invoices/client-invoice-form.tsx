@@ -27,7 +27,14 @@ import { useLocalFormRecovery } from "@/features/forms/use-local-form-recovery";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 
-const invoiceStageSchema = z.enum(["DP", "PROGRESS_1", "PROGRESS_2", "PELUNASAN", "RETENTION", "AD_HOC"]);
+const invoiceStageSchema = z.enum([
+  "DP",
+  "PROGRESS_1",
+  "PROGRESS_2",
+  "PELUNASAN",
+  "RETENTION",
+  "AD_HOC",
+]);
 type InvoiceStage = z.infer<typeof invoiceStageSchema>;
 const clientInvoiceRecoverySchema = z.object({
   invoiceNumber: z.string().max(100),
@@ -40,7 +47,11 @@ type ClientInvoiceRecovery = z.infer<typeof clientInvoiceRecoverySchema>;
 
 type ClientInvoiceFormProps = { readonly open: boolean };
 
-const INVOICE_STAGE_OPTIONS: ReadonlyArray<{ readonly value: InvoiceStage; readonly label: string; readonly description: string }> = [
+const INVOICE_STAGE_OPTIONS: ReadonlyArray<{
+  readonly value: InvoiceStage;
+  readonly label: string;
+  readonly description: string;
+}> = [
   { value: "DP", label: "Uang Muka", description: "Pembayaran awal proyek" },
   { value: "PROGRESS_1", label: "Termin Progress 1", description: "Tagihan progress pertama" },
   { value: "PROGRESS_2", label: "Termin Progress 2", description: "Tagihan progress kedua" },
@@ -81,8 +92,11 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
     initialPayload,
   });
   const amount = Number(draft.payload.amount || 0);
-  const stageLabel = INVOICE_STAGE_OPTIONS.find((option) => option.value === draft.payload.stage)?.label ?? draft.payload.stage;
-  const canContinue = Boolean(projectId && draft.payload.invoiceNumber.trim() && draft.payload.dueDate) && amount > 0;
+  const stageLabel =
+    INVOICE_STAGE_OPTIONS.find((option) => option.value === draft.payload.stage)?.label ??
+    draft.payload.stage;
+  const canContinue =
+    Boolean(projectId && draft.payload.invoiceNumber.trim() && draft.payload.dueDate) && amount > 0;
   const disabledReason = !projectId
     ? "Proyek tidak valid."
     : !draft.payload.invoiceNumber.trim()
@@ -103,8 +117,14 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
   }
 
   function requestClose(): void {
-    if (reviewing) { setReviewing(false); return; }
-    if (draft.isDirty) { setConfirmClose(true); return; }
+    if (reviewing) {
+      setReviewing(false);
+      return;
+    }
+    if (draft.isDirty) {
+      setConfirmClose(true);
+      return;
+    }
     closeForm();
   }
 
@@ -160,67 +180,156 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
         disabledReason={disabledReason}
         primaryLabel={reviewing ? "Buat" : "Tinjau"}
         secondaryLabel={reviewing ? "Ubah" : undefined}
-        statusText={draft.recoveredAt ? "Data sebelumnya dipulihkan dari perangkat ini." : draft.isDirty ? "Perubahan aman di perangkat ini." : undefined}
+        statusText={
+          draft.recoveredAt
+            ? "Data sebelumnya dipulihkan dari perangkat ini."
+            : draft.isDirty
+              ? "Perubahan aman di perangkat ini."
+              : undefined
+        }
         statusTone="success"
-        onPrimary={() => reviewing ? submit() : setReviewing(true)}
+        onPrimary={() => (reviewing ? submit() : setReviewing(true))}
         onSecondary={() => setReviewing(false)}
       >
         <div className="space-y-md">
-          {error ? <div className="rounded-2xl bg-error-container/20 p-3 text-xs font-medium text-error" role="alert">{error}</div> : null}
+          {error ? (
+            <div
+              className="bg-error-container/20 text-error rounded-2xl p-3 text-xs font-medium"
+              role="alert"
+            >
+              {error}
+            </div>
+          ) : null}
           {reviewing ? (
             <div className="space-y-3">
-              <FormSection title="Invoice yang akan dibuat" helper="Dokumen ini dapat menerima pembayaran setelah dibuat.">
+              <FormSection
+                title="Invoice yang akan dibuat"
+                helper="Dokumen ini dapat menerima pembayaran setelah dibuat."
+              >
                 <ReviewFact label="Nomor" value={draft.payload.invoiceNumber} />
                 <ReviewFact label="Termin" value={stageLabel} />
                 <ReviewFact label="Nominal" value={`Rp ${amount.toLocaleString("id-ID")}`} />
-                <ReviewFact label="Jatuh tempo" value={new Date(draft.payload.dueDate).toLocaleDateString("id-ID", { dateStyle: "long" })} />
+                <ReviewFact
+                  label="Jatuh tempo"
+                  value={new Date(draft.payload.dueDate).toLocaleDateString("id-ID", {
+                    dateStyle: "long",
+                  })}
+                />
               </FormSection>
               <FormRiskNotice title="Belum mengubah saldo kas" tone="default">
-                Invoice mencatat piutang proyek. Saldo baru bertambah saat pembayaran klien dicatat secara terpisah.
+                Invoice mencatat piutang proyek. Saldo baru bertambah saat pembayaran klien dicatat
+                secara terpisah.
               </FormRiskNotice>
-              {draft.payload.notes ? <p className="rounded-2xl bg-surface-container-low px-4 py-3 text-xs leading-5">{draft.payload.notes}</p> : null}
+              {draft.payload.notes ? (
+                <p className="bg-surface-container-low rounded-2xl px-4 py-3 text-xs leading-5">
+                  {draft.payload.notes}
+                </p>
+              ) : null}
             </div>
           ) : (
-             <form onSubmit={(event) => { event.preventDefault(); setReviewing(true); }} className="space-y-md">
-               <FormSection title="Identitas invoice" helper="Nomor disiapkan otomatis dan tetap dapat diubah.">
-                 <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                   <FormField label="Nomor Invoice" required><TextInput value={draft.payload.invoiceNumber} disabled={isPending} onChange={(value) => patch({ invoiceNumber: value })} /></FormField>
-                   <SheetSelect label="Tahap Tagihan" value={draft.payload.stage} disabled={isPending} onChange={(value) => { const parsed = invoiceStageSchema.safeParse(value); if (parsed.success) patch({ stage: parsed.data }); }} options={INVOICE_STAGE_OPTIONS} />
-                 </div>
-               </FormSection>
-               <FormSection title="Nilai dan tenggat" helper="Nominal tidak ditebak oleh sistem.">
-                 <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                   <FormField label="Nominal Tagihan" required><MoneyInput value={draft.payload.amount} disabled={isPending} onChange={(value) => patch({ amount: value })} /></FormField>
-                   <DatePickerField label="Tanggal Jatuh Tempo" value={draft.payload.dueDate} disabled={isPending} onChange={(value) => patch({ dueDate: value })} required />
-                   <FormField label="Catatan" optional><Textarea value={draft.payload.notes} disabled={isPending} onChange={(value) => patch({ notes: value })} placeholder="Detail yang membantu tim finance" rows={2} /></FormField>
-                 </div>
-               </FormSection>
-               <FieldContextLine tone="success">Draft lokal diperbarui setiap kali data berubah.</FieldContextLine>
-             </form>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                setReviewing(true);
+              }}
+              className="space-y-md"
+            >
+              <FormSection
+                title="Identitas invoice"
+                helper="Nomor disiapkan otomatis dan tetap dapat diubah."
+              >
+                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                  <FormField label="Nomor Invoice" required>
+                    <TextInput
+                      value={draft.payload.invoiceNumber}
+                      disabled={isPending}
+                      onChange={(value) => patch({ invoiceNumber: value })}
+                    />
+                  </FormField>
+                  <SheetSelect
+                    label="Tahap Tagihan"
+                    value={draft.payload.stage}
+                    disabled={isPending}
+                    onChange={(value) => {
+                      const parsed = invoiceStageSchema.safeParse(value);
+                      if (parsed.success) patch({ stage: parsed.data });
+                    }}
+                    options={INVOICE_STAGE_OPTIONS}
+                  />
+                </div>
+              </FormSection>
+              <FormSection title="Nilai dan tenggat" helper="Nominal tidak ditebak oleh sistem.">
+                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                  <FormField label="Nominal Tagihan" required>
+                    <MoneyInput
+                      value={draft.payload.amount}
+                      disabled={isPending}
+                      onChange={(value) => patch({ amount: value })}
+                    />
+                  </FormField>
+                  <DatePickerField
+                    label="Tanggal Jatuh Tempo"
+                    value={draft.payload.dueDate}
+                    disabled={isPending}
+                    onChange={(value) => patch({ dueDate: value })}
+                    required
+                  />
+                  <FormField label="Catatan" optional>
+                    <Textarea
+                      value={draft.payload.notes}
+                      disabled={isPending}
+                      onChange={(value) => patch({ notes: value })}
+                      placeholder="Detail yang membantu tim finance"
+                      rows={2}
+                    />
+                  </FormField>
+                </div>
+              </FormSection>
+              <FieldContextLine tone="success">
+                Draft lokal diperbarui setiap kali data berubah.
+              </FieldContextLine>
+            </form>
           )}
         </div>
       </WorkflowFormSheet>
       <FinanceUnsavedChangesModal
         open={confirmClose}
-        onKeep={() => { setConfirmClose(false); closeForm(); }}
-        onDiscard={() => { draft.reset(); setConfirmClose(false); closeForm(); }}
+        onKeep={() => {
+          setConfirmClose(false);
+          closeForm();
+        }}
+        onDiscard={() => {
+          draft.reset();
+          setConfirmClose(false);
+          closeForm();
+        }}
         onContinue={() => setConfirmClose(false)}
       />
       <FinanceSuccessSheet
         success={success}
         secondaryLabel="Tambah"
         onClose={() => setSuccess(null)}
-        onSecondary={() => { setSuccess(null); draft.reset(); updateUrlSearchParam("new-invoice", "true", "push"); }}
+        onSecondary={() => {
+          setSuccess(null);
+          draft.reset();
+          updateUrlSearchParam("new-invoice", "true", "push");
+        }}
       />
     </>
   );
 }
 
-function ReviewFact({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.JSX.Element {
+function ReviewFact({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: React.ReactNode;
+}): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
       <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
+      <span className="text-on-surface text-right font-bold">{value}</span>
     </div>
   );
 }

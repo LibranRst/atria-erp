@@ -8,7 +8,7 @@ export default async function ExpensesPage(): Promise<React.JSX.Element> {
 
   return (
     <section className="space-y-sm select-none">
-      <ExpenseList 
+      <ExpenseList
         initialCosts={data.initialCosts}
         bankAccounts={data.bankAccounts}
         userRole={data.userRole}

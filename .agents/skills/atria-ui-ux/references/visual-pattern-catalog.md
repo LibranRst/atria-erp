@@ -4,15 +4,15 @@ Use this catalog to choose a pattern, then inspect the live component before imp
 
 ## Dashboard Taste Reference
 
-| Area | Inspect | Reuse the design reasoning |
-| --- | --- | --- |
-| Shell and tabs | `finance-dashboard.tsx`, `dashboard-primitives.tsx`, `components/ui/segmented-tabs.tsx` | Compact greeting/context, strong peer navigation, stable URL-backed tab content, one-column density |
-| Ringkasan | `DashboardOverviewTab`, `dashboard-overview-cards.tsx`, `dashboard-overview-lists.tsx` | One dominant financial position, concise attention list, grouped cash rows, supporting detail after the focal state |
-| Persetujuan | `dashboard-approvals-tab.tsx`, approval rows | Decision-first summary, urgency without decorative rails, budget impact before confirmation, detail sheet followed by explicit decision |
-| Budget | `BudgetRiskTab`, project/category rows | Budget versus actual, remaining value, margin/risk context, contextual indicators instead of repeated generic progress bars |
-| Jatuh Tempo | `CashDueTab`, due rows | Time and cash consequence, compact status, grouped obligations and receivables, direct drill-down |
-| Rekening | `AccountsTab`, `bank-accounts/` | Preserve account gradients as identity surfaces; keep transactions and actions operational and secondary to available balance |
-| Material | `MaterialsTab`, material rows | Show category-budget context before or alongside shortages; distinguish RAP shortage, low stock, review, waste, and adjustment |
+| Area           | Inspect                                                                                 | Reuse the design reasoning                                                                                                              |
+| -------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Shell and tabs | `finance-dashboard.tsx`, `dashboard-primitives.tsx`, `components/ui/segmented-tabs.tsx` | Compact greeting/context, strong peer navigation, stable URL-backed tab content, one-column density                                     |
+| Ringkasan      | `DashboardOverviewTab`, `dashboard-overview-cards.tsx`, `dashboard-overview-lists.tsx`  | One dominant financial position, concise attention list, grouped cash rows, supporting detail after the focal state                     |
+| Persetujuan    | `dashboard-approvals-tab.tsx`, approval rows                                            | Decision-first summary, urgency without decorative rails, budget impact before confirmation, detail sheet followed by explicit decision |
+| Budget         | `BudgetRiskTab`, project/category rows                                                  | Budget versus actual, remaining value, margin/risk context, contextual indicators instead of repeated generic progress bars             |
+| Jatuh Tempo    | `CashDueTab`, due rows                                                                  | Time and cash consequence, compact status, grouped obligations and receivables, direct drill-down                                       |
+| Rekening       | `AccountsTab`, `bank-accounts/`                                                         | Preserve account gradients as identity surfaces; keep transactions and actions operational and secondary to available balance           |
+| Material       | `MaterialsTab`, material rows                                                           | Show category-budget context before or alongside shortages; distinguish RAP shortage, low stock, review, waste, and adjustment          |
 
 Across every tab, preserve the calm hierarchy: position or workload, attention, next action, then supporting detail. Use shared soft surfaces, internal dividers, compact icon tiles, semantic status copy, `MoneyValue`, and structural empty/loading states.
 

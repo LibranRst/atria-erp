@@ -1,6 +1,7 @@
 # PRD - Dekoria Project Finance & Material Control System
 
 ## 1. Product Overview
+
 Atria ERP is Dekoria's internal Project Finance & Material Control System for interior design and build work. The app upgrades the current workbook-informed Project Budget workflow into a structured system for project budget control, category expense tracking, remaining budget, gross/margin visibility, RAP material planning, inventory visibility, vendor bills, stock movement, project profitability, and owner-readable AI summaries.
 
 The product promise is: **Project Budget Control upgraded into a real ERP with material stock visibility.**
@@ -8,9 +9,11 @@ The product promise is: **Project Budget Control upgraded into a real ERP with m
 The app remains mobile-first because owners, project teams, purchasing, and finance staff need to use it from the field. Desktop is supported for heavier administration, but mobile must be a first-class experience.
 
 ## 2. Main Business Problem
+
 Dekoria can already track project value, budget, category spend, remaining budget, and dashboard summaries in a finance spreadsheet pattern. That familiar flow must remain core. The weakness is that category tracking, especially Material, is not structured enough to connect expenses to material needs, stock, usage, leftover, and margin risk.
 
 The owner and finance team can see money going out, but cannot easily answer:
+
 - what material was bought;
 - what material is still in stock;
 - what material is reserved or used for a project;
@@ -21,6 +24,7 @@ The owner and finance team can see money going out, but cannot easily answer:
 - how material usage affects project margin.
 
 ## 3. Product Promise
+
 Preserve the familiar flow:
 
 `Project Budget Setup -> Expense Tracker by Category -> Budget Dashboard -> Category Usage -> Remaining Budget -> Project Margin`
@@ -32,28 +36,32 @@ Improve it into:
 Material tracking is attached to the Material category. It must not replace Tukang, Operasional, Lain-lain, Subcon, gross, or remaining-budget controls.
 
 ## 4. In Scope MVP
+
 1. Project Budget with category allocation from Settings defaults
 2. Expense Tracker by category
 3. Budget Dashboard and category usage cards
 4. RAP / Material Plan per Project
-3. Material Master
-4. Stock Inventory
-5. Stock Movement
+5. Material Master
+6. Stock Inventory
+7. Stock Movement
 8. Vendor Bills / Purchase Tracking
 9. Owner Finance & Material Dashboard
 10. Client-facing RAB Estimate based on RAP when useful
 11. AI Finance & Material Brief (deferred; no active Dashboard surface or pipeline)
 
 ## 5. Supporting Modules
+
 Existing project management, users/roles, dashboard, media handling, design/project workflows, sales/leads, content readiness, AI summaries, auth/permissions, reusable components, and layout structure should be preserved when useful. They are supporting modules behind the finance/material-control MVP.
 
 ## 6. Out of Scope MVP
+
 - Full accounting, tax, journal-entry UI, payroll, HR, and complex financial closing.
 - Barcode-heavy warehouse system, FIFO/LIFO accounting valuation, manufacturing, or production planning.
 - External vendor/client portal login.
 - Automatic fund disbursement or important material mutation triggered only by AI.
 
 ## 7. Core Concepts
+
 - Project Budget: ERP internal budget with project value, approved RAB value, total internal budget, consumed budget, remaining budget, used percentage, category allocation, target gross, and projected margin.
 - Expense Categories: `MATERIAL`, `TUKANG`, `OPERASIONAL`, `LAIN_LAIN`, and `SUBCON`.
 - Settings: source of truth for budget allocation defaults, expense category master data, item/price library, and material master data.
@@ -72,6 +80,7 @@ Existing project management, users/roles, dashboard, media handling, design/proj
 - Dashboard: owner-readable summary, not a complex accounting dashboard.
 
 ## 8. RAP / RAB Rules
+
 - RAP is internal.
 - RAB is client-facing.
 - Internal cost, margin, markup, vendor note, and internal note must never appear in client-facing RAB preview.
@@ -88,12 +97,14 @@ Existing project management, users/roles, dashboard, media handling, design/proj
 - Project margin compares approved RAB value, locked RAP cost, actual cost, estimated remaining cost, and projected final margin.
 
 ## 9. Primary Users
+
 - Owner: sees project value, budget, consumed budget, remaining budget, category usage, material shortage, leftover stock, due bills, and margin risk within 30 seconds.
 - Finance/Admin: creates budgets, inputs expenses, tracks paid/unpaid vendor bills, uploads proofs, and links costs to material/RAP when relevant.
 - Purchasing/Material Team: sees material needs, reserves stock, records stock in/out/use/return/waste, and tracks shortages.
 - Project Team: sees material readiness and status for assigned projects without manual chat follow-up.
 
 ## 10. Acceptance Criteria
+
 - Owner Dashboard shows active project value, total budget, consumed budget, remaining budget, category usage for Tukang/Material/Operasional/Lain-lain/Subcon, margin projection, material shortage, leftover/reusable stock value, vendor bills due, recent cash activity, and urgent actions.
 - Project Budget Detail shows approved RAB value, internal budget, category budget cards, allocated budget, actual spend, remaining budget, used percentage, category risk, RAP planned material cost, paid/unpaid cost, material usage, projected margin, and budget health.
 - Project Detail shows RAP Material Plan for Material, Tukang Work Packages for Tukang, and Subcon Packages for Subcon; Operasional and Lain-lain remain fast expense categories.

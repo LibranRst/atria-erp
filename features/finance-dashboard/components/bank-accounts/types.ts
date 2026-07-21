@@ -8,11 +8,7 @@ export type MovementType = "DEBIT" | "CREDIT";
 export type TextTone = "light" | "dark";
 
 export type CashMovementCategory =
-  | "owner_capital"
-  | "bank_fee"
-  | "correction"
-  | "cash_adjustment"
-  | "other";
+  "owner_capital" | "bank_fee" | "correction" | "cash_adjustment" | "other";
 
 export type AccountDraft = {
   readonly id: string | null;

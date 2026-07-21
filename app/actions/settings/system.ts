@@ -80,15 +80,11 @@ export async function getItemPriceLibrary(
   return getItemPriceLibraryRead(input);
 }
 
-export async function getSettingsHubOverview(): ReturnType<
-  typeof getSettingsHubOverviewRead
-> {
+export async function getSettingsHubOverview(): ReturnType<typeof getSettingsHubOverviewRead> {
   return getSettingsHubOverviewRead();
 }
 
-export async function getBudgetSettings(): ReturnType<
-  typeof getBudgetSettingsRead
-> {
+export async function getBudgetSettings(): ReturnType<typeof getBudgetSettingsRead> {
   return getBudgetSettingsRead();
 }
 
@@ -98,21 +94,15 @@ export async function getExpenseCategorySettings(): ReturnType<
   return getExpenseCategorySettingsRead();
 }
 
-export async function getItemLibrarySettings(): ReturnType<
-  typeof getItemLibrarySettingsRead
-> {
+export async function getItemLibrarySettings(): ReturnType<typeof getItemLibrarySettingsRead> {
   return getItemLibrarySettingsRead();
 }
 
-export async function getMaterialSettings(): ReturnType<
-  typeof getMaterialSettingsRead
-> {
+export async function getMaterialSettings(): ReturnType<typeof getMaterialSettingsRead> {
   return getMaterialSettingsRead();
 }
 
-export async function getSettingsOverview(): ReturnType<
-  typeof getSettingsOverviewRead
-> {
+export async function getSettingsOverview(): ReturnType<typeof getSettingsOverviewRead> {
   return getSettingsOverviewRead();
 }
 
@@ -123,19 +113,19 @@ export async function updateBudgetAllocationDefaults(
 }
 
 export async function updateBudgetAllocationSetting(
-  input: UpdateBudgetAllocationSettingInput
+  input: UpdateBudgetAllocationSettingInput,
 ): Promise<ActionResponse<BudgetAllocationSettingRow>> {
   return updateBudgetAllocationSettingWrite(input);
 }
 
 export async function updateBudgetAllocationCategoryRatio(
-  input: UpdateBudgetAllocationCategoryRatioInput
+  input: UpdateBudgetAllocationCategoryRatioInput,
 ): Promise<ActionResponse<BudgetAllocationCategoryRow>> {
   return updateBudgetAllocationCategoryRatioWrite(input);
 }
 
 export async function updateExpenseCategorySetting(
-  input: UpdateExpenseCategorySettingInput
+  input: UpdateExpenseCategorySettingInput,
 ): Promise<ActionResponse<ExpenseCategorySettingRow>> {
   return updateExpenseCategorySettingWrite(input);
 }
@@ -147,19 +137,19 @@ export async function updateExpenseCategoryDetails(
 }
 
 export async function createItemPriceLibraryItem(
-  input: CreateItemPriceLibraryItemInput
+  input: CreateItemPriceLibraryItemInput,
 ): Promise<ActionResponse<ItemPriceLibraryRow>> {
   return createItemPriceLibraryItemWrite(input);
 }
 
 export async function updateItemPriceLibraryItem(
-  input: UpdateItemPriceLibraryItemInput
+  input: UpdateItemPriceLibraryItemInput,
 ): Promise<ActionResponse<ItemPriceLibraryRow>> {
   return updateItemPriceLibraryItemWrite(input);
 }
 
 export async function archiveItemPriceLibraryItem(
-  input: ArchiveItemPriceLibraryItemInput
+  input: ArchiveItemPriceLibraryItemInput,
 ): Promise<ActionResponse<{ readonly id: string }>> {
   return archiveItemPriceLibraryItemWrite(input);
 }
@@ -171,19 +161,19 @@ export async function setItemPriceLibraryItemActive(
 }
 
 export async function updateMaterial(
-  input: UpdateMaterialInput
+  input: UpdateMaterialInput,
 ): Promise<ActionResponse<MaterialSettingRow>> {
   return updateMaterialWrite(input);
 }
 
 export async function updateMaterialInventoryDefaults(
-  input: UpdateMaterialInventoryDefaultsInput
+  input: UpdateMaterialInventoryDefaultsInput,
 ): Promise<ActionResponse<MaterialInventorySettingRow>> {
   return updateMaterialInventoryDefaultsWrite(input);
 }
 
 export async function archiveMaterial(
-  input: ArchiveMaterialInput
+  input: ArchiveMaterialInput,
 ): Promise<ActionResponse<{ readonly id: string }>> {
   return archiveMaterialWrite(input);
 }

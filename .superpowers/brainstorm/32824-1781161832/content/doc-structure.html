@@ -1,36 +1,56 @@
 <h2>Struktur Dokumentasi & Setup Proyek</h2>
-<p class="subtitle">Berikut adalah dokumen-dokumen yang akan dibuat untuk memandu AI coding agent membangun ERP Finance-First ini.</p>
+<p class="subtitle">
+  Berikut adalah dokumen-dokumen yang akan dibuat untuk memandu AI coding agent membangun ERP
+  Finance-First ini.
+</p>
 
 <div class="mockup">
   <div class="mockup-header">Rencana File Struktur (/docs)</div>
-  <div class="mockup-body" style="font-family: monospace; font-size: 14px; line-height: 1.6; padding: 15px;">
-    📁 atria-erp/<br>
-    ├── 📄 README.md (Overview proyek & petunjuk setup)<br>
-    ├── 📄 AGENTS.md (Aturan khusus untuk AI Coding Agent)<br>
-    └── 📁 docs/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 01-product/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 PRD.md (Tujuan, Scope, User Stories)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 02-product/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 MVP_BLUEPRINT.md (Modul prioritas & daily workflow)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 03-flows/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 FLOWS.md (Alur uang & cash flow dengan Mermaid)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 04-data/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 DATABASE_SCHEMA.md (Skema relasional PostgreSQL/Drizzle)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 STATUS_ENUMS.md (Definisi semua status transaksi & proyek)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 SEED_DATA.md (Data simulasi untuk pengujian UI)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 05-ui-ux/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 MOBILE_FIRST_UI_UX.md (Wireframe layar mobile & interaction)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 IOS26_SOLID_DESIGN_SYSTEM.md (Sistem warna, spacing, card style)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 06-technical/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 STACK_DECISION.md (Trade-offs Next.js + Bun + Neon + Better Auth + Gemini)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 ARCHITECTURE.md (Struktur folder, Server Actions, & AI layer)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 AUTH_AND_PERMISSION.md (RBAC & proteksi data sensitif)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 API_ACTIONS.md (Desain Server Actions & Zod validation)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 AI_AGENT_ARCHITECTURE.md (Integrasi Gemini AI & safety guardrails)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;└── 📁 07-development/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 ROADMAP.md (Rencana rilis berfase)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 TASK_BREAKDOWN.md (Checklist tugas coding yang siap dibaca AI)<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 IMPLEMENTATION_ORDER.md (Urutan instalasi dan pengerjaan)<br>
+  <div
+    class="mockup-body"
+    style="font-family: monospace; font-size: 14px; line-height: 1.6; padding: 15px"
+  >
+    📁 atria-erp/<br />
+    ├── 📄 README.md (Overview proyek & petunjuk setup)<br />
+    ├── 📄 AGENTS.md (Aturan khusus untuk AI Coding Agent)<br />
+    └── 📁 docs/<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 01-product/<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 PRD.md (Tujuan, Scope, User Stories)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 02-product/<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 MVP_BLUEPRINT.md (Modul prioritas & daily
+    workflow)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 03-flows/<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 FLOWS.md (Alur uang & cash flow dengan
+    Mermaid)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 04-data/<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 DATABASE_SCHEMA.md (Skema relasional
+    PostgreSQL/Drizzle)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 STATUS_ENUMS.md (Definisi semua status
+    transaksi & proyek)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 SEED_DATA.md (Data simulasi untuk
+    pengujian UI)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 05-ui-ux/<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 MOBILE_FIRST_UI_UX.md (Wireframe layar
+    mobile & interaction)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 IOS26_SOLID_DESIGN_SYSTEM.md (Sistem
+    warna, spacing, card style)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;├── 📁 06-technical/<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 STACK_DECISION.md (Trade-offs Next.js +
+    Bun + Neon + Better Auth + Gemini)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 ARCHITECTURE.md (Struktur folder, Server
+    Actions, & AI layer)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 AUTH_AND_PERMISSION.md (RBAC & proteksi
+    data sensitif)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 API_ACTIONS.md (Desain Server Actions &
+    Zod validation)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 AI_AGENT_ARCHITECTURE.md (Integrasi
+    Gemini AI & safety guardrails)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;└── 📁 07-development/<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 ROADMAP.md (Rencana rilis berfase)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 TASK_BREAKDOWN.md (Checklist tugas coding
+    yang siap dibaca AI)<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 IMPLEMENTATION_ORDER.md (Urutan instalasi
+    dan pengerjaan)<br />
   </div>
 </div>
 

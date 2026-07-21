@@ -106,9 +106,7 @@ export function buildRabEstimateForManager(
   };
 }
 
-export function buildRabRevisionHistoryItem(
-  estimate: ProjectRabEstimate,
-): RabRevisionHistoryView {
+export function buildRabRevisionHistoryItem(estimate: ProjectRabEstimate): RabRevisionHistoryView {
   return {
     id: estimate.id,
     revision: estimate.revision,
@@ -127,9 +125,7 @@ export function buildStaleSourceLabels(
   return lines.flatMap((line) => {
     if (line.sourceProjectRapItemId) {
       const source = project.raps
-        .flatMap((rap) =>
-          rap.items.map((item) => ({ item, revision: rap.revision })),
-        )
+        .flatMap((rap) => rap.items.map((item) => ({ item, revision: rap.revision })))
         .find((row) => row.item.id === line.sourceProjectRapItemId);
       if (
         source &&
@@ -178,16 +174,11 @@ export function buildChangeOrderHistoryItem(
     revisedRevision: order.revisedRab.revision,
     sourceRevisionSummary:
       [
-        order.revisedRab.sourceRap
-          ? `RAP R${order.revisedRab.sourceRap.revision}`
-          : null,
+        order.revisedRab.sourceRap ? `RAP R${order.revisedRab.sourceRap.revision}` : null,
         ...Array.from(
           new Set(
             order.revisedRab.items
-              .filter(
-                (item) =>
-                  item.sourceType === "CATEGORY_PLAN" && item.sourceRevision,
-              )
+              .filter((item) => item.sourceType === "CATEGORY_PLAN" && item.sourceRevision)
               .map((item) => `Package R${item.sourceRevision}`),
           ),
         ),
@@ -203,9 +194,7 @@ function buildRapItemForManager(
 ): RapItemView {
   const availableStock =
     item.material?.inventory?.reduce((sum, inventory) => {
-      return (
-        sum + Number(inventory.currentStock) - Number(inventory.reservedStock)
-      );
+      return sum + Number(inventory.currentStock) - Number(inventory.reservedStock);
     }, 0) ?? 0;
   const materialProjection = projectMaterialProjection(
     item.stockMovements ?? [],
@@ -214,8 +203,7 @@ function buildRapItemForManager(
   const actualMaterialCost = costs
     .filter(
       (expense) =>
-        expense.projectRapItemId === item.id &&
-        ["APPROVED", "PAID"].includes(expense.status),
+        expense.projectRapItemId === item.id && ["APPROVED", "PAID"].includes(expense.status),
     )
     .reduce((sum, expense) => sum + Number(expense.amount), 0);
   return {

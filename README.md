@@ -7,6 +7,7 @@ The product promise is: **Project Budget Control upgraded into a real ERP with m
 The product is practical by design. It is not a full accounting suite, not a generic project management tool, not just a prettier spreadsheet, and not a complex warehouse/manufacturing system. Its job is to help Dekoria see where project budget, category spending, materials, and margin are going before leaks become expensive surprises.
 
 ## Product Focus
+
 - Project Budget: ERP budget setup by category with contract value, internal budget, consumed budget, pending review, paid amount, remaining budget, used percentage, target gross, and projected margin.
 - Settings: source of truth for Budget Allocation defaults, Expense Categories, Item & Price Library, and Material Master settings.
 - Expense Categories: Material, Tukang, Operasional, Lain-lain, and Subcon are first-class budget controls.
@@ -23,7 +24,9 @@ The product is practical by design. It is not a full accounting suite, not a gen
 - Owner Dashboard: concise Bahasa Indonesia summaries of financial position, category budget usage, margin risk, material shortage, due documents, and next actions. AI CFO/financial briefing is deferred.
 
 ## Preserved Foundations
+
 The existing app already includes valuable foundations and should not be rewritten blindly:
+
 - Better Auth, RBAC, project scoping, and role permissions.
 - Drizzle/PostgreSQL schema, migrations, and seed workflow.
 - Project budgets, project costs, vendor bills, client invoices, payments, ledger, and audit logs.
@@ -33,6 +36,7 @@ The existing app already includes valuable foundations and should not be rewritt
 - Gemini OCR and preserved AI run history for future use; AI CFO/financial briefing is currently deferred from the product surface.
 
 ## Tech Stack
+
 - Runtime and package manager: Bun
 - Framework: Next.js App Router
 - Language: TypeScript
@@ -63,6 +67,7 @@ The existing app already includes valuable foundations and should not be rewritt
 - `docs/specs/`: repository design specifications.
 
 ## Local Development
+
 ```bash
 bun install
 cp .env.example .env
@@ -73,6 +78,7 @@ bun run dev
 Open `http://localhost:3000`.
 
 ## Core Engineering Rules
+
 - Use strict TypeScript. Do not introduce `any`.
 - Validate all Server Action inputs with Zod.
 - Use Drizzle query APIs and query builder. Do not execute raw SQL in app code.

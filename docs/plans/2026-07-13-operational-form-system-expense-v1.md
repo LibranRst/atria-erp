@@ -1,11 +1,13 @@
 # Operational Form System — Expense Vertical Slice V1
 
 ## Intent
+
 - Establish a stable mobile-first form foundation before migrating other operational flows.
 - Redesign Expense creation around recoverable drafts, compact repeatable items, contextual material fields, explicit review, and an intentional success state.
 - Preserve RBAC, project scoping, finance/material transactions, audit behavior, budget synchronization, and immutable submitted records.
 
 ## Phase 1 Scope
+
 - Versioned server-backed `form_draft` records plus immediate local recovery for Expense drafts.
 - Multiple active Expense drafts per user, optimistic revision checks, discard, expiry, and atomic submission.
 - Shared workflow form footer, unsaved-change guard, draft status feedback, option choices, compact line items, review, and success patterns.
@@ -13,12 +15,14 @@
 - Draft summaries in Finance Inbox and project-context entry points.
 
 ## Safety Rules
+
 - Saving or autosaving a draft must not create `project_cost`, canonical expenses, approvals, stock movements, cash transactions, or audit logs.
 - Final submission must validate the full payload, claim the active draft, create all business records, and consume the draft in one database transaction.
 - Material stock handling remains an explicit user choice and defaults to `EXPENSE_ONLY`.
 - Submitted, verified, approved, paid, and rejected records are never edited in place; rejected records may be copied into a new draft.
 
 ## Acceptance Gate
+
 - Draft survives close, reload, temporary offline state, and another authenticated session.
 - Users can identify incomplete items without opening every editor.
 - Review clearly states project, total, category impact, stock actions, and approval consequences.

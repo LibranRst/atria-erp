@@ -8,4 +8,3 @@ export default async function PasswordPage(): Promise<React.JSX.Element> {
   if (!session.user.mustChangePassword) redirect("/");
   return <TemporaryPasswordForm />;
 }
-

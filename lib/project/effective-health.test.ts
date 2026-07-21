@@ -55,10 +55,6 @@ describe("effective project health", () => {
     });
 
     expect(result.effectiveHealth).toBe("WARNING");
-    expect(result.healthReasons).toEqual([
-      "BUDGET_WATCH",
-      "CATEGORY_WATCH",
-      "MARGIN_BELOW_TARGET",
-    ]);
+    expect(result.healthReasons).toEqual(["BUDGET_WATCH", "CATEGORY_WATCH", "MARGIN_BELOW_TARGET"]);
   });
 });

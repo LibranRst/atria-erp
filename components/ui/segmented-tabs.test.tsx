@@ -77,24 +77,30 @@ describe("segmented tabs", () => {
   });
 
   test("centers the active tab inside its horizontal scroller only", () => {
-    expect(calculateCenteredScrollLeft({
-      itemLeft: 360,
-      itemWidth: 100,
-      viewportWidth: 320,
-      scrollWidth: 760,
-    })).toBe(250);
-    expect(calculateCenteredScrollLeft({
-      itemLeft: 10,
-      itemWidth: 90,
-      viewportWidth: 320,
-      scrollWidth: 760,
-    })).toBe(0);
-    expect(calculateCenteredScrollLeft({
-      itemLeft: 720,
-      itemWidth: 90,
-      viewportWidth: 320,
-      scrollWidth: 760,
-    })).toBe(440);
+    expect(
+      calculateCenteredScrollLeft({
+        itemLeft: 360,
+        itemWidth: 100,
+        viewportWidth: 320,
+        scrollWidth: 760,
+      }),
+    ).toBe(250);
+    expect(
+      calculateCenteredScrollLeft({
+        itemLeft: 10,
+        itemWidth: 90,
+        viewportWidth: 320,
+        scrollWidth: 760,
+      }),
+    ).toBe(0);
+    expect(
+      calculateCenteredScrollLeft({
+        itemLeft: 720,
+        itemWidth: 90,
+        viewportWidth: 320,
+        scrollWidth: 760,
+      }),
+    ).toBe(440);
   });
 
   test("contains any vertical touchpad delta inside the tab scroller", () => {

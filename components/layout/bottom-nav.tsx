@@ -14,11 +14,7 @@ import {
   type FabAction,
   type SessionUserWithRole,
 } from "./bottom-nav-config";
-import {
-  BottomNavBackdrop,
-  BottomTabBar,
-  QuickActionFab,
-} from "./bottom-nav-parts";
+import { BottomNavBackdrop, BottomTabBar, QuickActionFab } from "./bottom-nav-parts";
 
 export function BottomNav(): React.JSX.Element | null {
   const pathname = usePathname();
@@ -28,9 +24,7 @@ export function BottomNav(): React.JSX.Element | null {
   const [isFabOpen, setIsFabOpen] = React.useState(false);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [menuHeight, setMenuHeight] = React.useState<number | null>(null);
-  const [clickedTabHref, setClickedTabHref] = React.useState<string | null>(
-    null,
-  );
+  const [clickedTabHref, setClickedTabHref] = React.useState<string | null>(null);
   const [hasMounted, setHasMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -49,9 +43,7 @@ export function BottomNav(): React.JSX.Element | null {
     return () => window.clearTimeout(timeoutId);
   }, [pathname, searchParams]);
 
-  const roleId = session?.user
-    ? (session.user as SessionUserWithRole).roleId
-    : null;
+  const roleId = session?.user ? (session.user as SessionUserWithRole).roleId : null;
   const roleName = roleId ? ROLE_ID_TO_NAME[roleId] : null;
 
   const { isLocked, projectId } = useProjectState();
@@ -59,10 +51,7 @@ export function BottomNav(): React.JSX.Element | null {
     return !!(isLocked && projectId && pathname.includes(projectId));
   }, [isLocked, projectId, pathname]);
 
-  const filteredNavItems = React.useMemo(
-    () => getRoleNavItems(roleName),
-    [roleName],
-  );
+  const filteredNavItems = React.useMemo(() => getRoleNavItems(roleName), [roleName]);
   const isProjectDetail = pathname.startsWith("/projects/");
 
   const activeIndex = React.useMemo(() => {
@@ -75,11 +64,7 @@ export function BottomNav(): React.JSX.Element | null {
   }, [filteredNavItems, clickedTabHref, pathname, searchParams]);
 
   const withQuery = React.useCallback(
-    (
-      key: string,
-      value: string = "true",
-      targetPath: string = pathname,
-    ): string => {
+    (key: string, value: string = "true", targetPath: string = pathname): string => {
       const params =
         targetPath === pathname
           ? new URLSearchParams(searchParams.toString())
@@ -143,7 +128,7 @@ export function BottomNav(): React.JSX.Element | null {
 
   return (
     <>
-      <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-0 right-0 mx-auto flex h-14 w-[calc(100%-2rem)] max-w-md items-center gap-2 pointer-events-none select-none z-30">
+      <div className="pointer-events-none fixed right-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] left-0 z-30 mx-auto flex h-14 w-[calc(100%-2rem)] max-w-md items-center gap-2 select-none">
         <BottomNavBackdrop isOpen={isFabOpen} onClose={() => setIsFabOpen(false)} />
         <BottomTabBar
           activeIndex={activeIndex}

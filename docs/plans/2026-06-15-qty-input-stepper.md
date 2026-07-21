@@ -5,6 +5,7 @@ Improve the quantity input field UX by replacing the plain numeric input with a 
 ## User Review Required
 
 > [!IMPORTANT]
+>
 > - **Horizontal Stepper Component**: Preceded and followed by `-` and `+` tap targets (size $48 \times 44$ px, meeting iOS $\ge 44 \times 44$ px guidelines).
 > - **Dynamic Unit Labels**: Budget item units (e.g. `lembar`, `pcs`) are moved to the field label (`Qty (lembar)`) to prevent clutter inside the stepper.
 > - **Spinners Hidden**: Standard browser spinner handles (`type="number"`) are suppressed.
@@ -14,6 +15,7 @@ Improve the quantity input field UX by replacing the plain numeric input with a 
 ### Component Changes
 
 #### [MODIFY] [expense-form.tsx](file:///Volumes/DekoriaSSD/App%20Projects/atria-erp/components/expense/expense-form.tsx)
+
 - Add the `adjustQuantity(index, delta)` helper function below `updateLine`.
 - Adjust grid columns:
   - Increase Quantity column span from `col-span-4` to `col-span-5` to allow comfortable spacing for flanking buttons.
@@ -35,8 +37,10 @@ const adjustQuantity = (index: number, delta: number) => {
 ## Verification Plan
 
 ### Automated Tests
+
 - Run the test suite: `bun test` to ensure there are no compilation errors or test regressions.
 
 ### Manual Verification
+
 - Compile production bundle: `bun run build` to verify Next.js builds cleanly with the new changes.
 - Check visual layout matches mobile view constraints.

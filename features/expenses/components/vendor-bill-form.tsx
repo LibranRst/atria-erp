@@ -73,32 +73,20 @@ export function VendorBillForm({
   const [pending, startTransition] = React.useTransition();
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
-  const [pendingProjectId, setPendingProjectId] = React.useState<string | null>(
-    null,
-  );
-  const [pendingDiscardDraftId, setPendingDiscardDraftId] = React.useState<
-    string | null
-  >(null);
+  const [pendingProjectId, setPendingProjectId] = React.useState<string | null>(null);
+  const [pendingDiscardDraftId, setPendingDiscardDraftId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<FinanceOperationSuccess | null>(
-    null,
-  );
-  const [drafts, setDrafts] = React.useState<readonly VendorBillDraftSummary[]>(
-    [],
-  );
+  const [success, setSuccess] = React.useState<FinanceOperationSuccess | null>(null);
+  const [drafts, setDrafts] = React.useState<readonly VendorBillDraftSummary[]>([]);
   const currentProjectId = React.useMemo(() => {
     const parts = pathname.split("/");
     const index = parts.indexOf("projects");
     const candidate = index >= 0 ? parts[index + 1] : "";
-    return projects.some((project) => project.id === candidate)
-      ? candidate
-      : "";
+    return projects.some((project) => project.id === candidate) ? candidate : "";
   }, [pathname, projects]);
   const draft = useHybridVendorBillDraft(initialPayload(currentProjectId));
   const payload = draft.payload;
-  const activeProject = projects.find(
-    (project) => project.id === payload.projectId,
-  );
+  const activeProject = projects.find((project) => project.id === payload.projectId);
   const categories =
     activeProject?.canonicalBudgets?.[0]?.categories
       ?.slice()
@@ -108,12 +96,9 @@ export function VendorBillForm({
   );
   const packageOptions =
     activeProject?.categoryPlanItems?.filter(
-      (item) =>
-        item.projectBudgetCategoryId === payload.projectBudgetCategoryId,
+      (item) => item.projectBudgetCategoryId === payload.projectBudgetCategoryId,
     ) ?? [];
-  const selectedVendor = vendors.find(
-    (vendor) => vendor.id === payload.vendorId,
-  );
+  const selectedVendor = vendors.find((vendor) => vendor.id === payload.vendorId);
   const amount = Number(payload.amount || 0);
   const remainingBefore = Number(selectedCategory?.remainingAmount ?? 0);
   const remainingAfter = remainingBefore - amount;
@@ -166,10 +151,7 @@ export function VendorBillForm({
 
   const completeClose = React.useCallback((): void => {
     if (onClose) onClose();
-    else if (
-      new URLSearchParams(window.location.search).get("new-vendor-bill") ===
-      "true"
-    )
+    else if (new URLSearchParams(window.location.search).get("new-vendor-bill") === "true")
       updateUrlSearchParam("new-vendor-bill", null, "replace");
     else router.back();
   }, [onClose, router]);
@@ -288,7 +270,7 @@ export function VendorBillForm({
         <div className="space-y-md">
           {error ? (
             <div
-              className="rounded-2xl bg-error-container/20 p-3 text-xs font-medium text-error"
+              className="bg-error-container/20 text-error rounded-2xl p-3 text-xs font-medium"
               role="alert"
             >
               {error}
@@ -298,17 +280,15 @@ export function VendorBillForm({
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() =>
-                  draft.draftId ? void loadDraft(draft.draftId) : undefined
-                }
-                className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
+                onClick={() => (draft.draftId ? void loadDraft(draft.draftId) : undefined)}
+                className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
               >
                 Muat
               </button>
               <button
                 type="button"
                 onClick={() => void draft.saveAsCopy()}
-                className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white"
+                className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white"
               >
                 Salin
               </button>
@@ -320,7 +300,7 @@ export function VendorBillForm({
               helper="Lanjutkan tagihan yang pernah disimpan."
               presentation="plain"
             >
-              <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[24px] bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+              <div className="divide-outline-variant/15 bg-surface-container-lowest ring-outline-variant/15 divide-y overflow-hidden rounded-[24px] shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1">
                 {drafts.slice(0, 5).map((item) => (
                   <div
                     key={item.id}
@@ -329,11 +309,11 @@ export function VendorBillForm({
                     <button
                       type="button"
                       onClick={() => void loadDraft(item.id)}
-                      className="flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-[18px] px-2.5 py-2 text-left outline-none transition-colors active:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-blue-500/25"
+                      className="active:bg-surface-container-low flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-[18px] px-2.5 py-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25"
                       aria-label={`Lanjutkan draft ${item.payload.billNumber || "tagihan belum bernomor"}`}
                     >
                       <span
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant"
+                        className="bg-surface-container-low text-on-surface-variant flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
                         aria-hidden="true"
                       >
                         <span className="material-symbols-outlined text-[18px] leading-none">
@@ -341,16 +321,14 @@ export function VendorBillForm({
                         </span>
                       </span>
                       <span className="grid min-w-0 flex-1 gap-0.5">
-                        <span className="truncate text-xs font-bold leading-[1.15] text-on-surface">
+                        <span className="text-on-surface truncate text-xs leading-[1.15] font-bold">
                           {item.payload.billNumber || "Tagihan belum bernomor"}
                         </span>
-                        <span className="truncate text-[10px] leading-[1.2] text-on-surface-variant">
+                        <span className="text-on-surface-variant truncate text-[10px] leading-[1.2]">
                           {item.projectName} · Rp{" "}
-                          {Number(item.payload.amount || 0).toLocaleString(
-                            "id-ID",
-                          )}
+                          {Number(item.payload.amount || 0).toLocaleString("id-ID")}
                         </span>
-                        <span className="text-[9px] leading-[1.2] text-on-surface-variant/75">
+                        <span className="text-on-surface-variant/75 text-[9px] leading-[1.2]">
                           Disimpan{" "}
                           {new Date(item.lastSavedAt).toLocaleString("id-ID", {
                             day: "2-digit",
@@ -361,7 +339,7 @@ export function VendorBillForm({
                         </span>
                       </span>
                       <span
-                        className="material-symbols-outlined shrink-0 text-[18px] leading-none text-on-surface-variant"
+                        className="material-symbols-outlined text-on-surface-variant shrink-0 text-[18px] leading-none"
                         aria-hidden="true"
                       >
                         chevron_right
@@ -370,7 +348,7 @@ export function VendorBillForm({
                     <button
                       type="button"
                       onClick={() => setPendingDiscardDraftId(item.id)}
-                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-error outline-none transition-colors active:bg-error-container/20 focus-visible:ring-2 focus-visible:ring-error/25"
+                      className="text-error active:bg-error-container/20 focus-visible:ring-error/25 flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-2"
                       aria-label={`Buang draft ${item.payload.billNumber || "tagihan belum bernomor"}`}
                     >
                       <span
@@ -386,7 +364,7 @@ export function VendorBillForm({
             </FormSection>
           ) : null}
           {loading && projects.length === 0 ? (
-            <p className="py-12 text-center text-xs text-on-surface-variant">
+            <p className="text-on-surface-variant py-12 text-center text-xs">
               Mengambil proyek dan vendor…
             </p>
           ) : reviewing ? (
@@ -395,39 +373,24 @@ export function VendorBillForm({
                 title="Tagihan yang akan dibuat"
                 helper="Periksa dokumen dan dampak budget sebelum membuat tagihan."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <ReviewFact
-                    label="Vendor"
-                    value={selectedVendor?.name ?? "–"}
-                  />
-                  <ReviewFact
-                    label="Proyek"
-                    value={activeProject?.name ?? "–"}
-                  />
-                  <ReviewFact
-                    label="Kategori"
-                    value={selectedCategory?.name ?? "–"}
-                  />
+                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
+                  <ReviewFact label="Vendor" value={selectedVendor?.name ?? "–"} />
+                  <ReviewFact label="Proyek" value={activeProject?.name ?? "–"} />
+                  <ReviewFact label="Kategori" value={selectedCategory?.name ?? "–"} />
                   <ReviewFact label="Nomor" value={payload.billNumber} />
-                  <ReviewFact
-                    label="Nominal"
-                    value={`Rp ${amount.toLocaleString("id-ID")}`}
-                  />
+                  <ReviewFact label="Nominal" value={`Rp ${amount.toLocaleString("id-ID")}`} />
                   <ReviewFact
                     label="Jatuh tempo"
-                    value={new Date(payload.dueDate).toLocaleDateString(
-                      "id-ID",
-                      { dateStyle: "long" },
-                    )}
+                    value={new Date(payload.dueDate).toLocaleDateString("id-ID", {
+                      dateStyle: "long",
+                    })}
                   />
                   <ReviewFact
                     label="Sisa budget kategori"
                     value={
                       <span
                         className={
-                          remainingAfter < 0
-                            ? "text-error font-bold"
-                            : "text-primary font-bold"
+                          remainingAfter < 0 ? "text-error font-bold" : "text-primary font-bold"
                         }
                       >
                         Rp {remainingBefore.toLocaleString("id-ID")} → Rp{" "}
@@ -438,11 +401,7 @@ export function VendorBillForm({
                 </div>
               </FormSection>
               <FormRiskNotice
-                title={
-                  remainingAfter < 0
-                    ? "Melebihi budget kategori"
-                    : "Saldo kas belum berubah"
-                }
+                title={remainingAfter < 0 ? "Melebihi budget kategori" : "Saldo kas belum berubah"}
                 tone={remainingAfter < 0 ? "warning" : "default"}
               >
                 {remainingAfter < 0
@@ -462,7 +421,7 @@ export function VendorBillForm({
                 title="Vendor dan proyek"
                 helper="Proyek dari halaman aktif dipakai sebagai default aman."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
                   <SheetSelect
                     label="Vendor"
                     value={payload.vendorId}
@@ -479,10 +438,7 @@ export function VendorBillForm({
                     value={payload.projectId}
                     disabled={pending}
                     onChange={(value) => {
-                      if (
-                        payload.projectBudgetCategoryId &&
-                        value !== payload.projectId
-                      )
+                      if (payload.projectBudgetCategoryId && value !== payload.projectId)
                         setPendingProjectId(value);
                       else applyProject(value);
                     }}
@@ -511,19 +467,12 @@ export function VendorBillForm({
                     }))}
                     required
                   />
-                  {selectedCategory &&
-                  ["TUKANG", "SUBCON"].includes(selectedCategory.code) ? (
+                  {selectedCategory && ["TUKANG", "SUBCON"].includes(selectedCategory.code) ? (
                     <SheetSelect
-                      label={
-                        selectedCategory.code === "SUBCON"
-                          ? "Paket Subkon"
-                          : "Paket Tukang"
-                      }
+                      label={selectedCategory.code === "SUBCON" ? "Paket Subkon" : "Paket Tukang"}
                       optional
                       value={payload.projectCategoryPlanItemId}
-                      onChange={(value) =>
-                        patch({ projectCategoryPlanItemId: value })
-                      }
+                      onChange={(value) => patch({ projectCategoryPlanItemId: value })}
                       options={[
                         { value: "", label: "Tanpa tautan paket" },
                         ...packageOptions.map((item) => ({
@@ -536,11 +485,8 @@ export function VendorBillForm({
                   ) : null}
                 </div>
               </FormSection>
-              <FormSection
-                title="Dokumen tagihan"
-                helper="Nominal dan nomor selalu diisi manual."
-              >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+              <FormSection title="Dokumen tagihan" helper="Nominal dan nomor selalu diisi manual.">
+                <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
                   <FormField label="Nomor Tagihan" required>
                     <TextInput
                       value={payload.billNumber}
@@ -553,9 +499,7 @@ export function VendorBillForm({
                     <MoneyInput
                       value={payload.amount}
                       disabled={pending}
-                      onChange={(value) =>
-                        patch({ amount: value === "" ? "" : Number(value) })
-                      }
+                      onChange={(value) => patch({ amount: value === "" ? "" : Number(value) })}
                     />
                   </FormField>
                   <DatePickerField
@@ -606,8 +550,7 @@ export function VendorBillForm({
         danger
         onClose={() => setPendingDiscardDraftId(null)}
         onConfirm={() => {
-          if (pendingDiscardDraftId)
-            void discardDraftById(pendingDiscardDraftId);
+          if (pendingDiscardDraftId) void discardDraftById(pendingDiscardDraftId);
           setPendingDiscardDraftId(null);
         }}
       />
@@ -635,7 +578,7 @@ function ReviewFact({
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
       <span className="text-on-surface-variant shrink-0">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
+      <span className="text-on-surface text-right font-bold">{value}</span>
     </div>
   );
 }

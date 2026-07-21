@@ -20,8 +20,7 @@ type DeveloperAccountSwitcherProps = {
 export function DeveloperAccountSwitcher({
   state,
 }: DeveloperAccountSwitcherProps): React.JSX.Element | null {
-  const [selected, setSelected] =
-    React.useState<DeveloperSimulationTarget | null>(null);
+  const [selected, setSelected] = React.useState<DeveloperSimulationTarget | null>(null);
   const [pending, startTransition] = React.useTransition();
 
   if (!state.enabled || state.isSimulating) return null;
@@ -45,20 +44,20 @@ export function DeveloperAccountSwitcher({
       <div className="flex min-h-10 items-center justify-between gap-3 px-1">
         <h2
           id="developer-simulation-title"
-          className="min-w-0 truncate text-[17px] font-bold leading-6 tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5"
+          className="text-on-surface min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] max-[430px]:text-[15px] max-[430px]:leading-5"
         >
           Simulasi developer
         </h2>
-        <span className="shrink-0 text-[9px] font-bold uppercase tracking-[0.12em] text-warning">
+        <span className="text-warning shrink-0 text-[9px] font-bold tracking-[0.12em] uppercase">
           Development
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-[26px] bg-white/[0.94] shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/[0.025] max-[430px]:rounded-[24px]">
-        <div className="divide-y divide-black/[0.055]">
-          <div className="flex min-h-[72px] items-start gap-3 bg-warning/[0.055] px-3.5 py-3.5">
+      <div className="overflow-hidden rounded-[26px] bg-white/94 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-[24px]">
+        <div className="divide-y divide-black/5.5">
+          <div className="bg-warning/5.5 flex min-h-[72px] items-start gap-3 px-3.5 py-3.5">
             <span
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/[0.11] text-warning ring-1 ring-warning/[0.08]"
+              className="bg-warning/11 text-warning ring-warning/8 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1"
               aria-hidden="true"
             >
               <span className="material-symbols-outlined text-[18px] leading-none">
@@ -66,31 +65,26 @@ export function DeveloperAccountSwitcher({
               </span>
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-bold leading-4 text-on-surface">
+              <p className="text-on-surface text-[13px] leading-4 font-bold">
                 Uji akses sebagai akun tim
               </p>
-              <p className="mt-1 text-[10px] leading-[1.45] text-on-surface-variant">
-                Session ini benar-benar memakai role terpilih. Password akun
-                tidak dibaca atau diubah.
+              <p className="text-on-surface-variant mt-1 text-[10px] leading-[1.45]">
+                Session ini benar-benar memakai role terpilih. Password akun tidak dibaca atau
+                diubah.
               </p>
             </div>
           </div>
 
           {state.blockers.length > 0
             ? state.blockers.map((blocker) => (
-                <div
-                  key={blocker}
-                  className="flex min-h-[60px] items-center gap-3 px-3.5 py-3"
-                >
+                <div key={blocker} className="flex min-h-[60px] items-center gap-3 px-3.5 py-3">
                   <span
-                    className="material-symbols-outlined shrink-0 text-[18px] text-warning"
+                    className="material-symbols-outlined text-warning shrink-0 text-[18px]"
                     aria-hidden="true"
                   >
                     lock
                   </span>
-                  <p className="text-[11px] leading-[1.45] text-on-surface-variant">
-                    {blocker}
-                  </p>
+                  <p className="text-on-surface-variant text-[11px] leading-[1.45]">{blocker}</p>
                 </div>
               ))
             : state.targets.map((target) => (
@@ -101,11 +95,11 @@ export function DeveloperAccountSwitcher({
                   transition={transitionSpringSnappy}
                   onClick={() => setSelected(target)}
                   disabled={pending}
-                  className="flex min-h-[68px] w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left outline-none transition-colors active:bg-surface-container-low focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/25 disabled:opacity-55"
+                  className="active:bg-surface-container-low focus-visible:bg-surface-container-low focus-visible:ring-primary/25 flex min-h-[68px] w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset disabled:opacity-55"
                   aria-label={`Simulasikan akun ${target.name}, ${getDeveloperSimulationRoleLabel(target.roleName)}`}
                 >
                   <span
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/[0.065] text-primary ring-1 ring-primary/[0.06]"
+                    className="bg-primary/6.5 text-primary ring-primary/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1"
                     aria-hidden="true"
                   >
                     <span className="material-symbols-outlined text-[18px] leading-none">
@@ -113,19 +107,19 @@ export function DeveloperAccountSwitcher({
                     </span>
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13px] font-bold leading-4 text-on-surface">
+                    <span className="text-on-surface block truncate text-[13px] leading-4 font-bold">
                       {target.name}
                     </span>
-                    <span className="mt-1 block truncate text-[10px] leading-[1.3] text-on-surface-variant">
+                    <span className="text-on-surface-variant mt-1 block truncate text-[10px] leading-[1.3]">
                       {target.email}
                     </span>
                   </span>
                   <span className="shrink-0 text-right">
-                    <span className="block text-[10px] font-bold text-on-surface">
+                    <span className="text-on-surface block text-[10px] font-bold">
                       {getDeveloperSimulationRoleLabel(target.roleName)}
                     </span>
                     {target.mustChangePassword ? (
-                      <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-warning/[0.09] px-2 py-1 text-[8px] font-bold leading-none text-warning ring-1 ring-warning/[0.08]">
+                      <span className="bg-warning/9 text-warning ring-warning/8 mt-1 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[8px] leading-none font-bold ring-1">
                         <span
                           className="material-symbols-outlined text-[11px] leading-none"
                           aria-hidden="true"
@@ -136,7 +130,7 @@ export function DeveloperAccountSwitcher({
                       </span>
                     ) : (
                       <span
-                        className="material-symbols-outlined mt-0.5 block text-[17px] leading-none text-primary"
+                        className="material-symbols-outlined text-primary mt-0.5 block text-[17px] leading-none"
                         aria-hidden="true"
                       >
                         chevron_right

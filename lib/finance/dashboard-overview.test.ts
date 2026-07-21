@@ -18,24 +18,44 @@ function input(role: "OWNER" | "FINANCE_ADMIN"): FinanceDashboardCoreInput {
     pendingApprovals: 2,
     materialShortageCount: 4,
     lowStockCount: 1,
-    receivables: [{ amount: 100, paidAmount: 40, status: "PARTIALLY_PAID", dueDate: new Date("2026-06-01") }],
-    payables: [{ amount: 80, paidAmount: 20, status: "PARTIALLY_PAID", dueDate: new Date("2026-06-02") }],
-    projects: [{
-      projectId: "project-active",
-      projectName: "Active Project",
-      financialHealth: "CRITICAL",
-      contractValue: 1_000,
-      internalBudget: 900,
-      targetGrossAmount: 100,
-      categories: [{ code: "MATERIAL", name: "Material", allocatedAmount: 500, pendingAmount: 20, actualAmount: 550, paidAmount: 300, sortOrder: 1 }],
-    }],
+    receivables: [
+      { amount: 100, paidAmount: 40, status: "PARTIALLY_PAID", dueDate: new Date("2026-06-01") },
+    ],
+    payables: [
+      { amount: 80, paidAmount: 20, status: "PARTIALLY_PAID", dueDate: new Date("2026-06-02") },
+    ],
+    projects: [
+      {
+        projectId: "project-active",
+        projectName: "Active Project",
+        financialHealth: "CRITICAL",
+        contractValue: 1_000,
+        internalBudget: 900,
+        targetGrossAmount: 100,
+        categories: [
+          {
+            code: "MATERIAL",
+            name: "Material",
+            allocatedAmount: 500,
+            pendingAmount: 20,
+            actualAmount: 550,
+            paidAmount: 300,
+            sortOrder: 1,
+          },
+        ],
+      },
+    ],
   };
 }
 
 describe("finance dashboard overview", () => {
   test("calculates outstanding after partial payments and ignores void documents", () => {
-    expect(calculateOutstanding({ amount: 100, paidAmount: 40, status: "PARTIALLY_PAID", dueDate: now })).toBe(60);
-    expect(calculateOutstanding({ amount: 100, paidAmount: 0, status: "VOID", dueDate: now })).toBe(0);
+    expect(
+      calculateOutstanding({ amount: 100, paidAmount: 40, status: "PARTIALLY_PAID", dueDate: now }),
+    ).toBe(60);
+    expect(calculateOutstanding({ amount: 100, paidAmount: 0, status: "VOID", dueDate: now })).toBe(
+      0,
+    );
   });
 
   test("aggregates only projects supplied by the active-project query", () => {
@@ -60,7 +80,17 @@ describe("finance dashboard overview", () => {
           projectId: "stored-warning",
           projectName: "Stored warning",
           financialHealth: "WARNING",
-          categories: [{ code: "MATERIAL", name: "Material", allocatedAmount: 500, pendingAmount: 0, actualAmount: 300, paidAmount: 0, sortOrder: 1 }],
+          categories: [
+            {
+              code: "MATERIAL",
+              name: "Material",
+              allocatedAmount: 500,
+              pendingAmount: 0,
+              actualAmount: 300,
+              paidAmount: 0,
+              sortOrder: 1,
+            },
+          ],
         },
         {
           ...base.projects[0]!,

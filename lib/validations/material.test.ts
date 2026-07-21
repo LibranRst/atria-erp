@@ -61,7 +61,23 @@ describe("Material control validations", () => {
   });
 
   it("mewajibkan audit note minimal 10 karakter untuk waste", () => {
-    expect(wasteMaterialSchema.safeParse({ materialId: MATERIAL_ID, inventoryLocationId: LOCATION_ID, projectId: PROJECT_ID, quantity: 1, note: "rusak" }).success).toBe(false);
-    expect(wasteMaterialSchema.safeParse({ materialId: MATERIAL_ID, inventoryLocationId: LOCATION_ID, projectId: PROJECT_ID, quantity: 1, note: "Rusak terkena air saat instalasi" }).success).toBe(true);
+    expect(
+      wasteMaterialSchema.safeParse({
+        materialId: MATERIAL_ID,
+        inventoryLocationId: LOCATION_ID,
+        projectId: PROJECT_ID,
+        quantity: 1,
+        note: "rusak",
+      }).success,
+    ).toBe(false);
+    expect(
+      wasteMaterialSchema.safeParse({
+        materialId: MATERIAL_ID,
+        inventoryLocationId: LOCATION_ID,
+        projectId: PROJECT_ID,
+        quantity: 1,
+        note: "Rusak terkena air saat instalasi",
+      }).success,
+    ).toBe(true);
   });
 });

@@ -16,12 +16,9 @@ export function shortMoney(value: number): string {
   return `${sign}Rp ${absolute.toLocaleString("id-ID")}`;
 }
 
-export function statusTone(
-  status: string,
-): "APPROVED" | "DRAFT" | "WARNING" | "CRITICAL" {
+export function statusTone(status: string): "APPROVED" | "DRAFT" | "WARNING" | "CRITICAL" {
   if (status === "CRITICAL" || status === "OVER_BUDGET") return "CRITICAL";
-  if (status === "WARNING" || status === "WATCH" || status === "ON_HOLD")
-    return "WARNING";
+  if (status === "WARNING" || status === "WATCH" || status === "ON_HOLD") return "WARNING";
   if (status === "DRAFT") return "DRAFT";
   return "APPROVED";
 }
@@ -33,9 +30,9 @@ export function categoryTab(code: string): ProjectOverviewTab {
 
 export function fallbackProjectGradient(projectName: string): string {
   const fallbackGradients = [
-    "bg-gradient-to-tr from-neutral-900 via-neutral-800 to-neutral-700",
-    "bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-700",
-    "bg-gradient-to-tr from-zinc-900 via-zinc-800 to-zinc-700",
+    "bg-linear-to-tr from-neutral-900 via-neutral-800 to-neutral-700",
+    "bg-linear-to-tr from-slate-900 via-slate-800 to-slate-700",
+    "bg-linear-to-tr from-zinc-900 via-zinc-800 to-zinc-700",
   ];
   return fallbackGradients[projectName.length % fallbackGradients.length];
 }

@@ -32,9 +32,7 @@ export function isRapSetupStageUnlocked({
   return stageIndex <= RAP_SETUP_STAGES.indexOf(rap.setupStage as RapSetupStage);
 }
 
-export function sumPackageCost(
-  items: readonly ProjectCategoryPlanItemView[],
-): number {
+export function sumPackageCost(items: readonly ProjectCategoryPlanItemView[]): number {
   return items.reduce((sum, item) => sum + Number(item.estimatedTotalCost), 0);
 }
 

@@ -2,10 +2,7 @@ import { redirect } from "next/navigation";
 
 import { OwnerOnboardingWorkspace } from "@/features/onboarding/owner-onboarding-workspace";
 import { getOwnerOnboardingWorkspaceData } from "@/features/onboarding/server/get-owner-onboarding-workspace-data";
-import {
-  onboardingStepIdSchema,
-  type OnboardingStepId,
-} from "@/lib/onboarding/owner-onboarding";
+import { onboardingStepIdSchema, type OnboardingStepId } from "@/lib/onboarding/owner-onboarding";
 
 export const dynamic = "force-dynamic";
 

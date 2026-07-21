@@ -12,5 +12,10 @@ export default async function OnboardingReviewPage(): Promise<React.JSX.Element>
     getDeveloperAccountSimulationState(),
   ]);
   if (!review.success) redirect("/");
-  return <OnboardingFinanceReview pendingBatches={review.data.pendingBatches} simulated={simulation.success && simulation.data.isSimulating} />;
+  return (
+    <OnboardingFinanceReview
+      pendingBatches={review.data.pendingBatches}
+      simulated={simulation.success && simulation.data.isSimulating}
+    />
+  );
 }

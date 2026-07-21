@@ -6,11 +6,7 @@ import React from "react";
 import { toast } from "sonner";
 
 import { bootstrapFirstOwner } from "@/app/actions/administration";
-import {
-  FormField,
-  FormSection,
-  TextInput,
-} from "@/components/ui/form-controls";
+import { FormField, FormSection, TextInput } from "@/components/ui/form-controls";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 type SetupFormState = {
@@ -32,9 +28,7 @@ export function SetupOwnerForm(): React.JSX.Element {
   const [pending, setPending] = React.useState(false);
   const [form, setForm] = React.useState<SetupFormState>(EMPTY_FORM);
 
-  async function submit(
-    event: React.FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  async function submit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setPending(true);
     const result = await bootstrapFirstOwner({
@@ -56,15 +50,15 @@ export function SetupOwnerForm(): React.JSX.Element {
   return (
     <section className="flex min-h-[calc(100dvh-3rem)] flex-col justify-center py-6">
       <header className="mb-5 px-1">
-        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-primary">
+        <p className="text-primary text-[9px] font-bold tracking-[0.16em] uppercase">
           Setup production
         </p>
-        <h1 className="mt-1 text-[26px] font-bold tracking-[-0.025em] text-on-surface">
+        <h1 className="text-on-surface mt-1 text-[26px] font-bold tracking-tight">
           Buat Owner pertama
         </h1>
-        <p className="mt-2 text-[12px] leading-5 text-on-surface-variant">
-          Langkah ini hanya tersedia satu kali. Sistem juga menyiapkan role dan
-          kategori budget canonical tanpa data transaksi contoh.
+        <p className="text-on-surface-variant mt-2 text-[12px] leading-5">
+          Langkah ini hanya tersedia satu kali. Sistem juga menyiapkan role dan kategori budget
+          canonical tanpa data transaksi contoh.
         </p>
       </header>
       <form onSubmit={submit} className="space-y-3">
@@ -98,9 +92,7 @@ export function SetupOwnerForm(): React.JSX.Element {
           <FormField label="Email" required>
             <TextInput
               value={form.email}
-              onChange={(email) =>
-                setForm((current) => ({ ...current, email }))
-              }
+              onChange={(email) => setForm((current) => ({ ...current, email }))}
               type="email"
               autoComplete="email"
               placeholder="owner@dekoria.com"
@@ -115,9 +107,7 @@ export function SetupOwnerForm(): React.JSX.Element {
           >
             <TextInput
               value={form.password}
-              onChange={(password) =>
-                setForm((current) => ({ ...current, password }))
-              }
+              onChange={(password) => setForm((current) => ({ ...current, password }))}
               type="password"
               autoComplete="new-password"
               placeholder="Buat password Owner yang aman"
@@ -131,7 +121,7 @@ export function SetupOwnerForm(): React.JSX.Element {
               disabled={pending}
               whileTap={pending ? undefined : { scale: 0.97 }}
               transition={transitionSpringSnappy}
-              className="min-h-12 w-full rounded-full bg-primary px-6 text-sm font-bold text-white disabled:opacity-50"
+              className="bg-primary min-h-12 w-full rounded-full px-6 text-sm font-bold text-white disabled:opacity-50"
             >
               {pending ? "Menyiapkan…" : "Selesaikan setup"}
             </motion.button>

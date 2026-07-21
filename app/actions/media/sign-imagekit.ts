@@ -34,7 +34,10 @@ export async function signImagekit(): Promise<ActionResponse<ImageKitSignature>>
     if (!privateKey) {
       return {
         success: false,
-        error: { code: "INTERNAL_SERVER_ERROR", message: "Kunci privat ImageKit belum dikonfigurasi di server." },
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Kunci privat ImageKit belum dikonfigurasi di server.",
+        },
       };
     }
 

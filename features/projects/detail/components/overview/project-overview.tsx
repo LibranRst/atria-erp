@@ -6,13 +6,7 @@ import { toast } from "sonner";
 
 import type { ProjectBudgetDashboard } from "@/app/actions/project/excel-budget";
 import { reallocateProjectBudget } from "@/app/actions/project/workflow-governance";
-import {
-  BottomSheet,
-  FormField,
-  FormSection,
-  NumericInput,
-  Textarea,
-} from "@/components/ui";
+import { BottomSheet, FormField, FormSection, NumericInput, Textarea } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
 import { MoneyValue } from "@/components/ui/page-primitives";
 import {
@@ -24,8 +18,7 @@ import { categoryTab, statusTone } from "./project-overview-utils";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 export { ProjectIdentityHeader } from "./project-identity-header";
 
-export type ProjectOverviewTab =
-  "rab" | "rap" | "stok" | "expenses" | "payments" | "profitability";
+export type ProjectOverviewTab = "rab" | "rap" | "stok" | "expenses" | "payments" | "profitability";
 
 export type ProjectOverviewAction = {
   readonly id: string;
@@ -68,13 +61,9 @@ function SectionHeading({
 }): React.JSX.Element {
   return (
     <header className="px-1">
-      <h2 className="text-[17px] font-semibold leading-6 text-on-surface">
-        {title}
-      </h2>
+      <h2 className="text-on-surface text-[17px] leading-6 font-semibold">{title}</h2>
       {supporting ? (
-        <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">
-          {supporting}
-        </p>
+        <p className="text-on-surface-variant mt-0.5 text-[11px] leading-4">{supporting}</p>
       ) : null}
     </header>
   );
@@ -89,36 +78,25 @@ export function ProjectOverview({
   onNavigate,
 }: ProjectOverviewProps): React.JSX.Element {
   const router = useRouter();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null,
-  );
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [reallocationOpen, setReallocationOpen] = useState(false);
   const [reallocationReason, setReallocationReason] = useState("");
   const [ratios, setRatios] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       (budget?.categories ?? []).map((category) => [
         category.id,
-        (
-          (category.allocatedAmount /
-            Math.max(budget?.internalBudget ?? 1, 1)) *
-          100
-        ).toFixed(1),
+        ((category.allocatedAmount / Math.max(budget?.internalBudget ?? 1, 1)) * 100).toFixed(1),
       ]),
     ),
   );
   const [savingAllocation, setSavingAllocation] = useState(false);
   const selectedCategory =
-    budget?.categories.find((category) => category.id === selectedCategoryId) ??
-    null;
+    budget?.categories.find((category) => category.id === selectedCategoryId) ?? null;
   const remaining = budget?.remainingBudget ?? 0;
   const used = budget?.usedPercentage ?? 0;
-  const margin =
-    budget?.projectedMarginPercentage ?? (contractValue > 0 ? 100 : 0);
+  const margin = budget?.projectedMarginPercentage ?? (contractValue > 0 ? 100 : 0);
   const canReallocate = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
-  const totalRatio = Object.values(ratios).reduce(
-    (sum, value) => sum + Number(value || 0),
-    0,
-  );
+  const totalRatio = Object.values(ratios).reduce((sum, value) => sum + Number(value || 0), 0);
 
   async function saveReallocation(): Promise<void> {
     if (!budget) return;
@@ -147,10 +125,7 @@ export function ProjectOverview({
       Object.fromEntries(
         budget.categories.map((category) => [
           category.id,
-          (
-            (category.allocatedAmount / Math.max(budget.internalBudget, 1)) *
-            100
-          ).toFixed(1),
+          ((category.allocatedAmount / Math.max(budget.internalBudget, 1)) * 100).toFixed(1),
         ]),
       ),
     );
@@ -161,30 +136,29 @@ export function ProjectOverview({
   return (
     <div className="space-y-lg max-[430px]:space-y-5">
       {!budget ? (
-        <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.14)] max-[430px]:p-4">
-          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">
+        <section className="bg-primary text-on-primary rounded-[28px] p-5 shadow-[0_16px_38px_rgba(17,17,17,0.14)] max-[430px]:p-4">
+          <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
             Posisi proyek
           </p>
-          <h2 className="mt-2 text-[20px] font-semibold leading-6">
+          <h2 className="mt-2 text-[20px] leading-6 font-semibold">
             Budget internal belum terbentuk
           </h2>
           <p className="mt-2 text-xs leading-5 text-white/65">
-            Lengkapi RAP dan RAB agar pengeluaran, stok, pembayaran, dan margin
-            dapat dipantau.
+            Lengkapi RAP dan RAB agar pengeluaran, stok, pembayaran, dan margin dapat dipantau.
           </p>
           <button
             type="button"
             onClick={() => onNavigate("rap")}
-            className="mt-4 min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold text-primary"
+            className="text-primary mt-4 min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold"
           >
             Mulai dari RAP
           </button>
         </section>
       ) : (
-        <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.14)] max-[430px]:p-4">
+        <section className="bg-primary text-on-primary rounded-[28px] p-5 shadow-[0_16px_38px_rgba(17,17,17,0.14)] max-[430px]:p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">
+              <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
                 Sisa budget internal
               </p>
               <MoneyValue
@@ -195,16 +169,8 @@ export function ProjectOverview({
                 className="mt-1"
               />
             </div>
-            <Badge
-              status={
-                remaining < 0 ? "CRITICAL" : used >= 80 ? "WARNING" : "APPROVED"
-              }
-            >
-              {remaining < 0
-                ? "Terlampaui"
-                : used >= 80
-                  ? "Perlu dipantau"
-                  : "Terkendali"}
+            <Badge status={remaining < 0 ? "CRITICAL" : used >= 80 ? "WARNING" : "APPROVED"}>
+              {remaining < 0 ? "Terlampaui" : used >= 80 ? "Perlu dipantau" : "Terkendali"}
             </Badge>
           </div>
 
@@ -212,28 +178,16 @@ export function ProjectOverview({
             value={used}
             inverse
             danger={remaining < 0}
-            tone={
-              remaining < 0 ? "critical" : used >= 80 ? "warning" : "positive"
-            }
+            tone={remaining < 0 ? "critical" : used >= 80 ? "warning" : "positive"}
           />
 
           <div className="mt-4 grid grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-4">
             <FinancialFact label="Nilai proyek" amount={budget.contractValue} />
-            <FinancialFact
-              label="Budget"
-              amount={budget.internalBudget}
-              align="center"
-            />
-            <FinancialFact
-              label="Realisasi"
-              amount={budget.actualCost}
-              align="right"
-            />
+            <FinancialFact label="Budget" amount={budget.internalBudget} align="center" />
+            <FinancialFact label="Realisasi" amount={budget.actualCost} align="right" />
           </div>
           <div className="mt-3 flex items-center justify-between rounded-[18px] bg-white/[0.07] px-3 py-2.5">
-            <span className="text-[10px] font-semibold text-white/60">
-              Margin proyeksi
-            </span>
+            <span className="text-[10px] font-semibold text-white/60">Margin proyeksi</span>
             <span
               className={`financial-amount font-mono text-[13px] font-bold tabular-nums ${margin < 10 ? "text-[#ff9f96]" : "text-white"}`}
             >
@@ -248,15 +202,15 @@ export function ProjectOverview({
           title="Kesiapan proyek"
           supporting="Status dasar sebelum pekerjaan dan transaksi dilanjutkan."
         />
-        <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
+        <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
           {readiness.map((item, index) => (
             <button
               key={item.id}
               type="button"
               onClick={() => onNavigate(item.tab)}
-              className={`flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
+              className={`focus-visible:bg-surface-container-low active:bg-surface-container-low flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left outline-none ${index > 0 ? "border-outline-variant/20 border-t" : ""}`}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-primary">
+              <span className="bg-surface-container-low text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px]">
                 <span className="material-symbols-outlined text-[18px]">
                   {item.tone === "APPROVED"
                     ? "check"
@@ -267,10 +221,10 @@ export function ProjectOverview({
               </span>
               <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
                 <span className="grid min-w-0 gap-0.5">
-                  <span className="truncate text-xs font-bold leading-4 text-on-surface">
+                  <span className="text-on-surface truncate text-xs leading-4 font-bold">
                     {item.label}
                   </span>
-                  <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+                  <span className="text-on-surface-variant block truncate text-[10px] leading-4">
                     {item.detail}
                   </span>
                 </span>
@@ -278,7 +232,7 @@ export function ProjectOverview({
                   {item.value}
                 </Badge>
               </span>
-              <span className="material-symbols-outlined shrink-0 text-[18px] text-on-surface-variant/55">
+              <span className="material-symbols-outlined text-on-surface-variant/55 shrink-0 text-[18px]">
                 chevron_right
               </span>
             </button>
@@ -296,43 +250,37 @@ export function ProjectOverview({
           }
         />
         {actions.length === 0 ? (
-          <div className="rounded-[22px] bg-white px-4 py-4 text-xs font-medium text-primary shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
+          <div className="text-primary rounded-[22px] bg-white px-4 py-4 text-xs font-medium shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
             <span className="material-symbols-outlined mr-2 align-middle text-[18px]">
               check_circle
             </span>
             Proyek berjalan tanpa blocker aktif.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
+          <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
             {actions.slice(0, 3).map((action, index) => (
               <button
                 key={action.id}
                 type="button"
                 onClick={() => onNavigate(action.tab)}
-                className={`flex min-h-[68px] w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
+                className={`focus-visible:bg-surface-container-low active:bg-surface-container-low flex min-h-[68px] w-full items-center gap-3 px-4 py-3 text-left outline-none ${index > 0 ? "border-outline-variant/20 border-t" : ""}`}
               >
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${action.severity === "CRITICAL" ? "bg-error-container/28 text-error" : action.severity === "WARNING" ? "bg-secondary-container/30 text-secondary" : "bg-primary/8 text-primary"}`}
                 >
                   <span className="material-symbols-outlined text-[18px]">
-                    {action.severity === "INFO"
-                      ? "arrow_forward"
-                      : "priority_high"}
+                    {action.severity === "INFO" ? "arrow_forward" : "priority_high"}
                   </span>
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-bold leading-4 text-on-surface">
+                  <span className="text-on-surface block truncate text-xs leading-4 font-bold">
                     {action.title}
                   </span>
-                  <span className="mt-0.5 block line-clamp-2 text-[10px] leading-4 text-on-surface-variant">
+                  <span className="text-on-surface-variant mt-0.5 line-clamp-2 block text-[10px] leading-4">
                     {action.description}
                   </span>
                 </span>
-                <Badge
-                  status={
-                    action.severity === "INFO" ? "DRAFT" : action.severity
-                  }
-                >
+                <Badge status={action.severity === "INFO" ? "DRAFT" : action.severity}>
                   {action.severity === "CRITICAL"
                     ? "Kritis"
                     : action.severity === "WARNING"
@@ -356,24 +304,24 @@ export function ProjectOverview({
               <button
                 type="button"
                 onClick={openReallocation}
-                className="min-h-12 rounded-full px-3 text-[10px] font-bold text-primary"
+                className="text-primary min-h-12 rounded-full px-3 text-[10px] font-bold"
               >
                 Atur alokasi
               </button>
             ) : null}
           </div>
-          <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/[0.025]">
+          <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
             {budget.categories.map((category, index) => (
               <button
                 key={category.id}
                 type="button"
                 onClick={() => setSelectedCategoryId(category.id)}
-                className={`block min-h-[78px] w-full px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
+                className={`focus-visible:bg-surface-container-low active:bg-surface-container-low block min-h-[78px] w-full px-4 py-3 text-left outline-none ${index > 0 ? "border-outline-variant/20 border-t" : ""}`}
               >
                 <span className="flex items-start justify-between gap-3">
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
-                      <span className="truncate text-xs font-bold text-on-surface">
+                      <span className="text-on-surface truncate text-xs font-bold">
                         {category.name}
                       </span>
                       <Badge status={statusTone(category.status)}>
@@ -399,7 +347,7 @@ export function ProjectOverview({
                       align="right"
                       size="sm"
                     />
-                    <span className="mt-1 block text-right font-mono text-[9px] font-bold text-on-surface-variant">
+                    <span className="text-on-surface-variant mt-1 block text-right font-mono text-[9px] font-bold">
                       {category.usedPercentage.toFixed(1)}%
                     </span>
                   </span>
@@ -423,10 +371,9 @@ export function ProjectOverview({
                 setSelectedCategoryId(null);
                 onNavigate(tab);
               }}
-              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
+              className="bg-primary text-on-primary min-h-12 w-full rounded-full px-5 text-xs font-bold"
             >
-              {selectedCategory.code === "OPERASIONAL" ||
-              selectedCategory.code === "LAIN_LAIN"
+              {selectedCategory.code === "OPERASIONAL" || selectedCategory.code === "LAIN_LAIN"
                 ? "Buka pengeluaran"
                 : "Buka rencana internal"}
             </button>
@@ -434,29 +381,17 @@ export function ProjectOverview({
         }
       >
         {selectedCategory ? (
-          <div className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
-            <DetailMoneyRow
-              label="Budget"
-              amount={selectedCategory.allocatedAmount}
-            />
-            <DetailMoneyRow
-              label="Realisasi"
-              amount={selectedCategory.actualAmount}
-            />
-            <DetailMoneyRow
-              label="Menunggu"
-              amount={selectedCategory.pendingAmount}
-            />
-            <DetailMoneyRow
-              label="Terbayar"
-              amount={selectedCategory.paidAmount}
-            />
+          <div className="bg-surface-container-lowest ring-outline-variant/15 overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1">
+            <DetailMoneyRow label="Budget" amount={selectedCategory.allocatedAmount} />
+            <DetailMoneyRow label="Realisasi" amount={selectedCategory.actualAmount} />
+            <DetailMoneyRow label="Menunggu" amount={selectedCategory.pendingAmount} />
+            <DetailMoneyRow label="Terbayar" amount={selectedCategory.paidAmount} />
             <DetailMoneyRow
               label="Sisa"
               amount={selectedCategory.remainingAmount}
               danger={selectedCategory.remainingAmount < 0}
             />
-            <div className="border-t border-outline-variant/25 px-4 py-3">
+            <div className="border-outline-variant/25 border-t px-4 py-3">
               <div className="flex justify-between text-xs font-bold">
                 <span>Budget terpakai</span>
                 <span>{selectedCategory.usedPercentage.toFixed(1)}%</span>
@@ -487,11 +422,10 @@ export function ProjectOverview({
               disabled={
                 savingAllocation ||
                 totalRatio > 100.0001 ||
-                (budget?.status === "APPROVED" &&
-                  reallocationReason.trim().length < 10)
+                (budget?.status === "APPROVED" && reallocationReason.trim().length < 10)
               }
               onClick={() => void saveReallocation()}
-              className="min-h-12 w-full rounded-full bg-primary text-xs font-bold text-white disabled:opacity-40"
+              className="bg-primary min-h-12 w-full rounded-full text-xs font-bold text-white disabled:opacity-40"
             >
               {savingAllocation ? "Menyimpan…" : "Simpan alokasi"}
             </button>
@@ -504,11 +438,7 @@ export function ProjectOverview({
             helper="Masukkan persentase dari budget internal. Total maksimal 100%."
           >
             {budget?.categories.map((category) => (
-              <FormField
-                key={category.id}
-                label={category.name}
-                layout="inline"
-              >
+              <FormField key={category.id} label={category.name} layout="inline">
                 <NumericInput
                   value={ratios[category.id] ?? "0"}
                   onChange={(value) =>
@@ -567,9 +497,7 @@ function FinancialFact({
         : "pr-2 text-left";
   return (
     <div className={`min-w-0 ${alignClass}`}>
-      <p className="truncate text-[8px] font-bold uppercase tracking-wide text-white/50">
-        {label}
-      </p>
+      <p className="truncate text-[8px] font-bold tracking-wide text-white/50 uppercase">{label}</p>
       <MoneyValue
         amount={amount}
         variant="compactWithFull"
@@ -592,10 +520,8 @@ function DetailMoneyRow({
   readonly danger?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="flex min-h-14 items-center justify-between gap-3 border-t border-outline-variant/25 px-4 py-3 first:border-t-0">
-      <span className="text-xs font-semibold text-on-surface-variant">
-        {label}
-      </span>
+    <div className="border-outline-variant/25 flex min-h-14 items-center justify-between gap-3 border-t px-4 py-3 first:border-t-0">
+      <span className="text-on-surface-variant text-xs font-semibold">{label}</span>
       <MoneyValue
         amount={amount}
         variant="compactWithFull"

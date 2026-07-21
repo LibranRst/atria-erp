@@ -12,11 +12,7 @@ import {
 
 describe("Profile presentation", () => {
   test("excludes deferred AI access from the active profile modules", () => {
-    const groups = summarizeProfileAccess([
-      "view:bank_account",
-      "view:settings",
-      "view:ai_brief",
-    ]);
+    const groups = summarizeProfileAccess(["view:bank_account", "view:settings", "view:ai_brief"]);
 
     expect(groups).toHaveLength(6);
     expect(groups.map((group) => group.title)).not.toContain("AI Brief");

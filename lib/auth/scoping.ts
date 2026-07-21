@@ -5,11 +5,11 @@ import { resolveRoleName } from "./permissions";
 
 /**
  * Menghasilkan kondisi filter Drizzle ORM untuk kueri tabel `project`.
- * 
+ *
  * - OWNER & FINANCE_ADMIN: Mengembalikan `undefined` (tidak ada filter, akses global).
  * - PROJECT_MANAGER & DESIGNER: Mengembalikan filter `eq(project.projectManagerId, userId)`.
  * - Peran lainnya: Mengembalikan kondisi palsu agar data tidak bocor.
- * 
+ *
  * @param userId ID pengguna aktif
  * @param roleName Nama peran (misal: "PROJECT_MANAGER")
  * @returns Ekspresi Drizzle SQL filter atau `undefined`
@@ -33,7 +33,7 @@ export function scopeProjectQuery(userId: string, roleName: string) {
 /**
  * Memverifikasi apakah seorang pengguna diizinkan untuk mengakses proyek tertentu.
  * Jika tidak diizinkan, fungsi ini melempar error "UNAUTHORIZED".
- * 
+ *
  * @param projectId ID proyek target
  * @param userId ID pengguna aktif
  * @param roleIdOrName ID Peran (UUID) atau nama peran string (misal: "PROJECT_MANAGER")
@@ -41,7 +41,7 @@ export function scopeProjectQuery(userId: string, roleName: string) {
 export async function assertProjectAccess(
   projectId: string,
   userId: string,
-  roleIdOrName: string
+  roleIdOrName: string,
 ): Promise<void> {
   let roleName = roleIdOrName;
 
@@ -60,10 +60,7 @@ export async function assertProjectAccess(
   // PROJECT_MANAGER dan DESIGNER dibatasi hanya pada proyek di mana mereka ditugaskan
   if (normalizedRole === "PROJECT_MANAGER" || normalizedRole === "DESIGNER") {
     const assignedProject = await db.query.project.findFirst({
-      where: and(
-        eq(project.id, projectId),
-        eq(project.projectManagerId, userId)
-      ),
+      where: and(eq(project.id, projectId), eq(project.projectManagerId, userId)),
     });
 
     if (!assignedProject) {
@@ -92,6 +89,8 @@ export async function assertProjectIsOperational(projectId: string): Promise<voi
 
 export function assertProjectStatusIsOperational(status: string | undefined): void {
   if (status !== "ACTIVE") {
-    throw new Error("PROJECT_NOT_ACTIVE: Proyek belum Aktif. Aktifkan proyek sebelum mencatat transaksi atau pergerakan stok.");
+    throw new Error(
+      "PROJECT_NOT_ACTIVE: Proyek belum Aktif. Aktifkan proyek sebelum mencatat transaksi atau pergerakan stok.",
+    );
   }
 }

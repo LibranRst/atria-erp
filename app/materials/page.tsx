@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 
 import { getMaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
-import { MaterialGroupSurface, MaterialInlineState } from "@/features/materials/components/material-page-primitives";
+import {
+  MaterialGroupSurface,
+  MaterialInlineState,
+} from "@/features/materials/components/material-page-primitives";
 import { MaterialsControlCenter } from "@/features/materials/components/materials-control-center";
 
 export default async function MaterialsPage(): Promise<React.JSX.Element> {

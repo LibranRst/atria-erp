@@ -4,12 +4,7 @@ import { createClientId } from "@/lib/utils/client-id";
 
 export type MaterialTab = "overview" | "inventory" | "needs" | "activity";
 export type ProjectOperation = "RESERVE" | "USE" | "RETURN" | "WASTE";
-export type WarehouseAction =
-  | ProjectOperation
-  | "LOCATION"
-  | "TRANSFER"
-  | "COUNT"
-  | "ADJUST";
+export type WarehouseAction = ProjectOperation | "LOCATION" | "TRANSFER" | "COUNT" | "ADJUST";
 
 export type SimpleItem = {
   readonly key: string;
@@ -34,9 +29,7 @@ export const materialRupiah = new Intl.NumberFormat("id-ID", {
 });
 
 export function toMaterialTab(value: string | null): MaterialTab {
-  return materialTabs.some((item) => item.id === value)
-    ? (value as MaterialTab)
-    : "overview";
+  return materialTabs.some((item) => item.id === value) ? (value as MaterialTab) : "overview";
 }
 
 export function shortMaterialMoney(value: number): string {
@@ -131,14 +124,7 @@ export function materialBadgeTone(
   status: string,
 ): "HEALTHY" | "WARNING" | "CRITICAL" | "DRAFT" | "APPROVED" {
   if (["AVAILABLE", "POSTED"].includes(status)) return "HEALTHY";
-  if (
-    [
-      "LOW_STOCK",
-      "RESERVED",
-      "PENDING_APPROVAL",
-      "REVERSAL_REQUESTED",
-    ].includes(status)
-  ) {
+  if (["LOW_STOCK", "RESERVED", "PENDING_APPROVAL", "REVERSAL_REQUESTED"].includes(status)) {
     return "WARNING";
   }
   if (status === "OUT_OF_STOCK") return "CRITICAL";

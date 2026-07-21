@@ -30,15 +30,10 @@ function readSimulationContext(value: unknown): {
   const actorId = sessionValue.session?.developerActorUserId;
   const roleId = sessionValue.user?.roleId;
   const roleName =
-    typeof roleId === "string"
-      ? (ROLE_ID_TO_NAME[roleId] ?? "Role tidak dikenal")
-      : "UNKNOWN";
+    typeof roleId === "string" ? (ROLE_ID_TO_NAME[roleId] ?? "Role tidak dikenal") : "UNKNOWN";
   return {
     active: typeof actorId === "string" && actorId.length > 0,
-    userName:
-      typeof sessionValue.user?.name === "string"
-        ? sessionValue.user.name
-        : "Akun tim",
+    userName: typeof sessionValue.user?.name === "string" ? sessionValue.user.name : "Akun tim",
     roleLabel: formatProfileRole(roleName),
   };
 }
@@ -62,25 +57,23 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
   };
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 mx-auto w-full max-w-md px-margin-mobile">
+    <div className="px-margin-mobile pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 mx-auto w-full max-w-md">
       <aside
-        className="pointer-events-auto relative isolate flex min-h-[60px] min-w-0 items-center gap-2 overflow-hidden rounded-[22px] bg-white/[0.88] p-1.5 pl-2 shadow-[0_1px_2px_rgba(17,17,17,0.035),0_14px_36px_rgba(17,17,17,0.14)] ring-1 ring-black/[0.035] backdrop-blur-xl"
+        className="pointer-events-auto relative isolate flex min-h-[60px] min-w-0 items-center gap-2 overflow-hidden rounded-[22px] bg-white/88 p-1.5 pl-2 shadow-[0_1px_2px_rgba(17,17,17,0.035),0_14px_36px_rgba(17,17,17,0.14)] ring-1 ring-black/[0.035] backdrop-blur-xl"
         aria-live="polite"
         aria-label="Mode simulasi developer aktif"
       >
         <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/[0.10] text-warning ring-1 ring-warning/[0.08]"
+          className="bg-warning/10 text-warning ring-warning/8 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1"
           aria-hidden="true"
         >
-          <span className="material-symbols-outlined text-[18px] leading-none">
-            developer_mode
-          </span>
+          <span className="material-symbols-outlined text-[18px] leading-none">developer_mode</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[11px] font-bold leading-5 text-on-surface">
+          <span className="text-on-surface block truncate text-[11px] leading-5 font-bold">
             Simulasi · {simulation.roleLabel}
           </span>
-          <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+          <span className="text-on-surface-variant block truncate text-[10px] leading-4">
             {simulation.userName}
           </span>
         </span>
@@ -90,9 +83,9 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
           disabled={pending}
           whileTap={pending ? undefined : { scale: 0.97 }}
           transition={transitionSpringSnappy}
-          className="flex min-h-12 shrink-0 items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-55"
+          className="focus-visible:ring-primary/30 flex min-h-12 shrink-0 items-center rounded-full outline-none focus-visible:ring-2 disabled:opacity-55"
         >
-          <span className="flex h-10 items-center rounded-full bg-on-surface px-3.5 text-[10px] font-bold text-white shadow-[0_5px_14px_rgba(17,17,17,0.14)]">
+          <span className="bg-on-surface flex h-10 items-center rounded-full px-3.5 text-[10px] font-bold text-white shadow-[0_5px_14px_rgba(17,17,17,0.14)]">
             {pending ? "Memulihkan…" : "Kembali"}
           </span>
         </motion.button>

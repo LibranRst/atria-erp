@@ -212,17 +212,8 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "manage:material_settings",
     "create:opening_inventory",
   ],
-  SALES: [
-    "view:budget",
-    "view:client_invoice",
-    "create:client_invoice",
-    "update:client_invoice",
-  ],
-  DESIGNER: [
-    "view:budget",
-    "view:rap",
-    "view:rab",
-  ],
+  SALES: ["view:budget", "view:client_invoice", "create:client_invoice", "update:client_invoice"],
+  DESIGNER: ["view:budget", "view:rap", "view:rab"],
   MARKETING: [],
 };
 
@@ -240,7 +231,7 @@ export const ROLE_ID_TO_NAME: Record<string, string> = {
 /**
  * Menyelesaikan UUID role menjadi nama peran (string uppercase).
  * Menggunakan pencocokan statis terlebih dahulu sebelum melakukan fallback ke database.
- * 
+ *
  * @param roleId UUID peran dari database/session
  * @returns Nama peran dalam format string huruf besar (misal: "PROJECT_MANAGER")
  */
@@ -270,13 +261,13 @@ interface UserSessionAuth {
 /**
  * Memverifikasi apakah pengguna memiliki izin yang diperlukan untuk melakukan aksi tertentu.
  * Jika tidak memiliki izin, fungsi ini akan melempar kesalahan (error) "FORBIDDEN".
- * 
+ *
  * @param user Objek user dari sesi (minimal harus memiliki id dan salah satu dari roleId atau role)
  * @param permission Kunci izin finansial yang ingin diverifikasi
  */
 export async function assertPermission(
   user: UserSessionAuth,
-  permission: PermissionKey
+  permission: PermissionKey,
 ): Promise<void> {
   let roleName = user.role?.toUpperCase();
 

@@ -18,4 +18,3 @@ describe("parseCsvTable", () => {
     expect(() => parseCsvTable('name\n"Multipleks')).toThrow("belum ditutup");
   });
 });
-

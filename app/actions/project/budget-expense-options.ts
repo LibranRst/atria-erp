@@ -91,15 +91,17 @@ export async function getActiveProjectsForExpense(): Promise<ActionResponse<Proj
         })),
       })),
       materialOptions,
-      rapItems: proj.raps.flatMap((rap) => rap.items.map((item) => ({
-        id: item.id,
-        materialId: item.materialId,
-        label: item.name,
-        area: item.area,
-        quantity: item.totalQuantity,
-        unit: item.unit,
-        status: item.status,
-      }))),
+      rapItems: proj.raps.flatMap((rap) =>
+        rap.items.map((item) => ({
+          id: item.id,
+          materialId: item.materialId,
+          label: item.name,
+          area: item.area,
+          quantity: item.totalQuantity,
+          unit: item.unit,
+          status: item.status,
+        })),
+      ),
       categoryPlanItems: proj.categoryPlanItems.map((item) => ({
         id: item.id,
         projectBudgetCategoryId: item.projectBudgetCategoryId,
@@ -126,7 +128,10 @@ export async function getActiveProjectsForExpense(): Promise<ActionResponse<Proj
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Terjadi kesalahan server saat mengambil data proyek.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan server saat mengambil data proyek.",
       },
     };
   }

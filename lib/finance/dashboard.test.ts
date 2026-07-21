@@ -114,10 +114,7 @@ describe("Atria ERP CFO Dashboard & Owner Approvals - TSK-012", () => {
       expect(resApprove.success).toBe(true);
 
       const appRecord = await db.query.approval.findFirst({
-        where: and(
-          eq(approval.referenceType, "project_cost"),
-          eq(approval.referenceId, cost.id)
-        ),
+        where: and(eq(approval.referenceType, "project_cost"), eq(approval.referenceId, cost.id)),
       });
       expect(appRecord!.status).toBe("APPROVED");
 
@@ -141,27 +138,28 @@ describe("Atria ERP CFO Dashboard & Owner Approvals - TSK-012", () => {
       expect(resApprove.success).toBe(true);
 
       const appRecord = await db.query.approval.findFirst({
-        where: and(
-          eq(approval.referenceType, "vendor_payment"),
-          eq(approval.referenceId, vPay.id)
-        ),
+        where: and(eq(approval.referenceType, "vendor_payment"), eq(approval.referenceId, vPay.id)),
       });
       expect(appRecord!.status).toBe("APPROVED");
 
       // Owner menolak pembayaran vendor
-      const resReject = await approveVendorPayment(vPay.id, "Ditolak karena tidak sesuai", "REJECTED");
+      const resReject = await approveVendorPayment(
+        vPay.id,
+        "Ditolak karena tidak sesuai",
+        "REJECTED",
+      );
       expect(resReject.success).toBe(true);
 
       const appRecordRejected = await db.query.approval.findFirst({
-        where: and(
-          eq(approval.referenceType, "vendor_payment"),
-          eq(approval.referenceId, vPay.id)
-        ),
+        where: and(eq(approval.referenceType, "vendor_payment"), eq(approval.referenceId, vPay.id)),
       });
       expect(appRecordRejected!.status).toBe("REJECTED");
 
       // Kembalikan status ke PENDING untuk konsistensi DB
-      await db.update(vendorPayment).set({ status: "PENDING" }).where(eq(vendorPayment.id, vPay.id));
+      await db
+        .update(vendorPayment)
+        .set({ status: "PENDING" })
+        .where(eq(vendorPayment.id, vPay.id));
       await db.update(approval).set({ status: "PENDING" }).where(eq(approval.id, appRecord!.id));
     });
   });

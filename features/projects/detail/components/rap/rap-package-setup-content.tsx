@@ -27,9 +27,9 @@ export function PackageSetupContent({
 }): React.JSX.Element {
   if (skipped) {
     return (
-      <div className="rounded-2xl bg-surface-container-low p-md text-center">
+      <div className="bg-surface-container-low p-md rounded-2xl text-center">
         <p className="text-sm font-bold">Scope tidak digunakan</p>
-        <p className="mt-1 text-xs text-on-surface-variant">
+        <p className="text-on-surface-variant mt-1 text-xs">
           Keputusan ini tersimpan untuk review dan handoff.
         </p>
         {canEdit && (
@@ -37,7 +37,7 @@ export function PackageSetupContent({
             type="button"
             onClick={() => onSkip(false)}
             disabled={isPending}
-            className="mt-3 min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary"
+            className="text-primary mt-3 min-h-12 w-full rounded-full bg-white text-xs font-bold"
           >
             Buka Kembali Scope
           </button>
@@ -54,18 +54,16 @@ export function PackageSetupContent({
             key={item.id}
             type="button"
             onClick={() => onOpen(item.id)}
-            className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-surface-container-low p-3 text-left"
+            className="bg-surface-container-low flex min-h-16 w-full items-center gap-3 rounded-2xl p-3 text-left"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-primary">
+            <span className="text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
               <span className="material-symbols-outlined text-[19px]">
                 {code === "TUKANG" ? "engineering" : "domain"}
               </span>
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm leading-5 font-bold">
-                {item.name}
-              </span>
-              <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+              <span className="block truncate text-sm leading-5 font-bold">{item.name}</span>
+              <span className="text-on-surface-variant block truncate text-[10px] leading-4">
                 {item.area}
                 {item.vendorName ? ` - ${item.vendorName}` : ""}
               </span>
@@ -86,7 +84,7 @@ export function PackageSetupContent({
         ))}
       </div>
       {items.length === 0 && (
-        <div className="rounded-2xl bg-surface-container-low p-md text-center text-xs text-on-surface-variant">
+        <div className="bg-surface-container-low p-md text-on-surface-variant rounded-2xl text-center text-xs">
           Belum ada package untuk tahap ini.
         </div>
       )}
@@ -96,7 +94,7 @@ export function PackageSetupContent({
             type="button"
             onClick={onAdd}
             disabled={isPending}
-            className="min-h-12 rounded-full bg-primary text-xs font-bold text-on-primary"
+            className="bg-primary text-on-primary min-h-12 rounded-full text-xs font-bold"
           >
             Tambah Package
           </button>
@@ -105,7 +103,7 @@ export function PackageSetupContent({
               type="button"
               onClick={() => onSkip(true)}
               disabled={isPending}
-              className="min-h-12 rounded-full bg-white text-xs font-bold text-on-surface-variant ring-1 ring-outline-variant/20"
+              className="text-on-surface-variant ring-outline-variant/20 min-h-12 rounded-full bg-white text-xs font-bold ring-1"
             >
               Tidak Digunakan
             </button>
@@ -113,7 +111,7 @@ export function PackageSetupContent({
         </div>
       )}
       {!canEdit && (
-        <p className="rounded-2xl bg-primary/5 p-3 text-[10px] leading-4 text-primary">
+        <p className="bg-primary/5 text-primary rounded-2xl p-3 text-[10px] leading-4">
           Tahap ini menunggu PM, Owner, atau Finance.
         </p>
       )}

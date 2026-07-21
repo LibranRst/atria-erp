@@ -59,9 +59,7 @@ export interface RapManagerDerivedValues {
 
 export function getInitialRapStage(rap: RapView | null): RapSetupStage {
   const stage = rap?.setupStage;
-  return stage === "TUKANG" || stage === "SUBCON" || stage === "REVIEW"
-    ? stage
-    : "MATERIAL";
+  return stage === "TUKANG" || stage === "SUBCON" || stage === "REVIEW" ? stage : "MATERIAL";
 }
 
 export function getInitialRapOverviewFilter(): RapOverviewFilter {
@@ -75,9 +73,7 @@ export function getRapPermissions(userRole: string): RapManagerPermissions {
     userRole === "PROJECT_MANAGER" ||
     userRole === "PURCHASING";
   const canEditCategoryPlan =
-    userRole === "OWNER" ||
-    userRole === "FINANCE_ADMIN" ||
-    userRole === "PROJECT_MANAGER";
+    userRole === "OWNER" || userRole === "FINANCE_ADMIN" || userRole === "PROJECT_MANAGER";
 
   return {
     canEditRap,
@@ -100,28 +96,17 @@ export function getRapManagerDerivedValues({
   readonly categoryPlanForm: CategoryPlanFormState;
 }): RapManagerDerivedValues {
   const plannedCost =
-    rap?.items.reduce(
-      (sum, item) => sum + Number(item.estimatedTotalCost),
-      0,
-    ) ?? 0;
+    rap?.items.reduce((sum, item) => sum + Number(item.estimatedTotalCost), 0) ?? 0;
   const needToBuy = rap?.items.reduce((sum, item) => sum + item.needToBuy, 0) ?? 0;
   const tukangPlanItems = getPlanItemsByCategory(categoryPlanItems, "TUKANG");
   const subconPlanItems = getPlanItemsByCategory(categoryPlanItems, "SUBCON");
-  const selectedMaterial = materials.find(
-    (material) => material.id === rapForm.materialId,
-  );
+  const selectedMaterial = materials.find((material) => material.id === rapForm.materialId);
   const formTotalQty =
-    (Number(rapForm.requiredQuantity) || 0) +
-    (Number(rapForm.bufferQuantity) || 0);
-  const formNeedToBuy = Math.max(
-    0,
-    formTotalQty - (selectedMaterial?.availableStock ?? 0),
-  );
-  const formEstimatedTotal =
-    formTotalQty * (Number(rapForm.estimatedUnitCost) || 0);
+    (Number(rapForm.requiredQuantity) || 0) + (Number(rapForm.bufferQuantity) || 0);
+  const formNeedToBuy = Math.max(0, formTotalQty - (selectedMaterial?.availableStock ?? 0));
+  const formEstimatedTotal = formTotalQty * (Number(rapForm.estimatedUnitCost) || 0);
   const categoryFormEstimatedTotal =
-    (Number(categoryPlanForm.quantity) || 0) *
-    (Number(categoryPlanForm.estimatedUnitCost) || 0);
+    (Number(categoryPlanForm.quantity) || 0) * (Number(categoryPlanForm.estimatedUnitCost) || 0);
 
   return {
     plannedCost,
@@ -154,10 +139,8 @@ export function applyMaterialToRapForm({
     name: current.name || material?.name || "",
     unit: material?.unit || current.unit,
     estimatedUnitCost:
-      current.estimatedUnitCost ||
-      (material ? String(Number(material.lastPurchasePrice)) : ""),
-    source:
-      material && material.availableStock > 0 ? "STOCK_AND_PURCHASE" : "PURCHASE",
+      current.estimatedUnitCost || (material ? String(Number(material.lastPurchasePrice)) : ""),
+    source: material && material.availableStock > 0 ? "STOCK_AND_PURCHASE" : "PURCHASE",
   };
 }
 
@@ -186,8 +169,7 @@ export function applyRapTemplateToForm({
     description: template.description ?? "",
     unit: template.unit,
     estimatedUnitCost: String(template.internalCost),
-    source:
-      material && material.availableStock > 0 ? "STOCK_AND_PURCHASE" : "PURCHASE",
+    source: material && material.availableStock > 0 ? "STOCK_AND_PURCHASE" : "PURCHASE",
   };
 }
 
@@ -205,8 +187,7 @@ export function applyCategoryTemplateToForm({
   const template = pricingTemplates.find((item) => item.id === templateId);
   if (
     !template ||
-    (template.itemType !== "WORK_PACKAGE" &&
-      template.itemType !== "SUBCON_PACKAGE")
+    (template.itemType !== "WORK_PACKAGE" && template.itemType !== "SUBCON_PACKAGE")
   ) {
     return { ...current, templateId: "" };
   }

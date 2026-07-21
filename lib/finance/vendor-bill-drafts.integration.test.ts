@@ -30,8 +30,21 @@ const billIds: string[] = [];
 
 function mockOwner(): void {
   (auth.api as unknown as { getSession: unknown }).getSession = async (): Promise<unknown> => ({
-    session: { id: "vendor-draft-test", userId: OWNER.id, expiresAt: new Date(Date.now() + 3_600_000), token: "mock", createdAt: new Date(), updatedAt: new Date() },
-    user: { ...OWNER, emailVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date() },
+    session: {
+      id: "vendor-draft-test",
+      userId: OWNER.id,
+      expiresAt: new Date(Date.now() + 3_600_000),
+      token: "mock",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    user: {
+      ...OWNER,
+      emailVerified: true,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
   });
 }
 
@@ -56,7 +69,9 @@ describe("vendor bill draft actions", () => {
       await db.delete(auditLog).where(inArray(auditLog.targetId, billIds));
       await db.delete(projectExpenses).where(inArray(projectExpenses.vendorBillId, billIds));
       await db.delete(vendorBill).where(inArray(vendorBill.id, billIds));
-      await db.transaction((tx) => syncProjectBudgetCategory({ tx, projectBudgetCategoryId: CATEGORY_ID }));
+      await db.transaction((tx) =>
+        syncProjectBudgetCategory({ tx, projectBudgetCategoryId: CATEGORY_ID }),
+      );
     }
     if (draftIds.length > 0) await db.delete(formDraft).where(inArray(formDraft.id, draftIds));
   });
@@ -66,9 +81,17 @@ describe("vendor bill draft actions", () => {
     const created = await saveVendorBillDraft({ payload: payload(`CONFLICT-${Date.now()}`) });
     if (!created.success) throw new Error(created.error.message);
     draftIds.push(created.data.id);
-    const updated = await saveVendorBillDraft({ draftId: created.data.id, expectedRevision: created.data.revision, payload: { ...created.data.payload, notes: "updated" } });
+    const updated = await saveVendorBillDraft({
+      draftId: created.data.id,
+      expectedRevision: created.data.revision,
+      payload: { ...created.data.payload, notes: "updated" },
+    });
     expect(updated.success).toBe(true);
-    const stale = await saveVendorBillDraft({ draftId: created.data.id, expectedRevision: created.data.revision, payload: { ...created.data.payload, notes: "stale" } });
+    const stale = await saveVendorBillDraft({
+      draftId: created.data.id,
+      expectedRevision: created.data.revision,
+      payload: { ...created.data.payload, notes: "stale" },
+    });
     expect(stale.success).toBe(false);
     if (!stale.success) expect(stale.error.code).toBe("CONFLICT");
     expect((await getVendorBillDraft({ draftId: created.data.id })).success).toBe(true);
@@ -79,11 +102,17 @@ describe("vendor bill draft actions", () => {
     const created = await saveVendorBillDraft({ payload: payload(`SUBMIT-${Date.now()}`) });
     if (!created.success) throw new Error(created.error.message);
     draftIds.push(created.data.id);
-    const submitted = await submitVendorBillDraft({ draftId: created.data.id, expectedRevision: created.data.revision });
+    const submitted = await submitVendorBillDraft({
+      draftId: created.data.id,
+      expectedRevision: created.data.revision,
+    });
     expect(submitted.success).toBe(true);
     if (!submitted.success) return;
     billIds.push(submitted.data.vendorBillId);
-    const retry = await submitVendorBillDraft({ draftId: created.data.id, expectedRevision: created.data.revision });
+    const retry = await submitVendorBillDraft({
+      draftId: created.data.id,
+      expectedRevision: created.data.revision,
+    });
     expect(retry.success).toBe(true);
     if (retry.success) {
       expect(retry.data.idempotent).toBe(true);

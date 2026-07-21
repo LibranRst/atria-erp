@@ -3,21 +3,15 @@
 import React from "react";
 
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
-import type {
-  SettingsHubOverview,
-  SettingsOverview,
-} from "@/app/actions/settings/system";
-import type {
-  AdministrationOverview,
-  ProductionReadinessItem,
-} from "@/app/actions/administration";
+import type { SettingsHubOverview, SettingsOverview } from "@/app/actions/settings/system";
+import type { AdministrationOverview, ProductionReadinessItem } from "@/app/actions/administration";
 import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
-import type { InitialStockCandidate, InventoryOpeningBatchView } from "@/app/actions/material/opening-inventory";
+import type {
+  InitialStockCandidate,
+  InventoryOpeningBatchView,
+} from "@/app/actions/material/opening-inventory";
 import { AdministrationManager } from "@/features/administration/components/administration-manager";
-import {
-  updateBrowserUrl,
-  useBrowserUrlSearchParam,
-} from "@/lib/utils/use-url-search-param";
+import { updateBrowserUrl, useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { BudgetSettingsManager } from "./budget-settings-manager";
 import { CategorySettingsManager } from "./category-settings-manager";
 import { LibrarySettingsManager } from "./library-settings-manager";
@@ -26,11 +20,7 @@ import { SettingsHub } from "./settings-hub";
 import { SettingsNavigation } from "./settings-navigation";
 import { SettingsHeader } from "./settings-ui";
 import { SetupReadinessManager } from "./setup-readiness-manager";
-import {
-  parseSettingsTab,
-  settingsTabUrl,
-  type SettingsTab,
-} from "./settings-tabs-config";
+import { parseSettingsTab, settingsTabUrl, type SettingsTab } from "./settings-tabs-config";
 
 type SettingsDashboardProps = {
   readonly overview: SettingsOverview;
@@ -46,8 +36,7 @@ type SettingsDashboardProps = {
 function toHubOverview(overview: SettingsOverview): SettingsHubOverview {
   const categoryAllocationRatio =
     overview.budgetAllocationSetting?.categories.reduce(
-      (total, category) =>
-        total + (category.isEnabled ? category.ratioPercentage : 0),
+      (total, category) => total + (category.isEnabled ? category.ratioPercentage : 0),
       0,
     ) ?? 0;
 
@@ -57,12 +46,9 @@ function toHubOverview(overview: SettingsOverview): SettingsHubOverview {
     budgetCapRatio: overview.budgetAllocationSetting?.budgetCapRatio ?? 0,
     categoryAllocationRatio,
     unallocatedBufferRatio: Math.max(0, 1 - categoryAllocationRatio),
-    activeCategoryCount: overview.expenseCategories.filter(
-      (category) => category.isActive,
-    ).length,
+    activeCategoryCount: overview.expenseCategories.filter((category) => category.isActive).length,
     activeItemCount: overview.itemLibrary.filter((item) => item.isActive).length,
-    activeMaterialCount: overview.materials.filter((material) => material.isActive)
-      .length,
+    activeMaterialCount: overview.materials.filter((material) => material.isActive).length,
   };
 }
 
@@ -76,10 +62,7 @@ export function SettingsDashboard({
   initialStock,
   openingBatches,
 }: SettingsDashboardProps): React.JSX.Element {
-  const tabParam = useBrowserUrlSearchParam(
-    "tab",
-    initialTab === "overview" ? null : initialTab,
-  );
+  const tabParam = useBrowserUrlSearchParam("tab", initialTab === "overview" ? null : initialTab);
   const activeTab = tabParam ? parseSettingsTab(tabParam) : initialTab;
   const hubOverview = React.useMemo(() => toHubOverview(overview), [overview]);
 
@@ -90,9 +73,23 @@ export function SettingsDashboard({
   let content: React.JSX.Element;
 
   if (activeTab === "setup") {
-    content = onboarding ? <SetupReadinessManager overview={onboarding} inventory={initialStock} batches={openingBatches} /> : <p className="rounded-[24px] bg-white p-5 text-xs text-on-surface-variant">Kesiapan setup hanya tersedia untuk Owner.</p>;
+    content = onboarding ? (
+      <SetupReadinessManager
+        overview={onboarding}
+        inventory={initialStock}
+        batches={openingBatches}
+      />
+    ) : (
+      <p className="text-on-surface-variant rounded-[24px] bg-white p-5 text-xs">
+        Kesiapan setup hanya tersedia untuk Owner.
+      </p>
+    );
   } else if (activeTab === "administration") {
-    content = administration ? <AdministrationManager initialData={administration} /> : <p className="rounded-2xl bg-white p-5">Akses administrasi dibatasi.</p>;
+    content = administration ? (
+      <AdministrationManager initialData={administration} />
+    ) : (
+      <p className="rounded-2xl bg-white p-5">Akses administrasi dibatasi.</p>
+    );
   } else if (activeTab === "budget") {
     content = overview.budgetAllocationSetting ? (
       <BudgetSettingsManager
@@ -144,14 +141,19 @@ export function SettingsDashboard({
   }
 
   return (
-    <section className="min-w-0 space-y-lg pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
+    <section className="space-y-lg min-w-0 pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
       <SettingsHeader
         eyebrow="Pusat kontrol"
         title="Pengaturan ERP"
         description="Default finansial dan master data untuk alur proyek berikutnya."
         role={overview.roleName}
       />
-      <SettingsNavigation value={activeTab} onChange={changeTab} showAdministration={Boolean(administration)} showSetup={Boolean(onboarding)} />
+      <SettingsNavigation
+        value={activeTab}
+        onChange={changeTab}
+        showAdministration={Boolean(administration)}
+        showSetup={Boolean(onboarding)}
+      />
       <div className="min-w-0">{content}</div>
     </section>
   );

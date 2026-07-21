@@ -112,7 +112,7 @@ export function RapRabManager({
     <div className="space-y-lg max-[430px]:space-y-5">
       {(combinedError || combinedSuccess) && (
         <div
-          className={`rounded-2xl border p-md text-xs font-semibold ${combinedError ? "border-error/30 bg-error-container/20 text-error" : "border-primary/30 bg-surface-container-low text-primary"}`}
+          className={`p-md rounded-2xl border text-xs font-semibold ${combinedError ? "border-error/30 bg-error-container/20 text-error" : "border-primary/30 bg-surface-container-low text-primary"}`}
         >
           {combinedError ?? combinedSuccess}
         </div>
@@ -123,24 +123,19 @@ export function RapRabManager({
           {!rap ? (
             <NativePanel eyebrow="Rencana Internal" title="Mulai dari Material">
               <div className="py-lg text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <span className="material-symbols-outlined text-[28px]">
-                    architecture
-                  </span>
+                <div className="bg-primary/10 text-primary mx-auto flex h-14 w-14 items-center justify-center rounded-2xl">
+                  <span className="material-symbols-outlined text-[28px]">architecture</span>
                 </div>
-                <h3 className="mt-4 text-base font-bold">
-                  Susun kebutuhan material proyek
-                </h3>
-                <p className="mx-auto mt-1 max-w-xs text-xs leading-5 text-on-surface-variant">
-                  Material menjadi baseline biaya internal. Tukang dan Subcon
-                  disusun setelahnya.
+                <h3 className="mt-4 text-base font-bold">Susun kebutuhan material proyek</h3>
+                <p className="text-on-surface-variant mx-auto mt-1 max-w-xs text-xs leading-5">
+                  Material menjadi baseline biaya internal. Tukang dan Subcon disusun setelahnya.
                 </p>
                 {rapManager.canEditRap && (
                   <button
                     type="button"
                     onClick={rapManager.handleCreateRap}
                     disabled={rapManager.isPending}
-                    className="mt-5 min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary disabled:opacity-40"
+                    className="bg-primary text-on-primary mt-5 min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-40"
                   >
                     Mulai Susun RAP
                   </button>

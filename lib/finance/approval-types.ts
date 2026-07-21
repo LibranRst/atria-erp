@@ -1,5 +1,4 @@
-export type ApprovalDetailType =
-  "project_cost" | "vendor_payment" | "inventory_opening";
+export type ApprovalDetailType = "project_cost" | "vendor_payment" | "inventory_opening";
 
 type ApprovalDetailBase = {
   readonly id: string;
@@ -46,5 +45,4 @@ export type InventoryOpeningApprovalItem = {
   readonly totalValue: number;
 };
 
-export type ApprovalDetail =
-  FinanceApprovalDetail | InventoryOpeningApprovalDetail;
+export type ApprovalDetail = FinanceApprovalDetail | InventoryOpeningApprovalDetail;

@@ -28,6 +28,8 @@ describe("local form recovery", () => {
       schemaVersion: 1,
     });
     expect(parseLocalFormRecovery({ raw, schema, schemaVersion: 2 })).toBeNull();
-    expect(parseLocalFormRecovery({ raw: '{"schemaVersion":2,"payload":{}}', schema, schemaVersion: 2 })).toBeNull();
+    expect(
+      parseLocalFormRecovery({ raw: '{"schemaVersion":2,"payload":{}}', schema, schemaVersion: 2 }),
+    ).toBeNull();
   });
 });

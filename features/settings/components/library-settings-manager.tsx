@@ -44,10 +44,8 @@ import {
   SettingsStatusLabel,
 } from "./settings-primitives";
 
-type ItemType =
-  "MATERIAL_ITEM" | "WORK_PACKAGE" | "SUBCON_PACKAGE" | "CLIENT_LINE";
-type ComponentType =
-  "LABOR" | "MATERIAL" | "EQUIPMENT" | "LOGISTICS" | "OVERHEAD" | "OTHER";
+type ItemType = "MATERIAL_ITEM" | "WORK_PACKAGE" | "SUBCON_PACKAGE" | "CLIENT_LINE";
+type ComponentType = "LABOR" | "MATERIAL" | "EQUIPMENT" | "LOGISTICS" | "OVERHEAD" | "OTHER";
 type CostComponentDraft = {
   readonly key: string;
   readonly vendorId: string | null;
@@ -72,8 +70,7 @@ type Draft = {
   readonly pricingMode: "MARGIN_BASED" | "FIXED_CLIENT_PRICE";
   readonly targetGrossPercentage: number;
   readonly fixedClientPrice: number;
-  readonly priceSourceType:
-    "COST_BREAKDOWN" | "VENDOR_QUOTE" | "HISTORICAL" | "LEGACY_BACKFILL";
+  readonly priceSourceType: "COST_BREAKDOWN" | "VENDOR_QUOTE" | "HISTORICAL" | "LEGACY_BACKFILL";
   readonly sourceNote: string;
   readonly effectiveFrom: string;
   readonly isActive: boolean;
@@ -131,13 +128,12 @@ const ITEM_TYPE_LABELS: Readonly<Record<ItemType, string>> = {
   WORK_PACKAGE: "Paket Tukang",
   SUBCON_PACKAGE: "Paket Subcon",
 };
-const PRICE_SOURCE_LABELS: Readonly<Record<Draft["priceSourceType"], string>> =
-  {
-    COST_BREAKDOWN: "Rincian biaya",
-    VENDOR_QUOTE: "Penawaran vendor",
-    HISTORICAL: "Riwayat harga",
-    LEGACY_BACKFILL: "Data lama",
-  };
+const PRICE_SOURCE_LABELS: Readonly<Record<Draft["priceSourceType"], string>> = {
+  COST_BREAKDOWN: "Rincian biaya",
+  VENDOR_QUOTE: "Penawaran vendor",
+  HISTORICAL: "Riwayat harga",
+  LEGACY_BACKFILL: "Data lama",
+};
 function itemTypeLabel(value: string): string {
   if (value === "CLIENT_LINE") return ITEM_TYPE_LABELS.CLIENT_LINE;
   if (value === "MATERIAL_ITEM") return ITEM_TYPE_LABELS.MATERIAL_ITEM;
@@ -152,8 +148,7 @@ function priceSourceLabel(value: string): string {
   if (value === "LEGACY_BACKFILL") return PRICE_SOURCE_LABELS.LEGACY_BACKFILL;
   return formatBusinessLabel(value);
 }
-const fullMoney = (value: number): string =>
-  `Rp ${Math.round(value).toLocaleString("id-ID")}`;
+const fullMoney = (value: number): string => `Rp ${Math.round(value).toLocaleString("id-ID")}`;
 function newComponent(): CostComponentDraft {
   return {
     key: createClientId("cost-component"),
@@ -234,14 +229,10 @@ export function LibrarySettingsManager({
   const [draft, setDraft] = React.useState<Draft | null>(null);
   const [draftBaseline, setDraftBaseline] = React.useState("");
   const [confirmClose, setConfirmClose] = React.useState(false);
-  const [confirmItem, setConfirmItem] =
-    React.useState<PricingTemplateRow | null>(null);
-  const [componentEditor, setComponentEditor] =
-    React.useState<CostComponentDraft | null>(null);
-  const [componentEditorBaseline, setComponentEditorBaseline] =
-    React.useState("");
-  const [confirmComponentClose, setConfirmComponentClose] =
-    React.useState(false);
+  const [confirmItem, setConfirmItem] = React.useState<PricingTemplateRow | null>(null);
+  const [componentEditor, setComponentEditor] = React.useState<CostComponentDraft | null>(null);
+  const [componentEditorBaseline, setComponentEditorBaseline] = React.useState("");
+  const [confirmComponentClose, setConfirmComponentClose] = React.useState(false);
   const [nameTouched, setNameTouched] = React.useState(false);
   const [sourceNoteTouched, setSourceNoteTouched] = React.useState(false);
   const [componentNameTouched, setComponentNameTouched] = React.useState(false);
@@ -269,8 +260,7 @@ export function LibrarySettingsManager({
         .includes(search.toLowerCase()) &&
       (type === "ALL" || item.itemType === type) &&
       (categoryId === "ALL" || item.expenseCategoryId === categoryId) &&
-      (status === "ALL" ||
-        (status === "ACTIVE" ? item.isActive : !item.isActive)),
+      (status === "ALL" || (status === "ACTIVE" ? item.isActive : !item.isActive)),
   );
   const internalCost =
     draft?.components.reduce(
@@ -284,17 +274,13 @@ export function LibrarySettingsManager({
         : 0
       : draft.fixedClientPrice
     : 0;
-  const grossMargin =
-    clientPrice > 0 ? ((clientPrice - internalCost) / clientPrice) * 100 : 0;
+  const grossMargin = clientPrice > 0 ? ((clientPrice - internalCost) / clientPrice) * 100 : 0;
   const draftDirty = Boolean(draft && JSON.stringify(draft) !== draftBaseline);
-  const activeFilterCount =
-    Number(type !== "ALL") + Number(categoryId !== "ALL");
+  const activeFilterCount = Number(type !== "ALL") + Number(categoryId !== "ALL");
   const draftCompletionItems = draft
     ? [
         draft.expenseCategoryId &&
-          categories.some(
-            (category) => category.id === draft.expenseCategoryId,
-          ),
+          categories.some((category) => category.id === draft.expenseCategoryId),
         draft.name.trim().length >= 2,
         draft.itemCategory.trim().length >= 2,
         draft.unit.trim().length > 0,
@@ -313,9 +299,7 @@ export function LibrarySettingsManager({
     : [];
   const draftCompletedCount = draftCompletionItems.filter(Boolean).length;
   const draftCompletionTotal = draftCompletionItems.length || 1;
-  const canSaveDraft = Boolean(
-    draft && draftCompletedCount === draftCompletionTotal,
-  );
+  const canSaveDraft = Boolean(draft && draftCompletedCount === draftCompletionTotal);
   const componentEditorValid = Boolean(
     componentEditor &&
     componentEditor.label.trim().length >= 2 &&
@@ -324,8 +308,7 @@ export function LibrarySettingsManager({
     componentEditor.unitCost >= 0,
   );
   const componentEditorDirty = Boolean(
-    componentEditor &&
-    JSON.stringify(componentEditor) !== componentEditorBaseline,
+    componentEditor && JSON.stringify(componentEditor) !== componentEditorBaseline,
   );
   const draftDisabledReason = !draft
     ? undefined
@@ -338,13 +321,11 @@ export function LibrarySettingsManager({
           ? "Isi kategori item minimal 2 karakter."
           : !draft.unit.trim()
             ? "Isi satuan."
-            : !draft.effectiveFrom.trim() ||
-                Number.isNaN(new Date(draft.effectiveFrom).getTime())
+            : !draft.effectiveFrom.trim() || Number.isNaN(new Date(draft.effectiveFrom).getTime())
               ? "Isi tanggal berlaku yang valid."
               : draft.sourceNote.trim().length < 3
                 ? "Isi catatan sumber harga minimal 3 karakter."
-                : draft.pricingMode === "FIXED_CLIENT_PRICE" &&
-                    draft.fixedClientPrice <= 0
+                : draft.pricingMode === "FIXED_CLIENT_PRICE" && draft.fixedClientPrice <= 0
                   ? "Harga tetap untuk klien harus lebih dari 0."
                   : draft.components.some(
                         (component) =>
@@ -362,9 +343,7 @@ export function LibrarySettingsManager({
     setNameTouched(false);
     setSourceNoteTouched(false);
     setComponentEditor(null);
-    setShowSourceDetails(
-      Boolean(!next.id || next.sourceNote || next.description),
-    );
+    setShowSourceDetails(Boolean(!next.id || next.sourceNote || next.description));
   }
   function requestClose(): void {
     if (draft && JSON.stringify(draft) !== draftBaseline) setConfirmClose(true);
@@ -381,15 +360,9 @@ export function LibrarySettingsManager({
           : nextType === "SUBCON_PACKAGE"
             ? "SUBCON"
             : null;
-    const category = required
-      ? categories.find((row) => row.code === required)
-      : null;
+    const category = required ? categories.find((row) => row.code === required) : null;
     const defaultMargin =
-      nextType === "MATERIAL_ITEM"
-        ? 0.3
-        : nextType === "CLIENT_LINE"
-          ? 0.4
-          : 0.2;
+      nextType === "MATERIAL_ITEM" ? 0.3 : nextType === "CLIENT_LINE" ? 0.4 : 0.2;
     setDraft({
       ...draft,
       itemType: nextType,
@@ -404,9 +377,7 @@ export function LibrarySettingsManager({
     setComponentNameTouched(false);
   }
   function patchComponent(update: Partial<CostComponentDraft>): void {
-    setComponentEditor((current) =>
-      current ? { ...current, ...update } : current,
-    );
+    setComponentEditor((current) => (current ? { ...current, ...update } : current));
   }
   function addComponent(): void {
     const component = newComponent();
@@ -420,9 +391,7 @@ export function LibrarySettingsManager({
   }
   function saveComponent(): void {
     if (!draft || !componentEditor || !componentEditorValid) return;
-    const exists = draft.components.some(
-      (component) => component.key === componentEditor.key,
-    );
+    const exists = draft.components.some((component) => component.key === componentEditor.key);
     setDraft({
       ...draft,
       components: exists
@@ -438,9 +407,7 @@ export function LibrarySettingsManager({
     if (!draft || !componentEditor || draft.components.length <= 1) return;
     setDraft({
       ...draft,
-      components: draft.components.filter(
-        (component) => component.key !== componentEditor.key,
-      ),
+      components: draft.components.filter((component) => component.key !== componentEditor.key),
     });
     setComponentEditor(null);
     setComponentEditorBaseline("");
@@ -462,9 +429,7 @@ export function LibrarySettingsManager({
         pricingMode: draft.pricingMode,
         targetGrossPercentage: draft.targetGrossPercentage,
         fixedClientPrice:
-          draft.pricingMode === "FIXED_CLIENT_PRICE"
-            ? draft.fixedClientPrice
-            : undefined,
+          draft.pricingMode === "FIXED_CLIENT_PRICE" ? draft.fixedClientPrice : undefined,
         priceSourceType: draft.priceSourceType,
         sourceNote: draft.sourceNote,
         effectiveFrom: new Date(draft.effectiveFrom),
@@ -483,9 +448,7 @@ export function LibrarySettingsManager({
       if (result.success) {
         setItems((current) =>
           draft.id
-            ? current.map((item) =>
-                item.id === result.data.id ? result.data : item,
-              )
+            ? current.map((item) => (item.id === result.data.id ? result.data : item))
             : [result.data, ...current],
         );
         setDraft(null);
@@ -510,9 +473,7 @@ export function LibrarySettingsManager({
       if (result.success) {
         setItems((current) =>
           current.map((item) =>
-            item.id === target.id
-              ? { ...item, isActive: result.data.isActive }
-              : item,
+            item.id === target.id ? { ...item, isActive: result.data.isActive } : item,
           ),
         );
         if (draft?.id === target.id) {
@@ -530,9 +491,7 @@ export function LibrarySettingsManager({
   }
 
   return (
-    <section
-      className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-lg"}`}
-    >
+    <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-lg"}`}>
       {presentation === "onboarding" ? null : hideHeader ? (
         <SettingsModuleHeader
           eyebrow="Template proyek berulang"
@@ -552,25 +511,23 @@ export function LibrarySettingsManager({
         />
       )}
       {presentation === "settings" ? (
-        <p className="text-[10px] leading-[1.35] text-on-surface-variant">
-          <strong className="font-bold text-on-surface">
-            Harga tersimpan sebagai snapshot.
-          </strong>{" "}
+        <p className="text-on-surface-variant text-[10px] leading-[1.35]">
+          <strong className="text-on-surface font-bold">Harga tersimpan sebagai snapshot.</strong>{" "}
           Perubahan Library tidak mengubah RAB lama secara diam-diam.
         </p>
       ) : null}
       {message && (
-        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-[11px] leading-4 text-primary ring-1 ring-primary/15">
+        <p className="bg-primary/5 text-primary ring-primary/15 rounded-2xl px-3 py-2.5 text-[11px] leading-4 ring-1">
           {message}
         </p>
       )}
       {presentation === "onboarding" ? (
         <div className="flex min-w-0 items-center justify-between gap-3 px-1">
           <span className="min-w-0">
-            <span className="block text-[13px] leading-5 font-bold text-on-surface">
+            <span className="text-on-surface block text-[13px] leading-5 font-bold">
               Template tersimpan
             </span>
-            <span className="block text-[9px] leading-4 text-on-surface-variant">
+            <span className="text-on-surface-variant block text-[9px] leading-4">
               {items.filter((row) => row.isActive).length} template aktif
             </span>
           </span>
@@ -578,7 +535,7 @@ export function LibrarySettingsManager({
             type="button"
             onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
             disabled={!canManage}
-            className="relative min-h-10 shrink-0 rounded-full bg-[#007AFF]/[0.08] px-3.5 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] disabled:opacity-40"
+            className="relative min-h-10 shrink-0 rounded-full bg-[#007AFF]/8 px-3.5 text-[10px] font-bold text-[#007AFF] outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
           >
             Tambah
           </button>
@@ -601,12 +558,7 @@ export function LibrarySettingsManager({
             setStatus("ALL");
           }}
         >
-          <FilterSelect
-            label="Tipe"
-            value={type}
-            options={TYPE_FILTERS}
-            onChange={setType}
-          />
+          <FilterSelect label="Tipe" value={type} options={TYPE_FILTERS} onChange={setType} />
           <FilterSelect
             label="Kategori"
             value={categoryId}
@@ -617,11 +569,7 @@ export function LibrarySettingsManager({
       )}
       {filtered.length === 0 ? (
         <EmptyState
-          title={
-            items.length === 0
-              ? "Belum ada template"
-              : "Template tidak ditemukan"
-          }
+          title={items.length === 0 ? "Belum ada template" : "Template tidak ditemukan"}
           description={
             items.length === 0
               ? "Tambahkan template pertama untuk mempercepat setup proyek."
@@ -630,7 +578,7 @@ export function LibrarySettingsManager({
         />
       ) : (
         <SettingsGroupSurface>
-          <div className="divide-y divide-black/[0.055]">
+          <div className="divide-y divide-black/5.5">
             {filtered.map((item) => {
               const margin =
                 item.defaultClientPrice > 0
@@ -643,22 +591,22 @@ export function LibrarySettingsManager({
                   type="button"
                   key={item.id}
                   onClick={() => openDraft(toDraft(item))}
-                  className={`flex w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75 ${presentation === "onboarding" ? "min-h-[76px]" : "min-h-[104px]"}`}
+                  className={`focus-visible:bg-surface-container-low active:bg-surface-container-low/75 flex w-full items-center gap-3 px-3.5 py-3 text-left outline-none ${presentation === "onboarding" ? "min-h-[76px]" : "min-h-[104px]"}`}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-[13px] leading-5 font-bold text-on-surface">
+                      <span className="text-on-surface truncate text-[13px] leading-5 font-bold">
                         {item.name}
                       </span>
                     </span>
-                    <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+                    <span className="text-on-surface-variant block truncate text-[10px] leading-4">
                       {item.itemCategory} · {item.unit}
                       {item.code ? ` · ${item.code}` : ""}
                     </span>
                     {presentation === "settings" ? (
                       <span className="mt-2 grid grid-cols-2 gap-3">
                         <span className="min-w-0">
-                          <span className="block text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/60">
+                          <span className="text-on-surface-variant/60 block text-[8px] font-bold tracking-wide uppercase">
                             Harga klien
                           </span>
                           <MoneyValue
@@ -670,7 +618,7 @@ export function LibrarySettingsManager({
                           />
                         </span>
                         <span className="min-w-0 text-right">
-                          <span className="block text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/60">
+                          <span className="text-on-surface-variant/60 block text-[8px] font-bold tracking-wide uppercase">
                             Biaya internal
                           </span>
                           <MoneyValue
@@ -692,12 +640,12 @@ export function LibrarySettingsManager({
                       />
                     )}
                     {presentation === "settings" ? (
-                      <span className="mt-2 flex justify-between gap-3 text-[9px] text-on-surface-variant">
+                      <span className="text-on-surface-variant mt-2 flex justify-between gap-3 text-[9px]">
                         <span className="truncate">
                           {item.components.length} komponen ·{" "}
                           {priceSourceLabel(item.priceSourceType)}
                         </span>
-                        <span className="shrink-0 font-bold text-primary">
+                        <span className="text-primary shrink-0 font-bold">
                           Margin{" "}
                           {margin.toLocaleString("id-ID", {
                             maximumFractionDigits: 1,
@@ -709,11 +657,7 @@ export function LibrarySettingsManager({
                   </span>
                   <div className="flex flex-row items-center gap-2">
                     <SettingsStatusLabel
-                      label={
-                        item.isActive
-                          ? itemTypeLabel(item.itemType)
-                          : "Diarsipkan"
-                      }
+                      label={item.isActive ? itemTypeLabel(item.itemType) : "Diarsipkan"}
                       tone={item.isActive ? "neutral" : "inactive"}
                     />
                     <SettingsRowChevron />
@@ -741,9 +685,7 @@ export function LibrarySettingsManager({
             ? `${draft.components.length} komponen · ${fullMoney(internalCost)} · Margin ${grossMargin.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`
             : undefined
         }
-        statusTone={
-          !canSaveDraft ? "warning" : grossMargin < 0 ? "danger" : "success"
-        }
+        statusTone={!canSaveDraft ? "warning" : grossMargin < 0 ? "danger" : "success"}
       >
         {draft ? (
           <div className="space-y-md">
@@ -766,9 +708,7 @@ export function LibrarySettingsManager({
                 label="Kategori pengeluaran"
                 readOnly={draft.itemType !== "CLIENT_LINE"}
                 value={draft.expenseCategoryId}
-                onChange={(value) =>
-                  setDraft({ ...draft, expenseCategoryId: value })
-                }
+                onChange={(value) => setDraft({ ...draft, expenseCategoryId: value })}
                 options={categories.map((row) => ({
                   value: row.id,
                   label: row.name,
@@ -804,9 +744,7 @@ export function LibrarySettingsManager({
               >
                 <TextInput
                   value={draft.itemCategory}
-                  onChange={(value) =>
-                    setDraft({ ...draft, itemCategory: value })
-                  }
+                  onChange={(value) => setDraft({ ...draft, itemCategory: value })}
                   aria-invalid={draft.itemCategory.trim().length < 2}
                 />
               </FormField>
@@ -821,9 +759,7 @@ export function LibrarySettingsManager({
                 <SheetSelect
                   label="Tautan Material Master"
                   value={draft.materialId ?? ""}
-                  onChange={(value) =>
-                    setDraft({ ...draft, materialId: value || null })
-                  }
+                  onChange={(value) => setDraft({ ...draft, materialId: value || null })}
                   options={[
                     { value: "", label: "Tanpa tautan material" },
                     ...materials
@@ -862,27 +798,27 @@ export function LibrarySettingsManager({
                     whileTap={{ scale: 0.985 }}
                     transition={transitionSpringSnappy}
                     onClick={() => openComponent(component)}
-                    className="flex min-h-16 w-full items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:bg-surface-container-low"
+                    className="focus-visible:bg-surface-container-low flex min-h-16 w-full items-center gap-3 px-4 py-2.5 text-left outline-none"
                   >
                     <span
                       className={`h-2.5 w-2.5 shrink-0 rounded-full ${complete ? "bg-primary" : "bg-warning"}`}
                       aria-hidden="true"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-bold leading-[1.15] text-on-surface">
+                      <span className="text-on-surface block truncate text-xs leading-[1.15] font-bold">
                         {component.label.trim() || `Komponen ${index + 1}`}
                       </span>
-                      <span className="mt-1 block truncate text-[10px] leading-[1.2] text-on-surface-variant">
+                      <span className="text-on-surface-variant mt-1 block truncate text-[10px] leading-[1.2]">
                         {component.quantity} {component.unit} ·{" "}
                         {COMPONENT_TYPE_LABELS[component.componentType]} ·{" "}
                         {complete ? "Lengkap" : "Perlu diperiksa"}
                       </span>
                     </span>
-                    <span className="max-w-[32%] shrink-0 truncate text-right text-xs font-bold tabular-nums text-on-surface">
+                    <span className="text-on-surface max-w-[32%] shrink-0 truncate text-right text-xs font-bold tabular-nums">
                       {fullMoney(component.quantity * component.unitCost)}
                     </span>
                     <span
-                      className="material-symbols-outlined shrink-0 text-[18px] text-on-surface-variant"
+                      className="material-symbols-outlined text-on-surface-variant shrink-0 text-[18px]"
                       aria-hidden="true"
                     >
                       chevron_right
@@ -947,10 +883,10 @@ export function LibrarySettingsManager({
                 </FormField>
               )}
               <div className="p-3">
-                <div className="overflow-hidden rounded-[20px] bg-surface-container-low ring-1 ring-outline-variant/10">
-                  <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
+                <div className="bg-surface-container-low ring-outline-variant/10 overflow-hidden rounded-[20px] ring-1">
+                  <div className="divide-outline-variant/20 grid grid-cols-2 divide-x">
                     <div className="min-w-0 p-3">
-                      <p className="truncate text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                      <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-wide uppercase">
                         Biaya internal
                       </p>
                       <MoneyValue
@@ -961,7 +897,7 @@ export function LibrarySettingsManager({
                       />
                     </div>
                     <div className="min-w-0 p-3">
-                      <p className="truncate text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                      <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-wide uppercase">
                         Harga klien
                       </p>
                       <MoneyValue
@@ -973,8 +909,8 @@ export function LibrarySettingsManager({
                       />
                     </div>
                   </div>
-                  <div className="flex min-h-11 items-center justify-between gap-3 border-t border-outline-variant/20 px-3 py-2.5">
-                    <p className="text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                  <div className="border-outline-variant/20 flex min-h-11 items-center justify-between gap-3 border-t px-3 py-2.5">
+                    <p className="text-on-surface-variant text-[9px] font-bold tracking-wide uppercase">
                       Margin kotor
                     </p>
                     <p
@@ -990,8 +926,7 @@ export function LibrarySettingsManager({
               </div>
               {grossMargin < 0 ? (
                 <FormRiskNotice title="Harga di bawah biaya" tone="danger">
-                  Naikkan harga klien atau periksa kembali rincian biaya sebelum
-                  menyimpan.
+                  Naikkan harga klien atau periksa kembali rincian biaya sebelum menyimpan.
                 </FormRiskNotice>
               ) : null}
             </FormSection>
@@ -1022,16 +957,12 @@ export function LibrarySettingsManager({
                 <DatePickerField
                   label="Berlaku mulai"
                   value={draft.effectiveFrom}
-                  onChange={(value) =>
-                    setDraft({ ...draft, effectiveFrom: value })
-                  }
+                  onChange={(value) => setDraft({ ...draft, effectiveFrom: value })}
                 />
                 <SheetSelect
                   label="Vendor default"
                   value={draft.defaultVendorId ?? ""}
-                  onChange={(value) =>
-                    setDraft({ ...draft, defaultVendorId: value || null })
-                  }
+                  onChange={(value) => setDraft({ ...draft, defaultVendorId: value || null })}
                   options={[
                     { value: "", label: "Tanpa vendor default" },
                     ...vendors.map((vendor) => ({
@@ -1080,17 +1011,13 @@ export function LibrarySettingsManager({
                     }}
                     placeholder="Penawaran, referensi, tanggal, dan asumsi harga"
                     rows={2}
-                    aria-invalid={
-                      sourceNoteTouched && draft.sourceNote.trim().length < 3
-                    }
+                    aria-invalid={sourceNoteTouched && draft.sourceNote.trim().length < 3}
                   />
                 </FormField>
                 <FormField label="Deskripsi" optional>
                   <Textarea
                     value={draft.description}
-                    onChange={(value) =>
-                      setDraft({ ...draft, description: value })
-                    }
+                    onChange={(value) => setDraft({ ...draft, description: value })}
                     rows={2}
                   />
                 </FormField>
@@ -1106,7 +1033,7 @@ export function LibrarySettingsManager({
                   const item = items.find((row) => row.id === draft.id);
                   if (item) setConfirmItem(item);
                 }}
-                className="min-h-12 w-full rounded-full bg-error-container/20 px-5 text-xs font-bold text-error disabled:opacity-35"
+                className="bg-error-container/20 text-error min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-35"
               >
                 {draft.isActive ? "Arsipkan template" : "Aktifkan kembali"}
               </motion.button>
@@ -1119,9 +1046,7 @@ export function LibrarySettingsManager({
         open={Boolean(componentEditor)}
         title={
           componentEditor &&
-          draft?.components.some(
-            (component) => component.key === componentEditor.key,
-          )
+          draft?.components.some((component) => component.key === componentEditor.key)
             ? "Edit Komponen Biaya"
             : "Tambah Komponen Biaya"
         }
@@ -1150,9 +1075,7 @@ export function LibrarySettingsManager({
               <SheetSelect
                 label="Tipe komponen"
                 value={componentEditor.componentType}
-                onChange={(value) =>
-                  patchComponent({ componentType: value as ComponentType })
-                }
+                onChange={(value) => patchComponent({ componentType: value as ComponentType })}
                 options={COMPONENT_TYPES.map((value) => ({
                   value,
                   label: COMPONENT_TYPE_LABELS[value],
@@ -1162,8 +1085,7 @@ export function LibrarySettingsManager({
                 label="Nama biaya"
                 required
                 error={
-                  componentNameTouched &&
-                  componentEditor.label.trim().length < 2
+                  componentNameTouched && componentEditor.label.trim().length < 2
                     ? "Nama biaya minimal 2 karakter."
                     : undefined
                 }
@@ -1176,10 +1098,7 @@ export function LibrarySettingsManager({
                     setComponentNameTouched(true);
                     patchComponent({ label: value });
                   }}
-                  aria-invalid={
-                    componentNameTouched &&
-                    componentEditor.label.trim().length < 2
-                  }
+                  aria-invalid={componentNameTouched && componentEditor.label.trim().length < 2}
                 />
               </FormField>
             </FormSection>
@@ -1191,9 +1110,7 @@ export function LibrarySettingsManager({
                 <NumericInput
                   min={0.01}
                   value={componentEditor.quantity}
-                  onChange={(value) =>
-                    patchComponent({ quantity: Number(value || 0) })
-                  }
+                  onChange={(value) => patchComponent({ quantity: Number(value || 0) })}
                 />
               </FormField>
               <ComboboxField
@@ -1201,19 +1118,13 @@ export function LibrarySettingsManager({
                 value={componentEditor.unit}
                 onChange={(value) => patchComponent({ unit: value })}
                 options={COMMON_UNIT_OPTIONS}
-                error={
-                  !componentEditor.unit.trim()
-                    ? "Satuan wajib diisi."
-                    : undefined
-                }
+                error={!componentEditor.unit.trim() ? "Satuan wajib diisi." : undefined}
               />
               <FormField label="Biaya satuan">
                 <MoneyInput
                   value={componentEditor.unitCost}
                   showPreview={false}
-                  onChange={(value) =>
-                    patchComponent({ unitCost: Number(value || 0) })
-                  }
+                  onChange={(value) => patchComponent({ unitCost: Number(value || 0) })}
                 />
               </FormField>
               <div className="p-3">
@@ -1221,24 +1132,21 @@ export function LibrarySettingsManager({
                   items={[
                     {
                       label: "Subtotal komponen",
-                      amount:
-                        componentEditor.quantity * componentEditor.unitCost,
+                      amount: componentEditor.quantity * componentEditor.unitCost,
                       tone: "success",
                     },
                   ]}
                 />
               </div>
             </FormSection>
-            {draft?.components.some(
-              (component) => component.key === componentEditor.key,
-            ) ? (
+            {draft?.components.some((component) => component.key === componentEditor.key) ? (
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 disabled={(draft?.components.length ?? 0) <= 1}
                 onClick={deleteComponent}
-                className="min-h-12 w-full rounded-full bg-error-container/20 px-5 text-xs font-bold text-error disabled:opacity-35"
+                className="bg-error-container/20 text-error min-h-12 w-full rounded-full px-5 text-xs font-bold disabled:opacity-35"
               >
                 <Trash2 className="mr-1.5 inline h-4 w-4" /> Hapus Komponen
               </motion.button>
@@ -1248,11 +1156,7 @@ export function LibrarySettingsManager({
       </OperationalFormSheet>
       <ConfirmationSheet
         open={Boolean(confirmItem)}
-        title={
-          confirmItem?.isActive
-            ? "Arsipkan template?"
-            : "Aktifkan kembali template?"
-        }
+        title={confirmItem?.isActive ? "Arsipkan template?" : "Aktifkan kembali template?"}
         description={
           confirmItem
             ? `${confirmItem.name} ${confirmItem.isActive ? "tidak akan muncul sebagai pilihan aktif." : "akan kembali tersedia sebagai pilihan."}`
@@ -1277,7 +1181,7 @@ export function LibrarySettingsManager({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmClose(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
+              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
             >
               Lanjut Mengedit
             </motion.button>
@@ -1290,7 +1194,7 @@ export function LibrarySettingsManager({
                 setDraftBaseline("");
                 setConfirmClose(false);
               }}
-              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
+              className="bg-error min-h-12 rounded-full px-4 text-xs font-bold text-white"
             >
               Buang Perubahan
             </motion.button>
@@ -1310,7 +1214,7 @@ export function LibrarySettingsManager({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmComponentClose(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
+              className="bg-surface-container min-h-12 rounded-full px-4 text-xs font-bold"
             >
               Lanjut Mengedit
             </motion.button>
@@ -1323,7 +1227,7 @@ export function LibrarySettingsManager({
                 setComponentEditorBaseline("");
                 setConfirmComponentClose(false);
               }}
-              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
+              className="bg-error min-h-12 rounded-full px-4 text-xs font-bold text-white"
             >
               Buang Perubahan
             </motion.button>

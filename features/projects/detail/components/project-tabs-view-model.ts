@@ -1,8 +1,5 @@
 import { buildProjectOverviewActions } from "@/lib/project/project-overview";
-import {
-  selectApprovedRabEstimate,
-  selectCurrentRabEstimate,
-} from "@/lib/project/rab-selection";
+import { selectApprovedRabEstimate, selectCurrentRabEstimate } from "@/lib/project/rab-selection";
 import type { ProjectReadinessItem } from "./overview/project-overview";
 import type {
   ProjectCategoryPlanItemView,
@@ -74,20 +71,16 @@ export function buildProjectTabsViewModel({
   const budgetTotals = calculateBudgetTotals(project, projectBudgetDashboard);
   const totalReceived = calculateTotalReceived(invoices);
   const projectedGrossProfit =
-    projectBudgetDashboard?.projectedMarginAmount ??
-    contractValue - budgetTotals.totalAllocated;
+    projectBudgetDashboard?.projectedMarginAmount ?? contractValue - budgetTotals.totalAllocated;
   const projectedGrossMargin =
     projectBudgetDashboard?.projectedMarginPercentage ??
     (contractValue > 0 ? (projectedGrossProfit / contractValue) * 100 : 0);
   const cashPosition =
     totalReceived - (projectBudgetDashboard?.paidCost ?? budgetTotals.totalSpent);
 
-  const activeRap =
-    project.raps.slice().sort((a, b) => b.revision - a.revision)[0] ?? null;
+  const activeRap = project.raps.slice().sort((a, b) => b.revision - a.revision)[0] ?? null;
   const planBudgetCategories = (projectBudgetDashboard?.categories ?? [])
-    .filter(
-      (category) => category.code === "TUKANG" || category.code === "SUBCON",
-    )
+    .filter((category) => category.code === "TUKANG" || category.code === "SUBCON")
     .map((category) => ({
       id: category.id,
       code: category.code,
@@ -102,9 +95,7 @@ export function buildProjectTabsViewModel({
   const latestRabEstimate = selectCurrentRabEstimate(project.rabEstimates);
   const approvedRabEstimate = selectApprovedRabEstimate(project.rabEstimates);
   const baselineApprovedRabId =
-    latestRabEstimate?.status === "DRAFT"
-      ? (approvedRabEstimate?.id ?? null)
-      : null;
+    latestRabEstimate?.status === "DRAFT" ? (approvedRabEstimate?.id ?? null) : null;
   const rabEstimateForManager = buildRabEstimateForManager(latestRabEstimate);
   const rabRevisionHistory = project.rabEstimates
     .slice()
@@ -123,24 +114,17 @@ export function buildProjectTabsViewModel({
   const nextSetupTab: TabId = rapForManager ? "rab" : "rap";
   const nextSetupLabel = rapForManager ? "Buka RAB" : "Buat RAP";
   const nextSetupIcon = rapForManager ? "request_quote" : "architecture";
-  const shortageCount =
-    rapForManager?.items.filter((item) => item.needToBuy > 0).length ?? 0;
+  const shortageCount = rapForManager?.items.filter((item) => item.needToBuy > 0).length ?? 0;
   const invoiceOutstanding = calculateInvoiceOutstanding(invoices);
   const overdueInvoiceCount = invoices.filter(
     (invoice) =>
-      invoice.status !== "VOID" &&
-      invoice.status !== "PAID" &&
-      invoice.dueDate < new Date(),
+      invoice.status !== "VOID" && invoice.status !== "PAID" && invoice.dueDate < new Date(),
   ).length;
   const overdueVendorBillCount = vendorBills.filter(
-    (bill) =>
-      bill.status !== "VOID" &&
-      bill.status !== "PAID" &&
-      bill.dueDate < new Date(),
+    (bill) => bill.status !== "VOID" && bill.status !== "PAID" && bill.dueDate < new Date(),
   ).length;
   const criticalCategories = (projectBudgetDashboard?.categories ?? []).filter(
-    (category) =>
-      category.status === "CRITICAL" || category.status === "OVER_BUDGET",
+    (category) => category.status === "CRITICAL" || category.status === "OVER_BUDGET",
   );
   const readiness = buildReadiness({
     latestRabEstimate,

@@ -3,10 +3,7 @@
 import { useId, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { transitionSpringSmooth } from "@/lib/utils/motion";
-import {
-  updateBrowserUrl,
-  useUrlSearchParam,
-} from "@/lib/utils/use-url-search-param";
+import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import { GoodsReceiptSheet } from "./goods-receipt-sheet";
@@ -54,8 +51,7 @@ export function MaterialsControlCenter({
   const [activityProject, setActivityProject] = useState("ALL");
   const [activityLocation, setActivityLocation] = useState("ALL");
   const [activityPeriod, setActivityPeriod] = useState("ALL");
-  const urlAction = useUrlSearchParam("action") as
-    WarehouseAction | "RECEIVE" | null;
+  const urlAction = useUrlSearchParam("action") as WarehouseAction | "RECEIVE" | null;
   const action = urlAction && urlAction !== "RECEIVE" ? urlAction : null;
   const {
     pending,
@@ -115,10 +111,7 @@ export function MaterialsControlCenter({
     if (nextTab === "overview") params.delete("tab");
     else params.set("tab", nextTab);
     const query = params.toString();
-    updateBrowserUrl(
-      `${window.location.pathname}${query ? `?${query}` : ""}`,
-      "replace",
-    );
+    updateBrowserUrl(`${window.location.pathname}${query ? `?${query}` : ""}`, "replace");
   }
 
   const {
@@ -162,9 +155,7 @@ export function MaterialsControlCenter({
     Number(quantity) > 0 &&
     note.trim().length >= (action === "WASTE" ? 10 : 3),
   );
-  const shortageCount = data.shortages.filter(
-    (row) => row.needToBuy > 0,
-  ).length;
+  const shortageCount = data.shortages.filter((row) => row.needToBuy > 0).length;
 
   return (
     <section className="space-y-lg pb-8 select-none max-[430px]:space-y-5 max-[430px]:pb-6">
@@ -175,21 +166,16 @@ export function MaterialsControlCenter({
           subtitle="Posisi stok, kebutuhan project, dan aktivitas gudang."
           action={
             <Badge status={data.capabilities.canOperate ? "PRIMARY" : "DRAFT"}>
-              {data.capabilities.canOperate
-                ? roleLabel(data.roleName)
-                : "HANYA LIHAT"}
+              {data.capabilities.canOperate ? roleLabel(data.roleName) : "HANYA LIHAT"}
             </Badge>
           }
         />
         {message && (
           <div
-            className="flex min-h-10 items-center gap-2 px-1 text-[10px] font-semibold leading-[1.3] text-primary"
+            className="text-primary flex min-h-10 items-center gap-2 px-1 text-[10px] leading-[1.3] font-semibold"
             role="status"
           >
-            <span
-              className="material-symbols-outlined text-[16px]"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
               info
             </span>
             <span className="min-w-0 flex-1">{message}</span>
@@ -259,9 +245,7 @@ export function MaterialsControlCenter({
 
       <ProjectMaterialOperationSheet
         action={action}
-        open={Boolean(
-          action && ["RESERVE", "USE", "RETURN", "WASTE"].includes(action),
-        )}
+        open={Boolean(action && ["RESERVE", "USE", "RETURN", "WASTE"].includes(action))}
         pending={pending}
         valid={projectOperationValid}
         message={message}
@@ -402,10 +386,7 @@ export function MaterialsControlCenter({
               ? "Kirim Permintaan"
               : "Setujui & Posting"
         }
-        danger={Boolean(
-          decision?.type.includes("REJECT") ||
-          decision?.type.includes("REQUEST"),
-        )}
+        danger={Boolean(decision?.type.includes("REJECT") || decision?.type.includes("REQUEST"))}
         pending={pending}
         disabled={Boolean(
           decision &&
@@ -421,12 +402,13 @@ export function MaterialsControlCenter({
         }}
         onConfirm={decide}
       >
-        {decision && (
-          (data.roleName === "OWNER" && !decision.type.includes("REJECT") && !decision.type.includes("REQUEST")) ||
+        {decision &&
+        ((data.roleName === "OWNER" &&
+          !decision.type.includes("REJECT") &&
+          !decision.type.includes("REQUEST")) ||
           decision.type.includes("REJECT") ||
           decision.type.includes("REQUEST") ||
-          emergencyOverride
-        ) ? (
+          emergencyOverride) ? (
           <div className="space-y-2 text-left">
             {data.roleName === "OWNER" &&
             !decision.type.includes("REJECT") &&
@@ -460,8 +442,7 @@ export function MaterialsControlCenter({
                       placeholder="Jelaskan alasan, minimal 10 karakter"
                       aria-label="Alasan keputusan material"
                       aria-invalid={
-                        decisionReason.trim().length > 0 &&
-                        decisionReason.trim().length < 10
+                        decisionReason.trim().length > 0 && decisionReason.trim().length < 10
                       }
                     />
                   </div>
@@ -471,10 +452,7 @@ export function MaterialsControlCenter({
           </div>
         ) : null}
       </ConfirmationSheet>
-      <MaterialSuccessSheet
-        success={success}
-        onClose={() => setSuccess(null)}
-      />
+      <MaterialSuccessSheet success={success} onClose={() => setSuccess(null)} />
     </section>
   );
 }

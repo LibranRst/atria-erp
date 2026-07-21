@@ -67,8 +67,7 @@ export function SegmentedTabs<TValue extends string>({
   });
   const reduceMotion = useReducedMotion();
   const activeLayoutId =
-    layoutId ??
-    `segmented-tabs-active-${ariaLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+    layoutId ?? `segmented-tabs-active-${ariaLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   const optionSignature = options
     .map((option) => `${option.value}:${option.label}:${option.count ?? ""}`)
     .join("|");
@@ -150,27 +149,27 @@ export function SegmentedTabs<TValue extends string>({
         aria-selected={active}
         disabled={option.disabled}
         onClick={() => onChange(option.value)}
-        className={`relative flex items-center justify-center rounded-full font-bold outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-40 ${compact ? "h-10 min-h-10 gap-1 px-3 py-1.5 text-[11px] after:absolute after:-inset-y-1 after:inset-x-0 after:content-['']" : "min-h-12 gap-1.5 py-2 text-xs"} ${animated ? "transition-colors active:scale-[0.98]" : ""} ${
+        className={`focus-visible:ring-primary/30 relative flex items-center justify-center rounded-full font-bold outline-none focus-visible:ring-2 disabled:opacity-40 ${compact ? "h-10 min-h-10 gap-1 px-3 py-1.5 text-[11px] after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']" : "min-h-12 gap-1.5 py-2 text-xs"} ${animated ? "transition-colors active:scale-[0.98]" : ""} ${
           scrollable
             ? fillAvailableSpace
               ? compact
-                ? "min-w-max flex-1 whitespace-nowrap px-3"
-                : "min-w-max flex-1 whitespace-nowrap px-4"
+                ? "min-w-max flex-1 px-3 whitespace-nowrap"
+                : "min-w-max flex-1 px-4 whitespace-nowrap"
               : compact
-                ? "shrink-0 whitespace-nowrap px-3"
-                : "shrink-0 whitespace-nowrap px-4"
-            : compact ? "min-w-0 flex-1" : "min-w-0 flex-1 px-2"
-        } ${
-          active
-            ? "text-on-primary"
-            : "text-on-surface-variant hover:text-on-surface"
-        }`}
+                ? "shrink-0 px-3 whitespace-nowrap"
+                : "shrink-0 px-4 whitespace-nowrap"
+            : compact
+              ? "min-w-0 flex-1"
+              : "min-w-0 flex-1 px-2"
+        } ${active ? "text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
       >
         <span className="relative z-10 inline-flex min-w-0 items-center justify-center gap-1.5">
           {option.icon}
           <span className="truncate">{option.label}</span>
           {typeof option.count === "number" ? (
-            <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full p-0 font-mono font-black leading-none ${option.count > 99 ? "text-[7px]" : "text-[8px]"} ${compact ? "max-[430px]:h-[18px] max-[430px]:w-[18px] max-[430px]:text-[7px]" : ""} ${active ? "bg-white/18 text-white" : "bg-error-container/55 text-error"}`}>
+            <span
+              className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full p-0 font-mono leading-none font-black ${option.count > 99 ? "text-[7px]" : "text-[8px]"} ${compact ? "max-[430px]:h-[18px] max-[430px]:w-[18px] max-[430px]:text-[7px]" : ""} ${active ? "bg-white/18 text-white" : "bg-error-container/55 text-error"}`}
+            >
               {option.count > 99 ? "99+" : option.count}
             </span>
           ) : null}
@@ -181,14 +180,16 @@ export function SegmentedTabs<TValue extends string>({
 
   if (scrollable) {
     return (
-      <div className={`relative w-full overflow-hidden rounded-full border border-outline-variant/10 bg-surface-container-low p-1 ${className}`}>
+      <div
+        className={`border-outline-variant/10 bg-surface-container-low relative w-full overflow-hidden rounded-full border p-1 ${className}`}
+      >
         <div
           ref={scrollRef}
-          className="touch-pan-x overflow-x-auto overscroll-x-contain rounded-full no-scrollbar"
+          className="no-scrollbar touch-pan-x overflow-x-auto overscroll-x-contain rounded-full"
         >
           <div
             ref={tabListRef}
-            className="relative flex w-max min-w-full select-none overflow-hidden rounded-full"
+            className="relative flex w-max min-w-full overflow-hidden rounded-full select-none"
             role="tablist"
             aria-label={ariaLabel}
             data-indicator-id={activeLayoutId}
@@ -196,12 +197,8 @@ export function SegmentedTabs<TValue extends string>({
             <motion.span
               initial={false}
               animate={indicatorMetrics}
-              transition={
-                reduceMotion || !animated
-                  ? { duration: 0 }
-                  : transitionSpringBouncy
-              }
-              className="pointer-events-none absolute inset-y-0 rounded-full bg-primary shadow-sm"
+              transition={reduceMotion || !animated ? { duration: 0 } : transitionSpringBouncy}
+              className="bg-primary pointer-events-none absolute inset-y-0 rounded-full shadow-sm"
               aria-hidden="true"
             />
             {tabButtons}
@@ -215,7 +212,7 @@ export function SegmentedTabs<TValue extends string>({
     <div className={className}>
       <div
         ref={tabListRef}
-        className="relative flex w-full select-none overflow-hidden rounded-full border border-outline-variant/10 bg-surface-container-low p-1"
+        className="border-outline-variant/10 bg-surface-container-low relative flex w-full overflow-hidden rounded-full border p-1 select-none"
         role="tablist"
         aria-label={ariaLabel}
         data-indicator-id={activeLayoutId}
@@ -223,10 +220,8 @@ export function SegmentedTabs<TValue extends string>({
         <motion.span
           initial={false}
           animate={indicatorMetrics}
-          transition={
-            reduceMotion || !animated ? { duration: 0 } : transitionSpringBouncy
-          }
-          className="pointer-events-none absolute inset-y-1 rounded-full bg-primary shadow-sm"
+          transition={reduceMotion || !animated ? { duration: 0 } : transitionSpringBouncy}
+          className="bg-primary pointer-events-none absolute inset-y-1 rounded-full shadow-sm"
           aria-hidden="true"
         />
         {tabButtons}

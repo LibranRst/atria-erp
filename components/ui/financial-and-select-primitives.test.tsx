@@ -7,27 +7,17 @@ import { SearchInput, SheetSelect } from "./select-form-controls";
 describe("financial and select primitives", () => {
   test("keeps large full financial values on one dynamic line", () => {
     const full = renderToStaticMarkup(
-      <MoneyValue
-        amount={-1_017_050_000}
-        variant="fullDynamic"
-        size="hero"
-        tone="danger"
-      />,
+      <MoneyValue amount={-1_017_050_000} variant="fullDynamic" size="hero" tone="danger" />,
     );
     const compact = renderToStaticMarkup(
-      <MoneyValue
-        amount={-1_017_050_000}
-        variant="compactWithFull"
-        size="sm"
-        tone="danger"
-      />,
+      <MoneyValue amount={-1_017_050_000} variant="compactWithFull" size="sm" tone="danger" />,
     );
 
     expect(full).toContain("money-value-dynamic__text");
     expect(full).toContain("Rp -1.017.050.000");
     expect(compact).toContain("money-value-compact");
     expect(compact).toContain("money-value-exact");
-    expect(compact).not.toContain("break-words");
+    expect(compact).not.toContain("wrap-break-word");
   });
 
   test("uses explicit compact spacing for selected option context", () => {

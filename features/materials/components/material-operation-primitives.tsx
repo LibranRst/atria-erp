@@ -9,7 +9,10 @@ import {
   formatMaterialQuantity,
   formatMovementType,
 } from "@/features/materials/lib/material-ui-utils";
-import { ActivityDetailChevron, useActivityDetail } from "@/features/activity-detail/components/activity-detail-provider";
+import {
+  ActivityDetailChevron,
+  useActivityDetail,
+} from "@/features/activity-detail/components/activity-detail-provider";
 
 export function Mini({
   label,
@@ -21,19 +24,14 @@ export function Mini({
   readonly amount?: number;
 }): React.JSX.Element {
   return (
-    <div className="min-w-0 rounded-2xl bg-surface-container-low p-3">
-      <p className="truncate text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+    <div className="bg-surface-container-low min-w-0 rounded-2xl p-3">
+      <p className="text-on-surface-variant truncate text-[9px] font-bold tracking-wide uppercase">
         {label}
       </p>
       {typeof amount === "number" ? (
-        <MoneyValue
-          amount={amount}
-          variant="compactWithFull"
-          size="sm"
-          className="mt-1"
-        />
+        <MoneyValue amount={amount} variant="compactWithFull" size="sm" className="mt-1" />
       ) : (
-        <p className="mt-1 break-words font-mono text-[12px] font-bold tabular-nums [overflow-wrap:anywhere]">
+        <p className="mt-1 font-mono text-[12px] font-bold wrap-anywhere wrap-break-word tabular-nums">
           {value}
         </p>
       )}
@@ -57,30 +55,27 @@ export function Section({
   );
 }
 
-export function MovementRow({
-  row,
-}: {
-  readonly row: MaterialMovementView;
-}): React.JSX.Element {
+export function MovementRow({ row }: { readonly row: MaterialMovementView }): React.JSX.Element {
   const { openActivityDetail } = useActivityDetail();
   return (
-    <button type="button" onClick={() => openActivityDetail({ kind: "STOCK_MOVEMENT", id: row.id })} className="flex min-h-[64px] w-full items-center gap-3 py-2.5 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70" aria-label={`Lihat detail mutasi ${row.materialName}`}>
+    <button
+      type="button"
+      onClick={() => openActivityDetail({ kind: "STOCK_MOVEMENT", id: row.id })}
+      className="focus-visible:bg-surface-container-low active:bg-surface-container-low/70 flex min-h-[64px] w-full items-center gap-3 py-2.5 text-left outline-none"
+      aria-label={`Lihat detail mutasi ${row.materialName}`}
+    >
       <span
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${movementIconTone(row)}`}
       >
-        <span className="material-symbols-outlined text-[16px]">
-          {movementIcon(row)}
-        </span>
+        <span className="material-symbols-outlined text-[16px]">{movementIcon(row)}</span>
       </span>
       <span className="grid min-w-0 flex-1 gap-1">
-        <span className="block truncate text-[13px] font-bold leading-4">
-          {row.materialName}
-        </span>
-        <span className="block truncate text-[10px] leading-[1.3] text-on-surface-variant">
+        <span className="block truncate text-[13px] leading-4 font-bold">{row.materialName}</span>
+        <span className="text-on-surface-variant block truncate text-[10px] leading-[1.3]">
           {formatMovementType(row.movementType)} · {row.locationName}
           {row.projectName ? ` · ${row.projectName}` : ""}
         </span>
-        <span className="block truncate text-[9px] leading-3 text-on-surface-variant/65">
+        <span className="text-on-surface-variant/65 block truncate text-[9px] leading-3">
           {formatMaterialDate(row.createdAt)} · {row.createdByName}
         </span>
       </span>
@@ -133,21 +128,16 @@ export function ApprovalRow({
   return (
     <div className="px-3.5 py-3">
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/[0.09] text-warning ring-1 ring-warning/[0.06]">
+        <span className="bg-warning/9 text-warning ring-warning/6 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1">
           <span className="material-symbols-outlined text-[18px]">priority_high</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-bold leading-4">{title}</span>
-          <span className="mt-0.5 block text-[10px] leading-[1.3] text-on-surface-variant">
+          <span className="block truncate text-xs leading-4 font-bold">{title}</span>
+          <span className="text-on-surface-variant mt-0.5 block text-[10px] leading-[1.3]">
             {description}
           </span>
           {typeof amount === "number" && (
-            <MoneyValue
-              amount={amount}
-              variant="compactWithFull"
-              size="sm"
-              className="mt-1"
-            />
+            <MoneyValue amount={amount} variant="compactWithFull" size="sm" className="mt-1" />
           )}
         </span>
       </div>
@@ -155,14 +145,14 @@ export function ApprovalRow({
         <button
           type="button"
           onClick={onReject}
-          className="min-h-12 rounded-full bg-error-container/20 text-[10px] font-bold text-error transition active:scale-[0.97]"
+          className="bg-error-container/20 text-error min-h-12 rounded-full text-[10px] font-bold transition active:scale-[0.97]"
         >
           Tolak
         </button>
         <button
           type="button"
           onClick={onApprove}
-          className="min-h-12 rounded-full bg-primary text-[10px] font-bold text-on-primary transition active:scale-[0.97]"
+          className="bg-primary text-on-primary min-h-12 rounded-full text-[10px] font-bold transition active:scale-[0.97]"
         >
           Setujui
         </button>
@@ -171,14 +161,6 @@ export function ApprovalRow({
   );
 }
 
-export function Error({
-  text,
-}: {
-  readonly text: string;
-}): React.JSX.Element {
-  return (
-    <p className="rounded-2xl bg-error-container/20 p-3 text-xs text-error">
-      {text}
-    </p>
-  );
+export function Error({ text }: { readonly text: string }): React.JSX.Element {
+  return <p className="bg-error-container/20 text-error rounded-2xl p-3 text-xs">{text}</p>;
 }

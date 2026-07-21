@@ -17,10 +17,7 @@ import {
   TextInput,
   ValuePreviewStrip,
 } from "@/components/ui";
-import {
-  formatIdr as formatRp,
-  formatShortIdr as formatShortRp,
-} from "@/lib/utils/money";
+import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import type {
   MaterialOption,
   PricingTemplateOption,
@@ -73,19 +70,27 @@ export function RapMaterialFormDrawer({
       submittingLabel="Menyimpan…"
       pending={isPending}
       disabled={!rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity}
-      disabledReason={!rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity ? "Lengkapi nama, area, satuan, dan jumlah material." : undefined}
+      disabledReason={
+        !rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity
+          ? "Lengkapi nama, area, satuan, dan jumlah material."
+          : undefined
+      }
       statusText={`${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit} · Perlu dibeli ${formNeedToBuy.toLocaleString("id-ID")} · ${formatRp(formEstimatedTotal)}`}
-      statusTone={!rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity ? "warning" : formNeedToBuy > 0 ? "warning" : "success"}
+      statusTone={
+        !rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity
+          ? "warning"
+          : formNeedToBuy > 0
+            ? "warning"
+            : "success"
+      }
     >
       <div className="space-y-md">
         <FieldContextLine tone={formNeedToBuy > 0 ? "warning" : "success"}>
-          {rapForm.name || "Material belum diisi"} · Total {formTotalQty.toLocaleString("id-ID")} {rapForm.unit} · Perlu dibeli {formNeedToBuy.toLocaleString("id-ID")} · {formatRp(formEstimatedTotal)}
+          {rapForm.name || "Material belum diisi"} · Total {formTotalQty.toLocaleString("id-ID")}{" "}
+          {rapForm.unit} · Perlu dibeli {formNeedToBuy.toLocaleString("id-ID")} ·{" "}
+          {formatRp(formEstimatedTotal)}
         </FieldContextLine>
-        <form
-          id="rap-material-item-form"
-          onSubmit={handleSubmitRapItem}
-          className="space-y-md"
-        >
+        <form id="rap-material-item-form" onSubmit={handleSubmitRapItem} className="space-y-md">
           <FormSection
             title="Sumber material"
             helper="Gunakan data tersimpan untuk mempercepat input, atau isi manual bila material belum tersedia."
@@ -107,15 +112,13 @@ export function RapMaterialFormDrawer({
                       .map((item) => ({
                         value: item.id,
                         label: item.name,
-                        description: `${formatShortRp(item.internalCost)}/${
-                          item.unit
-                        }`,
+                        description: `${formatShortRp(item.internalCost)}/${item.unit}`,
                       })),
                   ]}
                 />
-                <p className="px-4 pb-3 pt-1 text-[10px] leading-4 text-on-surface-variant">
-                  Biaya dan rekomendasi harga klien berasal dari rincian Library,
-                  lalu disimpan sebagai snapshot proyek.
+                <p className="text-on-surface-variant px-4 pt-1 pb-3 text-[10px] leading-4">
+                  Biaya dan rekomendasi harga klien berasal dari rincian Library, lalu disimpan
+                  sebagai snapshot proyek.
                 </p>
               </div>
             )}
@@ -140,22 +143,18 @@ export function RapMaterialFormDrawer({
             title="Identitas & penggunaan"
             helper="Nama dan area akan menjadi konteks utama saat item muncul di daftar RAP."
           >
-            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+            <div className="divide-outline-variant/20 grid grid-cols-1 divide-y">
               <ComboboxField
                 label="Area / Ruangan"
                 value={rapForm.area}
-                onChange={(value) =>
-                  setRapForm((curr) => ({ ...curr, area: value }))
-                }
+                onChange={(value) => setRapForm((curr) => ({ ...curr, area: value }))}
                 options={COMMON_ROOM_OPTIONS}
                 placeholder="Contoh: Dapur"
               />
               <ComboboxField
                 label="Satuan"
                 value={rapForm.unit}
-                onChange={(value) =>
-                  setRapForm((curr) => ({ ...curr, unit: value }))
-                }
+                onChange={(value) => setRapForm((curr) => ({ ...curr, unit: value }))}
                 options={COMMON_UNIT_OPTIONS}
                 placeholder="Contoh: lembar"
               />
@@ -163,9 +162,7 @@ export function RapMaterialFormDrawer({
             <FormField label="Nama Material">
               <TextInput
                 value={rapForm.name}
-                onChange={(value) =>
-                  setRapForm((curr) => ({ ...curr, name: value }))
-                }
+                onChange={(value) => setRapForm((curr) => ({ ...curr, name: value }))}
                 placeholder="Contoh: Multipleks 18mm"
               />
             </FormField>
@@ -173,9 +170,7 @@ export function RapMaterialFormDrawer({
               <Textarea
                 rows={2}
                 value={rapForm.description}
-                onChange={(value) =>
-                  setRapForm((curr) => ({ ...curr, description: value }))
-                }
+                onChange={(value) => setRapForm((curr) => ({ ...curr, description: value }))}
                 placeholder="Spesifikasi atau penggunaan"
               />
             </FormField>
@@ -191,9 +186,7 @@ export function RapMaterialFormDrawer({
                   value={rapForm.requiredQuantity}
                   min={0}
                   step={1}
-                  onChange={(value) =>
-                    setRapForm((curr) => ({ ...curr, requiredQuantity: value }))
-                  }
+                  onChange={(value) => setRapForm((curr) => ({ ...curr, requiredQuantity: value }))}
                 />
               </FormField>
               <FormField label="Buffer">
@@ -201,18 +194,14 @@ export function RapMaterialFormDrawer({
                   value={rapForm.bufferQuantity}
                   min={0}
                   step={1}
-                  onChange={(value) =>
-                    setRapForm((curr) => ({ ...curr, bufferQuantity: value }))
-                  }
+                  onChange={(value) => setRapForm((curr) => ({ ...curr, bufferQuantity: value }))}
                 />
               </FormField>
             </div>
             <FormField label="Biaya per Satuan">
               <MoneyInput
                 value={rapForm.estimatedUnitCost}
-                onChange={(value) =>
-                  setRapForm((curr) => ({ ...curr, estimatedUnitCost: value }))
-                }
+                onChange={(value) => setRapForm((curr) => ({ ...curr, estimatedUnitCost: value }))}
                 showPreview={false}
               />
             </FormField>
@@ -236,9 +225,7 @@ export function RapMaterialFormDrawer({
               <Textarea
                 rows={2}
                 value={rapForm.internalNote}
-                onChange={(value) =>
-                  setRapForm((curr) => ({ ...curr, internalNote: value }))
-                }
+                onChange={(value) => setRapForm((curr) => ({ ...curr, internalNote: value }))}
                 placeholder="Tidak tampil ke klien"
               />
             </FormField>
@@ -247,9 +234,20 @@ export function RapMaterialFormDrawer({
               <ValuePreviewStrip
                 lastItemFullWidth
                 items={[
-                  { label: "Total kebutuhan", value: `${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit}` },
-                  { label: "Perlu dibeli", value: `${formNeedToBuy.toLocaleString("id-ID")} ${rapForm.unit}`, tone: formNeedToBuy > 0 ? "warning" : "success" },
-                  { label: "Estimasi biaya", amount: formEstimatedTotal, tone: formEstimatedTotal > 0 ? "success" : "default" },
+                  {
+                    label: "Total kebutuhan",
+                    value: `${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit}`,
+                  },
+                  {
+                    label: "Perlu dibeli",
+                    value: `${formNeedToBuy.toLocaleString("id-ID")} ${rapForm.unit}`,
+                    tone: formNeedToBuy > 0 ? "warning" : "success",
+                  },
+                  {
+                    label: "Estimasi biaya",
+                    amount: formEstimatedTotal,
+                    tone: formEstimatedTotal > 0 ? "success" : "default",
+                  },
                 ]}
               />
             </div>

@@ -41,7 +41,11 @@ describe("Settings validations", () => {
       name: "Default Project Budget",
       budgetCapRatio: 0.9,
       categories: [
-        { budgetAllocationSettingCategoryId: SETTING_CATEGORY_ID, ratioPercentage: 0.545, isEnabled: true },
+        {
+          budgetAllocationSettingCategoryId: SETTING_CATEGORY_ID,
+          ratioPercentage: 0.545,
+          isEnabled: true,
+        },
       ],
     });
     expect(parsed.success).toBe(true);
@@ -53,8 +57,16 @@ describe("Settings validations", () => {
       name: "Default Project Budget",
       budgetCapRatio: 0.9,
       categories: [
-        { budgetAllocationSettingCategoryId: SETTING_CATEGORY_ID, ratioPercentage: 0.6, isEnabled: true },
-        { budgetAllocationSettingCategoryId: "42424242-4242-4242-4242-424242424103", ratioPercentage: 0.5, isEnabled: true },
+        {
+          budgetAllocationSettingCategoryId: SETTING_CATEGORY_ID,
+          ratioPercentage: 0.6,
+          isEnabled: true,
+        },
+        {
+          budgetAllocationSettingCategoryId: "42424242-4242-4242-4242-424242424103",
+          ratioPercentage: 0.5,
+          isEnabled: true,
+        },
       ],
     });
     expect(parsed.success).toBe(false);
@@ -86,7 +98,11 @@ describe("Settings validations", () => {
   });
 
   it("menolak lokasi inventory duplikat saat membuat material", () => {
-    const inventoryDefault = { inventoryLocationId: LOCATION_ID, minimumStock: 5, lastPurchasePrice: 250000 };
+    const inventoryDefault = {
+      inventoryLocationId: LOCATION_ID,
+      minimumStock: 5,
+      lastPurchasePrice: 250000,
+    };
     const parsed = createMaterialWithInventoryDefaultsSchema.safeParse({
       categoryId: CATEGORY_ID,
       name: "Multipleks 18mm",

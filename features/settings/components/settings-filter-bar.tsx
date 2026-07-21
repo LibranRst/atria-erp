@@ -66,12 +66,19 @@ export function SettingsFilterBar<TValue extends string>({
         {mode === "filter" ? (
           <button
             type="button"
-            onClick={() => { onSearchChange(""); setFilterOpen(true); }}
-            className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/[0.96] text-on-surface shadow-[0_8px_22px_rgba(17,17,17,0.055)] ring-1 ring-black/[0.04] outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            onClick={() => {
+              onSearchChange("");
+              setFilterOpen(true);
+            }}
+            className="text-on-surface focus-visible:ring-primary/25 relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/96 shadow-[0_8px_22px_rgba(17,17,17,0.055)] ring-1 ring-black/4 outline-none focus-visible:ring-2"
             aria-label={`Buka ${filterTitle.toLowerCase()}`}
           >
             <SlidersHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
-            {filterCount > 0 ? <span className="absolute -right-0.5 -top-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-primary font-mono text-[8px] font-black leading-none text-white">{filterCount}</span> : null}
+            {filterCount > 0 ? (
+              <span className="bg-primary absolute -top-0.5 -right-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full font-mono text-[8px] leading-none font-black text-white">
+                {filterCount}
+              </span>
+            ) : null}
           </button>
         ) : null}
       </div>
@@ -79,12 +86,24 @@ export function SettingsFilterBar<TValue extends string>({
         open={filterOpen}
         title={filterTitle}
         onClose={() => setFilterOpen(false)}
-        footer={(
+        footer={
           <div className="grid grid-cols-2 gap-2">
-            <button type="button" onClick={onResetFilters} className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface">Reset</button>
-            <button type="button" onClick={() => setFilterOpen(false)} className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white">Terapkan filter</button>
+            <button
+              type="button"
+              onClick={onResetFilters}
+              className="bg-surface-container text-on-surface min-h-12 rounded-full px-4 text-xs font-bold"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterOpen(false)}
+              className="bg-primary min-h-12 rounded-full px-4 text-xs font-bold text-white"
+            >
+              Terapkan filter
+            </button>
           </div>
-        )}
+        }
       >
         <div className="space-y-3">{children}</div>
       </BottomSheet>

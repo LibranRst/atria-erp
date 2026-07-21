@@ -1,7 +1,17 @@
 "use server";
 
 import { db } from "@/db";
-import { auditLog, bankAccount, vendorBill, vendorPayment, project, projectBudgetCategory, approval, user, role } from "@/db/schema";
+import {
+  auditLog,
+  bankAccount,
+  vendorBill,
+  vendorPayment,
+  project,
+  projectBudgetCategory,
+  approval,
+  user,
+  role,
+} from "@/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
@@ -12,7 +22,7 @@ import crypto from "crypto";
 import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
 
 export async function scheduleVendorBillPayment(
-  input: SchedulePaymentInput
+  input: SchedulePaymentInput,
 ): Promise<ActionResponse<typeof vendorPayment.$inferSelect>> {
   const validation = schedulePaymentSchema.safeParse(input);
   if (!validation.success) {
@@ -43,7 +53,10 @@ export async function scheduleVendorBillPayment(
     } catch (err) {
       return {
         success: false,
-        error: { code: "FORBIDDEN", message: err instanceof Error ? err.message : "Akses ditolak." },
+        error: {
+          code: "FORBIDDEN",
+          message: err instanceof Error ? err.message : "Akses ditolak.",
+        },
       };
     }
 
@@ -120,8 +133,8 @@ export async function scheduleVendorBillPayment(
           throw new Error("OWNER_USER_NOT_FOUND");
         }
 
-        const notes = isOverrun 
-          ? "Pembayaran melebihi plafon anggaran belanja (Budget Overrun)." 
+        const notes = isOverrun
+          ? "Pembayaran melebihi plafon anggaran belanja (Budget Overrun)."
           : "Nominal transaksi mencapai/melebihi Rp 5.000.000.";
 
         await tx.insert(approval).values({
@@ -174,10 +187,16 @@ export async function scheduleVendorBillPayment(
     };
   } catch (error: unknown) {
     const errMsg = getErrorMessage(error, "Gagal menjadwalkan pembayaran vendor.");
-    let errorCode: "NOT_FOUND" | "FORBIDDEN" | "TRANSACTION_FAILED" | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
+    let errorCode: "NOT_FOUND" | "FORBIDDEN" | "TRANSACTION_FAILED" | "INTERNAL_SERVER_ERROR" =
+      "INTERNAL_SERVER_ERROR";
     let displayMessage = errMsg;
 
-    if (errMsg === "VENDOR_BILL_NOT_FOUND" || errMsg === "PROJECT_BUDGET_CATEGORY_NOT_FOUND" || errMsg === "OWNER_USER_NOT_FOUND" || errMsg === "BANK_ACCOUNT_NOT_FOUND") {
+    if (
+      errMsg === "VENDOR_BILL_NOT_FOUND" ||
+      errMsg === "PROJECT_BUDGET_CATEGORY_NOT_FOUND" ||
+      errMsg === "OWNER_USER_NOT_FOUND" ||
+      errMsg === "BANK_ACCOUNT_NOT_FOUND"
+    ) {
       errorCode = "NOT_FOUND";
       displayMessage = "Data pendukung transaksi tidak ditemukan.";
     } else if (errMsg === "VENDOR_BILL_CLOSED") {

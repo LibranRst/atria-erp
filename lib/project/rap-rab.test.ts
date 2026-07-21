@@ -1,9 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  calculateRabSellingUnitPrice,
-  getRapItemAvailabilityStatus,
-} from "@/lib/project/rap-rab";
+import { calculateRabSellingUnitPrice, getRapItemAvailabilityStatus } from "@/lib/project/rap-rab";
 import {
   addProjectRapItemSchema,
   createRabBundleSchema,
@@ -15,32 +12,42 @@ import { calculateQuotationTotal } from "@/lib/project/quotation-total";
 
 describe("RAP material plan and RAB generation helpers", () => {
   test("calculates RAP material readiness from stock and purchase source", () => {
-    expect(getRapItemAvailabilityStatus({
-      totalQuantity: 10,
-      availableStock: 12,
-      source: "STOCK",
-    })).toBe("READY");
-    expect(getRapItemAvailabilityStatus({
-      totalQuantity: 10,
-      availableStock: 4,
-      source: "STOCK_AND_PURCHASE",
-    })).toBe("WAITING_PURCHASE");
-    expect(getRapItemAvailabilityStatus({
-      totalQuantity: 10,
-      availableStock: 0,
-      source: "PURCHASE",
-    })).toBe("SHORTAGE");
+    expect(
+      getRapItemAvailabilityStatus({
+        totalQuantity: 10,
+        availableStock: 12,
+        source: "STOCK",
+      }),
+    ).toBe("READY");
+    expect(
+      getRapItemAvailabilityStatus({
+        totalQuantity: 10,
+        availableStock: 4,
+        source: "STOCK_AND_PURCHASE",
+      }),
+    ).toBe("WAITING_PURCHASE");
+    expect(
+      getRapItemAvailabilityStatus({
+        totalQuantity: 10,
+        availableStock: 0,
+        source: "PURCHASE",
+      }),
+    ).toBe("SHORTAGE");
   });
 
   test("uses target margin pricing for generated client RAB draft", () => {
-    expect(calculateRabSellingUnitPrice({
-      costUnitPrice: 900_000,
-      targetGrossPercentage: 10,
-    })).toBe(1_000_000);
-    expect(calculateRabSellingUnitPrice({
-      costUnitPrice: 500_000,
-      targetGrossPercentage: 0,
-    })).toBe(500_000);
+    expect(
+      calculateRabSellingUnitPrice({
+        costUnitPrice: 900_000,
+        targetGrossPercentage: 10,
+      }),
+    ).toBe(1_000_000);
+    expect(
+      calculateRabSellingUnitPrice({
+        costUnitPrice: 500_000,
+        targetGrossPercentage: 0,
+      }),
+    ).toBe(500_000);
   });
 
   test("validates RAP item input with internal-only note", () => {
@@ -97,13 +104,15 @@ describe("RAP material plan and RAB generation helpers", () => {
       projectId: "77777777-7777-7777-7777-777777777771",
       projectRapItemIds: ["17171717-1717-1717-1717-171717171701"],
       projectCategoryPlanItemIds: ["35353535-3535-3535-3535-353535353501"],
-      manualLines: [{
-        clientLabel: "Project coordination",
-        description: "Koordinasi proyek dan dokumentasi progress.",
-        quantity: 1,
-        unit: "paket",
-        unitPrice: 12_500_000,
-      }],
+      manualLines: [
+        {
+          clientLabel: "Project coordination",
+          description: "Koordinasi proyek dan dokumentasi progress.",
+          quantity: 1,
+          unit: "paket",
+          unitPrice: 12_500_000,
+        },
+      ],
     });
 
     expect(parsed.success).toBe(true);
@@ -121,19 +130,27 @@ describe("RAP material plan and RAB generation helpers", () => {
   });
 
   test("calculates named bundle once without double-counting its members", () => {
-    expect(calculateQuotationTotal([
-      { bundleId: "bundle-1", isHidden: false, lineTotal: 80_000_000 },
-      { bundleId: "bundle-1", isHidden: false, lineTotal: 55_000_000 },
-      { bundleId: null, isHidden: false, lineTotal: 30_000_000 },
-      { bundleId: null, isHidden: true, lineTotal: 9_000_000 },
-    ], [{ id: "bundle-1", isHidden: false, lineTotal: 135_000_000 }])).toBe(165_000_000);
+    expect(
+      calculateQuotationTotal(
+        [
+          { bundleId: "bundle-1", isHidden: false, lineTotal: 80_000_000 },
+          { bundleId: "bundle-1", isHidden: false, lineTotal: 55_000_000 },
+          { bundleId: null, isHidden: false, lineTotal: 30_000_000 },
+          { bundleId: null, isHidden: true, lineTotal: 9_000_000 },
+        ],
+        [{ id: "bundle-1", isHidden: false, lineTotal: 135_000_000 }],
+      ),
+    ).toBe(165_000_000);
   });
 
   test("named bundle requires at least two member lines", () => {
     const parsed = createRabBundleSchema.safeParse({
       rabEstimateId: "88888888-8888-8888-8888-888888888801",
       itemIds: ["99999999-9999-9999-9999-999999999901"],
-      clientLabel: "Kitchen package", quantity: 1, unit: "paket", unitPrice: 135_000_000,
+      clientLabel: "Kitchen package",
+      quantity: 1,
+      unit: "paket",
+      unitPrice: 135_000_000,
     });
     expect(parsed.success).toBe(false);
   });

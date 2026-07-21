@@ -21,10 +21,7 @@ export type ApprovalBudgetImpact = {
 
 export function getBudgetGeometry(value: number): BudgetGeometry {
   const normalized = Number.isFinite(value) ? value : 0;
-  const clampedPercentage = Math.min(
-    Math.max(normalized, 0),
-    RISK_LIMIT_THRESHOLD,
-  );
+  const clampedPercentage = Math.min(Math.max(normalized, 0), RISK_LIMIT_THRESHOLD);
   return {
     clampedPercentage,
     overflowPercentage: Math.max(0, normalized - RISK_LIMIT_THRESHOLD),
@@ -74,7 +71,9 @@ export function BudgetSplitIndicator({
 }): React.JSX.Element {
   const geometry = getBudgetGeometry(value);
   const usedClass = inverse
-    ? danger || tone === "critical" ? "bg-[#ff9f96]" : "bg-white"
+    ? danger || tone === "critical"
+      ? "bg-[#ff9f96]"
+      : "bg-white"
     : danger || tone === "critical"
       ? "bg-error"
       : tone === "warning"
@@ -103,10 +102,12 @@ export function BudgetSplitIndicator({
           />
         ) : null}
         {geometry.overflowPercentage > 0 ? (
-          <span className={`absolute -right-0.5 -top-1 h-4 w-1 rounded-full ${usedClass}`} />
+          <span className={`absolute -top-1 -right-0.5 h-4 w-1 rounded-full ${usedClass}`} />
         ) : null}
       </div>
-      <div className={`mt-1.5 flex items-center justify-between text-[8px] font-bold uppercase tracking-wide ${secondaryText}`}>
+      <div
+        className={`mt-1.5 flex items-center justify-between text-[8px] font-bold tracking-wide uppercase ${secondaryText}`}
+      >
         <span>Terpakai</span>
         <span>
           {geometry.overflowPercentage > 0
@@ -133,13 +134,13 @@ export function RiskThresholdRail({
       role="img"
       aria-label={`Penggunaan budget ${value.toFixed(0)} persen. Batas perhatian ${RISK_WARNING_THRESHOLD} persen dan batas budget ${RISK_LIMIT_THRESHOLD} persen.`}
     >
-      <div className="absolute inset-x-0 top-2 h-px bg-outline-variant/55" aria-hidden="true" />
+      <div className="bg-outline-variant/55 absolute inset-x-0 top-2 h-px" aria-hidden="true" />
       <span
-        className="absolute top-0 h-4 w-px bg-warning/70"
+        className="bg-warning/70 absolute top-0 h-4 w-px"
         style={{ left: `${RISK_WARNING_THRESHOLD}%` }}
         aria-hidden="true"
       />
-      <span className="absolute right-0 top-0 h-4 w-px bg-error/70" aria-hidden="true" />
+      <span className="bg-error/70 absolute top-0 right-0 h-4 w-px" aria-hidden="true" />
       <span
         className={`absolute top-1 h-2.5 w-2.5 rounded-full ring-2 ring-white ${markerClass}`}
         style={{
@@ -154,14 +155,16 @@ export function RiskThresholdRail({
         aria-hidden="true"
       />
       <span
-        className="absolute top-4 -translate-x-1/2 font-mono text-[8px] font-bold text-warning"
+        className="text-warning absolute top-4 -translate-x-1/2 font-mono text-[8px] font-bold"
         style={{ left: `${RISK_WARNING_THRESHOLD}%` }}
       >
         {RISK_WARNING_THRESHOLD}
       </span>
-      <span className="absolute right-0 top-4 font-mono text-[8px] font-bold text-error">{RISK_LIMIT_THRESHOLD}</span>
+      <span className="text-error absolute top-4 right-0 font-mono text-[8px] font-bold">
+        {RISK_LIMIT_THRESHOLD}
+      </span>
       {geometry.overflowPercentage > 0 ? (
-        <span className="absolute right-0 -top-2 font-mono text-[8px] font-black text-error">
+        <span className="text-error absolute -top-2 right-0 font-mono text-[8px] font-black">
           +{geometry.overflowPercentage.toFixed(0)}%
         </span>
       ) : null}
@@ -186,7 +189,11 @@ export function UsageBlockMeter({
       {Array.from({ length: 5 }, (_, index) => {
         const fill = getUsageBlockFill(value, index);
         return (
-          <span key={index} className="h-2 min-w-0 flex-1 overflow-hidden rounded-[3px] bg-surface-container-high" aria-hidden="true">
+          <span
+            key={index}
+            className="bg-surface-container-high h-2 min-w-0 flex-1 overflow-hidden rounded-[3px]"
+            aria-hidden="true"
+          >
             <span className={`block h-full ${fillClass}`} style={{ width: `${fill}%` }} />
           </span>
         );

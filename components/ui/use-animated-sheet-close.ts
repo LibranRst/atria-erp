@@ -20,9 +20,12 @@ export function useAnimatedSheetClose(
     onClosedRef.current = onClosed;
   }, [onClosed]);
 
-  React.useEffect(() => () => {
-    if (resetTimerRef.current !== null) window.clearTimeout(resetTimerRef.current);
-  }, []);
+  React.useEffect(
+    () => () => {
+      if (resetTimerRef.current !== null) window.clearTimeout(resetTimerRef.current);
+    },
+    [],
+  );
 
   const close = React.useCallback((): void => {
     if (!visible) return;

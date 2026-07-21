@@ -8,7 +8,8 @@ import {
   UsersRound,
 } from "lucide-react";
 
-export type SettingsTab = "overview" | "setup" | "budget" | "categories" | "library" | "materials" | "administration";
+export type SettingsTab =
+  "overview" | "setup" | "budget" | "categories" | "library" | "materials" | "administration";
 
 export const SETTINGS_TABS: ReadonlyArray<{
   readonly value: SettingsTab;
