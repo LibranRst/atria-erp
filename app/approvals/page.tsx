@@ -1,7 +1,7 @@
 import { resolveRoleName } from "@/lib/auth/permissions";
-import { ApprovalList } from "@/features/approvals/components/approval-list";
+import { ApprovalList } from "@/features/approvals/components/views/approval-list";
 import { PageState } from "@/components/ui";
-import { PageHeader } from "@/components/ui/page-primitives";
+import { PageHeader } from "@/components/ui/feedback/page-primitives";
 import { getPendingApprovalDetails, rankPendingApprovals } from "@/lib/finance/approval-details";
 import { requireServerSession } from "@/lib/server/session";
 import React from "react";

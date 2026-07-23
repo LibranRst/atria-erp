@@ -9,6 +9,7 @@ import {
   transitionSpringSmooth,
 } from "@/lib/utils/motion";
 import type { FabAction, NavItem } from "./bottom-nav-config";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export function BottomTabBar({
   activeIndex,
@@ -57,14 +58,11 @@ export function BottomTabBar({
               isActive ? "text-on-primary" : "text-on-surface-variant"
             }`}
           >
-            <span
-              className="material-symbols-outlined relative z-10 text-[24px]"
-              style={{
-                fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0",
-              }}
-            >
-              {item.iconName}
-            </span>
+            <AppIcon
+              name={item.iconName}
+              weight={isActive ? "fill" : "regular"}
+              className="relative z-10 text-[24px]"
+            />
             <span className="relative z-10 font-sans text-[8px] leading-4 font-bold tracking-wider uppercase">
               {item.label}
             </span>
@@ -118,7 +116,7 @@ export function QuickActionFab({
           transition={transitionEaseSmooth}
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
         >
-          <span className="material-symbols-outlined text-[32px] text-primary">add</span>
+          <AppIcon name="add" className="scale-75 text-[32px] text-primary" />
         </motion.div>
 
         <motion.div
@@ -155,7 +153,7 @@ export function QuickActionFab({
                       : "bg-primary/10 text-primary"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[20px]">{action.iconName}</span>
+                  <AppIcon name={action.iconName} className="text-[20px]" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span

@@ -62,7 +62,7 @@ export async function submitVendorBill(
     // PM Scoping check
     try {
       const userRoleName = await resolveRoleName(session.user.roleId);
-      if (userRoleName === "PROJECT_MANAGER" || userRoleName === "DESIGNER") {
+      if (userRoleName === "PROJECT_MANAGER") {
         await assertProjectAccess(projectId, session.user.id, userRoleName);
       }
       await assertProjectIsOperational(projectId);

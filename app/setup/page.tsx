@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getBootstrapStatus } from "@/app/actions/administration";
-import { SetupOwnerForm } from "@/features/administration/components/setup-owner-form";
+import { SetupOwnerForm } from "@/features/administration/components/forms/setup-owner-form";
 
 export const dynamic = "force-dynamic";
 

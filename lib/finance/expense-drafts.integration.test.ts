@@ -13,8 +13,8 @@ import { approval, auditLog, formDraft, projectCost, projectExpenses } from "@/d
 import {
   createBlankExpenseDraft,
   createBlankExpenseLine,
-} from "@/features/expenses/components/expense-form-utils";
-import type { ExpenseDraftPayload } from "@/features/expenses/components/expense-form-types";
+} from "@/features/expenses/utils/expense-form-utils";
+import type { ExpenseDraftPayload } from "@/features/expenses/types/expense-form-types";
 import { auth } from "@/lib/auth";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
 

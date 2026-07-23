@@ -157,7 +157,7 @@ export async function createBankAccount(
         await mutateBalance({
           tx,
           bankAccountId: created.id,
-          type: "DEBIT",
+          type: "INFLOW",
           amount: toMoney(validation.data.openingBalance),
           category: "opening_balance",
           description: validation.data.openingNote?.trim() || `Saldo awal ${created.name}`,
@@ -387,7 +387,7 @@ export async function transferBetweenBankAccounts(
       await mutateBalance({
         tx,
         bankAccountId: fromAccount.id,
-        type: "CREDIT",
+        type: "OUTFLOW",
         amount: toMoney(validation.data.amount),
         category: "bank_transfer_out",
         description: `${validation.data.description.trim()} ke ${toAccount.name}${descriptionSuffix}`,
@@ -399,7 +399,7 @@ export async function transferBetweenBankAccounts(
       await mutateBalance({
         tx,
         bankAccountId: toAccount.id,
-        type: "DEBIT",
+        type: "INFLOW",
         amount: toMoney(validation.data.amount),
         category: "bank_transfer_in",
         description: `${validation.data.description.trim()} dari ${fromAccount.name}${descriptionSuffix}`,

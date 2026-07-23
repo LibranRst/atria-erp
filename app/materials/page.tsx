@@ -4,8 +4,8 @@ import { getMaterialOperationsDashboard } from "@/app/actions/material/operation
 import {
   MaterialGroupSurface,
   MaterialInlineState,
-} from "@/features/materials/components/material-page-primitives";
-import { MaterialsControlCenter } from "@/features/materials/components/materials-control-center";
+} from "@/features/materials/components/shared/material-page-primitives";
+import { MaterialsControlCenter } from "@/features/materials/components/workspaces/materials-control-center";
 
 export const dynamic = "force-dynamic";
 

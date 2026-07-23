@@ -19,6 +19,7 @@ import {
 } from "@/lib/finance/dashboard-overview";
 import type { ActionResponse } from "@/lib/types/action-response";
 import {
+  isLowStockThresholdBreached,
   outstandingAmount,
   toCategoryCode,
   type FinanceDashboardCashDueGroup,
@@ -188,8 +189,11 @@ export async function getFinanceDashboardOverview(): Promise<
           Number(item.averageCost),
       0,
     );
-    const lowStockCount = inventoryRows.filter(
-      (item) => Number(item.currentStock) - Number(item.reservedStock) <= Number(item.minimumStock),
+    const lowStockCount = inventoryRows.filter((item) =>
+      isLowStockThresholdBreached(
+        Number(item.currentStock) - Number(item.reservedStock),
+        Number(item.minimumStock),
+      ),
     ).length;
     const liveRapItems = rapItems.filter(
       (item) => activeProjectIds.includes(item.rap.projectId) && item.rap.status !== "SUPERSEDED",
@@ -283,7 +287,7 @@ export async function getFinanceDashboardOverview(): Promise<
       ...inventoryRows.map((item): FinanceDashboardMaterialIssue | null => {
         const available = Number(item.currentStock) - Number(item.reservedStock);
         const minimum = Number(item.minimumStock);
-        if (available > minimum) return null;
+        if (!isLowStockThresholdBreached(available, minimum)) return null;
         return {
           id: `stock-${item.id}`,
           type: "LOW_STOCK",

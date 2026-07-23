@@ -13,6 +13,7 @@ import {
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export function RabRevisionHistoryPanel({
   revisionHistory,
@@ -84,7 +85,7 @@ export function RabRevisionHistoryPanel({
               onClick={() => setHistoryDetailId(order.id)}
               className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-full px-2 text-left"
             >
-              <span className="material-symbols-outlined text-primary">history</span>
+              <AppIcon name="history" className="text-primary" />
               <span className="min-w-0 flex-1 truncate text-xs font-bold">
                 Change Order R{order.baseRevision} ke R{order.revisedRevision}
               </span>

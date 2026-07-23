@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { scopeProjectQuery } from "@/lib/auth/scoping";
 import React from "react";
-import { ProjectListClient } from "@/features/projects/list/components/project-list-client";
+import { ProjectListClient } from "@/features/projects/list/components/views/project-list-client";
 import { requireServerSession } from "@/lib/server/session";
 import { resolveEffectiveProjectHealth } from "@/lib/project/effective-health";
 

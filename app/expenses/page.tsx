@@ -1,7 +1,7 @@
 import React from "react";
 
-import { ExpenseList } from "@/features/expenses/components/expense-list";
-import { getExpensesPageData } from "@/features/expenses/server/expenses-page-data";
+import { ExpenseList } from "@/features/expenses/components/lists/expense-list";
+import { getExpensesPageData } from "@/features/expenses/actions/expenses-page-data";
 
 export const dynamic = "force-dynamic";
 

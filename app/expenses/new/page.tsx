@@ -3,7 +3,7 @@ import { inventoryLocation, materialMaster, project } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { scopeProjectQuery } from "@/lib/auth/scoping";
-import { ExpenseForm } from "@/features/expenses/components/expense-form";
+import { ExpenseForm } from "@/features/expenses/components/forms/expense-form";
 import { requireServerSession } from "@/lib/server/session";
 import React from "react";
 

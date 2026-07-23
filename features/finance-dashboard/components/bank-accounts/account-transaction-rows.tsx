@@ -1,10 +1,10 @@
 import React from "react";
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 
-import { MoneyValue } from "@/components/ui/page-primitives";
-import { DashboardRowGroup } from "@/features/finance-dashboard/components/dashboard-primitives";
-import { DashboardTabEmpty } from "@/features/finance-dashboard/components/dashboard-rows";
-import type { CashTransaction } from "./types";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { DashboardRowGroup } from "@/features/finance-dashboard/components/shared/dashboard-primitives";
+import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
+import type { CashTransaction } from "@/features/finance-dashboard/types/bank-account-types";
 import {
   ActivityDetailChevron,
   useActivityDetail,
@@ -12,7 +12,7 @@ import {
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
 function transactionIcon(transaction: CashTransaction): React.ReactNode {
-  if (transaction.type === "DEBIT") {
+  if (transaction.type === "INFLOW") {
     return <ArrowDownLeft className="h-4 w-4" />;
   }
   return <ArrowUpRight className="h-4 w-4" />;
@@ -39,7 +39,7 @@ export function AccountTransactionRows({
         >
           <span
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-              transaction.type === "DEBIT" ? "bg-primary/8 text-primary" : "bg-error/8 text-error"
+              transaction.type === "INFLOW" ? "bg-primary/8 text-primary" : "bg-error/8 text-error"
             }`}
           >
             {transactionIcon(transaction)}
@@ -56,8 +56,8 @@ export function AccountTransactionRows({
           <MoneyValue
             amount={transaction.amount}
             variant="compactWithFull"
-            prefix={transaction.type === "DEBIT" ? "+" : "-"}
-            tone={transaction.type === "DEBIT" ? "primary" : "danger"}
+            prefix={transaction.type === "INFLOW" ? "+" : "-"}
+            tone={transaction.type === "INFLOW" ? "primary" : "danger"}
             align="right"
             size="sm"
             className="shrink-0"

@@ -538,7 +538,11 @@ describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", (
 
       // 4. Admin Lisa mencairkan dana
       mockUserSession(FINANCE_USER);
-      const payRes = await payFieldRequest(costRes.data.id, BCA_ACC_ID, "TRF-CLAIM-MARMER");
+      const payRes = await payFieldRequest(
+        costRes.data.id,
+        BCA_ACC_ID,
+        `TRF-CLAIM-MARMER-${Date.now()}`,
+      );
       expect(payRes.success).toBe(true);
       if (payRes.success) {
         expect(payRes.data.nextBalance).toBe(balBefore - 260000000);

@@ -4,6 +4,13 @@ Simplify button labels (primary, secondary, and submit labels) inside forms rend
 
 ## Proposed Changes
 
+## Audit Follow-up
+
+- `WorkflowFormSheet` uses equal-width actions when two actions are shown, so the one-word labels retain practical space at 320 px.
+- Button labels are explicitly non-wrapping; workflow meaning remains in the sheet title and review content.
+- Owner onboarding progress is a static, accessible status indicator. It must not use a continuous pulse or custom CSS transition.
+- Motion: existing sheet/modal slide-fade and snappy tap feedback only; no page, tab, or decorative progress animation.
+
 We will audit and modify button labels across the 22 components that use `WorkflowFormSheet` and `OperationalFormSheet`. All labels will be simplified to a single word that remains clear and operational.
 
 ---

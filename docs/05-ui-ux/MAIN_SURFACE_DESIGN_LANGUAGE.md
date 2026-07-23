@@ -7,6 +7,7 @@ This document defines the visual and interaction grammar established by the curr
 Read this document together with:
 
 - `.agents/skills/atria-ui-ux/SKILL.md` as the mandatory UI/UX workflow and verification entrypoint.
+- `docs/05-ui-ux/CONTROL_LANGUAGE.md` for buttons, sheet actions, badges, and color-token policy.
 - `docs/05-ui-ux/IOS26_SOLID_DESIGN_SYSTEM.md` for controls, sheets, and motion.
 - `docs/05-ui-ux/MOBILE_FIRST_UI_UX.md` for role and workflow priorities.
 - `AGENTS.md` for finance, material, RBAC, and implementation safety.
@@ -117,7 +118,7 @@ Gradients are reserved for meaningful identity or established focal surfaces, su
 A standard section consists of:
 
 - a concise title;
-- an optional compact text action with a chevron;
+- an optional compact light-blue capsule action with a chevron;
 - one grouped surface, timeline, or purpose-built comparison;
 - a functional empty/error state in the same visual footprint.
 
@@ -172,6 +173,8 @@ The shared status vocabulary is Healthy, Warning, Critical, Pending, Completed, 
 - Keep success and reconciliation language calm.
 - Do not create a rainbow of category colors or place a status pill on every neutral row.
 - Status copy must describe the condition or impact, not market the product.
+- Use `StatusBadge` for a meaningful state only. Keep 24px status pills, reserve their dot for pending/warning/critical, and use `CountBadge` or filter primitives instead of overloading status badges.
+- Use tokenized `accent` for focus, selection, and tertiary navigation. Do not add raw blue, red, amber, or green palette utilities to UI source.
 
 ## Progress and Data Visualization
 
@@ -189,6 +192,8 @@ Do not add a chart unless trend, distribution, or time-series comparison materia
 ## Actions, Forms, and Sheets
 
 - Each surface should have at most one obvious primary action.
+- Use the shared Button hierarchy: black primary commits, white secondary actions, accent tertiary navigation, and critical variants only for risk/destructive flows. Do not introduce local button class recipes.
+- Sheets keep a single primary commit full-width in the footer. When a safe secondary action is needed, it sits beside the primary in equal columns; headers are for close/navigation, not submit.
 - Keep secondary actions compact and move additional safe actions into a menu or bottom sheet.
 - Primary controls and normal buttons have a minimum 48 px touch target.
 - Standalone inputs and selectors use a white `min-h-12` capsule. Inside `FormSection`, controls become borderless rows on one white grouped surface with visible labels and subtle dividers.

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getDeveloperAccountSimulationState } from "@/app/actions/developer-account-simulation";
 import { getOnboardingReviewState } from "@/app/actions/onboarding-review";
-import { OnboardingFinanceReview } from "@/features/onboarding/onboarding-finance-review";
+import { OnboardingFinanceReview } from "@/features/onboarding/components/workspaces/onboarding-finance-review";
 
 export const dynamic = "force-dynamic";
 

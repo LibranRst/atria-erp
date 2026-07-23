@@ -144,3 +144,7 @@ export function outstandingAmount(amount: number, paidAmount: number, status: st
   if (status === "PAID" || status === "VOID") return 0;
   return Math.max(0, amount - paidAmount);
 }
+
+export function isLowStockThresholdBreached(availableStock: number, minimumStock: number): boolean {
+  return minimumStock > 0 && availableStock <= minimumStock;
+}

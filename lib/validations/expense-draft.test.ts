@@ -6,8 +6,8 @@ import {
   createBlankExpenseLine,
   isExpenseLineComplete,
   mergeExpenseLines,
-} from "@/features/expenses/components/expense-form-utils";
-import { parseLocalExpenseRecovery } from "@/features/expenses/components/use-hybrid-expense-draft";
+} from "@/features/expenses/utils/expense-form-utils";
+import { parseLocalExpenseRecovery } from "@/features/expenses/hooks/use-hybrid-expense-draft";
 import {
   expenseDraftPayloadSchema,
   nextExpenseDraftRevision,

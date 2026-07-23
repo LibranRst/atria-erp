@@ -95,7 +95,7 @@ export const createInventoryOpeningSchema = z
       .array(
         z.object({
           materialInventoryId: uuidSchema("ID inventory material tidak valid."),
-          quantity: z.number().positive("Quantity awal harus lebih besar dari 0."),
+          quantity: z.number().positive("Jumlah awal harus lebih besar dari 0."),
           unitCost: z.number().positive("Average cost awal harus lebih besar dari 0."),
         }),
       )

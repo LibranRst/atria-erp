@@ -7,7 +7,7 @@ import { resolveRoleName } from "./permissions";
  * Menghasilkan kondisi filter Drizzle ORM untuk kueri tabel `project`.
  *
  * - OWNER & FINANCE_ADMIN: Mengembalikan `undefined` (tidak ada filter, akses global).
- * - PROJECT_MANAGER & DESIGNER: Mengembalikan filter `eq(project.projectManagerId, userId)`.
+ * - PROJECT_MANAGER: Mengembalikan filter `eq(project.projectManagerId, userId)`.
  * - Peran lainnya: Mengembalikan kondisi palsu agar data tidak bocor.
  *
  * @param userId ID pengguna aktif
@@ -21,7 +21,7 @@ export function scopeProjectQuery(userId: string, roleName: string) {
     return undefined; // Akses global - tidak ada filter penugasan proyek
   }
 
-  if (normalizedRole === "PROJECT_MANAGER" || normalizedRole === "DESIGNER") {
+  if (normalizedRole === "PROJECT_MANAGER") {
     return eq(project.projectManagerId, userId);
   }
 
@@ -57,8 +57,8 @@ export async function assertProjectAccess(
     return;
   }
 
-  // PROJECT_MANAGER dan DESIGNER dibatasi hanya pada proyek di mana mereka ditugaskan
-  if (normalizedRole === "PROJECT_MANAGER" || normalizedRole === "DESIGNER") {
+  // Hanya PROJECT_MANAGER yang memiliki penugasan proyek pada fase finance saat ini.
+  if (normalizedRole === "PROJECT_MANAGER") {
     const assignedProject = await db.query.project.findFirst({
       where: and(eq(project.id, projectId), eq(project.projectManagerId, userId)),
     });

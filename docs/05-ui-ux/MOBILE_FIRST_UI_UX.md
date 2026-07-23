@@ -39,6 +39,7 @@ Role filtering can hide destinations that are irrelevant or forbidden.
 - Use bottom sheets for quick expense, stock in, reserve, use, and return actions.
 - Avoid wide tables on mobile. Use grouped rows, comparisons, timelines, or domain-specific cards instead.
 - Keep effective touch targets at least 48x48px, including visually compact icon and text actions.
+- Use the shared control language for action hierarchy, sheet footer actions, status badges, count badges, and semantic color tokens; do not introduce local palette or pill variants.
 - Keep primary monetary values on one line with tabular numerals and an exact secondary value when needed.
 - Every main route needs a structural skeleton that mirrors its final content instead of a centered spinner or generic loading card.
 - Changing a horizontal tab or filter may auto-center that control, but it must not scroll the document vertically or collapse the page enough to move the user's reading position.

@@ -48,6 +48,7 @@ Material tracking is attached to the Material category. It must not replace Tuka
 9. Owner Finance & Material Dashboard
 10. Client-facing RAB Estimate based on RAP when useful
 11. AI Finance & Material Brief (deferred; no active Dashboard surface or pipeline)
+12. Cash ledger, bank-statement import, reconciliation history, documented exceptions, and project-closing reconciliation control
 
 ## 5. Supporting Modules
 
@@ -59,6 +60,7 @@ Existing project management, users/roles, dashboard, media handling, design/proj
 - Barcode-heavy warehouse system, FIFO/LIFO accounting valuation, manufacturing, or production planning.
 - External vendor/client portal login.
 - Automatic fund disbursement or important material mutation triggered only by AI.
+- Direct host-to-host bank feeds, automatic bank login, and automatic approval of suggested reconciliation matches.
 
 ## 7. Core Concepts
 
@@ -78,6 +80,7 @@ Existing project management, users/roles, dashboard, media handling, design/proj
 - Expense: actual money spent by project and category. Material/RAP/stock links are allowed only for Material category expenses. Tukang/Subcon expenses may optionally link to their package plan. Operasional and Lain-lain stay simple.
 - Vendor Bill: payable or purchase record linked to vendor/project/material when relevant.
 - Dashboard: owner-readable summary, not a complex accounting dashboard.
+- Rekonsiliasi: finance control that matches one Atria cash record with one bank mutation. A confirmed pair remains visible in history. A documented exception remains unmatched and stores a reason, reviewer, timestamp, and audit evidence.
 
 ## 8. RAP / RAB Rules
 
@@ -113,3 +116,6 @@ Existing project management, users/roles, dashboard, media handling, design/proj
 - Material Inventory shows name, category, spec, brand/code/color, unit, current stock, reserved stock, available stock, minimum/buffer, average cost, last purchase price, location, and status.
 - Expense Tracker supports project, category, description, vendor, amount, quantity, unit cost, status, payment date, receipt/proof, linked material, linked RAP item, and linked stock movement.
 - AI CFO/financial briefing is deferred until the core ERP dashboard and operational flows are stable. The current Dashboard contains no AI briefing entry point or generated analysis.
+- Rekonsiliasi shows **Mutasi bank**, **Catatan Atria**, and **Riwayat** as peer views. Open cash records expose age and exception status; every history row opens the exact Atria/bank pair and reviewer evidence.
+- Bank-statement CSV import never changes balance, skips duplicate fingerprints, and only creates match suggestions. Users explicitly confirm every match. Canonical Atria CSV is supported; raw bank-specific formats require a compatible adapter or manual mapping.
+- Project closing is blocked while a project cash transaction is neither reconciled nor documented as an exception. Documented exceptions remain visible in the closing review.

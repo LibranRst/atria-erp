@@ -19,21 +19,18 @@ import {
   WorkflowFormSheet,
 } from "@/components/ui";
 import { FormField, QuantityStepper, SheetSelect, Textarea } from "@/components/ui";
-import {
-  MaterialSuccessSheet,
-  StockImpactRow,
-  type MaterialOperationSuccess,
-} from "@/features/materials/components/material-form-patterns";
-import { SegmentedTabs } from "@/components/ui/segmented-tabs";
+import { MaterialSuccessSheet, type MaterialOperationSuccess } from "@/features/materials/components/shared/material-success-sheet";
+import { StockImpactRow } from "@/features/materials/components/shared/stock-impact-row";
+import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
 import type { MaterialOption, RapView } from "../shared/rap-rab-manager";
 
 type Operation = "RESERVE" | "USE" | "RETURN" | "WASTE";
 
 const LABELS: Record<Operation, string> = {
-  RESERVE: "Reservasi Material",
-  USE: "Pakai Material",
-  RETURN: "Kembalikan Sisa",
-  WASTE: "Material Terbuang",
+  RESERVE: "Reservasi",
+  USE: "Pakai",
+  RETURN: "Kembalikan",
+  WASTE: "Terbuang",
 };
 const CONTEXT_HELPERS: Record<Operation, string> = {
   RESERVE: "Pilih kebutuhan RAP dan lokasi stok yang akan disiapkan untuk proyek ini.",
@@ -199,13 +196,13 @@ export function StockOperationSheet({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-x-2 gap-y-3">
         {(Object.keys(LABELS) as Operation[]).map((key) => (
           <button
             key={key}
             type="button"
             onClick={() => open(key)}
-            className={`min-h-12 rounded-full px-3 text-xs font-bold ${key === "WASTE" ? "bg-error-container/25 text-error" : "bg-white text-primary ring-1 ring-primary/15"}`}
+            className={`rounded-full px-3 py-3 text-xs font-bold ${key === "WASTE" ? "bg-error-container/10 text-error ring-1 ring-white/15" : "bg-white/10 text-white ring-1 ring-white/15"}`}
           >
             {LABELS[key]}
           </button>

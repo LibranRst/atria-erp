@@ -134,7 +134,7 @@ export function BottomNav(): React.JSX.Element {
   return (
     <nav
       aria-label="Primary mobile navigation"
-      className="border-border bg-surface sticky bottom-0 z-20 h-16 border-t px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,0.24)]"
+      className="sticky bottom-0 z-20 h-16 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,0.24)]"
     >
       <ul className="grid h-full grid-cols-4 items-center gap-1">
         {NAV_ITEMS.map((item: NavItem): React.JSX.Element => {
@@ -197,8 +197,8 @@ type MobileShellProps = Readonly<{
 
 export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
   return (
-    <div className="bg-deep text-text-primary min-h-dvh">
-      <div className="border-border bg-deep mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden border-x shadow-2xl shadow-black/30">
+    <div className="bg-deep min-h-dvh text-text-primary">
+      <div className="bg-deep mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden border-x border-border shadow-2xl shadow-black/30">
         <main className="flex-1 overflow-y-auto px-4 pt-6 pb-6">{children}</main>
         <BottomNav />
       </div>
@@ -288,13 +288,13 @@ export default function Home(): React.JSX.Element {
   return (
     <section className="flex min-h-[calc(100dvh-7rem)] flex-col justify-between gap-8">
       <div className="space-y-6">
-        <div className="border-border bg-surface rounded-3xl border p-5 shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
-          <p className="text-muted text-xs font-semibold tracking-[0.24em] uppercase">Atria ERP</p>
+        <div className="rounded-3xl border border-border bg-surface p-5 shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
+          <p className="text-xs font-semibold tracking-[0.24em] text-muted uppercase">Atria ERP</p>
           <div className="mt-5 space-y-3">
-            <h1 className="text-text-primary text-3xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight text-text-primary">
               Finance-first control room for interior projects.
             </h1>
-            <p className="text-secondary text-sm leading-6">
+            <p className="text-sm leading-6 text-secondary">
               Pantau proyek, ledger kas, dan pengeluaran lapangan dari satu shell seluler yang siap
               dipakai Project Manager di lapangan.
             </p>
@@ -302,22 +302,22 @@ export default function Home(): React.JSX.Element {
         </div>
 
         <div className="grid gap-3">
-          <div className="border-border bg-elevated rounded-2xl border p-4">
-            <p className="text-muted text-xs font-medium">Primary workflow</p>
-            <p className="text-text-primary mt-1 text-base font-semibold">
+          <div className="rounded-2xl border border-border bg-elevated p-4">
+            <p className="text-xs font-medium text-muted">Primary workflow</p>
+            <p className="mt-1 text-base font-semibold text-text-primary">
               Projects → Ledger → Add Expense → Profile
             </p>
           </div>
-          <div className="border-border bg-surface rounded-2xl border p-4">
-            <p className="text-muted text-xs font-medium">Design foundation</p>
-            <p className="text-text-primary mt-1 text-base font-semibold">
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <p className="text-xs font-medium text-muted">Design foundation</p>
+            <p className="mt-1 text-base font-semibold text-text-primary">
               iOS 26 Solid tokens, 48px touch targets, and sticky thumb navigation.
             </p>
           </div>
         </div>
       </div>
 
-      <p className="text-muted pb-2 text-center text-xs leading-5">
+      <p className="pb-2 text-center text-xs leading-5 text-muted">
         Gunakan navigasi bawah untuk berpindah ke modul utama Atria ERP.
       </p>
     </section>

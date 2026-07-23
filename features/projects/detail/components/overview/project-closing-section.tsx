@@ -3,7 +3,7 @@
 import React from "react";
 
 import { FormField, Textarea } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/page-primitives";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import type { ProjectClosingChecklist } from "@/app/actions/project/closing";
 
 export function ProjectClosingSection({
@@ -60,6 +60,12 @@ export function ProjectClosingSection({
             />
             <ClosingFact label="Posisi kas" amount={closingChecklist.cashPosition} />
           </div>
+          {closingChecklist.documentedReconciliationExceptionCount > 0 ? (
+            <p className="rounded-2xl bg-warning/8 px-3 py-2.5 text-[10px] leading-4 text-warning">
+              {closingChecklist.documentedReconciliationExceptionCount} transaksi kas memiliki
+              pengecualian rekonsiliasi tercatat. Periksa alasannya sebelum menyelesaikan proyek.
+            </p>
+          ) : null}
           {closingChecklist.blockers.length > 0 ? (
             <div className="rounded-2xl bg-error-container/25 p-3">
               <p className="text-xs font-bold text-error">Belum dapat ditutup</p>
@@ -96,7 +102,7 @@ export function ProjectClosingSection({
                 }
                 className="min-h-12 w-full rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
               >
-                Selesaikan proyek dan simpan snapshot final
+                Selesaikan proyek dan simpan ringkasan akhir
               </button>
             </>
           )}

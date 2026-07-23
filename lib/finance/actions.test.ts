@@ -2,12 +2,7 @@ import { db } from "@/db";
 import { project, clientInvoice, bankAccount, projectBudget } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import {
-  createProjectBudget,
-  createBudgetItem,
-  submitBudgetForApproval,
-  approveBudget,
-} from "@/app/actions/project/budget";
+import { createProjectBudget, createBudgetItem } from "@/app/actions/project/budget";
 import { recordClientPayment } from "@/app/actions/finance/record-client-payment";
 import { createClientInvoice } from "@/app/actions/finance/create-client-invoice";
 import { getDashboardStats } from "@/app/actions/finance/get-dashboard-stats";
@@ -128,11 +123,11 @@ describe("Atria ERP Server Actions - TSK-007", () => {
       expect(res.success).toBe(false);
       if (!res.success) {
         expect(res.error.code).toBe("FORBIDDEN");
-        expect(res.error.message).toContain("APPROVED");
+        expect(res.error.message).toContain("berbasis kategori");
       }
     });
 
-    it("harus mendukung alur pembuatan, pengajuan, dan persetujuan draf anggaran baru", async () => {
+    it("harus menutup jalur pembuatan budget legacy tanpa meninggalkan data parsial", async () => {
       mockUserSession(OWNER_USER);
 
       // Buat proyek baru untuk test budget lifecycle
@@ -149,49 +144,17 @@ describe("Atria ERP Server Actions - TSK-007", () => {
         .returning();
 
       mockUserSession(PM_BUDI_USER);
-      // 1. Buat draf budget
       const budgetRes = await createProjectBudget(testProj.id);
-      expect(budgetRes.success).toBe(true);
-      if (!budgetRes.success) return;
-      const budgetId = budgetRes.data.id;
-      expect(budgetRes.data.status).toBe("DRAFT");
-
-      // 2. Tambah item budget
-      const itemRes = await createBudgetItem({
-        projectBudgetId: budgetId,
-        costCategoryId: MATERIAL_CATEGORY_ID,
-        name: "Lantai Vinyl Kayu",
-        budgetCategory: "Pekerjaan Lantai",
-        quantity: 50,
-        unit: "m2",
-        unitPrice: 300000,
-      });
-      expect(itemRes.success).toBe(true);
-
-      // 3. Submit budget
-      const submitRes = await submitBudgetForApproval(budgetId);
-      expect(submitRes.success).toBe(true);
-      if (!submitRes.success) return;
-      expect(submitRes.data.status).toBe("PENDING_APPROVAL");
-
-      // 4. Coba approve oleh PM Budi (harus ditolak)
-      const badApproveRes = await approveBudget(budgetId);
-      expect(badApproveRes.success).toBe(false);
-      if (!badApproveRes.success) {
-        expect(badApproveRes.error.code).toBe("FORBIDDEN");
+      expect(budgetRes.success).toBe(false);
+      if (!budgetRes.success) {
+        expect(budgetRes.error.code).toBe("FORBIDDEN");
+        expect(budgetRes.error.message).toContain("berbasis kategori");
       }
+      const persistedLegacyBudget = await db.query.projectBudget.findFirst({
+        where: eq(projectBudget.projectId, testProj.id),
+      });
+      expect(persistedLegacyBudget).toBeUndefined();
 
-      // 5. Approve oleh Owner Ronald
-      mockUserSession(OWNER_USER);
-      const approveRes = await approveBudget(budgetId);
-      expect(approveRes.success).toBe(true);
-      if (!approveRes.success) return;
-      expect(approveRes.data.status).toBe("APPROVED");
-      expect(approveRes.data.approvedById).toBe(OWNER_USER.id);
-
-      // Clean up
-      await db.delete(clientInvoice).where(eq(clientInvoice.projectId, testProj.id));
-      await db.delete(projectBudget).where(eq(projectBudget.projectId, testProj.id));
       await db.delete(project).where(eq(project.id, testProj.id));
     });
   });
@@ -226,7 +189,7 @@ describe("Atria ERP Server Actions - TSK-007", () => {
         bankAccountId: BCA_ACC_ID,
         amountPaid: 20000000,
         paymentDate: new Date(),
-        referenceNumber: `TRF-TEST-PARTIAL`,
+        referenceNumber: `TRF-TEST-PARTIAL-${Date.now()}`,
       });
 
       expect(partialRes.success).toBe(true);
@@ -258,7 +221,7 @@ describe("Atria ERP Server Actions - TSK-007", () => {
         bankAccountId: BCA_ACC_ID,
         amountPaid: 30000000,
         paymentDate: new Date(),
-        referenceNumber: `TRF-TEST-FINAL`,
+        referenceNumber: `TRF-TEST-FINAL-${Date.now()}`,
       });
 
       expect(finalRes.success).toBe(true);
@@ -305,7 +268,7 @@ describe("Atria ERP Server Actions - TSK-007", () => {
           name: "Test Manual Invoice Project",
           clientId: "44444444-4444-4444-4444-444444444441",
           projectManagerId: PM_BUDI_USER.id,
-          status: "DRAFT",
+          status: "ACTIVE",
           totalContractValue: "100000000.00",
         })
         .returning();
@@ -348,7 +311,7 @@ describe("Atria ERP Server Actions - TSK-007", () => {
       }
     });
 
-    it("harus meng-generate invoice secara otomatis (DP, Progress 1, Pelunasan) saat budget disetujui", async () => {
+    it("tidak menerbitkan invoice melalui jalur persetujuan budget legacy", async () => {
       mockUserSession(PM_BUDI_USER);
 
       // 1. Buat project test baru (dengan totalContractValue 300jt)
@@ -363,56 +326,18 @@ describe("Atria ERP Server Actions - TSK-007", () => {
         })
         .returning();
 
-      // 2. Buat draft budget
       const budgetRes = await createProjectBudget(newProj.id);
-      expect(budgetRes.success).toBe(true);
-      const testBudgetId = budgetRes.success ? budgetRes.data.id : "";
+      expect(budgetRes.success).toBe(false);
+      if (!budgetRes.success) {
+        expect(budgetRes.error.message).toContain("berbasis kategori");
+      }
 
-      // 3. Tambahkan item budget
-      const itemRes = await createBudgetItem({
-        projectBudgetId: testBudgetId,
-        costCategoryId: MATERIAL_CATEGORY_ID,
-        name: "Test Material Kabinet",
-        budgetCategory: "Material",
-        quantity: 1,
-        unit: "set",
-        unitPrice: 100000000,
-      });
-      expect(itemRes.success).toBe(true);
-
-      // 4. Submit budget untuk diajukan ke Owner
-      const submitRes = await submitBudgetForApproval(testBudgetId);
-      expect(submitRes.success).toBe(true);
-
-      // 5. Ubah ke sesi Owner untuk menyetujui budget
-      mockUserSession(OWNER_USER);
-      const approveRes = await approveBudget(testBudgetId);
-      expect(approveRes.success).toBe(true);
-
-      // 6. Verifikasi bahwa 3 invoice ter-generate otomatis (DP, PROGRESS_1, PELUNASAN)
       const invoices = await db.query.clientInvoice.findMany({
         where: eq(clientInvoice.projectId, newProj.id),
       });
 
-      expect(invoices.length).toBe(3);
+      expect(invoices).toHaveLength(0);
 
-      const dpInv = invoices.find((inv) => inv.stage === "DP");
-      const progressInv = invoices.find((inv) => inv.stage === "PROGRESS_1");
-      const pelunasanInv = invoices.find((inv) => inv.stage === "PELUNASAN");
-
-      expect(dpInv).toBeDefined();
-      expect(progressInv).toBeDefined();
-      expect(pelunasanInv).toBeDefined();
-
-      // DP = 30% * 300jt = 90jt
-      expect(Number(dpInv!.amount)).toBe(90000000);
-      // PROGRESS_1 = 50% * 300jt = 150jt
-      expect(Number(progressInv!.amount)).toBe(150000000);
-      // PELUNASAN = 20% * 300jt = 60jt
-      expect(Number(pelunasanInv!.amount)).toBe(60000000);
-
-      // Clean up
-      await db.delete(clientInvoice).where(eq(clientInvoice.projectId, newProj.id));
       await db.delete(project).where(eq(project.id, newProj.id));
     });
   });

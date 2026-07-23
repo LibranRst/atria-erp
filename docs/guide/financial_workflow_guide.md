@@ -1,9 +1,14 @@
 # Walkthrough UAT Atria ERP — Dari Data Operasional Kosong sampai Project Closing
 
-Versi implementasi: **18 Juli 2026**
+Versi implementasi: **22 Juli 2026**
 Audit pendamping: `docs/guide/workflow_audit_2026-07-16.md`
 
 Dokumen ini adalah runbook acceptance test. Ikuti urutannya, ganti role sesuai instruksi, dan catat nilai sebelum/sesudah setiap action. Jangan memakai project atau transaksi seed sebagai titik awal.
+
+> **Pilih mode test:** dokumen ini menguji onboarding dan operasi seperti production dari database
+> kosong. Untuk belajar memakai data contoh yang sudah saling terhubung, gunakan
+> [`seeded_demo_walkthrough.md`](./seeded_demo_walkthrough.md). Jangan mencampur kedua dataset dalam
+> satu run.
 
 ### Cara membaca contoh form
 
@@ -134,6 +139,7 @@ Gunakan refresh browser setelah mencatat hasil instan. Nilai setelah refresh har
 | Budget             | `/ledger?tab=budget` dan `/projects/<id>?tab=overview` | Project value, Internal Budget, Actual/Consumed, Paid, Remaining, Used %, margin dan category risk    |
 | Jatuh tempo        | `/ledger?tab=cash`                                     | Vendor bill/client invoice outstanding dan tanggal jatuh tempo                                        |
 | Rekening           | `/ledger?tab=accounts`                                 | Saldo tiap rekening, total cash, dan transaksi kas terbaru                                            |
+| Rekonsiliasi bank  | `/reconciliation`                                      | Transaksi internal belum cocok, mutasi rekening koran belum cocok, dan pasangan yang akan disahkan    |
 | Expenses           | `/expenses` → **Pengeluaran**                          | Diajukan/Terverifikasi/Disetujui/Lunas, antrean, biaya aktual, nilai dibayar, rekening pencairan      |
 | Tagihan vendor     | `/expenses` → **Tagihan**                              | Belum dibayar/Dibayar sebagian/Lunas, nominal bill, terjadwal, dibayar, dan sisa                      |
 | Rencana bayar      | `/expenses` → **Rencana Bayar**                        | Menunggu/Sedang diproses/Selesai/Gagal, approval, tanggal rencana, rekening, dan referensi            |
@@ -148,62 +154,65 @@ Gunakan refresh browser setelah mencatat hasil instan. Nilai setelah refresh har
 
 ### 4.1.1 Cara membaca detail aktivitas
 
-Row event individual pada **Aktivitas**, **Riwayat**, **Transaksi terbaru**, dan timeline dapat diketuk. Ketuk seluruh badan row—bukan hanya nominal atau icon—lalu baca drawer **Detail aktivitas** yang mengambil ulang record canonical dari database.
+Setiap baris pada **Aktivitas**, **Riwayat**, **Transaksi terbaru**, dan timeline dapat diketuk. Ketuk seluruh baris—bukan hanya nominal atau ikon—lalu baca drawer **Detail aktivitas** yang menampilkan data terbaru yang tersedia.
 
 Urutan pemeriksaan di drawer:
 
 1. **Identitas**: cocokkan judul, status, pelaku, dan waktu dengan aksi yang baru dilakukan.
-2. **Fakta transaksi**: cocokkan quantity, unit cost, subtotal/amount, lokasi, proyek, rekening, dan reference dokumen.
+2. **Rincian transaksi**: cocokkan jumlah, harga satuan, subtotal/nominal, lokasi, proyek, rekening, dan referensi dokumen.
 3. **Perubahan**: bila section ini ada, bandingkan nilai Sebelum dan Sesudah. Section tidak ditampilkan bila histori lama tidak menyimpan bukti before-state.
 4. **Dampak bisnis**: pastikan arah stok, budget, kas, utang, piutang, atau nilai kontrak sesuai matriks mutation di bawah.
 5. **Catatan & bukti**: periksa alasan approval/rejection/reversal dan nomor referensi. Pesan “Data perubahan historis belum tercatat lengkap” berarti sistem sengaja tidak mengarang data lama.
 6. Gunakan CTA bagian bawah untuk membuka sumber yang diizinkan bagi role aktif. CTA yang tidak muncul bukan bukti record hilang; akses sumber dapat dibatasi RBAC.
 
-| Row yang diketuk                                       | Detail utama yang harus cocok                                | Dampak yang harus diperiksa                                                          |
-| ------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| Materials → Pergerakan stok / Project → Aktivitas stok | Material, lokasi, quantity, unit cost, movement type, actor  | Stok lokasi naik/turun; reserve/use/return/waste tidak membuat cash movement sendiri |
-| Materials → Transfer                                   | Lokasi asal/tujuan, item, quantity, nilai                    | Asal turun, tujuan naik, net stock global nol, kas tetap                             |
-| Materials → Stock opname                               | System quantity, counted quantity, variance, checker, alasan | Adjustment stock/value hanya setelah posted/approved, kas tetap                      |
-| Materials → Saldo awal                                 | Seluruh item, unit cost, subtotal, total, checker            | Stock dan inventory value naik setelah POSTED; kas, utang, actual proyek tetap       |
-| Expenses → Riwayat pengeluaran                         | Quantity, unit cost, subtotal, kategori, pengaju/checker     | Actual/paid mengikuti status; kas hanya berubah setelah PAID                         |
-| Expenses → Tagihan/Rencana bayar                       | Bill, vendor, scheduled/paid, rekening, reference            | Utang dan kas berubah pada tahap yang tepat                                          |
-| Dashboard/Rekening → Transaksi terbaru                 | DEBIT/CREDIT, amount, rekening, sumber, rekonsiliasi         | DEBIT menambah kas; CREDIT mengurangi kas                                            |
-| Project → Invoice/pembayaran                           | Invoice, paid, outstanding, rekening, reference              | Pembayaran mengurangi piutang dan menambah kas                                       |
-| Project → Riwayat RAB/Change Order                     | Revisi, nilai sebelum/sesudah, delta, actor, alasan          | Nilai kontrak hanya berubah lewat workflow Change Order yang disetujui               |
+| Row yang diketuk                                       | Detail utama yang harus cocok                                    | Dampak yang harus diperiksa                                                          |
+| ------------------------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Materials → Pergerakan stok / Project → Aktivitas stok | Material, lokasi, jumlah, harga satuan, jenis pergerakan, pelaku | Stok lokasi naik/turun; reservasi/pakai/kembali/terbuang tidak mengubah kas sendiri  |
+| Materials → Transfer                                   | Lokasi asal/tujuan, item, quantity, nilai                        | Asal turun, tujuan naik, net stock global nol, kas tetap                             |
+| Materials → Stock opname                               | Jumlah di sistem, hasil hitung fisik, selisih, pemeriksa, alasan | Penyesuaian stok/nilai hanya setelah diposting atau disetujui, kas tetap             |
+| Materials → Saldo awal                                 | Seluruh item, harga satuan, subtotal, total, pemeriksa           | Stok dan nilai persediaan naik setelah diposting; kas, utang, realisasi proyek tetap |
+| Expenses → Riwayat pengeluaran                         | Jumlah, harga satuan, subtotal, kategori, pengaju/pemeriksa      | Realisasi/dibayar mengikuti status; kas hanya berubah setelah lunas                  |
+| Expenses → Tagihan/Rencana bayar                       | Bill, vendor, scheduled/paid, rekening, reference                | Utang dan kas berubah pada tahap yang tepat                                          |
+| Dashboard/Rekening → Transaksi terbaru                 | Dana masuk/keluar, nominal, rekening, sumber, rekonsiliasi       | Dana masuk menambah kas; dana keluar mengurangi kas                                  |
+| Project → Invoice/pembayaran                           | Invoice, paid, outstanding, rekening, reference                  | Pembayaran mengurangi piutang dan menambah kas                                       |
+| Project → Riwayat RAB/Change Order                     | Revisi, nilai sebelum/sesudah, delta, actor, alasan              | Nilai kontrak hanya berubah lewat workflow Change Order yang disetujui               |
 
 ### 4.2 Matriks efek mutation yang benar
 
-| Mutation nyata                           | Surface asal                                      | Perubahan yang wajib terlihat                                                  | Surface silang                            | Angka yang wajib tetap                                       |
-| ---------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------- | ------------------------------------------------------------ |
-| `createBankAccount` dengan saldo awal    | Onboarding **Rekening** atau Dashboard → Rekening | Rekening baru dan saldo awal                                                   | `/ledger` Ringkasan + Rekening            | Project budget, payable, receivable dan stock                |
-| `approveRabEstimate` initial             | Project → RAB                                     | RAB APPROVED, project value dan canonical allocation terbentuk                 | Project Overview + `/ledger?tab=budget`   | Kas, stock, payable dan receivable                           |
-| `reserveMaterialForProject`              | Materials action **Reserve**                      | Reserved naik, Available turun, Current tetap                                  | Project → Stok + Materials → Aktivitas    | Kas, actual, paid dan average cost                           |
-| `submitVendorBill` kategori Material     | Expenses → Tagihan                                | Bill UNPAID dan payable naik                                                   | `/ledger` Ringkasan/Jatuh Tempo           | Kas, Material actual, Material paid dan stock                |
-| `submitVendorBill` kategori non-Material | Expenses → Tagihan                                | Bill UNPAID; canonical actual mengikuti source non-material                    | Project Overview + Budget tab             | Kas dan stock                                                |
-| `scheduleVendorBillPayment`              | Tagihan → Jadwalkan                               | Payment PENDING; scheduled/committed naik                                      | Rencana Bayar + Approval bila high-risk   | Kas, paid dan stock                                          |
-| `approveVendorPayment`                   | Approval drawer                                   | Approval APPROVED dan action pencairan menjadi tersedia                        | Expenses → Rencana Bayar                  | Kas, paid, bill outstanding dan stock                        |
-| `payVendorBill`                          | Rencana Bayar → Cairkan                           | Payment COMPLETED, bill paid/outstanding berubah, reference tersimpan          | `/ledger?tab=accounts` + Budget           | Current stock dan Material actual untuk inventory purchase   |
-| `postGoodsReceipt`                       | Materials → Goods Receipt                         | Current dan asset value naik; receipt POSTED                                   | Inventory + Aktivitas + Project Stok      | Kas, paid dan payable                                        |
-| `useMaterialForProject`                  | Materials action **Use**                          | Current turun, reserve milik project dikonsumsi, Material actual naik          | Project Stok + Project Overview           | Kas dan paid                                                 |
-| `returnMaterialFromProject`              | Materials action **Return**                       | Current naik, net used dan Material actual turun                               | Project Stok + Aktivitas                  | Kas dan paid; return tidak otomatis membuat reservation baru |
-| `wasteMaterialForProject`                | Materials action **Waste**                        | Current turun, waste dan Material actual naik; shortage bisa naik              | Project Stok + Budget + Aktivitas         | Kas dan paid                                                 |
-| `submitFieldRequest(s)`                  | Expense form                                      | Request SUBMITTED dan pending category naik                                    | Project Overview/Budget                   | Actual, paid, kas dan stock kecuali explicit stock handling  |
-| `verifyFieldRequest`                     | Expense review                                    | Normal request dapat APPROVED; high-risk berhenti VERIFIED/menunggu Owner      | Approval + Budget                         | Kas dan paid                                                 |
-| `approveFieldRequest`                    | Approval drawer                                   | Request APPROVED dan actual canonical final                                    | Expenses + Project Budget                 | Kas dan paid                                                 |
-| `payFieldRequest`                        | Expenses → Cairkan                                | Request PAID, category paid naik, saldo rekening turun, CREDIT ledger tercatat | `/ledger?tab=accounts` + Project Overview | Stock tanpa explicit material handling                       |
-| `createClientInvoice`                    | Project → Invoice                                 | Invoice/outstanding receivable naik                                            | `/ledger` Ringkasan/Jatuh Tempo           | Kas sampai pembayaran diterima                               |
-| `recordClientPayment`                    | Invoice → Catat Pembayaran                        | Invoice paid/outstanding berubah, saldo rekening naik, DEBIT ledger tercatat   | `/ledger?tab=accounts` + Ringkasan        | Budget actual, stock dan payable                             |
+| Mutation nyata                           | Surface asal                                      | Perubahan yang wajib terlihat                                                                        | Surface silang                             | Angka yang wajib tetap                                       |
+| ---------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------ |
+| `createBankAccount` dengan saldo awal    | Onboarding **Rekening** atau Dashboard → Rekening | Rekening baru dan saldo awal                                                                         | `/ledger` Ringkasan + Rekening             | Project budget, payable, receivable dan stock                |
+| `approveRabEstimate` initial             | Project → RAB                                     | RAB APPROVED, project value dan canonical allocation terbentuk                                       | Project Overview + `/ledger?tab=budget`    | Kas, stock, payable dan receivable                           |
+| `reserveMaterialForProject`              | Materials action **Reserve**                      | Reserved naik, Available turun, Current tetap                                                        | Project → Stok + Materials → Aktivitas     | Kas, actual, paid dan average cost                           |
+| `submitVendorBill` kategori Material     | Expenses → Tagihan                                | Bill UNPAID dan payable naik                                                                         | `/ledger` Ringkasan/Jatuh Tempo            | Kas, Material actual, Material paid dan stock                |
+| `submitVendorBill` kategori non-Material | Expenses → Tagihan                                | Bill UNPAID; canonical actual mengikuti source non-material                                          | Project Overview + Budget tab              | Kas dan stock                                                |
+| `scheduleVendorBillPayment`              | Tagihan → Jadwalkan                               | Payment PENDING; scheduled/committed naik                                                            | Rencana Bayar + Approval bila high-risk    | Kas, paid dan stock                                          |
+| `approveVendorPayment`                   | Approval drawer                                   | Approval APPROVED dan action pencairan menjadi tersedia                                              | Expenses → Rencana Bayar                   | Kas, paid, bill outstanding dan stock                        |
+| `payVendorBill`                          | Rencana Bayar → Cairkan                           | Payment COMPLETED, bill paid/outstanding berubah, reference tersimpan, transaksi kas **belum cocok** | `/ledger?tab=accounts` + `/reconciliation` | Current stock dan Material actual untuk inventory purchase   |
+| `postGoodsReceipt`                       | Materials → Goods Receipt                         | Current dan asset value naik; receipt POSTED                                                         | Inventory + Aktivitas + Project Stok       | Kas, paid dan payable                                        |
+| `useMaterialForProject`                  | Materials action **Use**                          | Current turun, reserve milik project dikonsumsi, Material actual naik                                | Project Stok + Project Overview            | Kas dan paid                                                 |
+| `returnMaterialFromProject`              | Materials action **Return**                       | Current naik, net used dan Material actual turun                                                     | Project Stok + Aktivitas                   | Kas dan paid; return tidak otomatis membuat reservation baru |
+| `wasteMaterialForProject`                | Materials action **Waste**                        | Current turun, waste dan Material actual naik; shortage bisa naik                                    | Project Stok + Budget + Aktivitas          | Kas dan paid                                                 |
+| `submitFieldRequest(s)`                  | Expense form                                      | Request SUBMITTED dan pending category naik                                                          | Project Overview/Budget                    | Actual, paid, kas dan stock kecuali explicit stock handling  |
+| `verifyFieldRequest`                     | Expense review                                    | Normal request dapat APPROVED; high-risk berhenti VERIFIED/menunggu Owner                            | Approval + Budget                          | Kas dan paid                                                 |
+| `approveFieldRequest`                    | Approval drawer                                   | Request APPROVED dan actual canonical final                                                          | Expenses + Project Budget                  | Kas dan paid                                                 |
+| `payFieldRequest`                        | Expenses → Cairkan                                | Request PAID, category paid naik, saldo rekening turun, OUTFLOW ledger tercatat dan **belum cocok**  | `/ledger?tab=accounts` + `/reconciliation` | Stock tanpa explicit material handling                       |
+| `createClientInvoice`                    | Project → Invoice                                 | Invoice/outstanding receivable naik                                                                  | `/ledger` Ringkasan/Jatuh Tempo            | Kas sampai pembayaran diterima                               |
+| `recordClientPayment`                    | Invoice → Catat Pembayaran                        | Invoice paid/outstanding berubah, saldo rekening naik, INFLOW ledger tercatat dan **belum cocok**    | `/ledger?tab=accounts` + `/reconciliation` | Budget actual, stock dan payable                             |
+| `importBankStatementCsv`                 | `/reconciliation` → Impor CSV                     | Baris rekening koran baru dibuat; duplikat dilewati dan saldo tidak berubah                          | `/reconciliation`                          | Saldo sistem, budget, payable, receivable, dan stock         |
+| `recordBankStatementRow`                 | `/reconciliation` → Catat mutasi                  | Satu baris rekening koran **belum cocok** dibuat                                                     | `/reconciliation`                          | Saldo sistem, budget, payable, receivable, dan stock         |
+| `reconcileCashTransaction`               | `/reconciliation` → Cocokkan                      | Satu transaksi kas dan satu mutasi rekening koran menjadi **Cocok**                                  | `/ledger?tab=accounts` + `/reconciliation` | Saldo, budget, payable, receivable, dan stock                |
 
-### 4.3 Arti angka canonical yang tidak boleh tertukar
+### 4.3 Arti angka bisnis yang tidak boleh tertukar
 
 - **Allocated**: batas kategori dari canonical `projectBudgetCategory`.
 - **Pending**: request yang sudah diajukan tetapi belum menjadi actual final.
 - **Actual/Consumed**: biaya yang diakui ke project. Inventory purchase tidak menjadi Material actual saat bill dibayar; actual muncul ketika material dipakai atau menjadi waste.
 - **Paid**: cash outflow yang sudah dicairkan dan diatribusikan ke kategori. Karena timing berbeda, `Paid` dapat lebih besar daripada `Actual`, terutama untuk pembelian inventory yang belum dipakai.
 - **Remaining**: `Allocated - Actual`, bukan `Allocated - Paid`.
-- **Current stock**: quantity fisik di lokasi.
-- **Reserved stock**: stock gudang yang belum keluar tetapi diamankan untuk project.
-- **Available stock**: `Current - Reserved`.
+- **Stok fisik**: jumlah barang yang secara fisik berada di lokasi.
+- **Stok direservasi**: stok gudang yang belum keluar, tetapi sudah diamankan untuk proyek.
+- **Stok tersedia**: `Stok fisik - Stok direservasi`.
 - **Secured project**: unit yang secara canonical sudah aman untuk project; receipt dan reservation atas unit yang sama tidak boleh dihitung dua kali.
 - **Need to buy**: kekurangan RAP setelah proyeksi secured/used/return/waste. Global free stock tidak otomatis dianggap milik project sebelum di-reserve.
 
@@ -335,7 +344,7 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
   - Klik **Simpan** untuk masing-masing rekening.
 - **Expected**:
   - Terbuat 2 rekening baru dengan total saldo kas terkonsolidasi menjadi **Rp110.000.000**.
-  - Karena saldo awal > 0, sistem otomatis mencatat transaksi ledger `DEBIT` dengan kategori `opening_balance` dan membuat log audit.
+  - Karena saldo awal > 0, sistem otomatis mencatat transaksi ledger `INFLOW` dengan kategori `opening_balance` dan membuat log audit.
   - Di **Verification snapshot**, cocokkan identitas kedua rekening, saldo aktual total `Rp110.000.000`, serta entry ledger saldo awal. Project cost, payable, receivable, dan stok tidak berubah.
 - Tekan **Lanjut**.
 
@@ -452,20 +461,22 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
     - Klik **Ajukan saldo awal**.
   - **Expected Saat Pending**: Batch berlabel **Menunggu persetujuan** terbuat. Namun, pastikan stok aktual `Multipleks UAT 18mm` di gudang **tetap bernilai 0** dan belum ada pergerakan **Saldo awal stok** yang diposting.
   - **Negative test pengajuan ganda**: Tetap di step **Saldo awal stok**. Inventory yang sudah berada di batch pending harus menjadi tidak eligible dan tombol **Ada stok lama** disabled jika tidak ada kandidat lain. Sistem harus menolak pengajuan kedua untuk kombinasi material/lokasi yang sama.
-  - Ketuk batch pada daftar internal onboarding. Drawer detail harus menampilkan nomor/status batch, nilai inventory `Rp2.500.000`, item `Multipleks UAT 18mm — Gudang UAT Utama`, quantity `10 lembar`, harga pokok `Rp250.000/lembar`, subtotal, pengaju, dokumen referensi, dan catatan sumber. Dalam status pending, current/reserved/available tetap `0` dan belum ada average cost/movement.
+  - Ketuk batch pada riwayat saldo awal. Drawer detail harus menampilkan nomor/status batch, nilai persediaan `Rp2.500.000`, item `Multipleks UAT 18mm — Gudang UAT Utama`, jumlah `10 lembar`, harga pokok `Rp250.000/lembar`, subtotal, pengaju, dokumen referensi, dan catatan sumber. Selama masih menunggu keputusan, stok fisik/direservasi/tersedia tetap `0` dan belum ada harga rata-rata atau pergerakan stok.
 - **Aksi (2) - Persetujuan Saldo Awal (Checker-Flow)**:
   - **Aturan Keamanan (Maker-Checker)**: Pembuat pengajuan (Purchasing/Owner) tidak boleh menyetujui pengajuannya sendiri.
   - **Production**: Finance Admin login normal. Dari landing setelah login, sistem otomatis membuka restricted **Onboarding Review** jika onboarding belum selesai dan ada setup approval pending. Finance tidak melihat editor budget, tim, rekening, Material Master, atau margin Owner.
   - **Development inline (disarankan untuk walkthrough tunggal)**: Sebagai Owner tekan **Simulasikan Finance Admin** pada batch pending. Baca confirmation effective identity/audit, lalu konfirmasi. Panel yang sama berubah menjadi mode review Finance tanpa logout atau navigation manual. Temporary password Finance tidak memblokir context khusus ini.
   - Pada **Item stok fisik**, pastikan **Jumlah fisik** = `10 lembar`, **Harga per unit** = `Rp250.000`, **Subtotal** = `Rp2.500.000`, dan total batch sama.
   - Isi **Alasan keputusan**: `Saldo fisik dan harga pokok sudah cocok dengan dokumen stock opname.` (minimal 10 karakter), lalu tekan **Setujui & posting**.
-  - Development simulation otomatis berhenti setelah keputusan sukses, session kembali ke Owner, dan step saldo awal menampilkan verification snapshot terbaru. Jika keputusan gagal, mode Finance tetap aktif dan tombol **Kembali ke Owner tanpa keputusan** tersedia.
+  - Pada simulasi development, keputusan **Setujui & posting** otomatis menghentikan simulasi, mengembalikan sesi ke Owner, memuat data terbaru, lalu membuka **Ringkasan**. Keputusan **Tolak** kembali ke langkah saldo awal agar Owner dapat membaca alasan dan memperbaiki pengajuan. Jika penyimpanan keputusan gagal, mode Finance tetap aktif dan tombol **Kembali ke Owner tanpa keputusan** tersedia.
+  - Pada login Finance biasa, keputusan tersimpan lalu pengajuan berikutnya langsung dibuka. Setelah antrean habis, tampil status **Semua saldo awal sudah diperiksa** dengan tombol **Masuk Dashboard**; Finance tidak membuka Ringkasan Owner.
 - **Expected Setelah Diposting**:
   - Status batch berubah menjadi **Diposting**.
   - Stok `Multipleks UAT 18mm` di `Gudang UAT Utama` bertambah secara riil: Stok fisik = `10`, Direservasi = `0`, Tersedia = `10`, Harga rata-rata = `Rp250.000`, Nilai inventori = `Rp2.500.000`.
-  - Tercatat pergerakan tipe **Saldo awal stok**. Kode canonical `OPENING_BALANCE` hanya boleh terlihat pada detail teknis developer.
-  - Saldo kas bank, hutang, dan biaya aktual proyek tetap Rp0 (tidak ada cash impact).
-- Tekan **Lanjut ke Ringkasan**. Status pending tetap boleh membuka Ringkasan, tetapi completion harus terblokir sampai keputusan Finance final.
+  - Tercatat pergerakan tipe **Saldo awal stok**. Kode internal `OPENING_BALANCE` hanya boleh terlihat pada detail teknis developer.
+  - Saldo kas bank, utang, dan realisasi biaya proyek tetap Rp0 karena posting saldo awal stok tidak mengubah kas.
+- Bila masih ada material/lokasi lain yang memenuhi syarat, tombol **Catat saldo awal lainnya** tetap tersedia tanpa menghilangkan status sukses batch yang sudah final.
+- Jika keputusan dilakukan melalui simulasi Finance, Ringkasan terbuka otomatis. Status pending tetap boleh membuka Ringkasan secara manual, tetapi penyelesaian onboarding terblokir sampai seluruh keputusan Finance final.
 
 #### Step 8: Ringkasan (Step ID: `summary`)
 
@@ -574,11 +585,13 @@ Sebelum memulai transaksi proyek, uji pembatasan hak akses (RBAC) antar akun men
    - Pastikan PM tidak bisa melihat total saldo kas organisasi.
 2. **Purchasing Boundary Test**:
    - Kembali ke Owner, lalu simulasikan `Purchasing UAT` atau login normal.
-   - Buka menu Expenses `/expenses`. Pastikan daftar saldo rekening bank diblokir dan tidak terkirim ke browser.
+   - Buka menu Expenses `/expenses`. Purchasing tetap boleh melihat nominal dan status tagihan yang dibutuhkan untuk pengadaan, tetapi pilihan rekening, nama bank, dan saldo tidak ditampilkan.
+   - Arti “data rekening diblokir” adalah server tidak menjalankan query daftar rekening untuk Purchasing dan menghapus relasi rekening dari data pembayaran sebelum respons dikirim ke browser. Ini bukan rekening yang dibekukan di bank.
    - Coba buka menu settings budget `/settings/budget`. Sistem wajib memblokir mutasi budget default oleh Purchasing.
 3. **Finance Admin Boundary Test**:
    - Kembali ke Owner, lalu simulasikan `Finance UAT` atau login normal.
-   - Buka menu Settings. Pastikan menu manajemen user dibatasi hanya untuk Owner.
+   - Buka menu Settings. Finance hanya menerima dan melihat data **Vendor** serta boleh menambah atau memperbaruinya untuk kebutuhan tagihan dan pembayaran.
+   - Tab **User**, daftar user, pilihan role, tombol tambah user, dan drawer edit user tidak dikirim atau dirender. Pemanggilan Server Action manajemen user secara langsung tetap ditolak; hanya Owner yang boleh mengelola user.
 
 ---
 
@@ -805,7 +818,7 @@ Negative tests:
 
 Login Purchasing, buka `/materials`, pilih project dan RAP item.
 
-Reserve 8 lembar di `Gudang UAT Utama`.
+Lakukan **Reserve** ketika material sudah dipastikan tersedia dan sengaja disisihkan untuk proyek, tetapi belum diambil dari gudang oleh tukang. Reserve 8 lembar di `Gudang UAT Utama`.
 
 Contoh form **Reserve Material**:
 
@@ -823,6 +836,8 @@ Contoh form **Reserve Material**:
 | Reserved  |             0 |             8 |
 | Available |            10 |             2 |
 | Cash      | Rp110.000.000 | Rp110.000.000 |
+
+Bukti lapangan yang diperiksa: label/area penyimpanan menunjukkan 8 lembar milik proyek ini dan barang masih berada di gudang. Dampak bisnisnya hanya stok tersedia berkurang; stok fisik, realisasi biaya Material, nilai dibayar, dan kas belum berubah.
 
 Expected: movement `RESERVE` dan audit log dibuat; tidak ada expense/cash transaction.
 
@@ -989,11 +1004,11 @@ Negative cumulative receipt tests:
 3. Jika total nilai receipt dimanipulasi melebihi Rp5.000.000, Server Action harus menolak dan tidak membuat receipt/movement parsial.
 4. Setelah penolakan, periksa `/materials?tab=activity`: hanya satu pergerakan **Penerimaan barang** sebanyak 20 yang boleh ada.
 
-### B6. Use, return, dan waste
+### B6. Pakai, kembalikan, dan catat material terbuang
 
 #### B6.1. Use 8 lembar
 
-Sebagai Purchasing, record Use 8 untuk RAP item UAT.
+Sebagai Purchasing, catat **Use Material** saat 8 lembar sudah diambil dari lokasi stok dan benar-benar digunakan tukang di proyek—bukan saat barang baru dipesan, dibayar, atau sekadar direservasi. Cocokkan dengan serah-terima material, catatan mandor, atau bukti lapangan yang berlaku.
 
 Contoh form **Use Material**:
 
@@ -1016,11 +1031,13 @@ Expected:
 - Material paid tetap Rp5.000.000;
 - cash tetap Rp105.000.000.
 
+Dampak bisnis: stok fisik berkurang dan realisasi biaya kategori Material bertambah memakai harga rata-rata stok. Kas tidak bergerak karena pembayaran vendor dicatat melalui alur tagihan/pembayaran, bukan melalui Use Material.
+
 Pada `/projects/<id>?tab=stok`, expected `used=8`, `reserved outstanding=0`, `leftover=12`, `secured=20`, dan `need to buy=0`.
 
 #### B6.2. Return 1 lembar
 
-Record Return 1.
+Catat **Return** setelah satu lembar yang tidak terpakai benar-benar diterima kembali dan dapat digunakan lagi di gudang. Jangan mencatat Return hanya karena rencana pemakaian berubah sementara barang masih di lapangan.
 
 Contoh form **Return Material**:
 
@@ -1041,11 +1058,13 @@ Expected:
 
 Pada Stok Project, expected `net used=7`, `returned=1`, `leftover receipt=12`, `secured=19`, dan `need to buy=1`. Return masuk kembali sebagai free warehouse stock dan **tidak** diam-diam menjadi reservation project.
 
+Bukti yang diperiksa: lokasi penerima, jumlah fisik, kondisi material, dan catatan pengembalian. Kas dan nilai dibayar tidak berubah.
+
 Negative test: return 8 lagi harus ditolak karena net use tersisa hanya 7.
 
 #### B6.3. Waste 1 lembar
 
-Record Waste 1 dengan audit note minimal 10 karakter.
+Catat **Waste** ketika satu lembar rusak, hilang, atau menjadi sisa potongan yang tidak dapat digunakan lagi. Isi catatan audit minimal 10 karakter dengan kondisi lapangan yang nyata; bila tersedia, cocokkan dengan foto atau laporan mandor.
 
 Contoh form **Waste Material**:
 
@@ -1065,6 +1084,8 @@ Expected:
 - cash tetap.
 
 Pada Stok Project, expected `net used=7`, `returned=1`, `waste=1`, `leftover receipt=11`, `secured=18`, dan `need to buy=2`. Waste mengurangi unit yang aman untuk menyelesaikan RAP sehingga shortage replacement naik satu lagi.
+
+Dampak bisnis: stok fisik dan ketersediaan untuk menyelesaikan RAP berkurang, sedangkan realisasi biaya Material bertambah. Kas tetap tidak bergerak.
 
 Negative test: note terlalu pendek harus ditolak tanpa stock movement.
 
@@ -1241,7 +1262,7 @@ Contoh form **Catat Pembayaran Klien** untuk langkah 1:
 
 | Field                          | Contoh UAT                  |
 | ------------------------------ | --------------------------- |
-| Rekening Penerima Dana (DEBIT) | `BCA · BCA UAT Operasional` |
+| Rekening Penerima Dana         | `BCA · BCA UAT Operasional` |
 | Nominal Diterima               | `2000000`                   |
 | Nomor Referensi Bukti Transfer | `RCV-UAT-DP-001`            |
 | Tanggal Transaksi Diterima     | `<tanggal UAT hari ini>`    |
@@ -1256,7 +1277,7 @@ Contoh form pembayaran dua invoice terakhir:
 
 | Field                          | Progress                    | Pelunasan                   |
 | ------------------------------ | --------------------------- | --------------------------- |
-| Rekening Penerima Dana (DEBIT) | `BCA · BCA UAT Operasional` | `BCA · BCA UAT Operasional` |
+| Rekening Penerima Dana         | `BCA · BCA UAT Operasional` | `BCA · BCA UAT Operasional` |
 | Nominal Diterima               | `8500000`                   | `3400000`                   |
 | Nomor Referensi Bukti Transfer | `RCV-UAT-PROGRESS-001`      | `RCV-UAT-PELUNASAN-001`     |
 | Tanggal Transaksi Diterima     | `<tanggal UAT hari ini>`    | `<tanggal UAT hari ini>`    |
@@ -1272,6 +1293,45 @@ Expected:
 Rekonsiliasi kas:
 
 `Rp110.000.000 opening + Rp17.000.000 client receipts - Rp12.700.000 cash out = Rp114.300.000`
+
+#### B9.4. Rekonsiliasi dengan rekening koran
+
+Perhitungan saldo di atas **bukan** rekonsiliasi. Saat pembayaran klien, pencairan vendor, atau pencairan pengeluaran dicatat, kas sistem sudah berubah tetapi transaksi tersebut berstatus **Belum cocok**. Status itu baru berubah menjadi **Cocok** setelah Finance Admin atau Owner memasangkan bukti mutasi rekening koran yang benar.
+
+Login sebagai Finance Admin atau Owner, lalu buka `/reconciliation`. Judul **Rekonsiliasi** adalah istilah finance standar; subtitle menjelaskan tugasnya sebagai mencocokkan catatan Atria dengan mutasi bank. Halaman menyediakan tiga peer view: **Mutasi bank**, **Catatan Atria**, dan **Riwayat**. View **Mutasi bank** terbuka lebih dahulu karena data bank adalah bukti pembanding utama.
+
+1. Tekan **Impor CSV**. Pada sheet **Impor rekening koran**, pilih rekening tujuan.
+2. Tekan **Unduh template**. Isi file menggunakan kolom persis `tanggal,deskripsi,dana_masuk,dana_keluar`. Setiap baris wajib mengisi tepat satu kolom nominal: `dana_masuk` atau `dana_keluar`.
+3. Tekan **Pilih file**, pilih CSV maksimal 1 MB dan 500 baris, lalu tekan **Impor**. Impor tidak mengubah saldo. Fingerprint yang sama dilewati agar file yang diunggah ulang tidak menggandakan mutasi.
+4. Baris dengan satu pasangan tepat diberi status **Pasangan ditemukan**. Ketuk baris tersebut untuk membuka sheet **Cocokkan transaksi**. Jika ada lebih dari satu kandidat, buka **Catatan Atria** dan pilih transaksi yang benar.
+5. Cocokkan rekening, arah, nominal, tanggal, deskripsi, dan referensi; lalu tekan **Cocokkan**. Sistem hanya mengizinkan rekening, arah, dan nominal yang sama persis.
+6. Setelah berhasil, toast **Transaksi berhasil direkonsiliasi.** tampil dan pasangan hilang dari kedua antrean. Pasangan tetap tersedia di **Riwayat**, audit log dibuat, dan saldo rekening tetap sama.
+
+Contoh CSV kontrol minimal setelah B9.2 langkah pertama:
+
+```csv
+tanggal,deskripsi,dana_masuk,dana_keluar
+2026-07-22,Penerimaan DP UAT — RCV-UAT-DP-001,2000000,
+```
+
+Jika bank belum menyediakan file untuk diolah, tekan **Catat satu mutasi** di dalam sheet impor. Form fallback berisi **Rekening**, **Tanggal mutasi**, **Arah mutasi**, **Nominal**, dan **Deskripsi**. Pilihan arah yang terlihat adalah **Dana masuk** atau **Dana keluar**; kode canonical internalnya adalah `INFLOW` dan `OUTFLOW` dengan makna yang sama, bukan istilah debit/kredit rekening bank.
+
+Jika satu **Catatan Atria** memang tidak akan mempunyai pasangan bank, buka transaksi lalu pilih **Catat pengecualian**. Isi alasan minimal 10 karakter. Status menjadi **Pengecualian tercatat** dan menyimpan alasan, pemeriksa, waktu, serta audit log, tetapi transaksi tetap `reconciled = false`. Gunakan hanya untuk kasus yang dapat dijelaskan, misalnya koreksi pembukaan atau transaksi internal non-bank; jangan gunakan untuk menyembunyikan transfer gagal atau perbedaan nominal. Pengecualian dapat dihapus agar transaksi kembali menjadi pekerjaan terbuka, atau otomatis dibersihkan ketika pasangan bank yang sah kemudian dikonfirmasi.
+
+Untuk audit, buka **Riwayat** lalu ketuk row. Sheet detail harus menampilkan Catatan Atria, nominal/arah, rekening dan referensi, mutasi bank pasangannya, tanggal bank, nama file sumber, tanggal rekonsiliasi, serta pemeriksa.
+
+Expected:
+
+- sebelum pencocokan, **Catatan Atria** dan **Mutasi bank** masing-masing memuat satu transaksi **Dana masuk** Rp2.000.000 yang belum cocok;
+- setelah pencocokan, pasangan tersebut hilang dari kedua antrean **Belum cocok** dan angka pada tab berkurang; saldo BCA tetap Rp94.000.000 karena rekonsiliasi tidak membuat mutasi kas baru;
+- mutasi rekening koran yang sudah dipakai tidak ditawarkan lagi sebagai pasangan transaksi lain;
+- mengimpor file yang sama kembali harus menghasilkan 0 mutasi baru dan melaporkan baris duplikat yang dilewati;
+- mencoba mencatat fallback manual dengan fingerprint yang sama (rekening, tanggal, arah, nominal, dan deskripsi) harus ditolak dengan pesan **Mutasi rekening koran ini sudah tercatat.**;
+- nomor referensi bank untuk penerimaan/pencairan harus unik dalam rekening yang sama. Jika bank mengirim referensi yang sama lagi, hentikan input dan investigasi lebih dulu—jangan melakukan submit ulang.
+- transaksi lebih dari 3 hari tampil sebagai **Perlu diperiksa**; ini adalah aging operasional, bukan perubahan saldo atau pembayaran;
+- project closing harus ditolak ketika cash transaction proyek belum cocok dan belum memiliki pengecualian tercatat. Pengecualian yang diterima tetap ditampilkan pada closing review.
+
+Batasan rilis saat ini: CSV harus mengikuti template canonical Atria; file mentah setiap bank belum dipetakan otomatis. Pencocokan masih **satu lawan satu dengan nominal tepat**. Split/one-to-many dan auto-approve tidak tersedia; sistem hanya memberi saran dan keputusan akhir tetap dilakukan user.
 
 ### B10. Rekonsiliasi profitability sebelum closing
 
@@ -1353,7 +1413,7 @@ Contoh form invoice dan pelunasan selisih untuk revision di atas:
 | Buat invoice     | Nominal Tagihan                | `1000000`                                  |
 | Buat invoice     | Tanggal Jatuh Tempo            | `<tanggal UAT + 7 hari>`                   |
 | Buat invoice     | Catatan                        | `Tagihan selisih Change Order UAT-CO-001.` |
-| Catat pembayaran | Rekening Penerima Dana (DEBIT) | `BCA · BCA UAT Operasional`                |
+| Catat pembayaran | Rekening Penerima Dana         | `BCA · BCA UAT Operasional`                |
 | Catat pembayaran | Nominal Diterima               | `1000000`                                  |
 | Catat pembayaran | Nomor Referensi Bukti Transfer | `RCV-UAT-CO-001`                           |
 | Catat pembayaran | Tanggal Transaksi Diterima     | `<tanggal UAT hari ini>`                   |
@@ -1372,6 +1432,7 @@ Login Owner/Finance → Profitability → Closing Checklist.
 
 Sebelum final close, checklist harus memastikan:
 
+- `/reconciliation` sudah ditinjau; setiap transaksi kas proyek sudah memiliki pasangan bank atau pengecualian tercatat dengan alasan yang dapat dipertanggungjawabkan. Closing review menampilkan jumlah pengecualian yang diterima;
 - total invoice aktif = current contract value;
 - semua invoice **Lunas** atau **Dibatalkan**;
 - semua tagihan vendor **Lunas** atau **Dibatalkan**;
@@ -1382,6 +1443,8 @@ Sebelum final close, checklist harus memastikan:
 - tidak ada Change Order terbuka;
 - outstanding reservation project = 0;
 - canonical budget `APPROVED` dan tersinkron.
+
+Pada rilis ini, pemeriksaan rekonsiliasi tersebut adalah gate operasional UAT dan belum menjadi blocker otomatis di action **Complete Project**. Jangan menutup project hanya karena action masih mengizinkan; Finance Admin/Owner harus menyelesaikan atau mendokumentasikan exception rekonsiliasi terlebih dahulu.
 
 Negative test: sebelum melunasi satu invoice atau saat masih ada reservation, Complete Project harus ditolak dan tidak membuat final snapshot.
 

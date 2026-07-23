@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it, mock } from "bun:test";
-import { inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import {
   createBankAccount,
@@ -8,8 +8,26 @@ import {
   transferBetweenBankAccounts,
   updateBankAccount,
 } from "@/app/actions/finance/bank-accounts";
+import {
+  clearReconciliationException,
+  markReconciliationException,
+  reconcileCashTransaction,
+} from "@/app/actions/finance/reconcile-cash-transaction";
+import {
+  getReconciliationWorkspace,
+  importBankStatementCsv,
+  recordBankStatementRow,
+} from "@/app/actions/finance/reconciliation-workspace";
+import { getProjectClosingChecklist } from "@/app/actions/project/closing";
 import { db } from "@/db";
-import { auditLog, bankAccount, cashTransaction } from "@/db/schema";
+import {
+  auditLog,
+  bankAccount,
+  bankStatementImport,
+  bankStatementRow,
+  cashTransaction,
+  projectCost,
+} from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 mock.module("next/headers", () => ({
@@ -109,6 +127,24 @@ describe("Bank account cash control actions", () => {
   afterAll(async () => {
     restoreUserSession();
     if (createdAccountIds.length === 0) return;
+    const imports = await db
+      .select({ id: bankStatementImport.id })
+      .from(bankStatementImport)
+      .where(inArray(bankStatementImport.bankAccountId, createdAccountIds));
+    if (imports.length > 0) {
+      await db.delete(bankStatementRow).where(
+        inArray(
+          bankStatementRow.importId,
+          imports.map((item) => item.id),
+        ),
+      );
+      await db.delete(bankStatementImport).where(
+        inArray(
+          bankStatementImport.id,
+          imports.map((item) => item.id),
+        ),
+      );
+    }
     await db
       .delete(cashTransaction)
       .where(inArray(cashTransaction.bankAccountId, createdAccountIds));
@@ -147,8 +183,11 @@ describe("Bank account cash control actions", () => {
     });
 
     expect(Number(account?.balance ?? 0)).toBe(1250000);
-    expect(openingLedger?.type).toBe("DEBIT");
+    expect(openingLedger?.type).toBe("INFLOW");
     expect(Number(openingLedger?.amount ?? 0)).toBe(1250000);
+    expect(openingLedger?.reconciled).toBe(false);
+    expect(openingLedger?.reconciliationDate).toBeNull();
+    expect(openingLedger?.reconciledById).toBeNull();
   });
 
   it("updates metadata and card colors without changing balance", async () => {
@@ -173,31 +212,31 @@ describe("Bank account cash control actions", () => {
     expect(result.data.cardColorFrom).toBe("#F5D7A1");
   });
 
-  it("posts manual debit and credit through the ledger", async () => {
+  it("posts manual inflow and outflow through the ledger", async () => {
     const accountId = await createOwnedAccount("manual", 1000000);
     mockUserSession(FINANCE_USER);
 
-    const debit = await postManualCashMovement({
+    const inflow = await postManualCashMovement({
       bankAccountId: accountId,
-      type: "DEBIT",
+      type: "INFLOW",
       amount: 250000,
       category: "owner_capital",
       description: "Tambahan modal test",
       transactionDate: new Date(),
-      referenceNumber: "DEBIT-TEST",
+      referenceNumber: "INFLOW-TEST",
     });
-    expect(debit.success).toBe(true);
+    expect(inflow.success).toBe(true);
 
-    const credit = await postManualCashMovement({
+    const outflow = await postManualCashMovement({
       bankAccountId: accountId,
-      type: "CREDIT",
+      type: "OUTFLOW",
       amount: 100000,
       category: "bank_fee",
       description: "Biaya admin test",
       transactionDate: new Date(),
-      referenceNumber: "CREDIT-TEST",
+      referenceNumber: "OUTFLOW-TEST",
     });
-    expect(credit.success).toBe(true);
+    expect(outflow.success).toBe(true);
 
     const account = await db.query.bankAccount.findFirst({
       where: (table, { eq }) => eq(table.id, accountId),
@@ -205,12 +244,12 @@ describe("Bank account cash control actions", () => {
     expect(Number(account?.balance ?? 0)).toBe(1150000);
   });
 
-  it("rejects manual credit when funds are insufficient", async () => {
+  it("rejects manual outflow when funds are insufficient", async () => {
     const accountId = await createOwnedAccount("insufficient", 50000);
     mockUserSession(FINANCE_USER);
     const result = await postManualCashMovement({
       bankAccountId: accountId,
-      type: "CREDIT",
+      type: "OUTFLOW",
       amount: 75000,
       category: "bank_fee",
       description: "Biaya terlalu besar",
@@ -220,6 +259,221 @@ describe("Bank account cash control actions", () => {
 
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.code).toBe("INSUFFICIENT_FUNDS");
+  });
+
+  it("reconciles one exact bank statement row and prevents a second reconciliation", async () => {
+    const accountId = await createOwnedAccount("reconciliation", 0);
+    mockUserSession(FINANCE_USER);
+    const posting = await postManualCashMovement({
+      bankAccountId: accountId,
+      type: "INFLOW",
+      amount: 125000,
+      category: "owner_capital",
+      description: "Setoran untuk rekonsiliasi",
+      transactionDate: new Date("2026-07-22T09:00:00Z"),
+      referenceNumber: "RECONCILE-TEST",
+    });
+    expect(posting.success).toBe(true);
+    if (!posting.success) return;
+    expect(posting.data.reconciled).toBe(false);
+
+    const statement = await recordBankStatementRow({
+      bankAccountId: accountId,
+      type: "INFLOW",
+      amount: 125000,
+      description: "Setoran untuk rekonsiliasi",
+      transactionDate: new Date("2026-07-22T09:00:00Z"),
+    });
+    expect(statement.success).toBe(true);
+    if (!statement.success) return;
+
+    const duplicateFromCsv = await importBankStatementCsv({
+      bankAccountId: accountId,
+      fileName: "manual-duplicate.csv",
+      content: [
+        "tanggal,deskripsi,dana_masuk,dana_keluar",
+        "2026-07-22,Setoran untuk rekonsiliasi,125000,",
+      ].join("\n"),
+    });
+    expect(duplicateFromCsv.success).toBe(true);
+    if (!duplicateFromCsv.success) return;
+    expect(duplicateFromCsv.data.importedCount).toBe(0);
+    expect(duplicateFromCsv.data.duplicateCount).toBe(1);
+
+    const result = await reconcileCashTransaction({
+      cashTransactionId: posting.data.id,
+      bankStatementRowId: statement.data.statementRowId,
+    });
+    expect(result.success).toBe(true);
+    const transaction = await db.query.cashTransaction.findFirst({
+      where: (table, { eq }) => eq(table.id, posting.data.id),
+    });
+    expect(transaction?.reconciled).toBe(true);
+    const workspace = await getReconciliationWorkspace();
+    expect(workspace.success).toBe(true);
+    if (workspace.success) {
+      const history = workspace.data.history.find(
+        (row) => row.cashTransactionId === posting.data.id,
+      );
+      expect(history?.statementDescription).toBe("Setoran untuk rekonsiliasi");
+      expect(history?.reconciledByName).toBe(FINANCE_USER.name);
+    }
+    const duplicate = await reconcileCashTransaction({
+      cashTransactionId: posting.data.id,
+      bankStatementRowId: statement.data.statementRowId,
+    });
+    expect(duplicate.success).toBe(false);
+  });
+
+  it("imports canonical statement CSV without changing balance and skips duplicates", async () => {
+    const accountId = await createOwnedAccount("csv-import", 0);
+    mockUserSession(FINANCE_USER);
+    const posting = await postManualCashMovement({
+      bankAccountId: accountId,
+      type: "INFLOW",
+      amount: 500000,
+      category: "owner_capital",
+      description: "Pembayaran klien UAT",
+      transactionDate: new Date("2026-07-20T12:00:00Z"),
+      referenceNumber: "CSV-MATCH-001",
+    });
+    expect(posting.success).toBe(true);
+    if (!posting.success) return;
+    const input = {
+      bankAccountId: accountId,
+      fileName: "rekening-uat.csv",
+      content: [
+        "tanggal,deskripsi,dana_masuk,dana_keluar",
+        "2026-07-20,Pembayaran klien UAT,500000,",
+        "2026-07-21,Biaya admin UAT,,25000",
+      ].join("\n"),
+    };
+
+    const firstImport = await importBankStatementCsv(input);
+    expect(firstImport.success).toBe(true);
+    if (!firstImport.success) return;
+    expect(firstImport.data.importedCount).toBe(2);
+    expect(firstImport.data.duplicateCount).toBe(0);
+
+    const workspace = await getReconciliationWorkspace();
+    expect(workspace.success).toBe(true);
+    if (!workspace.success) return;
+    const suggestedStatement = workspace.data.statementRows.find(
+      (row) => row.bankAccountId === accountId && row.description === "Pembayaran klien UAT",
+    );
+    expect(suggestedStatement?.suggestedCashTransactionId).toBe(posting.data.id);
+    expect(suggestedStatement?.candidateCount).toBe(1);
+
+    const duplicateImport = await importBankStatementCsv(input);
+    expect(duplicateImport.success).toBe(true);
+    if (!duplicateImport.success) return;
+    expect(duplicateImport.data.importedCount).toBe(0);
+    expect(duplicateImport.data.duplicateCount).toBe(2);
+
+    const account = await db.query.bankAccount.findFirst({
+      where: (table, { eq }) => eq(table.id, accountId),
+    });
+    expect(Number(account?.balance ?? 0)).toBe(500000);
+  });
+
+  it("records and clears a documented reconciliation exception without marking a match", async () => {
+    const accountId = await createOwnedAccount("reconciliation-exception", 0);
+    mockUserSession(FINANCE_USER);
+    const posting = await postManualCashMovement({
+      bankAccountId: accountId,
+      type: "INFLOW",
+      amount: 275000,
+      category: "correction",
+      description: "Koreksi internal untuk pengecualian",
+      transactionDate: new Date("2026-07-19T09:00:00Z"),
+      referenceNumber: "EXCEPTION-TEST",
+    });
+    expect(posting.success).toBe(true);
+    if (!posting.success) return;
+
+    const marked = await markReconciliationException({
+      cashTransactionId: posting.data.id,
+      reason: "Koreksi pembukaan internal yang tidak memiliki mutasi bank terpisah.",
+    });
+    expect(marked.success).toBe(true);
+    const markedTransaction = await db.query.cashTransaction.findFirst({
+      where: (table, { eq }) => eq(table.id, posting.data.id),
+    });
+    expect(markedTransaction?.reconciled).toBe(false);
+    expect(markedTransaction?.reconciliationExceptionById).toBe(FINANCE_USER.id);
+    expect(markedTransaction?.reconciliationExceptionReason).toContain("Koreksi pembukaan");
+
+    const cleared = await clearReconciliationException({ cashTransactionId: posting.data.id });
+    expect(cleared.success).toBe(true);
+    const clearedTransaction = await db.query.cashTransaction.findFirst({
+      where: (table, { eq }) => eq(table.id, posting.data.id),
+    });
+    expect(clearedTransaction?.reconciliationExceptionAt).toBeNull();
+    expect(clearedTransaction?.reconciliationExceptionReason).toBeNull();
+  });
+
+  it("blocks project closing until an unmatched project transaction is documented", async () => {
+    const projectId = "77777777-7777-7777-7777-777777777771";
+    const accountId = await createOwnedAccount("closing-reconciliation", 0);
+    mockUserSession(FINANCE_USER);
+    const baseline = await getProjectClosingChecklist(projectId);
+    expect(baseline.success).toBe(true);
+    if (!baseline.success) return;
+    const posting = await postManualCashMovement({
+      bankAccountId: accountId,
+      type: "INFLOW",
+      amount: 325000,
+      category: "correction",
+      description: "Fixture rekonsiliasi untuk closing",
+      transactionDate: new Date("2026-07-18T09:00:00Z"),
+      referenceNumber: "CLOSING-RECONCILIATION-TEST",
+    });
+    expect(posting.success).toBe(true);
+    if (!posting.success) return;
+    const [cost] = await db
+      .insert(projectCost)
+      .values({
+        projectId,
+        projectBudgetCategoryId: "32323232-3232-3232-3232-323232323104",
+        requestedById: "33333333-3333-3333-3333-333333333331",
+        quantity: "1.00",
+        unitPrice: "325000.00",
+        amount: "325000.00",
+        description: "Fixture rekonsiliasi untuk closing",
+        status: "PAID",
+        bankAccountId: accountId,
+        cashTransactionId: posting.data.id,
+      })
+      .returning();
+    expect(cost).toBeDefined();
+
+    try {
+      const before = await getProjectClosingChecklist(projectId);
+      expect(before.success).toBe(true);
+      if (!before.success) return;
+      expect(before.data.unresolvedReconciliationCount).toBe(
+        baseline.data.unresolvedReconciliationCount + 1,
+      );
+      expect(before.data.blockers.some((blocker) => blocker.includes("belum cocok"))).toBe(true);
+
+      const marked = await markReconciliationException({
+        cashTransactionId: posting.data.id,
+        reason: "Mutasi kas lapangan lama diterima sebagai pengecualian closing UAT.",
+      });
+      expect(marked.success).toBe(true);
+      const after = await getProjectClosingChecklist(projectId);
+      expect(after.success).toBe(true);
+      if (!after.success) return;
+      expect(after.data.unresolvedReconciliationCount).toBe(
+        baseline.data.unresolvedReconciliationCount,
+      );
+      expect(after.data.documentedReconciliationExceptionCount).toBe(
+        baseline.data.documentedReconciliationExceptionCount + 1,
+      );
+    } finally {
+      await clearReconciliationException({ cashTransactionId: posting.data.id });
+      if (cost) await db.delete(projectCost).where(eq(projectCost.id, cost.id));
+    }
   });
 
   it("transfers balance between two active accounts atomically", async () => {

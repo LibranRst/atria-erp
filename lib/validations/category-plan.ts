@@ -12,7 +12,7 @@ export const createProjectCategoryPlanItemSchema = z.object({
   name: z.string().min(3, "Nama paket minimal 3 karakter.").max(255),
   scopeDescription: z.string().max(1000).optional().nullable(),
   area: z.string().min(2, "Area minimal 2 karakter.").max(150).default("Umum"),
-  quantity: z.number().positive("Quantity wajib lebih besar dari 0."),
+  quantity: z.number().positive("Jumlah wajib lebih besar dari 0."),
   unit: z.string().min(1, "Satuan wajib diisi.").max(50),
   estimatedUnitCost: z.number().min(0, "Estimasi biaya tidak boleh negatif."),
   internalNote: z.string().max(1000).optional().nullable(),

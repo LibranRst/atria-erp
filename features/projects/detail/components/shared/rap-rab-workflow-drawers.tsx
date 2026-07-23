@@ -18,8 +18,8 @@ import {
   RabSourcePickerDrawer,
   VoidRevisionDrawer,
 } from "../rab/rab-drawers";
-import type { useRabManager } from "../rab/use-rab-manager";
-import type { useRapManager } from "../rap/use-rap-manager";
+import type { useRabManager } from "../../hooks/use-rab-manager";
+import type { useRapManager } from "../../hooks/use-rap-manager";
 import type {
   ChangeOrderHistoryView,
   MaterialOption,
@@ -29,7 +29,7 @@ import type {
   RabEstimateView,
   RapView,
   VendorOption,
-} from "./rap-rab-types";
+} from "../../types/rap-rab-types";
 
 interface RapRabWorkflowDrawersProps {
   readonly rap: RapView | null;

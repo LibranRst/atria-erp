@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { bankAccount, cashTransaction, auditLog } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import type { CashDirection } from "@/lib/finance/cash-direction";
 
 /**
  * Mengonversi desimal numerik berformat string (misal: "150000.50") menjadi satuan sen bigint.
@@ -67,7 +68,7 @@ export async function checkReconciledTransaction(
 interface MutateBalanceArgs {
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0];
   bankAccountId: string;
-  type: "DEBIT" | "CREDIT";
+  type: CashDirection;
   amount: string; // Harus berformat string desimal (misal: "5000000.00")
   description: string;
   category: string;
@@ -79,6 +80,7 @@ interface MutateBalanceArgs {
     | "manual_cash_movement"
     | "bank_transfer";
   referenceId: string;
+  bankReference?: string | null;
   userId: string;
   transactionDate?: Date;
   ipAddress?: string;
@@ -136,18 +138,16 @@ export async function mutateBalance(
   }
 
   let newBalanceCents = oldBalanceCents;
-  if (type === "DEBIT") {
+  if (type === "INFLOW") {
     newBalanceCents = oldBalanceCents + mutationCents;
-  } else if (type === "CREDIT") {
+  } else if (type === "OUTFLOW") {
     newBalanceCents = oldBalanceCents - mutationCents;
     // Cek kecukupan saldo untuk mutasi keluar
     if (newBalanceCents < BigInt(0)) {
-      throw new Error(
-        "INSUFFICIENT_FUNDS: Saldo kas bank tidak mencukupi untuk melakukan transaksi kredit.",
-      );
+      throw new Error("INSUFFICIENT_FUNDS: Saldo kas bank tidak mencukupi untuk transaksi keluar.");
     }
   } else {
-    throw new Error("INVALID_MUTATION_TYPE: Tipe mutasi wajib berupa DEBIT atau CREDIT.");
+    throw new Error("INVALID_MUTATION_TYPE: Arah kas wajib berupa INFLOW atau OUTFLOW.");
   }
 
   const newBalanceStr = fromCents(newBalanceCents);
@@ -172,7 +172,7 @@ export async function mutateBalance(
     throw new Error("BALANCE_MISMATCH: Saldo bank terupdate tidak cocok dengan hasil perhitungan.");
   }
 
-  // 4. Masukkan rekaman mutasi ke cash_transaction (auto-reconciled)
+  // 4. Internal postings remain unreconciled until a bank-statement match is approved.
   const [ledgerTx] = await tx
     .insert(cashTransaction)
     .values({
@@ -181,11 +181,12 @@ export async function mutateBalance(
       category,
       amount,
       description,
-      reconciled: true,
-      reconciliationDate: transactionDate ?? new Date(),
-      reconciledById: userId,
+      reconciled: false,
+      reconciliationDate: null,
+      reconciledById: null,
       referenceType,
       referenceId,
+      bankReference: args.bankReference?.trim() || null,
       createdAt: transactionDate ?? new Date(),
     })
     .returning();
@@ -197,7 +198,7 @@ export async function mutateBalance(
   // 5. Masukkan catatan perubahan ke audit_log
   await tx.insert(auditLog).values({
     userId,
-    action: type === "DEBIT" ? "DEBIT_BANK_ACCOUNT" : "CREDIT_BANK_ACCOUNT",
+    action: type === "INFLOW" ? "INFLOW_BANK_ACCOUNT" : "OUTFLOW_BANK_ACCOUNT",
     targetTable: "bank_account",
     targetId: bankAccountId,
     originalState: JSON.stringify({ balance: account.balance }),

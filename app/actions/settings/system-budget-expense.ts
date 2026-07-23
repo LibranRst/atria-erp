@@ -377,7 +377,7 @@ export async function updateExpenseCategoryDetails(
   if (!existing || !CORE_EXPENSE_CATEGORY_CODES.has(existing.code)) {
     return {
       success: false,
-      error: { code: "NOT_FOUND", message: "Kategori canonical tidak ditemukan." },
+      error: { code: "NOT_FOUND", message: "Kategori budget tidak ditemukan." },
     };
   }
   const [updated] = await db

@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { MoneyValue } from "@/components/ui/page-primitives";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 
 export function NativePanel({
   eyebrow,

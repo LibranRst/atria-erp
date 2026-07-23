@@ -1,8 +1,8 @@
 import React from "react";
 import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Pencil } from "lucide-react";
 
-import { BankAccountCard } from "@/features/finance-dashboard/components/dashboard-cards";
-import type { BankAccount } from "./types";
+import { BankAccountCard } from "@/features/finance-dashboard/components/cards/dashboard-cards";
+import type { BankAccount } from "@/features/finance-dashboard/types/bank-account-types";
 
 function QuickActionButton({
   label,

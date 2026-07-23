@@ -328,7 +328,7 @@ export async function getOwnerOnboardingOverview(): Promise<
     {
       id: "financial_defaults",
       label: "Default finansial",
-      detail: "Budget default dan kategori biaya canonical tersedia.",
+      detail: "Budget default dan kategori biaya utama tersedia.",
       ready: financeReady,
       status: statusFor("financial_defaults", financeReady, state),
       href: "/onboarding?step=financial_defaults",
@@ -401,7 +401,7 @@ export async function getOwnerOnboardingOverview(): Promise<
     {
       id: "summary",
       label: "Ringkasan kesiapan",
-      detail: "Tinjau gap sebelum membuat proyek pertama.",
+      detail: "Tinjau hal yang masih perlu dilengkapi sebelum membuat proyek pertama.",
       ready: state.status === "COMPLETED",
       status: statusFor("summary", state.status === "COMPLETED", state),
       href: "/onboarding?step=summary",

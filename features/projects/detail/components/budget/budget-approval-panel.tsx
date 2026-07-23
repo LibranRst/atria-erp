@@ -1,4 +1,5 @@
 "use client";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 import React from "react";
 import { motion } from "framer-motion";
@@ -28,7 +29,7 @@ export function BudgetDraftActions({
         disabled={isPending}
         className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-secondary px-5 text-xs font-bold text-on-secondary shadow-lg disabled:opacity-50"
       >
-        <span className="material-symbols-outlined text-[18px]">publish</span>
+        <AppIcon name="publish" className="text-[18px]" />
         <span>Tinjau & Ajukan Project Budget</span>
       </motion.button>
       <ConfirmationModal
@@ -95,7 +96,7 @@ export function BudgetApprovalPanel({
           disabled={isPending}
           className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-error text-xs font-bold text-error transition active:scale-[0.98] disabled:opacity-50"
         >
-          <span className="material-symbols-outlined text-[18px]">close</span>
+          <AppIcon name="close" className="text-[18px]" />
           <span>Tolak Budget</span>
         </button>
 
@@ -105,7 +106,7 @@ export function BudgetApprovalPanel({
           disabled={isPending}
           className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-primary text-xs font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
         >
-          <span className="material-symbols-outlined text-[18px]">done</span>
+          <AppIcon name="done" className="text-[18px]" />
           <span>Setujui Project Budget</span>
         </button>
       </div>

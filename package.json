@@ -10,19 +10,24 @@
     "lint": "eslint",
     "db:reset": "bun scripts/reset-database.ts",
     "db:seed": "bun db/seed.ts",
+    "db:demo:reset": "bun scripts/reset-demo-database.ts",
+    "db:demo:verify": "bun scripts/verify-demo-seed.ts",
     "format": "prettier --write . --ignore-unknown",
     "format:check": "prettier --check . --ignore-unknown",
-    "tailwind:canonical": "bunx @laststance/tailwind-suggest-canonical-classes@latest \"app/**/*.{js,jsx,ts,tsx}\" \"components/**/*.{js,jsx,ts,tsx}\" \"features/**/*.{js,jsx,ts,tsx}\" \"src/**/*.{js,jsx,ts,tsx}\"",
-    "tailwind:format": "bun run tailwind:canonical && prettier --write \"{app,components,features,src}/**/*.{js,jsx,ts,tsx}\""
+    "tailwind:canonical": "eslint app components features --fix --no-warn-ignored",
+    "tailwind:format": "bun run tailwind:canonical && prettier --write \"{app,components,features,src}/**/*.{js,jsx,ts,tsx}\"",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@google/genai": "^2.8.0",
+    "@heroicons/react": "^2.2.0",
     "@neondatabase/serverless": "^1.1.0",
+    "@phosphor-icons/react": "^2.1.10",
     "better-auth": "^1.6.16",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "framer-motion": "^12.40.0",
-    "lucide-react": "^1.17.0",
+    "lucide-react": "^1.25.0",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -31,6 +36,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@tailwindcss/node": "^4.3.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",
@@ -40,6 +46,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.20.0",
     "eslint-config-next": "^16.2.10",
+    "eslint-plugin-tailwind-canonical-classes": "^1.4.1",
     "pg": "^8.21.0",
     "prettier": "^3.9.5",
     "prettier-plugin-tailwindcss": "^0.8.1",

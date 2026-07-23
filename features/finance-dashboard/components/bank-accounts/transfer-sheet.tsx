@@ -16,10 +16,10 @@ import {
 import {
   FinanceUnsavedChangesModal,
   MoneyImpactRow,
-} from "@/features/finance/components/finance-form-patterns";
-import { shortMoney } from "@/features/finance-dashboard/lib/dashboard-formatters";
+} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { InfoPill } from "./info-pill";
-import type { BankAccount, TransferDraft } from "./types";
+import type { BankAccount, TransferDraft } from "@/features/finance-dashboard/types/bank-account-types";
 
 export function TransferSheet({
   open,

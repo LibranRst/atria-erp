@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CASH_DIRECTIONS } from "@/lib/finance/cash-direction";
 
 const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 const stockHandlingSchema = z.enum([
@@ -40,7 +41,7 @@ export type UpdateBankAccountInput = z.input<typeof updateBankAccountSchema>;
 
 export const postManualCashMovementSchema = z.object({
   bankAccountId: z.string().regex(uuidRegex, "ID rekening bank tidak valid."),
-  type: z.enum(["DEBIT", "CREDIT"]),
+  type: z.enum(CASH_DIRECTIONS),
   amount: z.number().positive("Nominal mutasi harus lebih besar dari 0."),
   category: z.enum(["owner_capital", "bank_fee", "correction", "cash_adjustment", "other"]),
   description: z.string().min(5, "Deskripsi mutasi minimal 5 karakter.").max(500),
@@ -65,6 +66,56 @@ export const transferBetweenBankAccountsSchema = z
   });
 
 export type TransferBetweenBankAccountsInput = z.input<typeof transferBetweenBankAccountsSchema>;
+
+export const reconcileCashTransactionSchema = z.object({
+  cashTransactionId: z.string().regex(uuidRegex, "ID transaksi kas tidak valid."),
+  bankStatementRowId: z.string().regex(uuidRegex, "ID baris rekening koran tidak valid."),
+});
+
+export type ReconcileCashTransactionInput = z.infer<typeof reconcileCashTransactionSchema>;
+
+export const markReconciliationExceptionSchema = z.object({
+  cashTransactionId: z.string().regex(uuidRegex, "ID transaksi kas tidak valid."),
+  reason: z
+    .string()
+    .trim()
+    .min(10, "Alasan pengecualian minimal 10 karakter.")
+    .max(1000, "Alasan pengecualian maksimal 1.000 karakter."),
+});
+
+export type MarkReconciliationExceptionInput = z.infer<typeof markReconciliationExceptionSchema>;
+
+export const clearReconciliationExceptionSchema = z.object({
+  cashTransactionId: z.string().regex(uuidRegex, "ID transaksi kas tidak valid."),
+});
+
+export type ClearReconciliationExceptionInput = z.infer<typeof clearReconciliationExceptionSchema>;
+
+export const recordBankStatementRowSchema = z.object({
+  bankAccountId: z.string().regex(uuidRegex, "ID rekening bank tidak valid."),
+  transactionDate: z.coerce.date(),
+  description: z.string().min(3, "Deskripsi mutasi minimal 3 karakter.").max(500),
+  amount: z.number().positive("Nominal mutasi harus lebih besar dari 0."),
+  type: z.enum(CASH_DIRECTIONS),
+});
+
+export type RecordBankStatementRowInput = z.infer<typeof recordBankStatementRowSchema>;
+
+export const importBankStatementCsvSchema = z.object({
+  bankAccountId: z.string().regex(uuidRegex, "ID rekening bank tidak valid."),
+  fileName: z
+    .string()
+    .trim()
+    .min(1, "Nama file rekening koran tidak tersedia.")
+    .max(255)
+    .refine((value) => value.toLowerCase().endsWith(".csv"), "File harus berformat CSV."),
+  content: z
+    .string()
+    .min(1, "File rekening koran kosong.")
+    .max(1_000_000, "Ukuran file rekening koran maksimal 1 MB."),
+});
+
+export type ImportBankStatementCsvInput = z.infer<typeof importBankStatementCsvSchema>;
 
 export const submitVendorBillSchema = z.object({
   vendorId: z.string().regex(uuidRegex, "ID Vendor tidak valid."),

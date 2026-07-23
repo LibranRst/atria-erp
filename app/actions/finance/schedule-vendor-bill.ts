@@ -20,6 +20,7 @@ import { schedulePaymentSchema, SchedulePaymentInput } from "@/lib/validations/f
 import { getErrorMessage } from "@/lib/utils/error-message";
 import crypto from "crypto";
 import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
+import { parseNumericToCents } from "@/lib/finance/balance-mutation";
 
 export async function scheduleVendorBillPayment(
   input: SchedulePaymentInput,
@@ -95,11 +96,12 @@ export async function scheduleVendorBillPayment(
           inArray(vendorPayment.status, ["PENDING", "COMPLETED"]),
         ),
       });
-      const committedAmount = committedPayments.reduce(
-        (sum, payment) => sum + Number(payment.amountPaid),
-        0,
+      const committedAmountCents = committedPayments.reduce(
+        (sum, payment) => sum + parseNumericToCents(payment.amountPaid),
+        BigInt(0),
       );
-      if (amountPaid > Number(bill.amount) - committedAmount + 0.001) {
+      const amountPaidCents = parseNumericToCents(amountPaid.toFixed(2));
+      if (amountPaidCents > parseNumericToCents(bill.amount) - committedAmountCents) {
         throw new Error("PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING");
       }
 
@@ -112,10 +114,10 @@ export async function scheduleVendorBillPayment(
         throw new Error("PROJECT_BUDGET_CATEGORY_NOT_FOUND");
       }
 
-      const allocated = Number(budgetCategory.allocatedAmount);
-      const spent = Number(budgetCategory.actualAmount);
-      const isOverrun = spent > allocated;
-      const requiresApproval = amountPaid >= 5000000 || isOverrun;
+      const allocatedCents = parseNumericToCents(budgetCategory.allocatedAmount);
+      const spentCents = parseNumericToCents(budgetCategory.actualAmount);
+      const isOverrun = spentCents > allocatedCents;
+      const requiresApproval = amountPaidCents >= BigInt(500_000_000) || isOverrun;
 
       // 3. Pre-generate payment UUID
       const paymentId = crypto.randomUUID();

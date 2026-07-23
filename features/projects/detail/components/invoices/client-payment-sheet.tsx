@@ -16,8 +16,9 @@ import {
 import {
   FinanceUnsavedChangesModal,
   MoneyImpactRow,
-} from "@/features/finance/components/finance-form-patterns";
-import type { BankAccountItem, ClientInvoiceItem } from "./project-invoices-types";
+} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import type { BankAccountItem, ClientInvoiceItem } from "../../types/project-invoices-types";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export function ClientPaymentSheet({
   selectedInvoice,
@@ -123,15 +124,13 @@ export function ClientPaymentSheet({
         <div className="space-y-md">
           {error && (
             <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs font-medium text-error">
-              <span className="material-symbols-outlined text-[18px] text-error">error</span>
+              <AppIcon name="error" className="text-[18px] text-error" />
               <div className="leading-relaxed">{error}</div>
             </div>
           )}
           {success && (
             <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-surface-container-low p-3.5 text-xs font-medium text-primary">
-              <span className="material-symbols-outlined text-[18px] text-primary">
-                check_circle
-              </span>
+              <AppIcon name="check_circle" className="text-[18px] text-primary" />
               <div className="leading-relaxed">{success}</div>
             </div>
           )}

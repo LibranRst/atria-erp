@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { PageState } from "@/components/ui/page-state";
+import { PageState } from "@/components/ui/feedback/page-state";
 
 export default function AppError({
   reset,

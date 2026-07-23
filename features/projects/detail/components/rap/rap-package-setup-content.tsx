@@ -5,6 +5,7 @@ import React from "react";
 import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import type { ProjectCategoryPlanItemView } from "../shared/rap-rab-manager";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export function PackageSetupContent({
   items,
@@ -57,9 +58,7 @@ export function PackageSetupContent({
             className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-surface-container-low p-3 text-left"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-primary">
-              <span className="material-symbols-outlined text-[19px]">
-                {code === "TUKANG" ? "engineering" : "domain"}
-              </span>
+              <AppIcon name={code === "TUKANG" ? "engineering" : "domain"} className="text-[19px]" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm leading-5 font-bold">{item.name}</span>

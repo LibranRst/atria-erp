@@ -2,9 +2,10 @@ import React from "react";
 import { Repeat2, RotateCcw } from "lucide-react";
 
 import { FormField } from "@/components/ui";
-import { useFormPresentation } from "@/components/ui/form-presentation-context";
-import { CARD_PRESETS } from "./constants";
-import type { AccountDraft } from "./types";
+import { useFormPresentation } from "@/components/ui/form/form-presentation-context";
+import { CARD_PRESETS } from "@/features/finance-dashboard/utils/bank-account-constants";
+import type { AccountDraft } from "@/features/finance-dashboard/types/bank-account-types";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 function ColorInput({
   label,
@@ -22,7 +23,7 @@ function ColorInput({
         className={
           grouped
             ? "flex min-h-9 items-center gap-3 bg-transparent"
-            : "flex min-h-12 items-center gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15"
+            : "flex min-h-12 items-center gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15"
         }
       >
         <span
@@ -37,7 +38,7 @@ function ColorInput({
           type="color"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="h-8 w-8 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+          className="h-8 w-8 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
           aria-label={label}
         />
       </label>
@@ -60,7 +61,7 @@ export function ColorEditor({
     <section className="space-y-3">
       <div
         className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 shadow-[0_14px_34px_rgba(17,17,17,0.08)] ${
-          draft.cardTextColor === "dark" ? "text-[#141414]" : "text-white"
+          draft.cardTextColor === "dark" ? "text-on-surface" : "text-white"
         }`}
         style={{
           backgroundImage: `linear-gradient(135deg, ${draft.cardColorFrom}, ${draft.cardColorTo})`,
@@ -79,9 +80,7 @@ export function ColorEditor({
               {draft.bankName || "Nama bank"}
             </p>
           </div>
-          <span className="material-symbols-outlined text-[23px] opacity-65" aria-hidden="true">
-            contactless
-          </span>
+          <AppIcon name="contactless" className="text-[23px] opacity-65" />
         </div>
         <div className="relative mt-auto">
           <p className="text-[9px] font-semibold tracking-[0.13em] uppercase opacity-60">
@@ -117,7 +116,7 @@ export function ColorEditor({
                 })
               }
               className={`min-h-12 rounded-full px-2 text-[9px] font-black transition active:scale-[0.97] ${
-                preset.text === "dark" ? "text-[#141414]" : "text-white"
+                preset.text === "dark" ? "text-on-surface" : "text-white"
               } ${active ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
               style={{
                 backgroundImage: `linear-gradient(135deg, ${preset.from}, ${preset.to})`,

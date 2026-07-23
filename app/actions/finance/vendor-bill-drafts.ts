@@ -61,7 +61,7 @@ async function authorize(
   try {
     await assertPermission(session.user, "create:vendor_bill");
     const roleName = await resolveRoleName(session.user.roleId);
-    if (projectId && (roleName === "PROJECT_MANAGER" || roleName === "DESIGNER")) {
+    if (projectId && roleName === "PROJECT_MANAGER") {
       await assertProjectAccess(projectId, session.user.id, roleName);
     }
     return { success: true, data: { user: { id: session.user.id, roleId: session.user.roleId } } };

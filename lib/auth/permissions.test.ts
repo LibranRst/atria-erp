@@ -50,6 +50,8 @@ describe("Atria ERP RBAC - permissions.ts", () => {
         assertPermission(financeUser, "manage:budget_settings"),
       ).resolves.toBeUndefined();
       await expect(assertPermission(financeUser, "manage:item_library")).resolves.toBeUndefined();
+      await expect(assertPermission(financeUser, "manage:vendors")).resolves.toBeUndefined();
+      await expect(assertPermission(financeUser, "manage:users")).rejects.toThrow("FORBIDDEN");
     });
 
     it("harus membatasi izin PROJECT_MANAGER hanya pada pengajuan biaya dan draf anggaran", async () => {

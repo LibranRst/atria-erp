@@ -3,10 +3,11 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge/badge";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export default function LoginPage(): React.JSX.Element {
   const [email, setEmail] = useState<string>("");
@@ -64,13 +65,13 @@ export default function LoginPage(): React.JSX.Element {
       {/* Top Branding Spacer */}
       <div className="flex flex-1 flex-col items-center justify-center pt-4 pb-8">
         <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-[22px] bg-primary text-white">
-          <span className="material-symbols-outlined text-[32px] text-white">account_balance</span>
+          <AppIcon name="account_balance" className="text-[32px] text-white" />
         </div>
         <div className="space-y-1.5 text-center">
           <p className="font-sans text-[8px] leading-4 font-bold tracking-wider text-primary uppercase">
             Atria Operating System
           </p>
-          <h1 className="text-display font-sans text-[28px] text-[32px] leading-10 font-bold tracking-tight text-primary">
+          <h1 className="text-display font-sans text-[28px] leading-10 font-bold tracking-tight text-primary">
             Atria ERP
           </h1>
           <p className="max-w-70 font-sans text-[14px] leading-margin-mobile font-normal text-on-surface-variant">
@@ -96,7 +97,7 @@ export default function LoginPage(): React.JSX.Element {
         <form method="post" onSubmit={handleLogin} className="space-y-md">
           {error && (
             <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs font-medium text-error">
-              <span className="material-symbols-outlined text-[18px] text-error">error</span>
+              <AppIcon name="error" className="text-[18px] text-error" />
               <div className="leading-relaxed">{error}</div>
             </div>
           )}
@@ -104,11 +105,9 @@ export default function LoginPage(): React.JSX.Element {
           <div className="space-y-base">
             <label
               htmlFor="email-input"
-              className="flex items-center gap-1 font-sans text-[8px] text-[10px] leading-4 font-bold tracking-wider text-on-surface-variant uppercase"
+              className="flex items-center gap-1 font-sans text-[8px] leading-4 font-bold tracking-wider text-on-surface-variant uppercase"
             >
-              <span className="material-symbols-outlined text-[14px] text-on-surface-variant">
-                mail
-              </span>
+              <AppIcon name="mail" className="text-[14px] text-on-surface-variant" />
               <span>Alamat Email</span>
             </label>
             <input
@@ -129,11 +128,9 @@ export default function LoginPage(): React.JSX.Element {
           <div className="space-y-base">
             <label
               htmlFor="password-input"
-              className="flex items-center gap-1 font-sans text-[8px] text-[10px] leading-4 font-bold tracking-wider text-on-surface-variant uppercase"
+              className="flex items-center gap-1 font-sans text-[8px] leading-4 font-bold tracking-wider text-on-surface-variant uppercase"
             >
-              <span className="material-symbols-outlined text-[14px] text-on-surface-variant">
-                lock
-              </span>
+              <AppIcon name="lock" className="text-[14px] text-on-surface-variant" />
               <span>Kata Sandi</span>
             </label>
             <input

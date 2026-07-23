@@ -11,6 +11,10 @@ describe("business labels", () => {
     expect(formatBusinessLabel("GOODS_RECEIPT_REVERSAL")).toBe("Pembatalan penerimaan barang");
     expect(formatBusinessLabel("PENDING_APPROVAL")).toBe("Menunggu persetujuan");
     expect(formatBusinessLabel("FINANCE_ADMIN")).toBe("Finance Admin");
+    expect(formatBusinessLabel("OPERASIONAL")).toBe("Operasional");
+    expect(formatBusinessLabel("LAIN_LAIN")).toBe("Lain-lain");
+    expect(formatBusinessLabel("REVIEW")).toBe("Tinjau");
+    expect(formatBusinessLabel("NOT_APPLICABLE")).toBe("Tidak diperlukan");
   });
 
   test("uses a readable fallback without leaking separators", () => {

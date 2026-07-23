@@ -1,8 +1,15 @@
 "use server";
 
 import { db } from "@/db";
-import { clientInvoice, clientPayment, bankAccount, auditLog, project } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  cashTransaction,
+  clientInvoice,
+  clientPayment,
+  bankAccount,
+  auditLog,
+  project,
+} from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { mutateBalance, parseNumericToCents } from "@/lib/finance/balance-mutation";
@@ -86,6 +93,16 @@ export async function recordClientPayment(
         );
       }
 
+      const duplicateReference = await tx.query.cashTransaction.findFirst({
+        where: and(
+          eq(cashTransaction.bankAccountId, bankAccountId),
+          eq(cashTransaction.bankReference, referenceNumber),
+        ),
+      });
+      if (duplicateReference) {
+        throw new Error("DUPLICATE_BANK_REFERENCE: Referensi mutasi bank sudah tercatat.");
+      }
+
       const existingPayments = await tx
         .select({ amountPaid: clientPayment.amountPaid })
         .from(clientPayment)
@@ -110,12 +127,13 @@ export async function recordClientPayment(
       const ledgerTx = await mutateBalance({
         tx,
         bankAccountId,
-        type: "DEBIT",
+        type: "INFLOW",
         amount: amountPaidStr,
         description: `Terima termin pembayaran Invoice #${invoice.invoiceNumber} (Ref: ${referenceNumber})`,
         category: "client_payment",
         referenceType: "client_payment",
         referenceId: clientPaymentId,
+        bankReference: referenceNumber,
         userId: session.user.id,
         transactionDate: paymentDate,
       });
@@ -205,6 +223,8 @@ export async function recordClientPayment(
     } else if (errMsg.startsWith("INVOICE_CLOSED")) {
       errorCode = "FORBIDDEN";
     } else if (errMsg.startsWith("PAYMENT_EXCEEDS_INVOICE_OUTSTANDING")) {
+      errorCode = "VALIDATION_ERROR";
+    } else if (errMsg.startsWith("DUPLICATE_BANK_REFERENCE")) {
       errorCode = "VALIDATION_ERROR";
     }
     return {

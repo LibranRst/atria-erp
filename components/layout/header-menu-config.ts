@@ -31,6 +31,12 @@ const HEADER_MENU_ITEMS: readonly HeaderMenuItem[] = [
     match: (path): boolean => path.startsWith("/expenses"),
   },
   {
+    label: "Rekonsiliasi",
+    href: "/reconciliation",
+    iconName: "fact_check",
+    match: (path): boolean => path.startsWith("/reconciliation"),
+  },
+  {
     label: "Persetujuan",
     href: "/approvals",
     iconName: "verified_user",
@@ -62,6 +68,10 @@ export function getHeaderMenuItems(roleName: string | null): readonly HeaderMenu
       return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
     }
 
+    if (item.label === "Rekonsiliasi") {
+      return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
+    }
+
     if (item.label === "Pengaturan ERP") {
       return roleName === "OWNER" || roleName === "FINANCE_ADMIN" || roleName === "PURCHASING";
     }
@@ -84,5 +94,6 @@ export function getPageTitle(pathname: string): string {
   if (pathname === "/settings/library") return "Library Item & Harga";
   if (pathname === "/settings/materials") return "Material Master";
   if (pathname === "/approvals") return "Persetujuan";
+  if (pathname === "/reconciliation") return "Rekonsiliasi";
   return "Finance ERP";
 }

@@ -1,10 +1,10 @@
 import React from "react";
 import { ArchiveRestore, ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Pencil } from "lucide-react";
 
-import { BottomSheet, useSheetPresenceValue } from "@/components/ui";
-import { BankAccountCard } from "@/features/finance-dashboard/components/dashboard-cards";
+import { BottomSheet, Button, useSheetPresenceValue } from "@/components/ui";
+import { BankAccountCard } from "@/features/finance-dashboard/components/cards/dashboard-cards";
 import { AccountTransactionRows } from "./account-transaction-rows";
-import type { BankAccount } from "./types";
+import type { BankAccount } from "@/features/finance-dashboard/types/bank-account-types";
 
 export function AccountDetailSheet({
   open,
@@ -67,55 +67,60 @@ export function AccountDetailSheet({
 
           <section className="space-y-2.5 rounded-3xl bg-surface-container-lowest p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
             <div className="grid grid-cols-2 gap-2">
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                fullWidth
+                leadingIcon={<ArrowDownLeft className="h-4 w-4" />}
                 disabled={!presentedAccount.isActive}
                 onClick={() => onDebit(presentedAccount)}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-on-primary active:scale-[0.97] disabled:opacity-45"
               >
-                <ArrowDownLeft className="h-4 w-4" />
                 Kas masuk
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="criticalQuiet"
+                fullWidth
+                leadingIcon={<ArrowUpRight className="h-4 w-4" />}
                 disabled={!presentedAccount.isActive}
                 onClick={() => onCredit(presentedAccount)}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-error-container/35 px-4 text-xs font-bold text-error active:scale-[0.97] disabled:opacity-45"
               >
-                <ArrowUpRight className="h-4 w-4" />
                 Kas keluar
-              </button>
+              </Button>
             </div>
-            <div className="grid grid-cols-2 divide-x divide-outline-variant/20 border-t border-outline-variant/20 pt-1">
-              <button
+            <div className="grid grid-cols-2 gap-2 border-t border-outline-variant/20 pt-2">
+              <Button
                 type="button"
+                variant="secondary"
+                fullWidth
+                leadingIcon={<ArrowRightLeft className="h-4 w-4" />}
                 disabled={!presentedAccount.isActive || !canTransfer}
                 onClick={() => onTransfer(presentedAccount)}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-full text-xs font-bold text-on-surface active:bg-surface-container-low disabled:opacity-45"
               >
-                <ArrowRightLeft className="h-4 w-4" />
                 Transfer
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
+                fullWidth
+                leadingIcon={<Pencil className="h-4 w-4" />}
                 onClick={() => onEdit(presentedAccount)}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-full text-xs font-bold text-on-surface active:bg-surface-container-low"
               >
-                <Pencil className="h-4 w-4" />
                 Edit
-              </button>
+              </Button>
             </div>
           </section>
           {canArchive ? (
-            <button
+            <Button
               type="button"
+              variant="criticalQuiet"
+              fullWidth
+              leadingIcon={<ArchiveRestore className="h-4 w-4" />}
               disabled={pending}
               onClick={() => onToggleActive(presentedAccount)}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-error-container/20 px-4 text-xs font-bold text-error active:scale-[0.97] disabled:opacity-45"
             >
-              <ArchiveRestore className="h-4 w-4" />
               {presentedAccount.isActive ? "Arsipkan rekening" : "Aktifkan kembali"}
-            </button>
+            </Button>
           ) : null}
           <section className="space-y-2.5">
             <h3 className="px-1 text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">

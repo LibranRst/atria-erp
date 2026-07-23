@@ -63,6 +63,8 @@ The existing app already includes valuable foundations and should not be rewritt
 - `docs/07-development/ROADMAP.md`: phased roadmap.
 - `docs/07-development/TASK_BREAKDOWN.md`: implementation task breakdown.
 - `docs/07-development/IMPLEMENTATION_ORDER.md`: build and verification order.
+- `docs/guide/seeded_demo_walkthrough.md`: resettable role-based demo and feature walkthrough.
+- `docs/guide/financial_workflow_guide.md`: production-style UAT beginning with empty business data.
 - `docs/plans/`: implementation plans and historical execution records.
 - `docs/specs/`: repository design specifications.
 
@@ -71,11 +73,21 @@ The existing app already includes valuable foundations and should not be rewritt
 ```bash
 bun install
 cp .env.example .env
-bun run db:seed
+bun run db:demo:reset --confirm-reset
 bun run dev
 ```
 
 Open `http://localhost:3000`.
+
+The demo reset is destructive and only intended for a development/sandbox `DATABASE_URL`. It
+creates connected demo data, writes reconciliation CSV fixtures to `.atria-demo/`, and verifies the
+result. `bun run db:seed` is insert-only and refuses a non-empty or production database.
+
+Two test modes are intentionally separate:
+
+- **Seeded learning sandbox:** follow `docs/guide/seeded_demo_walkthrough.md`.
+- **Production-style empty UAT:** run `bun run db:reset --confirm-reset`, bootstrap through the UI,
+  and follow `docs/guide/financial_workflow_guide.md` without demo seed transactions.
 
 ## Core Engineering Rules
 

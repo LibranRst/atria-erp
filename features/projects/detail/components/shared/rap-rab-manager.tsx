@@ -5,9 +5,10 @@ import { NativePanel } from "./rap-rab-primitives";
 import { RapSetupPanel } from "../rap/rap-setup-panel";
 import { InternalPlanOverview } from "../rap/internal-plan-overview";
 import { RabClientPanel } from "../rab/rab-client-panel";
-import { useRapManager } from "../rap/use-rap-manager";
-import { useRabManager } from "../rab/use-rab-manager";
+import { useRapManager } from "../../hooks/use-rap-manager";
+import { useRabManager } from "../../hooks/use-rab-manager";
 import { RapRabWorkflowDrawers } from "./rap-rab-workflow-drawers";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 import type {
   MaterialOption,
   PricingTemplateOption,
@@ -26,7 +27,7 @@ import type {
   ManualQuotationLine,
   RapSetupStage,
   RapOverviewFilter,
-} from "./rap-rab-types"; // shared sibling
+} from "../../types/rap-rab-types"; // shared sibling
 
 export type {
   MaterialOption,
@@ -124,7 +125,7 @@ export function RapRabManager({
             <NativePanel eyebrow="Rencana Internal" title="Mulai dari Material">
               <div className="py-lg text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <span className="material-symbols-outlined text-[28px]">architecture</span>
+                  <AppIcon name="architecture" className="text-[28px]" />
                 </div>
                 <h3 className="mt-4 text-base font-bold">Susun kebutuhan material proyek</h3>
                 <p className="mx-auto mt-1 max-w-xs text-xs leading-5 text-on-surface-variant">

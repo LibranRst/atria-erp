@@ -22,6 +22,10 @@ import {
   vendor,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import {
+  getAdministrationCapabilities,
+  type AdministrationCapabilities,
+} from "@/lib/auth/administration-access";
 import { OWNER_ROLE_ID, STAFF_ROLE_IDS, SYSTEM_ROLES } from "@/lib/auth/role-constants";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { DEFAULT_EXPENSE_CATEGORIES, EXCEL_BUDGET_CAP_RATIO } from "@/lib/budget/excel-budget";
@@ -68,6 +72,7 @@ type AdministrationUser = {
 
 export type AdministrationVendor = typeof vendor.$inferSelect;
 export type AdministrationOverview = {
+  readonly capabilities: AdministrationCapabilities;
   readonly users: readonly AdministrationUser[];
   readonly vendors: readonly AdministrationVendor[];
   readonly roles: readonly { id: string; name: string }[];
@@ -194,7 +199,7 @@ export async function bootstrapFirstOwner(
           name: "Default Project Budget Allocation",
           status: "ACTIVE",
           budgetCapRatio: EXCEL_BUDGET_CAP_RATIO.toFixed(6),
-          notes: "Default canonical untuk project baru.",
+          notes: "Default budget untuk proyek baru.",
           isActive: true,
           updatedById: created.id,
         })
@@ -249,7 +254,7 @@ export async function bootstrapFirstOwner(
     if (message.includes("unique")) {
       return {
         success: false,
-        error: { code: "CONFLICT", message: "Email atau setup canonical sudah digunakan." },
+        error: { code: "CONFLICT", message: "Email atau pengaturan awal sudah digunakan." },
       };
     }
     return { success: false, error: { code: "INTERNAL_SERVER_ERROR", message } };
@@ -261,20 +266,28 @@ export async function getAdministrationOverview(): Promise<ActionResponse<Admini
   if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   const roleName = await resolveRoleName(actor.roleId);
-  if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN") {
+  const capabilities = getAdministrationCapabilities(roleName);
+  if (!capabilities.canViewUsers && !capabilities.canViewVendors) {
     return {
       success: false,
       error: { code: "FORBIDDEN", message: "Administrasi hanya tersedia untuk Owner dan Finance." },
     };
   }
   const [users, vendors, roles] = await Promise.all([
-    db.query.user.findMany({ with: { role: true }, orderBy: [asc(user.name)] }),
-    db.query.vendor.findMany({ orderBy: [asc(vendor.name)] }),
-    db.query.role.findMany({ orderBy: [asc(role.name)] }),
+    capabilities.canViewUsers
+      ? db.query.user.findMany({ with: { role: true }, orderBy: [asc(user.name)] })
+      : Promise.resolve([]),
+    capabilities.canViewVendors
+      ? db.query.vendor.findMany({ orderBy: [asc(vendor.name)] })
+      : Promise.resolve([]),
+    capabilities.canManageUsers
+      ? db.query.role.findMany({ orderBy: [asc(role.name)] })
+      : Promise.resolve([]),
   ]);
   return {
     success: true,
     data: {
+      capabilities,
       users: users.map((row) => ({
         id: row.id,
         name: row.name,
@@ -339,7 +352,7 @@ export async function getProductionReadiness(): Promise<
       },
       {
         id: "categories",
-        label: "Kategori canonical",
+        label: "Kategori biaya utama",
         ready: DEFAULT_EXPENSE_CATEGORIES.every((row) => categoryCodes.has(row.code)),
         detail: "Lima bucket budget tersedia.",
       },

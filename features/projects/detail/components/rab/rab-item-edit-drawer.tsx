@@ -18,8 +18,8 @@ import {
   useSheetPresenceValue,
   ValuePreviewStrip,
 } from "@/components/ui";
-import { Badge } from "@/components/ui/badge";
-import { MoneyValue } from "@/components/ui/page-primitives";
+import { Badge } from "@/components/ui/badge/badge";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { rabSourceLabel } from "../shared/rap-rab-primitives";
 import type { RabEstimateView, RabItemView } from "../shared/rap-rab-manager";
 

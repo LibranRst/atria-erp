@@ -34,18 +34,10 @@ export default function RootLayout({
 }>): React.JSX.Element {
   return (
     <html
-      lang="en"
+      lang="id"
       className={`${manrope.variable} ${hanken.variable} ${jetbrains.variable} h-full antialiased`}
     >
-      <head>
-        {/* Material Symbols is the current icon font for the mobile shell. */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="min-h-full bg-[#fcf9f8] font-sans text-[16px] leading-lg font-normal text-on-surface">
+      <body className="min-h-full bg-background font-sans text-[16px] leading-lg font-normal text-on-surface">
         <MobileShell>{children}</MobileShell>
         <Toaster position="top-center" offset={72} mobileOffset={72} richColors />
       </body>

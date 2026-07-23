@@ -211,10 +211,24 @@ Goods Receipt lifecycle: `POSTED → REVERSAL_REQUESTED → REVERSED`; rejected 
 
 ## Cash Transaction Type
 
-| Enum     | Meaning   |
-| :------- | :-------- |
-| `DEBIT`  | Cash in.  |
-| `CREDIT` | Cash out. |
+| Enum      | Meaning   |
+| :-------- | :-------- |
+| `INFLOW`  | Cash in.  |
+| `OUTFLOW` | Cash out. |
+
+Legacy rows using `DEBIT`/`CREDIT` are migrated by `0026_cash_direction_semantics`. Those terms are reserved for a future double-entry accounting journal and are not used for cash-direction UX.
+
+## Reconciliation Presentation State
+
+This is derived from cash-transaction fields rather than stored as a free-form status.
+
+| User-facing state       | Canonical condition                                                                 |
+| :---------------------- | :---------------------------------------------------------------------------------- |
+| `Belum cocok`           | `reconciled = false` and no reconciliation exception                                |
+| `Pengecualian tercatat` | `reconciled = false` with reason, reviewer, and timestamp                           |
+| `Sudah cocok`           | `reconciled = true` with reconciliation date/reviewer and one matched statement row |
+
+An exception never means reconciled. Clearing an exception returns the transaction to `Belum cocok`; confirming a real pair clears any exception evidence from the current row while the audit history remains immutable.
 
 ## Cash Transaction Category
 

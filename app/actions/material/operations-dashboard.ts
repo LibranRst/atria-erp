@@ -15,7 +15,7 @@ import {
   type MaterialInventoryRow,
   type MaterialShortageRow,
 } from "./inventory";
-import type { GoodsReceiptVendorBillOption } from "@/features/materials/lib/goods-receipt-prefill";
+import type { GoodsReceiptVendorBillOption } from "@/features/materials/utils/goods-receipt-prefill";
 
 export interface MaterialMovementView {
   readonly id: string;

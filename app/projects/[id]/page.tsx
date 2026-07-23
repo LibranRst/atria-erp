@@ -1,7 +1,7 @@
 import React from "react";
 
-import { ProjectTabs } from "@/features/projects/detail/components/project-tabs";
-import { getProjectDetailData } from "@/features/projects/detail/server/project-detail-data";
+import { ProjectTabs } from "@/features/projects/detail/components/shared/project-tabs";
+import { getProjectDetailData } from "@/features/projects/detail/actions/project-detail-data";
 
 export const dynamic = "force-dynamic";
 

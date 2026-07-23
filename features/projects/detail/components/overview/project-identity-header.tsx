@@ -11,6 +11,8 @@ import {
 } from "@/lib/project/effective-health";
 import { DetailRow } from "./project-overview-primitives";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { AppIcon } from "@/components/ui/icon/app-icon";
+import { StatusBadge } from "@/components/ui/badge/badge";
 
 export type IdentityProject = {
   readonly name: string;
@@ -77,7 +79,7 @@ export function ProjectIdentityHeader({
             className="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.1)] backdrop-blur-2xl"
             aria-label="Lihat detail proyek"
           >
-            <span className="material-symbols-outlined text-[20px]">info</span>
+            <AppIcon name="info" className="text-[20px]" />
           </button>
 
           <div className="absolute inset-x-0 bottom-0 p-4">
@@ -102,7 +104,7 @@ export function ProjectIdentityHeader({
               {project.name}
             </h1>
             <p className="mt-2 flex min-w-0 items-center gap-1.5 truncate text-[10px] font-medium text-white/65">
-              <span className="material-symbols-outlined shrink-0 text-[13px]">location_on</span>
+              <AppIcon name="location_on" className="shrink-0 text-[13px]" />
               <span className="truncate">{project.location || "Lokasi belum diisi"}</span>
               <span className="shrink-0 text-white/30">·</span>
               <span className="max-w-[42%] shrink-0 truncate">
@@ -177,20 +179,21 @@ function HeroStatusPill({
   readonly health?: EffectiveProjectHealth;
   readonly title?: string;
 }): React.JSX.Element {
-  const tone =
+  const tone = health === "CRITICAL" ? "critical" : health === "WARNING" ? "warning" : "neutral";
+  const surfaceClass =
     health === "CRITICAL"
-      ? "border-error/25 bg-error/90 text-white"
+      ? "!bg-critical-container !text-critical"
       : health === "WARNING"
-        ? "border-warning-light/20 bg-warning/85 text-white"
-        : "border-white/15 bg-black/35 text-white";
+        ? "!bg-warning-container !text-warning"
+        : "!bg-white/92 !text-on-surface";
 
   return (
-    <span
-      className={`inline-flex min-h-6 items-center rounded-full border px-2.5 text-[9px] font-bold tracking-wide uppercase shadow-[0_4px_14px_rgba(0,0,0,0.12)] ${tone}`}
+    <StatusBadge
+      className={surfaceClass}
+      tone={tone}
+      label={label}
       title={title}
-    >
-      {label}
-    </span>
+    />
   );
 }
 

@@ -11,18 +11,18 @@ import { toast } from "sonner";
 import { ClientPaymentSheet } from "./client-payment-sheet";
 import { ProjectInvoicesList } from "./project-invoices-list";
 import { ProjectInvoicesSummary } from "./project-invoices-summary";
-import type { BankAccountItem, ClientInvoiceItem } from "./project-invoices-types";
+import type { BankAccountItem, ClientInvoiceItem } from "../../types/project-invoices-types";
 import {
   calculateInvoiceRemaining,
   calculateInvoiceTotals,
   defaultPaymentDate,
   formatShortRp,
-} from "./project-invoices-utils";
+} from "../../utils/project-invoices-utils";
 import {
   FinanceSuccessSheet,
   type FinanceOperationSuccess,
-} from "@/features/finance/components/finance-form-patterns";
-import { useLocalFormRecovery } from "@/features/forms/use-local-form-recovery";
+} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
 
 const clientPaymentRecoverySchema = z.object({
   invoiceId: z.string(),
@@ -38,7 +38,7 @@ export type {
   BankAccountItem,
   ClientInvoiceItem,
   InvoicePaymentItem,
-} from "./project-invoices-types";
+} from "../../types/project-invoices-types";
 
 interface ProjectInvoicesProps {
   projectId: string;

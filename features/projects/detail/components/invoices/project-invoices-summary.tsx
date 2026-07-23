@@ -2,7 +2,8 @@
 
 import React from "react";
 
-import { MoneyValue } from "@/components/ui/page-primitives";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export function ProjectInvoicesSummary({
   isOwnerOrFinance,
@@ -52,16 +53,16 @@ export function ProjectInvoicesSummary({
           <button
             type="button"
             onClick={onCreateInvoiceClick}
-            className="inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-full bg-white px-4 text-[11px] font-bold text-primary"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-[11px] font-bold text-white ring-1 ring-white/15"
           >
-            <span className="material-symbols-outlined text-[17px]">add</span> Invoice
+            <AppIcon name="add" className="text-[17px]" /> Invoice
           </button>
         ) : null}
       </div>
-      <div className="mt-4 grid grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-4">
+      <div className="mt-4 flex flex-row justify-between border-t border-white/12 pt-4">
         <InvoiceFact label="Kontrak" amount={contractValue} />
-        <InvoiceFact label="Ditagihkan" amount={totalInvoiceAmount} align="center" />
-        <InvoiceFact label="Diterima" amount={totalPaidAmount} align="right" />
+        <InvoiceFact label="Ditagihkan" amount={totalInvoiceAmount} />
+        <InvoiceFact label="Diterima" amount={totalPaidAmount} />
       </div>
       {isOwnerOrFinance && invoicesCount === 0 ? (
         <button
@@ -75,7 +76,7 @@ export function ProjectInvoicesSummary({
       ) : null}
       {createError || createSuccess ? (
         <p
-          className={`mt-3 rounded-2xl px-3 py-2 text-[11px] ${createError ? "bg-error/18 text-[#ffb5ae]" : "bg-white/10 text-white"}`}
+          className={`mt-3 rounded-2xl px-3 py-2 text-[11px] ${createError ? "bg-error/18 text-critical-on-inverse" : "bg-white/10 text-white"}`}
         >
           {createError ?? createSuccess}
         </p>

@@ -113,7 +113,22 @@ A draft RAB revision may be cancelled before approval. Cancellation marks the re
 
 ## 6C. Project Closing
 
-Completion runs only through the closing action. It validates client invoices, vendor liabilities, expenses, open revisions/change orders, stock reservations, and canonical budget synchronization, then writes the final realized-margin/cash-position snapshot.
+Completion runs only through the closing action. It validates client invoices, vendor liabilities, expenses, open revisions/change orders, stock reservations, canonical budget synchronization, and project cash reconciliation. A cash transaction must have a confirmed bank match or a documented exception before closing. The final action writes the realized-margin/cash-position snapshot and discloses any accepted reconciliation exceptions.
+
+## 6D. Bank Reconciliation
+
+```mermaid
+flowchart TD
+  A["Atria records an internal cash movement"] --> B["Cash record remains Belum cocok"]
+  C["Finance imports or manually records bank mutations"] --> D["System suggests exact account, direction, and amount matches"]
+  B --> D
+  D --> E{"Finance decision"}
+  E -->|"Confirm pair"| F["Both records become Cocok and remain in Riwayat"]
+  E -->|"No bank pair"| G["Record exception reason, reviewer, timestamp, and audit"]
+  G --> H["Record stays unmatched but may pass closing as a disclosed exception"]
+```
+
+Statement import and reconciliation never change the account balance. Only the original payment, receipt, or explicit cash action changes balance. Suggested matches are never auto-approved.
 
 ## 7. Reserve Material for Project
 

@@ -72,7 +72,7 @@ export async function createProjectBudgetFromRatios(
   if (existing) {
     return {
       success: false,
-      error: { code: "FORBIDDEN", message: "Budget proyek canonical sudah ada." },
+      error: { code: "FORBIDDEN", message: "Budget utama proyek sudah tersedia." },
     };
   }
 

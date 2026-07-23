@@ -1,0 +1,94 @@
+import { describe, expect, test } from "bun:test";
+import { renderToStaticMarkup } from "react-dom/server";
+
+import SettingsLoading from "@/app/settings/loading";
+import { SettingsFilterBar } from "./settings-filter-bar";
+import { SettingsHub } from "../navigation/settings-hub";
+import { SettingsNavigation } from "../navigation/settings-navigation";
+import { parseSettingsTab, settingsTabFromPathname, settingsTabUrl } from "../../utils/settings-tabs-config";
+
+describe("Settings presentation", () => {
+  test("keeps query and legacy settings routes compatible", () => {
+    expect(parseSettingsTab("materials")).toBe("materials");
+    expect(parseSettingsTab("unknown")).toBe("overview");
+    expect(settingsTabFromPathname("/settings/library")).toBe("library");
+    expect(settingsTabUrl("budget")).toBe("/settings?tab=budget");
+  });
+
+  test("renders a default-project posture and role-aware grouped modules", () => {
+    const html = renderToStaticMarkup(
+      <SettingsHub
+        data={{
+          roleName: "OWNER",
+          permissions: {
+            canManageBudgetSettings: true,
+            canManageExpenseCategories: true,
+            canManageItemLibrary: false,
+            canManageMaterialSettings: true,
+            canManageUsers: true,
+            canManageVendors: true,
+          },
+          budgetCapRatio: 0.9,
+          categoryAllocationRatio: 0.545,
+          unallocatedBufferRatio: 0.455,
+          activeCategoryCount: 5,
+          activeItemCount: 14,
+          activeMaterialCount: 8,
+        }}
+        onSelectTab={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("Default proyek baru");
+    expect(html).toContain("90%");
+    expect(html).toContain("54,5%");
+    expect(html).toContain("Dapat dikelola");
+    expect(html).toContain("Hanya baca");
+    expect(html).toContain("divide-y");
+  });
+
+  test("keeps five peer modules in overflow-capable document-flow navigation", () => {
+    const html = renderToStaticMarkup(
+      <SettingsNavigation value="overview" onChange={() => undefined} />,
+    );
+    expect(html).toContain('data-sticky="false"');
+    expect(html).toContain("Ringkasan");
+    expect(html).toContain("Budget");
+    expect(html).toContain("Material");
+    expect(html).toContain('role="tablist"');
+  });
+
+  test("renders exclusive search with a structured-filter trigger and count", () => {
+    const html = renderToStaticMarkup(
+      <SettingsFilterBar
+        status="ACTIVE"
+        statusOptions={[
+          { value: "ACTIVE", label: "Aktif" },
+          { value: "INACTIVE", label: "Arsip" },
+          { value: "ALL", label: "Semua" },
+        ]}
+        search=""
+        filterCount={2}
+        searchPlaceholder="Cari data"
+        searchAriaLabel="Cari data pengaturan"
+        layoutPrefix="settings-test"
+        filterTitle="Filter data"
+        onStatusChange={() => undefined}
+        onSearchChange={() => undefined}
+        onResetFilters={() => undefined}
+      >
+        <span>Isi filter</span>
+      </SettingsFilterBar>,
+    );
+    expect(html).toContain('data-control-mode="filter"');
+    expect(html).toContain("Buka filter data");
+    expect(html).toContain(">2<");
+  });
+
+  test("uses a route-specific structural skeleton", () => {
+    const html = renderToStaticMarkup(<SettingsLoading />);
+    expect(html).toContain("Memuat Pengaturan ERP");
+    expect(html).toContain("bg-surface-inverse");
+    expect(html).toContain("Default finansial dan master data sedang disiapkan");
+  });
+});

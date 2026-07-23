@@ -68,6 +68,9 @@ Interactive controls remain fully rounded when they stand alone. Grouped data-en
 - **Textareas**: Standalone textareas use `rounded-2xl`; grouped textareas grow inside their row without a second container.
 - **Field Layout**: Text, money, and notes are stacked. Toggles and short choices may opt into an inline label/control row. Helper and error copy stays inside the row.
 - **Buttons**: All action buttons, toggles, selectors, and option cards must use fully rounded capsule shapes (`rounded-full`).
+- **Action hierarchy**: Use the shared Button family. Primary commits are black, tertiary navigation/focus uses tokenized iOS blue, and solid critical actions appear only at irreversible confirmation.
+- **Sheet footer**: One action uses a full-width primary footer button. Two actions use equal secondary + primary capsule columns. Header controls do not submit.
+- **Status badges**: Use the shared 24px `StatusBadge`; count, metadata, filter, and tab controls are separate primitives.
 - **Drawers & Sheets**: Sliding sheets use a light gray canvas (`surface-container-low`), white grouped surfaces, large rounded top corners (`rounded-t-[28px]`), and circular header controls. Centered confirmations keep their geometry but share the same palette.
 - **Focus & Selection**: Use iOS blue for focus, selected options, calendar dates, and checkmarks. Keep Atria black for primary submit and semantic colors for status.
 - **Touch Targets**: Visible compact controls may be 32–40px high only when their effective interactive area remains at least 48x48px.

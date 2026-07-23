@@ -122,7 +122,7 @@ async function resolveStockMovement(
   return {
     kind: "STOCK_MOVEMENT",
     id: row.id,
-    title: "Detail mutasi stok",
+    title: "Detail pergerakan stok",
     subtitle: row.material.name,
     status: row.movementType,
     statusTone: statusTone(row.movementType),
@@ -132,9 +132,9 @@ async function resolveStockMovement(
       fact("Material", textValue(row.material.name)),
       fact("Lokasi", textValue(row.location.name)),
       fact("Arah", textValue(direction)),
-      fact("Quantity", quantityValue(Number(row.quantity), row.material.unit)),
-      fact("Unit cost", moneyValue(Number(row.unitCost))),
-      fact("Nilai mutasi", moneyValue(stockValue)),
+      fact("Jumlah", quantityValue(Number(row.quantity), row.material.unit)),
+      fact("Harga satuan", moneyValue(Number(row.unitCost))),
+      fact("Nilai pergerakan", moneyValue(stockValue)),
       ...(row.project ? [fact("Proyek", textValue(row.project.name))] : []),
     ],
     comparisons: [],
@@ -154,7 +154,7 @@ async function resolveStockMovement(
         textValue(
           row.projectCostId || row.vendorBillId
             ? "Dampak kas mengikuti transaksi finansial sumber"
-            : "Tidak ada mutasi kas langsung",
+            : "Kas tidak berubah langsung",
         ),
       ),
     ],
@@ -230,28 +230,28 @@ async function resolveGoodsReceipt(
             `${index + 1}. ${item.material.name}`,
             quantityValue(Number(item.quantity), item.material.unit),
           ),
-          fact(`Unit cost ${index + 1}`, moneyValue(Number(item.unitCost))),
+          fact(`Harga satuan ${index + 1}`, moneyValue(Number(item.unitCost))),
           fact(`Subtotal ${index + 1}`, moneyValue(Number(item.quantity) * Number(item.unitCost))),
           ...(inventory
             ? [
                 fact(
-                  `Current stock ${index + 1}`,
+                  `Stok fisik ${index + 1}`,
                   quantityValue(Number(inventory.currentStock), item.material.unit),
                 ),
                 fact(
-                  `Reserved stock ${index + 1}`,
+                  `Stok direservasi ${index + 1}`,
                   quantityValue(Number(inventory.reservedStock), item.material.unit),
                 ),
                 fact(
-                  `Available stock ${index + 1}`,
+                  `Stok tersedia ${index + 1}`,
                   quantityValue(
                     Math.max(0, Number(inventory.currentStock) - Number(inventory.reservedStock)),
                     item.material.unit,
                   ),
                 ),
-                fact(`Average cost ${index + 1}`, moneyValue(Number(inventory.averageCost))),
+                fact(`Harga rata-rata ${index + 1}`, moneyValue(Number(inventory.averageCost))),
                 fact(
-                  `Nilai inventory ${index + 1}`,
+                  `Nilai persediaan ${index + 1}`,
                   moneyValue(Number(inventory.currentStock) * Number(inventory.averageCost)),
                 ),
               ]
@@ -270,11 +270,11 @@ async function resolveGoodsReceipt(
         ),
       ),
       fact("Kas", textValue("Tidak berubah oleh penerimaan barang")),
-      fact("Actual cost proyek", textValue("Tidak berubah oleh penerimaan barang")),
+      fact("Realisasi biaya proyek", textValue("Tidak berubah oleh penerimaan barang")),
     ],
     notes: [
       fact("Catatan", textValue(row.note?.trim() || "Tidak ada catatan")),
-      ...(row.reversalReason ? [fact("Alasan reversal", textValue(row.reversalReason))] : []),
+      ...(row.reversalReason ? [fact("Alasan pembatalan", textValue(row.reversalReason))] : []),
     ],
     source: canLinkProject(roleName)
       ? { label: "Lihat proyek", href: `/projects/${row.projectId}?tab=stok` }
@@ -321,8 +321,8 @@ async function resolveStockTransfer(id: string): Promise<ActivityDetailView | nu
     impacts: [
       fact("Lokasi asal", textValue("Stok berkurang")),
       fact("Lokasi tujuan", textValue("Stok bertambah")),
-      fact("Stok global", textValue("Net stock nol")),
-      fact("Kas", textValue("Tidak ada mutasi kas")),
+      fact("Total stok", textValue("Jumlah keseluruhan tidak berubah")),
+      fact("Kas", textValue("Kas tidak berubah")),
     ],
     notes: [fact("Catatan", textValue(row.note))],
     source: { label: "Buka aktivitas material", href: "/materials?tab=activity" },
@@ -357,7 +357,7 @@ async function resolveStockCount(id: string): Promise<ActivityDetailView | null>
     facts: [
       fact("Lokasi", textValue(row.location.name)),
       fact("Jumlah item", quantityValue(row.items.length, "item")),
-      ...(row.approvedBy ? [fact("Checker", textValue(row.approvedBy.name))] : []),
+      ...(row.approvedBy ? [fact("Pemeriksa", textValue(row.approvedBy.name))] : []),
     ],
     comparisons: row.items.map((item) => ({
       label: item.material.name,
@@ -366,11 +366,11 @@ async function resolveStockCount(id: string): Promise<ActivityDetailView | null>
     })),
     impacts: [
       fact(
-        "Variance quantity",
+        "Selisih jumlah",
         quantityValue(row.items.reduce((sum, item) => sum + Number(item.varianceQuantity), 0)),
       ),
-      fact("Variance nilai", moneyValue(varianceValue)),
-      fact("Kas", textValue("Tidak ada mutasi kas")),
+      fact("Nilai selisih", moneyValue(varianceValue)),
+      fact("Kas", textValue("Kas tidak berubah")),
     ],
     notes: [
       fact("Catatan", textValue(row.note?.trim() || "Tidak ada catatan")),
@@ -407,7 +407,7 @@ async function resolveOpening(id: string): Promise<ActivityDetailView | null> {
       row.postedAt?.toISOString() ?? row.approvedAt?.toISOString() ?? row.createdAt.toISOString(),
     actorName: row.requestedBy.name,
     facts: [
-      fact("Tanggal cutover", dateValue(row.cutoverDate)),
+      fact("Tanggal saldo awal", dateValue(row.cutoverDate)),
       fact("Pengaju", textValue(row.requestedBy.name)),
       ...(row.approvedBy ? [fact("Pemeriksa", textValue(row.approvedBy.name))] : []),
       fact("Jumlah item", quantityValue(row.items.length, "item")),
@@ -452,7 +452,7 @@ async function resolveOpening(id: string): Promise<ActivityDetailView | null> {
         ...(item.stockMovement
           ? [
               fact(
-                `Mutasi stok ${index + 1}`,
+                `Pergerakan stok ${index + 1}`,
                 textValue(formatBusinessLabel(item.stockMovement.movementType, "INVENTORY")),
               ),
             ]
@@ -465,16 +465,16 @@ async function resolveOpening(id: string): Promise<ActivityDetailView | null> {
         "Stok",
         textValue(
           row.status === "POSTED"
-            ? "Menambah current dan available stock"
+            ? "Menambah stok fisik dan stok tersedia"
             : row.status === "REVERSED"
               ? "Saldo awal telah dibalik"
               : "Belum mengubah stok",
         ),
       ),
-      fact("Nilai inventory", moneyValue(row.status === "POSTED" ? openingTotal : 0)),
+      fact("Nilai persediaan", moneyValue(row.status === "POSTED" ? openingTotal : 0)),
       fact("Kas", textValue("Tidak berubah")),
       fact("Utang vendor", textValue("Tidak berubah")),
-      fact("Actual cost proyek", textValue("Tidak berubah")),
+      fact("Realisasi biaya proyek", textValue("Tidak berubah")),
     ],
     notes: [
       fact("Catatan", textValue(row.note)),
@@ -483,7 +483,7 @@ async function resolveOpening(id: string): Promise<ActivityDetailView | null> {
         "Alasan keputusan",
         textValue(reason ?? "Alasan keputusan belum tercatat pada data lama"),
       ),
-      ...(row.reversalReason ? [fact("Alasan reversal", textValue(row.reversalReason))] : []),
+      ...(row.reversalReason ? [fact("Alasan pembatalan", textValue(row.reversalReason))] : []),
     ],
     source: { label: "Buka saldo awal", href: "/materials/opening" },
     evidenceIncomplete: ["POSTED", "REJECTED"].includes(row.status) && !reason,
@@ -525,8 +525,8 @@ async function resolveProjectCost(
       fact("Proyek", textValue(row.project.name)),
       fact("Kategori", textValue(row.budgetCategory.expenseCategory.name)),
       ...(row.material ? [fact("Material", textValue(row.material.name))] : []),
-      fact("Quantity", quantityValue(Number(row.quantity))),
-      fact("Unit cost", moneyValue(Number(row.unitPrice))),
+      fact("Jumlah", quantityValue(Number(row.quantity))),
+      fact("Harga satuan", moneyValue(Number(row.unitPrice))),
       fact("Subtotal", moneyValue(Number(row.amount))),
       fact("Pengaju", textValue(row.requestedBy.name)),
       ...(row.bankAccount ? [fact("Rekening", textValue(row.bankAccount.name))] : []),
@@ -538,7 +538,7 @@ async function resolveProjectCost(
         textValue(
           ["APPROVED", "PAID"].includes(row.status)
             ? "Menambah pemakaian kategori budget"
-            : "Belum menjadi actual spend",
+            : "Belum menjadi realisasi biaya",
         ),
       ),
       fact(
@@ -546,7 +546,7 @@ async function resolveProjectCost(
         textValue(
           row.cashTransaction
             ? `Kas berkurang ${Number(row.amount).toLocaleString("id-ID")}`
-            : "Belum ada mutasi kas",
+            : "Kas belum berubah",
         ),
       ),
     ],
@@ -602,7 +602,7 @@ async function resolveVendorBill(
     ],
     comparisons: [],
     impacts: [
-      fact("Budget", textValue("Tagihan menambah komitmen/actual kategori sesuai status")),
+      fact("Budget", textValue("Tagihan menambah komitmen atau realisasi kategori sesuai status")),
       fact("Utang vendor", moneyValue(Math.max(0, Number(row.amount) - paid))),
       fact(
         "Kas",
@@ -663,7 +663,7 @@ async function resolveVendorPayment(
 async function resolveCashTransaction(id: string): Promise<ActivityDetailView | null> {
   const row = await db.query.cashTransaction.findFirst({
     where: (table) => eq(table.id, id),
-    with: { bankAccount: true, reconciledBy: true },
+    with: { bankAccount: true, reconciledBy: true, reconciliationExceptionBy: true },
   });
   if (!row) return null;
   const directAudit = await latestAudit("cash_transaction", row.id);
@@ -677,8 +677,12 @@ async function resolveCashTransaction(id: string): Promise<ActivityDetailView | 
     id: row.id,
     title: row.description,
     subtitle: row.bankAccount.name,
-    status: row.reconciled ? "RECONCILED" : "BELUM DIREKONSILIASI",
-    statusTone: row.reconciled ? "SUCCESS" : "PENDING",
+    status: row.reconciled
+      ? "SUDAH COCOK"
+      : row.reconciliationExceptionAt
+        ? "PENGECUALIAN TERCATAT"
+        : "BELUM COCOK",
+    statusTone: row.reconciled ? "SUCCESS" : row.reconciliationExceptionAt ? "WARNING" : "PENDING",
     occurredAt: row.createdAt.toISOString(),
     actorName: audit?.actorName ?? "Sistem",
     facts: [
@@ -692,10 +696,10 @@ async function resolveCashTransaction(id: string): Promise<ActivityDetailView | 
     ],
     comparisons: [],
     impacts: [
-      fact("Saldo rekening", textValue(row.type === "DEBIT" ? "Bertambah" : "Berkurang")),
+      fact("Saldo rekening", textValue(row.type === "INFLOW" ? "Bertambah" : "Berkurang")),
       fact(
         "Nilai perubahan",
-        moneyValue(row.type === "DEBIT" ? Number(row.amount) : -Number(row.amount)),
+        moneyValue(row.type === "INFLOW" ? Number(row.amount) : -Number(row.amount)),
       ),
     ],
     notes: [
@@ -704,6 +708,15 @@ async function resolveCashTransaction(id: string): Promise<ActivityDetailView | 
         : []),
       ...(row.reconciliationDate
         ? [fact("Tanggal rekonsiliasi", dateValue(row.reconciliationDate))]
+        : []),
+      ...(row.reconciliationExceptionReason
+        ? [fact("Alasan pengecualian", textValue(row.reconciliationExceptionReason))]
+        : []),
+      ...(row.reconciliationExceptionBy
+        ? [fact("Pemeriksa pengecualian", textValue(row.reconciliationExceptionBy.name))]
+        : []),
+      ...(row.reconciliationExceptionAt
+        ? [fact("Pengecualian dicatat", dateValue(row.reconciliationExceptionAt))]
         : []),
     ],
     source: { label: "Buka rekening", href: "/ledger?tab=accounts" },
@@ -929,7 +942,7 @@ async function resolveApproval(id: string): Promise<ActivityDetailView | null> {
         "Keputusan",
         textValue(
           row.status === "APPROVED"
-            ? "Transaksi dapat melanjutkan workflow canonical"
+            ? "Transaksi dapat dilanjutkan ke tahap berikutnya"
             : "Transaksi dihentikan atau dikembalikan untuk perbaikan",
         ),
       ),

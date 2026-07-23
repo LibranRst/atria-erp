@@ -3,6 +3,7 @@
 import React from "react";
 
 import { NativePanel } from "../shared/rap-rab-primitives";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export function RabEmptyState({
   canManageRab,
@@ -15,7 +16,7 @@ export function RabEmptyState({
     <NativePanel eyebrow="RAB Klien" title="Belum ada RAB">
       <div className="py-lg text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <span className="material-symbols-outlined text-[28px]">request_quote</span>
+          <AppIcon name="request_quote" className="text-[28px]" />
         </div>
         <h3 className="mt-4 text-base font-bold">Susun draf yang siap dibaca klien</h3>
         <p className="mx-auto mt-1 max-w-xs text-xs leading-5 text-on-surface-variant">

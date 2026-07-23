@@ -4,6 +4,7 @@ import Link from "next/link";
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
+import { AppIcon } from "@/components/ui/icon/app-icon";
 import {
   transitionEaseSmooth,
   transitionSpringBouncy,
@@ -136,17 +137,11 @@ export function HeaderMorphMenu({
                     }`}
                   >
                     <span className="min-w-0 truncate text-sm font-bold">{item.label}</span>
-                    <span
-                      aria-hidden="true"
-                      className={`material-symbols-outlined shrink-0 text-[18px] ${
-                        isActive ? "text-on-primary" : "text-on-surface-variant/55"
-                      }`}
-                      style={{
-                        fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0",
-                      }}
-                    >
-                      {item.iconName}
-                    </span>
+                    <AppIcon
+                      name={item.iconName}
+                      weight={isActive ? "fill" : "regular"}
+                      className={`shrink-0 text-[18px] ${isActive ? "text-on-primary" : "text-on-surface-variant/55"}`}
+                    />
                   </Link>
                 );
               })}

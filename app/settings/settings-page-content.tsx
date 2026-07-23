@@ -8,8 +8,8 @@ import {
   getInitialStockCandidates,
   getInventoryOpeningBatches,
 } from "@/app/actions/material/opening-inventory";
-import { SettingsDashboard } from "@/features/settings/components/settings-dashboard";
-import type { SettingsTab } from "@/features/settings/components/settings-tabs-config";
+import { SettingsDashboard } from "@/features/settings/components/navigation/settings-dashboard";
+import type { SettingsTab } from "@/features/settings/utils/settings-tabs-config";
 import { PageState } from "@/components/ui";
 
 type SettingsPageContentProps = {

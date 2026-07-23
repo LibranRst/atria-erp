@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export function BudgetEmptyState({
   canManage,
@@ -16,7 +17,7 @@ export function BudgetEmptyState({
   return (
     <div className="flex flex-col items-center justify-center space-y-md rounded-[28px] border border-outline-variant/20 bg-white p-md py-10 text-center shadow-[0_14px_34px_rgba(17,17,17,0.045)] select-none">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container text-on-surface-variant">
-        <span className="material-symbols-outlined text-[28px]">description</span>
+        <AppIcon name="description" className="text-[28px]" />
       </div>
       <div className="space-y-xs">
         <h3 className="font-title-md text-on-surface">RAB Belum Tersedia</h3>
@@ -35,7 +36,7 @@ export function BudgetEmptyState({
             <span className="animate-pulse">Membuat Draf...</span>
           ) : (
             <>
-              <span className="material-symbols-outlined text-[16px]">add</span>
+              <AppIcon name="add" className="text-[16px]" />
               <span>Buat Rencana Anggaran (RAB)</span>
             </>
           )}

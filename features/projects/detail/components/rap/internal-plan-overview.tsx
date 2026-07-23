@@ -3,10 +3,11 @@
 import React from "react";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
-import { Badge } from "@/components/ui/badge";
-import { SegmentedTabs } from "@/components/ui/segmented-tabs";
+import { Badge } from "@/components/ui/badge/badge";
+import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
 import { NativePanel } from "../shared/rap-rab-primitives";
 import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@/lib/utils/money";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 import type {
   RapView,
   RabEstimateView,
@@ -84,13 +85,11 @@ export function InternalPlanOverview({
           value: filter,
           label: filter === "MATERIAL" ? "Material" : filter === "TUKANG" ? "Tukang" : "Subcon",
           icon: (
-            <span className="material-symbols-outlined text-[16px]">
-              {filter === "MATERIAL"
+            <AppIcon name={filter === "MATERIAL"
                 ? "inventory_2"
                 : filter === "TUKANG"
                   ? "engineering"
-                  : "domain"}
-            </span>
+                  : "domain"} className="text-[16px]" />
           ),
         }))}
       />

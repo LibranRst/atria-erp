@@ -9,17 +9,18 @@ import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
-import { GlobalExpenseDrawer } from "@/features/expenses/components/global-drawer";
-import { GlobalProjectDrawer } from "@/features/projects/list/components/global-project-drawer";
-import { GlobalVendorBillDrawer } from "@/features/expenses/components/global-vendor-bill-drawer";
+import { GlobalExpenseDrawer } from "@/features/expenses/components/sheets/global-drawer";
+import { GlobalProjectDrawer } from "@/features/projects/list/components/drawers/global-project-drawer";
+import { GlobalVendorBillDrawer } from "@/features/expenses/components/sheets/global-vendor-bill-drawer";
 import { GlobalInvoiceDrawer } from "@/features/projects/detail/components/invoices/global-invoice-drawer";
-import { ProjectStateProvider } from "@/features/projects/detail/components/project-state-context";
+import { ProjectStateProvider } from "@/features/projects/detail/components/shared/project-state-context";
 import { authClient } from "@/lib/auth-client";
 import { ROLE_ID_TO_NAME } from "@/lib/auth/permissions";
 import { transitionSpringBouncy, transitionSpringSmooth } from "@/lib/utils/motion";
-import { ConnectivityBanner } from "@/components/ui/page-state";
-import { DeveloperSimulationBanner } from "@/features/profile/components/developer-simulation-banner";
+import { ConnectivityBanner } from "@/components/ui/feedback/page-state";
+import { DeveloperSimulationBanner } from "@/features/profile/components/developer/developer-simulation-banner";
 import { ActivityDetailProvider } from "@/features/activity-detail/components/activity-detail-provider";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 type MobileShellProps = Readonly<{
   children: React.ReactNode;
@@ -73,7 +74,7 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
                 className="absolute top-0 left-0 z-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-[0_10px_24px_rgba(17,17,17,0.10)] transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
                 aria-label="Go back"
               >
-                <span className="material-symbols-outlined text-[28px]">chevron_left</span>
+                <AppIcon name="chevron_left" className="text-[28px]" />
               </motion.button>
             )}
           </AnimatePresence>

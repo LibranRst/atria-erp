@@ -405,7 +405,7 @@ export async function approveStockCount(input: unknown): Promise<ActionResponse<
           )
           .for("update");
         if (!inventory || Number(inventory.currentStock) !== Number(item.systemQuantity))
-          throw new Error("Stock berubah sejak snapshot. Buat ulang stock count.");
+          throw new Error("Stok berubah sejak terakhir dihitung. Lakukan stock opname ulang.");
         if (Number(item.countedQuantity) < Number(inventory.reservedStock))
           throw new Error(
             "Counted stock lebih kecil dari reserved stock. Rekonsiliasi reservation dahulu.",

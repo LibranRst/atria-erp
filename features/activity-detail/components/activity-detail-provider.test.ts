@@ -8,10 +8,14 @@ describe("activity detail UI contract", () => {
     expect(source).toContain("<BottomSheet");
     expect(source).toContain("DetailSkeleton");
     expect(source).toContain("Coba lagi");
-    expect(source).toContain("Fakta transaksi");
+    expect(source).toContain("Rincian transaksi");
     expect(source).toContain("Dampak bisnis");
-    expect(source).toContain("Data perubahan historis belum tercatat lengkap");
+    expect(source).toContain(
+      "Riwayat lama belum menyimpan semua perubahan. Hanya data yang tersedia yang ditampilkan.",
+    );
     expect(source).toContain("MoneyValue");
+    expect(source).toContain("isActivityDetailSourceRepresentedInCurrentContext");
+    expect(source).toContain("useSearchParams");
     expect(source).not.toContain("originalState");
     expect(source).not.toContain("newState");
   });

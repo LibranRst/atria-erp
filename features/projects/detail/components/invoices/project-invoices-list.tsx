@@ -2,10 +2,10 @@
 
 import React from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { MoneyValue } from "@/components/ui/page-primitives";
-import type { ClientInvoiceItem } from "./project-invoices-types";
-import { calculateInvoicePaidAmount, calculateInvoiceRemaining } from "./project-invoices-utils";
+import { Badge } from "@/components/ui/badge/badge";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import type { ClientInvoiceItem } from "../../types/project-invoices-types";
+import { calculateInvoicePaidAmount, calculateInvoiceRemaining } from "../../utils/project-invoices-utils";
 import {
   ActivityDetailChevron,
   useActivityDetail,
@@ -37,7 +37,7 @@ export function ProjectInvoicesList({
           jadwal penagihan klien sudah siap.
         </div>
       ) : (
-        <div className="rounded-3xl bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+        <div className="flex flex-col gap-3 rounded-3xl bg-white p-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
           {orderedInvoices.map((invoice, index) => (
             <ProjectInvoiceTimelineRow
               key={invoice.id}
@@ -81,28 +81,30 @@ function ProjectInvoiceTimelineRow({
           openActivityDetail({ kind: "CLIENT_INVOICE", id: invoice.id });
         }
       }}
-      className="relative flex min-h-12 gap-3 py-3 outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
+      className="relative flex min-h-12 gap-3 rounded-2xl p-2 transition-all outline-none focus-visible:bg-surface-container-low active:scale-98 active:bg-surface-container-low/40"
       aria-label={`Lihat detail invoice ${invoice.invoiceNumber}`}
     >
       {connected ? (
         <span
-          className="absolute top-11 -bottom-sm left-4.25 w-px bg-outline-variant/45"
+          className="absolute top-11 -bottom-sm left-6 w-px bg-outline-variant/45"
           aria-hidden="true"
         />
       ) : null}
       <div className="relative z-10 flex w-9 shrink-0 flex-col items-center gap-0.5 rounded-xl bg-surface-container-low py-1 ring-4 ring-white">
-        <span className="font-mono text-[12px] font-black">
+        <span className="font-mono text-[12px] leading-5 font-black">
           {due.toLocaleDateString("id-ID", { day: "2-digit" })}
         </span>
-        <span className="text-[7px] font-bold text-on-surface-variant uppercase">
+        <span className="text-[7px] leading-6 font-bold text-on-surface-variant uppercase">
           {due.toLocaleDateString("id-ID", { month: "short" })}
         </span>
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-xs font-bold text-on-surface">{invoice.invoiceNumber}</p>
-            <p className="mt-0.5 text-[10px] text-on-surface-variant">
+            <p className="truncate text-xs leading-5 font-bold text-on-surface">
+              {invoice.invoiceNumber}
+            </p>
+            <p className="text-[10px] leading-4 text-on-surface-variant">
               Jatuh tempo{" "}
               {due.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
             </p>
@@ -121,7 +123,7 @@ function ProjectInvoiceTimelineRow({
         </div>
         <div className="mt-2 flex items-end justify-between gap-3">
           <div>
-            <p className="text-[8px] font-bold tracking-wide text-on-surface-variant uppercase">
+            <p className="text-[8px] leading-5 font-bold tracking-wide text-on-surface-variant uppercase">
               Sisa dari tagihan
             </p>
             <MoneyValue
@@ -148,7 +150,7 @@ function ProjectInvoiceTimelineRow({
         </div>
         {invoice.payments.length > 0 ? (
           <div className="mt-2 space-y-1">
-            <p className="text-[9px] text-on-surface-variant">
+            <p className="text-[9px] leading-5 text-on-surface-variant">
               {invoice.payments.length} pembayaran · diterima Rp {totalPaid.toLocaleString("id-ID")}
             </p>
             {invoice.payments.map((payment) => (
@@ -159,7 +161,7 @@ function ProjectInvoiceTimelineRow({
                   event.stopPropagation();
                   openActivityDetail({ kind: "CLIENT_PAYMENT", id: payment.id });
                 }}
-                className="flex min-h-12 w-full items-center justify-between gap-3 rounded-full bg-surface-container-low px-3 text-left text-[10px] font-semibold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                className="flex w-full items-center justify-between gap-3 rounded-xl bg-surface-container-low p-2 text-left text-[10px] font-semibold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
               >
                 <span>
                   {new Date(payment.paymentDate).toLocaleDateString("id-ID", {

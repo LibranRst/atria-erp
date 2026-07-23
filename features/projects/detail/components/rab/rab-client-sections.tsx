@@ -1,11 +1,12 @@
 "use client";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 import React from "react";
 import { motion } from "framer-motion";
 
 import { ConfirmationModal } from "@/components/ui";
-import { Badge, type BadgeStatus } from "@/components/ui/badge";
-import { MoneyValue } from "@/components/ui/page-primitives";
+import { Badge, type BadgeStatus } from "@/components/ui/badge/badge";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
@@ -188,7 +189,7 @@ export function RabItemsPanel({
             className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-on-primary"
             aria-label="Tambah item manual"
           >
-            <span className="material-symbols-outlined">add</span>
+            <AppIcon name="add" />
           </button>
         ) : undefined
       }
@@ -342,7 +343,7 @@ function RabBundleRow({
     >
       <div className="flex min-w-0 items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary">
-          <span className="material-symbols-outlined text-[19px]">inventory_2</span>
+          <AppIcon name="inventory_2" className="text-[19px]" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-bold">{bundle.clientLabel}</span>
@@ -373,9 +374,7 @@ function RabItemRow({
     >
       <div className="flex min-w-0 items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75 text-primary">
-          <span className="material-symbols-outlined text-[19px]">
-            {item.sourceType === "MANUAL" ? "edit_note" : "format_list_bulleted"}
-          </span>
+          <AppIcon name={item.sourceType === "MANUAL" ? "edit_note" : "format_list_bulleted"} className="text-[19px]" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-bold">{item.clientLabel}</span>

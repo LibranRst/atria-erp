@@ -197,7 +197,7 @@ export function deriveOwnerOnboardingGates(input: OwnerOnboardingGateInput): {
     blockers.push({
       stepId: "financial_defaults",
       label: "Default finansial belum siap",
-      detail: "Aktifkan alokasi budget dan lima kategori biaya canonical.",
+      detail: "Aktifkan alokasi budget dan lima kategori biaya utama.",
     });
   if (!input.teamReady)
     blockers.push({

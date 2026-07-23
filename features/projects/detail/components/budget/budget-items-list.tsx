@@ -2,9 +2,10 @@
 
 import React from "react";
 
-import { MoneyValue } from "@/components/ui/page-primitives";
-import { Badge, type BadgeStatus } from "@/components/ui/badge";
-import type { BudgetItem } from "./budget-manager-types";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { MetadataChip, resolveStatusPresentation, StatusBadge } from "@/components/ui/badge/badge";
+import type { BudgetItem } from "../../types/budget-manager-types";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export function BudgetItemsList({
   status,
@@ -15,20 +16,19 @@ export function BudgetItemsList({
   readonly budgetItems: readonly BudgetItem[];
   readonly itemsByCategory: Record<string, BudgetItem[]>;
 }): React.JSX.Element {
+  const statusPresentation = resolveStatusPresentation(status);
   return (
     <div className="space-y-md">
       <div className="flex items-center justify-between">
         <h2 className="font-sans text-[8px] leading-4 font-bold tracking-wider text-on-surface-variant uppercase">
           Rincian Project Budget
         </h2>
-        <Badge status={status as BadgeStatus}>{status}</Badge>
+        <StatusBadge tone={statusPresentation.tone} label={statusPresentation.label} />
       </div>
 
       {budgetItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-[28px] border border-outline-variant/20 bg-white p-md py-8 text-center shadow-[0_14px_34px_rgba(17,17,17,0.045)]">
-          <span className="material-symbols-outlined mb-1 text-[24px] text-on-surface-variant">
-            list
-          </span>
+          <AppIcon name="list" className="mb-1 text-[24px] text-on-surface-variant" />
           <p className="font-body-xs text-on-surface-variant">
             Belum ada item dalam draft Project Budget ini.
           </p>
@@ -56,9 +56,9 @@ function BudgetCategoryGroup({
   return (
     <div className="space-y-sm">
       <div className="flex items-center">
-        <span className="rounded-full border border-outline-variant/20 bg-surface-container px-2.5 py-1 font-sans text-[10px] leading-4 font-bold tracking-wider text-primary uppercase">
+        <MetadataChip className="font-sans font-bold tracking-wider text-primary uppercase">
           Area pekerjaan: {categoryName}
-        </span>
+        </MetadataChip>
       </div>
 
       <div className="space-y-sm">

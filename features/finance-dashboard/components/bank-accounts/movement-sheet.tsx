@@ -15,12 +15,12 @@ import {
 import {
   FinanceUnsavedChangesModal,
   MoneyImpactRow,
-} from "@/features/finance/components/finance-form-patterns";
-import { shortMoney } from "@/features/finance-dashboard/lib/dashboard-formatters";
+} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import { movementCategoryOptions } from "./constants";
+import { movementCategoryOptions } from "@/features/finance-dashboard/utils/bank-account-constants";
 import { InfoPill } from "./info-pill";
-import type { BankAccount, CashMovementCategory, MovementDraft } from "./types";
+import type { BankAccount, CashMovementCategory, MovementDraft } from "@/features/finance-dashboard/types/bank-account-types";
 
 function toMovementCategory(value: string): CashMovementCategory {
   const option = movementCategoryOptions.find((item) => item.value === value);
@@ -57,7 +57,7 @@ export function MovementSheet({
   const canSave = Number(draft.amount || 0) > 0 && draft.description.trim().length >= 5;
   const amount = Number(draft.amount || 0);
   const projectedBalance = account
-    ? draft.type === "DEBIT"
+    ? draft.type === "INFLOW"
       ? account.balance + amount
       : account.balance - amount
     : 0;
@@ -84,7 +84,7 @@ export function MovementSheet({
       <WorkflowFormSheet
         open={open}
         title={
-          reviewing ? "Tinjau mutasi kas" : draft.type === "DEBIT" ? "Kas masuk" : "Kas keluar"
+          reviewing ? "Tinjau mutasi kas" : draft.type === "INFLOW" ? "Kas masuk" : "Kas keluar"
         }
         onClose={requestClose}
         pending={pending}
@@ -93,7 +93,7 @@ export function MovementSheet({
         primaryLabel={reviewing ? "Catat" : "Tinjau"}
         secondaryLabel={reviewing ? "Ubah" : undefined}
         pendingLabel="Mencatat…"
-        danger={reviewing && draft.type === "CREDIT"}
+        danger={reviewing && draft.type === "OUTFLOW"}
         statusText={projectedBalance < 0 ? "Saldo sesudah mutasi tidak mencukupi." : undefined}
         statusTone={projectedBalance < 0 ? "danger" : "default"}
         onPrimary={() => (reviewing ? onSave() : setReviewing(true))}
@@ -108,7 +108,7 @@ export function MovementSheet({
               <MoneyImpactRow
                 label={account?.name ?? "Rekening"}
                 before={account?.balance ?? 0}
-                delta={draft.type === "DEBIT" ? amount : -amount}
+                delta={draft.type === "INFLOW" ? amount : -amount}
                 after={projectedBalance}
               />
               <FormSection
@@ -116,7 +116,7 @@ export function MovementSheet({
                 helper="Mutasi ini menambah baris ledger dan tidak mengubah transaksi lama."
               >
                 <FieldContextLine>
-                  {draft.type === "DEBIT" ? "Kas masuk" : "Kas keluar"} ·{" "}
+                  {draft.type === "INFLOW" ? "Kas masuk" : "Kas keluar"} ·{" "}
                   {movementCategoryOptions.find((option) => option.value === draft.category)
                     ?.label ?? formatBusinessLabel(draft.category, "FINANCE")}
                 </FieldContextLine>
@@ -130,7 +130,7 @@ export function MovementSheet({
             </>
           ) : (
             <>
-              {draft.type === "CREDIT" && amount > 0 ? (
+              {draft.type === "OUTFLOW" && amount > 0 ? (
                 <FormRiskNotice
                   title="Cegah saldo kas minus"
                   tone={projectedBalance < 0 ? "danger" : "warning"}
@@ -142,9 +142,9 @@ export function MovementSheet({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => patch({ type: "DEBIT", category: "owner_capital" })}
+                  onClick={() => patch({ type: "INFLOW", category: "owner_capital" })}
                   className={`min-h-12 rounded-full px-4 text-xs font-bold active:scale-[0.97] ${
-                    draft.type === "DEBIT"
+                    draft.type === "INFLOW"
                       ? "bg-primary text-on-primary"
                       : "bg-surface-container-low text-on-surface"
                   }`}
@@ -153,9 +153,9 @@ export function MovementSheet({
                 </button>
                 <button
                   type="button"
-                  onClick={() => patch({ type: "CREDIT", category: "bank_fee" })}
+                  onClick={() => patch({ type: "OUTFLOW", category: "bank_fee" })}
                   className={`min-h-12 rounded-full px-4 text-xs font-bold active:scale-[0.97] ${
-                    draft.type === "CREDIT"
+                    draft.type === "OUTFLOW"
                       ? "bg-error text-white"
                       : "bg-surface-container-low text-on-surface"
                   }`}

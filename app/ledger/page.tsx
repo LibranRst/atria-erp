@@ -2,9 +2,10 @@ import React from "react";
 
 import { getFinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
 import { getOwnerOnboardingOverview } from "@/app/actions/onboarding";
-import { FinanceDashboard } from "@/features/finance-dashboard/components/finance-dashboard";
+import { FinanceDashboard } from "@/features/finance-dashboard/components/workspaces/finance-dashboard";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { requireServerSession } from "@/lib/server/session";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export default async function LedgerPage(): Promise<React.JSX.Element> {
   if (role !== "OWNER" && role !== "FINANCE_ADMIN") {
     return (
       <section className="mx-auto max-w-sm space-y-3 px-6 py-16 text-center">
-        <span className="material-symbols-outlined text-[36px] text-error">lock</span>
+        <AppIcon name="lock" className="text-[36px] text-error" />
         <h1 className="text-xl font-semibold">Akses ditolak</h1>
         <p className="text-xs leading-5 text-on-surface-variant">
           Dashboard finansial hanya tersedia untuk Owner dan Finance Admin.

@@ -175,7 +175,7 @@ export function mapPayFieldRequestError(error: unknown): ActionResponse<never> {
       success: false,
       error: {
         code: "NOT_FOUND",
-        message: "Data record keuangan yang dibutuhkan untuk transaksi tidak ditemukan.",
+        message: "Data keuangan yang dibutuhkan untuk transaksi tidak ditemukan.",
       },
     };
   }
@@ -215,6 +215,15 @@ export function mapPayFieldRequestError(error: unknown): ActionResponse<never> {
       },
     };
   }
+  if (errMsg === "DUPLICATE_BANK_REFERENCE") {
+    return {
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Referensi mutasi bank sudah tercatat pada rekening ini.",
+      },
+    };
+  }
   return { success: false, error: { code: "TRANSACTION_FAILED", message: errMsg } };
 }
 
@@ -223,7 +232,7 @@ export function mapApproveVendorPaymentError(error: unknown): ActionResponse<nev
   if (errMsg === "PAYMENT_RECORD_NOT_FOUND") {
     return {
       success: false,
-      error: { code: "NOT_FOUND", message: "Record pembayaran vendor tidak ditemukan." },
+      error: { code: "NOT_FOUND", message: "Data pembayaran vendor tidak ditemukan." },
     };
   }
   if (errMsg === "MAKER_CHECKER_REQUIRED") {

@@ -28,7 +28,7 @@ export default function SettingsLoading(): React.JSX.Element {
         <SkeletonLine className="h-5 w-40" />
         <SkeletonLine className="h-3 w-60 bg-surface-container-low" />
       </div>
-      <section className="rounded-[30px] bg-[#111315] p-5 max-[430px]:rounded-[26px] max-[430px]:p-4">
+      <section className="rounded-[30px] bg-surface-inverse p-5 max-[430px]:rounded-[26px] max-[430px]:p-4">
         <SkeletonLine className="h-2 w-24 bg-white/15" />
         <SkeletonLine className="mt-3 h-7 w-20 bg-white/30" />
         <div className="mt-5 grid grid-cols-2 gap-4 border-y border-white/10 py-4">

@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { LockedTabState } from "../project-tab-states";
+import { LockedTabState } from "../shared/project-tab-states";
 import { CashRealizationSection, ProfitProjectionSection } from "./profitability-summary-sections";
 import { ProjectClosingSection } from "./project-closing-section";
 import {
@@ -10,7 +10,7 @@ import {
   getProjectClosingChecklist,
   type ProjectClosingChecklist,
 } from "@/app/actions/project/closing";
-import type { TabId } from "../project-tabs";
+import type { TabId } from "../shared/project-tabs";
 
 interface ProfitabilityPanelProps {
   readonly projectId: string;
@@ -95,7 +95,7 @@ export function ProfitabilityPanel({
         return;
       }
       setClosingChecklist(result.data);
-      const message = "Project selesai dan final profitability snapshot berhasil dibuat.";
+      const message = "Proyek selesai dan ringkasan profitabilitas akhir berhasil disimpan.";
       setClosingMessage(message);
       toast.success(message);
       window.location.reload();

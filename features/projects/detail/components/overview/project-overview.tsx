@@ -7,15 +7,14 @@ import { toast } from "sonner";
 import type { ProjectBudgetDashboard } from "@/app/actions/project/excel-budget";
 import { reallocateProjectBudget } from "@/app/actions/project/workflow-governance";
 import { BottomSheet, FormField, FormSection, NumericInput, Textarea } from "@/components/ui";
-import { Badge } from "@/components/ui/badge";
-import { MoneyValue } from "@/components/ui/page-primitives";
-import {
-  BudgetSplitIndicator,
-  UsageBlockMeter,
-} from "@/features/finance-dashboard/components/dashboard-budget-indicators";
-import type { DashboardTone } from "@/features/finance-dashboard/lib/dashboard-types";
-import { categoryTab, statusTone } from "./project-overview-utils";
+import { Badge } from "@/components/ui/badge/badge";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { BudgetSplitIndicator } from "@/features/finance-dashboard/components/cards/budget-split-indicator";
+import { UsageBlockMeter } from "@/features/finance-dashboard/components/cards/usage-block-meter";
+import type { DashboardTone } from "@/features/finance-dashboard/types/dashboard-types";
+import { categoryTab, statusTone } from "../../utils/project-overview-utils";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 export { ProjectIdentityHeader } from "./project-identity-header";
 
 export type ProjectOverviewTab = "rab" | "rap" | "stok" | "expenses" | "payments" | "profitability";
@@ -189,7 +188,7 @@ export function ProjectOverview({
           <div className="mt-3 flex items-center justify-between rounded-[18px] bg-white/[0.07] px-3 py-2.5">
             <span className="text-[10px] font-semibold text-white/60">Margin proyeksi</span>
             <span
-              className={`financial-amount font-mono text-[13px] font-bold tabular-nums ${margin < 10 ? "text-[#ff9f96]" : "text-white"}`}
+              className={`financial-amount font-mono text-[13px] font-bold tabular-nums ${margin < 10 ? "text-critical-on-inverse" : "text-white"}`}
             >
               {margin.toFixed(1)}%
             </span>
@@ -211,13 +210,16 @@ export function ProjectOverview({
               className={`flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-primary">
-                <span className="material-symbols-outlined text-[18px]">
-                  {item.tone === "APPROVED"
-                    ? "check"
-                    : item.tone === "DRAFT"
-                      ? "edit_note"
-                      : "priority_high"}
-                </span>
+                <AppIcon
+                  name={
+                    item.tone === "APPROVED"
+                      ? "check"
+                      : item.tone === "DRAFT"
+                        ? "edit_note"
+                        : "priority_high"
+                  }
+                  className="text-[18px]"
+                />
               </span>
               <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
                 <span className="grid min-w-0 gap-0.5">
@@ -232,9 +234,10 @@ export function ProjectOverview({
                   {item.value}
                 </Badge>
               </span>
-              <span className="material-symbols-outlined shrink-0 text-[18px] text-on-surface-variant/55">
-                chevron_right
-              </span>
+              <AppIcon
+                name="chevron_right"
+                className="shrink-0 text-[18px] text-on-surface-variant/55"
+              />
             </button>
           ))}
         </div>
@@ -251,9 +254,7 @@ export function ProjectOverview({
         />
         {actions.length === 0 ? (
           <div className="rounded-[22px] bg-white px-4 py-4 text-xs font-medium text-primary shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
-            <span className="material-symbols-outlined mr-2 align-middle text-[18px]">
-              check_circle
-            </span>
+            <AppIcon name="check_circle" className="mr-2 align-middle text-[18px]" />
             Proyek berjalan tanpa blocker aktif.
           </div>
         ) : (
@@ -268,9 +269,10 @@ export function ProjectOverview({
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${action.severity === "CRITICAL" ? "bg-error-container/28 text-error" : action.severity === "WARNING" ? "bg-secondary-container/30 text-secondary" : "bg-primary/8 text-primary"}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">
-                    {action.severity === "INFO" ? "arrow_forward" : "priority_high"}
-                  </span>
+                  <AppIcon
+                    name={action.severity === "INFO" ? "arrow_forward" : "priority_high"}
+                    className="text-[18px]"
+                  />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs leading-4 font-bold text-on-surface">
@@ -381,7 +383,7 @@ export function ProjectOverview({
         }
       >
         {selectedCategory ? (
-          <div className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+          <div className="overflow-hidden rounded-[22px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1 ring-black/2.5">
             <DetailMoneyRow label="Budget" amount={selectedCategory.allocatedAmount} />
             <DetailMoneyRow label="Realisasi" amount={selectedCategory.actualAmount} />
             <DetailMoneyRow label="Menunggu" amount={selectedCategory.pendingAmount} />

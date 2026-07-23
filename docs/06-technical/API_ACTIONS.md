@@ -15,8 +15,22 @@
 - `submitFieldRequest`, `submitFieldRequests`, `verifyFieldRequest`, `approveFieldRequest`, `payFieldRequest`
 - `submitVendorBill`, `scheduleVendorBillPayment`, `payVendorBill`
 - `recordClientPayment`
+- `reconcileCashTransaction`
+- `getReconciliationWorkspace`, `importBankStatementCsv`, `recordBankStatementRow`
+- `markReconciliationException`, `clearReconciliationException`
 - `getDashboardStats`
 - `processReceipt`
+
+## Bank Reconciliation Actions
+
+- `getReconciliationWorkspace()` returns active accounts, unmatched Atria cash records with age/exception evidence, unmatched bank mutations with exact-match suggestions, and the latest confirmed reconciliation history.
+- `importBankStatementCsv(input)` accepts the canonical Atria columns `tanggal,deskripsi,dana_masuk,dana_keluar`, validates a maximum of 500 rows/1 MB, skips duplicate fingerprints, creates one import batch plus statement rows, and writes audit evidence. It never changes bank balance.
+- `recordBankStatementRow(input)` creates one manual bank mutation as an explicit fallback. It uses the same account/date/direction/amount/description fingerprint as batch import.
+- `reconcileCashTransaction(input)` locks both records, requires the same account, `INFLOW`/`OUTFLOW` direction, and exact amount, then atomically marks both sides reconciled and writes audit evidence. Any documented exception is cleared when a real match is confirmed.
+- `markReconciliationException(input)` requires `reconcile:ledger`, a 10–1,000 character reason, an unreconciled cash transaction, and writes reviewer/timestamp/audit evidence without setting `reconciled = true`.
+- `clearReconciliationException(input)` returns an exception to the ordinary unresolved queue and preserves the change in `audit_log`.
+
+Project closing gathers cash transactions through client payments, vendor payments, and project costs. A transaction that is neither reconciled nor documented as an exception is a closing blocker. Exceptions are accepted as documented decisions but remain disclosed in the closing checklist.
 
 ## Project Budget Control Actions
 
@@ -156,3 +170,12 @@ Tukang/Subcon expense and vendor bill flows may optionally link to `project_cate
 
 - `getProjectBudgetDashboard` returns contract value, internal budget, actual cost, remaining budget, used percentage, projected margin, and category usage cards.
 - `getOwnerBudgetDashboard` returns portfolio totals, category totals, risky projects, near-limit categories, material shortage, reusable stock, due bills, and recent expenses.
+
+### Finance Metric Contract
+
+- `actualAmount` is the committed/approved project-cost baseline used for budget control. It is not a cash-basis metric.
+- `paidAmount` is the amount disbursed for that category. It is the cash-out metric.
+- Client invoice totals, client payments, vendor bill totals, and completed vendor payments remain separate read-model inputs. A surface must label a cash metric as cash collected/cash paid and must not call it net profit.
+- A cash transaction written by an internal action starts with `reconciled = false`. Reconciliation fields may be set only after an imported bank-statement row is matched and approved.
+- `reconciled = true` requires a matched `bank_statement_row`. A documented exception uses `reconciliation_exception_reason`, `reconciliation_exception_at`, and `reconciliation_exception_by_id`; it never impersonates a bank match.
+- A non-empty bank reference is unique per bank account. Reusing it must fail safely without creating another cash movement.

@@ -22,8 +22,8 @@ import {
   FinanceSuccessSheet,
   FinanceUnsavedChangesModal,
   type FinanceOperationSuccess,
-} from "@/features/finance/components/finance-form-patterns";
-import { useLocalFormRecovery } from "@/features/forms/use-local-form-recovery";
+} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 

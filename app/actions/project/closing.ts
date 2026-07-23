@@ -2,11 +2,12 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
   auditLog,
+  cashTransaction,
   project,
   projectBudgetCategory,
   projectBudgets,
@@ -33,6 +34,8 @@ export type ProjectClosingChecklist = {
   readonly realizedMargin: number;
   readonly realizedMarginPercentage: number;
   readonly cashPosition: number;
+  readonly unresolvedReconciliationCount: number;
+  readonly documentedReconciliationExceptionCount: number;
 };
 
 async function getSessionUser(): Promise<SessionUser | null> {
@@ -80,6 +83,21 @@ async function buildClosingChecklist(projectId: string): Promise<ProjectClosingC
     where: eq(projectBudgets.projectId, projectId),
     with: { categories: true },
   });
+  const projectCashTransactionIds = [
+    ...invoices.flatMap((invoice) => invoice.payments.map((payment) => payment.cashTransactionId)),
+    ...bills.flatMap((bill) =>
+      bill.payments.flatMap((payment) =>
+        payment.cashTransactionId ? [payment.cashTransactionId] : [],
+      ),
+    ),
+    ...costs.flatMap((cost) => (cost.cashTransactionId ? [cost.cashTransactionId] : [])),
+  ];
+  const projectCashTransactions = projectCashTransactionIds.length
+    ? await db
+        .select()
+        .from(cashTransaction)
+        .where(inArray(cashTransaction.id, [...new Set(projectCashTransactionIds)]))
+    : [];
   const blockers: string[] = [];
   const contractValue = Number(proj.totalContractValue);
   const liveInvoices = invoices.filter((invoice) => invoice.status !== "VOID");
@@ -106,7 +124,7 @@ async function buildClosingChecklist(projectId: string): Promise<ProjectClosingC
   if (costs.some((cost) => !["PAID", "REJECTED"].includes(cost.status)))
     blockers.push("Masih ada expense request yang belum final.");
   if (expenses.some((expense) => ["SUBMITTED", "VERIFIED"].includes(expense.status)))
-    blockers.push("Masih ada canonical expense pending review.");
+    blockers.push("Masih ada pengeluaran yang menunggu peninjauan.");
   if (
     expenses.some(
       (expense) =>
@@ -123,7 +141,18 @@ async function buildClosingChecklist(projectId: string): Promise<ProjectClosingC
     blockers.push("Reservasi stock proyek belum diselesaikan.");
   }
   if (!budget || budget.status !== "APPROVED")
-    blockers.push("Canonical project budget belum approved/sinkron.");
+    blockers.push("Budget proyek belum disetujui atau belum sinkron.");
+  const unresolvedReconciliationCount = projectCashTransactions.filter(
+    (transaction) => !transaction.reconciled && !transaction.reconciliationExceptionAt,
+  ).length;
+  const documentedReconciliationExceptionCount = projectCashTransactions.filter(
+    (transaction) => !transaction.reconciled && transaction.reconciliationExceptionAt,
+  ).length;
+  if (unresolvedReconciliationCount > 0) {
+    blockers.push(
+      `${unresolvedReconciliationCount} transaksi kas proyek belum cocok dengan mutasi bank atau belum memiliki pengecualian tercatat.`,
+    );
+  }
 
   const actualCost =
     budget?.categories.reduce((sum, category) => sum + Number(category.actualAmount), 0) ?? 0;
@@ -142,6 +171,8 @@ async function buildClosingChecklist(projectId: string): Promise<ProjectClosingC
     realizedMargin,
     realizedMarginPercentage: contractValue > 0 ? (realizedMargin / contractValue) * 100 : 0,
     cashPosition: clientReceipts - cashOutflow,
+    unresolvedReconciliationCount,
+    documentedReconciliationExceptionCount,
   };
 }
 

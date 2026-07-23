@@ -3,13 +3,13 @@
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { approval, bankAccount, projectCost } from "@/db/schema";
+import { approval, bankAccount, cashTransaction, projectCost } from "@/db/schema";
 import {
   ensureCanonicalExpenseForProjectCost,
   syncProjectBudgetCategory,
 } from "@/lib/budget/budget-sync";
 import type { ActionResponse } from "@/lib/types/action-response";
-import { mutateBalance } from "@/lib/finance/balance-mutation";
+import { mutateBalance, parseNumericToCents } from "@/lib/finance/balance-mutation";
 import { authorizeFieldRequestAction } from "./field-request-auth";
 import { mapPayFieldRequestError, writeFieldRequestAuditTx } from "./field-request-utils";
 
@@ -44,8 +44,8 @@ export async function payFieldRequest(
         throw new Error("COST_NOT_APPROVED");
       }
 
-      const amount = Number(cost.amount);
-      const requiresApproval = amount >= 5000000 || cost.budgetOverrun;
+      const amountCents = parseNumericToCents(cost.amount);
+      const requiresApproval = amountCents >= BigInt(500_000_000) || cost.budgetOverrun;
 
       if (requiresApproval) {
         const appRecord = await tx.query.approval.findFirst({
@@ -64,16 +64,23 @@ export async function payFieldRequest(
         where: eq(bankAccount.id, bankAccountId),
       });
       if (!accountBefore) throw new Error("BANK_ACCOUNT_NOT_FOUND");
-      const oldBalance = Number(accountBefore.balance);
+      const duplicateReference = await tx.query.cashTransaction.findFirst({
+        where: and(
+          eq(cashTransaction.bankAccountId, bankAccountId),
+          eq(cashTransaction.bankReference, referenceNumber),
+        ),
+      });
+      if (duplicateReference) throw new Error("DUPLICATE_BANK_REFERENCE");
       const ledgerTx = await mutateBalance({
         tx,
         bankAccountId,
-        type: "CREDIT",
-        amount: amount.toFixed(2),
+        type: "OUTFLOW",
+        amount: cost.amount,
         category: "field_claim",
         description: `Realisasi biaya lapangan: ${cost.description} (Ref: ${referenceNumber})`,
         referenceType: "project_cost",
         referenceId: cost.id,
+        bankReference: referenceNumber,
         userId: currentUser.id,
       });
       const accountAfter = await tx.query.bankAccount.findFirst({
@@ -109,11 +116,11 @@ export async function payFieldRequest(
         targetTable: "project_cost",
         targetId: projectCostId,
         originalState: {
-          balance: oldBalance.toFixed(2),
+          balance: accountBefore.balance,
           costStatus: cost.status,
         },
         newState: {
-          balance: newBalance.toFixed(2),
+          balance: accountAfter.balance,
           costStatus: "PAID",
           cashTransactionId: ledgerTx.id,
         },

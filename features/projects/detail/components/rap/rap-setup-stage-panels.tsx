@@ -1,9 +1,10 @@
 "use client";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 import React from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { MetricGrid } from "@/components/ui/page-primitives";
+import { Badge } from "@/components/ui/badge/badge";
+import { MetricGrid } from "@/components/ui/feedback/page-primitives";
 import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import type {
   ProjectCategoryPlanItemView,
@@ -12,7 +13,7 @@ import type {
 } from "../shared/rap-rab-manager";
 import { MiniMetric, MiniMoneyMetric, NativePanel } from "../shared/rap-rab-primitives";
 import { PackageSetupContent } from "./rap-package-setup-content";
-import { isPackageScopeReady, sumPackageCost } from "./rap-setup-utils";
+import { isPackageScopeReady, sumPackageCost } from "../../utils/rap-setup-utils";
 
 export function MaterialRapStagePanel({
   rap,
@@ -58,7 +59,7 @@ export function MaterialRapStagePanel({
             className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-surface-container-low p-3 text-left"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-primary">
-              <span className="material-symbols-outlined text-[19px]">inventory_2</span>
+              <AppIcon name="inventory_2" className="text-[19px]" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm leading-5 font-bold">{item.name}</span>
@@ -257,11 +258,10 @@ export function ReviewInternalPlanPanel({
             onClick={() => setActiveRapStage(row.stage)}
             className="flex min-h-12 w-full items-center gap-3 rounded-2xl bg-surface-container-low px-3 text-left"
           >
-            <span
-              className={`material-symbols-outlined ${row.ready ? "text-primary" : "text-warning"}`}
-            >
-              {row.ready ? "check_circle" : "warning"}
-            </span>
+            <AppIcon
+              name={row.ready ? "check_circle" : "warning"}
+              className={row.ready ? "text-primary" : "text-warning"}
+            />
             <span className="flex-1 text-xs font-bold">{row.label}</span>
             <span className="text-[10px] text-on-surface-variant">Edit</span>
           </button>

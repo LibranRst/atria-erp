@@ -10,6 +10,7 @@ import {
   projectExpenses,
   auditLog,
   approval,
+  cashTransaction,
 } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
@@ -18,7 +19,7 @@ import { ActionResponse } from "@/lib/types/action-response";
 import { payVendorBillSchema, PayVendorBillInput } from "@/lib/validations/finance";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
-import { mutateBalance } from "@/lib/finance/balance-mutation";
+import { mutateBalance, parseNumericToCents } from "@/lib/finance/balance-mutation";
 import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
 
 export async function payVendorBill(
@@ -104,7 +105,7 @@ export async function payVendorBill(
       }
 
       // 4. Verify Approval status if payment amount >= 5M or causes budget overrun
-      const paymentAmount = Number(payment.amountPaid);
+      const paymentAmountCents = parseNumericToCents(payment.amountPaid);
       const completedPayments = await tx
         .select({ amountPaid: vendorPayment.amountPaid })
         .from(vendorPayment)
@@ -114,14 +115,18 @@ export async function payVendorBill(
             eq(vendorPayment.status, "COMPLETED"),
           ),
         );
-      const paidBefore = completedPayments.reduce((sum, row) => sum + Number(row.amountPaid), 0);
-      if (paymentAmount > Number(bill.amount) - paidBefore + 0.001) {
+      const paidBeforeCents = completedPayments.reduce(
+        (sum, row) => sum + parseNumericToCents(row.amountPaid),
+        BigInt(0),
+      );
+      const billAmountCents = parseNumericToCents(bill.amount);
+      if (paymentAmountCents > billAmountCents - paidBeforeCents) {
         throw new Error("PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING");
       }
-      const allocated = Number(budgetCategory.allocatedAmount);
-      const spent = Number(budgetCategory.actualAmount);
-      const isOverrun = spent > allocated;
-      const requiresApproval = paymentAmount >= 5000000 || isOverrun;
+      const allocatedCents = parseNumericToCents(budgetCategory.allocatedAmount);
+      const spentCents = parseNumericToCents(budgetCategory.actualAmount);
+      const isOverrun = spentCents > allocatedCents;
+      const requiresApproval = paymentAmountCents >= BigInt(500_000_000) || isOverrun;
 
       if (requiresApproval) {
         const appRecord = await tx.query.approval.findFirst({
@@ -146,16 +151,23 @@ export async function payVendorBill(
         where: eq(bankAccount.id, targetBankAccountId),
       });
       if (!accountBefore) throw new Error("BANK_ACCOUNT_NOT_FOUND");
-      const oldBalance = Number(accountBefore.balance);
+      const duplicateReference = await tx.query.cashTransaction.findFirst({
+        where: and(
+          eq(cashTransaction.bankAccountId, targetBankAccountId),
+          eq(cashTransaction.bankReference, referenceNumber),
+        ),
+      });
+      if (duplicateReference) throw new Error("DUPLICATE_BANK_REFERENCE");
       const ledgerTx = await mutateBalance({
         tx,
         bankAccountId: targetBankAccountId,
-        type: "CREDIT",
-        amount: paymentAmount.toFixed(2),
+        type: "OUTFLOW",
+        amount: payment.amountPaid,
         category: "vendor_payment",
         description: `Bayar tagihan Vendor Bill #${bill.billNumber} (Ref: ${referenceNumber})`,
         referenceType: "vendor_payment",
         referenceId: payment.id,
+        bankReference: referenceNumber,
         userId: session.user.id,
         transactionDate: payment.paymentDate,
       });
@@ -178,10 +190,8 @@ export async function payVendorBill(
         .where(eq(vendorPayment.id, vendorPaymentId));
 
       // 9. Update vendor bill status to PAID or PARTIALLY_PAID
-      const totalPaidAmount = paidBefore + paymentAmount;
-
-      const billAmount = Number(bill.amount);
-      const nextBillStatus = totalPaidAmount >= billAmount ? "PAID" : "PARTIALLY_PAID";
+      const totalPaidCents = paidBeforeCents + paymentAmountCents;
+      const nextBillStatus = totalPaidCents >= billAmountCents ? "PAID" : "PARTIALLY_PAID";
 
       await tx
         .update(vendorBill)
@@ -211,13 +221,13 @@ export async function payVendorBill(
         targetTable: "vendor_payment",
         targetId: payment.id,
         originalState: JSON.stringify({
-          balance: oldBalance.toFixed(2),
+          balance: accountBefore.balance,
           paymentStatus: payment.status,
           billStatus: bill.status,
           canonicalCategoryActual: budgetCategory.actualAmount,
         }),
         newState: JSON.stringify({
-          balance: newBalance.toFixed(2),
+          balance: accountAfter.balance,
           paymentStatus: "COMPLETED",
           billStatus: nextBillStatus,
           canonicalCategoryActual: budgetCategory.actualAmount,
@@ -246,7 +256,7 @@ export async function payVendorBill(
       errMsg === "PROJECT_BUDGET_CATEGORY_NOT_FOUND"
     ) {
       code = "NOT_FOUND";
-      displayMessage = "Data record keuangan yang dibutuhkan untuk transaksi tidak ditemukan.";
+      displayMessage = "Data keuangan yang dibutuhkan untuk transaksi tidak ditemukan.";
     } else if (errMsg.startsWith("INSUFFICIENT_FUNDS")) {
       code = "INSUFFICIENT_FUNDS";
       displayMessage = "Pencairan dibatalkan: Saldo akun bank perusahaan tidak mencukupi.";
@@ -255,7 +265,8 @@ export async function payVendorBill(
       errMsg === "PAYMENT_NOT_PENDING" ||
       errMsg === "PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING" ||
       errMsg === "APPROVAL_REQUIRED_BUT_PENDING" ||
-      errMsg === "APPROVAL_RECORD_MISSING"
+      errMsg === "APPROVAL_RECORD_MISSING" ||
+      errMsg === "DUPLICATE_BANK_REFERENCE"
     ) {
       code = "FORBIDDEN";
       displayMessage =
@@ -265,7 +276,9 @@ export async function payVendorBill(
             ? "Pembayaran ini sudah ditolak atau tidak lagi menunggu pencairan."
             : errMsg === "PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING"
               ? "Nominal pembayaran melebihi sisa tagihan vendor."
-              : "Pembayaran memerlukan persetujuan Owner dan belum disetujui.";
+              : errMsg === "DUPLICATE_BANK_REFERENCE"
+                ? "Referensi mutasi bank sudah tercatat pada rekening ini."
+                : "Pembayaran memerlukan persetujuan Owner dan belum disetujui.";
     }
 
     return {

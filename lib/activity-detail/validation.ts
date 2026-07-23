@@ -6,7 +6,7 @@ const databaseUuidSchema = z
   .string()
   .regex(
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    "ID aktivitas harus menggunakan format UUID database.",
+    "ID aktivitas tidak valid.",
   );
 
 export const activityDetailRequestSchema = z.object({

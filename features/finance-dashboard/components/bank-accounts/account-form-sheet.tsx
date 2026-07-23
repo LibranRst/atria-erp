@@ -8,10 +8,11 @@ import {
   WorkflowFormSheet,
   TextInput,
 } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/page-primitives";
-import { FinanceUnsavedChangesModal } from "@/features/finance/components/finance-form-patterns";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { FinanceUnsavedChangesModal } from "@/features/finance-dashboard/components/shared/finance-form-patterns";
 import { ColorEditor } from "./color-editor";
-import type { AccountDraft } from "./types";
+import type { AccountDraft } from "@/features/finance-dashboard/types/bank-account-types";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 function AccountBalanceImpact({
   openingBalance,
@@ -30,12 +31,7 @@ function AccountBalanceImpact({
       </header>
       <div className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
         <div className="flex min-w-0 items-center gap-3 px-4 py-3.5">
-          <span
-            className="material-symbols-outlined flex! h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-primary/8 text-[19px] leading-none text-primary"
-            aria-hidden="true"
-          >
-            account_balance_wallet
-          </span>
+          <AppIcon name="account_balance_wallet" className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-primary/8 text-[19px] leading-none text-primary" />
           <span className="min-w-0 flex-1">
             <span className="block text-[13px] leading-5 font-bold text-on-surface">
               Saldo awal rekening
@@ -52,12 +48,7 @@ function AccountBalanceImpact({
             </p>
             <MoneyValue amount={0} variant="fullDynamic" size="sm" className="mt-1" />
           </div>
-          <span
-            className="material-symbols-outlined text-[20px] leading-none text-on-surface-variant/65"
-            aria-hidden="true"
-          >
-            arrow_forward
-          </span>
+          <AppIcon name="arrow_forward" className="text-[20px] leading-none text-on-surface-variant/65" />
           <div className="min-w-0 text-right">
             <p className="text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
               Sesudah

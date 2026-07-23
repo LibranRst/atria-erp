@@ -4,8 +4,8 @@ import React from "react";
 
 import { BottomSheet, useSheetPresenceValue } from "@/components/ui";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import { Badge, type BadgeStatus } from "@/components/ui/badge";
-import { MoneyValue } from "@/components/ui/page-primitives";
+import { Badge, type BadgeStatus } from "@/components/ui/badge/badge";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import type { ProjectCategoryPlanItemView, RapItemView, RapView } from "../shared/rap-rab-manager";
 
 function toBadgeStatus(status: string): BadgeStatus {

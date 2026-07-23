@@ -93,7 +93,7 @@ function failure<T>(error: unknown, fallback: string): ActionResponse<T> {
       error: {
         code: "FORBIDDEN",
         message:
-          "Pembuat batch tidak boleh menyetujui sendiri. Gunakan Finance Admin sebagai checker terpisah.",
+          "Pembuat pengajuan tidak boleh menyetujui sendiri. Gunakan Finance Admin sebagai pemeriksa terpisah.",
       },
     };
   if (message === "INVENTORY_ALREADY_ACTIVE")

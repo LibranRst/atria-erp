@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { TemporaryPasswordForm } from "@/features/administration/components/temporary-password-form";
+import { TemporaryPasswordForm } from "@/features/administration/components/forms/temporary-password-form";
 import { requireServerSession } from "@/lib/server/session";
 
 export const dynamic = "force-dynamic";

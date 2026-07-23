@@ -85,7 +85,7 @@ export function Card({
   return (
     <section
       className={mergeClassNames(
-        "border-border rounded-2xl border p-4 shadow-[0_4px_12px_rgba(0,0,0,0.15)]",
+        "rounded-2xl border border-border p-4 shadow-[0_4px_12px_rgba(0,0,0,0.15)]",
         CARD_VARIANT_CLASS_NAMES[variant],
         className,
       )}
@@ -108,7 +108,7 @@ export function CardTitle({ children, className, ...props }: CardTitleProps): Re
   return (
     <h2
       className={mergeClassNames(
-        "text-text-primary text-lg font-semibold tracking-tight",
+        "text-lg font-semibold tracking-tight text-text-primary",
         className,
       )}
       {...props}
@@ -124,7 +124,7 @@ export function CardDescription({
   ...props
 }: CardDescriptionProps): React.JSX.Element {
   return (
-    <p className={mergeClassNames("text-secondary text-sm leading-6", className)} {...props}>
+    <p className={mergeClassNames("text-sm leading-6 text-secondary", className)} {...props}>
       {children}
     </p>
   );
@@ -142,7 +142,7 @@ export function CardFooter({ children, className, ...props }: CardPartProps): Re
   return (
     <div
       className={mergeClassNames(
-        "border-border mt-4 flex items-center justify-between gap-3 border-t pt-4",
+        "mt-4 flex items-center justify-between gap-3 border-t border-border pt-4",
         className,
       )}
       {...props}
@@ -327,7 +327,7 @@ export default function Home(): React.JSX.Element {
       <div className="space-y-6">
         <Card className="rounded-3xl p-5 shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
           <CardHeader>
-            <p className="text-muted text-xs font-semibold tracking-[0.24em] uppercase">
+            <p className="text-xs font-semibold tracking-[0.24em] text-muted uppercase">
               Atria ERP
             </p>
             <CardTitle className="pt-4 text-3xl">
@@ -347,13 +347,13 @@ export default function Home(): React.JSX.Element {
         <div className="grid gap-3">
           <Card variant="elevated">
             <CardHeader>
-              <p className="text-muted text-xs font-medium">Primary workflow</p>
+              <p className="text-xs font-medium text-muted">Primary workflow</p>
               <CardTitle className="text-base">Projects → Ledger → Add Expense → Profile</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader>
-              <p className="text-muted text-xs font-medium">Design foundation</p>
+              <p className="text-xs font-medium text-muted">Design foundation</p>
               <CardTitle className="text-base">
                 iOS 26 Solid tokens, 48px touch targets, and sticky thumb navigation.
               </CardTitle>
@@ -362,7 +362,7 @@ export default function Home(): React.JSX.Element {
         </div>
       </div>
 
-      <p className="text-muted pb-2 text-center text-xs leading-5">
+      <p className="pb-2 text-center text-xs leading-5 text-muted">
         Gunakan navigasi bawah untuk berpindah ke modul utama Atria ERP.
       </p>
     </section>

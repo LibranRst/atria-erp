@@ -51,6 +51,15 @@ describe("developer account simulation guard", () => {
     ).toBe(false);
   });
 
+  test("accepts deterministic demo user ids used by the seeded walkthrough", () => {
+    expect(
+      developerAccountSimulationSchema.parse({
+        targetUserId: "22222222-2222-2222-2222-222222222222",
+        context: "ONBOARDING_SETUP_REVIEW",
+      }).targetUserId,
+    ).toBe("22222222-2222-2222-2222-222222222222");
+  });
+
   test("lands each simulated role on its real operational route", () => {
     expect(getDeveloperSimulationLandingRoute("FINANCE_ADMIN")).toBe("/ledger");
     expect(getDeveloperSimulationLandingRoute("PROJECT_MANAGER")).toBe("/projects");

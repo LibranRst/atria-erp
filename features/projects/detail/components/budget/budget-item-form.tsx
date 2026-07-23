@@ -16,8 +16,8 @@ import type {
   BudgetItemFormSetters,
   BudgetItemFormState,
   CostCategory,
-} from "./budget-manager-types";
-import { isBudgetItemFormValid } from "./budget-manager-utils";
+} from "../../types/budget-manager-types";
+import { isBudgetItemFormValid } from "../../utils/budget-manager-utils";
 
 export function BudgetItemForm({
   open,

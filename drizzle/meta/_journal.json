@@ -169,6 +169,41 @@
       "when": 1784360445418,
       "tag": "0023_onboarding_control_room",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784685572689,
+      "tag": "0024_finance_reconciliation_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1784686477969,
+      "tag": "0025_bank_statement_row_fingerprint",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1784692800000,
+      "tag": "0026_cash_direction_semantics",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1784696400000,
+      "tag": "0027_reconciliation_history_exceptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1784697300000,
+      "tag": "0028_reconciliation_exception_constraints",
+      "breakpoints": true
     }
   ]
 }

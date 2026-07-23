@@ -2,8 +2,10 @@ import { z } from "zod";
 
 import { SYSTEM_ROLES } from "@/lib/auth/role-constants";
 
+const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export const developerAccountSimulationSchema = z.object({
-  targetUserId: z.string().uuid(),
+  targetUserId: z.string().regex(uuidRegex, "ID akun simulasi tidak valid."),
   context: z.enum(["GENERAL", "ONBOARDING_SETUP_REVIEW"]).default("GENERAL"),
 });
 

@@ -14,10 +14,10 @@ import {
   updateBankAccount,
 } from "@/app/actions/finance/bank-accounts";
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import { fullMoney } from "@/features/finance-dashboard/lib/dashboard-formatters";
-import { BankAccountCard } from "@/features/finance-dashboard/components/dashboard-cards";
-import { DashboardSummarySurface } from "@/features/finance-dashboard/components/dashboard-primitives";
-import { MoneyValue } from "@/components/ui/page-primitives";
+import { fullMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
+import { BankAccountCard } from "@/features/finance-dashboard/components/cards/dashboard-cards";
+import { DashboardSummarySurface } from "@/features/finance-dashboard/components/shared/dashboard-primitives";
+import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { AccountDetailSheet } from "./account-detail-sheet";
 import { AccountFormSheet } from "./account-form-sheet";
 import { MovementSheet } from "./movement-sheet";
@@ -25,9 +25,10 @@ import { TransferSheet } from "./transfer-sheet";
 import {
   FinanceSuccessSheet,
   type FinanceOperationSuccess,
-} from "@/features/finance/components/finance-form-patterns";
-import { useLocalFormRecovery } from "@/features/forms/use-local-form-recovery";
+} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 import type {
   AccountDraft,
   BankAccount,
@@ -35,7 +36,7 @@ import type {
   MovementType,
   SheetMode,
   TransferDraft,
-} from "./types";
+} from "@/features/finance-dashboard/types/bank-account-types";
 import {
   accountOptions,
   accountToDraft,
@@ -43,14 +44,14 @@ import {
   newAccountDraft,
   newMovementDraft,
   newTransferDraft,
-} from "./utils";
+} from "@/features/finance-dashboard/utils/bank-account-utils";
 
 const accountCardPressScale = { scale: 0.985 } as const;
 
 const movementRecoverySchema = z.object({
   accountId: z.string(),
   draft: z.object({
-    type: z.enum(["DEBIT", "CREDIT"]),
+    type: z.enum(["INFLOW", "OUTFLOW"]),
     amount: z.string(),
     category: z.enum(["owner_capital", "bank_fee", "correction", "cash_adjustment", "other"]),
     description: z.string(),
@@ -105,12 +106,7 @@ function EmptyAccountsState({
 }): React.JSX.Element {
   return (
     <div className="rounded-[28px] bg-white px-5 py-6 text-center shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/10">
-      <span
-        className="material-symbols-outlined mx-auto flex! h-12 w-12 items-center justify-center rounded-full bg-primary/8 text-[24px] leading-none text-primary"
-        aria-hidden="true"
-      >
-        account_balance
-      </span>
+      <AppIcon name="account_balance" className="mx-auto flex! h-12 w-12 items-center justify-center rounded-full bg-primary/8 text-[24px] leading-none text-primary" />
       <h3 className="mt-3 text-base font-bold text-on-surface">Belum ada rekening</h3>
       <p className="mx-auto mt-1 max-w-65 text-xs leading-5 text-on-surface-variant">
         Tambahkan rekening kas perusahaan untuk mulai mencatat saldo dan mutasi.
@@ -169,7 +165,7 @@ export function BankAccountsControl({
   const initialMovementRecovery = React.useCallback(
     () => ({
       accountId: "",
-      draft: newMovementDraft("DEBIT"),
+      draft: newMovementDraft("INFLOW"),
     }),
     [],
   );
@@ -320,7 +316,7 @@ export function BankAccountsControl({
       if (result.success) {
         const amount = Number(movementDraft.amount || 0);
         const nextBalance =
-          movementDraft.type === "DEBIT" ? selected.balance + amount : selected.balance - amount;
+          movementDraft.type === "INFLOW" ? selected.balance + amount : selected.balance - amount;
         setItems((current) =>
           current.map((item) =>
             item.id === selected.id ? { ...item, balance: nextBalance } : item,
@@ -336,7 +332,7 @@ export function BankAccountsControl({
             { label: "Rekening", value: selected.name },
             {
               label: "Mutasi",
-              value: `${movementDraft.type === "DEBIT" ? "+" : "−"}${fullMoney.format(amount)}`,
+              value: `${movementDraft.type === "INFLOW" ? "+" : "−"}${fullMoney.format(amount)}`,
             },
             { label: "Saldo sekarang", value: fullMoney.format(nextBalance) },
           ],
@@ -494,7 +490,7 @@ export function BankAccountsControl({
                 type="button"
                 disabled={!canCreate}
                 onClick={openCreate}
-                className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#007AFF]/8 px-3 text-[10px] font-semibold text-[#007AFF] outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 active:bg-[#007AFF]/[0.14] disabled:opacity-45"
+                className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-accent/30 active:bg-accent/[0.14] disabled:opacity-45"
               >
                 <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="hidden min-[360px]:inline">Tambah rekening</span>
@@ -513,7 +509,7 @@ export function BankAccountsControl({
                     aria-label={`Buka rekening ${account.name}`}
                     whileTap={reduceMotion ? undefined : accountCardPressScale}
                     transition={transitionSpringSnappy}
-                    className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] px-5 py-4.5 text-left shadow-[0_3px_6px_rgba(17,17,17,0.08),0_18px_42px_rgba(17,17,17,0.13)] ring-1 outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/45 max-[430px]:rounded-3xl max-[430px]:px-4 max-[430px]:py-4 ${account.cardTextColor === "dark" ? "text-[#141414] ring-black/[0.07]" : "text-white ring-white/16"} ${account.isActive ? "" : "opacity-60 grayscale"}`}
+                    className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] px-5 py-4.5 text-left shadow-[0_3px_6px_rgba(17,17,17,0.08),0_18px_42px_rgba(17,17,17,0.13)] ring-1 outline-none focus-visible:ring-2 focus-visible:ring-accent/45 max-[430px]:rounded-3xl max-[430px]:px-4 max-[430px]:py-4 ${account.cardTextColor === "dark" ? "text-on-surface ring-black/[0.07]" : "text-white ring-white/16"} ${account.isActive ? "" : "opacity-60 grayscale"}`}
                     style={{
                       backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
                     }}
@@ -530,12 +526,7 @@ export function BankAccountsControl({
                       <span
                         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] ring-1 backdrop-blur-md max-[430px]:h-10 max-[430px]:w-10 max-[430px]:rounded-[14px] ${account.cardTextColor === "dark" ? "bg-black/5.5 ring-black/8" : "bg-white/[0.14] ring-white/18"}`}
                       >
-                        <span
-                          className="material-symbols-outlined text-[21px] max-[430px]:text-[19px]"
-                          aria-hidden="true"
-                        >
-                          account_balance
-                        </span>
+                        <AppIcon name="account_balance" className="text-[21px] max-[430px]:text-[19px]" />
                       </span>
                       <span className="min-w-0 flex-1 pt-0.5">
                         <span className="flex items-center gap-2">
@@ -554,12 +545,7 @@ export function BankAccountsControl({
                           {account.bankName}
                         </span>
                       </span>
-                      <span
-                        className="material-symbols-outlined shrink-0 pt-1 text-[23px] opacity-65"
-                        aria-hidden="true"
-                      >
-                        contactless
-                      </span>
+                      <AppIcon name="contactless" className="shrink-0 pt-1 text-[23px] opacity-65" />
                     </span>
 
                     <span className="relative mt-auto block pt-3">
@@ -592,12 +578,7 @@ export function BankAccountsControl({
                     <span
                       className={`relative mt-3 flex min-h-9 w-full items-center gap-2 rounded-[14px] px-2.5 py-1.5 ring-1 backdrop-blur-md ${account.cardTextColor === "dark" ? "bg-black/4.5 ring-black/6" : "bg-white/10 ring-white/12"}`}
                     >
-                      <span
-                        className="material-symbols-outlined shrink-0 text-[15px] opacity-65"
-                        aria-hidden="true"
-                      >
-                        receipt_long
-                      </span>
+                      <AppIcon name="receipt_long" className="shrink-0 text-[15px] opacity-65" />
                       <span className="min-w-0 flex-1 truncate text-[9px] font-medium opacity-75">
                         {account.recentTransactions[0]?.description ?? "Belum ada transaksi"}
                       </span>
@@ -605,9 +586,7 @@ export function BankAccountsControl({
                         className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${account.cardTextColor === "dark" ? "bg-black/6" : "bg-white/12"}`}
                         aria-hidden="true"
                       >
-                        <span className="material-symbols-outlined text-[15px] opacity-70">
-                          chevron_right
-                        </span>
+                        <AppIcon name="chevron_right" className="text-[15px] opacity-70" />
                       </span>
                     </span>
                   </motion.button>
@@ -625,8 +604,8 @@ export function BankAccountsControl({
         canTransfer={selectedTransferOptions.length > 0}
         pending={pending}
         onClose={closeSheet}
-        onDebit={(account) => openMovement(account, "DEBIT")}
-        onCredit={(account) => openMovement(account, "CREDIT")}
+        onDebit={(account) => openMovement(account, "INFLOW")}
+        onCredit={(account) => openMovement(account, "OUTFLOW")}
         onTransfer={openTransfer}
         onEdit={openEdit}
         onToggleActive={toggleActive}

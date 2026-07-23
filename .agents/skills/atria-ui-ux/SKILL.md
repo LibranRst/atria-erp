@@ -13,9 +13,10 @@ Before making a UI decision:
 
 1. Read `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md`.
 2. Read `docs/05-ui-ux/IOS26_SOLID_DESIGN_SYSTEM.md`.
-3. Inspect the live implementation relevant to the task; do not rely on old plans or screenshots.
-4. Read [references/visual-pattern-catalog.md](references/visual-pattern-catalog.md) for main-page or form work.
-5. Read [references/motion-and-interaction.md](references/motion-and-interaction.md) whenever the task contains interaction, state changes, overlays, or animation.
+3. Read `docs/05-ui-ux/CONTROL_LANGUAGE.md` whenever adding, reviewing, or changing a button, sheet action, badge, count, metadata chip, color token, or icon. Use the typed Phosphor-backed `AppIcon` mapping; do not add Material Symbols or icon fonts.
+4. Inspect the live implementation relevant to the task; do not rely on old plans or screenshots.
+5. Read [references/visual-pattern-catalog.md](references/visual-pattern-catalog.md) for main-page or form work.
+6. Read [references/motion-and-interaction.md](references/motion-and-interaction.md) whenever the task contains interaction, state changes, overlays, or animation.
 
 For Dashboard-led main surfaces, inspect all applicable code under `features/finance-dashboard/components/`, including Ringkasan, Persetujuan, Budget, Jatuh Tempo, Rekening, and Material. For forms, inspect the current `ExpenseForm`, `VendorBillForm`, and `ProjectDrawer` implementations plus their shared form and sheet primitives.
 

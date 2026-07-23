@@ -2,16 +2,17 @@
 
 import React from "react";
 
-import { formatStatus } from "@/components/ui/badge";
+import { formatStatus, MetadataChip, StatusBadge } from "@/components/ui/badge/badge";
 import type { RapView, MaterialOption } from "../shared/rap-rab-manager";
-import type { StockMovement, TabId } from "../project-tabs";
-import { LockedTabState } from "../project-tab-states";
+import type { StockMovement, TabId } from "../shared/project-tabs";
+import { LockedTabState } from "../shared/project-tab-states";
 import { StockOperationSheet } from "./stock-operation-sheet";
 import {
   ActivityDetailChevron,
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
 import { cn } from "@/lib/utils/cn";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 interface StockControlPanelProps {
   readonly projectId: string;
@@ -77,23 +78,23 @@ export function StockControlPanel({
         <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
           Posisi material proyek
         </p>
-        <div className="mt-2 flex items-end justify-between gap-3">
-          <div>
-            <p className="font-mono text-[28px] leading-8 font-bold tabular-nums">
+        <div className="mt-2 flex flex-col justify-between">
+          <div className="flex flex-row items-end justify-between">
+            <div className="font-mono text-4xl leading-none font-bold tabular-nums">
               {totalTracked.toLocaleString("id-ID")}
-            </p>
-            <p className="mt-1 text-[10px] text-white/60">
-              total kebutuhan yang sudah diamankan atau terpakai
-            </p>
+            </div>
+            <MetadataChip className="h-fit bg-white/10 text-[10px] leading-4 font-bold text-white/80">
+              {rap?.items.length ?? 0} material RAP
+            </MetadataChip>
           </div>
-          <span className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-bold text-white/80">
-            {rap?.items.length ?? 0} material RAP
-          </span>
+          <p className="text-[10px] text-white/60">
+            total kebutuhan yang sudah diamankan atau terpakai
+          </p>
         </div>
-        <div className="mt-4 grid grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-4">
+        <div className="mt-2 grid grid-cols-3 gap-2 border-t border-white/12 pt-4">
           <QuantityFact label="Direservasi" value={reservedQty} />
-          <QuantityFact label="Terpakai" value={usedQty} align="center" />
-          <QuantityFact label="Tersisa" value={leftoverQty} align="right" />
+          <QuantityFact label="Terpakai" value={usedQty} />
+          <QuantityFact label="Tersisa" value={leftoverQty} />
         </div>
         <div className="mt-4">
           <StockOperationSheet
@@ -141,13 +142,9 @@ export function StockControlPanel({
                       </div>
                     </div>
                     {shortage ? (
-                      <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold text-amber-600">
-                        Kurang {item.needToBuy} {item.unit}
-                      </span>
+                      <StatusBadge tone="warning" label={`Kurang ${item.needToBuy} ${item.unit}`} />
                     ) : (
-                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold text-emerald-600">
-                        Terpenuhi
-                      </span>
+                      <StatusBadge tone="healthy" label="Terpenuhi" />
                     )}
                   </div>
 
@@ -183,31 +180,13 @@ export function StockControlPanel({
                       <div
                         className={cn(
                           "flex flex-row items-center justify-center gap-1.5 rounded-xl bg-surface-container-low p-3 font-mono leading-4 font-bold text-on-surface tabular-nums",
-                          shortage ? "text-amber-600" : "text-on-surface",
+                          shortage ? "text-warning" : "text-on-surface",
                         )}
                       >
                         {item.needToBuy} <span className="text-[10px]">{item.unit}</span>
                       </div>
                     </div>
                   </div>
-                  {/*<div className="grid grid-cols-4 gap-2 text-[9px] font-medium leading-none text-on-surface-variant bg-surface-container-low p-2.5 rounded-xl border border-outline-variant/15">
-                    <div>
-                      <span className="block text-[8px] uppercase tracking-wide text-on-surface-variant/60 mb-1">Required</span>
-                      <span className="font-mono font-bold text-on-surface tabular-nums">{item.totalQuantity} {item.unit}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[8px] uppercase tracking-wide text-on-surface-variant/60 mb-1">Reserved</span>
-                      <span className="font-mono font-bold text-on-surface tabular-nums">{item.reservedQuantity} {item.unit}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[8px] uppercase tracking-wide text-on-surface-variant/60 mb-1">Secured</span>
-                      <span className="font-mono font-bold text-on-surface tabular-nums">{item.securedQuantity} {item.unit}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[8px] uppercase tracking-wide text-on-surface-variant/60 mb-1">Need to Buy</span>
-                      <span className={`font-mono font-bold tabular-nums ${shortage ? "text-amber-600" : "text-on-surface"}`}>{item.needToBuy} {item.unit}</span>
-                    </div>
-                  </div>*/}
                 </div>
               );
             })}
@@ -228,13 +207,13 @@ export function StockControlPanel({
             material pertama akan muncul setelah operasi stok dicatat.
           </div>
         ) : (
-          <div className="rounded-3xl bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+          <div className="rounded-3xl bg-white px-1 py-1 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
             {stockMovements.map((move, index) => (
               <button
                 type="button"
                 onClick={() => openActivityDetail({ kind: "STOCK_MOVEMENT", id: move.id })}
                 key={move.id}
-                className="relative flex min-h-12 w-full gap-3 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
+                className="relative flex min-h-12 w-full gap-3 rounded-3xl px-2 py-3 text-left transition-all outline-none focus-visible:bg-surface-container-low active:scale-98 active:bg-surface-container-low/80"
                 aria-label={`Lihat detail mutasi ${move.material.name}`}
               >
                 {index < stockMovements.length - 1 ? (
@@ -246,29 +225,27 @@ export function StockControlPanel({
                 <span
                   className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-4 ring-white ${movementTone(move.movementType)}`}
                 >
-                  <span className="material-symbols-outlined text-[17px]">
-                    {move.movementType === "WASTE"
+                  <AppIcon name={move.movementType === "WASTE"
                       ? "delete"
                       : move.movementType === "RETURN"
                         ? "undo"
-                        : "sync_alt"}
-                  </span>
+                        : "sync_alt"} className="text-[17px]" />
                 </span>
                 <div className="min-w-0 flex-1 pt-0.5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-bold text-on-surface">
+                      <p className="truncate text-xs leading-5 font-bold text-on-surface">
                         {move.material.name}
                       </p>
-                      <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+                      <p className="truncate text-[10px] leading-4 text-on-surface-variant">
                         {move.location.name} · {move.createdBy.name}
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="font-mono text-xs font-bold text-on-surface tabular-nums">
+                      <p className="font-mono text-xs leading-5 font-bold text-on-surface tabular-nums">
                         {Number(move.quantity).toLocaleString("id-ID")} {move.material.unit}
                       </p>
-                      <p className="mt-0.5 text-[9px] font-semibold text-on-surface-variant">
+                      <p className="text-[9px] leading-4 font-semibold text-on-surface-variant">
                         {movementLabel(move.movementType)}
                       </p>
                     </div>
@@ -283,12 +260,12 @@ export function StockControlPanel({
                     })}
                   </p>
                   {move.note ? (
-                    <p className="mt-1.5 text-[10px] leading-4 text-on-surface-variant">
+                    <p className="rounded-xl bg-surface-container-low p-2 text-[10px] leading-4 text-on-surface-variant ring-outline-variant/15">
                       {move.note}
                     </p>
                   ) : null}
                 </div>
-                <ActivityDetailChevron />
+                <ActivityDetailChevron className="mt-2" />
               </button>
             ))}
           </div>
@@ -310,9 +287,11 @@ function QuantityFact({
   const className =
     align === "center" ? "px-2 text-center" : align === "right" ? "pl-2 text-right" : "pr-2";
   return (
-    <div className={className}>
-      <p className="truncate text-[8px] font-bold tracking-wide text-white/50 uppercase">{label}</p>
-      <p className="mt-1 font-mono text-[13px] font-bold tabular-nums">
+    <div className={cn("flex flex-col gap-2 rounded-2xl bg-white/7.5 p-3", className)}>
+      <p className="truncate text-[8px] leading-none font-bold tracking-wide text-white/50 uppercase">
+        {label}
+      </p>
+      <p className="mt-1 font-mono text-[18px] leading-none font-bold tabular-nums">
         {value.toLocaleString("id-ID")}
       </p>
     </div>

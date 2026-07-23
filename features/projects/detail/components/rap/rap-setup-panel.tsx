@@ -2,14 +2,14 @@
 
 import React from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { SegmentedTabs } from "@/components/ui/segmented-tabs";
+import { Badge } from "@/components/ui/badge/badge";
+import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
 import {
   getRapSetupStageLabel,
   getRapSetupStageNumber,
   isRapSetupStageUnlocked,
   RAP_SETUP_STAGES,
-} from "./rap-setup-utils";
+} from "../../utils/rap-setup-utils";
 import {
   MaterialRapStagePanel,
   PackageSetupStagePanel,
