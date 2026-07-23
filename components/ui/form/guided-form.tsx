@@ -545,9 +545,9 @@ export function OptionChoiceGroup<TValue extends string>({
   readonly onChange: (value: TValue) => void;
 }): React.JSX.Element {
   return (
-    <fieldset className="space-y-2">
-      <legend className="text-xs font-semibold text-on-surface">{label}</legend>
-      <div className="space-y-2">
+    <fieldset className="space-y-2 rounded-2xl bg-surface-container-low">
+      <p className="px-3 pt-3 text-xs font-semibold text-on-surface">{label}</p>
+      <div className="space-y-2 px-2 pb-2">
         {options.map((option) => {
           const selected = option.value === value;
           return (
@@ -558,9 +558,9 @@ export function OptionChoiceGroup<TValue extends string>({
               transition={transitionSpringSnappy}
               onClick={() => onChange(option.value)}
               className={cx(
-                "flex min-h-12 w-full items-center gap-3 rounded-full px-5 text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                "flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-container-lowest px-5 text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
                 selected
-                  ? "bg-primary/10 text-primary ring-primary/35"
+                  ? "bg-primary/10 text-primary ring-primary/10"
                   : "bg-surface-container-low text-on-surface ring-outline-variant/20",
               )}
               aria-pressed={selected}

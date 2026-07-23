@@ -41,7 +41,10 @@ import {
   mergeExpenseLines,
   STOCK_HANDLING_OPTIONS,
 } from "@/features/expenses/utils/expense-form-utils";
-import { uploadAndParseExpenseReceipt, type ExpenseReceiptOcrResult } from "@/features/expenses/utils/expense-receipt-ocr";
+import {
+  uploadAndParseExpenseReceipt,
+  type ExpenseReceiptOcrResult,
+} from "@/features/expenses/utils/expense-receipt-ocr";
 import { useHybridExpenseDraft } from "@/features/expenses/hooks/use-hybrid-expense-draft";
 import { createClientId } from "@/lib/utils/client-id";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
@@ -508,7 +511,13 @@ export function ExpenseForm({
     <>
       <WorkflowFormSheet
         open={open && success === null}
-        title={reviewOpen ? "Tinjau Pengeluaran" : requestedDraftId ? "Lanjutkan Draft" : "Tambah Pengeluaran"}
+        title={
+          reviewOpen
+            ? "Tinjau Pengeluaran"
+            : requestedDraftId
+              ? "Lanjutkan Draft"
+              : "Tambah Pengeluaran"
+        }
         primaryLabel={reviewOpen ? "Ajukan" : "Tinjau"}
         secondaryLabel={reviewOpen ? "Ubah" : "Simpan"}
         pending={reviewOpen ? submitting : loadingDraft}
@@ -624,7 +633,11 @@ export function ExpenseForm({
             </div>
           ) : (
             <>
-              {!reviewOpen && drafts.length > 0 && !requestedDraftId && !loadedDraftId && !draft.draftId ? (
+              {!reviewOpen &&
+              drafts.length > 0 &&
+              !requestedDraftId &&
+              !loadedDraftId &&
+              !draft.draftId ? (
                 <FormSection
                   title="Draft aktif"
                   helper="Lanjutkan pengeluaran yang pernah disimpan."
@@ -666,7 +679,10 @@ export function ExpenseForm({
                               })}
                             </span>
                           </span>
-                          <AppIcon name="chevron_right" className="shrink-0 text-[18px] leading-none text-on-surface-variant" />
+                          <AppIcon
+                            name="chevron_right"
+                            className="shrink-0 text-[18px] leading-none text-on-surface-variant"
+                          />
                         </button>
                         <button
                           type="button"

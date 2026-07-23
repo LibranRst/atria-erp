@@ -86,7 +86,7 @@ export function ExpenseReceiptUpload({
           />
         </div>
       ) : (
-        <div className="space-y-2 rounded-3xl bg-surface-container-lowest p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+        <div className="space-y-2 rounded-3xl">
           <div className="grid grid-cols-2 gap-2">
             <ReceiptUploadOption
               icon="photo_camera"
@@ -165,7 +165,7 @@ function ReceiptUploadOption({
     <motion.label
       whileTap={disabled ? undefined : { scale: 0.97 }}
       transition={transitionSpringSnappy}
-      className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-surface-container-low px-3 text-on-surface ring-1 ring-outline-variant/10 focus-within:ring-2 focus-within:ring-accent/25 ${disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
+      className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-3 text-on-surface shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15 focus-within:ring-2 focus-within:ring-accent/25 ${disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
     >
       <AppIcon name={icon} className="text-[18px]" />
       <span className="truncate text-xs font-bold">{label}</span>

@@ -234,7 +234,9 @@ export function ExpenseLineEditor({
               <FormField
                 label="Harga Satuan"
                 required
-                error={touched.unitPrice && draft.unitPrice === "" ? "Masukkan harga satuan." : undefined}
+                error={
+                  touched.unitPrice && draft.unitPrice === "" ? "Masukkan harga satuan." : undefined
+                }
               >
                 <MoneyInput
                   value={draft.unitPrice}
@@ -242,7 +244,10 @@ export function ExpenseLineEditor({
                   placeholder="0"
                   onChange={(value) => {
                     const clean = cleanLeadingZeros(value);
-                    patch({ unitPrice: clean === "" ? "" : Math.max(0, Number(clean)) }, "unitPrice");
+                    patch(
+                      { unitPrice: clean === "" ? "" : Math.max(0, Number(clean)) },
+                      "unitPrice",
+                    );
                   }}
                 />
               </FormField>
@@ -268,20 +273,22 @@ export function ExpenseLineEditor({
               helper="Opsi perlakuan stok dan tautan catalog/RAP."
             >
               <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                <OptionChoiceGroup
-                  label="Perlakuan Stok"
-                  value={draft.stockHandling}
-                  options={STOCK_HANDLING_OPTIONS}
-                  onChange={(stockHandling) =>
-                    patch({
-                      stockHandling,
-                      inventoryLocationId:
-                        stockHandling === "EXPENSE_ONLY"
-                          ? ""
-                          : draft.inventoryLocationId || defaultInventoryLocationId,
-                    })
-                  }
-                />
+                <div className="mx-3 mt-3 border-b-0">
+                  <OptionChoiceGroup
+                    label="Perlakuan Stok"
+                    value={draft.stockHandling}
+                    options={STOCK_HANDLING_OPTIONS}
+                    onChange={(stockHandling) =>
+                      patch({
+                        stockHandling,
+                        inventoryLocationId:
+                          stockHandling === "EXPENSE_ONLY"
+                            ? ""
+                            : draft.inventoryLocationId || defaultInventoryLocationId,
+                      })
+                    }
+                  />
+                </div>
                 <SheetSelect
                   label="Material"
                   value={draft.materialId}
@@ -307,7 +314,11 @@ export function ExpenseLineEditor({
                     }))}
                     placeholder="Pilih lokasi"
                     required
-                    error={touched.location && !draft.inventoryLocationId ? "Pilih lokasi stok." : undefined}
+                    error={
+                      touched.location && !draft.inventoryLocationId
+                        ? "Pilih lokasi stok."
+                        : undefined
+                    }
                   />
                 ) : null}
                 <SheetSelect
@@ -315,7 +326,10 @@ export function ExpenseLineEditor({
                   value={draft.projectRapItemId}
                   onChange={(projectRapItemId) => {
                     const rapItem = rapItems.find((item) => item.id === projectRapItemId);
-                    patch({ projectRapItemId, materialId: rapItem?.materialId ?? draft.materialId });
+                    patch({
+                      projectRapItemId,
+                      materialId: rapItem?.materialId ?? draft.materialId,
+                    });
                   }}
                   options={[
                     { value: "", label: "Tidak ditautkan" },
@@ -336,22 +350,17 @@ export function ExpenseLineEditor({
           {selectedMaterial && draft.quantity !== "" && isMaterial ? (
             <FieldContextLine
               tone={
-                selectedMaterial.availableStock >= Number(draft.quantity)
-                  ? "success"
-                  : "warning"
+                selectedMaterial.availableStock >= Number(draft.quantity) ? "success" : "warning"
               }
             >
               Stok tersedia {selectedMaterial.availableStock.toLocaleString("id-ID")}{" "}
-              {selectedMaterial.unit}; kebutuhan{" "}
-              {Number(draft.quantity).toLocaleString("id-ID")} {selectedMaterial.unit}.
+              {selectedMaterial.unit}; kebutuhan {Number(draft.quantity).toLocaleString("id-ID")}{" "}
+              {selectedMaterial.unit}.
             </FieldContextLine>
           ) : null}
 
           {isPackage ? (
-            <FormSection
-              title={packageLabel}
-              helper="Tautkan ke paket pekerjaan yang sesuai."
-            >
+            <FormSection title={packageLabel} helper="Tautkan ke paket pekerjaan yang sesuai.">
               <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
                 <SheetSelect
                   label={packageLabel}
