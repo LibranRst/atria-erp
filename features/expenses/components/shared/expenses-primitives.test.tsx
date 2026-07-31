@@ -47,7 +47,9 @@ describe("Expenses Dashboard visual language", () => {
 
     expect(html).toContain("Pengeluaran aktif");
     expect(html).toContain('aria-label="14 pengajuan"');
-    expect(html).toContain("14 Pengajuan");
+    expect(html).toContain(">Pengajuan</span>");
+    expect(html).toContain("inline-grid h-5 min-w-5");
+    expect(html).toContain("min-h-8");
     expect(html).toContain("rounded-3xl");
   });
 

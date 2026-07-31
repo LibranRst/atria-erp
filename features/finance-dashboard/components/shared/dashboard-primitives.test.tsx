@@ -52,7 +52,9 @@ describe("native editorial dashboard sections", () => {
 
     expect(html).toContain("Hari ini");
     expect(html).toContain('aria-label="23 pengajuan"');
-    expect(html).toContain("23 Pengajuan");
+    expect(html).toContain(">Pengajuan</span>");
+    expect(html).toContain("inline-grid h-5 min-w-5");
+    expect(html).toContain("min-h-8");
     expect(html).toContain("text-[11px]");
     expect(html).toContain("px-3");
     expect(html).not.toContain("Hari ini · 23");

@@ -203,18 +203,16 @@ export function SectionCountPill({
     <span
       {...props}
       aria-label={`${count} ${label.toLowerCase()}`}
-      className={`items-center px-3 text-[11px] leading-4 font-bold text-on-surface-variant ${className}`}
+      className={`inline-flex min-h-8 items-center gap-1.5 rounded-full bg-surface-container-low px-3 text-[11px] leading-4 font-bold text-on-surface-variant ${className}`}
     >
-      <span>
-        {count} {label}
-      </span>
-      {/*<CountBadge
+      <span>{label}</span>
+      <CountBadge
         count={count}
         label={label.toLowerCase()}
         tone="neutral"
         aria-hidden="true"
         className="bg-surface-container-lowest text-[9px] ring-1 ring-ring-subtle"
-      />*/}
+      />
     </span>
   );
 }

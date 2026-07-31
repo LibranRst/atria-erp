@@ -114,7 +114,8 @@ test("design tokens keep iOS neutral surfaces and semantic elevation roles", () 
   expect(globals).toContain("--surface-container-lowest: #ffffff");
   expect(globals).toContain("--surface-container-low: var(--ios-gray-6)");
   expect(globals).toContain("--surface-container: var(--ios-gray-5)");
-  expect(globals).toContain("--ring-subtle: color-mix(in srgb, #3c3c43 6%, transparent)");
+  expect(globals).toContain("--ring-subtle: color-mix(in srgb, #3c3c43 2%, transparent)");
+  expect(globals).toContain("--ring-control: color-mix(in srgb, #3c3c43 6%, transparent)");
   expect(globals).toContain("--color-focus-ring: var(--focus-ring)");
   expect(globals).toContain("--shadow-surface:");
   expect(globals).toContain("--shadow-floating:");
