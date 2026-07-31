@@ -5,23 +5,8 @@ import { ProfileAccessList } from "@/features/profile/components/views/profile-a
 import { ProfileIdentitySurface } from "@/features/profile/components/views/profile-identity-surface";
 import { LogoutButton } from "@/features/profile/components/views/logout-button";
 import { DeveloperAccountSwitcher } from "@/features/profile/components/developer/developer-account-switcher";
-import { getDeveloperAccountSimulationState } from "@/app/actions/developer-account-simulation";
-import {
-  countAccessibleProfileModules,
-  formatProfileRole,
-  getProfileInitials,
-  summarizeProfileAccess,
-} from "@/features/profile/utils/profile-access";
-import { resolveRoleName, ROLE_PERMISSIONS, type PermissionKey } from "@/lib/auth/permissions";
-import { requireServerSession } from "@/lib/server/session";
+import { getProfilePageData } from "@/features/profile/server/get-profile-page-data";
 import { AppIcon } from "@/components/ui/icon/app-icon";
-
-function getBadgeStatus(role: string): "PRIMARY" | "APPROVED" | "PENDING" | "DRAFT" {
-  if (role === "OWNER") return "PRIMARY";
-  if (role === "FINANCE_ADMIN") return "APPROVED";
-  if (role === "PROJECT_MANAGER") return "PENDING";
-  return "DRAFT";
-}
 
 function SectionHeader({
   title,
@@ -31,7 +16,7 @@ function SectionHeader({
   readonly meta?: string;
 }): React.JSX.Element {
   return (
-    <div className="flex min-h-10 items-center justify-between gap-3 px-1">
+    <div className="flex items-center justify-between gap-3 px-1">
       <h2 className="min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5">
         {title}
       </h2>
@@ -45,20 +30,10 @@ function SectionHeader({
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage(): Promise<React.JSX.Element> {
-  const session = await requireServerSession();
-  const roleName = await resolveRoleName(session.user.roleId);
-  const permissions: readonly PermissionKey[] = ROLE_PERMISSIONS[roleName] ?? [];
-  const accessGroups = summarizeProfileAccess(permissions);
-  const accessibleModuleCount = countAccessibleProfileModules(accessGroups);
-  const roleLabel = formatProfileRole(roleName);
-  const canAccessSettings = permissions.includes("view:settings");
-  const displayName = session.user.name || "Pengguna Atria";
-  const displayEmail = session.user.email || "Email belum tersedia";
-  const developerSimulation =
-    roleName === "OWNER" ? await getDeveloperAccountSimulationState() : null;
+  const data = await getProfilePageData();
 
   return (
-    <section className="space-y-5 pb-8 max-[430px]:-mx-1 max-[430px]:space-y-4 max-[430px]:pb-6">
+    <section className="space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6">
       <header className="px-1">
         <div className="min-w-0">
           <p className="text-[9px] font-bold tracking-[0.16em] text-primary uppercase">Akun</p>
@@ -72,24 +47,24 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
       </header>
 
       <ProfileIdentitySurface
-        displayName={displayName}
-        displayEmail={displayEmail}
-        imageUrl={session.user.image}
-        initials={getProfileInitials(displayName)}
-        roleLabel={roleLabel}
-        roleStatus={getBadgeStatus(roleName)}
-        isActive={session.user.isActive}
-        accessibleModuleCount={accessibleModuleCount}
-        moduleCount={accessGroups.length}
+        displayName={data.displayName}
+        displayEmail={data.displayEmail}
+        imageUrl={data.imageUrl}
+        initials={data.initials}
+        roleLabel={data.roleLabel}
+        roleStatus={data.roleStatus}
+        isActive={data.isActive}
+        accessibleModuleCount={data.accessibleModuleCount}
+        moduleCount={data.accessGroups.length}
       />
 
       <section className="space-y-2">
         <SectionHeader title="Akun & akses" />
-        <div className="relative isolate overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl">
+        <div className="relative isolate overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl">
           <div className="divide-y divide-black/5.5">
             <div className="flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3">
               <span
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-high/65 text-on-surface-variant ring-1 ring-black/[0.035]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-high/65 text-on-surface-variant ring-1 ring-ring-subtle"
                 aria-hidden="true"
               >
                 <AppIcon name="verified_user" className="text-[18px] leading-none" />
@@ -102,15 +77,20 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                   Menentukan menu dan tindakan yang tersedia.
                 </p>
               </div>
-              <span className="shrink-0 text-[10px] font-bold text-on-surface">{roleLabel}</span>
+              <span className="shrink-0 text-[10px] font-bold text-on-surface">
+                {data.roleLabel}
+              </span>
             </div>
 
             <div className="flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3">
               <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${session.user.isActive ? "bg-success/[0.07] text-success ring-success/6" : "bg-error/[0.07] text-error ring-error/6"}`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${data.isActive ? "bg-success/[0.07] text-success ring-success/6" : "bg-error/[0.07] text-error ring-error/6"}`}
                 aria-hidden="true"
               >
-                <AppIcon name={session.user.isActive ? "check_circle" : "block"} className="text-[18px] leading-none" />
+                <AppIcon
+                  name={data.isActive ? "check_circle" : "block"}
+                  className="text-[18px] leading-none"
+                />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
@@ -121,16 +101,16 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                 </p>
               </div>
               <span
-                className={`shrink-0 text-[10px] font-semibold ${session.user.isActive ? "text-success" : "text-error"}`}
+                className={`shrink-0 text-[10px] font-semibold ${data.isActive ? "text-success" : "text-error"}`}
               >
-                {session.user.isActive ? "Aktif" : "Nonaktif"}
+                {data.isActive ? "Aktif" : "Nonaktif"}
               </span>
             </div>
 
-            {canAccessSettings ? (
+            {data.canAccessSettings ? (
               <Link
                 href="/settings"
-                className="flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3 transition-colors outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-inset active:bg-surface-container-low"
+                className="flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3 transition-colors outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low"
               >
                 <span
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/6.5 text-primary ring-1 ring-primary/6"
@@ -146,7 +126,10 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                     Kelola default dan master data sesuai akses.
                   </p>
                 </div>
-                <AppIcon name="chevron_right" className="shrink-0 text-[18px] leading-none text-primary" />
+                <AppIcon
+                  name="chevron_right"
+                  className="shrink-0 text-[18px] leading-none text-primary"
+                />
               </Link>
             ) : null}
           </div>
@@ -156,18 +139,18 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
       <section className="space-y-2">
         <SectionHeader
           title="Hak akses"
-          meta={`${accessibleModuleCount} dari ${accessGroups.length} modul`}
+          meta={`${data.accessibleModuleCount} dari ${data.accessGroups.length} modul`}
         />
-        <ProfileAccessList groups={accessGroups} roleLabel={roleLabel} />
+        <ProfileAccessList groups={data.accessGroups} roleLabel={data.roleLabel} />
       </section>
 
-      {developerSimulation?.success && developerSimulation.data.enabled ? (
-        <DeveloperAccountSwitcher state={developerSimulation.data} />
+      {data.developerSimulation ? (
+        <DeveloperAccountSwitcher state={data.developerSimulation} />
       ) : null}
 
       <section className="space-y-2">
         <SectionHeader title="Sesi" />
-        <div className="overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl">
+        <div className="overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl">
           <LogoutButton />
         </div>
       </section>

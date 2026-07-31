@@ -41,6 +41,11 @@ Before changing a main surface, inspect the current implementation instead of re
 
 Reuse shared primitives when their semantics fit. Do not duplicate their class strings into a new domain just to make it look similar.
 
+Global main-surface primitives live under `components/ui/feedback/`. Use `SummarySurface`,
+`GroupedSurface`, `SectionHeader`, `DetailSection`, `RowGroup`, `SummaryFact`, and
+`InlineStateRow` directly when their semantic contract fits. Do not create feature-prefixed copies
+of these primitives; feature-owned components should compose them with domain data and actions.
+
 ## Configuration Workspaces
 
 Settings-style workspaces keep the application identity stable while the configuration domain changes:
@@ -103,15 +108,46 @@ Use surfaces according to information ownership:
 
 - **Focal surface:** one strong summary or independent decision unit. A dark financial surface is allowed when it creates a clear anchor.
 - **Grouped surface:** one soft white or translucent container holding related rows separated by subtle dividers.
+- **Inset metric grid:** two or three compact neutral metric cells owned by a focal, grouped, or decision surface. It decomposes a comparison without creating a second layer of standalone cards.
+- **Decision item:** one independently actionable entity card or row that may contain identity, supporting context, an inset metric grid, and one comparison or status treatment.
 - **Identity surface:** a branded or user-configured entity such as a bank account. Existing account gradients belong here and must remain visible.
 - **Inline section:** simple supporting content that needs hierarchy and whitespace but no container.
 - **Tinted state surface:** reserved for a meaningful warning, critical state, selection, or comparison.
 
-Repeated information should normally share one grouped surface. Do not create a separate rounded card for every row. Conversely, do not remove cards where an item is an independent interactive object or where the established product language uses a focal surface.
+Choose the owner before styling its contents. Simple repeated events, transactions, master data, and title/meta/value rows normally share one grouped surface with dividers. A decision-heavy entity may own an individual card when the whole item is actionable or its internal comparisons are necessary to judge it.
 
-Use soft rings and shadows instead of hard borders. Large radii belong to focal and grouped surfaces; they should not be repeated on every nested element.
+An inset metric cell is not an independent card. Keep it compact and neutral, use spacing rather than hard dividers between cells, and do not give each cell its own shadow or elevation. Put semantic tone on the value, icon, or explicit status by default; tint the cell only when the whole cell represents a meaningful warning, critical state, selection, or comparison.
+
+Use the semantic ring and shadow roles from `CONTROL_LANGUAGE.md` instead of local recipes. Large
+radii belong to owning focal, grouped, decision, and identity surfaces. Nested metric cells use a
+quieter radius and surface contrast so the owner remains visually dominant; they never receive
+independent elevation.
+
+The main canvas and low containers use the cool iOS system-gray foundation. Owning grouped surfaces
+remain white. Never warm a neutral surface with cream, beige, brown, red, or yellow undertones, and
+never select a palette utility merely because it appears visually close to a surface token.
 
 Gradients are reserved for meaningful identity or established focal surfaces, such as bank account colors. Do not spread gradients across generic summaries or status cards.
+
+Functional edge scrims are the narrow exception: fixed bottom-sheet chrome may use a token-based
+surface-to-transparent fade so scrolling content passes beneath readable controls without a hard
+cutoff. Keep the fade attached to the overlay edge, preserve an opaque-enough area beneath text and
+actions, and do not reuse it as decorative page or card styling.
+
+### Inset metric grid
+
+Use an inset metric grid when:
+
+- two or three values must be scanned together to understand position, composition, or risk;
+- the values support one focal summary or one identifiable decision item;
+- labels can remain short and each primary value stays on one line at 320 px;
+- the grid reduces scanning effort compared with a sentence or stacked label/value list.
+
+Common examples are available cash decomposed into receivables, payables, and near-term exposure; actual versus internal budget; consumed versus remaining budget; or compact approval workload facts.
+
+Do not use an inset metric grid for a single title/meta/value row, activity or transaction history, long narrative values, unrelated KPIs, or decoration. Keep grids to two or three cells in one row. If four or more facts are essential, establish hierarchy by promoting one value, grouping secondary facts, or moving detail into a sheet instead of shrinking the typography.
+
+The owning focal or decision surface remains the interaction target. Inset cells are non-interactive unless each cell genuinely leads to a different destination and has its own accessible 48px target.
 
 ## Section and Row Grammar
 
@@ -119,10 +155,16 @@ A standard section consists of:
 
 - a concise title;
 - an optional compact light-blue capsule action with a chevron;
+- an optional compact neutral count pill for a cardinal workload count;
 - one grouped surface, timeline, or purpose-built comparison;
 - a functional empty/error state in the same visual footprint.
 
 Small section actions may appear visually 32–40 px tall, but their effective touch target must remain at least 48 px. Use direct labels such as `Lihat semua`, `Tinjau`, or `Buka project`.
+
+Use the shared compact section count pill when the trailing value answers “how many items are
+in this section?” The outer pill names the item type and the inner count badge carries the number.
+Keep status, dates, periods, ratios such as `3 dari 8`, and descriptive context as plain metadata.
+Do not show a count pill beside a section action when both compete for the same trailing slot.
 
 A standard grouped row should expose only what is needed to scan and decide:
 
@@ -132,6 +174,15 @@ A standard grouped row should expose only what is needed to scan and decide:
 - chevron or contextual action only when the entire row is interactive.
 
 Use an icon tile around 36 px with a compact radius for repeated rows. Use soft horizontal dividers between related rows, not a border around every row.
+
+A decision item may use a different internal grammar when a plain row would hide the comparison:
+
+- keep entity identity and status readable before the numbers;
+- place two or three comparable facts in a compact neutral inset metric grid;
+- use at most one full-width comparison, indicator, or consequence below it;
+- keep the whole item visually and interactively owned by one card or row.
+
+Do not retrofit this grammar onto activity, history, recent-transaction, or simple master-data rows. Those remain grouped operational rows unless the workflow introduces a real independent decision.
 
 Do not use colored vertical severity rails beside ordinary list items. A vertical line is valid only when it represents an actual timeline relationship; timeline connectors must visually continue between items and replace horizontal row dividers.
 
@@ -199,7 +250,7 @@ Do not add a chart unless trend, distribution, or time-series comparison materia
 - Standalone inputs and selectors use a white `min-h-12` capsule. Inside `FormSection`, controls become borderless rows on one white grouped surface with visible labels and subtle dividers.
 - Text, money, and notes use stacked label/value rows. Toggles and short choices may use an explicit inline label/control layout; do not infer layout from label length.
 - Helper and validation copy belongs inside the relevant row. Use a restrained error tint and text instead of a separate error card.
-- Bottom sheets use a `surface-container-low` canvas, white grouped content, `rounded-t-[28px]`, a pull indicator, keyboard-safe spacing, and the shared overlay hierarchy.
+- Bottom sheets use a `surface-container-low` canvas, white grouped content, `rounded-t-[28px]`, a pull indicator, keyboard-safe spacing, and the shared overlay hierarchy. Their fixed header and footer use functional edge scrims over one scroll plane rather than hard opaque cutoffs.
 - Selection and date sheets retain their nested behavior. Present options as grouped rows and reserve blue for focus or selection while primary submit actions remain Atria black.
 - Destructive actions are visually separated and require confirmation or a reason when the business flow demands it.
 - Never add an inline mutation merely to make a dashboard or summary feel interactive.
@@ -243,7 +294,10 @@ Do not ship:
 
 - a generic formula of summary card, header pill, and identical rounded cards for every section;
 - oversized text, padding, tabs, or buttons that only look balanced in a desktop preview;
-- a card around every metric or row;
+- an elevated standalone card around every metric or simple row;
+- tonal or rainbow backgrounds across ordinary inset metric cells;
+- more than three equal-weight metric cells in one mobile row;
+- nested metric cells that compete with their owning focal or decision surface through shadow, elevation, or oversized radius;
 - an entirely unframed operational list when independent items need established card affordance;
 - identical progress lines across unrelated contexts;
 - colored vertical rails on ordinary list items;
@@ -260,13 +314,16 @@ Before implementation:
 
 - inspect Dashboard and Expenses in code and at 320–430 px;
 - identify the focal information, grouped data, primary action, and exceptional states;
+- decide whether repeated content is a grouped operational row, a decision item, or an inset metric grid; do not mix these patterns by visual preference alone;
 - decide which existing primitive can be reused and which domain-specific pattern is needed;
 - verify that the proposed pattern preserves business logic, permission, and navigation.
 
 Before handoff:
 
 - verify 320, 360, 390, and 430 px plus the fixed-width large-screen shell;
-- check primary values for wrapping and horizontal overflow;
+- check primary values and every 2–3-cell inset metric grid for wrapping and horizontal overflow;
+- check that canvas, grouped surfaces, rings, and shadows use their semantic token roles with no
+  warm neutral or competing nested elevation;
 - verify focus order, screen-reader labels, 48 px effective touch targets, and reduced motion;
 - test loading-to-content layout stability and empty/error states;
 - verify tab/filter changes do not scroll the page unexpectedly;

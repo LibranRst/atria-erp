@@ -1,0 +1,26 @@
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+import type { ActionResponse } from "@/lib/types/action-response";
+
+export type WarehouseUser = { readonly id: string; readonly roleId?: string };
+
+export async function getWarehouseUser(): Promise<WarehouseUser | null> {
+  const session = await auth.api.getSession({ headers: { cookie: (await cookies()).toString() } });
+  return session?.user ? (session.user as WarehouseUser) : null;
+}
+
+export function warehouseFailure<T>(error: unknown, fallback: string): ActionResponse<T> {
+  const message = error instanceof Error ? error.message : fallback;
+  return {
+    success: false,
+    error: {
+      code: message.includes("FORBIDDEN") ? "FORBIDDEN" : "TRANSACTION_FAILED",
+      message,
+    },
+  };
+}
+
+export function refreshWarehouse(): void {
+  revalidatePath("/materials");
+}

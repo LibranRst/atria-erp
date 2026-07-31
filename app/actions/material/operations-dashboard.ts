@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { desc, eq, lt, ne } from "drizzle-orm";
+import { and, desc, eq, lt, ne, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { goodsReceipt, project, stockMovement, vendorBill } from "@/db/schema";
@@ -33,6 +33,10 @@ export interface MaterialMovementView {
   readonly projectId: string | null;
   readonly projectName: string | null;
   readonly createdByName: string;
+}
+export interface MaterialMovementPage {
+  readonly items: MaterialMovementView[];
+  readonly hasMore: boolean;
 }
 export interface ReceiptView {
   readonly id: string;
@@ -112,6 +116,7 @@ export interface MaterialOperationsDashboard {
   readonly inventory: MaterialInventoryRow[];
   readonly shortages: MaterialShortageRow[];
   readonly movements: MaterialMovementView[];
+  readonly movementsHasMore: boolean;
   readonly receipts: ReceiptView[];
   readonly counts: CountView[];
   readonly transfers: TransferView[];
@@ -119,14 +124,27 @@ export interface MaterialOperationsDashboard {
   readonly bills: readonly GoodsReceiptVendorBillOption[];
 }
 
-async function movementRows(limit: number, cursor?: Date): Promise<MaterialMovementView[]> {
+type MaterialMovementCursor = {
+  readonly createdAt: Date;
+  readonly id: string;
+};
+
+async function movementRows(
+  limit: number,
+  cursor?: MaterialMovementCursor,
+): Promise<MaterialMovementPage> {
   const rows = await db.query.stockMovement.findMany({
-    where: cursor ? lt(stockMovement.createdAt, cursor) : undefined,
+    where: cursor
+      ? or(
+          lt(stockMovement.createdAt, cursor.createdAt),
+          and(eq(stockMovement.createdAt, cursor.createdAt), lt(stockMovement.id, cursor.id)),
+        )
+      : undefined,
     with: { material: true, location: true, project: true, createdBy: true },
-    orderBy: [desc(stockMovement.createdAt)],
-    limit,
+    orderBy: [desc(stockMovement.createdAt), desc(stockMovement.id)],
+    limit: limit + 1,
   });
-  return rows.map((row) => {
+  const items = rows.slice(0, limit).map((row) => {
     const inferredDirection = ["STOCK_IN", "GOODS_RECEIPT", "RETURN", "TRANSFER_IN"].includes(
       row.movementType,
     )
@@ -153,11 +171,12 @@ async function movementRows(limit: number, cursor?: Date): Promise<MaterialMovem
       createdByName: row.createdBy.name,
     };
   });
+  return { items, hasMore: rows.length > limit };
 }
 
 export async function getMaterialMovementPage(
   input: unknown,
-): Promise<ActionResponse<MaterialMovementView[]>> {
+): Promise<ActionResponse<MaterialMovementPage>> {
   const parsed = movementPageSchema.safeParse(input);
   if (!parsed.success)
     return {
@@ -193,7 +212,7 @@ export async function getMaterialOperationsDashboard(): Promise<
     const [
       inventoryResult,
       shortageResult,
-      movements,
+      movementPage,
       receipts,
       counts,
       transfers,
@@ -322,7 +341,8 @@ export async function getMaterialOperationsDashboard(): Promise<
         },
         inventory: inventoryResult.data,
         shortages,
-        movements,
+        movements: movementPage.items,
+        movementsHasMore: movementPage.hasMore,
         receipts: receipts.map((row) => ({
           id: row.id,
           receiptNumber: row.receiptNumber,

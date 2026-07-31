@@ -2,87 +2,26 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
-import { CirclePlus, FileSearch, Trash2 } from "lucide-react";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-
-import {
-  setItemPriceLibraryItemActive,
-  type ExpenseCategorySettingRow,
-} from "@/app/actions/settings/system";
-import {
-  upsertPricingTemplate,
-  type PricingTemplateRow,
-} from "@/app/actions/settings/pricing-library";
+import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
+import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
 import { ConfirmationSheet, EmptyState, SettingsHeader } from "../shared/settings-ui";
-import {
-  COMMON_UNIT_OPTIONS,
-  ComboboxField,
-  ConfirmationModal,
-  DatePickerField,
-  FilterSelect,
-  FormDisclosure,
-  FormField,
-  FormRiskNotice,
-  FormSection,
-  OperationalFormSheet,
-  MoneyInput,
-  NumericInput,
-  SheetSelect,
-  Textarea,
-  TextInput,
-  ValuePreviewStrip,
-} from "@/components/ui";
+import { ConfirmationModal, FilterSelect } from "@/components/ui";
 import { createClientId } from "@/lib/utils/client-id";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-import {
-  SettingsGroupSurface,
-  SettingsModuleHeader,
-  SettingsRowChevron,
-  SettingsStatusLabel,
-} from "../shared/settings-primitives";
-
-type ItemType = "MATERIAL_ITEM" | "WORK_PACKAGE" | "SUBCON_PACKAGE" | "CLIENT_LINE";
-type ComponentType = "LABOR" | "MATERIAL" | "EQUIPMENT" | "LOGISTICS" | "OVERHEAD" | "OTHER";
-type CostComponentDraft = {
-  readonly key: string;
-  readonly vendorId: string | null;
-  readonly componentType: ComponentType;
-  readonly label: string;
-  readonly quantity: number;
-  readonly unit: string;
-  readonly unitCost: number;
-  readonly note: string;
-};
-type Draft = {
-  readonly id?: string;
-  readonly expenseCategoryId: string;
-  readonly materialId: string | null;
-  readonly defaultVendorId: string | null;
-  readonly code: string;
-  readonly itemType: ItemType;
-  readonly itemCategory: string;
-  readonly name: string;
-  readonly description: string;
-  readonly unit: string;
-  readonly pricingMode: "MARGIN_BASED" | "FIXED_CLIENT_PRICE";
-  readonly targetGrossPercentage: number;
-  readonly fixedClientPrice: number;
-  readonly priceSourceType: "COST_BREAKDOWN" | "VENDOR_QUOTE" | "HISTORICAL" | "LEGACY_BACKFILL";
-  readonly sourceNote: string;
-  readonly effectiveFrom: string;
-  readonly isActive: boolean;
-  readonly components: readonly CostComponentDraft[];
-};
-type MaterialOption = {
-  readonly id: string;
-  readonly name: string;
-  readonly isActive: boolean;
-};
-type VendorOption = { readonly id: string; readonly name: string };
+import { SettingsModuleHeader } from "../shared/settings-primitives";
+import { LibraryCostComponentSheet } from "./library-cost-component-sheet";
+import { LibraryTemplateEditorSheet } from "./library-template-editor-sheet";
+import { LibraryTemplateList } from "./library-template-list";
+import { useLibraryTemplateMutations } from "../../hooks/use-library-template-mutations";
+import type {
+  ComponentType,
+  CostComponentDraft,
+  Draft,
+  ItemType,
+  MaterialOption,
+  VendorOption,
+} from "../../types/library-types";
 type Props = {
   readonly initialItems: readonly PricingTemplateRow[];
   readonly categories: readonly ExpenseCategorySettingRow[];
@@ -107,49 +46,6 @@ const STATUS_FILTERS = [
   { value: "INACTIVE", label: "Arsip" },
   { value: "ALL", label: "Semua" },
 ] as const;
-const COMPONENT_TYPES: readonly ComponentType[] = [
-  "LABOR",
-  "MATERIAL",
-  "EQUIPMENT",
-  "LOGISTICS",
-  "OVERHEAD",
-  "OTHER",
-];
-const COMPONENT_TYPE_LABELS: Readonly<Record<ComponentType, string>> = {
-  LABOR: "Tenaga kerja",
-  MATERIAL: "Material",
-  EQUIPMENT: "Peralatan",
-  LOGISTICS: "Logistik",
-  OVERHEAD: "Overhead",
-  OTHER: "Lainnya",
-};
-const ITEM_TYPE_LABELS: Readonly<Record<ItemType, string>> = {
-  CLIENT_LINE: "Baris klien",
-  MATERIAL_ITEM: "Material",
-  WORK_PACKAGE: "Paket Tukang",
-  SUBCON_PACKAGE: "Paket Subcon",
-};
-const PRICE_SOURCE_LABELS: Readonly<Record<Draft["priceSourceType"], string>> = {
-  COST_BREAKDOWN: "Rincian biaya",
-  VENDOR_QUOTE: "Penawaran vendor",
-  HISTORICAL: "Riwayat harga",
-  LEGACY_BACKFILL: "Data lama",
-};
-function itemTypeLabel(value: string): string {
-  if (value === "CLIENT_LINE") return ITEM_TYPE_LABELS.CLIENT_LINE;
-  if (value === "MATERIAL_ITEM") return ITEM_TYPE_LABELS.MATERIAL_ITEM;
-  if (value === "WORK_PACKAGE") return ITEM_TYPE_LABELS.WORK_PACKAGE;
-  if (value === "SUBCON_PACKAGE") return ITEM_TYPE_LABELS.SUBCON_PACKAGE;
-  return formatBusinessLabel(value);
-}
-function priceSourceLabel(value: string): string {
-  if (value === "COST_BREAKDOWN") return PRICE_SOURCE_LABELS.COST_BREAKDOWN;
-  if (value === "VENDOR_QUOTE") return PRICE_SOURCE_LABELS.VENDOR_QUOTE;
-  if (value === "HISTORICAL") return PRICE_SOURCE_LABELS.HISTORICAL;
-  if (value === "LEGACY_BACKFILL") return PRICE_SOURCE_LABELS.LEGACY_BACKFILL;
-  return formatBusinessLabel(value);
-}
-const fullMoney = (value: number): string => `Rp ${Math.round(value).toLocaleString("id-ID")}`;
 function newComponent(): CostComponentDraft {
   return {
     key: createClientId("cost-component"),
@@ -243,7 +139,6 @@ export function LibrarySettingsManager({
   const [status, setStatus] = React.useState("ACTIVE");
   const [categoryId, setCategoryId] = React.useState("ALL");
   const [message, setMessage] = React.useState<string | null>(null);
-  const [pending, startTransition] = React.useTransition();
   const categoryFilters = React.useMemo(
     () => [
       { value: "ALL", label: "Semua kategori" },
@@ -413,86 +308,19 @@ export function LibrarySettingsManager({
     setComponentEditor(null);
     setComponentEditorBaseline("");
   }
-  function save(): void {
-    if (!draft || !canSaveDraft) return;
-    startTransition(async () => {
-      const result = await upsertPricingTemplate({
-        itemPriceLibraryId: draft.id,
-        expenseCategoryId: draft.expenseCategoryId,
-        materialId: draft.materialId,
-        defaultVendorId: draft.defaultVendorId,
-        code: draft.code || null,
-        itemType: draft.itemType,
-        itemCategory: draft.itemCategory,
-        name: draft.name,
-        description: draft.description || null,
-        unit: draft.unit,
-        pricingMode: draft.pricingMode,
-        targetGrossPercentage: draft.targetGrossPercentage,
-        fixedClientPrice:
-          draft.pricingMode === "FIXED_CLIENT_PRICE" ? draft.fixedClientPrice : undefined,
-        priceSourceType: draft.priceSourceType,
-        sourceNote: draft.sourceNote,
-        effectiveFrom: new Date(draft.effectiveFrom),
-        isActive: draft.isActive,
-        components: draft.components.map((component, index) => ({
-          vendorId: component.vendorId,
-          componentType: component.componentType,
-          label: component.label,
-          quantity: component.quantity,
-          unit: component.unit,
-          unitCost: component.unitCost,
-          note: component.note || null,
-          displayOrder: index,
-        })),
-      });
-      if (result.success) {
-        setItems((current) =>
-          draft.id
-            ? current.map((item) => (item.id === result.data.id ? result.data : item))
-            : [result.data, ...current],
-        );
-        setDraft(null);
-        setDraftBaseline("");
-        setMessage("Template dan breakdown harga berhasil disimpan.");
-        toast.success("Template dan breakdown harga berhasil disimpan.");
-        onMutationComplete?.();
-      } else {
-        setMessage(result.error.message);
-        toast.error(result.error.message);
-      }
-    });
-  }
-  function confirmToggle(): void {
-    if (!confirmItem) return;
-    const target = confirmItem;
-    startTransition(async () => {
-      const result = await setItemPriceLibraryItemActive({
-        itemPriceLibraryId: target.id,
-        isActive: !target.isActive,
-      });
-      if (result.success) {
-        setItems((current) =>
-          current.map((item) =>
-            item.id === target.id ? { ...item, isActive: result.data.isActive } : item,
-          ),
-        );
-        if (draft?.id === target.id) {
-          setDraft(null);
-          setDraftBaseline("");
-        }
-        setConfirmItem(null);
-        toast.success("Item berhasil diperbarui.");
-        onMutationComplete?.();
-      } else {
-        setMessage(result.error.message);
-        toast.error(result.error.message);
-      }
-    });
-  }
-
+  const { pending, save, confirmToggle } = useLibraryTemplateMutations({
+    draft,
+    confirmItem,
+    canSave: canSaveDraft,
+    onMutationComplete,
+    setItems,
+    setDraft,
+    setBaseline: setDraftBaseline,
+    setConfirmItem,
+    setMessage,
+  });
   return (
-    <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-lg"}`}>
+    <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
       {presentation === "onboarding" ? null : hideHeader ? (
         <SettingsModuleHeader
           eyebrow="Template proyek berulang"
@@ -578,576 +406,59 @@ export function LibrarySettingsManager({
           }
         />
       ) : (
-        <SettingsGroupSurface>
-          <div className="divide-y divide-black/5.5">
-            {filtered.map((item) => {
-              const margin =
-                item.defaultClientPrice > 0
-                  ? ((item.defaultClientPrice - item.defaultInternalCost) /
-                      item.defaultClientPrice) *
-                    100
-                  : 0;
-              return (
-                <button
-                  type="button"
-                  key={item.id}
-                  onClick={() => openDraft(toDraft(item))}
-                  className={`flex w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75 ${presentation === "onboarding" ? "min-h-19" : "min-h-26"}`}
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-[13px] leading-5 font-bold text-on-surface">
-                        {item.name}
-                      </span>
-                    </span>
-                    <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
-                      {item.itemCategory} · {item.unit}
-                      {item.code ? ` · ${item.code}` : ""}
-                    </span>
-                    {presentation === "settings" ? (
-                      <span className="mt-2 grid grid-cols-2 gap-3">
-                        <span className="min-w-0">
-                          <span className="block text-[8px] font-bold tracking-wide text-on-surface-variant/60 uppercase">
-                            Harga klien
-                          </span>
-                          <MoneyValue
-                            amount={item.defaultClientPrice}
-                            variant="compactWithFull"
-                            size="xs"
-                            tone="primary"
-                            className="mt-1"
-                          />
-                        </span>
-                        <span className="min-w-0 text-right">
-                          <span className="block text-[8px] font-bold tracking-wide text-on-surface-variant/60 uppercase">
-                            Biaya internal
-                          </span>
-                          <MoneyValue
-                            amount={item.defaultInternalCost}
-                            variant="compactWithFull"
-                            size="xs"
-                            align="right"
-                            className="mt-1"
-                          />
-                        </span>
-                      </span>
-                    ) : (
-                      <MoneyValue
-                        amount={item.defaultClientPrice}
-                        variant="compactWithFull"
-                        size="xs"
-                        tone="primary"
-                        className="mt-1.5"
-                      />
-                    )}
-                    {presentation === "settings" ? (
-                      <span className="mt-2 flex justify-between gap-3 text-[9px] text-on-surface-variant">
-                        <span className="truncate">
-                          {item.components.length} komponen ·{" "}
-                          {priceSourceLabel(item.priceSourceType)}
-                        </span>
-                        <span className="shrink-0 font-bold text-primary">
-                          Margin{" "}
-                          {margin.toLocaleString("id-ID", {
-                            maximumFractionDigits: 1,
-                          })}
-                          %
-                        </span>
-                      </span>
-                    ) : null}
-                  </span>
-                  <div className="flex flex-row items-center gap-2">
-                    <SettingsStatusLabel
-                      label={item.isActive ? itemTypeLabel(item.itemType) : "Diarsipkan"}
-                      tone={item.isActive ? "neutral" : "inactive"}
-                    />
-                    <SettingsRowChevron />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </SettingsGroupSurface>
+        <LibraryTemplateList
+          items={filtered}
+          presentation={presentation}
+          onOpen={(item) => openDraft(toDraft(item))}
+        />
       )}
 
-      <OperationalFormSheet
-        open={Boolean(draft)}
-        title={draft?.id ? "Edit Template Harga" : "Tambah Template Harga"}
-        onClose={requestClose}
+      <LibraryTemplateEditorSheet
+        draft={draft}
+        categories={categories}
+        materials={materials}
+        vendors={vendors}
+        canManage={canManage}
         pending={pending}
-        disabled={!canManage || !canSaveDraft}
+        canSave={canSaveDraft}
         disabledReason={draftDisabledReason}
-        submitLabel="Simpan"
-        submittingLabel="Menyimpan..."
+        internalCost={internalCost}
+        clientPrice={clientPrice}
+        grossMargin={grossMargin}
+        dirty={draftDirty}
+        nameTouched={nameTouched}
+        sourceTouched={sourceNoteTouched}
+        sourceOpen={showSourceDetails}
+        onClose={requestClose}
         onSubmit={save}
-        statusText={
-          draft
-            ? `${draft.components.length} komponen · ${fullMoney(internalCost)} · Margin ${grossMargin.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`
-            : undefined
-        }
-        statusTone={!canSaveDraft ? "warning" : grossMargin < 0 ? "danger" : "success"}
-      >
-        {draft ? (
-          <div className="space-y-md">
-            <FormSection
-              title="Identitas template"
-              helper="Tipe menentukan konteks dan kategori budget yang digunakan."
-            >
-              <SheetSelect
-                label="Tipe item"
-                value={draft.itemType}
-                onChange={(value) => changeType(value as ItemType)}
-                options={[
-                  { value: "CLIENT_LINE", label: "Baris Klien" },
-                  { value: "MATERIAL_ITEM", label: "Material" },
-                  { value: "WORK_PACKAGE", label: "Paket Tukang" },
-                  { value: "SUBCON_PACKAGE", label: "Paket Subcon" },
-                ]}
-              />
-              <SheetSelect
-                label="Kategori pengeluaran"
-                readOnly={draft.itemType !== "CLIENT_LINE"}
-                value={draft.expenseCategoryId}
-                onChange={(value) => setDraft({ ...draft, expenseCategoryId: value })}
-                options={categories.map((row) => ({
-                  value: row.id,
-                  label: row.name,
-                  description: row.code,
-                }))}
-              />
-              <FormField
-                label="Nama template"
-                required
-                error={
-                  nameTouched && draft.name.trim().length < 2
-                    ? "Nama template minimal 2 karakter."
-                    : undefined
-                }
-              >
-                <TextInput
-                  value={draft.name}
-                  onChange={(value) => {
-                    setNameTouched(true);
-                    setDraft({ ...draft, name: value });
-                  }}
-                  aria-invalid={nameTouched && draft.name.trim().length < 2}
-                />
-              </FormField>
-              <FormField
-                label="Kategori item"
-                required
-                error={
-                  draft.itemCategory.trim().length < 2
-                    ? "Kategori item minimal 2 karakter."
-                    : undefined
-                }
-              >
-                <TextInput
-                  value={draft.itemCategory}
-                  onChange={(value) => setDraft({ ...draft, itemCategory: value })}
-                  aria-invalid={draft.itemCategory.trim().length < 2}
-                />
-              </FormField>
-              <ComboboxField
-                label="Satuan"
-                value={draft.unit}
-                onChange={(value) => setDraft({ ...draft, unit: value })}
-                options={COMMON_UNIT_OPTIONS}
-                error={!draft.unit.trim() ? "Satuan wajib diisi." : undefined}
-              />
-              {draft.itemType === "MATERIAL_ITEM" ? (
-                <SheetSelect
-                  label="Tautan Material Master"
-                  value={draft.materialId ?? ""}
-                  onChange={(value) => setDraft({ ...draft, materialId: value || null })}
-                  options={[
-                    { value: "", label: "Tanpa tautan material" },
-                    ...materials
-                      .filter((row) => row.isActive)
-                      .map((row) => ({ value: row.id, label: row.name })),
-                  ]}
-                />
-              ) : null}
-            </FormSection>
-
-            <FormSection
-              title="Rincian biaya"
-              helper={`${draft.components.length} komponen membentuk biaya internal.`}
-              action={
-                <motion.button
-                  type="button"
-                  whileTap={{ scale: 0.97 }}
-                  transition={transitionSpringSnappy}
-                  onClick={addComponent}
-                  className="flex min-h-10 items-center gap-1.5 rounded-full px-2.5 text-[10px] font-semibold text-accent outline-none focus-visible:ring-2 focus-visible:ring-accent/25"
-                >
-                  <CirclePlus className="h-4 w-4" aria-hidden="true" /> Tambah
-                </motion.button>
-              }
-            >
-              {draft.components.map((component, index) => {
-                const complete = Boolean(
-                  component.label.trim().length >= 2 &&
-                  component.quantity > 0 &&
-                  component.unit.trim(),
-                );
-                return (
-                  <motion.button
-                    key={component.key}
-                    type="button"
-                    whileTap={{ scale: 0.985 }}
-                    transition={transitionSpringSnappy}
-                    onClick={() => openComponent(component)}
-                    className="flex min-h-16 w-full items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:bg-surface-container-low"
-                  >
-                    <span
-                      className={`h-2.5 w-2.5 shrink-0 rounded-full ${complete ? "bg-primary" : "bg-warning"}`}
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs leading-[1.15] font-bold text-on-surface">
-                        {component.label.trim() || `Komponen ${index + 1}`}
-                      </span>
-                      <span className="mt-1 block truncate text-[10px] leading-[1.2] text-on-surface-variant">
-                        {component.quantity} {component.unit} ·{" "}
-                        {COMPONENT_TYPE_LABELS[component.componentType]} ·{" "}
-                        {complete ? "Lengkap" : "Perlu diperiksa"}
-                      </span>
-                    </span>
-                    <span className="max-w-[32%] shrink-0 truncate text-right text-xs font-bold text-on-surface tabular-nums">
-                      {fullMoney(component.quantity * component.unitCost)}
-                    </span>
-                    <AppIcon name="chevron_right" className="shrink-0 text-[18px] text-on-surface-variant" />
-                  </motion.button>
-                );
-              })}
-            </FormSection>
-
-            <FormSection
-              title="Harga untuk klien"
-              helper="Rekomendasi harga dan margin dihitung dari total komponen."
-            >
-              <SheetSelect
-                label="Metode harga"
-                value={draft.pricingMode}
-                onChange={(pricingMode) =>
-                  setDraft({
-                    ...draft,
-                    pricingMode: pricingMode as Draft["pricingMode"],
-                  })
-                }
-                options={[
-                  {
-                    value: "MARGIN_BASED",
-                    label: "Berdasarkan margin",
-                    description: "Harga klien mengikuti target margin.",
-                  },
-                  {
-                    value: "FIXED_CLIENT_PRICE",
-                    label: "Harga tetap",
-                    description: "Masukkan nominal jual secara langsung.",
-                  },
-                ]}
-              />
-              {draft.pricingMode === "MARGIN_BASED" ? (
-                <FormField label="Target margin kotor (%)">
-                  <NumericInput
-                    min={0}
-                    max={95}
-                    value={draft.targetGrossPercentage * 100}
-                    onChange={(value) =>
-                      setDraft({
-                        ...draft,
-                        targetGrossPercentage: Number(value || 0) / 100,
-                      })
-                    }
-                    suffix="%"
-                  />
-                </FormField>
-              ) : (
-                <FormField label="Harga tetap untuk klien">
-                  <MoneyInput
-                    value={draft.fixedClientPrice}
-                    onChange={(value) =>
-                      setDraft({
-                        ...draft,
-                        fixedClientPrice: Number(value || 0),
-                      })
-                    }
-                  />
-                </FormField>
-              )}
-              <div className="p-3">
-                <div className="overflow-hidden rounded-[20px] bg-surface-container-low ring-1 ring-outline-variant/10">
-                  <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
-                    <div className="min-w-0 p-3">
-                      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
-                        Biaya internal
-                      </p>
-                      <MoneyValue
-                        amount={internalCost}
-                        variant="compactWithFull"
-                        size="sm"
-                        className="mt-1.5"
-                      />
-                    </div>
-                    <div className="min-w-0 p-3">
-                      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
-                        Harga klien
-                      </p>
-                      <MoneyValue
-                        amount={clientPrice}
-                        variant="compactWithFull"
-                        size="sm"
-                        tone="primary"
-                        className="mt-1.5"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex min-h-11 items-center justify-between gap-3 border-t border-outline-variant/20 px-3 py-2.5">
-                    <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
-                      Margin kotor
-                    </p>
-                    <p
-                      className={`shrink-0 text-sm font-bold tabular-nums ${grossMargin < 0 ? "text-error" : "text-primary"}`}
-                    >
-                      {grossMargin.toLocaleString("id-ID", {
-                        maximumFractionDigits: 1,
-                      })}
-                      %
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {grossMargin < 0 ? (
-                <FormRiskNotice title="Harga di bawah biaya" tone="danger">
-                  Naikkan harga klien atau periksa kembali rincian biaya sebelum menyimpan.
-                </FormRiskNotice>
-              ) : null}
-            </FormSection>
-
-            <FormDisclosure
-              variant="compact"
-              title="Sumber harga & detail"
-              description="Tanggal dan catatan sumber wajib; detail lain opsional"
-              summary={
-                draft.sourceNote.trim().length >= 3
-                  ? `${priceSourceLabel(draft.priceSourceType)} · sumber terisi`
-                  : "Catatan sumber belum lengkap"
-              }
-              icon={<FileSearch className="h-4 w-4" />}
-              expanded={showSourceDetails}
-              onToggle={() => setShowSourceDetails((current) => !current)}
-            >
-              <FormSection
-                title="Sumber & detail"
-                helper="Data pendukung untuk audit dan penggunaan ulang template."
-              >
-                <FormField label="Kode" optional>
-                  <TextInput
-                    value={draft.code}
-                    onChange={(value) => setDraft({ ...draft, code: value })}
-                  />
-                </FormField>
-                <DatePickerField
-                  label="Berlaku mulai"
-                  value={draft.effectiveFrom}
-                  onChange={(value) => setDraft({ ...draft, effectiveFrom: value })}
-                />
-                <SheetSelect
-                  label="Vendor default"
-                  value={draft.defaultVendorId ?? ""}
-                  onChange={(value) => setDraft({ ...draft, defaultVendorId: value || null })}
-                  options={[
-                    { value: "", label: "Tanpa vendor default" },
-                    ...vendors.map((vendor) => ({
-                      value: vendor.id,
-                      label: vendor.name,
-                    })),
-                  ]}
-                />
-                <SheetSelect
-                  label="Sumber harga"
-                  value={draft.priceSourceType}
-                  onChange={(value) =>
-                    setDraft({
-                      ...draft,
-                      priceSourceType: value as Draft["priceSourceType"],
-                    })
-                  }
-                  options={[
-                    { value: "COST_BREAKDOWN", label: "Rincian biaya" },
-                    { value: "VENDOR_QUOTE", label: "Penawaran vendor" },
-                    { value: "HISTORICAL", label: "Riwayat harga" },
-                    ...(draft.priceSourceType === "LEGACY_BACKFILL"
-                      ? [
-                          {
-                            value: "LEGACY_BACKFILL",
-                            label: "Data lama (kompatibilitas)",
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-                <FormField
-                  label="Catatan sumber"
-                  required
-                  error={
-                    sourceNoteTouched && draft.sourceNote.trim().length < 3
-                      ? "Catatan sumber minimal 3 karakter."
-                      : undefined
-                  }
-                >
-                  <Textarea
-                    value={draft.sourceNote}
-                    onChange={(value) => {
-                      setSourceNoteTouched(true);
-                      setDraft({ ...draft, sourceNote: value });
-                    }}
-                    placeholder="Penawaran, referensi, tanggal, dan asumsi harga"
-                    rows={2}
-                    aria-invalid={sourceNoteTouched && draft.sourceNote.trim().length < 3}
-                  />
-                </FormField>
-                <FormField label="Deskripsi" optional>
-                  <Textarea
-                    value={draft.description}
-                    onChange={(value) => setDraft({ ...draft, description: value })}
-                    rows={2}
-                  />
-                </FormField>
-              </FormSection>
-            </FormDisclosure>
-            {draft.id ? (
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.97 }}
-                transition={transitionSpringSnappy}
-                disabled={!canManage || pending || draftDirty}
-                onClick={() => {
-                  const item = items.find((row) => row.id === draft.id);
-                  if (item) setConfirmItem(item);
-                }}
-                className="min-h-12 w-full rounded-full bg-error-container/20 px-5 text-xs font-bold text-error disabled:opacity-35"
-              >
-                {draft.isActive ? "Arsipkan template" : "Aktifkan kembali"}
-              </motion.button>
-            ) : null}
-          </div>
-        ) : null}
-      </OperationalFormSheet>
-      <OperationalFormSheet
-        open={Boolean(componentEditor)}
-        title={
-          componentEditor &&
-          draft?.components.some((component) => component.key === componentEditor.key)
-            ? "Edit Komponen Biaya"
-            : "Tambah Komponen Biaya"
-        }
-        onClose={requestComponentClose}
-        disabled={!componentEditorValid}
-        disabledReason={
-          !componentEditorValid
-            ? "Lengkapi nama minimal 2 karakter, jumlah, satuan, dan biaya satuan."
-            : undefined
-        }
-        submitLabel="Simpan"
+        onDraftChange={setDraft}
+        onItemTypeChange={changeType}
+        onAddComponent={addComponent}
+        onOpenComponent={openComponent}
+        onNameTouched={() => setNameTouched(true)}
+        onSourceTouched={() => setSourceNoteTouched(true)}
+        onSourceOpenChange={setShowSourceDetails}
+        onRequestToggle={() => {
+          if (!draft?.id) return;
+          const item = items.find((row) => row.id === draft.id);
+          if (item) setConfirmItem(item);
+        }}
+      />
+      <LibraryCostComponentSheet
+        componentEditor={componentEditor}
+        onRequestClose={requestComponentClose}
         onSubmit={saveComponent}
-        statusText={
-          componentEditor
-            ? `${componentEditor.label.trim() || "Komponen belum diisi"} · ${fullMoney(componentEditor.quantity * componentEditor.unitCost)}`
-            : undefined
-        }
-        statusTone={componentEditorValid ? "success" : "warning"}
-      >
-        {componentEditor ? (
-          <div className="space-y-md">
-            <FormSection
-              title="Jenis & nama biaya"
-              helper="Satu komponen mewakili satu sumber biaya yang dapat digunakan kembali."
-            >
-              <SheetSelect
-                label="Tipe komponen"
-                value={componentEditor.componentType}
-                onChange={(value) => patchComponent({ componentType: value as ComponentType })}
-                options={COMPONENT_TYPES.map((value) => ({
-                  value,
-                  label: COMPONENT_TYPE_LABELS[value],
-                }))}
-              />
-              <FormField
-                label="Nama biaya"
-                required
-                error={
-                  componentNameTouched && componentEditor.label.trim().length < 2
-                    ? "Nama biaya minimal 2 karakter."
-                    : undefined
-                }
-              >
-                <TextInput
-                  autoFocus
-                  placeholder="Contoh: Material utama"
-                  value={componentEditor.label}
-                  onChange={(value) => {
-                    setComponentNameTouched(true);
-                    patchComponent({ label: value });
-                  }}
-                  aria-invalid={componentNameTouched && componentEditor.label.trim().length < 2}
-                />
-              </FormField>
-            </FormSection>
-            <FormSection
-              title="Jumlah & biaya"
-              helper="Subtotal diperbarui langsung sebelum komponen disimpan."
-            >
-              <FormField label="Jumlah">
-                <NumericInput
-                  min={0.01}
-                  value={componentEditor.quantity}
-                  onChange={(value) => patchComponent({ quantity: Number(value || 0) })}
-                />
-              </FormField>
-              <ComboboxField
-                label="Satuan"
-                value={componentEditor.unit}
-                onChange={(value) => patchComponent({ unit: value })}
-                options={COMMON_UNIT_OPTIONS}
-                error={!componentEditor.unit.trim() ? "Satuan wajib diisi." : undefined}
-              />
-              <FormField label="Biaya satuan">
-                <MoneyInput
-                  value={componentEditor.unitCost}
-                  showPreview={false}
-                  onChange={(value) => patchComponent({ unitCost: Number(value || 0) })}
-                />
-              </FormField>
-              <div className="p-3">
-                <ValuePreviewStrip
-                  items={[
-                    {
-                      label: "Subtotal komponen",
-                      amount: componentEditor.quantity * componentEditor.unitCost,
-                      tone: "success",
-                    },
-                  ]}
-                />
-              </div>
-            </FormSection>
-            {draft?.components.some((component) => component.key === componentEditor.key) ? (
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.97 }}
-                transition={transitionSpringSnappy}
-                disabled={(draft?.components.length ?? 0) <= 1}
-                onClick={deleteComponent}
-                className="min-h-12 w-full rounded-full bg-error-container/20 px-5 text-xs font-bold text-error disabled:opacity-35"
-              >
-                <Trash2 className="mr-1.5 inline h-4 w-4" /> Hapus Komponen
-              </motion.button>
-            ) : null}
-          </div>
-        ) : null}
-      </OperationalFormSheet>
+        patchComponent={patchComponent}
+        deleteComponent={deleteComponent}
+        componentEditorValid={componentEditorValid}
+        componentNameTouched={componentNameTouched}
+        setComponentNameTouched={setComponentNameTouched}
+        isExistingComponent={Boolean(
+          componentEditor &&
+          draft?.components.some((component) => component.key === componentEditor.key),
+        )}
+        canDelete={(draft?.components.length ?? 0) > 1}
+      />
       <ConfirmationSheet
         open={Boolean(confirmItem)}
         title={confirmItem?.isActive ? "Arsipkan template?" : "Aktifkan kembali template?"}

@@ -71,7 +71,7 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.7 }}
                 transition={hasBackButton ? transitionSpringBouncy : transitionSpringSmooth}
-                className="absolute top-0 left-0 z-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-[0_10px_24px_rgba(17,17,17,0.10)] transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
+                className="absolute top-0 left-0 z-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-raised transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
                 aria-label="Go back"
               >
                 <AppIcon name="chevron_left" className="text-[28px]" />
@@ -84,7 +84,7 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
             onClick={() => toast("AI Chat segera hadir.")}
             animate={{ x: hasBackButton ? 46 : 0 }}
             transition={hasBackButton ? transitionSpringBouncy : transitionSpringSmooth}
-            className="absolute top-0 left-0 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-[0_10px_24px_rgba(17,17,17,0.10)] transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
+            className="absolute top-0 left-0 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-raised transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
             aria-label="AI Chat segera hadir"
           >
             <MessageCircle aria-hidden="true" className="h-5 w-5" />

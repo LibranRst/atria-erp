@@ -31,7 +31,8 @@ describe("shared page states", () => {
     const html = renderToStaticMarkup(
       <PageState kind="offline" title="Offline" description="Mode baca saja." />,
     );
-    expect(html).toContain("cloud_off");
+    expect(html).toContain("<svg");
     expect(html).toContain("Mode baca saja");
+    expect(html).not.toContain("Rp");
   });
 });

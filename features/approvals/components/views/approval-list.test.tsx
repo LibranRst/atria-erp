@@ -5,14 +5,18 @@ import ApprovalsLoading from "@/app/approvals/loading";
 import { ApprovalDecisionReasonFields } from "@/features/approvals/components/shared/approval-decision-reason-fields";
 import { ApprovalDetailContent } from "@/features/approvals/components/views/approval-list";
 import {
+  APPROVAL_PAGE_SIZE,
   approvalIsCritical,
   groupApprovals,
+  paginateApprovalGroups,
 } from "@/features/approvals/utils/approval-list-utils";
 import type {
   ApprovalDetail,
   FinanceApprovalDetail,
   InventoryOpeningApprovalDetail,
 } from "@/lib/finance/approval-types";
+
+const approvalListPath = new URL("./approval-list.tsx", import.meta.url);
 
 function approvalItem(overrides: Partial<FinanceApprovalDetail> = {}): ApprovalDetail {
   return {
@@ -100,6 +104,110 @@ describe("Approval decision queue presentation", () => {
     expect(approvalIsCritical(approvalItem())).toBe(false);
     expect(approvalIsCritical(approvalItem({ amount: 5_000_000 }))).toBe(true);
     expect(approvalIsCritical(approvalItem({ priority: "CRITICAL" }))).toBe(true);
+  });
+
+  test("reports the exact next page size and partial group count", () => {
+    const now = new Date("2026-07-27T12:00:00+07:00");
+    const approvals = Array.from({ length: 23 }, (_, index) =>
+      approvalItem({
+        id: `approval-${index + 1}`,
+        createdAt: new Date("2026-07-20T08:00:00+07:00"),
+      }),
+    );
+
+    const page = paginateApprovalGroups(approvals, APPROVAL_PAGE_SIZE, now);
+
+    expect(page.visibleCount).toBe(20);
+    expect(page.remainingCount).toBe(3);
+    expect(page.nextPageCount).toBe(3);
+    expect(page.groups).toHaveLength(1);
+    expect(page.groups[0]?.items).toHaveLength(20);
+    expect(page.groups[0]?.totalCount).toBe(23);
+  });
+
+  test("always shows every approval from today before paginating older groups", () => {
+    const now = new Date("2026-07-27T12:00:00+07:00");
+    const today = Array.from({ length: 25 }, (_, index) =>
+      approvalItem({
+        id: `today-${index + 1}`,
+        createdAt: new Date("2026-07-27T08:00:00+07:00"),
+      }),
+    );
+    const older = Array.from({ length: 23 }, (_, index) =>
+      approvalItem({
+        id: `older-${index + 1}`,
+        createdAt: new Date("2026-07-20T08:00:00+07:00"),
+      }),
+    );
+
+    const page = paginateApprovalGroups([...today, ...older], APPROVAL_PAGE_SIZE, now);
+
+    expect(page.visibleCount).toBe(45);
+    expect(page.remainingCount).toBe(3);
+    expect(page.nextPageCount).toBe(3);
+    expect(page.groups.map((group) => group.label)).toEqual(["Hari ini", "Lebih lama"]);
+    expect(page.groups[0]?.items).toHaveLength(25);
+    expect(page.groups[0]?.totalCount).toBe(25);
+    expect(page.groups[1]?.items).toHaveLength(20);
+    expect(page.groups[1]?.totalCount).toBe(23);
+  });
+
+  test("caps the next page at twenty and hides it at the end", () => {
+    const now = new Date("2026-07-27T12:00:00+07:00");
+    const approvals = Array.from({ length: 45 }, (_, index) =>
+      approvalItem({
+        id: `approval-${index + 1}`,
+        createdAt: new Date("2026-07-20T08:00:00+07:00"),
+      }),
+    );
+
+    expect(paginateApprovalGroups(approvals, 20, now).nextPageCount).toBe(20);
+    expect(paginateApprovalGroups(approvals, 40, now).nextPageCount).toBe(5);
+    expect(paginateApprovalGroups(approvals, 45, now).nextPageCount).toBe(0);
+    expect(paginateApprovalGroups(approvals, 45, now).remainingCount).toBe(0);
+  });
+
+  test("handles empty and exact page boundaries without a phantom next page", () => {
+    const now = new Date("2026-07-27T12:00:00+07:00");
+    const approvals = Array.from({ length: 21 }, (_, index) =>
+      approvalItem({
+        id: `approval-${index + 1}`,
+        createdAt: new Date("2026-07-20T08:00:00+07:00"),
+      }),
+    );
+
+    expect(paginateApprovalGroups([], APPROVAL_PAGE_SIZE, now)).toMatchObject({
+      visibleCount: 0,
+      remainingCount: 0,
+      nextPageCount: 0,
+    });
+    expect(
+      paginateApprovalGroups(approvals.slice(0, APPROVAL_PAGE_SIZE), APPROVAL_PAGE_SIZE, now),
+    ).toMatchObject({
+      visibleCount: 20,
+      remainingCount: 0,
+      nextPageCount: 0,
+    });
+    expect(paginateApprovalGroups(approvals, APPROVAL_PAGE_SIZE, now)).toMatchObject({
+      visibleCount: 20,
+      remainingCount: 1,
+      nextPageCount: 1,
+    });
+  });
+
+  test("keeps type counts in filters and shows actionable summary facts", async () => {
+    const source = await Bun.file(approvalListPath).text();
+
+    expect(source).toContain("Prioritas kritis");
+    expect(source).toContain("Menunggu ≥3 hari");
+    expect(source).not.toContain("Lapangan · Vendor · Stok");
+    expect(source).toContain('label: "Lapangan"');
+    expect(source).toContain('label: "Vendor"');
+    expect(source).toContain('label: "Stok"');
+    expect(source).toContain("Tampilkan {queuePage.nextPageCount} berikutnya");
+    expect(source).not.toContain("Tampilkan 20 berikutnya");
+    expect(source).toContain("count={group.totalCount}");
+    expect(source).not.toContain("title={`${group.label} ·");
   });
 
   test("uses a route-specific skeleton matching summary, filters, and grouped rows", () => {

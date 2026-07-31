@@ -5,14 +5,12 @@ import React from "react";
 import { EmptyState, MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
 import {
-  ExpensesGroupSurface,
-  ExpensesSectionHeader,
-  ExpensesSummarySurface,
-} from "@/features/expenses/components/shared/expenses-primitives";
-import type {
-  ExpenseCostItem,
-  FilterStatus,
-} from "@/features/expenses/types/expense-list-types";
+  GroupedSurface,
+  SectionHeader,
+  SummaryFact,
+  SummarySurface,
+} from "@/components/ui/feedback/main-surface";
+import type { ExpenseCostItem, FilterStatus } from "@/features/expenses/types/expense-list-types";
 import { FieldClaimHistory } from "@/features/expenses/components/lists/field-claim-rows";
 import { FieldClaimRow } from "@/features/expenses/components/lists/field-claim-rows";
 import { AppIcon } from "@/components/ui/icon/app-icon";
@@ -87,7 +85,7 @@ export function FieldClaimsPanel({
   }
 
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
+    <div className="space-y-sm">
       <div className="space-y-3" data-expense-overview-cluster>
         {leadingContent}
         <FieldClaimsSummary
@@ -117,24 +115,25 @@ export function FieldClaimsPanel({
         style={resultsMinHeight === null ? undefined : { minHeight: `${resultsMinHeight}px` }}
       >
         {hasNoRows ? (
-          <ExpensesGroupSurface>
+          <GroupedSurface>
             <EmptyState
               icon="receipt_long"
               title="Tidak Ada Pengajuan"
               description="Tidak ada pengajuan pengeluaran biaya lapangan dalam kategori filter ini."
             />
-          </ExpensesGroupSurface>
+          </GroupedSurface>
         ) : (
           <div className="space-y-3">
-            <ExpensesSectionHeader
+            <SectionHeader
               title={
                 filter === "ALL"
                   ? "Pengeluaran aktif"
                   : (filterTabs.find((tab) => tab.value === filter)?.label ?? "Pengeluaran")
               }
-              meta={`${filteredCosts.length} item`}
+              count={filteredCosts.length}
+              countLabel="Pengajuan"
             />
-            <ExpensesGroupSurface>
+            <GroupedSurface>
               <div className="divide-y divide-black/5.5">
                 {visibleCosts.map((cost) => (
                   <FieldClaimRow
@@ -148,7 +147,7 @@ export function FieldClaimsPanel({
                   />
                 ))}
               </div>
-            </ExpensesGroupSurface>
+            </GroupedSurface>
 
             {filteredCosts.length > visibleLimit ? (
               <button
@@ -189,7 +188,7 @@ function FieldClaimsSummary({
   readonly onOpenExpenseDrawer: () => void;
 }): React.JSX.Element {
   return (
-    <ExpensesSummarySurface
+    <SummarySurface
       ariaLabel="Posisi pengeluaran lapangan"
       eyebrow="Pengeluaran lapangan"
       icon="receipt_long"
@@ -200,7 +199,7 @@ function FieldClaimsSummary({
           <button
             type="button"
             onClick={onOpenExpenseDrawer}
-            className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] leading-4 font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-accent/30 active:bg-accent/[0.14]"
+            className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] leading-4 font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
           >
             <AppIcon name="add" className="text-[14px] leading-none" />
             Tambah
@@ -208,7 +207,7 @@ function FieldClaimsSummary({
         ) : undefined
       }
     >
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
         <div className="min-w-0">
           <p className="text-[9px] leading-3 font-semibold text-on-surface-variant/60">
             Total aktif
@@ -224,27 +223,18 @@ function FieldClaimsSummary({
           Dana yang masih berada dalam alur verifikasi hingga pencairan.
         </p>
       </div>
-      <div className="mt-3.5 grid grid-cols-2 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
-        <InboxMetric label="Butuh aksi" value={String(needsActionCount)} />
-        <InboxMetric label="Siap dicairkan" value={String(readyToPayCount)} />
+      <div className="grid grid-cols-2 gap-2 p-2">
+        <SummaryFact
+          label="Butuh aksi"
+          value={String(needsActionCount)}
+          tone={needsActionCount > 0 ? "warning" : "default"}
+        />
+        <SummaryFact
+          label="Siap dicairkan"
+          value={String(readyToPayCount)}
+          tone={readyToPayCount > 0 ? "positive" : "default"}
+        />
       </div>
-    </ExpensesSummarySurface>
-  );
-}
-
-function InboxMetric({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: string;
-}): React.JSX.Element {
-  return (
-    <div className="min-w-0 px-2.5 first:pl-0 last:pr-0">
-      <p className="truncate text-[9px] leading-3 font-semibold text-on-surface-variant/60">
-        {label}
-      </p>
-      <p className="mt-1 font-mono text-sm leading-5 font-bold text-on-surface">{value}</p>
-    </div>
+    </SummarySurface>
   );
 }

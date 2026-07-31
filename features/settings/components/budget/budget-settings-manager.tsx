@@ -20,11 +20,8 @@ import {
   TextInput,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import {
-  SettingsGroupSurface,
-  SettingsModuleHeader,
-  SettingsStatusLabel,
-} from "../shared/settings-primitives";
+import { GroupedSurface } from "@/components/ui/feedback/main-surface";
+import { SettingsModuleHeader, SettingsStatusLabel } from "../shared/settings-primitives";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 
 const fullMoney = (value: number): string => `Rp ${Math.round(value).toLocaleString("id-ID")}`;
@@ -101,7 +98,7 @@ export function BudgetSettingsManager({
   }
 
   return (
-    <section className="min-w-0 space-y-lg">
+    <section className="min-w-0 space-y-sm">
       {presentation === "onboarding" ? null : hideHeader ? (
         <SettingsModuleHeader
           eyebrow="Default finansial"
@@ -133,7 +130,7 @@ export function BudgetSettingsManager({
               onChange={(value) => setSampleValue(Number(value || 0))}
             />
           </FormField>
-          <SettingsGroupSurface>
+          <GroupedSurface>
             <dl className="divide-y divide-black/5.5 px-4">
               {[
                 {
@@ -170,7 +167,7 @@ export function BudgetSettingsManager({
                 </div>
               ))}
             </dl>
-          </SettingsGroupSurface>
+          </GroupedSurface>
         </FormSection>
       ) : null}
 
@@ -248,7 +245,7 @@ export function BudgetSettingsManager({
           <span className="min-w-0">Teralokasi {fullMoney(allocated)}</span>
           <span className="shrink-0">Buffer {percent(Math.max(0, 1 - allocation))}</span>
         </div>
-        <SettingsGroupSurface className="mt-md">
+        <GroupedSurface className="mt-md">
           <div className="divide-y divide-black/5.5">
             {setting.categories.map((category, index) => {
               const categoryAmount =
@@ -266,7 +263,7 @@ export function BudgetSettingsManager({
                       aria-label={`${category.isEnabled ? "Nonaktifkan" : "Aktifkan"} ${category.name}`}
                       whileTap={{ scale: 0.96 }}
                       transition={transitionSpringSnappy}
-                      className={`relative h-7 w-12 shrink-0 rounded-full p-1 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${category.isEnabled ? "bg-primary" : "bg-outline-variant/35"}`}
+                      className={`relative h-7 w-12 shrink-0 rounded-full p-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${category.isEnabled ? "bg-primary" : "bg-outline-variant/35"}`}
                       disabled={!canManage}
                       onClick={() =>
                         setSetting({
@@ -280,7 +277,7 @@ export function BudgetSettingsManager({
                       <motion.span
                         layout
                         transition={transitionSpringSnappy}
-                        className={`block h-5 w-5 rounded-full bg-white shadow-sm ${category.isEnabled ? "ml-5" : "ml-0"}`}
+                        className={`block h-5 w-5 rounded-full bg-white shadow-control ${category.isEnabled ? "ml-5" : "ml-0"}`}
                       />
                     </motion.button>
                     <div className="min-w-0 flex-1">
@@ -334,7 +331,7 @@ export function BudgetSettingsManager({
               );
             })}
           </div>
-        </SettingsGroupSurface>
+        </GroupedSurface>
         {overLimit ? (
           <FormRiskNotice title="Alokasi melebihi 100%" tone="danger">
             Kurangi rasio kategori sebelum menyimpan default.
@@ -355,7 +352,7 @@ export function BudgetSettingsManager({
         </p>
       ) : null}
       {canManage && dirty ? (
-        <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 min-w-0 space-y-1 rounded-[22px] bg-white/96 p-2 shadow-[0_12px_32px_rgba(17,17,17,0.13)] ring-1 ring-black/4 backdrop-blur-xl">
+        <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 min-w-0 space-y-1 rounded-[22px] bg-white/96 p-2 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl">
           <p
             className={`px-1 text-[11px] leading-4 ${overLimit ? "font-bold text-error" : "text-on-surface-variant"}`}
           >

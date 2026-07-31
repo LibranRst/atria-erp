@@ -5,11 +5,7 @@ import React from "react";
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { StatusBadge } from "@/components/ui/badge/badge";
-import {
-  DashboardDetailSection,
-  DashboardRowGroup,
-  DashboardSummarySurface,
-} from "@/features/finance-dashboard/components/shared/dashboard-primitives";
+import { DetailSection, RowGroup, SummarySurface } from "@/components/ui/feedback/main-surface";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
 import { MaterialIssueRow } from "@/features/finance-dashboard/components/rows/material-rows";
 
@@ -28,8 +24,8 @@ export function MaterialsTab({
     (item) => item.type === "WASTE" || item.type === "ADJUSTMENT",
   );
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
-      <DashboardSummarySurface
+    <div className="space-y-sm">
+      <SummarySurface
         ariaLabel="Posisi stok material"
         eyebrow="Posisi stok"
         icon="inventory_2"
@@ -44,7 +40,7 @@ export function MaterialsTab({
             : "positive"
         }
       >
-        <div className="grid grid-cols-2 divide-x divide-black/5.5 rounded-[20px] bg-surface-container-low/65 px-3.5 py-3">
+        <div className="grid grid-cols-2 px-3.5 pt-3 pb-1">
           <div className="min-w-0">
             <p className="text-[9px] font-semibold text-on-surface-variant/60">Stok tersedia</p>
             <MoneyValue
@@ -65,21 +61,26 @@ export function MaterialsTab({
             />
           </div>
         </div>
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-black/5.5 pt-3 text-[10px] font-semibold">
-          <span
-            className={data.stockIssues.materialShortageCount > 0 ? "text-warning" : "text-success"}
-          >
-            {data.stockIssues.materialShortageCount > 0
-              ? `${data.stockIssues.materialShortageCount} kebutuhan RAP belum terpenuhi`
-              : "Kebutuhan RAP terpenuhi"}
-          </span>
-          <StatusBadge
-            tone={data.stockIssues.lowStockCount > 0 ? "warning" : "healthy"}
-            label={`${data.stockIssues.lowStockCount} stok rendah`}
-          />
+        <div className="px-2 pt-2 pb-2">
+          <div className="flex items-center justify-between rounded-xl bg-surface-container-lowest p-2 text-[10px] font-semibold">
+            <span
+              className={
+                data.stockIssues.materialShortageCount > 0 ? "text-warning" : "text-success"
+              }
+            >
+              {data.stockIssues.materialShortageCount > 0
+                ? `${data.stockIssues.materialShortageCount} kebutuhan RAP belum terpenuhi`
+                : "Kebutuhan RAP terpenuhi"}
+            </span>
+            <StatusBadge
+              tone={data.stockIssues.lowStockCount > 0 ? "warning" : "healthy"}
+              label={`${data.stockIssues.lowStockCount} stok rendah`}
+              marker={false}
+            />
+          </div>
         </div>
-      </DashboardSummarySurface>
-      <DashboardDetailSection
+      </SummarySurface>
+      <DetailSection
         title="Risiko pemenuhan"
         href="/materials?tab=needs"
         actionLabel="Buka kebutuhan"
@@ -87,27 +88,23 @@ export function MaterialsTab({
         {shortages.length === 0 ? (
           <DashboardTabEmpty>Tidak ada kekurangan RAP atau stok rendah aktif.</DashboardTabEmpty>
         ) : (
-          <DashboardRowGroup>
+          <RowGroup>
             {shortages.map((item) => (
-              <MaterialIssueRow key={item.id} item={item} />
+              <MaterialIssueRow key={item.id} item={item} compact />
             ))}
-          </DashboardRowGroup>
+          </RowGroup>
         )}
-      </DashboardDetailSection>
+      </DetailSection>
       {reviews.length > 0 ? (
-        <DashboardDetailSection
-          title="Perlu keputusan"
-          href="/materials?tab=overview"
-          actionLabel="Tinjau"
-        >
-          <DashboardRowGroup>
+        <DetailSection title="Perlu keputusan" href="/materials?tab=overview" actionLabel="Tinjau">
+          <RowGroup>
             {reviews.map((item) => (
-              <MaterialIssueRow key={item.id} item={item} />
+              <MaterialIssueRow key={item.id} item={item} compact />
             ))}
-          </DashboardRowGroup>
-        </DashboardDetailSection>
+          </RowGroup>
+        </DetailSection>
       ) : null}
-      <DashboardDetailSection
+      <DetailSection
         title="Waste dan penyesuaian"
         href="/materials?tab=activity"
         actionLabel="Buka aktivitas"
@@ -115,13 +112,13 @@ export function MaterialsTab({
         {activity.length === 0 ? (
           <DashboardTabEmpty>Tidak ada waste atau penyesuaian terbaru.</DashboardTabEmpty>
         ) : (
-          <DashboardRowGroup>
+          <RowGroup>
             {activity.map((item) => (
-              <MaterialIssueRow key={item.id} item={item} />
+              <MaterialIssueRow key={item.id} item={item} compact />
             ))}
-          </DashboardRowGroup>
+          </RowGroup>
         )}
-      </DashboardDetailSection>
+      </DetailSection>
     </div>
   );
 }

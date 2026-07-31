@@ -53,8 +53,8 @@ export function DatePickerField({
         onClick={() => setOpen(true)}
         className={cx(
           grouped
-            ? "flex min-h-8 w-full items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-55"
-            : "flex min-h-12 w-full items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition focus:border-accent focus:ring-2 focus:ring-accent/15 focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
+            ? "flex min-h-8 w-full items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
+            : "flex min-h-12 w-full items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
         )}
       >
         <span
@@ -68,7 +68,7 @@ export function DatePickerField({
         <CalendarDays className="h-4 w-4 text-on-surface-variant" />
       </button>
       <BottomSheet open={open} title={label} onClose={() => setOpen(false)}>
-        <div className="rounded-3xl bg-surface-container-lowest p-3 ring-1 ring-outline-variant/15">
+        <div className="rounded-3xl bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
           <div className="flex items-center justify-between">
             <button
               type="button"

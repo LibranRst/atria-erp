@@ -11,12 +11,12 @@ import type {
 import { OpeningInventoryWorkspace } from "@/features/materials/components/workspaces/opening-inventory-workspace";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import { MetadataChip } from "@/components/ui/badge/badge";
+import { GroupedSurface } from "@/components/ui/feedback/main-surface";
 import type {
   OnboardingStepStatus,
   OwnerOnboardingOverview,
 } from "@/lib/onboarding/owner-onboarding";
 import {
-  SettingsGroupSurface,
   SettingsModuleHeader,
   SettingsRowChevron,
   SettingsStatusLabel,
@@ -88,9 +88,7 @@ export function SetupReadinessManager({
                     : "Sedang berjalan"}
             </span>
           </span>
-          <MetadataChip className="bg-white/10 text-white/75">
-            {missing} gap
-          </MetadataChip>
+          <MetadataChip className="bg-white/10 text-white/75">{missing} gap</MetadataChip>
         </div>
         {overview.canManageOnboarding ? (
           <Link
@@ -110,7 +108,7 @@ export function SetupReadinessManager({
           </p>
         )}
       </section>
-      <SettingsGroupSurface>
+      <GroupedSurface>
         <div className="divide-y divide-black/5.5">
           {overview.readiness
             .filter((item) => item.id !== "summary")
@@ -143,11 +141,13 @@ export function SetupReadinessManager({
                 >
                   <AppIcon
                     className={`h-9 w-9 shrink-0 rounded-[13px] p-2 text-[18px] ${item.ready ? "bg-success-container text-success" : "bg-warning-container text-warning"}`}
-                    name={item.ready
-                      ? "check"
-                      : item.status === "PENDING_APPROVAL"
-                        ? "hourglass_top"
-                        : "priority_high"}
+                    name={
+                      item.ready
+                        ? "check"
+                        : item.status === "PENDING_APPROVAL"
+                          ? "hourglass_top"
+                          : "priority_high"
+                    }
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[13px] font-bold text-on-surface">
@@ -163,7 +163,7 @@ export function SetupReadinessManager({
               );
             })}
         </div>
-      </SettingsGroupSurface>
+      </GroupedSurface>
     </section>
   );
 }

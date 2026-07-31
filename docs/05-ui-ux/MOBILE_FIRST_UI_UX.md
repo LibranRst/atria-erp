@@ -34,7 +34,8 @@ Role filtering can hide destinations that are irrelevant or forbidden.
 
 - Start with the current position or workload, then attention, next actions, and drill-down detail.
 - Use one focal summary only when the page has a genuinely dominant state.
-- Group repeated rows inside one soft surface with dividers. Use individual cards only for independent interactive units.
+- Group simple repeated rows inside one soft surface with dividers. Use individual cards for independently interactive or decision-heavy units.
+- Use compact neutral inset metric grids for two or three values that must be compared inside one focal or decision surface. Keep tone on the value/status, avoid shadow per cell, and keep every primary value unwrapped at 320px.
 - Use contextual indicators for category budget status; do not place the same progress bar under every value.
 - Use bottom sheets for quick expense, stock in, reserve, use, and return actions.
 - Avoid wide tables on mobile. Use grouped rows, comparisons, timelines, or domain-specific cards instead.
@@ -51,6 +52,7 @@ Dashboard (`/ledger`) and Expenses (`/expenses`) are the current reference imple
 - compact one-column composition inside the fixed `max-w-md` shell;
 - a clear focal or workload summary followed by concise sections;
 - grouped white/translucent surfaces with soft depth and internal dividers;
+- compact inset metric grids that decompose a focal summary or decision item without becoming a generic KPI dashboard;
 - compact semantic icon tiles, scan-friendly rows, and restrained status treatments;
 - small capsule section actions with a 48px effective touch area;
 - shared segmented tabs that scroll horizontally without moving the page;
@@ -66,13 +68,13 @@ Copy the design grammar, not the exact arrangement. Approval remains a decision 
 - Budget ratios should be edited as human-readable percentages.
 - Settings stays inside the fixed `max-w-md` application shell at every viewport. Do not use `sm`, `md`, or `xl` layout changes inside this workspace because viewport breakpoints can create desktop arrangements inside the narrow container.
 - Module navigation follows Project Detail horizontal pills. Only tab and filter strips may scroll horizontally.
-- Financial summaries use compact 2×2 metrics with a shortened primary value and wrapped full value underneath. Do not use large snap-card carousels for Settings metrics.
+- Financial summaries use compact inset metrics with a shortened primary value and exact supporting value where needed. Prefer two or three cells per row; if four facts are essential, establish hierarchy across rows instead of forcing four equal columns. Do not use large snap-card carousels for Settings metrics.
 - Forms, lists, headers, and filter containers remain single-column. Create/edit interactions always use a centered mobile bottom sheet rather than switching to a desktop side drawer.
 - Budget Allocation must label Gross Margin and Unallocated Buffer as separate values and explain that category ratios use Internal Budget.
 - Keep the five canonical Expense Categories active and code-locked; ratio editing belongs only in Budget Allocation.
 - Material Master settings should show material identity and default inventory thresholds without replacing the operational Materials page.
 - `/materials` uses fixed mobile tabs Overview, Inventory, Needs, and Activity. It provides global stock operations, search/filter, grouped location inventory, approval cards, and movement/receipt history without desktop breakpoints.
-- Global action forms use bottom sheets; stock value uses compact 2×2 metrics and short/full financial values.
+- Global action forms use bottom sheets; stock value uses compact inset metrics and short/full financial values.
 - Role badges should make edit/read-only state obvious.
 - Library cards show Internal Cost, Suggested Client Price, gross margin, component count, price source, and source note. Cost-component editing remains one-column in the bottom sheet.
 - Project forms offer `Gunakan template Library` and explain snapshot behavior.

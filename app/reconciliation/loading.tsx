@@ -9,7 +9,7 @@ function ReconciliationRowSkeleton({
 }): React.JSX.Element {
   return (
     <div
-      className={`min-h-25 px-4 py-3.5 ${card ? "rounded-[26px] bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/3" : ""}`}
+      className={`min-h-25 px-4 py-3.5 ${card ? "rounded-[26px] bg-white shadow-surface ring-1 ring-ring-subtle" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-2">
@@ -29,7 +29,7 @@ function ReconciliationRowSkeleton({
 export default function ReconciliationLoading(): React.JSX.Element {
   return (
     <div
-      className="space-y-5 pb-8 max-[430px]:space-y-4"
+      className="space-y-sm pb-8"
       aria-label="Memuat rekonsiliasi"
       role="status"
     >
@@ -38,31 +38,30 @@ export default function ReconciliationLoading(): React.JSX.Element {
         <SkeletonLine className="h-3 w-58 bg-surface-container-low" />
       </div>
 
-      <section className="rounded-[26px] bg-white/88 p-4 shadow-[0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl max-[430px]:p-3.5">
-        <div className="flex items-center justify-between gap-3">
+      <section className="rounded-[26px] bg-white/88 p-2 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl max-[430px]:p-3.5">
+        <div className="flex items-center justify-between gap-3 p-2">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-xl bg-surface-container" />
             <SkeletonLine className="h-2.5 w-32" />
           </div>
           <SkeletonLine className="h-7 w-22 bg-surface-container-low" />
         </div>
-        <div className="mt-4 flex items-end justify-between gap-4">
-          <div className="space-y-2">
-            <SkeletonLine className="h-7 w-8" />
-            <SkeletonLine className="h-2.5 w-40 bg-surface-container-low" />
+        <div className="mt-1 rounded-2xl bg-surface-container-low">
+          <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
+            <div className="space-y-2">
+              <SkeletonLine className="h-8 w-10" />
+              <SkeletonLine className="h-2.5 w-40 bg-surface-container-low" />
+            </div>
           </div>
-          <div className="space-y-2 text-right">
-            <SkeletonLine className="ml-auto h-2.5 w-20 bg-surface-container-low" />
-            <SkeletonLine className="ml-auto h-4 w-8" />
+          <div className="grid grid-cols-2 gap-2 p-2">
+            <div className="h-12 rounded-xl bg-surface-container-lowest" />
+            <div className="h-12 rounded-xl bg-surface-container-lowest" />
           </div>
-        </div>
-        <div className="mt-4 border-t border-black/5.5 pt-3">
-          <SkeletonLine className="h-2.5 w-52 bg-surface-container-low" />
         </div>
       </section>
 
       <div className="grid h-12 grid-cols-3 gap-1 rounded-full bg-surface-container-low p-1">
-        <div className="rounded-full bg-white shadow-sm" />
+        <div className="rounded-full bg-white shadow-control" />
         <div className="rounded-full" />
         <div className="rounded-full" />
       </div>
@@ -79,7 +78,7 @@ export default function ReconciliationLoading(): React.JSX.Element {
           <ReconciliationRowSkeleton card />
           <div className="space-y-2">
             <SkeletonLine className="ml-1 h-2.5 w-28 bg-surface-container-low" />
-            <div className="overflow-hidden rounded-[26px] bg-white/88 shadow-[0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl">
+            <div className="overflow-hidden rounded-[26px] bg-white/88 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl">
               <ReconciliationRowSkeleton />
             </div>
           </div>

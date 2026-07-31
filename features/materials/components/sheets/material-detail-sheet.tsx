@@ -65,7 +65,7 @@ export function MaterialDetail({
           </div>
 
           <section
-            className="rounded-3xl bg-primary px-4 py-4 text-white shadow-[0_12px_28px_rgba(17,17,17,0.12)]"
+            className="rounded-3xl bg-primary px-4 py-4 text-white shadow-raised"
             aria-label="Posisi stok material"
           >
             <p className="text-[9px] font-bold tracking-[0.15em] text-white/55 uppercase">
@@ -155,7 +155,7 @@ function SheetSection({
   return (
     <section className="space-y-2">
       <h3 className="px-1 text-[14px] leading-5 font-bold text-on-surface">{title}</h3>
-      <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-black/[0.035]">
+      <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-ring-subtle">
         {children}
       </div>
     </section>

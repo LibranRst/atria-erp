@@ -5,8 +5,10 @@ import Link from "next/link";
 
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import type { DashboardRiskyProject } from "@/features/finance-dashboard/types/dashboard-types";
-import { ProgressBar, projectTone } from "@/features/finance-dashboard/components/shared/dashboard-tone";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import {
+  ProgressBar,
+  projectTone,
+} from "@/features/finance-dashboard/components/shared/dashboard-tone";
 import { StatusBadge, type StatusBadgeTone } from "@/components/ui/badge/badge";
 
 export function ProjectRiskCard({
@@ -33,7 +35,7 @@ export function ProjectRiskCard({
   return (
     <Link
       href={`/projects/${project.projectId}?tab=overview`}
-      className="block w-60 shrink-0 snap-start rounded-2xl bg-white p-3.5 shadow-[0_12px_28px_rgba(17,17,17,0.04)] ring-1 ring-outline-variant/10 transition hover:bg-white active:scale-[0.99]"
+      className="block w-60 shrink-0 snap-start rounded-2xl bg-white p-3.5 shadow-surface ring-1 ring-ring-subtle transition hover:bg-white active:scale-[0.99]"
     >
       <div className="flex min-w-0 items-center gap-2">
         <span

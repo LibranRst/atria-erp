@@ -102,7 +102,7 @@ export function PackageSetupContent({
               type="button"
               onClick={() => onSkip(true)}
               disabled={isPending}
-              className="min-h-12 rounded-full bg-white text-xs font-bold text-on-surface-variant ring-1 ring-outline-variant/20"
+              className="min-h-12 rounded-full bg-white text-xs font-bold text-on-surface-variant ring-1 ring-ring-control"
             >
               Tidak Digunakan
             </button>

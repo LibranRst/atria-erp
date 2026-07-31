@@ -60,7 +60,7 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 mx-auto w-full max-w-md px-margin-mobile">
       <aside
-        className="pointer-events-auto relative isolate flex min-h-15 min-w-0 items-center gap-2 overflow-hidden rounded-[22px] bg-white/88 p-1.5 pl-2 shadow-[0_1px_2px_rgba(17,17,17,0.035),0_14px_36px_rgba(17,17,17,0.14)] ring-1 ring-black/[0.035] backdrop-blur-xl"
+        className="pointer-events-auto relative isolate flex min-h-15 min-w-0 items-center gap-2 overflow-hidden rounded-[22px] bg-white/88 p-1.5 pl-2 shadow-floating ring-1 ring-ring-subtle backdrop-blur-xl"
         aria-live="polite"
         aria-label="Mode simulasi developer aktif"
       >
@@ -84,9 +84,9 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
           disabled={pending}
           whileTap={pending ? undefined : { scale: 0.97 }}
           transition={transitionSpringSnappy}
-          className="flex min-h-12 shrink-0 items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-55"
+          className="flex min-h-12 shrink-0 items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-55"
         >
-          <span className="flex h-10 items-center rounded-full bg-on-surface px-3.5 text-[10px] font-bold text-white shadow-[0_5px_14px_rgba(17,17,17,0.14)]">
+          <span className="flex h-10 items-center rounded-full bg-on-surface px-3.5 text-[10px] font-bold text-white shadow-control">
             {pending ? "Memulihkan…" : "Kembali"}
           </span>
         </motion.button>

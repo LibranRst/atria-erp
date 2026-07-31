@@ -181,9 +181,40 @@ export function CountBadge({
     <span
       {...props}
       aria-label={`${count} ${label}`}
-      className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 font-mono text-[8px] leading-none font-black ${tone === "attention" ? "bg-critical-container text-critical" : "bg-surface-container-high text-on-surface-variant"} ${className}`}
+      className={`inline-grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[8px] leading-none font-black tabular-nums ${tone === "attention" ? "bg-critical-container text-critical" : "bg-surface-container-high text-on-surface-variant"} ${className}`}
     >
-      {displayedCount}
+      <span className="translate-y-px">{displayedCount}</span>
+    </span>
+  );
+}
+
+type SectionCountPillProps = Omit<ComponentPropsWithoutRef<"span">, "children"> & {
+  readonly count: number;
+  readonly label: string;
+};
+
+export function SectionCountPill({
+  count,
+  label,
+  className = "",
+  ...props
+}: SectionCountPillProps): React.JSX.Element {
+  return (
+    <span
+      {...props}
+      aria-label={`${count} ${label.toLowerCase()}`}
+      className={`items-center px-3 text-[11px] leading-4 font-bold text-on-surface-variant ${className}`}
+    >
+      <span>
+        {count} {label}
+      </span>
+      {/*<CountBadge
+        count={count}
+        label={label.toLowerCase()}
+        tone="neutral"
+        aria-hidden="true"
+        className="bg-surface-container-lowest text-[9px] ring-1 ring-ring-subtle"
+      />*/}
     </span>
   );
 }

@@ -55,7 +55,7 @@ describe("financial and select primitives", () => {
     );
 
     expect(html).toContain("bg-surface-container-lowest");
-    expect(html).toContain("ring-outline-variant/20");
-    expect(html).toContain("focus-within:ring-accent/25");
+    expect(html).toContain("ring-ring-control");
+    expect(html).toContain("focus-within:ring-focus-ring");
   });
 });

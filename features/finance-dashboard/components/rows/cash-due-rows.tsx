@@ -47,7 +47,7 @@ export function CashDueRow({
     >
       <Link
         href={item.href}
-        className="grid grid-cols-[38px_minmax(0,1fr)] gap-3 rounded-[20px] px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-accent/25 focus-visible:ring-inset active:bg-black/2.5 max-[430px]:px-3 max-[430px]:py-3"
+        className="grid grid-cols-[38px_minmax(0,1fr)] gap-3 rounded-[20px] px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-black/2.5 max-[430px]:px-3 max-[430px]:py-3"
       >
         <span className="relative flex flex-col items-start pt-0.5 text-left" aria-hidden="true">
           <span className="font-mono text-[13px] leading-none font-black text-on-surface">

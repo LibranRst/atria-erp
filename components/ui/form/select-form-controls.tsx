@@ -88,8 +88,8 @@ export function SheetSelect({
         }}
         className={cx(
           grouped
-            ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-55"
-            : "flex w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition focus:border-accent focus:ring-2 focus:ring-accent/15 focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
+            ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
+            : "flex w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
           !grouped && (compact ? "min-h-11" : "min-h-12"),
           !grouped && compact && "bg-surface-container-low",
           readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
@@ -144,7 +144,7 @@ export function SheetSelect({
                     {group}
                   </p>
                 )}
-                <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-outline-variant/15">
+                <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-ring-subtle">
                   {filtered
                     .filter((option) => (option.group ?? "") === group)
                     .map((option) => {
@@ -265,8 +265,8 @@ export function ComboboxField({
         }}
         className={cx(
           grouped
-            ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-55"
-            : "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition focus:border-accent focus:ring-2 focus:ring-accent/15 focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
+            ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
+            : "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
         )}
       >
         <span
@@ -302,7 +302,7 @@ export function ComboboxField({
             </p>
           ) : null}
           {filteredOptions.length > 0 || canUseCustomValue ? (
-            <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-outline-variant/15">
+            <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-ring-subtle">
               {filteredOptions.map((option) => {
                 const active = option === value;
                 return (
@@ -370,7 +370,7 @@ export function SearchInput({
   return (
     <div
       className={cx(
-        "flex min-h-12 items-center gap-2 rounded-full bg-surface-container-lowest px-5 shadow-[0_5px_16px_rgba(17,17,17,0.045)] ring-1 ring-outline-variant/20 transition-shadow focus-within:ring-2 focus-within:ring-accent/25",
+        "flex min-h-12 items-center gap-2 rounded-full bg-surface-container-lowest px-5 shadow-control ring-1 ring-ring-control transition-shadow focus-within:ring-2 focus-within:ring-focus-ring",
         className,
       )}
     >

@@ -29,7 +29,7 @@ function AccountBalanceImpact({
           Periksa perubahan kas sebelum rekening dibuat.
         </p>
       </header>
-      <div className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+      <div className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
         <div className="flex min-w-0 items-center gap-3 px-4 py-3.5">
           <AppIcon name="account_balance_wallet" className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-primary/8 text-[19px] leading-none text-primary" />
           <span className="min-w-0 flex-1">
@@ -104,7 +104,7 @@ function AccountIdentityReview({ draft }: { readonly draft: AccountDraft }): Rea
           Periksa data yang akan tampil di selector kas, kartu rekening, dan ledger.
         </p>
       </header>
-      <dl className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+      <dl className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
         <AccountReviewRow label="Bank" value={draft.bankName} />
         <AccountReviewRow label="Nama rekening" value={draft.name} />
         <AccountReviewRow label="Nomor rekening" value={draft.accountNumber} tabular />

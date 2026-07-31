@@ -15,11 +15,7 @@ import type {
 import { Badge, FilterSelect } from "@/components/ui";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
-import {
-  MaterialGroupSurface,
-  MaterialInlineState,
-  MaterialSection,
-} from "@/features/materials/components/shared/material-page-primitives";
+import { GroupedSurface, InlineStateRow, MainSection } from "@/components/ui/feedback/main-surface";
 import { MovementRow } from "@/features/materials/components/sheets/material-operation-sheets";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import {
@@ -39,7 +35,7 @@ type ActivityTabProps = {
   readonly activityLocationOptions: readonly { readonly value: string; readonly label: string }[];
   readonly visibleReceipts: readonly ReceiptView[];
   readonly visibleMovements: readonly MaterialMovementView[];
-  readonly movementsLength: number;
+  readonly movementsHasMore: boolean;
   readonly transfers: MaterialOperationsDashboard["transfers"];
   readonly counts: MaterialOperationsDashboard["counts"];
   readonly pending: boolean;
@@ -61,7 +57,7 @@ export function MaterialActivityTab({
   activityLocationOptions,
   visibleReceipts,
   visibleMovements,
-  movementsLength,
+  movementsHasMore,
   transfers,
   counts,
   pending,
@@ -74,7 +70,7 @@ export function MaterialActivityTab({
 }: ActivityTabProps): React.JSX.Element {
   const { openActivityDetail } = useActivityDetail();
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
+    <div className="space-y-sm">
       <section
         className="space-y-2.5"
         aria-label="Filter aktivitas material"
@@ -124,10 +120,10 @@ export function MaterialActivityTab({
         </div>
       </section>
 
-      <MaterialSection title="Penerimaan barang" meta={`${visibleReceipts.length} dokumen`}>
-        <MaterialGroupSurface>
+      <MainSection title="Penerimaan barang" count={visibleReceipts.length} countLabel="Dokumen">
+        <GroupedSurface>
           {visibleReceipts.length === 0 ? (
-            <MaterialInlineState
+            <InlineStateRow
               icon="inbox"
               title="Tidak ada penerimaan"
               description="Ubah filter untuk melihat dokumen penerimaan lainnya."
@@ -172,13 +168,13 @@ export function MaterialActivityTab({
               ))}
             </div>
           )}
-        </MaterialGroupSurface>
-      </MaterialSection>
+        </GroupedSurface>
+      </MainSection>
 
-      <MaterialSection title="Pergerakan stok" meta={`${visibleMovements.length} aktivitas`}>
-        <MaterialGroupSurface>
+      <MainSection title="Pergerakan stok" count={visibleMovements.length} countLabel="Aktivitas">
+        <GroupedSurface>
           {visibleMovements.length === 0 ? (
-            <MaterialInlineState
+            <InlineStateRow
               icon="history"
               title="Tidak ada pergerakan stok"
               description="Ubah filter untuk melihat histori aktivitas lainnya."
@@ -190,28 +186,29 @@ export function MaterialActivityTab({
               ))}
             </div>
           )}
-          {movementsLength >= 30 ? (
+          {movementsHasMore ? (
             <div className="border-t border-black/5.5 p-3">
               <button
                 type="button"
                 onClick={onLoadMore}
                 disabled={pending}
-                className="min-h-12 w-full rounded-full bg-accent/8 px-5 text-[11px] font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-accent/30 active:bg-accent/[0.14] disabled:opacity-45"
+                className="min-h-12 w-full rounded-full bg-accent/8 px-5 text-[11px] font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-45"
               >
                 {pending ? "Memuat…" : "Muat aktivitas sebelumnya"}
               </button>
             </div>
           ) : null}
-        </MaterialGroupSurface>
-      </MaterialSection>
+        </GroupedSurface>
+      </MainSection>
 
-      <MaterialSection
+      <MainSection
         title="Transfer dan stock opname"
-        meta={`${transfers.length + counts.length} dokumen`}
+        count={transfers.length + counts.length}
+        countLabel="Dokumen"
       >
-        <MaterialGroupSurface>
+        <GroupedSurface>
           {transfers.length === 0 && counts.length === 0 ? (
-            <MaterialInlineState
+            <InlineStateRow
               icon="inventory"
               title="Belum ada dokumen"
               description="Transfer dan stock opname akan tersimpan di bagian ini."
@@ -234,8 +231,8 @@ export function MaterialActivityTab({
               ))}
             </div>
           )}
-        </MaterialGroupSurface>
-      </MaterialSection>
+        </GroupedSurface>
+      </MainSection>
     </div>
   );
 }

@@ -39,8 +39,8 @@ export function dashboardToneClasses(tone: DashboardTone): {
     };
   }
   return {
-    surface: "bg-surface-container-low ring-1 ring-outline-variant/10",
-    icon: "bg-white text-on-surface-variant shadow-sm",
+    surface: "bg-surface-container-low ring-1 ring-ring-subtle",
+    icon: "bg-white text-on-surface-variant shadow-control",
     progress: "bg-primary",
     text: "text-on-surface",
   };

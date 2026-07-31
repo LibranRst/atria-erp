@@ -10,6 +10,7 @@ import {
   type ExpenseDraftSummary,
 } from "@/app/actions/finance/expense-drafts";
 import { ConfirmationSheet } from "@/components/ui";
+import { GroupedSurface } from "@/components/ui/feedback/main-surface";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { transitionSpringSnappy, transitionSpringSmooth } from "@/lib/utils/motion";
 import { AppIcon } from "@/components/ui/icon/app-icon";
@@ -73,11 +74,11 @@ export function ExpenseDraftsPanel({
 
   return (
     <>
-      <section className="overflow-hidden rounded-3xl bg-white/88 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5 backdrop-blur-xl">
+      <GroupedSurface as="section">
         <button
           type="button"
           onClick={() => setExpanded((current) => !current)}
-          className="flex min-h-14 w-full items-center gap-3 px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          className="flex min-h-14 w-full items-center gap-3 px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           aria-expanded={expanded}
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/9 text-primary ring-1 ring-primary/6">
@@ -124,7 +125,7 @@ export function ExpenseDraftsPanel({
                         updateUrlSearchParam("expense-draft", draft.id, "replace");
                         updateUrlSearchParam("new-expense", "true", "push");
                       }}
-                      className="min-w-0 flex-1 rounded-2xl px-2 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                      className="min-w-0 flex-1 rounded-2xl px-2 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                     >
                       <span className="block truncate text-xs font-bold text-on-surface">
                         {draft.projectName}
@@ -137,7 +138,7 @@ export function ExpenseDraftsPanel({
                     <button
                       type="button"
                       onClick={() => setDiscardTarget(draft)}
-                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-error outline-none focus-visible:ring-2 focus-visible:ring-error/30"
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                       aria-label={`Buang draft ${draft.projectName}`}
                     >
                       <AppIcon name="delete" className="text-[19px]" />
@@ -148,7 +149,7 @@ export function ExpenseDraftsPanel({
             </motion.div>
           ) : null}
         </AnimatePresence>
-      </section>
+      </GroupedSurface>
 
       <ConfirmationSheet
         open={discardTarget !== null}

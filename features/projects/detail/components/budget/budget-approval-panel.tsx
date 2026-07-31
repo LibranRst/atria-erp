@@ -27,7 +27,7 @@ export function BudgetDraftActions({
         transition={transitionSpringSnappy}
         onClick={() => setConfirmSubmit(true)}
         disabled={isPending}
-        className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-secondary px-5 text-xs font-bold text-on-secondary shadow-lg disabled:opacity-50"
+        className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-secondary px-5 text-xs font-bold text-on-secondary shadow-raised disabled:opacity-50"
       >
         <AppIcon name="publish" className="text-[18px]" />
         <span>Tinjau & Ajukan Project Budget</span>
@@ -104,7 +104,7 @@ export function BudgetApprovalPanel({
           type="button"
           onClick={() => setConfirmApprove(true)}
           disabled={isPending}
-          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-primary text-xs font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
+          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-primary text-xs font-bold text-white shadow-primary transition active:scale-[0.98] disabled:opacity-50"
         >
           <AppIcon name="done" className="text-[18px]" />
           <span>Setujui Project Budget</span>

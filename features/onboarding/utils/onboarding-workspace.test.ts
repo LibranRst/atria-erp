@@ -1,26 +1,54 @@
 import { describe, expect, test } from "bun:test";
 
-const workspacePath = new URL("./owner-onboarding-workspace.tsx", import.meta.url);
-const accountPanelPath = new URL("./components/setup-bank-accounts-panel.tsx", import.meta.url);
-const financialPanelPath = new URL("./components/financial-defaults-panel.tsx", import.meta.url);
-const loaderPath = new URL("./server/get-owner-onboarding-workspace-data.ts", import.meta.url);
-const financeReviewPath = new URL("./onboarding-finance-review.tsx", import.meta.url);
+const workspacePath = new URL(
+  "../components/workspaces/owner-onboarding-workspace.tsx",
+  import.meta.url,
+);
+const stepContentPath = new URL(
+  "../components/workspaces/onboarding-step-content.tsx",
+  import.meta.url,
+);
+const workspaceActionsPath = new URL(
+  "../components/workspaces/onboarding-workspace-actions.tsx",
+  import.meta.url,
+);
+const accountPanelPath = new URL(
+  "../components/panels/setup-bank-accounts-panel.tsx",
+  import.meta.url,
+);
+const financialPanelPath = new URL(
+  "../components/panels/financial-defaults-panel.tsx",
+  import.meta.url,
+);
+const loaderPath = new URL("../server/get-owner-onboarding-workspace-data.ts", import.meta.url);
+const financeReviewPath = new URL(
+  "../components/workspaces/onboarding-finance-review.tsx",
+  import.meta.url,
+);
 const verificationPanelPath = new URL(
-  "./components/onboarding-verification-panel.tsx",
+  "../components/panels/onboarding-verification-panel.tsx",
   import.meta.url,
 );
 const initialStockPanelPath = new URL(
-  "./components/initial-stock-setup-panel.tsx",
+  "../components/panels/initial-stock-setup-panel.tsx",
   import.meta.url,
 );
 const dashboardTabsPath = new URL(
-  "../finance-dashboard/components/dashboard-tabs.tsx",
+  "../../finance-dashboard/components/tabs/tab-overview.tsx",
   import.meta.url,
 );
 
+async function readWorkspaceSource(): Promise<string> {
+  return [
+    await Bun.file(workspacePath).text(),
+    await Bun.file(stepContentPath).text(),
+    await Bun.file(workspaceActionsPath).text(),
+  ].join("\n");
+}
+
 describe("inline owner onboarding workspace", () => {
   test("keeps setup actions inside onboarding instead of linking to operational modules", async () => {
-    const source = await Bun.file(workspacePath).text();
+    const source = await readWorkspaceSource();
     expect(source).not.toContain('href="/settings');
     expect(source).not.toContain('href="/materials');
     expect(source).not.toContain('href="/ledger');
@@ -59,7 +87,7 @@ describe("inline owner onboarding workspace", () => {
   });
 
   test("uses one atomic advancement action and hard completion state", async () => {
-    const source = await Bun.file(workspacePath).text();
+    const source = await readWorkspaceSource();
     expect(source).toContain("advanceOwnerOnboardingStep");
     expect(source).not.toContain("updateOwnerOnboardingStep");
     expect(source).toContain("overview.canComplete");
@@ -68,7 +96,7 @@ describe("inline owner onboarding workspace", () => {
   });
 
   test("keeps pause confirmation and dashboard continuation accessible without decorative motion", async () => {
-    const workspaceSource = await Bun.file(workspacePath).text();
+    const workspaceSource = await readWorkspaceSource();
     const dashboardSource = await Bun.file(dashboardTabsPath).text();
 
     expect(workspaceSource).toContain("showExitConfirm");
@@ -77,7 +105,7 @@ describe("inline owner onboarding workspace", () => {
     expect(workspaceSource).toContain("transition={transitionSpringSnappy}");
     expect(dashboardSource).toContain('role="progressbar"');
     expect(dashboardSource).toContain("aria-valuetext");
-    expect(dashboardSource).toContain("min-h-12");
+    expect(dashboardSource).toContain("Lanjutkan setup");
     expect(dashboardSource).not.toContain("animate-pulse");
   });
 

@@ -2,12 +2,9 @@ import { describe, expect, test } from "bun:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import {
-  DashboardDetailSection,
-  DashboardRowGroup,
-  OverviewPreviewSection,
-  SectionAction,
-} from "./dashboard-primitives";
+import { SectionAction } from "@/components/ui/button/button";
+import { DetailSection, RowGroup, SummaryFact } from "@/components/ui/feedback/main-surface";
+import { OverviewPreviewSection } from "./dashboard-primitives";
 
 describe("native editorial dashboard sections", () => {
   test("renders section actions as compact light-blue capsule buttons", () => {
@@ -16,7 +13,7 @@ describe("native editorial dashboard sections", () => {
     );
 
     expect(html).toContain('href="/ledger?tab=budget"');
-    expect(html).toContain("h-9");
+    expect(html).toContain("h-8");
     expect(html).toContain("bg-accent/8");
     expect(html).toContain("gap-1");
     expect(html).toContain("pl-3 pr-2.5");
@@ -32,26 +29,41 @@ describe("native editorial dashboard sections", () => {
         <OverviewPreviewSection title="Budget berisiko" href="/ledger?tab=budget">
           <span>Preview</span>
         </OverviewPreviewSection>
-        <DashboardDetailSection title="Project berisiko">
+        <DetailSection title="Project berisiko">
           <span>Detail</span>
-        </DashboardDetailSection>
+        </DetailSection>
       </>,
     );
 
     expect(html).toContain("Budget berisiko");
     expect(html).toContain("Project berisiko");
     expect(html).toContain("rounded-3xl");
-    expect(html).toContain("shadow-[0_1px_2px");
+    expect(html).toContain("shadow-surface");
     expect(html).toContain("bg-white");
     expect(html).toContain("backdrop-blur-xl");
   });
 
+  test("renders a section count as a neutral trailing pill", () => {
+    const html = renderToStaticMarkup(
+      <DetailSection title="Hari ini" count={23} countLabel="Pengajuan">
+        <span>Detail</span>
+      </DetailSection>,
+    );
+
+    expect(html).toContain("Hari ini");
+    expect(html).toContain('aria-label="23 pengajuan"');
+    expect(html).toContain("23 Pengajuan");
+    expect(html).toContain("text-[11px]");
+    expect(html).toContain("px-3");
+    expect(html).not.toContain("Hari ini · 23");
+  });
+
   test("uses divider grouping inside its parent card", () => {
     const html = renderToStaticMarkup(
-      <DashboardRowGroup>
+      <RowGroup>
         <div>Baris satu</div>
         <div>Baris dua</div>
-      </DashboardRowGroup>,
+      </RowGroup>,
     );
 
     expect(html).toContain("divide-y");
@@ -60,15 +72,26 @@ describe("native editorial dashboard sections", () => {
 
   test("removes horizontal dividers for a connected timeline", () => {
     const html = renderToStaticMarkup(
-      <DashboardRowGroup connected>
+      <RowGroup connected>
         <div>Hari ini</div>
         <div>Besok</div>
-      </DashboardRowGroup>,
+      </RowGroup>,
     );
 
     expect(html).not.toContain("divide-y");
     expect(html).toContain("inset-y-0");
     expect(html).toContain("left-13.5");
     expect(html).toContain("max-[430px]:left-12.5");
+  });
+
+  test("uses compact neutral cards while keeping tone on the value", () => {
+    const html = renderToStaticMarkup(
+      <SummaryFact label="Prioritas kritis" value="23" tone="danger" />,
+    );
+
+    expect(html).toContain("rounded-xl");
+    expect(html).toContain("bg-white");
+    expect(html).toContain("text-error");
+    expect(html).not.toContain("bg-error-container");
   });
 });

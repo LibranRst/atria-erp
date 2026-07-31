@@ -73,7 +73,12 @@ export const createInventoryLocationSchema = z.object({
   description: z.string().trim().max(500).optional().nullable(),
 });
 export const movementPageSchema = z.object({
-  cursor: z.coerce.date().optional(),
+  cursor: z
+    .object({
+      createdAt: z.coerce.date(),
+      id: uuid,
+    })
+    .optional(),
   limit: z.number().int().min(10).max(100).default(30),
 });
 

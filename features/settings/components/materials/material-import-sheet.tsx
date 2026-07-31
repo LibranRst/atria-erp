@@ -10,8 +10,8 @@ import {
   type MaterialImportPreview,
 } from "@/app/actions/settings/material-import";
 import { Button, FormRiskNotice, WorkflowFormSheet } from "@/components/ui";
+import { GroupedSurface } from "@/components/ui/feedback/main-surface";
 import { parseCsvTable } from "@/lib/import/csv";
-import { SettingsGroupSurface } from "../shared/settings-primitives";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
 function parseMaterialRows(source: string): MaterialImportInput {
@@ -137,7 +137,7 @@ export function MaterialImportSheet({
       onPrimary={() => void commit()}
     >
       <div className="space-y-4">
-        <section className="rounded-[26px] bg-white p-4 shadow-sm ring-1 ring-black/4">
+        <section className="rounded-[26px] bg-white p-4 shadow-control ring-1 ring-ring-subtle">
           <p className="text-[13px] font-bold text-on-surface">Template CSV</p>
           <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
             Wajib: name, category, unit, location. Opsional: minimum_stock, last_purchase_price,
@@ -152,7 +152,7 @@ export function MaterialImportSheet({
           >
             Unduh template CSV
           </Button>
-          <label className="mt-4 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-surface-container-low px-5 text-xs font-bold text-on-surface ring-1 ring-black/4">
+          <label className="mt-4 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-surface-container-low px-5 text-xs font-bold text-on-surface ring-1 ring-ring-subtle">
             <AppIcon name="upload_file" className="text-[18px]" />
             {fileName || "Pilih file CSV"}
             <input
@@ -168,7 +168,7 @@ export function MaterialImportSheet({
           </label>
         </section>
         {preview ? (
-          <SettingsGroupSurface>
+          <GroupedSurface>
             <div className="divide-y divide-black/5.5">
               {preview.items.map((item) => (
                 <div key={item.rowNumber} className="flex min-h-15.5 items-center gap-3 px-4 py-3">
@@ -197,7 +197,7 @@ export function MaterialImportSheet({
                 </div>
               ))}
             </div>
-          </SettingsGroupSurface>
+          </GroupedSurface>
         ) : null}
         <FormRiskNotice title="Preview tidak mengubah data">
           Saat import dikonfirmasi, seluruh baris ditulis dalam satu transaksi. Satu kegagalan

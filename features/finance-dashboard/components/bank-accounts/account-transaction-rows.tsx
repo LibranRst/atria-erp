@@ -2,7 +2,7 @@ import React from "react";
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { DashboardRowGroup } from "@/features/finance-dashboard/components/shared/dashboard-primitives";
+import { RowGroup } from "@/components/ui/feedback/main-surface";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
 import type { CashTransaction } from "@/features/finance-dashboard/types/bank-account-types";
 import {
@@ -29,7 +29,7 @@ export function AccountTransactionRows({
   }
 
   return (
-    <DashboardRowGroup>
+    <RowGroup>
       {transactions.map((transaction) => (
         <button
           type="button"
@@ -65,6 +65,6 @@ export function AccountTransactionRows({
           <ActivityDetailChevron />
         </button>
       ))}
-    </DashboardRowGroup>
+    </RowGroup>
   );
 }

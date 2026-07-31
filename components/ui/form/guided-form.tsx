@@ -174,17 +174,17 @@ export function FormDisclosure({
         transition={transitionSpringSnappy}
         onClick={onToggle}
         className={cx(
-          "flex w-full items-center text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+          "flex w-full items-center text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
           compact
-            ? "min-h-12 gap-2.5 rounded-[22px] bg-surface-container-lowest px-3 py-2.5 shadow-[0_8px_24px_rgba(17,17,17,0.035)]"
+            ? "min-h-12 gap-2.5 rounded-[22px] bg-surface-container-lowest px-3 py-2.5 shadow-surface"
             : "min-h-14 gap-3 rounded-full px-3.5 py-2.5",
           compact
             ? expanded
               ? "text-on-surface ring-primary/18"
-              : "text-on-surface ring-outline-variant/15"
+              : "text-on-surface ring-ring-subtle"
             : expanded
               ? "bg-primary/7 text-primary ring-primary/20"
-              : "bg-surface-container-low text-on-surface ring-outline-variant/15",
+              : "bg-surface-container-low text-on-surface ring-ring-subtle",
         )}
         aria-expanded={expanded}
       >
@@ -307,7 +307,7 @@ export function CompactEditableItemRow({
       transition={transitionSpringSnappy}
       disabled={disabled}
       onClick={onClick}
-      className="flex min-h-16 w-full items-center gap-3 rounded-[22px] bg-surface-container-low/70 px-4 py-2.5 text-left ring-1 ring-outline-variant/15 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-45"
+      className="flex min-h-16 w-full items-center gap-3 rounded-[22px] bg-surface-container-low/70 px-4 py-2.5 text-left ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-45"
       aria-label={`${title}. ${statusLabel}. ${meta}`}
     >
       <span
@@ -338,7 +338,7 @@ export function FormSection({
   className,
   presentation = "grouped",
 }: {
-  readonly title: string;
+  readonly title?: string;
   readonly helper?: string;
   readonly action?: React.ReactNode;
   readonly children: React.ReactNode;
@@ -346,26 +346,32 @@ export function FormSection({
   readonly presentation?: Exclude<FormPresentation, "standalone"> | "plain";
 }): React.JSX.Element {
   const grouped = presentation === "grouped";
+  const hasHeader = Boolean(title || helper || action);
+
   return (
     <section className={cx("min-w-0 space-y-2.5", className)}>
-      <div className="flex min-w-0 items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
-            {title}
-          </h3>
-          {helper ? (
-            <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant">
-              {helper}
-            </p>
-          ) : null}
+      {hasHeader ? (
+        <div className="flex min-w-0 items-end justify-between gap-3">
+          <div className="min-w-0">
+            {title ? (
+              <h3 className="truncate text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
+                {title}
+              </h3>
+            ) : null}
+            {helper ? (
+              <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant">
+                {helper}
+              </p>
+            ) : null}
+          </div>
+          {action}
         </div>
-        {action}
-      </div>
+      ) : null}
       <FormPresentationProvider presentation={grouped ? "grouped" : "standalone"}>
         <div
           className={cx(
             grouped
-              ? "min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
+              ? "min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle"
               : "space-y-2.5",
           )}
         >
@@ -383,7 +389,7 @@ export function MicroStatusDock({
 }): React.JSX.Element {
   const visibleItems = items.slice(0, 3);
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-surface-container-low px-3 py-2 text-[10px] leading-4 ring-1 ring-outline-variant/10">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-surface-container-low px-3 py-2 text-[10px] leading-4 ring-1 ring-ring-subtle">
       {visibleItems.map((item, index) => {
         const tone = item.tone ?? "default";
         const renderedValue =
@@ -558,10 +564,10 @@ export function OptionChoiceGroup<TValue extends string>({
               transition={transitionSpringSnappy}
               onClick={() => onChange(option.value)}
               className={cx(
-                "flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-container-lowest px-5 text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                "flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-container-lowest px-5 text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
                 selected
                   ? "bg-primary/10 text-primary ring-primary/10"
-                  : "bg-surface-container-low text-on-surface ring-outline-variant/20",
+                  : "bg-surface-container-low text-on-surface ring-ring-control",
               )}
               aria-pressed={selected}
             >
@@ -576,7 +582,7 @@ export function OptionChoiceGroup<TValue extends string>({
               <span
                 className={cx(
                   "h-4 w-4 shrink-0 rounded-full ring-2 ring-inset",
-                  selected ? "bg-primary ring-primary" : "ring-outline-variant",
+                  selected ? "bg-primary ring-primary" : "ring-ring-control",
                 )}
                 aria-hidden="true"
               />

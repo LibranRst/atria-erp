@@ -67,7 +67,7 @@ export function RabClientSummaryPanel({
     rabEstimate.bundles.filter((bundle) => !bundle.isHidden).length;
 
   return (
-    <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
+    <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">

@@ -75,6 +75,7 @@ export function MaterialsControlCenter({
     emergencyOverride,
     message,
     movements,
+    movementsHasMore,
     newLocationName,
     adjustDirection,
     setDetailMaterialId,
@@ -159,7 +160,7 @@ export function MaterialsControlCenter({
   const shortageCount = data.shortages.filter((row) => row.needToBuy > 0).length;
 
   return (
-    <section className="space-y-lg pb-8 select-none max-[430px]:space-y-5 max-[430px]:pb-6">
+    <section className="space-y-sm pb-8 select-none max-[430px]:pb-6">
       <header className="space-y-2 px-1">
         <PageHeader
           eyebrow="Kontrol material"
@@ -229,7 +230,7 @@ export function MaterialsControlCenter({
           activityLocationOptions={activityLocationOptions}
           visibleReceipts={visibleReceipts}
           visibleMovements={visibleMovements}
-          movementsLength={movements.length}
+          movementsHasMore={movementsHasMore}
           transfers={data.transfers}
           counts={data.counts}
           pending={pending}

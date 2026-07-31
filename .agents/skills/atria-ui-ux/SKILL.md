@@ -35,7 +35,7 @@ Dashboard and the approved forms are taste references, not universal layouts. Re
 Before implementation, state:
 
 - the information hierarchy;
-- the focal, grouped, identity, inline, and state surfaces required;
+- the focal, grouped, decision, identity, inline, state, and inset metric surfaces required;
 - the row and financial-value patterns;
 - empty, loading, error, restricted, partial/stale, pending, success, and failure behavior relevant to the flow;
 - the motion decision, including `no animation` where stability is preferable.
@@ -46,10 +46,20 @@ Do not invent a focal summary, chart, card, progress indicator, or animation whe
 
 - Keep the fixed `max-w-md` shell one column at all viewport sizes.
 - Use at most one justified focal summary.
-- Put related repeated rows on one soft grouped surface with dividers.
-- Preserve cards for independent interactive or identity units such as configured bank accounts.
+- Put simple related rows on one soft grouped surface with dividers.
+- Use a decision item when one entity is independently actionable and needs internal comparison. It may contain one compact neutral inset grid of 2–3 comparable values.
+- Treat inset metric cells as contents of their owning surface: no independent shadow or elevation, quiet radius, and semantic tone on the value, icon, or status by default.
+- Use semantic surface, ring, focus-ring, and shadow utilities from `app/globals.css` and
+  `CONTROL_LANGUAGE.md`. Never add warm neutral values, raw neutral palette utilities, arbitrary
+  Tailwind shadows, `ring-black/*`, raw `box-shadow`, or component-local focus-ring colors.
+- Use the global main-surface primitives from `components/ui/feedback/` for summary, grouped,
+  section-header, detail-section, row-group, summary-fact, and inline-state contracts. Do not add a
+  feature-prefixed duplicate when the semantics match.
+- Preserve standalone cards for focal, decision, interactive, or identity units such as configured bank accounts.
 - Use `MoneyValue`, tabular numerals, compact primary amounts, and exact supporting amounts. Never wrap a primary financial value at supported widths.
 - Use `SegmentedTabs` for genuine peer views or filters. Keep tab content replacement instant and the document position stable.
+- Use `SectionCountPill` for a cardinal item/workload total in a section header. Keep status,
+  dates, periods, ratios/progress, and descriptive context as plain metadata.
 - Use structural skeletons matching the final hierarchy.
 - Keep visible controls compact while preserving a 48x48px effective target, keyboard focus, screen-reader names, and safe-area clearance.
 
@@ -77,6 +87,8 @@ For a main page, form, or overlay, verify 320, 360, 390, and 430px. For a micro-
 Confirm:
 
 - no horizontal overflow or wrapped primary amounts;
+- no wrapping, competing elevation, or more than three equal-weight cells in an inset metric row;
+- no warm neutral undertone, arbitrary shadow recipe, local focus-ring color, or nested elevation;
 - stable document position when tabs or filters change;
 - skeleton-to-content stability;
 - relevant runtime states;
@@ -88,7 +100,9 @@ In the handoff, report the visual references used, widths and states checked, an
 ## Non-Negotiable Anti-Patterns
 
 - Generic admin dashboard composition or spreadsheet-like mobile UI
-- Identical cards, pills, or progress bars repeated under every section
+- Elevated standalone cards, pills, or progress bars repeated under every section
+- Tonal or rainbow inset metric cells without a whole-cell semantic reason
+- Inset metric grids used for activity, history, transactions, or simple title/meta/value rows
 - Nested capsules for ordinary grouped rows
 - Decorative gradients, glass, blur, charts, rails, or animation
 - Oversized mobile typography, spacing, tabs, or controls

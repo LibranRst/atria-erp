@@ -1,8 +1,6 @@
 "use client";
 
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import { cx } from "@/components/ui/form/form-control-utils";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { calculateStockImpact } from "@/features/materials/utils/material-ui-utils";
 
 export function StockImpactRow({
@@ -32,7 +30,7 @@ export function StockImpactRow({
       : `${normalizedDelta > 0 ? "+" : ""}${quantity(normalizedDelta)}`;
 
   return (
-    <section className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+    <section className="overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
       <div className="flex min-h-12 items-center justify-between gap-3 px-4 py-2.5">
         <p className="min-w-0 truncate text-xs font-bold text-on-surface">{label}</p>
         <p
@@ -58,7 +56,7 @@ export function StockImpactRow({
           </p>
         </div>
         <span
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-sm text-on-surface-variant ring-1 ring-outline-variant/15"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-sm text-on-surface-variant ring-1 ring-ring-subtle"
           aria-hidden="true"
         >
           →
@@ -91,4 +89,3 @@ export function StockImpactRow({
     </section>
   );
 }
-

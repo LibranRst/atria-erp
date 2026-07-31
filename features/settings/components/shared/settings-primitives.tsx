@@ -43,29 +43,13 @@ export function SettingsModuleHeader({
           onClick={onAction}
           whileTap={reduceMotion ? undefined : { scale: 0.96 }}
           transition={transitionSpringSnappy}
-          className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-accent/30 active:bg-accent/[0.14] disabled:opacity-35"
+          className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-35"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           {actionLabel}
         </motion.button>
       ) : null}
     </header>
-  );
-}
-
-export function SettingsGroupSurface({
-  children,
-  className = "",
-}: {
-  readonly children: React.ReactNode;
-  readonly className?: string;
-}): React.JSX.Element {
-  return (
-    <div
-      className={`overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl ${className}`}
-    >
-      {children}
-    </div>
   );
 }
 
@@ -79,8 +63,22 @@ export function SettingsStatusLabel({
   readonly className?: string;
 }): React.JSX.Element {
   const badgeTone: StatusBadgeTone =
-    tone === "positive" ? "healthy" : tone === "warning" ? "warning" : tone === "critical" ? "critical" : tone === "inactive" ? "inactive" : "neutral";
-  return <StatusBadge className={`${tone === "inverse" ? "bg-white/10 text-white/70" : ""} ${className ?? ""}`} tone={badgeTone} label={label} />;
+    tone === "positive"
+      ? "healthy"
+      : tone === "warning"
+        ? "warning"
+        : tone === "critical"
+          ? "critical"
+          : tone === "inactive"
+            ? "inactive"
+            : "neutral";
+  return (
+    <StatusBadge
+      className={`${tone === "inverse" ? "bg-white/10 text-white/70" : ""} ${className ?? ""}`}
+      tone={badgeTone}
+      label={label}
+    />
+  );
 }
 
 export function SettingsRowChevron(): React.JSX.Element {

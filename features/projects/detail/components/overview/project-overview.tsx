@@ -15,6 +15,7 @@ import type { DashboardTone } from "@/features/finance-dashboard/types/dashboard
 import { categoryTab, statusTone } from "../../utils/project-overview-utils";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { AppIcon } from "@/components/ui/icon/app-icon";
+import { cn } from "@/lib/utils/cn";
 export { ProjectIdentityHeader } from "./project-identity-header";
 
 export type ProjectOverviewTab = "rab" | "rap" | "stok" | "expenses" | "payments" | "profitability";
@@ -59,7 +60,7 @@ function SectionHeading({
   readonly supporting?: string;
 }): React.JSX.Element {
   return (
-    <header className="px-1">
+    <header className="px-1 pt-2">
       <h2 className="text-[17px] leading-6 font-semibold text-on-surface">{title}</h2>
       {supporting ? (
         <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">{supporting}</p>
@@ -133,9 +134,9 @@ export function ProjectOverview({
   }
 
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
+    <div className="space-y-sm">
       {!budget ? (
-        <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.14)] max-[430px]:p-4">
+        <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
           <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
             Posisi proyek
           </p>
@@ -154,7 +155,7 @@ export function ProjectOverview({
           </button>
         </section>
       ) : (
-        <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-[0_16px_38px_rgba(17,17,17,0.14)] max-[430px]:p-4">
+        <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
@@ -180,10 +181,10 @@ export function ProjectOverview({
             tone={remaining < 0 ? "critical" : used >= 80 ? "warning" : "positive"}
           />
 
-          <div className="mt-4 grid grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-4">
+          <div className="mt-1 flex flex-row gap-3">
             <FinancialFact label="Nilai proyek" amount={budget.contractValue} />
-            <FinancialFact label="Budget" amount={budget.internalBudget} align="center" />
-            <FinancialFact label="Realisasi" amount={budget.actualCost} align="right" />
+            <FinancialFact label="Budget" amount={budget.internalBudget} />
+            <FinancialFact label="Realisasi" amount={budget.actualCost} />
           </div>
           <div className="mt-3 flex items-center justify-between rounded-[18px] bg-white/[0.07] px-3 py-2.5">
             <span className="text-[10px] font-semibold text-white/60">Margin proyeksi</span>
@@ -201,7 +202,7 @@ export function ProjectOverview({
           title="Kesiapan proyek"
           supporting="Status dasar sebelum pekerjaan dan transaksi dilanjutkan."
         />
-        <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+        <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
           {readiness.map((item, index) => (
             <button
               key={item.id}
@@ -253,12 +254,12 @@ export function ProjectOverview({
           }
         />
         {actions.length === 0 ? (
-          <div className="rounded-[22px] bg-white px-4 py-4 text-xs font-medium text-primary shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
+          <div className="rounded-[22px] bg-white px-4 py-4 text-xs font-medium text-primary shadow-surface">
             <AppIcon name="check_circle" className="mr-2 align-middle text-[18px]" />
             Proyek berjalan tanpa blocker aktif.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+          <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
             {actions.slice(0, 3).map((action, index) => (
               <button
                 key={action.id}
@@ -312,7 +313,7 @@ export function ProjectOverview({
               </button>
             ) : null}
           </div>
-          <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+          <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
             {budget.categories.map((category, index) => (
               <button
                 key={category.id}
@@ -383,7 +384,7 @@ export function ProjectOverview({
         }
       >
         {selectedCategory ? (
-          <div className="overflow-hidden rounded-[22px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.04)] ring-1 ring-black/2.5">
+          <div className="overflow-hidden rounded-[22px] bg-white shadow-surface ring-1 ring-ring-subtle">
             <DetailMoneyRow label="Budget" amount={selectedCategory.allocatedAmount} />
             <DetailMoneyRow label="Realisasi" amount={selectedCategory.actualAmount} />
             <DetailMoneyRow label="Menunggu" amount={selectedCategory.pendingAmount} />
@@ -491,15 +492,17 @@ function FinancialFact({
   readonly amount: number;
   readonly align?: "left" | "center" | "right";
 }): React.JSX.Element {
-  const alignClass =
-    align === "center"
-      ? "px-2 text-center"
-      : align === "right"
-        ? "pl-2 text-right"
-        : "pr-2 text-left";
+  const alignClass = align === "right" ? "pl-2 text-right" : "pr-2 text-left";
   return (
-    <div className={`min-w-0 ${alignClass}`}>
-      <p className="truncate text-[8px] font-bold tracking-wide text-white/50 uppercase">{label}</p>
+    <div
+      className={cn(
+        "flex w-full min-w-0 flex-col gap-2 rounded-2xl bg-white/[0.07] p-3",
+        alignClass,
+      )}
+    >
+      <p className="truncate text-[8px] leading-none font-bold tracking-wide text-white/50 uppercase">
+        {label}
+      </p>
       <MoneyValue
         amount={amount}
         variant="compactWithFull"

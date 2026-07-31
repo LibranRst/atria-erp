@@ -1,20 +1,13 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  text,
-  timestamp,
-  boolean,
-  numeric,
-  integer,
-  jsonb,
-  index,
-  uniqueIndex,
-  type AnyPgColumn,
-} from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { budgetAllocationSetting, formDraft, project, projectBudget } from "./projects";
-import { bankStatementImport, cashTransaction, clientPayment, projectCost, vendorPayment } from "./finance";
+import {
+  bankStatementImport,
+  cashTransaction,
+  clientPayment,
+  projectCost,
+  vendorPayment,
+} from "./finance";
 import { itemPriceLibrary } from "./materials";
 import { aiRun, appConfig, approval, attachment, auditLog, notification } from "./system";
 
@@ -31,8 +24,6 @@ export const role = pgTable("role", {
 export const roleRelations = relations(role, ({ many }) => ({
   users: many(user),
 }));
-
-
 
 // ==========================================
 // // 2. Pengguna (User)
@@ -85,8 +76,6 @@ export const userRelations = relations(user, ({ one, many }) => ({
   formDrafts: many(formDraft),
 }));
 
-
-
 // ==========================================
 // // 24. Sesi Better Auth (Session)
 // ==========================================
@@ -126,8 +115,6 @@ export const sessionRelations = relations(session, ({ one }) => ({
   }),
 }));
 
-
-
 // ==========================================
 // // 25. Akun Better Auth (Account)
 // ==========================================
@@ -157,8 +144,6 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
 }));
 
-
-
 // ==========================================
 // // 26. Verifikasi Better Auth (Verification)
 // ==========================================
@@ -174,4 +159,3 @@ export const verification = pgTable(
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
-

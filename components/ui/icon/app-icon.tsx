@@ -22,6 +22,7 @@ const componentNameByLegacyName = {
   arrow_downward: "ArrowDownIcon",
   arrow_forward: "ArrowRightIcon",
   arrow_upward: "ArrowUpIcon",
+  assignment_late: "ClipboardTextIcon",
   cancel: "XCircleIcon",
   category: "TagIcon",
   check: "CheckIcon",

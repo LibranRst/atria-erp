@@ -163,7 +163,7 @@ export function SegmentedTabs<TValue extends string>({
           }
           onChange(option.value);
         }}
-        className={`relative flex items-center justify-center rounded-full font-bold outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-40 ${option.unavailable ? "opacity-45" : ""} ${compact ? "h-10 min-h-10 gap-1 px-3 py-1.5 text-[11px] after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']" : "min-h-12 gap-1.5 py-2 text-xs"} ${animated ? "transition-colors active:scale-[0.98]" : ""} ${
+        className={`relative flex items-center justify-center rounded-full font-bold outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40 ${option.unavailable ? "opacity-45" : ""} ${compact ? "h-10 min-h-10 gap-1 px-3 py-1.5 text-[11px] after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']" : "min-h-12 gap-1.5 py-2 text-xs"} ${animated ? "transition-colors active:scale-[0.98]" : ""} ${
           scrollable
             ? fillAvailableSpace
               ? compact
@@ -217,7 +217,7 @@ export function SegmentedTabs<TValue extends string>({
               initial={false}
               animate={indicatorMetrics}
               transition={reduceMotion || !animated ? { duration: 0 } : transitionSpringBouncy}
-              className="pointer-events-none absolute inset-y-0 rounded-full bg-primary shadow-sm"
+              className="pointer-events-none absolute inset-y-0 rounded-full bg-primary shadow-control"
               aria-hidden="true"
             />
             {tabButtons}
@@ -240,7 +240,7 @@ export function SegmentedTabs<TValue extends string>({
           initial={false}
           animate={indicatorMetrics}
           transition={reduceMotion || !animated ? { duration: 0 } : transitionSpringBouncy}
-          className="pointer-events-none absolute inset-y-1 rounded-full bg-primary shadow-sm"
+          className="pointer-events-none absolute inset-y-1 rounded-full bg-primary shadow-control"
           aria-hidden="true"
         />
         {tabButtons}

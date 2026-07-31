@@ -15,7 +15,7 @@ export function LockedTabState({
   onAction,
 }: LockedTabStateProps): React.JSX.Element {
   return (
-    <section className="rounded-3xl bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/2.5">
+    <section className="rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant">
           <AppIcon name="lock" className="text-[20px] text-on-surface-variant/80" />
@@ -51,7 +51,7 @@ interface RabPrerequisiteStateProps {
 
 export function RabPrerequisiteState({ onGoToRap }: RabPrerequisiteStateProps): React.JSX.Element {
   return (
-    <section className="rounded-3xl bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/2.5">
+    <section className="rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-on-primary">
           <AppIcon name="architecture" className="text-[20px]" />

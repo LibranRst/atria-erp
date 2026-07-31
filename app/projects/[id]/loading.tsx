@@ -42,7 +42,7 @@ export default function ProjectDetailLoading(): React.JSX.Element {
       {["readiness", "actions"].map((section) => (
         <section key={section} className="space-y-2.5">
           <SkeletonLine className="h-5 w-32" />
-          <div className="overflow-hidden rounded-3xl bg-white px-4 shadow-[0_12px_30px_rgba(17,17,17,0.04)]">
+          <div className="overflow-hidden rounded-3xl bg-white px-4 shadow-surface">
             {["one", "two", "three"].map((row, index) => (
               <div
                 key={row}

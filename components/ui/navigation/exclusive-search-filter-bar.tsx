@@ -91,7 +91,7 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
         initial={false}
         animate={{ width: mode === "search" ? "100%" : 48 }}
         transition={layoutTransition}
-        className="absolute inset-y-0 right-0 z-10 overflow-hidden rounded-full bg-white/96 shadow-[0_8px_22px_rgba(17,17,17,0.055)] ring-1 ring-black/4 focus-within:ring-2 focus-within:ring-primary/20"
+        className="absolute inset-y-0 right-0 z-10 overflow-hidden rounded-full bg-white/96 shadow-surface ring-1 ring-ring-subtle focus-within:ring-2 focus-within:ring-focus-ring"
       >
         <AnimatePresence initial={false} mode="sync">
           {mode === "filter" ? (
@@ -104,7 +104,7 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
               onClick={() => onModeChange("search")}
               whileTap={reduceMotion ? undefined : { scale: 0.96 }}
               transition={transitionSpringSnappy}
-              className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-full text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-full text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
               aria-label={`Buka ${searchAriaLabel.toLowerCase()}`}
             >
               <Search className="h-4.5 w-4.5" aria-hidden="true" />
@@ -136,7 +136,7 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
                 onClick={closeSearch}
                 whileTap={reduceMotion ? undefined : { scale: 0.94 }}
                 transition={transitionSpringSnappy}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant outline-none focus-visible:bg-surface-container focus-visible:ring-2 focus-visible:ring-primary/25"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant outline-none focus-visible:bg-surface-container focus-visible:ring-2 focus-visible:ring-focus-ring"
                 aria-label="Tutup pencarian"
               >
                 <X className="h-4 w-4" aria-hidden="true" />

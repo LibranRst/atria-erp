@@ -3,6 +3,7 @@
 import React from "react";
 
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { cn } from "@/lib/utils/cn";
 
 export function ProfitProjectionSection({
   contractValue,
@@ -19,7 +20,7 @@ export function ProfitProjectionSection({
 }): React.JSX.Element {
   const risky = projectedGrossProfit < 0 || projectedGrossMargin < 10;
   return (
-    <section className="rounded-[28px] bg-primary p-5 text-white shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
+    <section className="rounded-[28px] bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
@@ -42,15 +43,10 @@ export function ProfitProjectionSection({
           {projectedGrossMargin.toFixed(1)}%
         </span>
       </div>
-      <div className="mt-4 grid grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-4">
+      <div className="mt-2 flex flex-row gap-3">
         <MarginFact label="Kontrak" amount={contractValue} />
-        <MarginFact label="Plafon" amount={totalAllocated} align="center" />
-        <MarginFact
-          label="Sisa plafon"
-          amount={totalRemaining}
-          align="right"
-          danger={totalRemaining < 0}
-        />
+        <MarginFact label="Plafon" amount={totalAllocated} />
+        <MarginFact label="Sisa plafon" amount={totalRemaining} danger={totalRemaining < 0} />
       </div>
       <div className="mt-3 rounded-[18px] bg-white/[0.07] px-3 py-2.5 text-[10px] leading-4 text-white/65">
         {risky
@@ -78,7 +74,7 @@ export function CashRealizationSection({
           Dana klien yang diterima dibanding pengeluaran kas proyek.
         </p>
       </header>
-      <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+      <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
         <CashRow label="Dana diterima" amount={totalReceived} />
         <CashRow label="Pengeluaran kas" amount={totalSpent} />
         <CashRow label="Posisi kas bersih" amount={cashPosition} strong danger={cashPosition < 0} />
@@ -101,11 +97,12 @@ function MarginFact({
   readonly align?: "left" | "center" | "right";
   readonly danger?: boolean;
 }): React.JSX.Element {
-  const className =
-    align === "center" ? "px-2 text-center" : align === "right" ? "pl-2 text-right" : "pr-2";
+  const className = align === "right" ? "pl-2 text-right" : "pr-2";
   return (
-    <div className={className}>
-      <p className="truncate text-[8px] font-bold tracking-wide text-white/50 uppercase">{label}</p>
+    <div className={cn("flex w-full flex-col gap-2 rounded-2xl bg-white/7.5 p-3", className)}>
+      <p className="truncate text-[8px] leading-none font-bold tracking-wide text-white/50 uppercase">
+        {label}
+      </p>
       <MoneyValue
         amount={amount}
         variant="compactWithFull"
@@ -130,7 +127,10 @@ function CashRow({
 }): React.JSX.Element {
   return (
     <div
-      className={`flex min-h-16 items-center justify-between gap-3 border-t border-outline-variant/20 px-4 py-3 first:border-t-0 ${strong ? "bg-surface-container-low/65" : ""}`}
+      className={cn(
+        "flex min-h-16 items-center justify-between gap-3 border-t border-outline-variant/20 px-4 py-3 first:border-t-0",
+        strong ? "mx-3 mt-1 mb-3 min-h-0 rounded-2xl border-t-0 bg-surface-container-low p-3" : "",
+      )}
     >
       <span
         className={`text-xs ${strong ? "font-bold text-on-surface" : "font-semibold text-on-surface-variant"}`}

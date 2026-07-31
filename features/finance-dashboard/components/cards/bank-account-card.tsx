@@ -21,7 +21,7 @@ export function BankAccountCard({
 
   const content = full ? (
     <div
-      className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 text-left shadow-[0_3px_6px_rgba(17,17,17,0.08),0_18px_42px_rgba(17,17,17,0.13)] ring-1 ${textClass} ${inactiveClass} ${account.cardTextColor === "dark" ? "ring-black/[0.07]" : "ring-white/16"}`}
+      className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 text-left shadow-floating ring-1 ${textClass} ${inactiveClass} ${account.cardTextColor === "dark" ? "ring-ring-subtle" : "ring-white/16"}`}
       style={{
         backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
       }}
@@ -69,7 +69,7 @@ export function BankAccountCard({
     </div>
   ) : (
     <div
-      className={`relative flex min-h-30 w-60 shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl p-4 text-left shadow-[0_12px_28px_rgba(17,17,17,0.04)] transition active:scale-[0.99] ${textClass} ${inactiveClass}`}
+      className={`relative flex min-h-30 w-60 shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl p-4 text-left shadow-surface transition active:scale-[0.99] ${textClass} ${inactiveClass}`}
       style={{
         backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
       }}
@@ -109,7 +109,7 @@ export function BankAccountCard({
     <button
       type="button"
       onClick={() => onSelect(account)}
-      className={`shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+      className={`shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
         full ? "w-full rounded-[28px]" : "rounded-2xl"
       }`}
       aria-label={`Buka rekening ${account.name}`}

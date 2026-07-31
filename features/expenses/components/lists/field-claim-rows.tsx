@@ -5,12 +5,13 @@ import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { ExpensesGroupSurface } from "@/features/expenses/components/shared/expenses-primitives";
+import { GroupedSurface } from "@/components/ui/feedback/main-surface";
 import type { ExpenseCostItem } from "@/features/expenses/types/expense-list-types";
 import { fieldClaimStatusLabel } from "@/features/expenses/utils/expense-list-utils";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import {
   ActivityDetailChevron,
+  type ActivityDetailOpenOptions,
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
 
@@ -52,16 +53,44 @@ export function FieldClaimRow({
   const showBudgetRisk = Boolean(
     cost.budgetItem && (cost.budgetOverrun || utilizationPercent >= 90),
   );
+  const activityDetailOptions: ActivityDetailOpenOptions | undefined =
+    cost.status === "SUBMITTED" && isOwnerOrFinance
+      ? {
+          actions: {
+            primary: {
+              label: "Verifikasi",
+              onClick: () => onVerify(cost),
+            },
+          },
+        }
+      : cost.status === "APPROVED" && isOwnerOrFinance
+        ? {
+            actions: {
+              primary: {
+                label: "Cairkan",
+                onClick: () => onDisburse(cost),
+              },
+            },
+          }
+        : cost.status === "SUBMITTED"
+          ? { footerStatus: { label: "Menunggu verifikasi", tone: "pending" } }
+          : cost.status === "VERIFIED"
+            ? { footerStatus: { label: "Menunggu persetujuan", tone: "pending" } }
+            : cost.status === "APPROVED"
+              ? { footerStatus: { label: "Menunggu pencairan", tone: "pending" } }
+              : undefined;
 
   return (
     <div
       role="button"
       tabIndex={0}
-      onClick={() => openActivityDetail({ kind: "PROJECT_COST", id: cost.id })}
+      onClick={() =>
+        openActivityDetail({ kind: "PROJECT_COST", id: cost.id }, activityDetailOptions)
+      }
       onKeyDown={(event) => {
         if ((event.key === "Enter" || event.key === " ") && event.currentTarget === event.target) {
           event.preventDefault();
-          openActivityDetail({ kind: "PROJECT_COST", id: cost.id });
+          openActivityDetail({ kind: "PROJECT_COST", id: cost.id }, activityDetailOptions);
         }
       }}
       className="min-h-24 px-3 py-3.5 text-left transition-colors outline-none hover:bg-black/1.5 focus-visible:bg-surface-container-low active:bg-surface-container-low/70 max-[430px]:px-2.5"
@@ -71,7 +100,10 @@ export function FieldClaimRow({
         <span
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${cost.status === "APPROVED" ? "bg-success/8 text-success ring-success/6" : "bg-warning/9 text-warning ring-warning/6"}`}
         >
-          <AppIcon name={cost.status === "APPROVED" ? "payments" : "receipt_long"} className="text-[18px] leading-none" />
+          <AppIcon
+            name={cost.status === "APPROVED" ? "payments" : "receipt_long"}
+            className="text-[18px] leading-none"
+          />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
@@ -132,7 +164,7 @@ export function FieldClaimRow({
             disabled={pending}
             whileTap={reduceMotion ? undefined : expenseRowPressScale}
             transition={transitionSpringSnappy}
-            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50"
+            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50"
           >
             <AppIcon name="fact_check" className="text-[14px] leading-none" />
             Verifikasi
@@ -149,7 +181,7 @@ export function FieldClaimRow({
             disabled={pending}
             whileTap={reduceMotion ? undefined : expenseRowPressScale}
             transition={transitionSpringSnappy}
-            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50"
+            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50"
           >
             <AppIcon name="payments" className="text-[14px] leading-none" />
             Cairkan
@@ -182,7 +214,7 @@ export function FieldClaimHistory({
         onClick={() => onExpandedChange(!expanded)}
         whileTap={reduceMotion ? undefined : expenseRowPressScale}
         transition={transitionSpringSnappy}
-        className="flex min-h-12 w-full items-center justify-between rounded-full bg-surface-container-low/70 px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
+        className="flex min-h-12 w-full items-center justify-between rounded-full bg-surface-container-low/70 px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
       >
         <div className="flex min-w-0 items-center gap-2.5">
           <AppIcon name="history" className="text-[18px] leading-none text-on-surface-variant" />
@@ -203,7 +235,7 @@ export function FieldClaimHistory({
       </motion.button>
 
       {expanded && (
-        <ExpensesGroupSurface>
+        <GroupedSurface>
           <div className="divide-y divide-black/5.5">
             {historyCosts.map((cost) => (
               <CompactClaimRow
@@ -214,7 +246,7 @@ export function FieldClaimHistory({
               />
             ))}
           </div>
-        </ExpensesGroupSurface>
+        </GroupedSurface>
       )}
     </div>
   );
@@ -295,7 +327,10 @@ function StatusIcon({ status }: { readonly status: ExpenseCostItem["status"] }):
           : "bg-error-container/20 text-error"
       }`}
     >
-      <AppIcon name={status === "PAID" ? "check_circle" : "cancel"} className="text-[18px] leading-none" />
+      <AppIcon
+        name={status === "PAID" ? "check_circle" : "cancel"}
+        className="text-[18px] leading-none"
+      />
     </div>
   );
 }
@@ -317,7 +352,7 @@ function ReceiptButton({
       }}
       whileTap={reduceMotion ? undefined : expenseRowPressScale}
       transition={transitionSpringSnappy}
-      className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF] outline-none after:absolute after:-inset-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-[#007AFF]/25"
+      className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent outline-none after:absolute after:-inset-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
       title="Lihat Nota"
       aria-label="Lihat nota"
     >

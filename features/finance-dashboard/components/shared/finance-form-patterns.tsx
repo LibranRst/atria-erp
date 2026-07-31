@@ -28,7 +28,7 @@ export function MoneyImpactRow({
   const money = (value: number): string =>
     `Rp ${Math.abs(value).toLocaleString("id-ID", { maximumFractionDigits: 0 })}`;
   return (
-    <div className="rounded-2xl bg-surface-container-low px-4 py-3 ring-1 ring-outline-variant/10">
+    <div className="rounded-2xl bg-surface-container-low px-4 py-3 ring-1 ring-ring-subtle">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-bold text-on-surface">{label}</p>
         <p
@@ -106,7 +106,7 @@ export function FinanceSuccessSheet({
             {success?.description}
           </p>
         </div>
-        <dl className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-white px-4 text-left ring-1 ring-black/[0.035]">
+        <dl className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-white px-4 text-left ring-1 ring-ring-subtle">
           {success?.facts.map((fact) => (
             <div key={fact.label} className="flex items-start justify-between gap-4 py-3.5">
               <dt className="text-xs font-medium text-on-surface-variant">{fact.label}</dt>

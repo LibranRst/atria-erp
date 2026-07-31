@@ -11,10 +11,8 @@ import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
 import type { MaterialLocation } from "@/features/materials/types/material-dashboard-types";
 import { AppIcon } from "@/components/ui/icon/app-icon";
+import { GroupedSurface, InlineStateRow, MainSection } from "@/components/ui/feedback/main-surface";
 import {
-  MaterialGroupSurface,
-  MaterialInlineState,
-  MaterialSection,
   MaterialStatusLabel,
   type MaterialTone,
 } from "@/features/materials/components/shared/material-page-primitives";
@@ -51,7 +49,7 @@ export function MaterialInventoryTab({
   const [mode, setMode] = React.useState<SearchFilterMode>("filter");
 
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
+    <div className="space-y-sm">
       <div className="space-y-2" data-material-controls="inline">
         <ExclusiveSearchFilterBar
           mode={mode}
@@ -94,10 +92,10 @@ export function MaterialInventoryTab({
         ) : null}
       </div>
 
-      <MaterialSection title="Daftar material" meta={`${visibleMaterials.length} material`}>
-        <MaterialGroupSurface>
+      <MainSection title="Daftar material" count={visibleMaterials.length} countLabel="Material">
+        <GroupedSurface>
           {visibleMaterials.length === 0 ? (
-            <MaterialInlineState
+            <InlineStateRow
               icon="search_off"
               title="Material tidak ditemukan"
               description="Ubah kata pencarian, lokasi, atau status stok untuk melihat hasil lain."
@@ -113,8 +111,8 @@ export function MaterialInventoryTab({
               ))}
             </div>
           )}
-        </MaterialGroupSurface>
-      </MaterialSection>
+        </GroupedSurface>
+      </MainSection>
     </div>
   );
 }

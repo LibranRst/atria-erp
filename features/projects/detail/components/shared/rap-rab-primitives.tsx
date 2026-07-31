@@ -16,7 +16,7 @@ export function NativePanel({
   readonly children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <section className="rounded-3xl bg-white p-4 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+    <section className="rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
       <div className="mb-sm flex items-start justify-between gap-3">
         <div className="min-w-0">
           {eyebrow && (

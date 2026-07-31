@@ -8,19 +8,17 @@ import type {
 } from "@/app/actions/material/operations-dashboard";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import type { MaterialOperationDecision } from "@/features/materials/types/material-dashboard-types";
-import {
-  MaterialGroupSurface,
-  MaterialInlineState,
-  MaterialSection,
-  MaterialTextAction,
-  type MaterialTone,
-} from "@/features/materials/components/shared/material-page-primitives";
+import { SectionAction } from "@/components/ui/button/button";
+import { GroupedSurface, InlineStateRow, MainSection } from "@/components/ui/feedback/main-surface";
+import type { MaterialTone } from "@/features/materials/components/shared/material-page-primitives";
 import {
   ApprovalRow,
   MovementRow,
 } from "@/features/materials/components/sheets/material-operation-sheets";
 import type { MaterialTab } from "@/features/materials/utils/material-ui-utils";
 import { AppIcon } from "@/components/ui/icon/app-icon";
+import { ActivityDetailSheet } from "@/features/activity-detail/components/activity-detail-sheet";
+import type { ActivityDetailRequest } from "@/lib/activity-detail/types";
 
 type OverviewTabProps = {
   readonly data: MaterialOperationsDashboard;
@@ -43,6 +41,12 @@ type AttentionItem = {
   readonly tab: MaterialTab;
 };
 
+type PendingDecisionDetail = {
+  readonly target: ActivityDetailRequest;
+  readonly approve: MaterialOperationDecision;
+  readonly reject: MaterialOperationDecision;
+};
+
 export function MaterialOverviewTab({
   data,
   totalStockValue,
@@ -53,6 +57,30 @@ export function MaterialOverviewTab({
   onDecision,
   onNavigate,
 }: OverviewTabProps): React.JSX.Element {
+  const [detailTarget, setDetailTarget] = React.useState<ActivityDetailRequest | null>(null);
+  const [presentedDecision, setPresentedDecision] = React.useState<PendingDecisionDetail | null>(
+    null,
+  );
+  const decisionAfterCloseRef = React.useRef<MaterialOperationDecision | null>(null);
+
+  function openDecisionDetail(detail: PendingDecisionDetail): void {
+    decisionAfterCloseRef.current = null;
+    setPresentedDecision(detail);
+    setDetailTarget(detail.target);
+  }
+
+  function requestDecisionFromDetail(decision: MaterialOperationDecision): void {
+    decisionAfterCloseRef.current = decision;
+    setDetailTarget(null);
+  }
+
+  function finishDetailExit(): void {
+    setPresentedDecision(null);
+    const nextDecision = decisionAfterCloseRef.current;
+    decisionAfterCloseRef.current = null;
+    if (nextDecision) onDecision(nextDecision);
+  }
+
   const shortageCount = data.shortages.filter((row) => row.needToBuy > 0).length;
   const reservedValue = Math.max(totalStockValue - availableValue, 0);
   const availableRatio =
@@ -103,9 +131,9 @@ export function MaterialOverviewTab({
   const pendingReceipts = data.receipts.filter((row) => row.status === "REVERSAL_REQUESTED");
 
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
+    <div className="space-y-sm">
       <section
-        className="relative isolate overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-white shadow-[0_2px_4px_rgba(17,17,17,0.12),0_20px_48px_rgba(17,17,17,0.16)] ring-1 ring-white/8 max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
+        className="relative isolate overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-white shadow-floating ring-1 ring-white/8 max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
         aria-label="Posisi stok"
       >
         <span
@@ -157,13 +185,15 @@ export function MaterialOverviewTab({
         </div>
       </section>
 
-      <MaterialSection
+      <MainSection
         title="Perlu perhatian"
-        meta={attention.length > 0 ? `${attention.length} prioritas` : "Terkendali"}
+        count={attention.length > 0 ? attention.length : undefined}
+        countLabel="Prioritas"
+        meta={attention.length === 0 ? "Terkendali" : undefined}
       >
-        <MaterialGroupSurface>
+        <GroupedSurface>
           {attention.length === 0 ? (
-            <MaterialInlineState
+            <InlineStateRow
               icon="check_circle"
               title="Tidak ada perhatian mendesak"
               description="Kebutuhan RAP, batas minimum, dan keputusan stok saat ini terkendali."
@@ -199,18 +229,26 @@ export function MaterialOverviewTab({
               ))}
             </div>
           )}
-        </MaterialGroupSurface>
-      </MaterialSection>
+        </GroupedSurface>
+      </MainSection>
 
       {pendingApprovals > 0 ? (
-        <MaterialSection title="Perlu keputusan" meta={`${pendingApprovals} menunggu`}>
-          <MaterialGroupSurface>
+        <MainSection title="Perlu keputusan" count={pendingApprovals} countLabel="Keputusan">
+          <GroupedSurface>
             <div className="divide-y divide-black/5.5">
               {pendingCounts.map((row) => (
                 <ApprovalRow
                   key={row.id}
                   title={row.countNumber}
                   description={`${row.locationName} · ${row.items.length} material · stock opname`}
+                  detailLabel={`Lihat detail keputusan stock opname ${row.countNumber}`}
+                  onOpen={() =>
+                    openDecisionDetail({
+                      target: { kind: "STOCK_COUNT", id: row.id },
+                      approve: { type: "COUNT_APPROVE", id: row.id },
+                      reject: { type: "COUNT_REJECT", id: row.id },
+                    })
+                  }
                   onApprove={() => onDecision({ type: "COUNT_APPROVE", id: row.id })}
                   onReject={() => onDecision({ type: "COUNT_REJECT", id: row.id })}
                 />
@@ -221,27 +259,35 @@ export function MaterialOverviewTab({
                   title={`Pembatalan ${row.receiptNumber}`}
                   description={`${row.projectName} · penerimaan akan dikembalikan`}
                   amount={row.total}
+                  detailLabel={`Lihat detail keputusan pembatalan ${row.receiptNumber}`}
+                  onOpen={() =>
+                    openDecisionDetail({
+                      target: { kind: "GOODS_RECEIPT", id: row.id },
+                      approve: { type: "RECEIPT_APPROVE", id: row.id },
+                      reject: { type: "RECEIPT_REJECT", id: row.id },
+                    })
+                  }
                   onApprove={() => onDecision({ type: "RECEIPT_APPROVE", id: row.id })}
                   onReject={() => onDecision({ type: "RECEIPT_REJECT", id: row.id })}
                 />
               ))}
             </div>
-          </MaterialGroupSurface>
-        </MaterialSection>
+          </GroupedSurface>
+        </MainSection>
       ) : null}
 
-      <MaterialSection
+      <MainSection
         title="Aktivitas terbaru"
         meta={movements.length > 0 ? `${Math.min(movements.length, 5)} terbaru` : undefined}
         action={
           movements.length > 0 ? (
-            <MaterialTextAction label="Lihat semua" onClick={() => onNavigate("activity")} />
+            <SectionAction label="Lihat semua" onClick={() => onNavigate("activity")} />
           ) : undefined
         }
       >
-        <MaterialGroupSurface>
+        <GroupedSurface>
           {movements.length === 0 ? (
-            <MaterialInlineState
+            <InlineStateRow
               icon="history"
               title="Belum ada pergerakan stok"
               description="Penerimaan, pemakaian, transfer, dan penyesuaian akan muncul di sini."
@@ -253,8 +299,28 @@ export function MaterialOverviewTab({
               ))}
             </div>
           )}
-        </MaterialGroupSurface>
-      </MaterialSection>
+        </GroupedSurface>
+      </MainSection>
+
+      <ActivityDetailSheet
+        target={detailTarget}
+        actions={
+          presentedDecision
+            ? {
+                secondary: {
+                  label: "Tolak",
+                  onClick: () => requestDecisionFromDetail(presentedDecision.reject),
+                },
+                primary: {
+                  label: "Setujui",
+                  onClick: () => requestDecisionFromDetail(presentedDecision.approve),
+                },
+              }
+            : undefined
+        }
+        onClose={() => setDetailTarget(null)}
+        onExitComplete={finishDetailExit}
+      />
     </div>
   );
 }

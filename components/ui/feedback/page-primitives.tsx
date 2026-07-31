@@ -58,7 +58,7 @@ export function NativeSection({
   const hasHeader = Boolean(eyebrow || title || action);
   return (
     <section
-      className={`rounded-[28px] bg-white p-md shadow-[0_14px_34px_rgba(17,17,17,0.045)] ${className}`}
+      className={`rounded-[28px] bg-white p-md shadow-surface ${className}`}
     >
       {hasHeader && (
         <div className="mb-sm flex items-center justify-between gap-3">
@@ -356,8 +356,8 @@ export function PillTabs<TValue extends string>({
             onClick={() => onChange(option.value)}
             className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-[11px] font-bold transition active:scale-95 disabled:opacity-50 ${
               active
-                ? "bg-primary text-on-primary shadow-sm"
-                : "bg-surface-container text-on-surface-variant ring-1 ring-outline-variant/35 hover:text-on-surface"
+                ? "bg-primary text-on-primary shadow-primary"
+                : "bg-surface-container text-on-surface-variant ring-1 ring-ring-control hover:text-on-surface"
             }`}
           >
             {option.icon}
@@ -373,7 +373,7 @@ export function PillTabs<TValue extends string>({
 
   return (
     <div
-      className={`${contained ? "rounded-[28px] bg-white p-2 shadow-[0_14px_34px_rgba(17,17,17,0.045)]" : ""} ${className}`}
+      className={`${contained ? "rounded-[28px] bg-white p-2 shadow-surface" : ""} ${className}`}
       role="group"
       aria-label={ariaLabel}
     >
@@ -397,9 +397,9 @@ export function EmptyState({
 }: EmptyStateProps): JSX.Element {
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-[28px] bg-white px-6 py-14 text-center shadow-[0_14px_34px_rgba(17,17,17,0.045)] ${className}`}
+      className={`flex flex-col items-center justify-center rounded-[28px] bg-white px-6 py-14 text-center shadow-surface ${className}`}
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-surface-container-low text-on-surface-variant shadow-sm">
+      <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-surface-container-low text-on-surface-variant shadow-control">
         <AppIcon name={icon} className="text-[28px]" />
       </div>
       <h3 className="mt-5 text-lg leading-6 font-semibold text-on-surface">{title}</h3>

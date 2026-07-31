@@ -2,7 +2,6 @@
 
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 import {
@@ -12,31 +11,20 @@ import {
   submitExpenseDraft,
   type ExpenseDraftSummary,
 } from "@/app/actions/finance/expense-drafts";
-import {
-  ConfirmationModal,
-  ConfirmationSheet,
-  FormRiskNotice,
-  FormSection,
-  SheetSelect,
-  WorkflowFormSheet,
-} from "@/components/ui";
-import {
-  FinanceSuccessSheet,
-  FinanceUnsavedChangesModal,
-  type FinanceOperationSuccess,
-} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
-import { ExpenseItemsSection } from "@/features/expenses/components/forms/expense-form-sections";
+import { WorkflowFormSheet } from "@/components/ui";
+import type { FinanceOperationSuccess } from "@/features/finance-dashboard/components/shared/finance-form-patterns";
 import { ExpenseFormNotice } from "@/features/expenses/components/forms/expense-form-sections";
-import { ExpenseReceiptUpload } from "@/features/expenses/components/forms/expense-receipt-upload";
+import { ExpenseActiveDrafts } from "@/features/expenses/components/forms/expense-active-drafts";
+import { ExpenseFormEntryFields } from "@/features/expenses/components/forms/expense-form-entry-fields";
+import { ExpenseFormReview } from "@/features/expenses/components/forms/expense-form-review";
+import { ExpenseFormOverlays } from "@/features/expenses/components/forms/expense-form-overlays";
 import type {
   ExpenseDraftPayload,
   ExpenseFormProject,
-  ExpenseLine,
   InventoryLocationOption,
 } from "@/features/expenses/types/expense-form-types";
 import {
   createBlankExpenseDraft,
-  createBlankExpenseLine,
   isExpenseLineComplete,
   mergeExpenseLines,
   STOCK_HANDLING_OPTIONS,
@@ -46,10 +34,15 @@ import {
   type ExpenseReceiptOcrResult,
 } from "@/features/expenses/utils/expense-receipt-ocr";
 import { useHybridExpenseDraft } from "@/features/expenses/hooks/use-hybrid-expense-draft";
-import { createClientId } from "@/lib/utils/client-id";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { useExpenseLineMutations } from "@/features/expenses/hooks/use-expense-line-mutations";
+import {
+  getLastExpenseProject,
+  getServerLastExpenseProject,
+  hasMeaningfulLine,
+  routeProjectId,
+  subscribeLastExpenseProject,
+} from "@/features/expenses/utils/expense-form-local-utils";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export type { ExpenseFormProject } from "@/features/expenses/types/expense-form-types";
 
@@ -59,35 +52,6 @@ interface ExpenseFormProps {
   readonly projects: ExpenseFormProject[];
   readonly inventoryLocations?: InventoryLocationOption[];
   readonly requestedDraftId?: string | null;
-}
-
-function routeProjectId(pathname: string): string {
-  const parts = pathname.split("/");
-  const projectIndex = parts.indexOf("projects");
-  return projectIndex >= 0 ? (parts[projectIndex + 1] ?? "") : "";
-}
-
-function hasMeaningfulLine(line: ExpenseLine): boolean {
-  return Boolean(
-    line.projectBudgetCategoryId || line.description.trim() || Number(line.amount) > 0,
-  );
-}
-
-function subscribeLastExpenseProject(onChange: () => void): () => void {
-  window.addEventListener("storage", onChange);
-  window.addEventListener("atria:last-expense-project-changed", onChange);
-  return () => {
-    window.removeEventListener("storage", onChange);
-    window.removeEventListener("atria:last-expense-project-changed", onChange);
-  };
-}
-
-function getLastExpenseProject(): string {
-  return window.localStorage.getItem("atria:last-expense-project") ?? "";
-}
-
-function getServerLastExpenseProject(): string {
-  return "";
 }
 
 export function ExpenseForm({
@@ -194,6 +158,8 @@ export function ExpenseForm({
       disabledReason: approved ? undefined : "Setujui budget proyek sebelum mencatat pengeluaran.",
     };
   });
+  const { updateLine, addLine, duplicateLine, removeLine, restoreLine, moveLine } =
+    useExpenseLineMutations({ budgetCategories, updatePayload });
 
   function closeForm(): void {
     if (onClose) {
@@ -253,59 +219,6 @@ export function ExpenseForm({
       return;
     }
     applyProjectChange(projectId);
-  }
-
-  function updateLine(nextLine: ExpenseLine): void {
-    updatePayload((current) => ({
-      ...current,
-      lines: current.lines.map((line) => (line.key === nextLine.key ? nextLine : line)),
-    }));
-  }
-
-  function addLine(): void {
-    const nextLine = createBlankExpenseLine();
-    const firstCategory = budgetCategories[0];
-    if (firstCategory) nextLine.projectBudgetCategoryId = firstCategory.id;
-    updatePayload((current) => ({ ...current, lines: [...current.lines, nextLine] }));
-  }
-
-  function duplicateLine(key: string): void {
-    updatePayload((current) => {
-      const index = current.lines.findIndex((line) => line.key === key);
-      if (index < 0) return current;
-      const source = current.lines[index];
-      const copy = { ...source, key: createClientId("expense-line") };
-      const lines = [...current.lines];
-      lines.splice(index + 1, 0, copy);
-      return { ...current, lines };
-    });
-  }
-
-  function removeLine(key: string): void {
-    updatePayload((current) => ({
-      ...current,
-      lines: current.lines.filter((line) => line.key !== key),
-    }));
-  }
-
-  function restoreLine(line: ExpenseLine, index: number): void {
-    updatePayload((current) => {
-      const lines = [...current.lines];
-      lines.splice(Math.min(index, lines.length), 0, line);
-      return { ...current, lines };
-    });
-  }
-
-  function moveLine(key: string, direction: -1 | 1): void {
-    updatePayload((current) => {
-      const from = current.lines.findIndex((line) => line.key === key);
-      const to = from + direction;
-      if (from < 0 || to < 0 || to >= current.lines.length) return current;
-      const lines = [...current.lines];
-      const [moved] = lines.splice(from, 1);
-      lines.splice(to, 0, moved);
-      return { ...current, lines };
-    });
   }
 
   async function loadDraft(id: string): Promise<void> {
@@ -568,69 +481,16 @@ export function ExpenseForm({
           ) : null}
 
           {reviewOpen ? (
-            <div className="space-y-4">
-              <FormSection
-                title="Ringkasan pengeluaran"
-                helper="Periksa kembali proyek, dokumen, dan perlakuan stok sebelum mengajukan."
-              >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <ReviewFact label="Proyek" value={selectedProject?.name ?? "–"} />
-                  <ReviewFact
-                    label="Dokumen"
-                    value={draft.payload.receipt ? draft.payload.receipt.fileName : "Tanpa nota"}
-                  />
-                  <ReviewFact
-                    label="Perubahan Stok"
-                    value={
-                      stockLines.length === 0
-                        ? "Tidak ada perubahan stok"
-                        : stockLines
-                            .map(
-                              (line) =>
-                                STOCK_HANDLING_OPTIONS.find(
-                                  (option) => option.value === line.stockHandling,
-                                )?.label ?? line.stockHandling,
-                            )
-                            .join(" · ")
-                    }
-                  />
-                  <ReviewFact
-                    label="Langkah Berikutnya"
-                    value="Finance memverifikasi, lalu approval mengikuti aturan budget proyek."
-                  />
-                </div>
-              </FormSection>
-
-              {categorySummaries.length > 0 && (
-                <FormSection
-                  title="Dampak Budget"
-                  helper="Kondisi overbudget akan mengharuskan persetujuan khusus Owner."
-                >
-                  <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                    {categorySummaries.map(({ category, amount }) => {
-                      const before = Number(category.remainingAmount);
-                      const after = before - amount;
-                      return (
-                        <div key={category.id} className="px-4 py-3 text-xs">
-                          <div className="flex items-center justify-between gap-3 font-semibold">
-                            <span className="text-on-surface">{category.name}</span>
-                            <span className="font-bold text-primary tabular-nums">
-                              Rp {amount.toLocaleString("id-ID")}
-                            </span>
-                          </div>
-                          <p
-                            className={`mt-1 text-[11px] font-medium ${after < 0 ? "font-bold text-error" : "text-on-surface-variant"}`}
-                          >
-                            Sisa: Rp {before.toLocaleString("id-ID")} → Rp{" "}
-                            {after.toLocaleString("id-ID")}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </FormSection>
+            <ExpenseFormReview
+              projectName={selectedProject?.name ?? "–"}
+              documentName={draft.payload.receipt?.fileName ?? "Tanpa nota"}
+              stockHandlingLabels={stockLines.map(
+                (line) =>
+                  STOCK_HANDLING_OPTIONS.find((option) => option.value === line.stockHandling)
+                    ?.label ?? line.stockHandling,
               )}
-            </div>
+              categorySummaries={categorySummaries}
+            />
           ) : (
             <>
               {!reviewOpen &&
@@ -638,282 +498,97 @@ export function ExpenseForm({
               !requestedDraftId &&
               !loadedDraftId &&
               !draft.draftId ? (
-                <FormSection
-                  title="Draft aktif"
-                  helper="Lanjutkan pengeluaran yang pernah disimpan."
-                  presentation="plain"
-                >
-                  <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
-                    {drafts.slice(0, 5).map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex min-h-18 min-w-0 items-center gap-1 px-2 py-1.5"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => void loadDraft(item.id)}
-                          className="flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-[18px] px-2.5 py-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent/25 active:bg-surface-container-low"
-                          aria-label={`Lanjutkan draft ${item.projectName}`}
-                        >
-                          <span
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant"
-                            aria-hidden="true"
-                          >
-                            <AppIcon name="edit_note" className="text-[18px] leading-none" />
-                          </span>
-                          <span className="grid min-w-0 flex-1 gap-0.5">
-                            <span className="truncate text-xs leading-[1.15] font-bold text-on-surface">
-                              {item.projectName}
-                            </span>
-                            <span className="truncate text-[10px] leading-[1.2] text-on-surface-variant">
-                              {item.itemCount} item · Rp{" "}
-                              {Number(item.totalAmount || 0).toLocaleString("id-ID")}
-                            </span>
-                            <span className="text-[9px] leading-[1.2] text-on-surface-variant/75">
-                              Disimpan{" "}
-                              {new Date(item.lastSavedAt).toLocaleString("id-ID", {
-                                day: "2-digit",
-                                month: "short",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </span>
-                          </span>
-                          <AppIcon
-                            name="chevron_right"
-                            className="shrink-0 text-[18px] leading-none text-on-surface-variant"
-                          />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPendingDiscardDraftId(item.id)}
-                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-error transition-colors outline-none focus-visible:ring-2 focus-visible:ring-error/25 active:bg-error-container/20"
-                          aria-label={`Buang draft ${item.projectName}`}
-                        >
-                          <AppIcon name="delete" className="text-[18px] leading-none" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </FormSection>
+                <ExpenseActiveDrafts
+                  drafts={drafts}
+                  onLoad={(id) => void loadDraft(id)}
+                  onDiscard={setPendingDiscardDraftId}
+                />
               ) : null}
 
-              <FormSection
-                title="Proyek"
-                helper="Kategori, budget, stok, dan approval mengikuti proyek ini."
-              >
-                <SheetSelect
-                  label="Proyek"
-                  value={draft.payload.projectId}
-                  onChange={requestProjectChange}
-                  options={projectOptions}
-                  placeholder="Pilih proyek aktif"
-                  disabled={busy}
-                  required
-                />
-                {!safeRouteProjectId &&
-                !draft.payload.projectId &&
-                lastProjectSuggestion?.canonicalBudgets?.[0]?.status === "APPROVED" ? (
-                  <motion.button
-                    type="button"
-                    whileTap={{ scale: 0.97 }}
-                    transition={transitionSpringSnappy}
-                    onClick={() => applyProjectChange(lastProjectSuggestion.id)}
-                    className="flex min-h-14 w-full min-w-0 items-center gap-3 bg-surface-container-lowest px-4 py-2.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent/25 focus-visible:ring-inset active:bg-surface-container-low"
-                  >
-                    <span
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant"
-                      aria-hidden="true"
-                    >
-                      <AppIcon name="history" className="text-[18px] leading-none" />
-                    </span>
-                    <span className="grid min-w-0 flex-1 gap-0.5">
-                      <span className="block text-[10px] leading-[1.15] font-semibold text-on-surface-variant">
-                        Proyek terakhir
-                      </span>
-                      <span className="block truncate text-xs leading-[1.15] font-bold text-on-surface">
-                        {lastProjectSuggestion.name}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-[11px] font-bold text-accent">Gunakan</span>
-                  </motion.button>
-                ) : null}
-                {selectedProject && !selectedProjectApproved ? (
-                  <FormRiskNotice title="Budget belum disetujui" tone="warning">
-                    Pengeluaran dapat disiapkan sebagai draft, tetapi belum dapat ditinjau atau
-                    diajukan.
-                  </FormRiskNotice>
-                ) : null}
-              </FormSection>
-
-              <FormSection
-                title="Nota (opsional)"
-                helper="Unggah untuk membaca item otomatis, atau lewati dan isi rincian."
-                presentation="plain"
-              >
-                <ExpenseReceiptUpload
-                  attachment={draft.payload.receipt}
-                  selectedProjectId={draft.payload.projectId}
-                  disabled={busy}
-                  isUploading={uploading}
-                  isProcessingOCR={processingOcr}
-                  uploadError={uploadError}
-                  onSelectFile={(file) => void handleReceipt(file)}
-                  onClearReceipt={() =>
-                    updatePayload((current) => ({
-                      ...current,
-                      inputMode: "MANUAL",
-                      receipt: null,
-                      ocrWarning: null,
-                    }))
-                  }
-                  onValidationError={setUploadError}
-                />
-              </FormSection>
-
-              <FormSection
-                title="Rincian item"
-                helper={`${draft.payload.lines.length - incompleteCount} dari ${draft.payload.lines.length} item sudah lengkap.`}
-                presentation="plain"
-              >
-                <ExpenseItemsSection
-                  disabled={busy}
-                  selectedProjectId={draft.payload.projectId}
-                  lines={draft.payload.lines}
-                  budgetCategories={budgetCategories}
-                  materialOptions={selectedProject?.materialOptions ?? []}
-                  rapItems={selectedProject?.rapItems ?? []}
-                  categoryPlanItems={selectedProject?.categoryPlanItems ?? []}
-                  defaultInventoryLocationId={inventoryLocations[0]?.id ?? ""}
-                  inventoryLocations={inventoryLocations}
-                  onAdd={addLine}
-                  onDuplicate={duplicateLine}
-                  onRemove={removeLine}
-                  onMove={moveLine}
-                  onRestore={restoreLine}
-                  onUpdate={updateLine}
-                />
-              </FormSection>
+              <ExpenseFormEntryFields
+                payload={draft.payload}
+                selectedProject={selectedProject}
+                selectedProjectApproved={selectedProjectApproved}
+                lastProjectSuggestion={lastProjectSuggestion}
+                safeRouteProjectId={safeRouteProjectId}
+                projectOptions={projectOptions}
+                budgetCategories={budgetCategories}
+                inventoryLocations={inventoryLocations}
+                incompleteCount={incompleteCount}
+                busy={busy}
+                uploading={uploading}
+                processingOcr={processingOcr}
+                uploadError={uploadError}
+                onProjectChange={requestProjectChange}
+                onUseLastProject={applyProjectChange}
+                onSelectReceipt={(file) => void handleReceipt(file)}
+                onClearReceipt={() =>
+                  updatePayload((current) => ({
+                    ...current,
+                    inputMode: "MANUAL",
+                    receipt: null,
+                    ocrWarning: null,
+                  }))
+                }
+                onUploadError={setUploadError}
+                onAddLine={addLine}
+                onDuplicateLine={duplicateLine}
+                onRemoveLine={removeLine}
+                onMoveLine={moveLine}
+                onRestoreLine={restoreLine}
+                onUpdateLine={updateLine}
+              />
             </>
           )}
         </div>
       </WorkflowFormSheet>
 
-      <FinanceUnsavedChangesModal
-        open={closeGuardOpen}
-        pending={discarding || draft.status === "saving"}
-        onKeep={() => void saveAndClose()}
-        onDiscard={() => void discardAndClose()}
-        onContinue={() => setCloseGuardOpen(false)}
-      />
-
-      <ConfirmationModal
-        open={conflictOpen}
-        title="Draft Berubah"
-        description="Draft ini diperbarui dari sesi lain. Muat versi server atau pertahankan isian lokal sebagai draft terpisah."
-        tone="warning"
-        onClose={() => setConflictOpen(false)}
-        actions={
-          <div className="space-y-2">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => void saveConflictCopy()}
-              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white"
-            >
-              Simpan sebagai Draft Baru
-            </motion.button>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => void loadServerVersion()}
-              className="min-h-12 w-full rounded-full bg-surface-container px-5 text-xs font-bold text-on-surface"
-            >
-              Muat Versi Server
-            </motion.button>
-          </div>
-        }
-      />
-
-      <ConfirmationModal
-        open={pendingOcr !== null}
-        title="Gabungkan Hasil Scan"
-        description={`${pendingOcr?.lines.length ?? 0} item terdeteksi. Item yang sudah Anda isi tidak akan diubah tanpa pilihan eksplisit.`}
-        onClose={() => setPendingOcr(null)}
-        actions={
-          <div className="space-y-2">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => {
-                if (!pendingOcr) return;
-                updatePayload((current) => ({
-                  ...current,
-                  lines: mergeExpenseLines(current.lines, pendingOcr.lines, "APPEND"),
-                }));
-                setPendingOcr(null);
-              }}
-              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white"
-            >
-              Tambahkan Hasil Scan
-            </motion.button>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => {
-                if (!pendingOcr) return;
-                updatePayload((current) => ({
-                  ...current,
-                  lines: mergeExpenseLines(current.lines, pendingOcr.lines, "REPLACE"),
-                }));
-                setPendingOcr(null);
-              }}
-              className="min-h-12 w-full rounded-full bg-surface-container px-5 text-xs font-bold text-on-surface"
-            >
-              Ganti Item Saat Ini
-            </motion.button>
-          </div>
-        }
-      />
-
-      <ConfirmationSheet
-        open={projectChange !== null}
-        title="Ganti proyek?"
-        description="Kategori, tautan RAP, material, paket, dan lokasi stok akan dikosongkan. Nominal dan keterangan tetap aman."
-        confirmLabel="Ganti Proyek"
-        danger
-        onClose={() => setProjectChange(null)}
-        onConfirm={() => {
+      <ExpenseFormOverlays
+        closeGuardOpen={closeGuardOpen}
+        closeGuardPending={discarding || draft.status === "saving"}
+        conflictOpen={conflictOpen}
+        pendingOcr={pendingOcr}
+        projectChange={projectChange}
+        pendingDiscardDraftId={pendingDiscardDraftId}
+        success={success}
+        onKeepDraft={() => void saveAndClose()}
+        onDiscardDraft={() => void discardAndClose()}
+        onContinueEditing={() => setCloseGuardOpen(false)}
+        onCloseConflict={() => setConflictOpen(false)}
+        onSaveConflictCopy={() => void saveConflictCopy()}
+        onLoadServerVersion={() => void loadServerVersion()}
+        onCloseOcr={() => setPendingOcr(null)}
+        onAppendOcr={() => {
+          if (!pendingOcr) return;
+          updatePayload((current) => ({
+            ...current,
+            lines: mergeExpenseLines(current.lines, pendingOcr.lines, "APPEND"),
+          }));
+          setPendingOcr(null);
+        }}
+        onReplaceOcr={() => {
+          if (!pendingOcr) return;
+          updatePayload((current) => ({
+            ...current,
+            lines: mergeExpenseLines(current.lines, pendingOcr.lines, "REPLACE"),
+          }));
+          setPendingOcr(null);
+        }}
+        onCloseProjectChange={() => setProjectChange(null)}
+        onConfirmProjectChange={() => {
           if (projectChange) applyProjectChange(projectChange);
           setProjectChange(null);
         }}
-      />
-
-      <ConfirmationSheet
-        open={Boolean(pendingDiscardDraftId)}
-        title="Buang draft pengeluaran?"
-        description="Draft ini akan dihapus dan tidak dapat dilanjutkan lagi. Belum ada transaksi atau saldo kas yang berubah."
-        confirmLabel="Buang Draft"
-        danger
-        onClose={() => setPendingDiscardDraftId(null)}
-        onConfirm={() => {
+        onCloseDiscardDraft={() => setPendingDiscardDraftId(null)}
+        onConfirmDiscardDraft={() => {
           if (pendingDiscardDraftId) void discardDraftById(pendingDiscardDraftId);
           setPendingDiscardDraftId(null);
         }}
-      />
-
-      <FinanceSuccessSheet
-        success={success}
-        secondaryLabel="Tambah Pengeluaran"
-        onClose={() => {
+        onCloseSuccess={() => {
           setSuccess(null);
           closeForm();
         }}
-        onSecondary={() => {
+        onAddAnotherExpense={() => {
           setSuccess(null);
           const nextProjectId = draft.payload.projectId;
           updateUrlSearchParam("expense-draft", null, "replace");
@@ -922,20 +597,5 @@ export function ExpenseForm({
         }}
       />
     </>
-  );
-}
-
-function ReviewFact({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="shrink-0 text-on-surface-variant">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
-    </div>
   );
 }

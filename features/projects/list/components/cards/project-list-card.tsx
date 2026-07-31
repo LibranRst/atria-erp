@@ -42,10 +42,10 @@ export function ProjectListCard({
         ? "Perhatian"
         : "Terkendali";
   return (
-    <article className="group relative overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl">
+    <article className="group relative overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl">
       <Link
         href={`/projects/${project.id}`}
-        className="block p-3.5 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-inset active:bg-black/[0.018]"
+        className="block p-3.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-black/[0.018]"
         aria-label={`Buka project ${project.name}`}
       >
         <div
@@ -156,7 +156,7 @@ export function ProjectListCard({
         <button
           type="button"
           onClick={() => onEdit(project)}
-          className="absolute top-3.5 right-3.5 flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-low/95 text-on-surface-variant shadow-[0_6px_16px_rgba(17,17,17,0.08)] outline-none after:absolute after:-inset-1 after:rounded-full focus-visible:ring-2 focus-visible:ring-primary/30 active:bg-surface-container"
+          className="absolute top-3.5 right-3.5 flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-low/95 text-on-surface-variant shadow-control outline-none after:absolute after:-inset-1 after:rounded-full focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container"
           aria-label={`Edit ${project.name}`}
         >
           <AppIcon name="more_horiz" className="text-[19px]" />
@@ -173,14 +173,14 @@ function ProjectCover({ project }: { readonly project: ProjectItem }): React.JSX
       <img
         src={project.coverImageUrl}
         alt={`Cover ${project.name}`}
-        className="h-18.5 w-18.5 shrink-0 rounded-[20px] bg-surface-container object-cover ring-1 ring-black/4"
+        className="h-18.5 w-18.5 shrink-0 rounded-[20px] bg-surface-container object-cover ring-1 ring-ring-subtle"
       />
     );
   }
 
   const initial = project.name.trim().charAt(0).toUpperCase() || "P";
   return (
-    <span className="flex h-18.5 w-18.5 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-surface-inverse text-white shadow-[0_8px_18px_rgba(17,17,17,0.12)]">
+    <span className="flex h-18.5 w-18.5 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-surface-inverse text-white shadow-surface">
       <span className="font-mono text-[28px] leading-none font-black text-white/90">{initial}</span>
     </span>
   );

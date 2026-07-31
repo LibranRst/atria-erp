@@ -18,7 +18,7 @@ function ProfileRowSkeleton(): React.JSX.Element {
 export default function ProfileLoading(): React.JSX.Element {
   return (
     <div
-      className="space-y-5 pb-8 max-[430px]:-mx-1 max-[430px]:space-y-4 max-[430px]:pb-6"
+      className="space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6"
       aria-label="Memuat profil"
       role="status"
     >
@@ -28,7 +28,7 @@ export default function ProfileLoading(): React.JSX.Element {
         <SkeletonLine className="h-3 w-64 bg-surface-container-low" />
       </div>
 
-      <section className="rounded-[28px] bg-white/90 p-4 shadow-[0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl max-[430px]:p-3.5">
+      <section className="rounded-[28px] bg-white/90 p-4 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl max-[430px]:p-3.5">
         <div className="flex items-start gap-3.5">
           <div
             className="h-16 w-16 shrink-0 rounded-full bg-surface-container max-[430px]:h-14 max-[430px]:w-14"
@@ -48,7 +48,7 @@ export default function ProfileLoading(): React.JSX.Element {
 
       <section className="space-y-2">
         <SkeletonLine className="h-4 w-28" />
-        <div className="divide-y divide-black/5.5 overflow-hidden rounded-[26px] bg-white/90 shadow-[0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl">
+        <div className="divide-y divide-black/5.5 overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl">
           {[0, 1, 2].map((row) => (
             <ProfileRowSkeleton key={row} />
           ))}
@@ -60,7 +60,7 @@ export default function ProfileLoading(): React.JSX.Element {
           <SkeletonLine className="h-4 w-24" />
           <SkeletonLine className="h-2.5 w-20 bg-surface-container-low" />
         </div>
-        <div className="divide-y divide-black/5.5 overflow-hidden rounded-[26px] bg-white/90 shadow-[0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl">
+        <div className="divide-y divide-black/5.5 overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl">
           {[0, 1, 2, 3].map((row) => (
             <ProfileRowSkeleton key={row} />
           ))}

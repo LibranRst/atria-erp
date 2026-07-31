@@ -70,7 +70,7 @@ export function SettingsFilterBar<TValue extends string>({
               onSearchChange("");
               setFilterOpen(true);
             }}
-            className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/96 text-on-surface shadow-[0_8px_22px_rgba(17,17,17,0.055)] ring-1 ring-black/4 outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/96 text-on-surface shadow-surface ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
             aria-label={`Buka ${filterTitle.toLowerCase()}`}
           >
             <SlidersHorizontal className="h-4.5 w-4.5" aria-hidden="true" />

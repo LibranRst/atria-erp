@@ -48,7 +48,10 @@ export function RiskBriefList({
             <span
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${classes.icon}`}
             >
-              <AppIcon name={action.severity === "CRITICAL" ? "priority_high" : "notification_important"} className="text-[17px]" />
+              <AppIcon
+                name={action.severity === "CRITICAL" ? "priority_high" : "notification_important"}
+                className="text-[17px]"
+              />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-xs font-bold text-on-surface">
@@ -87,7 +90,7 @@ export function OverviewPriorityList({
           >
             <Link
               href={action.href}
-              className="flex min-h-16 items-center gap-3 rounded-[20px] px-1.5 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-accent/25 active:bg-black/2.5 max-[430px]:min-h-15 max-[430px]:gap-2.5"
+              className="flex min-h-16 items-center gap-3 rounded-[20px] px-1.5 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5 max-[430px]:min-h-15 max-[430px]:gap-2.5"
             >
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${isCritical ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
@@ -129,7 +132,7 @@ export function OverviewPreviewEmpty({
   readonly children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <div className="flex min-h-16 items-center gap-2.5 px-4 py-3 text-xs leading-5 text-on-surface-variant">
+    <div className="flex items-center gap-2.5 px-4 py-3 text-xs leading-5 text-on-surface-variant">
       <AppIcon name="check_circle" className="text-[18px] text-success" />
       <span>{children}</span>
     </div>

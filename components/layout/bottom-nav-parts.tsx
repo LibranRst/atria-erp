@@ -29,7 +29,7 @@ export function BottomTabBar({
   return (
     <nav
       aria-label="Primary mobile navigation"
-      className="pointer-events-auto relative z-10 flex h-full flex-1 items-center justify-center rounded-full border border-outline-variant/20 bg-white p-1 shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+      className="pointer-events-auto relative z-10 flex h-full flex-row items-center justify-center rounded-full border border-outline-variant/20 bg-white p-1 shadow-raised"
     >
       {activeIndex !== -1 && (
         <motion.div
@@ -54,18 +54,15 @@ export function BottomTabBar({
             href={item.href}
             aria-current={isActive ? "page" : undefined}
             onClick={() => onTabClick(item.href)}
-            className={`relative flex h-full flex-1 flex-col items-center justify-center rounded-full px-2 transition-all duration-200 active:scale-90 ${
+            className={`relative flex h-10 w-15 flex-1 flex-col items-center justify-center rounded-full px-2 transition-all duration-200 active:scale-90 ${
               isActive ? "text-on-primary" : "text-on-surface-variant"
             }`}
           >
             <AppIcon
               name={item.iconName}
               weight={isActive ? "fill" : "regular"}
-              className="relative z-10 text-[24px]"
+              className="relative z-10 text-[20px]"
             />
-            <span className="relative z-10 font-sans text-[8px] leading-4 font-bold tracking-wider uppercase">
-              {item.label}
-            </span>
           </Link>
         );
       })}
@@ -98,14 +95,15 @@ export function QuickActionFab({
         whileTap={!isOpen ? { scale: 0.95 } : undefined}
         animate={{
           height: isOpen && menuHeight ? menuHeight : 56,
-          width: isOpen ? 240 : 56,
+          width: isOpen ? 238 : 56,
+          right: isOpen ? -40 : 0,
           bottom: isOpen ? 68 : 0,
         }}
         transition={isOpen ? transitionSpringBouncy : transitionSpringSmooth}
         className={`pointer-events-auto absolute right-0 z-50 origin-bottom-right cursor-pointer overflow-hidden rounded-[28px] border transition-colors duration-300 select-none ${
           isOpen
-            ? "border-outline-variant/20 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
-            : "border-outline-variant/20 bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]"
+            ? "border-outline-variant/20 bg-white shadow-raised"
+            : "border-outline-variant/20 bg-black shadow-raised"
         }`}
       >
         <motion.div
@@ -116,7 +114,7 @@ export function QuickActionFab({
           transition={transitionEaseSmooth}
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
         >
-          <AppIcon name="add" className="scale-75 text-[32px] text-primary" />
+          <AppIcon name="add" className="scale-75 text-[32px] text-white" />
         </motion.div>
 
         <motion.div
@@ -126,7 +124,7 @@ export function QuickActionFab({
             scale: isOpen ? 1 : 0.95,
           }}
           transition={transitionEaseSmooth}
-          className={`flex w-60 flex-col p-3 ${
+          className={`flex w-60 flex-col p-2 ${
             isOpen ? "pointer-events-auto" : "pointer-events-none"
           }`}
         >
@@ -157,11 +155,11 @@ export function QuickActionFab({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span
-                    className={`block text-xs font-bold ${action.disabled ? "text-on-surface-variant" : "text-on-surface"}`}
+                    className={`block text-xs leading-5 font-bold ${action.disabled ? "text-on-surface-variant" : "text-on-surface"}`}
                   >
                     {action.label}
                   </span>
-                  <span className="block truncate text-[10px] font-semibold text-on-surface-variant">
+                  <span className="block truncate text-[10px] leading-4 font-semibold text-on-surface-variant">
                     {action.description}
                   </span>
                 </span>

@@ -87,7 +87,7 @@ export function OnboardingFinanceReview({
   if (!active)
     return (
       <section className="w-full space-y-5 px-1">
-        <div className="rounded-[28px] bg-white px-5 py-8 text-center ring-1 ring-black/4">
+        <div className="rounded-[28px] bg-white px-5 py-8 text-center ring-1 ring-ring-subtle">
           <AppIcon name="task_alt" className="text-[34px] text-success" />
           <h1 className="mt-3 text-xl font-bold text-on-surface">
             Semua saldo awal sudah diperiksa
@@ -139,7 +139,7 @@ export function OnboardingFinanceReview({
           budget, rekening, tim, dan margin Owner tidak ditampilkan.
         </p>
       </header>
-      <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-black/4">
+      <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-ring-subtle">
         <div className="divide-y divide-outline-variant/20">
           <div className="flex items-center justify-between gap-3 px-4 py-3.5">
             <span className="text-xs font-semibold text-on-surface-variant">Batch</span>
@@ -168,7 +168,7 @@ export function OnboardingFinanceReview({
         </div>
       </div>
       <InventoryOpeningApprovalItems item={itemSource} />
-      <div className="rounded-3xl bg-white p-4 ring-1 ring-black/4">
+      <div className="rounded-3xl bg-white p-4 ring-1 ring-ring-subtle">
         <p className="text-xs font-bold text-on-surface">Dampak jika disetujui</p>
         <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
           Mencatat pergerakan saldo awal stok, lalu mengisi stok fisik dan harga rata-rata. Kas,

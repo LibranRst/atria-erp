@@ -19,8 +19,8 @@ import {
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { MetadataChip } from "@/components/ui/badge/badge";
+import { GroupedSurface } from "@/components/ui/feedback/main-surface";
 import {
-  SettingsGroupSurface,
   SettingsModuleHeader,
   SettingsRowChevron,
   SettingsStatusLabel,
@@ -96,7 +96,7 @@ export function CategorySettingsManager({
   }
 
   return (
-    <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-lg"}`}>
+    <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
       {presentation === "onboarding" ? null : hideHeader ? (
         <SettingsModuleHeader
           eyebrow="Kategori baku"
@@ -117,7 +117,7 @@ export function CategorySettingsManager({
           {message}
         </p>
       )}
-      <SettingsGroupSurface>
+      <GroupedSurface>
         <div className="divide-y divide-black/5.5">
           {categories.map((category) => (
             <button
@@ -148,7 +148,7 @@ export function CategorySettingsManager({
             </button>
           ))}
         </div>
-      </SettingsGroupSurface>
+      </GroupedSurface>
       <OperationalFormSheet
         open={Boolean(editing)}
         title={canManage ? "Edit Kategori" : "Detail Kategori"}

@@ -39,7 +39,7 @@ export function ProjectRiskRow({
       >
         <Link
           href={`/projects/${project.projectId}?tab=overview`}
-          className="block rounded-[22px] px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-accent/25 active:bg-black/2.5 max-[430px]:px-3"
+          className="block rounded-[22px] px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5 max-[430px]:px-3"
         >
           <div className="flex items-start gap-3">
             <span
@@ -117,7 +117,7 @@ export function ProjectRiskRow({
     >
       <Link
         href={`/projects/${project.projectId}?tab=overview`}
-        className="block rounded-[20px] px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-accent/25 active:bg-black/2.5"
+        className="block rounded-[20px] px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5"
       >
         <div className="flex items-start gap-3">
           <span

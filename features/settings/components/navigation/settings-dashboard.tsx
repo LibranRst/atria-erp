@@ -141,7 +141,7 @@ export function SettingsDashboard({
   }
 
   return (
-    <section className="min-w-0 space-y-lg pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
+    <section className="min-w-0 space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6">
       <SettingsHeader
         eyebrow="Pusat kontrol"
         title="Pengaturan ERP"

@@ -37,7 +37,7 @@ export function LogoutButton(): React.JSX.Element {
         transition={transitionSpringSnappy}
         onClick={() => setConfirmOpen(true)}
         disabled={isLoading}
-        className="flex min-h-16 w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:bg-error/[0.035] focus-visible:ring-2 focus-visible:ring-error/25 focus-visible:ring-inset active:bg-error/[0.035] disabled:opacity-55"
+        className="flex min-h-16 w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:bg-error/[0.035] focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-error/[0.035] disabled:opacity-55"
       >
         <span
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-error/[0.07] text-error ring-1 ring-error/6"

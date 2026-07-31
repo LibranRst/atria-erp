@@ -87,13 +87,17 @@ When replacing the budget model, introduce canonical tables additively and prese
 - `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md` is the active source of truth for main-page composition, density, surfaces, rows, tabs, financial values, loading states, and visual QA.
 - Treat the current Dashboard (`/ledger`) and Expenses (`/expenses`) as reference implementations. Reuse their design grammar and shared primitives; do not copy either page's layout blindly into another workflow.
 - Mobile widths 320–430 px are the source of truth. The fixed `max-w-md` shell remains one column at every viewport; a desktop browser preview alone is not acceptance evidence.
-- Build hierarchy through one justified focal summary, concise section headers, grouped surfaces, purpose-built rows, dividers, and whitespace. Do not wrap every metric or repeated item in its own card.
-- Repeated rows normally share one soft surface. Preserve cards for focal or independently interactive units, and preserve configured gradients for identity surfaces such as bank accounts.
+- Build hierarchy through one justified focal summary, concise section headers, grouped surfaces, purpose-built rows, inset metric grids, dividers, and whitespace. Do not turn every metric or repeated item into an elevated standalone card.
+- Use compact neutral inset metric cells for 2–3 values that must be compared inside one owning surface or decision-heavy item. Keep semantic tone on the value, icon, or status rather than tinting every cell. Simple operational rows still share one soft surface with dividers; preserve standalone cards for focal or independently interactive units and configured gradients for identity surfaces such as bank accounts.
 - Use shared `MoneyValue` formatting, tabular numerals, compact primary amounts, and exact secondary amounts. Primary financial values must not wrap at supported mobile widths.
 - Use the shared `SegmentedTabs` for peer views and filters. Horizontal auto-centering must never move the document vertically; changing a tab or filter must preserve a stable reading position.
 - Every main route needs a structural skeleton matching its final hierarchy. Do not use a generic centered spinner or unrelated loading card for core pages.
 - Keep visible controls compact while preserving an effective minimum touch target of 48x48 px, keyboard focus, screen-reader labels, safe-area clearance, and reduced-motion support.
 - Status must combine concise Bahasa Indonesia copy with icon/shape/position; color alone is insufficient. Do not add colored vertical severity rails to ordinary rows. Continuous vertical connectors are reserved for real timelines.
+- Use only the semantic surface, ring, focus-ring, and shadow tokens defined in `app/globals.css`
+  and `docs/05-ui-ux/CONTROL_LANGUAGE.md`. Neutral UI uses the cool iOS system-gray family; do not
+  add warm neutral hex values, raw gray palette utilities, arbitrary Tailwind shadows,
+  `ring-black/*`, raw `box-shadow`, or component-local focus-ring colors.
 - Use contextual budget indicators, comparisons, or timelines. Do not repeat the same progress bar across unrelated sections or add decorative charts.
 - Avoid generic admin compositions, AI-looking repeated patterns, oversized mobile typography/spacing, excessive gradients/glass/blur, and animated decoration.
 - Owner dashboard must be understandable within 30 seconds.

@@ -24,7 +24,7 @@ describe("OverviewPriorityList", () => {
     expect(html).toContain("Keputusan tertunda dapat menahan pekerjaan atau pembayaran.");
     expect(html).toContain('href="/ledger?tab=approvals"');
     expect(html).toContain("approval");
-    expect(html).toContain("chevron_right");
+    expect(html).toContain("<svg");
     expect(html).not.toContain(">1<");
   });
 });

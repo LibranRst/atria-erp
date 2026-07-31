@@ -1,13 +1,11 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, Copy, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { postGoodsReceipt } from "@/app/actions/material/goods-receipt";
-import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
   ConfirmationSheet,
   DatePickerField,
@@ -15,8 +13,6 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
-  MoneyInput,
-  QuantityStepper,
   SheetSelect,
   Textarea,
   TextInput,
@@ -25,64 +21,20 @@ import {
 import { type MaterialOperationSuccess } from "@/features/materials/components/shared/material-form-patterns";
 import { MaterialSuccessSheet } from "@/features/materials/components/shared/material-success-sheet";
 import { StockImpactRow } from "@/features/materials/components/shared/stock-impact-row";
+import { GoodsReceiptItemsSection } from "@/features/materials/components/sheets/goods-receipt-items-section";
+import {
+  goodsReceiptMoney as money,
+  newGoodsReceiptItem as newItem,
+  type GoodsReceiptItemDraft as ItemDraft,
+  type GoodsReceiptSheetProps as Props,
+} from "@/features/materials/components/sheets/goods-receipt-types";
 import {
   buildGoodsReceiptBillPrefill,
   type GoodsReceiptVendorBillOption,
 } from "@/features/materials/utils/goods-receipt-prefill";
-import { createClientId } from "@/lib/utils/client-id";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { AppIcon } from "@/components/ui/icon/app-icon";
-
-type RapOption = {
-  readonly id: string;
-  readonly materialId: string | null;
-  readonly name: string;
-  readonly area: string;
-  readonly quantity?: number | null;
-  readonly unitCost?: number | null;
-};
-type ProjectOption = {
-  readonly id: string;
-  readonly name: string;
-  readonly rapItems?: readonly RapOption[];
-};
-type MaterialOption = { readonly id: string; readonly name: string; readonly unit?: string };
-type Option = { readonly id: string; readonly name: string };
-type ItemDraft = {
-  readonly key: string;
-  readonly materialId: string;
-  readonly projectRapItemId: string;
-  readonly quantity: number;
-  readonly unitCost: number;
-  readonly note: string;
-};
-type Props = {
-  readonly projects: readonly ProjectOption[];
-  readonly locations: readonly Option[];
-  readonly materials: readonly MaterialOption[];
-  readonly inventory: MaterialOperationsDashboard["inventory"];
-  readonly vendorBills: readonly GoodsReceiptVendorBillOption[];
-  readonly compact?: boolean;
-  readonly showTrigger?: boolean;
-};
-
-const money = new Intl.NumberFormat("id-ID", {
-  style: "currency",
-  currency: "IDR",
-  maximumFractionDigits: 0,
-});
-
-function newItem(): ItemDraft {
-  return {
-    key: createClientId("receipt-item"),
-    materialId: "",
-    projectRapItemId: "",
-    quantity: 1,
-    unitCost: 0,
-    note: "",
-  };
-}
 
 export function GoodsReceiptSheet({
   projects,
@@ -157,11 +109,6 @@ export function GoodsReceiptSheet({
     value: location.id,
     label: location.name,
   }));
-  const materialOptions = materials.map((material) => ({
-    value: material.id,
-    label: material.name,
-    description: material.unit ? `Satuan ${material.unit}` : undefined,
-  }));
   const isSheetOpen = open || showSheet;
 
   function reset(): void {
@@ -224,11 +171,10 @@ export function GoodsReceiptSheet({
           row.id === prefill.item.projectRapItemId && row.materialId === prefill.item.materialId,
       ),
     );
-    const item: ItemDraft = {
-      key: createClientId("receipt-item"),
+    const item = newItem({
       ...prefill.item,
       projectRapItemId: rapLinkIsValid ? prefill.item.projectRapItemId : "",
-    };
+    });
     setVendorBillId(bill.id);
     setProjectId(prefill.projectId);
     setItems([item]);
@@ -329,7 +275,7 @@ export function GoodsReceiptSheet({
               : "flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
           }
         >
-          {!compact ? <Plus className="h-4 w-4" aria-hidden="true" /> : null} Terima Barang
+          {!compact ? <AppIcon name="add" className="text-[16px]" /> : null} Terima Barang
         </motion.button>
       ) : null}
       <WorkflowFormSheet
@@ -452,192 +398,15 @@ export function GoodsReceiptSheet({
               </FormField>
             </FormSection>
 
-            <section className="space-y-2">
-              <div className="flex items-end justify-between gap-3 px-1">
-                <div className="grid min-w-0 gap-0.5">
-                  <p className="text-[10px] leading-[1.15] font-bold tracking-wide uppercase">
-                    Material diterima
-                  </p>
-                  <p className="text-[10px] leading-tight text-on-surface-variant">
-                    Buka item untuk mengubah detail.
-                  </p>
-                </div>
-                <p className="shrink-0 font-mono text-xs font-bold text-on-surface tabular-nums">
-                  {money.format(total)}
-                </p>
-              </div>
-              {items.map((item, index) => {
-                const material = materials.find((row) => row.id === item.materialId);
-                const complete = Boolean(
-                  item.materialId && item.quantity > 0 && item.unitCost >= 0,
-                );
-                return (
-                  <div
-                    key={item.key}
-                    className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
-                  >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditingKey((current) => (current === item.key ? null : item.key))
-                      }
-                      className="flex min-h-17 w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent/25 focus-visible:ring-inset active:bg-surface-container-low"
-                      aria-expanded={editingKey === item.key}
-                    >
-                      <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${complete ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"}`}
-                        aria-hidden="true"
-                      >
-                        <AppIcon name={complete ? "check" : "inventory_2"} className="text-[18px] leading-none" />
-                      </span>
-                      <span className="grid min-w-0 flex-1 gap-0.5">
-                        <span className="flex min-w-0 items-center gap-2">
-                          <span className="truncate text-xs leading-[1.15] font-bold">
-                            {material?.name ?? `Material ${index + 1}`}
-                          </span>
-                          <span
-                            className={`shrink-0 text-[9px] leading-none font-bold ${complete ? "text-primary" : "text-warning"}`}
-                          >
-                            {complete ? "Lengkap" : "Lengkapi"}
-                          </span>
-                        </span>
-                        <span className="truncate text-[10px] leading-tight text-on-surface-variant">
-                          {complete
-                            ? `${item.quantity.toLocaleString("id-ID")} ${material?.unit ?? "unit"} × ${money.format(item.unitCost)}`
-                            : "Pilih material, jumlah, dan harga"}
-                        </span>
-                      </span>
-                      <span className="flex shrink-0 items-center gap-2">
-                        <span className="font-mono text-xs font-bold tabular-nums">
-                          {money.format(item.quantity * item.unitCost)}
-                        </span>
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant">
-                          <ChevronDown
-                            className={`h-3.5 w-3.5 transition-transform ${editingKey === item.key ? "rotate-180" : ""}`}
-                            aria-hidden="true"
-                          />
-                        </span>
-                      </span>
-                    </button>
-                    {editingKey === item.key ? (
-                      <div className="space-y-2.5 border-t border-outline-variant/15 bg-surface-container-low/65 p-3">
-                        <SheetSelect
-                          label="Material"
-                          value={item.materialId}
-                          options={materialOptions}
-                          onChange={(value) =>
-                            updateItem(item.key, { materialId: value, projectRapItemId: "" })
-                          }
-                          placeholder="Pilih material"
-                          required
-                        />
-                        <SheetSelect
-                          label="Tautan RAP"
-                          optional
-                          value={item.projectRapItemId}
-                          options={[
-                            { value: "", label: "Tanpa tautan RAP" },
-                            ...(selectedProject?.rapItems
-                              ?.filter((row) => row.materialId === item.materialId)
-                              .map((row) => ({
-                                value: row.id,
-                                label: row.name,
-                                description: row.area,
-                              })) ?? []),
-                          ]}
-                          onChange={(value) => {
-                            const rapItem = selectedProject?.rapItems?.find(
-                              (row) => row.id === value,
-                            );
-                            updateItem(item.key, {
-                              projectRapItemId: value,
-                              ...(rapItem
-                                ? {
-                                    quantity: rapItem.quantity ?? 1,
-                                    unitCost: rapItem.unitCost ?? 0,
-                                  }
-                                : {}),
-                            });
-                          }}
-                          placeholder="Tanpa tautan RAP"
-                        />
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                          <FormField
-                            label={material?.unit ? `Jumlah (${material.unit})` : "Jumlah"}
-                          >
-                            <QuantityStepper
-                              value={item.quantity}
-                              min={0}
-                              step={1}
-                              onChange={(value) =>
-                                updateItem(item.key, { quantity: Number(value) })
-                              }
-                            />
-                          </FormField>
-                          <FormField label="Harga per unit">
-                            <MoneyInput
-                              value={item.unitCost}
-                              showPreview={false}
-                              onChange={(value) =>
-                                updateItem(item.key, { unitCost: Number(value) })
-                              }
-                            />
-                          </FormField>
-                        </div>
-                        <FormField label="Catatan item" optional>
-                          <Textarea
-                            rows={2}
-                            value={item.note}
-                            onChange={(value) => updateItem(item.key, { note: value })}
-                          />
-                        </FormField>
-                        <div className="grid grid-cols-2 gap-2">
-                          <motion.button
-                            type="button"
-                            whileTap={{ scale: 0.97 }}
-                            transition={transitionSpringSnappy}
-                            onClick={() => {
-                              const copy = { ...item, key: createClientId("receipt-item") };
-                              setItems((current) => [...current, copy]);
-                              setEditingKey(copy.key);
-                            }}
-                            className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container text-xs font-bold"
-                          >
-                            <Copy className="h-4 w-4" /> Duplikat
-                          </motion.button>
-                          <motion.button
-                            type="button"
-                            whileTap={{ scale: 0.97 }}
-                            transition={transitionSpringSnappy}
-                            disabled={items.length === 1}
-                            onClick={() => {
-                              setItems((current) => current.filter((row) => row.key !== item.key));
-                              setEditingKey(null);
-                            }}
-                            className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-error-container/25 text-xs font-bold text-error disabled:opacity-35"
-                          >
-                            <Trash2 className="h-4 w-4" /> Hapus
-                          </motion.button>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.97 }}
-                transition={transitionSpringSnappy}
-                onClick={() => {
-                  const item = newItem();
-                  setItems((current) => [...current, item]);
-                  setEditingKey(item.key);
-                }}
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest text-xs font-bold text-on-surface shadow-[0_5px_16px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15"
-              >
-                <Plus className="h-4 w-4 text-accent" aria-hidden="true" /> Tambah Material
-              </motion.button>
-            </section>
+            <GoodsReceiptItemsSection
+              items={items}
+              materials={materials}
+              selectedProject={selectedProject}
+              editingKey={editingKey}
+              onEditingKeyChange={setEditingKey}
+              onItemsChange={(change) => setItems((current) => change(current))}
+              onUpdateItem={updateItem}
+            />
           </div>
         )}
       </WorkflowFormSheet>

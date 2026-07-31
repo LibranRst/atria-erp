@@ -1,13 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import React from "react";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import { Badge } from "@/components/ui";
+import { Badge, Button, GroupedSurface, InlineStateRow } from "@/components/ui";
 import { MoneyValue, PageHeader } from "@/components/ui/feedback/page-primitives";
 import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
 import { BudgetSplitIndicator } from "@/features/finance-dashboard/components/cards/budget-split-indicator";
+import { useDashboardRefresh } from "@/features/finance-dashboard/hooks/use-dashboard-refresh";
 import type { DashboardPageTab } from "@/features/finance-dashboard/types/dashboard-types";
 import { resolveDashboardDataStatus } from "@/features/finance-dashboard/utils/dashboard-data-status";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
@@ -25,7 +25,7 @@ function parseDashboardTab(
   value: string | null,
   role: FinanceDashboardOverview["role"],
 ): DashboardPageTab {
-  if (value === "approvals" && role === "OWNER") return "approvals";
+  if (value === "approvals" && (role === "OWNER" || role === "FINANCE_ADMIN")) return "approvals";
   if (value === "budget" || value === "cash" || value === "accounts" || value === "materials")
     return value;
   return "overview";
@@ -54,7 +54,7 @@ function DashboardTabsNav({
       icon: <AppIcon name="space_dashboard" className="text-[15px]" />,
     },
   ];
-  if (data.role === "OWNER") {
+  if (data.role === "OWNER" || data.role === "FINANCE_ADMIN") {
     options.push({
       value: "approvals",
       label: "Persetujuan",
@@ -111,14 +111,15 @@ function PositionMetric({
   readonly danger?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="min-w-0">
-      <p className="text-[9px] font-bold tracking-[0.12em] text-white/52 uppercase">{label}</p>
+    <div className="flex w-full min-w-0 flex-col gap-2 rounded-2xl bg-white/7.5 p-3">
+      <p className="text-[9px] leading-none font-bold tracking-[0.12em] text-white/52 uppercase">
+        {label}
+      </p>
       <MoneyValue
         amount={amount}
         variant="compactWithFull"
         tone={danger ? "danger" : "inverse"}
         size="sm"
-        className="mt-1"
       />
     </div>
   );
@@ -132,7 +133,7 @@ export function FinancialPosition({
   const budgetDanger = summary.remainingBudget < 0 || summary.usedPercentage >= 100;
   return (
     <section
-      className="relative isolate overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-on-primary shadow-[0_2px_4px_rgba(17,17,17,0.12),0_20px_48px_rgba(17,17,17,0.16)] ring-1 ring-white/8 max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
+      className="relative isolate overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-on-primary shadow-floating ring-1 ring-white/8 max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
       aria-label="Posisi finansial"
     >
       <span
@@ -152,7 +153,7 @@ export function FinancialPosition({
         />
       </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-3 border-t border-white/8 pt-4 max-[430px]:mt-4 max-[430px]:gap-2.5 max-[430px]:pt-3">
+      <div className="mt-4 flex flex-row gap-3">
         <PositionMetric label="Piutang" amount={summary.receivablesOutstanding} />
         <PositionMetric label="Hutang" amount={summary.payablesOutstanding} />
         <PositionMetric
@@ -200,48 +201,52 @@ export function FinancialPosition({
 
 function DataStatus({
   data,
+  online,
+  refreshFailed,
   refreshing,
   onRefresh,
 }: {
   readonly data: FinanceDashboardOverview;
+  readonly online: boolean;
+  readonly refreshFailed: boolean;
   readonly refreshing: boolean;
   readonly onRefresh: () => void;
 }): React.JSX.Element | null {
-  const [currentTime, setCurrentTime] = React.useState<Date | null>(null);
-  React.useEffect(() => {
-    const update = (): void => setCurrentTime(new Date());
-    update();
-    const interval = window.setInterval(update, 60_000);
-    return () => window.clearInterval(interval);
-  }, []);
   const status = resolveDashboardDataStatus({
     generatedAt: data.generatedAt,
-    currentTime: currentTime ?? new Date(data.generatedAt),
     partial: data.dataQuality.partial,
     unavailableSources: data.dataQuality.unavailableSources,
+    online,
+    refreshFailed,
     refreshing,
   });
 
   if (!status) return null;
 
   return (
-    <div
-      className="flex h-8 items-center gap-2 px-1 text-warning"
-      role="status"
-      aria-live="polite"
-      aria-label={status.accessibleLabel}
-    >
-      <AppIcon name={status.icon} className="text-[15px]" />
-      <p className="min-w-0 flex-1 truncate text-[10px] font-bold">{status.label}</p>
-      <button
-        type="button"
-        disabled={refreshing}
-        onClick={onRefresh}
-        aria-label="Perbarui data Dashboard"
-        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-warning outline-none after:absolute after:-inset-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-warning/30 disabled:opacity-45"
-      >
-        <AppIcon name={refreshing ? "sync" : "refresh"} className="text-[17px]" />
-      </button>
+    <div role="status" aria-live="polite" aria-label={status.accessibleLabel}>
+      <GroupedSurface>
+        <InlineStateRow
+          icon={status.icon}
+          title={status.title}
+          description={status.description}
+          tone={status.kind === "OFFLINE" ? "neutral" : "warning"}
+          action={
+            status.retryable ? (
+              <Button
+                type="button"
+                variant="tertiary"
+                size="compact"
+                pending={refreshing}
+                pendingLabel="Memuat…"
+                onClick={onRefresh}
+              >
+                Coba lagi
+              </Button>
+            ) : undefined
+          }
+        />
+      </GroupedSurface>
     </div>
   );
 }
@@ -256,13 +261,14 @@ export function FinanceDashboard({
   readonly onboarding: OwnerOnboardingOverview | null;
 }): React.JSX.Element {
   const tabParam = useUrlSearchParam("tab");
-  const router = useRouter();
-  const [refreshing, startRefresh] = React.useTransition();
+  const { online, refreshFailed, refreshing, refresh } = useDashboardRefresh(data.generatedAt);
   const [referenceDate] = React.useState(() => new Date());
   const [approvals, setApprovals] = React.useState<readonly ApprovalDetail[]>(
     data.dashboardDetails.approvals,
   );
-  const [approvalCount, setApprovalCount] = React.useState(data.dashboardTabs.counts.approvals);
+  const [approvalSummary, setApprovalSummary] = React.useState(
+    data.dashboardDetails.approvalSummary,
+  );
   const activeTab = parseDashboardTab(tabParam, data.role);
   const today = referenceDate.toLocaleDateString("id-ID", {
     weekday: "long",
@@ -276,10 +282,6 @@ export function FinanceDashboard({
     updateBrowserUrl(value === "overview" ? "/ledger" : `/ledger?tab=${value}`, "replace");
   }
 
-  function refresh(): void {
-    startRefresh(() => router.refresh());
-  }
-
   const tabContent =
     activeTab === "overview" ? (
       <DashboardOverviewTab
@@ -287,12 +289,12 @@ export function FinanceDashboard({
         financialPosition={<FinancialPosition summary={data.summary} />}
         onboarding={onboarding}
       />
-    ) : activeTab === "approvals" && data.role === "OWNER" ? (
+    ) : activeTab === "approvals" && (data.role === "OWNER" || data.role === "FINANCE_ADMIN") ? (
       <ApprovalsTab
         approvals={approvals}
-        approvalCount={approvalCount}
+        approvalSummary={approvalSummary}
         setApprovals={setApprovals}
-        setApprovalCount={setApprovalCount}
+        setApprovalSummary={setApprovalSummary}
         canEmergencyOverride={data.role === "OWNER"}
       />
     ) : activeTab === "budget" ? (
@@ -306,7 +308,7 @@ export function FinanceDashboard({
     );
 
   return (
-    <div className="dashboard-density space-y-lg pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
+    <div className="dashboard-density space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6">
       <PageHeader
         title={`Halo, ${userName.split(" ")[0]}`}
         subtitle={today}
@@ -314,13 +316,17 @@ export function FinanceDashboard({
       />
       <DashboardTabsNav
         activeTab={activeTab}
-        approvalCount={approvalCount}
+        approvalCount={approvalSummary.totalCount}
         data={data}
         onChange={changeTab}
       />
-      {activeTab === "overview" ? (
-        <DataStatus data={data} refreshing={refreshing} onRefresh={refresh} />
-      ) : null}
+      <DataStatus
+        data={data}
+        online={online}
+        refreshFailed={refreshFailed}
+        refreshing={refreshing}
+        onRefresh={refresh}
+      />
       <div>{tabContent}</div>
     </div>
   );

@@ -7,7 +7,7 @@ export default function OwnerOnboardingLoading(): React.JSX.Element {
         <div className="h-8 w-56 rounded-full bg-surface-container-high" />
         <div className="h-4 w-full rounded-full bg-surface-container-high" />
       </div>
-      <div className="overflow-hidden rounded-[28px] bg-white ring-1 ring-black/4">
+      <div className="overflow-hidden rounded-[28px] bg-white ring-1 ring-ring-subtle">
         {[0, 1, 2].map((row) => (
           <div
             key={row}

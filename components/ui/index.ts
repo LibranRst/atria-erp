@@ -1,5 +1,12 @@
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card/card";
-export { Badge, CountBadge, MetadataChip, resolveStatusPresentation, StatusBadge } from "./badge/badge";
+export {
+  Badge,
+  CountBadge,
+  MetadataChip,
+  resolveStatusPresentation,
+  SectionCountPill,
+  StatusBadge,
+} from "./badge/badge";
 export type { BadgeStatus, BadgeVariant, StatusBadgeTone, StatusPresentation } from "./badge/badge";
 export { Button, ButtonLink, IconButton, SectionAction } from "./button/button";
 export { AppIcon } from "./icon/app-icon";
@@ -21,10 +28,20 @@ export {
 export type { ConfirmationModalTone } from "./overlay/bottom-sheet";
 export { FilterPills } from "./navigation/filter-pills";
 export type { FilterPillOption } from "./navigation/filter-pills";
-export { PanelEmptyState } from "./feedback/panel-empty-state";
 export { ConnectivityBanner, PageState } from "./feedback/page-state";
 export type { PageStateKind, PageStateTone } from "./feedback/page-state";
 export { RoutePageError, RoutePageLoading } from "./feedback/route-page-state";
+export {
+  DetailSection,
+  GroupedSurface,
+  InlineStateRow,
+  MainSection,
+  RowGroup,
+  SectionHeader,
+  SummaryFact,
+  SummarySurface,
+} from "./feedback/main-surface";
+export type { InlineStateTone, SummarySurfaceTone } from "./feedback/main-surface";
 export {
   ChoiceRow,
   SwitchRow,

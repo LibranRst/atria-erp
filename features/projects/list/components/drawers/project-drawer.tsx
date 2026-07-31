@@ -2,40 +2,21 @@
 
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { createProjectAction, updateProjectAction } from "@/app/actions/project/crud";
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
 import { getErrorMessage } from "@/lib/utils/error-message";
-import {
-  FormField,
-  FormDisclosure,
-  FormSection,
-  FormRiskNotice,
-  ConfirmationModal,
-  OperationalFormSheet,
-  SheetSelect,
-  SmartDefaultHint,
-  Textarea,
-  TextInput,
-  WorkflowFormSheet,
-} from "@/components/ui";
-import { BottomSheet } from "@/components/ui";
+import { BottomSheet, OperationalFormSheet } from "@/components/ui";
 import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { toast } from "sonner";
 import { AppIcon } from "@/components/ui/icon/app-icon";
-import {
-  ProjectClientFields,
-  ProjectCoverField,
-  ProjectCreatedSuccess,
-  ProjectDetailFields,
-  ProjectEditStateFields,
-} from "./project-drawer-sections";
+import { ProjectCreatedSuccess } from "./project-drawer-sections";
+import { ProjectDrawerFormFields } from "./project-drawer-form-fields";
+import { ProjectRecoveryModal } from "./project-recovery-modal";
+import { ProjectReviewSheet } from "./project-review-sheet";
+import type { ProjectDrawerProps } from "./project-drawer-types";
 import {
   FINANCIAL_HEALTH_OPTIONS,
   PROJECT_STATUS_OPTIONS,
-  type ProjectFinancialHealthOption,
-  type ProjectStatusOption,
 } from "../../utils/project-drawer-options";
 import {
   createProjectFormDraft,
@@ -43,41 +24,6 @@ import {
   projectFormDraftSchema,
   type ProjectFormDraft,
 } from "../../utils/project-form-draft";
-
-interface ClientOption {
-  readonly id: string;
-  readonly name: string;
-}
-
-interface UserOption {
-  readonly id: string;
-  readonly name: string;
-}
-
-interface ProjectData {
-  readonly id: string;
-  readonly name: string;
-  readonly clientId: string;
-  readonly projectManagerId: string;
-  readonly status: "DRAFT" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
-  readonly financialHealth: "HEALTHY" | "WARNING" | "CRITICAL";
-  readonly totalContractValue: number;
-  readonly startDate?: string | null;
-  readonly endDate?: string | null;
-  readonly location?: string | null;
-  readonly roomArea?: string | null;
-  readonly projectType?: string | null;
-  readonly coverImageUrl?: string | null;
-  readonly notes?: string | null;
-}
-
-interface ProjectDrawerProps {
-  readonly isOpen: boolean;
-  readonly onClose: () => void;
-  readonly clients: readonly ClientOption[];
-  readonly users: readonly UserOption[];
-  readonly editProject?: ProjectData | null;
-}
 
 interface ImageKitUploadResponse {
   readonly url: string;
@@ -141,14 +87,6 @@ export function ProjectDrawer({
     recovery.reset(createProjectFormDraft(editProject, users));
   }, [editProject, projectManagerId, recovery, users]);
 
-  const clientOptions = clients.map((client) => ({
-    value: client.id,
-    label: client.name,
-  }));
-  const userOptions = users.map((user) => ({
-    value: user.id,
-    label: user.name,
-  }));
   const selectedClientName = isNewClient
     ? newClientName.trim() || "Klien baru"
     : (clients.find((client) => client.id === clientId)?.name ?? "Belum dipilih");
@@ -207,25 +145,6 @@ export function ProjectDrawer({
     }
     handleClose();
   }
-
-  const setName = (value: string): void => patch({ name: value });
-  const setClientId = (value: string): void => patch({ clientId: value });
-  const setIsNewClient = (value: boolean): void => patch({ isNewClient: value });
-  const setNewClientName = (value: string): void => patch({ newClientName: value });
-  const setNewClientEmail = (value: string): void => patch({ newClientEmail: value });
-  const setNewClientPhone = (value: string): void => patch({ newClientPhone: value });
-  const setNewClientAddress = (value: string): void => patch({ newClientAddress: value });
-  const setProjectManagerId = (value: string): void => patch({ projectManagerId: value });
-  const setStartDate = (value: string): void => patch({ startDate: value });
-  const setEndDate = (value: string): void => patch({ endDate: value });
-  const setLocation = (value: string): void => patch({ location: value });
-  const setRoomArea = (value: string): void => patch({ roomArea: value });
-  const setProjectType = (value: string): void => patch({ projectType: value });
-  const setCoverImageUrl = (value: string): void => patch({ coverImageUrl: value });
-  const setNotes = (value: string): void => patch({ notes: value });
-  const setStatus = (value: ProjectStatusOption): void => patch({ status: value });
-  const setFinancialHealth = (value: ProjectFinancialHealthOption): void =>
-    patch({ financialHealth: value });
 
   const handleCoverUpload = async (file: File): Promise<void> => {
     setError(null);
@@ -438,234 +357,51 @@ export function ProjectDrawer({
         }
       >
         <form id="project-drawer-form" onSubmit={prepareReview} className="space-y-md">
-          <FormSection
-            title="Identitas inti"
-            helper="Nama, klien, dan PM menentukan ownership proyek."
-          >
-            <FormField label="Nama Proyek" required>
-              <TextInput
-                value={name}
-                onChange={setName}
-                placeholder="Misal: Menteng Villa Penthouse Fit-Out"
-              />
-            </FormField>
-
-            {/* Client Selection */}
-            {!editProject && (
-              <ProjectClientFields
-                isNewClient={isNewClient}
-                clientId={clientId}
-                clientOptions={clientOptions}
-                newClientName={newClientName}
-                newClientEmail={newClientEmail}
-                newClientPhone={newClientPhone}
-                newClientAddress={newClientAddress}
-                onClientModeChange={setIsNewClient}
-                onClientIdChange={setClientId}
-                onNewClientNameChange={setNewClientName}
-                onNewClientEmailChange={setNewClientEmail}
-                onNewClientPhoneChange={setNewClientPhone}
-                onNewClientAddressChange={setNewClientAddress}
-              />
-            )}
-            <SheetSelect
-              label="Project Manager"
-              value={projectManagerId}
-              onChange={setProjectManagerId}
-              options={userOptions}
-              placeholder="Pilih Project Manager"
-              required
-            />
-            {users.length === 1 && projectManagerId ? (
-              <SmartDefaultHint>
-                Project Manager otomatis dipilih karena hanya ada satu opsi aktif.
-              </SmartDefaultHint>
-            ) : null}
-          </FormSection>
-
-          {editProject ? (
-            <FormSection
-              title="Status proyek"
-              helper="Status dan kesehatan finansial memengaruhi cara proyek dipantau."
-            >
-              <ProjectEditStateFields
-                status={status}
-                financialHealth={financialHealth}
-                onStatusChange={setStatus}
-                onFinancialHealthChange={setFinancialHealth}
-              />
-            </FormSection>
-          ) : null}
-
-          <FormDisclosure
-            title="Detail operasional"
-            description="Jadwal, lokasi, cover, dan catatan proyek"
-            variant="compact"
-            icon={
-              <AppIcon name="tune" className="text-[18px]" />
-            }
-            summary={operationalDetailCount > 0 ? `${operationalDetailCount} terisi` : "Opsional"}
-            expanded={operationalDetailsVisible}
-            onToggle={() =>
+          <ProjectDrawerFormFields
+            draft={recovery.payload}
+            editMode={Boolean(editProject)}
+            clients={clients}
+            users={users}
+            operationalDetailCount={operationalDetailCount}
+            operationalDetailsVisible={operationalDetailsVisible}
+            recovered={Boolean(recovery.recoveredAt)}
+            isUploadingCover={isUploadingCover}
+            isPending={isPending}
+            onPatch={patch}
+            onToggleOperationalDetails={() =>
               setShowOperationalDetails((current) => !(current ?? hasOperationalDetails))
             }
-          >
-            <div className="space-y-md">
-              <FormSection
-                title="Jadwal dan lokasi"
-                helper="Konteks utama untuk pelaksanaan proyek."
-              >
-                <ProjectDetailFields
-                  startDate={startDate}
-                  endDate={endDate}
-                  location={location}
-                  roomArea={roomArea}
-                  projectType={projectType}
-                  onStartDateChange={setStartDate}
-                  onEndDateChange={setEndDate}
-                  onLocationChange={setLocation}
-                  onRoomAreaChange={setRoomArea}
-                  onProjectTypeChange={setProjectType}
-                />
-              </FormSection>
-
-              <FormSection
-                title="Cover dan catatan"
-                helper="Informasi pendukung yang dapat dilengkapi nanti."
-              >
-                <ProjectCoverField
-                  coverImageUrl={coverImageUrl}
-                  isUploading={isUploadingCover}
-                  isPending={isPending}
-                  onClear={() => setCoverImageUrl("")}
-                  onUpload={(file) => {
-                    void handleCoverUpload(file);
-                  }}
-                />
-                <FormField label="Catatan Proyek" optional>
-                  <Textarea
-                    value={notes}
-                    onChange={setNotes}
-                    placeholder="Catatan tambahan mengenai scope proyek..."
-                  />
-                </FormField>
-              </FormSection>
-            </div>
-          </FormDisclosure>
-
-          {recovery.recoveredAt ? (
-            <SmartDefaultHint>Isian sebelumnya dipulihkan dari perangkat ini.</SmartDefaultHint>
-          ) : null}
+            onCoverUpload={(file) => {
+              void handleCoverUpload(file);
+            }}
+          />
         </form>
       </OperationalFormSheet>
-      <WorkflowFormSheet
+      <ProjectReviewSheet
         open={isOpen && reviewing}
-        title={editProject ? "Tinjau Perubahan Proyek" : "Tinjau Proyek Baru"}
-        primaryLabel={editProject ? "Simpan" : "Buat"}
-        secondaryLabel="Ubah"
-        pendingLabel={editProject ? "Memperbarui…" : "Membuat…"}
+        editMode={Boolean(editProject)}
         pending={isPending}
+        draft={recovery.payload}
+        clientName={selectedClientName}
+        projectManagerName={selectedPmName}
+        statusLabel={selectedStatusLabel}
+        healthLabel={selectedHealthLabel}
         onClose={() => setReviewing(false)}
-        onSecondary={() => setReviewing(false)}
-        onPrimary={handleSubmit}
-        statusText={`${selectedClientName} · ${selectedPmName}`}
-        statusTone="success"
-      >
-        <div className="space-y-3">
-          <FormSection
-            title={editProject ? "Tinjau Perubahan Proyek" : "Tinjau Proyek Baru"}
-            helper="Periksa detail proyek sebelum menyimpan."
-          >
-            <ReviewFact label="Nama Proyek" value={name.trim()} />
-            <ReviewFact label="Klien" value={selectedClientName ?? "–"} />
-            <ReviewFact label="Project Manager" value={selectedPmName ?? "–"} />
-            <ReviewFact
-              label="Lokasi & Area"
-              value={[location, roomArea].filter(Boolean).join(" · ") || "–"}
-            />
-            <ReviewFact
-              label="Periode"
-              value={
-                startDate || endDate ? `${startDate || "–"}${endDate ? ` → ${endDate}` : ""}` : "–"
-              }
-            />
-            <ReviewFact label="Status Proyek" value={selectedStatusLabel ?? "–"} />
-            {editProject && (
-              <ReviewFact label="Kesehatan Finansial" value={selectedHealthLabel ?? "–"} />
-            )}
-          </FormSection>
-          <FormRiskNotice
-            title={editProject ? "Dampak perubahan" : "Yang disiapkan otomatis"}
-            tone="warning"
-          >
-            {editProject
-              ? "Penugasan PM dan status proyek langsung memengaruhi akses serta alur operasional setelah disimpan."
-              : "Project dibuat sebagai Draft. Budget kategori awal disiapkan dari default Settings; lengkapi setup lalu aktifkan proyek sebelum transaksi atau pergerakan stok."}
-          </FormRiskNotice>
-        </div>
-      </WorkflowFormSheet>
-      <ConfirmationModal
+        onSubmit={handleSubmit}
+      />
+      <ProjectRecoveryModal
         open={confirmClose}
-        title="Tutup form proyek?"
-        description="Isian sudah aman di perangkat ini dan dapat dilanjutkan saat form dibuka kembali."
-        tone="warning"
         onClose={() => setConfirmClose(false)}
-        actions={
-          <div className="space-y-2">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => {
-                setConfirmClose(false);
-                handleClose();
-              }}
-              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white"
-            >
-              Simpan Lokal & Tutup
-            </motion.button>
-            <div className="grid grid-cols-2 gap-2">
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.97 }}
-                transition={transitionSpringSnappy}
-                onClick={() => {
-                  recovery.reset(initialDraft());
-                  setConfirmClose(false);
-                  handleClose();
-                }}
-                className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error"
-              >
-                Buang Perubahan
-              </motion.button>
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.97 }}
-                transition={transitionSpringSnappy}
-                onClick={() => setConfirmClose(false)}
-                className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
-              >
-                Lanjut Mengisi
-              </motion.button>
-            </div>
-          </div>
-        }
+        onSaveAndClose={() => {
+          setConfirmClose(false);
+          handleClose();
+        }}
+        onDiscard={() => {
+          recovery.reset(initialDraft());
+          setConfirmClose(false);
+          handleClose();
+        }}
       />
     </>
-  );
-}
-
-function ReviewFact({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="shrink-0 text-on-surface-variant">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
-    </div>
   );
 }

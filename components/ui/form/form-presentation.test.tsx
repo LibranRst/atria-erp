@@ -29,6 +29,19 @@ describe("iOS grouped form presentation", () => {
     expect(html).not.toContain("bg-surface-container-low px-5");
   });
 
+  test("supports a headerless grouped surface without rendering an empty heading", () => {
+    const html = renderToStaticMarkup(
+      <FormSection>
+        <FormField label="Email">
+          <TextInput value="" onChange={() => undefined} />
+        </FormField>
+      </FormSection>,
+    );
+
+    expect(html).toContain("divide-y");
+    expect(html).not.toContain("<h3");
+  });
+
   test("keeps standalone inputs as white capsules", () => {
     const html = renderToStaticMarkup(<TextInput value="Atria" onChange={() => undefined} />);
 

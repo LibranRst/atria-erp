@@ -5,7 +5,7 @@ function SkeletonLine({ className }: { readonly className: string }): React.JSX.
 export default function SettingsLoading(): React.JSX.Element {
   return (
     <div
-      className="space-y-lg pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6"
+      className="space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6"
       aria-label="Memuat Pengaturan ERP"
       role="status"
     >
@@ -18,7 +18,7 @@ export default function SettingsLoading(): React.JSX.Element {
         {[96, 82, 88, 82].map((width, index) => (
           <div
             key={`${width}-${index}`}
-            className={`h-full shrink-0 rounded-full ${index === 0 ? "bg-white shadow-sm" : ""}`}
+            className={`h-full shrink-0 rounded-full ${index === 0 ? "bg-white shadow-control" : ""}`}
             style={{ width }}
           />
         ))}
@@ -45,7 +45,7 @@ export default function SettingsLoading(): React.JSX.Element {
       </section>
       <section className="space-y-2">
         <SkeletonLine className="h-4 w-36" />
-        <div className="overflow-hidden rounded-[26px] bg-white/90 shadow-[0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5">
+        <div className="overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle">
           {[0, 1, 2].map((row) => (
             <div
               key={row}

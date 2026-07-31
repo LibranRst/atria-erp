@@ -5,12 +5,8 @@ import {
   text,
   timestamp,
   boolean,
-  numeric,
   integer,
-  jsonb,
   index,
-  uniqueIndex,
-  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { user } from "./auth";
@@ -44,8 +40,6 @@ export const attachmentRelations = relations(attachment, ({ one }) => ({
   }),
 }));
 
-
-
 // ==========================================
 // // 17. Keputusan Otorisasi (Approval)
 // ==========================================
@@ -76,8 +70,6 @@ export const approvalRelations = relations(approval, ({ one }) => ({
   }),
 }));
 
-
-
 // ==========================================
 // // 18. Log AI Pipeline (AI Run)
 // ==========================================
@@ -103,8 +95,6 @@ export const aiRunRelations = relations(aiRun, ({ one }) => ({
   runBy: one(user, { fields: [aiRun.runById], references: [user.id], relationName: "aiRunner" }),
 }));
 
-
-
 // ==========================================
 // // 19. Notifikasi (Notification)
 // ==========================================
@@ -129,8 +119,6 @@ export const notification = pgTable(
 export const notificationRelations = relations(notification, ({ one }) => ({
   user: one(user, { fields: [notification.userId], references: [user.id] }),
 }));
-
-
 
 // ==========================================
 // // 20. Riwayat Audit (Audit Log)
@@ -161,8 +149,6 @@ export const auditLogRelations = relations(auditLog, ({ one }) => ({
   user: one(user, { fields: [auditLog.userId], references: [user.id] }),
 }));
 
-
-
 // ==========================================
 // // 21. Konfigurasi Aplikasi (App Config)
 // ==========================================
@@ -178,5 +164,3 @@ export const appConfig = pgTable("app_config", {
 export const appConfigRelations = relations(appConfig, ({ one }) => ({
   updatedBy: one(user, { fields: [appConfig.updatedById], references: [user.id] }),
 }));
-
-

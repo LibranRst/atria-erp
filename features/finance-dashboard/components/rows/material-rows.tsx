@@ -52,7 +52,7 @@ export function MaterialIssueRow({
       >
         <Link
           href={item.href}
-          className="block rounded-[22px] px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-accent/25 active:bg-black/2.5 max-[430px]:px-3"
+          className="block rounded-[22px] px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5 max-[430px]:px-3"
         >
           <div className="flex items-start gap-3">
             <span
@@ -98,7 +98,7 @@ export function MaterialIssueRow({
               </span>
             ) : null}
             <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-accent shadow-sm"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-accent shadow-control"
               aria-hidden="true"
             >
               <AppIcon name="chevron_right" className="text-[15px]" />
@@ -114,7 +114,7 @@ export function MaterialIssueRow({
       ? "bg-error/7.5 text-error ring-error/5"
       : item.severity === "WARNING"
         ? "bg-warning/9 text-warning ring-warning/6"
-        : "bg-surface-container-high/70 text-on-surface-variant ring-black/[0.035]";
+        : "bg-surface-container-high/70 text-on-surface-variant ring-ring-subtle";
 
   return (
     <motion.div
@@ -124,7 +124,7 @@ export function MaterialIssueRow({
     >
       <Link
         href={item.href}
-        className="block rounded-[20px] px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-accent/25 active:bg-black/2.5"
+        className="block rounded-[20px] px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5"
       >
         <div className="flex items-start gap-3">
           <span

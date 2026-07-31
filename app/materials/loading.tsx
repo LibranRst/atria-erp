@@ -5,7 +5,7 @@ function SkeletonLine({ className }: { readonly className: string }): React.JSX.
 export default function MaterialsLoading(): React.JSX.Element {
   return (
     <div
-      className="space-y-lg pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6"
+      className="space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6"
       aria-label="Memuat Material dan Stok"
       role="status"
     >
@@ -19,7 +19,7 @@ export default function MaterialsLoading(): React.JSX.Element {
         {[104, 96, 104, 96].map((width, index) => (
           <div
             key={`${width}-${index}`}
-            className={`h-full shrink-0 rounded-full ${index === 0 ? "bg-white shadow-sm" : "bg-transparent"}`}
+            className={`h-full shrink-0 rounded-full ${index === 0 ? "bg-white shadow-control" : "bg-transparent"}`}
             style={{ width }}
           />
         ))}
@@ -52,7 +52,7 @@ export default function MaterialsLoading(): React.JSX.Element {
           <SkeletonLine className="h-4 w-32" />
           <SkeletonLine className="h-2.5 w-16 bg-surface-container-low" />
         </div>
-        <div className="overflow-hidden rounded-[26px] bg-white/90 shadow-[0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl">
+        <div className="overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl">
           {[0, 1].map((row) => (
             <div
               key={row}
@@ -74,7 +74,7 @@ export default function MaterialsLoading(): React.JSX.Element {
           <SkeletonLine className="h-4 w-28" />
           <SkeletonLine className="h-7 w-20 bg-surface-container-low" />
         </div>
-        <div className="overflow-hidden rounded-[26px] bg-white/90 shadow-[0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl">
+        <div className="overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl">
           {[0, 1, 2].map((row) => (
             <div
               key={row}

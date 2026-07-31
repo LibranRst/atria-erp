@@ -6,10 +6,7 @@ import { AlertTriangle, Check, LoaderCircle } from "lucide-react";
 import { AnimatePresence, motion, useDragControls } from "framer-motion";
 import type { PanInfo } from "framer-motion";
 
-import {
-  transitionEaseSmooth,
-  transitionSpringSmooth,
-} from "@/lib/utils/motion";
+import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import {
   calculateBottomSheetMetrics,
   MIN_RESIZE_DISTANCE,
@@ -149,6 +146,8 @@ export function BottomSheet({
   const [expanded, setExpanded] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(720);
   const [naturalHeight, setNaturalHeight] = useState(MIN_SHEET_HEIGHT);
+  const [topChromeHeight, setTopChromeHeight] = useState(76);
+  const [footerHeight, setFooterHeight] = useState(0);
   const [contentOverflows, setContentOverflows] = useState(false);
   const [hasMeasured, setHasMeasured] = useState(false);
   const portalNode = React.useSyncExternalStore(
@@ -167,22 +166,20 @@ export function BottomSheet({
     const nextViewportHeight = window.visualViewport?.height ?? window.innerHeight;
     const handleHeight = handleRef.current?.offsetHeight ?? 20;
     const headerHeight = headerRef.current?.offsetHeight ?? 56;
-    const bodyStyle = bodyRef.current ? window.getComputedStyle(bodyRef.current) : null;
-    const bodyPadding = bodyStyle
-      ? Number.parseFloat(bodyStyle.paddingTop) + Number.parseFloat(bodyStyle.paddingBottom)
-      : 0;
-    const bodyHeight = (bodyContentRef.current?.scrollHeight ?? 0) + bodyPadding;
-    const footerHeight = footerRef.current?.offsetHeight ?? 0;
+    const bodyHeight = bodyContentRef.current?.scrollHeight ?? 0;
+    const nextFooterHeight = footerRef.current?.offsetHeight ?? 0;
     const metrics = calculateBottomSheetMetrics({
       viewportHeight: nextViewportHeight,
       handleHeight,
       headerHeight,
       bodyHeight,
-      footerHeight,
+      footerHeight: nextFooterHeight,
     });
 
     setViewportHeight(nextViewportHeight);
     setNaturalHeight(metrics.naturalHeight);
+    setTopChromeHeight(handleHeight + headerHeight);
+    setFooterHeight(nextFooterHeight);
     setContentOverflows(metrics.contentOverflows);
     if (metrics.contentOverflows) setExpanded(false);
     setHasMeasured(true);
@@ -343,7 +340,7 @@ export function BottomSheet({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.08, bottom: 0.04 }}
             onDragEnd={handleDragEnd}
-            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-background shadow-[0_-24px_80px_rgba(0,0,0,0.28)] ring-1 ring-outline-variant/20 outline-none"
+            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-surface-container-low shadow-sheet ring-1 ring-ring-control outline-none"
             style={{
               zIndex: zIndex + 1,
               maxHeight: `calc(100dvh - ${SHEET_TOP_GAP}px)`,
@@ -352,65 +349,79 @@ export function BottomSheet({
             aria-modal="true"
             aria-label={title}
           >
-            <div className="z-10 flex h-5 shrink-0 items-center justify-center bg-background/95 pt-2">
-              <button
-                ref={handleRef}
-                type="button"
-                onClick={toggleExpanded}
-                onPointerDown={(event) => {
-                  if (!canResize) return;
-                  dragControls.start(event);
-                }}
-                className="flex h-5 w-16 cursor-grab items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:cursor-grabbing disabled:cursor-default"
-                aria-label={expanded ? "Turunkan drawer" : "Perbesar drawer"}
-                disabled={!canResize}
-                style={{ touchAction: "none" }}
-              >
-                <span
-                  className={`h-1 w-10 rounded-full transition-colors ${
-                    canResize ? "bg-outline-variant/70" : "bg-outline-variant/35"
-                  }`}
-                  aria-hidden="true"
-                />
-              </button>
-            </div>
-
-            <header
-              ref={headerRef}
-              className="relative z-10 flex h-14 shrink-0 items-center bg-background px-margin-mobile backdrop-blur-md"
-            >
-              <IconButton
-                ref={closeButtonRef}
-                label="Tutup"
-                icon={<AppIcon name="close" className="text-[24px] leading-none" />}
-                variant="secondary"
-                onClick={() => onCloseRef.current()}
-                className="absolute top-1/2 left-margin-mobile z-10 -translate-y-1/2 shadow-[0_5px_16px_rgba(17,17,17,0.08)]"
+            <div className="absolute inset-x-0 top-0 z-20">
+              <div
+                className="pointer-events-none absolute inset-0 bg-linear-to-b from-surface-container-low from-0% via-surface-container-low/95 via-70% to-transparent"
+                aria-hidden="true"
               />
-
-              <div className="pointer-events-none absolute top-1/2 left-1/2 w-[min(58vw,15rem)] -translate-x-1/2 -translate-y-1/2 text-center">
-                <h2 className="truncate font-sans text-[18px] leading-tight font-semibold text-on-surface">
-                  {title}
-                </h2>
+              <div className="relative z-10 flex h-5 items-center justify-center pt-2">
+                <button
+                  ref={handleRef}
+                  type="button"
+                  onClick={toggleExpanded}
+                  onPointerDown={(event) => {
+                    if (!canResize) return;
+                    dragControls.start(event);
+                  }}
+                  className="flex h-5 w-16 cursor-grab items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:cursor-grabbing disabled:cursor-default"
+                  aria-label={expanded ? "Turunkan drawer" : "Perbesar drawer"}
+                  disabled={!canResize}
+                  style={{ touchAction: "none" }}
+                >
+                  <span
+                    className={`h-1 w-10 rounded-full transition-colors ${
+                      canResize ? "bg-outline-variant/70" : "bg-outline-variant/35"
+                    }`}
+                    aria-hidden="true"
+                  />
+                </button>
               </div>
 
-              <div className="absolute top-1/2 right-margin-mobile z-10 flex -translate-y-1/2 items-center justify-end gap-1.5">
-                {action}
-              </div>
-            </header>
+              <header
+                ref={headerRef}
+                className="relative z-10 flex h-14 items-center px-margin-mobile"
+              >
+                <IconButton
+                  ref={closeButtonRef}
+                  label="Tutup"
+                  icon={<AppIcon name="close" className="text-[24px] leading-none" />}
+                  variant="secondary"
+                  onClick={() => onCloseRef.current()}
+                  className="absolute top-1/2 left-margin-mobile z-10 -translate-y-1/2 shadow-control"
+                />
+
+                <div className="pointer-events-none absolute top-1/2 left-1/2 w-[min(58vw,15rem)] -translate-x-1/2 -translate-y-1/2 text-center">
+                  <h2 className="truncate font-sans text-[18px] leading-tight font-semibold text-on-surface">
+                    {title}
+                  </h2>
+                </div>
+
+                <div className="absolute top-1/2 right-margin-mobile z-10 flex -translate-y-1/2 items-center justify-end gap-1.5">
+                  {action}
+                </div>
+              </header>
+            </div>
 
             <div
               ref={bodyRef}
-              className={`no-scrollbar min-h-0 flex-1 px-margin-mobile py-md ${
+              className={`no-scrollbar min-h-0 flex-1 overscroll-contain ${
                 contentOverflows ? "overflow-y-auto" : "overflow-y-hidden"
               }`}
+              style={{
+                scrollPaddingTop: topChromeHeight + 16,
+                scrollPaddingBottom: footerHeight + 16,
+              }}
             >
-              <div ref={bodyContentRef}>{children}</div>
+              <div aria-hidden="true" style={{ height: topChromeHeight }} />
+              <div ref={bodyContentRef} className="px-margin-mobile py-md">
+                {children}
+              </div>
+              {footer ? <div aria-hidden="true" style={{ height: footerHeight }} /> : null}
             </div>
             {footer && (
               <div
                 ref={footerRef}
-                className="shrink-0 border-t border-outline-variant/15 bg-background px-margin-mobile pt-sm pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md"
+                className="absolute inset-x-0 bottom-0 z-20 bg-linear-to-t from-surface-container-low from-0% via-surface-container-low/95 via-65% to-transparent px-margin-mobile pt-sm pb-[calc(1rem+env(safe-area-inset-bottom))]"
               >
                 {footer}
               </div>
@@ -550,7 +561,7 @@ export function ConfirmationModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 10 }}
               transition={transitionSpringSmooth}
-              className="no-scrollbar pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-90 overflow-y-auto rounded-[28px] bg-background p-5 shadow-[0_28px_90px_rgba(0,0,0,0.32)] ring-1 ring-white/10 outline-none"
+              className="no-scrollbar pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-90 overflow-y-auto rounded-[28px] bg-background p-5 shadow-overlay ring-1 ring-white/10 outline-none"
             >
               <div
                 className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}
@@ -575,7 +586,7 @@ export function ConfirmationModal({
                 ) : null}
               </div>
               {children ? (
-                <div className="mt-4 rounded-[22px] bg-surface-container-lowest p-4 ring-1 ring-outline-variant/15">
+                <div className="mt-4 rounded-[22px] bg-surface-container-lowest p-4 ring-1 ring-ring-subtle">
                   {children}
                 </div>
               ) : null}

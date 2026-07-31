@@ -11,14 +11,12 @@ export type ButtonVariant = "primary" | "secondary" | "tertiary" | "criticalQuie
 export type ButtonSize = "default" | "compact";
 
 const variantClass: Record<ButtonVariant, string> = {
-  primary:
-    "bg-primary text-on-primary shadow-[0_6px_16px_rgba(17,17,17,0.14)] focus-visible:ring-primary/30",
+  primary: "bg-primary text-on-primary shadow-primary focus-visible:ring-focus-ring",
   secondary:
-    "bg-surface-container-lowest text-on-surface ring-1 ring-outline-variant/20 focus-visible:ring-accent/30",
-  tertiary: "text-accent focus-visible:ring-accent/30 active:bg-accent/8",
-  criticalQuiet: "bg-critical-container text-critical focus-visible:ring-critical/30",
-  critical:
-    "bg-critical text-on-critical shadow-[0_6px_16px_rgba(180,35,24,0.16)] focus-visible:ring-critical/30",
+    "bg-surface-container-lowest text-on-surface ring-1 ring-ring-control focus-visible:ring-focus-ring",
+  tertiary: "text-accent focus-visible:ring-focus-ring active:bg-accent/8",
+  criticalQuiet: "bg-critical-container text-critical focus-visible:ring-focus-ring",
+  critical: "bg-critical text-on-critical shadow-primary focus-visible:ring-focus-ring",
 };
 
 const sizeClass: Record<ButtonSize, string> = {
@@ -65,7 +63,7 @@ export function Button({
     <motion.button
       {...props}
       disabled={disabled || pending}
-      whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+      whileTap={{ scale: reduceMotion ? 1 : 0.97 }}
       transition={transitionSpringSnappy}
       className={`inline-flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 ${variantClass[variant]} ${sizeClass[size]} ${fullWidth ? "w-full" : ""} ${className}`}
     >
@@ -113,49 +111,54 @@ export type IconButtonProps = Omit<
   readonly variant?: Exclude<ButtonVariant, "tertiary">;
 };
 
-export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-  function IconButton(
-    { label, icon, variant = "secondary", className = "", ...props },
-    ref,
-  ): React.JSX.Element {
-    const reduceMotion = useReducedMotion();
-    return (
-      <motion.button
-        ref={ref}
-        {...props}
-        type={props.type ?? "button"}
-        aria-label={label}
-        title={label}
-        whileTap={reduceMotion ? undefined : { scale: 0.97 }}
-        transition={transitionSpringSnappy}
-        className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 ${variantClass[variant]} ${className}`}
-      >
-        <span aria-hidden="true">{icon}</span>
-      </motion.button>
-    );
-  },
-);
+export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+  { label, icon, variant = "secondary", className = "", ...props },
+  ref,
+): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+  return (
+    <motion.button
+      ref={ref}
+      {...props}
+      type={props.type ?? "button"}
+      aria-label={label}
+      title={label}
+      whileTap={{ scale: reduceMotion ? 1 : 0.97 }}
+      transition={transitionSpringSnappy}
+      className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 ${variantClass[variant]} ${className}`}
+    >
+      <span aria-hidden="true">{icon}</span>
+    </motion.button>
+  );
+});
 
 type SectionActionProps = {
   readonly label: string;
   readonly href?: string;
   readonly onClick?: () => void;
   readonly className?: string;
+  readonly mode?: "default" | "text-only";
 };
 
-const sectionActionClass =
-  "relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent/8 pl-3 pr-2.5 text-[10px] font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-accent/30 active:bg-accent/[0.14]";
+const defaultSectionActionClass =
+  "relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-accent/8 pl-3 pr-2.5 text-[10px] font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]";
 
 export function SectionAction({
   label,
   href,
   onClick,
   className = "",
+  mode = "default",
 }: SectionActionProps): React.JSX.Element {
+  const sectionActionClass =
+    mode === "default"
+      ? defaultSectionActionClass
+      : "text-[11px] relative inline-flex gap-1 items-center shrink-0 text-accent font-semibold";
+
   const content = (
     <>
       <span>{label}</span>
-      <AppIcon name="chevron_right" className="h-3.5 w-3.5 shrink-0" />
+      {mode === "default" && <AppIcon name="chevron_right" className="h-3.5 w-3.5 shrink-0" />}
     </>
   );
 

@@ -52,7 +52,7 @@ export function ExpenseReceiptUpload({
   return (
     <div className="space-y-2.5">
       {attachment ? (
-        <div className="space-y-2 rounded-[22px] bg-surface-container-low p-2 ring-1 ring-outline-variant/15">
+        <div className="space-y-2 rounded-[22px] bg-surface-container-low p-2 ring-1 ring-ring-subtle">
           <div className="flex min-h-14 items-center gap-3 rounded-2xl px-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -73,7 +73,7 @@ export function ExpenseReceiptUpload({
               type="button"
               onClick={onClearReceipt}
               disabled={disabled}
-              className="min-h-12 rounded-full px-3 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-error/30 disabled:opacity-40"
+              className="min-h-12 rounded-full px-3 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
             >
               Hapus
             </button>
@@ -165,7 +165,7 @@ function ReceiptUploadOption({
     <motion.label
       whileTap={disabled ? undefined : { scale: 0.97 }}
       transition={transitionSpringSnappy}
-      className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-3 text-on-surface shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15 focus-within:ring-2 focus-within:ring-accent/25 ${disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
+      className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-3 text-on-surface shadow-surface ring-1 ring-ring-subtle focus-within:ring-2 focus-within:ring-focus-ring ${disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
     >
       <AppIcon name={icon} className="text-[18px]" />
       <span className="truncate text-xs font-bold">{label}</span>

@@ -45,7 +45,7 @@ export function ExpenseFormNotice({
         <button
           type="button"
           onClick={onDismiss}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           aria-label="Tutup pemberitahuan"
         >
           <AppIcon name="close" className="text-[17px]" />
@@ -117,9 +117,42 @@ export function ExpenseItemsSection({
     if (removalTimer.current) window.clearTimeout(removalTimer.current);
   }
 
+  const insertIndex = removed ? Math.min(removed.index, lines.length) : -1;
+
+  const renderRemovedBanner = (): React.JSX.Element | null => {
+    if (!removed) return null;
+    return (
+      <motion.div
+        layout
+        key="removed-item-banner"
+        transition={transitionSpringSnappy}
+        className="m-2 flex items-center justify-between gap-3 divide-y-0 rounded-3xl bg-surface-container-low/50 p-3"
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-on-surface-variant/10 text-on-surface-variant">
+            <AppIcon name="delete" className="text-[15px]" />
+          </span>
+          <span className="truncate text-xs font-medium text-on-surface-variant">
+            <strong className="font-semibold text-on-surface">
+              {removed.line.description.trim() || `Item #${removed.index + 1}`}
+            </strong>{" "}
+            dihapus
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={undoRemove}
+          className="flex min-h-4 shrink-0 items-center justify-center px-1.5 text-xs font-bold text-primary"
+        >
+          Urungkan
+        </button>
+      </motion.div>
+    );
+  };
+
   return (
     <div className="space-y-2.5">
-      <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+      <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
         {lines.map((line, index) => {
           const category = budgetCategories.find(
             (item) => item.id === line.projectBudgetCategoryId,
@@ -127,106 +160,101 @@ export function ExpenseItemsSection({
           const complete = isExpenseLineComplete(line, category?.code);
           const quantity = Number(line.quantity) || 0;
           const unitPrice = Number(line.unitPrice) || 0;
+          const isInsertHere = removed && index === insertIndex;
+
           return (
-            <motion.div layout key={line.key} transition={transitionSpringSnappy} className="p-2.5">
-              <button
-                type="button"
-                data-expense-incomplete={complete ? undefined : "true"}
-                onClick={() => setEditingKey(line.key)}
-                disabled={disabled}
-                className="flex w-full min-w-0 items-start gap-3 rounded-2xl p-1 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent/25 active:bg-surface-container-low disabled:opacity-50"
-              >
-                <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                    complete ? "bg-primary/10 text-primary" : "bg-warning/15 text-warning"
-                  }`}
-                  aria-label={complete ? "Item lengkap" : "Item belum lengkap"}
+            <React.Fragment key={line.key}>
+              {isInsertHere ? renderRemovedBanner() : null}
+              <motion.div layout transition={transitionSpringSnappy} className="p-2.5">
+                <button
+                  type="button"
+                  data-expense-incomplete={complete ? undefined : "true"}
+                  onClick={() => setEditingKey(line.key)}
+                  disabled={disabled}
+                  className="flex w-full min-w-0 items-start gap-3 rounded-2xl p-1 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-low disabled:opacity-50"
                 >
-                  <AppIcon
-                    name={complete ? "check_circle" : "info"}
-                    className="text-[18px] leading-none"
-                  />
-                </span>
-
-                <span className="grid min-w-0 flex-1 gap-1">
-                  <span className="line-clamp-2 text-xs leading-snug font-bold wrap-break-word text-on-surface">
-                    {line.description.trim() || `Item ${index + 1}`}
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                      complete ? "bg-primary/10 text-primary" : "bg-warning/15 text-warning"
+                    }`}
+                    aria-label={complete ? "Item lengkap" : "Item belum lengkap"}
+                  >
+                    <AppIcon
+                      name={complete ? "check_circle" : "info"}
+                      className="text-[18px] leading-none"
+                    />
                   </span>
 
-                  <span className="flex flex-wrap items-center gap-1.5">
-                    <span className="shrink-0 rounded-full bg-surface-container-low px-2 py-0.5 text-[9px] font-semibold text-on-surface-variant/80">
-                      Item #{index + 1}
+                  <span className="grid min-w-0 flex-1 gap-1">
+                    <span className="line-clamp-2 text-xs leading-snug font-bold wrap-break-word text-on-surface">
+                      {line.description.trim() || `Item ${index + 1}`}
                     </span>
-                    {category ? (
-                      <span className="shrink-0 rounded-full bg-surface-container-low px-2 py-0.5 text-[9px] font-bold text-on-surface-variant">
-                        {category.name}
+
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <span className="shrink-0 rounded-full bg-surface-container-low px-2 py-0.5 text-[9px] font-semibold text-on-surface-variant/80">
+                        Item #{index + 1}
                       </span>
-                    ) : null}
-                    <span className="truncate text-[10px] leading-tight text-on-surface-variant tabular-nums">
-                      {quantity || "–"} × Rp {unitPrice.toLocaleString("id-ID")}
-                      {complete ? "" : " · Perlu diperiksa"}
+                      {category ? (
+                        <span className="shrink-0 rounded-full bg-surface-container-low px-2 py-0.5 text-[9px] font-bold text-on-surface-variant">
+                          {category.name}
+                        </span>
+                      ) : null}
+                      <span className="truncate text-[10px] leading-tight text-on-surface-variant tabular-nums">
+                        {quantity || "–"} × Rp {unitPrice.toLocaleString("id-ID")}
+                        {complete ? "" : " · Perlu diperiksa"}
+                      </span>
                     </span>
                   </span>
-                </span>
 
-                <AppIcon
-                  name="chevron_right"
-                  className="mt-0.5 shrink-0 text-[18px] text-on-surface-variant/60"
-                />
-              </button>
+                  <AppIcon
+                    name="chevron_right"
+                    className="mt-0.5 shrink-0 text-[18px] text-on-surface-variant/60"
+                  />
+                </button>
 
-              <div className="mt-2 flex items-center justify-between rounded-2xl bg-surface-container-low py-1 pr-1 pl-3">
-                <div className="flex min-w-0 items-center gap-1.5">
-                  <span className="text-[10px] font-medium text-on-surface-variant/70">Total:</span>
-                  <span className="truncate text-xs font-bold text-on-surface tabular-nums">
-                    Rp {(Number(line.amount) || 0).toLocaleString("id-ID")}
-                  </span>
+                <div className="mt-2 flex items-center justify-between rounded-2xl bg-surface-container-low py-1 pr-1 pl-3">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <span className="text-[10px] font-medium text-on-surface-variant/70">
+                      Total:
+                    </span>
+                    <span className="truncate text-xs font-bold text-on-surface tabular-nums">
+                      Rp {(Number(line.amount) || 0).toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-0.5 rounded-3xl bg-surface-container-lowest ring-1 ring-ring-subtle">
+                    <RowAction
+                      label="Naikkan item"
+                      icon="arrow_upward"
+                      disabled={disabled || index === 0}
+                      onClick={() => onMove(line.key, -1)}
+                    />
+                    <RowAction
+                      label="Turunkan item"
+                      icon="arrow_downward"
+                      disabled={disabled || index === lines.length - 1}
+                      onClick={() => onMove(line.key, 1)}
+                    />
+                    <RowAction
+                      label="Duplikat item"
+                      icon="content_copy"
+                      disabled={disabled}
+                      onClick={() => onDuplicate(line.key)}
+                    />
+                    <RowAction
+                      label="Hapus item"
+                      icon="delete"
+                      danger
+                      disabled={disabled || lines.length === 1}
+                      onClick={() => removeWithUndo(line, index)}
+                    />
+                  </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-0.5 rounded-3xl bg-surface-container-lowest ring-1 ring-black/2.5">
-                  <RowAction
-                    label="Naikkan item"
-                    icon="arrow_upward"
-                    disabled={disabled || index === 0}
-                    onClick={() => onMove(line.key, -1)}
-                  />
-                  <RowAction
-                    label="Turunkan item"
-                    icon="arrow_downward"
-                    disabled={disabled || index === lines.length - 1}
-                    onClick={() => onMove(line.key, 1)}
-                  />
-                  <RowAction
-                    label="Duplikat item"
-                    icon="content_copy"
-                    disabled={disabled}
-                    onClick={() => onDuplicate(line.key)}
-                  />
-                  <RowAction
-                    label="Hapus item"
-                    icon="delete"
-                    danger
-                    disabled={disabled || lines.length === 1}
-                    onClick={() => removeWithUndo(line, index)}
-                  />
-                </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </React.Fragment>
           );
         })}
+        {removed && insertIndex === lines.length ? renderRemovedBanner() : null}
       </div>
-
-      {removed ? (
-        <div className="flex min-h-12 items-center justify-between rounded-3xl bg-surface-container-lowest px-4 text-xs shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
-          <span>Item dihapus</span>
-          <button
-            type="button"
-            onClick={undoRemove}
-            className="min-h-10 rounded-full font-bold text-primary-container"
-          >
-            Urungkan
-          </button>
-        </div>
-      ) : null}
 
       <motion.button
         type="button"
@@ -234,7 +262,7 @@ export function ExpenseItemsSection({
         transition={transitionSpringSnappy}
         onClick={onAdd}
         disabled={!selectedProjectId || disabled}
-        className="min-h-12 w-full rounded-full bg-surface-container px-5 text-sm font-bold text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-45"
+        className="min-h-12 w-full rounded-full bg-surface-container px-5 text-sm font-bold text-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-45"
       >
         Tambahkan Item
       </motion.button>
@@ -279,7 +307,7 @@ function RowAction({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:bg-surface-container-low disabled:opacity-25 ${
+      className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-low disabled:opacity-25 ${
         danger
           ? "text-error hover:bg-error-container/20"
           : "text-on-surface-variant hover:bg-surface-container-low/50"

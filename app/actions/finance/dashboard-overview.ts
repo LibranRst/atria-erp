@@ -8,6 +8,7 @@ import { cashTransaction, goodsReceipt, project, stockMovement } from "@/db/sche
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { getPendingApprovalDetails, rankPendingApprovals } from "@/lib/finance/approval-details";
+import { summarizeApprovals } from "@/lib/finance/approval-summary";
 import {
   buildFinanceDashboardCore,
   DASHBOARD_TAB_DETAIL_LIMIT,
@@ -130,7 +131,9 @@ export async function getFinanceDashboardOverview(): Promise<
     ]);
 
     const optionalResults = await Promise.allSettled([
-      role === "OWNER" ? getPendingApprovalDetails() : Promise.resolve([]),
+      role === "OWNER" || role === "FINANCE_ADMIN"
+        ? getPendingApprovalDetails()
+        : Promise.resolve([]),
       db.query.materialInventory.findMany({ with: { material: true, location: true } }),
       db.query.projectRapItem.findMany({
         with: {
@@ -158,7 +161,16 @@ export async function getFinanceDashboardOverview(): Promise<
       }),
     ] as const);
     const unavailableSources: string[] = [];
-    const approvalDetails = optionalData(optionalResults[0], "persetujuan", [], unavailableSources);
+    const rawApprovalDetails = optionalData(
+      optionalResults[0],
+      "persetujuan",
+      [],
+      unavailableSources,
+    );
+    const approvalDetails =
+      role === "FINANCE_ADMIN"
+        ? rawApprovalDetails.filter((item) => item.type === "inventory_opening")
+        : rawApprovalDetails;
     const inventoryRows = optionalData(optionalResults[1], "inventori", [], unavailableSources);
     const rapItems = optionalData(optionalResults[2], "kebutuhan RAP", [], unavailableSources);
     const transactions = optionalData(optionalResults[3], "aktivitas kas", [], unavailableSources);
@@ -436,6 +448,7 @@ export async function getFinanceDashboardOverview(): Promise<
         },
         dashboardDetails: {
           approvals: limitDashboardTabDetails(rankedApprovalDetails, DASHBOARD_TAB_DETAIL_LIMIT),
+          approvalSummary: summarizeApprovals(rankedApprovalDetails, now),
           cashDue: limitDashboardTabDetails(cashDue, DASHBOARD_TAB_DETAIL_LIMIT),
           cashDueGroups: buildCashDueGroups(cashDue),
           budgetRisks: limitDashboardTabDetails(core.riskyProjects, DASHBOARD_TAB_DETAIL_LIMIT),

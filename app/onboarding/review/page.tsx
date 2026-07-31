@@ -1,21 +1,15 @@
 import { redirect } from "next/navigation";
 
-import { getDeveloperAccountSimulationState } from "@/app/actions/developer-account-simulation";
-import { getOnboardingReviewState } from "@/app/actions/onboarding-review";
 import { OnboardingFinanceReview } from "@/features/onboarding/components/workspaces/onboarding-finance-review";
+import { getOnboardingReviewPageData } from "@/features/onboarding/server/get-onboarding-review-page-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingReviewPage(): Promise<React.JSX.Element> {
-  const [review, simulation] = await Promise.all([
-    getOnboardingReviewState(),
-    getDeveloperAccountSimulationState(),
-  ]);
-  if (!review.success) redirect("/");
+  const data = await getOnboardingReviewPageData();
+  if (data.status === "unavailable") redirect("/");
+
   return (
-    <OnboardingFinanceReview
-      pendingBatches={review.data.pendingBatches}
-      simulated={simulation.success && simulation.data.isSimulating}
-    />
+    <OnboardingFinanceReview pendingBatches={data.pendingBatches} simulated={data.simulated} />
   );
 }

@@ -68,7 +68,7 @@ export function PageState({
 
   return (
     <section
-      className={`rounded-[28px] border border-outline-variant/15 bg-white text-center shadow-[0_14px_34px_rgba(17,17,17,0.04)] ${
+      className={`rounded-[28px] border border-outline-variant/15 bg-white text-center shadow-surface ${
         compact ? "px-4 py-6" : "px-6 py-12"
       } ${className}`}
       role={kind === "error" || kind === "restricted" ? "alert" : "status"}
@@ -93,7 +93,7 @@ export function PageState({
           whileTap={{ scale: 0.97 }}
           transition={transitionSpringSnappy}
           onClick={onAction}
-          className="mt-5 min-h-12 rounded-full bg-primary px-6 text-xs font-bold text-on-primary outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          className="mt-5 min-h-12 rounded-full bg-primary px-6 text-xs font-bold text-on-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
         >
           {actionLabel}
         </motion.button>
@@ -125,7 +125,7 @@ export function ConnectivityBanner(): React.JSX.Element | null {
           animate="visible"
           exit="exit"
           role="status"
-          className="fixed inset-x-0 top-16 z-40 mx-auto flex w-[calc(100%-2.5rem)] max-w-sm items-center gap-2 rounded-full bg-warning px-4 py-2 text-[11px] leading-4 font-bold text-white shadow-lg"
+          className="fixed inset-x-0 top-16 z-40 mx-auto flex w-[calc(100%-2.5rem)] max-w-sm items-center gap-2 rounded-full bg-warning px-4 py-2 text-[11px] leading-4 font-bold text-white shadow-raised"
         >
           <AppIcon name="cloud_off" className="text-[17px]" />
           Mode offline · data tetap dapat dibaca, perubahan ditahan.

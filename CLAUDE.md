@@ -4,105 +4,123 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Atria ERP is a finance-first, mobile-first internal ERP for interior design/build contractors. The product centers on project budgets, cash/bank ledger integrity, field expense approvals, material stock visibility, and real-time profitability rather than generic HR modules. Most product and technical specifications are under `docs/`; active guides and executable code take precedence over historical implementation plans.
+Atria ERP is Dekoria's finance-first, mobile-first internal ERP for interior design/build projects. It centers on project budgets by expense category, cash/bank ledger integrity, field expense approvals, RAP/RAB planning, material stock visibility, and margin risk — not generic HR or PM modules. Product/technical specs live under `docs/`; executable code and active guides take precedence over historical implementation plans in `docs/plans/`.
 
-The repository is an active Next.js App Router application using Bun, TypeScript, Neon PostgreSQL, Drizzle ORM, Better Auth, Tailwind CSS, ImageKit, and Gemini receipt OCR. AI CFO/financial briefing is deferred from the current Dashboard; do not reintroduce it unless product scope explicitly changes.
+Stack: Bun, Next.js App Router (v16) with React 19, TypeScript (strict), Neon PostgreSQL + Drizzle ORM, Better Auth, Tailwind v4, Framer Motion, ImageKit uploads, Gemini (`@google/genai`) receipt OCR. AI CFO/financial briefing is deferred from the Dashboard; do not reintroduce it unless product scope explicitly changes.
+
+User-facing copy and much of the domain-code commenting are Bahasa Indonesia. Match the surrounding language when editing.
 
 ## Common Commands
 
-Use Bun as the package manager/runtime; `bun.lock` is committed.
+Bun is the package manager/runtime; `bun.lock` is committed.
 
 ```bash
-bun install          # install dependencies
-bun run dev          # start Next.js dev server
-bun run build        # production build
-bun run start        # run built app
-bun run lint         # run ESLint
+bun install
+bun run dev            # Next dev server with localhost + LAN host (scripts/dev-lan.mjs)
+bun run dev:default    # plain `next dev`
+bun run build
+bun run lint           # eslint
+bun run lint:fix
+bun run format         # prettier --write .
+bun run tailwind:format  # canonical Tailwind class order (eslint --fix) + prettier
 ```
 
-Tests use Bun Test. Run a focused test file with:
+Tests are Bun Test, colocated next to the code they cover (`lib/**`, `app/actions/**`, `components/**`, `db/seed/**`). There is no `test` script:
 
 ```bash
-bun test path/to/file.test.ts
+bun test                              # whole suite
+bun test lib/finance/dashboard.test.ts  # single file
+bun test --test-name-pattern "reconcile"
 ```
 
-Check `package.json` before running database or project scripts; do not infer commands from historical docs.
+Database scripts (all destructive ones require `--confirm-reset`):
 
-## Current Codebase Shape
+```bash
+bun run db:seed              # insert-only; refuses a non-empty or production DB
+bun run db:reset             # empty DB for production-style UAT
+bun run db:demo:reset        # connected demo dataset + CSV fixtures in .atria-demo/
+bun run db:demo:verify
+```
 
-- `app/` contains the Next.js App Router routes, layouts, loading states, and server actions.
-- `app/globals.css` defines the HSL-based dark design tokens (`--bg-*`, `--text-*`, `--primary`, `--success`, `--warning`, `--critical`) and maps them into Tailwind v4 `@theme` variables. Prefer these semantic tokens over hardcoded colors.
-- `tsconfig.json` uses strict TypeScript and maps `@/*` to the repository root.
-- `eslint.config.mjs` extends Next.js core web vitals and TypeScript rules.
-- `docs/` contains the real product, data, architecture, UI/UX, and implementation guidance. Consult it before implementing substantial features.
+Drizzle migrations live in `drizzle/`; config is `drizzle.config.ts`. Check `package.json` before running any script — do not infer commands from docs.
 
-## Architecture Direction from Docs
+## Architecture
 
-The intended architecture is data-flow-first:
+Layering runs database → auth/RBAC → transaction helpers → Server Actions → UI. Read-only data fetching happens in Server Components; Client Components are for interaction, local state, animation, camera/upload, and forms. All mutations are Server Actions — no internal REST endpoints (the only API route is Better Auth at `app/api/auth/[...better-auth]/route.ts`).
 
-1. Database layer and Drizzle schema
-2. Auth and RBAC security layer
-3. Core transaction helper / Option A ledger model
-4. Server Actions with Zod validation
-5. Gemini AI integrations
-6. Mobile-first iOS 26 Solid UI
+Three source roots, with enforced boundaries:
 
-Use Next.js Server Components for read-only data fetching directly on the server. Use Client Components only for interactive UI, local state, animation, browser APIs, camera/upload flows, and form interactions. All data mutations should be implemented as Next.js Server Actions, not internal REST endpoints, unless a documented integration requires an API route.
+- `app/` — routes, layouts, `loading.tsx` skeletons, `error.tsx`, and `app/actions/**` (the `"use server"` modules, grouped by domain: `finance/`, `project/`, `material/`, `settings/`, `ai/`, `media/`, plus onboarding/administration/activity-detail families).
+- `features/<domain>/` — feature slices with `components/`, `hooks/`, `server/`, `types/`, `utils/`. Domains: activity-detail, administration, approvals, expenses, finance-dashboard, materials, onboarding, profile, projects, reconciliation, settings, shared-hooks.
+- `lib/` — cross-cutting domain logic and pure helpers (`lib/finance`, `lib/project`, `lib/material`, `lib/validations` Zod schemas, `lib/auth` permissions, `lib/server/session.ts`, `lib/utils/motion.ts`, `lib/types/action-response.ts`).
+- `components/ui/**` and `components/layout/**` — shared primitives and the mobile shell/bottom nav.
+- `db/` — `db/index.ts` client, `db/schema/{auth,projects,finance,materials,system}.ts` re-exported from `db/schema.ts`, seed under `db/seed/`.
 
-Server Actions are expected to be organized by domain:
+`lib/architecture/server-boundaries.test.ts` is an executable architecture test. It fails the build-time suite when:
 
-- `app/actions/finance/` for ledger, bank accounts, client payments, vendor payments, and financial summaries.
-- `app/actions/project/` for project budgets, budget items, field cash requests, and project approval flows.
+1. A `features/<domain>/actions/` folder exists (server entrypoints belong in `app/actions/`).
+2. A file under `features/**/server/**` does not start with `import "server-only";`.
+3. Any route `page.tsx` imports from `@/db` or `drizzle-orm` directly — pages must delegate to a server loader.
+4. A `"use server"` module exports anything other than directly declared `async` functions (no re-exports, consts, classes, or type-only value exports).
 
-All Server Actions should return the documented `ActionResponse<T>` shape from `docs/06-technical/API_ACTIONS.md` so Client Components can handle success and error states consistently.
+Keep these invariants in mind before moving code; run `bun test lib/architecture/server-boundaries.test.ts` after restructuring.
+
+### Server Action contract
+
+Every Server Action returns `ActionResponse<T>` from `lib/types/action-response.ts`: `{ success: true, data }` or `{ success: false, error: { code, message, details? } }` where `code` is one of `UNAUTHORIZED | FORBIDDEN | CONFLICT | VALIDATION_ERROR | INSUFFICIENT_FUNDS | TRANSACTION_FAILED | NOT_FOUND | INTERNAL_SERVER_ERROR`. See `docs/06-technical/API_ACTIONS.md`.
+
+Read the session via `getServerSession()` / `requireServerSession()` in `lib/server/session.ts`, then enforce RBAC with `lib/auth/permissions.ts`. Never trust client-provided user IDs or role claims.
 
 ## Finance and Data Integrity Guardrails
 
-This app manages financial state. Follow `AGENTS.md`, `docs/06-technical/ARCHITECTURE.md`, and `docs/04-data/DATABASE_SCHEMA.md` when implementing financial flows.
+Follow `AGENTS.md`, `docs/06-technical/ARCHITECTURE.md`, and `docs/04-data/DATABASE_SCHEMA.md` for financial flows.
 
-- Use Drizzle ORM query builders/relational queries for application code. Raw SQL is reserved for migrations only.
-- Every balance-changing operation must run inside `db.transaction(...)` and write both a `cash_transaction` ledger entry and an `audit_log` entry.
-- Use the documented Option A ledger model: lock the relevant `bank_account` row with pessimistic locking, verify funds for `CREDIT` cash-out operations, update the balance, verify exactly one row changed, then write immutable ledger/audit records.
-- Never edit or delete reconciled `cash_transaction` rows. Corrections must be compensating reversal/journal transactions with audit notes.
-- Do not trust client-provided user IDs or authorization data. Read the session on the server through Better Auth, then enforce RBAC and project scoping.
-- PM and Designer access is project-scoped; Owner and Finance Admin have broader/global financial access as documented in `docs/06-technical/AUTH_AND_PERMISSION.md`.
-- Owner approval is required for field/vendor payments of Rp 5,000,000 or more and for any over-budget override.
+- Use Drizzle query builders/relational queries in application code. Raw SQL is for migrations only.
+- Every balance-changing operation runs inside `db.transaction(...)` and writes both a `cash_transaction` ledger entry and an `audit_log` entry. Use the helpers in `lib/finance/balance-mutation.ts` rather than hand-rolling balance math.
+- Option A ledger model: lock the `bank_account` row pessimistically, verify funds for cash-out, update the balance, assert exactly one row changed, then write immutable ledger/audit records.
+- Money is `numeric(15, 2)` in Postgres. In TypeScript, convert to `bigint` cents with `parseNumericToCents` / `fromCents` for arithmetic — never use floats for money.
+- Reconciled `cash_transaction` rows are immutable (`checkReconciledTransaction` guards this). Corrections are compensating reversal/journal entries with audit notes.
+- Stock-changing actions also run in a transaction and write `stock_movement` + `audit_log`. Reservation and usage do not by themselves create cash transactions.
+- PM/Designer access is project-scoped; Owner and Finance Admin have global financial access (`docs/06-technical/AUTH_AND_PERMISSION.md`). Owner approval is required for field/vendor payments ≥ Rp 5,000,000 and any over-budget override.
+- Settings is the source of truth for budget allocation defaults, expense categories, item/price library, and material master. Code constants are seed/fallback only.
 
 ## Validation and Types
 
-- Keep strict TypeScript. Avoid `any`; use concrete types, inferred Drizzle types, Zod schemas, or type guards.
-- Validate every Server Action input with Zod before business logic. Match Zod constraints to Drizzle/PostgreSQL constraints: UUIDs, string lengths, numeric bounds, and enums/statuses.
-- Money values are documented as PostgreSQL `numeric(15, 2)`. Be careful with JavaScript floating point; prefer minor units or a decimal library when implementing real money arithmetic.
+- Strict TypeScript, no `any`. Explicit argument and return types; avoid assertions outside untyped third-party boundaries.
+- Validate every Server Action input with Zod (schemas in `lib/validations/`) before business logic, matching Drizzle/Postgres constraints: UUIDs, lengths, numeric bounds, enums from `docs/04-data/STATUS_ENUMS.md`.
 
 ## UI/UX Direction
 
-Atria ERP is mobile-first for field Project Managers and should feel like a premium native iOS-style WebView.
+Mobile-first for field PMs; should feel like a premium native iOS-style WebView.
 
-- Load the project skill at `.claude/skills/atria-ui-ux/SKILL.md` before planning, implementing, styling, redesigning, reworking, auditing, or reviewing any UI. Follow its live references, motion decision, and verification workflow.
-- `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md` is the active page-design source of truth.
-- The current Dashboard (`/ledger`) and Expenses (`/expenses`) are reference implementations. Reuse their grammar and shared primitives; do not copy either layout blindly.
-- The fixed `max-w-md` mobile shell remains one column at all viewports. Verify 320, 360, 390, and 430px rather than judging only from desktop preview.
-- Use one justified focal summary, concise section headers, grouped surfaces with dividers, purpose-built rows, and restrained status treatments. Do not make every row a card.
-- Use shared financial formatting with tabular numerals; primary amounts must not wrap.
-- Keep visible actions compact while preserving a 48x48px effective touch target.
-- Use structural route skeletons matching the final hierarchy. Avoid generic centered spinners and large loading layout shifts.
-- Horizontal tabs and filters may auto-center within their strip but must never scroll the document vertically or move the user's reading position.
-- Preserve established identity surfaces such as bank account gradients. Avoid repeated progress bars, decorative vertical severity rails, excessive glass/gradients, and whole-section animations.
+- **Load `.agents/skills/atria-ui-ux/SKILL.md` before planning, implementing, styling, redesigning, auditing, or reviewing any UI** (`.claude/skills/atria-ui-ux` is a symlink to it). Follow its references, motion decision, and verification workflow.
+- `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md` is the active page-design source of truth; `docs/05-ui-ux/CONTROL_LANGUAGE.md` governs inputs, buttons, focus rings, and shadow tokens.
+- Dashboard (`/ledger`) and Expenses (`/expenses`) are the reference implementations. Reuse their grammar and shared primitives; do not copy either layout blindly.
+- The fixed `max-w-md` shell stays one column at every viewport. Verify 320, 360, 390, and 430 px — a desktop preview is not acceptance evidence.
+- One justified focal summary, concise section headers, grouped surfaces with dividers, purpose-built rows, restrained status. Do not make every row a card, and do not repeat progress bars across sections.
+- Use shared `MoneyValue` formatting with tabular numerals; primary amounts must not wrap. Use shared `SegmentedTabs` for peer views/filters — changing a tab must not move the reading position.
+- Every main route needs a structural skeleton in `loading.tsx` matching its final hierarchy; no generic centered spinners.
+- Compact controls with a 48×48 px effective touch target, keyboard focus, SR labels, safe-area clearance, reduced-motion support. Status needs copy + icon/shape, not color alone.
+- Use only semantic tokens from `app/globals.css` (Tailwind v4 `@theme`) — no warm neutral hex, raw gray utilities, arbitrary shadows, `ring-black/*`, or component-local focus-ring colors. Preserve identity surfaces such as bank account gradients.
+- All animation goes through Framer Motion presets in `lib/utils/motion.ts` (`slideUpDrawerVariants`, `fadeVariants`, `transitionSpringSmooth/Snappy/Bouncy`, `transitionEaseSmooth`). No ad-hoc springs or inline keyframes.
+- Tailwind class order is linted (`eslint-plugin-tailwind-canonical-classes`); run `bun run tailwind:format` after significant class edits.
 
 ## Documentation Map to Read Before Work
 
 - Product scope and MVP: `docs/01-product/PRD.md`, `docs/02-product/MVP_BLUEPRINT.md`
 - Financial workflows: `docs/03-flows/FLOWS.md`
 - Data model and statuses: `docs/04-data/DATABASE_SCHEMA.md`, `docs/04-data/STATUS_ENUMS.md`, `docs/04-data/SEED_DATA.md`
-- Main-surface design language: `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md`
-- UI/UX workflow and component tokens: `docs/05-ui-ux/MOBILE_FIRST_UI_UX.md`, `docs/05-ui-ux/IOS26_SOLID_DESIGN_SYSTEM.md`
-- Technical architecture, auth, actions, AI: `docs/06-technical/ARCHITECTURE.md`, `docs/06-technical/AUTH_AND_PERMISSION.md`, `docs/06-technical/API_ACTIONS.md`, `docs/06-technical/AI_AGENT_ARCHITECTURE.md`
-- Build order and roadmap: `docs/07-development/IMPLEMENTATION_ORDER.md`, `docs/07-development/ROADMAP.md`, `docs/07-development/TASK_BREAKDOWN.md`
+- UI/UX: `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md`, `CONTROL_LANGUAGE.md`, `MOBILE_FIRST_UI_UX.md`, `IOS26_SOLID_DESIGN_SYSTEM.md`
+- Technical: `docs/06-technical/ARCHITECTURE.md`, `AUTH_AND_PERMISSION.md`, `API_ACTIONS.md`, `AI_AGENT_ARCHITECTURE.md`
+- Build order and roadmap: `docs/07-development/IMPLEMENTATION_ORDER.md`, `ROADMAP.md`, `TASK_BREAKDOWN.md`
+- Manual verification: `docs/guide/seeded_demo_walkthrough.md` (seeded sandbox), `docs/guide/financial_workflow_guide.md` (empty-DB UAT)
 
 ## Agent Workflow Requirements
 
-Important instructions from `AGENTS.md`:
+From `AGENTS.md`:
 
-- Read existing schemas and API documentation before proposing changes.
-- Before major executable changes, write or update a step-by-step implementation plan under `docs/plans/YYYY-MM-DD-<feature-name>.md`.
-- Do not leave placeholder code such as `TODO`, `TBD`, or incomplete statements in implemented functions, schemas, or actions.
+- Read existing schema, actions, docs, and UI before changing code.
+- Before major executable changes, write or update a plan under `docs/plans/YYYY-MM-DD-<feature-name>.md`.
+- Do not leave `TODO`, `TBD`, or incomplete statements in implemented functions, schemas, or actions.
+- Introduce schema changes additively; preserve legacy `project_budget`, `project_budget_item`, and `project_cost` compatibility until reads, writes, tests, approvals, and dashboards are migrated. The field expense table is `project_cost` — there is no `field_request` table.
+- AI may analyze, summarize, and prefill, but must not mutate finance/material records without explicit human approval, must not generate or execute SQL, and must not leak internal RAP cost/margin/vendor notes into client-facing RAB output.

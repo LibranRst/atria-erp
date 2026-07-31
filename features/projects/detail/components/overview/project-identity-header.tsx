@@ -54,7 +54,7 @@ export function ProjectIdentityHeader({
 
   return (
     <>
-      <section className="overflow-hidden rounded-[28px] bg-primary shadow-[0_16px_38px_rgba(17,17,17,0.11)] ring-1 ring-black/4">
+      <section className="overflow-hidden rounded-[28px] bg-primary shadow-inverse ring-1 ring-ring-subtle">
         <div className="relative aspect-square overflow-hidden bg-primary">
           {showCover && project.coverImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -76,7 +76,7 @@ export function ProjectIdentityHeader({
           <button
             type="button"
             onClick={() => setDetailOpen(true)}
-            className="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.1)] backdrop-blur-2xl"
+            className="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-control backdrop-blur-2xl"
             aria-label="Lihat detail proyek"
           >
             <AppIcon name="info" className="text-[20px]" />
@@ -115,7 +115,7 @@ export function ProjectIdentityHeader({
         </div>
       </section>
       <BottomSheet open={detailOpen} title="Detail Proyek" onClose={() => setDetailOpen(false)}>
-        <div className="overflow-hidden rounded-[22px] bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+        <div className="overflow-hidden rounded-[22px] bg-white shadow-surface ring-1 ring-ring-subtle">
           <DetailRow
             label="Klien"
             value={project.client?.name ?? "Belum diisi"}
@@ -200,7 +200,7 @@ function HeroStatusPill({
 function ProjectCoverFallback({ initial }: { readonly initial: string }): React.JSX.Element {
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-primary text-on-primary">
-      <span className="relative flex h-20 w-20 -translate-y-5 items-center justify-center rounded-3xl bg-white/10 text-[32px] leading-none font-semibold text-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.16)] ring-1 ring-white/12">
+      <span className="relative flex h-20 w-20 -translate-y-5 items-center justify-center rounded-3xl bg-white/10 text-[32px] leading-none font-semibold text-white/90 shadow-surface ring-1 ring-white/12">
         {initial}
       </span>
     </div>

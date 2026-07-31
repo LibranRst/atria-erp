@@ -3,6 +3,7 @@
 import React from "react";
 
 import type { MaterialMovementView } from "@/app/actions/material/operations-dashboard";
+import { Button } from "@/components/ui/button/button";
 import { MoneyValue, NativeSection } from "@/components/ui/feedback/page-primitives";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import {
@@ -117,18 +118,28 @@ export function ApprovalRow({
   title,
   description,
   amount,
+  detailLabel,
+  onOpen,
   onApprove,
   onReject,
 }: {
   readonly title: string;
   readonly description: string;
   readonly amount?: number;
+  readonly detailLabel: string;
+  readonly onOpen: () => void;
   readonly onApprove: () => void;
   readonly onReject: () => void;
 }): React.JSX.Element {
   return (
-    <div className="px-3.5 py-3">
-      <div className="flex items-start gap-3">
+    <div className="relative px-3.5 py-3">
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={detailLabel}
+        className="absolute inset-0 z-0 rounded-[20px] outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-low/70"
+      />
+      <div className="pointer-events-none relative z-1 flex items-start gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/9 text-warning ring-1 ring-warning/6">
           <AppIcon name="priority_high" className="text-[18px]" />
         </span>
@@ -141,22 +152,15 @@ export function ApprovalRow({
             <MoneyValue amount={amount} variant="compactWithFull" size="sm" className="mt-1" />
           )}
         </span>
+        <ActivityDetailChevron className="mt-2" />
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2 pl-12">
-        <button
-          type="button"
-          onClick={onReject}
-          className="min-h-12 rounded-full bg-error-container/20 text-[10px] font-bold text-error transition active:scale-[0.97]"
-        >
+      <div className="relative z-10 mt-3 grid grid-cols-2 gap-2 pl-12">
+        <Button type="button" onClick={onReject} variant="secondary" fullWidth className="min-w-0">
           Tolak
-        </button>
-        <button
-          type="button"
-          onClick={onApprove}
-          className="min-h-12 rounded-full bg-primary text-[10px] font-bold text-on-primary transition active:scale-[0.97]"
-        >
+        </Button>
+        <Button type="button" onClick={onApprove} variant="primary" fullWidth className="min-w-0">
           Setujui
-        </button>
+        </Button>
       </div>
     </div>
   );

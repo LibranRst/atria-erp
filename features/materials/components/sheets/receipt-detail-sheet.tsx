@@ -131,7 +131,7 @@ function SheetSection({
       <h3 className="px-1 text-[12px] font-bold tracking-wide text-on-surface-variant uppercase">
         {title}
       </h3>
-      <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-black/[0.035]">
+      <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-ring-subtle">
         {children}
       </div>
     </section>

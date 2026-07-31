@@ -5,11 +5,19 @@ import { ProjectDrawer } from "../drawers/project-drawer";
 import type { SearchFilterMode } from "@/components/ui/navigation/exclusive-search-filter-bar";
 import { updateUrlSearchParam, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { ProjectListCard } from "../cards/project-list-card";
-import { ProjectListHeader, ProjectSearchAndFilters, ProjectListEmptyState } from "./project-list-header";
-
+import {
+  ProjectListEmptyState,
+  ProjectListHeader,
+  ProjectListSectionHeader,
+  ProjectSearchAndFilters,
+} from "./project-list-header";
 
 import type { ClientData, FilterId, ProjectItem, UserData } from "../../types/project-list-types";
-import { matchesFilter, summarizeProjectPortfolio, toFilterId } from "../../utils/project-list-utils";
+import {
+  matchesFilter,
+  summarizeProjectPortfolio,
+  toFilterId,
+} from "../../utils/project-list-utils";
 
 interface ProjectListClientProps {
   readonly projects: readonly ProjectItem[];
@@ -98,7 +106,7 @@ export function ProjectListClient({
   }
 
   return (
-    <div className="space-y-lg pb-10 max-[430px]:space-y-5 max-[430px]:pb-8">
+    <div className="space-y-sm pb-10 max-[430px]:pb-8">
       <ProjectListHeader summary={summary} />
       <ProjectSearchAndFilters
         activeFilter={activeFilter}
@@ -128,17 +136,7 @@ export function ProjectListClient({
           />
         ) : (
           <section aria-labelledby="project-list-title">
-            <div className="flex min-h-10 items-center justify-between gap-3 px-1">
-              <h2
-                id="project-list-title"
-                className="text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px]"
-              >
-                Daftar proyek
-              </h2>
-              <span className="shrink-0 text-[9px] font-semibold text-on-surface-variant/65">
-                {filteredProjects.length} dari {projects.length}
-              </span>
-            </div>
+            <ProjectListSectionHeader count={filteredProjects.length} />
             <div className="mt-2.5 space-y-3">
               {filteredProjects.map((project) => (
                 <ProjectListCard

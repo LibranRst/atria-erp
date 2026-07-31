@@ -52,7 +52,7 @@ export function DeveloperAccountSwitcher({
         <StatusBadge tone="warning" label="Development" />
       </div>
 
-      <div className="overflow-hidden rounded-[26px] bg-white/94 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 max-[430px]:rounded-3xl">
+      <div className="overflow-hidden rounded-[26px] bg-white/94 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl">
         <div className="divide-y divide-black/5.5">
           <div className="flex min-h-18 items-start gap-3 px-3.5 py-3.5">
             <span
@@ -87,7 +87,7 @@ export function DeveloperAccountSwitcher({
                   transition={transitionSpringSnappy}
                   onClick={() => setSelected(target)}
                   disabled={pending}
-                  className="flex min-h-17 w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-inset active:bg-surface-container-low disabled:opacity-55"
+                  className="flex min-h-17 w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low disabled:opacity-55"
                   aria-label={`Simulasikan akun ${target.name}, ${getDeveloperSimulationRoleLabel(target.roleName)}`}
                 >
                   <span

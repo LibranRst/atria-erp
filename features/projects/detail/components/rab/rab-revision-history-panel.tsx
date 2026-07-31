@@ -48,7 +48,7 @@ export function RabRevisionHistoryPanel({
             type="button"
             onClick={() => openActivityDetail({ kind: "RAB_REVISION", id: revision.id })}
             key={revision.id}
-            className={`min-h-12 w-full rounded-2xl bg-surface-container-low p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
+            className={`min-h-12 w-full rounded-2xl bg-surface-container-low p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
               revision.status === "VOID" ? "opacity-65" : ""
             }`}
           >

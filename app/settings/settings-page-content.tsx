@@ -1,16 +1,9 @@
 import { redirect } from "next/navigation";
 
-import { getPricingTemplates } from "@/app/actions/settings/pricing-library";
-import { getSettingsOverview } from "@/app/actions/settings/system";
-import { getAdministrationOverview, getProductionReadiness } from "@/app/actions/administration";
-import { getOwnerOnboardingOverview } from "@/app/actions/onboarding";
-import {
-  getInitialStockCandidates,
-  getInventoryOpeningBatches,
-} from "@/app/actions/material/opening-inventory";
-import { SettingsDashboard } from "@/features/settings/components/navigation/settings-dashboard";
-import type { SettingsTab } from "@/features/settings/utils/settings-tabs-config";
 import { PageState } from "@/components/ui";
+import { SettingsDashboard } from "@/features/settings/components/navigation/settings-dashboard";
+import { getSettingsPageData } from "@/features/settings/server/get-settings-page-data";
+import type { SettingsTab } from "@/features/settings/utils/settings-tabs-config";
 
 type SettingsPageContentProps = {
   readonly initialTab?: SettingsTab;
@@ -19,39 +12,22 @@ type SettingsPageContentProps = {
 export async function SettingsPageContent({
   initialTab = "overview",
 }: SettingsPageContentProps): Promise<React.JSX.Element> {
-  const [result, templates, administration, readiness, onboarding, initialStock, openingBatches] =
-    await Promise.all([
-      getSettingsOverview(),
-      getPricingTemplates(true),
-      getAdministrationOverview(),
-      getProductionReadiness(),
-      getOwnerOnboardingOverview(),
-      getInitialStockCandidates(),
-      getInventoryOpeningBatches(),
-    ]);
+  const data = await getSettingsPageData();
 
-  if (!result.success) {
-    if (result.error.code === "UNAUTHORIZED") redirect("/login");
+  if (data.status !== "ready") {
+    if (data.status === "unauthorized") redirect("/login");
+    const isRestricted = data.status === "restricted";
     return (
       <PageState
-        kind={result.error.code === "FORBIDDEN" ? "restricted" : "error"}
+        kind={isRestricted ? "restricted" : "error"}
         title={
-          result.error.code === "FORBIDDEN"
+          isRestricted
             ? "Akses pengaturan dibatasi"
-            : "Pengaturan belum dapat dimuat"
+            : data.source === "library"
+              ? "Library harga belum dapat dimuat"
+              : "Pengaturan belum dapat dimuat"
         }
-        description={result.error.message}
-        compact
-      />
-    );
-  }
-
-  if (!templates.success) {
-    return (
-      <PageState
-        kind="error"
-        title="Library harga belum dapat dimuat"
-        description={templates.error.message}
+        description={data.message}
         compact
       />
     );
@@ -60,13 +36,13 @@ export async function SettingsPageContent({
   return (
     <SettingsDashboard
       initialTab={initialTab}
-      overview={result.data}
-      pricingTemplates={templates.data}
-      administration={administration.success ? administration.data : null}
-      readiness={readiness.success ? readiness.data : []}
-      onboarding={onboarding.success ? onboarding.data : null}
-      initialStock={initialStock.success ? initialStock.data : []}
-      openingBatches={openingBatches.success ? openingBatches.data : []}
+      overview={data.overview}
+      pricingTemplates={data.pricingTemplates}
+      administration={data.administration}
+      readiness={data.readiness}
+      onboarding={data.onboarding}
+      initialStock={data.initialStock}
+      openingBatches={data.openingBatches}
     />
   );
 }

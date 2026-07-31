@@ -6,9 +6,13 @@ import { Info } from "lucide-react";
 import { MoneyValue, type MoneyValueVariant } from "@/components/ui/feedback/page-primitives";
 import { MetadataChip } from "@/components/ui/badge/badge";
 
-export { BottomSheet, ConfirmationSheet, SheetActionButton } from "@/components/ui/overlay/bottom-sheet";
+export {
+  BottomSheet,
+  ConfirmationSheet,
+  SheetActionButton,
+} from "@/components/ui/overlay/bottom-sheet";
 export { FilterPills } from "@/components/ui/navigation/filter-pills";
-export { PanelEmptyState as EmptyState } from "@/components/ui/feedback/panel-empty-state";
+export { EmptyState } from "@/components/ui/feedback/page-primitives";
 
 type SettingsHeaderProps = {
   readonly eyebrow: string;

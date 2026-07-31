@@ -258,7 +258,7 @@ export function ExpenseList({
   }
 
   return (
-    <div className="space-y-lg px-1 pb-8 max-[430px]:-mx-1 max-[430px]:space-y-5 max-[430px]:pb-6">
+    <div className="space-y-sm px-1 pb-8 max-[430px]:-mx-1 max-[430px]:pb-6">
       {!projectId && (
         <FinanceInboxHeader activeClaimTotal={activeClaimTotal} fieldClaimTotal={fieldClaimTotal} />
       )}

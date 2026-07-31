@@ -82,7 +82,7 @@ export function ProjectCreatedSuccess({
                 onClose();
                 onNavigate(action.href);
               }}
-              className="flex min-h-16 w-full items-center justify-between rounded-full bg-white px-5 py-3 text-left shadow-[0_12px_28px_rgba(17,17,17,0.05)] transition-transform active:scale-[0.99]"
+              className="flex min-h-16 w-full items-center justify-between rounded-full bg-white px-5 py-3 text-left shadow-surface transition-transform active:scale-[0.99]"
             >
               <div className="flex items-center gap-3">
                 <AppIcon name={action.icon} className="text-primary" />
@@ -129,7 +129,7 @@ export function ProjectCoverField({
     <FormField label="Cover proyek" optional>
       {coverImageUrl ? (
         <div className="space-y-2.5">
-          <div className="relative aspect-video overflow-hidden rounded-3xl bg-surface-container-low ring-1 ring-outline-variant/20">
+          <div className="relative aspect-video overflow-hidden rounded-3xl bg-surface-container-low ring-1 ring-ring-control">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={coverImageUrl} alt="Cover proyek" className="h-full w-full object-cover" />
             {isUploading ? (
@@ -144,7 +144,7 @@ export function ProjectCoverField({
               whileTap={busy ? undefined : { scale: 0.97 }}
               transition={transitionSpringSnappy}
               aria-disabled={busy}
-              className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary focus-within:ring-2 focus-within:ring-primary/25 aria-disabled:pointer-events-none aria-disabled:opacity-45"
+              className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary focus-within:ring-2 focus-within:ring-focus-ring aria-disabled:pointer-events-none aria-disabled:opacity-45"
             >
               <ImagePlus className="h-4 w-4" />
               Ganti gambar

@@ -5,12 +5,12 @@ import React from "react";
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import {
-  DashboardDetailSection,
-  DashboardRowGroup,
-  DashboardSummarySurface,
-} from "@/features/finance-dashboard/components/shared/dashboard-primitives";
+  DetailSection,
+  RowGroup,
+  SummaryFact,
+  SummarySurface,
+} from "@/components/ui/feedback/main-surface";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
-import { SummaryFact } from "@/features/finance-dashboard/components/shared/dashboard-summary-fact";
 import { CashDueRow } from "@/features/finance-dashboard/components/rows/cash-due-rows";
 
 export function CashDueTab({
@@ -22,9 +22,7 @@ export function CashDueTab({
 }): React.JSX.Element {
   const overdue = data.dashboardDetails.cashDueGroups.find((group) => group.bucket === "OVERDUE");
   const today = data.dashboardDetails.cashDueGroups.find((group) => group.bucket === "TODAY");
-  const near = data.dashboardDetails.cashDueGroups.find(
-    (group) => group.bucket === "NEXT_7_DAYS",
-  );
+  const near = data.dashboardDetails.cashDueGroups.find((group) => group.bucket === "NEXT_7_DAYS");
   const urgentTotal =
     (overdue?.totalOutstanding ?? 0) +
     (today?.totalOutstanding ?? 0) +
@@ -32,8 +30,8 @@ export function CashDueTab({
   const coverage = urgentTotal > 0 ? data.summary.cashAvailable / urgentTotal : null;
   const groupsWithItems = data.dashboardDetails.cashDueGroups.filter((group) => group.count > 0);
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
-      <DashboardSummarySurface
+    <div className="space-y-sm">
+      <SummarySurface
         ariaLabel="Urgensi jatuh tempo"
         eyebrow="Jadwal kas terdekat"
         icon="event_upcoming"
@@ -42,7 +40,7 @@ export function CashDueTab({
         }
         statusTone={(overdue?.count ?? 0) > 0 ? "critical" : "positive"}
       >
-        <div className="flex items-end justify-between gap-4">
+        <div className="flex items-end justify-between gap-4 px-3.5 pt-3 pb-1">
           <div className="min-w-0">
             <p className="text-[9px] font-semibold text-on-surface-variant/60">
               Outstanding 7 hari
@@ -55,7 +53,7 @@ export function CashDueTab({
               className="mt-1"
             />
           </div>
-          <div className="shrink-0 rounded-2xl bg-surface-container-low/70 px-3 py-2 text-right">
+          <div className="shrink-0 text-right">
             <p className="text-[8px] font-semibold text-on-surface-variant/60">Cakupan kas</p>
             <p
               className={`mt-1 font-mono text-sm font-black ${coverage !== null && coverage < 1 ? "text-error" : "text-success"}`}
@@ -64,35 +62,31 @@ export function CashDueTab({
             </p>
           </div>
         </div>
-        <div className="mt-3.5 grid grid-cols-3 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
+        <div className="grid grid-cols-3 gap-2 px-2 pt-2 pb-2">
           <SummaryFact
             label="Terlambat"
             value={String(overdue?.count ?? 0)}
             tone={(overdue?.count ?? 0) > 0 ? "danger" : "default"}
           />
-          <div className="pl-3">
-            <SummaryFact
-              label="Hari ini"
-              value={String(today?.count ?? 0)}
-              tone={(today?.count ?? 0) > 0 ? "warning" : "default"}
-            />
-          </div>
-          <div className="pl-3">
-            <SummaryFact
-              label="7 hari"
-              value={String(near?.count ?? 0)}
-              tone={(near?.count ?? 0) > 0 ? "warning" : "positive"}
-            />
-          </div>
+          <SummaryFact
+            label="Hari ini"
+            value={String(today?.count ?? 0)}
+            tone={(today?.count ?? 0) > 0 ? "warning" : "default"}
+          />
+          <SummaryFact
+            label="7 hari"
+            value={String(near?.count ?? 0)}
+            tone={(near?.count ?? 0) > 0 ? "warning" : "positive"}
+          />
         </div>
-      </DashboardSummarySurface>
+      </SummarySurface>
       {groupsWithItems.length === 0 ? (
-        <DashboardDetailSection title="Jadwal pembayaran">
+        <DetailSection title="Jadwal pembayaran">
           <DashboardTabEmpty>Tidak ada tagihan atau invoice terbuka.</DashboardTabEmpty>
-        </DashboardDetailSection>
+        </DetailSection>
       ) : (
         groupsWithItems.map((group) => (
-          <DashboardDetailSection
+          <DetailSection
             key={group.bucket}
             title={group.label}
             href={group.bucket === "LATER" ? "/expenses?view=vendor-bills" : undefined}
@@ -108,7 +102,7 @@ export function CashDueTab({
                 tone={group.bucket === "OVERDUE" ? "danger" : "default"}
               />
             </div>
-            <DashboardRowGroup connected>
+            <RowGroup connected>
               {group.items.map((item) => (
                 <CashDueRow
                   key={`${item.type}-${item.id}`}
@@ -116,8 +110,8 @@ export function CashDueTab({
                   referenceDate={referenceDate}
                 />
               ))}
-            </DashboardRowGroup>
-          </DashboardDetailSection>
+            </RowGroup>
+          </DetailSection>
         ))
       )}
     </div>

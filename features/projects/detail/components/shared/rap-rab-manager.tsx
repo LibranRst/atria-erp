@@ -120,7 +120,7 @@ export function RapRabManager({
       )}
 
       {showRapPlanning && (
-        <div className="space-y-lg max-[430px]:space-y-5">
+        <div className="space-y-sm">
           {!rap ? (
             <NativePanel eyebrow="Rencana Internal" title="Mulai dari Material">
               <div className="py-lg text-center">

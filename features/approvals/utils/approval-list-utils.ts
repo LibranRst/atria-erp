@@ -1,15 +1,23 @@
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
+export { approvalIsCritical } from "@/lib/finance/approval-summary";
 
 export type ApprovalGroup = {
   readonly label: string;
   readonly items: readonly ApprovalDetail[];
 };
 
-export function approvalIsCritical(item: ApprovalDetail): boolean {
-  const nextSpent = item.actualSpent + item.amount;
-  const utilization = item.allocatedAmount > 0 ? (nextSpent / item.allocatedAmount) * 100 : 0;
-  return item.priority === "CRITICAL" || item.budgetOverrun || utilization >= 100;
-}
+export type PaginatedApprovalGroup = ApprovalGroup & {
+  readonly totalCount: number;
+};
+
+export type ApprovalQueuePage = {
+  readonly groups: readonly PaginatedApprovalGroup[];
+  readonly visibleCount: number;
+  readonly remainingCount: number;
+  readonly nextPageCount: number;
+};
+
+export const APPROVAL_PAGE_SIZE = 20;
 
 export function groupApprovals(
   items: readonly ApprovalDetail[],
@@ -35,4 +43,46 @@ export function groupApprovals(
     { label: "Kemarin", items: yesterday },
     { label: "Lebih lama", items: earlier },
   ].filter((group) => group.items.length > 0);
+}
+
+export function paginateApprovalGroups(
+  items: readonly ApprovalDetail[],
+  olderVisibleLimit: number,
+  now: Date,
+  pageSize: number = APPROVAL_PAGE_SIZE,
+): ApprovalQueuePage {
+  const safeOlderVisibleLimit = Math.max(0, Math.floor(olderVisibleLimit));
+  const safePageSize = Math.max(1, Math.floor(pageSize));
+  const allGroups = groupApprovals(items, now);
+  let remainingOlderSlots = safeOlderVisibleLimit;
+  const groups: PaginatedApprovalGroup[] = [];
+
+  for (const group of allGroups) {
+    const visibleItems =
+      group.label === "Hari ini"
+        ? group.items
+        : group.items.slice(0, Math.max(0, remainingOlderSlots));
+    if (group.label !== "Hari ini") {
+      remainingOlderSlots = Math.max(0, remainingOlderSlots - visibleItems.length);
+    }
+    if (visibleItems.length === 0) continue;
+    groups.push({
+      label: group.label,
+      items: visibleItems,
+      totalCount: group.items.length,
+    });
+  }
+
+  const todayCount = allGroups.find((group) => group.label === "Hari ini")?.items.length ?? 0;
+  const olderCount = items.length - todayCount;
+  const visibleOlderCount = Math.min(safeOlderVisibleLimit, olderCount);
+  const visibleCount = todayCount + visibleOlderCount;
+  const remainingCount = Math.max(0, olderCount - visibleOlderCount);
+
+  return {
+    groups,
+    visibleCount,
+    remainingCount,
+    nextPageCount: Math.min(safePageSize, remainingCount),
+  };
 }

@@ -49,7 +49,7 @@ export function SetupOwnerForm(): React.JSX.Element {
 
   return (
     <section className="flex min-h-[calc(100dvh-3rem)] flex-col justify-center py-6">
-      <header className="mb-5 px-1">
+      <header className="mb-5">
         <p className="text-[9px] font-bold tracking-[0.16em] text-primary uppercase">
           Setup production
         </p>
@@ -62,10 +62,7 @@ export function SetupOwnerForm(): React.JSX.Element {
         </p>
       </header>
       <form onSubmit={submit} className="space-y-3">
-        <FormSection
-          title="Akun Owner"
-          helper="Gunakan identitas aktif. Secret hanya dipakai untuk setup pertama."
-        >
+        <FormSection title="">
           <FormField label="Bootstrap secret" required>
             <TextInput
               value={form.bootstrapSecret}
@@ -115,18 +112,16 @@ export function SetupOwnerForm(): React.JSX.Element {
               required
             />
           </FormField>
-          <div className="bg-white p-3.5">
-            <motion.button
-              type="submit"
-              disabled={pending}
-              whileTap={pending ? undefined : { scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              className="min-h-12 w-full rounded-full bg-primary px-6 text-sm font-bold text-white disabled:opacity-50"
-            >
-              {pending ? "Menyiapkan…" : "Selesaikan setup"}
-            </motion.button>
-          </div>
         </FormSection>
+        <motion.button
+          type="submit"
+          disabled={pending}
+          whileTap={pending ? undefined : { scale: 0.97 }}
+          transition={transitionSpringSnappy}
+          className="min-h-12 w-full rounded-full bg-primary px-6 text-sm font-bold text-white disabled:opacity-50"
+        >
+          {pending ? "Menyiapkan…" : "Selesaikan setup"}
+        </motion.button>
       </form>
     </section>
   );

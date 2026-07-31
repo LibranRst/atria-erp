@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import ProjectsLoading from "@/app/projects/loading";
 import { ProjectListCard } from "../cards/project-list-card";
-import { ProjectSearchAndFilters } from "./project-list-header";
+import { ProjectListSectionHeader, ProjectSearchAndFilters } from "./project-list-header";
 
 import type { ProjectItem } from "../../types/project-list-types";
 
@@ -32,6 +32,17 @@ function project(overrides: Partial<ProjectItem> = {}): ProjectItem {
 }
 
 describe("project list presentation", () => {
+  test("uses the shared compact count pill for visible project results", () => {
+    const html = renderToStaticMarkup(<ProjectListSectionHeader count={12} />);
+
+    expect(html).toContain("Daftar proyek");
+    expect(html).toContain('aria-label="12 proyek"');
+    expect(html).toContain(">Proyek</span>");
+    expect(html).toContain("min-h-8");
+    expect(html).toContain("inline-grid h-5 min-w-5");
+    expect(html).not.toContain("12 dari");
+  });
+
   test("uses a compact independent project card", () => {
     const html = renderToStaticMarkup(
       <ProjectListCard project={project()} isAllowedToCreate onEdit={() => undefined} />,
@@ -41,9 +52,9 @@ describe("project list presentation", () => {
     expect(html).toContain(">M</span>");
     expect(html.indexOf("Aktif")).toBeLessThan(html.indexOf(">M</span>"));
     expect(html.indexOf(">M</span>")).toBeLessThan(html.indexOf(">Menteng Villa</h2>"));
-    expect(html).toContain("flex min-h-10 min-w-0 pr-11");
-    expect(html).toContain("inline-flex h-6 shrink-0 items-center");
-    expect(html).toContain("bg-surface-container-low/70");
+    expect(html).toContain("flex min-h-10 min-w-0 items-center gap-1.5 pr-11");
+    expect(html).toContain("inline-flex min-h-6 items-center");
+    expect(html).toContain("bg-surface-container");
     expect(html).not.toContain("bg-success/8");
     expect(html).not.toContain("folder_open");
     expect(html).toContain("Budget masih terkendali");

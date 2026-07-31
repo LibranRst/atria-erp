@@ -8,6 +8,12 @@ Load `.agents/skills/atria-ui-ux/SKILL.md` before any UI/UX implementation or re
 
 The interface should feel premium, calm, modern, operational, and trustworthy. It should be inspired by modern iOS interaction patterns but remain solid and readable, not overly glassy or decorative.
 
+The light appearance uses Apple's system-gray family without warm undertones. The page canvas is a
+slightly brighter cool gray (`#F7F7FA`), segmented and inset tracks use iOS System Gray 6
+(`#F2F2F7`), grouped content is white, secondary neutral levels step through the remaining system
+grays, and text uses iOS label grays. Atria black remains the primary commit color; iOS blue remains
+focus and selection.
+
 ## Principles
 
 - Mobile-first.
@@ -31,7 +37,8 @@ The interface should feel premium, calm, modern, operational, and trustworthy. I
 
 - One focal surface for a dominant summary when justified.
 - Grouped surfaces and soft dividers for repeated rows.
-- Individual cards only for independently interactive units.
+- Compact neutral inset metric grids for 2–3 comparable values inside one owning surface.
+- Individual cards for independently interactive or decision-heavy units.
 - Segmented controls for dashboard/project tabs.
 - Bottom sheets for quick stock/expense actions.
 - Badges for RAP, stock, purchase, bill, and budget status.
@@ -71,10 +78,15 @@ Interactive controls remain fully rounded when they stand alone. Grouped data-en
 - **Action hierarchy**: Use the shared Button family. Primary commits are black, tertiary navigation/focus uses tokenized iOS blue, and solid critical actions appear only at irreversible confirmation.
 - **Sheet footer**: One action uses a full-width primary footer button. Two actions use equal secondary + primary capsule columns. Header controls do not submit.
 - **Status badges**: Use the shared 24px `StatusBadge`; count, metadata, filter, and tab controls are separate primitives.
-- **Drawers & Sheets**: Sliding sheets use a light gray canvas (`surface-container-low`), white grouped surfaces, large rounded top corners (`rounded-t-[28px]`), and circular header controls. Centered confirmations keep their geometry but share the same palette.
+- **Drawers & Sheets**: Sliding sheets use a light gray canvas (`surface-container-low`), white grouped surfaces, large rounded top corners (`rounded-t-[28px]`), and circular header controls. Fixed sheet chrome uses token-based edge scrims so content may scroll beneath readable header/footer controls without a hard divider. Centered confirmations keep their geometry but share the same palette.
 - **Focus & Selection**: Use iOS blue for focus, selected options, calendar dates, and checkmarks. Keep Atria black for primary submit and semantic colors for status.
+- **Token-only depth**: Use the semantic ring and shadow roles defined in `CONTROL_LANGUAGE.md`.
+  Never author a local neutral hex, arbitrary Tailwind shadow, raw `box-shadow`, or component-local
+  focus-ring color.
 - **Touch Targets**: Visible compact controls may be 32–40px high only when their effective interactive area remains at least 48x48px.
-- **Content Surfaces**: Focal and grouped content use soft large radii; repeated rows use dividers and must not become nested capsules.
+- **Content Surfaces**: Focal, grouped, decision, and identity surfaces own hierarchy and depth. Simple repeated rows use dividers. A decision-heavy item may contain a compact 2–3-cell inset metric grid when comparison is necessary.
+- **Inset Metric Cells**: Use a neutral low-contrast surface, quiet radius, compact padding, no independent shadow, and no elevation. Semantic color belongs to the value, icon, or explicit status by default; tonal cell backgrounds are reserved for a state that applies to the whole cell.
+- **Metric Grid Limits**: Keep one mobile row to two or three cells, keep primary values unwrapped at 320px, and do not make cells independently interactive unless each has a distinct destination and accessible 48px target.
 
 ## Unified Motion & Animation Tokens
 

@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import React from "react";
 
-import { PageState, StatusBadge } from "@/components/ui";
+import { PageState } from "@/components/ui";
 import {
   ExclusiveSearchFilterBar,
   type SearchFilterMode,
@@ -11,10 +11,10 @@ import {
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
-import { formatIdr, formatShortIdr } from "@/lib/utils/money";
+import { formatShortIdr } from "@/lib/utils/money";
 import type { FilterId } from "../../types/project-list-types";
 import { PROJECT_FILTERS, type ProjectPortfolioSummary } from "../../utils/project-list-utils";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { SectionHeader, SummaryFact, SummarySurface } from "@/components/ui/feedback/main-surface";
 
 export function ProjectListHeader({
   summary,
@@ -24,7 +24,7 @@ export function ProjectListHeader({
   const hasAttention = summary.attentionCount > 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-sm">
       <header className="px-1">
         <h1 className="text-[28px] leading-8 font-semibold tracking-tight text-on-surface">
           Proyek
@@ -34,31 +34,19 @@ export function ProjectListHeader({
         </p>
       </header>
 
-      <section
-        className="relative isolate overflow-hidden rounded-[26px] bg-white/88 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5"
-        aria-label="Portfolio proyek aktif"
+      <SummarySurface
+        ariaLabel="Portfolio proyek aktif"
+        eyebrow="Proyek aktif"
+        icon="folder_open"
+        status={hasAttention ? `${summary.attentionCount} perlu perhatian` : "Terkendali"}
+        statusTone={hasAttention ? "warning" : "positive"}
       >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-container-high/65 text-on-surface-variant ring-1 ring-black/[0.035]">
-              <AppIcon name="folder_open" className="text-[17px]" />
-            </span>
-            <p className="truncate text-[10px] font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
-              Aktif
-            </p>
-          </div>
-          <StatusBadge
-            tone={hasAttention ? "warning" : "healthy"}
-            label={hasAttention ? `${summary.attentionCount} perlu perhatian` : "Terkendali"}
-          />
-        </div>
-
-        <div className="mt-4 flex items-end justify-between gap-4">
+        <div className="flex flex-row items-end justify-between px-3.5 pt-3.5 pb-2">
           <div className="min-w-0">
-            <p className="font-mono text-[29px] font-black text-on-surface max-[430px]:text-[27px]">
+            <p className="font-mono text-[36px] leading-none font-black text-on-surface max-[430px]:text-[32px]">
               {summary.activeCount}
             </p>
-            <p className="mt-1 text-[10px] font-semibold text-on-surface-variant">
+            <p className="text-[10px] leading-4 font-semibold text-on-surface-variant">
               proyek sedang berjalan
             </p>
           </div>
@@ -76,44 +64,16 @@ export function ProjectListHeader({
           </div>
         </div>
 
-        <div className="mt-3.5 grid grid-cols-3 divide-x divide-black/5.5 rounded-[18px] bg-surface-container-low/65 px-3 py-2.5">
-          <ProjectPortfolioMetric label="Budget" amount={summary.activeInternalBudget} />
-          <ProjectPortfolioMetric label="Aktual" amount={summary.activeActualCost} align="center" />
-          <ProjectPortfolioMetric
+        <div className="grid grid-cols-3 gap-2 px-2 pt-2 pb-2">
+          <SummaryFact label="Budget" value={formatPortfolioMetric(summary.activeInternalBudget)} />
+          <SummaryFact label="Aktual" value={formatPortfolioMetric(summary.activeActualCost)} />
+          <SummaryFact
             label="Sisa budget"
-            amount={summary.activeRemainingBudget}
-            align="right"
-            danger={summary.activeRemainingBudget < 0}
+            value={formatPortfolioMetric(summary.activeRemainingBudget)}
+            tone={summary.activeRemainingBudget < 0 ? "danger" : "default"}
           />
         </div>
-      </section>
-    </div>
-  );
-}
-
-function ProjectPortfolioMetric({
-  label,
-  amount,
-  align = "left",
-  danger = false,
-}: {
-  readonly label: string;
-  readonly amount: number;
-  readonly align?: "left" | "center" | "right";
-  readonly danger?: boolean;
-}): React.JSX.Element {
-  const alignClass =
-    align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left";
-  return (
-    <div className={`min-w-0 px-2 first:pl-0 last:pr-0 ${alignClass}`}>
-      <p className="truncate text-[9px] font-semibold text-on-surface-variant/60">{label}</p>
-      <p
-        className={`mt-1 truncate font-mono text-[10px] font-black tabular-nums max-[430px]:text-[9px] ${danger ? "text-error" : "text-on-surface"}`}
-        title={formatIdr(amount)}
-        aria-label={formatIdr(amount)}
-      >
-        {formatPortfolioMetric(amount)}
-      </p>
+      </SummarySurface>
     </div>
   );
 }
@@ -125,11 +85,143 @@ function formatPortfolioMetric(amount: number): string {
   return formatShortIdr(amount);
 }
 
+export function ProjectSearchAndFilters({
+  activeFilter,
+  filterCounts,
+  mode,
+  searchQuery,
+  onFilterChange,
+  onModeChange,
+  onSearchChange,
+}: {
+  readonly activeFilter: FilterId;
+  readonly filterCounts: Partial<Record<FilterId, number>>;
+  readonly mode: SearchFilterMode;
+  readonly searchQuery: string;
+  readonly onFilterChange: (filter: FilterId) => void;
+  readonly onModeChange: (mode: SearchFilterMode) => void;
+  readonly onSearchChange: (query: string) => void;
+}): React.JSX.Element {
+  const stickyControlRef = React.useRef<HTMLDivElement | null>(null);
+  const [stickyActive, setStickyActive] = React.useState(false);
+  const surfaceTransition = useReducedMotion() ? { duration: 0 } : transitionEaseSmooth;
+  const stickyTransition = useReducedMotion() ? { duration: 0 } : transitionSpringSmooth;
 
-export function ProjectSearchAndFilters(props: any): React.JSX.Element {
-  return <div className="space-y-2">{props.children}</div>;
+  React.useEffect(() => {
+    if (!WORKSPACE_STICKY_CONTROLS_ENABLED) return;
+    const element = stickyControlRef.current;
+    if (!element) return;
+
+    function updateStickyState(): void {
+      const rect = element?.getBoundingClientRect();
+      if (!rect) return;
+      setStickyActive(rect.top <= 64.5);
+    }
+
+    updateStickyState();
+    window.addEventListener("scroll", updateStickyState, { passive: true });
+    window.addEventListener("resize", updateStickyState, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", updateStickyState);
+      window.removeEventListener("resize", updateStickyState);
+    };
+  }, []);
+
+  const handleSearchChange = React.useCallback(
+    (value: string): void => {
+      const isStartingSearch = searchQuery.length === 0 && value.length > 0;
+      onSearchChange(value);
+      if (isStartingSearch && window.scrollY > 0) {
+        window.scrollTo({ top: 0, behavior: "auto" });
+      }
+    },
+    [onSearchChange, searchQuery],
+  );
+
+  return (
+    <motion.div
+      ref={stickyControlRef}
+      data-sticky={stickyActive ? "true" : "false"}
+      data-density={stickyActive ? "floating" : "inline"}
+      animate={{
+        marginLeft: stickyActive ? -8 : 0,
+        marginRight: stickyActive ? -8 : 0,
+        padding: stickyActive ? 8 : 0,
+      }}
+      transition={stickyTransition}
+      className={WORKSPACE_STICKY_CONTROLS_ENABLED ? "sticky top-16 z-20" : "relative"}
+    >
+      <AnimatePresence initial={false}>
+        {stickyActive ? (
+          <motion.div
+            key="sticky-search-surface"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={surfaceTransition}
+            className="pointer-events-none absolute inset-0 rounded-3xl bg-white/96 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl"
+            aria-hidden="true"
+          />
+        ) : null}
+      </AnimatePresence>
+      <div className="relative">
+        <ExclusiveSearchFilterBar
+          mode={mode}
+          filterValue={activeFilter}
+          onFilterChange={onFilterChange}
+          filterAriaLabel="Filter proyek"
+          filterLayoutId="project-list-filter"
+          searchLayoutId="project-list-search-control"
+          searchValue={searchQuery}
+          onSearchChange={handleSearchChange}
+          onModeChange={onModeChange}
+          searchPlaceholder="Cari proyek, klien, lokasi"
+          searchAriaLabel="Cari proyek"
+          filterOptions={PROJECT_FILTERS.map((filter) => ({
+            value: filter.id,
+            label: filter.label,
+            count:
+              (filter.id === "WARNING" || filter.id === "CRITICAL") &&
+              (filterCounts[filter.id] ?? 0) > 0
+                ? filterCounts[filter.id]
+                : undefined,
+          }))}
+        />
+      </div>
+    </motion.div>
+  );
 }
 
-export function ProjectListEmptyState(props: any): React.JSX.Element {
-  return <div className="p-4 text-center text-xs text-on-surface-variant">Tidak ada project</div>;
+export function ProjectListEmptyState({
+  mode,
+  onReset,
+}: {
+  readonly mode: SearchFilterMode;
+  readonly onReset: () => void;
+}): React.JSX.Element {
+  return (
+    <PageState
+      kind="filtered-empty"
+      title="Proyek tidak ditemukan"
+      description={
+        mode === "search"
+          ? "Coba kata kunci lain atau tutup pencarian."
+          : "Pilih filter lain untuk melihat proyek."
+      }
+      actionLabel={mode === "search" ? "Tutup pencarian" : "Reset filter"}
+      onAction={onReset}
+    />
+  );
+}
+
+export function ProjectListSectionHeader({ count }: { readonly count: number }): React.JSX.Element {
+  return (
+    <SectionHeader
+      id="project-list-title"
+      title="Daftar proyek"
+      count={count}
+      countLabel="Proyek"
+    />
+  );
 }

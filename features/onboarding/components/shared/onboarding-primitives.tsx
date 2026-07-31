@@ -23,7 +23,7 @@ export function OnboardingSurface({
 }): React.JSX.Element {
   return (
     <div
-      className={`overflow-hidden rounded-[25px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.02),0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/2.5 ${className}`}
+      className={`overflow-hidden rounded-[25px] bg-white/90 shadow-surface ring-1 ring-ring-subtle ${className}`}
     >
       {children}
     </div>
@@ -55,7 +55,7 @@ export function OnboardingToolbar({
         onClick={onAction}
         whileTap={disabled ? undefined : { scale: 0.97 }}
         transition={transitionSpringSnappy}
-        className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-[10px] font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-accent/25 disabled:opacity-40"
+        className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-[10px] font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
       >
         {actionLabel}
       </motion.button>
@@ -73,7 +73,7 @@ export function OnboardingEmpty({
   readonly detail: string;
 }): React.JSX.Element {
   return (
-    <div className="px-5 py-7 text-center">
+    <div className="flex flex-col items-center px-5 py-7 text-center">
       <AppIcon name={icon} className="text-[26px] text-on-surface-variant/45" />
       <p className="mt-2 text-[12px] font-bold text-on-surface">{title}</p>
       <p className="mx-auto mt-1 max-w-68 text-[10px] leading-4 text-on-surface-variant">
@@ -97,7 +97,7 @@ export function OnboardingNotice({
       ? "bg-warning/8 text-warning"
       : tone === "positive"
         ? "bg-success/8 text-success"
-        : "bg-surface-container-low text-on-surface-variant";
+        : "bg-surface-container-high/30 text-on-surface-variant";
   return (
     <div className={`flex items-start gap-2.5 rounded-[20px] px-3.5 py-3 ${toneClass}`}>
       <AppIcon name={icon} className="mt-0.5 shrink-0 text-[16px]" />

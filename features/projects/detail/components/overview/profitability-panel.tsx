@@ -103,7 +103,7 @@ export function ProfitabilityPanel({
   }
 
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
+    <div className="space-y-sm">
       <ProfitProjectionSection
         contractValue={contractValue}
         totalAllocated={totalAllocated}

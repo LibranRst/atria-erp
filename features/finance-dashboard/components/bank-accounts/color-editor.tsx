@@ -23,11 +23,11 @@ function ColorInput({
         className={
           grouped
             ? "flex min-h-9 items-center gap-3 bg-transparent"
-            : "flex min-h-12 items-center gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15"
+            : "flex min-h-12 items-center gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 focus-within:border-accent focus-within:ring-2 focus-within:ring-focus-ring"
         }
       >
         <span
-          className="h-6 w-6 rounded-full border border-white/70 shadow-sm"
+          className="h-6 w-6 rounded-full border border-white/70 shadow-control"
           style={{ backgroundColor: value }}
           aria-hidden="true"
         />
@@ -38,7 +38,7 @@ function ColorInput({
           type="color"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="h-8 w-8 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
+          className="h-8 w-8 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           aria-label={label}
         />
       </label>
@@ -60,7 +60,7 @@ export function ColorEditor({
   return (
     <section className="space-y-3">
       <div
-        className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 shadow-[0_14px_34px_rgba(17,17,17,0.08)] ${
+        className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 shadow-raised ${
           draft.cardTextColor === "dark" ? "text-on-surface" : "text-white"
         }`}
         style={{

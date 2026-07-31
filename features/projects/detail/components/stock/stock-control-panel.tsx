@@ -73,8 +73,8 @@ export function StockControlPanel({
   const totalTracked = rap?.items.reduce((sum, item) => sum + item.securedQuantity, 0) || 0;
 
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
-      <section className="rounded-[28px] bg-primary p-5 text-white shadow-[0_16px_38px_rgba(17,17,17,0.13)] max-[430px]:p-4">
+    <div className="space-y-sm">
+      <section className="rounded-[28px] bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
         <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
           Posisi material proyek
         </p>
@@ -91,7 +91,7 @@ export function StockControlPanel({
             total kebutuhan yang sudah diamankan atau terpakai
           </p>
         </div>
-        <div className="mt-2 grid grid-cols-3 gap-2 border-t border-white/12 pt-4">
+        <div className="mt-2 grid grid-cols-3 gap-2">
           <QuantityFact label="Direservasi" value={reservedQty} />
           <QuantityFact label="Terpakai" value={usedQty} />
           <QuantityFact label="Tersisa" value={leftoverQty} />
@@ -114,12 +114,12 @@ export function StockControlPanel({
           </p>
         </header>
         {!rap || rap.items.length === 0 ? (
-          <div className="rounded-[22px] bg-white px-4 py-4 text-xs leading-5 text-on-surface-variant shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
+          <div className="rounded-[22px] bg-white px-4 py-4 text-xs leading-5 text-on-surface-variant shadow-surface">
             <span className="font-bold text-on-surface">Belum ada material.</span> Tambahkan
             material di tab RAP terlebih dahulu.
           </div>
         ) : (
-          <div className="divide-y divide-black/4 rounded-3xl bg-white px-4 py-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+          <div className="divide-y divide-black/4 rounded-3xl bg-white px-4 py-2 shadow-surface ring-1 ring-ring-subtle">
             {rap.items.map((item) => {
               const shortage = item.needToBuy > 0;
               return (
@@ -202,12 +202,12 @@ export function StockControlPanel({
           </p>
         </header>
         {stockMovements.length === 0 ? (
-          <div className="rounded-[22px] bg-white px-4 py-4 text-xs leading-5 text-on-surface-variant shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
+          <div className="rounded-[22px] bg-white px-4 py-4 text-xs leading-5 text-on-surface-variant shadow-surface">
             <span className="font-bold text-on-surface">Belum ada mutasi stok.</span> Aktivitas
             material pertama akan muncul setelah operasi stok dicatat.
           </div>
         ) : (
-          <div className="rounded-3xl bg-white px-1 py-1 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+          <div className="rounded-3xl bg-white px-1 py-1 shadow-surface ring-1 ring-ring-subtle">
             {stockMovements.map((move, index) => (
               <button
                 type="button"
@@ -225,11 +225,16 @@ export function StockControlPanel({
                 <span
                   className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-4 ring-white ${movementTone(move.movementType)}`}
                 >
-                  <AppIcon name={move.movementType === "WASTE"
-                      ? "delete"
-                      : move.movementType === "RETURN"
-                        ? "undo"
-                        : "sync_alt"} className="text-[17px]" />
+                  <AppIcon
+                    name={
+                      move.movementType === "WASTE"
+                        ? "delete"
+                        : move.movementType === "RETURN"
+                          ? "undo"
+                          : "sync_alt"
+                    }
+                    className="text-[17px]"
+                  />
                 </span>
                 <div className="min-w-0 flex-1 pt-0.5">
                   <div className="flex items-start justify-between gap-3">
@@ -260,7 +265,7 @@ export function StockControlPanel({
                     })}
                   </p>
                   {move.note ? (
-                    <p className="rounded-xl bg-surface-container-low p-2 text-[10px] leading-4 text-on-surface-variant ring-outline-variant/15">
+                    <p className="rounded-xl bg-surface-container-low p-2 text-[10px] leading-4 text-on-surface-variant ring-ring-subtle">
                       {move.note}
                     </p>
                   ) : null}

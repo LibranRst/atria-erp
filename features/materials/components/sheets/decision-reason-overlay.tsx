@@ -27,7 +27,7 @@ export function DecisionReasonOverlay({
         rows={3}
         value={reason}
         onChange={onReasonChange}
-        className="bg-white shadow-xl ring-1 ring-outline-variant/20"
+        className="bg-white shadow-floating ring-1 ring-ring-control"
         placeholder="Alasan minimal 10 karakter"
         aria-label="Alasan keputusan material"
         aria-invalid={reason.trim().length > 0 && reason.trim().length < 10}

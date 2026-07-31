@@ -33,14 +33,14 @@ export function ProfileIdentitySurface({
   return (
     <section
       aria-label="Identitas akun"
-      className="relative isolate overflow-hidden rounded-[28px] bg-white/90 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5"
+      className="relative isolate overflow-hidden rounded-[28px] bg-white/90 p-4 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5"
     >
       <span
         className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white"
         aria-hidden="true"
       />
       <div className="flex min-w-0 items-start gap-3.5">
-        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-[23px] leading-none font-bold tracking-tight text-on-primary shadow-[0_10px_24px_rgba(17,17,17,0.13)] ring-1 ring-black/5 max-[430px]:h-14 max-[430px]:w-14 max-[430px]:text-[20px]">
+        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-[23px] leading-none font-bold tracking-tight text-on-primary shadow-raised ring-1 ring-ring-subtle max-[430px]:h-14 max-[430px]:w-14 max-[430px]:text-[20px]">
           <span aria-hidden={showImage}>{initials}</span>
           {showImage && imageUrl ? (
             <Image
@@ -89,7 +89,7 @@ export function ProfileIdentitySurface({
           </p>
         </div>
         <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-high/65 text-on-surface-variant ring-1 ring-black/[0.035]"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-high/65 text-on-surface-variant ring-1 ring-ring-subtle"
           aria-hidden="true"
         >
           <AppIcon name="verified_user" className="text-[18px] leading-none" />

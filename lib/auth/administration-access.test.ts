@@ -2,7 +2,14 @@ import { describe, expect, test } from "bun:test";
 
 import { getAdministrationCapabilities } from "./administration-access";
 
-const administrationActionPath = new URL("../../app/actions/administration.ts", import.meta.url);
+const administrationStaffActionPath = new URL(
+  "../../app/actions/administration-staff.ts",
+  import.meta.url,
+);
+const administrationVendorActionPath = new URL(
+  "../../app/actions/administration-vendors.ts",
+  import.meta.url,
+);
 
 describe("administration role boundary", () => {
   test("keeps user administration owner-only", () => {
@@ -28,18 +35,19 @@ describe("administration role boundary", () => {
   });
 
   test("keeps direct administration mutations behind server-side permissions", async () => {
-    const source = await Bun.file(administrationActionPath).text();
-    const createUserBlock = source.slice(
-      source.indexOf("export async function createStaffUser"),
-      source.indexOf("export async function updateStaffUser"),
+    const staffSource = await Bun.file(administrationStaffActionPath).text();
+    const vendorSource = await Bun.file(administrationVendorActionPath).text();
+    const createUserBlock = staffSource.slice(
+      staffSource.indexOf("export async function createStaffUser"),
+      staffSource.indexOf("export async function updateStaffUser"),
     );
-    const updateUserBlock = source.slice(
-      source.indexOf("export async function updateStaffUser"),
-      source.indexOf("export async function changeTemporaryPassword"),
+    const updateUserBlock = staffSource.slice(
+      staffSource.indexOf("export async function updateStaffUser"),
+      staffSource.indexOf("export async function changeTemporaryPassword"),
     );
-    const vendorBlock = source.slice(
-      source.indexOf("export async function saveVendor"),
-      source.indexOf("export async function setVendorActive"),
+    const vendorBlock = vendorSource.slice(
+      vendorSource.indexOf("export async function saveVendor"),
+      vendorSource.indexOf("export async function setVendorActive"),
     );
 
     expect(createUserBlock).toContain('assertPermission(actor, "manage:users")');

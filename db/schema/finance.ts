@@ -6,11 +6,8 @@ import {
   timestamp,
   boolean,
   numeric,
-  integer,
-  jsonb,
   index,
   uniqueIndex,
-  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { user } from "./auth";

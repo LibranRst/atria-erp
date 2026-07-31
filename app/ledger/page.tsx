@@ -1,19 +1,15 @@
 import React from "react";
 
-import { getFinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import { getOwnerOnboardingOverview } from "@/app/actions/onboarding";
-import { FinanceDashboard } from "@/features/finance-dashboard/components/workspaces/finance-dashboard";
-import { resolveRoleName } from "@/lib/auth/permissions";
-import { requireServerSession } from "@/lib/server/session";
 import { AppIcon } from "@/components/ui/icon/app-icon";
+import { FinanceDashboard } from "@/features/finance-dashboard/components/workspaces/finance-dashboard";
+import { getFinanceDashboardPageData } from "@/features/finance-dashboard/server/get-finance-dashboard-page-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function LedgerPage(): Promise<React.JSX.Element> {
-  const session = await requireServerSession();
+  const data = await getFinanceDashboardPageData();
 
-  const role = await resolveRoleName(session.user.roleId);
-  if (role !== "OWNER" && role !== "FINANCE_ADMIN") {
+  if (data.status === "restricted") {
     return (
       <section className="mx-auto max-w-sm space-y-3 px-6 py-16 text-center">
         <AppIcon name="lock" className="text-[36px] text-error" />
@@ -25,28 +21,15 @@ export default async function LedgerPage(): Promise<React.JSX.Element> {
     );
   }
 
-  const resultPromise = getFinanceDashboardOverview();
-  const onboardingPromise =
-    role === "OWNER"
-      ? getOwnerOnboardingOverview()
-      : Promise.resolve({
-          success: false as const,
-          error: { code: "FORBIDDEN" as const, message: "" },
-        });
-
-  const [result, onboardingResult] = await Promise.all([resultPromise, onboardingPromise]);
-
-  if (!result.success) {
+  if (data.status === "error") {
     return (
       <section className="rounded-2xl bg-error-container/20 p-md text-center text-xs text-error">
-        {result.error.message}
+        {data.message}
       </section>
     );
   }
 
-  const onboarding = onboardingResult.success ? onboardingResult.data : null;
-
   return (
-    <FinanceDashboard data={result.data} userName={session.user.name} onboarding={onboarding} />
+    <FinanceDashboard data={data.overview} userName={data.userName} onboarding={data.onboarding} />
   );
 }

@@ -11,9 +11,9 @@ import {
 
 import type { ProductionReadinessItem } from "@/app/actions/administration";
 import type { SettingsHubOverview } from "@/app/actions/settings/system";
+import { GroupedSurface } from "@/components/ui/feedback/main-surface";
 import type { SettingsTab } from "../../utils/settings-tabs-config";
 import {
-  SettingsGroupSurface,
   SettingsModuleHeader,
   SettingsRowChevron,
   SettingsStatusLabel,
@@ -77,14 +77,14 @@ export function SettingsHub({
   const bufferWidth = Math.min(100, Math.max(0, data.unallocatedBufferRatio * 100));
 
   return (
-    <section className="min-w-0 space-y-lg max-[430px]:space-y-5">
+    <section className="min-w-0 space-y-sm">
       <SettingsModuleHeader
         eyebrow="Posisi default"
         title="Default proyek baru"
         description="Formula yang dipakai saat budget dan master data baru disiapkan."
       />
 
-      <section className="overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-white shadow-[0_18px_40px_rgba(17,17,17,0.16)] max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4">
+      <section className="overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-white shadow-floating max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-[9px] font-bold tracking-[0.15em] text-white/48 uppercase">
@@ -162,7 +162,7 @@ export function SettingsHub({
               tone={readiness.every((item) => item.ready) ? "positive" : "inactive"}
             />
           </div>
-          <SettingsGroupSurface>
+          <GroupedSurface>
             <div className="divide-y divide-black/5.5">
               {readiness.map((item) => {
                 const Icon = item.ready ? CheckCircle2 : CircleAlert;
@@ -189,7 +189,7 @@ export function SettingsHub({
                 );
               })}
             </div>
-          </SettingsGroupSurface>
+          </GroupedSurface>
         </section>
       ) : null}
 
@@ -199,7 +199,7 @@ export function SettingsHub({
             Modul pengaturan
           </h3>
         </div>
-        <SettingsGroupSurface>
+        <GroupedSurface>
           <div className="divide-y divide-black/5.5">
             {modules.map((module) => {
               const Icon = module.icon;
@@ -238,7 +238,7 @@ export function SettingsHub({
               );
             })}
           </div>
-        </SettingsGroupSurface>
+        </GroupedSurface>
       </section>
     </section>
   );

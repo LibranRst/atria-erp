@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import { Badge } from "@/components/ui/badge/badge";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+
+import { authClient } from "@/lib/auth-client";
+import { AppIcon, Button, FormField, FormSection, TextInput } from "@/components/ui";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage(): React.JSX.Element {
   const [email, setEmail] = useState<string>("");
@@ -16,9 +16,19 @@ export default function LoginPage(): React.JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+  function updateEmail(value: string): void {
+    setEmail(value);
+    setError(null);
+  }
+
+  function updatePassword(value: string): void {
+    setPassword(value);
+    setError(null);
+  }
+
+  async function handleLogin(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     const submittedEmail = String(formData.get("email") ?? "").trim();
     const submittedPassword = String(formData.get("password") ?? "");
 
@@ -26,9 +36,12 @@ export default function LoginPage(): React.JSX.Element {
     setPassword(submittedPassword);
 
     if (!submittedEmail || !submittedPassword) {
-      const message = "Email dan password wajib diisi.";
-      setError(message);
-      toast.error(message);
+      setError("Email dan kata sandi wajib diisi.");
+      return;
+    }
+
+    if (!EMAIL_PATTERN.test(submittedEmail)) {
+      setError("Format email belum benar.");
       return;
     }
 
@@ -42,128 +55,91 @@ export default function LoginPage(): React.JSX.Element {
       });
 
       if (authError) {
-        const message = authError.message || "Email atau password salah.";
-        setError(message);
-        toast.error(message);
+        setError("Email atau kata sandi belum sesuai.");
         setIsLoading(false);
-      } else {
-        toast.success("Login berhasil. Selamat datang kembali.");
-        router.push("/");
-        router.refresh();
+        return;
       }
+
+      toast.success("Berhasil masuk.");
+      router.push("/");
+      router.refresh();
     } catch (err: unknown) {
       console.error("Login unexpected error:", err);
-      const message = "Terjadi kesalahan internal. Silakan coba lagi.";
-      setError(message);
-      toast.error(message);
+      setError("Atria belum dapat memverifikasi akun. Coba lagi.");
       setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <section className="flex min-h-[calc(100dvh-5rem)] flex-col justify-between px-1 py-6 select-none">
-      {/* Top Branding Spacer */}
-      <div className="flex flex-1 flex-col items-center justify-center pt-4 pb-8">
-        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-[22px] bg-primary text-white">
-          <AppIcon name="account_balance" className="text-[32px] text-white" />
-        </div>
-        <div className="space-y-1.5 text-center">
-          <p className="font-sans text-[8px] leading-4 font-bold tracking-wider text-primary uppercase">
-            Atria Operating System
-          </p>
-          <h1 className="text-display font-sans text-[28px] leading-10 font-bold tracking-tight text-primary">
-            Atria ERP
-          </h1>
-          <p className="max-w-70 font-sans text-[14px] leading-margin-mobile font-normal text-on-surface-variant">
-            Kontrol budget proyek, pengeluaran, dan ketersediaan material dalam satu ruang kerja.
-          </p>
-        </div>
-      </div>
+    <section className="flex min-h-[calc(100dvh-3rem)] flex-col">
+      <div className="flex flex-1 items-center py-8">
+        <div className="w-full space-y-2">
+          <header>
+            <h1 className="text-center text-[28px] leading-9 font-extrabold tracking-[-0.035em] text-on-surface">
+              Atria
+            </h1>
+          </header>
 
-      {/* Login Credentials Box */}
-      <div className="shrink-0 space-y-md rounded-[28px] border border-outline-variant/20 bg-white p-md shadow-[0_12px_28px_rgba(17,17,17,0.035)]">
-        <div className="space-y-xs border-b border-outline-variant/10 pb-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="font-sans text-[20px] leading-7 font-semibold text-on-surface">
-              Kredensial Masuk
-            </h2>
-            <Badge status={isLoading ? "PENDING" : "DRAFT"}>{isLoading ? "PROSES" : "LOGIN"}</Badge>
-          </div>
-          <p className="font-sans text-[14px] leading-margin-mobile font-normal text-on-surface-variant">
-            Masukkan alamat email terdaftar dan kata sandi Anda.
-          </p>
-        </div>
+          <form method="post" noValidate aria-busy={isLoading} onSubmit={handleLogin}>
+            <FormSection>
+              <FormField label="Email" htmlFor="email-input" required>
+                <TextInput
+                  id="email-input"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={updateEmail}
+                  disabled={isLoading}
+                  placeholder="nama@dekoria.com"
+                  autoComplete="email"
+                  inputMode="email"
+                  autoFocus
+                  required
+                  aria-describedby={error ? "login-error" : undefined}
+                  aria-invalid={Boolean(error)}
+                />
+              </FormField>
 
-        <form method="post" onSubmit={handleLogin} className="space-y-md">
-          {error && (
-            <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs font-medium text-error">
-              <AppIcon name="error" className="text-[18px] text-error" />
-              <div className="leading-relaxed">{error}</div>
+              <FormField label="Kata sandi" htmlFor="password-input" required>
+                <TextInput
+                  id="password-input"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={updatePassword}
+                  disabled={isLoading}
+                  placeholder="Masukkan kata sandi"
+                  autoComplete="current-password"
+                  required
+                  aria-describedby={error ? "login-error" : undefined}
+                  aria-invalid={Boolean(error)}
+                />
+              </FormField>
+            </FormSection>
+
+            <div className="min-h-5 px-1" aria-live="polite">
+              {error ? (
+                <p
+                  id="login-error"
+                  role="alert"
+                  className="flex items-start gap-2 text-[11px] leading-5 font-semibold text-error"
+                >
+                  <AppIcon name="error" className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </p>
+              ) : null}
             </div>
-          )}
 
-          <div className="space-y-base">
-            <label
-              htmlFor="email-input"
-              className="flex items-center gap-1 font-sans text-[8px] leading-4 font-bold tracking-wider text-on-surface-variant uppercase"
-            >
-              <AppIcon name="mail" className="text-[14px] text-on-surface-variant" />
-              <span>Alamat Email</span>
-            </label>
-            <input
-              id="email-input"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              placeholder="nama@dekoria.com"
-              autoComplete="email"
-              inputMode="email"
-              required
-              className="min-h-12 w-full rounded-full border border-outline-variant bg-surface-container-low px-5 text-sm text-on-surface outline-none focus:border-primary disabled:opacity-50"
-            />
-          </div>
-
-          <div className="space-y-base">
-            <label
-              htmlFor="password-input"
-              className="flex items-center gap-1 font-sans text-[8px] leading-4 font-bold tracking-wider text-on-surface-variant uppercase"
-            >
-              <AppIcon name="lock" className="text-[14px] text-on-surface-variant" />
-              <span>Kata Sandi</span>
-            </label>
-            <input
-              id="password-input"
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-              className="min-h-12 w-full rounded-full border border-outline-variant bg-surface-container-low px-5 text-sm text-on-surface outline-none focus:border-primary disabled:opacity-50"
-            />
-          </div>
-
-          <motion.button
-            type="submit"
-            disabled={isLoading}
-            whileTap={isLoading ? undefined : { scale: 0.97 }}
-            transition={transitionSpringSnappy}
-            className="mt-2 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full bg-primary text-sm font-bold text-white disabled:opacity-50"
-          >
-            {isLoading ? "Memverifikasi…" : "Masuk Sistem"}
-          </motion.button>
-        </form>
+            <Button type="submit" fullWidth pending={isLoading} pendingLabel="Memverifikasi…">
+              Masuk
+            </Button>
+          </form>
+        </div>
       </div>
 
-      {/* Footer Branding */}
-      <div className="shrink-0 space-y-0.5 pt-6 text-center text-[9px] font-medium text-on-surface-variant select-none">
-        <p>Atria ERP · Project Finance & Material Control</p>
-        <p>© 2026 PT Dekoria Desain Estetika. All rights reserved.</p>
-      </div>
+      <p className="shrink-0 pb-1 text-center text-[9px] font-semibold tracking-[0.04em] text-on-surface-variant/70">
+        Atria · Project Finance &amp; Material Control
+      </p>
     </section>
   );
 }

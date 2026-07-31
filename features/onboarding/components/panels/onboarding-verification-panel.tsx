@@ -88,7 +88,7 @@ export function OnboardingVerificationPanel({
   return (
     <section
       aria-label="Status langkah onboarding"
-      className="overflow-hidden rounded-3xl bg-white shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-black/[0.035]"
+      className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle"
     >
       <motion.button
         type="button"
@@ -97,7 +97,7 @@ export function OnboardingVerificationPanel({
         transition={transitionSpringSnappy}
         aria-expanded={expanded}
         aria-controls={contentId}
-        className="flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-inset"
+        className="flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
       >
         <span
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant"
@@ -178,7 +178,7 @@ export function OnboardingVerificationPanel({
                     onClick={() => setTechnicalOpen((current) => !current)}
                     aria-expanded={technicalOpen}
                     aria-controls={technicalId}
-                    className="flex min-h-12 w-full items-center gap-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="flex min-h-12 w-full items-center gap-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                   >
                     <AppIcon name="code" className="text-[16px] text-on-surface-variant" />
                     <span className="min-w-0 flex-1 text-[10px] font-bold text-on-surface-variant">
@@ -203,7 +203,7 @@ export function OnboardingVerificationPanel({
                         transition={disclosureTransition}
                         className="overflow-hidden"
                       >
-                        <div className="mb-1 overflow-hidden rounded-[18px] bg-white ring-1 ring-black/[0.035]">
+                        <div className="mb-1 overflow-hidden rounded-[18px] bg-white ring-1 ring-ring-subtle">
                           <div className="divide-y divide-outline-variant/20">
                             {snapshot.technical.map((fact, index) => (
                               <div

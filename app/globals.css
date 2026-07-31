@@ -1,54 +1,70 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fcf9f8;
-  --foreground: #1c1b1b;
+  /* Apple light system grays. Palette primitives stay here; UI source uses semantic tokens. */
+  --ios-gray: #8e8e93;
+  --ios-gray-2: #aeaeb2;
+  --ios-gray-3: #c7c7cc;
+  --ios-gray-4: #d1d1d6;
+  --ios-gray-5: #e5e5ea;
+  --ios-gray-6: #f2f2f7;
+  --ios-canvas: #f7f7fa;
 
-  /* Monochrome-first iOS-inspired direction */
+  --background: var(--ios-canvas);
+  --foreground: #1c1c1e;
+
+  /* Monochrome commits with iOS-blue focus and selection. */
   --primary: #111111;
   --on-primary: #ffffff;
-  --primary-container: #242424;
-  --on-primary-container: #f7f7f7;
+  --primary-container: #2c2c2e;
+  --on-primary-container: var(--ios-gray-6);
   --accent: #007aff;
   --on-accent: #ffffff;
-  --accent-container: #eaf2ff;
+  --accent-container: #e5f1ff;
 
-  --secondary: #5e5e5b;
+  --secondary: #636366;
   --on-secondary: #ffffff;
-  --secondary-container: #e1dfdb;
-  --on-secondary-container: #63635f;
+  --secondary-container: var(--ios-gray-5);
+  --on-secondary-container: #48484a;
 
-  --tertiary: #494a4b;
+  --tertiary: #48484a;
   --on-tertiary: #ffffff;
-  --tertiary-container: #616262;
-  --on-tertiary-container: #dedede;
+  --tertiary-container: #636366;
+  --on-tertiary-container: var(--ios-gray-6);
 
   --error: #ba1a1a;
   --on-error: #ffffff;
   --error-container: #ffdad6;
   --on-error-container: #93000a;
 
-  --surface: #fcf9f8;
-  --on-surface: #1c1b1b;
-  --surface-variant: #e5e2e1;
-  --on-surface-variant: #3e494a;
+  --surface: var(--ios-canvas);
+  --on-surface: #1c1c1e;
+  --surface-variant: var(--ios-gray-5);
+  --on-surface-variant: #3a3a3c;
 
   --surface-container-lowest: #ffffff;
-  --surface-container-low: #f6f3f2;
-  --surface-container: #f0eded;
-  --surface-container-high: #eae7e7;
-  --surface-container-highest: #e5e2e1;
-  --surface-inverse: #151719;
+  --surface-container-low: var(--ios-gray-6);
+  --surface-container: var(--ios-gray-5);
+  --surface-container-high: var(--ios-gray-4);
+  --surface-container-highest: var(--ios-gray-3);
+  --surface-inverse: #1c1c1e;
   --on-surface-inverse: #ffffff;
 
-  --outline: #6f797a;
-  --outline-variant: #bec8ca;
+  --outline: var(--ios-gray);
+  --outline-variant: var(--ios-gray-3);
 
-  --border: #dedede;
+  --border: var(--ios-gray-4);
   --elevated: #ffffff;
-  --muted: #6f6f6f;
+  --muted: #636366;
   --text-primary: #111111;
-  --primary-light: #f1f1f1;
+  --primary-light: var(--ios-gray-6);
+
+  /* Boundary and focus roles. Do not substitute status colors for keyboard focus. */
+  --ring-subtle: color-mix(in srgb, #3c3c43 2%, transparent);
+  --ring-control: color-mix(in srgb, #3c3c43 6%, transparent);
+  --focus-ring: color-mix(in srgb, var(--accent) 35%, transparent);
+  --focus-ring-strong: color-mix(in srgb, var(--accent) 55%, transparent);
+
   --success: #0f766e;
   --success-container: #e6f4f1;
   --warning: #9a5b00;
@@ -117,6 +133,20 @@
   --color-critical-on-inverse: var(--critical-on-inverse);
   --color-warning-on-inverse: var(--warning-on-inverse);
   --color-critical-light: var(--critical-light);
+  --color-ring-subtle: var(--ring-subtle);
+  --color-ring-control: var(--ring-control);
+  --color-focus-ring: var(--focus-ring);
+  --color-focus-ring-strong: var(--focus-ring-strong);
+
+  /* Semantic elevation roles. Nested metrics and ordinary rows stay shadow-free. */
+  --shadow-surface: 0 1px 2px rgb(0 0 0 / 0.025), 0 10px 28px rgb(0 0 0 / 0.055);
+  --shadow-raised: 0 2px 4px rgb(0 0 0 / 0.04), 0 14px 34px rgb(0 0 0 / 0.12);
+  --shadow-floating: 0 3px 6px rgb(0 0 0 / 0.08), 0 18px 42px rgb(0 0 0 / 0.14);
+  --shadow-control: 0 5px 16px rgb(0 0 0 / 0.08);
+  --shadow-primary: 0 6px 16px rgb(0 0 0 / 0.14);
+  --shadow-inverse: 0 16px 38px rgb(0 0 0 / 0.14);
+  --shadow-sheet: 0 -24px 80px rgb(0 0 0 / 0.28);
+  --shadow-overlay: 0 28px 90px rgb(0 0 0 / 0.32);
 
   /* Spacing Configuration */
   --spacing-base: 4px;
@@ -168,8 +198,8 @@ body {
 /* Custom Styles from Reference Design */
 .premium-card {
   background-color: var(--surface-container-lowest);
-  box-shadow: 0 14px 34px rgba(17, 17, 17, 0.045);
-  border: 1px solid color-mix(in srgb, var(--outline-variant) 20%, transparent);
+  box-shadow: var(--shadow-surface);
+  border: 1px solid var(--ring-subtle);
   border-radius: 28px;
 }
 
@@ -321,7 +351,7 @@ body {
 /* Style the individual toast items */
 [data-sonner-toaster] [data-sonner-toast] {
   width: 100% !important;
-  box-shadow: 0 14px 34px rgba(17, 17, 17, 0.08) !important;
+  box-shadow: var(--shadow-raised) !important;
   border-radius: 24px !important;
   padding: 12px 18px !important;
   font-size: 14px !important;

@@ -46,7 +46,7 @@ export function AccountDetailSheet({
       {presentedAccount ? (
         <div className="space-y-md">
           <BankAccountCard account={presentedAccount} variant="full" />
-          <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+          <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
             {[
               ["Bank", presentedAccount.bankName],
               ["Pemegang", presentedAccount.holderName],
@@ -65,7 +65,7 @@ export function AccountDetailSheet({
             ))}
           </section>
 
-          <section className="space-y-2.5 rounded-3xl bg-surface-container-lowest p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+          <section className="space-y-2.5 rounded-3xl bg-surface-container-lowest p-3 shadow-surface ring-1 ring-ring-subtle">
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
@@ -126,7 +126,7 @@ export function AccountDetailSheet({
             <h3 className="px-1 text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
               Aktivitas terbaru
             </h3>
-            <div className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+            <div className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
               <AccountTransactionRows transactions={presentedAccount.recentTransactions} />
             </div>
           </section>

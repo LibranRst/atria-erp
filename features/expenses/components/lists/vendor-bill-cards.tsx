@@ -17,6 +17,7 @@ import {
 import { transitionSpringSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
 import {
   ActivityDetailChevron,
+  type ActivityDetailOpenOptions,
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
 
@@ -55,16 +56,37 @@ export function VendorBillCard({
         : bill.status === "PARTIALLY_PAID"
           ? "text-primary"
           : "text-warning";
+  const activityDetailOptions: ActivityDetailOpenOptions | undefined =
+    bill.status === "PAID" || bill.status === "VOID"
+      ? undefined
+      : isFullyScheduledOrPaid
+        ? {
+            footerStatus: hasPending
+              ? { label: "Menunggu pencairan", tone: "pending" }
+              : { label: "Terjadwal penuh", tone: "neutral" },
+          }
+        : isOwnerOrFinance
+          ? {
+              actions: {
+                primary: {
+                  label: totalScheduledOrPaid > 0 ? "Jadwalkan Sisa" : "Jadwalkan Bayar",
+                  onClick: () => onScheduleClick(bill),
+                },
+              },
+            }
+          : undefined;
 
   return (
     <div
       role="button"
       tabIndex={0}
-      onClick={() => openActivityDetail({ kind: "VENDOR_BILL", id: bill.id })}
+      onClick={() =>
+        openActivityDetail({ kind: "VENDOR_BILL", id: bill.id }, activityDetailOptions)
+      }
       onKeyDown={(event) => {
         if ((event.key === "Enter" || event.key === " ") && event.currentTarget === event.target) {
           event.preventDefault();
-          openActivityDetail({ kind: "VENDOR_BILL", id: bill.id });
+          openActivityDetail({ kind: "VENDOR_BILL", id: bill.id }, activityDetailOptions);
         }
       }}
       aria-label={`Lihat detail tagihan ${bill.billNumber}`}
@@ -80,7 +102,10 @@ export function VendorBillCard({
                 : "bg-warning/9 text-warning ring-warning/6"
           }`}
         >
-          <AppIcon name={bill.status === "PAID" ? "check_circle" : "request_quote"} className="text-[18px] leading-none" />
+          <AppIcon
+            name={bill.status === "PAID" ? "check_circle" : "request_quote"}
+            className="text-[18px] leading-none"
+          />
         </span>
 
         <div className="min-w-0 flex-1">
@@ -167,7 +192,7 @@ export function VendorBillCard({
                 }}
                 whileTap={reduceMotion ? undefined : payablePressScale}
                 transition={transitionSpringSnappy}
-                className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
               >
                 {totalScheduledOrPaid > 0 ? "Jadwalkan Sisa" : "Jadwalkan Bayar"}
               </motion.button>
@@ -206,16 +231,35 @@ export function VendorPaymentCard({
         : presentation.status === "PENDING"
           ? "text-warning"
           : "text-primary";
+  const activityDetailOptions: ActivityDetailOpenOptions | undefined = isCompleted
+    ? undefined
+    : presentation.canDisburse && isOwnerOrFinance
+      ? {
+          actions: {
+            primary: {
+              label: "Cairkan",
+              onClick: () => onDisburseClick(payment),
+            },
+          },
+        }
+      : {
+          footerStatus: {
+            label: presentation.canDisburse ? "Dalam antrean" : presentation.label,
+            tone: presentation.status === "REJECTED" ? "danger" : "pending",
+          },
+        };
 
   return (
     <div
       role="button"
       tabIndex={0}
-      onClick={() => openActivityDetail({ kind: "VENDOR_PAYMENT", id: payment.id })}
+      onClick={() =>
+        openActivityDetail({ kind: "VENDOR_PAYMENT", id: payment.id }, activityDetailOptions)
+      }
       onKeyDown={(event) => {
         if ((event.key === "Enter" || event.key === " ") && event.currentTarget === event.target) {
           event.preventDefault();
-          openActivityDetail({ kind: "VENDOR_PAYMENT", id: payment.id });
+          openActivityDetail({ kind: "VENDOR_PAYMENT", id: payment.id }, activityDetailOptions);
         }
       }}
       aria-label={`Lihat detail pembayaran ${payment.vendorBill?.billNumber ?? "vendor"}`}
@@ -233,11 +277,16 @@ export function VendorPaymentCard({
                   : "bg-primary/9 text-primary ring-primary/6"
           }`}
         >
-          <AppIcon name={isCompleted
-              ? "check_circle"
-              : presentation.status === "PENDING"
-                ? "schedule"
-                : "payments"} className="text-[18px] leading-none" />
+          <AppIcon
+            name={
+              isCompleted
+                ? "check_circle"
+                : presentation.status === "PENDING"
+                  ? "schedule"
+                  : "payments"
+            }
+            className="text-[18px] leading-none"
+          />
         </span>
 
         <div className="min-w-0 flex-1">
@@ -295,7 +344,7 @@ export function VendorPaymentCard({
               }}
               whileTap={reduceMotion ? undefined : payablePressScale}
               transition={transitionSpringSnappy}
-              className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-primary/30"
+              className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
             >
               Cairkan
             </motion.button>

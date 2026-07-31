@@ -128,7 +128,7 @@ export function BottomNav(): React.JSX.Element | null {
 
   return (
     <>
-      <div className="pointer-events-none fixed right-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] left-0 z-30 mx-auto flex h-14 w-[calc(100%-2rem)] max-w-md items-center gap-2 select-none">
+      <div className="pointer-events-none fixed right-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] left-0 z-30 mx-auto flex w-fit max-w-md items-center gap-2 select-none">
         <BottomNavBackdrop isOpen={isFabOpen} onClose={() => setIsFabOpen(false)} />
         <BottomTabBar
           activeIndex={activeIndex}

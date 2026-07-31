@@ -39,7 +39,7 @@ export function PendingApprovalsBanner({ count }: { readonly count: number }): R
     >
       <Link
         href="/ledger?tab=approvals"
-        className="flex min-h-16 items-center gap-3 rounded-[22px] bg-white/88 px-3 py-2.5 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5 backdrop-blur-xl outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/25 active:bg-white"
+        className="flex min-h-16 items-center gap-3 rounded-[22px] bg-white/88 px-3 py-2.5 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-white"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/9 text-warning ring-1 ring-warning/6">
           <AppIcon name="approval" className="text-[18px]" />
@@ -53,7 +53,7 @@ export function PendingApprovalsBanner({ count }: { readonly count: number }): R
           </span>
         </span>
         <span
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-[#007AFF]"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
           aria-hidden="true"
         >
           <AppIcon name="chevron_right" className="text-[16px]" />

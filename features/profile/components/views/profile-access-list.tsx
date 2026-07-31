@@ -3,6 +3,7 @@
 import React from "react";
 
 import { BottomSheet } from "@/components/ui";
+import { GroupedSurface } from "@/components/ui/feedback/main-surface";
 import type { ProfileAccessGroup } from "@/features/profile/utils/profile-access";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
@@ -18,7 +19,7 @@ export function ProfileAccessList({
 
   return (
     <>
-      <div className="relative isolate overflow-hidden rounded-[26px] bg-white/90 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_14px_34px_rgba(17,17,17,0.055)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-3xl">
+      <GroupedSurface>
         <div className="divide-y divide-black/5.5">
           {groups.map((group) => {
             const activeCount = group.activePermissionDescriptions.length;
@@ -29,11 +30,11 @@ export function ProfileAccessList({
                 key={group.key}
                 type="button"
                 onClick={() => setSelectedKey(group.key)}
-                className="flex min-h-17 w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-inset active:bg-surface-container-low"
+                className="flex min-h-17 w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-colors outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low"
                 aria-label={`Tinjau akses ${group.title}`}
               >
                 <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${hasAccess ? "bg-primary/6.5 text-primary ring-primary/6" : "bg-surface-container-high/65 text-on-surface-variant/55 ring-black/2.5"}`}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${hasAccess ? "bg-primary/6.5 text-primary ring-primary/6" : "bg-surface-container-high/65 text-on-surface-variant/55 ring-ring-subtle"}`}
                   aria-hidden="true"
                 >
                   <AppIcon name={group.iconName} className="text-[18px] leading-none" />
@@ -56,12 +57,15 @@ export function ProfileAccessList({
                     {activeCount}/{group.permissions.length}
                   </span>
                 </span>
-                <AppIcon name="chevron_right" className="shrink-0 text-[18px] leading-none text-on-surface-variant/50" />
+                <AppIcon
+                  name="chevron_right"
+                  className="shrink-0 text-[18px] leading-none text-on-surface-variant/50"
+                />
               </button>
             );
           })}
         </div>
-      </div>
+      </GroupedSurface>
 
       <BottomSheet
         open={selectedGroup !== null}
@@ -72,7 +76,7 @@ export function ProfileAccessList({
           <div className="space-y-4">
             <div className="flex min-w-0 items-start gap-3 rounded-[22px] bg-surface-container-low p-3.5">
               <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white text-primary shadow-sm"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white text-primary shadow-control"
                 aria-hidden="true"
               >
                 <AppIcon name={selectedGroup.iconName} className="text-[20px] leading-none" />
@@ -92,14 +96,17 @@ export function ProfileAccessList({
             </div>
 
             {selectedGroup.activePermissionDescriptions.length > 0 ? (
-              <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-black/[0.035]">
+              <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-ring-subtle">
                 <div className="divide-y divide-black/5.5">
                   {selectedGroup.activePermissionDescriptions.map((permission) => (
                     <div
                       key={permission}
                       className="flex min-h-12 items-center gap-2.5 px-3.5 py-2.5"
                     >
-                      <AppIcon name="check_circle" className="shrink-0 text-[17px] leading-none text-success" />
+                      <AppIcon
+                        name="check_circle"
+                        className="shrink-0 text-[17px] leading-none text-success"
+                      />
                       <span className="text-[11px] leading-[1.35] font-semibold text-on-surface">
                         {permission}
                       </span>

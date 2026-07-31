@@ -16,18 +16,20 @@ import {
   type MaterialOperationsDashboard,
   type ReceiptView,
 } from "@/app/actions/material/operations-dashboard";
+import { createInventoryLocation } from "@/app/actions/material/warehouse";
+import { createStockTransfer } from "@/app/actions/material/warehouse-transfer";
 import {
-  approveGoodsReceiptReversal,
   approveStockCount,
-  createInventoryLocation,
-  createStockTransfer,
-  emergencyAdjustStock,
-  rejectGoodsReceiptReversal,
   rejectStockCount,
-  requestGoodsReceiptReversal,
   saveStockCount,
   submitStockCount,
-} from "@/app/actions/material/warehouse";
+} from "@/app/actions/material/warehouse-stock-count";
+import {
+  approveGoodsReceiptReversal,
+  rejectGoodsReceiptReversal,
+  requestGoodsReceiptReversal,
+} from "@/app/actions/material/warehouse-receipt-reversal";
+import { emergencyAdjustStock } from "@/app/actions/material/warehouse-adjustment";
 import type { MaterialOperationDecision } from "@/features/materials/components/tabs/material-dashboard-tabs";
 import type { MaterialOperationSuccess } from "@/features/materials/components/shared/material-form-patterns";
 import {
@@ -69,6 +71,7 @@ export function useMaterialControlOperations({
   readonly emergencyOverride: boolean;
   readonly message: string | null;
   readonly movements: readonly MaterialMovementView[];
+  readonly movementsHasMore: boolean;
   readonly newLocationName: string;
   readonly adjustDirection: "INCREASE" | "DECREASE";
   readonly setDetailMaterialId: (value: string | null) => void;
@@ -132,6 +135,7 @@ export function useMaterialControlOperations({
       ...additionalMovements.filter((movement) => !serverIds.has(movement.id)),
     ];
   }, [additionalMovements, data.movements]);
+  const [movementsHasMore, setMovementsHasMore] = useState(data.movementsHasMore);
   const [pending, startTransition] = useTransition();
   const [newLocationName, setNewLocationName] = useState("");
   const [adjustDirection, setAdjustDirection] = useState<"INCREASE" | "DECREASE">("INCREASE");
@@ -426,16 +430,35 @@ export function useMaterialControlOperations({
   }
 
   function loadMore(): void {
+    if (!movementsHasMore) return;
     const cursor = movements.at(-1)?.createdAt;
-    if (!cursor) return;
+    const cursorId = movements.at(-1)?.id;
+    if (!cursor || !cursorId) return;
     startTransition(async () => {
-      const result = await getMaterialMovementPage({ cursor, limit: 30 });
+      const result = await getMaterialMovementPage({
+        cursor: { createdAt: cursor, id: cursorId },
+        limit: 30,
+      });
       if (!result.success) {
         setMessage(result.error.message);
         toast.error(result.error.message);
         return;
       }
-      setAdditionalMovements((current) => [...current, ...result.data]);
+      setMovementsHasMore(result.data.hasMore);
+      const loadedMessage =
+        result.data.items.length === 0
+          ? "Semua aktivitas sebelumnya sudah dimuat."
+          : `${result.data.items.length} aktivitas sebelumnya dimuat.`;
+      setMessage(loadedMessage);
+      if (result.data.items.length === 0) toast.info(loadedMessage);
+      else toast.success(loadedMessage);
+      setAdditionalMovements((current) => {
+        const knownIds = new Set([
+          ...data.movements.map((movement) => movement.id),
+          ...current.map((movement) => movement.id),
+        ]);
+        return [...current, ...result.data.items.filter((movement) => !knownIds.has(movement.id))];
+      });
     });
   }
 
@@ -460,6 +483,7 @@ export function useMaterialControlOperations({
     emergencyOverride,
     message,
     movements,
+    movementsHasMore,
     newLocationName,
     adjustDirection,
     setDetailMaterialId,

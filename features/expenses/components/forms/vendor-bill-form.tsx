@@ -303,7 +303,7 @@ export function VendorBillForm({
               helper="Lanjutkan tagihan yang pernah disimpan."
               presentation="plain"
             >
-              <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+              <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
                 {drafts.slice(0, 5).map((item) => (
                   <div
                     key={item.id}
@@ -312,7 +312,7 @@ export function VendorBillForm({
                     <button
                       type="button"
                       onClick={() => void loadDraft(item.id)}
-                      className="flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-[18px] px-2.5 py-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent/25 active:bg-surface-container-low"
+                      className="flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-[18px] px-2.5 py-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-low"
                       aria-label={`Lanjutkan draft ${item.payload.billNumber || "tagihan belum bernomor"}`}
                     >
                       <span
@@ -344,7 +344,7 @@ export function VendorBillForm({
                     <button
                       type="button"
                       onClick={() => setPendingDiscardDraftId(item.id)}
-                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-error transition-colors outline-none focus-visible:ring-2 focus-visible:ring-error/25 active:bg-error-container/20"
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-error transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-error-container/20"
                       aria-label={`Buang draft ${item.payload.billNumber || "tagihan belum bernomor"}`}
                     >
                       <AppIcon name="delete" className="text-[18px] leading-none" />

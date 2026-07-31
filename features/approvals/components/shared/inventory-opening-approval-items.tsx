@@ -41,7 +41,7 @@ export function InventoryOpeningApprovalItems({
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(17,17,17,0.045)] ring-1 ring-black/2.5">
+      <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
         {item.inventoryItems.length > 0 ? (
           item.inventoryItems.map((inventoryItem) => (
             <div

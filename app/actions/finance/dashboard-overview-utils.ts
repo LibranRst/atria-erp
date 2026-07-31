@@ -1,5 +1,6 @@
 import type { ExpenseCategoryCode } from "@/lib/budget/excel-budget";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
+import type { ApprovalQueueSummary } from "@/lib/finance/approval-summary";
 import type {
   DashboardRole,
   DashboardDueBucket,
@@ -76,6 +77,7 @@ export type FinanceDashboardBankAccount = {
 
 export type FinanceDashboardTabDetails = {
   readonly approvals: readonly ApprovalDetail[];
+  readonly approvalSummary: ApprovalQueueSummary;
   readonly cashDue: readonly FinanceDashboardCashDueItem[];
   readonly cashDueGroups: readonly FinanceDashboardCashDueGroup[];
   readonly budgetRisks: readonly FinanceDashboardRiskyProject[];

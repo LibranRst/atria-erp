@@ -49,7 +49,7 @@ export function MaterialSuccessSheet({
             {success?.description}
           </p>
         </div>
-        <dl className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-white px-4 text-left ring-1 ring-black/[0.035]">
+        <dl className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-white px-4 text-left ring-1 ring-ring-subtle">
           {success?.facts.map((fact) => (
             <div key={fact.label} className="flex items-start justify-between gap-4 py-3.5">
               <dt className="text-xs font-medium text-on-surface-variant">{fact.label}</dt>

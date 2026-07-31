@@ -7,10 +7,8 @@ import {
   boolean,
   numeric,
   integer,
-  jsonb,
   index,
   uniqueIndex,
-  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { user } from "./auth";
@@ -61,8 +59,6 @@ export const materialMasterRelations = relations(materialMaster, ({ one, many })
   vendorBills: many(vendorBill),
 }));
 
-
-
 // ==========================================
 // // 14C. Lokasi Inventory (Inventory Location)
 // ==========================================
@@ -79,8 +75,6 @@ export const inventoryLocationRelations = relations(inventoryLocation, ({ many }
   inventory: many(materialInventory),
   stockMovements: many(stockMovement),
 }));
-
-
 
 // ==========================================
 // // 14D. Inventory Material (Material Inventory)
@@ -174,8 +168,6 @@ export const stockCount = pgTable(
     index("sc_status_idx").on(table.status),
   ],
 );
-
-
 
 // ==========================================
 // // 14E. Item / Price Library Settings
@@ -289,8 +281,6 @@ export const itemPriceLibraryCostComponentRelations = relations(
     }),
   }),
 );
-
-
 
 // ==========================================
 // // 14G. Stock Movement (Pergerakan Stock)
@@ -558,8 +548,6 @@ export const stockCountItemRelations = relations(stockCountItem, ({ one }) => ({
   }),
 }));
 
-
-
 // ==========================================
 // // 14H. Goods Receipt (Physical Receipt)
 // ==========================================
@@ -660,5 +648,3 @@ export const goodsReceiptItemRelations = relations(goodsReceiptItem, ({ one }) =
     references: [stockMovement.id],
   }),
 }));
-
-

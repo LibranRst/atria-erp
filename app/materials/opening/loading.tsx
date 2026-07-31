@@ -16,7 +16,7 @@ export default function OpeningInventoryLoading(): React.JSX.Element {
           <SkeletonLine className="h-2.5 w-28" />
           <SkeletonLine className="h-2.5 w-64 bg-surface-container-low" />
         </div>
-        <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white ring-1 ring-outline-variant/15">
+        <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white ring-1 ring-ring-subtle">
           {["w-36", "w-44", "w-32", "w-60"].map((width) => (
             <div key={width} className="space-y-2 px-4 py-3.5">
               <SkeletonLine className="h-2.5 w-24 bg-surface-container-low" />
@@ -31,7 +31,7 @@ export default function OpeningInventoryLoading(): React.JSX.Element {
           <SkeletonLine className="h-4 w-28" />
           <SkeletonLine className="h-2.5 w-12 bg-surface-container-low" />
         </div>
-        <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white ring-1 ring-outline-variant/15">
+        <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white ring-1 ring-ring-subtle">
           {["w-48", "w-32", "w-36"].map((width) => (
             <div key={width} className="space-y-2 px-4 py-3.5">
               <SkeletonLine className="h-2.5 w-24 bg-surface-container-low" />

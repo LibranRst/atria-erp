@@ -14,7 +14,7 @@ type CardProps = ComponentPropsWithoutRef<"div"> & {
 export function Card({ className, variant = "surface", ...props }: CardProps): React.JSX.Element {
   return (
     <div
-      className={`rounded-2xl border border-border p-4 shadow-[0_4px_12px_rgba(0,0,0,0.15)] ${cardVariants[variant]} ${className ?? ""}`}
+      className={`rounded-2xl border border-border p-4 shadow-control ${cardVariants[variant]} ${className ?? ""}`}
       {...props}
     />
   );

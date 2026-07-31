@@ -69,7 +69,7 @@ export function RabBundleDrawer({
             </div>
           </div>
 
-          <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+          <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
             {bundleForm.description && (
               <div className="bg-surface-container-low/20 px-4 py-3.5">
                 <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
@@ -110,7 +110,7 @@ export function RabBundleDrawer({
           {bundleItems.length > 0 && (
             <div className="space-y-sm">
               <p className="px-1 text-xs font-bold text-on-surface-variant">Item Anggota Paket</p>
-              <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-[0_8px_24px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+              <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
                 {bundleItems.map((item) => (
                   <DetailRow
                     key={item.id}

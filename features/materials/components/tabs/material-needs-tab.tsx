@@ -6,11 +6,12 @@ import React from "react";
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import {
-  MaterialGroupSurface,
-  MaterialInlineState,
-  MaterialSection,
-  MaterialStatusLabel,
-} from "@/features/materials/components/shared/material-page-primitives";
+  GroupedSurface,
+  InlineStateRow,
+  MainSection,
+  SummaryFact,
+  SummarySurface,
+} from "@/components/ui/feedback/main-surface";
 import { formatMaterialQuantity } from "@/features/materials/utils/material-ui-utils";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
@@ -25,63 +26,56 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
 
   if (shortages.length === 0) {
     return (
-      <MaterialGroupSurface>
-        <MaterialInlineState
+      <GroupedSurface>
+        <InlineStateRow
           icon="check_circle"
           title="Semua kebutuhan RAP terpenuhi"
           description="Stok tersedia saat ini cukup untuk menutup kebutuhan material project aktif."
           tone="positive"
         />
-      </MaterialGroupSurface>
+      </GroupedSurface>
     );
   }
 
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
-      <section
-        className="relative isolate overflow-hidden rounded-3xl bg-white/92 p-4 shadow-[0_1px_2px_rgba(17,17,17,0.025),0_12px_28px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5 backdrop-blur-xl max-[430px]:rounded-[22px] max-[430px]:p-3.5"
-        aria-label="Posisi kebutuhan material"
+    <div className="space-y-sm">
+      <SummarySurface
+        ariaLabel="Posisi kebutuhan material"
+        eyebrow="Kebutuhan"
+        icon="shopping_cart_checkout"
+        status="Perlu dibeli"
+        statusTone="warning"
       >
-        <span
-          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/90"
-          aria-hidden="true"
-        />
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-warning/9 text-warning ring-1 ring-warning/6">
-              <AppIcon name="production_quantity_limits" className="text-[17px]" />
-            </span>
-            <p className="truncate text-[10px] font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
-              Kebutuhan belum tertutup
-            </p>
-          </div>
-          <MaterialStatusLabel label="Perlu dibeli" tone="warning" />
-        </div>
-        <div className="mt-4 flex items-end justify-between gap-4">
-          <div>
-            <p className="font-mono text-[26px] leading-7 font-black text-on-surface tabular-nums">
+        <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
+          <div className="min-w-0">
+            <p className="font-mono text-[36px] leading-none font-black text-on-surface tabular-nums max-[430px]:text-[32px]">
               {shortages.length}
             </p>
-            <p className="mt-1 text-[10px] leading-[1.3] font-semibold text-on-surface-variant">
-              material pada {anchors.length} project
+            <p className="text-[10px] leading-4 font-semibold text-on-surface-variant">
+              material belum tertutup
             </p>
           </div>
-          <div className="min-w-0 text-right">
-            <p className="text-[8px] font-bold tracking-wide text-on-surface-variant/60 uppercase">
+          <div className="min-w-0 shrink-0 text-right">
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">
               Estimasi pengadaan
             </p>
             <MoneyValue
               amount={totalEstimate}
               variant="compactWithFull"
-              align="right"
               size="lg"
+              align="right"
               className="mt-1"
             />
           </div>
         </div>
-      </section>
 
-      <MaterialSection title="Per project" meta={`${anchors.length} terdampak`}>
+        <div className="grid grid-cols-2 gap-2 p-2">
+          <SummaryFact label="Project terdampak" value={String(anchors.length)} />
+          <SummaryFact label="Item perlu dibeli" value={String(shortages.length)} tone="warning" />
+        </div>
+      </SummarySurface>
+
+      <MainSection title="Per project" count={anchors.length} countLabel="Project">
         <div className="space-y-3">
           {anchors.map((anchor) => {
             const rows = shortages.filter((row) => row.projectRapId === anchor.projectRapId);
@@ -92,7 +86,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
               ),
             );
             return (
-              <MaterialGroupSurface key={anchor.projectRapId}>
+              <GroupedSurface key={anchor.projectRapId}>
                 <div className="flex items-start justify-between gap-3 px-3.5 py-3.5">
                   <div className="grid min-w-0 flex-1 gap-1">
                     <p className="line-clamp-2 text-[14px] leading-[1.12] font-bold text-on-surface">
@@ -148,18 +142,18 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
                   <div className="border-t border-black/5.5 px-3.5 py-2.5">
                     <Link
                       href={`/projects/${project.id}?tab=rap`}
-                      className="flex min-h-12 w-full items-center justify-center gap-1 rounded-full bg-accent/8 px-5 text-[11px] font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-accent/30 active:bg-accent/[0.14]"
+                      className="flex min-h-12 w-full items-center justify-center gap-1 rounded-full bg-accent/8 px-5 text-[11px] font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
                     >
                       Buka RAP project
                       <AppIcon name="chevron_right" className="text-[16px]" />
                     </Link>
                   </div>
                 ) : null}
-              </MaterialGroupSurface>
+              </GroupedSurface>
             );
           })}
         </div>
-      </MaterialSection>
+      </MainSection>
     </div>
   );
 }

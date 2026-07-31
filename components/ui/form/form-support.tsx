@@ -31,7 +31,7 @@ function toneClasses(tone: FormRiskTone): {
     };
   }
   return {
-    shell: "bg-surface-container-low text-on-surface-variant ring-outline-variant/15",
+    shell: "bg-surface-container-high/30 text-on-surface-variant ring-ring-subtle",
     icon: "text-on-surface-variant",
   };
 }

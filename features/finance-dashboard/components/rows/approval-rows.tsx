@@ -43,7 +43,7 @@ export function ApprovalWorkbenchRow({
         disabled={pending}
         whileTap={reduceMotion ? undefined : dashboardRowPressScale}
         transition={transitionSpringSnappy}
-        className="min-h-12 w-full rounded-[20px] px-2 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent/25 active:bg-black/2.5 disabled:opacity-50"
+        className="min-h-12 w-full rounded-[20px] px-2 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5 disabled:opacity-50"
       >
         <div className="flex items-start gap-3">
           <span
@@ -120,7 +120,7 @@ export function ApprovalBudgetContext({
       : "Masih dalam batas budget";
 
   return (
-    <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+    <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
       <div className="flex items-center justify-between gap-3 px-4 py-3.5">
         <div className="min-w-0">
           <p className="truncate text-[10px] font-extrabold tracking-wide text-on-surface-variant/60 uppercase">
@@ -148,7 +148,7 @@ export function ApprovalBudgetContext({
           </p>
         </div>
         <span
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-on-surface-variant/55 ring-1 ring-outline-variant/15"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-on-surface-variant/55 ring-1 ring-ring-subtle"
           aria-hidden="true"
         >
           <AppIcon name="arrow_forward" className="text-[15px]" />

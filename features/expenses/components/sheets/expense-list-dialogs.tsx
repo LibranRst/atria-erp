@@ -40,7 +40,7 @@ export function ReceiptImageLightbox({
         <img
           src={imageUrl}
           alt="Receipt Zoomed"
-          className="max-h-[80vh] max-w-full rounded-2xl border border-white/5 object-contain shadow-2xl"
+          className="max-h-[80vh] max-w-full rounded-2xl border border-white/5 object-contain shadow-overlay"
         />
         <button
           type="button"

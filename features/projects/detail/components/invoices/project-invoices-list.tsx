@@ -32,12 +32,12 @@ export function ProjectInvoicesList({
         </p>
       </header>
       {orderedInvoices.length === 0 ? (
-        <div className="rounded-[22px] bg-white px-4 py-4 text-xs leading-5 text-on-surface-variant shadow-[0_10px_26px_rgba(17,17,17,0.04)]">
+        <div className="rounded-[22px] bg-white px-4 py-4 text-xs leading-5 text-on-surface-variant shadow-surface">
           <span className="font-bold text-on-surface">Belum ada invoice.</span> Buat termin saat
           jadwal penagihan klien sudah siap.
         </div>
       ) : (
-        <div className="flex flex-col gap-3 rounded-3xl bg-white p-2 shadow-[0_12px_30px_rgba(17,17,17,0.05)] ring-1 ring-black/2.5">
+        <div className="flex flex-col gap-3 rounded-3xl bg-white p-2 shadow-surface ring-1 ring-ring-subtle">
           {orderedInvoices.map((invoice, index) => (
             <ProjectInvoiceTimelineRow
               key={invoice.id}
@@ -161,7 +161,7 @@ function ProjectInvoiceTimelineRow({
                   event.stopPropagation();
                   openActivityDetail({ kind: "CLIENT_PAYMENT", id: payment.id });
                 }}
-                className="flex w-full items-center justify-between gap-3 rounded-xl bg-surface-container-low p-2 text-left text-[10px] font-semibold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                className="flex w-full items-center justify-between gap-3 rounded-xl bg-surface-container-low p-2 text-left text-[10px] font-semibold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
               >
                 <span>
                   {new Date(payment.paymentDate).toLocaleDateString("id-ID", {

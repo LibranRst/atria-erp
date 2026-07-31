@@ -97,7 +97,7 @@ export function CategoryHealthMeter({
 
   return (
     <div
-      className={`top-11/12 flex flex-col justify-between gap-3 rounded-2xl border border-outline-variant/20 bg-white p-2 shadow-[0_14px_34px_rgba(17,17,17,0.05)] ${
+      className={`top-11/12 flex flex-col justify-between gap-3 rounded-2xl border border-outline-variant/20 bg-white p-2 shadow-surface ${
         isFullWidth ? "col-span-2" : "col-span-1"
       }`}
     >

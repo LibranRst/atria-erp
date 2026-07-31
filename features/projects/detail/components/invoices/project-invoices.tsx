@@ -203,7 +203,7 @@ export function ProjectInvoices({
   };
 
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
+    <div className="space-y-sm">
       <ProjectInvoicesSummary
         isOwnerOrFinance={isOwnerOrFinance}
         invoicesCount={invoices.length}

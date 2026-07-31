@@ -17,7 +17,12 @@ import { resolveEffectiveProjectHealth } from "@/lib/project/effective-health";
 import { getProjectActivationReadiness } from "@/lib/project/activation-readiness";
 import { ProjectActivationSheet } from "../sheets/project-activation-sheet";
 
-export type { ProjectData, ProjectTabsProps, StockMovement, TabId } from "../../types/project-tabs-types";
+export type {
+  ProjectData,
+  ProjectTabsProps,
+  StockMovement,
+  TabId,
+} from "../../types/project-tabs-types";
 
 export function ProjectTabs({
   project,
@@ -126,20 +131,37 @@ export function ProjectTabs({
     materialMasterCatalog,
   });
 
-  function selectProjectTab(tabId: TabId): void {
+  function selectProjectTab(tabId: TabId, options?: { readonly source?: "nav" | "action" }): void {
     if (tabId === activeTab) return;
-    const currentScrollY = window.scrollY;
-    const currentContentRect = contentRef.current?.getBoundingClientRect();
-    if (currentScrollY > 80 && currentContentRect) {
-      const contentTop = currentContentRect.top + currentScrollY;
-      const viewportRequiredHeight = Math.max(0, currentScrollY + window.innerHeight - contentTop);
-      setContentMinHeight((current) =>
-        Math.max(current ?? 0, currentContentRect.height, viewportRequiredHeight),
-      );
-    } else {
+    const source = options?.source ?? "nav";
+
+    if (source === "action") {
       setContentMinHeight(null);
+      if (contentRef.current) {
+        const currentScrollY = window.scrollY;
+        const contentTop = contentRef.current.getBoundingClientRect().top + currentScrollY;
+        pendingScrollPositionRef.current = Math.max(0, Math.round(contentTop - 110));
+      } else {
+        pendingScrollPositionRef.current = 0;
+      }
+    } else {
+      const currentScrollY = window.scrollY;
+      const currentContentRect = contentRef.current?.getBoundingClientRect();
+      if (currentScrollY > 80 && currentContentRect) {
+        const contentTop = currentContentRect.top + currentScrollY;
+        const viewportRequiredHeight = Math.max(
+          0,
+          currentScrollY + window.innerHeight - contentTop,
+        );
+        setContentMinHeight((current) =>
+          Math.max(current ?? 0, currentContentRect.height, viewportRequiredHeight),
+        );
+      } else {
+        setContentMinHeight(null);
+      }
+      pendingScrollPositionRef.current = currentScrollY;
     }
-    pendingScrollPositionRef.current = currentScrollY;
+
     const defaultTab = isLocked ? "rap" : "overview";
     const params = new URLSearchParams(window.location.search);
     if (tabId === defaultTab) params.delete("tab");
@@ -149,7 +171,7 @@ export function ProjectTabs({
   }
 
   return (
-    <div className="space-y-md">
+    <div className="space-y-sm">
       <ProjectIdentityHeader
         project={project}
         effectiveHealth={health.effectiveHealth}
@@ -166,7 +188,7 @@ export function ProjectTabs({
       <ProjectDetailNavigation
         activeTab={activeTab}
         isLocked={isLocked}
-        onTabChange={selectProjectTab}
+        onTabChange={(tab) => selectProjectTab(tab, { source: "nav" })}
       />
 
       <div
@@ -185,7 +207,7 @@ export function ProjectTabs({
             contractValue={contractValue}
             actions={overviewActions}
             readiness={readiness}
-            onNavigate={selectProjectTab}
+            onNavigate={(tab) => selectProjectTab(tab, { source: "action" })}
           />
         )}
         {activeTab === "rab" &&

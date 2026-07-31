@@ -22,17 +22,23 @@ import {
 } from "@/features/approvals/components/shared/approval-decision-reason-fields";
 import { InventoryOpeningApprovalItems } from "@/features/approvals/components/shared/inventory-opening-approval-items";
 import {
-  DashboardDetailSection,
-  DashboardRowGroup,
-  DashboardSummarySurface,
-} from "@/features/finance-dashboard/components/shared/dashboard-primitives";
+  DetailSection,
+  RowGroup,
+  SummaryFact,
+  SummarySurface,
+} from "@/components/ui/feedback/main-surface";
+import { approvalIsCritical } from "@/features/approvals/utils/approval-list-utils";
 import {
   ApprovalBudgetContext,
   ApprovalWorkbenchRow,
 } from "@/features/finance-dashboard/components/rows/approval-rows";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
-import { formatShortDate, shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
+import {
+  formatShortDate,
+  shortMoney,
+} from "@/features/finance-dashboard/utils/dashboard-formatters";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
+import { approvalIsWaitingLong, type ApprovalQueueSummary } from "@/lib/finance/approval-summary";
 import { getErrorMessage } from "@/lib/utils/error-message";
 
 type ApprovalDecision = {
@@ -42,17 +48,17 @@ type ApprovalDecision = {
 
 type ApprovalsTabProps = {
   readonly approvals: readonly ApprovalDetail[];
-  readonly approvalCount: number;
+  readonly approvalSummary: ApprovalQueueSummary;
   readonly setApprovals: React.Dispatch<React.SetStateAction<readonly ApprovalDetail[]>>;
-  readonly setApprovalCount: React.Dispatch<React.SetStateAction<number>>;
+  readonly setApprovalSummary: React.Dispatch<React.SetStateAction<ApprovalQueueSummary>>;
   readonly canEmergencyOverride?: boolean;
 };
 
 export function ApprovalsTab({
   approvals,
-  approvalCount,
+  approvalSummary,
   setApprovals,
-  setApprovalCount,
+  setApprovalSummary,
   canEmergencyOverride = false,
 }: ApprovalsTabProps): React.JSX.Element {
   const router = useRouter();
@@ -68,9 +74,6 @@ export function ApprovalsTab({
   const [emergencyOverride, setEmergencyOverride] = React.useState(false);
   const [emergencyReason, setEmergencyReason] = React.useState("");
   const [pending, startTransition] = React.useTransition();
-  const criticalCount = approvals.filter((item) => item.priority === "CRITICAL").length;
-  const visibleAmount = approvals.reduce((sum, item) => sum + item.amount, 0);
-
   function requestDecision(item: ApprovalDetail, status: ApprovalDecision["status"]): void {
     setDecision({ item, status });
     if (status === "REJECTED") setRejectionReason("");
@@ -155,7 +158,15 @@ export function ApprovalsTab({
         if (!result.success) throw new Error(result.error.message);
 
         setApprovals((current) => current.filter((approval) => approval.id !== item.id));
-        setApprovalCount((current) => Math.max(0, current - 1));
+        setApprovalSummary((current) => ({
+          totalCount: Math.max(0, current.totalCount - 1),
+          criticalCount: Math.max(0, current.criticalCount - Number(approvalIsCritical(item))),
+          waitingLongCount: Math.max(
+            0,
+            current.waitingLongCount - Number(approvalIsWaitingLong(item, new Date())),
+          ),
+          totalAmount: Math.max(0, current.totalAmount - item.amount),
+        }));
         setSelectedApproval(null);
         setDecision(null);
         setRejectionReason("");
@@ -173,47 +184,50 @@ export function ApprovalsTab({
   }
 
   return (
-    <div className="space-y-lg max-[430px]:space-y-5">
-      <DashboardSummarySurface
+    <div className="space-y-sm">
+      <SummarySurface
         ariaLabel="Antrean keputusan"
         eyebrow="Antrean keputusan"
         icon="approval"
-        status={approvalCount > 0 ? "Perlu ditinjau" : "Selesai"}
-        statusTone={approvalCount > 0 ? "warning" : "positive"}
+        status={approvalSummary.totalCount > 0 ? "Perlu ditinjau" : "Selesai"}
+        statusTone={approvalSummary.totalCount > 0 ? "warning" : "positive"}
       >
-        <div className="flex items-end justify-between gap-4">
-          <p className="font-mono text-[40px] leading-none font-black text-on-surface">
-            {approvalCount}
-          </p>
-          <div className="shrink-0 text-right">
-            <p className="text-[8px] font-semibold text-on-surface-variant/60">Total antrean</p>
-            <MoneyValue amount={visibleAmount} variant="compactWithFull" size="sm" align="right" />
+        <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
+          <div className="min-w-0">
+            <p className="font-mono text-[36px] leading-none font-black text-on-surface max-[430px]:text-[32px]">
+              {approvalSummary.totalCount}
+            </p>
+            <p className="text-[10px] leading-4 font-semibold text-on-surface-variant">
+              persetujuan menunggu keputusan
+            </p>
+          </div>
+          <div className="min-w-0 shrink-0 text-right">
+            <p className="text-[9px] font-semibold text-on-surface-variant/60">Total antrean</p>
+            <MoneyValue
+              amount={approvalSummary.totalAmount}
+              variant="compactWithFull"
+              size="lg"
+              align="right"
+              className="mt-1"
+            />
           </div>
         </div>
-        <p className="text-[10px] leading-4 font-semibold text-on-surface-variant">
-          persetujuan menunggu keputusan
-        </p>
-        <div className="mt-3.5 grid grid-cols-2 gap-2">
-          <div className="space-y-1 rounded-2xl bg-surface-container-low px-3 py-2">
-            <p className="text-[9px] leading-5 font-semibold text-on-surface-variant/60">
-              Prioritas kritis
-            </p>
-            <p
-              className={`font-mono text-sm leading-4 font-black ${criticalCount > 0 ? "text-error" : "text-on-surface"}`}
-            >
-              {criticalCount}
-            </p>
-          </div>
-          <div className="space-y-1 rounded-2xl bg-surface-container-low px-3 py-2">
-            <p className="text-[9px] leading-5 font-semibold text-on-surface-variant/60">
-              Urutan otomatis
-            </p>
-            <p className="text-[10px] leading-4 font-bold text-on-surface">Risiko &amp; urgensi</p>
-          </div>
-        </div>
-      </DashboardSummarySurface>
 
-      <DashboardDetailSection title="Urutan prioritas" href="/approvals" actionLabel="Buka semua">
+        <div className="grid grid-cols-2 gap-2 p-2">
+          <SummaryFact
+            label="Prioritas kritis"
+            value={String(approvalSummary.criticalCount)}
+            tone={approvalSummary.criticalCount > 0 ? "danger" : "default"}
+          />
+          <SummaryFact
+            label="Menunggu ≥3 hari"
+            value={String(approvalSummary.waitingLongCount)}
+            tone={approvalSummary.waitingLongCount > 0 ? "warning" : "positive"}
+          />
+        </div>
+      </SummarySurface>
+
+      <DetailSection title="Urutan prioritas" href="/approvals" actionLabel="Buka semua">
         {approvals.length === 0 ? (
           <DashboardTabEmpty>
             Tidak ada persetujuan tertunda. Semua keputusan saat ini sudah ditangani.
@@ -223,7 +237,7 @@ export function ApprovalsTab({
             <div className="mx-3 mt-3 rounded-[15px] bg-surface-container-low/65 px-3 py-2 text-[10px] leading-4 text-on-surface-variant">
               Diurutkan berdasarkan risiko budget, jatuh tempo, lama menunggu, dan nominal.
             </div>
-            <DashboardRowGroup>
+            <RowGroup>
               {approvals.map((item) => (
                 <ApprovalWorkbenchRow
                   key={item.id}
@@ -232,10 +246,10 @@ export function ApprovalsTab({
                   onOpen={setSelectedApproval}
                 />
               ))}
-            </DashboardRowGroup>
+            </RowGroup>
           </>
         )}
-      </DashboardDetailSection>
+      </DetailSection>
 
       <BottomSheet
         open={approvalOpen}
@@ -261,7 +275,7 @@ export function ApprovalsTab({
       >
         {presentedApproval ? (
           <div className="space-y-md">
-            <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+            <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
               <div className="p-4">
                 <div className="flex items-center justify-between gap-3">
                   <StatusBadge
@@ -303,7 +317,7 @@ export function ApprovalsTab({
               ) : null}
             </section>
 
-            <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+            <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
               {[
                 ["Proyek", presentedApproval.projectName],
                 ["Pengaju", presentedApproval.requestedBy],
@@ -332,7 +346,7 @@ export function ApprovalsTab({
             {presentedApproval.type === "inventory_opening" ? (
               <>
                 <InventoryOpeningApprovalItems item={presentedApproval} />
-                <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+                <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
                   <div className="px-4 py-3.5">
                     <p className="text-[10px] font-bold tracking-widest text-on-surface-variant/65 uppercase">
                       Dampak stok
@@ -352,7 +366,7 @@ export function ApprovalsTab({
                 <h3 className="px-1 text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
                   Bukti pengajuan
                 </h3>
-                <div className="overflow-hidden rounded-3xl bg-surface-container-lowest p-3 shadow-[0_10px_28px_rgba(17,17,17,0.035)] ring-1 ring-outline-variant/15">
+                <div className="overflow-hidden rounded-3xl bg-surface-container-lowest p-3 shadow-surface ring-1 ring-ring-subtle">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={presentedApproval.receiptImageUrl}
