@@ -13,7 +13,7 @@ import {
 } from "@/app/actions/finance/bank-accounts";
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
 import type { OperationSuccess, SelectOption } from "@/components/ui";
-import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
+import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 import type {
   AccountDraft,
   BankAccount,

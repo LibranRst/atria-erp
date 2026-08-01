@@ -8,7 +8,7 @@ import { z } from "zod";
 import { payVendorBill } from "@/app/actions/finance/pay-vendor-bill";
 import { scheduleVendorBillPayment } from "@/app/actions/finance/schedule-vendor-bill";
 import type { OperationSuccess } from "@/components/ui";
-import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
+import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 import type {
   VendorListBankAccount,
   VendorListBill,

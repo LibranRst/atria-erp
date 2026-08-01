@@ -12,7 +12,7 @@ import {
   SummaryFact,
   SummarySurface,
 } from "@/components/ui";
-import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
+import { usePreservedScrollHeight } from "@/lib/hooks/use-preserved-scroll-height";
 import type {
   VendorBillSubTab,
   VendorListBill,

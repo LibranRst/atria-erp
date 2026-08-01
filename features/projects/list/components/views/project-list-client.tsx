@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { ProjectDrawer } from "../drawers/project-drawer";
 import type { SearchFilterMode } from "@/components/ui";
 import { updateUrlSearchParam, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
-import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
+import { usePreservedScrollHeight } from "@/lib/hooks/use-preserved-scroll-height";
 import { ProjectListCard } from "../cards/project-list-card";
 import {
   ProjectListEmptyState,

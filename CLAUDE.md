@@ -51,19 +51,25 @@ Layering runs database → auth/RBAC → transaction helpers → Server Actions 
 Three source roots, with enforced boundaries:
 
 - `app/` — routes, layouts, `loading.tsx` skeletons, `error.tsx`, and `app/actions/**` (the `"use server"` modules, grouped by domain: `finance/`, `project/`, `material/`, `settings/`, `ai/`, `media/`, plus onboarding/administration/activity-detail families).
-- `features/<domain>/` — feature slices with `components/`, `hooks/`, `server/`, `types/`, `utils/`. Domains: activity-detail, administration, approvals, expenses, finance-dashboard, materials, onboarding, profile, projects, reconciliation, settings, shared-hooks.
-- `lib/` — cross-cutting domain logic and pure helpers (`lib/finance`, `lib/project`, `lib/material`, `lib/validations` Zod schemas, `lib/auth` permissions, `lib/server/session.ts`, `lib/utils/motion.ts`, `lib/types/action-response.ts`).
-- `components/ui/**` and `components/layout/**` — shared primitives and the mobile shell/bottom nav.
+- `features/<domain>/` — feature slices with `components/`, `hooks/`, `server/`, `types/`, `utils/`. Domains: activity-detail, administration, approvals, expenses, finance-dashboard, materials, onboarding, profile, projects, reconciliation, settings. `projects` nests `detail/`, `list/`, and `shared/` sub-slices that each follow the same shape. A slice holds one domain; anything cross-cutting belongs in `lib/` or `components/ui`.
+- `lib/` — cross-cutting domain logic and pure helpers (`lib/finance`, `lib/project`, `lib/material`, `lib/validations` Zod schemas, `lib/auth` permissions, `lib/server/session.ts`, `lib/hooks/` shared React hooks, `lib/utils/{money,date,motion,cn}.ts`, `lib/types/`).
+- `components/ui/**` and `components/layout/**` — shared primitives and the mobile shell/bottom nav. Application code imports shared UI from the `@/components/ui` barrel only; deep paths stay inside `components/ui/**`.
 - `db/` — `db/index.ts` client, `db/schema/{auth,projects,finance,materials,system}.ts` re-exported from `db/schema.ts`, seed under `db/seed/`.
 
-`lib/architecture/server-boundaries.test.ts` is an executable architecture test. It fails the build-time suite when:
+`lib/architecture/` holds executable architecture tests that fail the build-time suite.
+
+`server-boundaries.test.ts` fails when:
 
 1. A `features/<domain>/actions/` folder exists (server entrypoints belong in `app/actions/`).
 2. A file under `features/**/server/**` does not start with `import "server-only";`.
 3. Any route `page.tsx` imports from `@/db` or `drizzle-orm` directly — pages must delegate to a server loader.
 4. A `"use server"` module exports anything other than directly declared `async` functions (no re-exports, consts, classes, or type-only value exports).
 
-Keep these invariants in mind before moving code; run `bun test lib/architecture/server-boundaries.test.ts` after restructuring.
+`ui-import-boundaries.test.ts` fails when application code imports a deep `@/components/ui/**` path instead of the barrel, or when a feature re-exports a shared primitive as if it owned it.
+
+`feature-boundaries.test.ts` fails when a slice depends on another slice that the allowed-edge list in that file does not declare, when a declared edge no longer exists, or when a `shared-*` pseudo-domain reappears under `features/`. Adding an edge is a design decision: if three or more slices need the same thing, move it to `lib/` or `components/ui` instead.
+
+Keep these invariants in mind before moving code; run `bun test lib/architecture/` after restructuring.
 
 ### Server Action contract
 

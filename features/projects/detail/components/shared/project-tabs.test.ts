@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 const projectTabsPath = new URL("./project-tabs.tsx", import.meta.url);
 const scrollHeightHookPath = new URL(
-  "../../../../shared-hooks/use-preserved-scroll-height.ts",
+  "../../../../../lib/hooks/use-preserved-scroll-height.ts",
   import.meta.url,
 );
 

@@ -16,7 +16,7 @@ import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-
 import { resolveEffectiveProjectHealth } from "@/lib/project/effective-health";
 import { getProjectActivationReadiness } from "@/lib/project/activation-readiness";
 import { ProjectActivationSheet } from "../sheets/project-activation-sheet";
-import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
+import { usePreservedScrollHeight } from "@/lib/hooks/use-preserved-scroll-height";
 
 export type {
   ProjectData,

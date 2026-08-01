@@ -12,7 +12,7 @@ import {
   SummaryFact,
   SummarySurface,
 } from "@/components/ui";
-import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
+import { usePreservedScrollHeight } from "@/lib/hooks/use-preserved-scroll-height";
 import type { ExpenseCostItem, FilterStatus } from "@/features/expenses/types/expense-list-types";
 import { FieldClaimHistory } from "@/features/expenses/components/lists/field-claim-rows";
 import { FieldClaimRow } from "@/features/expenses/components/lists/field-claim-rows";

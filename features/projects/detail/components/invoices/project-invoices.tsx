@@ -19,7 +19,7 @@ import {
   formatShortRp,
 } from "../../utils/project-invoices-utils";
 import { type OperationSuccess, OperationSuccessSheet } from "@/components/ui";
-import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
+import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 
 const clientPaymentRecoverySchema = z.object({
   invoiceId: z.string(),
