@@ -120,12 +120,21 @@ function moneyDynamicSizeClass(size: MoneyValueSize = "lg"): string {
   return "money-value-dynamic--lg";
 }
 
+/**
+ * Ukuran nilai eksak sekunder — angka penuh di bawah nilai ringkas.
+ *
+ * Hanya varian `fit` yang memilih kelas di sini. Sisanya memakai
+ * `.money-value-exact` di `globals.css`, yang menetapkan
+ * `font-size: clamp(0.4rem, 1.8vw, 0.5625rem)` supaya angka rupiah panjang
+ * menyusut mengikuti lebar layar alih-alih terpotong.
+ *
+ * Jangan menambahkan kelas ukuran Tailwind untuk jalur non-`fit`: kelas itu
+ * tidak akan berlaku. `.money-value-exact` adalah CSS biasa di luar `@layer`,
+ * sehingga selalu mengalahkan utility. Fungsi ini sebelumnya mengembalikan
+ * empat ukuran berbeda yang semuanya tidak pernah terpakai.
+ */
 function moneySecondarySizeClass(size: MoneyValueSize = "md"): string {
-  if (size === "fit") return "money-value-fit__exact";
-  if (size === "xs") return "text-[8px] leading-[10px]";
-  if (size === "2xl") return "text-[16px] leading-5";
-  if (size === "xl") return "text-[14px] leading-[18px]";
-  return "text-eyebrow";
+  return size === "fit" ? "money-value-fit__exact" : "";
 }
 
 export type MoneyValueVariant = "compactWithFull" | "fullDynamic";
