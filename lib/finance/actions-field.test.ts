@@ -2,27 +2,69 @@ import { db } from "@/db";
 import {
   projectBudgetItem,
   vendorBill,
+  vendorPayment,
   projectCost,
   bankAccount,
   approval,
   materialInventory,
   stockMovement,
   projectExpenses,
+  cashTransaction,
 } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { submitVendorBill } from "@/app/actions/finance/submit-vendor-bill";
+import { submitVendorBill as submitVendorBillAction } from "@/app/actions/finance/submit-vendor-bill";
 import { scheduleVendorBillPayment } from "@/app/actions/finance/schedule-vendor-bill";
 import { payVendorBill } from "@/app/actions/finance/pay-vendor-bill";
 import {
-  submitFieldRequest,
-  submitFieldRequests,
+  submitFieldRequest as submitFieldRequestAction,
+  submitFieldRequests as submitFieldRequestsAction,
   verifyFieldRequest,
   approveFieldRequest,
   payFieldRequest,
   approveVendorPayment,
 } from "@/app/actions/finance/field-requests";
 import { describe, it, expect, afterAll, mock } from "bun:test";
+
+/**
+ * `submitVendorBill` and `submitFieldRequest(s)` post against real seeded
+ * fixtures (BCA_ACC_ID, the small-cash accounts, MENTENG/SUDIRMAN projects),
+ * not test-created ones, so nothing here can be cleaned up by deleting a
+ * bank account the way `bank-accounts.test.ts` does. Every downstream row
+ * (cash_transaction, vendor_payment, approval, stock_movement,
+ * project_expenses) traces back to a vendor_bill.id or project_cost.id, so
+ * wrapping the two creation calls and resolving the rest transitively in
+ * `afterAll` cleans up every test in this file without touching each `it`
+ * block's own logic. Without this, every suite run left permanent
+ * unreconciled cash_transaction rows against the shared dev database — 120
+ * had accumulated on BCA_ACC_ID alone by the time this was diagnosed.
+ */
+const createdVendorBillIds: string[] = [];
+const createdProjectCostIds: string[] = [];
+
+async function submitVendorBill(
+  ...args: Parameters<typeof submitVendorBillAction>
+): ReturnType<typeof submitVendorBillAction> {
+  const result = await submitVendorBillAction(...args);
+  if (result.success) createdVendorBillIds.push(result.data.id);
+  return result;
+}
+
+async function submitFieldRequest(
+  ...args: Parameters<typeof submitFieldRequestAction>
+): ReturnType<typeof submitFieldRequestAction> {
+  const result = await submitFieldRequestAction(...args);
+  if (result.success) createdProjectCostIds.push(result.data.id);
+  return result;
+}
+
+async function submitFieldRequests(
+  ...args: Parameters<typeof submitFieldRequestsAction>
+): ReturnType<typeof submitFieldRequestsAction> {
+  const result = await submitFieldRequestsAction(...args);
+  if (result.success) createdProjectCostIds.push(...result.data.map((cost) => cost.id));
+  return result;
+}
 
 // Mock next/headers untuk mencegah error cookies() di luar server Next.js
 mock.module("next/headers", () => {
@@ -104,8 +146,73 @@ const WAREHOUSE_LOCATION_ID = "14141414-1414-1414-1414-141414141401";
 const MENTENG_RAP_PLYWOOD_ITEM_ID = "17171717-1717-1717-1717-171717171701";
 
 describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", () => {
-  afterAll(() => {
+  afterAll(async () => {
     restoreUserSession();
+
+    const vendorBillIds = createdVendorBillIds;
+    const projectCostIds = createdProjectCostIds;
+    if (vendorBillIds.length === 0 && projectCostIds.length === 0) return;
+
+    const payments = vendorBillIds.length
+      ? await db.query.vendorPayment.findMany({
+          where: inArray(vendorPayment.vendorBillId, vendorBillIds),
+        })
+      : [];
+    const paymentIds = payments.map((payment) => payment.id);
+
+    const costs = projectCostIds.length
+      ? await db.query.projectCost.findMany({
+          where: inArray(projectCost.id, projectCostIds),
+        })
+      : [];
+
+    const cashTransactionIds = [
+      ...new Set(
+        [...payments, ...costs].flatMap((row) =>
+          row.cashTransactionId ? [row.cashTransactionId] : [],
+        ),
+      ),
+    ];
+
+    // Anak-anak dulu, lalu induknya, mengikuti arah FK restrict:
+    // stock_movement/project_expenses -> project_cost/vendor_bill -> cash_transaction.
+    if (projectCostIds.length) {
+      await db.delete(stockMovement).where(inArray(stockMovement.projectCostId, projectCostIds));
+      await db
+        .delete(projectExpenses)
+        .where(inArray(projectExpenses.legacyProjectCostId, projectCostIds));
+      await db
+        .delete(approval)
+        .where(
+          and(
+            eq(approval.referenceType, "project_cost"),
+            inArray(approval.referenceId, projectCostIds),
+          ),
+        );
+    }
+    if (vendorBillIds.length) {
+      await db.delete(projectExpenses).where(inArray(projectExpenses.vendorBillId, vendorBillIds));
+    }
+    if (paymentIds.length) {
+      await db
+        .delete(approval)
+        .where(
+          and(
+            eq(approval.referenceType, "vendor_payment"),
+            inArray(approval.referenceId, paymentIds),
+          ),
+        );
+      await db.delete(vendorPayment).where(inArray(vendorPayment.id, paymentIds));
+    }
+    if (projectCostIds.length) {
+      await db.delete(projectCost).where(inArray(projectCost.id, projectCostIds));
+    }
+    if (vendorBillIds.length) {
+      await db.delete(vendorBill).where(inArray(vendorBill.id, vendorBillIds));
+    }
+    if (cashTransactionIds.length) {
+      await db.delete(cashTransaction).where(inArray(cashTransaction.id, cashTransactionIds));
+    }
   });
 
   describe("Vendor Bill & Payment Flow", () => {

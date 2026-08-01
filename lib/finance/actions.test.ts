@@ -1,6 +1,13 @@
 import { db } from "@/db";
-import { project, clientInvoice, bankAccount, projectBudget } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  project,
+  clientInvoice,
+  clientPayment,
+  cashTransaction,
+  bankAccount,
+  projectBudget,
+} from "@/db/schema";
+import { eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { createProjectBudget, createBudgetItem } from "@/app/actions/project/budget";
 import { recordClientPayment } from "@/app/actions/finance/record-client-payment";
@@ -161,6 +168,29 @@ describe("Atria ERP Server Actions - TSK-007", () => {
 
   // 2. Uji Coba Server Action recordClientPayment
   describe("recordClientPayment Action", () => {
+    // Setiap pembayaran mendebit BCA_ACC_ID (rekening seed asli, bukan buatan
+    // test) dan mencatat cash_transaction yang tidak pernah direkonsiliasi.
+    // Tanpa cleanup ini, setiap kali file ini dijalankan akan meninggalkan
+    // client_invoice + client_payment + cash_transaction permanen di database
+    // dev bersama — 62 baris cash_transaction unreconciled sudah terkumpul
+    // dari proses ini sebelum diperbaiki.
+    const createdInvoiceIds: string[] = [];
+
+    afterAll(async () => {
+      if (createdInvoiceIds.length === 0) return;
+      const payments = await db.query.clientPayment.findMany({
+        where: inArray(clientPayment.clientInvoiceId, createdInvoiceIds),
+      });
+      const cashTransactionIds = payments.map((payment) => payment.cashTransactionId);
+      await db
+        .delete(clientPayment)
+        .where(inArray(clientPayment.clientInvoiceId, createdInvoiceIds));
+      await db.delete(clientInvoice).where(inArray(clientInvoice.id, createdInvoiceIds));
+      if (cashTransactionIds.length) {
+        await db.delete(cashTransaction).where(inArray(cashTransaction.id, cashTransactionIds));
+      }
+    });
+
     it("harus memotong piutang, memperbarui status invoice, dan mendebit bank account", async () => {
       mockUserSession(FINANCE_USER);
 
@@ -176,6 +206,7 @@ describe("Atria ERP Server Actions - TSK-007", () => {
           dueDate: new Date(),
         })
         .returning();
+      createdInvoiceIds.push(testInvoice!.id);
 
       // Baca saldo awal rekening BCA
       const accountBefore = await db.query.bankAccount.findFirst({
