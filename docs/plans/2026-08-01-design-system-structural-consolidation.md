@@ -93,10 +93,12 @@ All four phases landed. Measured results:
 
 | Metric                                   | Before | After |
 | ---------------------------------------- | ------ | ----- |
-| Hardcoded `text-[Npx]`                   | 1075   | 845   |
+| Hardcoded `text-[Npx]`                   | 1075   | 686   |
 | Deep `@/components/ui/**` imports        | 278    | 0     |
 | Cross-feature imports into the dashboard | 20     | 5     |
-| Cross-slice edges                        | 45     | 34    |
+| Cross-slice edges                        | 45     | 33    |
+| Slice-level dependency cycles            | 1      | 0     |
+| Icon libraries in use                    | 2      | 1     |
 | Architecture tests                       | 1      | 3     |
 
 ### Where the work diverged from this plan
@@ -120,15 +122,40 @@ All four phases landed. Measured results:
 - **`features/projects` stayed nested.** Its `detail/`, `list/`, and `shared/` sub-slices already
   follow the standard shape.
 
-### Known debt, deliberately not addressed here
+### Recorded debt, since cleared
 
-- `lucide-react` is still imported in roughly 30 files even though `CONTROL_LANGUAGE.md` mandates
-  the Phosphor-backed `AppIcon`. One instance was removed as a side effect of merging the success
-  sheets. The rest is its own change.
-- `settings <-> administration` remains a slice-level cycle. The fix is promoting the
-  configuration-workspace primitives (`SettingsModuleHeader`, `SettingsStatusLabel`,
-  `SettingsRowChevron`) to the shared layer, which is a rename cascade.
-- `.money-value-exact` in `globals.css` sets its own `font-size: clamp(...)`, which overrides the
-  Tailwind size utility on that element. The utility there is dead styling, predating this work.
-- The remaining 845 hardcoded sizes pair a size with a non-matching leading, specify no leading at
-  all, or carry no role in the scale. They need per-surface judgement, not another mechanical pass.
+Every item below was written up as deferred, then closed in a follow-up pass.
+
+- **`lucide-react` removed.** It was imported in 29 files against the single-icon-set rule, so two
+  libraries with different stroke weights rendered side by side. All 38 distinct icons map onto
+  `AppIcon`; eleven entries were added to the map. Two call sites needed more than a tag swap, since
+  they held an icon as a value: `FormRiskNotice` and the settings tab config, which typed its icon
+  field as `typeof Settings2` and so coupled a plain config module to an icon library. The package
+  is gone from `package.json`, and `ui-import-boundaries.test.ts` now fails on any third-party icon
+  import.
+- **The `settings <-> administration` cycle is broken.** The three configuration-workspace
+  primitives moved to `components/ui/feedback/workspace-primitives.tsx` as `Workspace*`. None of them
+  touched settings domain logic. `administration -> settings` is now zero.
+- **`.money-value-exact` dead styling removed.** `moneySecondarySizeClass` returned four Tailwind
+  sizes that never applied, because the plain CSS rule sits outside `@layer` and always wins.
+  Measured before the change: elements carrying `text-[14px]` and elements carrying `text-eyebrow`
+  both rendered at 9px/9.9px. Rendering after removal is unchanged at 1280px and 390px.
+- **Icon sizing moved onto the icon scale.** 151 `AppIcon` call sites still used `text-[Npx]`; they
+  now use `icon-*`. No visual change, since a 1em SVG at `text-[18px]` and at `icon-md` both measure
+  18px.
+
+### Remaining: the 686 hardcoded type sizes
+
+This is the one open item, and it is open on purpose. The breakdown, measured rather than estimated:
+
+| Group                                  | Count | Why a mechanical pass is wrong                        |
+| -------------------------------------- | ----- | ----------------------------------------------------- |
+| Size carries no role in the scale      | ~143  | 8px, 12px, 14px, 16px, 19px and similar have no token |
+| Size with no explicit `leading`        | ~336  | The token would introduce a line-height, see below    |
+| Size paired with a different `leading` | ~110  | The token would overwrite a deliberate line-height    |
+| Icon sizes with no matching utility    | ~57   | 13, 15, 17, 19, 21, 23, 26, 32, 34, 36px one-offs     |
+
+The middle group is the trap. Sampling live elements that set a size with no `leading` showed nine
+of twelve inherit a 24px line-height, while the matching token would set 12–16px. Converting them
+in bulk would tighten line boxes by 8–12px across hundreds of elements — a silent regression, not a
+cleanup. These need to be walked surface by surface with the rendering in view.
