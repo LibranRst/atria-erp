@@ -43,26 +43,37 @@ describe("project list presentation", () => {
     expect(html).not.toContain("12 dari");
   });
 
-  test("uses a compact independent project card", () => {
+  test("leads the card with a hero cover carrying identity and status", () => {
     const html = renderToStaticMarkup(
       <ProjectListCard project={project()} isAllowedToCreate onEdit={() => undefined} />,
     );
 
-    expect(html).toContain("h-18.5");
+    expect(html).toContain("aspect-4/3");
     expect(html).toContain(">M</span>");
-    expect(html.indexOf("Aktif")).toBeLessThan(html.indexOf(">M</span>"));
-    expect(html.indexOf(">M</span>")).toBeLessThan(html.indexOf(">Menteng Villa</h2>"));
-    expect(html).toContain("flex min-h-10 min-w-0 items-center gap-1.5 pr-11");
+    expect(html.indexOf(">M</span>")).toBeLessThan(html.indexOf("Aktif"));
+    expect(html.indexOf("Aktif")).toBeLessThan(html.indexOf(">Menteng Villa</h2>"));
+    expect(html).toContain('aria-label="Buka project Menteng Villa"');
+    expect(html).toContain('aria-label="Edit Menteng Villa"');
+    expect(html).toContain("Klien Ronald · PM Budi");
     expect(html).toContain("inline-flex min-h-6 items-center");
-    expect(html).toContain("bg-surface-container");
-    expect(html).not.toContain("bg-success/8");
     expect(html).not.toContain("folder_open");
-    expect(html).toContain("Budget masih terkendali");
-    expect(html).toContain("Buka project");
-    expect(html).toContain("bg-accent/8");
-    expect(html).toContain("rounded-full");
-    expect(html).not.toContain("h-40");
+    expect(html).not.toContain("h-18.5");
+    expect(html).not.toContain("Buka project<");
+    expect(html).not.toContain("bg-accent/8");
     expect(html).not.toContain("progressbar");
+  });
+
+  test("keeps a healthy project free of an attention banner but shows budget usage", () => {
+    const html = renderToStaticMarkup(
+      <ProjectListCard project={project()} isAllowedToCreate={false} onEdit={() => undefined} />,
+    );
+
+    expect(html).toContain("Terkendali");
+    expect(html).toContain("Sisa budget");
+    expect(html).toContain("text-success");
+    expect(html).toContain('role="img"');
+    expect(html).not.toContain("Budget masih terkendali");
+    expect(html).not.toContain('aria-label="Edit Menteng Villa"');
   });
 
   test("uses the portfolio-style budget split when budget risk is actionable", () => {
@@ -80,7 +91,9 @@ describe("project list presentation", () => {
     );
 
     expect(html).toContain("Budget proyek terlampaui");
-    expect(html).toContain("Budget terpakai 118.0 persen, melebihi batas 18.0 persen");
+    expect(html).toContain("Melebihi budget");
+    expect(html).toContain("text-error");
+    expect(html).toContain('role="img"');
     expect(html).toContain("Lebih 18%");
     expect(html).not.toContain("Batas perhatian 80 persen");
   });
@@ -112,7 +125,8 @@ describe("project list presentation", () => {
 
     expect(html).toContain("Memuat Proyek");
     expect(html).toContain("Portfolio dan daftar proyek sedang disiapkan");
-    expect(html).toContain("h-18.5");
+    expect(html).toContain("aspect-4/3");
+    expect(html).not.toContain("h-18.5");
     expect(html).not.toContain("spinner");
   });
 });
