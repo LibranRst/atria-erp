@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, Info, ShieldCheck } from "lucide-react";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 import { MoneyValue } from "../feedback/page-primitives";
 import { cx } from "./form-control-utils";
@@ -46,11 +46,15 @@ export function FormRiskNotice({
   readonly tone?: FormRiskTone;
 }): React.JSX.Element {
   const classes = toneClasses(tone);
-  const Icon = tone === "success" ? ShieldCheck : tone === "default" ? Info : AlertTriangle;
+  const iconName = tone === "success" ? "verified_user" : tone === "default" ? "info" : "warning";
 
   return (
     <div className={cx("flex min-w-0 items-start gap-2.5 rounded-2xl p-3", classes.shell)}>
-      <Icon className={cx("mt-0.5 h-4 w-4 shrink-0", classes.icon)} aria-hidden="true" />
+      <AppIcon
+        name={iconName}
+        className={cx("mt-0.5 icon-sm shrink-0", classes.icon)}
+        aria-hidden="true"
+      />
       <div className="min-w-0">
         <p className="text-xs leading-4 font-bold">{title}</p>
         <div className="mt-1 text-meta">{children}</div>

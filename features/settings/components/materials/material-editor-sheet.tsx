@@ -1,7 +1,7 @@
 import React from "react";
-import { SlidersHorizontal } from "lucide-react";
 import type { SettingsOption, MaterialDraft } from "../../types/material-types";
 import {
+  AppIcon,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
   FormDisclosure,
@@ -111,7 +111,7 @@ export function MaterialEditorSheet({
             title="Detail material"
             description="Merek, kode, warna, vendor, dan spesifikasi"
             summary={completedDetails > 0 ? `${completedDetails} terisi` : "Opsional"}
-            icon={<SlidersHorizontal className="h-4 w-4" />}
+            icon={<AppIcon name="tune" className="icon-sm" />}
             expanded={detailsOpen}
             onToggle={() => onDetailsOpenChange(!detailsOpen)}
           >

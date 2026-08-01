@@ -6,7 +6,6 @@ import { HeaderMorphMenu } from "@/components/layout/header-morph-menu";
 import { getHeaderMenuItems, getPageTitle } from "@/components/layout/header-menu-config";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { GlobalExpenseDrawer } from "@/features/expenses/components/sheets/global-drawer";
@@ -85,7 +84,7 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
             className="absolute top-0 left-0 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-raised transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
             aria-label="AI Chat segera hadir"
           >
-            <MessageCircle aria-hidden="true" className="h-5 w-5" />
+            <AppIcon name="chat" aria-hidden="true" className="icon-lg" />
           </motion.button>
         </div>
 

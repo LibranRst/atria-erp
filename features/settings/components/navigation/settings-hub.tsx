@@ -1,17 +1,8 @@
 "use client";
 
-import {
-  Boxes,
-  ChartNoAxesCombined,
-  CheckCircle2,
-  CircleAlert,
-  Layers3,
-  PackageSearch,
-} from "lucide-react";
-
 import type { ProductionReadinessItem } from "@/app/actions/administration";
 import type { SettingsHubOverview } from "@/app/actions/settings/system";
-import { GroupedSurface } from "@/components/ui";
+import { AppIcon, GroupedSurface } from "@/components/ui";
 import type { SettingsTab } from "../../utils/settings-tabs-config";
 import {
   SettingsModuleHeader,
@@ -42,7 +33,7 @@ export function SettingsHub({
       description: "Batas internal, margin, pembagian kategori, dan buffer.",
       metric: percent(data.budgetCapRatio),
       label: "batas budget",
-      icon: ChartNoAxesCombined,
+      icon: "trending_up" as const,
       access: data.permissions.canManageBudgetSettings,
     },
     {
@@ -51,7 +42,7 @@ export function SettingsHub({
       description: "Kelompok biaya baku untuk budget dan laporan.",
       metric: String(data.activeCategoryCount),
       label: "kategori aktif",
-      icon: Layers3,
+      icon: "layers" as const,
       access: data.permissions.canManageExpenseCategories,
     },
     {
@@ -60,7 +51,7 @@ export function SettingsHub({
       description: "Template biaya, harga klien, paket kerja, dan RAB.",
       metric: String(data.activeItemCount),
       label: "template aktif",
-      icon: PackageSearch,
+      icon: "inventory" as const,
       access: data.permissions.canManageItemLibrary,
     },
     {
@@ -69,7 +60,7 @@ export function SettingsHub({
       description: "Identitas material serta default inventori per lokasi.",
       metric: String(data.activeMaterialCount),
       label: "material aktif",
-      icon: Boxes,
+      icon: "inventory_2" as const,
       access: data.permissions.canManageMaterialSettings,
     },
   ] as const;
@@ -165,13 +156,13 @@ export function SettingsHub({
           <GroupedSurface>
             <div className="divide-y divide-black/5.5">
               {readiness.map((item) => {
-                const Icon = item.ready ? CheckCircle2 : CircleAlert;
+                const iconName = item.ready ? "check_circle" : "data_alert";
                 return (
                   <div key={item.id} className="flex min-h-17 items-center gap-3 px-3.5 py-3">
                     <span
                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.ready ? "bg-success-container text-success" : "bg-warning-container text-warning"}`}
                     >
-                      <Icon className="h-4 w-4" aria-hidden="true" />
+                      <AppIcon name={iconName} className="icon-sm" aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[13px] font-bold text-on-surface">
@@ -202,7 +193,6 @@ export function SettingsHub({
         <GroupedSurface>
           <div className="divide-y divide-black/5.5">
             {modules.map((module) => {
-              const Icon = module.icon;
               return (
                 <button
                   key={module.tab}
@@ -211,7 +201,7 @@ export function SettingsHub({
                   className="flex min-h-20.5 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
                 >
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface">
-                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    <AppIcon name={module.icon} className="icon-sm" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-center gap-2">

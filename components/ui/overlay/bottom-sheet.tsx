@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, Check, LoaderCircle } from "lucide-react";
 import { AnimatePresence, motion, useDragControls } from "framer-motion";
 import type { PanInfo } from "framer-motion";
 
@@ -113,9 +112,9 @@ export function SheetActionButton({
       label={accessibleLabel}
       icon={
         pending ? (
-          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+          <AppIcon name="progress_activity" className="icon-sm animate-spin" aria-hidden="true" />
         ) : (
-          <Check className="h-4 w-4" aria-hidden="true" />
+          <AppIcon name="check" className="icon-sm" aria-hidden="true" />
         )
       }
     />
@@ -567,9 +566,9 @@ export function ConfirmationModal({
                 className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}
               >
                 {tone === "default" ? (
-                  <Check className="h-6 w-6" aria-hidden="true" />
+                  <AppIcon name="check" className="icon-xl" aria-hidden="true" />
                 ) : (
-                  <AlertTriangle className="h-6 w-6" aria-hidden="true" />
+                  <AppIcon name="warning" className="icon-xl" aria-hidden="true" />
                 )}
               </div>
               <div className="mt-4 text-center">

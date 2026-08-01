@@ -1,5 +1,4 @@
 import React from "react";
-import { CirclePlus, FileSearch } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
 import {
@@ -210,7 +209,7 @@ export function LibraryTemplateEditorSheet({
                 onClick={onAddComponent}
                 className="flex min-h-10 items-center gap-1.5 rounded-full px-2.5 text-[10px] font-semibold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
               >
-                <CirclePlus className="h-4 w-4" aria-hidden="true" /> Tambah
+                <AppIcon name="add_circle" className="icon-sm" aria-hidden="true" /> Tambah
               </motion.button>
             }
           >
@@ -352,7 +351,7 @@ export function LibraryTemplateEditorSheet({
                 ? `${sourceLabel(draft.priceSourceType)} · sumber terisi`
                 : "Catatan sumber belum lengkap"
             }
-            icon={<FileSearch className="h-4 w-4" />}
+            icon={<AppIcon name="file_search" className="icon-sm" />}
             expanded={sourceOpen}
             onToggle={() => onSourceOpenChange(!sourceOpen)}
           >

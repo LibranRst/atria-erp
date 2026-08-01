@@ -58,4 +58,24 @@ describe("shared UI import boundaries", () => {
 
     expect(offenders).toEqual([]);
   });
+
+  /**
+   * `CONTROL_LANGUAGE.md` mewajibkan satu set ikon: `AppIcon` yang didukung
+   * Phosphor. Dua pustaka ikon dalam satu layar berarti dua bobot garis dan dua
+   * ukuran optik, dan `AppIcon` juga yang membawa perlakuan ikon global.
+   */
+  test("no icon library other than the shared AppIcon is imported", () => {
+    const FORBIDDEN = ["lucide-react", "@heroicons/react", "react-icons"];
+    const uiFiles = collectSourceFiles(path.join(WORKSPACE_ROOT, "components", "ui"));
+    const offenders = [...consumerFiles(), ...uiFiles].flatMap((filePath) => {
+      // Berkas tes boleh menyebut nama paketnya justru untuk menegaskan ketiadaannya.
+      if (filePath.endsWith("app-icon.tsx") || /\.test\.tsx?$/.test(filePath)) return [];
+      const source = readFileSync(filePath, "utf8");
+      return FORBIDDEN.filter((pkg) => source.includes(`from "${pkg}"`)).map(
+        (pkg) => `${relativePath(filePath)} imports ${pkg}`,
+      );
+    });
+
+    expect(offenders).toEqual([]);
+  });
 });

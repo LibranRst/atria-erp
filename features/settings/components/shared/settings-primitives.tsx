@@ -1,9 +1,8 @@
 "use client";
 
-import { ChevronRight, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import React from "react";
-import { StatusBadge, type StatusBadgeTone } from "@/components/ui";
+import { AppIcon, StatusBadge, type StatusBadgeTone } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 export function SettingsModuleHeader({
@@ -44,7 +43,7 @@ export function SettingsModuleHeader({
           transition={transitionSpringSnappy}
           className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-35"
         >
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+          <AppIcon name="add" className="icon-xs" aria-hidden="true" />
           {actionLabel}
         </motion.button>
       ) : null}
@@ -86,7 +85,7 @@ export function SettingsRowChevron(): React.JSX.Element {
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-accent"
       aria-hidden="true"
     >
-      <ChevronRight className="h-4 w-4" />
+      <AppIcon name="chevron_right" className="icon-sm" />
     </span>
   );
 }

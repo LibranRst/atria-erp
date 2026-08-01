@@ -2,7 +2,6 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { ImagePlus, Trash2 } from "lucide-react";
 
 import {
   AppIcon,
@@ -144,7 +143,7 @@ export function ProjectCoverField({
               aria-disabled={busy}
               className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary focus-within:ring-2 focus-within:ring-focus-ring aria-disabled:pointer-events-none aria-disabled:opacity-45"
             >
-              <ImagePlus className="h-4 w-4" />
+              <AppIcon name="add_photo" className="icon-sm" />
               Ganti gambar
               <input
                 type="file"
@@ -167,7 +166,7 @@ export function ProjectCoverField({
               aria-label="Hapus cover proyek"
               className="flex min-h-12 min-w-12 items-center justify-center rounded-full bg-error-container/25 px-4 text-error disabled:opacity-45"
             >
-              <Trash2 className="h-4 w-4" />
+              <AppIcon name="delete" className="icon-sm" />
             </motion.button>
           </div>
         </div>
@@ -179,7 +178,7 @@ export function ProjectCoverField({
           className="group flex min-h-12 cursor-pointer items-center gap-3 bg-transparent py-1 focus-within:text-accent aria-disabled:pointer-events-none aria-disabled:opacity-45"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary">
-            <ImagePlus className="h-4 w-4" />
+            <AppIcon name="add_photo" className="icon-sm" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-xs leading-[1.15] font-bold text-on-surface">

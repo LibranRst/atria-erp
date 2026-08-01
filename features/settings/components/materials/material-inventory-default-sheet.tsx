@@ -1,5 +1,4 @@
 import React from "react";
-import { Warehouse } from "lucide-react";
 import {
   AppIcon,
   FormField,
@@ -51,8 +50,9 @@ export function MaterialInventoryDefaultSheet({
           >
             <FormField label="Lokasi inventori" readOnly>
               <div className="flex min-h-8 items-center gap-2.5">
-                <Warehouse
-                  className="h-4 w-4 shrink-0 text-on-surface-variant"
+                <AppIcon
+                  name="warehouse"
+                  className="icon-sm shrink-0 text-on-surface-variant"
                   aria-hidden="true"
                 />
                 <span className="truncate text-sm font-bold text-on-surface">

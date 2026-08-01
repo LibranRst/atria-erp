@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check, LockKeyhole, Minus, Plus } from "lucide-react";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 import { motion } from "framer-motion";
 import { transitionSpringBouncy } from "@/lib/utils/motion";
 
@@ -73,8 +73,9 @@ export function FormField({
                 {label}
               </label>
               {readOnly ? (
-                <LockKeyhole
-                  className="h-3.5 w-3.5 shrink-0 text-on-surface-variant"
+                <AppIcon
+                  name="lock"
+                  className="icon-xs shrink-0 text-on-surface-variant"
                   aria-hidden="true"
                 />
               ) : null}
@@ -116,7 +117,7 @@ export function FormField({
         </label>
         <div className="flex shrink-0 items-center gap-1.5">
           {readOnly && (
-            <LockKeyhole className="h-3.5 w-3.5 text-on-surface-variant" aria-hidden="true" />
+            <AppIcon name="lock" className="icon-xs text-on-surface-variant" aria-hidden="true" />
           )}
           {adornment && (
             <span className="text-[8px] font-bold tracking-wide text-on-surface-variant/75 uppercase">
@@ -429,7 +430,7 @@ export function QuantityStepper({
         onClick={() => adjust(-step)}
         className="flex items-center justify-center border-r border-outline-variant/25 text-on-surface-variant transition active:scale-95 disabled:opacity-35"
       >
-        <Minus className="h-4 w-4" />
+        <AppIcon name="remove" className="icon-sm" />
       </button>
       <div className="flex min-w-0 items-center justify-center gap-1 px-2">
         <input
@@ -449,7 +450,7 @@ export function QuantityStepper({
         onClick={() => adjust(step)}
         className="flex items-center justify-center border-l border-outline-variant/25 text-on-surface-variant transition active:scale-95 disabled:opacity-35"
       >
-        <Plus className="h-4 w-4" />
+        <AppIcon name="add" className="icon-sm" />
       </button>
     </div>
   );
@@ -494,7 +495,7 @@ export function ChoiceRow({
           checked ? "border-accent bg-accent text-white" : "border-outline-variant bg-surface",
         )}
       >
-        {checked && <Check className="h-3 w-3" />}
+        {checked && <AppIcon name="check" className="h-3 w-3" />}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-xs font-bold">{title}</span>

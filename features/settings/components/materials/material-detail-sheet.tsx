@@ -1,8 +1,7 @@
 import React from "react";
-import { Archive, Pencil, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
-import { GroupedSurface } from "@/components/ui";
+import { AppIcon, GroupedSurface } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { BottomSheet } from "@/components/ui";
 import { SettingsRowChevron, SettingsStatusLabel } from "../shared/settings-primitives";
@@ -63,7 +62,7 @@ export function MaterialDetailSheet({
               onClick={editMaterial}
               className="flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
             >
-              <Pencil className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <AppIcon name="edit" className="icon-sm shrink-0" aria-hidden="true" />
               <span className="truncate">Edit identitas</span>
             </motion.button>
             <motion.button
@@ -74,9 +73,9 @@ export function MaterialDetailSheet({
               className="flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
             >
               {material.isActive ? (
-                <Archive className="h-4 w-4" aria-hidden="true" />
+                <AppIcon name="archive" className="icon-sm" aria-hidden="true" />
               ) : (
-                <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                <AppIcon name="restore" className="icon-sm" aria-hidden="true" />
               )}
               <span>{material.isActive ? "Arsipkan" : "Aktifkan"}</span>
             </motion.button>

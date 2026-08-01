@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import React from "react";
 
-import { SegmentedTabs } from "@/components/ui";
+import { AppIcon, SegmentedTabs } from "@/components/ui";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import { SETTINGS_TABS, type SettingsTab } from "../../utils/settings-tabs-config";
@@ -85,14 +85,11 @@ export function SettingsNavigation({
             (module) =>
               (module.value !== "administration" || showAdministration) &&
               (module.value !== "setup" || showSetup),
-          ).map((module) => {
-            const Icon = module.icon;
-            return {
-              value: module.value,
-              label: module.shortLabel,
-              icon: <Icon className="h-3.75 w-3.75" aria-hidden="true" />,
-            };
-          })}
+          ).map((module) => ({
+            value: module.value,
+            label: module.shortLabel,
+            icon: <AppIcon name={module.icon} className="h-3.75 w-3.75" aria-hidden="true" />,
+          }))}
         />
       </div>
     </motion.div>

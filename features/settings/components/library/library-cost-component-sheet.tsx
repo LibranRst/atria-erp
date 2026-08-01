@@ -2,8 +2,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Trash2 } from "lucide-react";
 import {
+  AppIcon,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
   FormField,
@@ -170,7 +170,7 @@ export function LibraryCostComponentSheet({
               onClick={deleteComponent}
               className="min-h-12 w-full rounded-full bg-error-container/20 px-5 text-xs font-bold text-error disabled:opacity-35"
             >
-              <Trash2 className="mr-1.5 inline h-4 w-4" /> Hapus Komponen
+              <AppIcon name="delete" className="mr-1.5 inline icon-sm" /> Hapus Komponen
             </motion.button>
           ) : null}
         </div>

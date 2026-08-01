@@ -1,12 +1,4 @@
-import {
-  Boxes,
-  ChartNoAxesCombined,
-  Layers3,
-  PackageSearch,
-  ListChecks,
-  Settings2,
-  UsersRound,
-} from "lucide-react";
+import type { AppIconName } from "@/components/ui";
 
 export type SettingsTab =
   "overview" | "setup" | "budget" | "categories" | "library" | "materials" | "administration";
@@ -15,15 +7,15 @@ export const SETTINGS_TABS: ReadonlyArray<{
   readonly value: SettingsTab;
   readonly label: string;
   readonly shortLabel: string;
-  readonly icon: typeof Settings2;
+  readonly icon: AppIconName;
 }> = [
-  { value: "overview", label: "Ringkasan", shortLabel: "Ringkasan", icon: Settings2 },
-  { value: "setup", label: "Kesiapan Setup", shortLabel: "Kesiapan", icon: ListChecks },
-  { value: "budget", label: "Alokasi Budget", shortLabel: "Budget", icon: ChartNoAxesCombined },
-  { value: "categories", label: "Kategori Pengeluaran", shortLabel: "Kategori", icon: Layers3 },
-  { value: "library", label: "Library Item & Harga", shortLabel: "Library", icon: PackageSearch },
-  { value: "materials", label: "Material Master", shortLabel: "Material", icon: Boxes },
-  { value: "administration", label: "Tim & Vendor", shortLabel: "Tim", icon: UsersRound },
+  { value: "overview", label: "Ringkasan", shortLabel: "Ringkasan", icon: "tune" },
+  { value: "setup", label: "Kesiapan Setup", shortLabel: "Kesiapan", icon: "fact_check" },
+  { value: "budget", label: "Alokasi Budget", shortLabel: "Budget", icon: "trending_up" },
+  { value: "categories", label: "Kategori Pengeluaran", shortLabel: "Kategori", icon: "layers" },
+  { value: "library", label: "Library Item & Harga", shortLabel: "Library", icon: "inventory" },
+  { value: "materials", label: "Material Master", shortLabel: "Material", icon: "inventory_2" },
+  { value: "administration", label: "Tim & Vendor", shortLabel: "Tim", icon: "group" },
 ];
 
 export function parseSettingsTab(value: string | null): SettingsTab {

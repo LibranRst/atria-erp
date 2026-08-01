@@ -1,7 +1,6 @@
 import React from "react";
-import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 
-import { MoneyValue, RowGroup } from "@/components/ui";
+import { AppIcon, MoneyValue, RowGroup } from "@/components/ui";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
 import type { CashTransaction } from "@/features/finance-dashboard/types/bank-account-types";
 import {
@@ -12,9 +11,9 @@ import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
 function transactionIcon(transaction: CashTransaction): React.ReactNode {
   if (transaction.type === "INFLOW") {
-    return <ArrowDownLeft className="h-4 w-4" />;
+    return <AppIcon name="south_west" className="icon-sm" />;
   }
-  return <ArrowUpRight className="h-4 w-4" />;
+  return <AppIcon name="north_east" className="icon-sm" />;
 }
 
 export function AccountTransactionRows({

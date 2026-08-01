@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Pencil } from "lucide-react";
+import { AppIcon } from "@/components/ui";
 
 import { BankAccountCard } from "@/features/finance-dashboard/components/cards/dashboard-cards";
 import type { BankAccount } from "@/features/finance-dashboard/types/bank-account-types";
@@ -69,14 +69,14 @@ export function AccountWorkspaceCard({
       <div className="grid grid-cols-4 gap-1.5 min-[390px]:gap-2">
         <QuickActionButton
           label="Masuk"
-          icon={<ArrowDownLeft className="h-4 w-4" />}
+          icon={<AppIcon name="south_west" className="icon-sm" />}
           disabled={!account.isActive}
           tone="primary"
           onClick={onDebit}
         />
         <QuickActionButton
           label="Keluar"
-          icon={<ArrowUpRight className="h-4 w-4" />}
+          icon={<AppIcon name="north_east" className="icon-sm" />}
           disabled={!account.isActive}
           tone="danger"
           onClick={onCredit}
@@ -84,11 +84,15 @@ export function AccountWorkspaceCard({
         <QuickActionButton
           label="Transfer"
           compactLabel="Pindah"
-          icon={<ArrowRightLeft className="h-4 w-4" />}
+          icon={<AppIcon name="swap_horiz" className="icon-sm" />}
           disabled={!account.isActive || !canTransfer}
           onClick={onTransfer}
         />
-        <QuickActionButton label="Edit" icon={<Pencil className="h-4 w-4" />} onClick={onEdit} />
+        <QuickActionButton
+          label="Edit"
+          icon={<AppIcon name="edit" className="icon-sm" />}
+          onClick={onEdit}
+        />
       </div>
     </article>
   );

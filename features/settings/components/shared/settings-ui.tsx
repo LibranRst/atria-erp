@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { Info } from "lucide-react";
 
-import { MetadataChip, MoneyValue, type MoneyValueVariant } from "@/components/ui";
+import { AppIcon, MetadataChip, MoneyValue, type MoneyValueVariant } from "@/components/ui";
 
 type SettingsHeaderProps = {
   readonly eyebrow: string;
@@ -143,7 +142,7 @@ export const textareaClass =
 export function SettingsNotice(): React.JSX.Element {
   return (
     <div className="flex min-w-0 items-start gap-2.5 rounded-2xl bg-primary/5 px-3 py-2.5 text-support text-on-surface-variant ring-1 ring-primary/15">
-      <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+      <AppIcon name="info" className="mt-0.5 icon-sm shrink-0 text-primary" aria-hidden="true" />
       <p className="min-w-0">
         <strong className="font-bold text-on-surface">Untuk proyek baru.</strong> Default ini tidak
         mengubah budget proyek yang sudah aktif.

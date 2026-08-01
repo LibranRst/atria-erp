@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 
 import { BottomSheet } from "../overlay/bottom-sheet";
 import { FormField } from "./basic-form-controls";
@@ -66,7 +66,7 @@ export function DatePickerField({
         >
           {value ? formatDateLabel(value) : placeholder}
         </span>
-        <CalendarDays className="h-4 w-4 text-on-surface-variant" />
+        <AppIcon name="event" className="icon-sm text-on-surface-variant" />
       </button>
       <BottomSheet open={open} title={label} onClose={() => setOpen(false)}>
         <div className="rounded-3xl bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
@@ -79,7 +79,7 @@ export function DatePickerField({
               className="flex h-11 w-11 items-center justify-center rounded-full text-accent transition active:bg-accent-container"
               aria-label="Bulan sebelumnya"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <AppIcon name="chevron_left" className="icon-sm" />
             </button>
             <p className="text-sm font-bold text-on-surface">{monthLabel}</p>
             <button
@@ -90,7 +90,7 @@ export function DatePickerField({
               className="flex h-11 w-11 items-center justify-center rounded-full text-accent transition active:bg-accent-container"
               aria-label="Bulan berikutnya"
             >
-              <ChevronRight className="h-4 w-4" />
+              <AppIcon name="chevron_right" className="icon-sm" />
             </button>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-on-surface-variant uppercase">

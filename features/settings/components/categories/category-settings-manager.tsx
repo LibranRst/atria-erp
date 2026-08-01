@@ -3,13 +3,13 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { LockKeyhole } from "lucide-react";
 import {
   updateExpenseCategoryDetails,
   type ExpenseCategorySettingRow,
 } from "@/app/actions/settings/system";
 import { SettingsHeader } from "../shared/settings-ui";
 import {
+  AppIcon,
   ConfirmationModal,
   FormField,
   FormSection,
@@ -128,7 +128,7 @@ export function CategorySettingsManager({
               aria-label={`${canManage ? "Edit" : "Lihat"} ${category.name}`}
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
-                <LockKeyhole className="h-4 w-4" aria-hidden="true" />
+                <AppIcon name="lock" className="icon-sm" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex min-w-0 items-center gap-2">
@@ -181,7 +181,7 @@ export function CategorySettingsManager({
           >
             <div className="flex min-h-14 items-center gap-3 px-4 py-2.5">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
-                <LockKeyhole className="h-4 w-4" aria-hidden="true" />
+                <AppIcon name="lock" className="icon-sm" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">

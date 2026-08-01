@@ -1,5 +1,4 @@
 import React from "react";
-import { Repeat2, RotateCcw } from "lucide-react";
 
 import { AppIcon, FormField, useFormPresentation } from "@/components/ui";
 import { CARD_PRESETS } from "@/features/finance-dashboard/utils/bank-account-constants";
@@ -149,7 +148,7 @@ export function ColorEditor({
           }
           className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
         >
-          <Repeat2 className="h-4 w-4" />
+          <AppIcon name="swap_horiz" className="icon-sm" />
           Balik warna
         </button>
         <button
@@ -163,7 +162,7 @@ export function ColorEditor({
           }
           className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
         >
-          <RotateCcw className="h-4 w-4" />
+          <AppIcon name="restore" className="icon-sm" />
           Atur ulang
         </button>
         <button

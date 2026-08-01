@@ -1,6 +1,5 @@
 "use client";
 
-import { MapPin, Package } from "lucide-react";
 import React from "react";
 
 import {
@@ -86,7 +85,7 @@ export function MaterialInventoryTab({
               {
                 value: "ALL",
                 label: "Semua lokasi",
-                icon: <MapPin className="h-3.5 w-3.5" aria-hidden="true" />,
+                icon: <AppIcon name="location_on" className="icon-xs" aria-hidden="true" />,
               },
               ...locations.map((row) => ({ value: row.id, label: row.name })),
             ]}
@@ -147,7 +146,7 @@ function InventoryMaterialRow({
         <span
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${statusPresentation.iconClass}`}
         >
-          <Package className="h-4 w-4" aria-hidden="true" />
+          <AppIcon name="inventory" className="icon-sm" aria-hidden="true" />
         </span>
         <span className="grid min-w-0 flex-1 gap-1">
           <span className="truncate text-row font-bold text-on-surface">{material.name}</span>
@@ -175,7 +174,7 @@ function InventoryMaterialRow({
 
       <div className="mt-3 flex items-center justify-between gap-3 px-1">
         <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[10px] font-semibold text-on-surface-variant">
-          <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <AppIcon name="location_on" className="icon-xs shrink-0" aria-hidden="true" />
           {summary.locationCount} lokasi · {primaryRow?.locationName ?? "Lokasi belum diatur"}
         </span>
         <span className="flex shrink-0 items-center gap-1.5">

@@ -1,9 +1,13 @@
 "use client";
 
-import { SlidersHorizontal } from "lucide-react";
 import React from "react";
 
-import { BottomSheet, ExclusiveSearchFilterBar, type SegmentedTabOption } from "@/components/ui";
+import {
+  AppIcon,
+  BottomSheet,
+  ExclusiveSearchFilterBar,
+  type SegmentedTabOption,
+} from "@/components/ui";
 export function SettingsFilterBar<TValue extends string>({
   status,
   statusOptions,
@@ -70,7 +74,7 @@ export function SettingsFilterBar<TValue extends string>({
             className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/96 text-on-surface shadow-surface ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
             aria-label={`Buka ${filterTitle.toLowerCase()}`}
           >
-            <SlidersHorizontal className="h-4.5 w-4.5" aria-hidden="true" />
+            <AppIcon name="tune" className="icon-md" aria-hidden="true" />
             {filterCount > 0 ? (
               <span className="absolute -top-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary font-mono text-[8px] leading-none font-black text-white">
                 {filterCount}

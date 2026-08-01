@@ -3,13 +3,13 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
 import {
   updateBudgetAllocationDefaults,
   type BudgetAllocationSettingRow,
 } from "@/app/actions/settings/system";
 import { SettingsHeader } from "../shared/settings-ui";
 import {
+  AppIcon,
   ConfirmationModal,
   FormField,
   FormRiskNotice,
@@ -367,7 +367,7 @@ export function BudgetSettingsManager({
             transition={transitionSpringSnappy}
             className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
           >
-            <Save className="h-4 w-4" />
+            <AppIcon name="save" className="icon-sm" />
             {pending ? "Menyimpan…" : "Tinjau perubahan"}
           </motion.button>
         </div>

@@ -1,10 +1,9 @@
 "use client";
 
-import { Building2, ChevronRight, UsersRound } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
-import { GroupedSurface, SegmentedTabs } from "@/components/ui";
+import { AppIcon, GroupedSurface, SegmentedTabs } from "@/components/ui";
 import {
   SettingsModuleHeader,
   SettingsStatusLabel,
@@ -108,7 +107,7 @@ export function AdministrationManager({
           {
             value: "USERS" as const,
             label: "User",
-            icon: <UsersRound className="h-4 w-4" aria-hidden="true" />,
+            icon: <AppIcon name="group" className="icon-sm" aria-hidden="true" />,
           },
         ]
       : []),
@@ -117,7 +116,7 @@ export function AdministrationManager({
           {
             value: "VENDORS" as const,
             label: "Vendor",
-            icon: <Building2 className="h-4 w-4" aria-hidden="true" />,
+            icon: <AppIcon name="domain" className="icon-sm" aria-hidden="true" />,
           },
         ]
       : []),
@@ -216,7 +215,7 @@ export function AdministrationManager({
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant"
                       aria-hidden="true"
                     >
-                      <UsersRound className="h-4.5 w-4.5" />
+                      <AppIcon name="group" className="icon-md" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
@@ -236,8 +235,9 @@ export function AdministrationManager({
                         label={row.isActive ? "Aktif" : "Nonaktif"}
                         tone={row.isActive ? "positive" : "inactive"}
                       />
-                      <ChevronRight
-                        className="h-4 w-4 shrink-0 text-on-surface-variant/55"
+                      <AppIcon
+                        name="chevron_right"
+                        className="icon-sm shrink-0 text-on-surface-variant/55"
                         aria-hidden="true"
                       />
                     </div>
@@ -246,8 +246,9 @@ export function AdministrationManager({
               </div>
             ) : (
               <div className="px-5 py-8 text-center">
-                <UsersRound
-                  className="mx-auto h-5 w-5 text-on-surface-variant/55"
+                <AppIcon
+                  name="group"
+                  className="mx-auto icon-lg text-on-surface-variant/55"
                   aria-hidden="true"
                 />
                 <p className="mt-2 text-xs font-bold text-on-surface">Belum ada user internal</p>
@@ -296,7 +297,7 @@ export function AdministrationManager({
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant"
                       aria-hidden="true"
                     >
-                      <Building2 className="h-4.5 w-4.5" />
+                      <AppIcon name="domain" className="icon-md" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
@@ -312,8 +313,9 @@ export function AdministrationManager({
                         label={row.isActive ? "Aktif" : "Diarsipkan"}
                         tone={row.isActive ? "positive" : "inactive"}
                       />
-                      <ChevronRight
-                        className="h-4 w-4 shrink-0 text-on-surface-variant/55"
+                      <AppIcon
+                        name="chevron_right"
+                        className="icon-sm shrink-0 text-on-surface-variant/55"
                         aria-hidden="true"
                       />
                     </div>
@@ -322,8 +324,9 @@ export function AdministrationManager({
               </div>
             ) : (
               <div className="px-5 py-8 text-center">
-                <Building2
-                  className="mx-auto h-5 w-5 text-on-surface-variant/55"
+                <AppIcon
+                  name="domain"
+                  className="mx-auto icon-lg text-on-surface-variant/55"
                   aria-hidden="true"
                 />
                 <p className="mt-2 text-xs font-bold text-on-surface">Belum ada vendor</p>

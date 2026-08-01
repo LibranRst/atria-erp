@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Check, ChevronDown, Plus, Search, X } from "lucide-react";
 
 import { BottomSheet } from "../overlay/bottom-sheet";
 import { Button } from "../button/button";
@@ -110,7 +109,7 @@ export function SheetSelect({
             </span>
           )}
         </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-on-surface-variant" />
+        <AppIcon name="expand_more" className="icon-sm shrink-0 text-on-surface-variant" />
       </button>
       <BottomSheet
         open={open}
@@ -173,7 +172,7 @@ export function SheetSelect({
                               </span>
                             ) : null}
                           </span>
-                          {active ? <Check className="h-4 w-4 shrink-0" /> : null}
+                          {active ? <AppIcon name="check" className="icon-sm shrink-0" /> : null}
                         </button>
                       );
                     })}
@@ -186,7 +185,7 @@ export function SheetSelect({
               type="button"
               variant="secondary"
               fullWidth
-              leadingIcon={<Plus className="h-4 w-4" />}
+              leadingIcon={<AppIcon name="add" className="icon-sm" />}
               trailingIcon={<AppIcon name="chevron_right" className="icon-md shrink-0" />}
               onClick={() => {
                 setPendingValue(null);
@@ -277,7 +276,7 @@ export function ComboboxField({
         >
           {value || placeholder}
         </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-on-surface-variant" />
+        <AppIcon name="expand_more" className="icon-sm shrink-0 text-on-surface-variant" />
       </button>
       <BottomSheet
         open={open}
@@ -319,7 +318,7 @@ export function ComboboxField({
                     )}
                   >
                     <span className="min-w-0 flex-1 truncate text-xs font-bold">{option}</span>
-                    {active ? <Check className="h-4 w-4 shrink-0" /> : null}
+                    {active ? <AppIcon name="check" className="icon-sm shrink-0" /> : null}
                   </button>
                 );
               })}
@@ -335,7 +334,7 @@ export function ComboboxField({
                   <span className="min-w-0 truncate text-xs font-bold">
                     Gunakan &quot;{customValue}&quot;
                   </span>
-                  <Plus className="h-4 w-4 shrink-0" />
+                  <AppIcon name="add" className="icon-sm shrink-0" />
                 </button>
               ) : null}
             </div>
@@ -374,7 +373,7 @@ export function SearchInput({
         className,
       )}
     >
-      <Search className="h-4 w-4 shrink-0 text-on-surface-variant" />
+      <AppIcon name="search" className="icon-sm shrink-0 text-on-surface-variant" />
       <input
         id={id}
         name={name}
@@ -392,7 +391,7 @@ export function SearchInput({
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition active:scale-95"
           aria-label={clearLabel}
         >
-          <X className="h-4 w-4" />
+          <AppIcon name="close" className="icon-sm" />
         </button>
       ) : null}
     </div>

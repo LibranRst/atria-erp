@@ -1,7 +1,6 @@
 import React from "react";
-import { ArchiveRestore, ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Pencil } from "lucide-react";
 
-import { BottomSheet, Button, useSheetPresenceValue } from "@/components/ui";
+import { AppIcon, BottomSheet, Button, useSheetPresenceValue } from "@/components/ui";
 import { BankAccountCard } from "@/features/finance-dashboard/components/cards/dashboard-cards";
 import { AccountTransactionRows } from "./account-transaction-rows";
 import type { BankAccount } from "@/features/finance-dashboard/types/bank-account-types";
@@ -71,7 +70,7 @@ export function AccountDetailSheet({
                 type="button"
                 variant="primary"
                 fullWidth
-                leadingIcon={<ArrowDownLeft className="h-4 w-4" />}
+                leadingIcon={<AppIcon name="south_west" className="icon-sm" />}
                 disabled={!presentedAccount.isActive}
                 onClick={() => onDebit(presentedAccount)}
               >
@@ -81,7 +80,7 @@ export function AccountDetailSheet({
                 type="button"
                 variant="criticalQuiet"
                 fullWidth
-                leadingIcon={<ArrowUpRight className="h-4 w-4" />}
+                leadingIcon={<AppIcon name="north_east" className="icon-sm" />}
                 disabled={!presentedAccount.isActive}
                 onClick={() => onCredit(presentedAccount)}
               >
@@ -93,7 +92,7 @@ export function AccountDetailSheet({
                 type="button"
                 variant="secondary"
                 fullWidth
-                leadingIcon={<ArrowRightLeft className="h-4 w-4" />}
+                leadingIcon={<AppIcon name="swap_horiz" className="icon-sm" />}
                 disabled={!presentedAccount.isActive || !canTransfer}
                 onClick={() => onTransfer(presentedAccount)}
               >
@@ -103,7 +102,7 @@ export function AccountDetailSheet({
                 type="button"
                 variant="secondary"
                 fullWidth
-                leadingIcon={<Pencil className="h-4 w-4" />}
+                leadingIcon={<AppIcon name="edit" className="icon-sm" />}
                 onClick={() => onEdit(presentedAccount)}
               >
                 Edit
@@ -115,7 +114,7 @@ export function AccountDetailSheet({
               type="button"
               variant="criticalQuiet"
               fullWidth
-              leadingIcon={<ArchiveRestore className="h-4 w-4" />}
+              leadingIcon={<AppIcon name="restore" className="icon-sm" />}
               disabled={pending}
               onClick={() => onToggleActive(presentedAccount)}
             >

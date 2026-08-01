@@ -1,7 +1,7 @@
 "use client";
 
-import { Search, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AppIcon } from "@/components/ui/icon/app-icon";
 import React from "react";
 
 import { SegmentedTabs, type SegmentedTabOption } from "@/components/ui/navigation/segmented-tabs";
@@ -107,7 +107,7 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
               className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-full text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
               aria-label={`Buka ${searchAriaLabel.toLowerCase()}`}
             >
-              <Search className="h-4.5 w-4.5" aria-hidden="true" />
+              <AppIcon name="search" className="icon-md" aria-hidden="true" />
             </motion.button>
           ) : (
             <motion.div
@@ -118,7 +118,11 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
               transition={contentTransition}
               className="flex h-12 w-full items-center gap-2 pr-1 pl-4"
             >
-              <Search className="h-4.5 w-4.5 shrink-0 text-on-surface-variant" aria-hidden="true" />
+              <AppIcon
+                name="search"
+                className="icon-md shrink-0 text-on-surface-variant"
+                aria-hidden="true"
+              />
               <input
                 ref={inputRef}
                 type="search"
@@ -139,7 +143,7 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant outline-none focus-visible:bg-surface-container focus-visible:ring-2 focus-visible:ring-focus-ring"
                 aria-label="Tutup pencarian"
               >
-                <X className="h-4 w-4" aria-hidden="true" />
+                <AppIcon name="close" className="icon-sm" aria-hidden="true" />
               </motion.button>
             </motion.div>
           )}

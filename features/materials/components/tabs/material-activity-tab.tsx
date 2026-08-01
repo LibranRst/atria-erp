@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowDownToLine, ArrowLeftRight, ClipboardCheck } from "lucide-react";
 import React from "react";
 import {
   ActivityDetailChevron,
@@ -143,7 +142,7 @@ export function MaterialActivityTab({
                   className="flex min-h-19 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
                 >
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-success/8 text-success ring-1 ring-success/6">
-                    <ArrowDownToLine className="h-4 w-4" aria-hidden="true" />
+                    <AppIcon name="move_to_inbox" className="icon-sm" aria-hidden="true" />
                   </span>
                   <span className="grid min-w-0 flex-1 gap-1">
                     <span className="truncate text-row font-bold text-on-surface">
@@ -257,7 +256,7 @@ function TransferRow({
       aria-label={`Lihat detail transfer ${row.transferNumber}`}
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/8 text-primary ring-1 ring-primary/6">
-        <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
+        <AppIcon name="swap_horiz" className="icon-sm" aria-hidden="true" />
       </span>
       <div className="grid min-w-0 flex-1 gap-1">
         <p className="truncate text-row font-bold text-on-surface">{row.transferNumber}</p>
@@ -285,7 +284,7 @@ function CountRow({
       aria-label={`Lihat detail opname ${row.countNumber}`}
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/9 text-warning ring-1 ring-warning/6">
-        <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
+        <AppIcon name="fact_check" className="icon-sm" aria-hidden="true" />
       </span>
       <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-center justify-between gap-2">
