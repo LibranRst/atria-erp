@@ -218,7 +218,7 @@ export function BudgetSettingsManager({
       >
         <div className="flex min-w-0 items-end justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="text-[17px] font-semibold text-on-surface">Pembagian Budget Internal</h2>
+            <h2 className="text-title font-semibold text-on-surface">Pembagian Budget Internal</h2>
           </div>
           <p
             className={`financial-amount shrink-0 font-mono text-lg font-bold tabular-nums ${overLimit ? "text-error" : "text-on-surface"}`}

@@ -59,7 +59,7 @@ export function FinancialDefaultsPanel({
                 <p className="text-[8px] font-bold tracking-[0.08em] text-on-surface-variant/65 uppercase">
                   Internal
                 </p>
-                <p className="font-numeral mt-1 text-[17px] font-bold text-on-surface tabular-nums">
+                <p className="font-numeral mt-1 text-title font-bold text-on-surface tabular-nums">
                   {Math.round((budget?.budgetCapRatio ?? 0) * 100)}%
                 </p>
               </div>
@@ -67,7 +67,7 @@ export function FinancialDefaultsPanel({
                 <p className="text-[8px] font-bold tracking-[0.08em] text-on-surface-variant/65 uppercase">
                   Terbagi
                 </p>
-                <p className="font-numeral mt-1 text-[17px] font-bold text-on-surface tabular-nums">
+                <p className="font-numeral mt-1 text-title font-bold text-on-surface tabular-nums">
                   {Math.round(allocation * 100)}%
                 </p>
               </div>
@@ -75,7 +75,7 @@ export function FinancialDefaultsPanel({
                 <p className="text-[8px] font-bold tracking-[0.08em] text-on-surface-variant/65 uppercase">
                   Buffer
                 </p>
-                <p className="font-numeral mt-1 text-[17px] font-bold text-warning tabular-nums">
+                <p className="font-numeral mt-1 text-title font-bold text-warning tabular-nums">
                   {Math.round(buffer * 100)}%
                 </p>
               </div>

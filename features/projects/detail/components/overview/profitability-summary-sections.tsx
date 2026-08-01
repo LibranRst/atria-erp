@@ -69,7 +69,7 @@ export function CashRealizationSection({
   return (
     <section className="space-y-2.5">
       <header className="px-1">
-        <h2 className="text-[17px] font-semibold text-on-surface">Realisasi kas</h2>
+        <h2 className="text-title font-semibold text-on-surface">Realisasi kas</h2>
         <p className="mt-0.5 text-support text-on-surface-variant">
           Dana klien yang diterima dibanding pengeluaran kas proyek.
         </p>

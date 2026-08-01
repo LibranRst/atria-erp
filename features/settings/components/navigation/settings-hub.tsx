@@ -142,7 +142,7 @@ export function SettingsHub({
       {readiness.length > 0 ? (
         <section className="space-y-2">
           <div className="flex min-h-10 items-center justify-between gap-3">
-            <h3 className="text-[17px] font-semibold tracking-[-0.015em] text-on-surface">
+            <h3 className="text-title font-semibold tracking-[-0.015em] text-on-surface">
               Kesiapan production
             </h3>
             <WorkspaceStatusLabel
@@ -187,7 +187,7 @@ export function SettingsHub({
 
       <section className="space-y-2">
         <div className="flex min-h-10 items-center">
-          <h3 className="text-[17px] font-semibold tracking-[-0.015em] text-on-surface">
+          <h3 className="text-title font-semibold tracking-[-0.015em] text-on-surface">
             Modul pengaturan
           </h3>
         </div>

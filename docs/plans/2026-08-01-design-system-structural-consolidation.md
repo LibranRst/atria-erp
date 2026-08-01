@@ -93,7 +93,7 @@ All four phases landed. Measured results:
 
 | Metric                                   | Before | After |
 | ---------------------------------------- | ------ | ----- |
-| Hardcoded `text-[Npx]`                   | 1075   | 686   |
+| Hardcoded `text-[Npx]`                   | 1075   | 679   |
 | Deep `@/components/ui/**` imports        | 278    | 0     |
 | Cross-feature imports into the dashboard | 20     | 5     |
 | Cross-slice edges                        | 45     | 33    |
@@ -144,18 +144,34 @@ Every item below was written up as deferred, then closed in a follow-up pass.
   now use `icon-*`. No visual change, since a 1em SVG at `text-[18px]` and at `icon-md` both measure
   18px.
 
-### Remaining: the 686 hardcoded type sizes
+### Remaining: the hardcoded type sizes
 
 This is the one open item, and it is open on purpose. The breakdown, measured rather than estimated:
 
 | Group                                  | Count | Why a mechanical pass is wrong                        |
 | -------------------------------------- | ----- | ----------------------------------------------------- |
 | Size carries no role in the scale      | ~143  | 8px, 12px, 14px, 16px, 19px and similar have no token |
-| Size with no explicit `leading`        | ~336  | The token would introduce a line-height, see below    |
+| Size with no explicit `leading`        | ~329  | The token would introduce a line-height, see below    |
 | Size paired with a different `leading` | ~110  | The token would overwrite a deliberate line-height    |
 | Icon sizes with no matching utility    | ~57   | 13, 15, 17, 19, 21, 23, 26, 32, 34, 36px one-offs     |
 
 The middle group is the trap. Sampling live elements that set a size with no `leading` showed nine
 of twelve inherit a 24px line-height, while the matching token would set 12–16px. Converting them
 in bulk would tighten line boxes by 8–12px across hundreds of elements — a silent regression, not a
-cleanup. These need to be walked surface by surface with the rendering in view.
+cleanup.
+
+That sample also revealed the actual rule: the app's ambient line-height with no explicit `leading`
+is a flat 24px almost everywhere, confirmed across five unrelated pages (`/ledger`, `/expenses`,
+`/settings`, `/materials`, a project detail page — roughly 109 elements) with zero exceptions. Of
+the seven tokens, only `text-title` (17px/24px) matches that ambient value; the other six are all
+smaller than 24px, so converting them can never be visually safe as a blanket rule. Converting them
+individually still requires per-element judgement, since the safety depends on what ancestor sets
+the 24px, not on the token itself.
+
+Acting on that rule: the 7 real `text-[17px]`-with-no-leading text sites in the repo (excluding
+`AppIcon` sizes, which share the same numeric syntax, and one `max-[430px]:text-[17px]` responsive
+override that is a different case) moved to `text-title`. Verified in the browser at both before and
+after: every one measured 17px/24px both times. Hardcoded `text-[Npx]` drops from 686 to 679.
+
+The remaining ~329 "no leading" sites need the same per-element browser measurement before any
+conversion, one surface at a time; there is no shortcut that preserves the guarantee above.
