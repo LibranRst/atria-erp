@@ -3,11 +3,13 @@
 import { motion, useReducedMotion } from "framer-motion";
 import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
-import { AppIcon, GroupedSurface, SegmentedTabs } from "@/components/ui";
 import {
-  SettingsModuleHeader,
-  SettingsStatusLabel,
-} from "@/features/settings/components/shared/settings-primitives";
+  AppIcon,
+  GroupedSurface,
+  SegmentedTabs,
+  WorkspaceModuleHeader,
+  WorkspaceStatusLabel,
+} from "@/components/ui";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { AdministrationUserEditorSheet } from "../forms/administration-user-editor-sheet";
@@ -126,7 +128,7 @@ export function AdministrationManager({
   return (
     <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
       {presentation === "settings" ? (
-        <SettingsModuleHeader
+        <WorkspaceModuleHeader
           eyebrow="Kontrol akses"
           title="Tim & Vendor"
           description={
@@ -226,12 +228,12 @@ export function AdministrationManager({
                       </span>
                       {row.mustChangePassword ? (
                         <span className="mt-1.5 flex min-w-0 flex-wrap gap-1.5">
-                          <SettingsStatusLabel label="Ganti password" tone="warning" />
+                          <WorkspaceStatusLabel label="Ganti password" tone="warning" />
                         </span>
                       ) : null}
                     </span>
                     <div className="flex flex-row items-center">
-                      <SettingsStatusLabel
+                      <WorkspaceStatusLabel
                         label={row.isActive ? "Aktif" : "Nonaktif"}
                         tone={row.isActive ? "positive" : "inactive"}
                       />
@@ -309,7 +311,7 @@ export function AdministrationManager({
                       </span>
                     </span>
                     <div className="flex flex-row items-center">
-                      <SettingsStatusLabel
+                      <WorkspaceStatusLabel
                         label={row.isActive ? "Aktif" : "Diarsipkan"}
                         tone={row.isActive ? "positive" : "inactive"}
                       />

@@ -65,6 +65,11 @@ export type {
   PillTabOption,
 } from "./feedback/page-primitives";
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card/card";
+export {
+  WorkspaceModuleHeader,
+  WorkspaceRowChevron,
+  WorkspaceStatusLabel,
+} from "./feedback/workspace-primitives";
 
 // Indikator budget dan dampak
 export { BudgetSplitIndicator } from "./feedback/budget-split-indicator";

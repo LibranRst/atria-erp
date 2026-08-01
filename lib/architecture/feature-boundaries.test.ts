@@ -28,14 +28,9 @@ const ALLOWED_EDGES: Readonly<Record<string, readonly string[]>> = {
   // Persetujuan menilai pengajuan stok, jadi memakai penyajian material.
   approvals: ["materials"],
   // Settings memuat master material dan menampung workspace administrasi.
-  //
-  // CATATAN: `settings -> administration` bersama `administration -> settings`
-  // membentuk siklus tingkat-slice. Bukan circular import runtime (filenya
-  // berbeda), tapi tetap utang desain: administration dirender di dalam
-  // settings sekaligus meminjam primitif UI-nya. Perbaikannya adalah menaikkan
-  // primitif configuration-workspace itu ke lapisan bersama.
+  // Arahnya satu jalur: administration tidak lagi menunjuk balik ke settings
+  // sejak primitif configuration-workspace naik ke `components/ui`.
   settings: ["materials", "administration"],
-  administration: ["settings"],
 };
 
 function collectSourceFiles(directory: string): string[] {

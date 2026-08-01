@@ -2,13 +2,14 @@
 
 import type { ProductionReadinessItem } from "@/app/actions/administration";
 import type { SettingsHubOverview } from "@/app/actions/settings/system";
-import { AppIcon, GroupedSurface } from "@/components/ui";
-import type { SettingsTab } from "../../utils/settings-tabs-config";
 import {
-  SettingsModuleHeader,
-  SettingsRowChevron,
-  SettingsStatusLabel,
-} from "../shared/settings-primitives";
+  AppIcon,
+  GroupedSurface,
+  WorkspaceModuleHeader,
+  WorkspaceRowChevron,
+  WorkspaceStatusLabel,
+} from "@/components/ui";
+import type { SettingsTab } from "../../utils/settings-tabs-config";
 
 function percent(value: number): string {
   return new Intl.NumberFormat("id-ID", { style: "percent", maximumFractionDigits: 1 }).format(
@@ -69,7 +70,7 @@ export function SettingsHub({
 
   return (
     <section className="min-w-0 space-y-sm">
-      <SettingsModuleHeader
+      <WorkspaceModuleHeader
         eyebrow="Posisi default"
         title="Default proyek baru"
         description="Formula yang dipakai saat budget dan master data baru disiapkan."
@@ -85,7 +86,7 @@ export function SettingsHub({
               {percent(data.budgetCapRatio)}
             </p>
           </div>
-          <SettingsStatusLabel label="Untuk proyek baru" tone="inverse" />
+          <WorkspaceStatusLabel label="Untuk proyek baru" tone="inverse" />
         </div>
         <div className="mt-5 grid grid-cols-2 divide-x divide-white/10 border-y border-white/10 py-3.5">
           <div className="pr-4">
@@ -144,7 +145,7 @@ export function SettingsHub({
             <h3 className="text-[17px] font-semibold tracking-[-0.015em] text-on-surface">
               Kesiapan production
             </h3>
-            <SettingsStatusLabel
+            <WorkspaceStatusLabel
               label={
                 readiness.every((item) => item.ready)
                   ? "Siap simulasi"
@@ -172,7 +173,7 @@ export function SettingsHub({
                         {item.detail}
                       </span>
                     </span>
-                    <SettingsStatusLabel
+                    <WorkspaceStatusLabel
                       label={item.ready ? "Siap" : "Lengkapi"}
                       tone={item.ready ? "positive" : "inactive"}
                     />
@@ -208,7 +209,7 @@ export function SettingsHub({
                       <span className="truncate text-row font-bold text-on-surface">
                         {module.title}
                       </span>
-                      <SettingsStatusLabel
+                      <WorkspaceStatusLabel
                         label={module.access ? "Dapat dikelola" : "Hanya baca"}
                         tone={module.access ? "positive" : "inactive"}
                       />
@@ -223,7 +224,7 @@ export function SettingsHub({
                       </span>
                     </span>
                   </span>
-                  <SettingsRowChevron />
+                  <WorkspaceRowChevron />
                 </button>
               );
             })}

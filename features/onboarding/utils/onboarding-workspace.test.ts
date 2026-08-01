@@ -71,7 +71,7 @@ describe("inline owner onboarding workspace", () => {
     expect(source).toContain("OnboardingStage");
     expect(source).toContain("OnboardingSurface");
     expect(source).not.toContain("SettingsHeader");
-    expect(source).not.toContain("SettingsModuleHeader");
+    expect(source).not.toContain("WorkspaceModuleHeader");
   });
 
   test("loads independent setup sources in parallel with isolated source errors", async () => {

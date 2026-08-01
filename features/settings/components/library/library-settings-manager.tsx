@@ -4,13 +4,12 @@ import React from "react";
 import { motion } from "framer-motion";
 import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
-import { ConfirmationSheet, EmptyState } from "@/components/ui";
+import { ConfirmationSheet, EmptyState, WorkspaceModuleHeader } from "@/components/ui";
 import { SettingsHeader } from "../shared/settings-ui";
 import { ConfirmationModal, FilterSelect } from "@/components/ui";
 import { createClientId } from "@/lib/utils/client-id";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
-import { SettingsModuleHeader } from "../shared/settings-primitives";
 import { LibraryCostComponentSheet } from "./library-cost-component-sheet";
 import { LibraryTemplateEditorSheet } from "./library-template-editor-sheet";
 import { LibraryTemplateList } from "./library-template-list";
@@ -323,7 +322,7 @@ export function LibrarySettingsManager({
   return (
     <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
       {presentation === "onboarding" ? null : hideHeader ? (
-        <SettingsModuleHeader
+        <WorkspaceModuleHeader
           eyebrow="Template proyek berulang"
           title="Library Item & Harga"
           description="Biaya internal, harga klien, paket kerja, dan baris RAB yang dapat digunakan kembali."

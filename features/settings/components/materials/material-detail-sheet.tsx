@@ -1,10 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
-import { AppIcon, GroupedSurface } from "@/components/ui";
+import {
+  AppIcon,
+  GroupedSurface,
+  WorkspaceRowChevron,
+  WorkspaceStatusLabel,
+} from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { BottomSheet } from "@/components/ui";
-import { SettingsRowChevron, SettingsStatusLabel } from "../shared/settings-primitives";
 import type { DetailNextAction } from "../../types/material-types";
 
 type Props = {
@@ -91,7 +95,7 @@ export function MaterialDetailSheet({
                 <p className="truncate text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
                   {material.categoryName}
                 </p>
-                <SettingsStatusLabel
+                <WorkspaceStatusLabel
                   label={material.isActive ? "Aktif" : "Diarsipkan"}
                   tone={material.isActive ? "positive" : "inactive"}
                 />
@@ -174,7 +178,7 @@ export function MaterialDetailSheet({
                         {inventory.reservedStock.toLocaleString("id-ID")}
                       </span>
                     </span>
-                    {canManage ? <SettingsRowChevron /> : null}
+                    {canManage ? <WorkspaceRowChevron /> : null}
                   </button>
                 ))}
               </div>

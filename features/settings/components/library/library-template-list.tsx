@@ -1,8 +1,12 @@
 import React from "react";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
-import { GroupedSurface, MoneyValue } from "@/components/ui";
-import { SettingsRowChevron, SettingsStatusLabel } from "../shared/settings-primitives";
+import {
+  GroupedSurface,
+  MoneyValue,
+  WorkspaceRowChevron,
+  WorkspaceStatusLabel,
+} from "@/components/ui";
 
 type LibraryTemplateListProps = {
   readonly items: readonly PricingTemplateRow[];
@@ -107,11 +111,11 @@ export function LibraryTemplateList({
                 ) : null}
               </span>
               <div className="flex flex-row items-center gap-2">
-                <SettingsStatusLabel
+                <WorkspaceStatusLabel
                   label={item.isActive ? itemTypeLabel(item.itemType) : "Diarsipkan"}
                   tone={item.isActive ? "neutral" : "inactive"}
                 />
-                <SettingsRowChevron />
+                <WorkspaceRowChevron />
               </div>
             </button>
           );

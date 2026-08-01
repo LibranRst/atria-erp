@@ -20,9 +20,10 @@ import {
   NumericInput,
   Textarea,
   TextInput,
+  WorkspaceModuleHeader,
+  WorkspaceStatusLabel,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { SettingsModuleHeader, SettingsStatusLabel } from "../shared/settings-primitives";
 const fullMoney = (value: number): string => `Rp ${Math.round(value).toLocaleString("id-ID")}`;
 const percent = (value: number): string =>
   new Intl.NumberFormat("id-ID", {
@@ -99,7 +100,7 @@ export function BudgetSettingsManager({
   return (
     <section className="min-w-0 space-y-sm">
       {presentation === "onboarding" ? null : hideHeader ? (
-        <SettingsModuleHeader
+        <WorkspaceModuleHeader
           eyebrow="Default finansial"
           title="Alokasi Budget"
           description="Atur hubungan Budget Internal, margin target, pembagian kategori, dan buffer."
@@ -293,7 +294,7 @@ export function BudgetSettingsManager({
                         align="right"
                       />
                       <div className="mt-1 flex justify-end">
-                        <SettingsStatusLabel
+                        <WorkspaceStatusLabel
                           label={
                             category.isEnabled ? percent(category.ratioPercentage) : "Nonaktif"
                           }

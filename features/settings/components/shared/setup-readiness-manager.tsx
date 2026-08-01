@@ -9,16 +9,18 @@ import type {
   InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
 import { OpeningInventoryWorkspace } from "@/features/materials/components/workspaces/opening-inventory-workspace";
-import { AppIcon, GroupedSurface, MetadataChip } from "@/components/ui";
+import {
+  AppIcon,
+  GroupedSurface,
+  MetadataChip,
+  WorkspaceModuleHeader,
+  WorkspaceRowChevron,
+  WorkspaceStatusLabel,
+} from "@/components/ui";
 import type {
   OnboardingStepStatus,
   OwnerOnboardingOverview,
 } from "@/lib/onboarding/owner-onboarding";
-import {
-  SettingsModuleHeader,
-  SettingsRowChevron,
-  SettingsStatusLabel,
-} from "./settings-primitives";
 
 function tone(status: OnboardingStepStatus): "positive" | "inactive" | "neutral" {
   if (status === "READY" || status === "NOT_APPLICABLE") return "positive";
@@ -65,7 +67,7 @@ export function SetupReadinessManager({
   const missing = overview.readiness.filter((item) => !item.ready && item.id !== "summary").length;
   return (
     <section className="space-y-5">
-      <SettingsModuleHeader
+      <WorkspaceModuleHeader
         eyebrow="Fondasi operasional"
         title="Kesiapan setup"
         description="Status berasal dari data nyata. Menyelesaikan onboarding tidak menyembunyikan konfigurasi yang masih kosong."
@@ -155,8 +157,8 @@ export function SetupReadinessManager({
                       {item.detail}
                     </span>
                   </span>
-                  <SettingsStatusLabel label={label(item.status)} tone={tone(item.status)} />
-                  <SettingsRowChevron />
+                  <WorkspaceStatusLabel label={label(item.status)} tone={tone(item.status)} />
+                  <WorkspaceRowChevron />
                 </Link>
               );
             })}

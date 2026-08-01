@@ -1,7 +1,11 @@
 import React from "react";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
-import { AppIcon, GroupedSurface } from "@/components/ui";
-import { SettingsRowChevron, SettingsStatusLabel } from "../shared/settings-primitives";
+import {
+  AppIcon,
+  GroupedSurface,
+  WorkspaceRowChevron,
+  WorkspaceStatusLabel,
+} from "@/components/ui";
 
 type MaterialSettingsListProps = {
   readonly materials: readonly MaterialSettingRow[];
@@ -47,11 +51,11 @@ export function MaterialSettingsList({
               </span>
             </span>
             <div className="flex min-w-0 items-center gap-2">
-              <SettingsStatusLabel
+              <WorkspaceStatusLabel
                 label={material.isActive ? material.categoryName : "Diarsipkan"}
                 tone={material.isActive ? "neutral" : "inactive"}
               />
-              <SettingsRowChevron />
+              <WorkspaceRowChevron />
             </div>
           </button>
         ))}

@@ -18,13 +18,11 @@ import {
   OperationalFormSheet,
   Textarea,
   TextInput,
+  WorkspaceModuleHeader,
+  WorkspaceRowChevron,
+  WorkspaceStatusLabel,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import {
-  SettingsModuleHeader,
-  SettingsRowChevron,
-  SettingsStatusLabel,
-} from "../shared/settings-primitives";
 
 type CategorySettingsManagerProps = {
   readonly initialCategories: readonly ExpenseCategorySettingRow[];
@@ -98,7 +96,7 @@ export function CategorySettingsManager({
   return (
     <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
       {presentation === "onboarding" ? null : hideHeader ? (
-        <SettingsModuleHeader
+        <WorkspaceModuleHeader
           eyebrow="Kategori baku"
           title="Kategori Pengeluaran"
           description="Lima kelompok biaya yang menjaga budget dan laporan tetap konsisten."
@@ -135,7 +133,7 @@ export function CategorySettingsManager({
                   <span className="truncate text-[13px] font-bold text-on-surface">
                     {category.name}
                   </span>
-                  <SettingsStatusLabel label={category.code} tone="neutral" />
+                  <WorkspaceStatusLabel label={category.code} tone="neutral" />
                 </span>
                 <span className="mt-1 line-clamp-2 block text-[10px] leading-[1.3] text-on-surface-variant">
                   {category.description || "Belum ada deskripsi kategori."}
@@ -144,7 +142,7 @@ export function CategorySettingsManager({
                   Kode dan status aktif dilindungi
                 </span>
               </span>
-              <SettingsRowChevron />
+              <WorkspaceRowChevron />
             </button>
           ))}
         </div>

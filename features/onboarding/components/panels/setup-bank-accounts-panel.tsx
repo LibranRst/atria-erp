@@ -5,14 +5,13 @@ import { toast } from "sonner";
 
 import { createBankAccount, updateBankAccount } from "@/app/actions/finance/bank-accounts";
 import type { OwnerOnboardingBankAccount } from "@/app/actions/onboarding";
-import { AppIcon, MoneyValue } from "@/components/ui";
+import { AppIcon, MoneyValue, WorkspaceStatusLabel } from "@/components/ui";
 import { AccountFormSheet } from "@/features/finance-dashboard/components/bank-accounts/account-form-sheet";
 import type { AccountDraft } from "@/features/finance-dashboard/types/bank-account-types";
 import {
   accountToDraft,
   newAccountDraft,
 } from "@/features/finance-dashboard/utils/bank-account-utils";
-import { SettingsStatusLabel } from "@/features/settings/components/shared/settings-primitives";
 import {
   OnboardingEmpty,
   OnboardingNotice,
@@ -139,7 +138,7 @@ export function SetupBankAccountsPanel({
                     {account.bankName} · {account.accountNumber}
                   </span>
                   {!account.isActive ? (
-                    <SettingsStatusLabel label="Diarsipkan" tone="inactive" className="mt-1" />
+                    <WorkspaceStatusLabel label="Diarsipkan" tone="inactive" className="mt-1" />
                   ) : null}
                 </span>
                 <MoneyValue

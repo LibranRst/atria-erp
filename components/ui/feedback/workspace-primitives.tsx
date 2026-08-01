@@ -1,11 +1,22 @@
 "use client";
 
+/**
+ * Primitif untuk "configuration workspace" seperti yang dijelaskan di
+ * MAIN_SURFACE_DESIGN_LANGUAGE.md: judul modul, label status, dan afordans baris.
+ *
+ * Sebelumnya tinggal di `features/settings` padahal administration dan
+ * onboarding ikut memakainya — administration dirender DI DALAM settings
+ * sekaligus meminjam primitif ini, sehingga terbentuk siklus antar-slice.
+ * Tidak ada di sini yang menyentuh domain settings.
+ */
+
 import { motion, useReducedMotion } from "framer-motion";
 import React from "react";
-import { AppIcon, StatusBadge, type StatusBadgeTone } from "@/components/ui";
+import { AppIcon } from "@/components/ui/icon/app-icon";
+import { StatusBadge, type StatusBadgeTone } from "@/components/ui/badge/badge";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
-export function SettingsModuleHeader({
+export function WorkspaceModuleHeader({
   eyebrow,
   title,
   description,
@@ -51,7 +62,7 @@ export function SettingsModuleHeader({
   );
 }
 
-export function SettingsStatusLabel({
+export function WorkspaceStatusLabel({
   label,
   tone = "neutral",
   className,
@@ -79,7 +90,7 @@ export function SettingsStatusLabel({
   );
 }
 
-export function SettingsRowChevron(): React.JSX.Element {
+export function WorkspaceRowChevron(): React.JSX.Element {
   return (
     <span
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-accent"

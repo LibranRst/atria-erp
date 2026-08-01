@@ -3,12 +3,11 @@
 import React from "react";
 import { motion } from "framer-motion";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
-import { ConfirmationSheet, EmptyState } from "@/components/ui";
+import { ConfirmationSheet, EmptyState, WorkspaceModuleHeader } from "@/components/ui";
 import { SettingsHeader } from "../shared/settings-ui";
 import { AppIcon, ConfirmationModal, FilterSelect } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
-import { SettingsModuleHeader } from "../shared/settings-primitives";
 import { MaterialImportSheet } from "./material-import-sheet";
 import { MaterialCategoryComposerSheet } from "./material-category-composer-sheet";
 import { MaterialDetailSheet } from "./material-detail-sheet";
@@ -201,7 +200,7 @@ export function MaterialSettingsManager({
   return (
     <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
       {presentation === "onboarding" ? null : hideHeader ? (
-        <SettingsModuleHeader
+        <WorkspaceModuleHeader
           eyebrow="Identitas dan default"
           title="Material Master"
           description="Kelola identitas material dan default inventori tanpa mencampur operasi stok."
