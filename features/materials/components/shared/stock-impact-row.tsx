@@ -1,6 +1,6 @@
 "use client";
 
-import { cx } from "@/components/ui/form/form-control-utils";
+import { cx } from "@/components/ui";
 import { calculateStockImpact } from "@/features/materials/utils/material-ui-utils";
 
 export function StockImpactRow({

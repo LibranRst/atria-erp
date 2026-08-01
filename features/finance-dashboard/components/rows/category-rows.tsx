@@ -2,12 +2,9 @@
 
 import React from "react";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { AppIcon, MoneyValue, UsageBlockMeter } from "@/components/ui";
 import type { DashboardCategory } from "@/features/finance-dashboard/types/dashboard-types";
 import { categoryTone } from "@/features/finance-dashboard/components/shared/dashboard-tone";
-import { UsageBlockMeter } from "@/components/ui/feedback/usage-block-meter";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 function categoryStatusLabel(status: DashboardCategory["status"]): string {
   if (status === "OVER_BUDGET") return "Melebihi budget";
   if (status === "CRITICAL") return "Kritis";

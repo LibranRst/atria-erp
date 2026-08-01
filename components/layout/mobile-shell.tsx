@@ -17,11 +17,9 @@ import { ProjectStateProvider } from "@/features/projects/detail/components/shar
 import { authClient } from "@/lib/auth-client";
 import { ROLE_ID_TO_NAME } from "@/lib/auth/permissions";
 import { transitionSpringBouncy, transitionSpringSmooth } from "@/lib/utils/motion";
-import { ConnectivityBanner } from "@/components/ui/feedback/page-state";
+import { AppIcon, ConnectivityBanner } from "@/components/ui";
 import { DeveloperSimulationBanner } from "@/features/profile/components/developer/developer-simulation-banner";
 import { ActivityDetailProvider } from "@/features/activity-detail/components/activity-detail-provider";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 type MobileShellProps = Readonly<{
   children: React.ReactNode;
 }>;

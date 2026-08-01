@@ -8,17 +8,17 @@ import {
   reverseInventoryOpening,
   type InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
-import { useSheetPresenceValue } from "@/components/ui";
-import { InlineStateRow } from "@/components/ui/feedback/main-surface";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import {
+  AppIcon,
   FormField,
   FormRiskNotice,
   FormSection,
+  InlineStateRow,
+  MoneyValue,
+  OperationalFormSheet,
   Textarea,
-} from "@/components/ui/form/form-controls";
-import { OperationalFormSheet } from "@/components/ui/form/guided-form";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+  useSheetPresenceValue,
+} from "@/components/ui";
 import { MaterialStatusLabel } from "@/features/materials/components/shared/material-page-primitives";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import {

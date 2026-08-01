@@ -1,7 +1,7 @@
 import React from "react";
 import { Warehouse } from "lucide-react";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
+import { GroupedSurface } from "@/components/ui";
 import { SettingsRowChevron, SettingsStatusLabel } from "../shared/settings-primitives";
 
 type MaterialSettingsListProps = {

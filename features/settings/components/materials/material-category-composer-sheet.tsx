@@ -1,6 +1,5 @@
 import React from "react";
 import { FormField, FormSection, OperationalFormSheet, TextInput } from "@/components/ui";
-
 type MaterialCategoryComposerSheetProps = {
   readonly open: boolean;
   readonly name: string;

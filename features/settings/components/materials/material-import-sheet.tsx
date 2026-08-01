@@ -9,11 +9,14 @@ import {
   type MaterialImportInput,
   type MaterialImportPreview,
 } from "@/app/actions/settings/material-import";
-import { Button, FormRiskNotice, WorkflowFormSheet } from "@/components/ui";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
+import {
+  AppIcon,
+  Button,
+  FormRiskNotice,
+  GroupedSurface,
+  WorkflowFormSheet,
+} from "@/components/ui";
 import { parseCsvTable } from "@/lib/import/csv";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 function parseMaterialRows(source: string): MaterialImportInput {
   const table = parseCsvTable(source);
   const index = (name: string): number => table.headers.indexOf(name);

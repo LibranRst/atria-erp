@@ -4,15 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { AppIcon, BudgetSplitIndicator, MoneyValue, StatusBadge } from "@/components/ui";
 import type { DashboardRiskyProject } from "@/features/finance-dashboard/types/dashboard-types";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
-import { BudgetSplitIndicator } from "@/components/ui/feedback/budget-split-indicator";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { cn } from "@/lib/utils/cn";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-import { StatusBadge } from "@/components/ui/badge/badge";
-
 const dashboardRowPressScale = { scale: 0.985 } as const;
 
 function projectHealthLabel(health: DashboardRiskyProject["effectiveHealth"]): string {

@@ -1,7 +1,6 @@
 import React from "react";
 
-import { MetricPill } from "@/components/ui/feedback/page-primitives";
-
+import { MetricPill } from "@/components/ui";
 export function InfoPill({
   label,
   value,

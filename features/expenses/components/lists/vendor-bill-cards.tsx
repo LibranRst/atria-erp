@@ -1,10 +1,8 @@
 "use client";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon, MoneyValue } from "@/components/ui";
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import type {
   VendorListBill,
   VendorListPayment,

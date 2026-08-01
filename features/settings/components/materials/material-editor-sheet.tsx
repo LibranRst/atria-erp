@@ -2,8 +2,8 @@ import React from "react";
 import { SlidersHorizontal } from "lucide-react";
 import type { SettingsOption, MaterialDraft } from "../../types/material-types";
 import {
-  COMMON_UNIT_OPTIONS,
   ComboboxField,
+  COMMON_UNIT_OPTIONS,
   FormDisclosure,
   FormField,
   FormSection,
@@ -14,7 +14,6 @@ import {
   Textarea,
   TextInput,
 } from "@/components/ui";
-
 type MaterialEditorSheetProps = {
   readonly draft: MaterialDraft | null;
   readonly categories: readonly SettingsOption[];

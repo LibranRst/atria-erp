@@ -3,8 +3,7 @@
 import React from "react";
 
 import { NativePanel } from "../shared/rap-rab-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 export function RabEmptyState({
   canManageRab,
   setSourcePickerOpen,

@@ -7,7 +7,6 @@ import {
   TextInput,
   WorkflowFormSheet,
 } from "@/components/ui";
-
 type InventoryLocationSheetProps = {
   readonly open: boolean;
   readonly pending: boolean;

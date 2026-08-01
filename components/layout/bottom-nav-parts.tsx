@@ -9,8 +9,7 @@ import {
   transitionSpringSmooth,
 } from "@/lib/utils/motion";
 import type { FabAction, NavItem } from "./bottom-nav-config";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 export function BottomTabBar({
   activeIndex,
   clickedTabHref,

@@ -1,13 +1,13 @@
 import React from "react";
 import { Warehouse } from "lucide-react";
 import {
+  AppIcon,
   FormField,
   FormSection,
   MoneyInput,
   NumericInput,
   OperationalFormSheet,
 } from "@/components/ui";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import type { InventoryDraft } from "../../types/material-types";
 
 type MaterialInventoryDefaultSheetProps = {

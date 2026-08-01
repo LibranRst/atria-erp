@@ -2,8 +2,7 @@
 
 import React from "react";
 
-import { Badge } from "@/components/ui/badge/badge";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { Badge, MoneyValue } from "@/components/ui";
 import type { ClientInvoiceItem } from "../../types/project-invoices-types";
 import {
   calculateInvoicePaidAmount,

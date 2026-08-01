@@ -2,20 +2,20 @@
 
 import React from "react";
 
-import { EmptyState, MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
-import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
 import {
+  AppIcon,
+  EmptyState,
   GroupedSurface,
+  MoneyValue,
   SectionHeader,
+  SegmentedTabs,
   SummaryFact,
   SummarySurface,
-} from "@/components/ui/feedback/main-surface";
+} from "@/components/ui";
+import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
 import type { ExpenseCostItem, FilterStatus } from "@/features/expenses/types/expense-list-types";
 import { FieldClaimHistory } from "@/features/expenses/components/lists/field-claim-rows";
 import { FieldClaimRow } from "@/features/expenses/components/lists/field-claim-rows";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 type FilterTab = {
   readonly label: string;
   readonly value: FilterStatus;

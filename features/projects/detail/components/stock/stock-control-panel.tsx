@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { formatStatus, MetadataChip, StatusBadge } from "@/components/ui/badge/badge";
+import { AppIcon, formatStatus, MetadataChip, StatusBadge } from "@/components/ui";
 import type { RapView, MaterialOption } from "../shared/rap-rab-manager";
 import type { StockMovement, TabId } from "../shared/project-tabs";
 import { LockedTabState } from "../shared/project-tab-states";
@@ -12,8 +12,6 @@ import {
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
 import { cn } from "@/lib/utils/cn";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 interface StockControlPanelProps {
   readonly projectId: string;
   readonly rap: RapView | null;

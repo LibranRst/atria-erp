@@ -2,11 +2,8 @@
 
 import React from "react";
 
-import { BottomSheet } from "@/components/ui";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
+import { AppIcon, BottomSheet, GroupedSurface } from "@/components/ui";
 import type { ProfileAccessGroup } from "@/features/profile/utils/profile-access";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 export function ProfileAccessList({
   groups,
   roleLabel,

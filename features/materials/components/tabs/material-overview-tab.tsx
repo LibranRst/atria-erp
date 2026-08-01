@@ -6,17 +6,21 @@ import type {
   MaterialMovementView,
   MaterialOperationsDashboard,
 } from "@/app/actions/material/operations-dashboard";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import {
+  AppIcon,
+  GroupedSurface,
+  InlineStateRow,
+  MainSection,
+  MoneyValue,
+  SectionAction,
+} from "@/components/ui";
 import type { MaterialOperationDecision } from "@/features/materials/types/material-dashboard-types";
-import { SectionAction } from "@/components/ui/button/button";
-import { GroupedSurface, InlineStateRow, MainSection } from "@/components/ui/feedback/main-surface";
 import type { MaterialTone } from "@/features/materials/components/shared/material-page-primitives";
 import {
   ApprovalRow,
   MovementRow,
 } from "@/features/materials/components/sheets/material-operation-sheets";
 import type { MaterialTab } from "@/features/materials/utils/material-ui-utils";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import { ActivityDetailSheet } from "@/features/activity-detail/components/activity-detail-sheet";
 import type { ActivityDetailRequest } from "@/lib/activity-detail/types";
 

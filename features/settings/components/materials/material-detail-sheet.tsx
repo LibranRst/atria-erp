@@ -2,9 +2,9 @@ import React from "react";
 import { Archive, Pencil, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
+import { GroupedSurface } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { BottomSheet } from "../shared/settings-ui";
+import { BottomSheet } from "@/components/ui";
 import { SettingsRowChevron, SettingsStatusLabel } from "../shared/settings-primitives";
 import type { DetailNextAction } from "../../types/material-types";
 

@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  DatePickerField,
-  FormField,
-  FormSection,
-  Textarea,
-  TextInput,
-} from "@/components/ui/form/form-controls";
+import { DatePickerField, FormField, FormSection, Textarea, TextInput } from "@/components/ui";
 import type { Metadata } from "./opening-inventory-utils";
 
 export function OpeningInventoryMetadataFields({

@@ -5,9 +5,13 @@ import type {
   ReconciliationStatementRow,
   ReconciliationWorkspace,
 } from "@/app/actions/finance/reconciliation-workspace";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
-import { GroupedSurface, SummaryFact, SummarySurface } from "@/components/ui/feedback/main-surface";
+import {
+  AppIcon,
+  GroupedSurface,
+  SegmentedTabs,
+  SummaryFact,
+  SummarySurface,
+} from "@/components/ui";
 import {
   cashDisplayTitle,
   cashRowMetaCopy,

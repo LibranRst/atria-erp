@@ -1,7 +1,5 @@
 import React from "react";
-import { StatusBadge, type StatusBadgeTone } from "@/components/ui/badge/badge";
-import type { InlineStateTone } from "@/components/ui/feedback/main-surface";
-
+import { type InlineStateTone, StatusBadge, type StatusBadgeTone } from "@/components/ui";
 export type MaterialTone = InlineStateTone;
 
 const materialBadgeTone: Record<MaterialTone, StatusBadgeTone> = {

@@ -4,8 +4,7 @@ import { Building2, ChevronRight, UsersRound } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
+import { GroupedSurface, SegmentedTabs } from "@/components/ui";
 import {
   SettingsModuleHeader,
   SettingsStatusLabel,

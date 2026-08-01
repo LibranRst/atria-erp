@@ -7,12 +7,19 @@ import { toast } from "sonner";
 
 import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
 import { decideInventoryOpening } from "@/app/actions/material/opening-inventory";
-import { BottomSheet, ConfirmationSheet, PageState, Textarea } from "@/components/ui";
 import {
+  BottomSheet,
+  ConfirmationSheet,
+  DetailSection,
   ExclusiveSearchFilterBar,
+  MoneyValue,
+  PageState,
+  RowGroup,
   type SearchFilterMode,
-} from "@/components/ui/navigation/exclusive-search-filter-bar";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+  SummaryFact,
+  SummarySurface,
+  Textarea,
+} from "@/components/ui";
 import {
   APPROVAL_PAGE_SIZE,
   approvalIsCritical,
@@ -23,12 +30,6 @@ import {
   approvalRequiresEmergencyOverride,
   approvalRequiresOpeningReason,
 } from "@/features/approvals/components/shared/approval-decision-reason-fields";
-import {
-  DetailSection,
-  RowGroup,
-  SummaryFact,
-  SummarySurface,
-} from "@/components/ui/feedback/main-surface";
 import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
 import { summarizeApprovals } from "@/lib/finance/approval-summary";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";

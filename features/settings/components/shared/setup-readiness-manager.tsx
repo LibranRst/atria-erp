@@ -9,9 +9,7 @@ import type {
   InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
 import { OpeningInventoryWorkspace } from "@/features/materials/components/workspaces/opening-inventory-workspace";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-import { MetadataChip } from "@/components/ui/badge/badge";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
+import { AppIcon, GroupedSurface, MetadataChip } from "@/components/ui";
 import type {
   OnboardingStepStatus,
   OwnerOnboardingOverview,

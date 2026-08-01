@@ -14,16 +14,15 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
+  GroupedSurface,
   MoneyInput,
+  MoneyValue,
   NumericInput,
   Textarea,
   TextInput,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
 import { SettingsModuleHeader, SettingsStatusLabel } from "../shared/settings-primitives";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-
 const fullMoney = (value: number): string => `Rp ${Math.round(value).toLocaleString("id-ID")}`;
 const percent = (value: number): string =>
   new Intl.NumberFormat("id-ID", {

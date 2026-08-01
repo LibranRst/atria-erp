@@ -3,8 +3,7 @@
 import { ChevronRight, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import React from "react";
-import { StatusBadge, type StatusBadgeTone } from "@/components/ui/badge/badge";
-
+import { StatusBadge, type StatusBadgeTone } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 export function SettingsModuleHeader({

@@ -8,6 +8,16 @@ export const errorClass = "text-[10px] font-semibold leading-4 text-error";
 export const controlClass =
   "min-h-12 w-full min-w-0 rounded-2xl border border-outline-variant/35 bg-surface-container-low px-3 text-sm font-semibold text-on-surface outline-none transition focus:border-outline focus:ring-0 disabled:cursor-not-allowed disabled:opacity-55";
 
+/**
+ * Gabung kelas apa adanya, tanpa menyelesaikan konflik Tailwind — kelas terakhir
+ * TIDAK otomatis menang. Pakai ini saat kelasnya sudah dipastikan tidak
+ * bertabrakan.
+ *
+ * Untuk menimpa kelas yang mungkin bentrok (misalnya `className` dari pemanggil
+ * yang harus mengalahkan default komponen), pakai `cn` di `lib/utils/cn.ts`
+ * yang menjalankan `twMerge`. Keduanya sengaja dibiarkan terpisah: menukar yang
+ * satu dengan yang lain mengubah hasil render pada kelas yang bertabrakan.
+ */
 export function cx(...values: Array<string | false | null | undefined>): string {
   return values.filter(Boolean).join(" ");
 }
@@ -35,13 +45,6 @@ export function formatDateLabel(value: string): string {
     month: "short",
     year: "numeric",
   }).format(new Date(year, month - 1, day));
-}
-
-export function formatIsoDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 export function parseIsoDate(value: string): Date | null {

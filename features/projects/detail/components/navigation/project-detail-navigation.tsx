@@ -4,12 +4,10 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import React from "react";
 import { toast } from "sonner";
 
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
+import { AppIcon, SegmentedTabs } from "@/components/ui";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import type { TabId } from "../../types/project-tabs-types";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 export type ProjectDomainId = "overview" | "planning" | "operations" | "finance";
 
 const DOMAIN_OPTIONS = [

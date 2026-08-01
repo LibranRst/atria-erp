@@ -9,8 +9,7 @@ import { authClient } from "@/lib/auth-client";
 import { ROLE_ID_TO_NAME } from "@/lib/auth/permissions";
 import { formatProfileRole } from "@/features/profile/utils/profile-access";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 type SessionShape = {
   readonly session?: { readonly developerActorUserId?: unknown };
   readonly user?: {

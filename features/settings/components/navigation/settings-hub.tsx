@@ -11,7 +11,7 @@ import {
 
 import type { ProductionReadinessItem } from "@/app/actions/administration";
 import type { SettingsHubOverview } from "@/app/actions/settings/system";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
+import { GroupedSurface } from "@/components/ui";
 import type { SettingsTab } from "../../utils/settings-tabs-config";
 import {
   SettingsModuleHeader,

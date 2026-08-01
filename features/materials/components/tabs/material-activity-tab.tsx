@@ -12,12 +12,17 @@ import type {
   MaterialOperationsDashboard,
   ReceiptView,
 } from "@/app/actions/material/operations-dashboard";
-import { Badge, FilterSelect } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
-import { GroupedSurface, InlineStateRow, MainSection } from "@/components/ui/feedback/main-surface";
+import {
+  AppIcon,
+  Badge,
+  FilterSelect,
+  GroupedSurface,
+  InlineStateRow,
+  MainSection,
+  MoneyValue,
+  SegmentedTabs,
+} from "@/components/ui";
 import { MovementRow } from "@/features/materials/components/sheets/material-operation-sheets";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import {
   formatMaterialDate,
   formatMaterialStatus,

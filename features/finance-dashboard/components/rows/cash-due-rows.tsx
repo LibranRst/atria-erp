@@ -4,12 +4,10 @@ import React from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { AppIcon, MoneyValue } from "@/components/ui";
 import type { DashboardCashDue } from "@/features/finance-dashboard/types/dashboard-types";
 import { formatShortDate } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 const dashboardRowPressScale = { scale: 0.985 } as const;
 
 export function CashDueRow({

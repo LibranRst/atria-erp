@@ -5,10 +5,9 @@ import { toast } from "sonner";
 
 import { createInventoryLocation } from "@/app/actions/material/warehouse";
 import type { SettingsOverview } from "@/app/actions/settings/system";
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
+import { AppIcon, SegmentedTabs } from "@/components/ui";
 import { InventoryLocationSheet } from "@/features/materials/components/sheets/inventory-location-sheet";
 import { MaterialSettingsManager } from "@/features/settings/components/materials/material-settings-manager";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import {
   OnboardingEmpty,
   OnboardingNotice,
@@ -79,7 +78,10 @@ export function MaterialFoundationPanel({
               <div className="divide-y divide-black/5.5">
                 {locations.map((location) => (
                   <div key={location.id} className="flex min-h-14 items-center gap-3 px-4 py-3">
-                    <AppIcon name="warehouse" className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant" />
+                    <AppIcon
+                      name="warehouse"
+                      className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
+                    />
                     <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-on-surface">
                       {location.name}
                     </span>

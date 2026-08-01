@@ -3,20 +3,20 @@
 import React from "react";
 
 import {
+  AppIcon,
   DatePickerField,
   FieldContextLine,
+  FinanceUnsavedChangesModal,
   FormField,
   FormSection,
+  MoneyImpactRow,
   MoneyInput,
-  WorkflowFormSheet,
   SheetSelect,
   TextInput,
   useSheetPresenceValue,
+  WorkflowFormSheet,
 } from "@/components/ui";
-import { FinanceUnsavedChangesModal, MoneyImpactRow } from "@/components/ui";
 import type { BankAccountItem, ClientInvoiceItem } from "../../types/project-invoices-types";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 export function ClientPaymentSheet({
   selectedInvoice,
   bankAccounts,

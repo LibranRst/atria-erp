@@ -1,12 +1,9 @@
 import React from "react";
 import { Repeat2, RotateCcw } from "lucide-react";
 
-import { FormField } from "@/components/ui";
-import { useFormPresentation } from "@/components/ui/form/form-presentation-context";
+import { AppIcon, FormField, useFormPresentation } from "@/components/ui";
 import { CARD_PRESETS } from "@/features/finance-dashboard/utils/bank-account-constants";
 import type { AccountDraft } from "@/features/finance-dashboard/types/bank-account-types";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 function ColorInput({
   label,
   value,

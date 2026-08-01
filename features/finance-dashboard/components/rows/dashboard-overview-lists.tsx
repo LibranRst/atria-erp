@@ -8,8 +8,7 @@ import {
 } from "@/features/activity-detail/components/activity-detail-provider";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { Badge } from "@/components/ui/badge/badge";
+import { AppIcon, Badge, MoneyValue } from "@/components/ui";
 import { formatShortDate } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import type {
   DashboardAction,
@@ -17,8 +16,6 @@ import type {
 } from "@/features/finance-dashboard/types/dashboard-types";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { dashboardToneClasses, severityTone } from "../shared/dashboard-tone";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 const dashboardPressScale = { scale: 0.985 } as const;
 
 function priorityActionIcon(id: string): string {

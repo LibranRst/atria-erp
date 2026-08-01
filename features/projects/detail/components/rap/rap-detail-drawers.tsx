@@ -2,11 +2,15 @@
 
 import React from "react";
 
-import { BottomSheet, useSheetPresenceValue } from "@/components/ui";
+import {
+  Badge,
+  type BadgeStatus,
+  BottomSheet,
+  FactRow,
+  MoneyValue,
+  useSheetPresenceValue,
+} from "@/components/ui";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import { Badge, type BadgeStatus } from "@/components/ui/badge/badge";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { FactRow } from "@/components/ui/feedback/main-surface";
 import type { ProjectCategoryPlanItemView, RapItemView, RapView } from "../shared/rap-rab-manager";
 
 function toBadgeStatus(status: string): BadgeStatus {

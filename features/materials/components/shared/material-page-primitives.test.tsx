@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import OpeningInventoryLoading from "@/app/materials/opening/loading";
 import MaterialsLoading from "@/app/materials/loading";
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
-import { GroupedSurface, SectionHeader } from "@/components/ui/feedback/main-surface";
+import { GroupedSurface, SectionHeader } from "@/components/ui";
 import { MaterialStatusLabel } from "@/features/materials/components/shared/material-page-primitives";
 import { MaterialActivityTab } from "@/features/materials/components/tabs/material-activity-tab";
 import { MaterialInventoryTab } from "@/features/materials/components/tabs/material-inventory-tab";

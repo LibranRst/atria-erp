@@ -3,9 +3,7 @@
 import React from "react";
 
 import type { MaterialMovementView } from "@/app/actions/material/operations-dashboard";
-import { Button } from "@/components/ui/button/button";
-import { MoneyValue, NativeSection } from "@/components/ui/feedback/page-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon, Button, MoneyValue, NativeSection } from "@/components/ui";
 import {
   formatMaterialDate,
   formatMaterialQuantity,

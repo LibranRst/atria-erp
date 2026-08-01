@@ -3,8 +3,14 @@
 import React from "react";
 import { KeyRound } from "lucide-react";
 import type { AdministrationOverview } from "@/app/actions/administration";
-import { BottomSheet, SheetFooterActions } from "@/components/ui";
-import { FormField, FormSection, SheetSelect, TextInput } from "@/components/ui/form/form-controls";
+import {
+  BottomSheet,
+  FormField,
+  FormSection,
+  SheetFooterActions,
+  SheetSelect,
+  TextInput,
+} from "@/components/ui";
 import type { EditorMode, UserFormState } from "./administration-editor-types";
 
 type Props = {

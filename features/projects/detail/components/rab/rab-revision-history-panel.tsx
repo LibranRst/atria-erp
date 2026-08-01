@@ -13,8 +13,7 @@ import {
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 export function RabRevisionHistoryPanel({
   revisionHistory,
   changeOrders,

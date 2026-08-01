@@ -3,8 +3,7 @@
 import React from "react";
 
 import type { SettingsOverview } from "@/app/actions/settings/system";
-import { BottomSheet, ConfirmationModal } from "@/components/ui";
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
+import { BottomSheet, ConfirmationModal, SegmentedTabs } from "@/components/ui";
 import { BudgetSettingsManager } from "@/features/settings/components/budget/budget-settings-manager";
 import { CategorySettingsManager } from "@/features/settings/components/categories/category-settings-manager";
 import {

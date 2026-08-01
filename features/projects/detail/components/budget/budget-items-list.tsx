@@ -2,11 +2,14 @@
 
 import React from "react";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { MetadataChip, resolveStatusPresentation, StatusBadge } from "@/components/ui/badge/badge";
+import {
+  AppIcon,
+  MetadataChip,
+  MoneyValue,
+  resolveStatusPresentation,
+  StatusBadge,
+} from "@/components/ui";
 import type { BudgetItem } from "../../types/budget-manager-types";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 export function BudgetItemsList({
   status,
   budgetItems,

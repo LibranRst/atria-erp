@@ -2,8 +2,7 @@ import { describe, expect, test } from "bun:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { SectionAction } from "@/components/ui/button/button";
-import { DetailSection, RowGroup, SummaryFact } from "@/components/ui/feedback/main-surface";
+import { DetailSection, RowGroup, SectionAction, SummaryFact } from "@/components/ui";
 import { OverviewPreviewSection } from "./dashboard-primitives";
 
 describe("native editorial dashboard sections", () => {

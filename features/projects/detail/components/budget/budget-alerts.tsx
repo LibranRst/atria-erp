@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 export function BudgetAlerts({
   error,
   success,

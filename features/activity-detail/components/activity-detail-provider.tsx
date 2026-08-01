@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon } from "@/components/ui";
 import type { ActivityDetailKind, ActivityDetailRequest } from "@/lib/activity-detail/types";
 import {
   ActivityDetailSheet,

@@ -1,8 +1,6 @@
 import React from "react";
 import type { InventoryOpeningBatchView } from "@/app/actions/material/opening-inventory";
-import { GroupedSurface, InlineStateRow, MainSection } from "@/components/ui/feedback/main-surface";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon, GroupedSurface, InlineStateRow, MainSection, MoneyValue } from "@/components/ui";
 import { MaterialStatusLabel } from "@/features/materials/components/shared/material-page-primitives";
 import { statusPresentation } from "./opening-inventory-utils";
 

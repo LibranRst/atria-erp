@@ -12,7 +12,7 @@ import {
   updateBankAccount,
 } from "@/app/actions/finance/bank-accounts";
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import type { OperationSuccess } from "@/components/ui";
+import type { OperationSuccess, SelectOption } from "@/components/ui";
 import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
 import type {
   AccountDraft,
@@ -31,8 +31,6 @@ import {
   newTransferDraft,
 } from "@/features/finance-dashboard/utils/bank-account-utils";
 import { fullMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
-import type { SelectOption } from "@/components/ui";
-
 const movementRecoverySchema = z.object({
   accountId: z.string(),
   draft: z.object({

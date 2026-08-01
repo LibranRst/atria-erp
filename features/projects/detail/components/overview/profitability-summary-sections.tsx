@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { MoneyValue } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
 export function ProfitProjectionSection({

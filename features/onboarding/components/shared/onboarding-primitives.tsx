@@ -4,8 +4,7 @@ import { motion } from "framer-motion";
 import React from "react";
 
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 export function OnboardingStage({
   children,
 }: {

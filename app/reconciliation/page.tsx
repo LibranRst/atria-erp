@@ -3,8 +3,7 @@ import React from "react";
 import { getReconciliationWorkspace } from "@/app/actions/finance/reconciliation-workspace";
 import { ReconciliationWorkspace } from "@/features/reconciliation/components/reconciliation-workspace";
 import { requireServerSession } from "@/lib/server/session";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 export default async function ReconciliationPage(): Promise<React.JSX.Element> {

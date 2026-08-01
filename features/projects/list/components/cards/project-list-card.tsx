@@ -3,9 +3,7 @@
 import Link from "next/link";
 import React from "react";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-import { BudgetSplitIndicator } from "@/components/ui/feedback/budget-split-indicator";
+import { AppIcon, BudgetSplitIndicator, MoneyValue } from "@/components/ui";
 import {
   ProjectCoverMedia,
   ProjectHeroStatusPill,

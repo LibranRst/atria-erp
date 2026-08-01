@@ -8,8 +8,7 @@ import type {
   OnboardingVerificationSnapshot,
 } from "@/lib/onboarding/owner-onboarding";
 import { transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 type VerificationPresentation = {
   readonly icon: string;
   readonly label: string;

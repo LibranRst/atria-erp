@@ -3,13 +3,7 @@
 import React from "react";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import {
-  DetailSection,
-  RowGroup,
-  SummaryFact,
-  SummarySurface,
-} from "@/components/ui/feedback/main-surface";
+import { DetailSection, MoneyValue, RowGroup, SummaryFact, SummarySurface } from "@/components/ui";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
 import { CashDueRow } from "@/features/finance-dashboard/components/rows/cash-due-rows";
 

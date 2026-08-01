@@ -5,8 +5,7 @@ import { motion } from "framer-motion";
 
 import type { ExpenseReceiptAttachment } from "@/features/expenses/types/expense-form-types";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 const MAX_RECEIPT_SIZE = 12 * 1024 * 1024;
 
 type ExpenseReceiptUploadProps = {

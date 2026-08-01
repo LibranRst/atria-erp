@@ -3,7 +3,7 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { AppIcon, MoneyValue } from "@/components/ui";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import {
@@ -12,8 +12,6 @@ import {
   RISK_WARNING_THRESHOLD,
 } from "@/lib/finance/budget-indicator";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 const dashboardRowPressScale = { scale: 0.985 } as const;
 
 export function ApprovalWorkbenchRow({

@@ -6,10 +6,8 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-import { ConfirmationSheet } from "@/components/ui";
+import { AppIcon, ConfirmationSheet } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 export function LogoutButton(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [confirmOpen, setConfirmOpen] = useState<boolean>(false);

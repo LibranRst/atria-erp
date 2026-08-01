@@ -1,6 +1,7 @@
 import React from "react";
 
 import {
+  AppIcon,
   FormDisclosure,
   FormField,
   FormSection,
@@ -9,7 +10,6 @@ import {
   Textarea,
   TextInput,
 } from "@/components/ui";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import type { ProjectFormDraft } from "@/features/projects/list/utils/project-form-draft";
 import type { ProjectClientOption, ProjectUserOption } from "./project-drawer-types";
 import {

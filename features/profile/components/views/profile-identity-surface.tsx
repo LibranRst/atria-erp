@@ -3,10 +3,7 @@
 import Image from "next/image";
 import React from "react";
 
-import { Badge } from "@/components/ui";
-import type { BadgeStatus } from "@/components/ui";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon, Badge, type BadgeStatus } from "@/components/ui";
 export function ProfileIdentitySurface({
   displayName,
   displayEmail,

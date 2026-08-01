@@ -11,3 +11,16 @@ export function formatShortDate(date: Date): string {
     month: "short",
   });
 }
+
+/**
+ * Tanggal lokal dalam bentuk `YYYY-MM-DD`, memakai zona waktu perangkat —
+ * bukan UTC. Ini disengaja: nilainya mewakili tanggal kalender yang dilihat
+ * pengguna (tanggal transaksi, jatuh tempo), sehingga `toISOString()` akan
+ * salah menggesernya satu hari bagi pengguna di timur UTC.
+ */
+export function formatIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}

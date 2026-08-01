@@ -4,7 +4,7 @@ import Link from "next/link";
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon } from "@/components/ui";
 import {
   transitionEaseSmooth,
   transitionSpringBouncy,

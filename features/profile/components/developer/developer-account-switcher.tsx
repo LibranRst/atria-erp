@@ -5,15 +5,13 @@ import React from "react";
 import { toast } from "sonner";
 
 import { startDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
-import { ConfirmationSheet, StatusBadge } from "@/components/ui";
+import { AppIcon, ConfirmationSheet, StatusBadge } from "@/components/ui";
 import {
   getDeveloperSimulationRoleLabel,
   type DeveloperAccountSimulationState,
   type DeveloperSimulationTarget,
 } from "@/lib/auth/developer-account-simulation";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 type DeveloperAccountSwitcherProps = {
   readonly state: DeveloperAccountSimulationState;
 };

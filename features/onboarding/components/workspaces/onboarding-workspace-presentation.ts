@@ -1,6 +1,5 @@
 import type { OnboardingStepId, OnboardingStepStatus } from "@/lib/onboarding/owner-onboarding";
 import type { StatusBadgeTone } from "@/components/ui";
-
 export type OnboardingStepCopy = {
   readonly eyebrow: string;
   readonly title: string;

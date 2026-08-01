@@ -3,8 +3,9 @@
 import React from "react";
 import { motion } from "framer-motion";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
-import { ConfirmationSheet, EmptyState, SettingsHeader } from "../shared/settings-ui";
-import { ConfirmationModal, FilterSelect } from "@/components/ui";
+import { ConfirmationSheet, EmptyState } from "@/components/ui";
+import { SettingsHeader } from "../shared/settings-ui";
+import { AppIcon, ConfirmationModal, FilterSelect } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
 import { SettingsModuleHeader } from "../shared/settings-primitives";
@@ -15,7 +16,6 @@ import { MaterialEditorSheet } from "./material-editor-sheet";
 import { MaterialInventoryDefaultSheet } from "./material-inventory-default-sheet";
 import { MaterialSettingsList } from "./material-settings-list";
 import { useMaterialSettingsMutations } from "../../hooks/use-material-settings-mutations";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import type {
   DetailNextAction,
   InventoryDraft,

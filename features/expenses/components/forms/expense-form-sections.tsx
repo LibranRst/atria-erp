@@ -11,8 +11,7 @@ import type {
 import { ExpenseLineEditor } from "./expense-line-editor";
 import { isExpenseLineComplete } from "@/features/expenses/utils/expense-form-utils";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 type BudgetCategory = NonNullable<
   NonNullable<ExpenseFormProject["canonicalBudgets"]>[number]["categories"]
 >[number];

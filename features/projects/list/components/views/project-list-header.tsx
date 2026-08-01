@@ -3,19 +3,20 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import React from "react";
 
-import { PageState } from "@/components/ui";
 import {
   ExclusiveSearchFilterBar,
+  MoneyValue,
+  PageState,
   type SearchFilterMode,
-} from "@/components/ui/navigation/exclusive-search-filter-bar";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+  SectionHeader,
+  SummaryFact,
+  SummarySurface,
+} from "@/components/ui";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import { formatTightIdr } from "@/lib/utils/money";
 import type { FilterId } from "../../types/project-list-types";
 import { PROJECT_FILTERS, type ProjectPortfolioSummary } from "../../utils/project-list-utils";
-import { SectionHeader, SummaryFact, SummarySurface } from "@/components/ui/feedback/main-surface";
-
 export function ProjectListHeader({
   summary,
 }: {

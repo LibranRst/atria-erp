@@ -1,10 +1,7 @@
 "use client";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon, Badge, MetricGrid } from "@/components/ui";
 import React from "react";
 
-import { Badge } from "@/components/ui/badge/badge";
-import { MetricGrid } from "@/components/ui/feedback/page-primitives";
 import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import type {
   ProjectCategoryPlanItemView,

@@ -13,13 +13,13 @@ import {
   ConfirmationModal,
   FormField,
   FormSection,
+  GroupedSurface,
+  MetadataChip,
   OperationalFormSheet,
   Textarea,
   TextInput,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { MetadataChip } from "@/components/ui/badge/badge";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
 import {
   SettingsModuleHeader,
   SettingsRowChevron,

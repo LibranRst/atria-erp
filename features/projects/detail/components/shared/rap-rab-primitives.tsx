@@ -2,9 +2,7 @@
 
 import React from "react";
 
-import { MetricPill, MoneyMetricPill } from "@/components/ui/feedback/page-primitives";
-import { PanelSection } from "@/components/ui/feedback/main-surface";
-
+import { MetricPill, MoneyMetricPill, PanelSection } from "@/components/ui";
 export { PanelSection as NativePanel };
 
 export function MiniMetric({

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon } from "@/components/ui";
 import { FinanceDashboard } from "@/features/finance-dashboard/components/workspaces/finance-dashboard";
 import { getFinanceDashboardPageData } from "@/features/finance-dashboard/server/get-finance-dashboard-page-data";
 

@@ -5,7 +5,8 @@ import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { BottomSheet } from "../overlay/bottom-sheet";
 import { FormField } from "./basic-form-controls";
-import { cx, formatDateLabel, formatIsoDate, parseIsoDate } from "./form-control-utils";
+import { cx, formatDateLabel, parseIsoDate } from "./form-control-utils";
+import { formatIsoDate } from "@/lib/utils/date";
 import { useFormPresentation } from "./form-presentation-context";
 
 export function DatePickerField({

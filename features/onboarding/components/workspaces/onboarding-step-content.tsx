@@ -1,7 +1,6 @@
 import React from "react";
 
-import { StatusBadge } from "@/components/ui";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon, StatusBadge } from "@/components/ui";
 import { FinancialDefaultsPanel } from "@/features/onboarding/components/panels/financial-defaults-panel";
 import { InitialStockSetupPanel } from "@/features/onboarding/components/panels/initial-stock-setup-panel";
 import { LibraryPanel } from "@/features/onboarding/components/panels/library-panel";

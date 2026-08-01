@@ -6,7 +6,7 @@ import React from "react";
 import { toast } from "sonner";
 
 import { changeTemporaryPassword } from "@/app/actions/administration";
-import { FormField, FormSection, TextInput } from "@/components/ui/form/form-controls";
+import { FormField, FormSection, TextInput } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 

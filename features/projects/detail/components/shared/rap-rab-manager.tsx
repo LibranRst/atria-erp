@@ -8,7 +8,7 @@ import { RabClientPanel } from "../rab/rab-client-panel";
 import { useRapManager } from "../../hooks/use-rap-manager";
 import { useRabManager } from "../../hooks/use-rab-manager";
 import { RapRabWorkflowDrawers } from "./rap-rab-workflow-drawers";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon } from "@/components/ui";
 import type {
   MaterialOption,
   PricingTemplateOption,

@@ -3,17 +3,23 @@
 import React from "react";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import { Badge, Button, GroupedSurface, InlineStateRow } from "@/components/ui";
-import { MoneyValue, PageHeader } from "@/components/ui/feedback/page-primitives";
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
-import { BudgetSplitIndicator } from "@/components/ui/feedback/budget-split-indicator";
+import {
+  AppIcon,
+  Badge,
+  BudgetSplitIndicator,
+  Button,
+  GroupedSurface,
+  InlineStateRow,
+  MoneyValue,
+  PageHeader,
+  SegmentedTabs,
+} from "@/components/ui";
 import { useDashboardRefresh } from "@/features/finance-dashboard/hooks/use-dashboard-refresh";
 import type { DashboardPageTab } from "@/features/finance-dashboard/types/dashboard-types";
 import { resolveDashboardDataStatus } from "@/features/finance-dashboard/utils/dashboard-data-status";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
 import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import { ApprovalsTab } from "../tabs/dashboard-approvals-tab";
 import { AccountsTab } from "../tabs/tab-accounts";
 import { BudgetRiskTab } from "../tabs/tab-budget-risk";

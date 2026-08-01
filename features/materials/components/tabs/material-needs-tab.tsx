@@ -4,17 +4,16 @@ import Link from "next/link";
 import React from "react";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import {
+  AppIcon,
   GroupedSurface,
   InlineStateRow,
   MainSection,
+  MoneyValue,
   SummaryFact,
   SummarySurface,
-} from "@/components/ui/feedback/main-surface";
+} from "@/components/ui";
 import { formatMaterialQuantity } from "@/features/materials/utils/material-ui-utils";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 type NeedsTabProps = {
   readonly data: MaterialOperationsDashboard;
 };

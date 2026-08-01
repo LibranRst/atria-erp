@@ -3,14 +3,12 @@
 import React from "react";
 import Link from "next/link";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { MoneyValue, StatusBadge, type StatusBadgeTone } from "@/components/ui";
 import type { DashboardRiskyProject } from "@/features/finance-dashboard/types/dashboard-types";
 import {
   ProgressBar,
   projectTone,
 } from "@/features/finance-dashboard/components/shared/dashboard-tone";
-import { StatusBadge, type StatusBadgeTone } from "@/components/ui/badge/badge";
-
 export function ProjectRiskCard({
   project,
 }: {

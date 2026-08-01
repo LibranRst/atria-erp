@@ -2,11 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import ExpensesLoading from "@/app/expenses/loading";
-import {
-  GroupedSurface,
-  SectionHeader,
-  SummarySurface,
-} from "@/components/ui/feedback/main-surface";
+import { GroupedSurface, SectionHeader, SummarySurface } from "@/components/ui";
 import { FieldClaimRow } from "@/features/expenses/components/lists/field-claim-rows";
 import { VendorPaymentCard } from "@/features/expenses/components/lists/vendor-bill-cards";
 import { VendorBillCard } from "@/features/expenses/components/lists/vendor-bill-cards";

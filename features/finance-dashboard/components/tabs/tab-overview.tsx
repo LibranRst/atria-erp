@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
 import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
-import { RowGroup } from "@/components/ui/feedback/main-surface";
+import { RowGroup } from "@/components/ui";
 import { OverviewPreviewSection } from "@/features/finance-dashboard/components/shared/dashboard-primitives";
 import {
   OverviewCashRows,

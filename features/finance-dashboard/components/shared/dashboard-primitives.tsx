@@ -1,7 +1,6 @@
 import React from "react";
 
-import { DetailSection } from "@/components/ui/feedback/main-surface";
-
+import { DetailSection } from "@/components/ui";
 /**
  * Seksi pratinjau di tab Ringkasan Dashboard: sama persis dengan `DetailSection`
  * global, hanya selalu membawa aksi "Lihat semua" dan sedikit jarak atas.

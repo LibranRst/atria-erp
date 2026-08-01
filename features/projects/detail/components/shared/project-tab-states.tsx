@@ -1,6 +1,5 @@
 "use client";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 interface LockedTabStateProps {
   readonly tabLabel: string;
   readonly actionLabel: string;

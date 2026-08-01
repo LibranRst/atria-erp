@@ -4,14 +4,12 @@ import React from "react";
 
 import type { MaterialMovementView } from "@/app/actions/material/operations-dashboard";
 import type { MaterialInventoryRow } from "@/app/actions/material/inventory";
-import { BottomSheet, useSheetPresenceValue } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { BottomSheet, MoneyValue, SheetSection, useSheetPresenceValue } from "@/components/ui";
 import {
   MaterialStatusLabel,
   type MaterialTone,
 } from "@/features/materials/components/shared/material-page-primitives";
 import { MovementRow } from "@/features/materials/components/shared/material-operation-primitives";
-import { SheetSection } from "@/components/ui/feedback/main-surface";
 import {
   formatMaterialQuantity,
   getGroupedMaterialStockSummary,

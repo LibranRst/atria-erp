@@ -3,16 +3,18 @@
 import { motion } from "framer-motion";
 import type { InitialStockCandidate } from "@/app/actions/material/opening-inventory";
 import {
+  AppIcon,
   FormField,
   FormSection,
+  GroupedSurface,
+  InlineStateRow,
+  MainSection,
   MoneyInput,
+  MoneyValue,
   NumericInput,
-  SheetSelect,
   type SelectOption,
-} from "@/components/ui/form/form-controls";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { GroupedSurface, InlineStateRow, MainSection } from "@/components/ui/feedback/main-surface";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+  SheetSelect,
+} from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import type { DraftLine } from "./opening-inventory-utils";
 

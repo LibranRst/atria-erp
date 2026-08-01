@@ -1,11 +1,8 @@
 "use client";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon, GroupedSurface, MoneyValue } from "@/components/ui";
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
 import type { ExpenseCostItem } from "@/features/expenses/types/expense-list-types";
 import { fieldClaimStatusLabel } from "@/features/expenses/utils/expense-list-utils";
 import { transitionSpringSnappy } from "@/lib/utils/motion";

@@ -5,9 +5,10 @@ import { motion } from "framer-motion";
 import { ImagePlus, Trash2 } from "lucide-react";
 
 import {
+  AppIcon,
   Button,
-  COMMON_ROOM_OPTIONS,
   ComboboxField,
+  COMMON_ROOM_OPTIONS,
   DatePickerField,
   FormField,
   SheetSelect,
@@ -15,7 +16,6 @@ import {
   TextInput,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import {
   FINANCIAL_HEALTH_OPTIONS,
   PROJECT_STATUS_OPTIONS,

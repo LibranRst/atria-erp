@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getMaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
-import { GroupedSurface, InlineStateRow } from "@/components/ui/feedback/main-surface";
+import { GroupedSurface, InlineStateRow } from "@/components/ui";
 import { MaterialsControlCenter } from "@/features/materials/components/workspaces/materials-control-center";
 
 export const dynamic = "force-dynamic";

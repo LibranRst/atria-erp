@@ -1,8 +1,7 @@
 import React from "react";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { GroupedSurface, MoneyValue } from "@/components/ui";
 import { SettingsRowChevron, SettingsStatusLabel } from "../shared/settings-primitives";
 
 type LibraryTemplateListProps = {

@@ -7,9 +7,15 @@ import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import { GoodsReceiptSheet } from "@/features/materials/components/sheets/goods-receipt-sheet";
-import { Badge } from "@/components/ui/badge/badge";
-import { SwitchRow, ConfirmationSheet, Textarea } from "@/components/ui";
-import { PageHeader } from "@/components/ui/feedback/page-primitives";
+import {
+  AppIcon,
+  Badge,
+  ConfirmationSheet,
+  OperationSuccessSheet,
+  PageHeader,
+  SwitchRow,
+  Textarea,
+} from "@/components/ui";
 import { MaterialDetail } from "@/features/materials/components/sheets/material-operation-sheets";
 import {
   EmergencyAdjustSheet,
@@ -27,9 +33,7 @@ import {
 } from "@/features/materials/components/tabs/material-dashboard-tabs";
 import { useMaterialControlDerivedData } from "@/features/materials/hooks/use-material-control-derived-data";
 import { useMaterialControlOperations } from "@/features/materials/hooks/use-material-control-operations";
-import { OperationSuccessSheet } from "@/components/ui";
 import { MaterialTabsNavigation } from "@/features/materials/components/tabs/material-tabs-navigation";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import {
   toMaterialTab,
   type MaterialTab,

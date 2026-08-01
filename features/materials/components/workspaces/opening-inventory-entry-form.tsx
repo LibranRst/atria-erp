@@ -10,11 +10,13 @@ import {
   type InitialStockCandidate,
   type InitialStockImportPreview,
 } from "@/app/actions/material/opening-inventory";
-import { FormRiskNotice } from "@/components/ui/form/form-controls";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
+import {
+  AppIcon,
+  FormRiskNotice,
+  GroupedSurface,
+  MoneyValue,
+  SegmentedTabs,
+} from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { OpeningInventoryCsvEntry } from "./opening-inventory-csv-entry";
 import { OpeningInventoryManualEntry } from "./opening-inventory-manual-entry";

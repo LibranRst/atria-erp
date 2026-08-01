@@ -1,7 +1,6 @@
 import React from "react";
 import type { InventoryOpeningBatchView } from "@/app/actions/material/opening-inventory";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { FormRiskNotice } from "@/components/ui/form/form-controls";
+import { FormRiskNotice, MoneyValue } from "@/components/ui";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 
 export function OpeningDetailSection({

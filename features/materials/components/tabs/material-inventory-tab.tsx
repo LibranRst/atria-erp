@@ -4,14 +4,16 @@ import { MapPin, Package } from "lucide-react";
 import React from "react";
 
 import {
+  AppIcon,
   ExclusiveSearchFilterBar,
+  GroupedSurface,
+  InlineStateRow,
+  MainSection,
+  MoneyValue,
   type SearchFilterMode,
-} from "@/components/ui/navigation/exclusive-search-filter-bar";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
+  SegmentedTabs,
+} from "@/components/ui";
 import type { MaterialLocation } from "@/features/materials/types/material-dashboard-types";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-import { GroupedSurface, InlineStateRow, MainSection } from "@/components/ui/feedback/main-surface";
 import {
   MaterialStatusLabel,
   type MaterialTone,

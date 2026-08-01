@@ -9,24 +9,22 @@ import {
   BottomSheet,
   Button,
   ConfirmationSheet,
+  DetailSection,
+  MoneyValue,
+  RowGroup,
   SheetFooterActions,
   StatusBadge,
+  SummaryFact,
+  SummarySurface,
   Textarea,
   useSheetPresenceValue,
 } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import {
   ApprovalDecisionReasonFields,
   approvalRequiresEmergencyOverride,
   approvalRequiresOpeningReason,
 } from "@/features/approvals/components/shared/approval-decision-reason-fields";
 import { InventoryOpeningApprovalItems } from "@/features/approvals/components/shared/inventory-opening-approval-items";
-import {
-  DetailSection,
-  RowGroup,
-  SummaryFact,
-  SummarySurface,
-} from "@/components/ui/feedback/main-surface";
 import { approvalIsCritical } from "@/features/approvals/utils/approval-list-utils";
 import {
   ApprovalBudgetContext,

@@ -6,8 +6,7 @@ import { ProfileIdentitySurface } from "@/features/profile/components/views/prof
 import { LogoutButton } from "@/features/profile/components/views/logout-button";
 import { DeveloperAccountSwitcher } from "@/features/profile/components/developer/developer-account-switcher";
 import { getProfilePageData } from "@/features/profile/server/get-profile-page-data";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 function SectionHeader({
   title,
   meta,

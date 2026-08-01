@@ -3,17 +3,18 @@ import React from "react";
 import {
   DatePickerField,
   FieldContextLine,
+  FinanceUnsavedChangesModal,
   FormField,
   FormRiskNotice,
   FormSection,
+  MoneyImpactRow,
   MoneyInput,
-  WorkflowFormSheet,
+  type SelectOption,
   SheetSelect,
   Textarea,
   TextInput,
-  type SelectOption,
+  WorkflowFormSheet,
 } from "@/components/ui";
-import { FinanceUnsavedChangesModal, MoneyImpactRow } from "@/components/ui";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { InfoPill } from "./info-pill";
 import type {

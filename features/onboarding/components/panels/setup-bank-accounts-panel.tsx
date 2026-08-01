@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { createBankAccount, updateBankAccount } from "@/app/actions/finance/bank-accounts";
 import type { OwnerOnboardingBankAccount } from "@/app/actions/onboarding";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { AppIcon, MoneyValue } from "@/components/ui";
 import { AccountFormSheet } from "@/features/finance-dashboard/components/bank-accounts/account-form-sheet";
 import type { AccountDraft } from "@/features/finance-dashboard/types/bank-account-types";
 import {
@@ -13,7 +13,6 @@ import {
   newAccountDraft,
 } from "@/features/finance-dashboard/utils/bank-account-utils";
 import { SettingsStatusLabel } from "@/features/settings/components/shared/settings-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import {
   OnboardingEmpty,
   OnboardingNotice,
@@ -128,7 +127,10 @@ export function SetupBankAccountsPanel({
                 onClick={() => edit(account)}
                 className="flex min-h-17.5 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
               >
-                <AppIcon name="account_balance" className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant" />
+                <AppIcon
+                  name="account_balance"
+                  className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
+                />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[12px] leading-5 font-bold text-on-surface">
                     {account.name}
@@ -146,7 +148,10 @@ export function SetupBankAccountsPanel({
                   size="sm"
                   align="right"
                 />
-                <AppIcon name="chevron_right" className="shrink-0 text-[17px] text-on-surface-variant/55" />
+                <AppIcon
+                  name="chevron_right"
+                  className="shrink-0 text-[17px] text-on-surface-variant/55"
+                />
               </button>
             ))}
           </div>

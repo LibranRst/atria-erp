@@ -3,9 +3,15 @@
 import React from "react";
 
 import type { ReceiptView } from "@/app/actions/material/operations-dashboard";
-import { Badge, BottomSheet, Button, useSheetPresenceValue } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { FactRow, SheetSection } from "@/components/ui/feedback/main-surface";
+import {
+  Badge,
+  BottomSheet,
+  Button,
+  FactRow,
+  MoneyValue,
+  SheetSection,
+  useSheetPresenceValue,
+} from "@/components/ui";
 import {
   formatMaterialQuantity,
   formatMaterialStatus,

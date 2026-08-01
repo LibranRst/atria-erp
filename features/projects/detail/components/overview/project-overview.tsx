@@ -6,15 +6,21 @@ import { toast } from "sonner";
 
 import type { ProjectBudgetDashboard } from "@/app/actions/project/excel-budget";
 import { reallocateProjectBudget } from "@/app/actions/project/workflow-governance";
-import { BottomSheet, FormField, FormSection, NumericInput, Textarea } from "@/components/ui";
-import { Badge } from "@/components/ui/badge/badge";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { BudgetSplitIndicator } from "@/components/ui/feedback/budget-split-indicator";
-import { UsageBlockMeter } from "@/components/ui/feedback/usage-block-meter";
+import {
+  AppIcon,
+  Badge,
+  BottomSheet,
+  BudgetSplitIndicator,
+  FormField,
+  FormSection,
+  MoneyValue,
+  NumericInput,
+  Textarea,
+  UsageBlockMeter,
+} from "@/components/ui";
 import type { IndicatorTone } from "@/lib/types/indicator-tone";
 import { categoryTab, statusTone } from "../../utils/project-overview-utils";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import { cn } from "@/lib/utils/cn";
 export { ProjectIdentityHeader } from "./project-identity-header";
 

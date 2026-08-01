@@ -1,7 +1,5 @@
 import type { ExpenseDraftSummary } from "@/app/actions/finance/expense-drafts";
-import { FormSection } from "@/components/ui";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon, FormSection } from "@/components/ui";
 interface ExpenseActiveDraftsProps {
   readonly drafts: readonly ExpenseDraftSummary[];
   readonly onLoad: (id: string) => void;

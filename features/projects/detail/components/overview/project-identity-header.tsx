@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { BottomSheet } from "@/components/ui";
+import { AppIcon, BottomSheet } from "@/components/ui";
 import {
   projectHealthLabel,
   projectHealthReasonLabel,
@@ -10,7 +10,6 @@ import {
   type EffectiveProjectHealthReason,
 } from "@/lib/project/effective-health";
 import { DetailRow } from "./project-overview-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
 import {
   ProjectCoverMedia,
   ProjectHeroStatusPill,

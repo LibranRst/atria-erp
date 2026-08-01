@@ -3,16 +3,7 @@
 import React from "react";
 import { Info } from "lucide-react";
 
-import { MoneyValue, type MoneyValueVariant } from "@/components/ui/feedback/page-primitives";
-import { MetadataChip } from "@/components/ui/badge/badge";
-
-export {
-  BottomSheet,
-  ConfirmationSheet,
-  SheetActionButton,
-} from "@/components/ui/overlay/bottom-sheet";
-export { FilterPills } from "@/components/ui/navigation/filter-pills";
-export { EmptyState } from "@/components/ui/feedback/page-primitives";
+import { MetadataChip, MoneyValue, type MoneyValueVariant } from "@/components/ui";
 
 type SettingsHeaderProps = {
   readonly eyebrow: string;

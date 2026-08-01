@@ -3,13 +3,11 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import React from "react";
 
-import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
+import { AppIcon, SegmentedTabs } from "@/components/ui";
 import type { MaterialTab } from "@/features/materials/utils/material-ui-utils";
 import { materialTabs } from "@/features/materials/utils/material-ui-utils";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 export function MaterialTabsNavigation({
   value,
   shortageCount,
@@ -93,13 +91,18 @@ export function MaterialTabsNavigation({
                   ? attentionCount
                   : undefined,
             icon: (
-              <AppIcon name={item.id === "overview"
-                  ? "space_dashboard"
-                  : item.id === "inventory"
-                    ? "inventory_2"
-                    : item.id === "needs"
-                      ? "assignment_late"
-                      : "history"} className="text-[15px]" />
+              <AppIcon
+                name={
+                  item.id === "overview"
+                    ? "space_dashboard"
+                    : item.id === "inventory"
+                      ? "inventory_2"
+                      : item.id === "needs"
+                        ? "assignment_late"
+                        : "history"
+                }
+                className="text-[15px]"
+              />
             ),
           }))}
         />

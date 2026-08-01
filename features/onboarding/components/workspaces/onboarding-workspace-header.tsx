@@ -3,7 +3,7 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon } from "@/components/ui";
 import {
   getOwnerOnboardingProgress,
   ONBOARDING_STEP_IDS,

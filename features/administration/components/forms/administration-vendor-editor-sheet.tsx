@@ -2,8 +2,14 @@
 
 import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
-import { BottomSheet, SheetFooterActions } from "@/components/ui";
-import { FormField, FormSection, Textarea, TextInput } from "@/components/ui/form/form-controls";
+import {
+  BottomSheet,
+  FormField,
+  FormSection,
+  SheetFooterActions,
+  Textarea,
+  TextInput,
+} from "@/components/ui";
 import type { EditorMode, VendorFormState } from "./administration-editor-types";
 
 type Props = {

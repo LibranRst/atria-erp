@@ -2,8 +2,7 @@
 
 import React from "react";
 
-import { FormField, QuantityStepper, SheetSelect } from "@/components/ui";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon, FormField, QuantityStepper, SheetSelect } from "@/components/ui";
 import type { MaterialOption } from "@/features/materials/types/material-operation-dialog-types";
 import type { SimpleItem } from "@/features/materials/utils/material-ui-utils";
 

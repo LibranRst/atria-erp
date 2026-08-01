@@ -3,14 +3,14 @@
 import React from "react";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { BudgetSplitIndicator } from "@/components/ui/feedback/budget-split-indicator";
 import {
+  BudgetSplitIndicator,
   DetailSection,
+  MoneyValue,
   RowGroup,
   SummaryFact,
   SummarySurface,
-} from "@/components/ui/feedback/main-surface";
+} from "@/components/ui";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
 import { CategoryUsageRow } from "@/features/finance-dashboard/components/rows/category-rows";
 import { ProjectRiskRow } from "@/features/finance-dashboard/components/rows/project-rows";

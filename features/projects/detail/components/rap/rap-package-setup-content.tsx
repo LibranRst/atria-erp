@@ -5,8 +5,7 @@ import React from "react";
 import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import type { ProjectCategoryPlanItemView } from "../shared/rap-rab-manager";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon } from "@/components/ui";
 export function PackageSetupContent({
   items,
   code,

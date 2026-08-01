@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { MoneyValue } from "@/components/ui";
 import { formatMaterialQuantity } from "@/features/materials/utils/material-ui-utils";
 export type InventoryOpeningApprovalItemSource = {
   readonly referenceId: string;

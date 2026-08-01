@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { StatusBadge } from "@/components/ui/badge/badge";
+import { StatusBadge } from "@/components/ui";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import type { EffectiveProjectHealth } from "@/lib/project/effective-health";
 

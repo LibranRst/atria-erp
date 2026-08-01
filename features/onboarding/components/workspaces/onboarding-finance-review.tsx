@@ -9,11 +9,8 @@ import {
   type InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
 import { stopDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
-import { Textarea } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { AppIcon, MoneyValue, Textarea } from "@/components/ui";
 import { InventoryOpeningApprovalItems } from "@/features/approvals/components/shared/inventory-opening-approval-items";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 export function OnboardingFinanceReview({
   pendingBatches,
   simulated,

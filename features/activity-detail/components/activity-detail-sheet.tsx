@@ -4,9 +4,14 @@ import React from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import { getActivityDetail } from "@/app/actions/activity-detail";
-import { BottomSheet, Button, SheetFooterActions, useSheetPresenceValue } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import {
+  AppIcon,
+  BottomSheet,
+  Button,
+  MoneyValue,
+  SheetFooterActions,
+  useSheetPresenceValue,
+} from "@/components/ui";
 import type {
   ActivityComparison,
   ActivityDetailRequest,

@@ -2,8 +2,7 @@
 
 import React from "react";
 
-import { FormField, Textarea } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { FormField, MoneyValue, Textarea } from "@/components/ui";
 import type { ProjectClosingChecklist } from "@/app/actions/project/closing";
 
 export function ProjectClosingSection({

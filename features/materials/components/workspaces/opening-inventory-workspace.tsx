@@ -6,8 +6,7 @@ import type {
   InitialStockCandidate,
   InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
-import { GroupedSurface, InlineStateRow, MainSection } from "@/components/ui/feedback/main-surface";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon, GroupedSurface, InlineStateRow, MainSection } from "@/components/ui";
 import { OpeningInventoryBatchDetailSheet } from "./opening-inventory-batch-detail-sheet";
 import { OpeningInventoryEntryForm } from "./opening-inventory-entry-form";
 import { OpeningInventoryHistory } from "./opening-inventory-history";

@@ -2,9 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
-import { BottomSheet, useSheetPresenceValue } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon, BottomSheet, MoneyValue, useSheetPresenceValue } from "@/components/ui";
 import { approvalIsCritical } from "@/features/approvals/utils/approval-list-utils";
 import { InventoryOpeningApprovalItems } from "@/features/approvals/components/shared/inventory-opening-approval-items";
 import {

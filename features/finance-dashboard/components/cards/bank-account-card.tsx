@@ -2,10 +2,8 @@
 
 import React from "react";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { AppIcon, MoneyValue } from "@/components/ui";
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 export function BankAccountCard({
   account,
   onSelect,

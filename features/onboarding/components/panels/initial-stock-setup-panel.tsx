@@ -7,8 +7,7 @@ import type {
   InitialStockCandidate,
   InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
-import { BottomSheet, ConfirmationSheet } from "@/components/ui";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { AppIcon, BottomSheet, ConfirmationSheet, MoneyValue } from "@/components/ui";
 import { OpeningInventoryWorkspace } from "@/features/materials/components/workspaces/opening-inventory-workspace";
 import { OnboardingFinanceReview } from "@/features/onboarding/components/workspaces/onboarding-finance-review";
 import { startDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
@@ -18,8 +17,6 @@ import {
   OnboardingStage,
   OnboardingSurface,
 } from "../shared/onboarding-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 function batchStatus(status: string): string {
   if (status === "PENDING_APPROVAL") return "Menunggu persetujuan";
   if (status === "POSTED") return "Sudah diposting";

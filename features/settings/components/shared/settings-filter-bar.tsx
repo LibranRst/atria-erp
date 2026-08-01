@@ -3,10 +3,7 @@
 import { SlidersHorizontal } from "lucide-react";
 import React from "react";
 
-import { BottomSheet } from "@/components/ui/overlay/bottom-sheet";
-import { ExclusiveSearchFilterBar } from "@/components/ui/navigation/exclusive-search-filter-bar";
-import type { SegmentedTabOption } from "@/components/ui/navigation/segmented-tabs";
-
+import { BottomSheet, ExclusiveSearchFilterBar, type SegmentedTabOption } from "@/components/ui";
 export function SettingsFilterBar<TValue extends string>({
   status,
   statusOptions,

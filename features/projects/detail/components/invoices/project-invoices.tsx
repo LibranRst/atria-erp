@@ -18,7 +18,7 @@ import {
   defaultPaymentDate,
   formatShortRp,
 } from "../../utils/project-invoices-utils";
-import { OperationSuccessSheet, type OperationSuccess } from "@/components/ui";
+import { type OperationSuccess, OperationSuccessSheet } from "@/components/ui";
 import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
 
 const clientPaymentRecoverySchema = z.object({

@@ -7,19 +7,20 @@ import { toast } from "sonner";
 
 import { postGoodsReceipt } from "@/app/actions/material/goods-receipt";
 import {
+  AppIcon,
   ConfirmationSheet,
   DatePickerField,
   FieldContextLine,
   FormField,
   FormRiskNotice,
   FormSection,
+  type OperationSuccess,
+  OperationSuccessSheet,
   SheetSelect,
   Textarea,
   TextInput,
   WorkflowFormSheet,
 } from "@/components/ui";
-import { type OperationSuccess } from "@/components/ui";
-import { OperationSuccessSheet } from "@/components/ui";
 import { StockImpactRow } from "@/features/materials/components/shared/stock-impact-row";
 import { GoodsReceiptItemsSection } from "@/features/materials/components/sheets/goods-receipt-items-section";
 import {
@@ -34,8 +35,6 @@ import {
 } from "@/features/materials/utils/goods-receipt-prefill";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { useUrlSearchParam } from "@/lib/utils/use-url-search-param";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 export function GoodsReceiptSheet({
   projects,
   locations,

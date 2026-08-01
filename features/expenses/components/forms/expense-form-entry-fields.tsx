@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FormRiskNotice, FormSection, SheetSelect } from "@/components/ui";
-import { AppIcon } from "@/components/ui/icon/app-icon";
+import { AppIcon, FormRiskNotice, FormSection, SheetSelect } from "@/components/ui";
 import { ExpenseItemsSection } from "@/features/expenses/components/forms/expense-form-sections";
 import { ExpenseReceiptUpload } from "@/features/expenses/components/forms/expense-receipt-upload";
 import type {

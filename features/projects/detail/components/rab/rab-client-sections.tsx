@@ -1,12 +1,8 @@
 "use client";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon, Badge, type BadgeStatus, ConfirmationModal, MoneyValue } from "@/components/ui";
 import React from "react";
 import { motion } from "framer-motion";
 
-import { ConfirmationModal } from "@/components/ui";
-import { Badge, type BadgeStatus } from "@/components/ui/badge/badge";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
@@ -374,7 +370,10 @@ function RabItemRow({
     >
       <div className="flex min-w-0 items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75 text-primary">
-          <AppIcon name={item.sourceType === "MANUAL" ? "edit_note" : "format_list_bulleted"} className="text-[19px]" />
+          <AppIcon
+            name={item.sourceType === "MANUAL" ? "edit_note" : "format_list_bulleted"}
+            className="text-[19px]"
+          />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-bold">{item.clientLabel}</span>

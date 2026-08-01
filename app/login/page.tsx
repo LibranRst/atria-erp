@@ -6,7 +6,6 @@ import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
 import { AppIcon, Button, FormField, FormSection, TextInput } from "@/components/ui";
-
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage(): React.JSX.Element {

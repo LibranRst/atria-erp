@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { activateProjectAction } from "@/app/actions/project/activation";
-import { FormSection, WorkflowFormSheet } from "@/components/ui";
+import { AppIcon, FormSection, WorkflowFormSheet } from "@/components/ui";
 import type { ProjectActivationReadiness } from "@/lib/project/activation-readiness";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
 type ProjectActivationSheetProps = {
   readonly projectId: string;
   readonly projectName: string;

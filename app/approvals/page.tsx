@@ -1,7 +1,6 @@
 import React from "react";
 
-import { PageState } from "@/components/ui";
-import { PageHeader } from "@/components/ui/feedback/page-primitives";
+import { PageHeader, PageState } from "@/components/ui";
 import { ApprovalList } from "@/features/approvals/components/views/approval-list";
 import { getApprovalsPageData } from "@/features/approvals/server/get-approvals-page-data";
 

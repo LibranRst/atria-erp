@@ -1,11 +1,7 @@
 "use client";
 
 import type { InitialStockImportPreview } from "@/app/actions/material/opening-inventory";
-import { Button } from "@/components/ui";
-import { GroupedSurface } from "@/components/ui/feedback/main-surface";
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { AppIcon } from "@/components/ui/icon/app-icon";
-
+import { AppIcon, Button, GroupedSurface, MoneyValue } from "@/components/ui";
 interface OpeningInventoryCsvEntryProps {
   readonly preview: InitialStockImportPreview | null;
   readonly fileName: string;
