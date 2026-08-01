@@ -55,7 +55,7 @@ describe("native editorial dashboard sections", () => {
     expect(html).toContain(">Pengajuan</span>");
     expect(html).toContain("inline-grid h-5 min-w-5");
     expect(html).toContain("min-h-8");
-    expect(html).toContain("text-[11px]");
+    expect(html).toContain("text-support");
     expect(html).toContain("px-3");
     expect(html).not.toContain("Hari ini · 23");
   });

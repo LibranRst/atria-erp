@@ -384,7 +384,7 @@ export function BottomSheet({
                 <IconButton
                   ref={closeButtonRef}
                   label="Tutup"
-                  icon={<AppIcon name="close" className="text-[24px] leading-none" />}
+                  icon={<AppIcon name="close" className="icon-xl leading-none" />}
                   variant="secondary"
                   onClick={() => onCloseRef.current()}
                   className="absolute top-1/2 left-margin-mobile z-10 -translate-y-1/2 shadow-control"

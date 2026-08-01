@@ -105,7 +105,7 @@ export function SheetSelect({
             {selected?.label || placeholder}
           </span>
           {(selected?.description || selected?.meta) && (
-            <span className="mt-0.5 block truncate text-[10px] leading-4 text-on-surface-variant">
+            <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
               {selected.description ?? selected.meta}
             </span>
           )}
@@ -168,7 +168,7 @@ export function SheetSelect({
                               {option.label}
                             </span>
                             {option.description || option.meta || option.disabledReason ? (
-                              <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
+                              <span className="mt-0.5 block text-meta text-on-surface-variant">
                                 {option.disabledReason ?? option.description ?? option.meta}
                               </span>
                             ) : null}
@@ -187,7 +187,7 @@ export function SheetSelect({
               variant="secondary"
               fullWidth
               leadingIcon={<Plus className="h-4 w-4" />}
-              trailingIcon={<AppIcon name="chevron_right" className="shrink-0 text-[18px]" />}
+              trailingIcon={<AppIcon name="chevron_right" className="icon-md shrink-0" />}
               onClick={() => {
                 setPendingValue(null);
                 setPendingCreateAction(true);

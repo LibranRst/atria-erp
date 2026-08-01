@@ -46,7 +46,7 @@ describe("financial and select primitives", () => {
     );
 
     expect(html).toContain("text-sm leading-4 font-bold");
-    expect(html).toContain("mt-0.5 block truncate text-[10px] leading-4");
+    expect(html).toContain("mt-0.5 block truncate text-meta");
   });
 
   test("keeps picker search visible against the gray sheet canvas", () => {

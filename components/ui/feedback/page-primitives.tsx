@@ -66,9 +66,7 @@ export function NativeSection({
                 {eyebrow}
               </p>
             )}
-            {title && (
-              <h2 className="text-[17px] leading-6 font-semibold text-on-surface">{title}</h2>
-            )}
+            {title && <h2 className="text-title font-semibold text-on-surface">{title}</h2>}
           </div>
           {action}
         </div>
@@ -108,10 +106,10 @@ function moneyCompactSizeClass(size: MoneyValueSize = "md"): string {
   if (size === "hero") return "text-[30px] leading-9";
   if (size === "2xl") return "text-[23px] leading-7";
   if (size === "xl") return "text-[17px] leading-5.5";
-  if (size === "lg") return "text-[15px] leading-5";
+  if (size === "lg") return "text-section";
   if (size === "xs") return "text-[10px] leading-3";
   if (size === "sm") return "text-[12px] leading-4";
-  return "text-[13px] leading-4";
+  return "text-row";
 }
 
 function moneyDynamicSizeClass(size: MoneyValueSize = "lg"): string {
@@ -127,7 +125,7 @@ function moneySecondarySizeClass(size: MoneyValueSize = "md"): string {
   if (size === "xs") return "text-[8px] leading-[10px]";
   if (size === "2xl") return "text-[16px] leading-5";
   if (size === "xl") return "text-[14px] leading-[18px]";
-  return "text-[9px] leading-3";
+  return "text-eyebrow";
 }
 
 export type MoneyValueVariant = "compactWithFull" | "fullDynamic";
@@ -241,11 +239,7 @@ export function MetricPill({
 }: MetricPillProps): JSX.Element {
   const valueClass = surface === "inverse" ? "text-white" : metricToneClass(tone);
   const sizeClass =
-    valueSize === "lg"
-      ? "text-[15px] leading-5"
-      : valueSize === "sm"
-        ? "text-[12px] leading-4"
-        : "text-[13px] leading-4";
+    valueSize === "lg" ? "text-section" : valueSize === "sm" ? "text-[12px] leading-4" : "text-row";
   const alignClass = align === "right" ? "text-right" : "text-left";
   const wrapClass = wrapMode === "truncate" ? "truncate" : "wrap-break-word wrap-anywhere";
   const fontClass = mono ? "financial-amount font-mono tabular-nums" : "";
@@ -263,7 +257,7 @@ export function MetricPill({
         {value}
       </p>
       {fullValue && fullValue !== value && (
-        <p className="financial-amount mt-1 font-mono text-[9px] leading-3 wrap-break-word text-on-surface-variant/75 tabular-nums">
+        <p className="financial-amount mt-1 font-mono text-eyebrow wrap-break-word text-on-surface-variant/75 tabular-nums">
           {fullValue}
         </p>
       )}
@@ -317,7 +311,7 @@ export function MoneyMetricPill({
         className="mt-0.5"
       />
       {detail && (
-        <p className="mt-1 text-[9px] leading-3 font-bold wrap-break-word text-on-surface-variant/75">
+        <p className="mt-1 text-eyebrow font-bold wrap-break-word text-on-surface-variant/75">
           {detail}
         </p>
       )}
@@ -442,7 +436,7 @@ export function EmptyState({
       className={`flex flex-col items-center justify-center rounded-[28px] bg-white px-6 py-14 text-center shadow-surface ${className}`}
     >
       <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-surface-container-low text-on-surface-variant shadow-control">
-        <AppIcon name={icon} className="text-[28px]" />
+        <AppIcon name={icon} className="icon-2xl" />
       </div>
       <h3 className="mt-5 text-lg leading-6 font-semibold text-on-surface">{title}</h3>
       <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-on-surface-variant">

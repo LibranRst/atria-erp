@@ -61,7 +61,7 @@ export function BottomTabBar({
             <AppIcon
               name={item.iconName}
               weight={isActive ? "fill" : "regular"}
-              className="relative z-10 text-[20px]"
+              className="relative z-10 icon-lg"
             />
           </Link>
         );
@@ -151,7 +151,7 @@ export function QuickActionFab({
                       : "bg-primary/10 text-primary"
                   }`}
                 >
-                  <AppIcon name={action.iconName} className="text-[20px]" />
+                  <AppIcon name={action.iconName} className="icon-lg" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span
@@ -159,7 +159,7 @@ export function QuickActionFab({
                   >
                     {action.label}
                   </span>
-                  <span className="block truncate text-[10px] leading-4 font-semibold text-on-surface-variant">
+                  <span className="block truncate text-meta font-semibold text-on-surface-variant">
                     {action.description}
                   </span>
                 </span>

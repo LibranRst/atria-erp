@@ -499,9 +499,7 @@ export function ChoiceRow({
       <span className="min-w-0 flex-1">
         <span className="block truncate text-xs font-bold">{title}</span>
         {description && (
-          <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
-            {description}
-          </span>
+          <span className="mt-0.5 block text-meta text-on-surface-variant">{description}</span>
         )}
       </span>
     </button>

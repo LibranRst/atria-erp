@@ -74,7 +74,7 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
                 className="absolute top-0 left-0 z-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-outline-variant/15 bg-white text-on-surface-variant shadow-raised transition-colors duration-200 hover:bg-surface-container-low active:scale-95"
                 aria-label="Go back"
               >
-                <AppIcon name="chevron_left" className="text-[28px]" />
+                <AppIcon name="chevron_left" className="icon-2xl" />
               </motion.button>
             )}
           </AnimatePresence>

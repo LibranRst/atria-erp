@@ -92,15 +92,29 @@ Every main page should answer, in order:
 
 Use one focal summary when the page has a genuinely dominant state. Follow it with section headers and grouped content. Do not give every metric, status, and action equal visual weight.
 
-Recommended type hierarchy:
+The type hierarchy is expressed as semantic tokens in `@theme`. Each token names the role and
+carries its own line-height, so a call site never picks a size and a leading separately:
 
-- Focal financial value: approximately 27–30 px, only once when justified.
-- Page or major section title: approximately 15–20 px.
-- Row title or primary value: approximately 13–15 px.
-- Supporting context: approximately 11–13 px.
-- Eyebrow and metadata: approximately 9–11 px, with restrained tracking.
+| Token           | Size / leading | Use                                                     |
+| --------------- | -------------- | ------------------------------------------------------- |
+| `text-focal`    | 28 / 32 px     | The one justified focal financial value on a surface    |
+| `text-title`    | 17 / 24 px     | Page or major section title                             |
+| `text-section`  | 15 / 20 px     | Section title                                           |
+| `text-row`      | 13 / 16 px     | Row title or primary row value                          |
+| `text-support`  | 11 / 16 px     | Supporting context                                      |
+| `text-meta`     | 10 / 16 px     | Dense metadata and inset metric cell labels             |
+| `text-eyebrow`  | 9 / 12 px      | Eyebrow and uppercase metadata, with restrained tracking |
 
-These are density ranges, not new hardcoded tokens. Prefer existing component variants and semantic classes.
+Use the token whose role matches. Do not pick one because its pixel value happens to be close: an
+arbitrary `text-[Npx]` remains correct for a size that carries no role in this table, and a
+narrow-screen override such as `max-[430px]:text-[15px]` is still the way to shrink a role.
+
+Icon sizes use the separate `icon-xs` through `icon-2xl` utilities. `AppIcon` renders a `1em` SVG,
+so its size follows `font-size`; without a distinct utility an icon size is indistinguishable from a
+type size at the call site.
+
+Monospace financial values resolve through `--font-mono`, which is mapped to JetBrains Mono. Use
+`font-mono` with `tabular-nums`; do not reintroduce role-named font-family aliases.
 
 ## Surface System
 

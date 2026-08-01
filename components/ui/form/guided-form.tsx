@@ -94,7 +94,7 @@ export function OperationalFormSheet({
       <div className="space-y-2">
         {statusText ? (
           <p
-            className={cx("px-1 text-[11px] leading-4 font-medium", textClass[statusTone])}
+            className={cx("px-1 text-support font-medium", textClass[statusTone])}
             role={statusTone === "danger" ? "alert" : "status"}
           >
             {statusText}
@@ -119,9 +119,7 @@ export function OperationalFormSheet({
             disabledReason={disabledReason}
           />
         ) : disabledReason ? (
-          <p className="px-1 text-[10px] leading-4 font-medium text-on-surface-variant">
-            {disabledReason}
-          </p>
+          <p className="px-1 text-meta font-medium text-on-surface-variant">{disabledReason}</p>
         ) : null}
       </div>
     ) : undefined;
@@ -316,7 +314,7 @@ export function CompactEditableItemRow({
       />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-xs leading-4 font-bold text-on-surface">{title}</span>
-        <span className="mt-0.5 block truncate text-[10px] leading-4 text-on-surface-variant">
+        <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
           {meta} · {statusLabel}
         </span>
       </span>
@@ -325,7 +323,7 @@ export function CompactEditableItemRow({
           {value}
         </span>
       ) : null}
-      <AppIcon name="chevron_right" className="shrink-0 text-[18px] text-on-surface-variant" />
+      <AppIcon name="chevron_right" className="icon-md shrink-0 text-on-surface-variant" />
     </motion.button>
   );
 }
@@ -359,9 +357,7 @@ export function FormSection({
               </h3>
             ) : null}
             {helper ? (
-              <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant">
-                {helper}
-              </p>
+              <p className="mt-0.5 line-clamp-2 text-meta text-on-surface-variant">{helper}</p>
             ) : null}
           </div>
           {action}
@@ -389,7 +385,7 @@ export function MicroStatusDock({
 }): React.JSX.Element {
   const visibleItems = items.slice(0, 3);
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-surface-container-low px-3 py-2 text-[10px] leading-4 ring-1 ring-ring-subtle">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-surface-container-low px-3 py-2 text-meta ring-1 ring-ring-subtle">
       {visibleItems.map((item, index) => {
         const tone = item.tone ?? "default";
         const renderedValue =
@@ -424,9 +420,7 @@ export function FieldContextLine({
   readonly children: React.ReactNode;
   readonly tone?: FormRiskTone;
 }): React.JSX.Element {
-  return (
-    <p className={cx("min-w-0 text-[10px] leading-4 font-medium", textClass[tone])}>{children}</p>
-  );
+  return <p className={cx("min-w-0 text-meta font-medium", textClass[tone])}>{children}</p>;
 }
 
 export function SmartDefaultHint({
@@ -502,7 +496,7 @@ export function WorkflowFormSheet({
           status={
             statusText ? (
               <p
-                className={cx("text-[11px] leading-4 font-medium", textClass[statusTone])}
+                className={cx("text-support font-medium", textClass[statusTone])}
                 role={statusTone === "danger" ? "alert" : "status"}
               >
                 {statusText}
@@ -574,7 +568,7 @@ export function OptionChoiceGroup<TValue extends string>({
               <span className="min-w-0 flex-1">
                 <span className="block text-sm leading-5 font-bold">{option.label}</span>
                 {option.description ? (
-                  <span className="block truncate text-[11px] leading-4 text-on-surface-variant">
+                  <span className="block truncate text-support text-on-surface-variant">
                     {option.description}
                   </span>
                 ) : null}

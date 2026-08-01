@@ -33,9 +33,7 @@ export function SheetFooterActions({
     <div className="space-y-2">
       {status ? <div className="px-1">{status}</div> : null}
       {disabledReason ? (
-        <p className="px-1 text-[10px] leading-4 font-medium text-on-surface-variant">
-          {disabledReason}
-        </p>
+        <p className="px-1 text-meta font-medium text-on-surface-variant">{disabledReason}</p>
       ) : null}
       {secondary ? (
         <div className="grid grid-cols-2 gap-2">

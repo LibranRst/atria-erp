@@ -160,15 +160,28 @@
 
   /* Font Families */
   --font-sans: var(--font-inter), ui-sans-serif, sans-serif;
-  --font-body-lg: var(--font-inter), sans-serif;
-  --font-headline-md: var(--font-inter), sans-serif;
-  --font-body-sm: var(--font-inter), sans-serif;
-  --font-label-caps: var(--font-inter), sans-serif;
-  --font-headline-lg: var(--font-inter), sans-serif;
-  --font-body-md: var(--font-inter), sans-serif;
-  --font-numeral-lg: var(--font-jetbrains), monospace;
-  --font-numeral-md: var(--font-jetbrains), monospace;
-  --font-display: var(--font-inter), sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  /*
+   * Tangga tipografi semantik. Nama menyatakan PERAN, bukan ukuran, sesuai
+   * hierarki di MAIN_SURFACE_DESIGN_LANGUAGE.md. Setiap peran sekalian membawa
+   * line-height-nya supaya call site tidak memilih ukuran dan leading terpisah.
+   * Ukuran yang tidak punya peran di sini tetap boleh memakai nilai arbitrer.
+   */
+  --text-eyebrow: 9px;
+  --text-eyebrow--line-height: 12px;
+  --text-meta: 10px;
+  --text-meta--line-height: 16px;
+  --text-support: 11px;
+  --text-support--line-height: 16px;
+  --text-row: 13px;
+  --text-row--line-height: 16px;
+  --text-section: 15px;
+  --text-section--line-height: 20px;
+  --text-title: 17px;
+  --text-title--line-height: 24px;
+  --text-focal: 28px;
+  --text-focal--line-height: 32px;
 
   /* Explicitly restore default max-width scales to prevent collision with custom spacing */
   --max-width-xs: 20rem;
@@ -177,6 +190,43 @@
   --max-width-lg: 32rem;
   --max-width-xl: 36rem;
   --max-width-2xl: 42rem;
+}
+
+/*
+ * Skala ukuran ikon. Sengaja memakai width/height, bukan font-size: `AppIcon`
+ * merender SVG Phosphor `1em` sehingga sebelumnya ukurannya diatur lewat
+ * `text-[Npx]` — bentuk yang identik dengan ukuran teks, sehingga di call site
+ * maupun bagi linter, ikon dan tipografi tak terbedakan. Dimensi eksplisit
+ * memutus ambiguitas itu: `icon-md` tidak akan pernah tertukar dengan judul.
+ */
+@utility icon-xs {
+  width: 14px;
+  height: 14px;
+}
+
+@utility icon-sm {
+  width: 16px;
+  height: 16px;
+}
+
+@utility icon-md {
+  width: 18px;
+  height: 18px;
+}
+
+@utility icon-lg {
+  width: 20px;
+  height: 20px;
+}
+
+@utility icon-xl {
+  width: 24px;
+  height: 24px;
+}
+
+@utility icon-2xl {
+  width: 28px;
+  height: 28px;
 }
 
 body {

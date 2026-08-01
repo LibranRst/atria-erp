@@ -153,7 +153,7 @@ export function StatusBadge({
   return (
     <span
       {...props}
-      className={`inline-flex min-h-6 items-center gap-1.5 rounded-full px-2.5 text-[9px] leading-3 font-bold tracking-wide uppercase ${toneClass[tone]} ${className}`}
+      className={`inline-flex min-h-6 items-center gap-1.5 rounded-full px-2.5 text-eyebrow font-bold tracking-wide uppercase ${toneClass[tone]} ${className}`}
     >
       {showMarker ? (
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" />
@@ -203,7 +203,7 @@ export function SectionCountPill({
     <span
       {...props}
       aria-label={`${count} ${label.toLowerCase()}`}
-      className={`inline-flex min-h-8 items-center gap-1.5 rounded-full bg-surface-container-low px-3 text-[11px] leading-4 font-bold text-on-surface-variant ${className}`}
+      className={`inline-flex min-h-8 items-center gap-1.5 rounded-full bg-surface-container-low px-3 text-support font-bold text-on-surface-variant ${className}`}
     >
       <span>{label}</span>
       <CountBadge
@@ -229,7 +229,7 @@ export function MetadataChip({
   return (
     <span
       {...props}
-      className={`inline-flex min-h-6 items-center rounded-full bg-surface-container px-2.5 text-[9px] leading-3 font-semibold text-on-surface-variant ${className}`}
+      className={`inline-flex min-h-6 items-center rounded-full bg-surface-container px-2.5 text-eyebrow font-semibold text-on-surface-variant ${className}`}
     >
       {children}
     </span>

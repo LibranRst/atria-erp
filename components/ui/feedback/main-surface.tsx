@@ -110,7 +110,7 @@ export function SectionHeader({
       <div className="flex min-w-0 items-center gap-2">
         <h2
           id={id}
-          className="min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5"
+          className="min-w-0 truncate text-title font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5"
         >
           {title}
         </h2>
@@ -121,9 +121,7 @@ export function SectionHeader({
           {count !== undefined ? (
             <SectionCountPill count={count} label={countLabel ?? "Item"} />
           ) : meta ? (
-            <span className="text-[9px] leading-3 font-semibold text-on-surface-variant/65">
-              {meta}
-            </span>
+            <span className="text-eyebrow font-semibold text-on-surface-variant/65">{meta}</span>
           ) : null}
           {action}
         </div>
@@ -254,7 +252,7 @@ export function PanelSection({
               {eyebrow}
             </p>
           )}
-          <h3 className="text-[17px] leading-6 font-semibold text-on-surface">{title}</h3>
+          <h3 className="text-title font-semibold text-on-surface">{title}</h3>
         </div>
         {action}
       </div>
@@ -375,7 +373,7 @@ export function InlineStateRow({
         <AppIcon name={icon} className="text-[17px]" />
       </span>
       <span className="grid min-w-0 flex-1 gap-1">
-        <span className="text-[13px] leading-4 font-bold text-on-surface">{title}</span>
+        <span className="text-row font-bold text-on-surface">{title}</span>
         <span className="text-[11px] leading-[1.3] text-on-surface-variant">{description}</span>
       </span>
       {action ? <span className="shrink-0">{action}</span> : null}

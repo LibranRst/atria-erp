@@ -53,7 +53,7 @@ export function FormRiskNotice({
       <Icon className={cx("mt-0.5 h-4 w-4 shrink-0", classes.icon)} aria-hidden="true" />
       <div className="min-w-0">
         <p className="text-xs leading-4 font-bold">{title}</p>
-        <div className="mt-1 text-[10px] leading-4">{children}</div>
+        <div className="mt-1 text-meta">{children}</div>
       </div>
     </div>
   );

@@ -125,7 +125,7 @@ export function ConnectivityBanner(): React.JSX.Element | null {
           animate="visible"
           exit="exit"
           role="status"
-          className="fixed inset-x-0 top-16 z-40 mx-auto flex w-[calc(100%-2.5rem)] max-w-sm items-center gap-2 rounded-full bg-warning px-4 py-2 text-[11px] leading-4 font-bold text-white shadow-raised"
+          className="fixed inset-x-0 top-16 z-40 mx-auto flex w-[calc(100%-2.5rem)] max-w-sm items-center gap-2 rounded-full bg-warning px-4 py-2 text-support font-bold text-white shadow-raised"
         >
           <AppIcon name="cloud_off" className="text-[17px]" />
           Mode offline · data tetap dapat dibaca, perubahan ditahan.
