@@ -76,9 +76,7 @@ export function OnboardingEmpty({
     <div className="flex flex-col items-center px-5 py-7 text-center">
       <AppIcon name={icon} className="text-[26px] text-on-surface-variant/45" />
       <p className="mt-2 text-[12px] font-bold text-on-surface">{title}</p>
-      <p className="mx-auto mt-1 max-w-68 text-[10px] leading-4 text-on-surface-variant">
-        {detail}
-      </p>
+      <p className="mx-auto mt-1 max-w-68 text-meta text-on-surface-variant">{detail}</p>
     </div>
   );
 }
@@ -101,7 +99,7 @@ export function OnboardingNotice({
   return (
     <div className={`flex items-start gap-2.5 rounded-[20px] px-3.5 py-3 ${toneClass}`}>
       <AppIcon name={icon} className="mt-0.5 shrink-0 text-[16px]" />
-      <p className="text-[10px] leading-4">{children}</p>
+      <p className="text-meta">{children}</p>
     </div>
   );
 }

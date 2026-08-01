@@ -72,12 +72,12 @@ export function MovementRow({ row }: { readonly row: MaterialMovementView }): Re
         <AppIcon name={movementIcon(row)} className="text-[16px]" />
       </span>
       <span className="grid min-w-0 flex-1 gap-1">
-        <span className="block truncate text-[13px] leading-4 font-bold">{row.materialName}</span>
+        <span className="block truncate text-row font-bold">{row.materialName}</span>
         <span className="block truncate text-[10px] leading-[1.3] text-on-surface-variant">
           {formatMovementType(row.movementType)} · {row.locationName}
           {row.projectName ? ` · ${row.projectName}` : ""}
         </span>
-        <span className="block truncate text-[9px] leading-3 text-on-surface-variant/65">
+        <span className="block truncate text-eyebrow text-on-surface-variant/65">
           {formatMaterialDate(row.createdAt)} · {row.createdByName}
         </span>
       </span>

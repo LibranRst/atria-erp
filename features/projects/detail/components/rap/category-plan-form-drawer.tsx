@@ -123,7 +123,7 @@ export function CategoryPlanFormDrawer({
                       })),
                   ]}
                 />
-                <p className="px-4 pt-1 pb-3 text-[10px] leading-4 text-on-surface-variant">
+                <p className="px-4 pt-1 pb-3 text-meta text-on-surface-variant">
                   Template disalin sebagai snapshot. Edit setelahnya tidak mengubah Library.
                 </p>
               </div>

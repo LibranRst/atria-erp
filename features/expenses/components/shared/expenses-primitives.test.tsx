@@ -100,7 +100,7 @@ describe("Expenses Dashboard visual language", () => {
     expect(html).toContain("PT Kayu Rapi");
     expect(html).toContain("Jatuh tempo");
     expect(html).toContain("Sudah dijadwalkan");
-    expect(html).toContain("leading-3");
+    expect(html).toContain("text-eyebrow");
   });
 
   test("uses the same hierarchy for buyer plans and field expenses", () => {

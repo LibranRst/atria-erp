@@ -5,7 +5,10 @@ import React from "react";
 import { Badge } from "@/components/ui/badge/badge";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import type { ClientInvoiceItem } from "../../types/project-invoices-types";
-import { calculateInvoicePaidAmount, calculateInvoiceRemaining } from "../../utils/project-invoices-utils";
+import {
+  calculateInvoicePaidAmount,
+  calculateInvoiceRemaining,
+} from "../../utils/project-invoices-utils";
 import {
   ActivityDetailChevron,
   useActivityDetail,
@@ -26,8 +29,8 @@ export function ProjectInvoicesList({
   return (
     <section className="space-y-2.5">
       <header className="px-1">
-        <h2 className="text-[17px] leading-6 font-semibold text-on-surface">Termin penagihan</h2>
-        <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">
+        <h2 className="text-title font-semibold text-on-surface">Termin penagihan</h2>
+        <p className="mt-0.5 text-support text-on-surface-variant">
           Urut berdasarkan tanggal jatuh tempo.
         </p>
       </header>
@@ -104,7 +107,7 @@ function ProjectInvoiceTimelineRow({
             <p className="truncate text-xs leading-5 font-bold text-on-surface">
               {invoice.invoiceNumber}
             </p>
-            <p className="text-[10px] leading-4 text-on-surface-variant">
+            <p className="text-meta text-on-surface-variant">
               Jatuh tempo{" "}
               {due.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
             </p>

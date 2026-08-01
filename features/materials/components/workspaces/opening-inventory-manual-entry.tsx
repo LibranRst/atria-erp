@@ -180,11 +180,11 @@ export function OpeningInventoryManualEntry({
           Tambah item stok lainnya
         </motion.button>
       ) : allEligibleSelected ? (
-        <p className="px-3 text-center text-[10px] leading-4 text-on-surface-variant">
+        <p className="px-3 text-center text-meta text-on-surface-variant">
           Semua inventory yang memenuhi syarat sudah tersedia di batch ini.
         </p>
       ) : (
-        <p className="px-3 text-center text-[10px] leading-4 text-on-surface-variant">
+        <p className="px-3 text-center text-meta text-on-surface-variant">
           Pilih material dan lokasi pada baris yang tersedia sebelum menambah data lain.
         </p>
       )}

@@ -78,7 +78,7 @@ export function StockImpactRow({
       {typeof reserved === "number" ? (
         <p
           className={cx(
-            "border-t border-outline-variant/15 px-4 py-2.5 text-[10px] leading-4",
+            "border-t border-outline-variant/15 px-4 py-2.5 text-meta",
             unsafe ? "bg-error-container/10 text-error" : "text-on-surface-variant",
           )}
         >

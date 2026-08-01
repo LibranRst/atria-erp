@@ -90,9 +90,7 @@ export function ProjectCreatedSuccess({
                   <span className="block text-xs leading-5 font-bold text-on-surface">
                     {action.title}
                   </span>
-                  <span className="text-[10px] leading-4 text-on-surface-variant">
-                    {action.description}
-                  </span>
+                  <span className="text-meta text-on-surface-variant">{action.description}</span>
                 </div>
               </div>
               <AppIcon name="chevron_right" className="text-[20px] text-outline-variant" />

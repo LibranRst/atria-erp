@@ -74,7 +74,7 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
           <span className="block truncate text-[11px] leading-5 font-bold text-on-surface">
             Simulasi · {simulation.roleLabel}
           </span>
-          <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+          <span className="block truncate text-meta text-on-surface-variant">
             {simulation.userName}
           </span>
         </span>

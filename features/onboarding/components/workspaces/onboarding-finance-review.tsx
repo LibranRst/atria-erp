@@ -170,7 +170,7 @@ export function OnboardingFinanceReview({
       <InventoryOpeningApprovalItems item={itemSource} />
       <div className="rounded-3xl bg-white p-4 ring-1 ring-ring-subtle">
         <p className="text-xs font-bold text-on-surface">Dampak jika disetujui</p>
-        <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
+        <p className="mt-1 text-meta text-on-surface-variant">
           Mencatat pergerakan saldo awal stok, lalu mengisi stok fisik dan harga rata-rata. Kas,
           utang vendor, dan realisasi biaya proyek tidak berubah.
         </p>

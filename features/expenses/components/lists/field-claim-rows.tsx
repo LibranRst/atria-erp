@@ -107,10 +107,10 @@ export function FieldClaimRow({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <span className={`truncate text-[9px] leading-3 font-bold ${statusTone}`}>
+            <span className={`truncate text-eyebrow font-bold ${statusTone}`}>
               {fieldClaimStatusLabel(cost.status)}
             </span>
-            <span className="shrink-0 text-[9px] leading-3 font-semibold text-on-surface-variant/60">
+            <span className="shrink-0 text-eyebrow font-semibold text-on-surface-variant/60">
               {new Date(cost.createdAt).toLocaleDateString("id-ID", {
                 month: "short",
                 day: "numeric",
@@ -131,11 +131,11 @@ export function FieldClaimRow({
               className="shrink-0"
             />
           </div>
-          <p className="mt-0.5 truncate text-[10px] leading-4 font-medium text-on-surface-variant/75">
+          <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
             {cost.project?.name || "Proyek"} · {cost.budgetItem?.name || "Belum ditentukan"}
           </p>
           {showBudgetRisk ? (
-            <p className="mt-1 flex min-w-0 items-center gap-1 text-[9px] leading-3 font-bold text-error">
+            <p className="mt-1 flex min-w-0 items-center gap-1 text-eyebrow font-bold text-error">
               <AppIcon name="warning" className="shrink-0 text-[13px] leading-none" />
               <span className="truncate">
                 {cost.budgetOverrun ? "Melebihi budget" : "Mendekati batas budget"} ·{" "}
@@ -148,7 +148,7 @@ export function FieldClaimRow({
       </div>
 
       <div className="mt-2 flex min-h-8 items-center gap-2 pr-8 pl-12">
-        <span className="min-w-0 flex-1 truncate text-[9px] leading-3 font-semibold text-on-surface-variant/60">
+        <span className="min-w-0 flex-1 truncate text-eyebrow font-semibold text-on-surface-variant/60">
           Diajukan {cost.requestedBy?.name || "-"}
         </span>
         {cost.receiptImageUrl ? (
@@ -164,7 +164,7 @@ export function FieldClaimRow({
             disabled={pending}
             whileTap={reduceMotion ? undefined : expenseRowPressScale}
             transition={transitionSpringSnappy}
-            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50"
+            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-meta font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50"
           >
             <AppIcon name="fact_check" className="text-[14px] leading-none" />
             Verifikasi
@@ -181,7 +181,7 @@ export function FieldClaimRow({
             disabled={pending}
             whileTap={reduceMotion ? undefined : expenseRowPressScale}
             transition={transitionSpringSnappy}
-            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50"
+            className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-meta font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50"
           >
             <AppIcon name="payments" className="text-[14px] leading-none" />
             Cairkan
@@ -221,7 +221,7 @@ export function FieldClaimHistory({
           <span className="truncate text-xs leading-4 font-semibold text-on-surface">
             Riwayat pengeluaran
           </span>
-          <span className="inline-flex items-center justify-center rounded-full bg-outline-variant/20 px-1.5 py-0.5 text-[10px] leading-4 font-bold text-on-surface-variant">
+          <span className="inline-flex items-center justify-center rounded-full bg-outline-variant/20 px-1.5 py-0.5 text-meta font-bold text-on-surface-variant">
             {historyCosts.length}
           </span>
         </div>
@@ -281,10 +281,10 @@ function CompactClaimRow({
         <StatusIcon status={cost.status} />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center justify-between gap-2">
-            <span className={`truncate text-[9px] leading-3 font-bold ${statusTone}`}>
+            <span className={`truncate text-eyebrow font-bold ${statusTone}`}>
               {cost.status === "PAID" ? "Lunas" : "Ditolak"}
             </span>
-            <span className="shrink-0 text-[9px] leading-3 font-semibold text-on-surface-variant/60">
+            <span className="shrink-0 text-eyebrow font-semibold text-on-surface-variant/60">
               {new Date(cost.createdAt).toLocaleDateString("id-ID", {
                 month: "short",
                 day: "numeric",
@@ -303,7 +303,7 @@ function CompactClaimRow({
               className="shrink-0"
             />
           </div>
-          <p className="mt-0.5 truncate text-[10px] leading-4 font-medium text-on-surface-variant/70">
+          <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/70">
             {cost.project?.name || "Proyek"}
           </p>
         </div>

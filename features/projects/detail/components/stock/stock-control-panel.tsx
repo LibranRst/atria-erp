@@ -83,7 +83,7 @@ export function StockControlPanel({
             <div className="font-mono text-4xl leading-none font-bold tabular-nums">
               {totalTracked.toLocaleString("id-ID")}
             </div>
-            <MetadataChip className="h-fit bg-white/10 text-[10px] leading-4 font-bold text-white/80">
+            <MetadataChip className="h-fit bg-white/10 text-meta font-bold text-white/80">
               {rap?.items.length ?? 0} material RAP
             </MetadataChip>
           </div>
@@ -108,8 +108,8 @@ export function StockControlPanel({
 
       <section className="space-y-2.5">
         <header className="px-1">
-          <h2 className="text-[17px] leading-6 font-semibold text-on-surface">Material proyek</h2>
-          <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">
+          <h2 className="text-title font-semibold text-on-surface">Material proyek</h2>
+          <p className="mt-0.5 text-support text-on-surface-variant">
             Status stok, reservasi, dan kekurangan pengadaan per material RAP.
           </p>
         </header>
@@ -127,7 +127,7 @@ export function StockControlPanel({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-xs leading-5 font-bold text-on-surface">{item.name}</p>
-                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] leading-4 text-on-surface-variant">
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-meta text-on-surface-variant">
                         <span>{item.area}</span>
                         {item.returnedQuantity > 0 && (
                           <span className="font-semibold text-primary">
@@ -196,8 +196,8 @@ export function StockControlPanel({
 
       <section className="space-y-2.5">
         <header className="px-1">
-          <h2 className="text-[17px] leading-6 font-semibold text-on-surface">Aktivitas stok</h2>
-          <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">
+          <h2 className="text-title font-semibold text-on-surface">Aktivitas stok</h2>
+          <p className="mt-0.5 text-support text-on-surface-variant">
             Urutan reservasi, pemakaian, pengembalian, dan material terbuang.
           </p>
         </header>
@@ -242,7 +242,7 @@ export function StockControlPanel({
                       <p className="truncate text-xs leading-5 font-bold text-on-surface">
                         {move.material.name}
                       </p>
-                      <p className="truncate text-[10px] leading-4 text-on-surface-variant">
+                      <p className="truncate text-meta text-on-surface-variant">
                         {move.location.name} · {move.createdBy.name}
                       </p>
                     </div>
@@ -265,7 +265,7 @@ export function StockControlPanel({
                     })}
                   </p>
                   {move.note ? (
-                    <p className="rounded-xl bg-surface-container-low p-2 text-[10px] leading-4 text-on-surface-variant ring-ring-subtle">
+                    <p className="rounded-xl bg-surface-container-low p-2 text-meta text-on-surface-variant ring-ring-subtle">
                       {move.note}
                     </p>
                   ) : null}

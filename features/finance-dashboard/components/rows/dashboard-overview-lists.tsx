@@ -169,10 +169,10 @@ export function OverviewCashRows({
               <AppIcon name={incoming ? "south_west" : "north_east"} className="text-[16px]" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px] leading-4 font-semibold tracking-[-0.01em] text-on-surface">
+              <span className="block truncate text-row font-semibold tracking-[-0.01em] text-on-surface">
                 {transaction.description}
               </span>
-              <span className="mt-0.5 block text-[10px] leading-4 font-semibold text-on-surface-variant/70">
+              <span className="mt-0.5 block text-meta font-semibold text-on-surface-variant/70">
                 {formatShortDate(transaction.createdAt)}
               </span>
             </span>

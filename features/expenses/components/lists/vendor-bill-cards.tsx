@@ -110,10 +110,10 @@ export function VendorBillCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center justify-between gap-2">
-            <span className={`truncate text-[9px] leading-3 font-bold ${statusTone}`}>
+            <span className={`truncate text-eyebrow font-bold ${statusTone}`}>
               {vendorBillStatusLabel(statusMapping)}
             </span>
-            <span className="shrink-0 text-[9px] leading-3 font-semibold text-on-surface-variant/60">
+            <span className="shrink-0 text-eyebrow font-semibold text-on-surface-variant/60">
               Jatuh tempo{" "}
               {new Date(bill.dueDate).toLocaleDateString("id-ID", {
                 day: "numeric",
@@ -122,7 +122,7 @@ export function VendorBillCard({
             </span>
           </div>
           <div className="mt-1 flex min-w-0 items-start justify-between gap-3">
-            <h3 className="min-w-0 flex-1 truncate text-[13px] leading-4 font-bold tracking-[-0.01em] text-on-surface">
+            <h3 className="min-w-0 flex-1 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
               {bill.vendor?.name || "Vendor"}
             </h3>
             <MoneyValue
@@ -133,11 +133,11 @@ export function VendorBillCard({
               className={`shrink-0 ${bill.status === "PAID" ? "text-on-surface-variant/65" : "text-on-surface"}`}
             />
           </div>
-          <p className="mt-1 truncate text-[10px] leading-4 font-medium text-on-surface-variant/75">
+          <p className="mt-1 truncate text-meta font-medium text-on-surface-variant/75">
             {bill.project?.name || "Proyek"} · {bill.billNumber}
           </p>
           {bill.budgetItem?.name ? (
-            <p className="mt-0.5 truncate text-[9px] leading-3 font-medium text-on-surface-variant/55">
+            <p className="mt-0.5 truncate text-eyebrow font-medium text-on-surface-variant/55">
               Budget {bill.budgetItem.name}
             </p>
           ) : null}
@@ -147,7 +147,7 @@ export function VendorBillCard({
 
       {totalScheduledOrPaid > 0 && bill.status !== "PAID" && !isFullyScheduledOrPaid && (
         <div className="mt-2.5 pr-8 pl-12">
-          <div className="flex items-center justify-between gap-3 text-[9px] leading-3 font-bold text-primary">
+          <div className="flex items-center justify-between gap-3 text-eyebrow font-bold text-primary">
             <span>Sudah dijadwalkan</span>
             <span className="shrink-0 tabular-nums">{scheduledPercentage.toFixed(0)}%</span>
           </div>
@@ -160,7 +160,7 @@ export function VendorBillCard({
               className="h-full rounded-full bg-primary"
             />
           </div>
-          <p className="mt-1 truncate text-[9px] leading-3 font-medium text-on-surface-variant/55">
+          <p className="mt-1 truncate text-eyebrow font-medium text-on-surface-variant/55">
             Rp {totalScheduledOrPaid.toLocaleString("id-ID")} dari Rp{" "}
             {amountNum.toLocaleString("id-ID")}
           </p>
@@ -173,12 +173,12 @@ export function VendorBillCard({
           {isOwnerOrFinance ? (
             isFullyScheduledOrPaid ? (
               hasPending ? (
-                <span className="flex items-center gap-1 text-[9px] leading-3 font-bold text-warning">
+                <span className="flex items-center gap-1 text-eyebrow font-bold text-warning">
                   <AppIcon name="schedule" className="text-[13px] leading-none" />
                   Menunggu pencairan
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[9px] leading-3 font-bold text-primary">
+                <span className="flex items-center gap-1 text-eyebrow font-bold text-primary">
                   <AppIcon name="event_available" className="text-[13px] leading-none" />
                   Terjadwal penuh
                 </span>
@@ -192,13 +192,13 @@ export function VendorBillCard({
                 }}
                 whileTap={reduceMotion ? undefined : payablePressScale}
                 transition={transitionSpringSnappy}
-                className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
+                className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-meta font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
               >
                 {totalScheduledOrPaid > 0 ? "Jadwalkan Sisa" : "Jadwalkan Bayar"}
               </motion.button>
             )
           ) : (
-            <span className="text-[9px] leading-3 font-bold text-primary">Terjadwal penuh</span>
+            <span className="text-eyebrow font-bold text-primary">Terjadwal penuh</span>
           )}
         </div>
       ) : null}
@@ -291,10 +291,10 @@ export function VendorPaymentCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center justify-between gap-2">
-            <span className={`truncate text-[9px] leading-3 font-bold ${statusTone}`}>
+            <span className={`truncate text-eyebrow font-bold ${statusTone}`}>
               {presentation.label}
             </span>
-            <span className="shrink-0 text-[9px] leading-3 font-semibold text-on-surface-variant/60">
+            <span className="shrink-0 text-eyebrow font-semibold text-on-surface-variant/60">
               {isCompleted ? "Dicairkan" : "Rencana"}{" "}
               {new Date(payment.paymentDate).toLocaleDateString("id-ID", {
                 day: "numeric",
@@ -303,7 +303,7 @@ export function VendorPaymentCard({
             </span>
           </div>
           <div className="mt-1 flex min-w-0 items-start justify-between gap-3">
-            <h4 className="min-w-0 flex-1 truncate text-[13px] leading-4 font-bold tracking-[-0.01em] text-on-surface">
+            <h4 className="min-w-0 flex-1 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
               {payment.vendorBill?.vendor?.name || "Vendor"}
             </h4>
             <MoneyValue
@@ -314,11 +314,11 @@ export function VendorPaymentCard({
               className={`shrink-0 ${isCompleted ? "text-on-surface-variant/65" : "text-on-surface"}`}
             />
           </div>
-          <p className="mt-1 truncate text-[10px] leading-4 font-medium text-on-surface-variant/75">
+          <p className="mt-1 truncate text-meta font-medium text-on-surface-variant/75">
             {payment.vendorBill?.project?.name || "Proyek"} · {payment.vendorBill?.billNumber}
           </p>
           {payment.bankAccount?.name || payment.referenceNumber ? (
-            <p className="mt-0.5 truncate text-[9px] leading-3 font-medium text-on-surface-variant/55">
+            <p className="mt-0.5 truncate text-eyebrow font-medium text-on-surface-variant/55">
               {payment.bankAccount?.name ?? "Rekening"}
               {payment.referenceNumber ? ` · Ref ${payment.referenceNumber}` : ""}
             </p>
@@ -331,7 +331,7 @@ export function VendorPaymentCard({
         <div className="mt-2 flex min-h-8 items-center justify-end gap-2 pr-8 pl-12">
           {!presentation.canDisburse ? (
             <span
-              className={`text-[9px] leading-3 font-bold ${presentation.status === "REJECTED" ? "text-error" : "text-warning"}`}
+              className={`text-eyebrow font-bold ${presentation.status === "REJECTED" ? "text-error" : "text-warning"}`}
             >
               {presentation.label}
             </span>
@@ -344,12 +344,12 @@ export function VendorPaymentCard({
               }}
               whileTap={reduceMotion ? undefined : payablePressScale}
               transition={transitionSpringSnappy}
-              className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-[10px] leading-4 font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
+              className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-meta font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
             >
               Cairkan
             </motion.button>
           ) : (
-            <span className="flex items-center gap-1 text-[9px] leading-3 font-bold text-primary">
+            <span className="flex items-center gap-1 text-eyebrow font-bold text-primary">
               <AppIcon name="schedule" className="text-[13px] leading-none" />
               Dalam antrean
             </span>

@@ -23,11 +23,7 @@ export function DetailRow({
         {label}
       </p>
       <p className="mt-1 text-sm leading-5 font-bold text-on-surface">{value}</p>
-      {detail && (
-        <p className="mt-1 text-[10px] leading-4 wrap-break-word text-on-surface-variant">
-          {detail}
-        </p>
-      )}
+      {detail && <p className="mt-1 text-meta wrap-break-word text-on-surface-variant">{detail}</p>}
     </div>
   );
 }

@@ -186,7 +186,7 @@ export function AdministrationManager({
         <section className="space-y-2">
           {presentation === "settings" ? (
             <div className="flex min-h-8 items-center justify-between gap-3 px-1">
-              <h3 className="text-[15px] leading-5 font-bold text-on-surface">Tim internal</h3>
+              <h3 className="text-section font-bold text-on-surface">Tim internal</h3>
               <span className="text-[9px] leading-4 font-semibold text-on-surface-variant">
                 {activeUserCount} aktif dari {data.users.length}
               </span>
@@ -223,7 +223,7 @@ export function AdministrationManager({
                       <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
                         {row.name}
                       </span>
-                      <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+                      <span className="block truncate text-meta text-on-surface-variant">
                         {row.email} · {roleLabel[row.roleName] ?? formatBusinessLabel(row.roleName)}
                       </span>
                       {row.mustChangePassword ? (
@@ -252,7 +252,7 @@ export function AdministrationManager({
                   aria-hidden="true"
                 />
                 <p className="mt-2 text-xs font-bold text-on-surface">Belum ada user internal</p>
-                <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
+                <p className="mt-1 text-meta text-on-surface-variant">
                   Tambahkan akun sesuai tanggung jawab operasional.
                 </p>
               </div>
@@ -303,7 +303,7 @@ export function AdministrationManager({
                       <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
                         {row.name}
                       </span>
-                      <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+                      <span className="block truncate text-meta text-on-surface-variant">
                         {row.phone}
                         {row.bankName ? ` · ${row.bankName}` : ""}
                       </span>
@@ -328,7 +328,7 @@ export function AdministrationManager({
                   aria-hidden="true"
                 />
                 <p className="mt-2 text-xs font-bold text-on-surface">Belum ada vendor</p>
-                <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
+                <p className="mt-1 text-meta text-on-surface-variant">
                   Vendor aktif dapat dipakai pada tagihan dan konteks material.
                 </p>
               </div>

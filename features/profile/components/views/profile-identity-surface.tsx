@@ -70,10 +70,7 @@ export function ProfileIdentitySurface({
           <h2 className="mt-2 line-clamp-2 text-[19px] leading-[1.12] font-bold tracking-[-0.02em] text-on-surface max-[430px]:text-[17px]">
             {displayName}
           </h2>
-          <p
-            className="mt-1.5 truncate text-[11px] leading-4 text-on-surface-variant"
-            title={displayEmail}
-          >
+          <p className="mt-1.5 truncate text-support text-on-surface-variant" title={displayEmail}>
             {displayEmail}
           </p>
         </div>
@@ -84,7 +81,7 @@ export function ProfileIdentitySurface({
           <p className="text-[9px] font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
             Akses aplikasi
           </p>
-          <p className="mt-1 text-[13px] leading-4 font-bold text-on-surface">
+          <p className="mt-1 text-row font-bold text-on-surface">
             {accessibleModuleCount} dari {moduleCount} modul tersedia
           </p>
         </div>

@@ -63,7 +63,7 @@ export function RabRevisionHistoryPanel({
                     : formatBusinessLabel(revision.status)}
                 </span>
                 {revision.voidReason && (
-                  <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+                  <span className="block truncate text-meta text-on-surface-variant">
                     {revision.voidReason}
                   </span>
                 )}

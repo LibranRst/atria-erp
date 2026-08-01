@@ -137,9 +137,7 @@ function Facts({ facts }: { readonly facts: readonly ActivityFact[] }): React.JS
             key={`${item.label}-${index}`}
             className="grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] items-center gap-3 px-4 py-3"
           >
-            <span className="text-[11px] leading-4 font-semibold text-on-surface-variant">
-              {item.label}
-            </span>
+            <span className="text-support font-semibold text-on-surface-variant">{item.label}</span>
             <Value value={item.value} />
           </div>
         ))}
@@ -214,12 +212,10 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
       <section className="rounded-3xl bg-white px-4 py-3.5 shadow-surface ring-1 ring-ring-subtle">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[15px] leading-5 font-semibold wrap-break-word text-on-surface">
+            <p className="text-section font-semibold wrap-break-word text-on-surface">
               {detail.title}
             </p>
-            <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">
-              {detail.subtitle}
-            </p>
+            <p className="mt-0.5 text-support text-on-surface-variant">{detail.subtitle}</p>
           </div>
           <span
             className={`shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold tracking-wide uppercase ${statusClass(detail.statusTone)}`}
@@ -240,7 +236,7 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
             <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
               Waktu
             </p>
-            <p className="mt-0.5 text-[10px] leading-4 font-semibold text-on-surface">
+            <p className="mt-0.5 text-meta font-semibold text-on-surface">
               {formatDate(detail.occurredAt)}
             </p>
           </div>
@@ -272,7 +268,7 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
       {detail.evidenceIncomplete ? (
         <div className="flex gap-3 rounded-[20px] bg-warning-light px-3.5 py-3 text-warning">
           <AppIcon name="warning" className="mt-0.5 h-4 w-4 shrink-0" />
-          <p className="text-[11px] leading-4">
+          <p className="text-support">
             Riwayat lama belum menyimpan semua perubahan. Hanya data yang tersedia yang ditampilkan.
           </p>
         </div>
@@ -396,7 +392,7 @@ function ActiveDetailSheetInner({
         <div className="rounded-3xl bg-white px-4 py-5 text-center shadow-surface">
           <AppIcon name="warning" className="mx-auto h-5 w-5 text-error" />
           <p className="mt-2 text-sm font-semibold text-on-surface">Detail belum dapat dimuat</p>
-          <p className="mt-1 text-[11px] leading-4 text-on-surface-variant">{state.message}</p>
+          <p className="mt-1 text-support text-on-surface-variant">{state.message}</p>
           <Button
             type="button"
             variant="secondary"

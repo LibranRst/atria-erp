@@ -58,11 +58,14 @@ export function PackageSetupContent({
             className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-surface-container-low p-3 text-left"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-primary">
-              <AppIcon name={code === "TUKANG" ? "engineering" : "domain"} className="text-[19px]" />
+              <AppIcon
+                name={code === "TUKANG" ? "engineering" : "domain"}
+                className="text-[19px]"
+              />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm leading-5 font-bold">{item.name}</span>
-              <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+              <span className="block truncate text-meta text-on-surface-variant">
                 {item.area}
                 {item.vendorName ? ` - ${item.vendorName}` : ""}
               </span>
@@ -110,7 +113,7 @@ export function PackageSetupContent({
         </div>
       )}
       {!canEdit && (
-        <p className="rounded-2xl bg-primary/5 p-3 text-[10px] leading-4 text-primary">
+        <p className="rounded-2xl bg-primary/5 p-3 text-meta text-primary">
           Tahap ini menunggu PM, Owner, atau Finance.
         </p>
       )}

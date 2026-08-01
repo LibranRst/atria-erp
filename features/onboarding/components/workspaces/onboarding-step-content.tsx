@@ -37,7 +37,7 @@ function FactRow({
       />
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-bold text-on-surface">{title}</span>
-        <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">{detail}</span>
+        <span className="mt-0.5 block text-meta text-on-surface-variant">{detail}</span>
       </span>
     </div>
   );
@@ -55,7 +55,7 @@ function SourceError({
     <div className="rounded-3xl bg-white px-5 py-6 text-center ring-1 ring-ring-subtle">
       <AppIcon name="sync_problem" className="text-[28px] text-warning" />
       <p className="mt-2 text-[13px] font-bold text-on-surface">Data step belum dapat dimuat</p>
-      <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">{source.message}</p>
+      <p className="mt-1 text-meta text-on-surface-variant">{source.message}</p>
       <button
         type="button"
         onClick={retry}
@@ -156,7 +156,7 @@ function OnboardingSummary({
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] font-bold text-on-surface">{item.label}</span>
-                  <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
+                  <span className="mt-0.5 block text-meta text-on-surface-variant">
                     {item.detail}
                   </span>
                 </span>

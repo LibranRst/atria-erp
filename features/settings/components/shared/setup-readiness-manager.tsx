@@ -102,7 +102,7 @@ export function SetupReadinessManager({
                 : "Lanjutkan onboarding"}
           </Link>
         ) : (
-          <p className="mt-4 border-t border-white/10 pt-3 text-[10px] leading-4 text-white/55">
+          <p className="mt-4 border-t border-white/10 pt-3 text-meta text-white/55">
             Progress onboarding hanya dapat diubah Owner. Aksi material tetap mengikuti permission
             role Anda.
           </p>
@@ -153,7 +153,7 @@ export function SetupReadinessManager({
                     <span className="block text-[13px] font-bold text-on-surface">
                       {item.label}
                     </span>
-                    <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
+                    <span className="mt-0.5 block text-meta text-on-surface-variant">
                       {item.detail}
                     </span>
                   </span>

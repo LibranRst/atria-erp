@@ -293,7 +293,7 @@ export function ApprovalList({
             <p className="font-mono text-[36px] leading-none font-black text-on-surface max-[430px]:text-[32px]">
               {approvals.length}
             </p>
-            <p className="text-[10px] leading-4 font-semibold text-on-surface-variant">
+            <p className="text-meta font-semibold text-on-surface-variant">
               persetujuan menunggu keputusan
             </p>
           </div>

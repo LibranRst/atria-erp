@@ -40,7 +40,7 @@ export function ProfileAccessList({
                   <AppIcon name={group.iconName} className="text-[18px] leading-none" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] leading-4 font-bold text-on-surface">
+                  <span className="block truncate text-row font-bold text-on-surface">
                     {group.title}
                   </span>
                   <span className="mt-1 line-clamp-1 block text-[10px] leading-[1.3] text-on-surface-variant">
@@ -82,7 +82,7 @@ export function ProfileAccessList({
                 <AppIcon name={selectedGroup.iconName} className="text-[20px] leading-none" />
               </span>
               <div className="min-w-0">
-                <p className="text-[13px] leading-4 font-bold text-on-surface">
+                <p className="text-row font-bold text-on-surface">
                   {selectedGroup.activePermissionDescriptions.length > 0
                     ? `${selectedGroup.activePermissionDescriptions.length} hak tersedia`
                     : "Belum tersedia untuk peran ini"}

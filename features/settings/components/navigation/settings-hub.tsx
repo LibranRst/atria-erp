@@ -215,7 +215,7 @@ export function SettingsHub({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-[13px] leading-4 font-bold text-on-surface">
+                      <span className="truncate text-row font-bold text-on-surface">
                         {module.title}
                       </span>
                       <SettingsStatusLabel

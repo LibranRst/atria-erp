@@ -42,7 +42,7 @@ export function OpeningInventoryWorkspace({
             Fondasi inventory
           </p>
           <h2 className="text-[20px] font-bold tracking-tight text-on-surface">Saldo awal stok</h2>
-          <p className="text-[11px] leading-4 text-on-surface-variant">
+          <p className="text-support text-on-surface-variant">
             Catat stok fisik yang sudah dimiliki sebelum aktivitas gudang berjalan di Atria.
           </p>
         </header>
@@ -72,7 +72,7 @@ export function OpeningInventoryWorkspace({
                       <span className="block truncate text-[11px] leading-5 font-bold text-on-surface">
                         {row.materialName} · {row.locationName}
                       </span>
-                      <span className="block text-[9px] leading-3 text-on-surface-variant">
+                      <span className="block text-eyebrow text-on-surface-variant">
                         {row.ineligibleReason}
                       </span>
                     </span>
@@ -92,7 +92,7 @@ export function OpeningInventoryWorkspace({
             tone="warning"
           />
           {setupOnly ? (
-            <p className="border-t border-black/5.5 px-4 py-3 text-[10px] leading-4 text-on-surface-variant">
+            <p className="border-t border-black/5.5 px-4 py-3 text-meta text-on-surface-variant">
               Kembali ke tab Lokasi & Material pada onboarding untuk melengkapi prasyarat.
             </p>
           ) : (

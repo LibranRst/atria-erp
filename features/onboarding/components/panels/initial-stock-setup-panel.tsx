@@ -13,7 +13,11 @@ import { OpeningInventoryWorkspace } from "@/features/materials/components/works
 import { OnboardingFinanceReview } from "@/features/onboarding/components/workspaces/onboarding-finance-review";
 import { startDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
 import type { DeveloperAccountSimulationState } from "@/lib/auth/developer-account-simulation";
-import { OnboardingNotice, OnboardingStage, OnboardingSurface } from "../shared/onboarding-primitives";
+import {
+  OnboardingNotice,
+  OnboardingStage,
+  OnboardingSurface,
+} from "../shared/onboarding-primitives";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
 function batchStatus(status: string): string {
@@ -104,12 +108,12 @@ export function InitialStockSetupPanel({
                 <p className="text-[13px] leading-5 font-bold text-on-surface">
                   Saldo awal sudah disetujui
                 </p>
-                <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
+                <p className="mt-1 text-meta text-on-surface-variant">
                   Stok fisik dan harga rata-rata sudah ditambahkan oleh{" "}
                   {postedBatch.approvedByName ?? "pemeriksa"}. Kas tidak berubah.
                 </p>
                 {pendingBatchCount > 0 ? (
-                  <p className="mt-2 text-[10px] leading-4 font-semibold text-warning">
+                  <p className="mt-2 text-meta font-semibold text-warning">
                     {pendingBatchCount} pengajuan lain masih menunggu persetujuan.
                   </p>
                 ) : null}
@@ -346,7 +350,7 @@ export function InitialStockSetupPanel({
               <p className="mt-1 text-xs leading-4 font-bold text-on-surface">
                 {financeTarget.name} · Finance Admin
               </p>
-              <p className="mt-0.5 truncate text-[10px] leading-4 text-on-surface-variant">
+              <p className="mt-0.5 truncate text-meta text-on-surface-variant">
                 {financeTarget.email}
               </p>
             </div>
@@ -354,7 +358,7 @@ export function InitialStockSetupPanel({
               <p className="text-[9px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
                 Konsekuensi audit
               </p>
-              <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
+              <p className="mt-1 text-meta text-on-surface-variant">
                 Keputusan untuk batch {simulationConfirmationBatch.batchNumber} tercatat atas
                 identitas Finance ini. Anda dapat kembali ke Owner tanpa membuat keputusan.
               </p>

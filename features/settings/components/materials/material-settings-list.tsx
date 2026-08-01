@@ -32,7 +32,7 @@ export function MaterialSettingsList({
                   {material.name}
                 </span>
               </span>
-              <span className="mt-1 block truncate text-[10px] leading-4 text-on-surface-variant">
+              <span className="mt-1 block truncate text-meta text-on-surface-variant">
                 {[material.brand, material.code, material.color, material.unit]
                   .filter(Boolean)
                   .join(" · ") || "Detail material belum dilengkapi"}

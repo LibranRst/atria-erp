@@ -25,7 +25,7 @@ describe("developer account simulation UI contract", () => {
     expect(source).toContain("bg-white/88");
     expect(source).toContain("backdrop-blur-xl");
     expect(source).toContain("leading-5 font-bold text-on-surface");
-    expect(source).toContain("text-[10px] leading-4 text-on-surface-variant");
+    expect(source).toContain("text-meta text-on-surface-variant");
     expect(source).not.toContain("mt-0.5 block truncate");
     expect(source).toContain('"Kembali"');
     expect(source).toContain("min-h-12");

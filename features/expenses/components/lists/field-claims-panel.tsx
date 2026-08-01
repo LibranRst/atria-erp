@@ -190,7 +190,7 @@ function FieldClaimsSummary({
           <button
             type="button"
             onClick={onOpenExpenseDrawer}
-            className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] leading-4 font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
+            className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
           >
             <AppIcon name="add" className="text-[14px] leading-none" />
             Tambah
@@ -200,9 +200,7 @@ function FieldClaimsSummary({
     >
       <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
         <div className="min-w-0">
-          <p className="text-[9px] leading-3 font-semibold text-on-surface-variant/60">
-            Total aktif
-          </p>
+          <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total aktif</p>
           <MoneyValue
             amount={activeClaimTotal}
             variant="compactWithFull"
@@ -210,7 +208,7 @@ function FieldClaimsSummary({
             className="mt-1"
           />
         </div>
-        <p className="max-w-36.25 text-right text-[10px] leading-4 text-on-surface-variant/70">
+        <p className="max-w-36.25 text-right text-meta text-on-surface-variant/70">
           Dana yang masih berada dalam alur verifikasi hingga pencairan.
         </p>
       </div>

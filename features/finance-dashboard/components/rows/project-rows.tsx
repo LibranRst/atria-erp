@@ -48,10 +48,10 @@ export function ProjectRiskRow({
               <AppIcon name="monitoring" className="text-[18px]" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] leading-4 font-semibold tracking-[-0.01em] text-on-surface">
+              <p className="truncate text-row font-semibold tracking-[-0.01em] text-on-surface">
                 {project.projectName}
               </p>
-              <p className="mt-0.5 truncate text-[10px] leading-4 text-on-surface-variant/75">
+              <p className="mt-0.5 truncate text-meta text-on-surface-variant/75">
                 {project.riskReason}
               </p>
             </div>
@@ -127,7 +127,7 @@ export function ProjectRiskRow({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-[13px] leading-4 font-semibold tracking-[-0.01em] text-on-surface">
+              <p className="truncate text-row font-semibold tracking-[-0.01em] text-on-surface">
                 {project.projectName}
               </p>
               <span
@@ -136,7 +136,7 @@ export function ProjectRiskRow({
                 {projectHealthLabel(project.effectiveHealth)}
               </span>
             </div>
-            <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant/75">
+            <p className="mt-0.5 line-clamp-2 text-meta text-on-surface-variant/75">
               {project.riskReason}
             </p>
           </div>

@@ -116,7 +116,7 @@ export function RapMaterialFormDrawer({
                       })),
                   ]}
                 />
-                <p className="px-4 pt-1 pb-3 text-[10px] leading-4 text-on-surface-variant">
+                <p className="px-4 pt-1 pb-3 text-meta text-on-surface-variant">
                   Biaya dan rekomendasi harga klien berasal dari rincian Library, lalu disimpan
                   sebagai snapshot proyek.
                 </p>

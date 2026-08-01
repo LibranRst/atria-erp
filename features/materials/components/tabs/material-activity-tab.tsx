@@ -141,13 +141,13 @@ export function MaterialActivityTab({
                     <ArrowDownToLine className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="grid min-w-0 flex-1 gap-1">
-                    <span className="truncate text-[13px] leading-4 font-bold text-on-surface">
+                    <span className="truncate text-row font-bold text-on-surface">
                       {row.receiptNumber}
                     </span>
                     <span className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
                       {row.projectName} · {row.locationName}
                     </span>
-                    <span className="truncate text-[9px] leading-3 text-on-surface-variant/65">
+                    <span className="truncate text-eyebrow text-on-surface-variant/65">
                       {formatMaterialDate(row.receivedAt)} · {row.receivedByName}
                     </span>
                   </span>
@@ -255,9 +255,7 @@ function TransferRow({
         <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
       </span>
       <div className="grid min-w-0 flex-1 gap-1">
-        <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
-          {row.transferNumber}
-        </p>
+        <p className="truncate text-row font-bold text-on-surface">{row.transferNumber}</p>
         <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
           {row.fromLocationName} → {row.toLocationName} · {row.items.length} material
         </p>
@@ -286,9 +284,7 @@ function CountRow({
       </span>
       <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-center justify-between gap-2">
-          <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
-            {row.countNumber}
-          </p>
+          <p className="truncate text-row font-bold text-on-surface">{row.countNumber}</p>
           <Badge status={materialBadgeTone(row.status)}>{formatMaterialStatus(row.status)}</Badge>
         </div>
         <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">

@@ -139,7 +139,7 @@ export function MaterialImportSheet({
       <div className="space-y-4">
         <section className="rounded-[26px] bg-white p-4 shadow-control ring-1 ring-ring-subtle">
           <p className="text-[13px] font-bold text-on-surface">Template CSV</p>
-          <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
+          <p className="mt-1 text-meta text-on-surface-variant">
             Wajib: name, category, unit, location. Opsional: minimum_stock, last_purchase_price,
             vendor, specification, brand, code, color.
           </p>
@@ -193,7 +193,7 @@ export function MaterialImportSheet({
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-error/10 text-[10px] font-bold text-error">
                     {error.rowNumber}
                   </span>
-                  <p className="text-[10px] leading-4 text-error">{error.message}</p>
+                  <p className="text-meta text-error">{error.message}</p>
                 </div>
               ))}
             </div>

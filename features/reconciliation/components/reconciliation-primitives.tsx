@@ -74,7 +74,7 @@ export function ReconciliationEmptyState({
               ? "Belum ada mutasi bank"
               : "Semua catatan sudah cocok"}
         </p>
-        <p className="mt-0.5 text-[10px] leading-4 text-on-surface-variant">
+        <p className="mt-0.5 text-meta text-on-surface-variant">
           {history
             ? "Pasangan yang sudah dikonfirmasi akan tersimpan di sini."
             : statement
@@ -122,7 +122,7 @@ export function ReconciliationRow({
           <span className="line-clamp-2 text-[13px] leading-5 font-semibold tracking-[-0.01em] text-on-surface">
             {title}
           </span>
-          <span className="mt-1 block truncate text-[10px] leading-4 font-medium text-on-surface-variant/70">
+          <span className="mt-1 block truncate text-meta font-medium text-on-surface-variant/70">
             {context}
           </span>
         </span>
@@ -137,7 +137,7 @@ export function ReconciliationRow({
       </span>
       <span className="mt-3 flex min-w-0 items-center justify-between gap-3 rounded-xl bg-surface-container-low p-3">
         <span
-          className={`flex max-w-[42%] min-w-0 items-center gap-1.5 text-[10px] leading-4 font-semibold ${statusClass}`}
+          className={`flex max-w-[42%] min-w-0 items-center gap-1.5 text-meta font-semibold ${statusClass}`}
         >
           <AppIcon
             name={
@@ -205,7 +205,7 @@ export function ReconciliationHistoryRow({
           </span>
           <span className="flex min-w-0 items-center gap-2 pl-0.5">
             <AppIcon name="link" className="shrink-0 text-[13px] leading-none text-success" />
-            <span className="truncate text-[11px] leading-4 font-medium text-on-surface-variant/75">
+            <span className="truncate text-support font-medium text-on-surface-variant/75">
               {item.statementDescription}
             </span>
           </span>
@@ -218,7 +218,7 @@ export function ReconciliationHistoryRow({
         </span>
       </span>
       <span className="mt-3 flex min-w-0 items-center justify-between gap-3 rounded-xl bg-surface-container-low p-3">
-        <span className="flex max-w-[42%] min-w-0 items-center gap-1.5 text-[10px] leading-4 font-semibold text-success">
+        <span className="flex max-w-[42%] min-w-0 items-center gap-1.5 text-meta font-semibold text-success">
           <AppIcon name="check_circle" className="shrink-0 text-[14px] leading-none" />
           <span className="truncate">Cocok {formatReconciliationDate(item.reconciledAt)}</span>
         </span>
@@ -252,7 +252,7 @@ export function SheetMoneySummary({
   return (
     <section className="px-1 py-1 text-center" aria-label={label}>
       <p
-        className={`flex items-center justify-center gap-1.5 text-[10px] leading-4 font-bold ${confirmed ? "text-success" : "text-on-surface-variant"}`}
+        className={`flex items-center justify-center gap-1.5 text-meta font-bold ${confirmed ? "text-success" : "text-on-surface-variant"}`}
       >
         <AppIcon
           name={confirmed ? "check_circle" : directionIcon(type)}
@@ -269,7 +269,7 @@ export function SheetMoneySummary({
         size="hero"
         className="mx-auto mt-2 w-full"
       />
-      <p className="mt-1.5 text-[10px] leading-4 font-medium text-on-surface-variant/70">{meta}</p>
+      <p className="mt-1.5 text-meta font-medium text-on-surface-variant/70">{meta}</p>
     </section>
   );
 }
@@ -291,7 +291,7 @@ export function EvidenceDescription({
       />
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] leading-5 font-semibold text-on-surface">{title}</span>
-        <span className="mt-0.5 block text-[10px] leading-4 font-medium text-on-surface-variant/70">
+        <span className="mt-0.5 block text-meta font-medium text-on-surface-variant/70">
           {description}
         </span>
       </span>
@@ -308,10 +308,8 @@ export function EvidenceMetaRow({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-12 items-start justify-between gap-4 px-4 py-3">
-      <span className="shrink-0 text-[10px] leading-4 font-medium text-on-surface-variant">
-        {label}
-      </span>
-      <span className="min-w-0 text-right text-[11px] leading-4 font-semibold wrap-break-word text-on-surface">
+      <span className="shrink-0 text-meta font-medium text-on-surface-variant">{label}</span>
+      <span className="min-w-0 text-right text-support font-semibold wrap-break-word text-on-surface">
         {value}
       </span>
     </div>

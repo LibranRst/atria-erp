@@ -354,7 +354,7 @@ export function BudgetSettingsManager({
       {canManage && dirty ? (
         <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 min-w-0 space-y-1 rounded-[22px] bg-white/96 p-2 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl">
           <p
-            className={`px-1 text-[11px] leading-4 ${overLimit ? "font-bold text-error" : "text-on-surface-variant"}`}
+            className={`px-1 text-support ${overLimit ? "font-bold text-error" : "text-on-surface-variant"}`}
           >
             {overLimit
               ? "Total kategori melebihi 100%. Kurangi rasio sebelum menyimpan."

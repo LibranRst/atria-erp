@@ -193,9 +193,7 @@ export function MaterialLocationStockRow({
     <div className="py-3">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
-            {row.locationName}
-          </p>
+          <p className="truncate text-row font-bold text-on-surface">{row.locationName}</p>
           <p className="mt-1 truncate text-[10px] leading-[1.3] text-on-surface-variant">
             Fisik {formatMaterialQuantity(row.currentStock)} · terreservasi{" "}
             {formatMaterialQuantity(row.reservedStock)} · minimum{" "}
@@ -206,7 +204,7 @@ export function MaterialLocationStockRow({
           <p className="text-[8px] font-bold tracking-wide text-on-surface-variant/65 uppercase">
             Tersedia
           </p>
-          <p className="mt-1 font-mono text-[13px] leading-4 font-black text-on-surface tabular-nums">
+          <p className="mt-1 font-mono text-row font-black text-on-surface tabular-nums">
             {formatMaterialQuantity(row.availableStock)} {row.unit}
           </p>
         </div>
@@ -257,7 +255,7 @@ function ShortageRow({
   return (
     <div className="flex min-h-17 items-center justify-between gap-3 py-3">
       <div className="grid min-w-0 flex-1 gap-1">
-        <p className="truncate text-[13px] leading-4 font-bold text-on-surface">{area}</p>
+        <p className="truncate text-row font-bold text-on-surface">{area}</p>
         <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
           Tersedia {formatMaterialQuantity(availableStock)} dari kebutuhan{" "}
           {formatMaterialQuantity(totalQuantity)}

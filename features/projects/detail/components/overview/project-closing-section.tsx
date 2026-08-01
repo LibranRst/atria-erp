@@ -30,7 +30,7 @@ export function ProjectClosingSection({
       <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
         Penutupan finansial
       </p>
-      <h2 className="mt-0.5 text-[17px] leading-6 font-semibold text-on-surface">
+      <h2 className="mt-0.5 text-title font-semibold text-on-surface">
         Checklist penutupan proyek
       </h2>
       <p className="mt-1 text-xs leading-5 text-on-surface-variant">
@@ -46,7 +46,7 @@ export function ProjectClosingSection({
         {closingPending ? "Memeriksa…" : "Periksa kesiapan closing"}
       </button>
       {closingMessage && (
-        <p className="mt-2 rounded-2xl bg-primary/5 p-3 text-[11px] leading-4 text-primary">
+        <p className="mt-2 rounded-2xl bg-primary/5 p-3 text-support text-primary">
           {closingMessage}
         </p>
       )}
@@ -61,7 +61,7 @@ export function ProjectClosingSection({
             <ClosingFact label="Posisi kas" amount={closingChecklist.cashPosition} />
           </div>
           {closingChecklist.documentedReconciliationExceptionCount > 0 ? (
-            <p className="rounded-2xl bg-warning/8 px-3 py-2.5 text-[10px] leading-4 text-warning">
+            <p className="rounded-2xl bg-warning/8 px-3 py-2.5 text-meta text-warning">
               {closingChecklist.documentedReconciliationExceptionCount} transaksi kas memiliki
               pengecualian rekonsiliasi tercatat. Periksa alasannya sebelum menyelesaikan proyek.
             </p>
@@ -69,7 +69,7 @@ export function ProjectClosingSection({
           {closingChecklist.blockers.length > 0 ? (
             <div className="rounded-2xl bg-error-container/25 p-3">
               <p className="text-xs font-bold text-error">Belum dapat ditutup</p>
-              <ul className="mt-2 space-y-1 text-[11px] leading-4 text-error">
+              <ul className="mt-2 space-y-1 text-support text-error">
                 {closingChecklist.blockers.map((blocker) => (
                   <li key={blocker}>• {blocker}</li>
                 ))}

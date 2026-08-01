@@ -139,11 +139,7 @@ export function Field({
         {label}
       </label>
       {children}
-      {hint && (
-        <span className="block text-[10px] leading-4 font-normal text-on-surface-variant">
-          {hint}
-        </span>
-      )}
+      {hint && <span className="block text-meta font-normal text-on-surface-variant">{hint}</span>}
     </div>
   );
 }
@@ -155,7 +151,7 @@ export const textareaClass =
 
 export function SettingsNotice(): React.JSX.Element {
   return (
-    <div className="flex min-w-0 items-start gap-2.5 rounded-2xl bg-primary/5 px-3 py-2.5 text-[11px] leading-4 text-on-surface-variant ring-1 ring-primary/15">
+    <div className="flex min-w-0 items-start gap-2.5 rounded-2xl bg-primary/5 px-3 py-2.5 text-support text-on-surface-variant ring-1 ring-primary/15">
       <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
       <p className="min-w-0">
         <strong className="font-bold text-on-surface">Untuk proyek baru.</strong> Default ini tidak

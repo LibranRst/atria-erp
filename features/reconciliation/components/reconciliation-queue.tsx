@@ -130,7 +130,7 @@ export function ReconciliationQueue({
             <p className="font-mono text-[36px] leading-none font-black text-on-surface tabular-nums max-[430px]:text-[32px]">
               {actionRequiredCount}
             </p>
-            <p className="text-[10px] leading-4 font-semibold text-on-surface-variant">
+            <p className="text-meta font-semibold text-on-surface-variant">
               transaksi perlu tindakan
             </p>
           </div>
@@ -165,7 +165,7 @@ export function ReconciliationQueue({
       <section className="space-y-2">
         <div className="flex min-h-11 items-center justify-between gap-3 px-1">
           <div className="min-w-0">
-            <h2 className="truncate text-[15px] leading-5 font-bold tracking-[-0.015em] text-on-surface">
+            <h2 className="truncate text-section font-bold tracking-[-0.015em] text-on-surface">
               {activeView === "history"
                 ? "Sudah cocok"
                 : activeView === "cash"
@@ -176,7 +176,7 @@ export function ReconciliationQueue({
                     ? "Perlu tindakan"
                     : "Belum cocok"}
             </h2>
-            <p className="mt-0.5 truncate text-[10px] leading-4 text-on-surface-variant">
+            <p className="mt-0.5 truncate text-meta text-on-surface-variant">
               {activeView === "cash"
                 ? "Catatan yang siap dicocokkan ditampilkan lebih dahulu."
                 : activeView === "history"
@@ -225,7 +225,7 @@ export function ReconciliationQueue({
                 ) : null}
                 {passiveCashTransactions.length > 0 ? (
                   <div className="space-y-2">
-                    <p className="px-1 text-[10px] leading-4 font-bold tracking-[0.08em] text-on-surface-variant/65 uppercase">
+                    <p className="px-1 text-meta font-bold tracking-[0.08em] text-on-surface-variant/65 uppercase">
                       Pengecualian dicatat
                     </p>
                     <GroupedSurface className="divide-y divide-black/5.5">
@@ -248,7 +248,7 @@ export function ReconciliationQueue({
               ) : null}
               {passiveStatementRows.length > 0 ? (
                 <div className="space-y-2">
-                  <p className="px-1 text-[10px] leading-4 font-bold tracking-[0.08em] text-on-surface-variant/65 uppercase">
+                  <p className="px-1 text-meta font-bold tracking-[0.08em] text-on-surface-variant/65 uppercase">
                     Belum ada kandidat
                   </p>
                   <GroupedSurface className="divide-y divide-black/5.5">

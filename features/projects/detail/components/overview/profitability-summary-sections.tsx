@@ -48,7 +48,7 @@ export function ProfitProjectionSection({
         <MarginFact label="Plafon" amount={totalAllocated} />
         <MarginFact label="Sisa plafon" amount={totalRemaining} danger={totalRemaining < 0} />
       </div>
-      <div className="mt-3 rounded-[18px] bg-white/[0.07] px-3 py-2.5 text-[10px] leading-4 text-white/65">
+      <div className="mt-3 rounded-[18px] bg-white/[0.07] px-3 py-2.5 text-meta text-white/65">
         {risky
           ? "Margin berada di bawah batas aman. Periksa realisasi biaya dan perubahan scope."
           : "Margin proyeksi masih positif berdasarkan budget yang disetujui."}
@@ -70,7 +70,7 @@ export function CashRealizationSection({
     <section className="space-y-2.5">
       <header className="px-1">
         <h2 className="text-[17px] font-semibold text-on-surface">Realisasi kas</h2>
-        <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">
+        <p className="mt-0.5 text-support text-on-surface-variant">
           Dana klien yang diterima dibanding pengeluaran kas proyek.
         </p>
       </header>
@@ -79,7 +79,7 @@ export function CashRealizationSection({
         <CashRow label="Pengeluaran kas" amount={totalSpent} />
         <CashRow label="Posisi kas bersih" amount={cashPosition} strong danger={cashPosition < 0} />
       </div>
-      <p className="px-1 text-[10px] leading-4 text-on-surface-variant">
+      <p className="px-1 text-meta text-on-surface-variant">
         Posisi kas bukan laba dan tidak memasukkan pemakaian stok non-kas.
       </p>
     </section>

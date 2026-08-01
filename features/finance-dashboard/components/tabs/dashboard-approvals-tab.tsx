@@ -197,7 +197,7 @@ export function ApprovalsTab({
             <p className="font-mono text-[36px] leading-none font-black text-on-surface max-[430px]:text-[32px]">
               {approvalSummary.totalCount}
             </p>
-            <p className="text-[10px] leading-4 font-semibold text-on-surface-variant">
+            <p className="text-meta font-semibold text-on-surface-variant">
               persetujuan menunggu keputusan
             </p>
           </div>
@@ -234,7 +234,7 @@ export function ApprovalsTab({
           </DashboardTabEmpty>
         ) : (
           <>
-            <div className="mx-3 mt-3 rounded-[15px] bg-surface-container-low/65 px-3 py-2 text-[10px] leading-4 text-on-surface-variant">
+            <div className="mx-3 mt-3 rounded-[15px] bg-surface-container-low/65 px-3 py-2 text-meta text-on-surface-variant">
               Diurutkan berdasarkan risiko budget, jatuh tempo, lama menunggu, dan nominal.
             </div>
             <RowGroup>

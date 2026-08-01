@@ -61,7 +61,7 @@ export function ProjectActivationSheet({
             Keputusan operasional
           </p>
           <p className="mt-1 text-sm font-bold text-on-surface">{projectName}</p>
-          <p className="mt-1 text-[11px] leading-4 text-on-surface-variant">
+          <p className="mt-1 text-support text-on-surface-variant">
             Setelah aktif, proyek dapat digunakan untuk biaya, tagihan, penerimaan barang, dan
             pergerakan stok.
           </p>

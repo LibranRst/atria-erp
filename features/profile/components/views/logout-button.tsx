@@ -46,9 +46,7 @@ export function LogoutButton(): React.JSX.Element {
           <AppIcon name="logout" className="text-[18px] leading-none" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] leading-4 font-bold text-error">
-            Keluar dari akun
-          </span>
+          <span className="block truncate text-row font-bold text-error">Keluar dari akun</span>
           <span className="mt-1 block truncate text-[10px] leading-[1.3] text-on-surface-variant">
             Akhiri sesi pada perangkat ini.
           </span>

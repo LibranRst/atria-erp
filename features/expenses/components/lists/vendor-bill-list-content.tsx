@@ -103,7 +103,7 @@ export function VendorBillListContent({
               <button
                 type="button"
                 onClick={onAddBill}
-                className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] leading-4 font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
+                className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
               >
                 <AppIcon name="add" className="text-[14px] leading-none" />
                 Tambah
@@ -113,7 +113,7 @@ export function VendorBillListContent({
         >
           <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
             <div className="min-w-0">
-              <p className="text-[9px] leading-3 font-semibold text-on-surface-variant/60">
+              <p className="text-eyebrow font-semibold text-on-surface-variant/60">
                 Total tagihan tercatat
               </p>
               <MoneyValue

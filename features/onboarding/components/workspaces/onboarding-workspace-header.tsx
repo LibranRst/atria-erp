@@ -53,9 +53,7 @@ export function OnboardingWorkspaceHeader({
           <p className="text-[9px] leading-5 font-bold tracking-[0.14em] text-on-surface-variant uppercase">
             Setup Atria
           </p>
-          <p className="truncate text-[11px] leading-4 font-semibold text-on-surface">
-            {progress.label}
-          </p>
+          <p className="truncate text-support font-semibold text-on-surface">{progress.label}</p>
         </div>
         <div className="flex justify-end">
           <motion.button

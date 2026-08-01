@@ -17,7 +17,7 @@ function SectionHeader({
 }): React.JSX.Element {
   return (
     <div className="flex items-center justify-between gap-3 px-1">
-      <h2 className="min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5">
+      <h2 className="min-w-0 truncate text-title font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5">
         {title}
       </h2>
       {meta ? (
@@ -70,9 +70,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                 <AppIcon name="verified_user" className="text-[18px] leading-none" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
-                  Peran autentikasi
-                </p>
+                <p className="truncate text-row font-bold text-on-surface">Peran autentikasi</p>
                 <p className="mt-1 truncate text-[10px] leading-[1.3] text-on-surface-variant">
                   Menentukan menu dan tindakan yang tersedia.
                 </p>
@@ -93,9 +91,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                 />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
-                  Status akun
-                </p>
+                <p className="truncate text-row font-bold text-on-surface">Status akun</p>
                 <p className="mt-1 truncate text-[10px] leading-[1.3] text-on-surface-variant">
                   Akses masuk dan aktivitas ERP.
                 </p>
@@ -119,9 +115,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                   <AppIcon name="tune" className="text-[18px] leading-none" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
-                    Pengaturan ERP
-                  </p>
+                  <p className="truncate text-row font-bold text-on-surface">Pengaturan ERP</p>
                   <p className="mt-1 truncate text-[10px] leading-[1.3] text-on-surface-variant">
                     Kelola default dan master data sesuai akses.
                   </p>

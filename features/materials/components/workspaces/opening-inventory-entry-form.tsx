@@ -194,7 +194,7 @@ export function OpeningInventoryEntryForm({
               <span className="block text-[12px] leading-4 font-bold text-on-surface">
                 Total saldo awal
               </span>
-              <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
+              <span className="mt-0.5 block text-meta text-on-surface-variant">
                 {submittedItems.length} item siap diajukan
               </span>
             </span>
@@ -212,10 +212,10 @@ export function OpeningInventoryEntryForm({
               className="mt-0.5 shrink-0 text-[18px] text-on-surface-variant/65"
             />
             <span className="min-w-0">
-              <span className="block text-[11px] leading-4 font-semibold text-on-surface">
+              <span className="block text-support font-semibold text-on-surface">
                 Belum ada mutasi yang diposting
               </span>
-              <span className="mt-0.5 block text-[10px] leading-4 text-on-surface-variant">
+              <span className="mt-0.5 block text-meta text-on-surface-variant">
                 Stok, kas, utang vendor, dan biaya aktual proyek tetap sama sampai pengajuan
                 disetujui.
               </span>
@@ -229,7 +229,7 @@ export function OpeningInventoryEntryForm({
         tidak dapat menyetujui pengajuannya sendiri.
       </FormRiskNotice>
       {!formComplete && submitDisabledReason ? (
-        <p className="flex min-h-12 items-center gap-2 rounded-[18px] bg-warning/8 px-3.5 py-2.5 text-[10px] leading-4 text-on-surface-variant ring-1 ring-warning/8">
+        <p className="flex min-h-12 items-center gap-2 rounded-[18px] bg-warning/8 px-3.5 py-2.5 text-meta text-on-surface-variant ring-1 ring-warning/8">
           <AppIcon name="info" className="shrink-0 text-[17px] text-warning" />
           {submitDisabledReason}
         </p>

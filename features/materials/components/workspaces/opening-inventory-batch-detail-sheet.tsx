@@ -113,7 +113,7 @@ export function OpeningInventoryBatchDetailSheet({
               <span className="block truncate text-[14px] leading-5 font-bold text-on-surface">
                 Saldo awal stok
               </span>
-              <span className="mt-0.5 block truncate text-[10px] leading-4 text-on-surface-variant">
+              <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
                 {new Intl.DateTimeFormat("id-ID", {
                   dateStyle: "long",
                 }).format(new Date(presentedBatch.cutoverDate))}

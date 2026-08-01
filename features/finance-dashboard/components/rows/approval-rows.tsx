@@ -72,9 +72,7 @@ export function ApprovalWorkbenchRow({
             <p className="mt-1 line-clamp-1 text-[12px] leading-5 font-semibold text-on-surface">
               {item.description}
             </p>
-            <p className="truncate text-[10px] leading-4 text-on-surface-variant/75">
-              {item.projectName}
-            </p>
+            <p className="truncate text-meta text-on-surface-variant/75">{item.projectName}</p>
           </div>
           <span
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"

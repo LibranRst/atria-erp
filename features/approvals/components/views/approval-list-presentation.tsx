@@ -83,7 +83,7 @@ export function ApprovalQueueRow({
                 className="min-w-0"
               />
               <span
-                className={`max-w-[42%] shrink-0 text-right text-[9px] leading-3 font-semibold ${reasonClass}`}
+                className={`max-w-[42%] shrink-0 text-right text-eyebrow font-semibold ${reasonClass}`}
               >
                 {priorityLabel}
               </span>
@@ -91,7 +91,7 @@ export function ApprovalQueueRow({
             <p className="mt-1 line-clamp-1 text-[12px] leading-5 font-semibold text-on-surface">
               {item.description}
             </p>
-            <p className="mt-0.5 truncate text-[10px] leading-4 text-on-surface-variant/75">
+            <p className="mt-0.5 truncate text-meta text-on-surface-variant/75">
               {item.projectName}
             </p>
           </div>

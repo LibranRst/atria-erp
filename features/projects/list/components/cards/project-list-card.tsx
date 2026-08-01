@@ -75,14 +75,14 @@ export function ProjectListCard({
             <h2 className="mt-2 line-clamp-2 text-[17px] leading-5.5 font-bold tracking-tight text-white">
               {project.name}
             </h2>
-            <p className="mt-1 truncate text-[11px] leading-4 text-white/70">
+            <p className="mt-1 truncate text-support text-white/70">
               {project.location || "Lokasi belum diisi"}
             </p>
           </div>
         </div>
 
         <div className={`px-2.5 pt-3 ${needsAttention ? "pb-3" : "pb-4"}`}>
-          <p className="truncate text-[11px] leading-4 font-semibold text-on-surface-variant">
+          <p className="truncate text-support font-semibold text-on-surface-variant">
             Klien {project.clientName} · PM {project.pmName}
           </p>
 
@@ -117,7 +117,7 @@ export function ProjectListCard({
 
           {needsAttention ? (
             <p
-              className={`mt-2.5 flex items-start gap-1.5 text-[11px] leading-4 font-bold ${isCritical ? "text-error" : "text-warning"}`}
+              className={`mt-2.5 flex items-start gap-1.5 text-support font-bold ${isCritical ? "text-error" : "text-warning"}`}
             >
               <AppIcon name="warning" className="mt-px shrink-0 text-[13px]" />
               <span className="min-w-0">
@@ -127,10 +127,10 @@ export function ProjectListCard({
           ) : null}
 
           <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/30 pt-2.5">
-            <span className="truncate text-[10px] leading-4 font-semibold text-on-surface-variant/70">
+            <span className="truncate text-meta font-semibold text-on-surface-variant/70">
               Kontrak {formatShortIdr(project.totalContractValue)}
             </span>
-            <span className="shrink-0 text-[10px] leading-4 font-bold text-on-surface-variant">
+            <span className="shrink-0 text-meta font-bold text-on-surface-variant">
               {budgetStatusLabel(project.budgetStatus)}
             </span>
           </div>
@@ -164,9 +164,7 @@ function ProjectMoneyFact({
 }): React.JSX.Element {
   return (
     <div className="min-w-0">
-      <p className="truncate text-[10px] leading-4 font-semibold text-on-surface-variant/60">
-        {label}
-      </p>
+      <p className="truncate text-meta font-semibold text-on-surface-variant/60">{label}</p>
       <MoneyValue
         amount={amount}
         variant="compactWithFull"
@@ -175,7 +173,7 @@ function ProjectMoneyFact({
         className="mt-0.5"
       />
       {detail ? (
-        <p className="mt-0.5 truncate text-[9px] leading-3 font-bold text-on-surface-variant/75">
+        <p className="mt-0.5 truncate text-eyebrow font-bold text-on-surface-variant/75">
           {detail}
         </p>
       ) : null}

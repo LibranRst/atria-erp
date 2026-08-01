@@ -34,7 +34,7 @@ export function OpeningInventoryCsvEntry({
     <section className="space-y-3">
       <div className="rounded-[26px] bg-white p-4 shadow-control ring-1 ring-ring-subtle">
         <p className="text-[13px] font-bold text-on-surface">Upload CSV saldo stok</p>
-        <p className="mt-1 text-[10px] leading-4 text-on-surface-variant">
+        <p className="mt-1 text-meta text-on-surface-variant">
           Header: material_name atau material_code, location_name, quantity, unit_cost.
         </p>
         <Button
@@ -97,7 +97,7 @@ export function OpeningInventoryCsvEntry({
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-error/10 text-[10px] font-bold text-error">
                   {error.rowNumber}
                 </span>
-                <p className="text-[10px] leading-4 text-error">{error.message}</p>
+                <p className="text-meta text-error">{error.message}</p>
               </div>
             ))}
           </div>

@@ -390,7 +390,7 @@ export function ReconciliationWorkspace({
               <p className="truncate text-xs font-semibold text-on-surface">
                 {importDraft.fileName || "Belum ada file"}
               </p>
-              <p className="mt-0.5 text-[10px] leading-4 text-on-surface-variant">
+              <p className="mt-0.5 text-meta text-on-surface-variant">
                 CSV · maksimal 1 MB · maksimal 500 baris
               </p>
             </div>
@@ -411,7 +411,7 @@ export function ReconciliationWorkspace({
           </div>
         </FormSection>
 
-        <div className="flex items-start gap-2 px-1 text-[10px] leading-4 text-on-surface-variant">
+        <div className="flex items-start gap-2 px-1 text-meta text-on-surface-variant">
           <AppIcon name="info" className="mt-0.5 shrink-0 text-[15px] text-primary" />
           <p>
             Isi tanggal dan deskripsi, lalu tepat satu kolom dana_masuk atau dana_keluar. Ingin
@@ -575,14 +575,14 @@ export function ReconciliationWorkspace({
                 />
               ) : null}
               {matchingStatements.length === 0 ? (
-                <p className="px-5 py-3 text-[10px] leading-4 font-medium text-warning">
+                <p className="px-5 py-3 text-meta font-medium text-warning">
                   Catat mutasi bank dengan rekening, arah, dan nominal yang sama.
                 </p>
               ) : null}
             </FormSection>
 
             {selectedStatement ? (
-              <p className="flex items-start gap-2 px-1 text-[10px] leading-4 font-medium text-success">
+              <p className="flex items-start gap-2 px-1 text-meta font-medium text-success">
                 <AppIcon name="verified" className="mt-0.5 shrink-0 text-[14px] leading-none" />
                 Rekening, arah dana, dan nominal sesuai. Periksa deskripsi dan tanggal sebelum
                 mengonfirmasi.

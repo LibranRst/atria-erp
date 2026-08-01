@@ -45,7 +45,7 @@ export function DeveloperAccountSwitcher({
       <div className="flex min-h-10 items-center justify-between gap-3 px-1">
         <h2
           id="developer-simulation-title"
-          className="min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5"
+          className="min-w-0 truncate text-title font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5"
         >
           Simulasi developer
         </h2>
@@ -62,9 +62,7 @@ export function DeveloperAccountSwitcher({
               <AppIcon name="developer_mode" className="text-[18px] leading-none" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] leading-4 font-bold text-on-surface">
-                Uji akses sebagai akun tim
-              </p>
+              <p className="text-row font-bold text-on-surface">Uji akses sebagai akun tim</p>
               <p className="mt-1 text-[10px] leading-[1.45] text-on-surface-variant">
                 Session ini benar-benar memakai role terpilih. Password akun tidak dibaca atau
                 diubah.
@@ -97,7 +95,7 @@ export function DeveloperAccountSwitcher({
                     <AppIcon name="person_play" className="text-[18px] leading-none" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13px] leading-4 font-bold text-on-surface">
+                    <span className="block truncate text-row font-bold text-on-surface">
                       {target.name}
                     </span>
                     <span className="mt-1 flex min-w-0 items-center gap-1.5 text-[10px] leading-[1.3]">

@@ -61,9 +61,9 @@ function SectionHeading({
 }): React.JSX.Element {
   return (
     <header className="px-1 pt-2">
-      <h2 className="text-[17px] leading-6 font-semibold text-on-surface">{title}</h2>
+      <h2 className="text-title font-semibold text-on-surface">{title}</h2>
       {supporting ? (
-        <p className="mt-0.5 text-[11px] leading-4 text-on-surface-variant">{supporting}</p>
+        <p className="mt-0.5 text-support text-on-surface-variant">{supporting}</p>
       ) : null}
     </header>
   );
@@ -227,7 +227,7 @@ export function ProjectOverview({
                   <span className="truncate text-xs leading-4 font-bold text-on-surface">
                     {item.label}
                   </span>
-                  <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+                  <span className="block truncate text-meta text-on-surface-variant">
                     {item.detail}
                   </span>
                 </span>
@@ -279,7 +279,7 @@ export function ProjectOverview({
                   <span className="block truncate text-xs leading-4 font-bold text-on-surface">
                     {action.title}
                   </span>
-                  <span className="mt-0.5 line-clamp-2 block text-[10px] leading-4 text-on-surface-variant">
+                  <span className="mt-0.5 line-clamp-2 block text-meta text-on-surface-variant">
                     {action.description}
                   </span>
                 </span>

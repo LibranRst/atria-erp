@@ -136,7 +136,7 @@ export function MaterialDetailSheet({
               <h3 className="text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
                 Default inventori
               </h3>
-              <p className="mt-0.5 text-[10px] leading-4 text-on-surface-variant">
+              <p className="mt-0.5 text-meta text-on-surface-variant">
                 Batas stok dan harga referensi per lokasi.
               </p>
             </div>

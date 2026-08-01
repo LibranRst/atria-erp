@@ -151,7 +151,7 @@ export function MaterialIssueRow({
             <p className="mt-1 truncate text-[13px] font-semibold tracking-[-0.01em] text-on-surface">
               {item.materialName}
             </p>
-            <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-on-surface-variant/75">
+            <p className="mt-0.5 line-clamp-2 text-meta text-on-surface-variant/75">
               {item.description}
             </p>
           </div>

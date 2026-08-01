@@ -63,7 +63,7 @@ export function MaterialRapStagePanel({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm leading-5 font-bold">{item.name}</span>
-              <span className="block truncate text-[10px] leading-4 text-on-surface-variant">
+              <span className="block truncate text-meta text-on-surface-variant">
                 {item.area} - {item.totalQuantity} {item.unit}
               </span>
             </span>
@@ -268,7 +268,7 @@ export function ReviewInternalPlanPanel({
         ))}
       </div>
       {!canFinalizeRap && (
-        <p className="mt-sm rounded-2xl bg-primary/5 p-3 text-[10px] leading-4 text-primary">
+        <p className="mt-sm rounded-2xl bg-primary/5 p-3 text-meta text-primary">
           Menunggu Owner/Finance untuk finalisasi. Progress tetap dapat dilihat semua role.
         </p>
       )}

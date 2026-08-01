@@ -190,7 +190,7 @@ export function FinancialPosition({
           </div>
         </div>
         <BudgetSplitIndicator value={summary.usedPercentage} inverse danger={budgetDanger} />
-        <div className="mt-3 flex items-center justify-between gap-3 text-[10px] leading-4 font-semibold text-white/58">
+        <div className="mt-3 flex items-center justify-between gap-3 text-meta font-semibold text-white/58">
           <span>Project aktif</span>
           <span>Margin proyeksi {summary.projectedMarginPercentage.toFixed(1)}%</span>
         </div>

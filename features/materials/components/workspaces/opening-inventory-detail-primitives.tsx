@@ -46,9 +46,7 @@ export function OpeningBatchItemRow({
   return (
     <div className="flex min-h-18 items-center justify-between gap-3 py-3">
       <div className="grid min-w-0 flex-1 gap-1">
-        <p className="truncate text-[13px] leading-4 font-bold text-on-surface">
-          {item.materialName}
-        </p>
+        <p className="truncate text-row font-bold text-on-surface">{item.materialName}</p>
         <p className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
           {item.locationName} · {formatOpeningQuantity(item.quantity)} {item.unit}
         </p>

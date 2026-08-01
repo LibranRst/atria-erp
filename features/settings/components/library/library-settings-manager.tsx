@@ -346,7 +346,7 @@ export function LibrarySettingsManager({
         </p>
       ) : null}
       {message && (
-        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-[11px] leading-4 text-primary ring-1 ring-primary/15">
+        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-support text-primary ring-1 ring-primary/15">
           {message}
         </p>
       )}

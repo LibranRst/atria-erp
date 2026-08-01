@@ -59,7 +59,7 @@ export function ReconciliationHistorySheet({
             <EvidenceMetaRow label="Sumber data" value={presentedValue.importFileName} />
           </FormSection>
 
-          <p className="px-1 text-[10px] leading-4 text-on-surface-variant">
+          <p className="px-1 text-meta text-on-surface-variant">
             Nominal, arah dana, dan rekening pada kedua catatan telah diverifikasi sebagai satu
             transaksi.
           </p>

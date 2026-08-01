@@ -148,9 +148,7 @@ function InventoryMaterialRow({
           <Package className="h-4 w-4" aria-hidden="true" />
         </span>
         <span className="grid min-w-0 flex-1 gap-1">
-          <span className="truncate text-[13px] leading-4 font-bold text-on-surface">
-            {material.name}
-          </span>
+          <span className="truncate text-row font-bold text-on-surface">{material.name}</span>
           <span className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
             {material.categoryName}
             {metadata.length > 0 ? ` · ${metadata.join(" · ")}` : ""}
