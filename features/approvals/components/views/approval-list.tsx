@@ -29,6 +29,7 @@ import {
   SummaryFact,
   SummarySurface,
 } from "@/components/ui/feedback/main-surface";
+import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
 import { summarizeApprovals } from "@/lib/finance/approval-summary";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
 import { getErrorMessage } from "@/lib/utils/error-message";
@@ -69,13 +70,15 @@ export function ApprovalList({
   const [emergencyReason, setEmergencyReason] = React.useState("");
   const [activeImage, setActiveImage] = React.useState<string | null>(null);
   const [olderVisibleLimit, setOlderVisibleLimit] = React.useState(APPROVAL_PAGE_SIZE);
-  const [resultsMinHeight, setResultsMinHeight] = React.useState<number | null>(null);
-  const resultsRef = React.useRef<HTMLDivElement | null>(null);
+  const {
+    containerRef: resultsRef,
+    containerStyle: resultsStyle,
+    preserveScrollPosition,
+  } = usePreservedScrollHeight(filter);
   const stickyControlRef = React.useRef<HTMLDivElement | null>(null);
   const [isSticky, setIsSticky] = React.useState(false);
   const rejectionMinimum = decision?.item.type === "inventory_opening" ? 10 : 5;
   const stickyActive = WORKSPACE_STICKY_CONTROLS_ENABLED && isSticky;
-  const pendingScrollYRef = React.useRef<number | null>(null);
   const [pending, startTransition] = React.useTransition();
   const referenceDate = React.useMemo(() => new Date(referenceDateIso), [referenceDateIso]);
   const shouldReduceStickyMotion = useReducedMotion();
@@ -146,18 +149,9 @@ export function ApprovalList({
     [filtered, olderVisibleLimit, referenceDate],
   );
 
-  React.useLayoutEffect(() => {
-    const pendingScrollY = pendingScrollYRef.current;
-    if (pendingScrollY === null) return;
-    window.scrollTo({ top: pendingScrollY, behavior: "auto" });
-    pendingScrollYRef.current = null;
-  }, [filter]);
-
   function preserveStickyResultsPosition(): void {
     if (!WORKSPACE_STICKY_CONTROLS_ENABLED) return;
-    const currentResultsHeight = resultsRef.current?.getBoundingClientRect().height ?? 0;
-    setResultsMinHeight((current) => Math.max(current ?? 0, currentResultsHeight));
-    pendingScrollYRef.current = window.scrollY;
+    preserveScrollPosition();
   }
 
   function changeFilter(value: ApprovalFilter): void {
@@ -400,11 +394,7 @@ export function ApprovalList({
         </motion.div>
       ) : null}
 
-      <div
-        ref={resultsRef}
-        className="space-y-sm"
-        style={resultsMinHeight === null ? undefined : { minHeight: `${resultsMinHeight}px` }}
-      >
+      <div ref={resultsRef} className="space-y-sm" style={resultsStyle}>
         {approvals.length === 0 ? (
           <DetailSection title="Urutan prioritas">
             <PageState

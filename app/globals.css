@@ -159,15 +159,16 @@
   --spacing-xl: 32px;
 
   /* Font Families */
-  --font-body-lg: var(--font-hanken), sans-serif;
-  --font-headline-md: var(--font-manrope), sans-serif;
-  --font-body-sm: var(--font-hanken), sans-serif;
-  --font-label-caps: var(--font-hanken), sans-serif;
-  --font-headline-lg: var(--font-manrope), sans-serif;
-  --font-body-md: var(--font-hanken), sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, sans-serif;
+  --font-body-lg: var(--font-inter), sans-serif;
+  --font-headline-md: var(--font-inter), sans-serif;
+  --font-body-sm: var(--font-inter), sans-serif;
+  --font-label-caps: var(--font-inter), sans-serif;
+  --font-headline-lg: var(--font-inter), sans-serif;
+  --font-body-md: var(--font-inter), sans-serif;
   --font-numeral-lg: var(--font-jetbrains), monospace;
   --font-numeral-md: var(--font-jetbrains), monospace;
-  --font-display: var(--font-manrope), sans-serif;
+  --font-display: var(--font-inter), sans-serif;
 
   /* Explicitly restore default max-width scales to prevent collision with custom spacing */
   --max-width-xs: 20rem;
@@ -231,6 +232,24 @@ body {
   display: block;
   min-width: 0;
   max-width: 100%;
+}
+
+/*
+ * Fit sizing for values inside narrow inset metric cells (SummaryFact and other
+ * 2-3 column grids). The cell owns the container, so the value scales with the
+ * real cell width instead of being clipped on small handsets.
+ */
+.money-value-fit {
+  container-type: inline-size;
+}
+
+.money-value-fit__primary {
+  font-size: clamp(0.625rem, 13.5cqw, 0.875rem);
+  line-height: 1.25;
+  overflow: hidden;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .money-value-dynamic__text {
@@ -312,7 +331,7 @@ body {
 
 /* Align toaster container with the mobile shell (max-w-md / 448px) */
 [data-sonner-toaster] {
-  font-family: var(--font-manrope), var(--font-hanken), sans-serif !important;
+  font-family: var(--font-inter), sans-serif !important;
   width: calc(100% - 40px) !important;
   max-width: calc(448px - 40px) !important;
   left: 50% !important;
@@ -361,14 +380,14 @@ body {
 
 /* Style Title and Description */
 [data-sonner-toast] [data-title] {
-  font-family: var(--font-manrope), sans-serif !important;
+  font-family: var(--font-inter), sans-serif !important;
   font-size: 14px !important;
   font-weight: 600 !important;
   line-height: 1.4 !important;
 }
 
 [data-sonner-toast] [data-description] {
-  font-family: var(--font-hanken), sans-serif !important;
+  font-family: var(--font-inter), sans-serif !important;
   font-size: 12px !important;
   font-weight: 400 !important;
   line-height: 1.4 !important;
@@ -378,7 +397,7 @@ body {
 
 /* Style actions/buttons inside toast to match Atria fully-rounded capsule style */
 [data-sonner-toast] [data-button] {
-  font-family: var(--font-manrope), sans-serif !important;
+  font-family: var(--font-inter), sans-serif !important;
   border-radius: 9999px !important; /* Capsule style */
   font-weight: 600 !important;
   padding: 6px 14px !important;

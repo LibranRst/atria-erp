@@ -8,7 +8,7 @@ function Demo(): React.JSX.Element {
   const [open, setOpen] = useState(true);
   const [name, setName] = useState("Pembelian Semen");
   return (
-    <div className="h-[560px] w-full">
+    <div className="h-140 w-full">
       <OperationalFormSheet
         open={open}
         title="Catat Pengeluaran"

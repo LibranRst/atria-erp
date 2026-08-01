@@ -44,16 +44,6 @@ export function summarizeProjectPortfolio(
   };
 }
 
-export function formatRp(value: number): string {
-  return `Rp ${value.toLocaleString("id-ID")}`;
-}
-
-export function formatCompactRp(value: number): string {
-  if (value >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(1)}M`;
-  if (value >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(1)}jt`;
-  return formatRp(value);
-}
-
 export function getUsedPercentage(project: ProjectItem): number {
   return Math.max(0, project.usedPercentage);
 }

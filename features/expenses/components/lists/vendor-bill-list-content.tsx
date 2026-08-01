@@ -5,6 +5,7 @@ import React from "react";
 import { EmptyState, MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
+import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
 import {
   GroupedSurface,
   SectionHeader,
@@ -58,22 +59,11 @@ export function VendorBillListContent({
   const [billFilter, setBillFilter] = React.useState<BillFilter>("ACTIVE");
   const [paymentFilter, setPaymentFilter] = React.useState<PaymentFilter>("ACTIVE");
   const [visibleLimit, setVisibleLimit] = React.useState(20);
-  const pendingScrollYRef = React.useRef<number | null>(null);
-  const resultsRef = React.useRef<HTMLDivElement | null>(null);
-  const [resultsMinHeight, setResultsMinHeight] = React.useState<number | null>(null);
-
-  React.useLayoutEffect(() => {
-    const pendingScrollY = pendingScrollYRef.current;
-    if (pendingScrollY === null) return;
-    window.scrollTo({ top: pendingScrollY, behavior: "auto" });
-    pendingScrollYRef.current = null;
-  }, [billFilter, paymentFilter, subTab]);
-
-  function preserveScrollPosition(): void {
-    const currentResultsHeight = resultsRef.current?.getBoundingClientRect().height ?? 0;
-    setResultsMinHeight((current) => Math.max(current ?? 0, currentResultsHeight));
-    pendingScrollYRef.current = window.scrollY;
-  }
+  const {
+    containerRef: resultsRef,
+    containerStyle: resultsStyle,
+    preserveScrollPosition,
+  } = usePreservedScrollHeight(`${subTab}:${billFilter}:${paymentFilter}`);
 
   const totalBillAmount = vendorBills.reduce((sum, bill) => sum + Number(bill.amount), 0);
   const scheduledAmount = vendorPayments
@@ -213,10 +203,7 @@ export function VendorBillListContent({
         )}
       </div>
 
-      <div
-        ref={resultsRef}
-        style={resultsMinHeight === null ? undefined : { minHeight: `${resultsMinHeight}px` }}
-      >
+      <div ref={resultsRef} style={resultsStyle}>
         {subTab === "BILLS" ? (
           <div className="space-y-3">
             <SectionHeader

@@ -16,6 +16,7 @@ import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-
 import { resolveEffectiveProjectHealth } from "@/lib/project/effective-health";
 import { getProjectActivationReadiness } from "@/lib/project/activation-readiness";
 import { ProjectActivationSheet } from "../sheets/project-activation-sheet";
+import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
 
 export type {
   ProjectData,
@@ -42,9 +43,13 @@ export function ProjectTabs({
   const tabParam = useUrlSearchParam("tab");
   const isLocked = !projectBudgetDashboard || projectBudgetDashboard.status !== "APPROVED";
   const { setProjectState } = useProjectState();
-  const contentRef = React.useRef<HTMLDivElement | null>(null);
-  const pendingScrollPositionRef = React.useRef<number | null>(null);
-  const [contentMinHeight, setContentMinHeight] = React.useState<number | null>(null);
+  const activeTab = toTabId(tabParam, isLocked);
+  const {
+    containerRef: contentRef,
+    containerStyle: contentStyle,
+    preserveScrollPosition,
+    jumpToOnNextContent,
+  } = usePreservedScrollHeight(activeTab);
 
   React.useEffect(() => {
     setProjectState({
@@ -58,28 +63,6 @@ export function ProjectTabs({
       });
     };
   }, [project.id, isLocked, setProjectState]);
-
-  const activeTab = toTabId(tabParam, isLocked);
-
-  React.useLayoutEffect(() => {
-    const pendingScrollPosition = pendingScrollPositionRef.current;
-    if (pendingScrollPosition === null) return;
-    pendingScrollPositionRef.current = null;
-    window.scrollTo({ top: pendingScrollPosition, behavior: "auto" });
-  }, [activeTab]);
-
-  React.useEffect(() => {
-    if (contentMinHeight === null) return;
-
-    const releasePreservedHeight = (): void => {
-      if (window.scrollY <= 80) setContentMinHeight(null);
-    };
-
-    window.addEventListener("scroll", releasePreservedHeight, {
-      passive: true,
-    });
-    return () => window.removeEventListener("scroll", releasePreservedHeight);
-  }, [contentMinHeight]);
 
   const health = resolveEffectiveProjectHealth({
     storedHealth: project.financialHealth,
@@ -136,30 +119,13 @@ export function ProjectTabs({
     const source = options?.source ?? "nav";
 
     if (source === "action") {
-      setContentMinHeight(null);
-      if (contentRef.current) {
-        const currentScrollY = window.scrollY;
-        const contentTop = contentRef.current.getBoundingClientRect().top + currentScrollY;
-        pendingScrollPositionRef.current = Math.max(0, Math.round(contentTop - 110));
-      } else {
-        pendingScrollPositionRef.current = 0;
-      }
-    } else {
       const currentScrollY = window.scrollY;
-      const currentContentRect = contentRef.current?.getBoundingClientRect();
-      if (currentScrollY > 80 && currentContentRect) {
-        const contentTop = currentContentRect.top + currentScrollY;
-        const viewportRequiredHeight = Math.max(
-          0,
-          currentScrollY + window.innerHeight - contentTop,
-        );
-        setContentMinHeight((current) =>
-          Math.max(current ?? 0, currentContentRect.height, viewportRequiredHeight),
-        );
-      } else {
-        setContentMinHeight(null);
-      }
-      pendingScrollPositionRef.current = currentScrollY;
+      const contentTop = contentRef.current
+        ? contentRef.current.getBoundingClientRect().top + currentScrollY
+        : 0;
+      jumpToOnNextContent(contentTop - 110);
+    } else {
+      preserveScrollPosition();
     }
 
     const defaultTab = isLocked ? "rap" : "overview";
@@ -191,15 +157,7 @@ export function ProjectTabs({
         onTabChange={(tab) => selectProjectTab(tab, { source: "nav" })}
       />
 
-      <div
-        ref={contentRef}
-        className="min-h-100 [overflow-anchor:none]"
-        style={
-          contentMinHeight === null
-            ? undefined
-            : { minHeight: `${Math.max(400, contentMinHeight)}px` }
-        }
-      >
+      <div ref={contentRef} className="min-h-100 [overflow-anchor:none]" style={contentStyle}>
         {activeTab === "overview" && (
           <ProjectOverview
             budget={projectBudgetDashboard}
@@ -211,9 +169,9 @@ export function ProjectTabs({
           />
         )}
         {activeTab === "rab" &&
-          (rapForManager ? (
+          (rapForManager || rabEstimateForManager ? (
             <RapRabManager
-              key={`rab-${rapForManager.id}-${rabEstimateForManager?.id ?? "none"}`}
+              key={`rab-${rapForManager?.id ?? "none"}-${rabEstimateForManager?.id ?? "none"}`}
               projectId={project.id}
               rap={rapForManager}
               rabEstimate={rabEstimateForManager}

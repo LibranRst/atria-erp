@@ -4,11 +4,7 @@ function SkeletonLine({ className }: { readonly className: string }): React.JSX.
 
 export default function ProjectsLoading(): React.JSX.Element {
   return (
-    <div
-      className="space-y-sm pb-10 max-[430px]:pb-8"
-      aria-label="Memuat Proyek"
-      role="status"
-    >
+    <div className="space-y-sm pb-10 max-[430px]:pb-8" aria-label="Memuat Proyek" role="status">
       <div className="space-y-2 px-1">
         <SkeletonLine className="h-8 w-28" />
         <SkeletonLine className="h-3 w-64 bg-surface-container-low" />
@@ -62,29 +58,33 @@ export default function ProjectsLoading(): React.JSX.Element {
         {["first", "second"].map((id) => (
           <div
             key={id}
-            className="rounded-[26px] bg-white/88 p-3.5 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl"
+            className="rounded-[26px] bg-white/88 p-1.5 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl"
           >
-            <div className="flex gap-3">
-              <div className="h-18.5 w-18.5 shrink-0 rounded-[20px] bg-surface-container" />
-              <div className="min-w-0 flex-1 space-y-2">
-                <SkeletonLine className="h-2.5 w-20 bg-surface-container-low" />
-                <SkeletonLine className="h-4 w-full" />
-                <SkeletonLine className="h-2.5 w-28 bg-surface-container-low" />
-                <SkeletonLine className="h-2 w-36 bg-surface-container-low" />
+            <div className="aspect-4/3 rounded-[22px] bg-surface-container" />
+            <div className="px-2.5 pt-3 pb-1.5">
+              <SkeletonLine className="h-2.5 w-44 bg-surface-container-low" />
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <SkeletonLine className="h-2.5 w-14 bg-surface-container-low" />
+                  <SkeletonLine className="h-5 w-24" />
+                  <SkeletonLine className="h-2.5 w-28 bg-surface-container-low" />
+                </div>
+                <div className="space-y-1.5">
+                  <SkeletonLine className="h-2.5 w-20 bg-surface-container-low" />
+                  <SkeletonLine className="h-5 w-24" />
+                  <SkeletonLine className="h-2.5 w-28 bg-surface-container-low" />
+                </div>
               </div>
-            </div>
-            <div className="mt-3 border-t border-black/5.5 pt-3">
-              <div className="flex justify-between">
-                <SkeletonLine className="h-4 w-24" />
-                <SkeletonLine className="h-3 w-20 bg-surface-container-low" />
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-3 rounded-[18px] bg-surface-container-low/65 px-3 py-3">
-                <SkeletonLine className="h-4 w-20" />
-                <SkeletonLine className="ml-auto h-4 w-20" />
-              </div>
-              <div className="mt-3 flex justify-between">
-                <SkeletonLine className="h-2.5 w-32 bg-surface-container-low" />
-                <SkeletonLine className="h-2.5 w-16" />
+              <div className="mt-3.5 flex items-end justify-between gap-3">
+                <div className="space-y-1.5">
+                  <SkeletonLine className="h-2.5 w-20 bg-surface-container-low" />
+                  <SkeletonLine className="h-6 w-32" />
+                  <SkeletonLine className="h-2.5 w-28 bg-surface-container-low" />
+                </div>
+                <div className="space-y-1.5 pb-1">
+                  <SkeletonLine className="ml-auto h-2.5 w-20 bg-surface-container-low" />
+                  <SkeletonLine className="ml-auto h-3 w-16" />
+                </div>
               </div>
             </div>
           </div>

@@ -6,6 +6,7 @@ import { BottomSheet, useSheetPresenceValue } from "@/components/ui";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { Badge, type BadgeStatus } from "@/components/ui/badge/badge";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { FactRow } from "@/components/ui/feedback/main-surface";
 import type { ProjectCategoryPlanItemView, RapItemView, RapView } from "../shared/rap-rab-manager";
 
 function toBadgeStatus(status: string): BadgeStatus {
@@ -96,8 +97,8 @@ export function RapItemDetailDrawer({
             </div>
           )}
 
-          <DetailRow label="Total Kebutuhan" value={`${item.totalQuantity} ${item.unit}`} />
-          <DetailRow
+          <FactRow label="Total Kebutuhan" value={`${item.totalQuantity} ${item.unit}`} />
+          <FactRow
             label="Perlu Dibeli"
             value={
               <span className={item.needToBuy > 0 ? "text-error" : "text-on-surface"}>
@@ -105,11 +106,11 @@ export function RapItemDetailDrawer({
               </span>
             }
           />
-          <DetailRow label="Stok Fisik Tersedia" value={`${item.availableStock} ${item.unit}`} />
-          <DetailRow label="Stok Terreservasi" value={`${item.reservedQuantity} ${item.unit}`} />
-          <DetailRow label="Stok Terpakai" value={`${item.usedQuantity} ${item.unit}`} />
+          <FactRow label="Stok Fisik Tersedia" value={`${item.availableStock} ${item.unit}`} />
+          <FactRow label="Stok Terreservasi" value={`${item.reservedQuantity} ${item.unit}`} />
+          <FactRow label="Stok Terpakai" value={`${item.usedQuantity} ${item.unit}`} />
 
-          <DetailRow
+          <FactRow
             label="Estimasi Internal"
             value={
               <MoneyValue
@@ -254,7 +255,7 @@ export function PackageDetailDrawer({
             </div>
           )}
 
-          <DetailRow
+          <FactRow
             label="Estimasi Paket"
             value={
               <MoneyValue
@@ -265,7 +266,7 @@ export function PackageDetailDrawer({
               />
             }
           />
-          <DetailRow
+          <FactRow
             label="Realisasi Aktual"
             value={
               <MoneyValue
@@ -276,7 +277,7 @@ export function PackageDetailDrawer({
               />
             }
           />
-          <DetailRow
+          <FactRow
             label="Sisa Estimasi"
             value={
               <MoneyValue
@@ -289,24 +290,9 @@ export function PackageDetailDrawer({
             }
           />
 
-          {item.vendorName && <DetailRow label="Vendor Utama" value={item.vendorName} />}
+          {item.vendorName && <FactRow label="Vendor Utama" value={item.vendorName} />}
         </div>
       </div>
     </BottomSheet>
-  );
-}
-
-function DetailRow({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <div className="flex items-start justify-between gap-4 px-4 py-3.5 text-xs">
-      <span className="shrink-0 text-on-surface-variant">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
-    </div>
   );
 }

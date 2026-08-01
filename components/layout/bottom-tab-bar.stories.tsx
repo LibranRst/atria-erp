@@ -4,8 +4,18 @@ import type { NavItem } from "./bottom-nav-config";
 import { BottomTabBar } from "./bottom-nav-parts";
 
 const navItems: readonly NavItem[] = [
-  { label: "Dashboard", href: "/ledger", iconName: "dashboard", match: (path) => path === "/ledger" },
-  { label: "Projects", href: "/projects", iconName: "folder", match: (path) => path.startsWith("/projects") },
+  {
+    label: "Dashboard",
+    href: "/ledger",
+    iconName: "dashboard",
+    match: (path) => path === "/ledger",
+  },
+  {
+    label: "Projects",
+    href: "/projects",
+    iconName: "folder",
+    match: (path) => path.startsWith("/projects"),
+  },
   {
     label: "Materials",
     href: "/materials",

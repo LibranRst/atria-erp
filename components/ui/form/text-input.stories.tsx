@@ -3,7 +3,10 @@ import { useState } from "react";
 
 import { TextInput } from "./basic-form-controls";
 
-function Demo(props: { readonly initial?: string; readonly disabled?: boolean }): React.JSX.Element {
+function Demo(props: {
+  readonly initial?: string;
+  readonly disabled?: boolean;
+}): React.JSX.Element {
   const [value, setValue] = useState(props.initial ?? "");
   return (
     <div className="w-80">

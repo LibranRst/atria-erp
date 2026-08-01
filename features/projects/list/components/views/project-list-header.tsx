@@ -11,7 +11,7 @@ import {
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
-import { formatShortIdr } from "@/lib/utils/money";
+import { formatTightIdr } from "@/lib/utils/money";
 import type { FilterId } from "../../types/project-list-types";
 import { PROJECT_FILTERS, type ProjectPortfolioSummary } from "../../utils/project-list-utils";
 import { SectionHeader, SummaryFact, SummarySurface } from "@/components/ui/feedback/main-surface";
@@ -65,24 +65,17 @@ export function ProjectListHeader({
         </div>
 
         <div className="grid grid-cols-3 gap-2 px-2 pt-2 pb-2">
-          <SummaryFact label="Budget" value={formatPortfolioMetric(summary.activeInternalBudget)} />
-          <SummaryFact label="Aktual" value={formatPortfolioMetric(summary.activeActualCost)} />
+          <SummaryFact label="Budget" value={formatTightIdr(summary.activeInternalBudget)} />
+          <SummaryFact label="Aktual" value={formatTightIdr(summary.activeActualCost)} />
           <SummaryFact
             label="Sisa budget"
-            value={formatPortfolioMetric(summary.activeRemainingBudget)}
+            value={formatTightIdr(summary.activeRemainingBudget)}
             tone={summary.activeRemainingBudget < 0 ? "danger" : "default"}
           />
         </div>
       </SummarySurface>
     </div>
   );
-}
-
-function formatPortfolioMetric(amount: number): string {
-  if (Math.abs(amount) >= 100_000_000 && Math.abs(amount) < 1_000_000_000) {
-    return `Rp ${Math.round(amount / 1_000_000).toLocaleString("id-ID")} jt`;
-  }
-  return formatShortIdr(amount);
 }
 
 export function ProjectSearchAndFilters({

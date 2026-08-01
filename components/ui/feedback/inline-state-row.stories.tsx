@@ -25,7 +25,12 @@ type Story = StoryObj<typeof meta>;
 export const Neutral: Story = {};
 
 export const Positive: Story = {
-  args: { tone: "positive", icon: "check_circle", title: "Pembayaran Tukang", description: "Rp 3.200.000 · Disetujui" },
+  args: {
+    tone: "positive",
+    icon: "check_circle",
+    title: "Pembayaran Tukang",
+    description: "Rp 3.200.000 · Disetujui",
+  },
 };
 
 export const Warning: Story = {

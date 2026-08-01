@@ -5,6 +5,7 @@ import React from "react";
 import type { ReceiptView } from "@/app/actions/material/operations-dashboard";
 import { Badge, BottomSheet, Button, useSheetPresenceValue } from "@/components/ui";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { FactRow, SheetSection } from "@/components/ui/feedback/main-surface";
 import {
   formatMaterialQuantity,
   formatMaterialStatus,
@@ -53,8 +54,9 @@ export function ReceiptDetailSheet({
 
           <SheetSection title="Rincian Dokumen">
             <div className="divide-y divide-outline-variant/15 px-3">
-              <DetailRow label="Proyek Penerima" value={presentedReceipt.projectName} />
-              <DetailRow
+              <FactRow inset={false} label="Proyek Penerima" value={presentedReceipt.projectName} />
+              <FactRow
+                inset={false}
                 label="Total Nilai Material"
                 value={
                   <MoneyValue
@@ -116,39 +118,5 @@ export function ReceiptDetailSheet({
         </div>
       )}
     </BottomSheet>
-  );
-}
-
-function SheetSection({
-  title,
-  children,
-}: {
-  readonly title: string;
-  readonly children: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <section className="space-y-2">
-      <h3 className="px-1 text-[12px] font-bold tracking-wide text-on-surface-variant uppercase">
-        {title}
-      </h3>
-      <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-ring-subtle">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function DetailRow({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <div className="flex items-start justify-between gap-4 py-3.5 text-xs">
-      <span className="shrink-0 font-medium text-on-surface-variant">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
-    </div>
   );
 }

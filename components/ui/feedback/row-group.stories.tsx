@@ -33,8 +33,18 @@ export const Connected: Story = {
     connected: true,
     children: (
       <>
-        <InlineStateRow icon="check_circle" title="Diajukan" description="1 Agu 2026" tone="positive" />
-        <InlineStateRow icon="history" title="Diproses" description="Menunggu review" tone="pending" />
+        <InlineStateRow
+          icon="check_circle"
+          title="Diajukan"
+          description="1 Agu 2026"
+          tone="positive"
+        />
+        <InlineStateRow
+          icon="history"
+          title="Diproses"
+          description="Menunggu review"
+          tone="pending"
+        />
       </>
     ),
   },

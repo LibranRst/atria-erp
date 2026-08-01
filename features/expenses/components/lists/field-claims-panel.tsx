@@ -4,6 +4,7 @@ import React from "react";
 
 import { EmptyState, MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
+import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
 import {
   GroupedSurface,
   SectionHeader,
@@ -63,23 +64,16 @@ export function FieldClaimsPanel({
   onOpenReceipt,
 }: FieldClaimsPanelProps): React.JSX.Element {
   const [visibleLimit, setVisibleLimit] = React.useState(20);
-  const [resultsMinHeight, setResultsMinHeight] = React.useState<number | null>(null);
-  const resultsRef = React.useRef<HTMLDivElement | null>(null);
-  const pendingScrollYRef = React.useRef<number | null>(null);
+  const {
+    containerRef: resultsRef,
+    containerStyle: resultsStyle,
+    preserveScrollPosition,
+  } = usePreservedScrollHeight(filter);
   const hasNoRows = filter === "ALL" ? initialCosts.length === 0 : filteredCosts.length === 0;
   const visibleCosts = filteredCosts.slice(0, visibleLimit);
 
-  React.useLayoutEffect(() => {
-    const pendingScrollY = pendingScrollYRef.current;
-    if (pendingScrollY === null) return;
-    window.scrollTo({ top: pendingScrollY, behavior: "auto" });
-    pendingScrollYRef.current = null;
-  }, [filter]);
-
   function changeFilter(value: FilterStatus): void {
-    const currentResultsHeight = resultsRef.current?.getBoundingClientRect().height ?? 0;
-    setResultsMinHeight((current) => Math.max(current ?? 0, currentResultsHeight));
-    pendingScrollYRef.current = window.scrollY;
+    preserveScrollPosition();
     setVisibleLimit(20);
     onFilterChange(value);
   }
@@ -110,10 +104,7 @@ export function FieldClaimsPanel({
         }))}
       />
 
-      <div
-        ref={resultsRef}
-        style={resultsMinHeight === null ? undefined : { minHeight: `${resultsMinHeight}px` }}
-      >
+      <div ref={resultsRef} style={resultsStyle}>
         {hasNoRows ? (
           <GroupedSurface>
             <EmptyState

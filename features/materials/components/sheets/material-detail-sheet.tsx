@@ -11,6 +11,7 @@ import {
   type MaterialTone,
 } from "@/features/materials/components/shared/material-page-primitives";
 import { MovementRow } from "@/features/materials/components/shared/material-operation-primitives";
+import { SheetSection } from "@/components/ui/feedback/main-surface";
 import {
   formatMaterialQuantity,
   getGroupedMaterialStockSummary,
@@ -142,23 +143,6 @@ export function MaterialDetail({
         </div>
       ) : null}
     </BottomSheet>
-  );
-}
-
-function SheetSection({
-  title,
-  children,
-}: {
-  readonly title: string;
-  readonly children: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <section className="space-y-2">
-      <h3 className="px-1 text-[14px] leading-5 font-bold text-on-surface">{title}</h3>
-      <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-ring-subtle">
-        {children}
-      </div>
-    </section>
   );
 }
 

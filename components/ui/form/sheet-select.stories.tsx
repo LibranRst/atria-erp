@@ -15,7 +15,12 @@ function Demo(): React.JSX.Element {
   const [value, setValue] = useState("material");
   return (
     <div className="w-80">
-      <SheetSelect label="Kategori Biaya" value={value} options={categoryOptions} onChange={setValue} />
+      <SheetSelect
+        label="Kategori Biaya"
+        value={value}
+        options={categoryOptions}
+        onChange={setValue}
+      />
     </div>
   );
 }

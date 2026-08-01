@@ -79,7 +79,7 @@ export async function getProjectListPageData(): Promise<ProjectListPageData> {
         (total, category) => total + Number(category.actualAmount),
         0,
       );
-      const internalBudget = Number(budget?.internalBudget ?? contractValue * 0.9);
+      const internalBudget = Number(budget?.internalBudget ?? 0);
       const remainingBudget = internalBudget - actualCost;
       const usedPercentage = internalBudget > 0 ? (actualCost / internalBudget) * 100 : 0;
       const projectedMarginPercentage =

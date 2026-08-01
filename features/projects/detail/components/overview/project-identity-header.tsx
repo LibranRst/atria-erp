@@ -10,9 +10,12 @@ import {
   type EffectiveProjectHealthReason,
 } from "@/lib/project/effective-health";
 import { DetailRow } from "./project-overview-primitives";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { AppIcon } from "@/components/ui/icon/app-icon";
-import { StatusBadge } from "@/components/ui/badge/badge";
+import {
+  ProjectCoverMedia,
+  ProjectHeroStatusPill,
+  projectStatusLabel,
+} from "@/features/projects/shared/components/project-cover-hero";
 
 export type IdentityProject = {
   readonly name: string;
@@ -48,25 +51,12 @@ export function ProjectIdentityHeader({
   readonly healthReasons: readonly EffectiveProjectHealthReason[];
 }): React.JSX.Element {
   const [detailOpen, setDetailOpen] = useState(false);
-  const [failedCoverUrl, setFailedCoverUrl] = useState<string | null>(null);
-  const initial = project.name.trim().charAt(0).toUpperCase() || "P";
-  const showCover = Boolean(project.coverImageUrl && failedCoverUrl !== project.coverImageUrl);
 
   return (
     <>
       <section className="overflow-hidden rounded-[28px] bg-primary shadow-inverse ring-1 ring-ring-subtle">
         <div className="relative aspect-square overflow-hidden bg-primary">
-          {showCover && project.coverImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={project.coverImageUrl}
-              alt={`Cover ${project.name}`}
-              onError={() => setFailedCoverUrl(project.coverImageUrl)}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
-            <ProjectCoverFallback initial={initial} />
-          )}
+          <ProjectCoverMedia coverImageUrl={project.coverImageUrl} name={project.name} />
 
           <div
             className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent_40%,rgba(0,0,0,0.82)_100%)]"
@@ -88,8 +78,8 @@ export function ProjectIdentityHeader({
                 {project.client?.name ?? "Klien belum diisi"}
               </p>
               <div className="flex shrink-0 items-center gap-1.5">
-                <HeroStatusPill label={projectStatusLabel(project.status)} />
-                <HeroStatusPill
+                <ProjectHeroStatusPill label={projectStatusLabel(project.status)} />
+                <ProjectHeroStatusPill
                   label={projectHealthLabel(effectiveHealth)}
                   health={effectiveHealth}
                   title={
@@ -158,51 +148,5 @@ export function ProjectIdentityHeader({
         </div>
       </BottomSheet>
     </>
-  );
-}
-
-function projectStatusLabel(status: string): string {
-  if (status === "ACTIVE") return "Aktif";
-  if (status === "ON_HOLD") return "Ditunda";
-  if (status === "COMPLETED") return "Selesai";
-  if (status === "CANCELLED") return "Dibatalkan";
-  if (status === "DRAFT") return "Draf";
-  return formatBusinessLabel(status);
-}
-
-function HeroStatusPill({
-  label,
-  health,
-  title,
-}: {
-  readonly label: string;
-  readonly health?: EffectiveProjectHealth;
-  readonly title?: string;
-}): React.JSX.Element {
-  const tone = health === "CRITICAL" ? "critical" : health === "WARNING" ? "warning" : "neutral";
-  const surfaceClass =
-    health === "CRITICAL"
-      ? "!bg-critical-container !text-critical"
-      : health === "WARNING"
-        ? "!bg-warning-container !text-warning"
-        : "!bg-white/92 !text-on-surface";
-
-  return (
-    <StatusBadge
-      className={surfaceClass}
-      tone={tone}
-      label={label}
-      title={title}
-    />
-  );
-}
-
-function ProjectCoverFallback({ initial }: { readonly initial: string }): React.JSX.Element {
-  return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-primary text-on-primary">
-      <span className="relative flex h-20 w-20 -translate-y-5 items-center justify-center rounded-3xl bg-white/10 text-[32px] leading-none font-semibold text-white/90 shadow-surface ring-1 ring-white/12">
-        {initial}
-      </span>
-    </div>
   );
 }

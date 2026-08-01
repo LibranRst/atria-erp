@@ -57,9 +57,7 @@ export function NativeSection({
 }: NativeSectionProps): JSX.Element {
   const hasHeader = Boolean(eyebrow || title || action);
   return (
-    <section
-      className={`rounded-[28px] bg-white p-md shadow-surface ${className}`}
-    >
+    <section className={`rounded-[28px] bg-white p-md shadow-surface ${className}`}>
       {hasHeader && (
         <div className="mb-sm flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -81,8 +79,8 @@ export function NativeSection({
 }
 
 type MetricTone = "default" | "primary" | "muted" | "warning" | "danger";
-type MoneyValueTone = MetricTone | "inverse" | "inherit";
-type MoneyValueSize = "xs" | "sm" | "md" | "lg" | "hero";
+type MoneyValueTone = MetricTone | "success" | "inverse" | "inherit";
+type MoneyValueSize = "fit" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "hero";
 
 function metricToneClass(tone: MetricTone = "default"): string {
   if (tone === "primary") return "text-primary";
@@ -95,6 +93,7 @@ function metricToneClass(tone: MetricTone = "default"): string {
 function moneyToneClass(tone: MoneyValueTone = "default"): string {
   if (tone === "inherit") return "";
   if (tone === "inverse") return "text-white";
+  if (tone === "success") return "text-success";
   return metricToneClass(tone);
 }
 
@@ -105,7 +104,10 @@ function moneySecondaryToneClass(tone: MoneyValueTone = "default"): string {
 }
 
 function moneyCompactSizeClass(size: MoneyValueSize = "md"): string {
+  if (size === "fit") return "money-value-fit__primary";
   if (size === "hero") return "text-[30px] leading-9";
+  if (size === "2xl") return "text-[23px] leading-7";
+  if (size === "xl") return "text-[17px] leading-5.5";
   if (size === "lg") return "text-[15px] leading-5";
   if (size === "xs") return "text-[10px] leading-3";
   if (size === "sm") return "text-[12px] leading-4";
@@ -113,14 +115,18 @@ function moneyCompactSizeClass(size: MoneyValueSize = "md"): string {
 }
 
 function moneyDynamicSizeClass(size: MoneyValueSize = "lg"): string {
-  if (size === "hero") return "money-value-dynamic--hero";
+  if (size === "hero" || size === "2xl") return "money-value-dynamic--hero";
+  if (size === "fit") return "money-value-dynamic--sm";
   if (size === "md") return "money-value-dynamic--md";
   if (size === "sm" || size === "xs") return "money-value-dynamic--sm";
   return "money-value-dynamic--lg";
 }
 
 function moneySecondarySizeClass(size: MoneyValueSize = "md"): string {
+  if (size === "fit") return "money-value-fit__exact";
   if (size === "xs") return "text-[8px] leading-[10px]";
+  if (size === "2xl") return "text-[16px] leading-5";
+  if (size === "xl") return "text-[14px] leading-[18px]";
   return "text-[9px] leading-3";
 }
 
@@ -166,8 +172,12 @@ export function MoneyValue({
     );
   }
 
+  const fits = size === "fit";
+
   return (
-    <span className={`money-value-compact block min-w-0 space-y-0.5 ${alignClass} ${className}`}>
+    <span
+      className={`money-value-compact block min-w-0 space-y-0.5 ${fits ? "money-value-fit" : ""} ${alignClass} ${className}`}
+    >
       <span
         className={`financial-amount block font-mono leading-5 font-bold whitespace-nowrap tabular-nums ${moneyCompactSizeClass(size)} ${valueClass}`}
         title={fullValue}
@@ -176,7 +186,7 @@ export function MoneyValue({
       </span>
       {compactValue !== fullValue && (
         <span
-          className={`financial-amount money-value-exact block font-mono leading-4 tabular-nums ${moneySecondarySizeClass(size)} ${moneySecondaryToneClass(tone)}`}
+          className={`financial-amount block font-mono leading-4 tabular-nums ${fits ? "" : "money-value-exact"} ${moneySecondarySizeClass(size)} ${moneySecondaryToneClass(tone)}`}
         >
           {fullValue}
         </span>
@@ -184,6 +194,25 @@ export function MoneyValue({
     </span>
   );
 }
+
+/**
+ * Permukaan sel metrik. `low` adalah default di atas kartu putih, `translucent`
+ * untuk sel di dalam panel yang sudah berwarna, dan `inverse` untuk sel di atas
+ * permukaan gelap. Sel metrik tidak pernah punya elevasi sendiri.
+ */
+export type MetricPillSurface = "low" | "translucent" | "inverse";
+
+const metricPillSurfaceClass: Record<MetricPillSurface, string> = {
+  low: "bg-surface-container-low",
+  translucent: "bg-white/75",
+  inverse: "bg-white/8",
+};
+
+const metricPillLabelClass: Record<MetricPillSurface, string> = {
+  low: "text-on-surface-variant",
+  translucent: "text-on-surface-variant",
+  inverse: "text-white/55",
+};
 
 type MetricPillProps = {
   readonly label: string;
@@ -193,6 +222,9 @@ type MetricPillProps = {
   readonly valueSize?: "sm" | "md" | "lg";
   readonly align?: "left" | "right";
   readonly wrapMode?: "wrap" | "truncate";
+  readonly surface?: MetricPillSurface;
+  readonly mono?: boolean;
+  readonly className?: string;
 };
 
 export function MetricPill({
@@ -203,8 +235,11 @@ export function MetricPill({
   valueSize = "md",
   align = "left",
   wrapMode = "wrap",
+  surface = "low",
+  mono = true,
+  className = "",
 }: MetricPillProps): JSX.Element {
-  const valueClass = metricToneClass(tone);
+  const valueClass = surface === "inverse" ? "text-white" : metricToneClass(tone);
   const sizeClass =
     valueSize === "lg"
       ? "text-[15px] leading-5"
@@ -213,15 +248,18 @@ export function MetricPill({
         : "text-[13px] leading-4";
   const alignClass = align === "right" ? "text-right" : "text-left";
   const wrapClass = wrapMode === "truncate" ? "truncate" : "wrap-break-word wrap-anywhere";
+  const fontClass = mono ? "financial-amount font-mono tabular-nums" : "";
 
   return (
-    <div className={`min-w-0 rounded-2xl bg-surface-container-low px-3 py-2.5 ${alignClass}`}>
-      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+    <div
+      className={`min-w-0 rounded-2xl px-3 py-2.5 ${metricPillSurfaceClass[surface]} ${alignClass} ${className}`}
+    >
+      <p
+        className={`truncate text-[9px] font-bold tracking-wide uppercase ${metricPillLabelClass[surface]}`}
+      >
         {label}
       </p>
-      <p
-        className={`financial-amount mt-0.5 font-mono font-bold tabular-nums ${sizeClass} ${wrapClass} ${valueClass}`}
-      >
+      <p className={`mt-0.5 font-bold ${fontClass} ${sizeClass} ${wrapClass} ${valueClass}`}>
         {value}
       </p>
       {fullValue && fullValue !== value && (
@@ -242,6 +280,7 @@ type MoneyMetricPillProps = {
   readonly tone?: MoneyValueTone;
   readonly valueSize?: MoneyValueSize;
   readonly align?: "left" | "right";
+  readonly surface?: MetricPillSurface;
   readonly className?: string;
 };
 
@@ -254,22 +293,25 @@ export function MoneyMetricPill({
   tone = "default",
   valueSize = "md",
   align = "left",
+  surface = "low",
   className = "",
 }: MoneyMetricPillProps): JSX.Element {
   const alignClass = align === "right" ? "text-right" : "text-left";
 
   return (
     <div
-      className={`min-w-0 rounded-2xl bg-surface-container-low px-3 py-2.5 ${alignClass} ${className}`}
+      className={`min-w-0 rounded-2xl px-3 py-2.5 ${metricPillSurfaceClass[surface]} ${alignClass} ${className}`}
     >
-      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+      <p
+        className={`truncate text-[9px] font-bold tracking-wide uppercase ${metricPillLabelClass[surface]}`}
+      >
         {label}
       </p>
       <MoneyValue
         amount={amount}
         variant={variant}
         prefix={prefix}
-        tone={tone}
+        tone={surface === "inverse" ? "inverse" : tone}
         align={align}
         size={valueSize}
         className="mt-0.5"

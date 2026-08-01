@@ -6,7 +6,7 @@ import { WorkflowFormSheet } from "./guided-form";
 function Demo(): React.JSX.Element {
   const [open, setOpen] = useState(true);
   return (
-    <div className="h-[480px] w-full">
+    <div className="h-120 w-full">
       <WorkflowFormSheet
         open={open}
         title="Setujui Pengajuan"

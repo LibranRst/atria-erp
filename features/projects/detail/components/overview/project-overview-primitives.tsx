@@ -2,47 +2,12 @@
 
 import React from "react";
 
-import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-
-export function SummaryMetric({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: number;
-}): React.JSX.Element {
-  return (
-    <div className="min-w-0 rounded-2xl bg-white/8 p-3">
-      <p className="truncate text-[9px] font-bold tracking-wide text-white/55 uppercase">{label}</p>
-      <MoneyValue amount={value} variant="compactWithFull" tone="inverse" className="mt-1" />
-    </div>
-  );
-}
-
-export function DetailMetric({
-  label,
-  value,
-  danger = false,
-}: {
-  readonly label: string;
-  readonly value: number;
-  readonly danger?: boolean;
-}): React.JSX.Element {
-  return (
-    <div className="min-w-0 rounded-2xl bg-surface-container-low p-3">
-      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
-        {label}
-      </p>
-      <MoneyValue
-        amount={value}
-        variant="compactWithFull"
-        tone={danger ? "danger" : "default"}
-        className="mt-1"
-      />
-    </div>
-  );
-}
-
+/**
+ * Baris detail bertumpuk untuk sheet identitas proyek: label kecil di atas,
+ * nilai tebal di bawah, dengan konteks tambahan opsional. Untuk baris fakta
+ * satu baris (label kiri, nilai kanan) gunakan `FactRow` dari
+ * `components/ui/feedback/main-surface`.
+ */
 export function DetailRow({
   label,
   value,

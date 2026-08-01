@@ -8,7 +8,7 @@ import { SheetFooterActions } from "./sheet-footer-actions";
 function BottomSheetDemo(): React.JSX.Element {
   const [open, setOpen] = useState(true);
   return (
-    <div className="h-[520px] w-full">
+    <div className="h-130 w-full">
       <Button variant="secondary" onClick={() => setOpen(true)}>
         Buka drawer
       </Button>
@@ -24,8 +24,8 @@ function BottomSheetDemo(): React.JSX.Element {
         }
       >
         <p className="text-sm text-on-surface-variant">
-          Pembelian semen 40 sak untuk proyek Renovasi Rumah Jl. Kenanga No. 12. Total Rp
-          6.400.000, dibayar tunai oleh Budi Santoso.
+          Pembelian semen 40 sak untuk proyek Renovasi Rumah Jl. Kenanga No. 12. Total Rp 6.400.000,
+          dibayar tunai oleh Budi Santoso.
         </p>
       </BottomSheet>
     </div>
@@ -35,7 +35,7 @@ function BottomSheetDemo(): React.JSX.Element {
 function ConfirmationModalDemo(): React.JSX.Element {
   const [open, setOpen] = useState(true);
   return (
-    <div className="h-[420px] w-full">
+    <div className="h-105 w-full">
       <Button variant="secondary" onClick={() => setOpen(true)}>
         Buka konfirmasi
       </Button>
@@ -58,7 +58,7 @@ function ConfirmationModalDemo(): React.JSX.Element {
 function ConfirmationSheetDemo(): React.JSX.Element {
   const [open, setOpen] = useState(true);
   return (
-    <div className="h-[420px] w-full">
+    <div className="h-105 w-full">
       <Button variant="secondary" onClick={() => setOpen(true)}>
         Buka konfirmasi hapus
       </Button>

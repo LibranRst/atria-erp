@@ -19,6 +19,7 @@ import {
   ValuePreviewStrip,
 } from "@/components/ui";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { FactRow } from "@/components/ui/feedback/main-surface";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import type { RabEstimateView } from "../shared/rap-rab-manager";
 import type { RabBundleForm } from "../../types/rab-drawer-types";
@@ -81,8 +82,8 @@ export function RabBundleDrawer({
               </div>
             )}
 
-            <DetailRow label="Jumlah Paket" value={`${bundleForm.quantity} ${bundleForm.unit}`} />
-            <DetailRow
+            <FactRow label="Jumlah Paket" value={`${bundleForm.quantity} ${bundleForm.unit}`} />
+            <FactRow
               label="Harga per Paket"
               value={
                 <MoneyValue
@@ -93,7 +94,7 @@ export function RabBundleDrawer({
                 />
               }
             />
-            <DetailRow
+            <FactRow
               label="Total Nilai Paket"
               value={
                 <MoneyValue
@@ -112,7 +113,7 @@ export function RabBundleDrawer({
               <p className="px-1 text-xs font-bold text-on-surface-variant">Item Anggota Paket</p>
               <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
                 {bundleItems.map((item) => (
-                  <DetailRow
+                  <FactRow
                     key={item.id}
                     label={item.clientLabel}
                     value={`${item.quantity} ${item.unit}`}
@@ -293,20 +294,5 @@ export function RabBundleDrawer({
         }
       />
     </>
-  );
-}
-
-function DetailRow({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <div className="flex items-start justify-between gap-4 px-4 py-3.5 text-xs">
-      <span className="shrink-0 text-on-surface-variant">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
-    </div>
   );
 }

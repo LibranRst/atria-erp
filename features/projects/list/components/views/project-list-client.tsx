@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { ProjectDrawer } from "../drawers/project-drawer";
 import type { SearchFilterMode } from "@/components/ui/navigation/exclusive-search-filter-bar";
 import { updateUrlSearchParam, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { usePreservedScrollHeight } from "@/features/shared-hooks/use-preserved-scroll-height";
 import { ProjectListCard } from "../cards/project-list-card";
 import {
   ProjectListEmptyState,
@@ -36,10 +37,12 @@ export function ProjectListClient({
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [controlMode, setControlMode] = useState<SearchFilterMode>("filter");
-  const [resultsMinHeight, setResultsMinHeight] = useState<number | null>(null);
-  const resultsRef = React.useRef<HTMLDivElement | null>(null);
-  const pendingScrollYRef = React.useRef<number | null>(null);
   const activeFilter = toFilterId(useUrlSearchParam("filter"));
+  const {
+    containerRef: resultsRef,
+    containerStyle: resultsStyle,
+    preserveScrollPosition,
+  } = usePreservedScrollHeight(activeFilter);
   const clearQueryParam = React.useCallback((key: string): void => {
     updateUrlSearchParam(key, null, "replace");
   }, []);
@@ -81,18 +84,9 @@ export function ProjectListClient({
     [projects],
   );
 
-  React.useLayoutEffect(() => {
-    const pendingScrollY = pendingScrollYRef.current;
-    if (pendingScrollY === null) return;
-    window.scrollTo({ top: pendingScrollY, behavior: "auto" });
-    pendingScrollYRef.current = null;
-  }, [activeFilter]);
-
   function changeFilter(filter: FilterId): void {
     if (filter === activeFilter) return;
-    const currentResultsHeight = resultsRef.current?.getBoundingClientRect().height ?? 0;
-    setResultsMinHeight((current) => Math.max(current ?? 0, currentResultsHeight));
-    pendingScrollYRef.current = window.scrollY;
+    preserveScrollPosition();
     selectFilter(filter);
   }
 
@@ -100,7 +94,7 @@ export function ProjectListClient({
     setSearchQuery("");
     setControlMode(mode);
     if (mode === "search" && activeFilter !== "ALL") {
-      pendingScrollYRef.current = window.scrollY;
+      preserveScrollPosition();
       selectFilter("ALL");
     }
   }
@@ -118,10 +112,7 @@ export function ProjectListClient({
         onSearchChange={setSearchQuery}
       />
 
-      <div
-        ref={resultsRef}
-        style={resultsMinHeight === null ? undefined : { minHeight: `${resultsMinHeight}px` }}
-      >
+      <div ref={resultsRef} style={resultsStyle}>
         {filteredProjects.length === 0 ? (
           <ProjectListEmptyState
             mode={controlMode}

@@ -1010,7 +1010,7 @@ export async function seedDemoDatabase(): Promise<void> {
         projectManagerId: "33333333-3333-3333-3333-333333333331",
         status: "ACTIVE",
         financialHealth: "HEALTHY",
-        totalContractValue: "650000000.00",
+        totalContractValue: "0.00",
         startDate: demoDate("2026-07-01"),
         endDate: demoDate("2026-10-30"),
         location: "Jl. Brawijaya III No. 5, Jakarta Selatan",
@@ -1026,7 +1026,7 @@ export async function seedDemoDatabase(): Promise<void> {
         projectManagerId: "33333333-3333-3333-3333-333333333332",
         status: "ON_HOLD", // ON_HOLD filter test!
         financialHealth: "HEALTHY",
-        totalContractValue: "450000000.00",
+        totalContractValue: "0.00",
         startDate: demoDate("2026-08-01"),
         endDate: demoDate("2026-11-01"),
         location: "Jl. Kemang Selatan No. 8, Jakarta Selatan",
@@ -1057,7 +1057,7 @@ export async function seedDemoDatabase(): Promise<void> {
         projectManagerId: "33333333-3333-3333-3333-333333333332",
         status: "COMPLETED", // COMPLETED filter test!
         financialHealth: "HEALTHY",
-        totalContractValue: "350000000.00",
+        totalContractValue: "0.00",
         startDate: demoDate("2026-02-15"),
         endDate: demoDate("2026-05-15"),
         location: "Ruko Commercial Goldfinch BSD, Tangerang",
@@ -1073,7 +1073,7 @@ export async function seedDemoDatabase(): Promise<void> {
         projectManagerId: "33333333-3333-3333-3333-333333333331",
         status: "CANCELLED", // CANCELLED filter test!
         financialHealth: "HEALTHY",
-        totalContractValue: "300000000.00",
+        totalContractValue: "0.00",
         startDate: demoDate("2026-04-01"),
         endDate: demoDate("2026-06-01"),
         location: "PIK Avenue Shophouse Cluster B, Jakarta Utara",
@@ -1204,6 +1204,16 @@ export async function seedDemoDatabase(): Promise<void> {
         approvedValue: "500000000.00",
         approvedAt: demoDate("2026-02-28T10:30:00Z"),
       },
+      {
+        id: "19191919-1919-1919-1919-191919191903",
+        projectId: "77777777-7777-7777-7777-777777777772",
+        status: "APPROVED",
+        revision: 1,
+        title: "RAB Penthouse Fit-Out Sudirman Suites",
+        clientNotes: "Kontrak awal penthouse fit-out, disetujui klien.",
+        approvedValue: "1200000000.00",
+        approvedAt: demoDate("2026-06-14T11:00:00Z"),
+      },
     ]);
 
     await tx.insert(rabEstimateItem).values([
@@ -1233,6 +1243,84 @@ export async function seedDemoDatabase(): Promise<void> {
         unitPrice: "180000000.00",
         lineTotal: "180000000.00",
         displayOrder: 2,
+        isBundle: true,
+      },
+      {
+        id: "20202020-2020-2020-2020-202020202003",
+        rabEstimateId: "19191919-1919-1919-1919-191919191902",
+        sourceType: "MANUAL",
+        clientLabel: "Executive suite fit-out package",
+        description: "Partisi, flooring, ceiling, dan pengecatan director suite & meeting room.",
+        quantity: "1.00",
+        unit: "paket",
+        unitPrice: "350000000.00",
+        lineTotal: "350000000.00",
+        displayOrder: 1,
+        isBundle: true,
+      },
+      {
+        id: "20202020-2020-2020-2020-202020202004",
+        rabEstimateId: "19191919-1919-1919-1919-191919191902",
+        sourceType: "MANUAL",
+        clientLabel: "Built-in furniture & finishing",
+        description: "Fabrikasi dan instalasi furniture built-in beserta finishing akhir.",
+        quantity: "1.00",
+        unit: "paket",
+        unitPrice: "150000000.00",
+        lineTotal: "150000000.00",
+        displayOrder: 2,
+        isBundle: true,
+      },
+      {
+        id: "20202020-2020-2020-2020-202020202005",
+        rabEstimateId: "19191919-1919-1919-1919-191919191903",
+        sourceType: "MANUAL",
+        clientLabel: "Wall panel & veneer penthouse",
+        description: "Instalasi backing, wall panel veneer, list bayangan, dan perapihan.",
+        quantity: "1.00",
+        unit: "paket",
+        unitPrice: "57500000.00",
+        lineTotal: "57500000.00",
+        displayOrder: 1,
+        isBundle: false,
+      },
+      {
+        id: "20202020-2020-2020-2020-202020202007",
+        rabEstimateId: "19191919-1919-1919-1919-191919191903",
+        sourceType: "MANUAL",
+        clientLabel: "Interior fit-out & finishing penthouse",
+        description: "Flooring, ceiling, partisi, dan pengecatan seluruh unit penthouse.",
+        quantity: "1.00",
+        unit: "paket",
+        unitPrice: "700000000.00",
+        lineTotal: "700000000.00",
+        displayOrder: 3,
+        isBundle: true,
+      },
+      {
+        id: "20202020-2020-2020-2020-202020202008",
+        rabEstimateId: "19191919-1919-1919-1919-191919191903",
+        sourceType: "MANUAL",
+        clientLabel: "Kitchen & bathroom fixture package",
+        description: "Supply dan instalasi fixture kitchen serta kamar mandi premium.",
+        quantity: "1.00",
+        unit: "paket",
+        unitPrice: "250000000.00",
+        lineTotal: "250000000.00",
+        displayOrder: 4,
+        isBundle: true,
+      },
+      {
+        id: "20202020-2020-2020-2020-202020202009",
+        rabEstimateId: "19191919-1919-1919-1919-191919191903",
+        sourceType: "MANUAL",
+        clientLabel: "MEP & smart home integration",
+        description: "Instalasi elektrikal, AC, dan sistem smart home penthouse.",
+        quantity: "1.00",
+        unit: "paket",
+        unitPrice: "116500000.00",
+        lineTotal: "116500000.00",
+        displayOrder: 5,
         isBundle: true,
       },
     ]);
@@ -1279,7 +1367,7 @@ export async function seedDemoDatabase(): Promise<void> {
     // Project Budgets Setup
     const mentengContractValue = 800000000;
     const sudirmanContractValue = 1200000000;
-    const sandboxContractValue = 650000000;
+    const sandboxContractValue = 0;
     const senopatiContractValue = 500000000;
     const mentengInternalBudget = calculateInternalBudget(mentengContractValue);
     const sudirmanInternalBudget = calculateInternalBudget(sudirmanContractValue);
@@ -1510,6 +1598,23 @@ export async function seedDemoDatabase(): Promise<void> {
         lockedAt: demoDate("2026-06-14T10:15:00Z"),
         internalNote: "Final ukuran wajib diverifikasi bersama PM sebelum produksi.",
         displayOrder: 20,
+      },
+    ]);
+
+    await tx.insert(rabEstimateItem).values([
+      {
+        id: "20202020-2020-2020-2020-202020202006",
+        rabEstimateId: "19191919-1919-1919-1919-191919191903",
+        sourceType: "CATEGORY_PLAN",
+        sourceProjectCategoryPlanItemId: "35353535-3535-3535-3535-353535353504",
+        clientLabel: "Kaca & cermin custom master suite",
+        description: "Survey, fabrikasi, bevel, pengiriman, dan instalasi kaca dekoratif.",
+        quantity: "1.00",
+        unit: "paket",
+        unitPrice: "76000000.00",
+        lineTotal: "76000000.00",
+        displayOrder: 2,
+        isBundle: false,
       },
     ]);
 

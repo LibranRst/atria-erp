@@ -12,8 +12,18 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const items: readonly HeaderMenuItem[] = [
-  { label: "Dashboard", href: "/ledger", iconName: "dashboard", match: (path) => path === "/ledger" },
-  { label: "Proyek", href: "/projects", iconName: "folder", match: (path) => path.startsWith("/projects") },
+  {
+    label: "Dashboard",
+    href: "/ledger",
+    iconName: "dashboard",
+    match: (path) => path === "/ledger",
+  },
+  {
+    label: "Proyek",
+    href: "/projects",
+    iconName: "folder",
+    match: (path) => path.startsWith("/projects"),
+  },
   {
     label: "Kas & Tagihan",
     href: "/expenses",

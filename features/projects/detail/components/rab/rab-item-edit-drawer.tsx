@@ -20,6 +20,7 @@ import {
 } from "@/components/ui";
 import { Badge } from "@/components/ui/badge/badge";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
+import { FactRow } from "@/components/ui/feedback/main-surface";
 import { rabSourceLabel } from "../shared/rap-rab-primitives";
 import type { RabEstimateView, RabItemView } from "../shared/rap-rab-manager";
 
@@ -86,8 +87,8 @@ export function RabItemEditDrawer({
               </div>
             )}
 
-            <DetailRow label="Jumlah" value={`${item.quantity} ${item.unit}`} />
-            <DetailRow
+            <FactRow label="Jumlah" value={`${item.quantity} ${item.unit}`} />
+            <FactRow
               label="Harga Satuan Klien"
               value={
                 <MoneyValue
@@ -98,7 +99,7 @@ export function RabItemEditDrawer({
                 />
               }
             />
-            <DetailRow
+            <FactRow
               label="Subtotal Klien"
               value={
                 <MoneyValue
@@ -110,10 +111,7 @@ export function RabItemEditDrawer({
                 />
               }
             />
-            <DetailRow
-              label="Tampil ke Klien"
-              value={item.isHidden ? "Tidak (Tersembunyi)" : "Ya"}
-            />
+            <FactRow label="Tampil ke Klien" value={item.isHidden ? "Tidak (Tersembunyi)" : "Ya"} />
           </div>
         </div>
       </BottomSheet>
@@ -211,20 +209,5 @@ export function RabItemEditDrawer({
         </FormSection>
       </div>
     </OperationalFormSheet>
-  );
-}
-
-function DetailRow({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <div className="flex items-start justify-between gap-4 px-4 py-3.5 text-xs">
-      <span className="shrink-0 text-on-surface-variant">{label}</span>
-      <span className="text-right font-bold text-on-surface">{value}</span>
-    </div>
   );
 }

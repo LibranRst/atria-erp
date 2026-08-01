@@ -1,10 +1,10 @@
 import React from "react";
 
 import { cn } from "@/lib/utils/cn";
+import { formatIdr, formatTightIdr } from "@/lib/utils/money";
 import { SectionCountPill, StatusBadge, type StatusBadgeTone } from "../badge/badge";
 import { SectionAction } from "../button/button";
 import { AppIcon } from "../icon/app-icon";
-import { MoneyValue } from "./page-primitives";
 
 export type SummarySurfaceTone = "critical" | "warning" | "positive" | "neutral";
 export type InlineStateTone = "neutral" | "positive" | "warning" | "critical" | "pending";
@@ -43,7 +43,7 @@ export function SummarySurface({
 }): React.JSX.Element {
   return (
     <section
-      className="relative isolate overflow-hidden rounded-[26px] bg-white/88 p-2 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5"
+      className="relative isolate overflow-hidden rounded-[26px] bg-white/88 p-2 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl"
       aria-label={ariaLabel}
     >
       <span
@@ -88,6 +88,7 @@ export function GroupedSurface({
 export function SectionHeader({
   id,
   title,
+  titleAction,
   meta,
   count,
   countLabel,
@@ -96,6 +97,8 @@ export function SectionHeader({
 }: {
   readonly id?: string;
   readonly title: string;
+  /** Elemen kecil yang menempel pada judul, misalnya badge status seksi. */
+  readonly titleAction?: React.ReactNode;
   readonly meta?: string;
   readonly count?: number;
   readonly countLabel?: string;
@@ -104,12 +107,15 @@ export function SectionHeader({
 }): React.JSX.Element {
   return (
     <div className={`flex items-center justify-between gap-3 px-1 pt-2 ${className}`}>
-      <h2
-        id={id}
-        className="min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5"
-      >
-        {title}
-      </h2>
+      <div className="flex min-w-0 items-center gap-2">
+        <h2
+          id={id}
+          className="min-w-0 truncate text-[17px] leading-6 font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5"
+        >
+          {title}
+        </h2>
+        {titleAction}
+      </div>
       {count !== undefined || meta || action ? (
         <div className="flex shrink-0 items-center gap-2">
           {count !== undefined ? (
@@ -128,6 +134,7 @@ export function SectionHeader({
 
 export function MainSection({
   title,
+  titleAction,
   meta,
   count,
   countLabel,
@@ -136,6 +143,7 @@ export function MainSection({
   className = "",
 }: {
   readonly title: string;
+  readonly titleAction?: React.ReactNode;
   readonly meta?: string;
   readonly count?: number;
   readonly countLabel?: string;
@@ -147,6 +155,7 @@ export function MainSection({
     <section className={`space-y-2 ${className}`}>
       <SectionHeader
         title={title}
+        titleAction={titleAction}
         meta={meta}
         count={count}
         countLabel={countLabel}
@@ -159,30 +168,98 @@ export function MainSection({
 
 export function DetailSection({
   title,
+  titleAction,
   count,
   countLabel,
   href,
   actionLabel = "Lihat semua",
   children,
+  className = "",
   contentClassName = "",
 }: {
   readonly title: string;
+  readonly titleAction?: React.ReactNode;
   readonly count?: number;
   readonly countLabel?: string;
   readonly href?: string;
   readonly actionLabel?: string;
   readonly children: React.ReactNode;
+  readonly className?: string;
   readonly contentClassName?: string;
 }): React.JSX.Element {
   return (
     <MainSection
       title={title}
+      titleAction={titleAction}
       count={count}
       countLabel={countLabel}
       action={href ? <SectionAction href={href} label={actionLabel} /> : undefined}
+      className={className}
     >
       <GroupedSurface className={contentClassName}>{children}</GroupedSurface>
     </MainSection>
+  );
+}
+
+/**
+ * Seksi di dalam bottom sheet: label seksi di luar kartu, lalu satu permukaan
+ * putih yang menampung baris-barisnya. Dipakai bersama oleh sheet detail
+ * material, penerimaan, dan sheet lain dengan struktur yang sama.
+ */
+export function SheetSection({
+  title,
+  children,
+}: {
+  readonly title: string;
+  readonly children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <section className="space-y-2">
+      <h3 className="px-1 text-[12px] font-bold tracking-wide text-on-surface-variant uppercase">
+        {title}
+      </h3>
+      <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-ring-subtle">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Panel putih dengan header ber-padding di dalam permukaannya sendiri. Dipakai
+ * untuk blok kerja seperti RAP/RAB yang butuh judul, eyebrow, dan aksi menempel
+ * pada konten — berbeda dari `MainSection` yang judulnya berada di luar kartu.
+ */
+export function PanelSection({
+  eyebrow,
+  title,
+  action,
+  children,
+  className = "",
+}: {
+  readonly eyebrow?: string;
+  readonly title: string;
+  readonly action?: React.ReactNode;
+  readonly children: React.ReactNode;
+  readonly className?: string;
+}): React.JSX.Element {
+  return (
+    <section
+      className={`rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle ${className}`}
+    >
+      <div className="mb-sm flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          {eyebrow && (
+            <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+              {eyebrow}
+            </p>
+          )}
+          <h3 className="text-[17px] leading-6 font-semibold text-on-surface">{title}</h3>
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -208,6 +285,28 @@ export function RowGroup({
   return <div className="divide-y divide-black/5.5">{children}</div>;
 }
 
+/**
+ * Baris fakta satu baris: label di kiri, nilai di kanan. Dipakai di dalam sheet
+ * detail dan permukaan grouped. Gunakan `inset={false}` bila kontainer induknya
+ * sudah punya padding horizontal sendiri.
+ */
+export function FactRow({
+  label,
+  value,
+  inset = true,
+}: {
+  readonly label: string;
+  readonly value: React.ReactNode;
+  readonly inset?: boolean;
+}): React.JSX.Element {
+  return (
+    <div className={`flex items-start justify-between gap-4 py-3.5 text-xs ${inset ? "px-4" : ""}`}>
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="min-w-0 text-right font-bold text-on-surface">{value}</span>
+    </div>
+  );
+}
+
 export function SummaryFact({
   label,
   value,
@@ -229,19 +328,27 @@ export function SummaryFact({
         : tone === "positive"
           ? "text-success"
           : "text-on-surface";
-  const moneyTone = tone === "danger" ? "danger" : tone === "warning" ? "warning" : "default";
+
+  const displayValue = amount !== undefined ? formatTightIdr(amount) : value;
+  const exactValue = amount !== undefined ? formatIdr(amount) : value;
 
   return (
-    <div className="flex min-w-0 flex-col gap-1 rounded-xl bg-white px-2.5 py-2">
-      <p className="truncate text-[9px] leading-4 font-bold tracking-wide text-on-surface-variant/55 uppercase">
+    <div className="flex min-w-0 flex-col gap-1 rounded-xl bg-white px-2.5 py-2 max-[430px]:px-2">
+      <p className="line-clamp-2 text-[9px] leading-[1.35] font-bold tracking-wide text-on-surface-variant/55 uppercase">
         {label}
       </p>
-      {amount !== undefined ? (
-        <MoneyValue amount={amount} variant="compactWithFull" size="sm" tone={moneyTone} />
-      ) : children ? (
-        children
-      ) : (
-        <p className={cn("truncate font-mono text-sm leading-4 font-black", toneClass)}>{value}</p>
+      {children ?? (
+        <span className="money-value-fit block min-w-0">
+          <span
+            className={cn(
+              "financial-amount money-value-fit__primary block font-mono font-black tabular-nums",
+              toneClass,
+            )}
+            title={exactValue}
+          >
+            {displayValue}
+          </span>
+        </span>
       )}
     </div>
   );

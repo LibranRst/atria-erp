@@ -43,6 +43,7 @@ const componentNameByLegacyName = {
   developer_mode: "CodeIcon",
   done: "CheckIcon",
   domain: "BuildingsIcon",
+  edit: "PencilSimpleIcon",
   edit_note: "NotePencilIcon",
   engineering: "HardHatIcon",
   error: "WarningCircleIcon",
