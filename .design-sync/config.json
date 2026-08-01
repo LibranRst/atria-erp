@@ -1,0 +1,20 @@
+{
+  "projectId": "fea87266-3b6a-4d3a-9f85-59461b5416ae",
+  "shape": "storybook",
+  "storybookConfigDir": ".storybook",
+  "pkg": "atria-ui",
+  "globalName": "AtriaUI",
+  "storybookStatic": ".design-sync/sb-reference",
+  "entry": ".design-sync/entry.ts",
+  "tsconfig": "tsconfig.json",
+  "buildCmd": "bunx tsc -p .design-sync/tsconfig.dts.json",
+  "extraEntries": ["./.design-sync/polyfills/process-shim.ts"],
+  "readmeHeader": ".design-sync/conventions.md",
+  "overrides": {
+    "OperationalFormSheet": { "cardMode": "single", "primaryStory": "Default" },
+    "WorkflowFormSheet": { "cardMode": "single", "primaryStory": "Default" },
+    "BottomNavBackdrop": { "cardMode": "single", "primaryStory": "Default" },
+    "HeaderMorphMenu": { "cardMode": "single", "primaryStory": "Closed" },
+    "BottomSheet": { "cardMode": "single", "primaryStory": "Sheet" }
+  }
+}

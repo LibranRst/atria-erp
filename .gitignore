@@ -59,3 +59,15 @@ next-env.d.ts
 output/
 scratch/
 .atria-demo/
+
+# storybook
+storybook-static/
+
+# design-sync working state (converter scripts, reference build, staged deps)
+.ds-sync/
+.design-sync/sb-reference/
+.design-sync/dts-out/
+.design-sync/learnings/
+.design-sync/.cache/
+.design-sync/node_modules
+ds-bundle/

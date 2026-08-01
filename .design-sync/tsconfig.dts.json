@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": false,
+    "outDir": "./dts-out",
+    "rootDir": ".."
+  },
+  "include": ["entry.ts"],
+  "exclude": ["../node_modules", "../scratch", "../**/*.test.ts", "../**/*.test.tsx"]
+}

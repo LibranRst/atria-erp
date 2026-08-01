@@ -2,6 +2,9 @@
   "name": "atria-erp",
   "version": "0.1.0",
   "private": true,
+  "publishConfig": {
+    "types": ".design-sync/dts-out/.design-sync/entry.d.ts"
+  },
   "scripts": {
     "dev": "node scripts/dev-lan.mjs",
     "dev:default": "next dev",
@@ -16,7 +19,9 @@
     "format:check": "prettier --check . --ignore-unknown",
     "tailwind:canonical": "eslint app components features --fix --no-warn-ignored",
     "tailwind:format": "bun run tailwind:canonical && prettier --write \"{app,components,features,src}/**/*.{js,jsx,ts,tsx}\"",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@google/genai": "^2.8.0",
@@ -36,6 +41,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@storybook/addon-a11y": "^10.5.5",
+    "@storybook/nextjs": "10.5.5",
     "@tailwindcss/node": "^4.3.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
@@ -47,9 +54,11 @@
     "eslint": "^9.20.0",
     "eslint-config-next": "^16.2.10",
     "eslint-plugin-tailwind-canonical-classes": "^1.4.1",
+    "mini-css-extract-plugin": "2.10.2",
     "pg": "^8.21.0",
     "prettier": "^3.9.5",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "storybook": "10.5.5",
     "tailwindcss": "^4.3.3",
     "typescript": "^5"
   },
