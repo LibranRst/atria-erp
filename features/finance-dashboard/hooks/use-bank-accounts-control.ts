@@ -12,7 +12,7 @@ import {
   updateBankAccount,
 } from "@/app/actions/finance/bank-accounts";
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import type { FinanceOperationSuccess } from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import type { OperationSuccess } from "@/components/ui";
 import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
 import type {
   AccountDraft,
@@ -93,7 +93,7 @@ export type BankAccountsControlState = {
   readonly selected: BankAccount | null;
   readonly sheet: SheetMode | null;
   readonly pending: boolean;
-  readonly success: FinanceOperationSuccess | null;
+  readonly success: OperationSuccess | null;
   readonly accountDraft: AccountDraft;
   readonly movementDraft: MovementDraft;
   readonly transferDraft: TransferDraft;
@@ -151,7 +151,7 @@ export function useBankAccountsControl({
   const [selected, setSelected] = React.useState<BankAccount | null>(null);
   const [sheet, setSheet] = React.useState<SheetMode | null>(null);
   const [pending, startTransition] = React.useTransition();
-  const [success, setSuccess] = React.useState<FinanceOperationSuccess | null>(null);
+  const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
 
   const initialAccountRecovery = React.useCallback((): AccountDraft => newAccountDraft(), []);
   const accountRecovery = useLocalFormRecovery({

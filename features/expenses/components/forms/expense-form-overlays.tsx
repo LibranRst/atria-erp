@@ -3,10 +3,10 @@
 import { motion } from "framer-motion";
 import { ConfirmationModal, ConfirmationSheet } from "@/components/ui";
 import {
-  FinanceSuccessSheet,
+  OperationSuccessSheet,
   FinanceUnsavedChangesModal,
-  type FinanceOperationSuccess,
-} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+  type OperationSuccess,
+} from "@/components/ui";
 import type { ExpenseReceiptOcrResult } from "@/features/expenses/utils/expense-receipt-ocr";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
@@ -17,7 +17,7 @@ interface ExpenseFormOverlaysProps {
   readonly pendingOcr: ExpenseReceiptOcrResult | null;
   readonly projectChange: string | null;
   readonly pendingDiscardDraftId: string | null;
-  readonly success: FinanceOperationSuccess | null;
+  readonly success: OperationSuccess | null;
   readonly onKeepDraft: () => void;
   readonly onDiscardDraft: () => void;
   readonly onContinueEditing: () => void;
@@ -148,7 +148,7 @@ export function ExpenseFormOverlays({
         onConfirm={onConfirmDiscardDraft}
       />
 
-      <FinanceSuccessSheet
+      <OperationSuccessSheet
         success={success}
         secondaryLabel="Tambah Pengeluaran"
         onClose={onCloseSuccess}

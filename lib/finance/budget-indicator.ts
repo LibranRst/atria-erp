@@ -1,6 +1,4 @@
-"use client";
-
-import type { DashboardTone } from "@/features/finance-dashboard/types/dashboard-types";
+import type { IndicatorTone } from "@/lib/types/indicator-tone";
 
 export const RISK_WARNING_THRESHOLD = 80;
 export const RISK_LIMIT_THRESHOLD = 100;
@@ -49,7 +47,7 @@ export function getApprovalBudgetImpact(
   };
 }
 
-export function indicatorToneClass(tone: DashboardTone): string {
+export function indicatorToneClass(tone: IndicatorTone): string {
   if (tone === "critical") return "bg-error";
   if (tone === "warning") return "bg-warning";
   if (tone === "positive") return "bg-primary";

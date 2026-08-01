@@ -13,7 +13,7 @@ import {
   useSheetPresenceValue,
   WorkflowFormSheet,
 } from "@/components/ui";
-import { FinanceUnsavedChangesModal } from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { FinanceUnsavedChangesModal } from "@/components/ui";
 import type {
   BankAccountItem,
   ExpenseCostItem,

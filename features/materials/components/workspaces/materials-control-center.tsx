@@ -27,7 +27,7 @@ import {
 } from "@/features/materials/components/tabs/material-dashboard-tabs";
 import { useMaterialControlDerivedData } from "@/features/materials/hooks/use-material-control-derived-data";
 import { useMaterialControlOperations } from "@/features/materials/hooks/use-material-control-operations";
-import { MaterialSuccessSheet } from "@/features/materials/components/shared/material-success-sheet";
+import { OperationSuccessSheet } from "@/components/ui";
 import { MaterialTabsNavigation } from "@/features/materials/components/tabs/material-tabs-navigation";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import {
@@ -452,7 +452,7 @@ export function MaterialsControlCenter({
           </div>
         ) : null}
       </ConfirmationSheet>
-      <MaterialSuccessSheet success={success} onClose={() => setSuccess(null)} />
+      <OperationSuccessSheet success={success} onClose={() => setSuccess(null)} />
     </section>
   );
 }

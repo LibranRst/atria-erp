@@ -11,8 +11,8 @@ import {
   getApprovalBudgetImpact,
   RISK_LIMIT_THRESHOLD,
   RISK_WARNING_THRESHOLD,
-} from "@/features/finance-dashboard/utils/budget-indicator-utils";
-import { formatShortDate } from "@/features/finance-dashboard/utils/dashboard-formatters";
+} from "@/lib/finance/budget-indicator";
+import { formatShortDate } from "@/lib/utils/date";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 export type ApprovalItem = ApprovalDetail;

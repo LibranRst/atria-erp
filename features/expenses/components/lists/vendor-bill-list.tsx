@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { FinanceSuccessSheet } from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { OperationSuccessSheet } from "@/components/ui";
 import {
   VendorDisbursePaymentSheet,
   VendorSchedulePaymentSheet,
@@ -99,7 +99,7 @@ export function VendorBillList({
         onRefNumberChange={operations.setRefNumber}
       />
 
-      <FinanceSuccessSheet success={operations.success} onClose={operations.clearSuccess} />
+      <OperationSuccessSheet success={operations.success} onClose={operations.clearSuccess} />
     </div>
   );
 }

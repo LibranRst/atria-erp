@@ -10,7 +10,7 @@ import {
   getApprovalBudgetImpact,
   RISK_LIMIT_THRESHOLD,
   RISK_WARNING_THRESHOLD,
-} from "@/features/finance-dashboard/utils/budget-indicator-utils";
+} from "@/lib/finance/budget-indicator";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 

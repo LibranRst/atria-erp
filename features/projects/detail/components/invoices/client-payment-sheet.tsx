@@ -13,10 +13,7 @@ import {
   TextInput,
   useSheetPresenceValue,
 } from "@/components/ui";
-import {
-  FinanceUnsavedChangesModal,
-  MoneyImpactRow,
-} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { FinanceUnsavedChangesModal, MoneyImpactRow } from "@/components/ui";
 import type { BankAccountItem, ClientInvoiceItem } from "../../types/project-invoices-types";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 

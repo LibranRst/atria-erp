@@ -5,7 +5,7 @@ import React from "react";
 
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import { AppIcon } from "@/components/ui/icon/app-icon";
-import { BudgetSplitIndicator } from "@/features/finance-dashboard/components/cards/budget-split-indicator";
+import { BudgetSplitIndicator } from "@/components/ui/feedback/budget-split-indicator";
 import {
   ProjectCoverMedia,
   ProjectHeroStatusPill,

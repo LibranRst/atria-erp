@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import { payVendorBill } from "@/app/actions/finance/pay-vendor-bill";
 import { scheduleVendorBillPayment } from "@/app/actions/finance/schedule-vendor-bill";
-import type { FinanceOperationSuccess } from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import type { OperationSuccess } from "@/components/ui";
 import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
 import type {
   VendorListBankAccount,
@@ -35,7 +35,7 @@ type VendorPaymentOperations = {
   readonly selectedPayment: VendorListPayment | null;
   readonly pending: boolean;
   readonly error: string | null;
-  readonly success: FinanceOperationSuccess | null;
+  readonly success: OperationSuccess | null;
   readonly selectedBankId: string;
   readonly scheduleAmount: string;
   readonly scheduleDate: string;
@@ -71,7 +71,7 @@ export function useVendorPaymentOperations({
   const [selectedBill, setSelectedBill] = React.useState<VendorListBill | null>(null);
   const [selectedPayment, setSelectedPayment] = React.useState<VendorListPayment | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<FinanceOperationSuccess | null>(null);
+  const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
   const initialScheduleRecovery = React.useCallback(
     () => ({
       billId: "",

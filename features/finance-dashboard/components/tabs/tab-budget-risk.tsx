@@ -4,7 +4,7 @@ import React from "react";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { BudgetSplitIndicator } from "@/features/finance-dashboard/components/cards/budget-split-indicator";
+import { BudgetSplitIndicator } from "@/components/ui/feedback/budget-split-indicator";
 import {
   DetailSection,
   RowGroup,

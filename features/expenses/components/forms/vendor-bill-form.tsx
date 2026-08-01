@@ -27,10 +27,10 @@ import {
   WorkflowFormSheet,
 } from "@/components/ui";
 import {
-  FinanceSuccessSheet,
+  OperationSuccessSheet,
   FinanceUnsavedChangesModal,
-  type FinanceOperationSuccess,
-} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+  type OperationSuccess,
+} from "@/components/ui";
 import { useHybridVendorBillDraft } from "@/features/expenses/hooks/use-hybrid-vendor-bill-draft";
 import type { VendorBillDraftPayload } from "@/lib/validations/vendor-bill-draft";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
@@ -77,7 +77,7 @@ export function VendorBillForm({
   const [pendingProjectId, setPendingProjectId] = React.useState<string | null>(null);
   const [pendingDiscardDraftId, setPendingDiscardDraftId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<FinanceOperationSuccess | null>(null);
+  const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
   const [drafts, setDrafts] = React.useState<readonly VendorBillDraftSummary[]>([]);
   const currentProjectId = React.useMemo(() => {
     const parts = pathname.split("/");
@@ -339,7 +339,10 @@ export function VendorBillForm({
                           })}
                         </span>
                       </span>
-                      <AppIcon name="chevron_right" className="shrink-0 text-[18px] leading-none text-on-surface-variant" />
+                      <AppIcon
+                        name="chevron_right"
+                        className="shrink-0 text-[18px] leading-none text-on-surface-variant"
+                      />
                     </button>
                     <button
                       type="button"
@@ -545,7 +548,7 @@ export function VendorBillForm({
           setPendingDiscardDraftId(null);
         }}
       />
-      <FinanceSuccessSheet
+      <OperationSuccessSheet
         success={success}
         secondaryLabel="Tambah"
         onClose={() => setSuccess(null)}

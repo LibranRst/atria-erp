@@ -4,10 +4,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useTransition } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import {
-  FinanceSuccessSheet,
-  type FinanceOperationSuccess,
-} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { OperationSuccessSheet, type OperationSuccess } from "@/components/ui";
 import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
 
 const fieldDisbursementRecoverySchema = z.object({
@@ -98,7 +95,7 @@ export function ExpenseList({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [operationSuccess, setOperationSuccess] = useState<FinanceOperationSuccess | null>(null);
+  const [operationSuccess, setOperationSuccess] = useState<OperationSuccess | null>(null);
 
   const isOwnerOrFinance = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
 
@@ -351,7 +348,7 @@ export function ExpenseList({
           disbursementRecovery.setPayload((current) => ({ ...current, refNumber: value }))
         }
       />
-      <FinanceSuccessSheet success={operationSuccess} onClose={() => setOperationSuccess(null)} />
+      <OperationSuccessSheet success={operationSuccess} onClose={() => setOperationSuccess(null)} />
     </div>
   );
 }

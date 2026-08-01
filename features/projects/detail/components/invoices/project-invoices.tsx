@@ -18,10 +18,7 @@ import {
   defaultPaymentDate,
   formatShortRp,
 } from "../../utils/project-invoices-utils";
-import {
-  FinanceSuccessSheet,
-  type FinanceOperationSuccess,
-} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { OperationSuccessSheet, type OperationSuccess } from "@/components/ui";
 import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
 
 const clientPaymentRecoverySchema = z.object({
@@ -89,7 +86,7 @@ export function ProjectInvoices({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [operationSuccess, setOperationSuccess] = useState<FinanceOperationSuccess | null>(null);
+  const [operationSuccess, setOperationSuccess] = useState<OperationSuccess | null>(null);
 
   const isOwnerOrFinance = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
   const { totalInvoiceAmount, totalPaidAmount, unpaidAmount } = calculateInvoiceTotals(invoices);
@@ -255,7 +252,7 @@ export function ProjectInvoices({
         }}
         onSubmit={handleSubmit}
       />
-      <FinanceSuccessSheet success={operationSuccess} onClose={() => setOperationSuccess(null)} />
+      <OperationSuccessSheet success={operationSuccess} onClose={() => setOperationSuccess(null)} />
     </div>
   );
 }

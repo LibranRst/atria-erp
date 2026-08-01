@@ -2,18 +2,15 @@
 
 import React from "react";
 
-import type { DashboardTone } from "@/features/finance-dashboard/types/dashboard-types";
-import {
-  getUsageBlockFill,
-  indicatorToneClass,
-} from "@/features/finance-dashboard/utils/budget-indicator-utils";
+import type { IndicatorTone } from "@/lib/types/indicator-tone";
+import { getUsageBlockFill, indicatorToneClass } from "@/lib/finance/budget-indicator";
 
 export function UsageBlockMeter({
   value,
   tone,
 }: {
   readonly value: number;
-  readonly tone: DashboardTone;
+  readonly tone: IndicatorTone;
 }): React.JSX.Element {
   const fillClass = indicatorToneClass(tone);
   return (

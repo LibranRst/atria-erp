@@ -2,13 +2,13 @@
 
 import React from "react";
 
+import type { IndicatorTone } from "@/lib/types/indicator-tone";
 import type {
   DashboardCategory,
   DashboardRiskyProject,
-  DashboardTone,
 } from "@/features/finance-dashboard/types/dashboard-types";
 
-export function dashboardToneClasses(tone: DashboardTone): {
+export function dashboardToneClasses(tone: IndicatorTone): {
   readonly surface: string;
   readonly icon: string;
   readonly progress: string;
@@ -46,17 +46,17 @@ export function dashboardToneClasses(tone: DashboardTone): {
   };
 }
 
-export function severityTone(severity: string): DashboardTone {
+export function severityTone(severity: string): IndicatorTone {
   return severity === "CRITICAL" ? "critical" : "warning";
 }
 
-export function projectTone(project: DashboardRiskyProject): DashboardTone {
+export function projectTone(project: DashboardRiskyProject): IndicatorTone {
   if (project.effectiveHealth === "CRITICAL") return "critical";
   if (project.effectiveHealth === "HEALTHY") return "positive";
   return "warning";
 }
 
-export function categoryTone(category: DashboardCategory): DashboardTone {
+export function categoryTone(category: DashboardCategory): IndicatorTone {
   if (category.status === "OVER_BUDGET" || category.status === "CRITICAL") return "critical";
   if (category.status === "WATCH") return "warning";
   return "positive";
@@ -68,7 +68,7 @@ export function ProgressBar({
   className = "mt-3",
 }: {
   readonly value: number;
-  readonly tone?: DashboardTone;
+  readonly tone?: IndicatorTone;
   readonly className?: string;
 }): React.JSX.Element {
   const classes = dashboardToneClasses(tone);

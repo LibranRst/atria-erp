@@ -6,7 +6,7 @@ import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-o
 import { Badge, Button, GroupedSurface, InlineStateRow } from "@/components/ui";
 import { MoneyValue, PageHeader } from "@/components/ui/feedback/page-primitives";
 import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
-import { BudgetSplitIndicator } from "@/features/finance-dashboard/components/cards/budget-split-indicator";
+import { BudgetSplitIndicator } from "@/components/ui/feedback/budget-split-indicator";
 import { useDashboardRefresh } from "@/features/finance-dashboard/hooks/use-dashboard-refresh";
 import type { DashboardPageTab } from "@/features/finance-dashboard/types/dashboard-types";
 import { resolveDashboardDataStatus } from "@/features/finance-dashboard/utils/dashboard-data-status";

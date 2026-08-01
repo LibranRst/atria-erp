@@ -5,7 +5,7 @@ import React from "react";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import type { DashboardCategory } from "@/features/finance-dashboard/types/dashboard-types";
 import { categoryTone } from "@/features/finance-dashboard/components/shared/dashboard-tone";
-import { UsageBlockMeter } from "@/features/finance-dashboard/components/cards/usage-block-meter";
+import { UsageBlockMeter } from "@/components/ui/feedback/usage-block-meter";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
 function categoryStatusLabel(status: DashboardCategory["status"]): string {

@@ -13,7 +13,7 @@ import {
   TextInput,
   WorkflowFormSheet,
 } from "@/components/ui";
-import { MaterialUnsavedChangesModal } from "@/features/materials/components/shared/material-unsaved-changes-modal";
+import { MaterialUnsavedChangesModal } from "@/components/ui";
 import type { SelectOption } from "@/features/materials/types/material-operation-dialog-types";
 import {
   formatMaterialQuantity,
@@ -297,7 +297,7 @@ export function StockCountSheet({
       <MaterialUnsavedChangesModal
         open={confirmClose}
         pending={pending}
-        onSave={() => {
+        onKeep={() => {
           setConfirmClose(false);
           onSaveDraft();
         }}

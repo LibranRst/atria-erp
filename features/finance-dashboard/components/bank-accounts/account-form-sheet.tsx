@@ -9,7 +9,7 @@ import {
   TextInput,
 } from "@/components/ui";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { FinanceUnsavedChangesModal } from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { FinanceUnsavedChangesModal } from "@/components/ui";
 import { ColorEditor } from "./color-editor";
 import type { AccountDraft } from "@/features/finance-dashboard/types/bank-account-types";
 import { AppIcon } from "@/components/ui/icon/app-icon";

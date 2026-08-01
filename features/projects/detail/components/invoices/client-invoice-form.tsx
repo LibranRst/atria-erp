@@ -19,10 +19,10 @@ import {
   WorkflowFormSheet,
 } from "@/components/ui";
 import {
-  FinanceSuccessSheet,
+  OperationSuccessSheet,
   FinanceUnsavedChangesModal,
-  type FinanceOperationSuccess,
-} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+  type OperationSuccess,
+} from "@/components/ui";
 import { useLocalFormRecovery } from "@/features/shared-hooks/use-local-form-recovery";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
@@ -79,7 +79,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<FinanceOperationSuccess | null>(null);
+  const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
   const projectId = React.useMemo(() => {
     const parts = pathname.split("/");
     const projectIndex = parts.indexOf("projects");
@@ -305,7 +305,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
         }}
         onContinue={() => setConfirmClose(false)}
       />
-      <FinanceSuccessSheet
+      <OperationSuccessSheet
         success={success}
         secondaryLabel="Tambah"
         onClose={() => setSuccess(null)}

@@ -12,15 +12,16 @@ import {
   Textarea,
   TextInput,
 } from "@/components/ui";
-import {
-  FinanceUnsavedChangesModal,
-  MoneyImpactRow,
-} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { FinanceUnsavedChangesModal, MoneyImpactRow } from "@/components/ui";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { movementCategoryOptions } from "@/features/finance-dashboard/utils/bank-account-constants";
 import { InfoPill } from "./info-pill";
-import type { BankAccount, CashMovementCategory, MovementDraft } from "@/features/finance-dashboard/types/bank-account-types";
+import type {
+  BankAccount,
+  CashMovementCategory,
+  MovementDraft,
+} from "@/features/finance-dashboard/types/bank-account-types";
 
 function toMovementCategory(value: string): CashMovementCategory {
   const option = movementCategoryOptions.find((item) => item.value === value);

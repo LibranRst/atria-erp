@@ -31,7 +31,7 @@ import {
 } from "@/app/actions/material/warehouse-receipt-reversal";
 import { emergencyAdjustStock } from "@/app/actions/material/warehouse-adjustment";
 import type { MaterialOperationDecision } from "@/features/materials/components/tabs/material-dashboard-tabs";
-import type { MaterialOperationSuccess } from "@/features/materials/components/shared/material-form-patterns";
+import type { OperationSuccess } from "@/components/ui";
 import {
   createSimpleItem,
   type SimpleItem,
@@ -65,7 +65,7 @@ export function useMaterialControlOperations({
   readonly items: readonly SimpleItem[];
   readonly counted: Record<string, string>;
   readonly stockCountId: string | null;
-  readonly success: MaterialOperationSuccess | null;
+  readonly success: OperationSuccess | null;
   readonly decision: MaterialOperationDecision | null;
   readonly decisionReason: string;
   readonly emergencyOverride: boolean;
@@ -91,7 +91,7 @@ export function useMaterialControlOperations({
   readonly setEmergencyOverride: (value: boolean) => void;
   readonly setNewLocationName: (value: string) => void;
   readonly setAdjustDirection: (value: "INCREASE" | "DECREASE") => void;
-  readonly setSuccess: (value: MaterialOperationSuccess | null) => void;
+  readonly setSuccess: (value: OperationSuccess | null) => void;
   readonly closeAction: () => void;
   readonly handleQuickOperation: (actionId: string) => void;
   readonly runProjectOperation: (selectedRap: SelectedRap) => void;
@@ -120,7 +120,7 @@ export function useMaterialControlOperations({
   const [items, setItems] = useState<readonly SimpleItem[]>([createSimpleItem()]);
   const [counted, setCounted] = useState<Record<string, string>>({});
   const [stockCountId, setStockCountId] = useState<string | null>(null);
-  const [success, setSuccess] = useState<MaterialOperationSuccess | null>(null);
+  const [success, setSuccess] = useState<OperationSuccess | null>(null);
   const [decision, setDecision] = useState<MaterialOperationDecision | null>(null);
   const [decisionReason, setDecisionReason] = useState("");
   const [emergencyOverride, setEmergencyOverride] = useState(false);
@@ -173,7 +173,7 @@ export function useMaterialControlOperations({
     updateActionInUrl(actionId);
   }
 
-  function finish(text: string, nextSuccess: MaterialOperationSuccess): void {
+  function finish(text: string, nextSuccess: OperationSuccess): void {
     setMessage(text);
     setSuccess(nextSuccess);
     toast.success(text);

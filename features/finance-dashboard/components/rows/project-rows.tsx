@@ -7,7 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
 import type { DashboardRiskyProject } from "@/features/finance-dashboard/types/dashboard-types";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
-import { BudgetSplitIndicator } from "@/features/finance-dashboard/components/cards/budget-split-indicator";
+import { BudgetSplitIndicator } from "@/components/ui/feedback/budget-split-indicator";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { cn } from "@/lib/utils/cn";
 import { AppIcon } from "@/components/ui/icon/app-icon";

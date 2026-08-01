@@ -19,6 +19,16 @@ export type {
   IconButtonProps,
 } from "./button/button";
 export { SheetFooterActions } from "./overlay/sheet-footer-actions";
+export { OperationSuccessSheet } from "./overlay/operation-success-sheet";
+export type { OperationSuccess } from "./overlay/operation-success-sheet";
+export {
+  FinanceUnsavedChangesModal,
+  MaterialUnsavedChangesModal,
+  UnsavedChangesModal,
+} from "./overlay/unsaved-changes-modal";
+export { MoneyImpactRow } from "./feedback/money-impact-row";
+export { BudgetSplitIndicator } from "./feedback/budget-split-indicator";
+export { UsageBlockMeter } from "./feedback/usage-block-meter";
 export {
   BottomSheet,
   ConfirmationModal,

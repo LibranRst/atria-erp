@@ -2,8 +2,8 @@
 
 import React from "react";
 
-import type { DashboardTone } from "@/features/finance-dashboard/types/dashboard-types";
-import { getBudgetGeometry } from "@/features/finance-dashboard/utils/budget-indicator-utils";
+import type { IndicatorTone } from "@/lib/types/indicator-tone";
+import { getBudgetGeometry } from "@/lib/finance/budget-indicator";
 
 export function BudgetSplitIndicator({
   value,
@@ -14,7 +14,7 @@ export function BudgetSplitIndicator({
   readonly value: number;
   readonly inverse?: boolean;
   readonly danger?: boolean;
-  readonly tone?: DashboardTone;
+  readonly tone?: IndicatorTone;
 }): React.JSX.Element {
   const geometry = getBudgetGeometry(value);
   const usedClass = inverse

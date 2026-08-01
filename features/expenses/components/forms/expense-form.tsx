@@ -12,7 +12,7 @@ import {
   type ExpenseDraftSummary,
 } from "@/app/actions/finance/expense-drafts";
 import { WorkflowFormSheet } from "@/components/ui";
-import type { FinanceOperationSuccess } from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import type { OperationSuccess } from "@/components/ui";
 import { ExpenseFormNotice } from "@/features/expenses/components/forms/expense-form-sections";
 import { ExpenseActiveDrafts } from "@/features/expenses/components/forms/expense-active-drafts";
 import { ExpenseFormEntryFields } from "@/features/expenses/components/forms/expense-form-entry-fields";
@@ -86,7 +86,7 @@ export function ExpenseForm({
   const [pendingOcr, setPendingOcr] = React.useState<ExpenseReceiptOcrResult | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
   const [discarding, setDiscarding] = React.useState(false);
-  const [success, setSuccess] = React.useState<FinanceOperationSuccess | null>(null);
+  const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
   const [drafts, setDrafts] = React.useState<readonly ExpenseDraftSummary[]>([]);
   const [pendingDiscardDraftId, setPendingDiscardDraftId] = React.useState<string | null>(null);
   const [, startTransition] = React.useTransition();

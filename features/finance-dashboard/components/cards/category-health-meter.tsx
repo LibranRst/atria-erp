@@ -4,10 +4,8 @@ import React from "react";
 import { motion } from "framer-motion";
 
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import type {
-  DashboardCategory,
-  DashboardTone,
-} from "@/features/finance-dashboard/types/dashboard-types";
+import type { IndicatorTone } from "@/lib/types/indicator-tone";
+import type { DashboardCategory } from "@/features/finance-dashboard/types/dashboard-types";
 import { transitionSpringSmooth } from "@/lib/utils/motion";
 import { categoryTone } from "@/features/finance-dashboard/components/shared/dashboard-tone";
 import { AppIcon } from "@/components/ui/icon/app-icon";
@@ -37,7 +35,7 @@ function CircularProgress({
   readonly value: number;
   readonly size?: number;
   readonly strokeWidth?: number;
-  readonly tone?: DashboardTone;
+  readonly tone?: IndicatorTone;
 }): React.JSX.Element {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;

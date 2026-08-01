@@ -19,7 +19,7 @@ import {
   WorkflowFormSheet,
 } from "@/components/ui";
 import { FormField, QuantityStepper, SheetSelect, Textarea } from "@/components/ui";
-import { MaterialSuccessSheet, type MaterialOperationSuccess } from "@/features/materials/components/shared/material-success-sheet";
+import { OperationSuccessSheet, type OperationSuccess } from "@/components/ui";
 import { StockImpactRow } from "@/features/materials/components/shared/stock-impact-row";
 import { SegmentedTabs } from "@/components/ui/navigation/segmented-tabs";
 import type { MaterialOption, RapView } from "../shared/rap-rab-manager";
@@ -65,7 +65,7 @@ export function StockOperationSheet({
   const [message, setMessage] = useState<string | null>(null);
   const [confirmWaste, setConfirmWaste] = useState(false);
   const [reviewing, setReviewing] = useState(false);
-  const [success, setSuccess] = useState<MaterialOperationSuccess | null>(null);
+  const [success, setSuccess] = useState<OperationSuccess | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
   const [pending, startTransition] = useTransition();
   const canOperate =
@@ -412,7 +412,7 @@ export function StockOperationSheet({
           setOperation(null);
         }}
       />
-      <MaterialSuccessSheet success={success} onClose={() => setSuccess(null)} />
+      <OperationSuccessSheet success={success} onClose={() => setSuccess(null)} />
     </>
   );
 }

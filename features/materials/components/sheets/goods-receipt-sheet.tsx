@@ -18,8 +18,8 @@ import {
   TextInput,
   WorkflowFormSheet,
 } from "@/components/ui";
-import { type MaterialOperationSuccess } from "@/features/materials/components/shared/material-form-patterns";
-import { MaterialSuccessSheet } from "@/features/materials/components/shared/material-success-sheet";
+import { type OperationSuccess } from "@/components/ui";
+import { OperationSuccessSheet } from "@/components/ui";
 import { StockImpactRow } from "@/features/materials/components/shared/stock-impact-row";
 import { GoodsReceiptItemsSection } from "@/features/materials/components/sheets/goods-receipt-items-section";
 import {
@@ -64,7 +64,7 @@ export function GoodsReceiptSheet({
   const [note, setNote] = React.useState("");
   const [items, setItems] = React.useState<readonly ItemDraft[]>([newItem()]);
   const [message, setMessage] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<MaterialOperationSuccess | null>(null);
+  const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
   const [pending, startTransition] = React.useTransition();
   const selectedProject = projects.find((project) => project.id === projectId);
   const selectedVendorBill = vendorBills.find((bill) => bill.id === vendorBillId);
@@ -448,7 +448,7 @@ export function GoodsReceiptSheet({
           setPendingVendorBillId(null);
         }}
       />
-      <MaterialSuccessSheet
+      <OperationSuccessSheet
         success={success}
         secondaryLabel="Tambah"
         onClose={() => setSuccess(null)}

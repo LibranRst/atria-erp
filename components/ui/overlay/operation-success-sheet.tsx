@@ -3,23 +3,30 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-import { WorkflowFormSheet } from "@/components/ui";
-import { transitionSpringBouncy } from "@/lib/utils/motion";
 import { AppIcon } from "@/components/ui/icon/app-icon";
+import { WorkflowFormSheet } from "@/components/ui/form/form-controls";
+import { transitionSpringBouncy } from "@/lib/utils/motion";
 
-export type MaterialOperationSuccess = {
+export type OperationSuccess = {
   readonly title: string;
   readonly description: string;
-  readonly facts: ReadonlyArray<{ readonly label: string; readonly value: string }>;
+  readonly facts: readonly { readonly label: string; readonly value: string }[];
 };
 
-export function MaterialSuccessSheet({
+/**
+ * Konfirmasi setelah satu operasi selesai: ikon, ringkasan, lalu fakta hasilnya
+ * sebagai baris berpembatas. Dipakai bersama oleh alur keuangan dan material —
+ * sebelumnya keduanya memelihara salinan yang identik kecuali pustaka ikonnya.
+ *
+ * Sheet ini hanya melaporkan hasil; ia tidak pernah melakukan mutasi sendiri.
+ */
+export function OperationSuccessSheet({
   success,
   secondaryLabel,
   onClose,
   onSecondary,
 }: {
-  readonly success: MaterialOperationSuccess | null;
+  readonly success: OperationSuccess | null;
   readonly secondaryLabel?: string;
   readonly onClose: () => void;
   readonly onSecondary?: () => void;

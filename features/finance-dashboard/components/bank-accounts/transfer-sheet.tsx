@@ -13,13 +13,13 @@ import {
   TextInput,
   type SelectOption,
 } from "@/components/ui";
-import {
-  FinanceUnsavedChangesModal,
-  MoneyImpactRow,
-} from "@/features/finance-dashboard/components/shared/finance-form-patterns";
+import { FinanceUnsavedChangesModal, MoneyImpactRow } from "@/components/ui";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { InfoPill } from "./info-pill";
-import type { BankAccount, TransferDraft } from "@/features/finance-dashboard/types/bank-account-types";
+import type {
+  BankAccount,
+  TransferDraft,
+} from "@/features/finance-dashboard/types/bank-account-types";
 
 export function TransferSheet({
   open,

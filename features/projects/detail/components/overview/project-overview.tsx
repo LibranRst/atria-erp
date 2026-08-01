@@ -9,9 +9,9 @@ import { reallocateProjectBudget } from "@/app/actions/project/workflow-governan
 import { BottomSheet, FormField, FormSection, NumericInput, Textarea } from "@/components/ui";
 import { Badge } from "@/components/ui/badge/badge";
 import { MoneyValue } from "@/components/ui/feedback/page-primitives";
-import { BudgetSplitIndicator } from "@/features/finance-dashboard/components/cards/budget-split-indicator";
-import { UsageBlockMeter } from "@/features/finance-dashboard/components/cards/usage-block-meter";
-import type { DashboardTone } from "@/features/finance-dashboard/types/dashboard-types";
+import { BudgetSplitIndicator } from "@/components/ui/feedback/budget-split-indicator";
+import { UsageBlockMeter } from "@/components/ui/feedback/usage-block-meter";
+import type { IndicatorTone } from "@/lib/types/indicator-tone";
 import { categoryTab, statusTone } from "../../utils/project-overview-utils";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
 import { AppIcon } from "@/components/ui/icon/app-icon";
@@ -46,7 +46,7 @@ type ProjectOverviewProps = {
   readonly onNavigate: (tab: ProjectOverviewTab) => void;
 };
 
-function categoryTone(status: string): DashboardTone {
+function categoryTone(status: string): IndicatorTone {
   if (status === "CRITICAL" || status === "OVER_BUDGET") return "critical";
   if (status === "WARNING" || status === "WATCH") return "warning";
   return "positive";
