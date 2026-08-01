@@ -91,7 +91,7 @@ export function ProjectListCard({
               label="Aktual"
               amount={project.actualCost}
               detail={
-                project.actualCost <= 0
+                project.actualCost <= 0 && project.internalBudget > 0
                   ? `dari ${formatShortIdr(project.internalBudget)}`
                   : undefined
               }
