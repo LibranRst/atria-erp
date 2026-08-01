@@ -112,7 +112,7 @@ export function ProjectDrawerFormFields({
         title="Detail operasional"
         description="Jadwal, lokasi, cover, dan catatan proyek"
         variant="compact"
-        icon={<AppIcon name="tune" className="text-[18px]" />}
+        icon={<AppIcon name="tune" className="icon-md" />}
         summary={operationalDetailCount > 0 ? `${operationalDetailCount} terisi` : "Opsional"}
         expanded={operationalDetailsVisible}
         onToggle={onToggleOperationalDetails}

@@ -27,7 +27,7 @@ export function BudgetDraftActions({
         disabled={isPending}
         className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-secondary px-5 text-xs font-bold text-on-secondary shadow-raised disabled:opacity-50"
       >
-        <AppIcon name="publish" className="text-[18px]" />
+        <AppIcon name="publish" className="icon-md" />
         <span>Tinjau & Ajukan Project Budget</span>
       </motion.button>
       <ConfirmationModal
@@ -94,7 +94,7 @@ export function BudgetApprovalPanel({
           disabled={isPending}
           className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-error text-xs font-bold text-error transition active:scale-[0.98] disabled:opacity-50"
         >
-          <AppIcon name="close" className="text-[18px]" />
+          <AppIcon name="close" className="icon-md" />
           <span>Tolak Budget</span>
         </button>
 
@@ -104,7 +104,7 @@ export function BudgetApprovalPanel({
           disabled={isPending}
           className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-primary text-xs font-bold text-white shadow-primary transition active:scale-[0.98] disabled:opacity-50"
         >
-          <AppIcon name="done" className="text-[18px]" />
+          <AppIcon name="done" className="icon-md" />
           <span>Setujui Project Budget</span>
         </button>
       </div>

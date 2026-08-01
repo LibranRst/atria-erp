@@ -30,7 +30,7 @@ function EmptyAccountsState({
     <div className="rounded-[28px] bg-white px-5 py-6 text-center shadow-surface ring-1 ring-ring-subtle">
       <AppIcon
         name="account_balance"
-        className="mx-auto flex! h-12 w-12 items-center justify-center rounded-full bg-primary/8 text-[24px] leading-none text-primary"
+        className="mx-auto flex! icon-xl h-12 w-12 items-center justify-center rounded-full bg-primary/8 leading-none text-primary"
       />
       <h3 className="mt-3 text-base font-bold text-on-surface">Belum ada rekening</h3>
       <p className="mx-auto mt-1 max-w-65 text-xs leading-5 text-on-surface-variant">
@@ -42,7 +42,7 @@ function EmptyAccountsState({
         onClick={onCreate}
         className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.97] disabled:opacity-45"
       >
-        <AppIcon name="add" className="text-[16px]" />
+        <AppIcon name="add" className="icon-sm" />
         Tambah rekening
       </button>
     </div>
@@ -219,7 +219,7 @@ export function BankAccountsOverview({
             onClick={onCreate}
             className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-45"
           >
-            <AppIcon name="add" className="text-[14px]" />
+            <AppIcon name="add" className="icon-xs" />
             <span className="hidden min-[360px]:inline">Tambah rekening</span>
             <span className="min-[360px]:hidden">Tambah</span>
           </button>

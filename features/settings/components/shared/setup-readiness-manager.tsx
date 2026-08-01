@@ -56,7 +56,7 @@ export function SetupReadinessManager({
           href="/settings?tab=setup"
           className="inline-flex min-h-12 items-center gap-1 rounded-full px-2 text-[10px] font-bold text-accent"
         >
-          <AppIcon name="arrow_back" className="text-[18px]" />
+          <AppIcon name="arrow_back" className="icon-md" />
           Kembali ke kesiapan setup
         </Link>
         <OpeningInventoryWorkspace inventory={inventory} batches={batches} embedded />
@@ -140,7 +140,7 @@ export function SetupReadinessManager({
                   className="flex min-h-18 items-center gap-3 px-3.5 py-3 outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
                 >
                   <AppIcon
-                    className={`h-9 w-9 shrink-0 rounded-[13px] p-2 text-[18px] ${item.ready ? "bg-success-container text-success" : "bg-warning-container text-warning"}`}
+                    className={`icon-md h-9 w-9 shrink-0 rounded-[13px] p-2 ${item.ready ? "bg-success-container text-success" : "bg-warning-container text-warning"}`}
                     name={
                       item.ready
                         ? "check"

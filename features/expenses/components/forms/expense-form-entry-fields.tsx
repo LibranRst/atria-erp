@@ -104,7 +104,7 @@ export function ExpenseFormEntryFields({
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant"
               aria-hidden="true"
             >
-              <AppIcon name="history" className="text-[18px] leading-none" />
+              <AppIcon name="history" className="icon-md leading-none" />
             </span>
             <span className="grid min-w-0 flex-1 gap-0.5">
               <span className="block text-[10px] leading-[1.15] font-semibold text-on-surface-variant">

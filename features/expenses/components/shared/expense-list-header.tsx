@@ -41,7 +41,7 @@ export function PendingApprovalsBanner({ count }: { readonly count: number }): R
         className="flex min-h-16 items-center gap-3 rounded-[22px] bg-white/88 px-3 py-2.5 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-white"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/9 text-warning ring-1 ring-warning/6">
-          <AppIcon name="approval" className="text-[18px]" />
+          <AppIcon name="approval" className="icon-md" />
         </span>
         <span className="grid min-w-0 flex-1 gap-0.5">
           <span className="block text-[13px] leading-[1.15] font-semibold tracking-[-0.01em] text-on-surface">
@@ -55,7 +55,7 @@ export function PendingApprovalsBanner({ count }: { readonly count: number }): R
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
           aria-hidden="true"
         >
-          <AppIcon name="chevron_right" className="text-[16px]" />
+          <AppIcon name="chevron_right" className="icon-sm" />
         </span>
       </Link>
     </motion.div>

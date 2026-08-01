@@ -80,7 +80,7 @@ export function MaterialFoundationPanel({
                   <div key={location.id} className="flex min-h-14 items-center gap-3 px-4 py-3">
                     <AppIcon
                       name="warehouse"
-                      className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
+                      className="flex! icon-md h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant"
                     />
                     <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-on-surface">
                       {location.name}

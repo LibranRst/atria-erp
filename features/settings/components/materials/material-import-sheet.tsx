@@ -156,7 +156,7 @@ export function MaterialImportSheet({
             Unduh template CSV
           </Button>
           <label className="mt-4 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-surface-container-low px-5 text-xs font-bold text-on-surface ring-1 ring-ring-subtle">
-            <AppIcon name="upload_file" className="text-[18px]" />
+            <AppIcon name="upload_file" className="icon-md" />
             {fileName || "Pilih file CSV"}
             <input
               type="file"

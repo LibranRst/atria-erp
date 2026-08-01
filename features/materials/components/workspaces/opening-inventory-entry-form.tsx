@@ -209,10 +209,7 @@ export function OpeningInventoryEntryForm({
             />
           </div>
           <div className="flex min-h-16 items-start gap-3 px-4 py-3.5">
-            <AppIcon
-              name="info"
-              className="mt-0.5 shrink-0 text-[18px] text-on-surface-variant/65"
-            />
+            <AppIcon name="info" className="mt-0.5 icon-md shrink-0 text-on-surface-variant/65" />
             <span className="min-w-0">
               <span className="block text-support font-semibold text-on-surface">
                 Belum ada mutasi yang diposting

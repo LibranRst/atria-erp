@@ -225,7 +225,7 @@ export function ProjectOverview({
                         ? "edit_note"
                         : "priority_high"
                   }
-                  className="text-[18px]"
+                  className="icon-md"
                 />
               </span>
               <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
@@ -243,7 +243,7 @@ export function ProjectOverview({
               </span>
               <AppIcon
                 name="chevron_right"
-                className="shrink-0 text-[18px] text-on-surface-variant/55"
+                className="icon-md shrink-0 text-on-surface-variant/55"
               />
             </button>
           ))}
@@ -261,7 +261,7 @@ export function ProjectOverview({
         />
         {actions.length === 0 ? (
           <div className="rounded-[22px] bg-white px-4 py-4 text-xs font-medium text-primary shadow-surface">
-            <AppIcon name="check_circle" className="mr-2 align-middle text-[18px]" />
+            <AppIcon name="check_circle" className="mr-2 icon-md align-middle" />
             Proyek berjalan tanpa blocker aktif.
           </div>
         ) : (
@@ -278,7 +278,7 @@ export function ProjectOverview({
                 >
                   <AppIcon
                     name={action.severity === "INFO" ? "arrow_forward" : "priority_high"}
-                    className="text-[18px]"
+                    className="icon-md"
                   />
                 </span>
                 <span className="min-w-0 flex-1">

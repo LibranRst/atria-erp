@@ -192,7 +192,7 @@ function FieldClaimsSummary({
             onClick={onOpenExpenseDrawer}
             className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
           >
-            <AppIcon name="add" className="text-[14px] leading-none" />
+            <AppIcon name="add" className="icon-xs leading-none" />
             Tambah
           </button>
         ) : undefined

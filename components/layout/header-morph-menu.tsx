@@ -140,7 +140,7 @@ export function HeaderMorphMenu({
                     <AppIcon
                       name={item.iconName}
                       weight={isActive ? "fill" : "regular"}
-                      className={`shrink-0 text-[18px] ${isActive ? "text-on-primary" : "text-on-surface-variant/55"}`}
+                      className={`icon-md shrink-0 ${isActive ? "text-on-primary" : "text-on-surface-variant/55"}`}
                     />
                   </Link>
                 );

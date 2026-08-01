@@ -85,7 +85,7 @@ export function OpeningInventoryManualEntry({
             disabled={pending || !canAddLine}
             className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-accent/8 px-5 text-xs font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:text-on-surface-variant disabled:opacity-55"
           >
-            <AppIcon name="add" className="text-[18px]" />
+            <AppIcon name="add" className="icon-md" />
             {canAddLine
               ? "Tambah baris item stok"
               : allEligibleSelected

@@ -99,7 +99,7 @@ export function FieldClaimRow({
         >
           <AppIcon
             name={cost.status === "APPROVED" ? "payments" : "receipt_long"}
-            className="text-[18px] leading-none"
+            className="icon-md leading-none"
           />
         </span>
         <div className="min-w-0 flex-1">
@@ -163,7 +163,7 @@ export function FieldClaimRow({
             transition={transitionSpringSnappy}
             className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-meta font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50"
           >
-            <AppIcon name="fact_check" className="text-[14px] leading-none" />
+            <AppIcon name="fact_check" className="icon-xs leading-none" />
             Verifikasi
           </motion.button>
         )}
@@ -180,7 +180,7 @@ export function FieldClaimRow({
             transition={transitionSpringSnappy}
             className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-meta font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50"
           >
-            <AppIcon name="payments" className="text-[14px] leading-none" />
+            <AppIcon name="payments" className="icon-xs leading-none" />
             Cairkan
           </motion.button>
         )}
@@ -214,7 +214,7 @@ export function FieldClaimHistory({
         className="flex min-h-12 w-full items-center justify-between rounded-full bg-surface-container-low/70 px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
       >
         <div className="flex min-w-0 items-center gap-2.5">
-          <AppIcon name="history" className="text-[18px] leading-none text-on-surface-variant" />
+          <AppIcon name="history" className="icon-md leading-none text-on-surface-variant" />
           <span className="truncate text-xs leading-4 font-semibold text-on-surface">
             Riwayat pengeluaran
           </span>
@@ -227,7 +227,7 @@ export function FieldClaimHistory({
           transition={transitionSpringSnappy}
           className="text-on-surface-variant"
         >
-          <AppIcon name="expand_more" className="text-[18px]" />
+          <AppIcon name="expand_more" className="icon-md" />
         </motion.div>
       </motion.button>
 
@@ -326,7 +326,7 @@ function StatusIcon({ status }: { readonly status: ExpenseCostItem["status"] }):
     >
       <AppIcon
         name={status === "PAID" ? "check_circle" : "cancel"}
-        className="text-[18px] leading-none"
+        className="icon-md leading-none"
       />
     </div>
   );
@@ -353,7 +353,7 @@ function ReceiptButton({
       title="Lihat Nota"
       aria-label="Lihat nota"
     >
-      <AppIcon name="image" className="text-[16px] leading-none" />
+      <AppIcon name="image" className="icon-sm leading-none" />
     </motion.button>
   );
 }

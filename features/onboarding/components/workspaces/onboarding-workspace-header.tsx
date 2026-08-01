@@ -43,7 +43,7 @@ export function OnboardingWorkspaceHeader({
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-on-surface shadow-control ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
               aria-label="Kembali ke langkah sebelumnya"
             >
-              <AppIcon name="arrow_back" className="text-[24px]" />
+              <AppIcon name="arrow_back" className="icon-xl" />
             </motion.button>
           ) : (
             <div className="h-10 w-10 shrink-0" />
@@ -66,7 +66,7 @@ export function OnboardingWorkspaceHeader({
             aria-label="Jeda dan keluar onboarding"
             title="Jeda dan keluar"
           >
-            <AppIcon name="close" className="text-[24px]" />
+            <AppIcon name="close" className="icon-xl" />
           </motion.button>
         </div>
       </div>

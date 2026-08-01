@@ -83,7 +83,7 @@ export function GoodsReceiptItemsSection({
               >
                 <AppIcon
                   name={complete ? "check" : "inventory_2"}
-                  className="text-[18px] leading-none"
+                  className="icon-md leading-none"
                 />
               </span>
               <span className="grid min-w-0 flex-1 gap-0.5">
@@ -110,7 +110,7 @@ export function GoodsReceiptItemsSection({
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant">
                   <AppIcon
                     name="expand_more"
-                    className={`text-[16px] transition-transform ${editingKey === item.key ? "rotate-180" : ""}`}
+                    className={`icon-sm transition-transform ${editingKey === item.key ? "rotate-180" : ""}`}
                   />
                 </span>
               </span>
@@ -192,7 +192,7 @@ export function GoodsReceiptItemsSection({
                     }}
                     className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container text-xs font-bold"
                   >
-                    <AppIcon name="content_copy" className="text-[16px]" />
+                    <AppIcon name="content_copy" className="icon-sm" />
                     Duplikat
                   </motion.button>
                   <motion.button
@@ -206,7 +206,7 @@ export function GoodsReceiptItemsSection({
                     }}
                     className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-error-container/25 text-xs font-bold text-error disabled:opacity-35"
                   >
-                    <AppIcon name="delete" className="text-[16px]" />
+                    <AppIcon name="delete" className="icon-sm" />
                     Hapus
                   </motion.button>
                 </div>
@@ -227,7 +227,7 @@ export function GoodsReceiptItemsSection({
         }}
         className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest text-xs font-bold text-on-surface shadow-control ring-1 ring-ring-subtle"
       >
-        <AppIcon name="add" className="text-[16px] text-accent" />
+        <AppIcon name="add" className="icon-sm text-accent" />
         Tambah Material
       </motion.button>
     </section>

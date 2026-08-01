@@ -91,7 +91,7 @@ export function InternalPlanOverview({
                     ? "engineering"
                     : "domain"
               }
-              className="text-[16px]"
+              className="icon-sm"
             />
           ),
         }))}

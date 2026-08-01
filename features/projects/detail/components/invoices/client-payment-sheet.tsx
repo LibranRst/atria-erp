@@ -121,13 +121,13 @@ export function ClientPaymentSheet({
         <div className="space-y-md">
           {error && (
             <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/20 p-3.5 text-xs font-medium text-error">
-              <AppIcon name="error" className="text-[18px] text-error" />
+              <AppIcon name="error" className="icon-md text-error" />
               <div className="leading-relaxed">{error}</div>
             </div>
           )}
           {success && (
             <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-surface-container-low p-3.5 text-xs font-medium text-primary">
-              <AppIcon name="check_circle" className="text-[18px] text-primary" />
+              <AppIcon name="check_circle" className="icon-md text-primary" />
               <div className="leading-relaxed">{success}</div>
             </div>
           )}

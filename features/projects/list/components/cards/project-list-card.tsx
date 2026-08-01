@@ -142,7 +142,7 @@ export function ProjectListCard({
           className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-on-surface shadow-control backdrop-blur-2xl outline-none after:absolute after:-inset-1 after:rounded-full focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-white"
           aria-label={`Edit ${project.name}`}
         >
-          <AppIcon name="edit" className="text-[18px]" />
+          <AppIcon name="edit" className="icon-md" />
         </button>
       ) : null}
     </article>

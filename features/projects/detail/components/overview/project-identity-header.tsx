@@ -68,7 +68,7 @@ export function ProjectIdentityHeader({
             className="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-control backdrop-blur-2xl"
             aria-label="Lihat detail proyek"
           >
-            <AppIcon name="info" className="text-[20px]" />
+            <AppIcon name="info" className="icon-lg" />
           </button>
 
           <div className="absolute inset-x-0 bottom-0 p-4">

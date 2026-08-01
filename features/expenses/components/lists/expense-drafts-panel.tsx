@@ -79,7 +79,7 @@ export function ExpenseDraftsPanel({
           aria-expanded={expanded}
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/9 text-primary ring-1 ring-primary/6">
-            <AppIcon name="edit_note" className="text-[18px]" />
+            <AppIcon name="edit_note" className="icon-md" />
           </span>
           <span className="grid min-w-0 flex-1 gap-0.5">
             <span className="block text-xs leading-[1.15] font-bold text-on-surface">

@@ -99,7 +99,7 @@ export function InitialStockSetupPanel({
             <div className="flex items-start gap-3">
               <AppIcon
                 name="task_alt"
-                className="flex! h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-success/9 text-[20px] text-success"
+                className="flex! icon-lg h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-success/9 text-success"
               />
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] leading-5 font-bold text-on-surface">
@@ -137,7 +137,7 @@ export function InitialStockSetupPanel({
             >
               <AppIcon
                 name="check"
-                className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-success/9 text-[18px] text-success"
+                className="flex! icon-md h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-success/9 text-success"
               />
               <span className="min-w-0 flex-1">
                 <span className="block text-[12px] leading-5 font-bold text-on-surface">
@@ -157,7 +157,7 @@ export function InitialStockSetupPanel({
             >
               <AppIcon
                 name="inventory"
-                className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-accent/8 text-[18px] text-accent"
+                className="flex! icon-md h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-accent/8 text-accent"
               />
               <span className="min-w-0 flex-1">
                 <span className="block text-[12px] leading-5 font-bold text-on-surface">
@@ -176,7 +176,7 @@ export function InitialStockSetupPanel({
             >
               <AppIcon
                 name="schedule"
-                className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
+                className="flex! icon-md h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant"
               />
               <span className="min-w-0 flex-1">
                 <span className="block text-[12px] leading-5 font-bold text-on-surface">
@@ -203,7 +203,7 @@ export function InitialStockSetupPanel({
                 >
                   <AppIcon
                     name="inventory"
-                    className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
+                    className="flex! icon-md h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[11px] leading-5 font-bold text-on-surface">
@@ -219,7 +219,7 @@ export function InitialStockSetupPanel({
                     size="sm"
                     align="right"
                   />
-                  <AppIcon name="chevron_right" className="text-[18px] text-on-surface-variant" />
+                  <AppIcon name="chevron_right" className="icon-md text-on-surface-variant" />
                 </button>
                 {batch.status === "PENDING_APPROVAL" && simulation?.enabled && financeTarget ? (
                   <button

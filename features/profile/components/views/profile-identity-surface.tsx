@@ -86,7 +86,7 @@ export function ProfileIdentitySurface({
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-high/65 text-on-surface-variant ring-1 ring-ring-subtle"
           aria-hidden="true"
         >
-          <AppIcon name="verified_user" className="text-[18px] leading-none" />
+          <AppIcon name="verified_user" className="icon-md leading-none" />
         </span>
       </div>
     </section>

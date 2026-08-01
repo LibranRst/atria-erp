@@ -38,7 +38,7 @@ export function ExpenseFormNotice({
       className={`flex items-start gap-3 rounded-2xl px-4 py-3 text-xs font-medium ring-1 ${toneClass}`}
       role={tone === "error" ? "alert" : "status"}
     >
-      <AppIcon name={icon} className="text-[18px]" />
+      <AppIcon name={icon} className="icon-md" />
       <div className="min-w-0 flex-1 leading-5">{children}</div>
       {onDismiss ? (
         <button
@@ -180,7 +180,7 @@ export function ExpenseItemsSection({
                   >
                     <AppIcon
                       name={complete ? "check_circle" : "info"}
-                      className="text-[18px] leading-none"
+                      className="icon-md leading-none"
                     />
                   </span>
 
@@ -207,7 +207,7 @@ export function ExpenseItemsSection({
 
                   <AppIcon
                     name="chevron_right"
-                    className="mt-0.5 shrink-0 text-[18px] text-on-surface-variant/60"
+                    className="mt-0.5 icon-md shrink-0 text-on-surface-variant/60"
                   />
                 </button>
 
@@ -314,7 +314,7 @@ function RowAction({
       aria-label={label}
       title={label}
     >
-      <AppIcon name={icon} className="text-[16px]" />
+      <AppIcon name={icon} className="icon-sm" />
     </button>
   );
 }

@@ -274,7 +274,7 @@ export function GoodsReceiptSheet({
               : "flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
           }
         >
-          {!compact ? <AppIcon name="add" className="text-[16px]" /> : null} Terima Barang
+          {!compact ? <AppIcon name="add" className="icon-sm" /> : null} Terima Barang
         </motion.button>
       ) : null}
       <WorkflowFormSheet

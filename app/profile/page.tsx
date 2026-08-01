@@ -66,7 +66,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-high/65 text-on-surface-variant ring-1 ring-ring-subtle"
                 aria-hidden="true"
               >
-                <AppIcon name="verified_user" className="text-[18px] leading-none" />
+                <AppIcon name="verified_user" className="icon-md leading-none" />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-row font-bold text-on-surface">Peran autentikasi</p>
@@ -86,7 +86,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
               >
                 <AppIcon
                   name={data.isActive ? "check_circle" : "block"}
-                  className="text-[18px] leading-none"
+                  className="icon-md leading-none"
                 />
               </span>
               <div className="min-w-0 flex-1">
@@ -111,7 +111,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/6.5 text-primary ring-1 ring-primary/6"
                   aria-hidden="true"
                 >
-                  <AppIcon name="tune" className="text-[18px] leading-none" />
+                  <AppIcon name="tune" className="icon-md leading-none" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-row font-bold text-on-surface">Pengaturan ERP</p>
@@ -121,7 +121,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                 </div>
                 <AppIcon
                   name="chevron_right"
-                  className="shrink-0 text-[18px] leading-none text-primary"
+                  className="icon-md shrink-0 leading-none text-primary"
                 />
               </Link>
             ) : null}

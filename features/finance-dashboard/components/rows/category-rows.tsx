@@ -26,7 +26,7 @@ export function CategoryUsageRow({
           <span
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${danger ? "bg-error/7.5 text-error ring-error/5" : category.status === "WATCH" ? "bg-warning/9 text-warning ring-warning/6" : "bg-success/8 text-success ring-success/6"}`}
           >
-            <AppIcon name="category" className="text-[18px]" />
+            <AppIcon name="category" className="icon-md" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">

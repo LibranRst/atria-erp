@@ -33,7 +33,7 @@ export function OpeningInventoryHistory({ show, batches, onSelect }: Props): Rea
                 >
                   <AppIcon
                     name="inventory"
-                    className="flex! h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-[20px] text-primary"
+                    className="flex! icon-lg h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-primary"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[12px] font-bold text-on-surface">
@@ -59,7 +59,7 @@ export function OpeningInventoryHistory({ show, batches, onSelect }: Props): Rea
                   />
                   <AppIcon
                     name="chevron_right"
-                    className="shrink-0 text-[18px] text-on-surface-variant/60"
+                    className="icon-md shrink-0 text-on-surface-variant/60"
                   />
                 </button>
               );

@@ -57,7 +57,7 @@ export function DeveloperAccountSwitcher({
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/11 text-warning ring-1 ring-warning/8"
               aria-hidden="true"
             >
-              <AppIcon name="developer_mode" className="text-[18px] leading-none" />
+              <AppIcon name="developer_mode" className="icon-md leading-none" />
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-row font-bold text-on-surface">Uji akses sebagai akun tim</p>
@@ -71,7 +71,7 @@ export function DeveloperAccountSwitcher({
           {state.blockers.length > 0
             ? state.blockers.map((blocker) => (
                 <div key={blocker} className="flex min-h-15 items-center gap-3 px-3.5 py-3">
-                  <AppIcon name="lock" className="shrink-0 text-[18px] text-warning" />
+                  <AppIcon name="lock" className="icon-md shrink-0 text-warning" />
                   <p className="text-[11px] leading-[1.45] text-on-surface-variant">{blocker}</p>
                 </div>
               ))
@@ -90,7 +90,7 @@ export function DeveloperAccountSwitcher({
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/6.5 text-primary ring-1 ring-primary/6"
                     aria-hidden="true"
                   >
-                    <AppIcon name="person_play" className="text-[18px] leading-none" />
+                    <AppIcon name="person_play" className="icon-md leading-none" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-row font-bold text-on-surface">

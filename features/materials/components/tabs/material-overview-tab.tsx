@@ -228,7 +228,7 @@ export function MaterialOverviewTab({
                   <span className="shrink-0 font-mono text-[13px] font-black text-on-surface tabular-nums">
                     {item.value}
                   </span>
-                  <AppIcon name="chevron_right" className="shrink-0 text-[18px] text-accent" />
+                  <AppIcon name="chevron_right" className="icon-md shrink-0 text-accent" />
                 </button>
               ))}
             </div>

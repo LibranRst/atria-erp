@@ -181,7 +181,7 @@ export function MaterialsControlCenter({
             className="flex min-h-10 items-center gap-2 px-1 text-[10px] leading-[1.3] font-semibold text-primary"
             role="status"
           >
-            <AppIcon name="info" className="text-[16px]" />
+            <AppIcon name="info" className="icon-sm" />
             <span className="min-w-0 flex-1">{message}</span>
           </div>
         )}

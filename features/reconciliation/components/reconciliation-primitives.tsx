@@ -130,7 +130,7 @@ export function ReconciliationRow({
             className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center text-on-surface-variant/38"
             aria-hidden="true"
           >
-            <AppIcon name="chevron_right" className="text-[18px] leading-none" />
+            <AppIcon name="chevron_right" className="icon-md leading-none" />
           </span>
         ) : null}
       </span>
@@ -146,7 +146,7 @@ export function ReconciliationRow({
                   ? "error"
                   : directionIcon(type)
             }
-            className="shrink-0 text-[14px] leading-none"
+            className="icon-xs shrink-0 leading-none"
           />
           <span className="truncate">{status}</span>
         </span>
@@ -196,7 +196,7 @@ export function ReconciliationHistoryRow({
           <span className="flex min-w-0 items-center gap-2">
             <AppIcon
               name="receipt_long"
-              className="shrink-0 text-[14px] leading-none text-on-surface-variant/55"
+              className="icon-xs shrink-0 leading-none text-on-surface-variant/55"
             />
             <span className="truncate text-[12px] leading-4 font-semibold text-on-surface">
               {item.cashDescription}
@@ -213,12 +213,12 @@ export function ReconciliationHistoryRow({
           className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center text-on-surface-variant/38"
           aria-hidden="true"
         >
-          <AppIcon name="chevron_right" className="text-[18px] leading-none" />
+          <AppIcon name="chevron_right" className="icon-md leading-none" />
         </span>
       </span>
       <span className="mt-3 flex min-w-0 items-center justify-between gap-3 rounded-xl bg-surface-container-low p-3">
         <span className="flex max-w-[42%] min-w-0 items-center gap-1.5 text-meta font-semibold text-success">
-          <AppIcon name="check_circle" className="shrink-0 text-[14px] leading-none" />
+          <AppIcon name="check_circle" className="icon-xs shrink-0 leading-none" />
           <span className="truncate">Cocok {formatReconciliationDate(item.reconciledAt)}</span>
         </span>
         <MoneyValue

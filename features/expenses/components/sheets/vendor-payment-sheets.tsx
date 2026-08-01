@@ -386,7 +386,7 @@ function PaymentError({ error }: { readonly error: string | null }): React.JSX.E
       className="flex items-start gap-3 rounded-2xl bg-error-container/20 p-3 text-xs font-medium text-error"
       role="alert"
     >
-      <AppIcon name="error" className="text-[18px]" />
+      <AppIcon name="error" className="icon-md" />
       <div className="leading-relaxed">{error}</div>
     </div>
   );

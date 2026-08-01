@@ -92,7 +92,7 @@ export function OverviewPriorityList({
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${isCritical ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
               >
-                <AppIcon name={priorityActionIcon(action.id)} className="text-[18px]" />
+                <AppIcon name={priorityActionIcon(action.id)} className="icon-md" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] leading-normal font-semibold tracking-[-0.01em] text-on-surface">
@@ -112,7 +112,7 @@ export function OverviewPriorityList({
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
                   aria-hidden="true"
                 >
-                  <AppIcon name="chevron_right" className="text-[16px]" />
+                  <AppIcon name="chevron_right" className="icon-sm" />
                 </span>
               </span>
             </Link>
@@ -130,7 +130,7 @@ export function OverviewPreviewEmpty({
 }): React.JSX.Element {
   return (
     <div className="flex items-center gap-2.5 px-4 py-3 text-xs leading-5 text-on-surface-variant">
-      <AppIcon name="check_circle" className="text-[18px] text-success" />
+      <AppIcon name="check_circle" className="icon-md text-success" />
       <span>{children}</span>
     </div>
   );
@@ -163,7 +163,7 @@ export function OverviewCashRows({
                   : "bg-error/8 text-error ring-1 ring-error/5"
               }`}
             >
-              <AppIcon name={incoming ? "south_west" : "north_east"} className="text-[16px]" />
+              <AppIcon name={incoming ? "south_west" : "north_east"} className="icon-sm" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-row font-semibold tracking-[-0.01em] text-on-surface">

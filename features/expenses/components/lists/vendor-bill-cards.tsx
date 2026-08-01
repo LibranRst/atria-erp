@@ -102,7 +102,7 @@ export function VendorBillCard({
         >
           <AppIcon
             name={bill.status === "PAID" ? "check_circle" : "request_quote"}
-            className="text-[18px] leading-none"
+            className="icon-md leading-none"
           />
         </span>
 
@@ -283,7 +283,7 @@ export function VendorPaymentCard({
                   ? "schedule"
                   : "payments"
             }
-            className="text-[18px] leading-none"
+            className="icon-md leading-none"
           />
         </span>
 

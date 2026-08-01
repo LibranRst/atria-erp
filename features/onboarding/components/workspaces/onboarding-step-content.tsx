@@ -32,7 +32,7 @@ function FactRow({
     <div className="flex min-h-17.5 items-center gap-3 px-4 py-3">
       <AppIcon
         name={icon}
-        className="flex! h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-[20px] text-primary"
+        className="flex! icon-lg h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-primary"
       />
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-bold text-on-surface">{title}</span>
@@ -52,7 +52,7 @@ function SourceError({
   if (source.status !== "error") return null;
   return (
     <div className="rounded-3xl bg-white px-5 py-6 text-center ring-1 ring-ring-subtle">
-      <AppIcon name="sync_problem" className="text-[28px] text-warning" />
+      <AppIcon name="sync_problem" className="icon-2xl text-warning" />
       <p className="mt-2 text-[13px] font-bold text-on-surface">Data step belum dapat dimuat</p>
       <p className="mt-1 text-meta text-on-surface-variant">{source.message}</p>
       <button
@@ -87,7 +87,7 @@ function OnboardingSummary({
                   onClick={() => onNavigate(issue.stepId)}
                   className="flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left"
                 >
-                  <AppIcon name="priority_high" className="text-[20px] text-warning" />
+                  <AppIcon name="priority_high" className="icon-lg text-warning" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[12px] font-bold text-on-surface">
                       {issue.label}
@@ -96,7 +96,7 @@ function OnboardingSummary({
                       {issue.detail}
                     </span>
                   </span>
-                  <AppIcon name="chevron_right" className="text-[18px] text-on-surface-variant" />
+                  <AppIcon name="chevron_right" className="icon-md text-on-surface-variant" />
                 </button>
               ))}
             </div>
@@ -144,7 +144,7 @@ function OnboardingSummary({
                 className="flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
               >
                 <AppIcon
-                  className={`h-9 w-9 shrink-0 rounded-full p-2 text-[18px] ${onboardingStatusClass(item.status)}`}
+                  className={`icon-md h-9 w-9 shrink-0 rounded-full p-2 ${onboardingStatusClass(item.status)}`}
                   name={
                     item.ready
                       ? "check"

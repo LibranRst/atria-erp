@@ -41,7 +41,7 @@ export function LogoutButton(): React.JSX.Element {
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-error/[0.07] text-error ring-1 ring-error/6"
           aria-hidden="true"
         >
-          <AppIcon name="logout" className="text-[18px] leading-none" />
+          <AppIcon name="logout" className="icon-md leading-none" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-row font-bold text-error">Keluar dari akun</span>
@@ -49,7 +49,7 @@ export function LogoutButton(): React.JSX.Element {
             Akhiri sesi pada perangkat ini.
           </span>
         </span>
-        <AppIcon name="chevron_right" className="shrink-0 text-[18px] leading-none text-error/70" />
+        <AppIcon name="chevron_right" className="icon-md shrink-0 leading-none text-error/70" />
       </motion.button>
 
       <ConfirmationSheet

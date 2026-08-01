@@ -128,7 +128,7 @@ export function SetupBankAccountsPanel({
               >
                 <AppIcon
                   name="account_balance"
-                  className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-[18px] text-on-surface-variant"
+                  className="flex! icon-md h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant"
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[12px] leading-5 font-bold text-on-surface">

@@ -17,7 +17,7 @@ export function LockedTabState({
     <section className="rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant">
-          <AppIcon name="lock" className="text-[20px] text-on-surface-variant/80" />
+          <AppIcon name="lock" className="icon-lg text-on-surface-variant/80" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
@@ -37,7 +37,7 @@ export function LockedTabState({
         onClick={onAction}
         className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.98]"
       >
-        <AppIcon name={actionIcon} className="text-[16px]" />
+        <AppIcon name={actionIcon} className="icon-sm" />
         <span>{actionLabel}</span>
       </button>
     </section>
@@ -53,7 +53,7 @@ export function RabPrerequisiteState({ onGoToRap }: RabPrerequisiteStateProps): 
     <section className="rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-on-primary">
-          <AppIcon name="architecture" className="text-[20px]" />
+          <AppIcon name="architecture" className="icon-lg" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[9px] font-bold tracking-[0.14em] text-primary uppercase">
@@ -74,7 +74,7 @@ export function RabPrerequisiteState({ onGoToRap }: RabPrerequisiteStateProps): 
         className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.98]"
       >
         Buka RAP
-        <AppIcon name="arrow_forward" className="text-[16px]" />
+        <AppIcon name="arrow_forward" className="icon-sm" />
       </button>
     </section>
   );

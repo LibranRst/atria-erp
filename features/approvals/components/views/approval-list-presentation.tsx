@@ -69,7 +69,7 @@ export function ApprovalQueueRow({
                     ? "inventory"
                     : "request_quote"
               }
-              className="text-[18px]"
+              className="icon-md"
             />
           </span>
           <div className="min-w-0 flex-1">
@@ -97,7 +97,7 @@ export function ApprovalQueueRow({
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
             aria-hidden="true"
           >
-            <AppIcon name="chevron_right" className="text-[16px]" />
+            <AppIcon name="chevron_right" className="icon-sm" />
           </span>
         </div>
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
@@ -243,7 +243,7 @@ export function ApprovalDetailContent({
               className="flex min-h-12 w-full items-center gap-3 border-t border-outline-variant/20 px-3.5 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-black/2"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-primary/7.5 text-primary">
-                <AppIcon name="image" className="text-[18px]" />
+                <AppIcon name="image" className="icon-md" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[9px] font-semibold text-on-surface-variant/60">
@@ -253,7 +253,7 @@ export function ApprovalDetailContent({
                   Lihat bukti pengajuan
                 </span>
               </span>
-              <AppIcon name="chevron_right" className="text-[18px] text-primary" />
+              <AppIcon name="chevron_right" className="icon-md text-primary" />
             </button>
           ) : null}
         </div>
@@ -280,7 +280,7 @@ function ApprovalContextRow({
   return (
     <div className="flex min-h-12 items-center gap-3 border-b border-outline-variant/20 px-3.5 py-2.5 last:border-b-0">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
-        <AppIcon name={icon} className="text-[18px]" />
+        <AppIcon name={icon} className="icon-md" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-[9px] font-semibold text-on-surface-variant/60">{label}</p>
@@ -415,7 +415,7 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
         >
           <AppIcon
             name={critical ? "report" : warning ? "warning" : "check_circle"}
-            className="text-[16px]"
+            className="icon-sm"
           />
           <span>{impactLabel}</span>
         </div>

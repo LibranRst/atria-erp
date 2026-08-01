@@ -246,7 +246,7 @@ export function LibraryTemplateEditorSheet({
                   </span>
                   <AppIcon
                     name="chevron_right"
-                    className="shrink-0 text-[18px] text-on-surface-variant"
+                    className="icon-md shrink-0 text-on-surface-variant"
                   />
                 </motion.button>
               );

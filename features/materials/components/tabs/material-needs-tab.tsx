@@ -144,7 +144,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
                       className="flex min-h-12 w-full items-center justify-center gap-1 rounded-full bg-accent/8 px-5 text-[11px] font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
                     >
                       Buka RAP project
-                      <AppIcon name="chevron_right" className="text-[16px]" />
+                      <AppIcon name="chevron_right" className="icon-sm" />
                     </Link>
                   </div>
                 ) : null}

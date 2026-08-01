@@ -83,7 +83,7 @@ export function BankAccountCard({
             </h3>
           </div>
         </div>
-        <AppIcon name="account_balance" className="shrink-0 text-[18px] opacity-75" />
+        <AppIcon name="account_balance" className="icon-md shrink-0 opacity-75" />
       </div>
 
       <div className="relative z-10 mt-4">

@@ -52,7 +52,7 @@ export function ItemRows({
               className="flex h-10 w-10 items-center justify-center rounded-full text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-30"
               aria-label={`Hapus item ${index + 1}`}
             >
-              <AppIcon name="delete" className="text-[18px]" />
+              <AppIcon name="delete" className="icon-md" />
             </button>
           </div>
           <SheetSelect

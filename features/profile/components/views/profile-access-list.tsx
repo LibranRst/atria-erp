@@ -34,7 +34,7 @@ export function ProfileAccessList({
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${hasAccess ? "bg-primary/6.5 text-primary ring-primary/6" : "bg-surface-container-high/65 text-on-surface-variant/55 ring-ring-subtle"}`}
                   aria-hidden="true"
                 >
-                  <AppIcon name={group.iconName} className="text-[18px] leading-none" />
+                  <AppIcon name={group.iconName} className="icon-md leading-none" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-row font-bold text-on-surface">
@@ -56,7 +56,7 @@ export function ProfileAccessList({
                 </span>
                 <AppIcon
                   name="chevron_right"
-                  className="shrink-0 text-[18px] leading-none text-on-surface-variant/50"
+                  className="icon-md shrink-0 leading-none text-on-surface-variant/50"
                 />
               </button>
             );
@@ -76,7 +76,7 @@ export function ProfileAccessList({
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white text-primary shadow-control"
                 aria-hidden="true"
               >
-                <AppIcon name={selectedGroup.iconName} className="text-[20px] leading-none" />
+                <AppIcon name={selectedGroup.iconName} className="icon-lg leading-none" />
               </span>
               <div className="min-w-0">
                 <p className="text-row font-bold text-on-surface">

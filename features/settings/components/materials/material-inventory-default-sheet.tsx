@@ -91,7 +91,7 @@ export function MaterialInventoryDefaultSheet({
               </div>
               <AppIcon
                 name="arrow_forward"
-                className="text-[18px] leading-none text-on-surface-variant"
+                className="icon-md leading-none text-on-surface-variant"
               />
               <div className="text-right">
                 <p className="text-[9px] font-bold tracking-wide text-primary uppercase">Sesudah</p>

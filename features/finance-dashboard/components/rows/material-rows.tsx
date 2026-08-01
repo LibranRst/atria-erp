@@ -131,7 +131,7 @@ export function MaterialIssueRow({
           >
             <AppIcon
               name={item.type === "WASTE" || item.type === "ADJUSTMENT" ? "history" : "inventory_2"}
-              className="text-[18px]"
+              className="icon-md"
             />
           </span>
           <div className="min-w-0 flex-1">
@@ -158,7 +158,7 @@ export function MaterialIssueRow({
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
             aria-hidden="true"
           >
-            <AppIcon name="chevron_right" className="text-[16px]" />
+            <AppIcon name="chevron_right" className="icon-sm" />
           </span>
         </div>
         <div className="mt-2 flex items-center justify-between gap-3 pl-12 text-[9px] font-semibold text-on-surface-variant/70">

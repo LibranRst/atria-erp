@@ -97,7 +97,7 @@ export function OnboardingNotice({
         : "bg-surface-container-high/30 text-on-surface-variant";
   return (
     <div className={`flex items-start gap-2.5 rounded-[20px] px-3.5 py-3 ${toneClass}`}>
-      <AppIcon name={icon} className="mt-0.5 shrink-0 text-[16px]" />
+      <AppIcon name={icon} className="mt-0.5 icon-sm shrink-0" />
       <p className="text-meta">{children}</p>
     </div>
   );

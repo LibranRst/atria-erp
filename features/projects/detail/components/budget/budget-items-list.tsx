@@ -31,7 +31,7 @@ export function BudgetItemsList({
 
       {budgetItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-[28px] border border-outline-variant/20 bg-white p-md py-8 text-center shadow-surface">
-          <AppIcon name="list" className="mb-1 text-[24px] text-on-surface-variant" />
+          <AppIcon name="list" className="mb-1 icon-xl text-on-surface-variant" />
           <p className="font-body-xs text-on-surface-variant">
             Belum ada item dalam draft Project Budget ini.
           </p>

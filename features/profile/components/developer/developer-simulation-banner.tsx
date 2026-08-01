@@ -67,7 +67,7 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/10 text-warning ring-1 ring-warning/8"
           aria-hidden="true"
         >
-          <AppIcon name="developer_mode" className="text-[18px] leading-none" />
+          <AppIcon name="developer_mode" className="icon-md leading-none" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[11px] leading-5 font-bold text-on-surface">

@@ -349,7 +349,7 @@ export function ProjectDrawer({
         error={
           error ? (
             <div className="flex items-start gap-2 rounded-2xl border border-error bg-error-container/10 p-3 text-xs text-error">
-              <AppIcon name="error" className="text-[18px]" />
+              <AppIcon name="error" className="icon-md" />
               <span className="leading-normal">{error}</span>
             </div>
           ) : null

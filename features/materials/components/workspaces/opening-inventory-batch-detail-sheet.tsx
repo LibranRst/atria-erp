@@ -107,7 +107,7 @@ export function OpeningInventoryBatchDetailSheet({
           <div className="flex items-center gap-3 px-1">
             <AppIcon
               name="inventory"
-              className="flex! h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-[20px] text-primary"
+              className="flex! icon-lg h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-primary"
             />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[14px] leading-5 font-bold text-on-surface">

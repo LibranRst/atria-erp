@@ -166,7 +166,7 @@ function ReceiptUploadOption({
       transition={transitionSpringSnappy}
       className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-3 text-on-surface shadow-surface ring-1 ring-ring-subtle focus-within:ring-2 focus-within:ring-focus-ring ${disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
     >
-      <AppIcon name={icon} className="text-[18px]" />
+      <AppIcon name={icon} className="icon-md" />
       <span className="truncate text-xs font-bold">{label}</span>
       <input
         type="file"

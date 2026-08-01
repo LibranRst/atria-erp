@@ -86,7 +86,7 @@ function ReadinessRow({
   return (
     <div className="flex min-h-12 items-center justify-between gap-3 px-4 py-2.5">
       <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-on-surface">
-        <AppIcon name={icon} className="text-[18px] text-success" />
+        <AppIcon name={icon} className="icon-md text-success" />
         {label}
       </span>
       <span className="shrink-0 text-[11px] font-bold text-success">{value}</span>

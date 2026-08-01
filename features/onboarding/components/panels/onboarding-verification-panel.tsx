@@ -102,7 +102,7 @@ export function OnboardingVerificationPanel({
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant"
           aria-hidden="true"
         >
-          <AppIcon name="fact_check" className="text-[18px]" />
+          <AppIcon name="fact_check" className="icon-md" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[12px] leading-5 font-bold text-on-surface">
@@ -117,7 +117,7 @@ export function OnboardingVerificationPanel({
           aria-hidden="true"
           className={`hidden shrink-0 items-center gap-1 text-[9px] font-bold min-[350px]:flex ${presentation.className}`}
         >
-          <AppIcon name={presentation.icon} className="text-[14px]" />
+          <AppIcon name={presentation.icon} className="icon-xs" />
           {presentation.label}
         </span>
         <motion.span
@@ -179,7 +179,7 @@ export function OnboardingVerificationPanel({
                     aria-controls={technicalId}
                     className="flex min-h-12 w-full items-center gap-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                   >
-                    <AppIcon name="code" className="text-[16px] text-on-surface-variant" />
+                    <AppIcon name="code" className="icon-sm text-on-surface-variant" />
                     <span className="min-w-0 flex-1 text-[10px] font-bold text-on-surface-variant">
                       Info teknis developer
                     </span>

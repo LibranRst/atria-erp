@@ -67,7 +67,7 @@ export function MovementRow({ row }: { readonly row: MaterialMovementView }): Re
       <span
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${movementIconTone(row)}`}
       >
-        <AppIcon name={movementIcon(row)} className="text-[16px]" />
+        <AppIcon name={movementIcon(row)} className="icon-sm" />
       </span>
       <span className="grid min-w-0 flex-1 gap-1">
         <span className="block truncate text-row font-bold">{row.materialName}</span>
@@ -139,7 +139,7 @@ export function ApprovalRow({
       />
       <div className="pointer-events-none relative z-1 flex items-start gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/9 text-warning ring-1 ring-warning/6">
-          <AppIcon name="priority_high" className="text-[18px]" />
+          <AppIcon name="priority_high" className="icon-md" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-xs leading-4 font-bold">{title}</span>

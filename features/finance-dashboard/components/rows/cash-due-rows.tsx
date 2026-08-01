@@ -90,7 +90,7 @@ export function CashDueRow({
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
                   aria-hidden="true"
                 >
-                  <AppIcon name="chevron_right" className="text-[16px] leading-none" />
+                  <AppIcon name="chevron_right" className="icon-sm leading-none" />
                 </span>
               </span>
             </div>

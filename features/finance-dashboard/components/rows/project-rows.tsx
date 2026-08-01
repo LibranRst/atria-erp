@@ -41,7 +41,7 @@ export function ProjectRiskRow({
             <span
               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${overBudget ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
             >
-              <AppIcon name="monitoring" className="text-[18px]" />
+              <AppIcon name="monitoring" className="icon-md" />
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-row font-semibold tracking-[-0.01em] text-on-surface">
@@ -61,7 +61,7 @@ export function ProjectRiskRow({
                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
                 aria-hidden="true"
               >
-                <AppIcon name="chevron_right" className="text-[16px]" />
+                <AppIcon name="chevron_right" className="icon-sm" />
               </span>
             </div>
           </div>
@@ -119,7 +119,7 @@ export function ProjectRiskRow({
           <span
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${overBudget ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
           >
-            <AppIcon name="monitoring" className="text-[18px]" />
+            <AppIcon name="monitoring" className="icon-md" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
@@ -140,7 +140,7 @@ export function ProjectRiskRow({
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
             aria-hidden="true"
           >
-            <AppIcon name="chevron_right" className="text-[16px]" />
+            <AppIcon name="chevron_right" className="icon-sm" />
           </span>
         </div>
         <div className="mt-2 flex items-center justify-between gap-3">

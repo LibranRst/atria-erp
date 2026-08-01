@@ -52,7 +52,7 @@ function AccountBalanceImpact({
           </div>
           <AppIcon
             name="arrow_forward"
-            className="text-[20px] leading-none text-on-surface-variant/65"
+            className="icon-lg leading-none text-on-surface-variant/65"
           />
           <div className="min-w-0 text-right">
             <p className="text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">

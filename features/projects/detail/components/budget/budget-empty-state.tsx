@@ -16,7 +16,7 @@ export function BudgetEmptyState({
   return (
     <div className="flex flex-col items-center justify-center space-y-md rounded-[28px] border border-outline-variant/20 bg-white p-md py-10 text-center shadow-surface select-none">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container text-on-surface-variant">
-        <AppIcon name="description" className="text-[28px]" />
+        <AppIcon name="description" className="icon-2xl" />
       </div>
       <div className="space-y-xs">
         <h3 className="font-title-md text-on-surface">RAB Belum Tersedia</h3>
@@ -35,7 +35,7 @@ export function BudgetEmptyState({
             <span className="animate-pulse">Membuat Draf...</span>
           ) : (
             <>
-              <AppIcon name="add" className="text-[16px]" />
+              <AppIcon name="add" className="icon-sm" />
               <span>Buat Rencana Anggaran (RAB)</span>
             </>
           )}

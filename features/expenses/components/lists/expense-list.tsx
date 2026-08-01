@@ -272,12 +272,12 @@ export function ExpenseList({
           {
             value: "FIELD_CLAIMS",
             label: "Pengeluaran Lapangan",
-            icon: <AppIcon name="receipt_long" className="text-[16px]" />,
+            icon: <AppIcon name="receipt_long" className="icon-sm" />,
           },
           {
             value: "VENDOR_BILLS",
             label: "Tagihan Vendor",
-            icon: <AppIcon name="request_quote" className="text-[16px]" />,
+            icon: <AppIcon name="request_quote" className="icon-sm" />,
           },
         ]}
       />

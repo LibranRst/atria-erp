@@ -125,7 +125,7 @@ export function RapRabManager({
             <NativePanel eyebrow="Rencana Internal" title="Mulai dari Material">
               <div className="py-lg text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <AppIcon name="architecture" className="text-[28px]" />
+                  <AppIcon name="architecture" className="icon-2xl" />
                 </div>
                 <h3 className="mt-4 text-base font-bold">Susun kebutuhan material proyek</h3>
                 <p className="mx-auto mt-1 max-w-xs text-xs leading-5 text-on-surface-variant">

@@ -384,7 +384,7 @@ export function ReconciliationWorkspace({
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant ring-1 ring-ring-subtle"
               aria-hidden="true"
             >
-              <AppIcon name="description" className="text-[18px] leading-none" />
+              <AppIcon name="description" className="icon-md leading-none" />
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-semibold text-on-surface">
@@ -583,7 +583,7 @@ export function ReconciliationWorkspace({
 
             {selectedStatement ? (
               <p className="flex items-start gap-2 px-1 text-meta font-medium text-success">
-                <AppIcon name="verified" className="mt-0.5 shrink-0 text-[14px] leading-none" />
+                <AppIcon name="verified" className="mt-0.5 icon-xs shrink-0 leading-none" />
                 Rekening, arah dana, dan nominal sesuai. Periksa deskripsi dan tanggal sebelum
                 mengonfirmasi.
               </p>

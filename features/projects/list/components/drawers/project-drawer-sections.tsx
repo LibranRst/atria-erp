@@ -92,7 +92,7 @@ export function ProjectCreatedSuccess({
                   <span className="text-meta text-on-surface-variant">{action.description}</span>
                 </div>
               </div>
-              <AppIcon name="chevron_right" className="text-[20px] text-outline-variant" />
+              <AppIcon name="chevron_right" className="icon-lg text-outline-variant" />
             </button>
           ))}
         </div>

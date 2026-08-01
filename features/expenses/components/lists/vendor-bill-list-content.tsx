@@ -106,7 +106,7 @@ export function VendorBillListContent({
                 onClick={onAddBill}
                 className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
               >
-                <AppIcon name="add" className="text-[14px] leading-none" />
+                <AppIcon name="add" className="icon-xs leading-none" />
                 Tambah
               </button>
             ) : undefined
@@ -147,13 +147,13 @@ export function VendorBillListContent({
               value: "BILLS",
               label: "Tagihan",
               count: openBillCount,
-              icon: <AppIcon name="request_quote" className="text-[16px] leading-none" />,
+              icon: <AppIcon name="request_quote" className="icon-sm leading-none" />,
             },
             {
               value: "PAYMENTS",
               label: "Rencana Bayar",
               count: vendorPayments.filter((payment) => payment.status !== "COMPLETED").length,
-              icon: <AppIcon name="payments" className="text-[16px] leading-none" />,
+              icon: <AppIcon name="payments" className="icon-sm leading-none" />,
             },
           ]}
         />

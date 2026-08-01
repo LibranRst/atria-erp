@@ -316,7 +316,7 @@ export function VendorBillForm({
                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant"
                         aria-hidden="true"
                       >
-                        <AppIcon name="edit_note" className="text-[18px] leading-none" />
+                        <AppIcon name="edit_note" className="icon-md leading-none" />
                       </span>
                       <span className="grid min-w-0 flex-1 gap-0.5">
                         <span className="truncate text-xs leading-[1.15] font-bold text-on-surface">
@@ -338,7 +338,7 @@ export function VendorBillForm({
                       </span>
                       <AppIcon
                         name="chevron_right"
-                        className="shrink-0 text-[18px] leading-none text-on-surface-variant"
+                        className="icon-md shrink-0 leading-none text-on-surface-variant"
                       />
                     </button>
                     <button
@@ -347,7 +347,7 @@ export function VendorBillForm({
                       className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-error transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-error-container/20"
                       aria-label={`Buang draft ${item.payload.billNumber || "tagihan belum bernomor"}`}
                     >
-                      <AppIcon name="delete" className="text-[18px] leading-none" />
+                      <AppIcon name="delete" className="icon-md leading-none" />
                     </button>
                   </div>
                 ))}

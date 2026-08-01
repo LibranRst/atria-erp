@@ -55,7 +55,7 @@ export function ApprovalWorkbenchRow({
                     ? "inventory"
                     : "request_quote"
               }
-              className="text-[18px]"
+              className="icon-md"
             />
           </span>
           <div className="min-w-0 flex-1">
@@ -76,7 +76,7 @@ export function ApprovalWorkbenchRow({
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
             aria-hidden="true"
           >
-            <AppIcon name="chevron_right" className="text-[16px]" />
+            <AppIcon name="chevron_right" className="icon-sm" />
           </span>
         </div>
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
@@ -172,7 +172,7 @@ export function ApprovalBudgetContext({
         <span className="inline-flex min-w-0 items-center gap-1.5">
           <AppIcon
             name={critical ? "report" : warning ? "warning" : "check_circle"}
-            className="shrink-0 text-[14px]"
+            className="icon-xs shrink-0"
           />
           <span className="truncate">{impactLabel}</span>
         </span>
