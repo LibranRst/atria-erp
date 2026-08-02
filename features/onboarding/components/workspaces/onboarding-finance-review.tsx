@@ -125,7 +125,7 @@ export function OnboardingFinanceReview({
         </div>
       ) : null}
       <header>
-        <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+        <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
           Onboarding Review
         </p>
         <h1 className="mt-1.5 text-[26px] font-bold tracking-[-0.035em] text-on-surface">

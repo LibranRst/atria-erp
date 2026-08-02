@@ -54,7 +54,7 @@ export function OnboardingToolbar({
         onClick={onAction}
         whileTap={disabled ? undefined : { scale: 0.97 }}
         transition={transitionSpringSnappy}
-        className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-[10px] font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
+        className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
       >
         {actionLabel}
       </motion.button>

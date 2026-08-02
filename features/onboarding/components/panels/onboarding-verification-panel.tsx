@@ -115,7 +115,7 @@ export function OnboardingVerificationPanel({
         </span>
         <span
           aria-hidden="true"
-          className={`hidden shrink-0 items-center gap-1 text-[9px] font-bold min-[350px]:flex ${presentation.className}`}
+          className={`hidden shrink-0 items-center gap-1 text-eyebrow font-bold min-[350px]:flex ${presentation.className}`}
         >
           <AppIcon name={presentation.icon} className="icon-xs" />
           {presentation.label}
@@ -148,7 +148,7 @@ export function OnboardingVerificationPanel({
                     className="flex min-h-14.5 items-center justify-between gap-3 px-4 py-3"
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[10px] font-semibold text-on-surface-variant">
+                      <span className="block text-meta font-semibold text-on-surface-variant">
                         {fact.label}
                       </span>
                       {fact.detail ? (
@@ -157,7 +157,7 @@ export function OnboardingVerificationPanel({
                         </span>
                       ) : null}
                     </span>
-                    <span className="max-w-[48%] text-right text-[11px] font-bold wrap-break-word text-on-surface tabular-nums">
+                    <span className="max-w-[48%] text-right text-support font-bold wrap-break-word text-on-surface tabular-nums">
                       {fact.value}
                     </span>
                   </div>
@@ -180,7 +180,7 @@ export function OnboardingVerificationPanel({
                     className="flex min-h-12 w-full items-center gap-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                   >
                     <AppIcon name="code" className="icon-sm text-on-surface-variant" />
-                    <span className="min-w-0 flex-1 text-[10px] font-bold text-on-surface-variant">
+                    <span className="min-w-0 flex-1 text-meta font-bold text-on-surface-variant">
                       Info teknis developer
                     </span>
                     <motion.span
@@ -209,10 +209,10 @@ export function OnboardingVerificationPanel({
                                 key={`${fact.label}-${fact.value}-${index}`}
                                 className="px-3.5 py-3"
                               >
-                                <p className="text-[9px] font-semibold text-on-surface-variant">
+                                <p className="text-eyebrow font-semibold text-on-surface-variant">
                                   {fact.label}
                                 </p>
-                                <p className="mt-1 font-mono text-[9px] break-all text-on-surface">
+                                <p className="mt-1 font-mono text-eyebrow break-all text-on-surface">
                                   {fact.value}
                                 </p>
                                 {fact.detail ? (

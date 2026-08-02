@@ -120,7 +120,7 @@ export function InitialStockSetupPanel({
               <button
                 type="button"
                 onClick={() => setComposerOpen(true)}
-                className="mt-4 min-h-12 w-full rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface"
+                className="mt-4 min-h-12 w-full rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface"
               >
                 Catat saldo awal lainnya
               </button>
@@ -226,7 +226,7 @@ export function InitialStockSetupPanel({
                     type="button"
                     disabled={simulationPending}
                     onClick={() => setSimulationConfirmationBatch(batch)}
-                    className="mt-2 min-h-12 w-full rounded-full bg-accent-container px-4 text-[10px] font-bold text-accent disabled:opacity-40"
+                    className="mt-2 min-h-12 w-full rounded-full bg-accent-container px-4 text-meta font-bold text-accent disabled:opacity-40"
                   >
                     Simulasikan Finance Admin
                   </button>
@@ -293,8 +293,8 @@ export function InitialStockSetupPanel({
             {detailBatch.items.map((item) => (
               <div key={item.id} className="rounded-3xl bg-white px-4 py-3.5">
                 <p className="text-xs font-bold">{item.materialName}</p>
-                <p className="mt-0.5 text-[10px] text-on-surface-variant">{item.locationName}</p>
-                <div className="mt-3 grid grid-cols-2 gap-3 border-t border-outline-variant/20 pt-3 text-[10px]">
+                <p className="mt-0.5 text-meta text-on-surface-variant">{item.locationName}</p>
+                <div className="mt-3 grid grid-cols-2 gap-3 border-t border-outline-variant/20 pt-3 text-meta">
                   <span>
                     Jumlah fisik
                     <br />
@@ -341,7 +341,7 @@ export function InitialStockSetupPanel({
         {financeTarget && simulationConfirmationBatch ? (
           <div className="divide-y divide-outline-variant/20 text-left">
             <div className="py-2 first:pt-0">
-              <p className="text-[9px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
+              <p className="text-eyebrow font-bold tracking-[0.12em] text-on-surface-variant uppercase">
                 Akun efektif
               </p>
               <p className="mt-1 text-xs leading-4 font-bold text-on-surface">
@@ -352,7 +352,7 @@ export function InitialStockSetupPanel({
               </p>
             </div>
             <div className="py-2.5 last:pb-0">
-              <p className="text-[9px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
+              <p className="text-eyebrow font-bold tracking-[0.12em] text-on-surface-variant uppercase">
                 Konsekuensi audit
               </p>
               <p className="mt-1 text-meta text-on-surface-variant">

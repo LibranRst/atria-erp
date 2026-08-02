@@ -83,11 +83,11 @@ export function OnboardingWorkspaceHeader({
       </div>
       <div className="px-1">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
             {copy.eyebrow}
           </p>
           {refreshing ? (
-            <span className="text-[9px] font-semibold text-on-surface-variant">Memperbarui…</span>
+            <span className="text-eyebrow font-semibold text-on-surface-variant">Memperbarui…</span>
           ) : null}
         </div>
         <h1 className="mt-1.5 text-[26px] leading-8 font-bold tracking-[-0.035em] text-on-surface">

@@ -35,7 +35,7 @@ function FactRow({
         className="flex! icon-lg h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-primary"
       />
       <span className="min-w-0 flex-1">
-        <span className="block text-[13px] font-bold text-on-surface">{title}</span>
+        <span className="block text-row font-bold text-on-surface">{title}</span>
         <span className="mt-0.5 block text-meta text-on-surface-variant">{detail}</span>
       </span>
     </div>
@@ -53,7 +53,7 @@ function SourceError({
   return (
     <div className="rounded-3xl bg-white px-5 py-6 text-center ring-1 ring-ring-subtle">
       <AppIcon name="sync_problem" className="icon-2xl text-warning" />
-      <p className="mt-2 text-[13px] font-bold text-on-surface">Data step belum dapat dimuat</p>
+      <p className="mt-2 text-row font-bold text-on-surface">Data step belum dapat dimuat</p>
       <p className="mt-1 text-meta text-on-surface-variant">{source.message}</p>
       <button
         type="button"
@@ -119,7 +119,7 @@ function OnboardingSummary({
                 >
                   <AppIcon name="info" className="text-[19px] text-on-surface-variant" />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[11px] font-bold text-on-surface">
+                    <span className="block text-support font-bold text-on-surface">
                       {issue.label}
                     </span>
                     <span className="mt-0.5 block text-[9px] leading-4 text-on-surface-variant">
@@ -154,7 +154,7 @@ function OnboardingSummary({
                   }
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] font-bold text-on-surface">{item.label}</span>
+                  <span className="block text-row font-bold text-on-surface">{item.label}</span>
                   <span className="mt-0.5 block text-meta text-on-surface-variant">
                     {item.detail}
                   </span>
