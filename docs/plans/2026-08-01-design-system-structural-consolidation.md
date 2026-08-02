@@ -161,24 +161,49 @@ in bulk would tighten line boxes by 8–12px across hundreds of elements — a s
 cleanup.
 
 That sample also revealed the actual rule, and it turned out to be a provable fact, not a pattern
-that needs re-checking per surface. `app/layout.tsx:31` sets `leading-lg` directly on `<body>`
-(resolves to 24px at the app's 16px base) and font-sans, text-[16px], and nothing else touches
-line-height. Walking the ancestor chain of a live element in the browser confirmed no wrapper
-between `<body>` and any sampled node re-declares `line-height` at any point, so **every** element in
-the app that does not set its own `leading-*` inherits exactly 24px, unconditionally. Sampling across
+that needs re-checking per surface — though the first attribution was wrong. `app/layout.tsx:31` set
+a `leading-lg` class directly on `<body>`, and the ancestor-chain walk found no wrapper between
+`<body>` and any sampled node that re-declares `line-height`, so **every** element in the app that
+does not set its own `leading-*` inherits the same ambient value, unconditionally. Sampling across
 seven unrelated surfaces (`/ledger` two dashboard tabs, `/expenses`, `/settings`, `/materials`, a
-project detail page — 139 elements total) found zero exceptions, which is what this mechanism
-predicts.
+project detail page — 139 elements total) found zero exceptions.
 
-Of the seven type tokens, only `text-title` (17px/24px) equals that ambient value; the other six are
-all smaller than 24px. This means the remaining "no leading" sites at 9/10/11/13/15px **cannot** be
-converted by a blanket rule, not "probably shouldn't" — doing so would always tighten the line box,
-by construction, unless a closer ancestor happens to override `leading-lg` (none did, in 139 sampled
-elements). Closing this gap for real means adding an intentional `leading-*` per site, a design
-decision made one component at a time, not a continuation of the mechanical migration from phase 1.
+`leading-lg` itself, however, was never a valid Tailwind class. This project's leading scale (there is
+no `--leading-lg` in `app/globals.css`) and Tailwind v4's own default scale (`tight`/`snug`/`normal`/
+`relaxed`/`loose` only, per `node_modules/tailwindcss/theme.css`) both lack an `lg` size, so the class
+compiled to zero CSS the entire time. Confirmed empirically by removing it and reading
+`getComputedStyle(document.body).lineHeight` before and after: `24px` in both cases, no change.
+The real source is Tailwind v4 Preflight (`node_modules/tailwindcss/preflight.css:29`):
+`html, :host { line-height: 1.5; }` — a framework default, not a project-specific token. `leading-lg`
+was removed from `app/layout.tsx` as dead-code cleanup; the ambient value is unchanged and the
+decision (see below) is to leave the Preflight default alone rather than override it at the root.
 
-Acting on the proven-safe subset: the 7 real `text-[17px]`-with-no-leading text sites in the repo
-(excluding `AppIcon` sizes, which share the same numeric syntax, and one `max-[430px]:text-[17px]`
-responsive override that is a different case) moved to `text-title`. Verified in the browser at both
-before and after: every one measured 17px/24px both times. Hardcoded `text-[Npx]` drops from 686 to
-679, and that is the full extent of what can be converted without a size regression.
+Of the seven type tokens, only `text-title` (17px/24px) equals that ambient 1.5-ratio value at the
+app's 16px base; the other six are all smaller than what 1.5× their own size would give them. This
+means the remaining "no leading" sites at 9/10/11/13/15px **cannot** be converted by a blanket rule,
+not "probably shouldn't" — doing so would always tighten the line box relative to the current render,
+by construction, unless a closer ancestor happens to override the Preflight default (none did, in 139
+sampled elements). Closing this gap for real means adding an intentional `leading-*` per site, a
+design decision made one component at a time, not a continuation of the mechanical migration from
+phase 1. The existing hand-added `leading-4`/`leading-5` overrides scattered across the app are
+exactly this kind of per-site decision, made reactively against the same Preflight default — not
+band-aids for a mistake, legitimate prior art for the same problem.
+
+Acting on the proven-safe subset first: the 7 real `text-[17px]`-with-no-leading text sites in the
+repo (excluding `AppIcon` sizes, which share the same numeric syntax, and one
+`max-[430px]:text-[17px]` responsive override that is a different case) moved to `text-title`.
+Verified in the browser at both before and after: every one measured 17px/24px both times.
+
+Then the deliberate per-site pass proceeded feature by feature — reviewing each site's role (eyebrow
+label, dense metadata, supporting text, row value, section title) against the matching bundled token,
+applying it, and verifying visually per surface before committing:
+
+| Area              | Sites converted | Commit    |
+| ----------------- | --------------- | --------- |
+| finance-dashboard  | 74               | `df255df` |
+| projects           | 60               | `55f141c` |
+| settings           | 47               | `0418097` |
+
+Materials, approvals, shared components, onboarding, and the remaining small feature areas are still
+open. Hardcoded `text-[Npx]` count and the icon one-offs group are unaffected by this pass (that work
+targets sizes with no token role and icon sizing respectively, not the type scale).
