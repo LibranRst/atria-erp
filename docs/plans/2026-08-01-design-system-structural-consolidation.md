@@ -93,7 +93,7 @@ All four phases landed. Measured results:
 
 | Metric                                   | Before | After |
 | ---------------------------------------- | ------ | ----- |
-| Hardcoded `text-[Npx]`                   | 1075   | 679   |
+| Hardcoded `text-[Npx]`                   | 1075   | 353   |
 | Deep `@/components/ui/**` imports        | 278    | 0     |
 | Cross-feature imports into the dashboard | 20     | 5     |
 | Cross-slice edges                        | 45     | 33    |
@@ -196,14 +196,43 @@ Verified in the browser at both before and after: every one measured 17px/24px b
 
 Then the deliberate per-site pass proceeded feature by feature — reviewing each site's role (eyebrow
 label, dense metadata, supporting text, row value, section title) against the matching bundled token,
-applying it, and verifying visually per surface before committing:
+applying it, and verifying visually per surface (including 320/360/390/430px) before committing:
 
-| Area              | Sites converted | Commit    |
-| ----------------- | --------------- | --------- |
-| finance-dashboard  | 74               | `df255df` |
-| projects           | 60               | `55f141c` |
-| settings           | 47               | `0418097` |
+| Area                     | Sites converted | Commit    |
+| ------------------------ | --------------- | --------- |
+| finance-dashboard        | 74               | `df255df` |
+| projects                 | 60               | `55f141c` |
+| settings                 | 47               | `0418097` |
+| materials                | 39               | `091af84` |
+| approvals                | 26               | `f0d418c` |
+| components/ui (shared)   | 25               | `f9569bc` |
+| onboarding               | 20               | `7b1edff` |
+| expenses/activity-detail/reconciliation/profile/administration/app | 35 | `1a2595c` |
 
-Materials, approvals, shared components, onboarding, and the remaining small feature areas are still
-open. Hardcoded `text-[Npx]` count and the icon one-offs group are unaffected by this pass (that work
-targets sizes with no token role and icon sizing respectively, not the type scale).
+326 sites total. The remaining 4 sites at token sizes with no explicit `leading` are not conversions
+missed by the pass — they're 3 `AppIcon` instances whose `text-[17px]` is icon sizing on a multi-line
+JSX tag (the single-line `AppIcon` check used while filtering didn't catch multi-line cases, but these
+were never text sites) and the one `max-[430px]:text-[17px]` responsive-override case already called
+out above as a different situation. The "no explicit leading" group is fully closed: 0 remaining text
+sites among 9/10/11/13/15px.
+
+Hardcoded `text-[Npx]` drops from 679 to 353. What's left is the other three groups from the table
+above, none of which this pass targeted: sizes with no scale role (~138), sizes already paired with a
+deliberate `leading-*` override (~154, unchanged by design — converting them would overwrite an
+existing decision, not just an ambient default), and icon one-offs (~57, a separate icon-scale gap,
+not a type-scale one).
+
+### leading-lg was a dead class, not a design decision
+
+Mid-pass, a stray uncommitted change surfaced: `leading-lg` had been removed from `app/layout.tsx`,
+apparently in an earlier attempt to fix line spacing that looked too loose across the app, then left
+uncommitted. It was restored on the assumption it was accidental debris — which was wrong. Testing
+confirmed the removal was deliberate and, more importantly, correct in intent: `getComputedStyle`
+showed `document.body`'s line-height was `24px` identically with or without the class, because
+`leading-lg` was never valid Tailwind (no `--leading-lg` in this project's theme or Tailwind's default
+scale) and compiled to no CSS. The real source of the ambient 24px is Tailwind v4 Preflight
+(`html, :host { line-height: 1.5; }`), not anything project-specific. The class was removed again as
+dead-code cleanup (`93ac2f0`); the decision was to leave the Preflight default itself alone rather
+than override it at the root, since every dense-text site either now carries an explicit bundled
+token or a hand-added `leading-4`/`leading-5` override, and a root-level change would touch every
+untouched element in the app at once with no per-site review.
