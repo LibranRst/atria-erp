@@ -139,7 +139,7 @@ export function SheetSelect({
             groups.map((group) => (
               <div key={group || "ungrouped"} className="space-y-2">
                 {group && (
-                  <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+                  <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                     {group}
                   </p>
                 )}
@@ -197,7 +197,7 @@ export function SheetSelect({
               {createActionDescription ? (
                 <span className="min-w-0 text-left">
                   <span className="block truncate">{createActionLabel}</span>
-                  <span className="block truncate text-[10px] font-normal text-on-surface-variant">
+                  <span className="block truncate text-meta font-normal text-on-surface-variant">
                     {createActionDescription}
                   </span>
                 </span>

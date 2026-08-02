@@ -22,7 +22,7 @@ const variantClass: Record<ButtonVariant, string> = {
 const sizeClass: Record<ButtonSize, string> = {
   default: "min-h-12 px-5 text-xs",
   compact:
-    "relative h-10 px-3 text-[10px] after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+    "relative h-10 px-3 text-meta after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
 };
 
 type SharedButtonProps = {
@@ -141,7 +141,7 @@ type SectionActionProps = {
 };
 
 const defaultSectionActionClass =
-  "relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-accent/8 pl-3 pr-2.5 text-[10px] font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]";
+  "relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-accent/8 pl-3 pr-2.5 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]";
 
 export function SectionAction({
   label,
@@ -153,7 +153,7 @@ export function SectionAction({
   const sectionActionClass =
     mode === "default"
       ? defaultSectionActionClass
-      : "text-[11px] relative inline-flex gap-1 items-center shrink-0 text-accent font-semibold";
+      : "text-support relative inline-flex gap-1 items-center shrink-0 text-accent font-semibold";
 
   const content = (
     <>

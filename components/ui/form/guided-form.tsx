@@ -352,7 +352,7 @@ export function FormSection({
         <div className="flex min-w-0 items-end justify-between gap-3">
           <div className="min-w-0">
             {title ? (
-              <h3 className="truncate text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
+              <h3 className="truncate text-meta font-bold tracking-[0.11em] text-on-surface uppercase">
                 {title}
               </h3>
             ) : null}

@@ -211,7 +211,7 @@ export function SectionCountPill({
         label={label.toLowerCase()}
         tone="neutral"
         aria-hidden="true"
-        className="bg-surface-container-lowest text-[9px] ring-1 ring-ring-subtle"
+        className="bg-surface-container-lowest text-eyebrow ring-1 ring-ring-subtle"
       />
     </span>
   );

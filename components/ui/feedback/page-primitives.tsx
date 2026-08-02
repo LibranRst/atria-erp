@@ -24,7 +24,7 @@ export function PageHeader({
     <header className={`flex items-start justify-between gap-4 ${className}`}>
       <div className="min-w-0">
         {eyebrow && (
-          <p className="mb-1 text-[9px] font-bold tracking-[0.16em] text-primary uppercase">
+          <p className="mb-1 text-eyebrow font-bold tracking-[0.16em] text-primary uppercase">
             {eyebrow}
           </p>
         )}
@@ -62,7 +62,7 @@ export function NativeSection({
         <div className="mb-sm flex items-center justify-between gap-3">
           <div className="min-w-0">
             {eyebrow && (
-              <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+              <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                 {eyebrow}
               </p>
             )}
@@ -258,7 +258,7 @@ export function MetricPill({
       className={`min-w-0 rounded-2xl px-3 py-2.5 ${metricPillSurfaceClass[surface]} ${alignClass} ${className}`}
     >
       <p
-        className={`truncate text-[9px] font-bold tracking-wide uppercase ${metricPillLabelClass[surface]}`}
+        className={`truncate text-eyebrow font-bold tracking-wide uppercase ${metricPillLabelClass[surface]}`}
       >
         {label}
       </p>
@@ -306,7 +306,7 @@ export function MoneyMetricPill({
       className={`min-w-0 rounded-2xl px-3 py-2.5 ${metricPillSurfaceClass[surface]} ${alignClass} ${className}`}
     >
       <p
-        className={`truncate text-[9px] font-bold tracking-wide uppercase ${metricPillLabelClass[surface]}`}
+        className={`truncate text-eyebrow font-bold tracking-wide uppercase ${metricPillLabelClass[surface]}`}
       >
         {label}
       </p>
@@ -399,7 +399,7 @@ export function PillTabs<TValue extends string>({
             aria-pressed={active}
             disabled={option.disabled}
             onClick={() => onChange(option.value)}
-            className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-[11px] font-bold transition active:scale-95 disabled:opacity-50 ${
+            className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-support font-bold transition active:scale-95 disabled:opacity-50 ${
               active
                 ? "bg-primary text-on-primary shadow-primary"
                 : "bg-surface-container text-on-surface-variant ring-1 ring-ring-control hover:text-on-surface"

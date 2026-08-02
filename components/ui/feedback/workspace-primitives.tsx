@@ -35,7 +35,7 @@ export function WorkspaceModuleHeader({
   return (
     <header className="flex min-w-0 items-end justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant/65 uppercase">
+        <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant/65 uppercase">
           {eyebrow}
         </p>
         <h2 className="mt-1 text-[19px] leading-[1.12] font-semibold tracking-[-0.02em] text-on-surface">
@@ -52,7 +52,7 @@ export function WorkspaceModuleHeader({
           onClick={onAction}
           whileTap={reduceMotion ? undefined : { scale: 0.96 }}
           transition={transitionSpringSnappy}
-          className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-35"
+          className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-35"
         >
           <AppIcon name="add" className="icon-xs" aria-hidden="true" />
           {actionLabel}

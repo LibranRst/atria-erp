@@ -93,7 +93,7 @@ export function DatePickerField({
               <AppIcon name="chevron_right" className="icon-sm" />
             </button>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-on-surface-variant uppercase">
+          <div className="grid grid-cols-7 gap-1 text-center text-meta font-bold text-on-surface-variant uppercase">
             {["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].map((day) => (
               <span key={day} className="py-2">
                 {day}

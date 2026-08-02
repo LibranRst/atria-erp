@@ -55,7 +55,7 @@ export function SummarySurface({
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-container-low text-on-surface-variant ring-1 ring-ring-subtle">
             <AppIcon name={icon} className="text-[17px]" />
           </span>
-          <p className="min-w-0 truncate text-[10px] font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
+          <p className="min-w-0 truncate text-meta font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
             {eyebrow}
           </p>
         </div>
@@ -248,7 +248,7 @@ export function PanelSection({
       <div className="mb-sm flex items-start justify-between gap-3">
         <div className="min-w-0">
           {eyebrow && (
-            <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+            <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
               {eyebrow}
             </p>
           )}

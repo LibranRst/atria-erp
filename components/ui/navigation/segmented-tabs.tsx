@@ -163,7 +163,7 @@ export function SegmentedTabs<TValue extends string>({
           }
           onChange(option.value);
         }}
-        className={`relative flex items-center justify-center rounded-full font-bold outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40 ${option.unavailable ? "opacity-45" : ""} ${compact ? "h-10 min-h-10 gap-1 px-3 py-1.5 text-[11px] after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']" : "min-h-12 gap-1.5 py-2 text-xs"} ${animated ? "transition-colors active:scale-[0.98]" : ""} ${
+        className={`relative flex items-center justify-center rounded-full font-bold outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40 ${option.unavailable ? "opacity-45" : ""} ${compact ? "h-10 min-h-10 gap-1 px-3 py-1.5 text-support after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']" : "min-h-12 gap-1.5 py-2 text-xs"} ${animated ? "transition-colors active:scale-[0.98]" : ""} ${
           scrollable
             ? fillAvailableSpace
               ? compact
@@ -186,8 +186,8 @@ export function SegmentedTabs<TValue extends string>({
               label={`${option.label} memerlukan perhatian`}
               className={cn(
                 compact
-                  ? "text-[9px] max-[430px]:h-4.5 max-[430px]:min-w-4.5 max-[430px]:text-[8.5px]"
-                  : "text-[10px]",
+                  ? "text-eyebrow max-[430px]:h-4.5 max-[430px]:min-w-4.5 max-[430px]:text-[8.5px]"
+                  : "text-meta",
                 active && "bg-white/18 text-white",
               )}
             />

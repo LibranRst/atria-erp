@@ -66,7 +66,7 @@ export function FormField({
                 className={cx(
                   labelClass,
                   grouped &&
-                    "ml-0 text-[10px] tracking-[0.08em] transition-colors group-focus-within/form:text-accent",
+                    "ml-0 text-meta tracking-[0.08em] transition-colors group-focus-within/form:text-accent",
                 )}
                 htmlFor={htmlFor}
               >
@@ -384,7 +384,7 @@ export function MoneyInput({
         aria-describedby={ariaDescribedBy}
       />
       {showPreview && (
-        <p className="financial-amount font-mono text-[10px] wrap-anywhere text-on-surface-variant">
+        <p className="financial-amount font-mono text-meta wrap-anywhere text-on-surface-variant">
           Rp {numeric.toLocaleString("id-ID")}
         </p>
       )}
@@ -441,7 +441,7 @@ export function QuantityStepper({
           className="min-w-0 flex-1 bg-transparent text-center font-mono text-sm font-bold text-on-surface tabular-nums outline-none"
         />
         {unit && (
-          <span className="shrink-0 text-[10px] font-bold text-on-surface-variant">{unit}</span>
+          <span className="shrink-0 text-meta font-bold text-on-surface-variant">{unit}</span>
         )}
       </div>
       <button
@@ -528,7 +528,7 @@ export function SwitchRow({
       )}
     >
       <div className="min-w-0 flex-1 text-left">
-        <span className="block text-[13px] font-bold text-on-surface">{title}</span>
+        <span className="block text-row font-bold text-on-surface">{title}</span>
         {description && (
           <span className="mt-0.5 block text-[10px] leading-relaxed text-on-surface-variant">
             {description}

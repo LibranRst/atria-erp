@@ -34,7 +34,7 @@ export function FilterPills({
             type="button"
             onClick={() => onChange(option.value)}
             aria-pressed={value === option.value}
-            className={`h-9 shrink-0 rounded-full px-4 text-[11px] font-bold transition active:scale-95 ${
+            className={`h-9 shrink-0 rounded-full px-4 text-support font-bold transition active:scale-95 ${
               value === option.value
                 ? "bg-primary text-on-primary"
                 : "bg-surface-container text-on-surface-variant ring-1 ring-ring-control"
