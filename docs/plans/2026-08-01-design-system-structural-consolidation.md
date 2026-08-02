@@ -160,18 +160,25 @@ of twelve inherit a 24px line-height, while the matching token would set 12–16
 in bulk would tighten line boxes by 8–12px across hundreds of elements — a silent regression, not a
 cleanup.
 
-That sample also revealed the actual rule: the app's ambient line-height with no explicit `leading`
-is a flat 24px almost everywhere, confirmed across five unrelated pages (`/ledger`, `/expenses`,
-`/settings`, `/materials`, a project detail page — roughly 109 elements) with zero exceptions. Of
-the seven tokens, only `text-title` (17px/24px) matches that ambient value; the other six are all
-smaller than 24px, so converting them can never be visually safe as a blanket rule. Converting them
-individually still requires per-element judgement, since the safety depends on what ancestor sets
-the 24px, not on the token itself.
+That sample also revealed the actual rule, and it turned out to be a provable fact, not a pattern
+that needs re-checking per surface. `app/layout.tsx:31` sets `leading-lg` directly on `<body>`
+(resolves to 24px at the app's 16px base) and font-sans, text-[16px], and nothing else touches
+line-height. Walking the ancestor chain of a live element in the browser confirmed no wrapper
+between `<body>` and any sampled node re-declares `line-height` at any point, so **every** element in
+the app that does not set its own `leading-*` inherits exactly 24px, unconditionally. Sampling across
+seven unrelated surfaces (`/ledger` two dashboard tabs, `/expenses`, `/settings`, `/materials`, a
+project detail page — 139 elements total) found zero exceptions, which is what this mechanism
+predicts.
 
-Acting on that rule: the 7 real `text-[17px]`-with-no-leading text sites in the repo (excluding
-`AppIcon` sizes, which share the same numeric syntax, and one `max-[430px]:text-[17px]` responsive
-override that is a different case) moved to `text-title`. Verified in the browser at both before and
-after: every one measured 17px/24px both times. Hardcoded `text-[Npx]` drops from 686 to 679.
+Of the seven type tokens, only `text-title` (17px/24px) equals that ambient value; the other six are
+all smaller than 24px. This means the remaining "no leading" sites at 9/10/11/13/15px **cannot** be
+converted by a blanket rule, not "probably shouldn't" — doing so would always tighten the line box,
+by construction, unless a closer ancestor happens to override `leading-lg` (none did, in 139 sampled
+elements). Closing this gap for real means adding an intentional `leading-*` per site, a design
+decision made one component at a time, not a continuation of the mechanical migration from phase 1.
 
-The remaining ~329 "no leading" sites need the same per-element browser measurement before any
-conversion, one surface at a time; there is no shortcut that preserves the guarantee above.
+Acting on the proven-safe subset: the 7 real `text-[17px]`-with-no-leading text sites in the repo
+(excluding `AppIcon` sizes, which share the same numeric syntax, and one `max-[430px]:text-[17px]`
+responsive override that is a different case) moved to `text-title`. Verified in the browser at both
+before and after: every one measured 17px/24px both times. Hardcoded `text-[Npx]` drops from 686 to
+679, and that is the full extent of what can be converted without a size regression.
