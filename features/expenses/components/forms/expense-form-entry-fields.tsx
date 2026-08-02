@@ -114,7 +114,7 @@ export function ExpenseFormEntryFields({
                 {lastProjectSuggestion.name}
               </span>
             </span>
-            <span className="shrink-0 text-[11px] font-bold text-accent">Gunakan</span>
+            <span className="shrink-0 text-support font-bold text-accent">Gunakan</span>
           </motion.button>
         ) : null}
         {selectedProject && !selectedProjectApproved ? (

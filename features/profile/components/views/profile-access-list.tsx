@@ -46,11 +46,11 @@ export function ProfileAccessList({
                 </span>
                 <span className="shrink-0 text-right">
                   <span
-                    className={`block text-[9px] font-semibold ${hasAccess ? "text-success" : "text-on-surface-variant/60"}`}
+                    className={`block text-eyebrow font-semibold ${hasAccess ? "text-success" : "text-on-surface-variant/60"}`}
                   >
                     {hasAccess ? "Tersedia" : "Tidak tersedia"}
                   </span>
-                  <span className="mt-1 block font-mono text-[9px] font-bold text-on-surface-variant tabular-nums">
+                  <span className="mt-1 block font-mono text-eyebrow font-bold text-on-surface-variant tabular-nums">
                     {activeCount}/{group.permissions.length}
                   </span>
                 </span>

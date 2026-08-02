@@ -192,7 +192,7 @@ export function ReconciliationQueue({
             <button
               type="button"
               onClick={onOpenImport}
-              className="relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 text-[10px] font-semibold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-primary/88"
+              className="relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 text-meta font-semibold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-primary/88"
             >
               <AppIcon name="upload_file" className="text-[15px]" />
               Impor CSV

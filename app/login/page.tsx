@@ -136,7 +136,7 @@ export default function LoginPage(): React.JSX.Element {
         </div>
       </div>
 
-      <p className="shrink-0 pb-1 text-center text-[9px] font-semibold tracking-[0.04em] text-on-surface-variant/70">
+      <p className="shrink-0 pb-1 text-center text-eyebrow font-semibold tracking-[0.04em] text-on-surface-variant/70">
         Atria · Project Finance &amp; Material Control
       </p>
     </section>

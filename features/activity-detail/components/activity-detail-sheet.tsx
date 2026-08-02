@@ -159,14 +159,14 @@ function ComparisonRows({
   if (comparisons.length === 0) return null;
   return (
     <section className="space-y-2">
-      <h3 className="px-1 text-[10px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
+      <h3 className="px-1 text-meta font-bold tracking-[0.12em] text-on-surface-variant uppercase">
         Perubahan
       </h3>
       <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
         <div className="divide-y divide-outline-variant/20">
           {comparisons.map((item, index) => (
             <div key={`${item.label}-${index}`} className="px-4 py-3">
-              <p className="text-[11px] font-semibold text-on-surface-variant">{item.label}</p>
+              <p className="text-support font-semibold text-on-surface-variant">{item.label}</p>
               <div className="mt-2 grid grid-cols-[minmax(0,1fr)_20px_minmax(0,1fr)] items-center gap-2">
                 <div className="rounded-2xl bg-surface-container-low px-3 py-2">
                   <p className="mb-1 text-[8px] font-bold tracking-wide text-on-surface-variant uppercase">
@@ -223,14 +223,14 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
             <p className="mt-0.5 text-support text-on-surface-variant">{detail.subtitle}</p>
           </div>
           <span
-            className={`shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold tracking-wide uppercase ${statusClass(detail.statusTone)}`}
+            className={`shrink-0 rounded-full px-2.5 py-1 text-eyebrow font-bold tracking-wide uppercase ${statusClass(detail.statusTone)}`}
           >
             {formatBusinessLabel(detail.status)}
           </span>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3 border-t border-outline-variant/20 pt-3">
           <div>
-            <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+            <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
               Pelaku
             </p>
             <p className="mt-0.5 truncate text-xs font-semibold text-on-surface">
@@ -238,7 +238,7 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+            <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
               Waktu
             </p>
             <p className="mt-0.5 text-meta font-semibold text-on-surface">
@@ -248,7 +248,7 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
         </div>
       </section>
       <section className="space-y-2">
-        <h3 className="px-1 text-[10px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
+        <h3 className="px-1 text-meta font-bold tracking-[0.12em] text-on-surface-variant uppercase">
           Rincian transaksi
         </h3>
         <Facts facts={detail.facts} />
@@ -256,7 +256,7 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
       <ComparisonRows comparisons={detail.comparisons} />
       {detail.impacts.length > 0 ? (
         <section className="space-y-2">
-          <h3 className="px-1 text-[10px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
+          <h3 className="px-1 text-meta font-bold tracking-[0.12em] text-on-surface-variant uppercase">
             Dampak bisnis
           </h3>
           <Facts facts={detail.impacts} />
@@ -264,7 +264,7 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
       ) : null}
       {detail.notes.length > 0 ? (
         <section className="space-y-2">
-          <h3 className="px-1 text-[10px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
+          <h3 className="px-1 text-meta font-bold tracking-[0.12em] text-on-surface-variant uppercase">
             Catatan & bukti
           </h3>
           <Facts facts={detail.notes} />

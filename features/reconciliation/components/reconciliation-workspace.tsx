@@ -364,7 +364,7 @@ export function ReconciliationWorkspace({
             <button
               type="button"
               onClick={downloadTemplate}
-              className="min-h-10 rounded-full bg-primary/8 px-3.5 text-[10px] font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-primary/12"
+              className="min-h-10 rounded-full bg-primary/8 px-3.5 text-meta font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-primary/12"
             >
               Unduh template
             </button>
@@ -404,7 +404,7 @@ export function ReconciliationWorkspace({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="relative inline-flex min-h-10 shrink-0 items-center rounded-full bg-surface-container-high px-3.5 text-[10px] font-semibold text-on-surface outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-highest"
+              className="relative inline-flex min-h-10 shrink-0 items-center rounded-full bg-surface-container-high px-3.5 text-meta font-semibold text-on-surface outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-highest"
             >
               Pilih file
             </button>

@@ -61,7 +61,7 @@ export function ExpenseReceiptUpload({
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-bold text-on-surface">{attachment.fileName}</p>
-              <p className="truncate text-[11px] text-on-surface-variant">
+              <p className="truncate text-support text-on-surface-variant">
                 {(attachment.size / 1024 / 1024).toLocaleString("id-ID", {
                   maximumFractionDigits: 1,
                 })}{" "}
@@ -111,7 +111,7 @@ export function ExpenseReceiptUpload({
 
       {busy ? (
         <div className="rounded-2xl bg-primary/8 px-4 py-3 ring-1 ring-primary/15" role="status">
-          <div className="flex items-center justify-between gap-3 text-[11px] font-semibold text-primary">
+          <div className="flex items-center justify-between gap-3 text-support font-semibold text-primary">
             <span>{isUploading ? "Mengunggah nota…" : "Membaca isi nota…"}</span>
             <span>{isUploading ? "35%" : "72%"}</span>
           </div>

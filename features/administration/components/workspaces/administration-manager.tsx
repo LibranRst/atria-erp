@@ -174,7 +174,7 @@ export function AdministrationManager({
             <button
               type="button"
               onClick={openCreate}
-              className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-[10px] font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
+              className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
             >
               {activeTab === "USERS" ? "Tambah user" : "Tambah vendor"}
             </button>
@@ -265,8 +265,8 @@ export function AdministrationManager({
         <section className="space-y-2">
           {presentation === "settings" ? (
             <div className="flex min-h-8 items-center justify-between gap-3 px-1">
-              <h3 className="text-[15px] font-bold text-on-surface">Daftar vendor</h3>
-              <span className="text-[9px] font-semibold text-on-surface-variant">
+              <h3 className="text-section font-bold text-on-surface">Daftar vendor</h3>
+              <span className="text-eyebrow font-semibold text-on-surface-variant">
                 {activeVendorCount} aktif dari {data.vendors.length}
               </span>
             </div>

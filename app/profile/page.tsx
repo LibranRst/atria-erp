@@ -20,7 +20,9 @@ function SectionHeader({
         {title}
       </h2>
       {meta ? (
-        <span className="shrink-0 text-[9px] font-semibold text-on-surface-variant/65">{meta}</span>
+        <span className="shrink-0 text-eyebrow font-semibold text-on-surface-variant/65">
+          {meta}
+        </span>
       ) : null}
     </div>
   );
@@ -74,9 +76,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                   Menentukan menu dan tindakan yang tersedia.
                 </p>
               </div>
-              <span className="shrink-0 text-[10px] font-bold text-on-surface">
-                {data.roleLabel}
-              </span>
+              <span className="shrink-0 text-meta font-bold text-on-surface">{data.roleLabel}</span>
             </div>
 
             <div className="flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3">
@@ -96,7 +96,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
                 </p>
               </div>
               <span
-                className={`shrink-0 text-[10px] font-semibold ${data.isActive ? "text-success" : "text-error"}`}
+                className={`shrink-0 text-meta font-semibold ${data.isActive ? "text-success" : "text-error"}`}
               >
                 {data.isActive ? "Aktif" : "Nonaktif"}
               </span>

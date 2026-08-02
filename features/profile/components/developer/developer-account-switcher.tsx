@@ -106,7 +106,7 @@ export function DeveloperAccountSwitcher({
                       <StatusBadge className="mt-2" tone="warning" label="Password sementara" />
                     ) : null}
                   </span>
-                  <div className="flex flex-row items-center gap-1 text-[10px]">
+                  <div className="flex flex-row items-center gap-1 text-meta">
                     <span className="shrink-0 rounded-xl bg-black/10 px-3 py-0.5 font-bold text-primary">
                       {getDeveloperSimulationRoleLabel(target.roleName)}
                     </span>

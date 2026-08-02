@@ -127,7 +127,7 @@ export function ExpenseDraftsPanel({
                       <span className="block truncate text-xs font-bold text-on-surface">
                         {draft.projectName}
                       </span>
-                      <span className="mt-0.5 block truncate text-[11px] text-on-surface-variant">
+                      <span className="mt-0.5 block truncate text-support text-on-surface-variant">
                         {draft.itemCount} item · Rp {draft.totalAmount.toLocaleString("id-ID")} ·{" "}
                         {savedTimeLabel(draft.lastSavedAt)}
                       </span>

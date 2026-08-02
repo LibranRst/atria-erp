@@ -85,7 +85,7 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
           transition={transitionSpringSnappy}
           className="flex min-h-12 shrink-0 items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-55"
         >
-          <span className="flex h-10 items-center rounded-full bg-on-surface px-3.5 text-[10px] font-bold text-white shadow-control">
+          <span className="flex h-10 items-center rounded-full bg-on-surface px-3.5 text-meta font-bold text-white shadow-control">
             {pending ? "Memulihkan…" : "Kembali"}
           </span>
         </motion.button>

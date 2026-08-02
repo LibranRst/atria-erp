@@ -38,7 +38,7 @@ export function TemporaryPasswordForm(): React.JSX.Element {
   return (
     <section className="flex min-h-[calc(100dvh-3rem)] flex-col justify-center py-6">
       <header className="mb-5">
-        <p className="text-[9px] font-bold tracking-[0.16em] text-primary uppercase">
+        <p className="text-eyebrow font-bold tracking-[0.16em] text-primary uppercase">
           Keamanan akun
         </p>
         <h1 className="mt-1 text-[25px] font-bold tracking-tight">Ganti password sementara</h1>

@@ -58,7 +58,7 @@ export function ProfileIdentitySurface({
               <span>{roleLabel}</span>
             </Badge>
             <span
-              className={`inline-flex shrink-0 items-center gap-1.5 text-[10px] font-semibold ${isActive ? "text-success" : "text-error"}`}
+              className={`inline-flex shrink-0 items-center gap-1.5 text-meta font-semibold ${isActive ? "text-success" : "text-error"}`}
             >
               <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
               {isActive ? "Aktif" : "Nonaktif"}
@@ -75,7 +75,7 @@ export function ProfileIdentitySurface({
 
       <div className="mt-4 flex min-w-0 items-center justify-between gap-3 border-t border-black/5.5 pt-3.5">
         <div className="min-w-0">
-          <p className="text-[9px] font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
             Akses aplikasi
           </p>
           <p className="mt-1 text-row font-bold text-on-surface">

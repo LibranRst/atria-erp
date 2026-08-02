@@ -61,7 +61,7 @@ export function ExpenseFormReview({
                     </span>
                   </div>
                   <p
-                    className={`mt-1 text-[11px] font-medium ${after < 0 ? "font-bold text-error" : "text-on-surface-variant"}`}
+                    className={`mt-1 text-support font-medium ${after < 0 ? "font-bold text-error" : "text-on-surface-variant"}`}
                   >
                     Sisa: Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
                   </p>

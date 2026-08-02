@@ -190,11 +190,11 @@ export function ExpenseItemsSection({
                     </span>
 
                     <span className="flex flex-wrap items-center gap-1.5">
-                      <span className="shrink-0 rounded-full bg-surface-container-low px-2 py-0.5 text-[9px] font-semibold text-on-surface-variant/80">
+                      <span className="shrink-0 rounded-full bg-surface-container-low px-2 py-0.5 text-eyebrow font-semibold text-on-surface-variant/80">
                         Item #{index + 1}
                       </span>
                       {category ? (
-                        <span className="shrink-0 rounded-full bg-surface-container-low px-2 py-0.5 text-[9px] font-bold text-on-surface-variant">
+                        <span className="shrink-0 rounded-full bg-surface-container-low px-2 py-0.5 text-eyebrow font-bold text-on-surface-variant">
                           {category.name}
                         </span>
                       ) : null}
@@ -213,9 +213,7 @@ export function ExpenseItemsSection({
 
                 <div className="mt-2 flex items-center justify-between rounded-2xl bg-surface-container-low py-1 pr-1 pl-3">
                   <div className="flex min-w-0 items-center gap-1.5">
-                    <span className="text-[10px] font-medium text-on-surface-variant/70">
-                      Total:
-                    </span>
+                    <span className="text-meta font-medium text-on-surface-variant/70">Total:</span>
                     <span className="truncate text-xs font-bold text-on-surface tabular-nums">
                       Rp {(Number(line.amount) || 0).toLocaleString("id-ID")}
                     </span>

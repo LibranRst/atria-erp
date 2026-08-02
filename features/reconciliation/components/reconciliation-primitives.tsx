@@ -66,7 +66,7 @@ export function ReconciliationEmptyState({
         />
       </span>
       <div className="min-w-0">
-        <p className="text-[13px] font-semibold text-on-surface">
+        <p className="text-row font-semibold text-on-surface">
           {history
             ? "Belum ada riwayat"
             : statement
