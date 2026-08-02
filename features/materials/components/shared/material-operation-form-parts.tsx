@@ -42,7 +42,7 @@ export function ItemRows({
           className="space-y-3 rounded-[22px] bg-surface-container-lowest p-3 ring-1 ring-ring-subtle"
         >
           <div className="flex items-center justify-between gap-3 px-1">
-            <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
+            <p className="text-meta font-bold tracking-wide text-on-surface-variant uppercase">
               Item {index + 1}
             </p>
             <button

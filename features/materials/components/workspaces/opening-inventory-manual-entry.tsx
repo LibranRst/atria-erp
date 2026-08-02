@@ -118,7 +118,7 @@ export function OpeningInventoryManualEntry({
                     type="button"
                     aria-label={`Hapus item stok ${index + 1}`}
                     onClick={() => onRemoveLine(line.key)}
-                    className="min-h-12 rounded-full px-3 text-[10px] font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                    className="min-h-12 rounded-full px-3 text-meta font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                   >
                     Hapus
                   </button>

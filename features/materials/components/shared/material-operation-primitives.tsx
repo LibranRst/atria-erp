@@ -25,7 +25,7 @@ export function Mini({
 }): React.JSX.Element {
   return (
     <div className="min-w-0 rounded-2xl bg-surface-container-low p-3">
-      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+      <p className="truncate text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
         {label}
       </p>
       {typeof amount === "number" ? (
@@ -80,7 +80,7 @@ export function MovementRow({ row }: { readonly row: MaterialMovementView }): Re
         </span>
       </span>
       <span
-        className={`shrink-0 text-right font-mono text-[10px] font-extrabold tabular-nums ${row.movementDirection === "OUT" ? "text-error" : row.movementDirection === "IN" ? "text-primary" : "text-on-surface"}`}
+        className={`shrink-0 text-right font-mono text-meta font-extrabold tabular-nums ${row.movementDirection === "OUT" ? "text-error" : row.movementDirection === "IN" ? "text-primary" : "text-on-surface"}`}
       >
         {row.movementDirection === "OUT" ? "−" : row.movementDirection === "IN" ? "+" : ""}
         {formatMaterialQuantity(row.quantity)} {row.unit}

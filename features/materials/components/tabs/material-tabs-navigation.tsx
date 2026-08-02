@@ -101,7 +101,7 @@ export function MaterialTabsNavigation({
                         ? "assignment_late"
                         : "history"
                 }
-                className="text-[15px]"
+                className="text-section"
               />
             ),
           }))}

@@ -144,7 +144,9 @@ export function MaterialOverviewTab({
           className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/20"
           aria-hidden="true"
         />
-        <p className="text-[9px] font-bold tracking-[0.18em] text-white/52 uppercase">Nilai stok</p>
+        <p className="text-eyebrow font-bold tracking-[0.18em] text-white/52 uppercase">
+          Nilai stok
+        </p>
         <MoneyValue
           amount={totalStockValue}
           variant="fullDynamic"
@@ -156,7 +158,7 @@ export function MaterialOverviewTab({
         <div className="mt-5 rounded-[22px] bg-white/7.5 p-3.5 ring-1 ring-white/6 max-[430px]:mt-4 max-[430px]:rounded-[20px] max-[430px]:p-3">
           <div className="flex items-end justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[9px] font-bold tracking-wide text-white/50 uppercase">
+              <p className="text-eyebrow font-bold tracking-wide text-white/50 uppercase">
                 Siap dipakai
               </p>
               <MoneyValue
@@ -168,7 +170,7 @@ export function MaterialOverviewTab({
               />
             </div>
             <div className="min-w-0 text-right">
-              <p className="text-[9px] font-bold tracking-wide text-white/50 uppercase">
+              <p className="text-eyebrow font-bold tracking-wide text-white/50 uppercase">
                 Terikat / reserved
               </p>
               <MoneyValue
@@ -182,7 +184,7 @@ export function MaterialOverviewTab({
             </div>
           </div>
           <StockAvailabilitySplit value={availableRatio} />
-          <div className="mt-3 flex items-center justify-between gap-3 text-[10px] font-semibold text-white/58">
+          <div className="mt-3 flex items-center justify-between gap-3 text-meta font-semibold text-white/58">
             <span>{availableRatio.toFixed(1)}% dapat digunakan</span>
             <span>{lowCount} perlu perhatian</span>
           </div>
@@ -225,7 +227,7 @@ export function MaterialOverviewTab({
                       {item.detail}
                     </span>
                   </span>
-                  <span className="shrink-0 font-mono text-[13px] font-black text-on-surface tabular-nums">
+                  <span className="shrink-0 font-mono text-row font-black text-on-surface tabular-nums">
                     {item.value}
                   </span>
                   <AppIcon name="chevron_right" className="icon-md shrink-0 text-accent" />

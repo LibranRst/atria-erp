@@ -293,15 +293,13 @@ export function GoodsReceiptSheet({
         {reviewing ? (
           <div className="space-y-md">
             <div className="rounded-2xl bg-primary/5 px-4 py-3">
-              <p className="text-[10px] font-bold tracking-wide text-primary uppercase">
-                Penerimaan
-              </p>
+              <p className="text-meta font-bold tracking-wide text-primary uppercase">Penerimaan</p>
               <p className="mt-1 text-sm font-bold">{selectedProject?.name}</p>
               <p className="mt-0.5 text-xs text-on-surface-variant">
                 {locations.find((row) => row.id === locationId)?.name} · {receiptNumber}
               </p>
               {selectedVendorBill ? (
-                <p className="mt-1 text-[10px] font-semibold text-on-surface-variant">
+                <p className="mt-1 text-meta font-semibold text-on-surface-variant">
                   Tagihan {selectedVendorBill.name} · {selectedVendorBill.vendorName}
                 </p>
               ) : null}

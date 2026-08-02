@@ -35,7 +35,7 @@ export function StockImpactRow({
         <p className="min-w-0 truncate text-xs font-bold text-on-surface">{label}</p>
         <p
           className={cx(
-            "shrink-0 text-[10px] font-bold",
+            "shrink-0 text-meta font-bold",
             unsafe
               ? "text-error"
               : normalizedDelta === 0
@@ -48,10 +48,10 @@ export function StockImpactRow({
       </div>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-outline-variant/15 bg-surface-container-lowest px-4 py-3 text-center">
         <div>
-          <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+          <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
             Sebelum
           </p>
-          <p className="mt-1 font-mono text-[13px] font-bold whitespace-nowrap tabular-nums">
+          <p className="mt-1 font-mono text-row font-bold whitespace-nowrap tabular-nums">
             {quantity(before)}
           </p>
         </div>
@@ -62,12 +62,12 @@ export function StockImpactRow({
           →
         </span>
         <div>
-          <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+          <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
             Sesudah
           </p>
           <p
             className={cx(
-              "mt-1 font-mono text-[13px] font-bold whitespace-nowrap tabular-nums",
+              "mt-1 font-mono text-row font-bold whitespace-nowrap tabular-nums",
               unsafe ? "text-error" : "text-on-surface",
             )}
           >

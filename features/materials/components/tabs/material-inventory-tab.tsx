@@ -173,7 +173,7 @@ function InventoryMaterialRow({
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3 px-1">
-        <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[10px] font-semibold text-on-surface-variant">
+        <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-meta font-semibold text-on-surface-variant">
           <AppIcon name="location_on" className="icon-xs shrink-0" aria-hidden="true" />
           {summary.locationCount} lokasi · {primaryRow?.locationName ?? "Lokasi belum diatur"}
         </span>

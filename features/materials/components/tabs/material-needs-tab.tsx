@@ -55,7 +55,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
             </p>
           </div>
           <div className="min-w-0 shrink-0 text-right">
-            <p className="text-[9px] font-semibold text-on-surface-variant/60">
+            <p className="text-eyebrow font-semibold text-on-surface-variant/60">
               Estimasi pengadaan
             </p>
             <MoneyValue
@@ -141,7 +141,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
                   <div className="border-t border-black/5.5 px-3.5 py-2.5">
                     <Link
                       href={`/projects/${project.id}?tab=rap`}
-                      className="flex min-h-12 w-full items-center justify-center gap-1 rounded-full bg-accent/8 px-5 text-[11px] font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
+                      className="flex min-h-12 w-full items-center justify-center gap-1 rounded-full bg-accent/8 px-5 text-support font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
                     >
                       Buka RAP project
                       <AppIcon name="chevron_right" className="icon-sm" />

@@ -29,7 +29,7 @@ export function OpeningInventoryCsvEntry({
   return (
     <section className="space-y-3">
       <div className="rounded-[26px] bg-white p-4 shadow-control ring-1 ring-ring-subtle">
-        <p className="text-[13px] font-bold text-on-surface">Upload CSV saldo stok</p>
+        <p className="text-row font-bold text-on-surface">Upload CSV saldo stok</p>
         <p className="mt-1 text-meta text-on-surface-variant">
           Header: material_name atau material_code, location_name, quantity, unit_cost.
         </p>
@@ -66,14 +66,14 @@ export function OpeningInventoryCsvEntry({
                 key={`${item.rowNumber}-${item.materialInventoryId}`}
                 className="flex min-h-16 items-center gap-3 px-4 py-3"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-container text-[10px] font-bold text-success">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-container text-meta font-bold text-success">
                   {item.rowNumber}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[12px] font-bold text-on-surface">
                     {item.materialName}
                   </span>
-                  <span className="mt-0.5 block text-[10px] text-on-surface-variant">
+                  <span className="mt-0.5 block text-meta text-on-surface-variant">
                     {item.locationName} · {item.quantity.toLocaleString("id-ID")}
                   </span>
                 </span>
@@ -90,7 +90,7 @@ export function OpeningInventoryCsvEntry({
                 key={`${error.rowNumber}-${error.message}`}
                 className="flex min-h-14.5 items-center gap-3 bg-error/[0.035] px-4 py-3"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-error/10 text-[10px] font-bold text-error">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-error/10 text-meta font-bold text-error">
                   {error.rowNumber}
                 </span>
                 <p className="text-meta text-error">{error.message}</p>

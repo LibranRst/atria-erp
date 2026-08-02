@@ -37,7 +37,7 @@ export function OpeningInventoryWorkspace({
     <section className={`space-y-5 ${embedded ? "" : "pb-8"}`}>
       {showHeader ? (
         <header className="space-y-1 px-1">
-          <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
             Fondasi inventory
           </p>
           <h2 className="text-[20px] font-bold tracking-tight text-on-surface">Saldo awal stok</h2>
@@ -98,13 +98,13 @@ export function OpeningInventoryWorkspace({
             <div className="grid grid-cols-2 gap-2 border-t border-black/5.5 p-3">
               <Link
                 href="/materials?action=LOCATION"
-                className="flex min-h-12 items-center justify-center rounded-full bg-white px-3 text-[10px] font-bold text-on-surface ring-1 ring-ring-subtle"
+                className="flex min-h-12 items-center justify-center rounded-full bg-white px-3 text-meta font-bold text-on-surface ring-1 ring-ring-subtle"
               >
                 Buat lokasi
               </Link>
               <Link
                 href="/settings?tab=materials"
-                className="flex min-h-12 items-center justify-center rounded-full bg-primary px-3 text-[10px] font-bold text-on-primary"
+                className="flex min-h-12 items-center justify-center rounded-full bg-primary px-3 text-meta font-bold text-on-primary"
               >
                 Material Master
               </Link>

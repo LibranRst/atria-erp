@@ -67,7 +67,7 @@ export function MaterialDetail({
             className="rounded-3xl bg-primary px-4 py-4 text-white shadow-raised"
             aria-label="Posisi stok material"
           >
-            <p className="text-[9px] font-bold tracking-[0.15em] text-white/55 uppercase">
+            <p className="text-eyebrow font-bold tracking-[0.15em] text-white/55 uppercase">
               Stok tersedia
             </p>
             <p className="mt-1 font-mono text-[26px] leading-7 font-black tabular-nums">
@@ -87,7 +87,7 @@ export function MaterialDetail({
               />
             </div>
             <div className="mt-3 flex items-end justify-between gap-3 rounded-[18px] bg-white/7.5 px-3 py-2.5 ring-1 ring-white/6">
-              <span className="text-[9px] font-semibold text-white/58">Nilai stok saat ini</span>
+              <span className="text-eyebrow font-semibold text-white/58">Nilai stok saat ini</span>
               <MoneyValue
                 amount={summary.stockValue}
                 variant="compactWithFull"

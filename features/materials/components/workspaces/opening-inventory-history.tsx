@@ -39,7 +39,7 @@ export function OpeningInventoryHistory({ show, batches, onSelect }: Props): Rea
                     <span className="block truncate text-[12px] font-bold text-on-surface">
                       {batch.batchNumber}
                     </span>
-                    <span className="mt-0.5 block text-[10px] text-on-surface-variant">
+                    <span className="mt-0.5 block text-meta text-on-surface-variant">
                       {batch.itemCount} item ·{" "}
                       {new Intl.DateTimeFormat("id-ID", {
                         dateStyle: "medium",

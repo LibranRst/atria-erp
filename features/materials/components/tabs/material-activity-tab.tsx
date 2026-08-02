@@ -196,7 +196,7 @@ export function MaterialActivityTab({
                 type="button"
                 onClick={onLoadMore}
                 disabled={pending}
-                className="min-h-12 w-full rounded-full bg-accent/8 px-5 text-[11px] font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-45"
+                className="min-h-12 w-full rounded-full bg-accent/8 px-5 text-support font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-45"
               >
                 {pending ? "Memuat…" : "Muat aktivitas sebelumnya"}
               </button>

@@ -163,7 +163,7 @@ export function StockCountSheet({
             ) : (
               <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
                 <div className="bg-surface-container-low/50 px-4 py-2.5">
-                  <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
+                  <p className="text-meta font-bold tracking-wide text-on-surface-variant uppercase">
                     Rincian Selisih ({changedRows.length} item)
                   </p>
                 </div>
@@ -176,7 +176,7 @@ export function StockCountSheet({
                       <p className="truncate text-xs font-bold text-on-surface">
                         {row.materialName}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-on-surface-variant">
+                      <p className="mt-0.5 text-meta text-on-surface-variant">
                         Sistem {formatMaterialQuantity(row.currentStock)} → fisik{" "}
                         {formatMaterialQuantity(row.countedQuantity)} {row.unit}
                       </p>
@@ -200,7 +200,7 @@ export function StockCountSheet({
           <div className="space-y-md">
             {!stockCountId && existingDrafts.length > 0 ? (
               <section className="space-y-2">
-                <p className="px-1 text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
+                <p className="px-1 text-meta font-bold tracking-wide text-on-surface-variant uppercase">
                   Draft yang dapat dilanjutkan
                 </p>
                 {existingDrafts.map((draft) => (
@@ -214,7 +214,7 @@ export function StockCountSheet({
                       <span className="block truncate text-xs font-bold text-primary">
                         {draft.countNumber}
                       </span>
-                      <span className="mt-0.5 block text-[10px] text-on-surface-variant">
+                      <span className="mt-0.5 block text-meta text-on-surface-variant">
                         {draft.locationName} · {draft.items.length} material
                       </span>
                     </span>
@@ -251,7 +251,7 @@ export function StockCountSheet({
                 title="Jumlah fisik"
                 helper="Nilai awal mengikuti catatan sistem. Ubah hanya jika hasil hitung fisik berbeda."
                 action={
-                  <span className="shrink-0 text-[10px] font-bold text-primary">
+                  <span className="shrink-0 text-meta font-bold text-primary">
                     {changedRows.length} berubah
                   </span>
                 }
@@ -269,7 +269,7 @@ export function StockCountSheet({
                         </p>
                       </div>
                       <p
-                        className={`shrink-0 text-[10px] font-bold ${row.variance === 0 ? "text-on-surface-variant" : row.variance < 0 ? "text-error" : "text-primary"}`}
+                        className={`shrink-0 text-meta font-bold ${row.variance === 0 ? "text-on-surface-variant" : row.variance < 0 ? "text-error" : "text-primary"}`}
                       >
                         {row.variance === 0
                           ? "Sama"

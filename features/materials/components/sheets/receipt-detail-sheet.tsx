@@ -101,7 +101,7 @@ export function ReceiptDetailSheet({
                         size="sm"
                         className="font-bold text-on-surface"
                       />
-                      <p className="mt-1 text-[10px] text-on-surface-variant">
+                      <p className="mt-1 text-meta text-on-surface-variant">
                         @ Rp {Number(item.unitCost).toLocaleString("id-ID")}
                       </p>
                     </div>
