@@ -92,7 +92,7 @@ export function MaterialDetailSheet({
           <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
             <div className="p-4">
               <div className="flex min-w-0 items-center justify-between gap-2">
-                <p className="truncate text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
+                <p className="truncate text-eyebrow font-bold tracking-widest text-on-surface-variant uppercase">
                   {material.categoryName}
                 </p>
                 <WorkspaceStatusLabel
@@ -113,7 +113,7 @@ export function MaterialDetailSheet({
               <div className="divide-y divide-outline-variant/15 border-t border-outline-variant/15">
                 {material.specification ? (
                   <div className="grid min-h-12 grid-cols-[5.25rem_minmax(0,1fr)] items-start gap-3 px-4 py-3">
-                    <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+                    <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                       Spesifikasi
                     </p>
                     <p className="line-clamp-2 text-right text-[10px] leading-[1.35] text-on-surface">
@@ -123,10 +123,10 @@ export function MaterialDetailSheet({
                 ) : null}
                 {material.defaultVendorName ? (
                   <div className="grid min-h-12 grid-cols-[5.25rem_minmax(0,1fr)] items-center gap-3 px-4 py-3">
-                    <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+                    <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                       Vendor
                     </p>
-                    <p className="truncate text-right text-[10px] font-semibold text-on-surface">
+                    <p className="truncate text-right text-meta font-semibold text-on-surface">
                       {material.defaultVendorName}
                     </p>
                   </div>
@@ -136,7 +136,7 @@ export function MaterialDetailSheet({
           </section>
           <section className="space-y-2.5">
             <div>
-              <h3 className="text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
+              <h3 className="text-meta font-bold tracking-[0.11em] text-on-surface uppercase">
                 Default inventori
               </h3>
               <p className="mt-0.5 text-meta text-on-surface-variant">

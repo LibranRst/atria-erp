@@ -20,7 +20,11 @@ import { SettingsHub } from "./settings-hub";
 import { SettingsNavigation } from "./settings-navigation";
 import { SettingsHeader } from "../shared/settings-ui";
 import { SetupReadinessManager } from "../shared/setup-readiness-manager";
-import { parseSettingsTab, settingsTabUrl, type SettingsTab } from "../../utils/settings-tabs-config";
+import {
+  parseSettingsTab,
+  settingsTabUrl,
+  type SettingsTab,
+} from "../../utils/settings-tabs-config";
 
 type SettingsDashboardProps = {
   readonly overview: SettingsOverview;

@@ -54,7 +54,7 @@ export function SetupReadinessManager({
       <section className="space-y-4">
         <Link
           href="/settings?tab=setup"
-          className="inline-flex min-h-12 items-center gap-1 rounded-full px-2 text-[10px] font-bold text-accent"
+          className="inline-flex min-h-12 items-center gap-1 rounded-full px-2 text-meta font-bold text-accent"
         >
           <AppIcon name="arrow_back" className="icon-md" />
           Kembali ke kesiapan setup
@@ -75,7 +75,7 @@ export function SetupReadinessManager({
       <section className="rounded-[26px] bg-surface-inverse p-4 text-white">
         <div className="flex items-start justify-between gap-4">
           <span>
-            <span className="block text-[9px] font-bold tracking-[0.13em] text-white/50 uppercase">
+            <span className="block text-eyebrow font-bold tracking-[0.13em] text-white/50 uppercase">
               Status onboarding
             </span>
             <span className="mt-2 block text-[22px] font-bold tracking-[-0.03em]">
@@ -150,9 +150,7 @@ export function SetupReadinessManager({
                     }
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] font-bold text-on-surface">
-                      {item.label}
-                    </span>
+                    <span className="block text-row font-bold text-on-surface">{item.label}</span>
                     <span className="mt-0.5 block text-meta text-on-surface-variant">
                       {item.detail}
                     </span>

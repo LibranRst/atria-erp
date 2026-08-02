@@ -364,7 +364,7 @@ export function LibrarySettingsManager({
             type="button"
             onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
             disabled={!canManage}
-            className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-[10px] font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
+            className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
           >
             Tambah
           </button>

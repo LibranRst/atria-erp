@@ -154,7 +154,7 @@ export function BudgetSettingsManager({
                   key={item.label}
                   className="flex min-h-12 items-center justify-between gap-3 py-2.5"
                 >
-                  <dt className="text-[11px] text-on-surface-variant">{item.label}</dt>
+                  <dt className="text-support text-on-surface-variant">{item.label}</dt>
                   <dd className="min-w-0">
                     <MoneyValue
                       amount={item.value}
@@ -241,7 +241,7 @@ export function BudgetSettingsManager({
             />
           ) : null}
         </div>
-        <div className="mt-2 flex min-w-0 justify-between gap-3 text-[10px] text-on-surface-variant">
+        <div className="mt-2 flex min-w-0 justify-between gap-3 text-meta text-on-surface-variant">
           <span className="min-w-0">Teralokasi {fullMoney(allocated)}</span>
           <span className="shrink-0">Buffer {percent(Math.max(0, 1 - allocation))}</span>
         </div>
@@ -282,7 +282,7 @@ export function BudgetSettingsManager({
                     </motion.button>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold text-on-surface">{category.name}</p>
-                      <p className="truncate text-[9px] tracking-wide text-on-surface-variant uppercase">
+                      <p className="truncate text-eyebrow tracking-wide text-on-surface-variant uppercase">
                         {category.code}
                       </p>
                     </div>
@@ -383,13 +383,13 @@ export function BudgetSettingsManager({
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2 rounded-2xl bg-surface-container-low p-3 text-center">
               <div>
-                <p className="text-[9px] font-bold text-on-surface-variant uppercase">
+                <p className="text-eyebrow font-bold text-on-surface-variant uppercase">
                   Internal budget
                 </p>
                 <p className="mt-1 text-sm font-bold">{percent(setting.budgetCapRatio)}</p>
               </div>
               <div>
-                <p className="text-[9px] font-bold text-on-surface-variant uppercase">
+                <p className="text-eyebrow font-bold text-on-surface-variant uppercase">
                   Buffer kategori
                 </p>
                 <p className="mt-1 text-sm font-bold">{percent(Math.max(0, 1 - allocation))}</p>

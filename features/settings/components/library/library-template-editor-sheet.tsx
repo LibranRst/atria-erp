@@ -207,7 +207,7 @@ export function LibraryTemplateEditorSheet({
                 whileTap={{ scale: 0.97 }}
                 transition={transitionSpringSnappy}
                 onClick={onAddComponent}
-                className="flex min-h-10 items-center gap-1.5 rounded-full px-2.5 text-[10px] font-semibold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                className="flex min-h-10 items-center gap-1.5 rounded-full px-2.5 text-meta font-semibold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
               >
                 <AppIcon name="add_circle" className="icon-sm" aria-hidden="true" /> Tambah
               </motion.button>
@@ -301,7 +301,7 @@ export function LibraryTemplateEditorSheet({
               <div className="overflow-hidden rounded-[20px] bg-surface-container-low ring-1 ring-ring-subtle">
                 <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
                   <div className="min-w-0 p-3">
-                    <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+                    <p className="truncate text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                       Biaya internal
                     </p>
                     <MoneyValue
@@ -312,7 +312,7 @@ export function LibraryTemplateEditorSheet({
                     />
                   </div>
                   <div className="min-w-0 p-3">
-                    <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+                    <p className="truncate text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                       Harga klien
                     </p>
                     <MoneyValue
@@ -325,7 +325,7 @@ export function LibraryTemplateEditorSheet({
                   </div>
                 </div>
                 <div className="flex min-h-11 items-center justify-between gap-3 border-t border-outline-variant/20 px-3 py-2.5">
-                  <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+                  <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                     Margin kotor
                   </p>
                   <p

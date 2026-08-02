@@ -79,7 +79,7 @@ export function SettingsHub({
       <section className="overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-white shadow-floating max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[9px] font-bold tracking-[0.15em] text-white/48 uppercase">
+            <p className="text-eyebrow font-bold tracking-[0.15em] text-white/48 uppercase">
               Budget Internal
             </p>
             <p className="mt-2 font-mono text-[29px] leading-none font-black tracking-[-0.03em] tabular-nums">
@@ -90,7 +90,7 @@ export function SettingsHub({
         </div>
         <div className="mt-5 grid grid-cols-2 divide-x divide-white/10 border-y border-white/10 py-3.5">
           <div className="pr-4">
-            <p className="text-[9px] font-bold tracking-widest text-white/45 uppercase">
+            <p className="text-eyebrow font-bold tracking-widest text-white/45 uppercase">
               Margin target
             </p>
             <p className="mt-1.5 font-mono text-[16px] font-bold tabular-nums">
@@ -98,7 +98,7 @@ export function SettingsHub({
             </p>
           </div>
           <div className="pl-4 text-right">
-            <p className="text-[9px] font-bold tracking-widest text-white/45 uppercase">
+            <p className="text-eyebrow font-bold tracking-widest text-white/45 uppercase">
               Buffer kategori
             </p>
             <p className="mt-1.5 font-mono text-[16px] font-bold tabular-nums">
@@ -109,7 +109,7 @@ export function SettingsHub({
         <div className="mt-4 rounded-[20px] bg-white/7.5 p-3.5 ring-1 ring-white/6">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-[9px] font-bold tracking-widest text-white/45 uppercase">
+              <p className="text-eyebrow font-bold tracking-widest text-white/45 uppercase">
                 Pembagian kategori
               </p>
               <p className="mt-1 font-mono text-[14px] font-bold tabular-nums">
@@ -166,9 +166,7 @@ export function SettingsHub({
                       <AppIcon name={iconName} className="icon-sm" aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[13px] font-bold text-on-surface">
-                        {item.label}
-                      </span>
+                      <span className="block text-row font-bold text-on-surface">{item.label}</span>
                       <span className="mt-0.5 block text-[10px] leading-[1.35] text-on-surface-variant">
                         {item.detail}
                       </span>
@@ -217,7 +215,7 @@ export function SettingsHub({
                     <span className="mt-1 block truncate text-[10px] leading-[1.3] text-on-surface-variant">
                       {module.description}
                     </span>
-                    <span className="mt-1.5 block font-mono text-[10px] font-bold text-on-surface tabular-nums">
+                    <span className="mt-1.5 block font-mono text-meta font-bold text-on-surface tabular-nums">
                       {module.metric}{" "}
                       <span className="font-sans font-medium text-on-surface-variant">
                         {module.label}

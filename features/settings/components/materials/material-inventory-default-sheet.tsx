@@ -79,13 +79,13 @@ export function MaterialInventoryDefaultSheet({
           {original && dirty ? (
             <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-[20px] bg-surface-container-lowest px-3.5 py-3 ring-1 ring-ring-subtle">
               <div>
-                <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+                <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                   Sebelum
                 </p>
-                <p className="mt-1 text-[11px] font-bold tabular-nums">
+                <p className="mt-1 text-support font-bold tabular-nums">
                   Min. {original.minimumStock.toLocaleString("id-ID")}
                 </p>
-                <p className="mt-0.5 truncate text-[9px] text-on-surface-variant tabular-nums">
+                <p className="mt-0.5 truncate text-eyebrow text-on-surface-variant tabular-nums">
                   Rp {original.lastPurchasePrice.toLocaleString("id-ID")}
                 </p>
               </div>
@@ -94,11 +94,13 @@ export function MaterialInventoryDefaultSheet({
                 className="icon-md leading-none text-on-surface-variant"
               />
               <div className="text-right">
-                <p className="text-[9px] font-bold tracking-wide text-primary uppercase">Sesudah</p>
-                <p className="mt-1 text-[11px] font-bold text-primary tabular-nums">
+                <p className="text-eyebrow font-bold tracking-wide text-primary uppercase">
+                  Sesudah
+                </p>
+                <p className="mt-1 text-support font-bold text-primary tabular-nums">
                   Min. {draft.minimumStock.toLocaleString("id-ID")}
                 </p>
-                <p className="mt-0.5 truncate text-[9px] text-primary tabular-nums">
+                <p className="mt-0.5 truncate text-eyebrow text-primary tabular-nums">
                   Rp {draft.lastPurchasePrice.toLocaleString("id-ID")}
                 </p>
               </div>

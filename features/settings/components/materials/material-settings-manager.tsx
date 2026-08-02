@@ -237,7 +237,7 @@ export function MaterialSettingsManager({
               type="button"
               onClick={() => setShowImport(true)}
               disabled={!canManage}
-              className="relative min-h-10 rounded-full px-3 text-[10px] font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
+              className="relative min-h-10 rounded-full px-3 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
             >
               Import
             </button>
@@ -245,7 +245,7 @@ export function MaterialSettingsManager({
               type="button"
               onClick={() => openMaterial(blank())}
               disabled={!canManage}
-              className="relative min-h-10 rounded-full bg-accent/8 px-3.5 text-[10px] font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
+              className="relative min-h-10 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
             >
               Tambah
             </button>
@@ -255,7 +255,7 @@ export function MaterialSettingsManager({
         <button
           type="button"
           onClick={() => setShowImport(true)}
-          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-4 text-[10px] font-bold text-accent shadow-control ring-1 ring-ring-subtle"
+          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-4 text-meta font-bold text-accent shadow-control ring-1 ring-ring-subtle"
         >
           <AppIcon name="upload_file" className="text-[17px]" />
           Import CSV

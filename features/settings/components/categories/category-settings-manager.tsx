@@ -130,7 +130,7 @@ export function CategorySettingsManager({
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex min-w-0 items-center gap-2">
-                  <span className="truncate text-[13px] font-bold text-on-surface">
+                  <span className="truncate text-row font-bold text-on-surface">
                     {category.name}
                   </span>
                   <WorkspaceStatusLabel label={category.code} tone="neutral" />
@@ -138,7 +138,7 @@ export function CategorySettingsManager({
                 <span className="mt-1 line-clamp-2 block text-[10px] leading-[1.3] text-on-surface-variant">
                   {category.description || "Belum ada deskripsi kategori."}
                 </span>
-                <span className="mt-1.5 block text-[9px] font-semibold text-on-surface-variant/70">
+                <span className="mt-1.5 block text-eyebrow font-semibold text-on-surface-variant/70">
                   Kode dan status aktif dilindungi
                 </span>
               </span>
@@ -182,7 +182,7 @@ export function CategorySettingsManager({
                 <AppIcon name="lock" className="icon-sm" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+                <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                   Kode kategori
                 </p>
                 <p className="mt-1 text-sm leading-none font-bold text-on-surface">

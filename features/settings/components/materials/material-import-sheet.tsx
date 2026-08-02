@@ -141,7 +141,7 @@ export function MaterialImportSheet({
     >
       <div className="space-y-4">
         <section className="rounded-[26px] bg-white p-4 shadow-control ring-1 ring-ring-subtle">
-          <p className="text-[13px] font-bold text-on-surface">Template CSV</p>
+          <p className="text-row font-bold text-on-surface">Template CSV</p>
           <p className="mt-1 text-meta text-on-surface-variant">
             Wajib: name, category, unit, location. Opsional: minimum_stock, last_purchase_price,
             vendor, specification, brand, code, color.
@@ -175,14 +175,14 @@ export function MaterialImportSheet({
             <div className="divide-y divide-black/5.5">
               {preview.items.map((item) => (
                 <div key={item.rowNumber} className="flex min-h-15.5 items-center gap-3 px-4 py-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-container text-[10px] font-bold text-success">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-container text-meta font-bold text-success">
                     {item.rowNumber}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[12px] font-bold text-on-surface">
                       {item.name}
                     </span>
-                    <span className="mt-0.5 block truncate text-[10px] text-on-surface-variant">
+                    <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
                       {item.categoryName} · {item.locationName} · {item.unit}
                     </span>
                   </span>
@@ -193,7 +193,7 @@ export function MaterialImportSheet({
                   key={`${error.rowNumber}-${error.message}`}
                   className="flex min-h-14.5 items-center gap-3 bg-error/[0.035] px-4 py-3"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-error/10 text-[10px] font-bold text-error">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-error/10 text-meta font-bold text-error">
                     {error.rowNumber}
                   </span>
                   <p className="text-meta text-error">{error.message}</p>

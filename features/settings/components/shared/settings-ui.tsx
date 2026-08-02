@@ -25,7 +25,7 @@ export function SettingsHeader({
     <header className="min-w-0">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[9px] font-bold tracking-[0.15em] text-on-surface-variant/65 uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.15em] text-on-surface-variant/65 uppercase">
             {eyebrow}
           </p>
           <h1 className="mt-1.5 text-[24px] leading-[1.12] font-semibold tracking-tight text-on-surface max-[360px]:text-[22px]">
@@ -71,14 +71,14 @@ export function CompactMetric({
           : "text-on-surface";
   return (
     <div className="min-w-0 rounded-2xl bg-surface-container-low px-3 py-2.5">
-      <p className="truncate text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+      <p className="truncate text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
         {label}
       </p>
       {typeof amount === "number" ? (
         <>
           {supportingValue && (
             <p
-              className={`mt-0.5 font-mono text-[11px] font-bold wrap-anywhere wrap-break-word tabular-nums ${valueClass}`}
+              className={`mt-0.5 font-mono text-support font-bold wrap-anywhere wrap-break-word tabular-nums ${valueClass}`}
             >
               {supportingValue}
             </p>
@@ -100,13 +100,13 @@ export function CompactMetric({
         </>
       ) : (
         <p
-          className={`financial-amount mt-0.5 font-mono text-[13px] font-bold wrap-anywhere wrap-break-word tabular-nums ${valueClass}`}
+          className={`financial-amount mt-0.5 font-mono text-row font-bold wrap-anywhere wrap-break-word tabular-nums ${valueClass}`}
         >
           {value}
         </p>
       )}
       {typeof amount !== "number" && fullValue && fullValue !== value && (
-        <p className="financial-amount mt-1 font-mono text-[9px] wrap-anywhere wrap-break-word text-on-surface-variant/75 tabular-nums">
+        <p className="financial-amount mt-1 font-mono text-eyebrow wrap-anywhere wrap-break-word text-on-surface-variant/75 tabular-nums">
           {fullValue}
         </p>
       )}
@@ -125,7 +125,7 @@ export function Field({
 }): React.JSX.Element {
   return (
     <div className="min-w-0 space-y-1.5">
-      <label className="block text-[9px] font-bold tracking-[0.12em] text-on-surface-variant uppercase">
+      <label className="block text-eyebrow font-bold tracking-[0.12em] text-on-surface-variant uppercase">
         {label}
       </label>
       {children}

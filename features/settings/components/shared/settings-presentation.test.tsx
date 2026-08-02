@@ -5,7 +5,11 @@ import SettingsLoading from "@/app/settings/loading";
 import { SettingsFilterBar } from "./settings-filter-bar";
 import { SettingsHub } from "../navigation/settings-hub";
 import { SettingsNavigation } from "../navigation/settings-navigation";
-import { parseSettingsTab, settingsTabFromPathname, settingsTabUrl } from "../../utils/settings-tabs-config";
+import {
+  parseSettingsTab,
+  settingsTabFromPathname,
+  settingsTabUrl,
+} from "../../utils/settings-tabs-config";
 
 describe("Settings presentation", () => {
   test("keeps query and legacy settings routes compatible", () => {

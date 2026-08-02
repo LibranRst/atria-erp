@@ -100,7 +100,7 @@ export function LibraryTemplateList({
                   />
                 )}
                 {presentation === "settings" ? (
-                  <span className="mt-2 flex justify-between gap-3 text-[9px] text-on-surface-variant">
+                  <span className="mt-2 flex justify-between gap-3 text-eyebrow text-on-surface-variant">
                     <span className="truncate">
                       {item.components.length} komponen · {priceSourceLabel(item.priceSourceType)}
                     </span>
