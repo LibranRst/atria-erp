@@ -1,5 +1,8 @@
 import type { SelectOption } from "@/components/ui";
-import type { CashMovementCategory, TextTone } from "@/features/finance-dashboard/types/bank-account-types";
+import type {
+  CashMovementCategory,
+  TextTone,
+} from "@/features/finance-dashboard/types/bank-account-types";
 
 export const CARD_PRESETS: readonly {
   readonly name: string;

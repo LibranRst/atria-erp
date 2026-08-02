@@ -62,7 +62,7 @@ export function ApprovalWorkbenchRow({
             <div className="flex items-center justify-between gap-2">
               <MoneyValue amount={item.amount} variant="compactWithFull" size="lg" />
               <span
-                className={`shrink-0 text-[9px] font-semibold ${critical ? "text-error" : "text-warning"}`}
+                className={`shrink-0 text-eyebrow font-semibold ${critical ? "text-error" : "text-warning"}`}
               >
                 {item.priority === "NORMAL" ? approvalLabel : item.priorityReason}
               </span>
@@ -79,7 +79,7 @@ export function ApprovalWorkbenchRow({
             <AppIcon name="chevron_right" className="icon-sm" />
           </span>
         </div>
-        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-eyebrow font-semibold text-on-surface-variant/70">
           <span className="max-w-full truncate">{counterpartyLabel}</span>
           <span className="h-1 w-1 rounded-full bg-outline-variant/60" aria-hidden="true" />
           <span className="max-w-full truncate">{item.budgetItemName}</span>
@@ -119,7 +119,7 @@ export function ApprovalBudgetContext({
     <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
       <div className="flex items-center justify-between gap-3 px-4 py-3.5">
         <div className="min-w-0">
-          <p className="truncate text-[10px] font-extrabold tracking-wide text-on-surface-variant/60 uppercase">
+          <p className="truncate text-meta font-extrabold tracking-wide text-on-surface-variant/60 uppercase">
             Konteks budget
           </p>
           <p className="mt-1 truncate text-xs font-bold text-on-surface">{item.budgetItemName}</p>
@@ -130,7 +130,7 @@ export function ApprovalBudgetContext({
           {impact.afterPercentage.toFixed(0)}%
         </span>
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-t border-outline-variant/20 px-4 py-3.5 text-[10px] font-semibold text-on-surface-variant">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-t border-outline-variant/20 px-4 py-3.5 text-meta font-semibold text-on-surface-variant">
         <div className="min-w-0">
           <span>Sekarang</span>
           <MoneyValue
@@ -139,7 +139,7 @@ export function ApprovalBudgetContext({
             size="sm"
             className="mt-0.5"
           />
-          <p className="mt-1 font-mono text-[9px] font-bold">
+          <p className="mt-1 font-mono text-eyebrow font-bold">
             {impact.beforePercentage.toFixed(0)}% budget
           </p>
         </div>
@@ -160,14 +160,14 @@ export function ApprovalBudgetContext({
             className="mt-0.5"
           />
           <p
-            className={`mt-1 font-mono text-[9px] font-bold ${critical ? "text-error" : warning ? "text-warning" : ""}`}
+            className={`mt-1 font-mono text-eyebrow font-bold ${critical ? "text-error" : warning ? "text-warning" : ""}`}
           >
             {impact.afterPercentage.toFixed(0)}% budget
           </p>
         </div>
       </div>
       <div
-        className={`flex min-h-10 items-center justify-between gap-2 border-t border-outline-variant/20 px-4 py-2.5 text-[9px] font-bold ${critical ? "text-error" : warning ? "text-warning" : ""}`}
+        className={`flex min-h-10 items-center justify-between gap-2 border-t border-outline-variant/20 px-4 py-2.5 text-eyebrow font-bold ${critical ? "text-error" : warning ? "text-warning" : ""}`}
       >
         <span className="inline-flex min-w-0 items-center gap-1.5">
           <AppIcon

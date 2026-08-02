@@ -144,7 +144,7 @@ export function ProjectRiskRow({
           </span>
         </div>
         <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="text-[10px] font-bold text-on-surface-variant">
+          <span className="text-meta font-bold text-on-surface-variant">
             Budget terpakai {project.usedPercentage.toFixed(0)}%
           </span>
           <MoneyValue
@@ -161,7 +161,7 @@ export function ProjectRiskRow({
           danger={overBudget}
           tone={project.effectiveHealth === "CRITICAL" ? "critical" : "warning"}
         />
-        <div className="mt-3 grid grid-cols-2 gap-3 text-[10px] font-semibold text-on-surface-variant">
+        <div className="mt-3 grid grid-cols-2 gap-3 text-meta font-semibold text-on-surface-variant">
           <span>
             Aktual
             <MoneyValue
@@ -182,7 +182,7 @@ export function ProjectRiskRow({
             />
           </span>
         </div>
-        <div className="mt-2 flex items-center justify-between border-t border-outline-variant/35 pt-2 text-[10px] font-semibold text-on-surface-variant">
+        <div className="mt-2 flex items-center justify-between border-t border-outline-variant/35 pt-2 text-meta font-semibold text-on-surface-variant">
           <span>Margin target {project.targetMarginPercentage.toFixed(1)}%</span>
           <span
             className={

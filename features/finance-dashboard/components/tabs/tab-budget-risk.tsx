@@ -37,7 +37,9 @@ export function BudgetRiskTab({
         <div className="px-3.5 pt-3 pb-1">
           <div className="grid grid-cols-2">
             <div className="min-w-0 pr-3">
-              <p className="text-[9px] font-semibold text-on-surface-variant/60">Internal budget</p>
+              <p className="text-eyebrow font-semibold text-on-surface-variant/60">
+                Internal budget
+              </p>
               <MoneyValue
                 amount={data.summary.internalBudget}
                 variant="compactWithFull"
@@ -46,7 +48,9 @@ export function BudgetRiskTab({
               />
             </div>
             <div className="min-w-0 pl-3 text-right">
-              <p className="text-[9px] font-semibold text-on-surface-variant/60">Aktual terpakai</p>
+              <p className="text-eyebrow font-semibold text-on-surface-variant/60">
+                Aktual terpakai
+              </p>
               <MoneyValue
                 amount={data.summary.actualCost}
                 variant="compactWithFull"
@@ -94,7 +98,7 @@ export function BudgetRiskTab({
           <DashboardTabEmpty>Budget kategori project aktif belum tersedia.</DashboardTabEmpty>
         ) : (
           <>
-            <div className="border-b border-outline-variant/35 px-4 py-2.5 text-[10px] font-semibold text-on-surface-variant">
+            <div className="border-b border-outline-variant/35 px-4 py-2.5 text-meta font-semibold text-on-surface-variant">
               {criticalCategories.length > 0
                 ? `${criticalCategories.length} kategori perlu perhatian di seluruh project.`
                 : "Semua kategori masih terkendali."}

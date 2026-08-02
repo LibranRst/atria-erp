@@ -147,7 +147,7 @@ export function FinancialPosition({
         aria-hidden="true"
       />
       <div className="min-w-0">
-        <p className="text-[9px] font-bold tracking-[0.18em] text-white/52 uppercase">
+        <p className="text-eyebrow font-bold tracking-[0.18em] text-white/52 uppercase">
           Kas tersedia
         </p>
         <MoneyValue

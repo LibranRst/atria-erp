@@ -72,23 +72,23 @@ export function ColorEditor({
             <h3 className="truncate text-sm leading-[1.15] font-semibold">
               {draft.name || "Nama rekening"}
             </h3>
-            <p className="mt-1 truncate text-[10px] font-medium tracking-[0.08em] uppercase opacity-65">
+            <p className="mt-1 truncate text-meta font-medium tracking-[0.08em] uppercase opacity-65">
               {draft.bankName || "Nama bank"}
             </p>
           </div>
           <AppIcon name="contactless" className="text-[23px] opacity-65" />
         </div>
         <div className="relative mt-auto">
-          <p className="text-[9px] font-semibold tracking-[0.13em] uppercase opacity-60">
+          <p className="text-eyebrow font-semibold tracking-[0.13em] uppercase opacity-60">
             Saldo tersedia
           </p>
           <p className="mt-1.5 font-mono text-lg font-bold whitespace-nowrap tabular-nums">Rp 0</p>
         </div>
         <div className="relative mt-4 flex items-center justify-between gap-3">
-          <p className="font-mono text-[11px] font-semibold tracking-[0.16em] opacity-75">
+          <p className="font-mono text-support font-semibold tracking-[0.16em] opacity-75">
             •••• {(draft.accountNumber || "0000").slice(-4)}
           </p>
-          <p className="max-w-[55%] min-w-0 truncate text-right text-[9px] font-semibold tracking-widest uppercase opacity-60">
+          <p className="max-w-[55%] min-w-0 truncate text-right text-eyebrow font-semibold tracking-widest uppercase opacity-60">
             {draft.holderName || "Pemegang"}
           </p>
         </div>
@@ -111,7 +111,7 @@ export function ColorEditor({
                   cardTextColor: preset.text,
                 })
               }
-              className={`min-h-12 rounded-full px-2 text-[9px] font-black transition active:scale-[0.97] ${
+              className={`min-h-12 rounded-full px-2 text-eyebrow font-black transition active:scale-[0.97] ${
                 preset.text === "dark" ? "text-on-surface" : "text-white"
               } ${active ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
               style={{
@@ -146,7 +146,7 @@ export function ColorEditor({
               cardColorTo: draft.cardColorFrom,
             })
           }
-          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface active:scale-[0.97]"
         >
           <AppIcon name="swap_horiz" className="icon-sm" />
           Balik warna
@@ -160,7 +160,7 @@ export function ColorEditor({
               cardTextColor: CARD_PRESETS[0].text,
             })
           }
-          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface active:scale-[0.97]"
         >
           <AppIcon name="restore" className="icon-sm" />
           Atur ulang
@@ -172,7 +172,7 @@ export function ColorEditor({
               cardTextColor: draft.cardTextColor === "light" ? "dark" : "light",
             })
           }
-          className="min-h-12 rounded-full bg-surface-container-low px-4 text-[10px] font-bold text-on-surface active:scale-[0.97]"
+          className="min-h-12 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface active:scale-[0.97]"
         >
           Teks {draft.cardTextColor === "light" ? "Terang" : "Gelap"}
         </button>

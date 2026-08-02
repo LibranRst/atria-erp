@@ -36,7 +36,7 @@ export function CashDueTab({
       >
         <div className="flex items-end justify-between gap-4 px-3.5 pt-3 pb-1">
           <div className="min-w-0">
-            <p className="text-[9px] font-semibold text-on-surface-variant/60">
+            <p className="text-eyebrow font-semibold text-on-surface-variant/60">
               Outstanding 7 hari
             </p>
             <MoneyValue
@@ -86,7 +86,7 @@ export function CashDueTab({
             href={group.bucket === "LATER" ? "/expenses?view=vendor-bills" : undefined}
             actionLabel="Lihat semua"
           >
-            <div className="mx-3 mt-3 flex items-center justify-between rounded-[15px] bg-surface-container-low/65 px-3 py-2 text-[10px] font-semibold text-on-surface-variant">
+            <div className="mx-3 mt-3 flex items-center justify-between rounded-[15px] bg-surface-container-low/65 px-3 py-2 text-meta font-semibold text-on-surface-variant">
               <span>{group.count} dokumen</span>
               <MoneyValue
                 amount={group.totalOutstanding}

@@ -56,7 +56,7 @@ export function AccountDetailSheet({
                 key={label}
                 className="flex min-h-12 items-center justify-between gap-4 border-b border-outline-variant/20 px-4 py-3 last:border-b-0"
               >
-                <p className="shrink-0 text-[10px] font-medium text-on-surface-variant">{label}</p>
+                <p className="shrink-0 text-meta font-medium text-on-surface-variant">{label}</p>
                 <p className="min-w-0 truncate text-right text-xs font-semibold text-on-surface">
                   {value}
                 </p>
@@ -122,7 +122,7 @@ export function AccountDetailSheet({
             </Button>
           ) : null}
           <section className="space-y-2.5">
-            <h3 className="px-1 text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
+            <h3 className="px-1 text-meta font-bold tracking-[0.11em] text-on-surface uppercase">
               Aktivitas terbaru
             </h3>
             <div className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">

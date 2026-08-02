@@ -44,7 +44,7 @@ export function BankAccountCard({
       </div>
 
       <div className="relative mt-auto pt-3">
-        <p className="text-[9px] font-semibold tracking-[0.13em] uppercase opacity-60">
+        <p className="text-eyebrow font-semibold tracking-[0.13em] uppercase opacity-60">
           Saldo tersedia
         </p>
         <MoneyValue
@@ -57,10 +57,10 @@ export function BankAccountCard({
       </div>
 
       <div className="relative mt-4 flex items-center justify-between gap-3">
-        <p className="font-mono text-[11px] font-semibold tracking-[0.16em] opacity-75">
+        <p className="font-mono text-support font-semibold tracking-[0.16em] opacity-75">
           •••• {account.accountNumber.slice(-4)}
         </p>
-        <p className="max-w-[55%] min-w-0 truncate text-right text-[9px] font-semibold tracking-widest uppercase opacity-60">
+        <p className="max-w-[55%] min-w-0 truncate text-right text-eyebrow font-semibold tracking-widest uppercase opacity-60">
           {account.holderName}
         </p>
       </div>

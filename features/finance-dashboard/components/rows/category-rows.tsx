@@ -30,20 +30,20 @@ export function CategoryUsageRow({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-[13px] font-semibold text-on-surface">{category.name}</p>
+              <p className="truncate text-row font-semibold text-on-surface">{category.name}</p>
               <span
-                className={`shrink-0 text-[9px] font-semibold ${danger ? "text-error" : category.status === "WATCH" ? "text-warning" : "text-success"}`}
+                className={`shrink-0 text-eyebrow font-semibold ${danger ? "text-error" : category.status === "WATCH" ? "text-warning" : "text-success"}`}
               >
                 {categoryStatusLabel(category.status)}
               </span>
             </div>
-            <p className="mt-0.5 text-[10px] font-semibold text-on-surface-variant/75">
+            <p className="mt-0.5 text-meta font-semibold text-on-surface-variant/75">
               Terpakai {category.usedPercentage.toFixed(0)}% dari alokasi
             </p>
           </div>
         </div>
         <div className="mt-2 flex items-center justify-between gap-3 pl-12">
-          <span className="text-[10px] font-bold text-on-surface-variant">Sisa budget</span>
+          <span className="text-meta font-bold text-on-surface-variant">Sisa budget</span>
           <MoneyValue
             amount={category.remainingAmount}
             variant="compactWithFull"

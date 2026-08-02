@@ -90,7 +90,7 @@ export function DashboardOverviewTab({
           </div>
 
           <div className="flex flex-row items-center justify-end gap-4 px-1 py-1">
-            <span className="font-mono text-[9px] font-semibold text-white/70">
+            <span className="font-mono text-eyebrow font-semibold text-white/70">
               {completedSteps}/{setupSteps.length} Selesai
             </span>
             <Link

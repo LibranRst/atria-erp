@@ -62,14 +62,14 @@ export function CashDueRow({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <p
-                className={`text-[10px] font-semibold ${item.type === "payable" ? "text-error" : "text-primary"}`}
+                className={`text-meta font-semibold ${item.type === "payable" ? "text-error" : "text-primary"}`}
               >
                 {item.type === "payable" ? "Hutang vendor" : "Piutang klien"}
               </p>
-              <p className="mt-1.5 truncate text-sm font-semibold tracking-[-0.01em] text-on-surface max-[430px]:text-[13px]">
+              <p className="mt-1.5 truncate text-sm font-semibold tracking-[-0.01em] text-on-surface max-[430px]:text-row">
                 {item.documentNumber}
               </p>
-              <p className="mt-1 truncate text-[11px] text-on-surface-variant">
+              <p className="mt-1 truncate text-support text-on-surface-variant">
                 {item.projectName} • {item.counterpartyName}
               </p>
             </div>
@@ -96,7 +96,7 @@ export function CashDueRow({
             </div>
           </div>
           {!compact ? (
-            <div className="mt-2 flex items-center justify-between gap-3 text-[10px] font-semibold text-on-surface-variant">
+            <div className="mt-2 flex items-center justify-between gap-3 text-meta font-semibold text-on-surface-variant">
               <span>Jatuh tempo {formatShortDate(item.dueDate)}</span>
               <span className="text-right">
                 Dibayar

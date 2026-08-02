@@ -46,7 +46,7 @@ export function AccountTransactionRows({
             <span className="block truncate text-xs font-bold text-on-surface">
               {transaction.description}
             </span>
-            <span className="mt-0.5 block truncate text-[10px] text-on-surface-variant">
+            <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
               {formatBusinessLabel(transaction.category, "FINANCE")} •{" "}
               {transaction.createdAt.toLocaleDateString("id-ID")}
             </span>

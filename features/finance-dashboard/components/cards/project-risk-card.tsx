@@ -37,7 +37,7 @@ export function ProjectRiskCard({
     >
       <div className="flex min-w-0 items-center gap-2">
         <span
-          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${circleColor}`}
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-meta font-bold ${circleColor}`}
         >
           {initial}
         </span>

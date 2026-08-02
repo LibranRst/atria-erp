@@ -62,26 +62,26 @@ export function MaterialIssueRow({
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
                 <p
-                  className={`truncate text-[10px] font-semibold ${item.severity === "CRITICAL" ? "text-error" : "text-warning"}`}
+                  className={`truncate text-meta font-semibold ${item.severity === "CRITICAL" ? "text-error" : "text-warning"}`}
                 >
                   {label}
                 </p>
                 {quantityLabel ? (
-                  <span className="financial-amount shrink-0 font-mono text-[10px] font-bold text-on-surface">
+                  <span className="financial-amount shrink-0 font-mono text-meta font-bold text-on-surface">
                     Kurang {quantityLabel}
                   </span>
                 ) : null}
               </div>
-              <p className="mt-1 truncate text-[13px] font-semibold tracking-[-0.01em] text-on-surface">
+              <p className="mt-1 truncate text-row font-semibold tracking-[-0.01em] text-on-surface">
                 {item.materialName}
               </p>
-              <p className="mt-0.5 truncate text-[10px] text-on-surface-variant/75">
+              <p className="mt-0.5 truncate text-meta text-on-surface-variant/75">
                 {item.description}
               </p>
             </div>
           </div>
 
-          <div className="mt-3 flex min-h-9 items-center gap-3 rounded-[15px] bg-surface-container-low/70 px-3 py-2 text-[9px] font-semibold text-on-surface-variant">
+          <div className="mt-3 flex min-h-9 items-center gap-3 rounded-[15px] bg-surface-container-low/70 px-3 py-2 text-eyebrow font-semibold text-on-surface-variant">
             <span className="min-w-0 flex-1 truncate">
               Tersedia{" "}
               <strong className="font-mono text-on-surface">
@@ -137,17 +137,17 @@ export function MaterialIssueRow({
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
               <p
-                className={`truncate text-[9px] font-semibold ${item.severity === "CRITICAL" ? "text-error" : item.severity === "WARNING" ? "text-warning" : "text-on-surface-variant"}`}
+                className={`truncate text-eyebrow font-semibold ${item.severity === "CRITICAL" ? "text-error" : item.severity === "WARNING" ? "text-warning" : "text-on-surface-variant"}`}
               >
                 {label}
               </p>
               {quantityLabel ? (
-                <span className="financial-amount shrink-0 font-mono text-[10px] font-bold text-on-surface">
+                <span className="financial-amount shrink-0 font-mono text-meta font-bold text-on-surface">
                   {quantityLabel}
                 </span>
               ) : null}
             </div>
-            <p className="mt-1 truncate text-[13px] font-semibold tracking-[-0.01em] text-on-surface">
+            <p className="mt-1 truncate text-row font-semibold tracking-[-0.01em] text-on-surface">
               {item.materialName}
             </p>
             <p className="mt-0.5 line-clamp-2 text-meta text-on-surface-variant/75">
@@ -161,7 +161,7 @@ export function MaterialIssueRow({
             <AppIcon name="chevron_right" className="icon-sm" />
           </span>
         </div>
-        <div className="mt-2 flex items-center justify-between gap-3 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
+        <div className="mt-2 flex items-center justify-between gap-3 pl-12 text-eyebrow font-semibold text-on-surface-variant/70">
           <span className="truncate">{item.projectName ?? item.locationName ?? "-"}</span>
           <span className="shrink-0">
             {item.type === "RAP_SHORTAGE"

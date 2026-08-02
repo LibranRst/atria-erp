@@ -200,7 +200,7 @@ export function ApprovalsTab({
             </p>
           </div>
           <div className="min-w-0 shrink-0 text-right">
-            <p className="text-[9px] font-semibold text-on-surface-variant/60">Total antrean</p>
+            <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total antrean</p>
             <MoneyValue
               amount={approvalSummary.totalAmount}
               variant="compactWithFull"
@@ -286,11 +286,11 @@ export function ApprovalsTab({
                     }
                     label={presentedApproval.priorityReason}
                   />
-                  <span className="shrink-0 text-[10px] font-semibold text-on-surface-variant">
+                  <span className="shrink-0 text-meta font-semibold text-on-surface-variant">
                     {formatShortDate(presentedApproval.createdAt)}
                   </span>
                 </div>
-                <p className="mt-4 text-[9px] font-bold tracking-[0.12em] text-on-surface-variant/65 uppercase">
+                <p className="mt-4 text-eyebrow font-bold tracking-[0.12em] text-on-surface-variant/65 uppercase">
                   Nominal pengajuan
                 </p>
                 <MoneyValue
@@ -331,9 +331,7 @@ export function ApprovalsTab({
                   key={label}
                   className="flex min-h-12 items-center justify-between gap-4 border-b border-outline-variant/20 px-4 py-3 last:border-b-0"
                 >
-                  <p className="shrink-0 text-[10px] font-medium text-on-surface-variant">
-                    {label}
-                  </p>
+                  <p className="shrink-0 text-meta font-medium text-on-surface-variant">{label}</p>
                   <p className="min-w-0 truncate text-right text-xs font-semibold text-on-surface">
                     {value}
                   </p>
@@ -346,7 +344,7 @@ export function ApprovalsTab({
                 <InventoryOpeningApprovalItems item={presentedApproval} />
                 <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
                   <div className="px-4 py-3.5">
-                    <p className="text-[10px] font-bold tracking-widest text-on-surface-variant/65 uppercase">
+                    <p className="text-meta font-bold tracking-widest text-on-surface-variant/65 uppercase">
                       Dampak stok
                     </p>
                     <p className="mt-1 text-xs leading-5 text-on-surface">
@@ -361,7 +359,7 @@ export function ApprovalsTab({
             )}
             {presentedApproval.receiptImageUrl ? (
               <section className="space-y-2.5">
-                <h3 className="px-1 text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
+                <h3 className="px-1 text-meta font-bold tracking-[0.11em] text-on-surface uppercase">
                   Bukti pengajuan
                 </h3>
                 <div className="overflow-hidden rounded-3xl bg-surface-container-lowest p-3 shadow-surface ring-1 ring-ring-subtle">
@@ -451,7 +449,7 @@ export function ApprovalsTab({
                   (decision?.item.type === "inventory_opening" ? 10 : 5)
               }
             />
-            <p className="mt-1 px-1 text-[10px] text-on-surface-variant">
+            <p className="mt-1 px-1 text-meta text-on-surface-variant">
               Minimal {decision?.item.type === "inventory_opening" ? 10 : 5} karakter.
             </p>
           </div>

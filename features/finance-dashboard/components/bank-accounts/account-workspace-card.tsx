@@ -31,7 +31,7 @@ function QuickActionButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-full px-1 text-[9px] font-bold transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 min-[430px]:gap-1.5 min-[500px]:px-3 min-[500px]:text-[10px] ${toneClass}`}
+      className={`flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-full px-1 text-eyebrow font-bold transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 min-[430px]:gap-1.5 min-[500px]:px-3 min-[500px]:text-meta ${toneClass}`}
     >
       <span className="shrink-0">{icon}</span>
       {compactLabel ? (

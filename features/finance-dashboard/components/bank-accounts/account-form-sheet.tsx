@@ -21,7 +21,7 @@ function AccountBalanceImpact({
   return (
     <section className="min-w-0 space-y-2.5">
       <header className="min-w-0 px-1">
-        <h3 className="text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
+        <h3 className="text-meta font-bold tracking-[0.11em] text-on-surface uppercase">
           Dampak saldo
         </h3>
         <p className="mt-1 text-support text-on-surface-variant">
@@ -45,7 +45,7 @@ function AccountBalanceImpact({
         </div>
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3.5 py-4">
           <div className="min-w-0">
-            <p className="text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
+            <p className="text-eyebrow font-bold tracking-widest text-on-surface-variant uppercase">
               Sebelum
             </p>
             <MoneyValue amount={0} variant="fullDynamic" size="sm" className="mt-1" />
@@ -55,7 +55,7 @@ function AccountBalanceImpact({
             className="icon-lg leading-none text-on-surface-variant/65"
           />
           <div className="min-w-0 text-right">
-            <p className="text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
+            <p className="text-eyebrow font-bold tracking-widest text-on-surface-variant uppercase">
               Sesudah
             </p>
             <MoneyValue
@@ -100,7 +100,7 @@ function AccountIdentityReview({ draft }: { readonly draft: AccountDraft }): Rea
   return (
     <section className="min-w-0 space-y-2.5">
       <header className="min-w-0 px-1">
-        <h3 className="text-[10px] font-bold tracking-[0.11em] text-on-surface uppercase">
+        <h3 className="text-meta font-bold tracking-[0.11em] text-on-surface uppercase">
           Identitas rekening
         </h3>
         <p className="mt-1 text-support text-on-surface-variant">
@@ -283,7 +283,7 @@ export function AccountFormSheet({
                     <button
                       type="button"
                       onClick={() => patch({ isActive: !draft.isActive })}
-                      className={`min-h-8 rounded-full px-3 text-[10px] font-bold active:scale-[0.97] ${
+                      className={`min-h-8 rounded-full px-3 text-meta font-bold active:scale-[0.97] ${
                         draft.isActive ? "bg-primary/8 text-primary" : "bg-error/8 text-error"
                       }`}
                     >

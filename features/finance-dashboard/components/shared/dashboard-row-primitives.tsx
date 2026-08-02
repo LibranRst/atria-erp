@@ -18,7 +18,7 @@ export function MiniSignal({
         {label}
       </p>
       <p
-        className={`mt-1 truncate text-[11px] font-bold ${danger ? "text-error" : "text-on-surface"}`}
+        className={`mt-1 truncate text-support font-bold ${danger ? "text-error" : "text-on-surface"}`}
       >
         {value}
       </p>

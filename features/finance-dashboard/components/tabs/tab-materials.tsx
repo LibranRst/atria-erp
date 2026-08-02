@@ -40,7 +40,7 @@ export function MaterialsTab({
       >
         <div className="grid grid-cols-2 px-3.5 pt-3 pb-1">
           <div className="min-w-0">
-            <p className="text-[9px] font-semibold text-on-surface-variant/60">Stok tersedia</p>
+            <p className="text-eyebrow font-semibold text-on-surface-variant/60">Stok tersedia</p>
             <MoneyValue
               amount={data.stockIssues.reusableStockValue}
               variant="compactWithFull"
@@ -49,7 +49,9 @@ export function MaterialsTab({
             />
           </div>
           <div className="min-w-0 pl-3 text-right">
-            <p className="text-[9px] font-semibold text-on-surface-variant/60">Total nilai stok</p>
+            <p className="text-eyebrow font-semibold text-on-surface-variant/60">
+              Total nilai stok
+            </p>
             <MoneyValue
               amount={data.stockIssues.totalStockValue}
               variant="compactWithFull"
@@ -60,7 +62,7 @@ export function MaterialsTab({
           </div>
         </div>
         <div className="px-2 pt-2 pb-2">
-          <div className="flex items-center justify-between rounded-xl bg-surface-container-lowest p-2 text-[10px] font-semibold">
+          <div className="flex items-center justify-between rounded-xl bg-surface-container-lowest p-2 text-meta font-semibold">
             <span
               className={
                 data.stockIssues.materialShortageCount > 0 ? "text-warning" : "text-success"

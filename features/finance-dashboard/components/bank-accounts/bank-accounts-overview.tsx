@@ -105,7 +105,7 @@ function AccountPositionCard({
       </span>
 
       <span className="relative mt-auto block pt-3">
-        <span className="block text-[9px] font-semibold tracking-[0.13em] uppercase opacity-60">
+        <span className="block text-eyebrow font-semibold tracking-[0.13em] uppercase opacity-60">
           Saldo tersedia
         </span>
         <MoneyValue
@@ -124,10 +124,10 @@ function AccountPositionCard({
       </span>
 
       <span className="relative mt-3 flex items-center justify-between gap-3">
-        <span className="font-mono text-[11px] font-semibold tracking-[0.16em] opacity-75">
+        <span className="font-mono text-support font-semibold tracking-[0.16em] opacity-75">
           •••• {account.accountNumber.slice(-4)}
         </span>
-        <span className="max-w-[55%] min-w-0 truncate text-right text-[9px] font-semibold tracking-widest uppercase opacity-60">
+        <span className="max-w-[55%] min-w-0 truncate text-right text-eyebrow font-semibold tracking-widest uppercase opacity-60">
           {account.holderName}
         </span>
       </span>
@@ -135,7 +135,7 @@ function AccountPositionCard({
         className={`relative mt-3 flex min-h-9 w-full items-center gap-2 rounded-[14px] px-2.5 py-1.5 ring-1 backdrop-blur-md ${account.cardTextColor === "dark" ? "bg-black/4.5 ring-ring-subtle" : "bg-white/10 ring-white/12"}`}
       >
         <AppIcon name="receipt_long" className="shrink-0 text-[15px] opacity-65" />
-        <span className="min-w-0 flex-1 truncate text-[9px] font-medium opacity-75">
+        <span className="min-w-0 flex-1 truncate text-eyebrow font-medium opacity-75">
           {account.recentTransactions[0]?.description ?? "Belum ada transaksi"}
         </span>
         <span
@@ -217,7 +217,7 @@ export function BankAccountsOverview({
             type="button"
             disabled={!canCreate}
             onClick={onCreate}
-            className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-[10px] font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-45"
+            className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-45"
           >
             <AppIcon name="add" className="icon-xs" />
             <span className="hidden min-[360px]:inline">Tambah rekening</span>

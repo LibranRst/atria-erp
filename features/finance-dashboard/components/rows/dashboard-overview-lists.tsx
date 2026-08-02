@@ -54,7 +54,7 @@ export function RiskBriefList({
               <span className="block truncate text-xs font-bold text-on-surface">
                 {action.title}
               </span>
-              <span className="mt-0.5 block truncate text-[10px] text-on-surface-variant">
+              <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
                 {action.description}
               </span>
             </span>
@@ -104,7 +104,7 @@ export function OverviewPriorityList({
               </span>
               <span className="flex shrink-0 items-center gap-1.5">
                 <span
-                  className={`text-[9px] font-semibold ${isCritical ? "text-error" : "text-warning"}`}
+                  className={`text-eyebrow font-semibold ${isCritical ? "text-error" : "text-warning"}`}
                 >
                   {isCritical ? "Kritis" : "Perhatian"}
                 </span>
