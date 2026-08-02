@@ -66,7 +66,7 @@ export function RabClientSummaryPanel({
     <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
             {isRevisionDraft ? `Revisi RAB R${rabEstimate.revision}` : "Nilai RAB klien"}
           </p>
           <MoneyValue
@@ -81,7 +81,7 @@ export function RabClientSummaryPanel({
           {rabStatusLabel(rabEstimate.status)}
         </Badge>
       </div>
-      <p className="mt-1 truncate text-[10px] text-white/60">
+      <p className="mt-1 truncate text-meta text-white/60">
         {rabEstimate.title} · {visibleItemCount} item tampil
       </p>
       {isRevisionDraft && approvedBaseline && (
@@ -99,7 +99,7 @@ export function RabClientSummaryPanel({
       {rabEstimate.status === "DRAFT" && staleSourceLabels.length > 0 && (
         <div className="mt-4 rounded-[18px] bg-warning/15 p-3 text-white ring-1 ring-warning/25">
           <p className="text-xs font-bold">{staleSourceLabels.length} sumber berubah</p>
-          <p className="mt-1 text-[10px]">Perbarui jumlah dan harga tanpa mengubah label klien.</p>
+          <p className="mt-1 text-meta">Perbarui jumlah dan harga tanpa mengubah label klien.</p>
           <button
             type="button"
             onClick={handleRefreshRabSources}
@@ -343,11 +343,11 @@ function RabBundleRow({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-bold">{bundle.clientLabel}</span>
-          <span className="block text-[10px] text-on-surface-variant">
+          <span className="block text-meta text-on-surface-variant">
             Paket - {bundle.itemIds.length} item - {bundle.quantity} {bundle.unit}
           </span>
         </span>
-        <span className="shrink-0 font-mono text-[11px] font-bold text-primary">
+        <span className="shrink-0 font-mono text-support font-bold text-primary">
           {formatShortRp(Number(bundle.lineTotal))}
         </span>
       </div>
@@ -377,16 +377,16 @@ function RabItemRow({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-bold">{item.clientLabel}</span>
-          <span className="block truncate text-[10px] text-on-surface-variant">
+          <span className="block truncate text-meta text-on-surface-variant">
             {rabSourceLabel(item.sourceType)} - {item.quantity} {item.unit}
           </span>
           {item.isHidden && (
-            <span className="mt-1 inline-flex rounded-full bg-error-container/30 px-2 py-0.5 text-[9px] font-bold text-error">
+            <span className="mt-1 inline-flex rounded-full bg-error-container/30 px-2 py-0.5 text-eyebrow font-bold text-error">
               Disembunyikan
             </span>
           )}
         </span>
-        <span className="shrink-0 font-mono text-[11px] font-bold">
+        <span className="shrink-0 font-mono text-support font-bold">
           {formatShortRp(Number(item.lineTotal))}
         </span>
       </div>

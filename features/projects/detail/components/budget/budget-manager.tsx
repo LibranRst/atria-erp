@@ -17,7 +17,11 @@ import { BudgetApprovalPanel, BudgetDraftActions } from "./budget-approval-panel
 import { BudgetEmptyState } from "./budget-empty-state";
 import { BudgetItemForm } from "./budget-item-form";
 import { BudgetItemsList } from "./budget-items-list";
-import type { BudgetHeader, BudgetItemFormState, CostCategory } from "../../types/budget-manager-types";
+import type {
+  BudgetHeader,
+  BudgetItemFormState,
+  CostCategory,
+} from "../../types/budget-manager-types";
 import {
   getBudgetItemFormValidationMessage,
   groupBudgetItemsByCategory,

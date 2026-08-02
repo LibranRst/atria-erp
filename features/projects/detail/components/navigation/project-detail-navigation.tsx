@@ -141,7 +141,7 @@ export function ProjectDetailNavigation({
             icon: (
               <AppIcon
                 name={isProjectDomainUnavailable(domain.value, isLocked) ? "lock" : domain.icon}
-                className="text-[15px]"
+                className="text-section"
               />
             ),
             unavailable: isProjectDomainUnavailable(domain.value, isLocked),

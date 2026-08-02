@@ -19,7 +19,7 @@ export function DetailRow({
 }): React.JSX.Element {
   return (
     <div className="border-t border-outline-variant/25 px-4 py-3 first:border-t-0">
-      <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+      <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
         {label}
       </p>
       <p className="mt-1 text-sm leading-5 font-bold text-on-surface">{value}</p>

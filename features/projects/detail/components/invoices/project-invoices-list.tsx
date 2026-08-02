@@ -142,7 +142,7 @@ function ProjectInvoiceTimelineRow({
                 event.stopPropagation();
                 onRecordPayment(invoice);
               }}
-              className="inline-flex min-h-12 shrink-0 items-center rounded-full bg-primary/7 px-4 text-[11px] font-bold text-primary"
+              className="inline-flex min-h-12 shrink-0 items-center rounded-full bg-primary/7 px-4 text-support font-bold text-primary"
             >
               Catat bayar
             </button>
@@ -163,7 +163,7 @@ function ProjectInvoiceTimelineRow({
                   event.stopPropagation();
                   openActivityDetail({ kind: "CLIENT_PAYMENT", id: payment.id });
                 }}
-                className="flex w-full items-center justify-between gap-3 rounded-xl bg-surface-container-low p-2 text-left text-[10px] font-semibold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                className="flex w-full items-center justify-between gap-3 rounded-xl bg-surface-container-low p-2 text-left text-meta font-semibold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
               >
                 <span>
                   {new Date(payment.paymentDate).toLocaleDateString("id-ID", {
@@ -181,7 +181,7 @@ function ProjectInvoiceTimelineRow({
           </div>
         ) : null}
         {totalPaid > amount ? (
-          <p className="mt-2 text-[10px] font-bold text-error">
+          <p className="mt-2 text-meta font-bold text-error">
             Pembayaran melebihi nominal invoice.
           </p>
         ) : null}

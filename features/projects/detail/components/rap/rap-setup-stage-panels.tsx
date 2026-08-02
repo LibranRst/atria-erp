@@ -260,7 +260,7 @@ export function ReviewInternalPlanPanel({
               className={row.ready ? "text-primary" : "text-warning"}
             />
             <span className="flex-1 text-xs font-bold">{row.label}</span>
-            <span className="text-[10px] text-on-surface-variant">Edit</span>
+            <span className="text-meta text-on-surface-variant">Edit</span>
           </button>
         ))}
       </div>

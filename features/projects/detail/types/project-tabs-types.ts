@@ -1,5 +1,8 @@
 import type { ProjectBudgetDashboard } from "@/app/actions/project/excel-budget";
-import type { BankAccountItem, ExpenseCostItem } from "@/features/expenses/components/lists/expense-list";
+import type {
+  BankAccountItem,
+  ExpenseCostItem,
+} from "@/features/expenses/components/lists/expense-list";
 import type {
   VendorListBill,
   VendorListPayment,

@@ -35,7 +35,7 @@ export function ProjectInvoicesSummary({
     <section className="rounded-[28px] bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
             Sisa tagihan klien
           </p>
           <MoneyValue
@@ -45,7 +45,7 @@ export function ProjectInvoicesSummary({
             size="hero"
             className="mt-1"
           />
-          <p className="mt-1 text-[10px] text-white/60">
+          <p className="mt-1 text-meta text-white/60">
             {invoicesCount} termin · {billedCoverage.toFixed(0)}% nilai kontrak sudah ditagihkan
           </p>
         </div>
@@ -53,7 +53,7 @@ export function ProjectInvoicesSummary({
           <button
             type="button"
             onClick={onCreateInvoiceClick}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-[11px] font-bold text-white ring-1 ring-white/15"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-support font-bold text-white ring-1 ring-white/15"
           >
             <AppIcon name="add" className="text-[17px]" /> Invoice
           </button>
@@ -76,7 +76,7 @@ export function ProjectInvoicesSummary({
       ) : null}
       {createError || createSuccess ? (
         <p
-          className={`mt-3 rounded-2xl px-3 py-2 text-[11px] ${createError ? "bg-error/18 text-critical-on-inverse" : "bg-white/10 text-white"}`}
+          className={`mt-3 rounded-2xl px-3 py-2 text-support ${createError ? "bg-error/18 text-critical-on-inverse" : "bg-white/10 text-white"}`}
         >
           {createError ?? createSuccess}
         </p>

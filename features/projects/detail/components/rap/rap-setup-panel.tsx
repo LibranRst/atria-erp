@@ -64,7 +64,7 @@ export function RapSetupPanel({
       <section className="rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[9px] font-bold tracking-wide text-on-surface-variant uppercase">
+            <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
               Setup rencana internal
             </p>
             <p className="text-sm font-bold">{getRapSetupStageLabel(activeRapStage)}</p>

@@ -127,7 +127,7 @@ function BudgetItemCard({ item }: { readonly item: BudgetItem }): React.JSX.Elem
               style={{ width: `${Math.min(percent, 100)}%` }}
             />
           </div>
-          <div className="flex items-center justify-between text-[10px] text-on-surface-variant">
+          <div className="flex items-center justify-between text-meta text-on-surface-variant">
             <span>Realisasi: Rp {spent.toLocaleString("id-ID")}</span>
             <span>{percent.toFixed(1)}% terpakai</span>
           </div>

@@ -143,7 +143,7 @@ export function ProjectOverview({
     <div className="space-y-sm">
       {!budget ? (
         <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
-          <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
             Posisi proyek
           </p>
           <h2 className="mt-2 text-[20px] leading-6 font-semibold">
@@ -164,7 +164,7 @@ export function ProjectOverview({
         <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
+              <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
                 Sisa budget internal
               </p>
               <MoneyValue
@@ -193,9 +193,9 @@ export function ProjectOverview({
             <FinancialFact label="Realisasi" amount={budget.actualCost} />
           </div>
           <div className="mt-3 flex items-center justify-between rounded-[18px] bg-white/[0.07] px-3 py-2.5">
-            <span className="text-[10px] font-semibold text-white/60">Margin proyeksi</span>
+            <span className="text-meta font-semibold text-white/60">Margin proyeksi</span>
             <span
-              className={`financial-amount font-mono text-[13px] font-bold tabular-nums ${margin < 10 ? "text-critical-on-inverse" : "text-white"}`}
+              className={`financial-amount font-mono text-row font-bold tabular-nums ${margin < 10 ? "text-critical-on-inverse" : "text-white"}`}
             >
               {margin.toFixed(1)}%
             </span>
@@ -313,7 +313,7 @@ export function ProjectOverview({
               <button
                 type="button"
                 onClick={openReallocation}
-                className="min-h-12 rounded-full px-3 text-[10px] font-bold text-primary"
+                className="min-h-12 rounded-full px-3 text-meta font-bold text-primary"
               >
                 Atur alokasi
               </button>
@@ -356,7 +356,7 @@ export function ProjectOverview({
                       align="right"
                       size="sm"
                     />
-                    <span className="mt-1 block text-right font-mono text-[9px] font-bold text-on-surface-variant">
+                    <span className="mt-1 block text-right font-mono text-eyebrow font-bold text-on-surface-variant">
                       {category.usedPercentage.toFixed(1)}%
                     </span>
                   </span>
@@ -420,7 +420,7 @@ export function ProjectOverview({
         footer={
           <div className="space-y-2">
             <p
-              className={`px-1 text-[10px] font-medium ${totalRatio > 100 ? "text-error" : "text-on-surface-variant"}`}
+              className={`px-1 text-meta font-medium ${totalRatio > 100 ? "text-error" : "text-on-surface-variant"}`}
             >
               {totalRatio > 100
                 ? "Total alokasi melebihi 100%. Kurangi salah satu kategori."

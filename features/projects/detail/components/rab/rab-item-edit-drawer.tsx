@@ -80,7 +80,7 @@ export function RabItemEditDrawer({
           <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
             {item.description && (
               <div className="bg-surface-container-low/20 px-4 py-3.5">
-                <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
+                <p className="text-meta font-bold tracking-wide text-on-surface-variant uppercase">
                   Deskripsi Pekerjaan
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.description}</p>

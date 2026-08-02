@@ -55,7 +55,7 @@ export function ProjectActivationSheet({
     >
       <div className="space-y-4">
         <div className="rounded-3xl bg-primary/7 px-4 py-3">
-          <p className="text-[10px] font-bold tracking-[0.12em] text-primary uppercase">
+          <p className="text-meta font-bold tracking-[0.12em] text-primary uppercase">
             Keputusan operasional
           </p>
           <p className="mt-1 text-sm font-bold text-on-surface">{projectName}</p>
@@ -89,7 +89,7 @@ function ReadinessRow({
         <AppIcon name={icon} className="icon-md text-success" />
         {label}
       </span>
-      <span className="shrink-0 text-[11px] font-bold text-success">{value}</span>
+      <span className="shrink-0 text-support font-bold text-success">{value}</span>
     </div>
   );
 }

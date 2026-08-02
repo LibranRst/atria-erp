@@ -52,7 +52,7 @@ export function ProjectListHeader({
             </p>
           </div>
           <div className="min-w-0 text-right">
-            <p className="text-[9px] font-semibold text-on-surface-variant/60">
+            <p className="text-eyebrow font-semibold text-on-surface-variant/60">
               Nilai kontrak aktif
             </p>
             <MoneyValue

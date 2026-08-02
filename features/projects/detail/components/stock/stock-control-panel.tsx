@@ -73,7 +73,7 @@ export function StockControlPanel({
   return (
     <div className="space-y-sm">
       <section className="rounded-[28px] bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
-        <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
+        <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
           Posisi material proyek
         </p>
         <div className="mt-2 flex flex-col justify-between">
@@ -85,7 +85,7 @@ export function StockControlPanel({
               {rap?.items.length ?? 0} material RAP
             </MetadataChip>
           </div>
-          <p className="text-[10px] text-white/60">
+          <p className="text-meta text-white/60">
             total kebutuhan yang sudah diamankan atau terpakai
           </p>
         </div>
@@ -181,7 +181,7 @@ export function StockControlPanel({
                           shortage ? "text-warning" : "text-on-surface",
                         )}
                       >
-                        {item.needToBuy} <span className="text-[10px]">{item.unit}</span>
+                        {item.needToBuy} <span className="text-meta">{item.unit}</span>
                       </div>
                     </div>
                   </div>
@@ -253,7 +253,7 @@ export function StockControlPanel({
                       </p>
                     </div>
                   </div>
-                  <p className="mt-1.5 text-[9px] text-on-surface-variant">
+                  <p className="mt-1.5 text-eyebrow text-on-surface-variant">
                     {new Date(move.createdAt).toLocaleDateString("id-ID", {
                       day: "2-digit",
                       month: "short",

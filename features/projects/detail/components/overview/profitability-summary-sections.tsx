@@ -23,7 +23,7 @@ export function ProfitProjectionSection({
     <section className="rounded-[28px] bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
             Margin proyeksi
           </p>
           <MoneyValue
@@ -33,12 +33,12 @@ export function ProfitProjectionSection({
             size="hero"
             className="mt-1"
           />
-          <p className="mt-1 text-[10px] text-white/60">
+          <p className="mt-1 text-meta text-white/60">
             Nilai kontrak dikurangi plafon budget internal
           </p>
         </div>
         <span
-          className={`rounded-full px-3 py-1.5 text-[10px] font-bold ${risky ? "bg-error/20 text-[#ffb5ae]" : "bg-white/10 text-white"}`}
+          className={`rounded-full px-3 py-1.5 text-meta font-bold ${risky ? "bg-error/20 text-[#ffb5ae]" : "bg-white/10 text-white"}`}
         >
           {projectedGrossMargin.toFixed(1)}%
         </span>

@@ -26,7 +26,7 @@ export function ProjectClosingSection({
 }): React.JSX.Element {
   return (
     <section className="rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
-      <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+      <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
         Penutupan finansial
       </p>
       <h2 className="mt-0.5 text-title font-semibold text-on-surface">
@@ -120,7 +120,7 @@ function ClosingFact({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-14 items-center justify-between gap-3 border-t border-outline-variant/25 px-3 py-2.5 first:border-t-0">
-      <span className="text-[10px] font-semibold text-on-surface-variant">{label}</span>
+      <span className="text-meta font-semibold text-on-surface-variant">{label}</span>
       <MoneyValue
         amount={amount}
         variant="compactWithFull"

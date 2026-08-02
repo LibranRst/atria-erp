@@ -52,7 +52,7 @@ export function RabRevisionHistoryPanel({
             }`}
           >
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold text-primary">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-meta font-bold text-primary">
                 R{revision.revision}
               </span>
               <span className="min-w-0 flex-1">
@@ -67,9 +67,7 @@ export function RabRevisionHistoryPanel({
                   </span>
                 )}
               </span>
-              <span className="font-mono text-[10px] font-bold">
-                {formatShortRp(revision.value)}
-              </span>
+              <span className="font-mono text-meta font-bold">{formatShortRp(revision.value)}</span>
               <ActivityDetailChevron />
             </div>
           </button>
@@ -88,7 +86,7 @@ export function RabRevisionHistoryPanel({
               <span className="min-w-0 flex-1 truncate text-xs font-bold">
                 Change Order R{order.baseRevision} ke R{order.revisedRevision}
               </span>
-              <span className="font-mono text-[10px] font-bold text-primary">
+              <span className="font-mono text-meta font-bold text-primary">
                 {Number(order.valueDelta) >= 0 ? "+" : ""}
                 {formatShortRp(Number(order.valueDelta))}
               </span>
@@ -98,7 +96,7 @@ export function RabRevisionHistoryPanel({
                 type="button"
                 disabled={pendingId === order.id}
                 onClick={() => void approve(order.id)}
-                className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-[10px] font-bold text-white disabled:opacity-50"
+                className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-meta font-bold text-white disabled:opacity-50"
               >
                 {pendingId === order.id ? "Memproses" : "Setujui"}
               </button>

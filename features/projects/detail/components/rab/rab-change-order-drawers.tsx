@@ -264,7 +264,7 @@ export function ChangeOrderDetailDrawer({
           <p className="mt-1 text-xs leading-5">{order.reason}</p>
         </div>
         <div className="rounded-2xl bg-surface-container-low p-3">
-          <p className="text-[9px] font-bold text-on-surface-variant uppercase">
+          <p className="text-eyebrow font-bold text-on-surface-variant uppercase">
             Scope R{order.baseRevision} → R{order.revisedRevision}
           </p>
           <p className="mt-1 text-xs leading-5">{order.scopeSummary}</p>

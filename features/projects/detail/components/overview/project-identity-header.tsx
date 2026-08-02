@@ -73,7 +73,7 @@ export function ProjectIdentityHeader({
 
           <div className="absolute inset-x-0 bottom-0 p-4">
             <div className="flex min-w-0 items-center justify-between gap-3">
-              <p className="min-w-0 flex-1 truncate text-[9px] font-bold tracking-[0.14em] text-white/65 uppercase">
+              <p className="min-w-0 flex-1 truncate text-eyebrow font-bold tracking-[0.14em] text-white/65 uppercase">
                 {project.client?.name ?? "Klien belum diisi"}
               </p>
               <div className="flex shrink-0 items-center gap-1.5">
@@ -92,7 +92,7 @@ export function ProjectIdentityHeader({
             <h1 className="mt-2 line-clamp-2 max-w-[95%] text-[21px] leading-6.5 font-bold tracking-tight text-white">
               {project.name}
             </h1>
-            <p className="mt-2 flex min-w-0 items-center gap-1.5 truncate text-[10px] font-medium text-white/65">
+            <p className="mt-2 flex min-w-0 items-center gap-1.5 truncate text-meta font-medium text-white/65">
               <AppIcon name="location_on" className="shrink-0 text-[13px]" />
               <span className="truncate">{project.location || "Lokasi belum diisi"}</span>
               <span className="shrink-0 text-white/30">·</span>

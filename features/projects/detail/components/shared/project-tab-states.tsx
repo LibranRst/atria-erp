@@ -20,7 +20,7 @@ export function LockedTabState({
           <AppIcon name="lock" className="icon-lg text-on-surface-variant/80" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
             Belum tersedia
           </p>
           <h3 className="mt-0.5 text-[16px] leading-5 font-semibold text-on-surface">
@@ -56,7 +56,7 @@ export function RabPrerequisiteState({ onGoToRap }: RabPrerequisiteStateProps): 
           <AppIcon name="architecture" className="icon-lg" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-bold tracking-[0.14em] text-primary uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.14em] text-primary uppercase">
             Urutan perencanaan
           </p>
           <h3 className="mt-0.5 text-[16px] leading-5 font-semibold text-on-surface">

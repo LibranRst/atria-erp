@@ -94,7 +94,7 @@ export function RapItemDetailDrawer({
         <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
           {item.description && (
             <div className="bg-surface-container-low/20 px-4 py-3.5">
-              <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
+              <p className="text-meta font-bold tracking-wide text-on-surface-variant uppercase">
                 Spesifikasi / Penggunaan
               </p>
               <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.description}</p>
@@ -128,7 +128,7 @@ export function RapItemDetailDrawer({
 
           {item.internalNote && (
             <div className="px-4 py-3.5">
-              <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
+              <p className="text-meta font-bold tracking-wide text-on-surface-variant uppercase">
                 Catatan Internal
               </p>
               <p className="mt-1 text-xs leading-relaxed text-on-surface">{item.internalNote}</p>
@@ -250,7 +250,7 @@ export function PackageDetailDrawer({
         <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
           {item.scopeDescription && (
             <div className="bg-surface-container-low/20 px-4 py-3.5">
-              <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
+              <p className="text-meta font-bold tracking-wide text-on-surface-variant uppercase">
                 Lingkup Pekerjaan
               </p>
               <p className="mt-1 text-xs leading-relaxed text-on-surface">
