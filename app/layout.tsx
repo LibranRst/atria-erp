@@ -28,7 +28,7 @@ export default function RootLayout({
 }>): React.JSX.Element {
   return (
     <html lang="id" className={`${inter.variable} ${jetbrains.variable} h-full antialiased`}>
-      <body className="min-h-full bg-background font-sans text-[16px] leading-lg font-normal text-on-surface">
+      <body className="min-h-full bg-background font-sans text-[16px] font-normal text-on-surface">
         <MobileShell>{children}</MobileShell>
         <Toaster position="top-center" offset={72} mobileOffset={72} richColors />
       </body>
