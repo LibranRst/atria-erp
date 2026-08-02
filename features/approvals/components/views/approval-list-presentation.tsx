@@ -100,7 +100,7 @@ export function ApprovalQueueRow({
             <AppIcon name="chevron_right" className="icon-sm" />
           </span>
         </div>
-        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-[9px] font-semibold text-on-surface-variant/70">
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-eyebrow font-semibold text-on-surface-variant/70">
           <span className="max-w-full truncate">{item.requestedBy}</span>
           <span className="h-1 w-1 rounded-full bg-outline-variant/60" aria-hidden="true" />
           <span className="max-w-full truncate">{item.budgetItemName}</span>
@@ -177,21 +177,21 @@ export function ApprovalDetailContent({
     <div className="space-y-4 pb-1">
       <section className="overflow-hidden rounded-[26px] bg-[#171819] px-4 pt-3.5 pb-4 text-white shadow-inverse">
         <div className="flex items-center justify-between gap-3">
-          <span className="inline-flex min-w-0 items-center gap-2 text-[10px] font-bold text-white/70">
+          <span className="inline-flex min-w-0 items-center gap-2 text-meta font-bold text-white/70">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
               <AppIcon name={typeIcon} className="text-[17px]" />
             </span>
             <span className="truncate">{typeLabel}</span>
           </span>
           <span
-            className={`shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold ${critical ? "bg-[#ff6b61]/18 text-[#ff9b94]" : warning ? "bg-[#ffb020]/16 text-[#ffd081]" : "bg-white/10 text-white/75"}`}
+            className={`shrink-0 rounded-full px-2.5 py-1 text-eyebrow font-bold ${critical ? "bg-[#ff6b61]/18 text-[#ff9b94]" : warning ? "bg-[#ffb020]/16 text-[#ffd081]" : "bg-white/10 text-white/75"}`}
           >
             {statusLabel}
           </span>
         </div>
 
         <div className="mt-4">
-          <p className="text-[9px] font-bold tracking-[0.14em] text-white/45 uppercase">
+          <p className="text-eyebrow font-bold tracking-[0.14em] text-white/45 uppercase">
             Nilai pengajuan
           </p>
           <MoneyValue
@@ -213,7 +213,7 @@ export function ApprovalDetailContent({
       </section>
 
       <section aria-labelledby="approval-context-title">
-        <h3 id="approval-context-title" className="mb-2 px-1 text-[13px] font-bold text-on-surface">
+        <h3 id="approval-context-title" className="mb-2 px-1 text-row font-bold text-on-surface">
           Konteks pengajuan
         </h3>
         <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
@@ -246,7 +246,7 @@ export function ApprovalDetailContent({
                 <AppIcon name="image" className="icon-md" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[9px] font-semibold text-on-surface-variant/60">
+                <span className="block text-eyebrow font-semibold text-on-surface-variant/60">
                   Dokumen pendukung
                 </span>
                 <span className="mt-0.5 block text-[12px] font-bold text-on-surface">
@@ -283,7 +283,7 @@ function ApprovalContextRow({
         <AppIcon name={icon} className="icon-md" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[9px] font-semibold text-on-surface-variant/60">{label}</p>
+        <p className="text-eyebrow font-semibold text-on-surface-variant/60">{label}</p>
         <p
           className={`mt-0.5 text-[12px] leading-4 font-semibold text-on-surface ${multiline ? "whitespace-pre-wrap" : "truncate"}`}
           title={value}
@@ -299,7 +299,7 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
   if (item.type === "inventory_opening") {
     return (
       <section aria-labelledby="approval-impact-title">
-        <h3 id="approval-impact-title" className="mb-2 px-1 text-[13px] font-bold text-on-surface">
+        <h3 id="approval-impact-title" className="mb-2 px-1 text-row font-bold text-on-surface">
           Dampak setelah disetujui
         </h3>
         <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
@@ -346,12 +346,10 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
     <section aria-labelledby="approval-impact-title">
       <div className="mb-2 flex items-end justify-between gap-3 px-1">
         <div className="min-w-0">
-          <h3 id="approval-impact-title" className="text-[13px] font-bold text-on-surface">
+          <h3 id="approval-impact-title" className="text-row font-bold text-on-surface">
             Dampak ke budget
           </h3>
-          <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
-            {item.budgetItemName}
-          </p>
+          <p className="mt-0.5 truncate text-meta text-on-surface-variant">{item.budgetItemName}</p>
         </div>
         <span
           className={`shrink-0 font-mono text-[12px] font-black ${critical ? "text-error" : warning ? "text-warning" : "text-on-surface"}`}
@@ -363,7 +361,7 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
       <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
         <div className="px-4 py-3.5">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-[9px] font-semibold text-on-surface-variant/60">
+            <span className="text-eyebrow font-semibold text-on-surface-variant/60">
               Budget kategori
             </span>
             <MoneyValue
@@ -375,14 +373,14 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
           </div>
           <div className="mt-3 grid grid-cols-[minmax(0,1fr)_28px_minmax(0,1fr)] items-center gap-2">
             <div className="min-w-0">
-              <p className="text-[9px] font-semibold text-on-surface-variant/60">Saat ini</p>
+              <p className="text-eyebrow font-semibold text-on-surface-variant/60">Saat ini</p>
               <MoneyValue
                 amount={item.actualSpent}
                 variant="compactWithFull"
                 size="lg"
                 className="mt-1"
               />
-              <p className="mt-1 font-mono text-[9px] font-bold text-on-surface-variant">
+              <p className="mt-1 font-mono text-eyebrow font-bold text-on-surface-variant">
                 {impact.beforePercentage.toFixed(0)}% terpakai
               </p>
             </div>
@@ -393,7 +391,9 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
               <AppIcon name="arrow_forward" className="text-[15px]" />
             </span>
             <div className="min-w-0 text-right">
-              <p className="text-[9px] font-semibold text-on-surface-variant/60">Jika disetujui</p>
+              <p className="text-eyebrow font-semibold text-on-surface-variant/60">
+                Jika disetujui
+              </p>
               <MoneyValue
                 amount={nextSpent}
                 variant="compactWithFull"
@@ -403,7 +403,7 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
                 className="mt-1"
               />
               <p
-                className={`mt-1 font-mono text-[9px] font-bold ${critical ? "text-error" : warning ? "text-warning" : "text-on-surface-variant"}`}
+                className={`mt-1 font-mono text-eyebrow font-bold ${critical ? "text-error" : warning ? "text-warning" : "text-on-surface-variant"}`}
               >
                 {impact.afterPercentage.toFixed(0)}% terpakai
               </p>
@@ -411,7 +411,7 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
           </div>
         </div>
         <div
-          className={`flex min-h-10 items-center gap-2 px-4 py-2.5 text-[10px] font-bold ${toneClass}`}
+          className={`flex min-h-10 items-center gap-2 px-4 py-2.5 text-meta font-bold ${toneClass}`}
         >
           <AppIcon
             name={critical ? "report" : warning ? "warning" : "check_circle"}

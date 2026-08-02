@@ -299,7 +299,7 @@ export function ApprovalList({
             </p>
           </div>
           <div className="min-w-0 shrink-0 text-right">
-            <p className="text-[9px] font-semibold text-on-surface-variant/60">Total antrean</p>
+            <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total antrean</p>
             <MoneyValue
               amount={approvalSummary.totalAmount}
               variant="compactWithFull"
@@ -533,7 +533,7 @@ export function ApprovalList({
                 rejectionReason.length > 0 && rejectionReason.trim().length < rejectionMinimum
               }
             />
-            <p className="mt-1 px-1 text-[10px] text-on-surface-variant">
+            <p className="mt-1 px-1 text-meta text-on-surface-variant">
               Minimal {rejectionMinimum} karakter.
             </p>
           </div>

@@ -77,7 +77,7 @@ export function ApprovalDecisionReasonFields({
             className="mt-2"
             aria-invalid={approvalReason.length > 0 && approvalReason.trim().length < 10}
           />
-          <p className="mt-1 px-1 text-[10px] text-on-surface-variant">
+          <p className="mt-1 px-1 text-meta text-on-surface-variant">
             Wajib diisi minimal 10 karakter. Alasan dicatat di audit log.
           </p>
         </div>

@@ -28,15 +28,15 @@ export function InventoryOpeningApprovalItems({
         <div className="min-w-0">
           <h3
             id={`opening-items-${item.referenceId}`}
-            className="text-[13px] font-bold text-on-surface"
+            className="text-row font-bold text-on-surface"
           >
             Item stok fisik
           </h3>
-          <p className="mt-0.5 text-[10px] text-on-surface-variant">
+          <p className="mt-0.5 text-meta text-on-surface-variant">
             Cek jumlah dan harga pokok setiap item.
           </p>
         </div>
-        <span className="shrink-0 text-[10px] font-semibold text-on-surface-variant">
+        <span className="shrink-0 text-meta font-semibold text-on-surface-variant">
           {item.inventoryItems.length} item
         </span>
       </div>
@@ -52,14 +52,14 @@ export function InventoryOpeningApprovalItems({
                 <p className="truncate text-[12px] font-bold text-on-surface">
                   {inventoryItem.materialName}
                 </p>
-                <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+                <p className="mt-0.5 truncate text-meta text-on-surface-variant">
                   {inventoryItem.locationName}
                 </p>
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-3 border-t border-outline-variant/20 pt-3">
                 <div className="min-w-0">
-                  <p className="text-[9px] font-semibold text-on-surface-variant/65">
+                  <p className="text-eyebrow font-semibold text-on-surface-variant/65">
                     Jumlah fisik
                   </p>
                   <p className="mt-0.5 truncate font-mono text-[12px] font-bold text-on-surface tabular-nums">
@@ -67,7 +67,7 @@ export function InventoryOpeningApprovalItems({
                   </p>
                 </div>
                 <div className="min-w-0 text-right">
-                  <p className="text-[9px] font-semibold text-on-surface-variant/65">
+                  <p className="text-eyebrow font-semibold text-on-surface-variant/65">
                     Harga per unit
                   </p>
                   <MoneyValue
@@ -81,7 +81,7 @@ export function InventoryOpeningApprovalItems({
               </div>
 
               <div className="mt-3 flex min-w-0 items-center justify-between gap-3 border-t border-outline-variant/20 pt-3">
-                <p className="shrink-0 text-[9px] font-semibold text-on-surface-variant/65">
+                <p className="shrink-0 text-eyebrow font-semibold text-on-surface-variant/65">
                   Subtotal item
                 </p>
                 <MoneyValue
