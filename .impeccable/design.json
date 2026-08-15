@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-04T12:45:00.000Z",
+  "generatedAt": "2026-08-15T09:54:20.000Z",
   "title": "Design System: Atria ERP",
   "extensions": {
     "colorMeta": {
@@ -327,55 +327,57 @@
     "rules": [
       {
         "name": "The One Accent Rule",
-        "body": "Terracotta is the only hue in the system. Warning and critical are the same family at different intensity, not different colors. Healthy, completed, pending, and inactive states stay neutral ink/gray with icon and copy carrying the meaning.",
+        "body": "Terracotta is the only hue in the system. Warning and critical are the same family at different intensity, not different colors. Healthy, completed, pending, and inactive states stay neutral ink/gray with icon and copy carrying the meaning — never assign a fourth or fifth \"status color.\"",
         "section": "colors"
       },
       {
         "name": "The No-Warm-Neutral Rule",
-        "body": "Neutral surfaces never take on cream, beige, brown, red, or yellow undertones. A neutral is always drawn from the cool ink/gray/canvas family, never approximated with a warm gray utility.",
+        "body": "Neutral surfaces never take on cream, beige, brown, red, or yellow undertones. A neutral is always drawn from the cool ink/gray/canvas family above, never approximated with a warm gray utility because it \"looks close.\"",
         "section": "colors"
       },
       {
         "name": "The Tabular Money Rule",
-        "body": "Every monetary value uses tabular numerals so digits never shift width as they change. Primary values stay on one line at 320–430px; fall back to a compact value plus exact secondary value when too long, never a wrapped primary.",
+        "body": "Every monetary value uses tabular numerals (`font-variant-numeric: tabular-nums`) so digits never shift width as they change. Primary values stay on one line at 320–430px; when a full amount is too long, show a compact primary value with an exact secondary value alongside, never a wrapped primary.",
         "section": "typography"
       },
       {
         "name": "The One Role Rule",
-        "body": "Pick the semantic type role whose purpose matches, not the one whose pixel size happens to look close.",
+        "body": "Pick the semantic type role whose purpose matches, not the one whose pixel size happens to look close. An arbitrary size remains valid only for something with no role in this table.",
         "section": "typography"
       },
       {
         "name": "The Nested-Stays-Flat Rule",
-        "body": "A surface that sits inside another owner, or that is deliberately recessed, carries no lift: inset metric cells, icon tiles, metric pills, grouped form rows, and segmented-tab tracks. Elevation marks what owns hierarchy, so applying it to a nested element destroys the signal."
+        "body": "A surface that sits inside another owner, or that is deliberately recessed, carries no lift: inset metric cells, icon tiles, metric pills, grouped form rows, and segmented-tab tracks. Elevation marks what owns hierarchy, so applying it to a nested element destroys the signal.",
+        "section": "elevation"
       },
       {
         "name": "The Lift-Is-Not-Loud Rule",
-        "body": "The resting lift must stay imperceptible element-by-element. If a shadow is legible on its own, it belongs to floating chrome (raised/floating/sheet/overlay), not to a resting surface — and if a static card reaches for shadow-floating, the role is wrong, not the value."
+        "body": "The resting lift must stay imperceptible element-by-element. If a shadow is legible on its own, it belongs to floating chrome (`raised`/`floating`/`sheet`/`overlay`), not to a resting surface — and if a static card reaches for `shadow-floating`, the role is wrong, not the value.",
+        "section": "elevation"
       }
     ],
     "dos": [
-      "Do keep exactly one accent hue (terracotta) system-wide; express urgency through its intensity, never a new hue.",
-      "Do give every owning surface and standalone control its semantic resting lift (shadow-surface/shadow-control, or the dark-tier shadow-primary/shadow-inverse), and keep everything nested inside one flat.",
-      "Do keep every standalone interactive control a full capsule, and every container surface on the fixed 28/20/16px radius scale.",
-      "Do keep primary monetary values on one line with tabular numerals at 320–430px.",
+      "Do keep exactly one accent hue (terracotta) system-wide; express urgency through its intensity (`#b84b2c` → `#97371f`), never through a new hue.",
+      "Do give every owning surface and standalone control its semantic resting lift (`shadow-surface`/`shadow-control`, or the dark-tier `shadow-primary`/`shadow-inverse`), and keep everything nested inside one flat.",
+      "Do keep every standalone interactive control a full capsule, and every container surface on the fixed 28/20/16px radius scale — never mix the two vocabularies.",
+      "Do keep primary monetary values on one line with tabular numerals at 320–430px, falling back to a compact value + exact secondary value when the full amount is too long.",
       "Do combine status with copy and an icon/shape/position — never color alone.",
-      "Do keep motion purposeful and spring-based (lib/utils/motion.ts presets only).",
+      "Do keep motion purposeful and spring-based (`lib/utils/motion.ts` presets only) — selection, origin, continuity, feedback.",
       "Do put simple repeated events, transactions, and master-data rows on one grouped surface with dividers; reserve an individual card for a genuinely independent, decision-heavy entity.",
-      "Do keep every main route's loading.tsx a structural skeleton matching the final hierarchy, never a centered spinner.",
-      "Do keep effective touch targets at 48×48px even when a visible control is drawn smaller, and preserve keyboard focus, screen-reader labels, safe-area clearance, and reduced-motion behavior."
+      "Do keep every main route's `loading.tsx` a structural skeleton matching the final hierarchy (header/tabs, focal summary, expected rows, nav clearance) — never a centered spinner or generic loading card.",
+      "Do keep effective touch targets at 48×48px even when a visible control is drawn smaller (32–40px), and preserve keyboard focus order, screen-reader labels, safe-area clearance, and reduced-motion behavior throughout."
     ],
     "donts": [
       "Don't add a second or third accent color, a rainbow of category colors, or a locally-defined focus-ring color.",
-      "Don't hand-roll a shadow value or reach past the semantic role — no shadow-[...], no raw box-shadow, and no shadow-floating on a static card. Never put a lift on a nested row, icon tile, metric cell, or recessed tab track, and never apply blur or glass to an ordinary surface.",
-      "Don't use glassmorphism, decorative gradients, or oversized touch chrome anywhere except a configured bank-account identity surface.",
+      "Don't hand-roll a shadow value or reach past the semantic role — no `shadow-[...]`, no raw `box-shadow`, and no `shadow-floating` on a static card. Never put a lift on a nested row, icon tile, metric cell, or recessed tab track, and never apply blur or glass to an ordinary surface.",
+      "Don't use glassmorphism, decorative gradients, or oversized touch chrome anywhere except a configured bank-account identity surface (the sole user-defined gradient exception).",
       "Don't wrap a primary money value, or let a value's digits reflow without tabular numerals.",
-      "Don't add whole-page transitions, section entrances, or list-stagger animation.",
+      "Don't add whole-page transitions, section entrances, or list-stagger animation — routes, tabs, and lists stay visually instant; only the active-pill spring and explicit local feedback (taps, sheets, disclosures) animate.",
       "Don't warm a neutral surface with cream, beige, brown, red, or yellow undertones.",
-      "Don't ship a generic admin-dashboard or spreadsheet-like composition of summary card, header pill, and identical rounded cards for every section.",
-      "Don't use an inset metric grid for a single title/meta/value row, activity/history/transactions, or more than three equal-weight cells in one mobile row.",
-      "Don't nest a capsule inside another owning surface for ordinary grouped rows, or place a colored severity rail or short marker beside an ordinary list icon.",
-      "Don't leave a hidden action or ambiguous icon-only control without an accessible label, or build UI from placeholder/dummy data when real domain data exists."
+      "Don't ship a generic admin-dashboard or spreadsheet-like composition — a repeated formula of summary card, header pill, and identical rounded cards for every section is a tell that the content pattern wasn't chosen deliberately.",
+      "Don't use an inset metric grid for a single title/meta/value row, activity/history/transactions, or more than three equal-weight cells in one mobile row; don't give a metric cell its own shadow, elevation, or oversized radius that competes with its owning surface.",
+      "Don't nest a capsule inside another owning surface for ordinary grouped rows, or place a colored vertical severity rail or short attention marker beside an ordinary list icon — a continuous connector is timeline-only.",
+      "Don't leave a hidden action or an ambiguous icon-only control without an accessible label, or build UI from placeholder/dummy data when real domain data exists."
     ]
   }
 }
