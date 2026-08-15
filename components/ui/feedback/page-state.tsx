@@ -4,6 +4,7 @@ import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { fadeVariants, transitionSpringSnappy } from "@/lib/utils/motion";
+import { DuotoneIconTile } from "@/components/ui/icon/icon-tile";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export type PageStateTone = "neutral" | "info" | "success" | "warning" | "critical";
@@ -50,8 +51,8 @@ const STATE_META: Record<PageStateKind, { readonly icon: string; readonly tone: 
 function toneClasses(tone: PageStateTone): string {
   if (tone === "critical") return "bg-error-container/35 text-error";
   if (tone === "warning") return "bg-warning-light text-warning";
-  if (tone === "success") return "bg-success-light text-success";
-  if (tone === "info") return "bg-deep-teal-soft text-deep-teal";
+  if (tone === "success") return "bg-surface-container-low text-on-surface";
+  if (tone === "info") return "bg-surface-container-low text-on-surface";
   return "bg-surface-container text-on-surface-variant";
 }
 
@@ -68,17 +69,20 @@ export function PageState({
 
   return (
     <section
-      className={`rounded-[28px] border border-outline-variant/15 bg-white text-center shadow-surface ${
+      className={`rounded-owner bg-white text-center ring-1 ring-ring-subtle ${
         compact ? "px-4 py-6" : "px-6 py-12"
       } ${className}`}
       role={kind === "error" || kind === "restricted" ? "alert" : "status"}
     >
-      <span
-        className={`mx-auto flex items-center justify-center rounded-full ${toneClasses(meta.tone)} ${compact ? "h-10 w-10" : "h-14 w-14"}`}
+      <DuotoneIconTile
+        name={meta.icon}
+        tone={
+          meta.tone === "critical" ? "critical" : meta.tone === "warning" ? "attention" : "neutral"
+        }
+        className={`mx-auto ${toneClasses(meta.tone)} ${compact ? "h-10 w-10" : "h-14 w-14"}`}
+        iconClassName={compact ? "h-5 w-5" : "h-6.5 w-6.5"}
         aria-hidden="true"
-      >
-        <AppIcon name={meta.icon} className={compact ? "h-5 w-5" : "h-6.5 w-6.5"} />
-      </span>
+      />
       <h2 className={`${compact ? "mt-3 text-sm" : "mt-5 text-lg"} font-semibold text-on-surface`}>
         {title}
       </h2>

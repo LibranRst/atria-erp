@@ -46,7 +46,10 @@ describe("global main-surface primitives", () => {
     );
 
     expect(html).toContain('aria-label="8 item"');
-    expect(html).toContain("rounded-3xl");
+    expect(html).toContain("rounded-owner");
+    // Owning surfaces carry the shared gentle lift, never an ad-hoc shadow.
+    expect(html).toContain("shadow-surface");
+    expect(html).not.toMatch(/shadow-\[/);
     expect(html).toContain("divide-y");
   });
 

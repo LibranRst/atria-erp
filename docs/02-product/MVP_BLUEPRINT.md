@@ -29,11 +29,12 @@ and adds material control:
 
 ### Module 2B: Settings Source of Truth
 
-- Dedicated Settings area manages Budget Allocation defaults, Expense Categories, Item & Price Library, and Material Master.
+- Dedicated Settings area manages Budget Allocation defaults, Expense Categories, Item & Price Library, and Material Master. It is a source-of-truth workspace, not a technical database editor.
+- Budget ratios are edited as human-readable percentages; Budget Allocation labels Gross Margin and Unallocated Buffer as separate values and explains that category ratios use Internal Budget. The five canonical Expense Categories stay active and code-locked — ratio editing belongs only in Budget Allocation.
 - Budget settings feed new Project Budget creation.
 - Expense categories feed budget, expense tracker, dashboards, reports, and AI.
-- Item & Price Library stores traceable cost components and margin/provenance, then copies immutable snapshots into RAP material items, Tukang/Subcon packages, and quotation lines.
-- Material Master settings feed stock/inventory readiness and material selection.
+- Item & Price Library stores traceable cost components and margin/provenance, then copies immutable snapshots into RAP material items, Tukang/Subcon packages, and quotation lines. Library cards show Internal Cost, Suggested Client Price, gross margin, component count, price source, and source note.
+- Material Master settings feed stock/inventory readiness and material selection, showing material identity and default inventory thresholds without replacing the operational Materials page.
 - Settings defaults affect newly created project budgets only. Existing project allocations remain unchanged.
 
 ### Module 3: Expense Tracker by Category
@@ -47,7 +48,9 @@ and adds material control:
 
 ### Module 4: Budget Dashboard
 
-- Category cards show allocated budget, actual spend, remaining budget, used percentage, and risk status.
+- Category cards show allocated budget, actual spend, remaining budget, used percentage, and risk status: Category name (Tukang, Material, Operasional, Lain-lain, or Subcon), Budget (allocated), Actual (approved/paid spend), Remaining (allocated minus actual), Used (percentage), and Status (`SAFE`, `WATCH`, `CRITICAL`, or `OVER_BUDGET`).
+- Drill-down is category-specific: Material opens material usage/RAP Material Plan and stock-control detail; Tukang opens Work Packages (area/scope, estimated cost, actual linked expense, variance, status); Subcon opens Subcon Packages (vendor/scope, estimated cost, vendor bill/expense linkage, variance, status); Operasional and Lain-lain stay simple (category, amount, description, vendor/receipt/payment context). Tukang/Subcon packages are not labeled RAP or BoQ in the primary UI.
+- Material stock detail appears as supporting detail after the Material budget card, never instead of it.
 - Dashboard shows total project value, total budget, consumed budget, remaining budget, projected margin, overbudget projects, and near-limit categories.
 
 ### Module 5: RAP / Material Plan
@@ -69,6 +72,7 @@ and adds material control:
 - Inventory stores current, reserved, available, minimum/buffer stock, location, average cost, and last purchase price.
 - Goods Receipt is the physical stock-in event and remains separate from vendor payment.
 - Stock usage/return is recognized in profitability at average cost even when no current-period cash moves.
+- Materials uses fixed tabs Overview, Inventory, Needs, and Activity, providing global stock operations, search/filter, grouped location inventory, approval cards, and movement/receipt history.
 
 ### Module 7: Closing & Final Profitability
 
@@ -96,7 +100,10 @@ and adds material control:
 ### Module 10: Owner Dashboard
 
 - Owner sees budget condition, category usage, actual cost, remaining budget, material shortage, leftover/reusable stock, vendor bills due, margin risk, and urgent actions.
-- AI CFO briefing is deferred and is not part of the current Dashboard experience.
+- AI CFO briefing is deferred and is not part of the current Dashboard experience; Ringkasan must not reserve empty space or expose a briefing shortcut.
+- **Dashboard Order (Ringkasan)**: (1) financial position — cash available, open receivables, open payables, obligations due within seven days, active-project budget usage, remaining budget, and projected margin; (2) at most three role-ranked priorities; (3) at most three risky active projects; (4) nearest due documents and material-attention previews; (5) three recent cash changes. Portfolio budget values include `ACTIVE` projects only; cash and open receivable/payable balances stay company-wide; outstanding balances are invoice/bill value minus posted payments with `VOID` records excluded. Owner priorities are approval and margin/project risk; Finance Admin priorities are overdue payables, overdue receivables, and operational finance work; material shortage stays supporting context after budget/finance risk.
+- **Dashboard tabs**: Persetujuan is an Owner-only decision queue ranked by budget impact, due date, waiting age, and amount (rejection requires a reason). Budget compares portfolio/project actuals against budget and target margin against projected margin. Jatuh Tempo groups open documents into Terlambat, Hari Ini, 7 Hari ke Depan, and Berikutnya using Asia/Jakarta calendar days. Rekening shows total cash, near-obligation coverage, account status, and recent reconciliation context (mutations stay in the account detail sheet). Material shows shortage/low-stock risk, receipt reversal requests, and recent waste/adjustment context without replacing the Materials page.
+- **Project Overview order**: (1) compact project identity (client, status, financial health, Detail sheet); (2) one financial health card on remaining internal budget and used percentage; (3) readiness cards for RAB, RAP, Material, and Tagihan; (4) at most three project blockers/actions; (5) up to five compact category rows, each opening full financial detail and a contextual module action.
 
 ## 3. Role-Based Value
 

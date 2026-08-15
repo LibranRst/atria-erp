@@ -19,6 +19,16 @@ export type ApprovalQueuePage = {
 
 export const APPROVAL_PAGE_SIZE = 20;
 
+export function approvalRejectionPlaceholder(item: ApprovalDetail): string {
+  if (item.type === "inventory_opening") {
+    return "Contoh: jumlah fisik tidak sesuai catatan gudang";
+  }
+  if (item.type === "vendor_payment") {
+    return "Contoh: nominal tagihan tidak sesuai kontrak atau PO";
+  }
+  return "Contoh: nominal belum sesuai dengan progres pekerjaan";
+}
+
 export function groupApprovals(
   items: readonly ApprovalDetail[],
   now: Date = new Date(),

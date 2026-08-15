@@ -165,7 +165,7 @@ function ProjectMoneyFact({
       <p className="truncate text-meta font-semibold text-on-surface-variant/60">{label}</p>
       <MoneyValue
         amount={amount}
-        variant="compactWithFull"
+        variant="compact"
         size="xl"
         tone={tone}
         className="mt-0.5"

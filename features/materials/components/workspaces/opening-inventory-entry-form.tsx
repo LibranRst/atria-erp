@@ -202,7 +202,7 @@ export function OpeningInventoryEntryForm({
             </span>
             <MoneyValue
               amount={total}
-              variant="compactWithFull"
+              variant="compact"
               size="md"
               align="right"
               className="shrink-0"

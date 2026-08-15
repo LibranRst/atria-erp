@@ -6,21 +6,21 @@
   --ios-gray-2: #aeaeb2;
   --ios-gray-3: #c7c7cc;
   --ios-gray-4: #d1d1d6;
-  --ios-gray-5: #e5e5ea;
-  --ios-gray-6: #f2f2f7;
-  --ios-canvas: #f7f7fa;
+  --ios-gray-5: #e3e3e7;
+  --ios-gray-6: #efeff2;
+  --ios-canvas: #f5f5f7;
 
   --background: var(--ios-canvas);
-  --foreground: #1c1c1e;
+  --foreground: #181817;
 
-  /* Monochrome commits with iOS-blue focus and selection. */
-  --primary: #111111;
+  /* Calm monochrome foundation with one terracotta attention family. */
+  --primary: #181817;
   --on-primary: #ffffff;
-  --primary-container: #2c2c2e;
+  --primary-container: #30302e;
   --on-primary-container: var(--ios-gray-6);
-  --accent: #007aff;
+  --accent: #b84b2c;
   --on-accent: #ffffff;
-  --accent-container: #e5f1ff;
+  --accent-container: #f6e8e3;
 
   --secondary: #636366;
   --on-secondary: #ffffff;
@@ -32,22 +32,22 @@
   --tertiary-container: #636366;
   --on-tertiary-container: var(--ios-gray-6);
 
-  --error: #ba1a1a;
+  --error: #97371f;
   --on-error: #ffffff;
-  --error-container: #ffdad6;
-  --on-error-container: #93000a;
+  --error-container: #f4e3dd;
+  --on-error-container: #742712;
 
   --surface: var(--ios-canvas);
-  --on-surface: #1c1c1e;
+  --on-surface: #181817;
   --surface-variant: var(--ios-gray-5);
   --on-surface-variant: #3a3a3c;
 
   --surface-container-lowest: #ffffff;
-  --surface-container-low: var(--ios-gray-6);
-  --surface-container: var(--ios-gray-5);
+  --surface-container-low: #efeff2;
+  --surface-container: #e8e8eb;
   --surface-container-high: var(--ios-gray-4);
   --surface-container-highest: var(--ios-gray-3);
-  --surface-inverse: #1c1c1e;
+  --surface-inverse: #181817;
   --on-surface-inverse: #ffffff;
 
   --outline: var(--ios-gray);
@@ -56,7 +56,7 @@
   --border: var(--ios-gray-4);
   --elevated: #ffffff;
   --muted: #636366;
-  --text-primary: #111111;
+  --text-primary: #181817;
   --primary-light: var(--ios-gray-6);
 
   /* Boundary and focus roles. Do not substitute status colors for keyboard focus. */
@@ -65,15 +65,20 @@
   --focus-ring: color-mix(in srgb, var(--accent) 35%, transparent);
   --focus-ring-strong: color-mix(in srgb, var(--accent) 55%, transparent);
 
-  --success: #0f766e;
-  --success-container: #e6f4f1;
-  --warning: #9a5b00;
-  --warning-container: #fff4dd;
-  --critical: #b42318;
+  --success: #30302e;
+  --success-container: #efeff2;
+  --warning: #b84b2c;
+  --warning-container: #f6e8e3;
+  --critical: #97371f;
   --on-critical: #ffffff;
-  --critical-container: #fff0ed;
-  --critical-on-inverse: #ffb5ae;
-  --warning-on-inverse: #ffd081;
+  --critical-container: #f4e3dd;
+  --critical-on-inverse: #ef9b80;
+  --warning-on-inverse: #e9a28d;
+  /* text-warning (#b84b2c) on bg-warning-container (#f6e8e3) measures 4.31:1,
+   * just under WCAG AA's 4.5:1 floor for normal text. This darkened shade
+   * (4.77:1) is for that light-container pairing only — the base --warning
+   * accent stays untouched for focus rings and every other use. */
+  --warning-on-container: #ae4528;
 
   /* Compatibility aliases for form-validation and legacy presentation call sites. */
   --success-light: var(--success-container);
@@ -127,6 +132,7 @@
   --color-warning: var(--warning);
   --color-warning-container: var(--warning-container);
   --color-warning-light: var(--warning-light);
+  --color-warning-on-container: var(--warning-on-container);
   --color-critical: var(--critical);
   --color-on-critical: var(--on-critical);
   --color-critical-container: var(--critical-container);
@@ -138,13 +144,33 @@
   --color-focus-ring: var(--focus-ring);
   --color-focus-ring-strong: var(--focus-ring-strong);
 
-  /* Semantic elevation roles. Nested metrics and ordinary rows stay shadow-free. */
-  --shadow-surface: 0 1px 2px rgb(0 0 0 / 0.025), 0 10px 28px rgb(0 0 0 / 0.055);
-  --shadow-raised: 0 2px 4px rgb(0 0 0 / 0.04), 0 14px 34px rgb(0 0 0 / 0.12);
-  --shadow-floating: 0 3px 6px rgb(0 0 0 / 0.08), 0 18px 42px rgb(0 0 0 / 0.14);
-  --shadow-control: 0 5px 16px rgb(0 0 0 / 0.08);
-  --shadow-primary: 0 6px 16px rgb(0 0 0 / 0.14);
-  --shadow-inverse: 0 16px 38px rgb(0 0 0 / 0.14);
+  /*
+   * Semantic elevation roles.
+   *
+   * Every role is a top rim-light plus a tight, low-blur lift. Two intensity
+   * tiers exist because the rim is a *white* inset: on a light surface it needs
+   * to be strong to register at all (and is simply invisible on pure #ffffff,
+   * where the drop shadow alone does the lifting), while on a near-black
+   * surface the same value would read as a glare line instead of a highlight.
+   *
+   * Nested tiles, metric cells, and recessed tab tracks stay shadow-free — a
+   * surface that sits *inside* another owner, or that is deliberately recessed,
+   * must not cast its own lift.
+   */
+  --shadow-surface:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03),
+    0 3px 8px rgb(24 24 23 / 0.05);
+  --shadow-control:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03),
+    0 3px 8px rgb(24 24 23 / 0.05);
+  --shadow-primary:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.12), 0 1px 1px rgb(24 24 23 / 0.1),
+    0 3px 8px rgb(24 24 23 / 0.14);
+  --shadow-inverse:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.12), 0 1px 1px rgb(24 24 23 / 0.1),
+    0 3px 8px rgb(24 24 23 / 0.14);
+  --shadow-raised: inset 0 1px 0 0 rgb(255 255 255 / 0.12), 0 10px 28px rgb(24 24 23 / 0.09);
+  --shadow-floating: inset 0 1px 0 0 rgb(255 255 255 / 0.12), 0 14px 34px rgb(24 24 23 / 0.18);
   --shadow-sheet: 0 -24px 80px rgb(0 0 0 / 0.28);
   --shadow-overlay: 0 28px 90px rgb(0 0 0 / 0.32);
 
@@ -159,7 +185,7 @@
   --spacing-xl: 32px;
 
   /* Font Families */
-  --font-sans: var(--font-inter), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /*
@@ -171,17 +197,22 @@
   --text-eyebrow: 9px;
   --text-eyebrow--line-height: 12px;
   --text-meta: 10px;
-  --text-meta--line-height: 16px;
-  --text-support: 11px;
-  --text-support--line-height: 16px;
-  --text-row: 13px;
-  --text-row--line-height: 16px;
-  --text-section: 15px;
-  --text-section--line-height: 20px;
-  --text-title: 17px;
-  --text-title--line-height: 24px;
-  --text-focal: 28px;
-  --text-focal--line-height: 32px;
+  --text-meta--line-height: 15px;
+  --text-support: 12px;
+  --text-support--line-height: 17px;
+  --text-row: 14px;
+  --text-row--line-height: 19px;
+  --text-section: 17px;
+  --text-section--line-height: 22px;
+  --text-title: 24px;
+  --text-title--line-height: 29px;
+  --text-focal: 30px;
+  --text-focal--line-height: 34px;
+
+  /* Calm Modern Luxury geometry roles. */
+  --radius-owner: 28px;
+  --radius-inset: 20px;
+  --radius-icon: 16px;
 
   /* Explicitly restore default max-width scales to prevent collision with custom spacing */
   --max-width-xs: 20rem;
@@ -249,7 +280,6 @@ body {
 /* Custom Styles from Reference Design */
 .premium-card {
   background-color: var(--surface-container-lowest);
-  box-shadow: var(--shadow-surface);
   border: 1px solid var(--ring-subtle);
   border-radius: 28px;
 }
@@ -313,11 +343,16 @@ body {
 }
 
 .money-value-exact {
-  font-size: clamp(0.4rem, 1.8vw, 0.5625rem);
-  line-height: 1.1;
+  /* Floor stays at the type ramp's Meta role (10px) across the product's whole
+   * 320-430px supported width; the old clamp(0.4rem, 1.8vw, 0.5625rem) never
+   * reached its own 9px ceiling in that range and rendered near-illegible
+   * (~7px) for perfectly ordinary amounts. Ellipsis truncates the rare
+   * genuinely oversized value instead of shrinking it further. */
+  font-size: clamp(0.625rem, 2.8vw, 0.75rem);
+  line-height: 1.15;
   overflow: hidden;
   overflow-wrap: normal;
-  text-overflow: clip;
+  text-overflow: ellipsis;
   white-space: nowrap;
   word-break: keep-all;
 }
@@ -381,7 +416,7 @@ body {
 
 /* Align toaster container with the mobile shell (max-w-md / 448px) */
 [data-sonner-toaster] {
-  font-family: var(--font-inter), sans-serif !important;
+  font-family: var(--font-manrope), sans-serif !important;
   width: calc(100% - 40px) !important;
   max-width: calc(448px - 40px) !important;
   left: 50% !important;
@@ -430,14 +465,14 @@ body {
 
 /* Style Title and Description */
 [data-sonner-toast] [data-title] {
-  font-family: var(--font-inter), sans-serif !important;
+  font-family: var(--font-manrope), sans-serif !important;
   font-size: 14px !important;
   font-weight: 600 !important;
   line-height: 1.4 !important;
 }
 
 [data-sonner-toast] [data-description] {
-  font-family: var(--font-inter), sans-serif !important;
+  font-family: var(--font-manrope), sans-serif !important;
   font-size: 12px !important;
   font-weight: 400 !important;
   line-height: 1.4 !important;
@@ -447,7 +482,7 @@ body {
 
 /* Style actions/buttons inside toast to match Atria fully-rounded capsule style */
 [data-sonner-toast] [data-button] {
-  font-family: var(--font-inter), sans-serif !important;
+  font-family: var(--font-manrope), sans-serif !important;
   border-radius: 9999px !important; /* Capsule style */
   font-weight: 600 !important;
   padding: 6px 14px !important;

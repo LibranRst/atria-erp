@@ -1,0 +1,381 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-04T12:45:00.000Z",
+  "title": "Design System: Atria ERP",
+  "extensions": {
+    "colorMeta": {
+      "ink-primary": {
+        "role": "primary",
+        "displayName": "Ink Primary",
+        "canonical": "oklch(20.9% 0.002 106.6)",
+        "tonalRamp": [
+          "oklch(15% 0.002 106.6)",
+          "oklch(28% 0.002 106.6)",
+          "oklch(40% 0.002 106.6)",
+          "oklch(52% 0.002 106.6)",
+          "oklch(65% 0.002 106.6)",
+          "oklch(78% 0.002 106.6)",
+          "oklch(88% 0.002 106.6)",
+          "oklch(95% 0.002 106.6)"
+        ]
+      },
+      "terracotta-accent": {
+        "role": "accent",
+        "displayName": "Terracotta Accent",
+        "canonical": "oklch(55.2% 0.149 36.5)",
+        "tonalRamp": [
+          "oklch(15% 0.149 36.5)",
+          "oklch(28% 0.149 36.5)",
+          "oklch(40% 0.149 36.5)",
+          "oklch(52% 0.149 36.5)",
+          "oklch(65% 0.149 36.5)",
+          "oklch(78% 0.149 36.5)",
+          "oklch(88% 0.149 36.5)",
+          "oklch(95% 0.149 36.5)"
+        ]
+      },
+      "terracotta-critical": {
+        "role": "critical",
+        "displayName": "Terracotta Critical",
+        "canonical": "oklch(47.0% 0.134 35.1)",
+        "tonalRamp": [
+          "oklch(15% 0.134 35.1)",
+          "oklch(28% 0.134 35.1)",
+          "oklch(40% 0.134 35.1)",
+          "oklch(52% 0.134 35.1)",
+          "oklch(65% 0.134 35.1)",
+          "oklch(78% 0.134 35.1)",
+          "oklch(88% 0.134 35.1)",
+          "oklch(95% 0.134 35.1)"
+        ]
+      },
+      "ios-canvas": {
+        "role": "neutral",
+        "displayName": "iOS Canvas",
+        "canonical": "oklch(97.1% 0.003 286.4)",
+        "tonalRamp": [
+          "oklch(15% 0.003 286.4)",
+          "oklch(28% 0.003 286.4)",
+          "oklch(40% 0.003 286.4)",
+          "oklch(52% 0.003 286.4)",
+          "oklch(65% 0.003 286.4)",
+          "oklch(78% 0.003 286.4)",
+          "oklch(88% 0.003 286.4)",
+          "oklch(95% 0.003 286.4)"
+        ]
+      },
+      "surface-white": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "oklch(100% 0 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0 89.9)",
+          "oklch(28% 0 89.9)",
+          "oklch(40% 0 89.9)",
+          "oklch(52% 0 89.9)",
+          "oklch(65% 0 89.9)",
+          "oklch(78% 0 89.9)",
+          "oklch(88% 0 89.9)",
+          "oklch(95% 0 89.9)"
+        ]
+      },
+      "inset-gray": {
+        "role": "neutral",
+        "displayName": "Inset Gray",
+        "canonical": "oklch(95.3% 0.004 286.3)",
+        "tonalRamp": [
+          "oklch(15% 0.004 286.3)",
+          "oklch(28% 0.004 286.3)",
+          "oklch(40% 0.004 286.3)",
+          "oklch(52% 0.004 286.3)",
+          "oklch(65% 0.004 286.3)",
+          "oklch(78% 0.004 286.3)",
+          "oklch(88% 0.004 286.3)",
+          "oklch(95% 0.004 286.3)"
+        ]
+      },
+      "neutral-gray": {
+        "role": "neutral",
+        "displayName": "Neutral Gray",
+        "canonical": "oklch(50.1% 0.005 286.2)",
+        "tonalRamp": [
+          "oklch(15% 0.005 286.2)",
+          "oklch(28% 0.005 286.2)",
+          "oklch(40% 0.005 286.2)",
+          "oklch(52% 0.005 286.2)",
+          "oklch(65% 0.005 286.2)",
+          "oklch(78% 0.005 286.2)",
+          "oklch(88% 0.005 286.2)",
+          "oklch(95% 0.005 286.2)"
+        ]
+      },
+      "outline-gray": {
+        "role": "neutral",
+        "displayName": "Outline Gray",
+        "canonical": "oklch(64.8% 0.007 286.2)",
+        "tonalRamp": [
+          "oklch(15% 0.007 286.2)",
+          "oklch(28% 0.007 286.2)",
+          "oklch(40% 0.007 286.2)",
+          "oklch(52% 0.007 286.2)",
+          "oklch(65% 0.007 286.2)",
+          "oklch(78% 0.007 286.2)",
+          "oklch(88% 0.007 286.2)",
+          "oklch(95% 0.007 286.2)"
+        ]
+      },
+      "accent-container": {
+        "role": "accent",
+        "displayName": "Accent Container",
+        "canonical": "oklch(94.1% 0.017 40.8)",
+        "tonalRamp": [
+          "oklch(15% 0.017 40.8)",
+          "oklch(28% 0.017 40.8)",
+          "oklch(40% 0.017 40.8)",
+          "oklch(52% 0.017 40.8)",
+          "oklch(65% 0.017 40.8)",
+          "oklch(78% 0.017 40.8)",
+          "oklch(88% 0.017 40.8)",
+          "oklch(95% 0.017 40.8)"
+        ]
+      },
+      "critical-container": {
+        "role": "critical",
+        "displayName": "Critical Container",
+        "canonical": "oklch(92.8% 0.020 40.5)",
+        "tonalRamp": [
+          "oklch(15% 0.020 40.5)",
+          "oklch(28% 0.020 40.5)",
+          "oklch(40% 0.020 40.5)",
+          "oklch(52% 0.020 40.5)",
+          "oklch(65% 0.020 40.5)",
+          "oklch(78% 0.020 40.5)",
+          "oklch(88% 0.020 40.5)",
+          "oklch(95% 0.020 40.5)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The one justified focal financial value on a surface. Used at most once per page."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page title."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section title."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Row title or primary row value."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Eyebrow and uppercase metadata labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "surface",
+        "value": "inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03), 0 3px 8px rgb(24 24 23 / 0.05)",
+        "purpose": "Resting lift (light tier) for owning cards, grouped surfaces, and panel sections. The white rim is invisible on a pure #ffffff card, where the drop shadow alone does the lifting."
+      },
+      {
+        "name": "control",
+        "value": "inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03), 0 3px 8px rgb(24 24 23 / 0.05)",
+        "purpose": "Resting lift (light tier) for capsule and circular controls: buttons, badges, search bars, standalone inputs, header icon buttons, avatar."
+      },
+      {
+        "name": "primary",
+        "value": "inset 0 1px 0 0 rgb(255 255 255 / 0.12), 0 1px 1px rgb(24 24 23 / 0.1), 0 3px 8px rgb(24 24 23 / 0.14)",
+        "purpose": "Resting lift (dark tier) for ink-primary commit buttons and the active segmented-tab/nav pill. Rim dimmed to 12% so it reads as a highlight, not a glare line."
+      },
+      {
+        "name": "inverse",
+        "value": "inset 0 1px 0 0 rgb(255 255 255 / 0.12), 0 1px 1px rgb(24 24 23 / 0.1), 0 3px 8px rgb(24 24 23 / 0.14)",
+        "purpose": "Resting lift (dark tier) for the dark focal financial surface."
+      },
+      {
+        "name": "raised",
+        "value": "inset 0 1px 0 0 rgb(255 255 255 / 0.12), 0 10px 28px rgb(24 24 23 / 0.09)",
+        "purpose": "Menus, floating navigation chrome, sticky action bars, and tooltips."
+      },
+      {
+        "name": "floating",
+        "value": "inset 0 1px 0 0 rgb(255 255 255 / 0.12), 0 14px 34px rgb(24 24 23 / 0.18)",
+        "purpose": "The FAB's resting elevation. Reserved for what genuinely floats — never a static dark card, which takes inverse."
+      },
+      {
+        "name": "sheet",
+        "value": "0 -24px 80px rgb(0 0 0 / 0.28)",
+        "purpose": "Bottom sheets rising off the page."
+      },
+      {
+        "name": "overlay",
+        "value": "0 28px 90px rgb(0 0 0 / 0.32)",
+        "purpose": "Centered modal/media overlays."
+      }
+    ],
+    "motion": [
+      {
+        "name": "spring-snappy",
+        "value": "spring(stiffness:380, damping:30, mass:0.8)",
+        "purpose": "Scale taps and micro-interactions (buttons, icon buttons)."
+      },
+      {
+        "name": "spring-smooth",
+        "value": "spring(stiffness:300, damping:32, mass:1)",
+        "purpose": "Slide-up drawers, sheets, modals, meaningful local layout changes."
+      },
+      {
+        "name": "spring-bouncy",
+        "value": "spring(stiffness:300, damping:26, mass:1)",
+        "purpose": "Sliding active-tab/nav pill indicators, celebratory feedback."
+      },
+      {
+        "name": "ease-smooth",
+        "value": "cubic-bezier(0.32, 0.94, 0.6, 1), 0.35s",
+        "purpose": "Backdrop and opacity fades."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "shell-max",
+        "value": "448px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one obvious commit action on a surface or sheet.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Simpan</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 9999px; min-height: 48px; padding: 0 20px; font-weight: 700; font-size: 12px; white-space: nowrap; border: none; cursor: pointer; transition: opacity 0.15s ease; } .ds-btn:active { transform: scale(0.97); } .ds-btn:disabled { cursor: not-allowed; opacity: 0.45; } .ds-btn-primary { background: #181817; color: #ffffff; box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.12), 0 1px 1px rgb(24 24 23 / 0.1), 0 3px 8px rgb(24 24 23 / 0.14); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, #b84b2c 35%, transparent); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A visible supporting action beside a primary commit.",
+      "html": "<button class=\"ds-btn ds-btn-secondary\">Batal</button>",
+      "css": ".ds-btn-secondary { background: #ffffff; color: #181817; box-shadow: inset 0 0 0 1px color-mix(in srgb, #3c3c43 6%, transparent), inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03), 0 3px 8px rgb(24 24 23 / 0.05); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: inset 0 0 0 1px color-mix(in srgb, #3c3c43 6%, transparent), 0 0 0 2px color-mix(in srgb, #b84b2c 35%, transparent); }"
+    },
+    {
+      "name": "Critical Button",
+      "kind": "button",
+      "refersTo": "button-critical",
+      "description": "Solid irreversible-action commit, used only after explicit confirmation.",
+      "html": "<button class=\"ds-btn ds-btn-critical\">Hapus permanen</button>",
+      "css": ".ds-btn-critical { background: #97371f; color: #ffffff; }"
+    },
+    {
+      "name": "Standalone Input",
+      "kind": "input",
+      "refersTo": "input-standalone",
+      "description": "A white full-capsule field used outside a grouped form panel.",
+      "html": "<div class=\"ds-input\"><input type=\"text\" placeholder=\"Cari project\" /></div>",
+      "css": ".ds-input { display: flex; align-items: center; min-height: 48px; width: 100%; border-radius: 9999px; border: 1px solid color-mix(in srgb, #8e8e93 35%, transparent); background: #ffffff; padding: 0 20px; box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03), 0 3px 8px rgb(24 24 23 / 0.05); transition: border-color 0.15s ease, box-shadow 0.15s ease; } .ds-input:focus-within { border-color: #b84b2c; box-shadow: 0 0 0 2px color-mix(in srgb, #b84b2c 35%, transparent); } .ds-input input { flex: 1; min-width: 0; background: transparent; border: none; outline: none; font-size: 14px; font-weight: 600; color: #181817; } .ds-input input::placeholder { color: color-mix(in srgb, #636366 55%, transparent); }"
+    },
+    {
+      "name": "Grouped Card",
+      "kind": "card",
+      "refersTo": "card-grouped",
+      "description": "A white owning surface holding related rows with hairline dividers, carrying the resting lift.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-row\"><span>Budget Material</span><strong>Rp 35.000.000</strong></div><div class=\"ds-card-row\"><span>Terpakai</span><strong>Rp 18.250.000</strong></div></div>",
+      "css": ".ds-card { background: #ffffff; border-radius: 28px; box-shadow: inset 0 0 0 1px color-mix(in srgb, #3c3c43 2%, transparent), inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03), 0 3px 8px rgb(24 24 23 / 0.05); overflow: hidden; } .ds-card-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; font-size: 12px; color: #181817; } .ds-card-row:not(:last-child) { border-bottom: 1px solid rgba(0,0,0,0.055); } .ds-card-row strong { font-variant-numeric: tabular-nums; font-weight: 800; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-status",
+      "description": "A 24px capsule communicating semantic state with a dot for pending/warning/critical.",
+      "html": "<span class=\"ds-badge ds-badge-warning\"><span class=\"ds-badge-dot\"></span>Perlu perhatian</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; border-radius: 9999px; padding: 0 10px; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03), 0 3px 8px rgb(24 24 23 / 0.05); } .ds-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; } .ds-badge-healthy { background: #efeff2; color: #181817; } .ds-badge-warning { background: #f6e8e3; color: #b84b2c; } .ds-badge-critical { background: #f4e3dd; color: #97371f; }"
+    },
+    {
+      "name": "Segmented Tabs",
+      "kind": "nav",
+      "refersTo": "segmented-tabs-track",
+      "description": "An inset-gray capsule track with a sliding ink-primary active pill.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab ds-tab-active\">Ringkasan</button><button class=\"ds-tab\">Persetujuan</button><button class=\"ds-tab\">Budget</button></div>",
+      "css": ".ds-tabs { display: flex; width: 100%; border-radius: 9999px; background: #efeff2; padding: 4px; gap: 2px; } .ds-tab { flex: 1; min-height: 40px; border: none; border-radius: 9999px; background: transparent; font-weight: 700; font-size: 12px; color: #636366; cursor: pointer; transition: color 0.15s ease; } .ds-tab-active { background: #181817; color: #ffffff; }"
+    },
+    {
+      "name": "Duotone Icon Tile",
+      "kind": "custom",
+      "refersTo": "icon-tile",
+      "description": "A 40px neutral or tinted tile used for repeated-row identity, categories, and priorities.",
+      "html": "<span class=\"ds-icon-tile\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\"><path d=\"M4 7h16M4 12h16M4 17h10\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg></span>",
+      "css": ".ds-icon-tile { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 16px; background: #efeff2; color: #181817; flex-shrink: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Command Center",
+    "overview": "Atria looks like a calm surface hiding real operational power underneath. Every screen — Owner dashboard, expense tracker, stock movement, reconciliation — carries genuine financial and material control (budgets, margin risk, cash ledger, over-budget approvals), but presents it the way modern iOS presents a bank balance: flat tonal layering, one confident dark surface for the number that matters, quiet grouped rows for everything else, and a single restrained terracotta accent reserved for what actually needs attention. Nothing shouts. A project team member checking material readiness one-handed at a job site, and an Owner scanning margin risk in 30 seconds from a phone, should both feel the same unhurried confidence — competence expressed through restraint, not decoration.\n\nThis is deliberately not a generic SaaS admin dashboard and not a dense accounting spreadsheet. It borrows iOS's clear grouping, confident typography, and disciplined motion, not its glass, gradients, or oversized chrome. The system draws its entire color vocabulary from a monochrome ink-and-canvas foundation plus exactly one accent family (terracotta), so status and priority read through intensity and position, never through a rainbow of category colors.",
+    "keyCharacteristics": [
+      "Solid tonal layering (canvas → white owner surface → inset gray) doing the structural work, finished with a barely-perceptible resting lift on owning surfaces — never glass or heavy elevation",
+      "One monochrome ink primary, one terracotta accent family covering both focus and warning/critical",
+      "Compact but never cramped: hierarchy carries density, not shrunken type",
+      "Fully capsule-shaped controls (buttons, tabs, badges, inputs) contrasted with 28/20/16px-radius container surfaces",
+      "Motion is restrained and purposeful — spring-based, never decorative or continuous"
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "Terracotta is the only hue in the system. Warning and critical are the same family at different intensity, not different colors. Healthy, completed, pending, and inactive states stay neutral ink/gray with icon and copy carrying the meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Warm-Neutral Rule",
+        "body": "Neutral surfaces never take on cream, beige, brown, red, or yellow undertones. A neutral is always drawn from the cool ink/gray/canvas family, never approximated with a warm gray utility.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Money Rule",
+        "body": "Every monetary value uses tabular numerals so digits never shift width as they change. Primary values stay on one line at 320–430px; fall back to a compact value plus exact secondary value when too long, never a wrapped primary.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Role Rule",
+        "body": "Pick the semantic type role whose purpose matches, not the one whose pixel size happens to look close.",
+        "section": "typography"
+      },
+      {
+        "name": "The Nested-Stays-Flat Rule",
+        "body": "A surface that sits inside another owner, or that is deliberately recessed, carries no lift: inset metric cells, icon tiles, metric pills, grouped form rows, and segmented-tab tracks. Elevation marks what owns hierarchy, so applying it to a nested element destroys the signal."
+      },
+      {
+        "name": "The Lift-Is-Not-Loud Rule",
+        "body": "The resting lift must stay imperceptible element-by-element. If a shadow is legible on its own, it belongs to floating chrome (raised/floating/sheet/overlay), not to a resting surface — and if a static card reaches for shadow-floating, the role is wrong, not the value."
+      }
+    ],
+    "dos": [
+      "Do keep exactly one accent hue (terracotta) system-wide; express urgency through its intensity, never a new hue.",
+      "Do give every owning surface and standalone control its semantic resting lift (shadow-surface/shadow-control, or the dark-tier shadow-primary/shadow-inverse), and keep everything nested inside one flat.",
+      "Do keep every standalone interactive control a full capsule, and every container surface on the fixed 28/20/16px radius scale.",
+      "Do keep primary monetary values on one line with tabular numerals at 320–430px.",
+      "Do combine status with copy and an icon/shape/position — never color alone.",
+      "Do keep motion purposeful and spring-based (lib/utils/motion.ts presets only).",
+      "Do put simple repeated events, transactions, and master-data rows on one grouped surface with dividers; reserve an individual card for a genuinely independent, decision-heavy entity.",
+      "Do keep every main route's loading.tsx a structural skeleton matching the final hierarchy, never a centered spinner.",
+      "Do keep effective touch targets at 48×48px even when a visible control is drawn smaller, and preserve keyboard focus, screen-reader labels, safe-area clearance, and reduced-motion behavior."
+    ],
+    "donts": [
+      "Don't add a second or third accent color, a rainbow of category colors, or a locally-defined focus-ring color.",
+      "Don't hand-roll a shadow value or reach past the semantic role — no shadow-[...], no raw box-shadow, and no shadow-floating on a static card. Never put a lift on a nested row, icon tile, metric cell, or recessed tab track, and never apply blur or glass to an ordinary surface.",
+      "Don't use glassmorphism, decorative gradients, or oversized touch chrome anywhere except a configured bank-account identity surface.",
+      "Don't wrap a primary money value, or let a value's digits reflow without tabular numerals.",
+      "Don't add whole-page transitions, section entrances, or list-stagger animation.",
+      "Don't warm a neutral surface with cream, beige, brown, red, or yellow undertones.",
+      "Don't ship a generic admin-dashboard or spreadsheet-like composition of summary card, header pill, and identical rounded cards for every section.",
+      "Don't use an inset metric grid for a single title/meta/value row, activity/history/transactions, or more than three equal-weight cells in one mobile row.",
+      "Don't nest a capsule inside another owning surface for ordinary grouped rows, or place a colored severity rail or short marker beside an ordinary list icon.",
+      "Don't leave a hidden action or ambiguous icon-only control without an accessible label, or build UI from placeholder/dummy data when real domain data exists."
+    ]
+  }
+}

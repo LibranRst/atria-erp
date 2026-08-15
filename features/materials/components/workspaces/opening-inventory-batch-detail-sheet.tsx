@@ -134,7 +134,7 @@ export function OpeningInventoryBatchDetailSheet({
                 value={
                   <MoneyValue
                     amount={presentedBatch.totalValue}
-                    variant="compactWithFull"
+                    variant="compact"
                     size="sm"
                     align="right"
                   />

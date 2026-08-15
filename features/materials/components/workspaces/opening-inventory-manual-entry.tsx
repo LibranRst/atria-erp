@@ -163,7 +163,7 @@ export function OpeningInventoryManualEntry({
                 helper="Jumlah fisik × harga pokok rata-rata."
                 readOnly
               >
-                <MoneyValue amount={subtotal} variant="compactWithFull" size="sm" align="right" />
+                <MoneyValue amount={subtotal} variant="compact" size="sm" align="right" />
               </FormField>
             </FormSection>
           );

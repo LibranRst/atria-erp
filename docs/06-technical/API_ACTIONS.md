@@ -81,6 +81,12 @@ Settings actions are Zod-validated and RBAC-protected:
 
 The feature requires `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED=true` and is hard-disabled when `NODE_ENV=production`. Start/stop operations are transactional and audited. No password is read, reset, or bypassed.
 
+## AI Chat Actions
+
+- `getLatestAiConversation()` and `getAiConversation(conversationId)` read the signed-in user's own chat history. Both require `use:ai_chat`; a conversation belonging to another user is reported as `NOT_FOUND` so its existence never leaks.
+- `confirmAiExpenseProposal(input)` is the **only** write reachable from an AI conversation, and only after a human presses the confirmation button on a proposal card. It re-validates with `aiExpenseProposalSchema` and delegates to `submitFieldRequest`; it contains no financial logic, no transaction, and no balance math of its own. Stock handling, material id, and RAP item id are not accepted from this path, so the AI route cannot cause a stock side effect. The created record is attributed to the confirming user.
+- Chat streaming itself is not a Server Action: it runs at `app/api/ai/chat/route.ts`, the one internal API route, and is read-only. See `docs/06-technical/AI_AGENT_ARCHITECTURE.md`.
+
 ## Owner Onboarding Control Room
 
 - `advanceOwnerOnboardingStep({ stepId, disposition, initialStockDecision? })` atomically records the reviewed/skipped disposition and destination step in one transaction and audit entry.

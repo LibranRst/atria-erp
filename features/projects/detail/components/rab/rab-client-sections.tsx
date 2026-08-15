@@ -63,7 +63,7 @@ export function RabClientSummaryPanel({
     rabEstimate.bundles.filter((bundle) => !bundle.isHidden).length;
 
   return (
-    <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
+    <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
@@ -141,7 +141,7 @@ function RabFact({
       <p className="truncate text-[8px] font-bold tracking-wide text-white/50 uppercase">{label}</p>
       <MoneyValue
         amount={value}
-        variant="compactWithFull"
+        variant="compact"
         tone={danger ? "danger" : "inverse"}
         size="xs"
         align={align === "right" ? "right" : "left"}
@@ -192,7 +192,7 @@ export function RabItemsPanel({
     >
       <div
         id="rab-items"
-        className="divide-y divide-outline-variant/25 overflow-hidden rounded-[20px] bg-surface-container-low"
+        className="divide-y divide-outline-variant/25 overflow-hidden rounded-inset bg-surface-container-low"
       >
         {rabEstimate.bundles.map((bundle) => (
           <RabBundleRow

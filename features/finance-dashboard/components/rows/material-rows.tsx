@@ -7,7 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { DashboardMaterialIssue } from "@/features/finance-dashboard/types/dashboard-types";
 import { formatShortDate } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, DuotoneIconTile } from "@/components/ui";
 const dashboardRowPressScale = { scale: 0.985 } as const;
 
 export function MaterialIssueRow({
@@ -54,11 +54,12 @@ export function MaterialIssueRow({
           className="block rounded-[22px] px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5 max-[430px]:px-3"
         >
           <div className="flex items-start gap-3">
-            <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${item.severity === "CRITICAL" ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
-            >
-              <AppIcon name="inventory_2" className="h-4.5 w-4.5" />
-            </span>
+            <DuotoneIconTile
+              name="inventory_2"
+              tone={item.severity === "CRITICAL" ? "critical" : "attention"}
+              className="h-9 w-9"
+              iconClassName="h-4.5 w-4.5"
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
                 <p
@@ -81,7 +82,7 @@ export function MaterialIssueRow({
             </div>
           </div>
 
-          <div className="mt-3 flex min-h-9 items-center gap-3 rounded-[15px] bg-surface-container-low/70 px-3 py-2 text-eyebrow font-semibold text-on-surface-variant">
+          <div className="mt-3 flex min-h-9 items-center gap-3 rounded-inset bg-surface-container-low px-3 py-2 text-eyebrow font-semibold text-on-surface-variant">
             <span className="min-w-0 flex-1 truncate">
               Tersedia{" "}
               <strong className="font-mono text-on-surface">
@@ -96,12 +97,7 @@ export function MaterialIssueRow({
                 </strong>
               </span>
             ) : null}
-            <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-accent shadow-control"
-              aria-hidden="true"
-            >
-              <AppIcon name="chevron_right" className="text-[15px]" />
-            </span>
+            <AppIcon name="chevron_right" className="icon-sm shrink-0 text-on-surface-variant/55" />
           </div>
         </Link>
       </motion.div>
@@ -123,7 +119,7 @@ export function MaterialIssueRow({
     >
       <Link
         href={item.href}
-        className="block rounded-[20px] px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5"
+        className="block rounded-inset px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5"
       >
         <div className="flex items-start gap-3">
           <span

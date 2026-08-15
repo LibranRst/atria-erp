@@ -44,8 +44,8 @@ export function DashboardOverviewTab({
   return (
     <div className="space-y-sm">
       {showOnboardingCard && onboarding ? (
-        <section className="flex flex-col gap-2 rounded-[26px] bg-surface-inverse p-2 text-white shadow-floating ring-1 ring-white/8 max-[430px]:rounded-[22px] max-[430px]:p-4">
-          <div className="flex flex-col gap-2 rounded-2xl bg-white/7.5 p-3">
+        <section className="flex flex-col gap-2 rounded-owner bg-surface-inverse p-2 text-white shadow-inverse ring-1 ring-white/8 max-[430px]:p-4">
+          <div className="flex flex-col gap-2 rounded-inset bg-white/8 p-3">
             <div className="min-w-0">
               <span className="block text-base leading-5 font-bold tracking-[-0.02em] text-white">
                 {onboarding.state.status === "PAUSED"
@@ -91,7 +91,7 @@ export function DashboardOverviewTab({
 
           <div className="flex flex-row items-center justify-end gap-4 px-1 py-1">
             <span className="font-mono text-eyebrow font-semibold text-white/70">
-              {completedSteps}/{setupSteps.length} Selesai
+              {completedSteps}/{setupSteps.length} selesai · {setupProgress}%
             </span>
             <Link
               href={`/onboarding?step=${onboarding.state.currentStep}`}

@@ -187,7 +187,7 @@ export function TextInput({
       className={cx(
         grouped
           ? "flex min-h-8 w-full min-w-0 items-center gap-2 border-0 bg-transparent px-0 focus-within:ring-0"
-          : "flex min-h-12 w-full min-w-0 items-center gap-2 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 transition focus-within:border-accent focus-within:ring-2 focus-within:ring-focus-ring",
+          : "flex min-h-12 w-full min-w-0 items-center gap-2 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 shadow-control transition focus-within:border-accent focus-within:ring-2 focus-within:ring-focus-ring",
         disabled && "opacity-55",
         readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
         className,
@@ -273,7 +273,7 @@ export function Textarea({
           ? "min-h-20 w-full min-w-0 resize-none border-0 bg-transparent px-0 py-1 text-sm leading-5 font-semibold text-on-surface caret-accent outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed disabled:opacity-55"
           : cx(
               controlClass,
-              "min-h-24 resize-none rounded-2xl bg-surface-container-lowest py-3 placeholder:text-on-surface-variant/55 focus:border-accent focus:ring-2 focus:ring-focus-ring",
+              "min-h-24 resize-none rounded-2xl bg-surface-container-lowest py-3 shadow-control placeholder:text-on-surface-variant/55 focus:border-accent focus:ring-2 focus:ring-focus-ring",
             ),
         readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
         className,
@@ -421,7 +421,7 @@ export function QuantityStepper({
         "grid grid-cols-[44px_1fr_44px] overflow-hidden focus-within:ring-2 focus-within:ring-focus-ring",
         grouped
           ? "min-h-10 rounded-full bg-surface-container-low"
-          : "min-h-12 rounded-full border border-outline-variant/35 bg-surface-container-lowest",
+          : "min-h-12 rounded-full border border-outline-variant/35 bg-surface-container-lowest shadow-control",
       )}
     >
       <button
@@ -479,7 +479,7 @@ export function ChoiceRow({
       className={cx(
         grouped
           ? "flex min-h-14 w-full items-center gap-3 bg-surface-container-lowest px-4 py-3 text-left transition active:bg-surface-container-low disabled:opacity-45"
-          : "flex min-h-12 w-full items-center gap-3 rounded-full border px-5 py-3 text-left transition active:scale-[0.99] disabled:opacity-45",
+          : "flex min-h-12 w-full items-center gap-3 rounded-full border px-5 py-3 text-left shadow-control transition active:scale-[0.99] disabled:opacity-45",
         checked
           ? grouped
             ? "text-accent"

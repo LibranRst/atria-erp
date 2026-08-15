@@ -90,7 +90,7 @@ export function MaterialDetail({
               <span className="text-eyebrow font-semibold text-white/58">Nilai stok saat ini</span>
               <MoneyValue
                 amount={summary.stockValue}
-                variant="compactWithFull"
+                variant="compact"
                 tone="inverse"
                 align="right"
                 size="sm"
@@ -215,7 +215,7 @@ export function MaterialLocationStockRow({
           </p>
           <MoneyValue
             amount={row.averageCost}
-            variant="compactWithFull"
+            variant="compact"
             size="xs"
             className="mt-1"
           />
@@ -226,7 +226,7 @@ export function MaterialLocationStockRow({
           </p>
           <MoneyValue
             amount={value}
-            variant="compactWithFull"
+            variant="compact"
             align="right"
             size="xs"
             className="mt-1"
@@ -265,7 +265,7 @@ function ShortageRow({
         </p>
         <MoneyValue
           amount={estimatedTotalCost}
-          variant="compactWithFull"
+          variant="compact"
           align="right"
           size="xs"
           className="mt-1"

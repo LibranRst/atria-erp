@@ -180,7 +180,7 @@ function InventoryMaterialRow({
         <span className="flex shrink-0 items-center gap-1.5">
           <MoneyValue
             amount={summary.stockValue}
-            variant="compactWithFull"
+            variant="compact"
             align="right"
             size="xs"
           />

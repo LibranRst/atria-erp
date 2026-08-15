@@ -30,7 +30,7 @@ export function BudgetItemsList({
       </div>
 
       {budgetItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-[28px] border border-outline-variant/20 bg-white p-md py-8 text-center shadow-surface">
+        <div className="flex flex-col items-center justify-center rounded-owner border border-outline-variant/20 bg-white p-md py-8 text-center shadow-surface">
           <AppIcon name="list" className="mb-1 icon-xl text-on-surface-variant" />
           <p className="font-body-xs text-on-surface-variant">
             Belum ada item dalam draft Project Budget ini.
@@ -81,7 +81,7 @@ function BudgetItemCard({ item }: { readonly item: BudgetItem }): React.JSX.Elem
   const isOverrun = spent > allocated;
 
   return (
-    <div className="space-y-md rounded-[28px] border border-outline-variant/20 bg-white p-md shadow-surface transition-colors hover:bg-surface-container-low">
+    <div className="space-y-md rounded-owner border border-outline-variant/20 bg-white p-md shadow-surface transition-colors hover:bg-surface-container-low">
       <div className="flex flex-col gap-sm">
         <div className="flex items-start justify-between gap-md">
           <div className="min-w-0 space-y-base">

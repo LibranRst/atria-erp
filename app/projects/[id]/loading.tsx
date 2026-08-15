@@ -5,7 +5,7 @@ function SkeletonLine({ className }: { readonly className: string }): React.JSX.
 export default function ProjectDetailLoading(): React.JSX.Element {
   return (
     <div className="space-y-md pb-8" aria-label="Memuat detail proyek" role="status">
-      <section className="relative aspect-square overflow-hidden rounded-[28px] bg-primary/90">
+      <section className="relative aspect-square overflow-hidden rounded-owner bg-primary/90">
         <div className="absolute top-3 right-3 h-12 w-12 rounded-full bg-white/10" />
         <div className="absolute inset-x-0 bottom-0 space-y-2 p-4">
           <div className="flex justify-between gap-3">
@@ -25,7 +25,7 @@ export default function ProjectDetailLoading(): React.JSX.Element {
         </div>
       </div>
 
-      <section className="rounded-[28px] bg-primary p-4">
+      <section className="rounded-owner bg-primary p-4">
         <SkeletonLine className="h-2.5 w-28 bg-white/15" />
         <SkeletonLine className="mt-2 h-8 w-48 bg-white/20" />
         <div className="mt-4 h-2 rounded-full bg-white/15" />

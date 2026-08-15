@@ -23,7 +23,7 @@ function ColorInput({
         }
       >
         <span
-          className="h-6 w-6 rounded-full border border-white/70 shadow-control"
+          className="h-6 w-6 rounded-full border border-white/70"
           style={{ backgroundColor: value }}
           aria-hidden="true"
         />
@@ -56,17 +56,13 @@ export function ColorEditor({
   return (
     <section className="space-y-3">
       <div
-        className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 shadow-raised ${
+        className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-owner p-5 ring-1 ${
           draft.cardTextColor === "dark" ? "text-on-surface" : "text-white"
-        }`}
+        } ${draft.cardTextColor === "dark" ? "ring-ring-subtle" : "ring-white/16"}`}
         style={{
           backgroundImage: `linear-gradient(135deg, ${draft.cardColorFrom}, ${draft.cardColorTo})`,
         }}
       >
-        <span
-          className="pointer-events-none absolute top-0 right-0 h-32 w-32 rounded-full bg-white/12 blur-2xl"
-          aria-hidden="true"
-        />
         <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="truncate text-sm leading-[1.15] font-semibold">
@@ -82,7 +78,9 @@ export function ColorEditor({
           <p className="text-eyebrow font-semibold tracking-[0.13em] uppercase opacity-60">
             Saldo tersedia
           </p>
-          <p className="mt-1.5 font-mono text-lg font-bold whitespace-nowrap tabular-nums">Rp 0</p>
+          <p className="financial-amount mt-1.5 text-lg font-extrabold whitespace-nowrap tabular-nums">
+            Rp 0
+          </p>
         </div>
         <div className="relative mt-4 flex items-center justify-between gap-3">
           <p className="font-mono text-support font-semibold tracking-[0.16em] opacity-75">

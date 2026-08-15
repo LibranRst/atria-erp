@@ -3,7 +3,7 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { AppIcon, MoneyValue, SummaryFact, SummarySurface } from "@/components/ui";
+import { AppIcon, DuotoneIconTile, MoneyValue, SummaryFact, SummarySurface } from "@/components/ui";
 import { BankAccountCard } from "@/features/finance-dashboard/components/cards/dashboard-cards";
 import type { BankAccount } from "@/features/finance-dashboard/types/bank-account-types";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
@@ -27,10 +27,11 @@ function EmptyAccountsState({
   onCreate,
 }: Pick<BankAccountsOverviewProps, "canCreate" | "onCreate">): React.JSX.Element {
   return (
-    <div className="rounded-[28px] bg-white px-5 py-6 text-center shadow-surface ring-1 ring-ring-subtle">
-      <AppIcon
+    <div className="rounded-owner bg-white px-5 py-6 text-center ring-1 ring-ring-subtle">
+      <DuotoneIconTile
         name="account_balance"
-        className="mx-auto flex! icon-xl h-12 w-12 items-center justify-center rounded-full bg-primary/8 leading-none text-primary"
+        className="mx-auto h-12 w-12"
+        iconClassName="icon-xl"
       />
       <h3 className="mt-3 text-base font-bold text-on-surface">Belum ada rekening</h3>
       <p className="mx-auto mt-1 max-w-65 text-xs leading-5 text-on-surface-variant">
@@ -65,22 +66,14 @@ function AccountPositionCard({
       aria-label={`Buka rekening ${account.name}`}
       whileTap={reduceMotion ? undefined : accountCardPressScale}
       transition={transitionSpringSnappy}
-      className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] px-5 py-4.5 text-left shadow-floating ring-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring-strong max-[430px]:rounded-3xl max-[430px]:px-4 max-[430px]:py-4 ${account.cardTextColor === "dark" ? "text-on-surface ring-ring-subtle" : "text-white ring-white/16"} ${account.isActive ? "" : "opacity-60 grayscale"}`}
+      className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-owner px-5 py-4.5 text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring-strong max-[430px]:px-4 max-[430px]:py-4 ${account.cardTextColor === "dark" ? "text-on-surface ring-ring-subtle" : "text-white ring-white/16"} ${account.isActive ? "" : "opacity-60 grayscale"}`}
       style={{
         backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
       }}
     >
-      <span
-        className="pointer-events-none absolute top-0 right-0 h-28 w-28 rounded-full bg-white/12 blur-2xl"
-        aria-hidden="true"
-      />
-      <span
-        className={`pointer-events-none absolute inset-x-6 top-0 h-px ${account.cardTextColor === "dark" ? "bg-white/35" : "bg-white/45"}`}
-        aria-hidden="true"
-      />
       <span className="relative flex w-full items-start gap-3">
         <span
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] ring-1 backdrop-blur-md max-[430px]:h-10 max-[430px]:w-10 max-[430px]:rounded-[14px] ${account.cardTextColor === "dark" ? "bg-black/5.5 ring-ring-subtle" : "bg-white/[0.14] ring-white/18"}`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-icon max-[430px]:h-10 max-[430px]:w-10 ${account.cardTextColor === "dark" ? "bg-black/5.5" : "bg-white/[0.14]"}`}
         >
           <AppIcon name="account_balance" className="text-[21px] max-[430px]:text-[19px]" />
         </span>
@@ -132,18 +125,17 @@ function AccountPositionCard({
         </span>
       </span>
       <span
-        className={`relative mt-3 flex min-h-9 w-full items-center gap-2 rounded-[14px] px-2.5 py-1.5 ring-1 backdrop-blur-md ${account.cardTextColor === "dark" ? "bg-black/4.5 ring-ring-subtle" : "bg-white/10 ring-white/12"}`}
+        className={`relative mt-3 flex min-h-9 w-full items-center gap-2 rounded-inset px-2.5 py-1.5 ${account.cardTextColor === "dark" ? "bg-black/4.5" : "bg-white/10"}`}
       >
         <AppIcon name="receipt_long" className="shrink-0 text-[15px] opacity-65" />
         <span className="min-w-0 flex-1 truncate text-eyebrow font-medium opacity-75">
           {account.recentTransactions[0]?.description ?? "Belum ada transaksi"}
         </span>
-        <span
-          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${account.cardTextColor === "dark" ? "bg-black/6" : "bg-white/12"}`}
+        <AppIcon
+          name="chevron_right"
+          className="shrink-0 text-[15px] opacity-70"
           aria-hidden="true"
-        >
-          <AppIcon name="chevron_right" className="text-[15px] opacity-70" />
-        </span>
+        />
       </span>
     </motion.button>
   );
@@ -206,7 +198,7 @@ export function BankAccountsOverview({
       <section className="space-y-2.5">
         <div className="flex min-h-12 items-center justify-between gap-3 px-1">
           <div className="min-w-0">
-            <h2 className="truncate text-[18px] font-semibold tracking-[-0.015em] text-on-surface max-[430px]:text-[17px]">
+            <h2 className="truncate text-section font-semibold tracking-[-0.015em] text-on-surface">
               Posisi rekening
             </h2>
             <p className="mt-0.5 text-[10px] leading-tight text-on-surface-variant">
@@ -217,7 +209,7 @@ export function BankAccountsOverview({
             type="button"
             disabled={!canCreate}
             onClick={onCreate}
-            className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-45"
+            className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-surface-container-low px-3 text-meta font-semibold text-on-surface outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-high disabled:opacity-45"
           >
             <AppIcon name="add" className="icon-xs" />
             <span className="hidden min-[360px]:inline">Tambah rekening</span>

@@ -32,7 +32,7 @@ export function ProjectInvoicesSummary({
 }): React.JSX.Element {
   const billedCoverage = contractValue > 0 ? (totalInvoiceAmount / contractValue) * 100 : 0;
   return (
-    <section className="rounded-[28px] bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
+    <section className="rounded-owner bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
@@ -103,7 +103,7 @@ function InvoiceFact({
       </p>
       <MoneyValue
         amount={amount}
-        variant="compactWithFull"
+        variant="compact"
         tone="inverse"
         size="xs"
         align={align === "right" ? "right" : "left"}

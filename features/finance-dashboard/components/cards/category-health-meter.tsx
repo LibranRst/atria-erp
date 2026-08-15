@@ -93,7 +93,7 @@ export function CategoryHealthMeter({
 
   return (
     <div
-      className={`top-11/12 flex flex-col justify-between gap-3 rounded-2xl border border-outline-variant/20 bg-white p-2 shadow-surface ${
+      className={`top-11/12 flex flex-col justify-between gap-3 rounded-2xl border border-outline-variant/20 bg-white p-2 shadow-raised ${
         isFullWidth ? "col-span-2" : "col-span-1"
       }`}
     >
@@ -113,7 +113,7 @@ export function CategoryHealthMeter({
         <div className="min-w-0 text-right">
           <MoneyValue
             amount={category.remainingAmount}
-            variant="compactWithFull"
+            variant="compact"
             tone={category.remainingAmount < 0 ? "danger" : "default"}
             align="right"
             size="xs"

@@ -8,7 +8,7 @@ import {
 } from "@/features/activity-detail/components/activity-detail-provider";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { AppIcon, Badge, MoneyValue } from "@/components/ui";
+import { AppIcon, Badge, DuotoneIconTile, MoneyValue } from "@/components/ui";
 import { formatShortDate } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import type {
   DashboardAction,
@@ -87,13 +87,14 @@ export function OverviewPriorityList({
           >
             <Link
               href={action.href}
-              className="flex min-h-16 items-center gap-3 rounded-[20px] px-1.5 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5 max-[430px]:min-h-15 max-[430px]:gap-2.5"
+              className="flex min-h-16 items-center gap-3 rounded-inset px-1.5 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5 max-[430px]:min-h-15 max-[430px]:gap-2.5"
             >
-              <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${isCritical ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
-              >
-                <AppIcon name={priorityActionIcon(action.id)} className="icon-md" />
-              </span>
+              <DuotoneIconTile
+                name={priorityActionIcon(action.id)}
+                tone={isCritical ? "critical" : "attention"}
+                className="h-9 w-9"
+                iconClassName="icon-md"
+              />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] leading-normal font-semibold tracking-[-0.01em] text-on-surface">
                   {action.title}
@@ -108,12 +109,7 @@ export function OverviewPriorityList({
                 >
                   {isCritical ? "Kritis" : "Perhatian"}
                 </span>
-                <span
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
-                  aria-hidden="true"
-                >
-                  <AppIcon name="chevron_right" className="icon-sm" />
-                </span>
+                <AppIcon name="chevron_right" className="icon-sm text-on-surface-variant/55" />
               </span>
             </Link>
           </motion.div>
@@ -130,7 +126,7 @@ export function OverviewPreviewEmpty({
 }): React.JSX.Element {
   return (
     <div className="flex items-center gap-2.5 px-4 py-3 text-xs leading-5 text-on-surface-variant">
-      <AppIcon name="check_circle" className="icon-md text-success" />
+      <AppIcon name="check_circle" weight="duotone" className="icon-md text-on-surface" />
       <span>{children}</span>
     </div>
   );
@@ -156,15 +152,12 @@ export function OverviewCashRows({
             key={transaction.id}
             className={`${rowClassName} w-full px-1 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70`}
           >
-            <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                incoming
-                  ? "bg-primary/9 text-primary ring-1 ring-primary/6"
-                  : "bg-error/8 text-error ring-1 ring-error/5"
-              }`}
-            >
-              <AppIcon name={incoming ? "south_west" : "north_east"} className="icon-sm" />
-            </span>
+            <DuotoneIconTile
+              name={incoming ? "south_west" : "north_east"}
+              tone={incoming ? "neutral" : "critical"}
+              className="h-8 w-8"
+              iconClassName="icon-sm"
+            />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-row font-semibold tracking-[-0.01em] text-on-surface">
                 {transaction.description}
@@ -175,7 +168,7 @@ export function OverviewCashRows({
             </span>
             <MoneyValue
               amount={transaction.amount}
-              variant="compactWithFull"
+              variant="compact"
               prefix={incoming ? "+" : "-"}
               tone={incoming ? "primary" : "default"}
               align="right"

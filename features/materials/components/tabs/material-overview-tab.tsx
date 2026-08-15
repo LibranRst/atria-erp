@@ -137,7 +137,7 @@ export function MaterialOverviewTab({
   return (
     <div className="space-y-sm">
       <section
-        className="relative isolate overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-white shadow-floating ring-1 ring-white/8 max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
+        className="relative isolate overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-white shadow-inverse ring-1 ring-white/8 max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
         aria-label="Posisi stok"
       >
         <span
@@ -155,7 +155,7 @@ export function MaterialOverviewTab({
           className="mt-1.5"
         />
 
-        <div className="mt-5 rounded-[22px] bg-white/7.5 p-3.5 ring-1 ring-white/6 max-[430px]:mt-4 max-[430px]:rounded-[20px] max-[430px]:p-3">
+        <div className="mt-5 rounded-[22px] bg-white/7.5 p-3.5 ring-1 ring-white/6 max-[430px]:mt-4 max-[430px]:rounded-inset max-[430px]:p-3">
           <div className="flex items-end justify-between gap-4">
             <div className="min-w-0">
               <p className="text-eyebrow font-bold tracking-wide text-white/50 uppercase">
@@ -163,7 +163,7 @@ export function MaterialOverviewTab({
               </p>
               <MoneyValue
                 amount={availableValue}
-                variant="compactWithFull"
+                variant="compact"
                 tone="inverse"
                 size="lg"
                 className="mt-1"
@@ -175,7 +175,7 @@ export function MaterialOverviewTab({
               </p>
               <MoneyValue
                 amount={reservedValue}
-                variant="compactWithFull"
+                variant="compact"
                 tone="inverse"
                 align="right"
                 size="sm"

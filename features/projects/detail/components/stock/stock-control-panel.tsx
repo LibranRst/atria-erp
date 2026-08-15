@@ -72,7 +72,7 @@ export function StockControlPanel({
 
   return (
     <div className="space-y-sm">
-      <section className="rounded-[28px] bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
+      <section className="rounded-owner bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
         <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
           Posisi material proyek
         </p>

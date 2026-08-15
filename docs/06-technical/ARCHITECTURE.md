@@ -4,6 +4,13 @@
 
 Atria ERP uses Next.js App Router with Server Components for data-heavy views, Client Components for interactive mobile forms, Drizzle ORM for PostgreSQL access, Better Auth for sessions, and Server Actions for mutations.
 
+Mutations never travel over an internal REST endpoint. Exactly two API routes exist, and neither of them writes domain data:
+
+- `app/api/auth/[...better-auth]/route.ts` — Better Auth.
+- `app/api/ai/chat/route.ts` — AI chat token streaming, opened because `useChat` requires an HTTP transport. Read-only: every tool it exposes to the model is read-only, enforced by `lib/ai/tools/read-only.test.ts`.
+
+Do not add a third. If a feature seems to need one, it almost certainly needs a Server Action.
+
 ## Domain Layers
 
 - Auth and permissions: `lib/auth/*`

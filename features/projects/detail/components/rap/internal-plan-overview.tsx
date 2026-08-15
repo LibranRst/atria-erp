@@ -44,7 +44,7 @@ export function InternalPlanOverview({
 }): React.JSX.Element {
   return (
     <>
-      <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
+      <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
@@ -106,7 +106,7 @@ export function InternalPlanOverview({
               : "Paket Subcon"
         }
       >
-        <div className="divide-y divide-outline-variant/25 overflow-hidden rounded-[20px] bg-surface-container-low">
+        <div className="divide-y divide-outline-variant/25 overflow-hidden rounded-inset bg-surface-container-low">
           {rapOverviewFilter === "MATERIAL"
             ? rap.items.map((item) => (
                 <button

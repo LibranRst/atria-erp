@@ -79,7 +79,7 @@ export function OpeningInventoryCsvEntry({
                 </span>
                 <MoneyValue
                   amount={item.quantity * item.unitCost}
-                  variant="compactWithFull"
+                  variant="compact"
                   size="sm"
                   align="right"
                 />

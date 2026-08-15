@@ -5,7 +5,7 @@ import { aiRun } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { ActionResponse } from "@/lib/types/action-response";
-import { ai } from "@/lib/ai/gemini";
+import { geminiClient, GEMINI_OCR_MODEL } from "@/lib/ai/gemini";
 import { getErrorMessage } from "@/lib/utils/error-message";
 import { Type } from "@google/genai";
 import { eq } from "drizzle-orm";
@@ -121,10 +121,10 @@ export async function processReceipt(
       })
       .returning();
 
-    // 5. Panggil Gemini 3 Flash Preview untuk ekstraksi teks nota multimodal
+    // 5. Panggil Gemini Flash untuk ekstraksi teks nota multimodal
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await geminiClient.models.generateContent({
+        model: GEMINI_OCR_MODEL,
         contents: [
           {
             inlineData: {

@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Atria ERP is Dekoria's finance-first, mobile-first internal ERP for interior design/build projects. It centers on project budgets by expense category, cash/bank ledger integrity, field expense approvals, RAP/RAB planning, material stock visibility, and margin risk — not generic HR or PM modules. Product/technical specs live under `docs/`; executable code and active guides take precedence over historical implementation plans in `docs/plans/`.
 
-Stack: Bun, Next.js App Router (v16) with React 19, TypeScript (strict), Neon PostgreSQL + Drizzle ORM, Better Auth, Tailwind v4, Framer Motion, ImageKit uploads, Gemini (`@google/genai`) receipt OCR. AI CFO/financial briefing is deferred from the Dashboard; do not reintroduce it unless product scope explicitly changes.
+Stack: Bun, Next.js App Router (v16) with React 19, TypeScript (strict), Neon PostgreSQL + Drizzle ORM, Better Auth, Tailwind v4, Framer Motion, ImageKit uploads, Gemini (`@google/genai`) receipt OCR, Vercel AI SDK v7 with DeepSeek V4 Flash (primary) and Gemini 3.7 Flash (fallback) for the AI chat agent.
+
+AI CFO/financial briefing remains deferred **from the Dashboard** — no AI card, summary, or briefing entry point belongs on `/ledger` or any route surface. AI is reachable only through the chat button in the header (`features/ai-chat/`), which answers questions from live data via read-only tools. See `docs/plans/2026-08-14-ai-agent-chat.md` and `docs/06-technical/AI_AGENT_ARCHITECTURE.md`.
 
 User-facing copy and much of the domain-code commenting are Bahasa Indonesia. Match the surrounding language when editing.
 
@@ -46,7 +48,7 @@ Drizzle migrations live in `drizzle/`; config is `drizzle.config.ts`. Check `pac
 
 ## Architecture
 
-Layering runs database → auth/RBAC → transaction helpers → Server Actions → UI. Read-only data fetching happens in Server Components; Client Components are for interaction, local state, animation, camera/upload, and forms. All mutations are Server Actions — no internal REST endpoints (the only API route is Better Auth at `app/api/auth/[...better-auth]/route.ts`).
+Layering runs database → auth/RBAC → transaction helpers → Server Actions → UI. Read-only data fetching happens in Server Components; Client Components are for interaction, local state, animation, camera/upload, and forms. All mutations are Server Actions — no internal REST endpoints for mutations. Exactly two API routes exist: Better Auth at `app/api/auth/[...better-auth]/route.ts`, and the AI chat stream at `app/api/ai/chat/route.ts`. The AI chat route is a deliberate, bounded exception because `useChat` needs an HTTP transport for token streaming; it is read-only (every tool exposed to the model is read-only, enforced by `lib/ai/tools/read-only.test.ts`) and verifies session plus `use:ai_chat` before doing anything. Do not add further API routes, and do not add write capability to this one.
 
 Three source roots, with enforced boundaries:
 
@@ -99,9 +101,8 @@ Follow `AGENTS.md`, `docs/06-technical/ARCHITECTURE.md`, and `docs/04-data/DATAB
 
 Mobile-first for field PMs; should feel like a premium native iOS-style WebView.
 
-- **Load `.agents/skills/atria-ui-ux/SKILL.md` before planning, implementing, styling, redesigning, auditing, or reviewing any UI** (`.claude/skills/atria-ui-ux` is a symlink to it). Follow its references, motion decision, and verification workflow.
-- `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md` is the active page-design source of truth; `docs/05-ui-ux/CONTROL_LANGUAGE.md` governs inputs, buttons, focus rings, and shadow tokens.
-- Dashboard (`/ledger`) and Expenses (`/expenses`) are the reference implementations. Reuse their grammar and shared primitives; do not copy either layout blindly.
+- **Use the Impeccable skill for any UI/UX planning, implementation, styling, redesigning, auditing, or reviewing work.** `PRODUCT.md` and `DESIGN.md` at the repo root are the source of truth for product context and the visual design system ("The Quiet Command Center" — calm ink-and-terracotta, flat tonal layering, capsule controls, no glass/gradients/decorative motion); `.impeccable/design.json` is the machine-readable sidecar. Read all three before a UI decision, and inspect the live implementation rather than relying on old plans or screenshots.
+- Dashboard (`/ledger`, all tabs — Ringkasan, Persetujuan, Budget, Jatuh Tempo, Rekening, Material) is the current approved reference implementation. Reuse its grammar and shared primitives (`components/ui/feedback/*`, `FormSection`, `OperationalFormSheet`/`WorkflowFormSheet`, `SegmentedTabs`, `DuotoneIconTile`, `AppIcon`); do not copy its layout blindly. Expenses and every other route are mid-rollout to this same visual language one review gate at a time — check `docs/plans/2026-08-04-calm-modern-luxury-redesign.md` for what's approved before treating any other route as a reference.
 - The fixed `max-w-md` shell stays one column at every viewport. Verify 320, 360, 390, and 430 px — a desktop preview is not acceptance evidence.
 - One justified focal summary, concise section headers, grouped surfaces with dividers, purpose-built rows, restrained status. Do not make every row a card, and do not repeat progress bars across sections.
 - Use shared `MoneyValue` formatting with tabular numerals; primary amounts must not wrap. Use shared `SegmentedTabs` for peer views/filters — changing a tab must not move the reading position.
@@ -116,7 +117,7 @@ Mobile-first for field PMs; should feel like a premium native iOS-style WebView.
 - Product scope and MVP: `docs/01-product/PRD.md`, `docs/02-product/MVP_BLUEPRINT.md`
 - Financial workflows: `docs/03-flows/FLOWS.md`
 - Data model and statuses: `docs/04-data/DATABASE_SCHEMA.md`, `docs/04-data/STATUS_ENUMS.md`, `docs/04-data/SEED_DATA.md`
-- UI/UX: `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md`, `CONTROL_LANGUAGE.md`, `MOBILE_FIRST_UI_UX.md`, `IOS26_SOLID_DESIGN_SYSTEM.md`
+- UI/UX: `PRODUCT.md`, `DESIGN.md`, and `.impeccable/design.json` (repo-root Impeccable design-system record)
 - Technical: `docs/06-technical/ARCHITECTURE.md`, `AUTH_AND_PERMISSION.md`, `API_ACTIONS.md`, `AI_AGENT_ARCHITECTURE.md`
 - Build order and roadmap: `docs/07-development/IMPLEMENTATION_ORDER.md`, `ROADMAP.md`, `TASK_BREAKDOWN.md`
 - Manual verification: `docs/guide/seeded_demo_walkthrough.md` (seeded sandbox), `docs/guide/financial_workflow_guide.md` (empty-DB UAT)

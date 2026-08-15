@@ -26,6 +26,15 @@ const eslintConfig = defineConfig([
     ".claude/**",
     "scratch/**",
 
+    // Generated/vendored, gitignored (see .gitignore):
+    "ds-bundle/**",
+    ".ds-sync/**",
+    ".design-sync/sb-reference/**",
+    ".design-sync/dts-out/**",
+    ".design-sync/learnings/**",
+    ".design-sync/.cache/**",
+    ".design-sync/node_modules/**",
+
     // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",

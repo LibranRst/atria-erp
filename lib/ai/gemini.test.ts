@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { aiRun } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { ai } from "@/lib/ai/gemini";
+import { geminiClient, GEMINI_OCR_MODEL } from "@/lib/ai/gemini";
 import { processReceipt } from "@/app/actions/ai/process-receipt";
 import { describe, it, expect, beforeAll, afterAll, mock } from "bun:test";
 
@@ -19,7 +19,7 @@ mock.module("next/headers", () => {
 
 // Simpan method original
 const originalGetSession = (auth.api as unknown as { getSession: unknown }).getSession;
-const originalGenerateContent = ai.models.generateContent;
+const originalGenerateContent = geminiClient.models.generateContent;
 const originalFetch = global.fetch;
 
 // Helper untuk mock sesi pengguna
@@ -74,7 +74,7 @@ async function mockGenerateContent(args: unknown): Promise<{
   };
 }> {
   const { model, contents } = args as GeminiMockArgs;
-  if (model === "gemini-3-flash-preview") {
+  if (model === GEMINI_OCR_MODEL) {
     const isOCR =
       Array.isArray(contents) &&
       contents.some((contentPart: unknown) => {
@@ -134,12 +134,13 @@ describe("Atria ERP AI Layer Integration - TSK-009", () => {
     }) as unknown as typeof fetch;
 
     // Mock Gemini API generateContent
-    (ai.models as unknown as { generateContent: unknown }).generateContent = mockGenerateContent;
+    (geminiClient.models as unknown as { generateContent: unknown }).generateContent =
+      mockGenerateContent;
   });
 
   afterAll(() => {
     restoreUserSession();
-    ai.models.generateContent = originalGenerateContent;
+    geminiClient.models.generateContent = originalGenerateContent;
     global.fetch = originalFetch;
   });
 
@@ -184,19 +185,20 @@ describe("Atria ERP AI Layer Integration - TSK-009", () => {
     it("harus menolak hasil OCR yang tidak sesuai schema Zod dan menyimpan status FAILED", async () => {
       mockUserSession(PM_BUDI_USER);
 
-      (ai.models as unknown as { generateContent: unknown }).generateContent = async () => {
-        return {
-          text: JSON.stringify({
-            vendorName: "",
-            transactionDate: "bukan-tanggal-iso",
-            totalAmount: -1,
-            items: [],
-          }),
-          usageMetadata: {
-            totalTokenCount: 42,
-          },
+      (geminiClient.models as unknown as { generateContent: unknown }).generateContent =
+        async () => {
+          return {
+            text: JSON.stringify({
+              vendorName: "",
+              transactionDate: "bukan-tanggal-iso",
+              totalAmount: -1,
+              items: [],
+            }),
+            usageMetadata: {
+              totalTokenCount: 42,
+            },
+          };
         };
-      };
 
       try {
         const res = await processReceipt("https://example.com/receipt.jpg");
@@ -213,7 +215,7 @@ describe("Atria ERP AI Layer Integration - TSK-009", () => {
         expect(runLog).toBeDefined();
         expect(runLog!.status).toBe("FAILED");
       } finally {
-        (ai.models as unknown as { generateContent: unknown }).generateContent =
+        (geminiClient.models as unknown as { generateContent: unknown }).generateContent =
           mockGenerateContent;
       }
     });

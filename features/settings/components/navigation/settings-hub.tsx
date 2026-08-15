@@ -76,7 +76,7 @@ export function SettingsHub({
         description="Formula yang dipakai saat budget dan master data baru disiapkan."
       />
 
-      <section className="overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-white shadow-floating max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4">
+      <section className="overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-white shadow-inverse max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-eyebrow font-bold tracking-[0.15em] text-white/48 uppercase">
@@ -106,7 +106,7 @@ export function SettingsHub({
             </p>
           </div>
         </div>
-        <div className="mt-4 rounded-[20px] bg-white/7.5 p-3.5 ring-1 ring-white/6">
+        <div className="mt-4 rounded-inset bg-white/7.5 p-3.5 ring-1 ring-white/6">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-eyebrow font-bold tracking-widest text-white/45 uppercase">

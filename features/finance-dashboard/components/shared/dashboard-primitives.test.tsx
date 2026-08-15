@@ -6,20 +6,20 @@ import { DetailSection, RowGroup, SectionAction, SummaryFact } from "@/component
 import { OverviewPreviewSection } from "./dashboard-primitives";
 
 describe("native editorial dashboard sections", () => {
-  test("renders section actions as compact light-blue capsule buttons", () => {
+  test("renders section actions as compact neutral capsule buttons", () => {
     const html = renderToStaticMarkup(
       <SectionAction href="/ledger?tab=budget" label="Lihat semua" />,
     );
 
     expect(html).toContain('href="/ledger?tab=budget"');
     expect(html).toContain("h-8");
-    expect(html).toContain("bg-accent/8");
+    expect(html).toContain("bg-surface-container-low");
     expect(html).toContain("gap-1");
     expect(html).toContain("pl-3 pr-2.5");
-    expect(html).toContain("after:-inset-y-1.5");
-    expect(html).toContain("text-accent");
+    expect(html).toContain("after:-inset-y-2");
+    expect(html).toContain("text-on-surface-variant");
     expect(html).toContain('viewBox="0 0 256 256"');
-    expect(html).toContain("active:bg-accent/[0.14]");
+    expect(html).toContain("active:bg-surface-container");
   });
 
   test("keeps preview and detail sections inside the established card language", () => {
@@ -36,10 +36,12 @@ describe("native editorial dashboard sections", () => {
 
     expect(html).toContain("Budget berisiko");
     expect(html).toContain("Project berisiko");
-    expect(html).toContain("rounded-3xl");
+    expect(html).toContain("rounded-owner");
+    expect(html).toContain("bg-surface-container-lowest");
+    // Owning surfaces carry the shared gentle lift, never an ad-hoc shadow.
     expect(html).toContain("shadow-surface");
-    expect(html).toContain("bg-white");
-    expect(html).toContain("backdrop-blur-xl");
+    expect(html).not.toMatch(/shadow-\[/);
+    expect(html).not.toContain("backdrop-blur-xl");
   });
 
   test("renders a section count as a neutral trailing pill", () => {
@@ -90,7 +92,7 @@ describe("native editorial dashboard sections", () => {
       <SummaryFact label="Prioritas kritis" value="23" tone="danger" />,
     );
 
-    expect(html).toContain("rounded-xl");
+    expect(html).toContain("rounded-inset");
     expect(html).toContain("bg-white");
     expect(html).toContain("text-error");
     expect(html).not.toContain("bg-error-container");

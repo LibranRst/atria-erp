@@ -24,10 +24,10 @@ export function dashboardToneClasses(tone: IndicatorTone): {
   }
   if (tone === "warning") {
     return {
-      surface: "bg-secondary-container/15 ring-1 ring-secondary/10",
-      icon: "bg-secondary text-white",
-      progress: "bg-secondary",
-      text: "text-secondary",
+      surface: "bg-warning-container ring-1 ring-warning/10",
+      icon: "bg-warning text-white",
+      progress: "bg-warning",
+      text: "text-warning",
     };
   }
   if (tone === "positive") {

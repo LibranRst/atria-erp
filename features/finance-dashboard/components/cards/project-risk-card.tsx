@@ -66,7 +66,7 @@ export function ProjectRiskCard({
           </span>
           <MoneyValue
             amount={project.remainingBudget}
-            variant="compactWithFull"
+            variant="compact"
             tone={project.remainingBudget < 0 ? "danger" : "default"}
             size="sm"
             className="mt-1"

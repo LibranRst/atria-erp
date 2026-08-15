@@ -77,7 +77,7 @@ export function MaterialInventoryDefaultSheet({
             </FormField>
           </FormSection>
           {original && dirty ? (
-            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-[20px] bg-surface-container-lowest px-3.5 py-3 ring-1 ring-ring-subtle">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-inset bg-surface-container-lowest px-3.5 py-3 ring-1 ring-ring-subtle">
               <div>
                 <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                   Sebelum

@@ -9,7 +9,7 @@ import {
   transitionSpringSmooth,
 } from "@/lib/utils/motion";
 import type { FabAction, NavItem } from "./bottom-nav-config";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, DuotoneIconTile } from "@/components/ui";
 export function BottomTabBar({
   activeIndex,
   clickedTabHref,
@@ -28,11 +28,11 @@ export function BottomTabBar({
   return (
     <nav
       aria-label="Primary mobile navigation"
-      className="pointer-events-auto relative z-10 flex h-full flex-row items-center justify-center rounded-full border border-outline-variant/20 bg-white p-1 shadow-raised"
+      className="pointer-events-auto relative z-10 flex h-full flex-row items-center justify-center rounded-full bg-white p-1 shadow-raised ring-1 ring-ring-subtle"
     >
       {activeIndex !== -1 && (
         <motion.div
-          className="absolute top-1 bottom-1 rounded-full bg-primary"
+          className="absolute top-1 bottom-1 rounded-full bg-primary shadow-primary"
           initial={false}
           animate={{
             left: `calc(4px + (100% - 8px) * ${activeIndex} / ${items.length})`,
@@ -53,7 +53,7 @@ export function BottomTabBar({
             href={item.href}
             aria-current={isActive ? "page" : undefined}
             onClick={() => onTabClick(item.href)}
-            className={`relative flex h-10 w-15 flex-1 flex-col items-center justify-center rounded-full px-2 transition-all duration-200 active:scale-90 ${
+            className={`relative flex h-10 w-15 flex-1 flex-col items-center justify-center rounded-full px-2 transition-all duration-200 after:absolute after:-inset-y-1 after:content-[''] active:scale-90 ${
               isActive ? "text-on-primary" : "text-on-surface-variant"
             }`}
           >
@@ -102,7 +102,7 @@ export function QuickActionFab({
         className={`pointer-events-auto absolute right-0 z-50 origin-bottom-right cursor-pointer overflow-hidden rounded-[28px] border transition-colors duration-300 select-none ${
           isOpen
             ? "border-outline-variant/20 bg-white shadow-raised"
-            : "border-outline-variant/20 bg-black shadow-raised"
+            : "border-primary bg-primary shadow-floating"
         }`}
       >
         <motion.div
@@ -143,15 +143,11 @@ export function QuickActionFab({
                     : "hover:bg-surface-container-low active:bg-surface-container-high"
                 }`}
               >
-                <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                    action.disabled
-                      ? "bg-on-surface-variant/10 text-on-surface-variant"
-                      : "bg-primary/10 text-primary"
-                  }`}
-                >
-                  <AppIcon name={action.iconName} className="icon-lg" />
-                </span>
+                <DuotoneIconTile
+                  name={action.iconName}
+                  className={`h-9 w-9 ${action.disabled ? "opacity-55" : ""}`}
+                  iconClassName="icon-lg"
+                />
                 <span className="min-w-0 flex-1">
                   <span
                     className={`block text-xs leading-5 font-bold ${action.disabled ? "text-on-surface-variant" : "text-on-surface"}`}

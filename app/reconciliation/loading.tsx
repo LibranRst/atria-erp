@@ -28,11 +28,7 @@ function ReconciliationRowSkeleton({
 
 export default function ReconciliationLoading(): React.JSX.Element {
   return (
-    <div
-      className="space-y-sm pb-8"
-      aria-label="Memuat rekonsiliasi"
-      role="status"
-    >
+    <div className="space-y-sm pb-8" aria-label="Memuat rekonsiliasi" role="status">
       <div className="space-y-2">
         <SkeletonLine className="h-8 w-40" />
         <SkeletonLine className="h-3 w-58 bg-surface-container-low" />

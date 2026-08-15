@@ -198,16 +198,16 @@ Then the deliberate per-site pass proceeded feature by feature — reviewing eac
 label, dense metadata, supporting text, row value, section title) against the matching bundled token,
 applying it, and verifying visually per surface (including 320/360/390/430px) before committing:
 
-| Area                     | Sites converted | Commit    |
-| ------------------------ | --------------- | --------- |
-| finance-dashboard        | 74               | `df255df` |
-| projects                 | 60               | `55f141c` |
-| settings                 | 47               | `0418097` |
-| materials                | 39               | `091af84` |
-| approvals                | 26               | `f0d418c` |
-| components/ui (shared)   | 25               | `f9569bc` |
-| onboarding               | 20               | `7b1edff` |
-| expenses/activity-detail/reconciliation/profile/administration/app | 35 | `1a2595c` |
+| Area                                                               | Sites converted | Commit    |
+| ------------------------------------------------------------------ | --------------- | --------- |
+| finance-dashboard                                                  | 74              | `df255df` |
+| projects                                                           | 60              | `55f141c` |
+| settings                                                           | 47              | `0418097` |
+| materials                                                          | 39              | `091af84` |
+| approvals                                                          | 26              | `f0d418c` |
+| components/ui (shared)                                             | 25              | `f9569bc` |
+| onboarding                                                         | 20              | `7b1edff` |
+| expenses/activity-detail/reconciliation/profile/administration/app | 35              | `1a2595c` |
 
 326 sites total. The remaining 4 sites at token sizes with no explicit `leading` are not conversions
 missed by the pass — they're 3 `AppIcon` instances whose `text-[17px]` is icon sizing on a multi-line

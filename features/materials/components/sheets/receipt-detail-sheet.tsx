@@ -67,7 +67,7 @@ export function ReceiptDetailSheet({
                 value={
                   <MoneyValue
                     amount={presentedReceipt.total}
-                    variant="compactWithFull"
+                    variant="compact"
                     size="sm"
                     align="right"
                     tone="default"
@@ -96,7 +96,7 @@ export function ReceiptDetailSheet({
                     <div className="shrink-0 text-right">
                       <MoneyValue
                         amount={item.quantity * item.unitCost}
-                        variant="compactWithFull"
+                        variant="compact"
                         align="right"
                         size="sm"
                         className="font-bold text-on-surface"

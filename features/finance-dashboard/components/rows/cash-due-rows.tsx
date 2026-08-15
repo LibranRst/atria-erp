@@ -45,7 +45,7 @@ export function CashDueRow({
     >
       <Link
         href={item.href}
-        className="grid grid-cols-[38px_minmax(0,1fr)] gap-3 rounded-[20px] px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-black/2.5 max-[430px]:px-3 max-[430px]:py-3"
+        className="grid grid-cols-[38px_minmax(0,1fr)] gap-3 rounded-inset px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-black/2.5 max-[430px]:px-3 max-[430px]:py-3"
       >
         <span className="relative flex flex-col items-start pt-0.5 text-left" aria-hidden="true">
           <span className="font-mono text-[13px] leading-none font-black text-on-surface">
@@ -55,7 +55,7 @@ export function CashDueRow({
             {dueMonth}
           </span>
           <span
-            className={`absolute top-1.5 -right-px z-10 h-2 w-2 rounded-full ring-[3px] ring-white/90 ${item.dayOffset < 0 ? "bg-error" : item.dayOffset <= 7 ? "bg-warning" : "bg-outline"}`}
+            className={`absolute top-1.5 -right-px z-10 h-2 w-2 rounded-full ring-[3px] ring-white/90 ${item.dayOffset < 0 ? "bg-critical" : item.dayOffset <= 7 ? "bg-warning/55" : "bg-outline"}`}
           />
         </span>
         <div className="min-w-0">
@@ -76,7 +76,7 @@ export function CashDueRow({
             <div className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch text-right">
               <MoneyValue
                 amount={item.outstandingAmount}
-                variant="compactWithFull"
+                variant="compact"
                 align="right"
                 size="sm"
               />
@@ -87,7 +87,7 @@ export function CashDueRow({
                   {timing}
                 </span>
                 <span
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-on-surface-variant/55"
                   aria-hidden="true"
                 >
                   <AppIcon name="chevron_right" className="icon-sm leading-none" />
@@ -102,7 +102,7 @@ export function CashDueRow({
                 Dibayar
                 <MoneyValue
                   amount={item.paidAmount}
-                  variant="compactWithFull"
+                  variant="compact"
                   align="right"
                   size="sm"
                   className="mt-0.5"

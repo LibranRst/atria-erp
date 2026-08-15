@@ -19,17 +19,13 @@ export function BankAccountCard({
 
   const content = full ? (
     <div
-      className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-[28px] p-5 text-left shadow-floating ring-1 ${textClass} ${inactiveClass} ${account.cardTextColor === "dark" ? "ring-ring-subtle" : "ring-white/16"}`}
+      className={`relative flex aspect-[1.586/1] w-full flex-col overflow-hidden rounded-owner p-5 text-left ring-1 ${textClass} ${inactiveClass} ${account.cardTextColor === "dark" ? "ring-ring-subtle" : "ring-white/16"}`}
       style={{
         backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
       }}
     >
-      <span
-        className="pointer-events-none absolute top-0 right-0 h-32 w-32 rounded-full bg-white/12 blur-2xl"
-        aria-hidden="true"
-      />
       <div className="relative flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-white/14 ring-1 ring-white/15 backdrop-blur-sm">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-icon bg-white/14">
           <AppIcon name="account_balance" className="text-[21px]" />
         </span>
         <div className="min-w-0 flex-1 pt-0.5">
@@ -67,7 +63,7 @@ export function BankAccountCard({
     </div>
   ) : (
     <div
-      className={`relative flex min-h-30 w-60 shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl p-4 text-left shadow-surface transition active:scale-[0.99] ${textClass} ${inactiveClass}`}
+      className={`relative flex min-h-30 w-60 shrink-0 snap-start flex-col justify-between overflow-hidden rounded-owner p-4 text-left ${textClass} ${inactiveClass}`}
       style={{
         backgroundImage: `linear-gradient(135deg, ${account.cardColorFrom}, ${account.cardColorTo})`,
       }}
@@ -92,7 +88,7 @@ export function BankAccountCard({
         </p>
         <MoneyValue
           amount={account.balance}
-          variant="compactWithFull"
+          variant="compact"
           tone={account.cardTextColor === "dark" ? "inherit" : "inverse"}
           size="md"
           className="mt-1"
@@ -107,8 +103,8 @@ export function BankAccountCard({
     <button
       type="button"
       onClick={() => onSelect(account)}
-      className={`shrink-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
-        full ? "w-full rounded-[28px]" : "rounded-2xl"
+      className={`shrink-0 rounded-owner text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+        full ? "w-full" : ""
       }`}
       aria-label={`Buka rekening ${account.name}`}
     >

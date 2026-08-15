@@ -161,7 +161,7 @@ export function MaterialActivityTab({
                     </Badge>
                     <MoneyValue
                       amount={row.total}
-                      variant="compactWithFull"
+                      variant="compact"
                       align="right"
                       size="xs"
                       className="mt-1"

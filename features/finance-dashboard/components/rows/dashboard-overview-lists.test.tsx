@@ -26,5 +26,6 @@ describe("OverviewPriorityList", () => {
     expect(html).toContain("approval");
     expect(html).toContain("<svg");
     expect(html).not.toContain(">1<");
+    expect(html).not.toContain("h-7 w-1");
   });
 });

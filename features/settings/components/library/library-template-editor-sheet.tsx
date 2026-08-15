@@ -298,7 +298,7 @@ export function LibraryTemplateEditorSheet({
               </FormField>
             )}
             <div className="p-3">
-              <div className="overflow-hidden rounded-[20px] bg-surface-container-low ring-1 ring-ring-subtle">
+              <div className="overflow-hidden rounded-inset bg-surface-container-low ring-1 ring-ring-subtle">
                 <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
                   <div className="min-w-0 p-3">
                     <p className="truncate text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
@@ -306,7 +306,7 @@ export function LibraryTemplateEditorSheet({
                     </p>
                     <MoneyValue
                       amount={internalCost}
-                      variant="compactWithFull"
+                      variant="compact"
                       size="sm"
                       className="mt-1.5"
                     />
@@ -317,7 +317,7 @@ export function LibraryTemplateEditorSheet({
                     </p>
                     <MoneyValue
                       amount={clientPrice}
-                      variant="compactWithFull"
+                      variant="compact"
                       size="sm"
                       tone="primary"
                       className="mt-1.5"

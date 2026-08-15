@@ -51,7 +51,7 @@ export function ProjectClosingSection({
       )}
       {closingChecklist && (
         <div className="mt-sm space-y-sm">
-          <div className="overflow-hidden rounded-[20px] bg-surface-container-low">
+          <div className="overflow-hidden rounded-inset bg-surface-container-low">
             <ClosingFact label="Biaya final saat ini" amount={closingChecklist.actualCost} />
             <ClosingFact
               label={`Margin realisasi · ${closingChecklist.realizedMarginPercentage.toFixed(2)}%`}
@@ -123,7 +123,7 @@ function ClosingFact({
       <span className="text-meta font-semibold text-on-surface-variant">{label}</span>
       <MoneyValue
         amount={amount}
-        variant="compactWithFull"
+        variant="compact"
         align="right"
         size="sm"
         tone={amount < 0 ? "danger" : "default"}

@@ -4,7 +4,13 @@ import React from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { AppIcon, BudgetSplitIndicator, MoneyValue, StatusBadge } from "@/components/ui";
+import {
+  AppIcon,
+  BudgetSplitIndicator,
+  DuotoneIconTile,
+  MoneyValue,
+  StatusBadge,
+} from "@/components/ui";
 import type { DashboardRiskyProject } from "@/features/finance-dashboard/types/dashboard-types";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
@@ -38,11 +44,12 @@ export function ProjectRiskRow({
           className="block rounded-[22px] px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5 max-[430px]:px-3"
         >
           <div className="flex items-start gap-3">
-            <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${overBudget ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
-            >
-              <AppIcon name="monitoring" className="icon-md" />
-            </span>
+            <DuotoneIconTile
+              name="monitoring"
+              tone={overBudget ? "critical" : "attention"}
+              className="h-9 w-9"
+              iconClassName="icon-md"
+            />
             <div className="min-w-0 flex-1">
               <p className="truncate text-row font-semibold tracking-[-0.01em] text-on-surface">
                 {project.projectName}
@@ -57,34 +64,29 @@ export function ProjectRiskRow({
               >
                 {projectHealthLabel(project.effectiveHealth)}
               </span>
-              <span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
-                aria-hidden="true"
-              >
-                <AppIcon name="chevron_right" className="icon-sm" />
-              </span>
+              <AppIcon name="chevron_right" className="icon-sm text-on-surface-variant/55" />
             </div>
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="flex min-w-0 flex-col gap-1 rounded-2xl bg-surface-container-low/70 p-3 pr-3">
+            <div className="flex min-w-0 flex-col gap-1 rounded-inset bg-surface-container-low p-3 pr-3">
               <p className="text-[8px] leading-none font-semibold tracking-[0.08em] text-on-surface-variant/55 uppercase">
                 Aktual
               </p>
               <MoneyValue
                 amount={project.actualCost}
-                variant="compactWithFull"
+                variant="compact"
                 size="sm"
                 className="mt-1"
               />
             </div>
-            <div className="flex min-w-0 flex-col gap-1 rounded-2xl bg-surface-container-low/70 p-3 pl-3 text-right">
+            <div className="flex min-w-0 flex-col gap-1 rounded-inset bg-surface-container-low p-3 pl-3 text-right">
               <p className="text-[8px] leading-none font-semibold tracking-[0.08em] text-on-surface-variant/55 uppercase">
                 Internal budget
               </p>
               <MoneyValue
                 amount={project.internalBudget}
-                variant="compactWithFull"
+                variant="compact"
                 size="sm"
                 align="right"
                 className="mt-1"
@@ -92,7 +94,7 @@ export function ProjectRiskRow({
             </div>
           </div>
 
-          <div className="mt-2.5 flex items-center justify-between gap-3 rounded-2xl bg-surface-container-low/70 p-3 text-[10px] font-semibold">
+          <div className="mt-2.5 flex items-center justify-between gap-3 rounded-inset bg-surface-container-low p-3 text-[10px] font-semibold">
             <span className="leading-4 text-on-surface-variant">
               Terpakai {project.usedPercentage.toFixed(0)}%
             </span>
@@ -113,14 +115,15 @@ export function ProjectRiskRow({
     >
       <Link
         href={`/projects/${project.projectId}?tab=overview`}
-        className="block rounded-[20px] px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5"
+        className="block rounded-inset px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5"
       >
         <div className="flex items-start gap-3">
-          <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${overBudget ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
-          >
-            <AppIcon name="monitoring" className="icon-md" />
-          </span>
+          <DuotoneIconTile
+            name="monitoring"
+            tone={overBudget ? "critical" : "attention"}
+            className="h-9 w-9"
+            iconClassName="icon-md"
+          />
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
               <p className="truncate text-row font-semibold tracking-[-0.01em] text-on-surface">
@@ -136,12 +139,11 @@ export function ProjectRiskRow({
               {project.riskReason}
             </p>
           </div>
-          <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
+          <AppIcon
+            name="chevron_right"
+            className="mt-1 icon-sm shrink-0 text-on-surface-variant/55"
             aria-hidden="true"
-          >
-            <AppIcon name="chevron_right" className="icon-sm" />
-          </span>
+          />
         </div>
         <div className="mt-2 flex items-center justify-between gap-3">
           <span className="text-meta font-bold text-on-surface-variant">
@@ -149,7 +151,7 @@ export function ProjectRiskRow({
           </span>
           <MoneyValue
             amount={project.remainingBudget}
-            variant="compactWithFull"
+            variant="compact"
             tone={project.remainingBudget < 0 ? "danger" : "default"}
             align="right"
             size="sm"
@@ -160,13 +162,15 @@ export function ProjectRiskRow({
           value={project.usedPercentage}
           danger={overBudget}
           tone={project.effectiveHealth === "CRITICAL" ? "critical" : "warning"}
+          usedAmount={project.actualCost}
+          remainingAmount={project.remainingBudget}
         />
         <div className="mt-3 grid grid-cols-2 gap-3 text-meta font-semibold text-on-surface-variant">
           <span>
             Aktual
             <MoneyValue
               amount={project.actualCost}
-              variant="compactWithFull"
+              variant="compact"
               size="sm"
               className="mt-0.5"
             />
@@ -175,7 +179,7 @@ export function ProjectRiskRow({
             Internal budget
             <MoneyValue
               amount={project.internalBudget}
-              variant="compactWithFull"
+              variant="compact"
               size="sm"
               align="right"
               className="mt-0.5"

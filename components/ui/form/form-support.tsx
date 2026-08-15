@@ -96,7 +96,7 @@ export function ValuePreviewStrip({
             {typeof item.amount === "number" ? (
               <MoneyValue
                 amount={item.amount}
-                variant="compactWithFull"
+                variant="compact"
                 size="sm"
                 tone={
                   item.tone === "danger"

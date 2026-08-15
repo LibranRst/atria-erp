@@ -77,7 +77,7 @@ export function HeaderMorphMenu({
             borderRadius: isOpen ? 28 : 20,
           }}
           transition={isOpen ? transitionSpringBouncy : transitionSpringSmooth}
-          className="pointer-events-auto absolute top-0 left-1/2 max-h-[calc(100dvh-5.5rem)] max-w-[calc(100vw-2rem)] overflow-hidden border border-outline-variant/20 bg-white shadow-raised"
+          className={`pointer-events-auto absolute top-0 left-1/2 max-h-[calc(100dvh-5.5rem)] max-w-[calc(100vw-2rem)] overflow-hidden bg-white ring-1 ring-ring-subtle ${isOpen ? "shadow-raised" : "shadow-control"}`}
           style={{ x: "-50%" }}
         >
           <motion.button
@@ -94,7 +94,7 @@ export function HeaderMorphMenu({
               y: isOpen ? activeTitleY : 0,
             }}
             transition={isOpen ? transitionSpringBouncy : transitionSpringSmooth}
-            className={`absolute inset-x-0 top-0 flex h-10 w-full cursor-pointer items-center justify-center px-5 text-center text-sm font-semibold tracking-tight text-on-surface will-change-[opacity,transform] outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+            className={`absolute inset-x-0 top-0 flex h-10 w-full cursor-pointer items-center justify-center px-5 text-center text-sm font-semibold tracking-tight text-on-surface will-change-[opacity,transform] outline-none after:absolute after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring ${
               isOpen ? "pointer-events-none" : "pointer-events-auto"
             }`}
           >

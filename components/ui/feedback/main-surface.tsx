@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatIdr, formatTightIdr } from "@/lib/utils/money";
 import { SectionCountPill, StatusBadge, type StatusBadgeTone } from "../badge/badge";
 import { SectionAction } from "../button/button";
-import { AppIcon } from "../icon/app-icon";
+import { DuotoneIconTile } from "../icon/icon-tile";
 
 export type SummarySurfaceTone = "critical" | "warning" | "positive" | "neutral";
 export type InlineStateTone = "neutral" | "positive" | "warning" | "critical" | "pending";
@@ -18,10 +18,10 @@ const summaryBadgeTone: Record<SummarySurfaceTone, StatusBadgeTone> = {
 
 const inlineStateToneClass: Record<InlineStateTone, string> = {
   neutral: "bg-surface-container-high/65 text-on-surface-variant ring-ring-subtle",
-  positive: "bg-success/8 text-success ring-success/8",
+  positive: "bg-surface-container-low text-on-surface ring-ring-subtle",
   warning: "bg-warning/9 text-warning ring-warning/8",
   critical: "bg-error/7.5 text-error ring-error/8",
-  pending: "bg-primary/8 text-primary ring-primary/8",
+  pending: "bg-surface-container-low text-on-surface ring-ring-subtle",
 };
 
 export function SummarySurface({
@@ -43,7 +43,7 @@ export function SummarySurface({
 }): React.JSX.Element {
   return (
     <section
-      className="relative isolate overflow-hidden rounded-[26px] bg-white/88 p-2 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl"
+      className="relative isolate overflow-hidden rounded-owner bg-surface-container-lowest p-2 shadow-surface ring-1 ring-ring-subtle"
       aria-label={ariaLabel}
     >
       <span
@@ -52,9 +52,7 @@ export function SummarySurface({
       />
       <div className="flex items-center justify-between gap-3 px-2 pt-1 pb-1">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-container-low text-on-surface-variant ring-1 ring-ring-subtle">
-            <AppIcon name={icon} className="text-[17px]" />
-          </span>
+          <DuotoneIconTile name={icon} className="h-8 w-8" iconClassName="icon-sm" />
           <p className="min-w-0 truncate text-meta font-bold tracking-[0.13em] text-on-surface-variant/60 uppercase">
             {eyebrow}
           </p>
@@ -62,7 +60,7 @@ export function SummarySurface({
         {action ??
           (status ? <StatusBadge tone={summaryBadgeTone[statusTone]} label={status} /> : null)}
       </div>
-      <div className="mt-1 rounded-2xl bg-surface-container-low">{children}</div>
+      <div className="mt-1 rounded-inset bg-surface-container-low">{children}</div>
     </section>
   );
 }
@@ -78,7 +76,7 @@ export function GroupedSurface({
 }): React.JSX.Element {
   return (
     <Component
-      className={`relative isolate overflow-hidden rounded-3xl bg-white/88 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl ${className}`}
+      className={`relative isolate overflow-hidden rounded-owner bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle ${className}`}
     >
       {children}
     </Component>
@@ -110,7 +108,7 @@ export function SectionHeader({
       <div className="flex min-w-0 items-center gap-2">
         <h2
           id={id}
-          className="min-w-0 truncate text-title font-bold tracking-[-0.015em] text-on-surface max-[430px]:text-[15px] max-[430px]:leading-5"
+          className="min-w-0 truncate text-section font-bold tracking-[-0.015em] text-on-surface"
         >
           {title}
         </h2>
@@ -243,7 +241,7 @@ export function PanelSection({
 }): React.JSX.Element {
   return (
     <section
-      className={`rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle ${className}`}
+      className={`rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle ${className}`}
     >
       <div className="mb-sm flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -331,7 +329,7 @@ export function SummaryFact({
   const exactValue = amount !== undefined ? formatIdr(amount) : value;
 
   return (
-    <div className="flex min-w-0 flex-col gap-1 rounded-xl bg-white px-2.5 py-2 max-[430px]:px-2">
+    <div className="flex min-w-0 flex-col gap-1 rounded-inset bg-white px-2.5 py-2 max-[430px]:px-2">
       <p className="line-clamp-2 text-[9px] leading-[1.35] font-bold tracking-wide text-on-surface-variant/55 uppercase">
         {label}
       </p>
@@ -339,7 +337,7 @@ export function SummaryFact({
         <span className="money-value-fit block min-w-0">
           <span
             className={cn(
-              "financial-amount money-value-fit__primary block font-mono font-black tabular-nums",
+              "financial-amount money-value-fit__primary block font-sans font-extrabold tracking-[-0.02em] tabular-nums",
               toneClass,
             )}
             title={exactValue}
@@ -367,11 +365,12 @@ export function InlineStateRow({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-19 items-center gap-3 px-3.5 py-3">
-      <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${inlineStateToneClass[tone]}`}
-      >
-        <AppIcon name={icon} className="text-[17px]" />
-      </span>
+      <DuotoneIconTile
+        name={icon}
+        tone={tone === "critical" ? "critical" : tone === "warning" ? "attention" : "neutral"}
+        className={`h-9 w-9 ring-1 ${inlineStateToneClass[tone]}`}
+        iconClassName="icon-sm"
+      />
       <span className="grid min-w-0 flex-1 gap-1">
         <span className="text-row font-bold text-on-surface">{title}</span>
         <span className="text-[11px] leading-[1.3] text-on-surface-variant">{description}</span>

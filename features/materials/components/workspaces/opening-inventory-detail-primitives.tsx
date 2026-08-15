@@ -51,7 +51,7 @@ export function OpeningBatchItemRow({
         </p>
       </div>
       <div className="max-w-[46%] shrink-0 text-right">
-        <MoneyValue amount={item.totalValue} variant="compactWithFull" align="right" size="sm" />
+        <MoneyValue amount={item.totalValue} variant="compact" align="right" size="sm" />
         <p className="mt-1 truncate text-eyebrow text-on-surface-variant tabular-nums">
           @ Rp {item.unitCost.toLocaleString("id-ID")}/{item.unit}
         </p>

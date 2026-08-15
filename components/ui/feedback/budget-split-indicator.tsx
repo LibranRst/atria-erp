@@ -4,17 +4,22 @@ import React from "react";
 
 import type { IndicatorTone } from "@/lib/types/indicator-tone";
 import { getBudgetGeometry } from "@/lib/finance/budget-indicator";
+import { formatShortIdr } from "@/lib/utils/money";
 
 export function BudgetSplitIndicator({
   value,
   inverse = false,
   danger = false,
   tone = "positive",
+  usedAmount,
+  remainingAmount,
 }: {
   readonly value: number;
   readonly inverse?: boolean;
   readonly danger?: boolean;
   readonly tone?: IndicatorTone;
+  readonly usedAmount?: number;
+  readonly remainingAmount?: number;
 }): React.JSX.Element {
   const geometry = getBudgetGeometry(value);
   const usedClass = inverse
@@ -33,7 +38,7 @@ export function BudgetSplitIndicator({
     <div
       className="mt-2.5"
       role="img"
-      aria-label={`Budget terpakai ${value.toFixed(1)} persen${geometry.overflowPercentage > 0 ? `, melebihi batas ${geometry.overflowPercentage.toFixed(1)} persen` : `, tersisa ${geometry.remainingPercentage.toFixed(1)} persen`}`}
+      aria-label={`Budget terpakai ${value.toFixed(1)} persen${usedAmount === undefined ? "" : ` atau ${formatShortIdr(usedAmount)}`}${geometry.overflowPercentage > 0 ? `, melebihi batas ${geometry.overflowPercentage.toFixed(1)} persen` : `, tersisa ${geometry.remainingPercentage.toFixed(1)} persen${remainingAmount === undefined ? "" : ` atau ${formatShortIdr(remainingAmount)}`}`}`}
     >
       <div className="relative flex h-2 gap-1" aria-hidden="true">
         {geometry.clampedPercentage > 0 ? (
@@ -55,11 +60,11 @@ export function BudgetSplitIndicator({
       <div
         className={`mt-1.5 flex items-center justify-between text-[8px] font-bold tracking-wide uppercase ${secondaryText}`}
       >
-        <span>Terpakai</span>
+        <span>Terpakai {usedAmount === undefined ? "" : formatShortIdr(usedAmount)}</span>
         <span>
           {geometry.overflowPercentage > 0
-            ? `Lebih ${geometry.overflowPercentage.toFixed(0)}%`
-            : `Tersisa ${geometry.remainingPercentage.toFixed(0)}%`}
+            ? `Lebih ${geometry.overflowPercentage.toFixed(0)}%${remainingAmount === undefined ? "" : ` · ${formatShortIdr(Math.abs(remainingAmount))}`}`
+            : `Tersisa ${geometry.remainingPercentage.toFixed(0)}%${remainingAmount === undefined ? "" : ` · ${formatShortIdr(remainingAmount)}`}`}
         </span>
       </div>
     </div>

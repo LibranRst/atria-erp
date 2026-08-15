@@ -114,7 +114,7 @@ export function ExpenseDraftsPanel({
                     layout
                     key={draft.id}
                     transition={transitionSpringSnappy}
-                    className="flex min-h-14 items-center gap-2 rounded-[20px] bg-surface-container-low/65 px-2 py-1.5"
+                    className="flex min-h-14 items-center gap-2 rounded-inset bg-surface-container-low/65 px-2 py-1.5"
                   >
                     <button
                       type="button"

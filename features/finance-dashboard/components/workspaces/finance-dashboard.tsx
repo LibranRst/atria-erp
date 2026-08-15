@@ -117,13 +117,13 @@ function PositionMetric({
   readonly danger?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="flex w-full min-w-0 flex-col gap-2 rounded-2xl bg-white/7.5 p-3">
+    <div className="flex w-full min-w-0 flex-col gap-2 rounded-inset bg-white/8 p-3">
       <p className="text-[9px] leading-none font-bold tracking-[0.12em] text-white/52 uppercase">
         {label}
       </p>
       <MoneyValue
         amount={amount}
-        variant="compactWithFull"
+        variant="compact"
         tone={danger ? "danger" : "inverse"}
         size="sm"
       />
@@ -139,7 +139,7 @@ export function FinancialPosition({
   const budgetDanger = summary.remainingBudget < 0 || summary.usedPercentage >= 100;
   return (
     <section
-      className="relative isolate overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-on-primary shadow-floating ring-1 ring-white/8 max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4"
+      className="relative isolate overflow-hidden rounded-owner bg-surface-inverse px-5 py-5 text-on-primary shadow-inverse ring-1 ring-white/8 max-[430px]:px-4 max-[430px]:py-4"
       aria-label="Posisi finansial"
     >
       <span
@@ -169,7 +169,7 @@ export function FinancialPosition({
         />
       </div>
 
-      <div className="mt-4 rounded-[22px] bg-white/7.5 p-3.5 ring-1 ring-white/6 backdrop-blur-md max-[430px]:mt-3 max-[430px]:rounded-[20px] max-[430px]:p-3">
+      <div className="mt-4 rounded-inset bg-white/8 p-3.5 ring-1 ring-white/6 max-[430px]:mt-3 max-[430px]:p-3">
         <div className="flex flex-col gap-2">
           <div className="flex flex-row justify-between">
             <p className="text-[9px] leading-none font-bold tracking-wide text-white/50 uppercase">
@@ -181,13 +181,13 @@ export function FinancialPosition({
           </div>
           <div className="flex flex-row items-end justify-between">
             <p
-              className={`mt-1 font-mono text-lg font-black max-[430px]:text-[16px] ${budgetDanger ? "text-critical-on-inverse" : "text-white"}`}
+              className={`mt-1 font-sans text-lg font-extrabold tracking-[-0.025em] tabular-nums max-[430px]:text-[16px] ${budgetDanger ? "text-critical-on-inverse" : "text-white"}`}
             >
               {summary.usedPercentage.toFixed(1)}%
             </p>
             <MoneyValue
               amount={summary.remainingBudget}
-              variant="compactWithFull"
+              variant="compact"
               tone={budgetDanger ? "danger" : "inverse"}
               align="right"
               size="sm"
@@ -195,7 +195,13 @@ export function FinancialPosition({
             />
           </div>
         </div>
-        <BudgetSplitIndicator value={summary.usedPercentage} inverse danger={budgetDanger} />
+        <BudgetSplitIndicator
+          value={summary.usedPercentage}
+          inverse
+          danger={budgetDanger}
+          usedAmount={summary.actualCost}
+          remainingAmount={summary.remainingBudget}
+        />
         <div className="mt-3 flex items-center justify-between gap-3 text-meta font-semibold text-white/58">
           <span>Project aktif</span>
           <span>Margin proyeksi {summary.projectedMarginPercentage.toFixed(1)}%</span>

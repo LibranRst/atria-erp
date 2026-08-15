@@ -108,11 +108,11 @@ const statusPresentation: Record<BadgeStatus, StatusPresentation> = {
 };
 
 const toneClass: Record<StatusBadgeTone, string> = {
-  healthy: "bg-success-container text-success",
-  warning: "bg-warning-container text-warning",
+  healthy: "bg-surface-container-low text-on-surface",
+  warning: "bg-warning-container text-warning-on-container",
   critical: "bg-critical-container text-critical",
-  pending: "bg-accent-container text-accent",
-  completed: "bg-success-container text-success",
+  pending: "bg-surface-container-low text-on-surface-variant",
+  completed: "bg-surface-container-low text-on-surface",
   neutral: "bg-surface-container text-on-surface-variant",
   inactive: "bg-surface-container-low text-on-surface-variant/75",
 };
@@ -153,7 +153,7 @@ export function StatusBadge({
   return (
     <span
       {...props}
-      className={`inline-flex min-h-6 items-center gap-1.5 rounded-full px-2.5 text-eyebrow font-bold tracking-wide uppercase ${toneClass[tone]} ${className}`}
+      className={`inline-flex min-h-6 items-center gap-1.5 rounded-full px-2.5 text-eyebrow font-bold tracking-wide uppercase shadow-control ${toneClass[tone]} ${className}`}
     >
       {showMarker ? (
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" />
@@ -181,7 +181,7 @@ export function CountBadge({
     <span
       {...props}
       aria-label={`${count} ${label}`}
-      className={`inline-grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[8px] leading-none font-black tabular-nums ${tone === "attention" ? "bg-critical-container text-critical" : "bg-surface-container-high text-on-surface-variant"} ${className}`}
+      className={`inline-grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-sans text-[8px] leading-none font-extrabold tabular-nums ${tone === "attention" ? "bg-warning-container text-warning-on-container" : "bg-surface-container-high text-on-surface-variant"} ${className}`}
     >
       <span className="translate-y-px">{displayedCount}</span>
     </span>

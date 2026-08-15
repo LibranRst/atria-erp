@@ -30,7 +30,7 @@ export function ProfileIdentitySurface({
   return (
     <section
       aria-label="Identitas akun"
-      className="relative isolate overflow-hidden rounded-[28px] bg-white/90 p-4 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5"
+      className="relative isolate overflow-hidden rounded-owner bg-white/90 p-4 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5"
     >
       <span
         className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white"

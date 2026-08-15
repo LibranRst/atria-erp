@@ -48,15 +48,12 @@ The existing app already includes valuable foundations and should not be rewritt
 
 ## Documentation Map
 
-- `.agents/skills/atria-ui-ux/SKILL.md`: mandatory Dashboard-led UI/UX workflow for all agents.
+- `PRODUCT.md` / `DESIGN.md` / `.impeccable/design.json` (repo root): Impeccable product context, visual design system, and machine-readable design sidecar — mandatory reading before any UI/UX work.
 - `docs/01-product/PRD.md`: product direction and acceptance criteria.
 - `docs/02-product/MVP_BLUEPRINT.md`: MVP modules and role workflows.
 - `docs/03-flows/FLOWS.md`: finance/material operational flows.
 - `docs/04-data/DATABASE_SCHEMA.md`: database model and relationships.
 - `docs/04-data/STATUS_ENUMS.md`: status and movement enums.
-- `docs/05-ui-ux/MAIN_SURFACE_DESIGN_LANGUAGE.md`: active Dashboard/Expenses-derived page design language and QA gate.
-- `docs/05-ui-ux/MOBILE_FIRST_UI_UX.md`: mobile-first screen guidance.
-- `docs/05-ui-ux/IOS26_SOLID_DESIGN_SYSTEM.md`: visual system.
 - `docs/06-technical/AUTH_AND_PERMISSION.md`: RBAC model.
 - `docs/06-technical/API_ACTIONS.md`: Server Action contracts.
 - `docs/06-technical/AI_AGENT_ARCHITECTURE.md`: AI guardrails and brief design.

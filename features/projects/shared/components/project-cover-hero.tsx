@@ -52,7 +52,7 @@ export function ProjectCoverMedia({
 
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-primary text-on-primary">
-      <span className="relative flex h-20 w-20 -translate-y-5 items-center justify-center rounded-3xl bg-white/10 text-[32px] leading-none font-semibold text-white/90 shadow-surface ring-1 ring-white/12">
+      <span className="relative flex h-20 w-20 -translate-y-5 items-center justify-center rounded-3xl bg-white/10 text-[32px] leading-none font-semibold text-white/90 ring-1 ring-white/12">
         {initial}
       </span>
     </div>

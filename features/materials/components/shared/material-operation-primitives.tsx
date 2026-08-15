@@ -29,7 +29,7 @@ export function Mini({
         {label}
       </p>
       {typeof amount === "number" ? (
-        <MoneyValue amount={amount} variant="compactWithFull" size="sm" className="mt-1" />
+        <MoneyValue amount={amount} variant="compact" size="sm" className="mt-1" />
       ) : (
         <p className="mt-1 font-mono text-[12px] font-bold wrap-anywhere wrap-break-word tabular-nums">
           {value}
@@ -135,7 +135,7 @@ export function ApprovalRow({
         type="button"
         onClick={onOpen}
         aria-label={detailLabel}
-        className="absolute inset-0 z-0 rounded-[20px] outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-low/70"
+        className="absolute inset-0 z-0 rounded-inset outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-low/70"
       />
       <div className="pointer-events-none relative z-1 flex items-start gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-warning/9 text-warning ring-1 ring-warning/6">
@@ -147,7 +147,7 @@ export function ApprovalRow({
             {description}
           </span>
           {typeof amount === "number" && (
-            <MoneyValue amount={amount} variant="compactWithFull" size="sm" className="mt-1" />
+            <MoneyValue amount={amount} variant="compact" size="sm" className="mt-1" />
           )}
         </span>
         <ActivityDetailChevron className="mt-2" />

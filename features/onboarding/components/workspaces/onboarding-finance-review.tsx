@@ -84,7 +84,7 @@ export function OnboardingFinanceReview({
   if (!active)
     return (
       <section className="w-full space-y-5 px-1">
-        <div className="rounded-[28px] bg-white px-5 py-8 text-center ring-1 ring-ring-subtle">
+        <div className="rounded-owner bg-white px-5 py-8 text-center ring-1 ring-ring-subtle">
           <AppIcon name="task_alt" className="text-[34px] text-success" />
           <h1 className="mt-3 text-xl font-bold text-on-surface">
             Semua saldo awal sudah diperiksa

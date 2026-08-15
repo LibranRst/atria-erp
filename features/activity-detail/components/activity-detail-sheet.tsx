@@ -100,7 +100,7 @@ function Value({
     return (
       <MoneyValue
         amount={value.value}
-        variant="compactWithFull"
+        variant="compact"
         size="sm"
         align={align}
         tone={value.value < 0 ? "danger" : "default"}
@@ -271,7 +271,7 @@ function DetailContent({ detail }: { readonly detail: ActivityDetailView }): Rea
         </section>
       ) : null}
       {detail.evidenceIncomplete ? (
-        <div className="flex gap-3 rounded-[20px] bg-warning-light px-3.5 py-3 text-warning">
+        <div className="flex gap-3 rounded-inset bg-warning-light px-3.5 py-3 text-warning">
           <AppIcon name="warning" className="mt-0.5 h-4 w-4 shrink-0" />
           <p className="text-support">
             Riwayat lama belum menyimpan semua perubahan. Hanya data yang tersedia yang ditampilkan.

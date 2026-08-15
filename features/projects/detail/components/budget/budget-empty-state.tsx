@@ -14,7 +14,7 @@ export function BudgetEmptyState({
   readonly onCreateBudget: () => void;
 }): React.JSX.Element {
   return (
-    <div className="flex flex-col items-center justify-center space-y-md rounded-[28px] border border-outline-variant/20 bg-white p-md py-10 text-center shadow-surface select-none">
+    <div className="flex flex-col items-center justify-center space-y-md rounded-owner border border-outline-variant/20 bg-white p-md py-10 text-center shadow-surface select-none">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container text-on-surface-variant">
         <AppIcon name="description" className="icon-2xl" />
       </div>

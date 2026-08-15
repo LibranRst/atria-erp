@@ -18,7 +18,7 @@ Atria ERP is a private Next.js app (no publishable package, no Storybook prior t
   - `.ds-sync/package-validate.mjs`'s render-check, right after its per-component `page.goto`.
   - `.ds-sync/storybook/compare.mjs`, right after the DS-page `page.goto` and before the `__dsCells`/cell-discovery `page.evaluate`.
   - `.ds-sync/storybook/compare.mjs`'s `storyShot()` (the per-story `?story=` capture used by every `cardMode:"single"` portal/overlay component), right after `settleRender(dsPage)` — found via `BottomNavBackdrop` grading (fan-out batch 1): its `AnimatePresence` fade-in (`initial={{opacity:0}}` → `animate={{opacity:1}}`, 0.35s) was reliably caught mid-transition, rendering as "no backdrop at all" vs storybook's fully-visible scrim. Every `cardMode:"single"` component (`OperationalFormSheet`, `WorkflowFormSheet`, `HeaderMorphMenu`, `BottomSheet`, `BottomNavBackdrop`) is equally exposed — re-check those if this patch is ever missing.
-  Neither fix is part of the upstream skill scripts — `.ds-sync/` is regenerated fresh from the packaged skill on every sync, so **re-apply all three `waitForTimeout(400)` patches after re-staging** until/unless the upstream harness adds its own settle wait.
+    Neither fix is part of the upstream skill scripts — `.ds-sync/` is regenerated fresh from the packaged skill on every sync, so **re-apply all three `waitForTimeout(400)` patches after re-staging** until/unless the upstream harness adds its own settle wait.
 
 ## Component-specific exclusions
 

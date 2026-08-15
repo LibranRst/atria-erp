@@ -7,6 +7,7 @@ import {
   boolean,
   integer,
   index,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { user } from "./auth";
@@ -93,6 +94,98 @@ export const aiRun = pgTable(
 
 export const aiRunRelations = relations(aiRun, ({ one }) => ({
   runBy: one(user, { fields: [aiRun.runById], references: [user.id], relationName: "aiRunner" }),
+}));
+
+// ==========================================
+// // 18B. Percakapan AI Chat (AI Conversation)
+// ==========================================
+export const aiConversation = pgTable(
+  "ai_conversation",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 200 }), // Diringkas dari pesan pertama pengguna
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("ai_conversation_user_id_idx").on(table.userId),
+    index("ai_conversation_updated_at_idx").on(table.updatedAt),
+  ],
+);
+
+export const aiConversationRelations = relations(aiConversation, ({ one, many }) => ({
+  user: one(user, { fields: [aiConversation.userId], references: [user.id] }),
+  messages: many(aiMessage),
+}));
+
+// ==========================================
+// // 18C. Pesan AI Chat (AI Message)
+// ==========================================
+export const aiMessage = pgTable(
+  "ai_message",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => aiConversation.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 20 }).notNull(), // user, assistant
+    // Disimpan sebagai UIMessage parts agar riwayat bisa dirender ulang persis,
+    // termasuk jejak pemanggilan tool.
+    parts: jsonb("parts").notNull(),
+    provider: varchar("provider", { length: 20 }), // DEEPSEEK, GEMINI
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("ai_message_conversation_id_idx").on(table.conversationId)],
+);
+
+export const aiMessageRelations = relations(aiMessage, ({ one }) => ({
+  conversation: one(aiConversation, {
+    fields: [aiMessage.conversationId],
+    references: [aiConversation.id],
+  }),
+}));
+
+// ==========================================
+// // 18D. Konfirmasi Usulan AI (AI Proposal Confirmation)
+// ==========================================
+/**
+ * Mencatat bahwa satu kartu usulan sudah dikonfirmasi menjadi dokumen nyata.
+ *
+ * `tool_call_id` unik per kartu dan ikut tersimpan di `ai_message.parts`, sehingga
+ * riwayat yang dimuat ulang tahu kartu mana yang sudah dieksekusi. Batasan UNIQUE
+ * di kolom itu membuat konfirmasi bersifat idempoten: klik ganda, permintaan yang
+ * berlomba, atau kartu yang dibuka lagi setelah refresh tidak bisa menghasilkan
+ * dokumen kedua.
+ */
+export const aiProposalConfirmation = pgTable(
+  "ai_proposal_confirmation",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    toolCallId: varchar("tool_call_id", { length: 128 }).notNull().unique(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => aiConversation.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    proposalType: varchar("proposal_type", { length: 50 }).notNull(), // FIELD_EXPENSE
+    documentId: uuid("document_id").notNull(), // Id dokumen yang tercipta, mis. project_cost
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("ai_proposal_conversation_id_idx").on(table.conversationId)],
+);
+
+export const aiProposalConfirmationRelations = relations(aiProposalConfirmation, ({ one }) => ({
+  conversation: one(aiConversation, {
+    fields: [aiProposalConfirmation.conversationId],
+    references: [aiConversation.id],
+  }),
+  user: one(user, { fields: [aiProposalConfirmation.userId], references: [user.id] }),
 }));
 
 // ==========================================

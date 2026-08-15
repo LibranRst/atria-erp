@@ -40,6 +40,7 @@ const PERMISSION_DESCRIPTIONS: Record<PermissionKey, string> = {
   "reconcile:client_invoice": "Mencatat penerimaan pembayaran klien",
   "view:profitability": "Melihat posisi margin proyek",
   "view:ai_brief": "Melihat briefing keuangan AI",
+  "use:ai_chat": "Bertanya ke asisten AI",
   "view:material": "Melihat master material",
   "create:material": "Membuat master material",
   "update:material": "Mengubah master material",

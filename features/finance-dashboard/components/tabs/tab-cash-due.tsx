@@ -41,7 +41,7 @@ export function CashDueTab({
             </p>
             <MoneyValue
               amount={urgentTotal}
-              variant="compactWithFull"
+              variant="compact"
               size="lg"
               tone={urgentTotal > data.summary.cashAvailable ? "danger" : "default"}
               className="mt-1"
@@ -50,7 +50,7 @@ export function CashDueTab({
           <div className="shrink-0 text-right">
             <p className="text-[8px] font-semibold text-on-surface-variant/60">Cakupan kas</p>
             <p
-              className={`mt-1 font-mono text-sm font-black ${coverage !== null && coverage < 1 ? "text-error" : "text-success"}`}
+              className={`financial-amount mt-1 text-sm font-extrabold ${coverage !== null && coverage < 1 ? "text-error" : "text-on-surface"}`}
             >
               {coverage === null ? "Aman" : `${coverage.toFixed(1)}×`}
             </p>
@@ -86,11 +86,11 @@ export function CashDueTab({
             href={group.bucket === "LATER" ? "/expenses?view=vendor-bills" : undefined}
             actionLabel="Lihat semua"
           >
-            <div className="mx-3 mt-3 flex items-center justify-between rounded-[15px] bg-surface-container-low/65 px-3 py-2 text-meta font-semibold text-on-surface-variant">
+            <div className="mx-3 mt-3 flex items-center justify-between rounded-inset bg-surface-container-low px-3 py-2 text-meta font-semibold text-on-surface-variant">
               <span>{group.count} dokumen</span>
               <MoneyValue
                 amount={group.totalOutstanding}
-                variant="compactWithFull"
+                variant="compact"
                 size="sm"
                 align="right"
                 tone={group.bucket === "OVERDUE" ? "danger" : "default"}

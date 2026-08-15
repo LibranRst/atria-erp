@@ -215,7 +215,7 @@ export function InitialStockSetupPanel({
                   </span>
                   <MoneyValue
                     amount={batch.totalValue}
-                    variant="compactWithFull"
+                    variant="compact"
                     size="sm"
                     align="right"
                   />

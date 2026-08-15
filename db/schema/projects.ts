@@ -35,8 +35,6 @@ export const clientRelations = relations(client, ({ many }) => ({
   projects: many(project),
 }));
 
-
-
 // ==========================================
 // // 4. Proyek (Project)
 // ==========================================
@@ -93,8 +91,6 @@ export const projectRelations = relations(project, ({ one, many }) => ({
   formDrafts: many(formDraft),
 }));
 
-
-
 // ==========================================
 // // 4A. Transient Form Draft
 // ==========================================
@@ -136,8 +132,6 @@ export const formDraftRelations = relations(formDraft, ({ one }) => ({
   }),
 }));
 
-
-
 // ==========================================
 // // 5. RAB Header (Project Budget)
 // ==========================================
@@ -169,8 +163,6 @@ export const projectBudgetRelations = relations(projectBudget, ({ one, many }) =
   canonicalBudgets: many(projectBudgets),
 }));
 
-
-
 // ==========================================
 // // 6. Kategori Biaya (Project Cost Category)
 // ==========================================
@@ -184,8 +176,6 @@ export const projectCostCategory = pgTable("project_cost_category", {
 export const projectCostCategoryRelations = relations(projectCostCategory, ({ many }) => ({
   budgetItems: many(projectBudgetItem),
 }));
-
-
 
 // ==========================================
 // // 7. Detail RAB BoQ (Project Budget Item)
@@ -230,8 +220,6 @@ export const projectBudgetItemRelations = relations(projectBudgetItem, ({ one, m
   projectCosts: many(projectCost),
 }));
 
-
-
 // ==========================================
 // // 7A. Canonical Expense Category
 // ==========================================
@@ -260,8 +248,6 @@ export const expenseCategoryRelations = relations(expenseCategory, ({ many }) =>
   categoryPlanItems: many(projectCategoryPlanItem),
   itemLibraryItems: many(itemPriceLibrary),
 }));
-
-
 
 // ==========================================
 // // 7B. Budget Allocation Settings
@@ -343,8 +329,6 @@ export const budgetAllocationSettingCategoryRelations = relations(
   }),
 );
 
-
-
 // ==========================================
 // // 7C. Canonical Project Budget
 // ==========================================
@@ -405,8 +389,6 @@ export const projectBudgetsRelations = relations(projectBudgets, ({ one, many })
   expenses: many(projectExpenses),
   profitabilitySnapshots: many(projectProfitabilitySnapshot),
 }));
-
-
 
 // ==========================================
 // // 7C. Canonical Project Budget Category
@@ -473,8 +455,6 @@ export const projectBudgetCategoryRelations = relations(projectBudgetCategory, (
   vendorBills: many(vendorBill),
   projectCosts: many(projectCost),
 }));
-
-
 
 // ==========================================
 // // 7D. Non-Material Category Plan Item
@@ -573,8 +553,6 @@ export const projectCategoryPlanItemRelations = relations(
     rabItems: many(rabEstimateItem),
   }),
 );
-
-
 
 // ==========================================
 // // 7E. Canonical Project Expense
@@ -690,8 +668,6 @@ export const projectExpensesRelations = relations(projectExpenses, ({ one }) => 
   }),
 }));
 
-
-
 // ==========================================
 // // 7F. Project Profitability Snapshot
 // ==========================================
@@ -790,8 +766,6 @@ export const projectProfitabilitySnapshotRelations = relations(
   }),
 );
 
-
-
 // ==========================================
 // // 14A. Kategori Material (Material Category)
 // ==========================================
@@ -805,8 +779,6 @@ export const materialCategory = pgTable("material_category", {
 export const materialCategoryRelations = relations(materialCategory, ({ many }) => ({
   materials: many(materialMaster),
 }));
-
-
 
 // ==========================================
 // // 14F. RAP Proyek (Internal Project RAP)
@@ -861,8 +833,6 @@ export const projectRapRelations = relations(projectRap, ({ one, many }) => ({
   items: many(projectRapItem),
   rabEstimates: many(rabEstimate),
 }));
-
-
 
 // ==========================================
 // // 14F. Item RAP Proyek (Project RAP Item)
@@ -926,8 +896,6 @@ export const projectRapItemRelations = relations(projectRapItem, ({ one, many })
   rabItems: many(rabEstimateItem),
 }));
 
-
-
 // ==========================================
 // // 14I. RAB Estimate Client-Facing
 // ==========================================
@@ -987,8 +955,6 @@ export const rabEstimateRelations = relations(rabEstimate, ({ one, many }) => ({
   bundles: many(rabEstimateBundle),
 }));
 
-
-
 // ==========================================
 // // 14J. RAB Named Bundle Client-Facing
 // ==========================================
@@ -1012,8 +978,6 @@ export const rabEstimateBundle = pgTable(
   },
   (table) => [index("reb_rab_estimate_id_idx").on(table.rabEstimateId)],
 );
-
-
 
 // ==========================================
 // // 14K. RAB Estimate Item Client-Facing
@@ -1155,5 +1119,3 @@ export const projectChangeOrderRelations = relations(projectChangeOrder, ({ one 
     relationName: "changeOrderApprover",
   }),
 }));
-
-

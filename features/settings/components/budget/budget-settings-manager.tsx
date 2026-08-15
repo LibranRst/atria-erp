@@ -158,7 +158,7 @@ export function BudgetSettingsManager({
                   <dd className="min-w-0">
                     <MoneyValue
                       amount={item.value}
-                      variant="compactWithFull"
+                      variant="compact"
                       size="xs"
                       align="right"
                       tone={item.tone}
@@ -289,7 +289,7 @@ export function BudgetSettingsManager({
                     <div className="max-w-[42%] shrink-0 text-right">
                       <MoneyValue
                         amount={categoryAmount}
-                        variant="compactWithFull"
+                        variant="compact"
                         size="xs"
                         align="right"
                       />
@@ -352,7 +352,7 @@ export function BudgetSettingsManager({
         </p>
       ) : null}
       {canManage && dirty ? (
-        <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 min-w-0 space-y-1 rounded-[22px] bg-white/96 p-2 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl">
+        <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 min-w-0 space-y-1 rounded-[22px] bg-white/96 p-2 shadow-raised ring-1 ring-ring-subtle backdrop-blur-xl">
           <p
             className={`px-1 text-support ${overLimit ? "font-bold text-error" : "text-on-surface-variant"}`}
           >

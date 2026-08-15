@@ -88,7 +88,7 @@ export function RabBundleDrawer({
               value={
                 <MoneyValue
                   amount={Number(bundleForm.unitPrice)}
-                  variant="compactWithFull"
+                  variant="compact"
                   size="sm"
                   align="right"
                 />
@@ -99,7 +99,7 @@ export function RabBundleDrawer({
               value={
                 <MoneyValue
                   amount={bundleTotal}
-                  variant="compactWithFull"
+                  variant="compact"
                   size="sm"
                   align="right"
                   tone="default"

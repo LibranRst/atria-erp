@@ -30,10 +30,11 @@ const config: StorybookConfig = {
       webpackConfig.plugins.push(new MiniCssExtractPlugin());
       const rules = (webpackConfig.module?.rules ?? []) as RuleSetRule[];
       for (const rule of rules) {
-        if (!rule || typeof rule !== "object" || !("use" in rule) || !Array.isArray(rule.use)) continue;
+        if (!rule || typeof rule !== "object" || !("use" in rule) || !Array.isArray(rule.use))
+          continue;
         const loaders = rule.use as (string | { loader?: string })[];
-        const styleLoaderIndex = loaders.findIndex(
-          (l) => (typeof l === "string" ? l : (l.loader ?? "")).includes("style-loader"),
+        const styleLoaderIndex = loaders.findIndex((l) =>
+          (typeof l === "string" ? l : (l.loader ?? "")).includes("style-loader"),
         );
         if (styleLoaderIndex !== -1) loaders[styleLoaderIndex] = MiniCssExtractPlugin.loader;
       }

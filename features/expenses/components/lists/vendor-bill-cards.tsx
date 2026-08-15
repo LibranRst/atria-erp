@@ -125,7 +125,7 @@ export function VendorBillCard({
             </h3>
             <MoneyValue
               amount={amountNum}
-              variant="compactWithFull"
+              variant="compact"
               align="right"
               size="sm"
               className={`shrink-0 ${bill.status === "PAID" ? "text-on-surface-variant/65" : "text-on-surface"}`}
@@ -306,7 +306,7 @@ export function VendorPaymentCard({
             </h4>
             <MoneyValue
               amount={amountPaidNum}
-              variant="compactWithFull"
+              variant="compact"
               align="right"
               size="sm"
               className={`shrink-0 ${isCompleted ? "text-on-surface-variant/65" : "text-on-surface"}`}

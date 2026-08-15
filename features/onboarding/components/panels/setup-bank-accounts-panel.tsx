@@ -143,7 +143,7 @@ export function SetupBankAccountsPanel({
                 </span>
                 <MoneyValue
                   amount={account.balance}
-                  variant="compactWithFull"
+                  variant="compact"
                   size="sm"
                   align="right"
                 />

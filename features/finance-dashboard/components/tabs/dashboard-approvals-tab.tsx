@@ -192,7 +192,7 @@ export function ApprovalsTab({
       >
         <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
           <div className="min-w-0">
-            <p className="font-mono text-[36px] leading-none font-black text-on-surface max-[430px]:text-[32px]">
+            <p className="financial-amount text-[36px] leading-none font-extrabold tracking-[-0.045em] text-on-surface max-[430px]:text-[32px]">
               {approvalSummary.totalCount}
             </p>
             <p className="text-meta font-semibold text-on-surface-variant">
@@ -203,7 +203,7 @@ export function ApprovalsTab({
             <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total antrean</p>
             <MoneyValue
               amount={approvalSummary.totalAmount}
-              variant="compactWithFull"
+              variant="compact"
               size="lg"
               align="right"
               className="mt-1"
@@ -232,7 +232,7 @@ export function ApprovalsTab({
           </DashboardTabEmpty>
         ) : (
           <>
-            <div className="mx-3 mt-3 rounded-[15px] bg-surface-container-low/65 px-3 py-2 text-meta text-on-surface-variant">
+            <div className="mx-3 mt-3 rounded-inset bg-surface-container-low px-3 py-2 text-meta text-on-surface-variant">
               Diurutkan berdasarkan risiko budget, jatuh tempo, lama menunggu, dan nominal.
             </div>
             <RowGroup>
@@ -273,7 +273,7 @@ export function ApprovalsTab({
       >
         {presentedApproval ? (
           <div className="space-y-md">
-            <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
+            <section className="overflow-hidden rounded-owner bg-surface-container-lowest ring-1 ring-ring-subtle">
               <div className="p-4">
                 <div className="flex items-center justify-between gap-3">
                   <StatusBadge
@@ -315,7 +315,7 @@ export function ApprovalsTab({
               ) : null}
             </section>
 
-            <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
+            <section className="overflow-hidden rounded-owner bg-surface-container-lowest ring-1 ring-ring-subtle">
               {[
                 ["Proyek", presentedApproval.projectName],
                 ["Pengaju", presentedApproval.requestedBy],
@@ -342,7 +342,7 @@ export function ApprovalsTab({
             {presentedApproval.type === "inventory_opening" ? (
               <>
                 <InventoryOpeningApprovalItems item={presentedApproval} />
-                <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
+                <section className="overflow-hidden rounded-owner bg-surface-container-lowest ring-1 ring-ring-subtle">
                   <div className="px-4 py-3.5">
                     <p className="text-meta font-bold tracking-widest text-on-surface-variant/65 uppercase">
                       Dampak stok
@@ -362,7 +362,7 @@ export function ApprovalsTab({
                 <h3 className="px-1 text-meta font-bold tracking-[0.11em] text-on-surface uppercase">
                   Bukti pengajuan
                 </h3>
-                <div className="overflow-hidden rounded-3xl bg-surface-container-lowest p-3 shadow-surface ring-1 ring-ring-subtle">
+                <div className="overflow-hidden rounded-owner bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={presentedApproval.receiptImageUrl}
@@ -423,7 +423,7 @@ export function ApprovalsTab({
         onClose={closeDecision}
       >
         <div className="space-y-md">
-          <div className="rounded-[20px] bg-error-container/25 p-4 text-xs leading-5 text-error">
+          <div className="rounded-inset bg-error-container/25 p-4 text-xs leading-5 text-error">
             Pengajuan tidak akan dilanjutkan. Jelaskan alasan yang dapat ditindaklanjuti oleh
             pengaju.
           </div>

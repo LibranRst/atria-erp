@@ -30,6 +30,7 @@ export type PermissionKey =
   | "reconcile:client_invoice"
   | "view:profitability"
   | "view:ai_brief"
+  | "use:ai_chat"
   | "view:material"
   | "create:material"
   | "update:material"
@@ -92,6 +93,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "reconcile:client_invoice",
     "view:profitability",
     "view:ai_brief",
+    "use:ai_chat",
     "view:material",
     "create:material",
     "update:material",
@@ -126,6 +128,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "reverse:opening_inventory",
   ],
   FINANCE_ADMIN: [
+    "use:ai_chat",
     "view:bank_account",
     "update:bank_account", // No Create or Delete for bank accounts
     "view:ledger",
@@ -174,6 +177,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "approve:opening_inventory",
   ],
   PROJECT_MANAGER: [
+    "use:ai_chat",
     "view:budget",
     "create:budget",
     "update:budget",

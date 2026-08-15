@@ -42,7 +42,7 @@ export function BudgetRiskTab({
               </p>
               <MoneyValue
                 amount={data.summary.internalBudget}
-                variant="compactWithFull"
+                variant="compact"
                 size="lg"
                 className="mt-1"
               />
@@ -53,7 +53,7 @@ export function BudgetRiskTab({
               </p>
               <MoneyValue
                 amount={data.summary.actualCost}
-                variant="compactWithFull"
+                variant="compact"
                 size="lg"
                 align="right"
                 tone={budgetDanger ? "danger" : "default"}
@@ -61,7 +61,13 @@ export function BudgetRiskTab({
               />
             </div>
           </div>
-          <BudgetSplitIndicator value={data.summary.usedPercentage} danger={budgetDanger} />
+          <BudgetSplitIndicator
+            value={data.summary.usedPercentage}
+            danger={budgetDanger}
+            tone={budgetDanger ? "critical" : "positive"}
+            usedAmount={data.summary.actualCost}
+            remainingAmount={data.summary.remainingBudget}
+          />
         </div>
         <div className="grid grid-cols-2 gap-2 px-2 pb-2">
           <SummaryFact

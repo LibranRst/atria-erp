@@ -362,6 +362,41 @@ Expected: status Active → Completed, final profitability snapshot dibuat, end 
 Sebagai negative test, buka Menteng dan tekan **Periksa kesiapan closing**. Menteng harus tetap
 blocked karena masih mempunyai invoice/vendor/payment/reservation yang belum final.
 
+## 12A. Asisten AI
+
+Prasyarat: `DEEPSEEK_API_KEY` terisi di `.env` (lihat `.env.example`). Tanpa key mana pun, tombol
+asisten tetap muncul untuk peran yang berhak tetapi setiap pertanyaan gagal dijawab.
+
+Seed demo tidak membuat percakapan apa pun — percakapan adalah data pengguna, bukan fixture. Setelah
+reset, chat dimulai kosong dan riwayat terbentuk dari yang Anda tanyakan sendiri.
+
+Buka tombol chat di header (kiri atas). Tombol hanya muncul untuk Owner, Finance Admin, dan PM.
+
+### 12A.1 Jawaban berbasis data
+
+Tanyakan berturut-turut dan bandingkan angkanya dengan layar terkait:
+
+| Pertanyaan                                        | Expected                                                                     |
+| ------------------------------------------------- | ---------------------------------------------------------------------------- |
+| "Berapa sisa budget proyek Sudirman?"             | Satu kartu budget Sudirman saja, bukan daftar seluruh proyek                  |
+| "Proyek mana yang budgetnya paling mengkhawatirkan?" | Satu kartu berisi hanya proyek berisiko; Senopati dan Brawijaya tidak muncul  |
+| "Berapa total kas kita?"                          | Kartu saldo; totalnya sama dengan `/ledger` tab Rekening                      |
+| "Ada tagihan vendor yang jatuh tempo?"            | Kartu tagihan; yang telat berada di baris teratas                             |
+
+Periksa juga: jejak "N sumber data dibaca" bisa dibuka, angka di kartu cocok dengan halaman aslinya,
+dan menekan kartu membuka rute terkait sambil menutup sheet.
+
+### 12A.2 Kartu usulan pengeluaran
+
+Minta: "Catat pengeluaran material Rp 750.000 untuk beli cat di proyek Sudirman."
+
+Expected: muncul kartu usulan berstatus **Belum dikirim**. Tidak ada apa pun yang tercatat sampai
+Anda menekan Konfirmasi. Setelah dikonfirmasi, kartu berubah menjadi **Terkirim**, dan pengajuan
+muncul di `/expenses` dengan status Diajukan.
+
+Muat ulang halaman lalu buka lagi percakapan itu: kartu harus tetap **Terkirim** tanpa tombol
+konfirmasi. Ini penjaga terhadap dokumen ganda.
+
 ## 13. Negative test ringkas
 
 | Test                                               | Expected                       |
@@ -377,6 +412,9 @@ blocked karena masih mempunyai invoice/vendor/payment/reservation yang belum fin
 | Edit/delete cash transaction yang sudah reconciled | Ditolak                        |
 | Stock use melebihi available stock                 | Ditolak                        |
 | Closing Menteng sebelum semua blocker selesai      | Ditolak dan blocker dijelaskan |
+| PM bertanya ke asisten soal proyek yang bukan miliknya | Dijawab di luar akses, tanpa membocorkan datanya |
+| Purchasing atau Sales membuka tombol asisten AI    | Tombol tidak muncul            |
+| Menekan Konfirmasi dua kali pada satu kartu usulan | Hanya satu pengajuan tercatat  |
 
 ## 14. Mengulang atau mengaudit hasil
 

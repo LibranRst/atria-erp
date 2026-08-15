@@ -28,9 +28,7 @@ export function PageHeader({
             {eyebrow}
           </p>
         )}
-        <h1 className="text-[28px] leading-8 font-semibold tracking-tight text-on-surface">
-          {title}
-        </h1>
+        <h1 className="text-title font-bold tracking-[-0.03em] text-on-surface">{title}</h1>
         {subtitle && <p className="mt-1 text-xs leading-4 text-on-surface-variant">{subtitle}</p>}
       </div>
       {(action || badge) && <div className="shrink-0 pt-1">{action ?? badge}</div>}
@@ -57,7 +55,9 @@ export function NativeSection({
 }: NativeSectionProps): JSX.Element {
   const hasHeader = Boolean(eyebrow || title || action);
   return (
-    <section className={`rounded-[28px] bg-white p-md shadow-surface ${className}`}>
+    <section
+      className={`rounded-owner bg-white p-md shadow-surface ring-1 ring-ring-subtle ${className}`}
+    >
       {hasHeader && (
         <div className="mb-sm flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -137,7 +137,7 @@ function moneySecondarySizeClass(size: MoneyValueSize = "md"): string {
   return size === "fit" ? "money-value-fit__exact" : "";
 }
 
-export type MoneyValueVariant = "compactWithFull" | "fullDynamic";
+export type MoneyValueVariant = "compact" | "compactWithFull" | "fullDynamic";
 
 type MoneyValueProps = {
   readonly amount: number;
@@ -171,7 +171,7 @@ export function MoneyValue({
         title={fullValue}
       >
         <span
-          className={`financial-amount money-value-dynamic__text block font-mono leading-4 font-bold tabular-nums ${valueClass}`}
+          className={`financial-amount money-value-dynamic__text block font-sans leading-4 font-extrabold tracking-[-0.035em] tabular-nums ${valueClass}`}
         >
           {fullValue}
         </span>
@@ -186,12 +186,12 @@ export function MoneyValue({
       className={`money-value-compact block min-w-0 space-y-0.5 ${fits ? "money-value-fit" : ""} ${alignClass} ${className}`}
     >
       <span
-        className={`financial-amount block font-mono leading-5 font-bold whitespace-nowrap tabular-nums ${moneyCompactSizeClass(size)} ${valueClass}`}
+        className={`financial-amount block font-sans leading-5 font-extrabold tracking-[-0.025em] whitespace-nowrap tabular-nums ${moneyCompactSizeClass(size)} ${valueClass}`}
         title={fullValue}
       >
         {compactValue}
       </span>
-      {compactValue !== fullValue && (
+      {variant === "compactWithFull" && compactValue !== fullValue && (
         <span
           className={`financial-amount block font-mono leading-4 tabular-nums ${fits ? "" : "money-value-exact"} ${moneySecondarySizeClass(size)} ${moneySecondaryToneClass(tone)}`}
         >
@@ -224,7 +224,6 @@ const metricPillLabelClass: Record<MetricPillSurface, string> = {
 type MetricPillProps = {
   readonly label: string;
   readonly value: string;
-  readonly fullValue?: string;
   readonly tone?: MetricTone;
   readonly valueSize?: "sm" | "md" | "lg";
   readonly align?: "left" | "right";
@@ -237,7 +236,6 @@ type MetricPillProps = {
 export function MetricPill({
   label,
   value,
-  fullValue,
   tone = "default",
   valueSize = "md",
   align = "left",
@@ -255,7 +253,7 @@ export function MetricPill({
 
   return (
     <div
-      className={`min-w-0 rounded-2xl px-3 py-2.5 ${metricPillSurfaceClass[surface]} ${alignClass} ${className}`}
+      className={`min-w-0 rounded-inset px-3 py-2.5 ${metricPillSurfaceClass[surface]} ${alignClass} ${className}`}
     >
       <p
         className={`truncate text-eyebrow font-bold tracking-wide uppercase ${metricPillLabelClass[surface]}`}
@@ -265,11 +263,6 @@ export function MetricPill({
       <p className={`mt-0.5 font-bold ${fontClass} ${sizeClass} ${wrapClass} ${valueClass}`}>
         {value}
       </p>
-      {fullValue && fullValue !== value && (
-        <p className="financial-amount mt-1 font-mono text-eyebrow wrap-break-word text-on-surface-variant/75 tabular-nums">
-          {fullValue}
-        </p>
-      )}
     </div>
   );
 }
@@ -292,7 +285,7 @@ export function MoneyMetricPill({
   amount,
   prefix,
   detail,
-  variant = "compactWithFull",
+  variant = "compact",
   tone = "default",
   valueSize = "md",
   align = "left",
@@ -444,7 +437,7 @@ export function EmptyState({
     <div
       className={`flex flex-col items-center justify-center rounded-[28px] bg-white px-6 py-14 text-center shadow-surface ${className}`}
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-surface-container-low text-on-surface-variant shadow-control">
+      <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-surface-container-low text-on-surface-variant">
         <AppIcon name={icon} className="icon-2xl" />
       </div>
       <h3 className="mt-5 text-lg leading-6 font-semibold text-on-surface">{title}</h3>

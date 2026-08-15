@@ -142,7 +142,7 @@ export function ProjectOverview({
   return (
     <div className="space-y-sm">
       {!budget ? (
-        <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
+        <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
           <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
             Posisi proyek
           </p>
@@ -161,7 +161,7 @@ export function ProjectOverview({
           </button>
         </section>
       ) : (
-        <section className="rounded-[28px] bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
+        <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
@@ -351,7 +351,7 @@ export function ProjectOverview({
                   <span className="max-w-[42%] shrink-0">
                     <MoneyValue
                       amount={category.remainingAmount}
-                      variant="compactWithFull"
+                      variant="compact"
                       tone={category.remainingAmount < 0 ? "danger" : "default"}
                       align="right"
                       size="sm"
@@ -511,7 +511,7 @@ function FinancialFact({
       </p>
       <MoneyValue
         amount={amount}
-        variant="compactWithFull"
+        variant="compact"
         tone="inverse"
         align={align === "right" ? "right" : "left"}
         size="xs"
@@ -535,7 +535,7 @@ function DetailMoneyRow({
       <span className="text-xs font-semibold text-on-surface-variant">{label}</span>
       <MoneyValue
         amount={amount}
-        variant="compactWithFull"
+        variant="compact"
         tone={danger ? "danger" : "default"}
         align="right"
         size="sm"

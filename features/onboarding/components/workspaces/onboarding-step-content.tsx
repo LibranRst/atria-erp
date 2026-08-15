@@ -132,7 +132,7 @@ function OnboardingSummary({
           </div>
         </section>
       ) : null}
-      <div className="overflow-hidden rounded-[28px] bg-white ring-1 ring-ring-subtle">
+      <div className="overflow-hidden rounded-owner bg-white ring-1 ring-ring-subtle">
         <div className="divide-y divide-black/5.5">
           {overview.readiness
             .filter((item) => item.id !== "summary")
@@ -192,7 +192,7 @@ export function OnboardingStepContent({
   return (
     <>
       {step === "welcome" ? (
-        <div className="overflow-hidden rounded-[28px] bg-white shadow-surface ring-1 ring-ring-subtle">
+        <div className="overflow-hidden rounded-owner bg-white shadow-surface ring-1 ring-ring-subtle">
           <div className="divide-y divide-black/5.5">
             <FactRow
               icon="tune"

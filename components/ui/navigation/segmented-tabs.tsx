@@ -5,8 +5,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { motion, useReducedMotion } from "framer-motion";
 
 import { transitionSpringBouncy } from "@/lib/utils/motion";
-import { CountBadge } from "../badge/badge";
-import { cn } from "@/lib/utils/cn";
 
 export type SegmentedTabOption<TValue extends string> = {
   readonly value: TValue;
@@ -181,16 +179,12 @@ export function SegmentedTabs<TValue extends string>({
           {option.icon}
           <span className="truncate">{option.label}</span>
           {typeof option.count === "number" ? (
-            <CountBadge
-              count={option.count}
-              label={`${option.label} memerlukan perhatian`}
-              className={cn(
-                compact
-                  ? "text-eyebrow max-[430px]:h-4.5 max-[430px]:min-w-4.5 max-[430px]:text-[8.5px]"
-                  : "text-meta",
-                active && "bg-white/18 text-white",
-              )}
-            />
+            <span
+              aria-label={`${option.count} ${option.label} memerlukan perhatian`}
+              className={`inline-flex min-w-4 items-center justify-center rounded-full px-1 font-sans text-eyebrow leading-4 font-extrabold tabular-nums ${active ? "bg-white/12 text-white" : "bg-surface-container text-on-surface"}`}
+            >
+              {option.count > 99 ? "99+" : option.count}
+            </span>
           ) : null}
         </span>
       </button>
@@ -200,7 +194,7 @@ export function SegmentedTabs<TValue extends string>({
   if (scrollable) {
     return (
       <div
-        className={`relative w-full overflow-hidden rounded-full border border-outline-variant/10 bg-surface-container-low p-1 ${className}`}
+        className={`relative w-full overflow-hidden rounded-full bg-surface-container-low p-1 ${className}`}
       >
         <div
           ref={scrollRef}
@@ -217,7 +211,7 @@ export function SegmentedTabs<TValue extends string>({
               initial={false}
               animate={indicatorMetrics}
               transition={reduceMotion || !animated ? { duration: 0 } : transitionSpringBouncy}
-              className="pointer-events-none absolute inset-y-0 rounded-full bg-primary shadow-control"
+              className="pointer-events-none absolute inset-y-0 rounded-full bg-primary shadow-primary"
               aria-hidden="true"
             />
             {tabButtons}
@@ -231,7 +225,7 @@ export function SegmentedTabs<TValue extends string>({
     <div className={className}>
       <div
         ref={tabListRef}
-        className="relative flex w-full overflow-hidden rounded-full border border-outline-variant/10 bg-surface-container-low p-1 select-none"
+        className="relative flex w-full overflow-hidden rounded-full bg-surface-container-low p-1 select-none"
         role="tablist"
         aria-label={ariaLabel}
         data-indicator-id={activeLayoutId}
@@ -240,7 +234,7 @@ export function SegmentedTabs<TValue extends string>({
           initial={false}
           animate={indicatorMetrics}
           transition={reduceMotion || !animated ? { duration: 0 } : transitionSpringBouncy}
-          className="pointer-events-none absolute inset-y-1 rounded-full bg-primary shadow-control"
+          className="pointer-events-none absolute inset-y-1 rounded-full bg-primary shadow-primary"
           aria-hidden="true"
         />
         {tabButtons}

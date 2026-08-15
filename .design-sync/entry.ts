@@ -8,7 +8,11 @@ export * from "../components/ui";
 // lib/auth/permissions.ts, which also imports the real Drizzle DB client at
 // module scope (same class of issue as MobileShell's Global*Drawer imports).
 // Its prop-driven subparts below have no such coupling.
-export { BottomNavBackdrop, BottomTabBar, QuickActionFab } from "../components/layout/bottom-nav-parts";
+export {
+  BottomNavBackdrop,
+  BottomTabBar,
+  QuickActionFab,
+} from "../components/layout/bottom-nav-parts";
 export { HeaderMorphMenu } from "../components/layout/header-morph-menu";
 
 // Real components used across the app but not re-exported by the ui barrel.

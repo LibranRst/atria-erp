@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { JSX } from "react";
 
-import { SwitchRow, Textarea } from "@/components/ui";
+import { AppIcon, SwitchRow, Textarea } from "@/components/ui";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
 import { transitionSpringSmooth } from "@/lib/utils/motion";
 
@@ -84,12 +84,16 @@ export function ApprovalDecisionReasonFields({
       ) : null}
 
       {requiresEmergencyOverride ? (
-        <div className="space-y-2">
+        <div className="space-y-2 rounded-inset bg-white p-3 ring-2 ring-critical/30">
+          <p className="flex items-center gap-1.5 text-eyebrow font-bold text-critical uppercase">
+            <AppIcon name="warning" className="icon-xs" />
+            Melewati batas persetujuan mandiri
+          </p>
           <SwitchRow
             checked={emergencyOverride}
             onChange={onEmergencyOverrideChange}
             title="Gunakan emergency override"
-            description="Wajib untuk menyetujui pengajuan sendiri. Keputusan dicatat di audit log."
+            description="Menyetujui pengajuan milik sendiri di luar alur normal. Wajib diaktifkan dengan alasan tertulis, dan tercatat permanen di audit log."
           />
           <AnimatePresence initial={false}>
             {emergencyOverride ? (

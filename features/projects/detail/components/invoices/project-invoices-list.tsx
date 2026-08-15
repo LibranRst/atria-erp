@@ -130,7 +130,7 @@ function ProjectInvoiceTimelineRow({
             </p>
             <MoneyValue
               amount={remaining}
-              variant="compactWithFull"
+              variant="compact"
               tone={isCritical ? "danger" : "default"}
               size="sm"
             />

@@ -53,7 +53,7 @@ export function ProjectIdentityHeader({
 
   return (
     <>
-      <section className="overflow-hidden rounded-[28px] bg-primary shadow-inverse ring-1 ring-ring-subtle">
+      <section className="overflow-hidden rounded-owner bg-primary shadow-inverse ring-1 ring-ring-subtle">
         <div className="relative aspect-square overflow-hidden bg-primary">
           <ProjectCoverMedia coverImageUrl={project.coverImageUrl} name={project.name} />
 

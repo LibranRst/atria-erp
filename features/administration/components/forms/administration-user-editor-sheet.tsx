@@ -165,7 +165,7 @@ export function AdministrationUserEditorSheet({
           ) : null}
         </FormSection>
         {editorMode === "NEW_USER" ? (
-          <div className="flex items-start gap-3 rounded-[20px] bg-warning/8 px-4 py-3 text-warning ring-1 ring-warning/8">
+          <div className="flex items-start gap-3 rounded-inset bg-warning/8 px-4 py-3 text-warning ring-1 ring-warning/8">
             <AppIcon name="password" className="mt-0.5 icon-sm shrink-0" aria-hidden="true" />
             <p className="text-meta">
               User wajib mengganti password sementara saat pertama kali login.

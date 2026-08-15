@@ -71,7 +71,7 @@ export function LibraryTemplateList({
                       </span>
                       <MoneyValue
                         amount={item.defaultClientPrice}
-                        variant="compactWithFull"
+                        variant="compact"
                         size="xs"
                         tone="primary"
                         className="mt-1"
@@ -83,7 +83,7 @@ export function LibraryTemplateList({
                       </span>
                       <MoneyValue
                         amount={item.defaultInternalCost}
-                        variant="compactWithFull"
+                        variant="compact"
                         size="xs"
                         align="right"
                         className="mt-1"
@@ -93,7 +93,7 @@ export function LibraryTemplateList({
                 ) : (
                   <MoneyValue
                     amount={item.defaultClientPrice}
-                    variant="compactWithFull"
+                    variant="compact"
                     size="xs"
                     tone="primary"
                     className="mt-1.5"

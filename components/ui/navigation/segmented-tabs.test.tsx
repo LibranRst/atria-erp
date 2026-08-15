@@ -49,9 +49,10 @@ describe("segmented tabs", () => {
 
     expect(html).toContain("h-10 min-h-10");
     expect(html).toContain("after:-inset-y-1");
-    expect(html).toContain("inline-grid h-5 min-w-5");
-    expect(html).toContain("max-[430px]:h-4.5 max-[430px]:min-w-4.5");
-    expect(html).toContain("translate-y-px");
+    expect(html).toContain("inline-flex min-w-4");
+    expect(html).toContain("bg-surface-container text-on-surface");
+    expect(html).toContain("2 Budget memerlukan perhatian");
+    expect(html).not.toContain("bg-critical-container");
   });
 
   test("fills spare width while preserving intrinsic overflow", () => {

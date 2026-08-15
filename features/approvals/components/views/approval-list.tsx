@@ -23,6 +23,7 @@ import {
 import {
   APPROVAL_PAGE_SIZE,
   approvalIsCritical,
+  approvalRejectionPlaceholder,
   paginateApprovalGroups,
 } from "@/features/approvals/utils/approval-list-utils";
 import {
@@ -36,6 +37,7 @@ import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentati
 import { getErrorMessage } from "@/lib/utils/error-message";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import {
+  ApprovalDecisionSubject,
   ApprovalDetailSheet,
   ApprovalQueueRow,
   type ApprovalDecision,
@@ -291,9 +293,7 @@ export function ApprovalList({
       >
         <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
           <div className="min-w-0">
-            <p className="font-mono text-[36px] leading-none font-black text-on-surface max-[430px]:text-[32px]">
-              {approvals.length}
-            </p>
+            <p className="font-mono text-focal font-black text-on-surface">{approvals.length}</p>
             <p className="text-meta font-semibold text-on-surface-variant">
               persetujuan menunggu keputusan
             </p>
@@ -302,7 +302,7 @@ export function ApprovalList({
             <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total antrean</p>
             <MoneyValue
               amount={approvalSummary.totalAmount}
-              variant="compactWithFull"
+              variant="compact"
               size="lg"
               align="right"
               className="mt-1"
@@ -345,7 +345,7 @@ export function ApprovalList({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={surfaceTransition}
-                className="pointer-events-none absolute inset-0 rounded-3xl bg-white/96 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl"
+                className="pointer-events-none absolute inset-0 rounded-owner bg-white ring-1 ring-ring-subtle"
                 aria-hidden="true"
               />
             ) : null}
@@ -485,31 +485,36 @@ export function ApprovalList({
         onClose={closeDecision}
         onConfirm={confirmDecision}
       >
-        {decision?.item &&
-        (approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride) ||
-          approvalRequiresOpeningReason(decision.item, canEmergencyOverride)) ? (
-          <ApprovalDecisionReasonFields
-            item={decision.item}
-            canEmergencyOverride={canEmergencyOverride}
-            approvalReason={approvalReason}
-            emergencyOverride={emergencyOverride}
-            emergencyReason={emergencyReason}
-            pending={pending}
-            idPrefix="approval"
-            onApprovalReasonChange={setApprovalReason}
-            onEmergencyOverrideChange={setEmergencyOverride}
-            onEmergencyReasonChange={setEmergencyReason}
-          />
+        {decision?.item ? (
+          <div className="space-y-3">
+            <ApprovalDecisionSubject item={decision.item} />
+            {approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride) ||
+            approvalRequiresOpeningReason(decision.item, canEmergencyOverride) ? (
+              <ApprovalDecisionReasonFields
+                item={decision.item}
+                canEmergencyOverride={canEmergencyOverride}
+                approvalReason={approvalReason}
+                emergencyOverride={emergencyOverride}
+                emergencyReason={emergencyReason}
+                pending={pending}
+                idPrefix="approval"
+                onApprovalReasonChange={setApprovalReason}
+                onEmergencyOverrideChange={setEmergencyOverride}
+                onEmergencyReasonChange={setEmergencyReason}
+              />
+            ) : null}
+          </div>
         ) : null}
       </ConfirmationSheet>
 
       <BottomSheet
         open={decision?.status === "REJECTED"}
-        title="Alasan Penolakan"
+        title="Alasan penolakan"
         onClose={closeDecision}
       >
         <div className="space-y-md">
-          <div className="rounded-[20px] bg-error-container/25 p-4 text-xs leading-5 text-error">
+          {decision?.item ? <ApprovalDecisionSubject item={decision.item} /> : null}
+          <div className="rounded-inset bg-error-container/25 p-4 text-xs leading-5 text-error">
             Pengajuan tidak akan dilanjutkan. Jelaskan alasan yang dapat ditindaklanjuti oleh
             pengaju.
           </div>
@@ -527,7 +532,7 @@ export function ApprovalList({
               value={rejectionReason}
               onChange={setRejectionReason}
               disabled={pending}
-              placeholder="Contoh: nominal belum sesuai dengan progres pekerjaan"
+              placeholder={decision?.item ? approvalRejectionPlaceholder(decision.item) : ""}
               className="mt-2"
               aria-invalid={
                 rejectionReason.length > 0 && rejectionReason.trim().length < rejectionMinimum
@@ -558,7 +563,7 @@ export function ApprovalList({
           <img
             src={activeImage}
             alt="Bukti pengajuan"
-            className="max-h-[68dvh] w-full rounded-3xl bg-surface-container object-contain"
+            className="max-h-[68dvh] w-full rounded-owner bg-surface-container object-contain"
           />
         ) : null}
       </BottomSheet>

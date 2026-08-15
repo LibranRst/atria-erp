@@ -105,21 +105,35 @@ test("UI source does not reintroduce raw semantic palette values", () => {
   expect(violations).toEqual([]);
 });
 
-test("design tokens keep iOS neutral surfaces and semantic elevation roles", () => {
-  const globals = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+test("design tokens keep calm neutral layers, one attention family, and semantic elevation roles", () => {
+  // Whitespace is collapsed before matching: this test asserts token VALUES, and
+  // the formatter owns line breaks. Multi-line shadow declarations are the same
+  // tokens, so a reformat must not read as a design-system regression.
+  const globals = readFileSync(join(process.cwd(), "app/globals.css"), "utf8").replace(/\s+/g, " ");
 
-  expect(globals).toContain("--ios-gray-6: #f2f2f7");
-  expect(globals).toContain("--ios-canvas: #f7f7fa");
+  expect(globals).toContain("--ios-gray-6: #efeff2");
+  expect(globals).toContain("--ios-canvas: #f5f5f7");
   expect(globals).toContain("--background: var(--ios-canvas)");
   expect(globals).toContain("--surface-container-lowest: #ffffff");
-  expect(globals).toContain("--surface-container-low: var(--ios-gray-6)");
-  expect(globals).toContain("--surface-container: var(--ios-gray-5)");
+  expect(globals).toContain("--surface-container-low: #efeff2");
+  expect(globals).toContain("--primary: #181817");
+  expect(globals).toContain("--accent: #b84b2c");
+  expect(globals).toContain("--critical: #97371f");
   expect(globals).toContain("--ring-subtle: color-mix(in srgb, #3c3c43 2%, transparent)");
   expect(globals).toContain("--ring-control: color-mix(in srgb, #3c3c43 6%, transparent)");
   expect(globals).toContain("--color-focus-ring: var(--focus-ring)");
-  expect(globals).toContain("--shadow-surface:");
+  // Owning surfaces and capsule controls carry a gentle lift; dark surfaces use
+  // a dimmed rim so the white inset reads as a highlight, not a glare line.
+  expect(globals).toContain("--shadow-surface: inset 0 1px 0 0 rgb(255 255 255 / 0.65)");
+  expect(globals).toContain("--shadow-control: inset 0 1px 0 0 rgb(255 255 255 / 0.65)");
+  expect(globals).toContain("--shadow-primary: inset 0 1px 0 0 rgb(255 255 255 / 0.12)");
+  expect(globals).toContain("--shadow-inverse: inset 0 1px 0 0 rgb(255 255 255 / 0.12)");
   expect(globals).toContain("--shadow-floating:");
   expect(globals).toContain("--shadow-sheet:");
+  expect(globals).toContain("--radius-owner: 28px");
+  expect(globals).toContain("--radius-inset: 20px");
+  expect(globals).toContain("--radius-icon: 16px");
+  expect(globals).toContain("--font-sans: var(--font-manrope)");
   expect(globals).not.toMatch(/#(?:fcf9f8|f6f3f2|f0eded|eae7e7|e5e2e1)/i);
 });
 

@@ -1,0 +1,9 @@
+[test]
+# Modul `server-only` sengaja melempar error saat di-resolve pada kondisi default,
+# dan hanya menjadi berkas kosong pada kondisi "react-server" yang ditetapkan
+# Next.js saat build. `bun test` tidak menetapkan kondisi itu, sehingga setiap
+# modul yang menulis `import "server-only";` gagal dimuat di test.
+#
+# Preload di bawah menetralkannya supaya modul server bisa diuji langsung,
+# tanpa melemahkan pagar `import "server-only";` di kode produksi.
+preload = ["./scripts/test-preload.ts"]

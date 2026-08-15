@@ -93,7 +93,7 @@ export function RabItemEditDrawer({
               value={
                 <MoneyValue
                   amount={Number(item.unitPrice)}
-                  variant="compactWithFull"
+                  variant="compact"
                   size="sm"
                   align="right"
                 />
@@ -104,7 +104,7 @@ export function RabItemEditDrawer({
               value={
                 <MoneyValue
                   amount={Number(item.quantity) * Number(item.unitPrice)}
-                  variant="compactWithFull"
+                  variant="compact"
                   size="sm"
                   align="right"
                   tone="default"

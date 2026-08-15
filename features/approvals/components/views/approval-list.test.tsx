@@ -215,7 +215,7 @@ describe("Approval decision queue presentation", () => {
 
     expect(html).toContain("Memuat persetujuan");
     expect(html).toContain("Antrean persetujuan sedang disiapkan");
-    expect(html).toContain("rounded-[26px]");
+    expect(html).toContain("rounded-owner");
     expect(html).not.toContain("spinner");
   });
 
@@ -236,8 +236,24 @@ describe("Approval decision queue presentation", () => {
     expect(html).toContain("Dampak ke budget");
     expect(html).toContain("Saat ini");
     expect(html).toContain("Jika disetujui");
-    expect(html).toContain("Lihat bukti pengajuan");
+    expect(html).toContain("Dokumen pendukung");
+    expect(html).toContain('alt="Bukti pengajuan"');
+    expect(html).not.toContain("Tidak ada bukti terlampir");
     expect(html).not.toContain("progressbar");
+    // Impact verdict leads its card, before the budget-category figure.
+    expect(html.indexOf("Tetap dalam batas budget")).toBeLessThan(html.indexOf("Budget kategori"));
+  });
+
+  test("shows an honest empty state when no receipt is attached", () => {
+    const html = renderToStaticMarkup(
+      <ApprovalDetailContent
+        item={approvalItem({ receiptImageUrl: null })}
+        onOpenReceipt={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("Tidak ada bukti terlampir");
+    expect(html).not.toContain('alt="Bukti pengajuan"');
   });
 
   test("shows quantity and unit cost for every opening inventory item", () => {

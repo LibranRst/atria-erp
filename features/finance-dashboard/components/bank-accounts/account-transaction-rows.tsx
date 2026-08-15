@@ -1,6 +1,6 @@
 import React from "react";
 
-import { AppIcon, MoneyValue, RowGroup } from "@/components/ui";
+import { DuotoneIconTile, MoneyValue, RowGroup } from "@/components/ui";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
 import type { CashTransaction } from "@/features/finance-dashboard/types/bank-account-types";
 import {
@@ -8,13 +8,6 @@ import {
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
 import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-
-function transactionIcon(transaction: CashTransaction): React.ReactNode {
-  if (transaction.type === "INFLOW") {
-    return <AppIcon name="south_west" className="icon-sm" />;
-  }
-  return <AppIcon name="north_east" className="icon-sm" />;
-}
 
 export function AccountTransactionRows({
   transactions,
@@ -35,13 +28,12 @@ export function AccountTransactionRows({
           key={transaction.id}
           className="flex min-h-14.5 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
         >
-          <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-              transaction.type === "INFLOW" ? "bg-primary/8 text-primary" : "bg-error/8 text-error"
-            }`}
-          >
-            {transactionIcon(transaction)}
-          </span>
+          <DuotoneIconTile
+            name={transaction.type === "INFLOW" ? "south_west" : "north_east"}
+            tone={transaction.type === "INFLOW" ? "neutral" : "critical"}
+            className="h-9 w-9"
+            iconClassName="icon-sm"
+          />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-xs font-bold text-on-surface">
               {transaction.description}
@@ -53,7 +45,7 @@ export function AccountTransactionRows({
           </span>
           <MoneyValue
             amount={transaction.amount}
-            variant="compactWithFull"
+            variant="compact"
             prefix={transaction.type === "INFLOW" ? "+" : "-"}
             tone={transaction.type === "INFLOW" ? "primary" : "danger"}
             align="right"

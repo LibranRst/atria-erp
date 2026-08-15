@@ -72,7 +72,7 @@ export function SetupReadinessManager({
         title="Kesiapan setup"
         description="Status berasal dari data nyata. Menyelesaikan onboarding tidak menyembunyikan konfigurasi yang masih kosong."
       />
-      <section className="rounded-[26px] bg-surface-inverse p-4 text-white">
+      <section className="rounded-[26px] bg-surface-inverse p-4 text-white shadow-inverse">
         <div className="flex items-start justify-between gap-4">
           <span>
             <span className="block text-eyebrow font-bold tracking-[0.13em] text-white/50 uppercase">

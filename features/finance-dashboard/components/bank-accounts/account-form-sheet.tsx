@@ -2,6 +2,7 @@ import React from "react";
 
 import {
   AppIcon,
+  DuotoneIconTile,
   FinanceUnsavedChangesModal,
   FormField,
   FormRiskNotice,
@@ -28,11 +29,12 @@ function AccountBalanceImpact({
           Periksa perubahan kas sebelum rekening dibuat.
         </p>
       </header>
-      <div className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
+      <div className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-owner bg-white ring-1 ring-ring-subtle">
         <div className="flex min-w-0 items-center gap-3 px-4 py-3.5">
-          <AppIcon
+          <DuotoneIconTile
             name="account_balance_wallet"
-            className="flex! h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-primary/8 text-[19px] leading-none text-primary"
+            className="h-9 w-9"
+            iconClassName="text-[19px]"
           />
           <span className="min-w-0 flex-1">
             <span className="block text-[13px] leading-5 font-bold text-on-surface">
@@ -107,7 +109,7 @@ function AccountIdentityReview({ draft }: { readonly draft: AccountDraft }): Rea
           Periksa data yang akan tampil di selector kas, kartu rekening, dan ledger.
         </p>
       </header>
-      <dl className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
+      <dl className="min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-owner bg-white ring-1 ring-ring-subtle">
         <AccountReviewRow label="Bank" value={draft.bankName} />
         <AccountReviewRow label="Nama rekening" value={draft.name} />
         <AccountReviewRow label="Nomor rekening" value={draft.accountNumber} tabular />

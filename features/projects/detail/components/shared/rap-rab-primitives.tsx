@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { MetricPill, MoneyMetricPill, PanelSection } from "@/components/ui";
+import { MetricPill, MoneyMetricPill, MoneyValueVariant, PanelSection } from "@/components/ui";
 export { PanelSection as NativePanel };
 
 export function MiniMetric({
@@ -29,11 +29,13 @@ export function MiniMoneyMetric({
   value,
   prefix,
   danger = false,
+  variant,
 }: {
   readonly label: string;
   readonly value: number;
   readonly prefix?: string;
   readonly danger?: boolean;
+  readonly variant?: MoneyValueVariant;
 }): React.JSX.Element {
   return (
     <MoneyMetricPill
@@ -41,6 +43,7 @@ export function MiniMoneyMetric({
       amount={value}
       prefix={prefix}
       tone={danger ? "danger" : "default"}
+      variant={variant}
     />
   );
 }

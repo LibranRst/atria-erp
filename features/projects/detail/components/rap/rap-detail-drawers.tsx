@@ -119,7 +119,7 @@ export function RapItemDetailDrawer({
             value={
               <MoneyValue
                 amount={Number(item.estimatedTotalCost)}
-                variant="compactWithFull"
+                variant="compact"
                 size="sm"
                 align="right"
               />
@@ -264,7 +264,7 @@ export function PackageDetailDrawer({
             value={
               <MoneyValue
                 amount={Number(item.estimatedTotalCost)}
-                variant="compactWithFull"
+                variant="compact"
                 size="sm"
                 align="right"
               />
@@ -275,7 +275,7 @@ export function PackageDetailDrawer({
             value={
               <MoneyValue
                 amount={item.actualCost}
-                variant="compactWithFull"
+                variant="compact"
                 size="sm"
                 align="right"
               />
@@ -286,7 +286,7 @@ export function PackageDetailDrawer({
             value={
               <MoneyValue
                 amount={-item.variance}
-                variant="compactWithFull"
+                variant="compact"
                 size="sm"
                 align="right"
                 tone={item.variance > 0 ? "danger" : "default"}

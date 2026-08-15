@@ -60,7 +60,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
             </p>
             <MoneyValue
               amount={totalEstimate}
-              variant="compactWithFull"
+              variant="compact"
               size="lg"
               align="right"
               className="mt-1"
@@ -97,7 +97,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
                   </div>
                   <MoneyValue
                     amount={projectEstimate}
-                    variant="compactWithFull"
+                    variant="compact"
                     align="right"
                     size="sm"
                   />
@@ -127,7 +127,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
                         </p>
                         <MoneyValue
                           amount={row.estimatedTotalCost}
-                          variant="compactWithFull"
+                          variant="compact"
                           align="right"
                           size="xs"
                           className="mt-1"

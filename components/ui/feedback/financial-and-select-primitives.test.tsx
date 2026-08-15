@@ -20,6 +20,15 @@ describe("financial and select primitives", () => {
     expect(compact).not.toContain("wrap-break-word");
   });
 
+  test("compact variant omits the secondary exact-value line", () => {
+    const html = renderToStaticMarkup(
+      <MoneyValue amount={-1_017_050_000} variant="compact" size="sm" tone="danger" />,
+    );
+
+    expect(html).toContain("money-value-compact");
+    expect(html).not.toContain("money-value-exact");
+  });
+
   test("centers a focal financial value when requested", () => {
     const html = renderToStaticMarkup(
       <MoneyValue amount={12_500_000} variant="fullDynamic" align="center" size="hero" />,

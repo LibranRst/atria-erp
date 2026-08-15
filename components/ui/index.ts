@@ -21,6 +21,8 @@ export type {
 } from "./button/button";
 export { AppIcon } from "./icon/app-icon";
 export type { AppIconName, AppIconProps } from "./icon/app-icon";
+export { DuotoneIconTile } from "./icon/icon-tile";
+export type { IconTileTone } from "./icon/icon-tile";
 
 // Status, hitungan, dan metadata
 export {

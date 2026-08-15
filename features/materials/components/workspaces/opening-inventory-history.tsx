@@ -53,7 +53,7 @@ export function OpeningInventoryHistory({ show, batches, onSelect }: Props): Rea
                   </span>
                   <MoneyValue
                     amount={batch.totalValue}
-                    variant="compactWithFull"
+                    variant="compact"
                     size="sm"
                     align="right"
                   />

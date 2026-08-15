@@ -339,7 +339,7 @@ export function BottomSheet({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.08, bottom: 0.04 }}
             onDragEnd={handleDragEnd}
-            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-surface-container-low shadow-sheet ring-1 ring-ring-control outline-none"
+            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-owner bg-surface-container-low shadow-sheet ring-1 ring-ring-control outline-none"
             style={{
               zIndex: zIndex + 1,
               maxHeight: `calc(100dvh - ${SHEET_TOP_GAP}px)`,
@@ -441,6 +441,7 @@ type ConfirmationModalProps = {
   readonly title: string;
   readonly description?: string;
   readonly tone?: ConfirmationModalTone;
+  readonly pending?: boolean;
   readonly children?: React.ReactNode;
   readonly actions: React.ReactNode;
   readonly onClose: () => void;
@@ -451,6 +452,7 @@ export function ConfirmationModal({
   title,
   description,
   tone = "default",
+  pending = false,
   children,
   actions,
   onClose,
@@ -460,6 +462,7 @@ export function ConfirmationModal({
   const titleId = `${dialogId}-title`;
   const descriptionId = `${dialogId}-description`;
   const onCloseRef = React.useRef(onClose);
+  const pendingRef = React.useRef(pending);
   const [zIndex, setZIndex] = React.useState(220);
   const portalNode = React.useSyncExternalStore(
     subscribeToDocumentBody,
@@ -470,6 +473,15 @@ export function ConfirmationModal({
   React.useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
+
+  React.useEffect(() => {
+    pendingRef.current = pending;
+  }, [pending]);
+
+  function requestClose(): void {
+    if (pendingRef.current) return;
+    onCloseRef.current();
+  }
 
   React.useEffect(() => {
     if (!open) return undefined;
@@ -487,7 +499,7 @@ export function ConfirmationModal({
       if (!isTopSheet(activeDialogId)) return;
       if (event.key === "Escape") {
         event.preventDefault();
-        onCloseRef.current();
+        requestClose();
         return;
       }
       if (event.key !== "Tab" || !dialogRef.current) return;
@@ -543,7 +555,7 @@ export function ConfirmationModal({
             transition={transitionEaseSmooth}
             className="fixed -inset-10 cursor-default bg-black/45 backdrop-blur-[2px]"
             style={{ zIndex }}
-            onClick={() => onCloseRef.current()}
+            onClick={requestClose}
           />
           <div
             className="pointer-events-none fixed inset-0 flex items-center justify-center p-4 sm:p-6"
@@ -560,7 +572,7 @@ export function ConfirmationModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 10 }}
               transition={transitionSpringSmooth}
-              className="no-scrollbar pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-90 overflow-y-auto rounded-[28px] bg-background p-5 shadow-overlay ring-1 ring-white/10 outline-none"
+              className="no-scrollbar pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-90 overflow-y-auto rounded-owner bg-background p-5 shadow-overlay ring-1 ring-white/10 outline-none"
             >
               <div
                 className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}
@@ -630,6 +642,7 @@ export function ConfirmationSheet({
       title={title}
       description={description}
       tone={danger ? "danger" : "default"}
+      pending={pending}
       onClose={onClose}
       actions={
         <SheetFooterActions

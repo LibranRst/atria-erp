@@ -13,8 +13,8 @@ export type ButtonSize = "default" | "compact";
 const variantClass: Record<ButtonVariant, string> = {
   primary: "bg-primary text-on-primary shadow-primary focus-visible:ring-focus-ring",
   secondary:
-    "bg-surface-container-lowest text-on-surface ring-1 ring-ring-control focus-visible:ring-focus-ring",
-  tertiary: "text-accent focus-visible:ring-focus-ring active:bg-accent/8",
+    "bg-surface-container-lowest text-on-surface shadow-control ring-1 ring-ring-control focus-visible:ring-focus-ring",
+  tertiary: "text-on-surface focus-visible:ring-focus-ring active:bg-surface-container-low",
   criticalQuiet: "bg-critical-container text-critical focus-visible:ring-focus-ring",
   critical: "bg-critical text-on-critical shadow-primary focus-visible:ring-focus-ring",
 };
@@ -141,7 +141,7 @@ type SectionActionProps = {
 };
 
 const defaultSectionActionClass =
-  "relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-accent/8 pl-3 pr-2.5 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]";
+  "relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-surface-container-low pl-3 pr-2.5 text-meta font-semibold text-on-surface-variant outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container";
 
 export function SectionAction({
   label,
@@ -153,7 +153,7 @@ export function SectionAction({
   const sectionActionClass =
     mode === "default"
       ? defaultSectionActionClass
-      : "text-support relative inline-flex gap-1 items-center shrink-0 text-accent font-semibold";
+      : "text-support relative inline-flex gap-1 items-center shrink-0 text-on-surface-variant font-semibold";
 
   const content = (
     <>

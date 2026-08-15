@@ -3,7 +3,7 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { AppIcon, MoneyValue } from "@/components/ui";
+import { AppIcon, DuotoneIconTile, MoneyValue } from "@/components/ui";
 import type { ApprovalDetail } from "@/lib/finance/approval-types";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import {
@@ -41,26 +41,24 @@ export function ApprovalWorkbenchRow({
         disabled={pending}
         whileTap={reduceMotion ? undefined : dashboardRowPressScale}
         transition={transitionSpringSnappy}
-        className="min-h-12 w-full rounded-[20px] px-2 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5 disabled:opacity-50"
+        className="min-h-12 w-full rounded-inset px-2 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-black/2.5 disabled:opacity-50"
       >
         <div className="flex items-start gap-3">
-          <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ring-1 ${critical ? "bg-error/7.5 text-error ring-error/5" : "bg-warning/9 text-warning ring-warning/6"}`}
-          >
-            <AppIcon
-              name={
-                item.type === "project_cost"
-                  ? "receipt_long"
-                  : item.type === "inventory_opening"
-                    ? "inventory"
-                    : "request_quote"
-              }
-              className="icon-md"
-            />
-          </span>
+          <DuotoneIconTile
+            name={
+              item.type === "project_cost"
+                ? "receipt_long"
+                : item.type === "inventory_opening"
+                  ? "inventory"
+                  : "request_quote"
+            }
+            tone={critical ? "critical" : "attention"}
+            className="h-9 w-9"
+            iconClassName="icon-md"
+          />
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <MoneyValue amount={item.amount} variant="compactWithFull" size="lg" />
+              <MoneyValue amount={item.amount} variant="compact" size="lg" />
               <span
                 className={`shrink-0 text-eyebrow font-semibold ${critical ? "text-error" : "text-warning"}`}
               >
@@ -72,12 +70,11 @@ export function ApprovalWorkbenchRow({
             </p>
             <p className="truncate text-meta text-on-surface-variant/75">{item.projectName}</p>
           </div>
-          <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high/70 text-accent"
+          <AppIcon
+            name="chevron_right"
+            className="mt-1 icon-sm shrink-0 text-on-surface-variant/55"
             aria-hidden="true"
-          >
-            <AppIcon name="chevron_right" className="icon-sm" />
-          </span>
+          />
         </div>
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-12 text-eyebrow font-semibold text-on-surface-variant/70">
           <span className="max-w-full truncate">{counterpartyLabel}</span>
@@ -116,7 +113,7 @@ export function ApprovalBudgetContext({
       : "Masih dalam batas budget";
 
   return (
-    <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
+    <section className="overflow-hidden rounded-owner bg-surface-container-lowest ring-1 ring-ring-subtle">
       <div className="flex items-center justify-between gap-3 px-4 py-3.5">
         <div className="min-w-0">
           <p className="truncate text-meta font-extrabold tracking-wide text-on-surface-variant/60 uppercase">
@@ -125,7 +122,7 @@ export function ApprovalBudgetContext({
           <p className="mt-1 truncate text-xs font-bold text-on-surface">{item.budgetItemName}</p>
         </div>
         <span
-          className={`financial-amount shrink-0 font-mono text-xs font-black ${critical ? "text-error" : "text-on-surface"}`}
+          className={`financial-amount shrink-0 text-xs font-extrabold ${critical ? "text-error" : "text-on-surface"}`}
         >
           {impact.afterPercentage.toFixed(0)}%
         </span>
@@ -135,7 +132,7 @@ export function ApprovalBudgetContext({
           <span>Sekarang</span>
           <MoneyValue
             amount={item.actualSpent}
-            variant="compactWithFull"
+            variant="compact"
             size="sm"
             className="mt-0.5"
           />
@@ -153,7 +150,7 @@ export function ApprovalBudgetContext({
           <span>Setelah disetujui</span>
           <MoneyValue
             amount={nextSpent}
-            variant="compactWithFull"
+            variant="compact"
             tone={critical ? "danger" : "default"}
             align="right"
             size="sm"

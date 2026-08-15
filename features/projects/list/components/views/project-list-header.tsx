@@ -57,7 +57,7 @@ export function ProjectListHeader({
             </p>
             <MoneyValue
               amount={summary.activeContractValue}
-              variant="compactWithFull"
+              variant="compact"
               size="lg"
               align="right"
               className="mt-1"
@@ -154,7 +154,7 @@ export function ProjectSearchAndFilters({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={surfaceTransition}
-            className="pointer-events-none absolute inset-0 rounded-3xl bg-white/96 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl"
+            className="pointer-events-none absolute inset-0 rounded-3xl bg-white/96 ring-1 ring-ring-subtle backdrop-blur-xl"
             aria-hidden="true"
           />
         ) : null}

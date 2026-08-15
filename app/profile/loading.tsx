@@ -28,7 +28,7 @@ export default function ProfileLoading(): React.JSX.Element {
         <SkeletonLine className="h-3 w-64 bg-surface-container-low" />
       </div>
 
-      <section className="rounded-[28px] bg-white/90 p-4 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl max-[430px]:p-3.5">
+      <section className="rounded-owner bg-white/90 p-4 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl max-[430px]:p-3.5">
         <div className="flex items-start gap-3.5">
           <div
             className="h-16 w-16 shrink-0 rounded-full bg-surface-container max-[430px]:h-14 max-[430px]:w-14"

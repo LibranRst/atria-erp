@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Manrope } from "next/font/google";
 import { MobileShell } from "@/components/layout/mobile-shell";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
   display: "swap",
 });
@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>): React.JSX.Element {
   return (
-    <html lang="id" className={`${inter.variable} ${jetbrains.variable} h-full antialiased`}>
+    <html lang="id" className={`${manrope.variable} ${jetbrains.variable} h-full antialiased`}>
       <body className="min-h-full bg-background font-sans text-[16px] font-normal text-on-surface">
         <MobileShell>{children}</MobileShell>
         <Toaster position="top-center" offset={72} mobileOffset={72} richColors />

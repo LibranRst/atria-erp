@@ -15,6 +15,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Compact: Story = {
+  args: { variant: "compact" },
+};
+
 export const CompactWithFull: Story = {};
 
 export const FullDynamicHero: Story = {

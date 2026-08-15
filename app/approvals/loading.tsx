@@ -14,7 +14,7 @@ export default function ApprovalsLoading(): React.JSX.Element {
         <SkeletonLine className="h-3 w-64 bg-surface-container-low" />
       </div>
 
-      <section className="rounded-[26px] bg-white/88 p-2 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl max-[430px]:p-3.5">
+      <section className="rounded-owner bg-white/88 p-2 shadow-surface ring-1 ring-ring-subtle max-[430px]:p-3.5">
         <div className="flex items-center justify-between gap-3 p-2">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-xl bg-surface-container" />
@@ -54,13 +54,13 @@ export default function ApprovalsLoading(): React.JSX.Element {
           <SkeletonLine className="h-4 w-24" />
           <SkeletonLine className="h-2.5 w-14 bg-surface-container-low" />
         </div>
-        <div className="overflow-hidden rounded-[26px] bg-white/88 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl">
+        <div className="overflow-hidden rounded-owner bg-white/88 shadow-surface ring-1 ring-ring-subtle">
           {[0, 1, 2].map((row) => (
             <div
               key={row}
               className="flex min-h-23.5 gap-3 border-t border-black/5.5 px-4 py-3 first:border-t-0"
             >
-              <div className="h-9 w-9 shrink-0 rounded-[13px] bg-surface-container" />
+              <div className="h-9 w-9 shrink-0 rounded-icon bg-surface-container" />
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex justify-between gap-3">
                   <SkeletonLine className="h-4 w-24" />

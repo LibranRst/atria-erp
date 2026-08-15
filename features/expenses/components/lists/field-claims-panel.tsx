@@ -199,11 +199,11 @@ function FieldClaimsSummary({
       }
     >
       <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total aktif</p>
           <MoneyValue
             amount={activeClaimTotal}
-            variant="compactWithFull"
+            variant="fullDynamic"
             size="lg"
             className="mt-1"
           />

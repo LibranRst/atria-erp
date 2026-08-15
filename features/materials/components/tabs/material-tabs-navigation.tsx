@@ -68,7 +68,7 @@ export function MaterialTabsNavigation({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={reduceMotion ? { duration: 0 } : transitionEaseSmooth}
-            className="pointer-events-none absolute inset-0 rounded-3xl bg-white/96 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl"
+            className="pointer-events-none absolute inset-0 rounded-3xl bg-white/96 ring-1 ring-ring-subtle backdrop-blur-xl"
             aria-hidden="true"
           />
         ) : null}
