@@ -15,9 +15,14 @@ import {
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
-import { ActionResponse } from "@/lib/types/action-response";
-import { payVendorBillSchema, PayVendorBillInput } from "@/lib/validations/finance";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { ActionResponse } from "@atria/core/types/action-response";
+import {
+  checkVendorPaymentApprovalGate,
+  exceedsVendorBillOutstanding,
+  vendorPaymentRequiresOwnerApproval,
+} from "@atria/core/finance/vendor-payment-rules";
+import { payVendorBillSchema, PayVendorBillInput } from "@atria/core/validations/finance";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
 import { mutateBalance, parseNumericToCents } from "@/lib/finance/balance-mutation";
 import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
@@ -120,29 +125,35 @@ export async function payVendorBill(
         BigInt(0),
       );
       const billAmountCents = parseNumericToCents(bill.amount);
-      if (paymentAmountCents > billAmountCents - paidBeforeCents) {
+      if (
+        exceedsVendorBillOutstanding({
+          billAmountCents,
+          committedCents: paidBeforeCents,
+          amountCents: paymentAmountCents,
+        })
+      ) {
         throw new Error("PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING");
       }
-      const allocatedCents = parseNumericToCents(budgetCategory.allocatedAmount);
-      const spentCents = parseNumericToCents(budgetCategory.actualAmount);
-      const isOverrun = spentCents > allocatedCents;
-      const requiresApproval = paymentAmountCents >= BigInt(500_000_000) || isOverrun;
+      const requiresApproval = vendorPaymentRequiresOwnerApproval({
+        amountCents: paymentAmountCents,
+        categoryAllocatedCents: parseNumericToCents(budgetCategory.allocatedAmount),
+        categoryActualCents: parseNumericToCents(budgetCategory.actualAmount),
+      });
 
-      if (requiresApproval) {
-        const appRecord = await tx.query.approval.findFirst({
-          where: and(
-            eq(approval.referenceType, "vendor_payment"),
-            eq(approval.referenceId, payment.id),
-          ),
-        });
-
-        if (!appRecord) {
-          throw new Error("APPROVAL_RECORD_MISSING");
-        }
-
-        if (appRecord.status !== "APPROVED") {
-          throw new Error("APPROVAL_REQUIRED_BUT_PENDING");
-        }
+      const appRecord = requiresApproval
+        ? await tx.query.approval.findFirst({
+            where: and(
+              eq(approval.referenceType, "vendor_payment"),
+              eq(approval.referenceId, payment.id),
+            ),
+          })
+        : null;
+      const approvalGate = checkVendorPaymentApprovalGate({
+        requiresApproval,
+        approvalStatus: appRecord?.status,
+      });
+      if (!approvalGate.allowed) {
+        throw new Error(approvalGate.reason);
       }
 
       const targetBankAccountId = bankAccountId || payment.bankAccountId;

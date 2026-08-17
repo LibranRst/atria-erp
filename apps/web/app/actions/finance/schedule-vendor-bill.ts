@@ -15,9 +15,10 @@ import {
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
-import { ActionResponse } from "@/lib/types/action-response";
-import { schedulePaymentSchema, SchedulePaymentInput } from "@/lib/validations/finance";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { ActionResponse } from "@atria/core/types/action-response";
+import { exceedsVendorBillOutstanding } from "@atria/core/finance/vendor-payment-rules";
+import { schedulePaymentSchema, SchedulePaymentInput } from "@atria/core/validations/finance";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 import crypto from "crypto";
 import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
 import { parseNumericToCents } from "@/lib/finance/balance-mutation";
@@ -101,7 +102,13 @@ export async function scheduleVendorBillPayment(
         BigInt(0),
       );
       const amountPaidCents = parseNumericToCents(amountPaid.toFixed(2));
-      if (amountPaidCents > parseNumericToCents(bill.amount) - committedAmountCents) {
+      if (
+        exceedsVendorBillOutstanding({
+          billAmountCents: parseNumericToCents(bill.amount),
+          committedCents: committedAmountCents,
+          amountCents: amountPaidCents,
+        })
+      ) {
         throw new Error("PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING");
       }
 

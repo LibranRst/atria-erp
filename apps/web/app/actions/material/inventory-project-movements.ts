@@ -6,7 +6,8 @@ import { db } from "@/db";
 import { materialInventory, stockMovement } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
 import { fromCents, parseNumericToCents } from "@/lib/finance/balance-mutation";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { exceedsProjectUsage } from "@atria/core/material/stock-guards";
 import {
   type ReturnMaterialInput,
   type UseMaterialInput,
@@ -14,7 +15,7 @@ import {
   returnMaterialSchema,
   useMaterialSchema,
   wasteMaterialSchema,
-} from "@/lib/validations/material";
+} from "@atria/core/validations/material";
 import {
   assertProjectScopeForMaterialAction,
   calculateOutstandingProjectReservations,
@@ -287,12 +288,17 @@ export async function returnMaterialFromProject(
             (movement) => movement.projectRapItemId === validation.data.projectRapItemId,
           )
         : projectMovements.filter((movement) => !movement.projectRapItemId);
-      const netUsed = matchingMovements.reduce((total, movement) => {
-        if (movement.movementType === "USE") return total + Number(movement.quantity);
-        if (movement.movementType === "RETURN") return total - Number(movement.quantity);
-        return total;
-      }, 0);
-      if (validation.data.quantity > netUsed) throw new Error("RETURN_EXCEEDS_PROJECT_USAGE");
+      if (
+        exceedsProjectUsage({
+          returnQuantity: validation.data.quantity,
+          movements: matchingMovements.map((movement) => ({
+            movementType: movement.movementType,
+            quantity: Number(movement.quantity),
+          })),
+        })
+      ) {
+        throw new Error("RETURN_EXCEEDS_PROJECT_USAGE");
+      }
       const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
       const nextCurrent = parseNumericToCents(inventory.currentStock) + quantity;
 
