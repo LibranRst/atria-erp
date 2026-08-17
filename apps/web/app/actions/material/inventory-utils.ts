@@ -13,8 +13,12 @@ import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
 export {
   calculateOutstandingProjectReservations,
   type ProjectMaterialMovement as ProjectReservationMovement,
-} from "@/lib/material/project-material-projection";
-import { ActionResponse } from "@/lib/types/action-response";
+} from "@atria/core/material/project-material-projection";
+import { ActionResponse } from "@atria/core/types/action-response";
+import {
+  resolveStockMovementDirection,
+  type StockMovementDirection,
+} from "@atria/core/material/stock-movement-direction";
 import { and, eq } from "drizzle-orm";
 
 type MaterialInventoryTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -34,6 +38,12 @@ export type StockMovementInsertArgs = {
   projectCostId?: string | null;
   vendorBillId?: string | null;
   movementType: string;
+  /**
+   * Biarkan kosong untuk memakai arah kanonis jenis pergerakan. Isi hanya untuk
+   * jenis yang arahnya bergantung tanda selisih, seperti penyesuaian dan
+   * transfer.
+   */
+  movementDirection?: StockMovementDirection;
   quantity: string;
   unitCost: string;
   note?: string | null;
@@ -134,7 +144,18 @@ export async function insertStockMovement(
   tx: MaterialInventoryTx,
   args: StockMovementInsertArgs,
 ): Promise<typeof stockMovement.$inferSelect> {
-  const [movement] = await tx.insert(stockMovement).values(args).returning();
+  // Kolom `movement_direction` punya default `NEUTRAL`. Karena helper ini
+  // sebelumnya tidak pernah mengisinya, setiap USE/WASTE/RETURN yang ditulis
+  // lewat sini tersimpan `NEUTRAL` — sehingga penjumlahan IN dikurangi OUT
+  // tidak lagi menghasilkan `current_stock` dan saldo tidak dapat direkonstruksi
+  // dari buku pergerakannya sendiri.
+  const [movement] = await tx
+    .insert(stockMovement)
+    .values({
+      ...args,
+      movementDirection: args.movementDirection ?? resolveStockMovementDirection(args.movementType),
+    })
+    .returning();
   return movement;
 }
 
