@@ -14,7 +14,7 @@ onboarding 1–6 beserta Ringkasan, B1 pembuatan project, B2 RAP (Material, Tuka
 Subcon, finalisasi), B3 RAB dan aktivasi, B4 reservasi, B5 tagihan vendor sampai
 pencairan dan Goods Receipt, B6 pakai/kembalikan/terbuang, B7.1 pengajuan
 pengeluaran, serta B9.1–B9.4 invoice klien sampai seluruh termin lunas dan rekonsiliasi kas
-dijalankan, serta B10 rekonsiliasi profitability.
+dijalankan, serta B10 rekonsiliasi profitability dan gate blocker B12.
 
 B9 terbukti persis seperti tertulis: tiga invoice berjumlah Rp17.000.000, partial
 payment Rp2.000.000 membawa BCA Rp92.000.000 → Rp94.000.000, percobaan
@@ -35,10 +35,12 @@ Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
 Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
-**Belum dijalankan ulang:** B7.2, B8, B11, B12, dan Bagian C.
+**Belum dijalankan ulang:** B7.2, B8, B11, dan Bagian C. B12 baru diverifikasi
+sampai gate-nya: checklist menolak closing dengan alasan yang benar, tetapi
+penutupan proyek sungguhan belum dijalankan.
 Bagian-bagian itu masih berisi ekspektasi hasil desain, bukan hasil pengamatan.
 
-Dua belas cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
+Tiga belas cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
 memengaruhi cara membaca runbook:
 
 - Panel dampak budget pada review tagihan vendor **dan** pada sheet persetujuan
@@ -60,6 +62,9 @@ memengaruhi cara membaca runbook:
   keluar. Ketiga barisnya karena itu tidak saling menjumlah, dan selisihnya persis
   sebesar persediaan yang sudah dibayar tetapi belum dipakai — justru angka yang
   paling mudah disalahbaca pada model biaya ini.
+- Hasil **Periksa kesiapan closing** dahulu dirender di bawah lipatan layar tanpa
+  digulirkan ke tampilan, sehingga daftar blocker — satu-satunya penjelasan
+  mengapa proyek belum bisa ditutup — tidak terlihat.
 - Ketiga sheet pada `/reconciliation` dahulu menonaktifkan tombol utamanya tanpa
   menjelaskan alasannya. Aturan alasan pengecualian minimal 10 karakter sama
   sekali tidak terlihat dari layar; sekarang footer menyebutkan syarat yang
@@ -1548,9 +1553,13 @@ Sebelum final close, checklist harus memastikan:
 - outstanding reservation project = 0;
 - canonical budget `APPROVED` dan tersinkron.
 
-Pada rilis ini, pemeriksaan rekonsiliasi tersebut adalah gate operasional UAT dan belum menjadi blocker otomatis di action **Complete Project**. Jangan menutup project hanya karena action masih mengizinkan; Finance Admin/Owner harus menyelesaikan atau mendokumentasikan exception rekonsiliasi terlebih dahulu.
+Pemeriksaan rekonsiliasi **sudah menjadi blocker otomatis**. Bila masih ada transaksi kas proyek yang belum cocok dan belum punya pengecualian tercatat, checklist menampilkan blocker berbunyi `N transaksi kas proyek belum cocok dengan mutasi bank atau belum memiliki pengecualian tercatat.` dan tombol final tidak muncul sama sekali.
+
+Cakupan hitungannya sempit dan disengaja: hanya transaksi kas yang terikat pada proyek ini — pembayaran klien, pembayaran vendor, dan pencairan pengeluaran lapangan. **Saldo awal rekening tidak ikut dihitung** karena bukan milik proyek mana pun. Karena itu pengecualian yang dicatat pada saldo awal (contoh di B9.4) tidak akan muncul sebagai `pengecualian yang diterima` pada closing review proyek.
 
 Negative test: sebelum melunasi satu invoice atau saat masih ada reservation, Complete Project harus ditolak dan tidak membuat final snapshot.
+
+Menekan **Periksa kesiapan closing** menampilkan tiga angka final lebih dahulu — Biaya final saat ini, Margin realisasi, dan Posisi kas — lalu daftar blocker di bawahnya. Untuk skenario base, ketiganya berbunyi Rp9.700.000, Rp7.300.000 · 42,94%, dan Rp4.300.000.
 
 Setelah semua blocker nol, isi closing note dan Complete Project.
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useReducedMotion } from "framer-motion";
 import React from "react";
 
 import { FormField, MoneyValue, Textarea } from "@/components/ui";
@@ -24,6 +25,21 @@ export function ProjectClosingSection({
   readonly loadClosingChecklist: () => void;
   readonly handleCompleteProject: () => void;
 }): React.JSX.Element {
+  const resultRef = React.useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
+
+  // Hasil pemeriksaan dirender di bawah tombolnya, di luar layar pada viewport
+  // ponsel. Tanpa ini pengguna menekan "Periksa kesiapan closing" dan tampak
+  // tidak terjadi apa-apa — padahal di situlah alasan proyek belum bisa ditutup
+  // dijelaskan.
+  React.useEffect(() => {
+    if (!closingChecklist) return;
+    resultRef.current?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "nearest",
+    });
+  }, [closingChecklist, reduceMotion]);
+
   return (
     <section className="rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
       <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
@@ -50,7 +66,7 @@ export function ProjectClosingSection({
         </p>
       )}
       {closingChecklist && (
-        <div className="mt-sm space-y-sm">
+        <div ref={resultRef} className="mt-sm space-y-sm">
           <div className="overflow-hidden rounded-inset bg-surface-container-low">
             <ClosingFact label="Biaya final saat ini" amount={closingChecklist.actualCost} />
             <ClosingFact
