@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { db } from "@/db";
 import {
   cashTransaction,
@@ -13,10 +15,13 @@ import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { mutateBalance, parseNumericToCents } from "@/lib/finance/balance-mutation";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import { ActionResponse } from "@/lib/types/action-response";
-import { recordClientPaymentSchema, RecordClientPaymentInput } from "@/lib/validations/budget";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import { ActionResponse } from "@atria/core/types/action-response";
+import {
+  recordClientPaymentSchema,
+  RecordClientPaymentInput,
+} from "@atria/core/validations/budget";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 import crypto from "crypto";
 import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
 
@@ -201,8 +206,16 @@ export async function recordClientPayment(
       return {
         paymentId: clientPaymentId,
         newBalance: newBalanceStr,
+        projectId: invoice.projectId,
       };
     });
+
+    // Pembayaran klien memindahkan kas, jadi surface yang membacanya harus ikut
+    // diperbarui: termin proyek, posisi kas di Dashboard, dan antrean
+    // rekonsiliasi yang baru saja menerima transaksi belum cocok.
+    revalidatePath(`/projects/${result.projectId}`);
+    revalidatePath("/ledger");
+    revalidatePath("/reconciliation");
 
     return {
       success: true,

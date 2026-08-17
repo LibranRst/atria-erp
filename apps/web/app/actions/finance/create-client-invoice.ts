@@ -1,13 +1,18 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { db } from "@/db";
 import { clientInvoice, auditLog, project } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
-import { ActionResponse } from "@/lib/types/action-response";
-import { createClientInvoiceSchema, CreateClientInvoiceInput } from "@/lib/validations/finance";
+import { ActionResponse } from "@atria/core/types/action-response";
+import {
+  createClientInvoiceSchema,
+  CreateClientInvoiceInput,
+} from "@atria/core/validations/finance";
 
 /**
  * Mencatat/membuat Invoice Klien baru secara manual.
@@ -133,6 +138,14 @@ export async function createClientInvoice(
 
       return inserted;
     });
+
+    // Tanpa ini tab Pembayaran tetap menampilkan daftar lama sesudah invoice
+    // dibuat: sheet sukses tertutup, tetapi termin yang baru tidak muncul dan
+    // "Sisa tagihan klien" tetap Rp0 sampai halaman dimuat ulang manual —
+    // mengundang pengguna membuat invoice yang sama dua kali.
+    // `generate-invoice-schedule.ts` sudah melakukan hal yang sama.
+    revalidatePath(`/projects/${projectId}`);
+    revalidatePath("/ledger");
 
     return {
       success: true,
