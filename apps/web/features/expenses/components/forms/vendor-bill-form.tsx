@@ -31,7 +31,7 @@ import {
   WorkflowFormSheet,
 } from "@/components/ui";
 import { useHybridVendorBillDraft } from "@/features/expenses/hooks/use-hybrid-vendor-bill-draft";
-import type { VendorBillDraftPayload } from "@/lib/validations/vendor-bill-draft";
+import type { VendorBillDraftPayload } from "@atria/core/validations/vendor-bill-draft";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 export interface VendorBillFormVendor {
   readonly id: string;
@@ -99,7 +99,19 @@ export function VendorBillForm({
   const selectedVendor = vendors.find((vendor) => vendor.id === payload.vendorId);
   const amount = Number(payload.amount || 0);
   const remainingBefore = Number(selectedCategory?.remainingAmount ?? 0);
-  const remainingAfter = remainingBefore - amount;
+  /**
+   * Tagihan kategori Material adalah pembelian persediaan, bukan realisasi
+   * proyek. `lib/finance/vendor-bill-write.ts` menyimpannya sebagai
+   * `INVENTORY_PURCHASE`/`INVENTORY_ASSET`, dan `syncProjectBudgetCategory`
+   * tidak menghitungnya sebagai `actual`. Realisasi Material baru diakui saat
+   * stok dipakai atau menjadi waste, memakai harga rata-rata persediaan.
+   *
+   * Karena itu sisa budget kategori tidak boleh diperagakan turun di sini:
+   * memakai rumus kategori lain akan menjanjikan dampak budget yang tidak
+   * pernah terjadi.
+   */
+  const isInventoryPurchase = selectedCategory?.code === "MATERIAL";
+  const remainingAfter = isInventoryPurchase ? remainingBefore : remainingBefore - amount;
   const canReview =
     Boolean(
       payload.vendorId &&
@@ -379,25 +391,39 @@ export function VendorBillForm({
                   <ReviewFact
                     label="Sisa budget kategori"
                     value={
-                      <span
-                        className={
-                          remainingAfter < 0 ? "font-bold text-error" : "font-bold text-primary"
-                        }
-                      >
-                        Rp {remainingBefore.toLocaleString("id-ID")} → Rp{" "}
-                        {remainingAfter.toLocaleString("id-ID")}
-                      </span>
+                      isInventoryPurchase ? (
+                        <span className="font-bold text-on-surface">
+                          Rp {remainingBefore.toLocaleString("id-ID")} · tetap
+                        </span>
+                      ) : (
+                        <span
+                          className={
+                            remainingAfter < 0 ? "font-bold text-error" : "font-bold text-primary"
+                          }
+                        >
+                          Rp {remainingBefore.toLocaleString("id-ID")} → Rp{" "}
+                          {remainingAfter.toLocaleString("id-ID")}
+                        </span>
+                      )
                     }
                   />
                 </div>
               </FormSection>
               <FormRiskNotice
-                title={remainingAfter < 0 ? "Melebihi budget kategori" : "Saldo kas belum berubah"}
-                tone={remainingAfter < 0 ? "warning" : "default"}
+                title={
+                  isInventoryPurchase
+                    ? "Menjadi nilai persediaan"
+                    : remainingAfter < 0
+                      ? "Melebihi budget kategori"
+                      : "Saldo kas belum berubah"
+                }
+                tone={!isInventoryPurchase && remainingAfter < 0 ? "warning" : "default"}
               >
-                {remainingAfter < 0
-                  ? "Tagihan tetap dapat dibuat, tetapi kondisi overbudget akan terlihat pada kontrol budget dan jalur pembayaran."
-                  : "Tagihan mencatat kewajiban. Kas berkurang hanya setelah pembayaran vendor dikonfirmasi."}
+                {isInventoryPurchase
+                  ? "Tagihan Material menambah utang vendor dan nilai persediaan, bukan realisasi budget. Realisasi Material baru diakui saat stok dipakai atau menjadi waste. Kas berkurang hanya setelah pembayaran vendor dikonfirmasi."
+                  : remainingAfter < 0
+                    ? "Tagihan tetap dapat dibuat, tetapi kondisi overbudget akan terlihat pada kontrol budget dan jalur pembayaran."
+                    : "Tagihan mencatat kewajiban. Kas berkurang hanya setelah pembayaran vendor dikonfirmasi."}
               </FormRiskNotice>
             </div>
           ) : (
