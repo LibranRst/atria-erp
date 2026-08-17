@@ -13,22 +13,32 @@ bukan hanya ke tampilan layar.
 onboarding 1–6 beserta Ringkasan, B1 pembuatan project, B2 RAP (Material, Tukang,
 Subcon, finalisasi), B3 RAB dan aktivasi, B4 reservasi, B5 tagihan vendor sampai
 pencairan dan Goods Receipt, B6 pakai/kembalikan/terbuang, B7.1 pengajuan
-pengeluaran, serta B9.1–B9.3 invoice klien sampai seluruh termin lunas.
+pengeluaran, serta B9.1–B9.4 invoice klien sampai seluruh termin lunas dan rekonsiliasi kas
+dijalankan.
 
 B9 terbukti persis seperti tertulis: tiga invoice berjumlah Rp17.000.000, partial
 payment Rp2.000.000 membawa BCA Rp92.000.000 → Rp94.000.000, percobaan
 Rp3.100.001 ditolak tanpa menyisakan satu baris pun, dan setelah seluruh termin
 dilunasi BCA berhenti di Rp109.000.000 dengan total kas Rp114.300.000.
 
+Rekonsiliasi B9.4 juga terbukti: impor CSV menambah pembanding tanpa menyentuh
+saldo, pencocokan hanya memindahkan status (BCA tetap Rp109.000.000), impor ulang
+file yang sama melewati seluruh baris duplikat, fallback manual dengan fingerprint
+sama ditolak, dan pengecualian tersimpan dengan `reconciled` tetap `false`.
+
+**Dua ekspektasi B9.4 belum dapat dibuktikan pada run ini:** penanda aging
+**Perlu diperiksa** untuk transaksi berumur lebih dari 3 hari (seluruh transaksi
+UAT masih berumur nol hari), dan penolakan closing proyek karena kas belum cocok
+— yang terakhir baru diuji pada B12.
+
 Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
 Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
-**Belum dijalankan ulang:** B7.2, B8, B9.4 rekonsiliasi, B10 sampai B12, dan
-Bagian C. Bagian-bagian itu masih berisi ekspektasi hasil desain, bukan hasil
-pengamatan.
+**Belum dijalankan ulang:** B7.2, B8, B10 sampai B12, dan Bagian C.
+Bagian-bagian itu masih berisi ekspektasi hasil desain, bukan hasil pengamatan.
 
-Sepuluh cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
+Sebelas cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
 memengaruhi cara membaca runbook:
 
 - Panel dampak budget pada review tagihan vendor **dan** pada sheet persetujuan
@@ -45,6 +55,10 @@ memengaruhi cara membaca runbook:
   murni Bahasa Indonesia; kode mesin hanya lewat `error.code`.
 - Spanduk gagal pada sheet penerimaan klien dahulu bertahan setelah nominal
   penyebabnya dikoreksi, sehingga tinjauan yang sudah sah tetap terlihat merah.
+- Ketiga sheet pada `/reconciliation` dahulu menonaktifkan tombol utamanya tanpa
+  menjelaskan alasannya. Aturan alasan pengecualian minimal 10 karakter sama
+  sekali tidak terlihat dari layar; sekarang footer menyebutkan syarat yang
+  belum terpenuhi, sama seperti sheet lain di aplikasi.
 
 Dokumen ini adalah runbook acceptance test. Ikuti urutannya, ganti role sesuai instruksi, dan catat nilai sebelum/sesudah setiap action. Jangan memakai project atau transaksi seed sebagai titik awal.
 
@@ -1375,9 +1389,25 @@ tanggal,deskripsi,dana_masuk,dana_keluar
 2026-07-22,Penerimaan DP UAT — RCV-UAT-DP-001,2000000,
 ```
 
+Bila B9.3 sudah dituntaskan lebih dahulu, seluruh mutasi BCA sudah ada dan CSV berikut memasangkan semuanya sekaligus. Ganti tanggal sesuai tanggal UAT masing-masing:
+
+```csv
+tanggal,deskripsi,dana_masuk,dana_keluar
+2026-08-17,Penerimaan DP UAT — RCV-UAT-DP-001,2000000,
+2026-08-17,Pelunasan DP UAT — RCV-UAT-DP-002,3100000,
+2026-08-17,Termin progress UAT — RCV-UAT-PROG-001,8500000,
+2026-08-17,Pelunasan kontrak UAT — RCV-UAT-PELUNASAN-001,3400000,
+2026-08-18,Transfer vendor subcon — TRF-UAT-SUB-001,,3000000
+2026-08-18,Transfer vendor material — TRF-UAT-MAT-001,,5000000
+```
+
+Saldo awal rekening **tidak** dimasukkan ke CSV: mutasi itu tidak pernah muncul di rekening koran, dan justru menjadi contoh sah untuk **Catat pengecualian** di bawah.
+
+Kalimat persis yang muncul saat impor ulang file yang sama: **Tidak ada mutasi baru. 6 baris duplikat dilewati.**
+
 Jika bank belum menyediakan file untuk diolah, tekan **Catat manual**; sheet yang terbuka berjudul **Catat mutasi bank**. Form fallback berisi **Rekening**, **Tanggal mutasi**, **Arah mutasi**, **Nominal**, dan **Deskripsi**. Pilihan arah yang terlihat adalah **Dana masuk** atau **Dana keluar**; kode canonical internalnya adalah `INFLOW` dan `OUTFLOW` dengan makna yang sama, bukan istilah debit/kredit rekening bank.
 
-Jika satu **Catatan Atria** memang tidak akan mempunyai pasangan bank, buka transaksi lalu pilih **Catat pengecualian**. Isi alasan minimal 10 karakter. Status menjadi **Pengecualian tercatat** dan menyimpan alasan, pemeriksa, waktu, serta audit log, tetapi transaksi tetap `reconciled = false`. Gunakan hanya untuk kasus yang dapat dijelaskan, misalnya koreksi pembukaan atau transaksi internal non-bank; jangan gunakan untuk menyembunyikan transfer gagal atau perbedaan nominal. Pengecualian dapat dihapus agar transaksi kembali menjadi pekerjaan terbuka, atau otomatis dibersihkan ketika pasangan bank yang sah kemudian dikonfirmasi.
+Jika satu **Catatan Atria** memang tidak akan mempunyai pasangan bank, buka transaksi lalu pilih **Catat pengecualian**. Isi alasan minimal 10 karakter; selama belum cukup, tombol **Simpan alasan** nonaktif dan footer menjelaskan `Tulis alasan minimal 10 karakter.` Status menjadi **Pengecualian tercatat** dan menyimpan alasan, pemeriksa, waktu, serta audit log, tetapi transaksi tetap `reconciled = false`. Gunakan hanya untuk kasus yang dapat dijelaskan, misalnya koreksi pembukaan atau transaksi internal non-bank; jangan gunakan untuk menyembunyikan transfer gagal atau perbedaan nominal. Pengecualian dapat dihapus agar transaksi kembali menjadi pekerjaan terbuka, atau otomatis dibersihkan ketika pasangan bank yang sah kemudian dikonfirmasi.
 
 Untuk audit, buka **Riwayat** lalu ketuk row. Sheet detail harus menampilkan Catatan Atria, nominal/arah, rekening dan referensi, mutasi bank pasangannya, tanggal bank, nama file sumber, tanggal rekonsiliasi, serta pemeriksa.
 

@@ -28,7 +28,7 @@ import {
   TextInput,
   WorkflowFormSheet,
 } from "@/components/ui";
-import { formatIdr } from "@/lib/utils/money";
+import { formatIdr } from "@atria/core/utils/money";
 import { updateUrlSearchParam, useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { useRouter } from "next/navigation";
 import {
@@ -271,6 +271,26 @@ export function ReconciliationWorkspace({
     });
   }
 
+  // Setiap sheet di aplikasi ini menjelaskan mengapa action utamanya nonaktif;
+  // tanpa itu tombol mati terlihat seperti kerusakan. Aturan panjang alasan
+  // pengecualian khususnya tidak terlihat sama sekali dari layar.
+  const exceptionDisabledReason =
+    exceptionReason.trim().length < 10 ? "Tulis alasan minimal 10 karakter." : undefined;
+  const importDisabledReason = !importDraft.bankAccountId
+    ? "Pilih rekening tujuan."
+    : !importDraft.fileName || !importDraft.content
+      ? "Pilih file CSV rekening koran."
+      : undefined;
+  const manualDisabledReason = !draft.bankAccountId
+    ? "Pilih rekening mutasi."
+    : !draft.transactionDate
+      ? "Isi tanggal mutasi."
+      : Number(draft.amount) <= 0
+        ? "Isi nominal lebih dari 0."
+        : !draft.description
+          ? "Isi deskripsi sesuai rekening koran."
+          : undefined;
+
   return (
     <div className="space-y-sm pb-8">
       <PageHeader title="Rekonsiliasi" subtitle="Cocokkan catatan Atria dengan mutasi bank." />
@@ -297,6 +317,7 @@ export function ReconciliationWorkspace({
         submittingLabel="Menyimpan…"
         pending={pending}
         disabled={exceptionReason.trim().length < 10}
+        disabledReason={exceptionDisabledReason}
         statusText="Pengecualian tidak menandai transaksi sebagai cocok dengan bank."
         statusTone="warning"
         error={
@@ -345,6 +366,7 @@ export function ReconciliationWorkspace({
         submittingLabel="Mengimpor…"
         pending={pending}
         disabled={!importDraft.bankAccountId || !importDraft.fileName || !importDraft.content}
+        disabledReason={importDisabledReason}
         statusText="Impor hanya menambah data pembanding dan tidak mengubah saldo."
         statusTone="default"
         error={
@@ -412,7 +434,7 @@ export function ReconciliationWorkspace({
         </FormSection>
 
         <div className="flex items-start gap-2 px-1 text-meta text-on-surface-variant">
-          <AppIcon name="info" className="mt-0.5 shrink-0 text-[15px] text-primary" />
+          <AppIcon name="info" className="mt-0.5 icon-sm shrink-0 text-primary" />
           <p>
             Isi tanggal dan deskripsi, lalu tepat satu kolom dana_masuk atau dana_keluar. Ingin
             memasukkan satu transaksi saja?{" "}
@@ -443,6 +465,7 @@ export function ReconciliationWorkspace({
           !draft.description ||
           Number(draft.amount) <= 0
         }
+        disabledReason={manualDisabledReason}
         statusText="Salin data sesuai rekening koran."
         statusTone="default"
         error={
