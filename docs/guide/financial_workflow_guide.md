@@ -14,7 +14,7 @@ onboarding 1–6 beserta Ringkasan, B1 pembuatan project, B2 RAP (Material, Tuka
 Subcon, finalisasi), B3 RAB dan aktivasi, B4 reservasi, B5 tagihan vendor sampai
 pencairan dan Goods Receipt, B6 pakai/kembalikan/terbuang, B7.1 pengajuan
 pengeluaran, serta B9.1–B9.4 invoice klien sampai seluruh termin lunas dan rekonsiliasi kas
-dijalankan.
+dijalankan, serta B10 rekonsiliasi profitability.
 
 B9 terbukti persis seperti tertulis: tiga invoice berjumlah Rp17.000.000, partial
 payment Rp2.000.000 membawa BCA Rp92.000.000 → Rp94.000.000, percobaan
@@ -35,10 +35,10 @@ Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
 Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
-**Belum dijalankan ulang:** B7.2, B8, B10 sampai B12, dan Bagian C.
+**Belum dijalankan ulang:** B7.2, B8, B11, B12, dan Bagian C.
 Bagian-bagian itu masih berisi ekspektasi hasil desain, bukan hasil pengamatan.
 
-Sebelas cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
+Dua belas cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
 memengaruhi cara membaca runbook:
 
 - Panel dampak budget pada review tagihan vendor **dan** pada sheet persetujuan
@@ -55,6 +55,11 @@ memengaruhi cara membaca runbook:
   murni Bahasa Indonesia; kode mesin hanya lewat `error.code`.
 - Spanduk gagal pada sheet penerimaan klien dahulu bertahan setelah nominal
   penyebabnya dikoreksi, sehingga tinjauan yang sudah sah tetap terlihat merah.
+- Kartu **Realisasi kas** dahulu memberi label "Pengeluaran kas" pada realisasi
+  akrual, sementara "Posisi kas bersih" di bawahnya memakai kas yang benar-benar
+  keluar. Ketiga barisnya karena itu tidak saling menjumlah, dan selisihnya persis
+  sebesar persediaan yang sudah dibayar tetapi belum dipakai — justru angka yang
+  paling mudah disalahbaca pada model biaya ini.
 - Ketiga sheet pada `/reconciliation` dahulu menonaktifkan tombol utamanya tanpa
   menjelaskan alasannya. Aturan alasan pengecualian minimal 10 karakter sama
   sekali tidak terlihat dari layar; sekarang footer menyebutkan syarat yang
@@ -1447,6 +1452,14 @@ Expected project totals:
 - Internal Budget remaining Rp5.600.000.
 
 Dashboard harus tetap menonjolkan category overrun walaupun total project masih di bawah Internal Budget.
+
+Perhatikan bahwa keenam angka di atas tidak semuanya tampil pada satu layar:
+
+- Tab **Keuangan → Margin** menampilkan **Margin proyeksi Rp1.700.000 (10,0%)** — itu nilai kontrak dikurangi **plafon** budget internal (Rp17.000.000 − Rp15.300.000), bukan realized gross. Kartunya menyebutkan dasar perhitungan itu secara eksplisit.
+- Kartu **Realisasi kas** pada tab yang sama menampilkan Dana diterima Rp17.000.000, Pengeluaran kas Rp12.700.000, dan Posisi kas bersih Rp4.300.000. Baris tengah memakai **kas yang benar-benar keluar** (`paidAmount`), bukan realisasi akrual — selisih Rp3.000.000 terhadap actual cost adalah material yang sudah dibayar tetapi belum dipakai.
+- **Realized gross Rp7.300.000 dan margin 42,94%** muncul pada **checklist penutupan** (`Periksa kesiapan closing`), bukan pada kartu Margin. Di sanalah `contractValue - actualCost` dihitung.
+
+Jangan mencari realized gross pada kartu Margin; keduanya memang metrik berbeda dan dilabeli berbeda.
 
 ### B11. Optional revision dan Change Order
 

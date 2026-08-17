@@ -22,7 +22,7 @@ interface ProfitabilityPanelProps {
   readonly projectedGrossMargin: number;
   readonly totalRemaining: number;
   readonly totalReceived: number;
-  readonly totalSpent: number;
+  readonly totalPaid: number;
   readonly cashPosition: number;
   readonly isLocked: boolean;
   readonly nextSetupTab: TabId;
@@ -41,7 +41,7 @@ export function ProfitabilityPanel({
   projectedGrossMargin,
   totalRemaining,
   totalReceived,
-  totalSpent,
+  totalPaid,
   cashPosition,
   isLocked,
   nextSetupTab,
@@ -114,7 +114,7 @@ export function ProfitabilityPanel({
 
       <CashRealizationSection
         totalReceived={totalReceived}
-        totalSpent={totalSpent}
+        totalPaid={totalPaid}
         cashPosition={cashPosition}
       />
 

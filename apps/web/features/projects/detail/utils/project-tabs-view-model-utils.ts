@@ -1,5 +1,5 @@
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import { formatShortIdr } from "@/lib/utils/money";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import { formatShortIdr } from "@atria/core/utils/money";
 import type { ProjectReadinessItem } from "../components/overview/project-overview";
 import { buildRapForManager } from "./project-tabs-mappers";
 import type { ProjectTabsProps } from "../types/project-tabs-types";
@@ -27,6 +27,31 @@ export function calculateBudgetTotals(
   const totalRemaining = projectBudgetDashboard?.remainingBudget ?? totalAllocated - totalSpent;
 
   return { totalAllocated, totalSpent, totalRemaining };
+}
+
+/**
+ * Angka untuk kartu "Realisasi kas".
+ *
+ * `actualCost` adalah realisasi akrual — tagihan Material baru diakui saat stok
+ * dipakai atau menjadi waste — sedangkan yang keluar dari rekening adalah
+ * `paidCost`. Kartu ini bicara kas, jadi keduanya tidak boleh tertukar: dahulu
+ * baris "Pengeluaran kas" memakai akrual sementara "Posisi kas bersih" memakai
+ * kas, sehingga ketiga barisnya tidak saling menjumlah dan selisihnya persis
+ * sebesar persediaan yang belum terpakai.
+ *
+ * Keduanya sengaja diturunkan bersama di sini supaya tidak bisa berbeda lagi.
+ */
+export function calculateCashRealization({
+  totalReceived,
+  paidCost,
+  fallbackSpent,
+}: {
+  readonly totalReceived: number;
+  readonly paidCost: number | undefined;
+  readonly fallbackSpent: number;
+}): { readonly totalPaid: number; readonly cashPosition: number } {
+  const totalPaid = paidCost ?? fallbackSpent;
+  return { totalPaid, cashPosition: totalReceived - totalPaid };
 }
 
 export function calculateTotalReceived(invoices: ProjectTabsProps["invoices"]): number {

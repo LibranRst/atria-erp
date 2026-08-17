@@ -1,5 +1,8 @@
-import { buildProjectOverviewActions } from "@/lib/project/project-overview";
-import { selectApprovedRabEstimate, selectCurrentRabEstimate } from "@/lib/project/rab-selection";
+import { buildProjectOverviewActions } from "@atria/core/project/project-overview";
+import {
+  selectApprovedRabEstimate,
+  selectCurrentRabEstimate,
+} from "@atria/core/project/rab-selection";
 import type { ProjectReadinessItem } from "../components/overview/project-overview";
 import type {
   ProjectCategoryPlanItemView,
@@ -18,6 +21,7 @@ import type { ProjectTabsProps, TabId } from "../types/project-tabs-types";
 import {
   buildReadiness,
   calculateBudgetTotals,
+  calculateCashRealization,
   calculateInvoiceOutstanding,
   calculateTotalReceived,
 } from "./project-tabs-view-model-utils";
@@ -45,6 +49,7 @@ export function buildProjectTabsViewModel({
   readonly contractValue: number;
   readonly totalAllocated: number;
   readonly totalSpent: number;
+  readonly totalPaid: number;
   readonly totalReceived: number;
   readonly totalRemaining: number;
   readonly projectedGrossProfit: number;
@@ -75,8 +80,11 @@ export function buildProjectTabsViewModel({
   const projectedGrossMargin =
     projectBudgetDashboard?.projectedMarginPercentage ??
     (contractValue > 0 ? (projectedGrossProfit / contractValue) * 100 : 0);
-  const cashPosition =
-    totalReceived - (projectBudgetDashboard?.paidCost ?? budgetTotals.totalSpent);
+  const { totalPaid, cashPosition } = calculateCashRealization({
+    totalReceived,
+    paidCost: projectBudgetDashboard?.paidCost,
+    fallbackSpent: budgetTotals.totalSpent,
+  });
 
   const activeRap = project.raps.slice().sort((a, b) => b.revision - a.revision)[0] ?? null;
   const planBudgetCategories = (projectBudgetDashboard?.categories ?? [])
@@ -150,6 +158,7 @@ export function buildProjectTabsViewModel({
     contractValue,
     totalAllocated: budgetTotals.totalAllocated,
     totalSpent: budgetTotals.totalSpent,
+    totalPaid,
     totalReceived,
     totalRemaining: budgetTotals.totalRemaining,
     projectedGrossProfit,

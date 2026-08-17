@@ -13,8 +13,8 @@ import { ProfitabilityPanel } from "../overview/profitability-panel";
 import { toTabId, type ProjectTabsProps, type TabId } from "../../types/project-tabs-types";
 import { buildProjectTabsViewModel } from "../../utils/project-tabs-view-model";
 import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
-import { resolveEffectiveProjectHealth } from "@/lib/project/effective-health";
-import { getProjectActivationReadiness } from "@/lib/project/activation-readiness";
+import { resolveEffectiveProjectHealth } from "@atria/core/project/effective-health";
+import { getProjectActivationReadiness } from "@atria/core/project/activation-readiness";
 import { ProjectActivationSheet } from "../sheets/project-activation-sheet";
 import { usePreservedScrollHeight } from "@/lib/hooks/use-preserved-scroll-height";
 
@@ -83,7 +83,7 @@ export function ProjectTabs({
   const {
     contractValue,
     totalAllocated,
-    totalSpent,
+    totalPaid,
     totalReceived,
     totalRemaining,
     projectedGrossProfit,
@@ -278,7 +278,7 @@ export function ProjectTabs({
             projectedGrossMargin={projectedGrossMargin}
             totalRemaining={totalRemaining}
             totalReceived={totalReceived}
-            totalSpent={totalSpent}
+            totalPaid={totalPaid}
             cashPosition={cashPosition}
             isLocked={isLocked}
             nextSetupTab={nextSetupTab}

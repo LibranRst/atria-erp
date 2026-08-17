@@ -59,11 +59,11 @@ export function ProfitProjectionSection({
 
 export function CashRealizationSection({
   totalReceived,
-  totalSpent,
+  totalPaid,
   cashPosition,
 }: {
   readonly totalReceived: number;
-  readonly totalSpent: number;
+  readonly totalPaid: number;
   readonly cashPosition: number;
 }): React.JSX.Element {
   return (
@@ -76,7 +76,7 @@ export function CashRealizationSection({
       </header>
       <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
         <CashRow label="Dana diterima" amount={totalReceived} />
-        <CashRow label="Pengeluaran kas" amount={totalSpent} />
+        <CashRow label="Pengeluaran kas" amount={totalPaid} />
         <CashRow label="Posisi kas bersih" amount={cashPosition} strong danger={cashPosition < 0} />
       </div>
       <p className="px-1 text-meta text-on-surface-variant">
