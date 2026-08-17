@@ -14,6 +14,7 @@ import {
   type FieldRequestTx,
   type StockHandling,
 } from "./field-request-stock";
+import { decideExpenseApproval } from "@atria/core/finance/expense-approval-rule";
 import { createProjectCostApprovalTx } from "./field-request-utils";
 
 export type FieldRequestSubmissionItem = {
@@ -72,10 +73,14 @@ export async function createSubmittedFieldRequestTx(
     throw new Error("PROJECT_BUDGET_CATEGORY_NOT_FOUND");
   }
 
-  const allocated = Number(budgetCategory.allocatedAmount);
-  const spent = Number(budgetCategory.actualAmount);
-  const isOverrun = spent + args.item.amount > allocated;
-  const requiresApproval = args.item.amount >= 5000000 || isOverrun;
+  // Pengajuan ini belum masuk `pendingAmount`, jadi seluruh nilai pending yang
+  // ada memang milik pengajuan lain.
+  const { isOverrun, requiresOwnerApproval: requiresApproval } = decideExpenseApproval({
+    amount: args.item.amount,
+    allocatedAmount: Number(budgetCategory.allocatedAmount),
+    actualAmount: Number(budgetCategory.actualAmount),
+    otherPendingAmount: Number(budgetCategory.pendingAmount),
+  });
   const projectCostId = crypto.randomUUID();
 
   if (requiresApproval) {

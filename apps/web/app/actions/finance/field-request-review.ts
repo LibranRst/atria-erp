@@ -3,17 +3,18 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { projectCost, vendorPayment } from "@/db/schema";
+import { projectBudgetCategory, projectCost, vendorPayment } from "@/db/schema";
 import {
   ensureCanonicalExpenseForProjectCost,
   syncProjectBudgetCategory,
 } from "@/lib/budget/budget-sync";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { decideExpenseApproval } from "@atria/core/finance/expense-approval-rule";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import {
   approveFieldRequestSchema,
   type ApproveFieldRequestInput,
-} from "@/lib/validations/finance";
+} from "@atria/core/validations/finance";
 import { authorizeFieldRequestAction, authorizeOwnerVendorApproval } from "./field-request-auth";
 import {
   mapApproveFieldRequestError,
@@ -57,7 +58,32 @@ export async function verifyFieldRequest(
       }
 
       const amount = Number(cost.amount);
-      const requiresApproval = amount >= 5000000 || cost.budgetOverrun;
+      /**
+       * Kondisi overbudget diperiksa ulang di sini, bukan hanya dipercaya dari
+       * penanda saat pengajuan. Antara pengajuan dan verifikasi, pengeluaran
+       * lain pada kategori yang sama bisa disetujui lebih dulu dan mendorong
+       * kategori melewati alokasinya — pengajuan ini baru menjadi overbudget
+       * pada saat diverifikasi.
+       *
+       * `pendingAmount` masih memuat pengajuan ini, jadi ia dikurangkan agar
+       * tidak dihitung dua kali bersama `amount`.
+       */
+      const budgetCategory = cost.projectBudgetCategoryId
+        ? await tx.query.projectBudgetCategory.findFirst({
+            where: eq(projectBudgetCategory.id, cost.projectBudgetCategoryId),
+          })
+        : null;
+      const overrunNow = budgetCategory
+        ? decideExpenseApproval({
+            amount,
+            allocatedAmount: Number(budgetCategory.allocatedAmount),
+            actualAmount: Number(budgetCategory.actualAmount),
+            // Pengajuan ini masih tercatat pending, jadi dikeluarkan agar tidak
+            // dihitung dua kali bersama `amount`.
+            otherPendingAmount: Math.max(0, Number(budgetCategory.pendingAmount) - amount),
+          }).isOverrun
+        : false;
+      const requiresApproval = amount >= 5000000 || cost.budgetOverrun || overrunNow;
       const nextStatus = requiresApproval ? "VERIFIED" : "APPROVED";
 
       const [updatedCost] = await tx
