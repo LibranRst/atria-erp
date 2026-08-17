@@ -36,8 +36,13 @@ Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
 Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
-**Belum dijalankan ulang:** B7.2, B8, B11, dan Bagian C. Bagian-bagian itu masih
-berisi ekspektasi hasil desain, bukan hasil pengamatan.
+**Sudah dijalankan sebagian:** Bagian C — sembilan dari delapan belas negative
+test terbukti live, satu terverifikasi dari kode, delapan sisanya menunggu
+proyek `ACTIVE` baru atau akun PM kedua. Rinciannya ada di akhir Bagian C.
+
+**Belum dijalankan ulang:** B11 revisi dan Change Order. B7.2 dan B8 sudah
+dijalankan — hasil akhirnya cocok persis dengan tabel B10, dan justru dari
+skenario B7.2 cacat aturan persetujuan gabungan ditemukan.
 Bagian-bagian itu masih berisi ekspektasi hasil desain, bukan hasil pengamatan.
 
 Tiga belas cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
@@ -1615,6 +1620,42 @@ Material 5.814.000 / 2.000.000 / 3.814.000 pada 34,3997%.
 | Archived account      | Finance       | Mutasi rekening inactive                  | Ditolak                                  |
 | Direct second RAB     | Owner         | Approve revision tanpa CO                 | Ditolak                                  |
 | Premature closing     | Owner         | Complete dengan blocker                   | Ditolak, no snapshot                     |
+
+### Status verifikasi Bagian C
+
+Dijalankan 18 Agustus 2026 terhadap database UAT yang sama.
+
+**Sudah terbukti live (9):** Global finance, Sensitive balance, Self verification,
+Budget settings, Approved RAP, Over-reserve, Short audit note, Client overpay,
+dan Premature closing.
+
+Dua di antaranya lebih kuat dari yang tertulis di matriks:
+
+- **Sensitive balance** bukan sekadar "tidak terlihat". Saat Purchasing membuka
+  `/expenses`, nama rekening maupun angka saldo tidak ada sama sekali di DOM
+  maupun di payload RSC — datanya tidak pernah dikirim ke klien.
+- **Budget settings** dijaga dua lapis: seluruh modul pada `/settings` berlabel
+  **Hanya baca** untuk Purchasing dan tidak punya tombol simpan, sementara
+  `manage:budget_settings` memang hanya dimiliki Owner dan Finance Admin.
+
+Sebagai catatan tambahan, menu navigasi juga ikut menyempit mengikuti peran: PM
+hanya melihat Proyek, Material & Stok, Kas & Tagihan, dan Profil.
+
+**Terverifikasi dari kode, belum dijalankan live (1):** Archived account.
+`recordBankAccountMovement` dan jalur transfer mencari rekening dengan filter
+`isActive = true`, sehingga rekening terarsip ditolak sebagai
+`BANK_ACCOUNT_NOT_FOUND` sebelum saldo tersentuh. Pesannya berbunyi "tidak
+ditemukan", bukan "sudah diarsipkan" — perilakunya benar, tetapi kalimatnya
+belum menjelaskan sebab sebenarnya.
+
+**Belum dapat dijalankan (8):**
+
+- **Project scoping** memerlukan akun PM kedua; workspace UAT baru punya satu PM.
+- **Cross-project reserve, Excess return, Reserved reversal, Vendor
+  over-schedule, Early vendor pay, Rejected payment, dan Direct second RAB**
+  memerlukan proyek berstatus `ACTIVE`. Proyek UAT pertama sudah `COMPLETED`
+  sehingga seluruh action pencatatan menolaknya lewat
+  `assertProjectStatusIsOperational`.
 
 ## BAGIAN D — Cara menilai hasil UAT
 
