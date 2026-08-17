@@ -5,7 +5,7 @@ import { z } from "zod";
 import { recordClientPayment } from "@/app/actions/finance/record-client-payment";
 import { generateClientInvoiceSchedule } from "@/app/actions/finance/generate-invoice-schedule";
 import { useRouter } from "next/navigation";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { toast } from "sonner";
 import { ClientPaymentSheet } from "./client-payment-sheet";
@@ -85,6 +85,16 @@ export function ProjectInvoices({
   const { amountPaid, selectedBankId, refNumber, paymentDate } = paymentRecovery.payload;
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const patchPayment = React.useCallback(
+    (patch: Partial<ClientPaymentRecovery>) => {
+      // Kegagalan dari percobaan sebelumnya menjadi menyesatkan begitu isian
+      // penyebabnya diperbaiki: setelah nominal overpay dikoreksi, tinjauan
+      // menampilkan angka yang sah tetapi spanduk merah lama masih terpampang.
+      setError(null);
+      paymentRecovery.setPayload((current) => ({ ...current, ...patch }));
+    },
+    [paymentRecovery],
+  );
   const [success, setSuccess] = useState<string | null>(null);
   const [operationSuccess, setOperationSuccess] = useState<OperationSuccess | null>(null);
 
@@ -226,21 +236,13 @@ export function ProjectInvoices({
         selectedInvoice={selectedInvoice}
         bankAccounts={bankAccounts}
         amountPaid={amountPaid}
-        setAmountPaid={(value) =>
-          paymentRecovery.setPayload((current) => ({ ...current, amountPaid: value }))
-        }
+        setAmountPaid={(value) => patchPayment({ amountPaid: value })}
         selectedBankId={selectedBankId}
-        setSelectedBankId={(value) =>
-          paymentRecovery.setPayload((current) => ({ ...current, selectedBankId: value }))
-        }
+        setSelectedBankId={(value) => patchPayment({ selectedBankId: value })}
         refNumber={refNumber}
-        setRefNumber={(value) =>
-          paymentRecovery.setPayload((current) => ({ ...current, refNumber: value }))
-        }
+        setRefNumber={(value) => patchPayment({ refNumber: value })}
         paymentDate={paymentDate}
-        setPaymentDate={(value) =>
-          paymentRecovery.setPayload((current) => ({ ...current, paymentDate: value }))
-        }
+        setPaymentDate={(value) => patchPayment({ paymentDate: value })}
         isDirty={paymentRecovery.isDirty}
         isPending={isPending}
         error={error}

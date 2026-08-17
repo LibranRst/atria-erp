@@ -2,7 +2,12 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { FormField, Textarea, TextInput } from "./basic-form-controls";
-import { FormSection, FormSheetPresentationBoundary } from "./guided-form";
+import {
+  FieldContextLine,
+  FormSection,
+  FormSheetPresentationBoundary,
+  SmartDefaultHint,
+} from "./guided-form";
 import { FormPresentationProvider } from "./form-presentation-context";
 import { ValuePreviewStrip } from "./form-support";
 import { SheetSelect } from "./select-form-controls";
@@ -106,6 +111,36 @@ describe("iOS grouped form presentation", () => {
     expect(html).not.toContain(
       "group/form min-w-0 space-y-1 bg-surface-container-lowest px-4 py-3",
     );
+  });
+
+  test("indents context lines that sit directly inside a grouped panel", () => {
+    // Kartu grouped memakai `rounded-3xl overflow-hidden`, jadi baris tanpa
+    // padding membuat huruf pertama/terakhir terpotong lengkung sudut.
+    const html = renderToStaticMarkup(
+      <FormSection title="Dampak invoice">
+        <FieldContextLine>Terbayar sebelum: Rp 0</FieldContextLine>
+      </FormSection>,
+    );
+
+    expect(html).toContain("px-5 py-2.5");
+  });
+
+  test("keeps a standalone context line flush with its own container", () => {
+    const html = renderToStaticMarkup(
+      <FieldContextLine>Invoice INV-001 · Sisa Rp 5.100.000</FieldContextLine>,
+    );
+
+    expect(html).not.toContain("px-5");
+  });
+
+  test("does not double-indent the hint that brings its own row padding", () => {
+    const html = renderToStaticMarkup(
+      <FormSection title="Tim proyek">
+        <SmartDefaultHint>hanya ada satu opsi aktif.</SmartDefaultHint>
+      </FormSection>,
+    );
+
+    expect(html.match(/px-5/g)).toHaveLength(1);
   });
 
   test("lets a single value preview occupy the full available row", () => {

@@ -5,10 +5,14 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { BottomSheet } from "../overlay/bottom-sheet";
 import { cx } from "./form-control-utils";
-import { type FormPresentation, FormPresentationProvider } from "./form-presentation-context";
+import {
+  type FormPresentation,
+  FormPresentationProvider,
+  useFormPresentation,
+} from "./form-presentation-context";
 import { SheetFooterActions } from "../overlay/sheet-footer-actions";
 import type { FormRiskTone } from "./form-support";
-import { formatShortIdr } from "@/lib/utils/money";
+import { formatShortIdr } from "@atria/core/utils/money";
 import { transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
@@ -420,7 +424,17 @@ export function FieldContextLine({
   readonly children: React.ReactNode;
   readonly tone?: FormRiskTone;
 }): React.JSX.Element {
-  return <p className={cx("min-w-0 text-meta font-medium", textClass[tone])}>{children}</p>;
+  // Di dalam FormSection bergaya `grouped`, baris ini menjadi anak langsung
+  // kartu ber-`rounded-3xl overflow-hidden`. Tanpa padding baris, huruf pertama
+  // dan terakhir tertelan lengkung sudut kartu — terlihat pada langkah tinjau
+  // Penerimaan kas termin, Mutasi rekening, dan Transfer antar rekening.
+  // Padding-nya disamakan dengan baris grouped lain (`px-5`).
+  const grouped = useFormPresentation() === "grouped";
+  return (
+    <p className={cx("min-w-0 text-meta font-medium", grouped && "px-5 py-2.5", textClass[tone])}>
+      {children}
+    </p>
+  );
 }
 
 export function SmartDefaultHint({
@@ -430,7 +444,11 @@ export function SmartDefaultHint({
 }): React.JSX.Element {
   return (
     <div className="min-w-0 px-5 py-2.5">
-      <FieldContextLine tone="success">Default: {children}</FieldContextLine>
+      {/* Padding baris sudah disediakan pembungkus ini, jadi presentasi
+          dikembalikan ke standalone agar tidak ter-padding dua kali. */}
+      <FormPresentationProvider presentation="standalone">
+        <FieldContextLine tone="success">Default: {children}</FieldContextLine>
+      </FormPresentationProvider>
     </div>
   );
 }

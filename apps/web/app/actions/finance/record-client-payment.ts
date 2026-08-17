@@ -222,30 +222,65 @@ export async function recordClientPayment(
       data: result,
     };
   } catch (error: unknown) {
-    const errMsg = getErrorMessage(error, "Gagal mencatatkan pembayaran termin klien.");
-    let errorCode:
-      | "UNAUTHORIZED"
-      | "FORBIDDEN"
-      | "VALIDATION_ERROR"
-      | "INSUFFICIENT_FUNDS"
-      | "TRANSACTION_FAILED"
-      | "NOT_FOUND"
-      | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
-    if (errMsg.startsWith("INVOICE_NOT_FOUND")) {
-      errorCode = "NOT_FOUND";
-    } else if (errMsg.startsWith("INVOICE_CLOSED")) {
-      errorCode = "FORBIDDEN";
-    } else if (errMsg.startsWith("PAYMENT_EXCEEDS_INVOICE_OUTSTANDING")) {
-      errorCode = "VALIDATION_ERROR";
-    } else if (errMsg.startsWith("DUPLICATE_BANK_REFERENCE")) {
-      errorCode = "VALIDATION_ERROR";
-    }
+    return mapRecordClientPaymentError(error);
+  }
+}
+
+/**
+ * Menerjemahkan sentinel internal menjadi pesan yang layak dibaca pengguna.
+ * Sentinel seperti `PAYMENT_EXCEEDS_INVOICE_OUTSTANDING` hanya penanda alur di
+ * dalam transaksi; menyalurkannya apa adanya ke `error.message` membuat kode
+ * internal muncul di sheet "Tinjau penerimaan klien". Kode mesin tetap
+ * tersampaikan lewat `error.code`.
+ */
+function mapRecordClientPaymentError(error: unknown): ActionResponse<never> {
+  const errMsg = getErrorMessage(error, "Gagal mencatatkan pembayaran termin klien.");
+
+  if (errMsg.startsWith("INVOICE_NOT_FOUND")) {
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Tagihan klien tidak ditemukan." },
+    };
+  }
+  if (errMsg.startsWith("INVOICE_CLOSED")) {
     return {
       success: false,
       error: {
-        code: errorCode,
-        message: errMsg,
+        code: "FORBIDDEN",
+        message: "Tagihan ini sudah ditutup dan tidak dapat menerima pembayaran lagi.",
       },
     };
   }
+  if (errMsg.startsWith("PAYMENT_EXCEEDS_INVOICE_OUTSTANDING")) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Nominal pembayaran melebihi sisa piutang invoice.",
+      },
+    };
+  }
+  if (errMsg.startsWith("DUPLICATE_BANK_REFERENCE")) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Nomor referensi mutasi bank ini sudah pernah dicatat.",
+      },
+    };
+  }
+  if (errMsg.startsWith("PAYMENT_INSERT_FAILED")) {
+    return {
+      success: false,
+      error: {
+        code: "TRANSACTION_FAILED",
+        message: "Gagal menyimpan rekaman pembayaran klien. Coba ulangi.",
+      },
+    };
+  }
+
+  return {
+    success: false,
+    error: { code: "INTERNAL_SERVER_ERROR", message: errMsg },
+  };
 }

@@ -12,17 +12,23 @@ bukan hanya ke tampilan layar.
 **Sudah dijalankan dan cocok sampai rupiah terakhir:** A0 bootstrap, seluruh langkah
 onboarding 1–6 beserta Ringkasan, B1 pembuatan project, B2 RAP (Material, Tukang,
 Subcon, finalisasi), B3 RAB dan aktivasi, B4 reservasi, B5 tagihan vendor sampai
-pencairan dan Goods Receipt, B6 pakai/kembalikan/terbuang, serta B7.1 pengajuan
-pengeluaran.
+pencairan dan Goods Receipt, B6 pakai/kembalikan/terbuang, B7.1 pengajuan
+pengeluaran, serta B9.1–B9.3 invoice klien sampai seluruh termin lunas.
+
+B9 terbukti persis seperti tertulis: tiga invoice berjumlah Rp17.000.000, partial
+payment Rp2.000.000 membawa BCA Rp92.000.000 → Rp94.000.000, percobaan
+Rp3.100.001 ditolak tanpa menyisakan satu baris pun, dan setelah seluruh termin
+dilunasi BCA berhenti di Rp109.000.000 dengan total kas Rp114.300.000.
 
 Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
 Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
-**Belum dijalankan ulang:** B7.2 sampai B12 dan Bagian C. Bagian-bagian itu masih
-berisi ekspektasi hasil desain, bukan hasil pengamatan.
+**Belum dijalankan ulang:** B7.2, B8, B9.4 rekonsiliasi, B10 sampai B12, dan
+Bagian C. Bagian-bagian itu masih berisi ekspektasi hasil desain, bukan hasil
+pengamatan.
 
-Tujuh cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
+Sepuluh cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
 memengaruhi cara membaca runbook:
 
 - Panel dampak budget pada review tagihan vendor **dan** pada sheet persetujuan
@@ -34,6 +40,11 @@ memengaruhi cara membaca runbook:
 - `bun run test` dahulu menulis ke database yang sama dengan dev server. Sekarang
   suite yang menyentuh Postgres hanya berjalan bila `ATRIA_TEST_DATABASE_URL` diisi,
   jadi menjalankan test di tengah UAT tidak lagi menggeser angka yang sedang diperiksa.
+- Penolakan pembayaran klien dahulu menampilkan sentinel internal
+  (`PAYMENT_EXCEEDS_INVOICE_OUTSTANDING: …`) langsung ke layar. Pesan gagal kini
+  murni Bahasa Indonesia; kode mesin hanya lewat `error.code`.
+- Spanduk gagal pada sheet penerimaan klien dahulu bertahan setelah nominal
+  penyebabnya dikoreksi, sehingga tinjauan yang sudah sah tetap terlihat merah.
 
 Dokumen ini adalah runbook acceptance test. Ikuti urutannya, ganti role sesuai instruksi, dan catat nilai sebelum/sesudah setiap action. Jangan memakai project atau transaksi seed sebagai titik awal.
 
@@ -1271,7 +1282,9 @@ Expected:
 
 #### B9.1. Buat tiga invoice klien
 
-Login Finance/Owner, Project → Payments → Buat Invoice. Current state membuat invoice satu per satu; ulangi form tiga kali dan jangan mencari action `Generate Schedule`.
+Login Finance/Owner, lalu buka Project → tab **Keuangan** → sub-tab **Pembayaran** → tombol **+ Invoice** di kartu ringkasan.
+
+Tab ini juga punya generator **Buat termin 30% · 35% · 25% · 10%** yang membuat empat termin sekaligus. Dataset kontrol runbook memakai pembagian 30/50/20, jadi **jangan** memakai generator itu — isi form tiga kali secara manual.
 
 | Field               | Invoice DP 30%           | Invoice Progress 50%       | Invoice Pelunasan 20%     |
 | ------------------- | ------------------------ | -------------------------- | ------------------------- |
@@ -1281,7 +1294,7 @@ Login Finance/Owner, Project → Payments → Buat Invoice. Current state membua
 | Tanggal Jatuh Tempo | `<tanggal UAT + 7 hari>` | `<tanggal UAT + 30 hari>`  | `<tanggal UAT + 60 hari>` |
 | Catatan             | `DP 30% sesuai RAB UAT.` | `Termin progress 50% UAT.` | `Pelunasan 20% UAT.`      |
 
-Expected total invoice tepat Rp17.000.000. Receivable naik Rp17.000.000; cash belum berubah.
+Expected total invoice tepat Rp17.000.000. Receivable naik Rp17.000.000; cash belum berubah — kartu ringkasan membaca **Rp17.000.000 · 3 termin · 100% nilai kontrak sudah ditagihkan**, sementara saldo kedua rekening tidak bergerak.
 
 #### B9.2. Partial payment dan overpayment guard
 
@@ -1304,6 +1317,16 @@ Contoh form **Catat Pembayaran Klien** untuk langkah 1:
 | Tanggal Transaksi Diterima     | `<tanggal UAT hari ini>`    |
 
 Untuk negative overpayment pada langkah 4, gunakan field yang sama tetapi **Nominal Diterima = `3100001`** dan referensi `RCV-UAT-DP-OVERPAY`. Untuk pelunasan langkah 6, gunakan nominal `3100000` dan referensi `RCV-UAT-DP-002`.
+
+Dua hal yang mudah terlewat saat menjalankan langkah ini:
+
+- **Rekening penerima tidak otomatis BCA.** Sheet membuka dengan rekening pertama pada daftar (`Kas · Kas UAT Lapangan`); pilih BCA secara eksplisit, atau kas masuk akan tercatat di rekening yang salah.
+- **Nominal sudah terisi penuh** sebesar sisa tagihan. Untuk partial payment, ganti isinya menjadi `2000000`.
+
+Penolakan overpayment berjalan **dua lapis**, dan hanya lapis kedua yang benar-benar menghentikan transaksi:
+
+1. Form memberi peringatan `Nominal melebihi sisa invoice sebesar Rp 1.` di footer, dan baris `Sisa sesudah` pada review berubah menjadi `Rp 0 · periksa kelebihan bayar`. Tombol **Tinjau** dan **Catat** tetap aktif — peringatan ini tidak memblokir.
+2. Server menolak saat **Catat** ditekan, dengan pesan `Nominal pembayaran melebihi sisa piutang invoice.` Seluruh transaksi di-rollback: saldo BCA tetap Rp94.000.000, tidak ada baris `client_payment` maupun `cash_transaction` yang tertulis, dan status invoice tetap **Dibayar sebagian**.
 
 #### B9.3. Lunasi invoice lain
 
@@ -1329,6 +1352,8 @@ Expected:
 Rekonsiliasi kas:
 
 `Rp110.000.000 opening + Rp17.000.000 client receipts - Rp12.700.000 cash out = Rp114.300.000`
+
+Nomor referensi wajib unik per rekening. Bila satu percobaan gagal karena nominal, referensi yang sama masih boleh dipakai ulang — percobaan yang ditolak tidak menyisakan baris apa pun.
 
 #### B9.4. Rekonsiliasi dengan rekening koran
 
