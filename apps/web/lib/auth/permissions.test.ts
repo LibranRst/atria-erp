@@ -14,10 +14,6 @@ describe("Atria ERP RBAC - permissions.ts", () => {
       expect(pmRoleName).toBe("PROJECT_MANAGER");
     });
 
-    it("harus mengembalikan UNKNOWN untuk UUID peran acak yang tidak terdaftar", async () => {
-      const unknownRoleName = await resolveRoleName("00000000-9999-9999-9999-000000000000");
-      expect(unknownRoleName).toBe("UNKNOWN");
-    });
   });
 
   // Test assertPermission
@@ -102,8 +98,17 @@ describe("Atria ERP RBAC - permissions.ts", () => {
 
 import { db } from "@/db";
 import { project } from "@/db/schema";
+import { describeIntegration } from "@/lib/testing/integration-db";
 
-describe("Atria ERP Project Scoping - scoping.ts", () => {
+describeIntegration("Atria ERP Project Scoping - scoping.ts", () => {
+  // `resolveRoleName` menelan error database dan mengembalikan "UNKNOWN", jadi
+  // tanpa database test ini akan lulus karena koneksi gagal — bukan karena
+  // barisnya memang tidak ada. Karena itu ia ikut tergerbang.
+  it("harus mengembalikan UNKNOWN untuk UUID peran acak yang tidak terdaftar", async () => {
+    const unknownRoleName = await resolveRoleName("00000000-9999-9999-9999-000000000000");
+    expect(unknownRoleName).toBe("UNKNOWN");
+  });
+
   // Test scopeProjectQuery
   describe("scopeProjectQuery", () => {
     it("harus mengembalikan undefined untuk OWNER dan FINANCE_ADMIN agar tidak difilter", () => {

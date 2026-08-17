@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, expect, mock, test } from "bun:test";
+import { describeIntegration } from "@/lib/testing/integration-db";
 import { and, eq } from "drizzle-orm";
 
 import { activateProjectAction } from "@/app/actions/project/activation";
@@ -16,15 +17,17 @@ mock.module("next/cache", () => ({
 const PROJECT_ID = "77777777-7777-7777-7777-777777777771";
 const originalGetSession = (auth.api as unknown as { getSession: unknown }).getSession;
 
-afterEach(async () => {
-  (auth.api as unknown as { getSession: unknown }).getSession = originalGetSession;
-  await db.update(project).set({ status: "ACTIVE" }).where(eq(project.id, PROJECT_ID));
-  await db
-    .delete(auditLog)
-    .where(and(eq(auditLog.action, "ACTIVATE_PROJECT"), eq(auditLog.targetId, PROJECT_ID)));
-});
+describeIntegration("project activation action", () => {
+  // Hook ini menyentuh Postgres, jadi ia harus ikut tergerbang bersama suite-nya
+  // dan tidak boleh berada di scope modul.
+  afterEach(async () => {
+    (auth.api as unknown as { getSession: unknown }).getSession = originalGetSession;
+    await db.update(project).set({ status: "ACTIVE" }).where(eq(project.id, PROJECT_ID));
+    await db
+      .delete(auditLog)
+      .where(and(eq(auditLog.action, "ACTIVATE_PROJECT"), eq(auditLog.targetId, PROJECT_ID)));
+  });
 
-describe("project activation action", () => {
   test("activates a ready Draft project only after rechecking the safeguards", async () => {
     (auth.api as unknown as { getSession: unknown }).getSession = async (): Promise<unknown> => ({
       user: {

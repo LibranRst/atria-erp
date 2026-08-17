@@ -1,4 +1,5 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, expect, it, mock } from "bun:test";
+import { describeIntegration } from "@/lib/testing/integration-db";
 import { inArray } from "drizzle-orm";
 
 import {
@@ -85,7 +86,7 @@ function validPayload(description: string): ExpenseDraftPayload {
   };
 }
 
-describe("expense draft actions", () => {
+describeIntegration("expense draft actions", () => {
   afterAll(async () => {
     (auth.api as unknown as { getSession: unknown }).getSession = originalGetSession;
     if (createdCostIds.length > 0) {

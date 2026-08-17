@@ -31,6 +31,17 @@ const percent = (value: number): string =>
     maximumFractionDigits: 1,
   }).format(value);
 
+/**
+ * Rasio disimpan sebagai pecahan, tetapi diedit sebagai persen. `rasio * 100`
+ * membocorkan galat IEEE-754 pada sebagian nilai — `0.28 * 100` menghasilkan
+ * `28.000000000000004`, dan angka mentah itu tampil di dalam input.
+ *
+ * Kolom rasio adalah numeric dengan 6 desimal, jadi persennya hanya bermakna
+ * sampai 4 desimal. Pembulatan di bawah menghapus galat tanpa membuang
+ * presisi yang benar-benar disimpan.
+ */
+const ratioToPercentInput = (ratio: number): number => Math.round(ratio * 1_000_000) / 10_000;
+
 type BudgetSettingsManagerProps = {
   readonly initialSetting: BudgetAllocationSettingRow;
   readonly roleName: string;
@@ -191,7 +202,7 @@ export function BudgetSettingsManager({
             min={0}
             max={100}
             disabled={!canManage}
-            value={setting.budgetCapRatio * 100}
+            value={ratioToPercentInput(setting.budgetCapRatio)}
             onChange={(value) =>
               setSetting({
                 ...setting,
@@ -309,7 +320,7 @@ export function BudgetSettingsManager({
                         min={0}
                         max={100}
                         disabled={!canManage || !category.isEnabled}
-                        value={category.ratioPercentage * 100}
+                        value={ratioToPercentInput(category.ratioPercentage)}
                         onChange={(value) =>
                           setSetting({
                             ...setting,

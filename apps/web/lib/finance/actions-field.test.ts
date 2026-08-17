@@ -25,6 +25,7 @@ import {
   approveVendorPayment,
 } from "@/app/actions/finance/field-requests";
 import { describe, it, expect, afterAll, mock } from "bun:test";
+import { describeIntegration } from "@/lib/testing/integration-db";
 
 /**
  * `submitVendorBill` and `submitFieldRequest(s)` post against real seeded
@@ -145,7 +146,7 @@ const MATERIAL_PLYWOOD_ID = "13131313-1313-1313-1313-131313131301";
 const WAREHOUSE_LOCATION_ID = "14141414-1414-1414-1414-141414141401";
 const MENTENG_RAP_PLYWOOD_ITEM_ID = "17171717-1717-1717-1717-171717171701";
 
-describe("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", () => {
+describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field Claims", () => {
   afterAll(async () => {
     restoreUserSession();
 

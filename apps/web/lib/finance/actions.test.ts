@@ -14,6 +14,7 @@ import { recordClientPayment } from "@/app/actions/finance/record-client-payment
 import { createClientInvoice } from "@/app/actions/finance/create-client-invoice";
 import { getDashboardStats } from "@/app/actions/finance/get-dashboard-stats";
 import { describe, it, expect, afterAll, mock } from "bun:test";
+import { describeIntegration } from "@/lib/testing/integration-db";
 
 // Mock next/headers untuk mencegah error cookies() di luar server Next.js
 mock.module("next/headers", () => {
@@ -88,7 +89,7 @@ const SUDIRMAN_PROJECT_ID = "77777777-7777-7777-7777-777777777772"; // PM Siti
 const MATERIAL_CATEGORY_ID = "99999999-9999-9999-9999-999999999991";
 const BCA_ACC_ID = "66666666-6666-6666-6666-666666666661";
 
-describe("Atria ERP Server Actions - TSK-007", () => {
+describeIntegration("Atria ERP Server Actions - TSK-007", () => {
   afterAll(() => {
     restoreUserSession();
   });

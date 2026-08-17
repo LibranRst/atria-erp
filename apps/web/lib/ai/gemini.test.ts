@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { geminiClient, GEMINI_OCR_MODEL } from "@/lib/ai/gemini";
 import { processReceipt } from "@/app/actions/ai/process-receipt";
 import { describe, it, expect, beforeAll, afterAll, mock } from "bun:test";
+import { describeIntegration } from "@/lib/testing/integration-db";
 
 // Mock next/headers
 mock.module("next/headers", () => {
@@ -117,7 +118,7 @@ async function mockGenerateContent(args: unknown): Promise<{
   throw new Error(`Model ${model} tidak dikenali dalam test mock.`);
 }
 
-describe("Atria ERP AI Layer Integration - TSK-009", () => {
+describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
   beforeAll(() => {
     // Mock global fetch
     global.fetch = (async (url: string) => {

@@ -10,7 +10,8 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { createProjectAction } from "@/app/actions/project/crud";
 import { approveRabEstimate } from "@/app/actions/project/rap-rab";
-import { describe, it, expect, mock, afterAll } from "bun:test";
+import { it, expect, mock, afterAll } from "bun:test";
+import { describeIntegration } from "@/lib/testing/integration-db";
 
 // Mock next/headers for Next.js environment
 mock.module("next/headers", () => {
@@ -63,7 +64,7 @@ const OWNER_USER = {
   name: "Ronald Wijaya",
 };
 
-describe("Project Workflow Rework - creation and RAB auto-scale", () => {
+describeIntegration("Project Workflow Rework - creation and RAB auto-scale", () => {
   afterAll(() => {
     restoreUserSession();
   });

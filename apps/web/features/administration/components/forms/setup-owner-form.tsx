@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "sonner";
 
@@ -24,7 +23,6 @@ const EMPTY_FORM: SetupFormState = {
 };
 
 export function SetupOwnerForm(): React.JSX.Element {
-  const router = useRouter();
   const [pending, setPending] = React.useState(false);
   const [form, setForm] = React.useState<SetupFormState>(EMPTY_FORM);
 
@@ -37,14 +35,26 @@ export function SetupOwnerForm(): React.JSX.Element {
       email: form.email,
       password: form.password,
     });
-    setPending(false);
     if (!result.success) {
+      setPending(false);
       toast.error(result.error.message);
       return;
     }
-    toast.success("Owner pertama dan default ERP berhasil dibuat.");
-    router.replace("/login");
-    router.refresh();
+
+    // Bootstrap mengubah state global sekali jalan: empat role system, lima
+    // kategori canonical, default budget, dan kunci `app_config`. Setelah itu
+    // `/setup` menolak dirinya sendiri lewat `redirect("/login")` di server.
+    //
+    // Navigasi lunak tidak boleh dipakai di sini. `router.refresh()` memuat
+    // ulang tree yang sedang aktif — masih `/setup` saat itu — sehingga RSC
+    // `/setup` dirender ulang, mengembalikan redirect server, lalu berlomba
+    // dengan `router.replace()` yang belum selesai. Pada `bun dev`, `/login`
+    // masih harus dikompilasi on-demand sehingga jendela lomba itu melebar dan
+    // halaman menggantung di status "Rendering".
+    //
+    // Muat ulang dokumen supaya router dan cache RSC benar-benar bersih.
+    // `pending` sengaja dibiarkan true agar tombol tidak sempat aktif kembali.
+    window.location.replace("/login");
   }
 
   return (

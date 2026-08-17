@@ -45,6 +45,11 @@ yarn-error.log*
 
 # env files
 .env*
+# `.env.example` carries no secrets and is the only record of which variables
+# the app needs. Without this exception `.env*` swallows it, so a fresh clone
+# has no way to learn about ATRIA_BOOTSTRAP_SECRET or ATRIA_TEST_DATABASE_URL.
+!.env.example
+!**/.env.example
 
 # vercel
 .vercel

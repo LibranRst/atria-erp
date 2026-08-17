@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
 import { getDashboardStats } from "@/app/actions/finance/get-dashboard-stats";
 import { describe, it, expect, afterAll, mock } from "bun:test";
+import { describeIntegration } from "@/lib/testing/integration-db";
 
 // Mock next/headers untuk mencegah error cookies() di luar server Next.js
 mock.module("next/headers", () => {
@@ -66,7 +67,7 @@ const PM_BUDI_USER = {
   name: "Budi Santoso",
 };
 
-describe("Atria ERP CFO Dashboard & Owner Approvals - TSK-012", () => {
+describeIntegration("Atria ERP CFO Dashboard & Owner Approvals - TSK-012", () => {
   afterAll(() => {
     restoreUserSession();
   });

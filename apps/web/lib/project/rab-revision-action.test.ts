@@ -1,4 +1,5 @@
-import { afterAll, describe, expect, mock, test } from "bun:test";
+import { afterAll, expect, mock, test } from "bun:test";
+import { describeIntegration } from "@/lib/testing/integration-db";
 import { and, eq } from "drizzle-orm";
 
 import { createProjectAction } from "@/app/actions/project/crud";
@@ -42,7 +43,7 @@ function mockOwnerSession(): void {
   });
 }
 
-describe("voidRabRevision", () => {
+describeIntegration("voidRabRevision", () => {
   afterAll(() => {
     (auth.api as unknown as { getSession: unknown }).getSession = originalGetSession;
   });

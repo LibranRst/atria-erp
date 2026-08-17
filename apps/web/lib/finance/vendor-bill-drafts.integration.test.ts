@@ -1,4 +1,5 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, expect, it, mock } from "bun:test";
+import { describeIntegration } from "@/lib/testing/integration-db";
 import { inArray } from "drizzle-orm";
 
 import {
@@ -10,7 +11,7 @@ import { db } from "@/db";
 import { auditLog, formDraft, projectExpenses, vendorBill } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
-import type { VendorBillDraftPayload } from "@/lib/validations/vendor-bill-draft";
+import type { VendorBillDraftPayload } from "@atria/core/validations/vendor-bill-draft";
 
 mock.module("next/headers", () => ({ cookies: () => ({ toString: () => "mocked-cookies" }) }));
 mock.module("next/cache", () => ({ revalidatePath: () => undefined }));
@@ -62,7 +63,7 @@ function payload(suffix: string): VendorBillDraftPayload {
   };
 }
 
-describe("vendor bill draft actions", () => {
+describeIntegration("vendor bill draft actions", () => {
   afterAll(async () => {
     (auth.api as unknown as { getSession: unknown }).getSession = originalGetSession;
     if (billIds.length > 0) {

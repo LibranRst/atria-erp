@@ -1,4 +1,5 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, expect, it, mock } from "bun:test";
+import { describeIntegration } from "@/lib/testing/integration-db";
 import { eq, inArray } from "drizzle-orm";
 
 import {
@@ -123,7 +124,7 @@ async function createOwnedAccount(label: string, openingBalance: number): Promis
   return result.data.id;
 }
 
-describe("Bank account cash control actions", () => {
+describeIntegration("Bank account cash control actions", () => {
   afterAll(async () => {
     restoreUserSession();
     if (createdAccountIds.length === 0) return;
