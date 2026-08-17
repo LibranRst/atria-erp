@@ -36,9 +36,9 @@ Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
 Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
-**Sudah dijalankan sebagian:** Bagian C — sembilan dari delapan belas negative
-test terbukti live, satu terverifikasi dari kode, delapan sisanya menunggu
-proyek `ACTIVE` baru atau akun PM kedua. Rinciannya ada di akhir Bagian C.
+**Sudah dijalankan sebagian:** Bagian C — sepuluh dari delapan belas negative
+test terbukti live, satu terverifikasi dari kode, tujuh sisanya menunggu
+proyek `ACTIVE` baru. Rinciannya ada di akhir Bagian C.
 
 **Belum dijalankan ulang:** B11 revisi dan Change Order. B7.2 dan B8 sudah
 dijalankan — hasil akhirnya cocok persis dengan tabel B10, dan justru dari
@@ -1625,9 +1625,9 @@ Material 5.814.000 / 2.000.000 / 3.814.000 pada 34,3997%.
 
 Dijalankan 18 Agustus 2026 terhadap database UAT yang sama.
 
-**Sudah terbukti live (9):** Global finance, Sensitive balance, Self verification,
-Budget settings, Approved RAP, Over-reserve, Short audit note, Client overpay,
-dan Premature closing.
+**Sudah terbukti live (10):** Project scoping, Global finance, Sensitive balance,
+Self verification, Budget settings, Approved RAP, Over-reserve, Short audit note,
+Client overpay, dan Premature closing.
 
 Dua di antaranya lebih kuat dari yang tertulis di matriks:
 
@@ -1637,6 +1637,13 @@ Dua di antaranya lebih kuat dari yang tertulis di matriks:
 - **Budget settings** dijaga dua lapis: seluruh modul pada `/settings` berlabel
   **Hanya baca** untuk Purchasing dan tidak punya tombol simpan, sementara
   `manage:budget_settings` memang hanya dimiliki Owner dan Finance Admin.
+
+**Project scoping** diuji dengan PM kedua yang tidak ditugaskan ke proyek UAT.
+Membuka `/projects/<id>` proyek itu langsung dialihkan ke `/projects`, dan daftar
+proyeknya kosong — "Proyek tidak ditemukan", nilai kontrak Rp0. Payload RSC
+memuat `projects: []`; nama proyek, nilai kontrak, dan realisasi tidak ikut
+terkirim. Yang tetap terkirim hanyalah daftar klien dan daftar PM sebagai master
+data untuk form pembuatan proyek — bukan kebocoran proyek yang di-scope.
 
 Sebagai catatan tambahan, menu navigasi juga ikut menyempit mengikuti peran: PM
 hanya melihat Proyek, Material & Stok, Kas & Tagihan, dan Profil.
@@ -1648,9 +1655,8 @@ hanya melihat Proyek, Material & Stok, Kas & Tagihan, dan Profil.
 ditemukan", bukan "sudah diarsipkan" — perilakunya benar, tetapi kalimatnya
 belum menjelaskan sebab sebenarnya.
 
-**Belum dapat dijalankan (8):**
+**Belum dapat dijalankan (7):**
 
-- **Project scoping** memerlukan akun PM kedua; workspace UAT baru punya satu PM.
 - **Cross-project reserve, Excess return, Reserved reversal, Vendor
   over-schedule, Early vendor pay, Rejected payment, dan Direct second RAB**
   memerlukan proyek berstatus `ACTIVE`. Proyek UAT pertama sudah `COMPLETED`
