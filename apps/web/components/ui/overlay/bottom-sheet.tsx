@@ -420,8 +420,26 @@ export function BottomSheet({
             {footer && (
               <div
                 ref={footerRef}
-                className="absolute inset-x-0 bottom-0 z-20 bg-linear-to-t from-surface-container-low from-0% via-surface-container-low/95 via-65% to-transparent px-margin-mobile pt-sm pb-[calc(1rem+env(safe-area-inset-bottom))]"
+                className="absolute inset-x-0 bottom-0 z-20 bg-surface-container-low px-margin-mobile pt-sm pb-[calc(1rem+env(safe-area-inset-bottom))]"
               >
+                {/*
+                  Peredupan diletakkan sebagai pita terpisah di atas footer,
+                  bukan sebagai latar footer itu sendiri.
+
+                  Sebelumnya footer memakai gradien yang transparan di sisi
+                  atasnya, sedangkan baris status footer ("2 komponen · Rp …")
+                  berada tepat di pita transparan itu — sehingga teks status
+                  bertumpuk dengan isi form yang sedang di-scroll di belakangnya.
+                  Footer kini solid, dan isi form memudar sebelum menyentuhnya.
+
+                  Pita ini `bottom-full` sehingga berada di luar kotak footer dan
+                  tidak ikut terukur oleh `offsetHeight`; perhitungan spacer dan
+                  `scrollPaddingBottom` tetap sama.
+                */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 bottom-full h-6 bg-linear-to-t from-surface-container-low to-transparent"
+                />
                 {footer}
               </div>
             )}

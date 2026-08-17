@@ -6,8 +6,8 @@ import type {
   ApprovalDetail,
   FinanceApprovalDetail,
   InventoryOpeningApprovalDetail,
-} from "@/lib/finance/approval-types";
-import { dashboardDueDayOffset } from "@/lib/finance/dashboard-overview";
+} from "@atria/core/finance/approval-types";
+import { dashboardDueDayOffset } from "@atria/core/finance/dashboard-overview";
 import { resolveRoleName } from "@/lib/auth/permissions";
 import { getServerSession } from "@/lib/server/session";
 
@@ -48,7 +48,7 @@ export type VendorPaymentApprovalSource = {
       readonly budgetCategory?: {
         readonly allocatedAmount: string | number;
         readonly actualAmount: string | number;
-        readonly expenseCategory: { readonly name: string };
+        readonly expenseCategory: { readonly name: string; readonly code?: string };
       } | null;
     } | null;
   };
@@ -108,6 +108,9 @@ export function mapProjectCostApprovalDetail(
     ),
     requestedBy: input.cost.requestedBy?.name ?? "Project Manager",
     canEmergencyOverride,
+    // Pengeluaran lapangan diakui sebagai realisasi kategori saat
+    // verifikasi/approval, termasuk pengeluaran Material direct-use.
+    consumesBudgetActual: true,
     budgetOverrun: input.cost.budgetOverrun,
     priority: input.cost.budgetOverrun ? "CRITICAL" : "NORMAL",
     priorityReason: input.cost.budgetOverrun ? "Melewati batas budget" : "Perlu keputusan Owner",
@@ -143,6 +146,10 @@ export function mapVendorPaymentApprovalDetail(
     actualSpent: Number(bill?.budgetCategory?.actualAmount ?? bill?.budgetItem?.actualSpent ?? 0),
     requestedBy: bill?.vendor?.name ?? "Vendor Supplier",
     canEmergencyOverride,
+    // Sejalan dengan `lib/finance/vendor-bill-write.ts`: kategori Material
+    // menjadi INVENTORY_PURCHASE/INVENTORY_ASSET dan tidak dihitung sebagai
+    // realisasi kategori oleh `syncProjectBudgetCategory`.
+    consumesBudgetActual: bill?.budgetCategory?.expenseCategory?.code !== "MATERIAL",
     budgetOverrun: false,
     priority: "NORMAL",
     priorityReason: "Perlu keputusan Owner",
@@ -182,6 +189,7 @@ export function mapInventoryOpeningApprovalDetail(
     actualSpent: 0,
     requestedBy: input.batch.requestedBy.name,
     canEmergencyOverride: false,
+    consumesBudgetActual: false,
     budgetOverrun: false,
     priority: "NORMAL",
     priorityReason: "Perlu persetujuan saldo stok",

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import type { ApprovalDetail } from "@/lib/finance/approval-types";
+import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import {
   AppIcon,
   BottomSheet,
@@ -17,8 +17,8 @@ import {
   getApprovalBudgetImpact,
   RISK_LIMIT_THRESHOLD,
   RISK_WARNING_THRESHOLD,
-} from "@/lib/finance/budget-indicator";
-import { formatShortDate } from "@/lib/utils/date";
+} from "@atria/core/finance/budget-indicator";
+import { formatShortDate } from "@atria/core/utils/date";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 export type ApprovalItem = ApprovalDetail;
@@ -423,8 +423,16 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
       </section>
     );
   }
-  const impact = getApprovalBudgetImpact(item.allocatedAmount, item.actualSpent, item.amount);
-  const nextSpent = item.actualSpent + item.amount;
+  // Pembelian persediaan tidak menaikkan realisasi kategori, jadi dampaknya
+  // dihitung dengan permintaan bernilai nol: angka "sesudah" harus sama dengan
+  // angka sekarang, bukan proyeksi kenaikan yang tidak akan terjadi.
+  const consumesActual = item.consumesBudgetActual;
+  const impact = getApprovalBudgetImpact(
+    item.allocatedAmount,
+    item.actualSpent,
+    consumesActual ? item.amount : 0,
+  );
+  const nextSpent = consumesActual ? item.actualSpent + item.amount : item.actualSpent;
   const critical = item.budgetOverrun || impact.afterPercentage >= RISK_LIMIT_THRESHOLD;
   const warning = !critical && impact.afterPercentage >= RISK_WARNING_THRESHOLD;
   const toneClass = critical
@@ -432,13 +440,15 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
     : warning
       ? "bg-warning-light text-warning-on-container"
       : "bg-primary-light text-primary";
-  const impactLabel = critical
-    ? impact.overflowPercentage > 0
-      ? `Melewati budget ${impact.overflowPercentage.toFixed(0)}%`
-      : "Mencapai batas budget"
-    : warning
-      ? `Tersisa ${(RISK_LIMIT_THRESHOLD - impact.afterPercentage).toFixed(0)}% sebelum batas`
-      : "Tetap dalam batas budget";
+  const impactLabel = !consumesActual
+    ? "Menjadi nilai persediaan, bukan realisasi"
+    : critical
+      ? impact.overflowPercentage > 0
+        ? `Melewati budget ${impact.overflowPercentage.toFixed(0)}%`
+        : "Mencapai batas budget"
+      : warning
+        ? `Tersisa ${(RISK_LIMIT_THRESHOLD - impact.afterPercentage).toFixed(0)}% sebelum batas`
+        : "Tetap dalam batas budget";
 
   return (
     <section aria-labelledby="approval-impact-title">

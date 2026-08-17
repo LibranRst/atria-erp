@@ -4,13 +4,13 @@ import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { AppIcon, DuotoneIconTile, MoneyValue } from "@/components/ui";
-import type { ApprovalDetail } from "@/lib/finance/approval-types";
+import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import {
   getApprovalBudgetImpact,
   RISK_LIMIT_THRESHOLD,
   RISK_WARNING_THRESHOLD,
-} from "@/lib/finance/budget-indicator";
+} from "@atria/core/finance/budget-indicator";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 const dashboardRowPressScale = { scale: 0.985 } as const;
 
@@ -100,17 +100,26 @@ export function ApprovalBudgetContext({
 }: {
   readonly item: ApprovalDetail;
 }): React.JSX.Element {
-  const nextSpent = item.actualSpent + item.amount;
-  const impact = getApprovalBudgetImpact(item.allocatedAmount, item.actualSpent, item.amount);
+  // Lihat catatan pada `consumesBudgetActual`: pembelian persediaan tidak
+  // menaikkan realisasi kategori, jadi proyeksinya harus datar.
+  const consumesActual = item.consumesBudgetActual;
+  const nextSpent = consumesActual ? item.actualSpent + item.amount : item.actualSpent;
+  const impact = getApprovalBudgetImpact(
+    item.allocatedAmount,
+    item.actualSpent,
+    consumesActual ? item.amount : 0,
+  );
   const critical = item.budgetOverrun || impact.afterPercentage >= RISK_LIMIT_THRESHOLD;
   const warning = !critical && impact.afterPercentage >= RISK_WARNING_THRESHOLD;
-  const impactLabel = critical
-    ? impact.overflowPercentage > 0
-      ? `Melewati budget ${impact.overflowPercentage.toFixed(0)}%`
-      : "Pengajuan menambah risiko budget"
-    : warning
-      ? `Tersisa ${(RISK_LIMIT_THRESHOLD - impact.afterPercentage).toFixed(0)}% sebelum batas`
-      : "Masih dalam batas budget";
+  const impactLabel = !consumesActual
+    ? "Menjadi nilai persediaan, bukan realisasi"
+    : critical
+      ? impact.overflowPercentage > 0
+        ? `Melewati budget ${impact.overflowPercentage.toFixed(0)}%`
+        : "Pengajuan menambah risiko budget"
+      : warning
+        ? `Tersisa ${(RISK_LIMIT_THRESHOLD - impact.afterPercentage).toFixed(0)}% sebelum batas`
+        : "Masih dalam batas budget";
 
   return (
     <section className="overflow-hidden rounded-owner bg-surface-container-lowest ring-1 ring-ring-subtle">

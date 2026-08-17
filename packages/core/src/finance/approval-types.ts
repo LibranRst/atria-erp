@@ -24,6 +24,17 @@ export type FinanceApprovalDetail = ApprovalDetailBase & {
   readonly allocatedAmount: number;
   readonly actualSpent: number;
   readonly budgetOverrun: boolean;
+  /**
+   * `false` ketika menyetujui permintaan ini tidak menaikkan realisasi
+   * kategori. Tagihan vendor kategori Material adalah pembelian persediaan:
+   * ia disimpan sebagai `INVENTORY_PURCHASE`/`INVENTORY_ASSET` dan realisasi
+   * Material baru diakui saat stok dipakai atau menjadi waste.
+   *
+   * Tanpa penanda ini, panel "Dampak ke budget" memproyeksikan kenaikan
+   * realisasi yang tidak pernah terjadi — angka yang dipakai Owner untuk
+   * memutus pencairan.
+   */
+  readonly consumesBudgetActual: boolean;
 };
 
 export type InventoryOpeningApprovalDetail = ApprovalDetailBase & {
@@ -31,6 +42,8 @@ export type InventoryOpeningApprovalDetail = ApprovalDetailBase & {
   readonly allocatedAmount: 0;
   readonly actualSpent: 0;
   readonly budgetOverrun: false;
+  /** Saldo awal stok membentuk nilai persediaan, bukan realisasi proyek. */
+  readonly consumesBudgetActual: false;
   readonly inventoryItems: readonly InventoryOpeningApprovalItem[];
 };
 

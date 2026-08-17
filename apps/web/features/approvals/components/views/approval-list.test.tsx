@@ -14,7 +14,7 @@ import type {
   ApprovalDetail,
   FinanceApprovalDetail,
   InventoryOpeningApprovalDetail,
-} from "@/lib/finance/approval-types";
+} from "@atria/core/finance/approval-types";
 
 const approvalListPath = new URL("./approval-list.tsx", import.meta.url);
 
@@ -34,6 +34,7 @@ function approvalItem(overrides: Partial<FinanceApprovalDetail> = {}): ApprovalD
     allocatedAmount: 10_000_000,
     actualSpent: 5_000_000,
     requestedBy: "PM Budi",
+    consumesBudgetActual: true,
     budgetOverrun: false,
     priority: "NORMAL",
     priorityReason: "Perlu keputusan Owner",
@@ -59,6 +60,7 @@ function openingApprovalItem(
     allocatedAmount: 0,
     actualSpent: 0,
     requestedBy: "Sari Purchasing",
+    consumesBudgetActual: false,
     budgetOverrun: false,
     priority: "NORMAL",
     priorityReason: "Perlu persetujuan saldo stok",
@@ -242,6 +244,47 @@ describe("Approval decision queue presentation", () => {
     expect(html).not.toContain("progressbar");
     // Impact verdict leads its card, before the budget-category figure.
     expect(html.indexOf("Tetap dalam batas budget")).toBeLessThan(html.indexOf("Budget kategori"));
+  });
+
+  test("does not project a budget impact for an inventory purchase", () => {
+    // Tagihan vendor kategori Material menjadi INVENTORY_ASSET dan tidak
+    // dihitung sebagai realisasi kategori. Panel dampak pernah memproyeksikan
+    // kenaikan yang tidak pernah terjadi: pembayaran Rp5.000.000 atas alokasi
+    // Rp5.814.000 ditampilkan "86% terpakai", padahal setelah dibayar
+    // `actual_amount` tetap 0 dan `used_percentage` tetap 0.
+    const html = renderToStaticMarkup(
+      <ApprovalDetailContent
+        item={approvalItem({
+          type: "vendor_payment",
+          consumesBudgetActual: false,
+          allocatedAmount: 5_814_000,
+          actualSpent: 0,
+          amount: 5_000_000,
+        })}
+        onOpenReceipt={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("Menjadi nilai persediaan, bukan realisasi");
+    expect(html).not.toContain("86%");
+    expect(html).not.toContain("sebelum batas");
+  });
+
+  test("still projects a budget impact for a cost that does consume actual", () => {
+    const html = renderToStaticMarkup(
+      <ApprovalDetailContent
+        item={approvalItem({
+          consumesBudgetActual: true,
+          allocatedAmount: 5_814_000,
+          actualSpent: 0,
+          amount: 5_000_000,
+        })}
+        onOpenReceipt={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("86%");
+    expect(html).not.toContain("Menjadi nilai persediaan, bukan realisasi");
   });
 
   test("shows an honest empty state when no receipt is attached", () => {
