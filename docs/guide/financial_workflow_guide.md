@@ -14,7 +14,8 @@ onboarding 1–6 beserta Ringkasan, B1 pembuatan project, B2 RAP (Material, Tuka
 Subcon, finalisasi), B3 RAB dan aktivasi, B4 reservasi, B5 tagihan vendor sampai
 pencairan dan Goods Receipt, B6 pakai/kembalikan/terbuang, B7.1 pengajuan
 pengeluaran, serta B9.1–B9.4 invoice klien sampai seluruh termin lunas dan rekonsiliasi kas
-dijalankan, serta B10 rekonsiliasi profitability dan gate blocker B12.
+dijalankan, serta B10 rekonsiliasi profitability dan B12 penutupan proyek — termasuk
+snapshot final yang tersimpan.
 
 B9 terbukti persis seperti tertulis: tiga invoice berjumlah Rp17.000.000, partial
 payment Rp2.000.000 membawa BCA Rp92.000.000 → Rp94.000.000, percobaan
@@ -35,9 +36,8 @@ Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
 Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
-**Belum dijalankan ulang:** B7.2, B8, B11, dan Bagian C. B12 baru diverifikasi
-sampai gate-nya: checklist menolak closing dengan alasan yang benar, tetapi
-penutupan proyek sungguhan belum dijalankan.
+**Belum dijalankan ulang:** B7.2, B8, B11, dan Bagian C. Bagian-bagian itu masih
+berisi ekspektasi hasil desain, bukan hasil pengamatan.
 Bagian-bagian itu masih berisi ekspektasi hasil desain, bukan hasil pengamatan.
 
 Tiga belas cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
@@ -1580,6 +1580,18 @@ Expected base scenario:
 - realized margin Rp7.300.000 / 42,94%;
 - cash position Rp4.300.000;
 - project tidak dapat diedit menjadi ACTIVE melalui form biasa.
+
+Ketiga jaminan terakhir dijaga di sisi server, bukan hanya disembunyikan di UI:
+`updateProject` menolak seluruh pengeditan proyek berstatus `COMPLETED` atau
+`CANCELLED`, dan menolak penetapan `COMPLETED` yang tidak lewat closing
+checklist. Seluruh action pencatatan transaksi juga menolak proyek non-`ACTIVE`
+lewat `assertProjectStatusIsOperational`.
+
+Snapshot final tersimpan di `project_profitability_snapshot` dengan
+`snapshot_type = FINAL`. Untuk skenario base isinya: contract 17.000.000,
+internal budget 15.300.000, actual 9.700.000, sisa 5.600.000, terpakai 63,3987%,
+realized margin 7.300.000 / 42,9412%, cash position 4.300.000, serta rincian
+Material 5.814.000 / 2.000.000 / 3.814.000 pada 34,3997%.
 
 ## BAGIAN C — Negative test matrix wajib
 
