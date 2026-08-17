@@ -1,7 +1,39 @@
 # Walkthrough UAT Atria ERP — Dari Data Operasional Kosong sampai Project Closing
 
-Versi implementasi: **22 Juli 2026**
+Versi implementasi: **17 Agustus 2026**
 Audit pendamping: `docs/guide/workflow_audit_2026-07-16.md`
+
+## Status verifikasi
+
+Dokumen ini dijalankan ulang terhadap aplikasi pada 17 Agustus 2026, dari database
+yang benar-benar dikosongkan, dan setiap angka dicocokkan langsung ke Postgres —
+bukan hanya ke tampilan layar.
+
+**Sudah dijalankan dan cocok sampai rupiah terakhir:** A0 bootstrap, seluruh langkah
+onboarding 1–6 beserta Ringkasan, B1 pembuatan project, B2 RAP (Material, Tukang,
+Subcon, finalisasi), B3 RAB dan aktivasi, B4 reservasi, B5 tagihan vendor sampai
+pencairan dan Goods Receipt, B6 pakai/kembalikan/terbuang, serta B7.1 pengajuan
+pengeluaran.
+
+Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
+Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
+buffer Rp1.224.000.
+
+**Belum dijalankan ulang:** B7.2 sampai B12 dan Bagian C. Bagian-bagian itu masih
+berisi ekspektasi hasil desain, bukan hasil pengamatan.
+
+Tujuh cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
+memengaruhi cara membaca runbook:
+
+- Panel dampak budget pada review tagihan vendor **dan** pada sheet persetujuan
+  dahulu memproyeksikan realisasi naik untuk tagihan kategori Material. Tagihan
+  Material adalah pembelian persediaan: realisasinya baru diakui saat stok dipakai
+  atau menjadi waste. Keduanya kini menampilkan dampak yang datar.
+- `USE`, `WASTE`, dan `RETURN` dahulu tersimpan tanpa arah pergerakan, sehingga
+  buku pergerakan stok tidak lagi menjumlah menjadi saldo `material_inventory`.
+- `bun run test` dahulu menulis ke database yang sama dengan dev server. Sekarang
+  suite yang menyentuh Postgres hanya berjalan bila `ATRIA_TEST_DATABASE_URL` diisi,
+  jadi menjalankan test di tengah UAT tidak lagi menggeser angka yang sedang diperiksa.
 
 Dokumen ini adalah runbook acceptance test. Ikuti urutannya, ganti role sesuai instruksi, dan catat nilai sebelum/sesudah setiap action. Jangan memakai project atau transaksi seed sebagai titik awal.
 
@@ -15,7 +47,7 @@ Dokumen ini adalah runbook acceptance test. Ikuti urutannya, ganti role sesuai i
 - Nilai pada kolom **Contoh UAT** adalah dataset kontrol yang harus diketik atau dipilih saat simulasi.
 - `Kosongkan` berarti field memang opsional dan sengaja tidak diisi untuk menguji jalur minimal. Nilai bertanda `<...>` harus diganti dengan secret, akun, atau tanggal milik environment UAT; jangan menyalin tanda kurung sudutnya.
 - Nilai uang ditulis tanpa simbol saat diinput bila komponen form sudah memformat Rupiah. Contoh `250000` akan tampil sebagai `Rp250.000`.
-- Setelah mengisi form, gunakan tahap Tinjau/Review bila tersedia. Cocokkan seluruh nilai di review sheet sebelum menekan action final.
+- Hampir semua form keuangan dan material memakai **dua tahap**: tombol pertama membuka review (**Tinjau**, atau **Tinjau perubahan** pada default budget), lalu review sheet punya tombol final tersendiri (**Buat**, **Tambah**, **Catat**, **Posting**, **Bayar**, **Simpan Default**). Bila langkah di bawah menulis "klik Simpan", yang dimaksud adalah menuntaskan kedua tahap itu. Cocokkan seluruh nilai di review sheet sebelum menekan action final.
 - Field kondisional hanya muncul setelah pilihan pemicunya dipilih. Contoh: data klien baru muncul setelah **Jenis klien = Klien baru**.
 
 ## 1. Arti “mulai dari kosong”
@@ -140,9 +172,9 @@ Gunakan refresh browser setelah mencatat hasil instan. Nilai setelah refresh har
 | Jatuh tempo        | `/ledger?tab=cash`                                     | Vendor bill/client invoice outstanding dan tanggal jatuh tempo                                        |
 | Rekening           | `/ledger?tab=accounts`                                 | Saldo tiap rekening, total cash, dan transaksi kas terbaru                                            |
 | Rekonsiliasi bank  | `/reconciliation`                                      | Transaksi internal belum cocok, mutasi rekening koran belum cocok, dan pasangan yang akan disahkan    |
-| Expenses           | `/expenses` → **Pengeluaran**                          | Diajukan/Terverifikasi/Disetujui/Lunas, antrean, biaya aktual, nilai dibayar, rekening pencairan      |
-| Tagihan vendor     | `/expenses` → **Tagihan**                              | Belum dibayar/Dibayar sebagian/Lunas, nominal bill, terjadwal, dibayar, dan sisa                      |
-| Rencana bayar      | `/expenses` → **Rencana Bayar**                        | Menunggu/Sedang diproses/Selesai/Gagal, approval, tanggal rencana, rekening, dan referensi            |
+| Expenses           | `/expenses` → **Pengeluaran Lapangan**                 | Diajukan/Terverifikasi/Disetujui/Lunas, antrean, biaya aktual, nilai dibayar, rekening pencairan      |
+| Tagihan vendor     | `/expenses` → **Tagihan Vendor** → **Tagihan**         | Belum dibayar/Dibayar sebagian/Lunas, nominal bill, terjadwal, dibayar, dan sisa                      |
+| Rencana bayar      | `/expenses` → **Tagihan Vendor** → **Rencana Bayar**   | Menunggu/Sedang diproses/Selesai/Gagal, approval, tanggal rencana, rekening, dan referensi            |
 | Material ringkas   | `/materials` → **Ringkasan**                           | Total nilai stok, stok tersedia, shortage, low stock, pending approval                                |
 | Kebutuhan material | `/materials?tab=needs`                                 | Kebutuhan RAP, stok diamankan proyek, perlu dibeli, status Siap/Kekurangan                            |
 | Inventory          | `/materials?tab=inventory`                             | Stok fisik, direservasi, tersedia, harga rata-rata, dan nilai inventori per lokasi                    |
@@ -222,7 +254,7 @@ Jika Dashboard, Project Overview, Expenses, Materials, dan Stok Project menunjuk
 
 ### A0. Bootstrap first Owner dari database kosong
 
-1. Pastikan environment memiliki `ATRIA_BOOTSTRAP_SECRET` minimal 16 karakter dan `BETTER_AUTH_SECRET` yang kuat.
+1. Pastikan environment memiliki `ATRIA_BOOTSTRAP_SECRET` minimal 16 karakter dan `BETTER_AUTH_SECRET` yang kuat. Keduanya didokumentasikan di `apps/web/.env.example`; salin ke `apps/web/.env` sebelum menjalankan dev server.
 2. Buka route khusus `/setup`.
 3. Isi nama, email, password Owner (minimal 12 karakter, mengandung huruf besar, huruf kecil, dan angka), serta masukkan bootstrap secret.
 4. Submit satu kali, lalu login sebagai Owner.
@@ -255,7 +287,7 @@ Setelah login pertama sebagai Owner, sistem secara otomatis mengarahkan Anda ke 
 
 1. **Penyimpanan Drawer (Contextual Form Style)**: Form tambah/edit data dibuka sebagai drawer bottom sheet (iOS-inspired). Menekan tombol simpan/save akan memperbarui data dan indikator kesiapan (`readiness`) secara inline tanpa memindahkan posisi langkah (step) aktif atau mengubah URL.
 2. **Konfirmasi Unsaved Changes**: Jika ada draft input dalam drawer yang berubah lalu drawer ditutup tanpa disimpan, konfirmasi **"Buang perubahan?"** harus muncul demi keamanan data.
-3. **Navigasi Step**: Menyimpan data tidak memindahkan step secara otomatis. Owner harus secara eksplisit menekan tombol **"Lanjut"** di bagian bawah halaman setelah memverifikasi data.
+3. **Navigasi Step**: Owner menekan tombol **"Lanjut"** di bagian bawah halaman setelah memverifikasi data. Perhatikan satu pengecualian nyata: ketika sebuah simpanan membuat status langkah berubah dari _Perlu dilengkapi_ menjadi siap untuk pertama kalinya, aplikasi langsung memindahkan Owner ke langkah berikutnya. Simpanan berikutnya pada langkah yang sama tidak memindahkan apa pun.
 4. **Lewati Step (Skip)**: Untuk step non-mandatory, tombol **"Lewati step ini"** tersedia. Status step di summary akan ditandai sebagai **"Dilanjutkan nanti" (SKIPPED)** tanpa memalsukan readiness checklist aktual.
 5. **Jeda dan Lanjutkan (Pause & Resume)**:
    - Tekan tombol **"Silang/Close" (X)** di kanan atas header onboarding.
@@ -266,17 +298,21 @@ Setelah login pertama sebagai Owner, sistem secara otomatis mengarahkan Anda ke 
 
 ---
 
-### A2. Langkah-Langkah Onboarding (Step 1-8)
+### A2. Langkah-Langkah Onboarding
 
 Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari dalam workspace `/onboarding`.
 
-#### Step 1: Pengenalan (Step ID: `welcome`)
+> **Penomoran langkah.** Header di aplikasi menghitung **enam** langkah yang dapat dikerjakan
+> (`1 dari 6` … `6 dari 6`); `welcome` dan `summary` tidak ikut dihitung. Judul di bawah memakai
+> penomoran aplikasi, dengan Step ID canonical sebagai penanda yang stabil.
+
+#### Pengenalan · sebelum langkah 1 (Step ID: `welcome`)
 
 - **Tampilan**: Landing page onboarding yang menjelaskan tujuan setup organisasi (default finansial, tim, kas, dan master data).
 - **Aksi**: Baca panduan lalu tekan tombol primary **"Mulai setup"**.
 - **Expected**: Progress bar di atas berubah dari 0% ke langkah 1/8.
 
-#### Step 2: Default Finansial (Step ID: `financial_defaults`)
+#### Langkah 1 dari 6 — Review default finansial (Step ID: `financial_defaults`)
 
 - **Tampilan**: Hubungan default budget, alokasi, dan unallocated buffer. Terdapat segmented tab **Budget / Kategori**.
 - **Aksi (1) - Konfigurasi Budget Allocation**:
@@ -300,7 +336,7 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
   - Negative test: jika alokasi kategori diisi hingga total > 100% (misal 101%), tombol simpan harus memunculkan error validation dan tidak dapat disubmit.
 - Tekan **Lanjut** untuk ke langkah berikutnya.
 
-#### Step 3: Tim & Vendor (Step ID: `team_vendors`)
+#### Langkah 2 dari 6 — Siapkan tim dan vendor (Step ID: `team_vendors`)
 
 - **Tampilan**: Ringkasan jumlah tim dan vendor aktif. Terdapat segmented tab **Tim / Vendor**.
 - **Aksi (1) - Buat Akun Tim**:
@@ -326,7 +362,7 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
 - **Expected**: Tim dan vendor terdaftar di database secara riil. List dan status kesiapan di onboarding terupdate secara instan.
 - Tekan **Lanjut**.
 
-#### Step 4: Rekening Perusahaan (Step ID: `bank_accounts`)
+#### Langkah 3 dari 6 — Tambahkan rekening perusahaan (Step ID: `bank_accounts`)
 
 - **Tampilan**: List rekening aktif.
 - **Aksi - Tambah Rekening & Saldo Awal**:
@@ -339,7 +375,7 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
     | **Nomor Rekening** | `8889991122`                 | `0000000001`              |
     | **Pemegang**       | `PT Dekoria Desain Estetika` | `PM UAT Nara`             |
     | **Saldo Awal**     | `100000000` (Rp100.000.000)  | `10000000` (Rp10.000.000) |
-    | **Preset Kartu**   | `BCA Night`                  | `Cash Mint`               |
+    | **Tampilan Kartu** | `BCA Night`                  | `Cash Mint`               |
 
   - Klik **Simpan** untuk masing-masing rekening.
 - **Expected**:
@@ -348,7 +384,7 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
   - Di **Verification snapshot**, cocokkan identitas kedua rekening, saldo aktual total `Rp110.000.000`, serta entry ledger saldo awal. Project cost, payable, receivable, dan stok tidak berubah.
 - Tekan **Lanjut**.
 
-#### Step 5: Lokasi & Material Master (Step ID: `material_foundation`)
+#### Langkah 4 dari 6 — Siapkan lokasi dan Material Master (Step ID: `material_foundation`)
 
 - **Tampilan**: Segmented tab **Lokasi / Material**.
 - **Aksi (1) - Buat Lokasi Gudang**:
@@ -377,7 +413,7 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
 - **Expected**: Material Master terdaftar. Stok fisik awal di inventory secara default masih bernilai **0** (average cost Rp0, total value Rp0). Tidak ada cash transaction yang terbuat.
 - Tekan **Lanjut**.
 
-#### Step 6: Library Item & Harga (Step ID: `item_library`)
+#### Langkah 5 dari 6 — Siapkan Library Item & Harga (Step ID: `item_library`)
 
 - **Tampilan**: Daftar template aktif yang dapat digunakan kembali ketika menyusun RAP Material, Paket Tukang, Paket Subcon, atau baris RAB klien. Step ini boleh dilewati, tetapi UAT ini mengisi tiga template agar alur proyek berikutnya dapat diuji dengan data yang konsisten.
 - **Pola input yang benar**: Setiap template diisi berurutan dari **Identitas template → Rincian biaya → Harga untuk klien → Sumber harga & detail → Simpan Template**. Jangan menekan **Simpan Template** sebelum komponen biaya di dalamnya disimpan.
@@ -409,7 +445,7 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
     | **Biaya satuan**      | `250000`                 | `4000000`                  | `3000000`                  |
     | **Subtotal komponen** | Harus tampil `Rp250.000` | Harus tampil `Rp4.000.000` | Harus tampil `Rp3.000.000` |
 
-  - Klik **Simpan Komponen**. Pastikan kembali ke drawer template dan baris komponen berstatus **Lengkap**, bukan **Perlu diperiksa**.
+  - Klik **Simpan**. Pastikan kembali ke drawer template dan baris komponen berstatus **Lengkap**, bukan **Perlu diperiksa**.
 
   **Isi Harga untuk klien**:
 
@@ -434,9 +470,9 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
   | **Catatan sumber**           | `Harga acuan Material Master UAT pada tanggal setup awal.` | `Estimasi tenaga kerja internal UAT untuk satu paket instalasi.`     | `Penawaran PT Vendor UAT Dekoria untuk satu paket top table.`       |
   | **Deskripsi**                | `Template material panel untuk pengujian RAP dan RAB.`     | `Template pekerjaan instalasi kabinet untuk pengujian paket Tukang.` | `Template pekerjaan top table vendor untuk pengujian paket Subcon.` |
   - **Berlaku mulai** dan **Catatan sumber** wajib valid. **Kode**, **Vendor default**, dan **Deskripsi** secara sistem bersifat opsional, tetapi tetap diisi pada UAT agar sumber angka mudah diaudit.
-  - Opsi sumber **Data lama** tidak tersedia untuk template baru. Label tersebut hanya dipertahankan saat membuka record hasil migrasi lama agar datanya tetap dapat dibaca dan dipindahkan ke sumber canonical.
+  - Pilihan **Sumber harga** yang tersedia untuk template baru adalah **Rincian biaya**, **Penawaran vendor**, dan **Riwayat harga**. Opsi **Data lama** tidak tersedia untuk template baru; label tersebut hanya dipertahankan saat membuka record hasil migrasi lama agar datanya tetap dapat dibaca dan dipindahkan ke sumber canonical.
   - Periksa status ringkas di header drawer: jumlah komponen, total biaya internal, dan margin harus sama dengan tabel preview di atas.
-  - Klik **Simpan Template**. Expected toast: **Template dan breakdown harga berhasil disimpan.**
+  - Klik **Simpan**. Expected toast: **Template dan breakdown harga berhasil disimpan.**
 
 - **Expected setelah ketiga template tersimpan**:
   - Ringkasan onboarding menampilkan **3 template aktif**.
@@ -445,7 +481,7 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
   - Harga yang nantinya disalin ke RAP/RAB menjadi snapshot. Perubahan Library di kemudian hari tidak mengubah RAP/RAB lama secara diam-diam.
 - Tekan **Lanjut**.
 
-#### Step 7: Saldo Awal Stok (Step ID: `initial_stock`)
+#### Langkah 6 dari 6 — Tentukan saldo awal stok (Step ID: `initial_stock`)
 
 - **Tampilan**: Pilihan keputusan saldo awal stok lama.
 - **Aksi (1) - Ajukan Saldo Awal Fisik (Maker-Flow)**:
@@ -478,7 +514,7 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
 - Bila masih ada material/lokasi lain yang memenuhi syarat, tombol **Catat saldo awal lainnya** tetap tersedia tanpa menghilangkan status sukses batch yang sudah final.
 - Jika keputusan dilakukan melalui simulasi Finance, Ringkasan terbuka otomatis. Status pending tetap boleh membuka Ringkasan secara manual, tetapi penyelesaian onboarding terblokir sampai seluruh keputusan Finance final.
 
-#### Step 8: Ringkasan (Step ID: `summary`)
+#### Ringkasan · setelah langkah 6 (Step ID: `summary`)
 
 - **Tampilan**: Ringkasan control room di dalam shell onboarding yang sama; bukan Dashboard operasional.
 - **Aksi**: Tinjau status seluruh step.
@@ -654,7 +690,7 @@ Login sebagai PM yang ditugaskan.
 
 #### B2.1. Buat RAP draft
 
-Buka Project UAT → tab RAP → Buat RAP Draft.
+Buka Project UAT → tab **Perencanaan → RAP** → **Mulai Susun RAP**.
 
 Expected: RAP revision 1, status `DRAFT`, stage `MATERIAL`.
 
@@ -841,7 +877,7 @@ Bukti lapangan yang diperiksa: label/area penyimpanan menunjukkan 8 lembar milik
 
 Expected: movement `RESERVE` dan audit log dibuat; tidak ada expense/cash transaction.
 
-Cross-check `/projects/<id>?tab=stok` pada row Multipleks:
+Cross-check `/projects/<id>?tab=stok` pada row Multipleks. **Lakukan cross-check ini sebagai Owner, Finance Admin, atau PM proyek** — Purchasing tidak memiliki akses detail proyek sama sekali (daftar proyeknya kosong dan URL langsung dialihkan kembali), jadi tabel di bawah tidak dapat dibaca dari sesi Purchasing:
 
 | Proyeksi project     | Sebelum reserve | Sesudah reserve 8 |
 | -------------------- | --------------: | ----------------: |
@@ -858,7 +894,7 @@ Negative test: reserve tambahan 3 harus ditolak karena available hanya 2.
 
 #### B5.1. PM membuat vendor bill Material
 
-Login PM, buka Expenses → Vendor Bills.
+Login PM, buka `/expenses` → **Tagihan Vendor**.
 
 - project UAT;
 - vendor test;
@@ -898,11 +934,11 @@ Login Finance, schedule Rp5.000.000 dari BCA UAT.
 
 Contoh form **Jadwalkan Pembayaran**:
 
-| Field                   | Wajib | Contoh UAT                  |
-| ----------------------- | ----- | --------------------------- |
-| Rekening Rencana        | Ya    | `BCA · BCA UAT Operasional` |
-| Tanggal Pembayaran      | Ya    | `<tanggal UAT + 1 hari>`    |
-| Nominal yang Dibayarkan | Ya    | `5000000`                   |
+| Field              | Wajib | Contoh UAT                  |
+| ------------------ | ----- | --------------------------- |
+| Rekening Rencana   | Ya    | `BCA · BCA UAT Operasional` |
+| Tanggal Pembayaran | Ya    | `<tanggal UAT + 1 hari>`    |
+| Nominal Pembayaran | Ya    | `5000000`                   |
 
 Expected:
 
@@ -1219,7 +1255,7 @@ Contoh form payment Subcon:
 | -------- | ------------------------------ | --------------------------- |
 | Schedule | Rekening Rencana               | `BCA · BCA UAT Operasional` |
 | Schedule | Tanggal Pembayaran             | `<tanggal UAT + 1 hari>`    |
-| Schedule | Nominal yang Dibayarkan        | `3000000`                   |
+| Schedule | Nominal Pembayaran             | `3000000`                   |
 | Pay      | Rekening Sumber Dana           | `BCA · BCA UAT Operasional` |
 | Pay      | Nomor Referensi Bukti Transfer | `TRF-UAT-SUB-001`           |
 
@@ -1314,7 +1350,7 @@ tanggal,deskripsi,dana_masuk,dana_keluar
 2026-07-22,Penerimaan DP UAT — RCV-UAT-DP-001,2000000,
 ```
 
-Jika bank belum menyediakan file untuk diolah, tekan **Catat satu mutasi** di dalam sheet impor. Form fallback berisi **Rekening**, **Tanggal mutasi**, **Arah mutasi**, **Nominal**, dan **Deskripsi**. Pilihan arah yang terlihat adalah **Dana masuk** atau **Dana keluar**; kode canonical internalnya adalah `INFLOW` dan `OUTFLOW` dengan makna yang sama, bukan istilah debit/kredit rekening bank.
+Jika bank belum menyediakan file untuk diolah, tekan **Catat manual**; sheet yang terbuka berjudul **Catat mutasi bank**. Form fallback berisi **Rekening**, **Tanggal mutasi**, **Arah mutasi**, **Nominal**, dan **Deskripsi**. Pilihan arah yang terlihat adalah **Dana masuk** atau **Dana keluar**; kode canonical internalnya adalah `INFLOW` dan `OUTFLOW` dengan makna yang sama, bukan istilah debit/kredit rekening bank.
 
 Jika satu **Catatan Atria** memang tidak akan mempunyai pasangan bank, buka transaksi lalu pilih **Catat pengecualian**. Isi alasan minimal 10 karakter. Status menjadi **Pengecualian tercatat** dan menyimpan alasan, pemeriksa, waktu, serta audit log, tetapi transaksi tetap `reconciled = false`. Gunakan hanya untuk kasus yang dapat dijelaskan, misalnya koreksi pembukaan atau transaksi internal non-bank; jangan gunakan untuk menyembunyikan transfer gagal atau perbedaan nominal. Pengecualian dapat dihapus agar transaksi kembali menjadi pekerjaan terbuka, atau otomatis dibersihkan ketika pasangan bank yang sah kemudian dikonfirmasi.
 
@@ -1428,7 +1464,7 @@ Negative tests:
 
 ### B12. Project Closing
 
-Login Owner/Finance → Profitability → Closing Checklist.
+Login Owner/Finance → tab **Keuangan → Margin** → bagian closing. Tombol finalnya berlabel **Selesaikan proyek dan simpan ringkasan akhir**, bukan "Complete Project".
 
 Sebelum final close, checklist harus memastikan:
 
@@ -1455,6 +1491,8 @@ Contoh form **Complete Project**:
 | Field                 | Wajib | Contoh UAT                                                                                                            |
 | --------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
 | Catatan closing final | Ya    | `Seluruh invoice, vendor bill, expense, reservation, dan revisi UAT telah final; angka closing sudah direkonsiliasi.` |
+
+Catatan closing minimal 10 karakter sebelum tombol final aktif.
 
 Expected base scenario:
 
