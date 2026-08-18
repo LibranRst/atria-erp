@@ -79,10 +79,13 @@ sebenarnya diuji adalah ketiga jalur tersebut.
 
 1. **Jalur klik.** Semuanya dibuktikan di lapisan Server Action, bukan lewat
    layar. Tombol, sheet, dan penempatan angka pada UI belum ditelusuri.
-2. **Bagian 12A (Asisten AI).** Jawaban model bersifat non-deterministik dan
-   menuntut jaringan, jadi tidak dijadikan test. Yang sudah dipaku hanyalah
-   aturan aksesnya — Owner, Finance Admin, dan PM boleh; Purchasing, Sales,
-   Designer, dan Marketing tidak (`packages/core/src/auth/ai-chat-access.test.ts`).
+2. **Bagian 12A (Asisten AI), bagian jawabannya saja.** Jawaban model bersifat
+   non-deterministik dan menuntut jaringan, jadi isi kartunya tidak dijadikan
+   test. Dua hal di sekitarnya sudah dipaku: aturan akses — Owner, Finance
+   Admin, dan PM boleh; Purchasing, Sales, Designer, dan Marketing tidak
+   (`packages/core/src/auth/ai-chat-access.test.ts`) — dan penjagaan dokumen
+   ganda pada kartu usulan
+   (`apps/web/lib/ai/confirm-expense-proposal.integration.test.ts`).
 
 ### Menjalankan ulang rantainya
 
@@ -512,6 +515,12 @@ konfirmasi. Ini penjaga terhadap dokumen ganda.
 | PM bertanya ke asisten soal proyek yang bukan miliknya | Dijawab di luar akses, tanpa membocorkan datanya |
 | Purchasing atau Sales membuka tombol asisten AI        | Tombol tidak muncul                              |
 | Menekan Konfirmasi dua kali pada satu kartu usulan     | Hanya satu pengajuan tercatat                    |
+
+Baris terakhir dahulu hanya benar untuk penekanan **berurutan**. Dua permintaan
+yang benar-benar berlomba — bentuk klik ganda yang sesungguhnya — sama-sama
+lolos pemeriksaan "sudah pernah dikonfirmasi?" dan menghasilkan dua pengajuan
+biaya dengan id berbeda. Sejak perbaikan itu, seluruh urutan periksa lalu tulis
+diserialkan oleh kunci baris percakapan, dan kasusnya dijaga regression test.
 
 ## 14. Mengulang atau mengaudit hasil
 

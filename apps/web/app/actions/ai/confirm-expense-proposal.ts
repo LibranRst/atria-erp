@@ -2,12 +2,11 @@
 
 import { submitFieldRequest } from "@/app/actions/finance/field-requests";
 import { db } from "@/db";
-import { aiProposalConfirmation } from "@/db/schema";
-import { findOwnedConversation } from "@/lib/ai/conversation-store";
+import { aiConversation, aiProposalConfirmation } from "@/db/schema";
 import { getServerSession } from "@/lib/server/session";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { aiExpenseProposalSchema } from "@atria/core/validations/ai-proposal";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 /**
  * Mengonfirmasi usulan pengeluaran yang disiapkan asisten AI.
@@ -22,8 +21,16 @@ import { eq } from "drizzle-orm";
  *
  * Idempoten terhadap `toolCallId`. Satu kartu usulan hanya bisa menghasilkan satu
  * dokumen, walaupun kartunya dibuka lagi setelah riwayat dimuat ulang, tombolnya
- * ditekan dua kali, atau dua permintaan berlomba. Penjaga terakhirnya adalah
- * batasan UNIQUE di database, bukan pemeriksaan di aplikasi.
+ * ditekan dua kali, atau dua permintaan berlomba.
+ *
+ * Yang menegakkan janji terakhir itu adalah kunci pesimistis pada baris
+ * percakapan, bukan batasan UNIQUE di `ai_proposal_confirmation`. Batasan itu
+ * baru diuji sesudah dokumennya terlanjur dibuat, jadi ia hanya mencegah catatan
+ * konfirmasi ganda — bukan dokumen ganda. Dua permintaan yang berlomba
+ * sama-sama lolos pemeriksaan "sudah pernah dikonfirmasi?" dan sama-sama
+ * membuat pengajuan. Karena itu seluruh urutan periksa lalu tulis dijalankan
+ * di bawah `SELECT ... FOR UPDATE` atas percakapannya, idiom yang sama dengan
+ * penguncian `bank_account` pada mutasi saldo.
  */
 export async function confirmAiExpenseProposal(
   input: unknown,
@@ -46,59 +53,71 @@ export async function confirmAiExpenseProposal(
 
   const proposal = validation.data;
 
-  // Percakapan harus milik pengguna ini; tanpa pemeriksaan ini, sebuah id
-  // percakapan asing bisa dipakai untuk menitipkan catatan konfirmasi.
-  const conversation = await findOwnedConversation(proposal.conversationId, session.user.id);
-  if (!conversation) {
-    return {
-      success: false,
-      error: { code: "NOT_FOUND", message: "Percakapan tidak ditemukan." },
-    };
-  }
+  // Seluruh urutan berjalan di bawah kunci baris percakapan, sehingga dua
+  // penekanan tombol yang berlomba diserialkan: yang kedua baru membaca setelah
+  // yang pertama menuliskan catatan konfirmasinya.
+  const outcome = await db.transaction(async (tx) => {
+    // Percakapan harus milik pengguna ini; tanpa pemeriksaan ini, sebuah id
+    // percakapan asing bisa dipakai untuk menitipkan catatan konfirmasi.
+    const [conversation] = await tx
+      .select({ id: aiConversation.id })
+      .from(aiConversation)
+      .where(
+        and(
+          eq(aiConversation.id, proposal.conversationId),
+          eq(aiConversation.userId, session.user.id),
+        ),
+      )
+      .for("update");
+    if (!conversation) return { kind: "not_found" } as const;
 
-  const existing = await db.query.aiProposalConfirmation.findFirst({
-    where: eq(aiProposalConfirmation.toolCallId, proposal.toolCallId),
-    columns: { documentId: true, userId: true },
-  });
+    const existing = await tx.query.aiProposalConfirmation.findFirst({
+      where: eq(aiProposalConfirmation.toolCallId, proposal.toolCallId),
+      columns: { documentId: true, userId: true },
+    });
 
-  if (existing) {
-    if (existing.userId !== session.user.id) {
-      return {
-        success: false,
-        error: { code: "FORBIDDEN", message: "Usulan ini bukan milik Anda." },
-      };
+    if (existing) {
+      return existing.userId === session.user.id
+        ? ({ kind: "already", documentId: existing.documentId } as const)
+        : ({ kind: "foreign" } as const);
     }
-    return { success: true, data: { expenseId: existing.documentId, alreadyConfirmed: true } };
-  }
 
-  const result = await submitFieldRequest({
-    projectId: proposal.projectId,
-    projectBudgetCategoryId: proposal.projectBudgetCategoryId,
-    description: proposal.description,
-    quantity: proposal.quantity,
-    unitPrice: proposal.unitPrice,
-    amount: proposal.amount,
-    stockHandling: "EXPENSE_ONLY",
-  });
+    const result = await submitFieldRequest({
+      projectId: proposal.projectId,
+      projectBudgetCategoryId: proposal.projectBudgetCategoryId,
+      description: proposal.description,
+      quantity: proposal.quantity,
+      unitPrice: proposal.unitPrice,
+      amount: proposal.amount,
+      stockHandling: "EXPENSE_ONLY",
+    });
 
-  if (!result.success) {
-    return result;
-  }
+    if (!result.success) return { kind: "submit_failed", response: result } as const;
 
-  try {
-    await db.insert(aiProposalConfirmation).values({
+    await tx.insert(aiProposalConfirmation).values({
       toolCallId: proposal.toolCallId,
       conversationId: conversation.id,
       userId: session.user.id,
       proposalType: "FIELD_EXPENSE",
       documentId: result.data.id,
     });
-  } catch (error) {
-    // Dokumennya sudah tercipta. Kegagalan mencatat jejak konfirmasi tidak boleh
-    // ditampilkan sebagai kegagalan pengajuan — itu akan mendorong pengguna
-    // menekan tombol lagi dan membuat dokumen kedua.
-    console.error("Gagal mencatat konfirmasi usulan AI:", error);
+
+    return { kind: "created", documentId: result.data.id } as const;
+  });
+
+  if (outcome.kind === "not_found") {
+    return { success: false, error: { code: "NOT_FOUND", message: "Percakapan tidak ditemukan." } };
+  }
+  if (outcome.kind === "foreign") {
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "Usulan ini bukan milik Anda." },
+    };
+  }
+  if (outcome.kind === "submit_failed") return outcome.response;
+  if (outcome.kind === "already") {
+    return { success: true, data: { expenseId: outcome.documentId, alreadyConfirmed: true } };
   }
 
-  return { success: true, data: { expenseId: result.data.id, alreadyConfirmed: false } };
+  return { success: true, data: { expenseId: outcome.documentId, alreadyConfirmed: false } };
 }
