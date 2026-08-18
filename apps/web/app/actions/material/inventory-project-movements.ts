@@ -7,7 +7,11 @@ import { materialInventory, stockMovement } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
 import { fromCents, parseNumericToCents } from "@/lib/finance/balance-mutation";
 import type { ActionResponse } from "@atria/core/types/action-response";
-import { exceedsProjectUsage } from "@atria/core/material/stock-guards";
+import {
+  exceedsProjectUsage,
+  reservedAfterOwnRelease,
+  violatesOtherProjectReservation,
+} from "@atria/core/material/stock-guards";
 import {
   type ReturnMaterialInput,
   type UseMaterialInput,
@@ -82,9 +86,9 @@ export async function wasteMaterialForProject(
       ensureNonNegativeStock(nextCurrent, "INSUFFICIENT_CURRENT_STOCK");
 
       const ownReserved = parseNumericToCents(toDecimal(outstandingReservation));
-      const reservedReduction = quantity > ownReserved ? ownReserved : quantity;
-      const nextReserved = reserved - reservedReduction;
-      if (nextCurrent < nextReserved) throw new Error("STOCK_RESERVED_FOR_OTHER_PROJECTS");
+      const nextReserved = reservedAfterOwnRelease({ reserved, ownReserved, quantity });
+      if (violatesOtherProjectReservation({ nextCurrent, reserved, ownReserved, quantity }))
+        throw new Error("STOCK_RESERVED_FOR_OTHER_PROJECTS");
       const [updated] = await tx
         .update(materialInventory)
         .set({
@@ -186,11 +190,22 @@ export async function useMaterialForProject(
       const reservedStock = parseNumericToCents(inventory.reservedStock);
       const nextCurrent = currentStock - quantity;
       const ownReserved = parseNumericToCents(toDecimal(outstandingReservation));
-      const reservedReduction = quantity > ownReserved ? ownReserved : quantity;
-      const nextReserved = reservedStock - reservedReduction;
+      const nextReserved = reservedAfterOwnRelease({
+        reserved: reservedStock,
+        ownReserved,
+        quantity,
+      });
 
       ensureNonNegativeStock(nextCurrent, "INSUFFICIENT_CURRENT_STOCK");
-      if (nextCurrent < nextReserved) throw new Error("STOCK_RESERVED_FOR_OTHER_PROJECTS");
+      if (
+        violatesOtherProjectReservation({
+          nextCurrent,
+          reserved: reservedStock,
+          ownReserved,
+          quantity,
+        })
+      )
+        throw new Error("STOCK_RESERVED_FOR_OTHER_PROJECTS");
 
       const [updated] = await tx
         .update(materialInventory)

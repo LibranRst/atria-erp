@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   calculateNetProjectUsage,
   exceedsProjectUsage,
+  reservedAfterOwnRelease,
   reversalWouldConsumeReservedStock,
   violatesOtherProjectReservation,
 } from "./stock-guards";
@@ -53,15 +54,33 @@ describe("exceedsProjectUsage", () => {
   });
 });
 
+describe("reservedAfterOwnRelease", () => {
+  test("releases only as much of its own reservation as it actually moved", () => {
+    expect(
+      reservedAfterOwnRelease({ reserved: BigInt(20), ownReserved: BigInt(8), quantity: BigInt(3) }),
+    ).toBe(BigInt(17));
+  });
+
+  test("never releases more than the project itself reserved", () => {
+    expect(
+      reservedAfterOwnRelease({
+        reserved: BigInt(20),
+        ownReserved: BigInt(8),
+        quantity: BigInt(12),
+      }),
+    ).toBe(BigInt(12));
+  });
+});
+
 describe("violatesOtherProjectReservation", () => {
   // Proyek ini memegang 8 dari 20 yang direservasi; 12 sisanya milik proyek lain.
   test("blocks a movement that would eat into another project's reservation", () => {
     expect(
       violatesOtherProjectReservation({
-        nextCurrent: 11,
-        reserved: 20,
-        ownReserved: 8,
-        quantity: 8,
+        nextCurrent: BigInt(11),
+        reserved: BigInt(20),
+        ownReserved: BigInt(8),
+        quantity: BigInt(8),
       }),
     ).toBe(true);
   });
@@ -69,10 +88,10 @@ describe("violatesOtherProjectReservation", () => {
   test("allows a movement that leaves other reservations covered", () => {
     expect(
       violatesOtherProjectReservation({
-        nextCurrent: 12,
-        reserved: 20,
-        ownReserved: 8,
-        quantity: 8,
+        nextCurrent: BigInt(12),
+        reserved: BigInt(20),
+        ownReserved: BigInt(8),
+        quantity: BigInt(8),
       }),
     ).toBe(false);
   });
@@ -81,18 +100,18 @@ describe("violatesOtherProjectReservation", () => {
     // Bergerak 3 dari reservasi sendiri 8: yang tersisa terjaga tetap 17, bukan 12.
     expect(
       violatesOtherProjectReservation({
-        nextCurrent: 16,
-        reserved: 20,
-        ownReserved: 8,
-        quantity: 3,
+        nextCurrent: BigInt(16),
+        reserved: BigInt(20),
+        ownReserved: BigInt(8),
+        quantity: BigInt(3),
       }),
     ).toBe(true);
     expect(
       violatesOtherProjectReservation({
-        nextCurrent: 17,
-        reserved: 20,
-        ownReserved: 8,
-        quantity: 3,
+        nextCurrent: BigInt(17),
+        reserved: BigInt(20),
+        ownReserved: BigInt(8),
+        quantity: BigInt(3),
       }),
     ).toBe(false);
   });

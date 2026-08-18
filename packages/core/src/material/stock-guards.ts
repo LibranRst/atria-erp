@@ -39,12 +39,28 @@ export function exceedsProjectUsage({
 }
 
 /**
- * Bagian C "Reserved reversal": stok sesudah pergerakan tidak boleh turun di
- * bawah jumlah yang masih direservasi.
+ * Sisa reservasi setelah proyek yang sedang bergerak melepas miliknya sendiri.
  *
- * Reservasi milik proyek yang sedang bergerak ikut susut lebih dulu — hanya
- * sebanyak yang benar-benar dipakai, tidak lebih — sehingga sisa reservasi yang
- * dibandingkan adalah milik proyek lain.
+ * Reservasi milik proyek yang bergerak ikut susut lebih dulu — hanya sebanyak
+ * yang benar-benar dipakai, tidak lebih — sehingga yang tersisa adalah reservasi
+ * proyek lain yang tetap harus tertutupi.
+ */
+export function reservedAfterOwnRelease({
+  reserved,
+  ownReserved,
+  quantity,
+}: {
+  readonly reserved: bigint;
+  readonly ownReserved: bigint;
+  readonly quantity: bigint;
+}): bigint {
+  const reservedReduction = quantity > ownReserved ? ownReserved : quantity;
+  return reserved - reservedReduction;
+}
+
+/**
+ * Bagian C "Cross-project reserve": stok sesudah pergerakan tidak boleh turun di
+ * bawah reservasi yang masih dipegang proyek lain.
  */
 export function violatesOtherProjectReservation({
   nextCurrent,
@@ -52,13 +68,12 @@ export function violatesOtherProjectReservation({
   ownReserved,
   quantity,
 }: {
-  readonly nextCurrent: number;
-  readonly reserved: number;
-  readonly ownReserved: number;
-  readonly quantity: number;
+  readonly nextCurrent: bigint;
+  readonly reserved: bigint;
+  readonly ownReserved: bigint;
+  readonly quantity: bigint;
 }): boolean {
-  const reservedReduction = quantity > ownReserved ? ownReserved : quantity;
-  return nextCurrent < reserved - reservedReduction;
+  return nextCurrent < reservedAfterOwnRelease({ reserved, ownReserved, quantity });
 }
 
 /**

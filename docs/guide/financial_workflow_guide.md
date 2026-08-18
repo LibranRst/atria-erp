@@ -955,6 +955,33 @@ Free stock gudang sebanyak 10 tidak otomatis menurunkan `Need to buy` sebelum di
 
 Negative test: reserve tambahan 3 harus ditolak karena available hanya 2.
 
+##### B4-opsional. Cross-project reserve
+
+Satu-satunya butir Bagian C yang menuntut **dua proyek `ACTIVE` sekaligus**.
+Jalankan tepat di titik ini — setelah reserve 8, sebelum Goods Receipt B5.4 —
+karena sesudah stok gudang naik menjadi 30 nominal ujinya harus ikut membesar.
+
+1. Sebagai Owner, jalankan ulang B1–B3 secara minimal untuk proyek kedua
+   (`UAT Proyek B — Cross Reserve`): kontrak kecil, satu item RAP
+   `Multipleks UAT 18mm`, RAB disetujui, project diaktifkan. Proyek B harus
+   berstatus `ACTIVE`; di bawah itu penolakannya datang dari guard status, bukan
+   dari guard reservasi, sehingga tidak membuktikan apa pun.
+2. Sebagai Purchasing, dari proyek B jalankan **Use** `5` Multipleks dari
+   `Gudang UAT Utama`.
+
+Expected: ditolak. Gudang punya current 10, tetapi 8 di antaranya direservasi
+proyek A, jadi sisa setelah pemakaian (5) turun di bawah reservasi milik proyek
+lain (8). Proyek B tidak memegang reservasi sendiri, sehingga tidak ada yang
+bisa dilepas lebih dulu.
+
+Invariant sesudah penolakan: `/materials` tetap menunjukkan current 10,
+reserved 8, available 2, dan tidak ada `stock_movement` baru untuk proyek B.
+
+Kontrol positif di sisi berlawanan: **Use** `2` dari proyek B harus diterima,
+karena sisa 8 masih menutup reservasi proyek A. Jika mengambil kontrol positif
+ini, ingat bahwa stok gudang berkurang 2 dan seluruh angka B5–B6 sesudahnya
+ikut bergeser — lebih aman berhenti pada uji penolakan saja.
+
 ### B5. Vendor bill, approval, payment, dan Goods Receipt
 
 #### B5.1. PM membuat vendor bill Material
@@ -1723,8 +1750,17 @@ alih-alih menjelaskan bahwa rekening sudah diarsipkan.
 **Belum dijalankan live (1):** Cross-project reserve.
 
 Yang tersisa menuntut **dua proyek `ACTIVE` sekaligus**, karena yang diuji
-adalah proyek B memakai stok yang direservasi proyek A. Saat ini hanya
-`UAT Pantry Budi — Guard Tests` yang aktif; proyek pertama sudah `COMPLETED`.
+adalah proyek B memakai stok yang direservasi proyek A — selama sesi verifikasi
+tidak pernah ada dua proyek aktif berbarengan. Resepnya kini tertulis sebagai
+langkah opsional di akhir B4 dan dapat dijalankan dalam satu kali putaran
+runbook.
+
+Guard-nya sendiri bukan kotak hitam: `violatesOtherProjectReservation` dan
+`reservedAfterOwnRelease` di `packages/core/src/material/stock-guards.ts` adalah
+fungsi murni dengan enam test, dan sejak commit penyelarasan keduanya benar-benar
+dipanggil oleh `useMaterialForProject` serta `wasteMaterialForProject` —
+sebelumnya action menyimpan salinan aritmetika yang sama secara inline, sehingga
+test memaku salinan, bukan jalur produksi.
 
 ## BAGIAN D — Cara menilai hasil UAT
 
