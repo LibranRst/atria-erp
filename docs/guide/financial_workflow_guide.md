@@ -43,10 +43,15 @@ arsitektur. Tujuh di antaranya sekaligus dikunci unit test. Sisa satu,
 **Cross-project reserve**, menuntut dua proyek `ACTIVE` sekaligus. Rinciannya
 ada di akhir Bagian C.
 
-**Belum dijalankan penuh:** hanya B11. Jalur pembatalan revisi sudah terbukti
-(revisi menjadi `VOID`, baseline dan budget tidak bergeser), tetapi alur Change
-Order yang disetujui beserta invoice selisihnya belum pernah dijalankan — bagian
-itu masih berisi ekspektasi desain, bukan hasil pengamatan.
+**Seluruh bagian runbook kini pernah dijalankan langsung terhadap aplikasi.**
+B11 ditutup terakhir: jalur pembatalan revisi (revisi menjadi `VOID`, baseline
+dan budget tidak bergeser) maupun Change Order yang disetujui. Kontrak
+Rp5.000.000 menjadi Rp6.000.000, internal budget mengikuti ke Rp5.400.000,
+kelima alokasi kategori ter-rescale tepat pada rasio default, RAB lama menjadi
+`SUPERSEDED`, dan kas tidak bergerak.
+
+Yang belum dijalankan tinggal satu butir Bagian C — **Cross-project reserve** —
+karena menuntut dua proyek `ACTIVE` sekaligus.
 
 B7.2 dan B8 sudah dijalankan; hasil akhirnya cocok persis dengan tabel B10, dan
 justru dari skenario B7.2 cacat aturan persetujuan gabungan ditemukan.
