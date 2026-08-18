@@ -36,8 +36,8 @@ Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
 Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
-**Sudah dijalankan sebagian:** Bagian C — sepuluh dari delapan belas negative
-test terbukti live, tujuh dikunci test otomatis, satu terverifikasi dari kode, tujuh sisanya menunggu
+**Sudah dijalankan sebagian:** Bagian C — tujuh belas dari delapan belas negative
+test terbukti, tujuh di antaranya juga dikunci test otomatis, satu terverifikasi dari kode, tujuh sisanya menunggu
 proyek `ACTIVE` baru. Rinciannya ada di akhir Bagian C.
 
 **Belum dijalankan ulang:** B11 revisi dan Change Order. B7.2 dan B8 sudah
@@ -1625,9 +1625,31 @@ Material 5.814.000 / 2.000.000 / 3.814.000 pada 34,3997%.
 
 Dijalankan 18 Agustus 2026 terhadap database UAT yang sama.
 
-**Sudah terbukti live (10):** Project scoping, Global finance, Sensitive balance,
+**Sudah terbukti live (17):** Project scoping, Global finance, Sensitive balance,
 Self verification, Budget settings, Approved RAP, Over-reserve, Short audit note,
-Client overpay, dan Premature closing.
+Client overpay, Premature closing, Direct second RAB, Vendor over-schedule,
+Early vendor pay, Rejected payment, Excess return, Reserved reversal, dan
+Archived account (yang terakhir lewat test arsitektur, bukan klik).
+
+Tujuh terakhir dijalankan pada proyek UAT kedua `UAT Pantry Budi — Guard Tests`
+setelah proyek itu diaktifkan. Catatan hasilnya:
+
+- **Vendor over-schedule** berhenti lebih awal daripada padanan kliennya:
+  formnya menolak (`Nominal melebihi sisa tagihan Rp 900.000.`) dan tombol
+  **Tinjau** mati, jadi permintaannya tidak pernah sampai ke server.
+- **Early vendor pay** dan **Rejected payment** tidak menampilkan tombol
+  **Cairkan** sama sekali — masing-masing berlabel `Menunggu Owner` dan
+  `Gagal Cair`, sementara tagihan berisiko rendah di sebelahnya punya tombol itu.
+- **Direct second RAB** tidak menyediakan jalur approve untuk revisi: hanya
+  `Proses change order` dan `Batalkan revisi`.
+- **Excess return** ditolak dengan pesan `Jumlah return melebihi pemakaian bersih
+material pada proyek.` Pesan itu muncul sebagai toast dan hilang setelah
+  beberapa detik; stok tidak bergerak dan tidak ada movement tertulis.
+- **Reserved reversal** menuntut pengaturan khusus: pembatalan penerimaan hanya
+  menembus reservasi bila reservasi melebihi sisa stok setelah pembatalan.
+  Reservasi **tidak dibatasi kebutuhan RAP**, sehingga skenario itu dapat dibuat
+  dengan satu proyek. Pembatalan ditolak, `goods_receipt` tetap
+  `REVERSAL_REQUESTED`, dan stok tidak bergeser.
 
 Dua di antaranya lebih kuat dari yang tertulis di matriks:
 
@@ -1661,15 +1683,11 @@ Satu catatan yang tetap berlaku untuk Archived account: penolakannya benar dan
 terjadi sebelum saldo tersentuh, tetapi pesannya berbunyi `BANK_ACCOUNT_NOT_FOUND`
 alih-alih menjelaskan bahwa rekening sudah diarsipkan.
 
-**Belum dijalankan live (8):** ketujuh butir di atas plus Cross-project reserve.
+**Belum dijalankan live (1):** Cross-project reserve.
 
-Seluruhnya memerlukan proyek berstatus `ACTIVE`; proyek UAT pertama sudah
-`COMPLETED` sehingga action pencatatan menolaknya lewat
-`assertProjectStatusIsOperational`. Scaffold `UAT Pantry Budi — Guard Tests`
-sudah dibuat sebagai `DRAFT` dan tinggal dibawa melalui RAP → RAB → aktivasi.
-
-**Cross-project reserve** menuntut lebih dari itu: dua proyek `ACTIVE` sekaligus,
-karena yang diuji adalah proyek B memakai stok yang direservasi proyek A.
+Yang tersisa menuntut **dua proyek `ACTIVE` sekaligus**, karena yang diuji
+adalah proyek B memakai stok yang direservasi proyek A. Saat ini hanya
+`UAT Pantry Budi — Guard Tests` yang aktif; proyek pertama sudah `COMPLETED`.
 
 ## BAGIAN D — Cara menilai hasil UAT
 
