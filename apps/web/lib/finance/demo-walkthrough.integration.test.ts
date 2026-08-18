@@ -13,6 +13,7 @@ import {
   inventoryOpeningBatch,
   materialInventory,
   project,
+  projectProfitabilitySnapshot,
   vendorBill,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
@@ -624,18 +625,29 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
     expect(menteng.data.blockers.length).toBeGreaterThan(0);
   });
 
-  it("12.2 closes Senopati and records the snapshot", async () => {
+  // Ditutup dua kali sekaligus dengan sengaja. Checklist kesiapan dibangun di
+  // luar transaksi penutupan, jadi dua permintaan yang berlomba sama-sama lolos
+  // `canComplete`; tanpa kunci baris proyek keduanya menyisipkan snapshot final
+  // dan proyek berakhir dengan dua catatan margin permanen.
+  it("12.2 closes Senopati exactly once even when two closings race", async () => {
     actAs(RONALD);
-
-    const result = await completeProject({
+    const input = {
       projectId: SENOPATI,
       closingNote: "Seluruh dokumen final sudah diperiksa.",
-    });
-    expect(result.success).toBe(true);
+    };
+
+    const [a, b] = await Promise.all([completeProject(input), completeProject(input)]);
+    expect([a.success, b.success].filter(Boolean).length).toBe(1);
 
     const closed = await db.query.project.findFirst({ where: eq(project.id, SENOPATI) });
     expect(closed?.status).toBe("COMPLETED");
     expect(closed?.endDate).not.toBeNull();
+
+    const snapshots = await db
+      .select({ id: projectProfitabilitySnapshot.id })
+      .from(projectProfitabilitySnapshot)
+      .where(eq(projectProfitabilitySnapshot.projectId, SENOPATI));
+    expect(snapshots.length).toBe(1);
   });
 
   it("12.2 refuses to close Menteng while blockers remain", async () => {

@@ -59,7 +59,9 @@ karakter lalu terposting dengan alasan yang layak.
 
 **Closing (bagian 12):** Senopati dilaporkan tanpa blocker dan benar-benar
 tertutup menjadi `COMPLETED` dengan end date terisi, sementara Menteng tetap
-diblokir dan penutupannya ditolak.
+diblokir dan penutupannya ditolak. Penutupannya dijalankan dua kali sekaligus
+dengan sengaja: hanya satu yang berhasil dan hanya satu snapshot profitability
+final yang tercipta.
 
 **Penjagaan script (bagian 1 dan 14):** `reset-demo-database.ts` tanpa
 `--confirm-reset` berhenti dengan pesan yang menyebut flag-nya, dan `db:seed`

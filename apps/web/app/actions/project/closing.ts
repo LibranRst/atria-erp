@@ -234,6 +234,18 @@ export async function completeProject(
       };
     }
     await db.transaction(async (tx) => {
+      // Checklist di atas dibangun di luar transaksi ini, jadi dua penutupan
+      // yang berlomba sama-sama lolos `canComplete` sebelum salah satunya
+      // menulis. Tanpa kunci baris proyek, keduanya menyisipkan snapshot final
+      // dan proyek berakhir dengan dua catatan margin permanen.
+      const [locked] = await tx
+        .select({ status: project.status })
+        .from(project)
+        .where(eq(project.id, checklist.projectId))
+        .for("update");
+      if (!locked) throw new Error("PROJECT_NOT_FOUND");
+      if (locked.status === "COMPLETED") throw new Error("PROJECT_ALREADY_COMPLETED");
+
       const categories = await tx.query.projectBudgetCategory.findMany({
         where: eq(projectBudgetCategory.projectBudgetId, budget.id),
         with: { expenseCategory: true },
@@ -282,6 +294,18 @@ export async function completeProject(
     return { success: true, data: checklist };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Gagal menyelesaikan project closing.";
+    if (message === "PROJECT_ALREADY_COMPLETED") {
+      return {
+        success: false,
+        error: { code: "CONFLICT", message: "Project ini sudah ditutup." },
+      };
+    }
+    if (message === "PROJECT_NOT_FOUND") {
+      return {
+        success: false,
+        error: { code: "NOT_FOUND", message: "Project tidak ditemukan." },
+      };
+    }
     return {
       success: false,
       error: { code: message.includes("FORBIDDEN") ? "FORBIDDEN" : "TRANSACTION_FAILED", message },
