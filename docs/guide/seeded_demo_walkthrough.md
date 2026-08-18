@@ -53,6 +53,12 @@ melebihi isi gudang ditolak tanpa menggeser stok.
 tertutup menjadi `COMPLETED` dengan end date terisi, sementara Menteng tetap
 diblokir dan penutupannya ditolak.
 
+**Penjagaan script (bagian 1 dan 14):** `reset-demo-database.ts` tanpa
+`--confirm-reset` berhenti dengan pesan yang menyebut flag-nya, dan `db:seed`
+pada database yang sudah berisi data menolak dengan
+`DEMO_DATABASE_NOT_EMPTY` tanpa menghapus apa pun. Keduanya keluar dengan
+exit code 1, jadi kegagalannya terlihat, bukan diam-diam.
+
 **Catatan tentang baris "Edit/delete cash transaction yang sudah reconciled"
 pada bagian 13:** aplikasi tidak mempunyai jalur edit maupun delete untuk
 transaksi kas sama sekali — buku besar bersifat append-only. Satu-satunya yang
@@ -65,7 +71,12 @@ sebenarnya diuji adalah ketiga jalur tersebut.
 
 1. **Jalur klik.** Semuanya dibuktikan di lapisan Server Action, bukan lewat
    layar. Tombol, sheet, dan penempatan angka pada UI belum ditelusuri.
-2. **Bagian 12A (Asisten AI).** Jawaban model bersifat non-deterministik dan
+2. **Bagian 11.2 dan 11.4.** Fixture-nya sudah diperiksa ada dan berstatus
+   benar — dua GRN `POSTED` bertaut vendor bill, dua stock transfer `POSTED`,
+   satu stock count `POSTED` dan satu `PENDING_APPROVAL` — tetapi entry baru
+   (posting ulang GRN, transfer material, stock count, emergency adjustment)
+   belum dijalankan.
+3. **Bagian 12A (Asisten AI).** Jawaban model bersifat non-deterministik dan
    menuntut jaringan, jadi tidak dijadikan test. Yang sudah dipaku hanyalah
    aturan aksesnya — Owner, Finance Admin, dan PM boleh; Purchasing, Sales,
    Designer, dan Marketing tidak (`packages/core/src/auth/ai-chat-access.test.ts`).
