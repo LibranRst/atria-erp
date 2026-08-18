@@ -34,7 +34,9 @@ overpayment invoice, dan transfer internal yang tidak mengubah kas bersih.
 
 **Rekonsiliasi (bagian 10):** pengecualian terdokumentasi tanpa menggerakkan
 saldo dan dapat dicabut; alasan di bawah 10 karakter ditolak; kedua pasangan
-seed cocok tanpa saldo bergerak; pencocokan lintas rekening ditolak. Yang
+seed cocok tanpa saldo bergerak; pencocokan lintas rekening ditolak dengan
+pesan ketidakcocokan yang benar; dan transaksi yang sudah direkonsiliasi
+membeku terhadap ketiga jalur tulis yang ada. Yang
 terpenting, sesudah ketiga CSV `.atria-demo/` diimpor, **setiap transaksi yang
 dibuat walkthrough ini menemukan tepat satu lawan** pada rekening dan arah yang
 sama — diperiksa sebagai perbandingan himpunan, bukan sekadar jumlah baris.
@@ -44,11 +46,20 @@ Impor ulang file yang sama melewatkan seluruh baris dan saldo tetap.
 pembuatnya sendiri yang menyetujui, lalu terposting ketika Owner yang
 menyetujui; siklus reserve → use → return → waste bergerak persis seperti yang
 dijanjikan (reserve mengunci tanpa memindahkan stok fisik) dan **tidak membuat
-satu pun cash transaction**; waste tanpa catatan audit ditolak.
+satu pun cash transaction**; waste tanpa catatan audit ditolak; pemakaian
+melebihi isi gudang ditolak tanpa menggeser stok.
 
 **Closing (bagian 12):** Senopati dilaporkan tanpa blocker dan benar-benar
 tertutup menjadi `COMPLETED` dengan end date terisi, sementara Menteng tetap
 diblokir dan penutupannya ditolak.
+
+**Catatan tentang baris "Edit/delete cash transaction yang sudah reconciled"
+pada bagian 13:** aplikasi tidak mempunyai jalur edit maupun delete untuk
+transaksi kas sama sekali — buku besar bersifat append-only. Satu-satunya yang
+boleh menulis ke `cash_transaction` adalah ketiga aksi rekonsiliasi, dan
+ketiganya menolak baris yang sudah direkonsiliasi di bawah row lock. Jadi
+harapan baris itu benar, tetapi tidak ada tombol yang bisa dicoba; yang
+sebenarnya diuji adalah ketiga jalur tersebut.
 
 **Belum diverifikasi — dan hanya ini yang tersisa:**
 

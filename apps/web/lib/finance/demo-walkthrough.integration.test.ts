@@ -400,6 +400,20 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
     expect(result.success).toBe(false);
   });
 
+  // 13 — nominal sama saja tidak cukup; rekening harus sama juga. Harus diuji
+  // selagi kedua transaksi masih terbuka: sesudah dicocokkan, penolakan datang
+  // dari penjagaan "sudah direkonsiliasi" dan tidak membuktikan apa pun.
+  it("10.2 refuses a match across two different bank accounts", async () => {
+    actAs(LISA);
+    const result = await reconcileCashTransaction({
+      cashTransactionId: TX_850,
+      bankStatementRowId: ROW_2500,
+    });
+    expect(result.success).toBe(false);
+    if (result.success) throw new Error("unreachable");
+    expect(result.error.message).toContain("tidak sama");
+  });
+
   // 10.2 — mencocokkan tidak menggerakkan saldo.
   it("10.2 matches both seeded pairs without moving any balance", async () => {
     actAs(LISA);
@@ -424,14 +438,31 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
     expect(matched?.reconciled).toBe(true);
   });
 
-  // 13 — nominal sama saja tidak cukup; rekening harus sama juga.
-  it("10.2 refuses a match across two different bank accounts", async () => {
+  // 13 — transaksi yang sudah direkonsiliasi tidak dapat disentuh lagi oleh
+  // satu pun dari ketiga jalur yang boleh menulis ke cash_transaction.
+  it("10.2 freezes a reconciled transaction against all three write paths", async () => {
     actAs(LISA);
-    const result = await reconcileCashTransaction({
+
+    const rematch = await reconcileCashTransaction({
       cashTransactionId: TX_850,
-      bankStatementRowId: ROW_2500,
+      bankStatementRowId: ROW_850,
     });
-    expect(result.success).toBe(false);
+    expect(rematch.success).toBe(false);
+
+    const exception = await markReconciliationException({
+      cashTransactionId: TX_850,
+      reason: "Mencoba menandai transaksi yang sudah cocok.",
+    });
+    expect(exception.success).toBe(false);
+
+    const cleared = await clearReconciliationException({ cashTransactionId: TX_850 });
+    expect(cleared.success).toBe(false);
+
+    const frozen = await db.query.cashTransaction.findFirst({
+      where: eq(cashTransaction.id, TX_850),
+    });
+    expect(frozen?.reconciled).toBe(true);
+    expect(frozen?.reconciliationExceptionReason).toBeNull();
   });
 
   // 10.3 — inti janji bagian ini: setiap transaksi yang dibuat walkthrough
@@ -546,6 +577,22 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
     expect(Number((await stock()).current)).toBe(Number(opening.current) - 2);
 
     expect(await cashTransactionCount()).toBe(cashBefore);
+  });
+
+  it("11.3 refuses a usage larger than the stock on hand", async () => {
+    actAs(AGUS);
+    const before = await stock();
+
+    const result = await useMaterialForProject({
+      materialId: MULTIPLEKS,
+      inventoryLocationId: GUDANG_UTAMA,
+      projectId: MENTENG,
+      quantity: Number(before.current) + 1,
+      note: "Mencoba memakai lebih banyak dari isi gudang.",
+    });
+
+    expect(result.success).toBe(false);
+    expect(await stock()).toEqual(before);
   });
 
   it("11.3 refuses a waste without an audit note", async () => {
