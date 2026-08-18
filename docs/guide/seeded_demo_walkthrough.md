@@ -7,6 +7,39 @@ untuk rekonsiliasi dan dashboard pada langkah berikutnya.
 Untuk UAT production-style dari data kosong, gunakan
 [`financial_workflow_guide.md`](./financial_workflow_guide.md), bukan panduan ini.
 
+## Status verifikasi
+
+Diperiksa 18 Agustus 2026 terhadap database demo sekali pakai hasil
+`db:demo:reset`, bukan terhadap database development.
+
+**Terbukti terhadap aplikasi (bagian 3, 4, 5, 8):** seluruh angka statis yang
+dikutip panduan ini cocok dengan seed — keempat saldo rekening, indikator dua
+transaksi belum rekonsiliasi, nominal dan status setiap expense serta vendor
+bill, hitungan rekonsiliasi 2/2/9, formula budget 90% dengan rasio
+18/35/1/0,5/0 dan buffer 45,5%, header Menteng Rp800 juta / Rp720 juta / target
+gross Rp80 juta, alokasi Subcon Rp0 pada Sudirman, budget Brawijaya yang masih
+`DRAFT` tanpa transaksi, serta invoice `INV/2026/002` Rp320 juta dengan
+Rp120 juta diterima.
+
+**Terbukti dijalankan (bagian 6 sampai 9):** seluruh tulang punggung kas
+dijalankan berurutan lewat Server Action asli oleh
+`lib/finance/demo-walkthrough.integration.test.ts`, dan mendarat persis pada
+saldo yang dijanjikan: Kas Budi Rp14.150.000 → Rp13.100.000 → Rp8.100.000,
+Mandiri Rp500.000.000 → Rp493.800.000, BCA Rp655.000.000 → Rp651.000.000 →
+Rp641.000.000 → Rp841.000.000 → Rp836.000.000. Termasuk maker-checker 6.2,
+penolakan vendor payment Rp10 juta sebelum approval Owner, penolakan
+overpayment invoice, dan transfer internal yang tidak mengubah kas bersih.
+
+**Terbukti sebagai fixture, belum diklik (bagian 10 sampai 12):** batch opening
+stock `OPB-2026-07-0002` memang `PENDING_APPROVAL` dengan maker Purchasing;
+kedua GRN tercatat POSTED terhadap vendor bill; ketiga CSV `.atria-demo/` ada;
+dan Senopati memang siap ditutup — tanpa invoice, bill, biaya, atau reservasi
+terbuka, dengan satu RAB approved serta invoice Rp500 juta yang sudah paid dan
+reconciled. Jalur UI-nya sendiri belum ditelusuri.
+
+**Belum diverifikasi:** bagian 12A (Asisten AI) sepenuhnya, karena menuntut
+`DEEPSEEK_API_KEY`; serta jalur klik bagian 10, 11, dan 12.
+
 ## 1. Persiapan dan reset
 
 Pastikan `DATABASE_URL` menunjuk database development/sandbox, kemudian jalankan:
