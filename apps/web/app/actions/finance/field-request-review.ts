@@ -254,11 +254,15 @@ export async function approveVendorPayment(
       });
 
       if (status === "REJECTED") {
+        // `referenceNumber` adalah nomor referensi mutasi bank — pada jalur
+        // pencairan ia menjadi `cashTransaction.bankReference` yang dipakai
+        // rekonsiliasi dan deteksi duplikat. Alasan penolakan tidak boleh
+        // menempatinya; alasan itu sudah tersimpan pada `approval.notes` lewat
+        // `upsertApprovalTx` di atas, yang memang tempat auditnya.
         await tx
           .update(vendorPayment)
           .set({
             status: "FAILED",
-            referenceNumber: notes || "Ditolak oleh Owner",
             paymentDate: new Date(),
           })
           .where(eq(vendorPayment.id, vendorPaymentId));
