@@ -1,4 +1,4 @@
-import { aiExpenseProposalSchema } from "@/lib/validations/ai-proposal";
+import { aiExpenseProposalSchema } from "./ai-proposal";
 import { describe, expect, it } from "bun:test";
 
 const base = {

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 export type RevisionActionUser = {
   readonly id: string;

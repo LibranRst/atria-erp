@@ -2,8 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-const WORKSPACE_ROOT = process.cwd();
-const FEATURES_ROOT = path.join(WORKSPACE_ROOT, "features");
+// Di-anchor ke lokasi file ini, bukan `process.cwd()`, supaya hasilnya sama
+// dari mana pun suite dijalankan.
+const APP_ROOT = path.resolve(import.meta.dir, "..", "..");
+const FEATURES_ROOT = path.join(APP_ROOT, "features");
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx"]);
 
 /**

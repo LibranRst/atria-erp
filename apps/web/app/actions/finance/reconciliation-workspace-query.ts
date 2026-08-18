@@ -9,8 +9,8 @@ import {
 import type { ReconciliationWorkspace } from "@/app/actions/finance/reconciliation-workspace-types";
 import { db } from "@/db";
 import { bankAccount, bankStatementRow, cashTransaction, projectCost } from "@/db/schema";
-import { normalizeCashDirection } from "@/lib/finance/cash-direction";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { normalizeCashDirection } from "@atria/core/finance/cash-direction";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 export async function getReconciliationWorkspace(): Promise<
   ActionResponse<ReconciliationWorkspace>

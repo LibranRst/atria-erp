@@ -9,9 +9,9 @@ import {
   ProjectHeroStatusPill,
   projectStatusLabel,
 } from "@/features/projects/shared/components/project-cover-hero";
-import { projectHealthReasonLabel } from "@/lib/project/effective-health";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import { formatShortIdr } from "@/lib/utils/money";
+import { projectHealthReasonLabel } from "@atria/core/project/effective-health";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import { formatShortIdr } from "@atria/core/utils/money";
 import type { ProjectItem } from "../../types/project-list-types";
 import { getUsedPercentage } from "../../utils/project-list-utils";
 
@@ -163,13 +163,7 @@ function ProjectMoneyFact({
   return (
     <div className="min-w-0">
       <p className="truncate text-meta font-semibold text-on-surface-variant/60">{label}</p>
-      <MoneyValue
-        amount={amount}
-        variant="compact"
-        size="xl"
-        tone={tone}
-        className="mt-0.5"
-      />
+      <MoneyValue amount={amount} variant="compact" size="xl" tone={tone} className="mt-0.5" />
       {detail ? (
         <p className="mt-0.5 truncate text-eyebrow font-bold text-on-surface-variant/75">
           {detail}

@@ -17,7 +17,7 @@ process.stdin.on("end", () => {
     if (inputData) {
       JSON.parse(inputData);
     }
-    
+
     // Inject persistent context reminders
     console.log(
       JSON.stringify({
@@ -27,7 +27,7 @@ process.stdin.on("end", () => {
               "[Atria ERP Context] Invariants: Strict TypeScript (no any), Drizzle db.transaction + audit_log for balance/stock mutations, mobile 320-430px truth, iOS Paten form styling (rounded-full standalone, FormSection borderless grouped), MoneyValue formatting, RAP vs RAB isolation.",
           },
         ],
-      })
+      }),
     );
   } catch {
     console.log(JSON.stringify({ injectSteps: [] }));

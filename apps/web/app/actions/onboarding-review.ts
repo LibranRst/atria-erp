@@ -12,9 +12,9 @@ import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import {
   OWNER_ONBOARDING_CONFIG_KEY,
   parseOwnerOnboardingState,
-} from "@/lib/onboarding/owner-onboarding";
+} from "@atria/core/onboarding/owner-onboarding";
 import { requireServerSession } from "@/lib/server/session";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 export type OnboardingReviewState = {
   readonly onboardingCompleted: boolean;

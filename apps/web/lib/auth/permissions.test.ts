@@ -13,7 +13,6 @@ describe("Atria ERP RBAC - permissions.ts", () => {
       expect(ownerRoleName).toBe("OWNER");
       expect(pmRoleName).toBe("PROJECT_MANAGER");
     });
-
   });
 
   // Test assertPermission

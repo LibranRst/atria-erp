@@ -120,9 +120,7 @@ export function ToolTraceList({ traces }: ToolTraceListProps): React.JSX.Element
               >
                 <motion.span
                   className="flex shrink-0"
-                  animate={
-                    trace.state === "running" && !reduceMotion ? spinAnimation : undefined
-                  }
+                  animate={trace.state === "running" && !reduceMotion ? spinAnimation : undefined}
                   transition={transitionSpinLinear}
                   aria-hidden="true"
                 >

@@ -10,8 +10,8 @@ import {
   projectRap,
   projectRapItem,
 } from "@/db/schema";
-import { assertRapCategoryReady } from "@/lib/project/rap-setup";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { assertRapCategoryReady } from "@atria/core/project/rap-setup";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   addProjectRapItemSchema,
   createProjectRapSchema,
@@ -21,7 +21,7 @@ import {
   type AddProjectRapItemInput,
   type CreateProjectRapInput,
   type UpdateProjectRapItemInput,
-} from "@/lib/validations/rap-rab";
+} from "@atria/core/validations/rap-rab";
 import {
   assertProjectMutationAccess,
   buildRapItemValues,

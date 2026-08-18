@@ -10,7 +10,7 @@ import {
   getDeveloperSimulationRoleLabel,
   type DeveloperAccountSimulationState,
   type DeveloperSimulationTarget,
-} from "@/lib/auth/developer-account-simulation";
+} from "@atria/core/auth/developer-account-simulation";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 type DeveloperAccountSwitcherProps = {
   readonly state: DeveloperAccountSimulationState;

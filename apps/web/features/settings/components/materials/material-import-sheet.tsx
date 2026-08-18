@@ -16,7 +16,7 @@ import {
   GroupedSurface,
   WorkflowFormSheet,
 } from "@/components/ui";
-import { parseCsvTable } from "@/lib/import/csv";
+import { parseCsvTable } from "@atria/core/import/csv";
 function parseMaterialRows(source: string): MaterialImportInput {
   const table = parseCsvTable(source);
   const index = (name: string): number => table.headers.indexOf(name);

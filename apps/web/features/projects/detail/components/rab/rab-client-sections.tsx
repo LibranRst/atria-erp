@@ -3,9 +3,9 @@ import { AppIcon, Badge, type BadgeStatus, ConfirmationModal, MoneyValue } from 
 import React from "react";
 import { motion } from "framer-motion";
 
-import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
+import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { NativePanel, rabSourceLabel } from "../shared/rap-rab-primitives";
 import type {
   RabBundleView,

@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName, type PermissionKey } from "@/lib/auth/permissions";
 import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 export type FieldRequestUser = {
   readonly id: string;

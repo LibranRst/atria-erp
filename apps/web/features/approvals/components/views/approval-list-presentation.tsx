@@ -105,12 +105,7 @@ export function ApprovalQueueRow({
           />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-start justify-between gap-2">
-              <MoneyValue
-                amount={item.amount}
-                variant="compact"
-                size="lg"
-                className="min-w-0"
-              />
+              <MoneyValue amount={item.amount} variant="compact" size="lg" className="min-w-0" />
               <span
                 className={`max-w-[42%] shrink-0 text-right text-eyebrow font-semibold ${reasonClass}`}
               >
@@ -477,22 +472,12 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
             <span className="text-eyebrow font-semibold text-on-surface-variant/60">
               Budget kategori
             </span>
-            <MoneyValue
-              amount={item.allocatedAmount}
-              variant="compact"
-              size="sm"
-              align="right"
-            />
+            <MoneyValue amount={item.allocatedAmount} variant="compact" size="sm" align="right" />
           </div>
           <div className="mt-3 grid grid-cols-[minmax(0,1fr)_28px_minmax(0,1fr)] items-center gap-2">
             <div className="min-w-0">
               <p className="text-eyebrow font-semibold text-on-surface-variant/60">Saat ini</p>
-              <MoneyValue
-                amount={item.actualSpent}
-                variant="compact"
-                size="lg"
-                className="mt-1"
-              />
+              <MoneyValue amount={item.actualSpent} variant="compact" size="lg" className="mt-1" />
               <p className="mt-1 font-mono text-eyebrow font-bold text-on-surface-variant">
                 {impact.beforePercentage.toFixed(0)}% terpakai
               </p>

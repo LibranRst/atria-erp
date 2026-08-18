@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { bankAccount } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { mutateBalance } from "@/lib/finance/balance-mutation";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 
 async function runConcurrencyTest(): Promise<void> {
   console.log("=== MEMULAI PENGUJIAN KONKURENSI TRANSAKSI ===");

@@ -21,8 +21,8 @@ import {
   type OwnerOnboardingState,
   parseOwnerOnboardingState,
   pauseOwnerOnboardingSchema,
-} from "@/lib/onboarding/owner-onboarding";
-import type { ActionResponse } from "@/lib/types/action-response";
+} from "@atria/core/onboarding/owner-onboarding";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 export async function advanceOwnerOnboardingStep(input: unknown): Promise<
   ActionResponse<{

@@ -19,7 +19,7 @@ const fieldDisbursementRecoverySchema = z.object({
 });
 
 import { payFieldRequest, verifyFieldRequest } from "@/app/actions/finance/field-requests";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 import { updateUrlSearchParam, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { FieldDisbursementSheet } from "@/features/expenses/components/sheets/expense-list-dialogs";
 import { ReceiptImageLightbox } from "@/features/expenses/components/sheets/expense-list-dialogs";
@@ -28,23 +28,18 @@ import {
   type ExpenseCostItem,
   type ExpenseListTab,
   type FilterStatus,
-} from "@/features/expenses/types/expense-list-types";
-import { PendingApprovalsBanner } from "@/features/expenses/components/shared/expense-list-header";
-import { FinanceInboxHeader } from "@/features/expenses/components/shared/expense-list-header";
-import { FieldClaimsPanel } from "@/features/expenses/components/lists/field-claims-panel";
-import { ExpenseDraftsPanel } from "@/features/expenses/components/lists/expense-drafts-panel";
-import {
-  VendorBillList,
   type VendorListBill,
   type VendorListPayment,
   type VendorListProject,
   type VendorListVendor,
-} from "./vendor-bill-list";
+} from "@atria/core/types/expenses";
+import { PendingApprovalsBanner } from "@/features/expenses/components/shared/expense-list-header";
+import { FinanceInboxHeader } from "@/features/expenses/components/shared/expense-list-header";
+import { FieldClaimsPanel } from "@/features/expenses/components/lists/field-claims-panel";
+import { ExpenseDraftsPanel } from "@/features/expenses/components/lists/expense-drafts-panel";
+import { VendorBillList } from "./vendor-bill-list";
 
-export type {
-  BankAccountItem,
-  ExpenseCostItem,
-} from "@/features/expenses/types/expense-list-types";
+export type { BankAccountItem, ExpenseCostItem } from "@atria/core/types/expenses";
 
 interface ExpenseListProps {
   projectId?: string;

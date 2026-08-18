@@ -1,5 +1,5 @@
-import { calculateQuotationTotal } from "@/lib/project/quotation-total";
-import { projectMaterialProjection } from "@/lib/material/project-material-projection";
+import { calculateQuotationTotal } from "@atria/core/project/quotation-total";
+import { projectMaterialProjection } from "@atria/core/material/project-material-projection";
 import type {
   ChangeOrderHistoryView,
   ProjectCategoryPlanItemView,

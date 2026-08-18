@@ -59,6 +59,6 @@ describe("Profile presentation", () => {
 
     expect(html).toContain("Memuat profil");
     expect(html).toContain("Identitas akun dan hak akses sedang disiapkan");
-    expect(html).toContain("rounded-[28px]");
+    expect(html).toContain("rounded-owner");
   });
 });

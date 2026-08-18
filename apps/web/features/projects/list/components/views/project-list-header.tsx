@@ -12,9 +12,9 @@ import {
   SummaryFact,
   SummarySurface,
 } from "@/components/ui";
-import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
+import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@atria/core/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
-import { formatTightIdr } from "@/lib/utils/money";
+import { formatTightIdr } from "@atria/core/utils/money";
 import type { FilterId } from "../../types/project-list-types";
 import { PROJECT_FILTERS, type ProjectPortfolioSummary } from "../../utils/project-list-utils";
 export function ProjectListHeader({

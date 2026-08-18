@@ -11,7 +11,7 @@ import {
   stockMovement,
 } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createInventoryOpeningSchema,
   decideInventoryOpeningSchema,
@@ -19,7 +19,7 @@ import {
   type CreateInventoryOpeningInput,
   type DecideInventoryOpeningInput,
   type ReverseInventoryOpeningInput,
-} from "@/lib/validations/material";
+} from "@atria/core/validations/material";
 import { getSessionUser } from "./inventory-utils";
 import {
   openingInventoryFailure as failure,

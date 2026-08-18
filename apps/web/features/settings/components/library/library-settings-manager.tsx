@@ -7,7 +7,7 @@ import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library"
 import { ConfirmationSheet, EmptyState, WorkspaceModuleHeader } from "@/components/ui";
 import { SettingsHeader } from "../shared/settings-ui";
 import { ConfirmationModal, FilterSelect } from "@/components/ui";
-import { createClientId } from "@/lib/utils/client-id";
+import { createClientId } from "@atria/core/utils/client-id";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
 import { LibraryCostComponentSheet } from "./library-cost-component-sheet";

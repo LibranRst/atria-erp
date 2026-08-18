@@ -3,12 +3,12 @@ import { calculateOutstandingProjectReservations } from "@/app/actions/material/
 import {
   calculateReceiptReversalValuation,
   calculateTransferDestinationAverage,
-} from "./stock-valuation";
+} from "@atria/core/material/stock-valuation";
 import {
   createStockTransferSchema,
   receiptReversalRequestSchema,
   saveStockCountSchema,
-} from "@/lib/validations/warehouse";
+} from "@atria/core/validations/warehouse";
 
 const A = "14141414-1414-1414-1414-141414141401";
 const B = "14141414-1414-1414-1414-141414141402";

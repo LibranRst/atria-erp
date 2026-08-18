@@ -200,16 +200,13 @@ export function AiChatSheet({
    * dan itu membuat membaca kartu di atas menjadi mustahil selama jawaban masih
    * berjalan.
    */
-  const scrollToBottom = React.useCallback(
-    (behavior: ScrollBehavior = "smooth", force = false) => {
-      if (!force && !isNearBottomRef.current) return;
-      if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
-      scrollRafRef.current = requestAnimationFrame(() => {
-        scrollAnchorRef.current?.scrollIntoView({ block: "end", behavior });
-      });
-    },
-    [],
-  );
+  const scrollToBottom = React.useCallback((behavior: ScrollBehavior = "smooth", force = false) => {
+    if (!force && !isNearBottomRef.current) return;
+    if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollAnchorRef.current?.scrollIntoView({ block: "end", behavior });
+    });
+  }, []);
 
   // Melacak apakah pengguna masih menempel di dasar percakapan.
   React.useEffect(() => {

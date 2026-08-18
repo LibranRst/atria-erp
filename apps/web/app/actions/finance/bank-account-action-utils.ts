@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { bankAccount } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, type PermissionKey } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 export type BankAccountActionUser = {
   readonly id: string;

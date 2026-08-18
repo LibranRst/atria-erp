@@ -1,7 +1,7 @@
 import React from "react";
 import type { InventoryOpeningBatchView } from "@/app/actions/material/opening-inventory";
 import { FormRiskNotice, MoneyValue } from "@/components/ui";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
 export function OpeningDetailSection({
   title,

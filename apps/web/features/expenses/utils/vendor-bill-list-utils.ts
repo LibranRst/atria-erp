@@ -3,7 +3,7 @@ import type {
   VendorListPayment,
 } from "@/features/expenses/types/vendor-bill-list-types";
 
-export { formatShortIdr as formatCompactRp } from "@/lib/utils/money";
+export { formatShortIdr as formatCompactRp } from "@atria/core/utils/money";
 
 export function getBillPaymentSummary(bill: VendorListBill): {
   readonly pendingPaymentAmount: number;

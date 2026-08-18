@@ -2,13 +2,13 @@ import {
   calculateUsedPercentage,
   getBudgetCategoryStatus,
   type ExpenseCategoryCode,
-} from "@/lib/budget/excel-budget";
+} from "../budget/excel-budget";
 import {
   projectHealthReasonLabel,
   resolveEffectiveProjectHealth,
   type EffectiveProjectHealth,
   type EffectiveProjectHealthReason,
-} from "@/lib/project/effective-health";
+} from "../project/effective-health";
 
 export type DashboardRole = "OWNER" | "FINANCE_ADMIN";
 export type DashboardSeverity = "CRITICAL" | "WARNING" | "INFO";

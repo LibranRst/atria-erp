@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { OnboardingVerificationSnapshot } from "@/lib/onboarding/owner-onboarding";
+import type { OnboardingVerificationSnapshot } from "@atria/core/onboarding/owner-onboarding";
 import { OnboardingVerificationPanel } from "./onboarding-verification-panel";
 
 const snapshot: OnboardingVerificationSnapshot = {

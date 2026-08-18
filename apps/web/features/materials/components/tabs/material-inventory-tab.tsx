@@ -178,12 +178,7 @@ function InventoryMaterialRow({
           {summary.locationCount} lokasi · {primaryRow?.locationName ?? "Lokasi belum diatur"}
         </span>
         <span className="flex shrink-0 items-center gap-1.5">
-          <MoneyValue
-            amount={summary.stockValue}
-            variant="compact"
-            align="right"
-            size="xs"
-          />
+          <MoneyValue amount={summary.stockValue} variant="compact" align="right" size="xs" />
           <AppIcon name="chevron_right" className="text-[17px] text-accent" />
         </span>
       </div>

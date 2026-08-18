@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { activateProjectAction } from "@/app/actions/project/activation";
 import { AppIcon, FormSection, WorkflowFormSheet } from "@/components/ui";
-import type { ProjectActivationReadiness } from "@/lib/project/activation-readiness";
+import type { ProjectActivationReadiness } from "@atria/core/project/activation-readiness";
 type ProjectActivationSheetProps = {
   readonly projectId: string;
   readonly projectName: string;

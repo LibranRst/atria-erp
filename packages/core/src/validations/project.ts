@@ -39,5 +39,23 @@ export const updateProjectSchema = z.object({
   financialHealth: z.enum(["HEALTHY", "WARNING", "CRITICAL"]),
 });
 
+export const updateProjectIdentitySchema = updateProjectSchema.omit({
+  coverImageUrl: true,
+  financialHealth: true,
+  status: true,
+  totalContractValue: true,
+});
+
+export const projectFormBootstrapSchema = z.object({
+  projectId: z.string().min(1, "ID Proyek tidak valid").optional(),
+});
+
+export const projectOverviewInputSchema = z.object({
+  projectId: z.string().min(1, "ID Proyek tidak valid"),
+});
+
 export type CreateProjectInput = z.input<typeof createProjectSchema>;
 export type UpdateProjectInput = z.input<typeof updateProjectSchema>;
+export type UpdateProjectIdentityInput = z.input<typeof updateProjectIdentitySchema>;
+export type ProjectFormBootstrapInput = z.input<typeof projectFormBootstrapSchema>;
+export type ProjectOverviewInput = z.input<typeof projectOverviewInputSchema>;

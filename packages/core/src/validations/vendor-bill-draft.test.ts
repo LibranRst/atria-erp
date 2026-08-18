@@ -1,9 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  toVendorBillSubmission,
-  vendorBillDraftPayloadSchema,
-} from "@/lib/validations/vendor-bill-draft";
+import { toVendorBillSubmission, vendorBillDraftPayloadSchema } from "./vendor-bill-draft";
 
 const id = "11111111-1111-4111-8111-111111111111";
 

@@ -20,7 +20,7 @@ import {
 import type {
   OnboardingStepStatus,
   OwnerOnboardingOverview,
-} from "@/lib/onboarding/owner-onboarding";
+} from "@atria/core/onboarding/owner-onboarding";
 
 function tone(status: OnboardingStepStatus): "positive" | "inactive" | "neutral" {
   if (status === "READY" || status === "NOT_APPLICABLE") return "positive";

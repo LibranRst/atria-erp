@@ -13,13 +13,13 @@ import { db } from "@/db";
 import { auditLog, bankAccount } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
 import { mutateBalance } from "@/lib/finance/balance-mutation";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createBankAccountSchema,
   updateBankAccountSchema,
   type CreateBankAccountInput,
   type UpdateBankAccountInput,
-} from "@/lib/validations/finance";
+} from "@atria/core/validations/finance";
 
 export async function createBankAccount(
   input: CreateBankAccountInput,

@@ -5,12 +5,12 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { auditLog, vendor } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   setVendorActiveSchema,
   vendorAdministrationSchema,
   type VendorAdministrationInput,
-} from "@/lib/validations/administration";
+} from "@atria/core/validations/administration";
 import {
   cleanAdministrationValue as clean,
   getAdministrationActor as currentUser,

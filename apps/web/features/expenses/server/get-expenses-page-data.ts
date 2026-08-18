@@ -1,7 +1,6 @@
 import "server-only";
 
 import { and, desc, eq, inArray, type SQL } from "drizzle-orm";
-import { redirect } from "next/navigation";
 
 import { db } from "@/db";
 import {
@@ -17,22 +16,20 @@ import {
 import type {
   BankAccountItem,
   ExpenseCostItem,
-} from "@/features/expenses/components/lists/expense-list";
-import type {
   VendorListBill,
   VendorListPayment,
   VendorListProject,
   VendorListVendor,
-} from "@/features/expenses/components/lists/vendor-bill-list";
-import { resolveRoleName } from "@/lib/auth/permissions";
+} from "@atria/core/types/expenses";
 import { getPendingApprovalDetails } from "@/lib/finance/approval-details";
-import { requireServerSession } from "@/lib/server/session";
+import type { Actor } from "@/server/actor";
 import {
   canExposeExpenseBankAccounts,
   redactExpensePaymentBankData,
 } from "@/features/expenses/utils/expenses-access";
 
-export type ExpensesPageData = {
+export type ExpensesPageReadyData = {
+  readonly status: "ready";
   readonly initialCosts: ExpenseCostItem[];
   readonly bankAccounts: BankAccountItem[];
   readonly userRole: string;
@@ -42,6 +39,13 @@ export type ExpensesPageData = {
   readonly projects: VendorListProject[];
   readonly pendingApprovalsCount: number;
 };
+
+/**
+ * Loader melaporkan status, bukan melakukan `redirect()`. `redirect()` adalah
+ * control-flow throw milik Next dan tidak bisa dipakai dari prosedur tRPC —
+ * pemanggil web yang menerjemahkan `restricted` menjadi redirect.
+ */
+export type ExpensesPageData = ExpensesPageReadyData | { readonly status: "restricted" };
 
 function toExpenseCostStatus(status: string): ExpenseCostItem["status"] {
   switch (status) {
@@ -56,16 +60,15 @@ function toExpenseCostStatus(status: string): ExpenseCostItem["status"] {
   }
 }
 
-export async function getExpensesPageData(): Promise<ExpensesPageData> {
-  const session = await requireServerSession();
-  const roleName = (await resolveRoleName(session.user.roleId)) ?? "UNKNOWN";
+export async function getExpensesPageData(actor: Actor): Promise<ExpensesPageData> {
+  const roleName = actor.roleName ?? "UNKNOWN";
   const isPM = roleName === "PROJECT_MANAGER";
   const isFinanceOperator = canExposeExpenseBankAccounts(roleName);
   const isPurchasing = roleName === "PURCHASING";
-  if (!isFinanceOperator && !isPM && !isPurchasing) redirect("/projects");
+  if (!isFinanceOperator && !isPM && !isPurchasing) return { status: "restricted" };
 
   const costFilter = isPM
-    ? eq(projectCost.requestedById, session.user.id)
+    ? eq(projectCost.requestedById, actor.userId)
     : isPurchasing
       ? eq(projectCost.id, "00000000-0000-0000-0000-000000000000")
       : undefined;
@@ -89,7 +92,7 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
 
   if (isPM) {
     const pmProjects = await db.query.project.findMany({
-      where: eq(project.projectManagerId, session.user.id),
+      where: eq(project.projectManagerId, actor.userId),
       columns: { id: true },
     });
     const pmProjectIds = pmProjects.map((row) => row.id);
@@ -179,7 +182,7 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
     orderBy: [desc(vendor.name)],
   });
 
-  const pmProjectFilter = isPM ? eq(project.projectManagerId, session.user.id) : undefined;
+  const pmProjectFilter = isPM ? eq(project.projectManagerId, actor.userId) : undefined;
   const projectsData = await db.query.project.findMany({
     where: pmProjectFilter
       ? and(eq(project.status, "ACTIVE"), pmProjectFilter)
@@ -286,6 +289,7 @@ export async function getExpensesPageData(): Promise<ExpensesPageData> {
     roleName === "OWNER" ? (await getPendingApprovalDetails()).length : 0;
 
   return {
+    status: "ready",
     initialCosts: costsForList,
     bankAccounts: bankAccountsData,
     userRole: roleName,

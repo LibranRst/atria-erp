@@ -201,12 +201,7 @@ function FieldClaimsSummary({
       <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
         <div className="min-w-0 flex-1">
           <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total aktif</p>
-          <MoneyValue
-            amount={activeClaimTotal}
-            variant="fullDynamic"
-            size="lg"
-            className="mt-1"
-          />
+          <MoneyValue amount={activeClaimTotal} variant="fullDynamic" size="lg" className="mt-1" />
         </div>
         <p className="max-w-36.25 text-right text-meta text-on-surface-variant/70">
           Dana yang masih berada dalam alur verifikasi hingga pencairan.

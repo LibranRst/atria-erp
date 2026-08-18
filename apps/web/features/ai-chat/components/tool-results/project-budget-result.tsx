@@ -2,7 +2,7 @@
 
 import { BudgetSplitIndicator, MoneyValue, StatusBadge } from "@/components/ui";
 import { getProjectBudgetOutputSchema, type ProjectBudgetCategory } from "@/lib/ai/tool-output";
-import type { IndicatorTone } from "@/lib/types/indicator-tone";
+import type { IndicatorTone } from "@atria/core/types/indicator-tone";
 import type { StatusBadgeTone } from "@/components/ui";
 import * as React from "react";
 

@@ -139,12 +139,7 @@ export function ApprovalBudgetContext({
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-t border-outline-variant/20 px-4 py-3.5 text-meta font-semibold text-on-surface-variant">
         <div className="min-w-0">
           <span>Sekarang</span>
-          <MoneyValue
-            amount={item.actualSpent}
-            variant="compact"
-            size="sm"
-            className="mt-0.5"
-          />
+          <MoneyValue amount={item.actualSpent} variant="compact" size="sm" className="mt-0.5" />
           <p className="mt-1 font-mono text-eyebrow font-bold">
             {impact.beforePercentage.toFixed(0)}% budget
           </p>

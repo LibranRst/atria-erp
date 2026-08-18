@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
-import { calculateGrossMarginRatio, calculateSuggestedClientPrice } from "@/lib/project/pricing";
+import { calculateGrossMarginRatio, calculateSuggestedClientPrice } from "./pricing";
 import {
   reallocateProjectBudgetSchema,
   upsertPricingTemplateSchema,
-} from "@/lib/validations/workflow-governance";
+} from "../validations/workflow-governance";
 
 describe("pricing template math", () => {
   test("derives suggested client price from cost and gross margin", () => {

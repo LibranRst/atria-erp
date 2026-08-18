@@ -1,6 +1,6 @@
 import type { JSX, ReactNode } from "react";
 
-import { formatIdr, formatShortIdr } from "@/lib/utils/money";
+import { formatIdr, formatShortIdr } from "@atria/core/utils/money";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
 type PageHeaderProps = {

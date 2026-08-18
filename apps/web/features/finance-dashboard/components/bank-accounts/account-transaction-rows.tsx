@@ -7,7 +7,7 @@ import {
   ActivityDetailChevron,
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
 export function AccountTransactionRows({
   transactions,

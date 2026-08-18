@@ -4,6 +4,7 @@ import type { JSX, ReactNode } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
+import { calculateCenteredScrollLeft } from "@atria/core/presentation/segmented-tabs-scroll";
 import { transitionSpringBouncy } from "@/lib/utils/motion";
 
 export type SegmentedTabOption<TValue extends string> = {
@@ -30,20 +31,10 @@ type SegmentedTabsProps<TValue extends string> = {
   readonly onUnavailableSelect?: (value: TValue) => void;
 };
 
-export function calculateCenteredScrollLeft({
-  itemLeft,
-  itemWidth,
-  viewportWidth,
-  scrollWidth,
-}: {
-  readonly itemLeft: number;
-  readonly itemWidth: number;
-  readonly viewportWidth: number;
-  readonly scrollWidth: number;
-}): number {
-  const centered = itemLeft - (viewportWidth - itemWidth) / 2;
-  return Math.min(Math.max(centered, 0), Math.max(scrollWidth - viewportWidth, 0));
-}
+// Matematikanya kini bersumber dari `@atria/core` supaya native memakai
+// perhitungan yang sama persis. Re-export menjaga seluruh pemanggil dan test
+// web yang sudah ada tetap bekerja tanpa perubahan.
+export { calculateCenteredScrollLeft };
 
 export function shouldContainSegmentedTabWheel(deltaY: number): boolean {
   return deltaY !== 0;

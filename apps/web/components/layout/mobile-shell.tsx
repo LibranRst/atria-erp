@@ -14,7 +14,7 @@ import { GlobalVendorBillDrawer } from "@/features/expenses/components/sheets/gl
 import { GlobalInvoiceDrawer } from "@/features/projects/detail/components/invoices/global-invoice-drawer";
 import { ProjectStateProvider } from "@/features/projects/detail/components/shared/project-state-context";
 import { authClient } from "@/lib/auth-client";
-import { ROLE_ID_TO_NAME, ROLE_PERMISSIONS } from "@/lib/auth/permissions";
+import { ROLE_ID_TO_NAME, ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
 import { transitionSpringBouncy, transitionSpringSmooth } from "@/lib/utils/motion";
 import { AppIcon, ConnectivityBanner } from "@/components/ui";
 import { AiChatLauncher } from "@/features/ai-chat/components/ai-chat-launcher";

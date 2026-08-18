@@ -1,71 +1,23 @@
 "use server";
 
-import crypto from "crypto";
-import { auth } from "@/lib/auth";
-import { ActionResponse } from "@/lib/types/action-response";
-import { getErrorMessage } from "@/lib/utils/error-message";
-
-export interface ImageKitSignature {
-  token: string;
-  expire: number;
-  signature: string;
-}
+import { resolveActor } from "@/server/actor";
+import { signImagekitUseCase } from "@/server/usecases/media/sign-imagekit";
+import type { ImageKitSignature } from "@/server/usecases/media/sign-imagekit";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 /**
- * Server Action untuk menandatangani otentikasi unggah berkas dari client langsung ke ImageKit CDN.
- * Mencegah eksposur IMAGEKIT_PRIVATE_KEY di client-side.
+ * Pembungkus tipis di atas `signImagekitUseCase`. Logikanya dipakai bersama
+ * prosedur tRPC supaya unggahan kamera dari klien native memakai jalur
+ * penandatanganan yang sama.
  */
 export async function signImagekit(): Promise<ActionResponse<ImageKitSignature>> {
-  try {
-    const session = await auth.api.getSession({
-      headers: {
-        cookie: (await (await import("next/headers")).cookies()).toString(),
-      },
-    });
-
-    if (!session || !session.user) {
-      return {
-        success: false,
-        error: { code: "UNAUTHORIZED", message: "Sesi tidak valid. Harap login kembali." },
-      };
-    }
-
-    const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
-    if (!privateKey) {
-      return {
-        success: false,
-        error: {
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Kunci privat ImageKit belum dikonfigurasi di server.",
-        },
-      };
-    }
-
-    // Generate parameter otentikasi sekali pakai untuk ImageKit
-    const token = crypto.randomBytes(16).toString("hex");
-    const expire = Math.floor(Date.now() / 1000) + 2400; // 40 menit masa berlaku token
-
-    // Buat tanda tangan HMAC-SHA1 dari token + expire
-    const signature = crypto
-      .createHmac("sha1", privateKey)
-      .update(token + expire)
-      .digest("hex");
-
-    return {
-      success: true,
-      data: {
-        token,
-        expire,
-        signature,
-      },
-    };
-  } catch (error: unknown) {
+  const actor = await resolveActor();
+  if (!actor) {
     return {
       success: false,
-      error: {
-        code: "INTERNAL_SERVER_ERROR",
-        message: getErrorMessage(error, "Gagal menghasilkan tanda tangan otentikasi ImageKit."),
-      },
+      error: { code: "UNAUTHORIZED", message: "Sesi tidak valid. Harap login kembali." },
     };
   }
+
+  return signImagekitUseCase();
 }

@@ -35,7 +35,7 @@ process.stdin.on("end", () => {
             JSON.stringify({
               decision: "ask",
               reason: `Perintah terdeteksi berpotensi destruktif: "${cmd}". Mohon konfirmasi pengguna terlebih dahulu.`,
-            })
+            }),
           );
           process.exit(0);
         }

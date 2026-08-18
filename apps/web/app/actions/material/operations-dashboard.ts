@@ -7,8 +7,8 @@ import { db } from "@/db";
 import { goodsReceipt, project, stockMovement, vendorBill } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { movementPageSchema } from "@/lib/validations/warehouse";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { movementPageSchema } from "@atria/core/validations/warehouse";
 import {
   getMaterialInventory,
   getMaterialShortages,

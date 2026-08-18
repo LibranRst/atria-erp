@@ -8,7 +8,7 @@ import {
   summarizeProfileAccess,
   type ProfileAccessGroup,
 } from "@/features/profile/utils/profile-access";
-import type { DeveloperAccountSimulationState } from "@/lib/auth/developer-account-simulation";
+import type { DeveloperAccountSimulationState } from "@atria/core/auth/developer-account-simulation";
 import { resolveRoleName, ROLE_PERMISSIONS, type PermissionKey } from "@/lib/auth/permissions";
 import { requireServerSession } from "@/lib/server/session";
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { SYSTEM_ROLES } from "@/lib/auth/role-constants";
+import { SYSTEM_ROLES } from "./role-constants";
 
 const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 

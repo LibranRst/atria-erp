@@ -13,8 +13,8 @@ import {
   nextExpenseDraftRevision,
   toExpenseSubmission,
   zodIssuesToDetails,
-} from "@/lib/validations/expense-draft";
-import { submitFieldRequestsSchema } from "@/lib/validations/finance";
+} from "@atria/core/validations/expense-draft";
+import { submitFieldRequestsSchema } from "@atria/core/validations/finance";
 
 const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
 const CATEGORY_ID = "22222222-2222-4222-8222-222222222222";

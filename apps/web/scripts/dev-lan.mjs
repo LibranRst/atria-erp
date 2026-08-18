@@ -1,11 +1,35 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const nextBin = path.join(rootDir, "node_modules", ".bin", "next");
+
+/**
+ * Di monorepo, Bun meng-hoist `.bin/` ke root workspace, jadi binary `next`
+ * belum tentu ada di `apps/web/node_modules`. Telusuri ke atas sampai ketemu.
+ */
+function resolveNextBin() {
+  let dir = rootDir;
+
+  while (true) {
+    const candidate = path.join(dir, "node_modules", ".bin", "next");
+    if (existsSync(candidate)) return candidate;
+
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      throw new Error("Tidak menemukan binary `next` di node_modules mana pun.");
+    }
+    dir = parent;
+  }
+}
+
+const nextBin = resolveNextBin();
+const preloadPath = path.join(rootDir, "scripts", "prefer-lan-network-host.cjs");
 const existingNodeOptions = process.env.NODE_OPTIONS?.trim();
-const nodeOptions = [existingNodeOptions, "--require=./scripts/prefer-lan-network-host.cjs"]
+// NODE_OPTIONS diurai ulang oleh proses Node anak. Path workspace dapat memuat
+// spasi, jadi kirim sebagai string JSON agar tetap menjadi satu argumen require.
+const nodeOptions = [existingNodeOptions, `--require=${JSON.stringify(preloadPath)}`]
   .filter(Boolean)
   .join(" ");
 

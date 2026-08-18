@@ -10,7 +10,7 @@ import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { createVendorBillTx } from "@/lib/finance/vendor-bill-write";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   saveVendorBillDraftSchema,
   submitVendorBillDraftSchema,
@@ -21,7 +21,7 @@ import {
   type SaveVendorBillDraftInput,
   type SubmitVendorBillDraftInput,
   type VendorBillDraftPayload,
-} from "@/lib/validations/vendor-bill-draft";
+} from "@atria/core/validations/vendor-bill-draft";
 
 const FORM_TYPE = "VENDOR_BILL_CREATE";
 const SCHEMA_VERSION = 1;

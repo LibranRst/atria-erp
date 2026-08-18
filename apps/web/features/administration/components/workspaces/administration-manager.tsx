@@ -10,7 +10,7 @@ import {
   WorkspaceModuleHeader,
   WorkspaceStatusLabel,
 } from "@/components/ui";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { AdministrationUserEditorSheet } from "../forms/administration-user-editor-sheet";
 import { AdministrationVendorEditorSheet } from "../forms/administration-vendor-editor-sheet";

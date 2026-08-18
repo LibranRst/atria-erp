@@ -6,7 +6,7 @@ import {
   getUsageBlockFill,
   RISK_LIMIT_THRESHOLD,
   RISK_WARNING_THRESHOLD,
-} from "@/lib/finance/budget-indicator";
+} from "./budget-indicator";
 
 describe("contextual budget indicators", () => {
   test("clamps geometry while preserving overflow", () => {

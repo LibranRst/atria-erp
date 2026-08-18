@@ -14,11 +14,11 @@ import {
   vendor,
 } from "@/db/schema";
 import { resolveRoleName } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   getItemPriceLibrarySchema,
   type GetItemPriceLibraryInput,
-} from "@/lib/validations/settings";
+} from "@atria/core/validations/settings";
 import type {
   BudgetSettingsData,
   ExpenseCategorySettingsData,

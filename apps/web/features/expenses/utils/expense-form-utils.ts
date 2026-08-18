@@ -2,7 +2,8 @@ import type {
   ExpenseDraftPayload,
   ExpenseLine,
 } from "@/features/expenses/types/expense-form-types";
-import { createClientId } from "@/lib/utils/client-id";
+import { createClientId } from "@atria/core/utils/client-id";
+export { inferExpenseCategoryCode } from "@atria/core/expenses/receipt-category";
 
 export const STOCK_HANDLING_OPTIONS: ReadonlyArray<{
   readonly value: ExpenseLine["stockHandling"];
@@ -100,24 +101,4 @@ export function cleanLeadingZeros(value: string): string {
     cleaned = `0${cleaned}`;
   }
   return cleaned;
-}
-
-export function inferExpenseCategoryCode(itemName: string): string {
-  const source = itemName.toUpperCase();
-  if (
-    ["MATERIAL", "BAHAN", "KAYU", "KACA", "CAT", "SEMEN", "BESI"].some((keyword) =>
-      source.includes(keyword),
-    )
-  )
-    return "MATERIAL";
-  if (["TUKANG", "LABOR", "PEKERJA", "MANDOR", "UPAH"].some((keyword) => source.includes(keyword)))
-    return "TUKANG";
-  if (
-    ["OPERASIONAL", "OPERATIONAL", "BENSIN", "TOLL", "PARKIR", "KIRIM"].some((keyword) =>
-      source.includes(keyword),
-    )
-  )
-    return "OPERASIONAL";
-  if (source.includes("SUBCON") || source.includes("SUBKON")) return "SUBCON";
-  return "LAIN_LAIN";
 }

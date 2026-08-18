@@ -13,7 +13,7 @@ export type FinancialHealth = "HEALTHY" | "WARNING" | "CRITICAL";
 import type {
   EffectiveProjectHealth,
   EffectiveProjectHealthReason,
-} from "@/lib/project/effective-health";
+} from "../project/effective-health";
 export type FilterId = "ALL" | ProjectStatus | FinancialHealth;
 
 export interface ProjectItem {

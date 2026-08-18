@@ -15,7 +15,7 @@ import type {
   VendorListPayment,
 } from "@/features/expenses/types/vendor-bill-list-types";
 import { getBillPaymentSummary } from "@/features/expenses/utils/vendor-bill-list-utils";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 
 const vendorScheduleRecoverySchema = z.object({
   billId: z.string(),

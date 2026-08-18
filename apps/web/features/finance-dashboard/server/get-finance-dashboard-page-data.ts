@@ -1,13 +1,10 @@
 import "server-only";
 
-import {
-  getFinanceDashboardOverview,
-  type FinanceDashboardOverview,
-} from "@/app/actions/finance/dashboard-overview";
-import { getOwnerOnboardingOverview } from "@/app/actions/onboarding";
-import { resolveRoleName } from "@/lib/auth/permissions";
-import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
-import { requireServerSession } from "@/lib/server/session";
+import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
+import { getOwnerOnboardingOverviewUseCase } from "@/server/usecases/onboarding/owner-onboarding-overview";
+import { getFinanceDashboardOverviewUseCase } from "@/server/usecases/finance/dashboard-overview";
+import type { OwnerOnboardingOverview } from "@atria/core/onboarding/owner-onboarding";
+import type { Actor } from "@/server/actor";
 
 export type FinanceDashboardPageData =
   | {
@@ -24,16 +21,17 @@ export type FinanceDashboardPageData =
       readonly onboarding: OwnerOnboardingOverview | null;
     };
 
-export async function getFinanceDashboardPageData(): Promise<FinanceDashboardPageData> {
-  const session = await requireServerSession();
-  const roleName = await resolveRoleName(session.user.roleId);
+export async function getFinanceDashboardPageData(actor: Actor): Promise<FinanceDashboardPageData> {
+  const roleName = actor.roleName;
   if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN") {
     return { status: "restricted" };
   }
 
   const [overview, onboarding] = await Promise.all([
-    getFinanceDashboardOverview(),
-    roleName === "OWNER" ? getOwnerOnboardingOverview() : Promise.resolve(null),
+    getFinanceDashboardOverviewUseCase(actor),
+    roleName === "OWNER"
+      ? getOwnerOnboardingOverviewUseCase({ id: actor.userId, roleId: actor.roleId })
+      : Promise.resolve(null),
   ]);
 
   if (!overview.success) {
@@ -43,7 +41,7 @@ export async function getFinanceDashboardPageData(): Promise<FinanceDashboardPag
   return {
     status: "ready",
     overview: overview.data,
-    userName: session.user.name,
+    userName: actor.name,
     onboarding: onboarding?.success ? onboarding.data : null,
   };
 }

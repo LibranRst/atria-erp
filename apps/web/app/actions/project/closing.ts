@@ -18,8 +18,8 @@ import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
 import { calculateOutstandingProjectReservations } from "@/app/actions/material/inventory-utils";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { completeProjectSchema } from "@/lib/validations/workflow-governance";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { completeProjectSchema } from "@atria/core/validations/workflow-governance";
 
 type SessionUser = { readonly id: string; readonly roleId?: string };
 export type ProjectClosingChecklist = {

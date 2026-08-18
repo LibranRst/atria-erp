@@ -16,13 +16,13 @@ import {
   type DeveloperAccountSimulationState,
   type DeveloperSimulationRole,
   type DeveloperSimulationTarget,
-} from "@/lib/auth/developer-account-simulation";
-import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@/lib/auth/role-constants";
+} from "@atria/core/auth/developer-account-simulation";
+import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@atria/core/auth/role-constants";
 import {
   OWNER_ONBOARDING_CONFIG_KEY,
   parseOwnerOnboardingState,
-} from "@/lib/onboarding/owner-onboarding";
-import type { ActionResponse } from "@/lib/types/action-response";
+} from "@atria/core/onboarding/owner-onboarding";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 type SessionContext = {
   readonly sessionId: string;

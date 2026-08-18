@@ -17,9 +17,9 @@ import {
 import { useDashboardRefresh } from "@/features/finance-dashboard/hooks/use-dashboard-refresh";
 import type { DashboardPageTab } from "@/features/finance-dashboard/types/dashboard-types";
 import { resolveDashboardDataStatus } from "@/features/finance-dashboard/utils/dashboard-data-status";
-import type { ApprovalDetail } from "@/lib/finance/approval-types";
+import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
-import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
+import type { OwnerOnboardingOverview } from "@atria/core/onboarding/owner-onboarding";
 import { ApprovalsTab } from "../tabs/dashboard-approvals-tab";
 import { AccountsTab } from "../tabs/tab-accounts";
 import { BudgetRiskTab } from "../tabs/tab-budget-risk";

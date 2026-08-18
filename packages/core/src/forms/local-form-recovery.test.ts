@@ -1,10 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 
-import {
-  parseLocalFormRecovery,
-  serializeLocalFormRecovery,
-} from "@/lib/forms/local-form-recovery";
+import { parseLocalFormRecovery, serializeLocalFormRecovery } from "./local-form-recovery";
 
 const schema = z.object({ amount: z.string(), note: z.string() });
 

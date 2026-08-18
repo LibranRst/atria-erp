@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 import { toast } from "sonner";
 import { ConfirmationSheet } from "@/components/ui";
 import {

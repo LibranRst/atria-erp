@@ -6,16 +6,17 @@ import { db } from "@/db";
 import { account, auditLog, session, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
-import { OWNER_ROLE_ID, STAFF_ROLE_IDS } from "@/lib/auth/role-constants";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { resolveActor } from "@/server/actor";
+import { changeTemporaryPasswordUseCase } from "@/server/usecases/administration/change-temporary-password";
+import { OWNER_ROLE_ID, STAFF_ROLE_IDS } from "@atria/core/auth/role-constants";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
-  changeTemporaryPasswordSchema,
   createStaffUserSchema,
   updateStaffUserSchema,
   type ChangeTemporaryPasswordInput,
   type CreateStaffUserInput,
   type UpdateStaffUserInput,
-} from "@/lib/validations/administration";
+} from "@atria/core/validations/administration";
 import { getAdministrationActor as currentUser } from "./administration-action-utils";
 export async function createStaffUser(
   input: CreateStaffUserInput,
@@ -171,57 +172,19 @@ export async function updateStaffUser(
   }
 }
 
+/**
+ * Pembungkus tipis di atas `changeTemporaryPasswordUseCase`.
+ *
+ * Identitas SELALU diselesaikan di sini dari sesi, tidak pernah diterima
+ * sebagai argumen — modul `"use server"` adalah endpoint HTTP, jadi parameter
+ * aktor akan bisa dipalsukan klien. Prosedur tRPC memanggil use-case yang sama
+ * dengan actor bearer, sehingga web dan native berbagi satu badan transaksi.
+ */
 export async function changeTemporaryPassword(
   input: ChangeTemporaryPasswordInput,
 ): Promise<ActionResponse<{ readonly changed: true }>> {
-  const validation = changeTemporaryPasswordSchema.safeParse(input);
-  if (!validation.success)
-    return {
-      success: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: validation.error.issues[0]?.message ?? "Password tidak valid.",
-      },
-    };
-  const actor = await currentUser();
+  const actor = await resolveActor();
   if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  const credential = await db.query.account.findFirst({
-    where: and(eq(account.userId, actor.id), eq(account.providerId, "credential")),
-  });
-  if (!credential?.password)
-    return {
-      success: false,
-      error: { code: "NOT_FOUND", message: "Credential user tidak ditemukan." },
-    };
-  const context = await auth.$context;
-  const valid = await context.password.verify({
-    hash: credential.password,
-    password: validation.data.currentPassword,
-  });
-  if (!valid)
-    return {
-      success: false,
-      error: { code: "FORBIDDEN", message: "Password sementara tidak sesuai." },
-    };
-  const newHash = await context.password.hash(validation.data.newPassword);
-  await db.transaction(async (tx) => {
-    await tx
-      .update(account)
-      .set({ password: newHash, updatedAt: new Date() })
-      .where(eq(account.id, credential.id));
-    await tx
-      .update(user)
-      .set({ mustChangePassword: false, temporaryPasswordIssuedAt: null, updatedAt: new Date() })
-      .where(eq(user.id, actor.id));
-    await tx.delete(session).where(and(eq(session.userId, actor.id), ne(session.id, "")));
-    await tx.insert(auditLog).values({
-      userId: actor.id,
-      action: "CHANGE_TEMPORARY_PASSWORD",
-      targetTable: "user",
-      targetId: actor.id,
-      newState: JSON.stringify({ mustChangePassword: false }),
-    });
-  });
-  return { success: true, data: { changed: true } };
+  return changeTemporaryPasswordUseCase(actor, input);
 }

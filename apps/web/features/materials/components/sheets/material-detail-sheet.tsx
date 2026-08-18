@@ -213,24 +213,13 @@ export function MaterialLocationStockRow({
           <p className="min-h-6 text-[8px] leading-3 font-bold tracking-wide text-on-surface-variant/65 uppercase">
             Harga pokok rata-rata / {row.unit}
           </p>
-          <MoneyValue
-            amount={row.averageCost}
-            variant="compact"
-            size="xs"
-            className="mt-1"
-          />
+          <MoneyValue amount={row.averageCost} variant="compact" size="xs" className="mt-1" />
         </div>
         <div className="min-w-0 pl-3 text-right">
           <p className="min-h-6 text-[8px] leading-3 font-bold tracking-wide text-on-surface-variant/65 uppercase">
             Nilai stok lokasi
           </p>
-          <MoneyValue
-            amount={value}
-            variant="compact"
-            align="right"
-            size="xs"
-            className="mt-1"
-          />
+          <MoneyValue amount={value} variant="compact" align="right" size="xs" className="mt-1" />
         </div>
       </div>
     </div>

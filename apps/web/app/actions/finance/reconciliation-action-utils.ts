@@ -4,8 +4,8 @@ import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { parseNumericToCents } from "@/lib/finance/balance-mutation";
-import { normalizeCashDirection, type CashDirection } from "@/lib/finance/cash-direction";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { normalizeCashDirection, type CashDirection } from "@atria/core/finance/cash-direction";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 export async function requireReconciliationUser(): Promise<
   ActionResponse<{ readonly id: string }>

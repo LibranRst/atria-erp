@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test";
 
-import { calculateRabSellingUnitPrice, getRapItemAvailabilityStatus } from "@/lib/project/rap-rab";
+import { calculateRabSellingUnitPrice, getRapItemAvailabilityStatus } from "./rap-rab";
 import {
   addProjectRapItemSchema,
   createRabBundleSchema,
   generateRabFromSelectedSourcesSchema,
   updateRabEstimateItemSchema,
-} from "@/lib/validations/rap-rab";
-import { createProjectCategoryPlanItemSchema } from "@/lib/validations/category-plan";
-import { calculateQuotationTotal } from "@/lib/project/quotation-total";
+} from "../validations/rap-rab";
+import { createProjectCategoryPlanItemSchema } from "../validations/category-plan";
+import { calculateQuotationTotal } from "./quotation-total";
 
 describe("RAP material plan and RAB generation helpers", () => {
   test("calculates RAP material readiness from stock and purchase source", () => {

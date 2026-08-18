@@ -63,7 +63,9 @@ export function ResultShell({
             {title}
           </h4>
           {meta && (
-            <p className="mt-0.5 truncate text-meta font-semibold text-on-surface-variant">{meta}</p>
+            <p className="mt-0.5 truncate text-meta font-semibold text-on-surface-variant">
+              {meta}
+            </p>
           )}
         </div>
         {trailing && <div className="shrink-0">{trailing}</div>}

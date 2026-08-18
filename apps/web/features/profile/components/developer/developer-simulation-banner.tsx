@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { stopDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
 import { authClient } from "@/lib/auth-client";
-import { ROLE_ID_TO_NAME } from "@/lib/auth/permissions";
+import { ROLE_ID_TO_NAME } from "@atria/core/auth/permissions";
 import { formatProfileRole } from "@/features/profile/utils/profile-access";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon } from "@/components/ui";

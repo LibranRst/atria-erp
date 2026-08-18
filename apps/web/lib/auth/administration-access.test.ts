@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { getAdministrationCapabilities } from "./administration-access";
+import { getAdministrationCapabilities } from "@atria/core/auth/administration-access";
 
 const administrationStaffActionPath = new URL(
   "../../app/actions/administration-staff.ts",

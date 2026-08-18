@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import type { ProjectItem } from "../types/project-list-types";
-import { matchesFilter, summarizeProjectPortfolio } from "./project-list-utils";
+import type { ProjectItem } from "../types/projects";
+import { matchesFilter, summarizeProjectPortfolio } from "./project-list";
 
 function project(overrides: Partial<ProjectItem> = {}): ProjectItem {
   return {

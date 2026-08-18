@@ -4,9 +4,12 @@ import { cookies } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName, type PermissionKey } from "@/lib/auth/permissions";
-import { type ActivityDetailRequest, type ActivityDetailView } from "@/lib/activity-detail/types";
-import { activityDetailRequestSchema } from "@/lib/activity-detail/validation";
-import type { ActionResponse } from "@/lib/types/action-response";
+import {
+  type ActivityDetailRequest,
+  type ActivityDetailView,
+} from "@atria/core/activity-detail/types";
+import { activityDetailRequestSchema } from "@atria/core/activity-detail/validation";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   resolveCashTransaction,
   resolveClientInvoice,

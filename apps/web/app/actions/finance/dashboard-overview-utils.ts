@@ -1,13 +1,13 @@
-import type { ExpenseCategoryCode } from "@/lib/budget/excel-budget";
-import type { ApprovalDetail } from "@/lib/finance/approval-types";
-import type { ApprovalQueueSummary } from "@/lib/finance/approval-summary";
+import type { ExpenseCategoryCode } from "@atria/core/budget/excel-budget";
+import type { ApprovalDetail } from "@atria/core/finance/approval-types";
+import type { ApprovalQueueSummary } from "@atria/core/finance/approval-summary";
 import type {
   DashboardRole,
   DashboardDueBucket,
   FinanceDashboardAction,
   FinanceDashboardCategory,
   FinanceDashboardRiskyProject,
-} from "@/lib/finance/dashboard-overview";
+} from "@atria/core/finance/dashboard-overview";
 
 export type FinanceDashboardRecentTransaction = {
   readonly id: string;

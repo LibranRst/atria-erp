@@ -6,8 +6,8 @@ import {
   quantityValue,
   textValue,
   type ActivityDetailView,
-} from "@/lib/activity-detail/types";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+} from "@atria/core/activity-detail/types";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import {
   fact,
   latestAudit,

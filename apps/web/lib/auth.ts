@@ -1,8 +1,18 @@
+import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { bearer } from "better-auth/plugins/bearer";
 import { db } from "@/db";
 
 const localHostnames = new Set(["localhost", "127.0.0.1", "::1"]);
+
+/**
+ * Skema deep link klien native. `atria://` dipakai build development maupun
+ * production; `exp://` hanya muncul saat aplikasi dijalankan lewat Expo Go,
+ * jadi sengaja dibatasi ke environment development.
+ */
+const NATIVE_ORIGINS = ["atria://"];
+const DEVELOPMENT_NATIVE_ORIGINS = ["exp://"];
 
 function isPrivateNetworkHostname(hostname: string): boolean {
   if (localHostnames.has(hostname)) return true;
@@ -33,7 +43,11 @@ function getConfiguredOrigins(): string[] {
 }
 
 function getTrustedOrigins(request?: Request): string[] {
-  const origins = new Set(getConfiguredOrigins());
+  const origins = new Set([
+    ...getConfiguredOrigins(),
+    ...NATIVE_ORIGINS,
+    ...(process.env.NODE_ENV === "development" ? DEVELOPMENT_NATIVE_ORIGINS : []),
+  ]);
   const requestOrigin = request?.headers.get("origin");
 
   if (process.env.NODE_ENV === "development" && requestOrigin) {
@@ -55,6 +69,15 @@ export const auth = betterAuth({
     provider: "pg",
   }),
   trustedOrigins: getTrustedOrigins,
+  /**
+   * Urutan penting. `expo()` harus melihat request lebih dulu supaya bisa
+   * menangani origin skema native dan mengirim header `set-auth-token` yang
+   * disimpan klien di SecureStore; `bearer()` kemudian menerima token itu
+   * kembali sebagai `Authorization: Bearer <token>`.
+   *
+   * Keduanya aditif: web tetap memakai cookie seperti sebelumnya.
+   */
+  plugins: [expo(), bearer()],
   emailAndPassword: {
     enabled: true,
   },

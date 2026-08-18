@@ -12,7 +12,7 @@ import {
   materialMaster,
   vendor,
 } from "@/db/schema";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import { assertSettingsPermission, getSessionUser, toMoney, toNullableText } from "./system-utils";
 
 const materialImportRowSchema = z.object({

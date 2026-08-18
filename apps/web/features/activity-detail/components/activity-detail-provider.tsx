@@ -3,7 +3,7 @@
 import React from "react";
 
 import { AppIcon } from "@/components/ui";
-import type { ActivityDetailKind, ActivityDetailRequest } from "@/lib/activity-detail/types";
+import type { ActivityDetailKind, ActivityDetailRequest } from "@atria/core/activity-detail/types";
 import {
   ActivityDetailSheet,
   type ActivityDetailFooterStatus,

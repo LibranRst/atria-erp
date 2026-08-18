@@ -6,7 +6,7 @@ import { db } from "@/db";
 import { materialInventory, stockMovement } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
 import { fromCents, parseNumericToCents } from "@/lib/finance/balance-mutation";
-import { ActionResponse } from "@/lib/types/action-response";
+import { ActionResponse } from "@atria/core/types/action-response";
 import {
   AdjustMaterialStockInput,
   RecordStockInInput,
@@ -17,7 +17,7 @@ import {
   adjustMaterialStockSchema,
   recordStockInSchema,
   reserveMaterialSchema,
-} from "@/lib/validations/material";
+} from "@atria/core/validations/material";
 import {
   assertProjectScopeForMaterialAction,
   ensureNonNegativeStock,

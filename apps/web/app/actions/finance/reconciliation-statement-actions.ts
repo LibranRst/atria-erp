@@ -8,14 +8,14 @@ import {
 } from "@/app/actions/finance/reconciliation-action-utils";
 import { db } from "@/db";
 import { auditLog, bankAccount, bankStatementImport, bankStatementRow } from "@/db/schema";
-import { parseBankStatementCsv } from "@/lib/finance/bank-statement-csv";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { parseBankStatementCsv } from "@atria/core/finance/bank-statement-csv";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   importBankStatementCsvSchema,
   recordBankStatementRowSchema,
   type ImportBankStatementCsvInput,
   type RecordBankStatementRowInput,
-} from "@/lib/validations/finance";
+} from "@atria/core/validations/finance";
 
 export async function recordBankStatementRow(
   input: RecordBankStatementRowInput,

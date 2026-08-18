@@ -17,8 +17,8 @@ import {
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { createGoodsReceiptSchema } from "@/lib/validations/workflow-governance";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { createGoodsReceiptSchema } from "@atria/core/validations/workflow-governance";
 
 type SessionUser = { readonly id: string; readonly roleId?: string };
 type GoodsReceipt = typeof goodsReceipt.$inferSelect;

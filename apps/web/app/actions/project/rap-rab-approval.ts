@@ -12,10 +12,10 @@ import {
   projectRap,
   rabEstimate,
 } from "@/db/schema";
-import { getBudgetCategoryStatus } from "@/lib/budget/excel-budget";
-import { calculateQuotationTotal } from "@/lib/project/quotation-total";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { approveRabEstimateSchema } from "@/lib/validations/rap-rab";
+import { getBudgetCategoryStatus } from "@atria/core/budget/excel-budget";
+import { calculateQuotationTotal } from "@atria/core/project/quotation-total";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { approveRabEstimateSchema } from "@atria/core/validations/rap-rab";
 import { assertProjectMutationAccess, getSessionUser, toError } from "./rap-rab-utils";
 
 export async function approveRabEstimate(

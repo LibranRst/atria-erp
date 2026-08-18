@@ -10,9 +10,9 @@ import {
   stockTransferItem,
 } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { calculateTransferDestinationAverage } from "@/lib/material/stock-valuation";
-import { createStockTransferSchema } from "@/lib/validations/warehouse";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { calculateTransferDestinationAverage } from "@atria/core/material/stock-valuation";
+import { createStockTransferSchema } from "@atria/core/validations/warehouse";
 import {
   getWarehouseUser as user,
   refreshWarehouse as refresh,

@@ -11,7 +11,7 @@ import {
 import {
   resolveEffectiveProjectHealth,
   projectHealthReasonLabel,
-} from "@/lib/project/effective-health";
+} from "@atria/core/project/effective-health";
 import { tool } from "ai";
 import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import { z } from "zod";
@@ -151,7 +151,10 @@ export function buildProjectTools(context: AiToolContext) {
             status: projectBudgetCategory.status,
           })
           .from(projectBudgetCategory)
-          .innerJoin(expenseCategory, eq(projectBudgetCategory.expenseCategoryId, expenseCategory.id))
+          .innerJoin(
+            expenseCategory,
+            eq(projectBudgetCategory.expenseCategoryId, expenseCategory.id),
+          )
           .where(
             inArray(
               projectBudgetCategory.projectBudgetId,

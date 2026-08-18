@@ -8,7 +8,7 @@ import { auditLog, project, projectBudgetCategory, projectCategoryPlanItem } fro
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createProjectCategoryPlanItemSchema,
   deleteProjectCategoryPlanItemSchema,
@@ -16,7 +16,7 @@ import {
   updateProjectCategoryPlanItemSchema,
   type CreateProjectCategoryPlanItemInput,
   type UpdateProjectCategoryPlanItemInput,
-} from "@/lib/validations/category-plan";
+} from "@atria/core/validations/category-plan";
 
 type SessionUser = {
   readonly id: string;

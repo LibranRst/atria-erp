@@ -28,8 +28,10 @@ node_modules/
 /coverage
 
 # next.js
-/.next/
-/out/
+# Di-anchor ke root sebelum aplikasi pindah ke apps/web; pola tanpa slash awal
+# berlaku di setiap kedalaman sehingga output build monorepo ikut terabaikan.
+.next/
+out/
 
 # production
 /build
@@ -76,3 +78,7 @@ storybook-static/
 .design-sync/.cache/
 .design-sync/node_modules
 ds-bundle/
+
+# build output paket & aplikasi di monorepo
+apps/web/dist/
+.expo/

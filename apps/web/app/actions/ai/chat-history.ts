@@ -10,7 +10,7 @@ import {
 } from "@/lib/ai/conversation-store";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { getServerSession } from "@/lib/server/session";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import type { UIMessage } from "ai";
 
 /**

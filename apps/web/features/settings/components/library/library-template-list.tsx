@@ -1,5 +1,5 @@
 import React from "react";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
 import {
   GroupedSurface,

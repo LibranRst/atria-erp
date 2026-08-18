@@ -9,8 +9,8 @@ import { db } from "@/db";
 import { auditLog, project, projectBudgets, projectRap, rabEstimate } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { resolveRoleName } from "@/lib/auth/permissions";
-import { getProjectActivationReadiness } from "@/lib/project/activation-readiness";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { getProjectActivationReadiness } from "@atria/core/project/activation-readiness";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 const activateProjectSchema = z.object({
   projectId: z.string().min(1, "ID proyek tidak valid."),

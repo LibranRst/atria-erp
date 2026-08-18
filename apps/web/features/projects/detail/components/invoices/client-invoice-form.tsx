@@ -22,7 +22,7 @@ import {
   WorkflowFormSheet,
 } from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 
 const invoiceStageSchema = z.enum([

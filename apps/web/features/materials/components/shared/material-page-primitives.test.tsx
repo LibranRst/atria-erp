@@ -67,7 +67,7 @@ describe("Material main surface visual language", () => {
     expect(html).toContain('aria-label="8 material"');
     expect(html).toContain(">Material</span>");
     expect(html).toContain("min-h-8");
-    expect(html).toContain("rounded-3xl");
+    expect(html).toContain("rounded-owner");
     expect(html).toContain("Menipis");
   });
 

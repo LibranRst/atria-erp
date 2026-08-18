@@ -8,7 +8,7 @@ import {
   OWNER_ONBOARDING_CONFIG_KEY,
   type OwnerOnboardingState,
   parseOwnerOnboardingState,
-} from "@/lib/onboarding/owner-onboarding";
+} from "@atria/core/onboarding/owner-onboarding";
 import { requireServerSession } from "@/lib/server/session";
 import type { OnboardingActor } from "@/app/actions/onboarding-types";
 

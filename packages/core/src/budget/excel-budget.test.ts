@@ -7,7 +7,7 @@ import {
   DEFAULT_EXPENSE_CATEGORIES,
   EXCEL_BUDGET_CAP_RATIO,
   getBudgetCategoryStatus,
-} from "@/lib/budget/excel-budget";
+} from "./excel-budget";
 
 describe("Project Budget default helpers", () => {
   test("uses Dekoria Project Budget workbook defaults", () => {

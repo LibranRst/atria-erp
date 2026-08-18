@@ -3,7 +3,7 @@ import { and, eq, lte } from "drizzle-orm";
 import type { SubmittedExpenseDraft } from "@/app/actions/finance/expense-draft-types";
 import { db } from "@/db";
 import { formDraft, projectCost } from "@/db/schema";
-import { expenseDraftPayloadSchema } from "@/lib/validations/expense-draft";
+import { expenseDraftPayloadSchema } from "@atria/core/validations/expense-draft";
 
 export const EXPENSE_DRAFT_FORM_TYPE = "EXPENSE_CREATE";
 export const EXPENSE_DRAFT_SCHEMA_VERSION = 1;

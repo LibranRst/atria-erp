@@ -6,6 +6,16 @@ The product promise is: **Project Budget Control upgraded into a real ERP with m
 
 ---
 
+## 0. Workspace Layout
+
+This repo is a **Bun workspace monorepo**. The Next.js app lives in `apps/web/`; the root holds only workspace config, `docs/`, and the top-level `*.md` files. Unqualified paths in this document (`app/`, `lib/`, `features/`, `components/`, `db/`) are relative to `apps/web/`, and the `@/*` alias resolves there.
+
+Run scripts from the repo root (`bun run test`, `bun run build`, `bun run lint`). **Never run a bare `bun test` from the root** — `bunfig.toml` lives in `apps/web/` and is loaded from the current directory; without it the `server-only` preload is missing and feature server tests fail. Use `cd apps/web && bun test <file>` for single files.
+
+A cross-platform Expo client (`apps/mobile/`) is being added. The official Expo skills are installed project-scoped in `.agents/skills/`, so you already have Expo SDK 57 knowledge available. See `docs/plans/2026-08-15-expo-cross-platform-migration.md` for the plan and `docs/plans/2026-08-15-expo-migration-handoff.md` for current progress and the handoff prompt.
+
+---
+
 ## 1. Core Operating Principles & Vocabulary
 
 - **Project Budget**: ERP internal budget setup with project value, approved RAB value, internal budget cap, category allocations, pending review, consumed budget, paid amount, remaining budget, used percentage, and margin visibility.
@@ -35,12 +45,14 @@ The product promise is: **Project Budget Control upgraded into a real ERP with m
 - **Validation**: Zod 4 for all Server Action inputs and schema assertions.
 
 ### Strict TypeScript Rules
+
 - NEVER introduce `any`.
 - Always provide explicit function argument and return types.
 - Avoid type assertions (`as Type`) unless interfacing with untyped third-party data.
 - Validate external and action inputs with Zod.
 
 ### Drizzle & Finance Safety Rules
+
 - NEVER execute raw SQL in application code.
 - Always use Drizzle query APIs and query builder.
 - Balance-changing and stock-changing actions MUST run inside `db.transaction`.
@@ -73,6 +85,7 @@ Before writing or editing UI, load `.agents/skills/impeccable/SKILL.md` and cons
 ## 4. Antigravity Workspace Capabilities & Customizations
 
 This repository is configured with project-specific customizations in `.agents/`:
+
 - **Rules (`.agents/rules/`)**:
   - `01-design-system.md`: Complete visual grammar, tokens, iOS form rules, motion tokens.
   - `02-finance-safety.md`: Ledger safety, transaction locking, audit logs, reconciliation.

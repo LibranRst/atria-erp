@@ -2,7 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { auditLog } from "@/db/schema";
 import { assertProjectAccess } from "@/lib/auth/scoping";
-import type { ActivityFact, ActivityStatusTone } from "@/lib/activity-detail/types";
+import type { ActivityFact, ActivityStatusTone } from "@atria/core/activity-detail/types";
 
 export type ActivityUser = { readonly id: string; readonly roleId: string };
 export type AuditEvidence = { readonly actorName: string; readonly action: string } | null;

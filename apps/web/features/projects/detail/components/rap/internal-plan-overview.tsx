@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
 import { AppIcon, Badge, SegmentedTabs } from "@/components/ui";
 import { NativePanel } from "../shared/rap-rab-primitives";
-import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@/lib/utils/money";
+import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@atria/core/utils/money";
 import type {
   RapView,
   RabEstimateView,

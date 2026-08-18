@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import type { IndicatorTone } from "@/lib/types/indicator-tone";
+import type { IndicatorTone } from "@atria/core/types/indicator-tone";
 import type {
   DashboardCategory,
   DashboardRiskyProject,

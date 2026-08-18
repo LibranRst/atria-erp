@@ -61,9 +61,9 @@ import {
   calculateInternalBudget,
   calculateTargetGross,
   calculateUsedPercentage,
-} from "@/lib/budget/excel-budget";
+} from "@atria/core/budget/excel-budget";
 import { syncProjectBudgetCategories } from "@/lib/budget/budget-sync";
-import { OWNER_ONBOARDING_CONFIG_KEY } from "@/lib/onboarding/owner-onboarding";
+import { OWNER_ONBOARDING_CONFIG_KEY } from "@atria/core/onboarding/owner-onboarding";
 import {
   createDemoCsvFixtures,
   DEMO_FIXTURE_DIRECTORY,

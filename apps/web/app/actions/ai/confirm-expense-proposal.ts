@@ -5,8 +5,8 @@ import { db } from "@/db";
 import { aiProposalConfirmation } from "@/db/schema";
 import { findOwnedConversation } from "@/lib/ai/conversation-store";
 import { getServerSession } from "@/lib/server/session";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { aiExpenseProposalSchema } from "@/lib/validations/ai-proposal";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { aiExpenseProposalSchema } from "@atria/core/validations/ai-proposal";
 import { eq } from "drizzle-orm";
 
 /**

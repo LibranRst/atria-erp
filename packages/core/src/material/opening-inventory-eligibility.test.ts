@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { getOpeningInventoryIneligibleReason } from "./opening-inventory-eligibility";
-import { createInventoryOpeningSchema } from "@/lib/validations/material";
+import { createInventoryOpeningSchema } from "../validations/material";
 
 const inventoryIdA = "10000000-0000-4000-8000-000000000001";
 const inventoryIdB = "10000000-0000-4000-8000-000000000002";

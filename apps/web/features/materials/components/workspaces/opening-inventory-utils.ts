@@ -1,5 +1,5 @@
-import { parseCsvTable } from "@/lib/import/csv";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { parseCsvTable } from "@atria/core/import/csv";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import type { MaterialTone } from "@/features/materials/components/shared/material-page-primitives";
 
 export type DraftLine = {

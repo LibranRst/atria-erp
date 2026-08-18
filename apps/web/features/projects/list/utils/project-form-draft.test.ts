@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { createProjectFormDraft, getProjectDateError } from "./project-form-draft";
-import { createProjectSchema } from "@/lib/validations/project";
+import { createProjectSchema } from "@atria/core/validations/project";
 
 describe("project form draft", () => {
   test("prefills the only active project manager without guessing project values", () => {

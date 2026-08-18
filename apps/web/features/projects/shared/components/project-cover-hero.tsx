@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 
 import { StatusBadge } from "@/components/ui";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import type { EffectiveProjectHealth } from "@/lib/project/effective-health";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import type { EffectiveProjectHealth } from "@atria/core/project/effective-health";
 
 /**
  * Cover proyek untuk surface identitas: foto penuh dengan fallback inisial ketika

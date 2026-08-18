@@ -9,8 +9,8 @@ import { auditLog, bankStatementImport, bankStatementRow, cashTransaction } from
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { parseNumericToCents } from "@/lib/finance/balance-mutation";
-import { normalizeCashDirection } from "@/lib/finance/cash-direction";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { normalizeCashDirection } from "@atria/core/finance/cash-direction";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   clearReconciliationExceptionSchema,
   markReconciliationExceptionSchema,
@@ -18,7 +18,7 @@ import {
   type ClearReconciliationExceptionInput,
   type MarkReconciliationExceptionInput,
   type ReconcileCashTransactionInput,
-} from "@/lib/validations/finance";
+} from "@atria/core/validations/finance";
 
 type ReconciliationUser = { readonly id: string; readonly roleId?: string };
 

@@ -1,4 +1,4 @@
-import type { CashDirection } from "@/lib/finance/cash-direction";
+import type { CashDirection } from "./cash-direction";
 
 export type ParsedBankStatementRow = {
   readonly rowNumber: number;

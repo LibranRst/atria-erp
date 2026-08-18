@@ -1,5 +1,9 @@
 import React from "react";
 
+import { redirect } from "next/navigation";
+
+import { resolveActor } from "@/server/actor";
+
 import { PageState } from "@/components/ui";
 import { FinanceDashboard } from "@/features/finance-dashboard/components/workspaces/finance-dashboard";
 import { getFinanceDashboardPageData } from "@/features/finance-dashboard/server/get-finance-dashboard-page-data";
@@ -7,7 +11,9 @@ import { getFinanceDashboardPageData } from "@/features/finance-dashboard/server
 export const dynamic = "force-dynamic";
 
 export default async function LedgerPage(): Promise<React.JSX.Element> {
-  const data = await getFinanceDashboardPageData();
+  const actor = await resolveActor();
+  if (!actor) redirect("/login");
+  const data = await getFinanceDashboardPageData(actor);
 
   if (data.status === "restricted") {
     return (

@@ -4,9 +4,9 @@ import { db } from "@/db";
 import { projectBudget, projectBudgetItem, project } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { assertPermission } from "@/lib/auth/permissions";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import { ActionResponse } from "@/lib/types/action-response";
-import { createBudgetItemSchema, CreateBudgetItemInput } from "@/lib/validations/budget";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import { ActionResponse } from "@atria/core/types/action-response";
+import { createBudgetItemSchema, CreateBudgetItemInput } from "@atria/core/validations/budget";
 import { getActiveProjectsForExpense as getActiveProjectsForExpenseRead } from "./budget-expense-options";
 import type { ProjectForExpense } from "./budget-types";
 import {

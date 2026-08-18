@@ -141,12 +141,7 @@ export function SetupBankAccountsPanel({
                     <WorkspaceStatusLabel label="Diarsipkan" tone="inactive" className="mt-1" />
                   ) : null}
                 </span>
-                <MoneyValue
-                  amount={account.balance}
-                  variant="compact"
-                  size="sm"
-                  align="right"
-                />
+                <MoneyValue amount={account.balance} variant="compact" size="sm" align="right" />
                 <AppIcon
                   name="chevron_right"
                   className="shrink-0 text-[17px] text-on-surface-variant/55"

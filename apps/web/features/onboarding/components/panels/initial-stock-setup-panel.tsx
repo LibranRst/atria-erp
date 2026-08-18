@@ -11,7 +11,7 @@ import { AppIcon, BottomSheet, ConfirmationSheet, MoneyValue } from "@/component
 import { OpeningInventoryWorkspace } from "@/features/materials/components/workspaces/opening-inventory-workspace";
 import { OnboardingFinanceReview } from "@/features/onboarding/components/workspaces/onboarding-finance-review";
 import { startDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
-import type { DeveloperAccountSimulationState } from "@/lib/auth/developer-account-simulation";
+import type { DeveloperAccountSimulationState } from "@atria/core/auth/developer-account-simulation";
 import {
   OnboardingNotice,
   OnboardingStage,
@@ -213,12 +213,7 @@ export function InitialStockSetupPanel({
                       {batch.itemCount} item · {batchStatus(batch.status)}
                     </span>
                   </span>
-                  <MoneyValue
-                    amount={batch.totalValue}
-                    variant="compact"
-                    size="sm"
-                    align="right"
-                  />
+                  <MoneyValue amount={batch.totalValue} variant="compact" size="sm" align="right" />
                   <AppIcon name="chevron_right" className="icon-md text-on-surface-variant" />
                 </button>
                 {batch.status === "PENDING_APPROVAL" && simulation?.enabled && financeTarget ? (

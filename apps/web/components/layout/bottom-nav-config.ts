@@ -1,4 +1,10 @@
-export type NavItem = {
+import {
+  getRoleNavItems as getSharedRoleNavItems,
+  ROLE_NAV_ITEMS,
+  type RoleNavItem,
+} from "@atria/core/navigation/role-navigation";
+
+export type NavItem = RoleNavItem & {
   readonly label: string;
   readonly href: string;
   readonly iconName: string;
@@ -17,53 +23,23 @@ export type SessionUserWithRole = {
   readonly roleId?: string;
 };
 
-export const NAV_ITEMS: readonly NavItem[] = [
-  {
-    label: "Dashboard",
-    href: "/ledger",
-    iconName: "dashboard",
-    match: (path, params): boolean => path === "/ledger" && params.get("brief") !== "true",
-  },
-  {
-    label: "Projects",
-    href: "/projects",
-    iconName: "folder",
-    match: (path): boolean => path.startsWith("/projects"),
-  },
-  {
-    label: "Materials",
-    href: "/materials",
-    iconName: "inventory_2",
-    match: (path): boolean => path.startsWith("/materials"),
-  },
-  {
-    label: "Expenses",
-    href: "/expenses",
-    iconName: "receipt_long",
-    match: (path): boolean => path.startsWith("/expenses"),
-  },
-];
+const navMatchByHref: Record<RoleNavItem["href"], NavItem["match"]> = {
+  "/ledger": (path, params): boolean => path === "/ledger" && params.get("brief") !== "true",
+  "/projects": (path): boolean => path.startsWith("/projects"),
+  "/materials": (path): boolean => path.startsWith("/materials"),
+  "/expenses": (path): boolean => path.startsWith("/expenses"),
+};
+
+export const NAV_ITEMS: readonly NavItem[] = ROLE_NAV_ITEMS.map((item) => ({
+  ...item,
+  match: navMatchByHref[item.href],
+}));
 
 export function getRoleNavItems(roleName: string | null): readonly NavItem[] {
-  return NAV_ITEMS.filter((item) => {
-    if (!roleName) {
-      return item.label === "Projects" || item.label === "Expenses";
-    }
-
-    if (roleName === "OWNER" || roleName === "FINANCE_ADMIN") {
-      return item.label === "Dashboard" || item.label === "Projects" || item.label === "Expenses";
-    }
-
-    if (roleName === "PURCHASING") {
-      return item.label === "Materials" || item.label === "Expenses" || item.label === "Projects";
-    }
-
-    if (roleName === "PROJECT_MANAGER") {
-      return item.label === "Projects" || item.label === "Expenses" || item.label === "Materials";
-    }
-
-    return item.label === "Projects" || item.label === "Expenses" || item.label === "Materials";
-  });
+  return getSharedRoleNavItems(roleName).map((item) => ({
+    ...item,
+    match: navMatchByHref[item.href],
+  }));
 }
 
 export function buildFabActions({

@@ -1,0 +1,7 @@
+# Metro (dipakai apps/mobile) menjalankan worker Babel lewat resolusi
+# `require()` klasik Node yang mengharapkan node_modules terhoist rata, bukan
+# store terisolasi (mirip pnpm) yang jadi default Bun untuk workspace. Tanpa
+# ini, plugin transitif `babel-preset-expo` (mis. `@babel/plugin-transform-react-jsx`)
+# gagal ditemukan meski sudah ada di store.
+[install]
+linker = "hoisted"

@@ -18,7 +18,7 @@ import {
   useSheetPresenceValue,
   ValuePreviewStrip,
 } from "@/components/ui";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { MiniMoneyMetric, RabMoneyBlock } from "../shared/rap-rab-primitives";
 import type { ChangeOrderHistoryView, RabRevisionHistoryView } from "../shared/rap-rab-manager";
 import type { RabChangeOrderForm } from "../../types/rab-drawer-types";

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseBankStatementCsv } from "@/lib/finance/bank-statement-csv";
+import { parseBankStatementCsv } from "@atria/core/finance/bank-statement-csv";
 
 import {
   createDemoClock,

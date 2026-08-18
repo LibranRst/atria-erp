@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { JSX } from "react";
 
 import { AppIcon, SwitchRow, Textarea } from "@/components/ui";
-import type { ApprovalDetail } from "@/lib/finance/approval-types";
+import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import { transitionSpringSmooth } from "@/lib/utils/motion";
 
 type ApprovalDecisionReasonFieldsProps = {

@@ -1,6 +1,6 @@
 import { getOwnerOnboardingOverview } from "@/app/actions/onboarding";
 import { resolveRoleName } from "@/lib/auth/permissions";
-import { shouldRedirectToOwnerOnboarding } from "@/lib/onboarding/owner-onboarding";
+import { shouldRedirectToOwnerOnboarding } from "@atria/core/onboarding/owner-onboarding";
 import { requireServerSession } from "@/lib/server/session";
 import { redirect } from "next/navigation";
 import { hasPendingOnboardingSetupApproval } from "@/app/actions/onboarding-review";

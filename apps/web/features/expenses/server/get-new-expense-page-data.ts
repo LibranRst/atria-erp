@@ -4,23 +4,17 @@ import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { inventoryLocation, materialMaster, project } from "@/db/schema";
-import type {
-  ExpenseFormProject,
-  InventoryLocationOption,
-} from "@/features/expenses/types/expense-form-types";
-import { resolveRoleName } from "@/lib/auth/permissions";
+import type { ExpenseFormProject, InventoryLocationOption } from "@atria/core/types/expenses";
 import { scopeProjectQuery } from "@/lib/auth/scoping";
-import { requireServerSession } from "@/lib/server/session";
+import type { Actor } from "@/server/actor";
 
 export type NewExpensePageData = {
   readonly projects: ExpenseFormProject[];
   readonly inventoryLocations: InventoryLocationOption[];
 };
 
-export async function getNewExpensePageData(): Promise<NewExpensePageData> {
-  const session = await requireServerSession();
-  const roleName = await resolveRoleName(session.user.roleId);
-  const projectFilter = scopeProjectQuery(session.user.id, roleName);
+export async function getNewExpensePageData(actor: Actor): Promise<NewExpensePageData> {
+  const projectFilter = scopeProjectQuery(actor.userId, actor.roleName);
 
   const [projects, materials, locations] = await Promise.all([
     db.query.project.findMany({

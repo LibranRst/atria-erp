@@ -1,12 +1,12 @@
-"use server";
+import "server-only";
 
 import { eq } from "drizzle-orm";
 
 import {
-  getOnboardingActor,
   readPersistedOnboardingState,
   uniqueOnboardingSteps,
 } from "@/app/actions/onboarding-action-utils";
+import type { OnboardingActor } from "@/app/actions/onboarding-types";
 import { db } from "@/db";
 import {
   bankAccount,
@@ -20,8 +20,8 @@ import {
   vendor,
 } from "@/db/schema";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@/lib/auth/role-constants";
-import { DEFAULT_EXPENSE_CATEGORIES } from "@/lib/budget/excel-budget";
+import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@atria/core/auth/role-constants";
+import { DEFAULT_EXPENSE_CATEGORIES } from "@atria/core/budget/excel-budget";
 import {
   DEFAULT_OWNER_ONBOARDING_STATE,
   deriveOwnerOnboardingGates,
@@ -30,8 +30,8 @@ import {
   type OwnerOnboardingOverview,
   type OwnerOnboardingReadiness,
   type OwnerOnboardingState,
-} from "@/lib/onboarding/owner-onboarding";
-import type { ActionResponse } from "@/lib/types/action-response";
+} from "@atria/core/onboarding/owner-onboarding";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 function statusFor(
   id: OnboardingStepId,
@@ -48,10 +48,17 @@ function statusFor(
   return "INCOMPLETE";
 }
 
-export async function getOwnerOnboardingOverview(): Promise<
-  ActionResponse<OwnerOnboardingOverview>
-> {
-  const current = await getOnboardingActor();
+/**
+ * Ringkasan onboarding organisasi untuk Owner.
+ *
+ * Menerima `OnboardingActor` eksplisit alih-alih membaca sesi sendiri. Itu yang
+ * membuatnya bisa dipanggil dari loader layar yang dipakai tRPC — versi lama
+ * memanggil `requireServerSession()` yang melakukan `redirect()`, dan
+ * control-flow throw itu tidak bisa menyeberang ke prosedur tRPC.
+ */
+export async function getOwnerOnboardingOverviewUseCase(
+  current: OnboardingActor,
+): Promise<ActionResponse<OwnerOnboardingOverview>> {
   try {
     await assertPermission(current, "view:settings");
   } catch {

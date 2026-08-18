@@ -1,4 +1,4 @@
-import type { ExpenseDraftPayloadInput } from "@/lib/validations/expense-draft";
+import type { ExpenseDraftPayloadInput } from "@atria/core/validations/expense-draft";
 
 export type ExpenseDraftSummary = {
   readonly id: string;

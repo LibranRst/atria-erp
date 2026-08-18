@@ -1,5 +1,5 @@
-import type { PermissionKey } from "@/lib/auth/permissions";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import type { PermissionKey } from "@atria/core/auth/permissions";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
 type PermissionGroupDefinition = {
   readonly key: string;

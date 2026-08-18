@@ -1,6 +1,6 @@
 import type { ExpenseCostItem } from "@/features/expenses/types/expense-list-types";
 
-export { formatShortIdr as formatCompactRp } from "@/lib/utils/money";
+export { formatShortIdr as formatCompactRp } from "@atria/core/utils/money";
 
 export function fieldClaimStatusLabel(status: ExpenseCostItem["status"]): string {
   if (status === "SUBMITTED") return "Butuh Verifikasi";

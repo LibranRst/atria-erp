@@ -10,12 +10,12 @@ import {
   stockMovement,
 } from "@/db/schema";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   rejectStockCountSchema,
   saveStockCountSchema,
   stockCountIdSchema,
-} from "@/lib/validations/warehouse";
+} from "@atria/core/validations/warehouse";
 import {
   getWarehouseUser as user,
   refreshWarehouse as refresh,

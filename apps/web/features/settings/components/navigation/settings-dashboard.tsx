@@ -5,7 +5,7 @@ import React from "react";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
 import type { SettingsHubOverview, SettingsOverview } from "@/app/actions/settings/system";
 import type { AdministrationOverview, ProductionReadinessItem } from "@/app/actions/administration";
-import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
+import type { OwnerOnboardingOverview } from "@atria/core/onboarding/owner-onboarding";
 import type {
   InitialStockCandidate,
   InventoryOpeningBatchView,

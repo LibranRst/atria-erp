@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { expenseCategory, itemPriceLibrary, materialMaster } from "@/db/schema";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   archiveItemPriceLibraryItemSchema,
   createItemPriceLibraryItemSchema,
@@ -15,7 +15,7 @@ import {
   type CreateItemPriceLibraryItemInput,
   type SetItemPriceLibraryItemActiveInput,
   type UpdateItemPriceLibraryItemInput,
-} from "@/lib/validations/settings";
+} from "@atria/core/validations/settings";
 import type { ItemPriceLibraryRow } from "./system-types";
 import {
   assertSettingsPermission,

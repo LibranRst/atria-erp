@@ -12,7 +12,7 @@ import type {
   OwnerOnboardingWorkspaceData,
   WorkspaceSource,
 } from "@/features/onboarding/server/get-owner-onboarding-workspace-data";
-import type { OnboardingStepId } from "@/lib/onboarding/owner-onboarding";
+import type { OnboardingStepId } from "@atria/core/onboarding/owner-onboarding";
 import {
   ONBOARDING_STATUS_LABEL,
   onboardingStatusBadgeTone,

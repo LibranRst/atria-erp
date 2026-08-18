@@ -15,12 +15,12 @@ import {
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
-import { calculateSuggestedClientPrice, roundMoney } from "@/lib/project/pricing";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { calculateSuggestedClientPrice, roundMoney } from "@atria/core/project/pricing";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   upsertPricingTemplateSchema,
   type UpsertPricingTemplateInput,
-} from "@/lib/validations/workflow-governance";
+} from "@atria/core/validations/workflow-governance";
 
 type SessionUser = { readonly id: string; readonly roleId?: string };
 

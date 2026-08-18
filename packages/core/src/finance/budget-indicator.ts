@@ -1,4 +1,4 @@
-import type { IndicatorTone } from "@/lib/types/indicator-tone";
+import type { IndicatorTone } from "../types/indicator-tone";
 
 export const RISK_WARNING_THRESHOLD = 80;
 export const RISK_LIMIT_THRESHOLD = 100;

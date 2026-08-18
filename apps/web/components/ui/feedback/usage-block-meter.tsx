@@ -2,8 +2,8 @@
 
 import React from "react";
 
-import type { IndicatorTone } from "@/lib/types/indicator-tone";
-import { getUsageBlockFill, indicatorToneClass } from "@/lib/finance/budget-indicator";
+import type { IndicatorTone } from "@atria/core/types/indicator-tone";
+import { getUsageBlockFill, indicatorToneClass } from "@atria/core/finance/budget-indicator";
 
 export function UsageBlockMeter({
   value,

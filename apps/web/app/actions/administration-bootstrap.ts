@@ -14,10 +14,16 @@ import {
   user,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@/lib/auth/role-constants";
-import { DEFAULT_EXPENSE_CATEGORIES, EXCEL_BUDGET_CAP_RATIO } from "@/lib/budget/excel-budget";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { bootstrapOwnerSchema, type BootstrapOwnerInput } from "@/lib/validations/administration";
+import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@atria/core/auth/role-constants";
+import {
+  DEFAULT_EXPENSE_CATEGORIES,
+  EXCEL_BUDGET_CAP_RATIO,
+} from "@atria/core/budget/excel-budget";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import {
+  bootstrapOwnerSchema,
+  type BootstrapOwnerInput,
+} from "@atria/core/validations/administration";
 
 const CATEGORY_IDS = [
   "31313131-3131-3131-3131-313131313101",

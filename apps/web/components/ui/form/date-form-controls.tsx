@@ -6,7 +6,7 @@ import { AppIcon } from "@/components/ui/icon/app-icon";
 import { BottomSheet } from "../overlay/bottom-sheet";
 import { FormField } from "./basic-form-controls";
 import { cx, formatDateLabel, parseIsoDate } from "./form-control-utils";
-import { formatIsoDate } from "@/lib/utils/date";
+import { formatIsoDate } from "@atria/core/utils/date";
 import { useFormPresentation } from "./form-presentation-context";
 
 export function DatePickerField({

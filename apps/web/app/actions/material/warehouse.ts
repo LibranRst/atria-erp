@@ -4,8 +4,8 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { auditLog, inventoryLocation, materialInventory, materialMaster } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { createInventoryLocationSchema } from "@/lib/validations/warehouse";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { createInventoryLocationSchema } from "@atria/core/validations/warehouse";
 import { getWarehouseUser, refreshWarehouse, warehouseFailure } from "./warehouse-action-utils";
 
 export async function createInventoryLocation(

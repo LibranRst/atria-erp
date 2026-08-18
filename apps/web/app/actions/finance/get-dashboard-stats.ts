@@ -12,7 +12,7 @@ import {
 import { eq, and, ne } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
-import { ActionResponse } from "@/lib/types/action-response";
+import { ActionResponse } from "@atria/core/types/action-response";
 
 export interface DashboardStats {
   totalCashBalance: number;

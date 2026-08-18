@@ -1,4 +1,4 @@
-import type { FilterId, ProjectItem } from "../types/project-list-types";
+import type { FilterId, ProjectItem } from "../types/projects";
 
 export const PROJECT_FILTERS: readonly { id: FilterId; label: string }[] = [
   { id: "ALL", label: "Semua" },

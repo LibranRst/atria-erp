@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
-import { SYSTEM_ROLES } from "@/lib/auth/role-constants";
+import { SYSTEM_ROLES } from "../auth/role-constants";
 import {
   changeTemporaryPasswordSchema,
   createStaffUserSchema,
   updateStaffUserSchema,
-} from "@/lib/validations/administration";
+} from "./administration";
 
 describe("administration validation", () => {
   test("accepts canonical system role IDs when creating a user", () => {

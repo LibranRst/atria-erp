@@ -8,7 +8,7 @@ import {
   projectHealthReasonLabel,
   type EffectiveProjectHealth,
   type EffectiveProjectHealthReason,
-} from "@/lib/project/effective-health";
+} from "@atria/core/project/effective-health";
 import { DetailRow } from "./project-overview-primitives";
 import {
   ProjectCoverMedia,

@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { bankAccount, cashTransaction, auditLog } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import type { CashDirection } from "@/lib/finance/cash-direction";
+import type { CashDirection } from "@atria/core/finance/cash-direction";
 
 /**
  * Mengonversi desimal numerik berformat string (misal: "150000.50") menjadi satuan sen bigint.

@@ -15,7 +15,7 @@ import {
   WorkflowFormSheet,
 } from "@/components/ui";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { movementCategoryOptions } from "@/features/finance-dashboard/utils/bank-account-constants";
 import { InfoPill } from "./info-pill";
 import type {

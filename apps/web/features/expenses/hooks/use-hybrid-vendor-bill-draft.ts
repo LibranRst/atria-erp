@@ -6,11 +6,11 @@ import {
   saveVendorBillDraft,
   type VendorBillDraftRecord,
 } from "@/app/actions/finance/vendor-bill-drafts";
-import { serializeLocalFormRecovery } from "@/lib/forms/local-form-recovery";
+import { serializeLocalFormRecovery } from "@atria/core/forms/local-form-recovery";
 import {
   vendorBillDraftPayloadSchema,
   type VendorBillDraftPayload,
-} from "@/lib/validations/vendor-bill-draft";
+} from "@atria/core/validations/vendor-bill-draft";
 
 const KEY_PREFIX = "atria:vendor-bill-draft";
 const SCHEMA_VERSION = 1;

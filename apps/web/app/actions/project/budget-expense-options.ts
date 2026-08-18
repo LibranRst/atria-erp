@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { inventoryLocation, materialMaster, project } from "@/db/schema";
 import { scopeProjectQuery } from "@/lib/auth/scoping";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import type { ProjectForExpense } from "./budget-types";
 import { getBudgetActionSession } from "./budget-utils";
 

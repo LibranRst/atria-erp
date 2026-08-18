@@ -24,12 +24,7 @@ const INBOUND_MOVEMENT_TYPES = [
   "TRANSFER_IN",
 ] as const;
 
-const OUTBOUND_MOVEMENT_TYPES = [
-  "USE",
-  "WASTE",
-  "TRANSFER_OUT",
-  "GOODS_RECEIPT_REVERSAL",
-] as const;
+const OUTBOUND_MOVEMENT_TYPES = ["USE", "WASTE", "TRANSFER_OUT", "GOODS_RECEIPT_REVERSAL"] as const;
 
 export function resolveStockMovementDirection(movementType: string): StockMovementDirection {
   if ((INBOUND_MOVEMENT_TYPES as readonly string[]).includes(movementType)) return "IN";

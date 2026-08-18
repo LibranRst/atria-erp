@@ -20,13 +20,13 @@ import {
   type PricingTemplateRow,
 } from "@/app/actions/settings/pricing-library";
 import { getSettingsOverview, type SettingsOverview } from "@/app/actions/settings/system";
-import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
-import type { OnboardingVerificationSnapshot } from "@/lib/onboarding/owner-onboarding";
-import { isDeveloperAccountSimulationEnabled } from "@/lib/auth/developer-account-simulation";
-import type { DeveloperAccountSimulationState } from "@/lib/auth/developer-account-simulation";
+import type { OwnerOnboardingOverview } from "@atria/core/onboarding/owner-onboarding";
+import type { OnboardingVerificationSnapshot } from "@atria/core/onboarding/owner-onboarding";
+import { isDeveloperAccountSimulationEnabled } from "@atria/core/auth/developer-account-simulation";
+import type { DeveloperAccountSimulationState } from "@atria/core/auth/developer-account-simulation";
 import { getDeveloperAccountSimulationState } from "@/app/actions/developer-account-simulation";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
 export type WorkspaceSource<T> =
   | { readonly status: "ready"; readonly data: T }

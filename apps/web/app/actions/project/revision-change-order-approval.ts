@@ -14,10 +14,10 @@ import {
   projectRap,
   rabEstimate,
 } from "@/db/schema";
-import { getBudgetCategoryStatus } from "@/lib/budget/excel-budget";
-import { calculateQuotationTotal } from "@/lib/project/quotation-total";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { approveChangeOrderSchema } from "@/lib/validations/workflow-governance";
+import { getBudgetCategoryStatus } from "@atria/core/budget/excel-budget";
+import { calculateQuotationTotal } from "@atria/core/project/quotation-total";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { approveChangeOrderSchema } from "@atria/core/validations/workflow-governance";
 import {
   assertRevisionProjectScope,
   getRevisionActionUser,

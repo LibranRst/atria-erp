@@ -6,7 +6,7 @@ import React from "react";
 import type {
   OnboardingStepStatus,
   OnboardingVerificationSnapshot,
-} from "@/lib/onboarding/owner-onboarding";
+} from "@atria/core/onboarding/owner-onboarding";
 import { transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon } from "@/components/ui";
 type VerificationPresentation = {

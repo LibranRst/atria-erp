@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { auditLog, materialCategory, materialInventory, materialMaster } from "@/db/schema";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   archiveMaterialSchema,
   createMaterialCategorySettingSchema,
@@ -21,7 +21,7 @@ import {
   type UpdateMaterialInput,
   type UpdateMaterialInventoryDefaultsInput,
   type UpdateMaterialSettingDefaultsInput,
-} from "@/lib/validations/settings";
+} from "@atria/core/validations/settings";
 import type { MaterialInventorySettingRow, MaterialSettingRow } from "./system-types";
 import {
   assertSettingsPermission,

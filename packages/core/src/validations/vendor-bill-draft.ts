@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { submitVendorBillSchema } from "@/lib/validations/finance";
-import { zodIssuesToDetails } from "@/lib/validations/expense-draft";
+import { submitVendorBillSchema } from "./finance";
+import { zodIssuesToDetails } from "./expense-draft";
 
 const uuid = z
   .string()

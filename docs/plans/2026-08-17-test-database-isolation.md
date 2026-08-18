@@ -72,13 +72,13 @@ Alternatif yang ditolak:
 
 ## Hasil
 
-| Gerbang                                    | Sebelum          | Sesudah                     |
-| ------------------------------------------ | ---------------- | --------------------------- |
-| `bun run test`                             | 550 pass         | 491 pass · 71 skip · 0 fail |
-| Durasi suite web                           | 32,8 s           | 8,5 s                       |
-| Baris database tersentuh oleh `bun test`   | ratusan          | **nol**                     |
-| `bun run build`                            | ✓                | ✓                           |
-| `bun run lint`                             | 0 error (1 warn) | 0 error (1 warn)            |
+| Gerbang                                  | Sebelum          | Sesudah                     |
+| ---------------------------------------- | ---------------- | --------------------------- |
+| `bun run test`                           | 550 pass         | 491 pass · 71 skip · 0 fail |
+| Durasi suite web                         | 32,8 s           | 8,5 s                       |
+| Baris database tersentuh oleh `bun test` | ratusan          | **nol**                     |
+| `bun run build`                          | ✓                | ✓                           |
+| `bun run lint`                           | 0 error (1 warn) | 0 error (1 warn)            |
 
 Dengan `ATRIA_TEST_DATABASE_URL` terisi, suite bergerbang terbukti tetap berjalan
 dan hijau (13 test pada `bank-accounts` + `workflow-rework`).

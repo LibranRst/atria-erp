@@ -19,7 +19,7 @@ import {
   refreshRabLinkedSources,
   voidRabRevision,
 } from "@/app/actions/project/revision-change-order";
-import { formatIdr as formatRp } from "@/lib/utils/money";
+import { formatIdr as formatRp } from "@atria/core/utils/money";
 import type { ManualQuotationLine, RabEstimateView, RabItemView } from "../types/rap-rab-types";
 import type { RabBundleForm, RabChangeOrderForm } from "../types/rab-drawer-types";
 import {

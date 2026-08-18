@@ -14,7 +14,7 @@ import {
   calculateUsedPercentage,
   getBudgetCategoryStatus,
   type ExpenseCategoryCode,
-} from "@/lib/budget/excel-budget";
+} from "@atria/core/budget/excel-budget";
 
 type BudgetTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 

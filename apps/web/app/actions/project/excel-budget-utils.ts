@@ -17,8 +17,8 @@ import {
   getBudgetCategoryStatus,
   type BudgetCategoryStatus,
   type ExpenseCategoryCode,
-} from "@/lib/budget/excel-budget";
-import type { ActionResponse } from "@/lib/types/action-response";
+} from "@atria/core/budget/excel-budget";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 type SessionUser = {
   readonly id: string;

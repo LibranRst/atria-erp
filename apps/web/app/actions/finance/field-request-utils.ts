@@ -2,8 +2,8 @@ import { db } from "@/db";
 import { approval, auditLog, role, user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-import { ActionResponse } from "@/lib/types/action-response";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { ActionResponse } from "@atria/core/types/action-response";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 
 type FieldRequestTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 

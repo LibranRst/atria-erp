@@ -95,12 +95,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
                       {rows.length} material belum tertutup · estimasi pengadaan
                     </p>
                   </div>
-                  <MoneyValue
-                    amount={projectEstimate}
-                    variant="compact"
-                    align="right"
-                    size="sm"
-                  />
+                  <MoneyValue amount={projectEstimate} variant="compact" align="right" size="sm" />
                 </div>
 
                 <div className="divide-y divide-black/5.5 border-t border-black/5.5 px-3">

@@ -76,12 +76,7 @@ export function UpcomingBillsResult({ output }: ToolResultProps): React.JSX.Elem
             meta={`${bill.projectName} · ${timingLabel(bill)}`}
             value={
               <div className="flex flex-col items-end gap-1">
-                <MoneyValue
-                  amount={bill.amount.amount}
-                  variant="compact"
-                  size="sm"
-                  align="right"
-                />
+                <MoneyValue amount={bill.amount.amount} variant="compact" size="sm" align="right" />
                 <StatusBadge tone={TIMING_TONE[bill.timing]} label={statusLabel(bill)} />
               </div>
             }

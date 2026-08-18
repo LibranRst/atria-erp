@@ -14,7 +14,7 @@ import type {
   VendorListPayment,
   VendorListProject,
   VendorListVendor,
-} from "@/features/expenses/types/vendor-bill-list-types";
+} from "@atria/core/types/expenses";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { VendorBillListContent } from "./vendor-bill-list-content";
 
@@ -25,7 +25,7 @@ export type {
   VendorListPayment,
   VendorListProject,
   VendorListVendor,
-} from "@/features/expenses/types/vendor-bill-list-types";
+} from "@atria/core/types/expenses";
 
 interface VendorBillListProps {
   readonly leadingContent?: React.ReactNode;

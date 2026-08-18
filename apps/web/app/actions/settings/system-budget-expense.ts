@@ -10,7 +10,7 @@ import {
   budgetAllocationSettingCategory,
   expenseCategory,
 } from "@/db/schema";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   updateBudgetAllocationCategoryRatioSchema,
   updateBudgetAllocationDefaultsSchema,
@@ -22,7 +22,7 @@ import {
   type UpdateBudgetAllocationSettingInput,
   type UpdateExpenseCategoryDetailsInput,
   type UpdateExpenseCategorySettingInput,
-} from "@/lib/validations/settings";
+} from "@atria/core/validations/settings";
 import type {
   BudgetAllocationCategoryRow,
   BudgetAllocationSettingRow,

@@ -1,4 +1,4 @@
-import { calculateQuotationTotal } from "@/lib/project/quotation-total";
+import { calculateQuotationTotal } from "@atria/core/project/quotation-total";
 import type {
   ManualQuotationLine,
   ProjectCategoryPlanItemView,

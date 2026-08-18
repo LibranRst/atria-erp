@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { projectBudgetCategory, projectBudgets } from "@/db/schema";
-import { calculateTargetGross } from "@/lib/budget/excel-budget";
+import { calculateTargetGross } from "@atria/core/budget/excel-budget";
 
 type BudgetCreationTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 

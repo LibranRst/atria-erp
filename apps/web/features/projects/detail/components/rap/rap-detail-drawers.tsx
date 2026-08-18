@@ -10,7 +10,7 @@ import {
   MoneyValue,
   useSheetPresenceValue,
 } from "@/components/ui";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import type { ProjectCategoryPlanItemView, RapItemView, RapView } from "../shared/rap-rab-manager";
 
 function toBadgeStatus(status: string): BadgeStatus {
@@ -273,12 +273,7 @@ export function PackageDetailDrawer({
           <FactRow
             label="Realisasi Aktual"
             value={
-              <MoneyValue
-                amount={item.actualCost}
-                variant="compact"
-                size="sm"
-                align="right"
-              />
+              <MoneyValue amount={item.actualCost} variant="compact" size="sm" align="right" />
             }
           />
           <FactRow

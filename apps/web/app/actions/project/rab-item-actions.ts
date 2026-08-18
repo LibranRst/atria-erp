@@ -4,11 +4,11 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { auditLog, rabEstimateItem } from "@/db/schema";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   updateRabEstimateItemSchema,
   type UpdateRabEstimateItemInput,
-} from "@/lib/validations/rap-rab";
+} from "@atria/core/validations/rap-rab";
 import { assertProjectMutationAccess, getSessionUser, toError } from "./rap-rab-utils";
 
 export async function updateRabEstimateItem(

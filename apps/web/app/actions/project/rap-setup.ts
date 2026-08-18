@@ -9,18 +9,18 @@ import { auditLog, projectCategoryPlanItem, projectRap } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   assertRapCategoryReady,
   assertRapSetupTransition,
   type RapSetupStage,
-} from "@/lib/project/rap-setup";
+} from "@atria/core/project/rap-setup";
 import {
   advanceProjectRapSetupSchema,
   finalizeProjectInternalPlanSchema,
   markProjectCategoryPlanItemDraftSchema,
   setProjectRapScopeSkippedSchema,
-} from "@/lib/validations/workflow-governance";
+} from "@atria/core/validations/workflow-governance";
 
 type SessionUser = { readonly id: string; readonly roleId?: string };
 type Rap = typeof projectRap.$inferSelect;

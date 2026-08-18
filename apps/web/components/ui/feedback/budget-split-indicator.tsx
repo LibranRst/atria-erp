@@ -2,9 +2,9 @@
 
 import React from "react";
 
-import type { IndicatorTone } from "@/lib/types/indicator-tone";
-import { getBudgetGeometry } from "@/lib/finance/budget-indicator";
-import { formatShortIdr } from "@/lib/utils/money";
+import type { IndicatorTone } from "@atria/core/types/indicator-tone";
+import { getBudgetGeometry } from "@atria/core/finance/budget-indicator";
+import { formatShortIdr } from "@atria/core/utils/money";
 
 export function BudgetSplitIndicator({
   value,

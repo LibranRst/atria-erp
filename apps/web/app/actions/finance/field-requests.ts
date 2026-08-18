@@ -2,14 +2,14 @@
 
 import { db } from "@/db";
 import { projectCost } from "@/db/schema";
-import { ActionResponse } from "@/lib/types/action-response";
+import { ActionResponse } from "@atria/core/types/action-response";
 import {
   submitFieldRequestSchema,
   ApproveFieldRequestInput,
   SubmitFieldRequestInput,
   submitFieldRequestsSchema,
   SubmitFieldRequestsInput,
-} from "@/lib/validations/finance";
+} from "@atria/core/validations/finance";
 import crypto from "crypto";
 import { authorizeFieldRequestAction } from "./field-request-auth";
 import { payFieldRequest as payFieldRequestWrite } from "./field-request-payment";

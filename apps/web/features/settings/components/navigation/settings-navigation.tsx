@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import React from "react";
 
 import { AppIcon, SegmentedTabs } from "@/components/ui";
-import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
+import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@atria/core/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import { SETTINGS_TABS, type SettingsTab } from "../../utils/settings-tabs-config";
 

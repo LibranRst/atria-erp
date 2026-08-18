@@ -51,12 +51,7 @@ export function OpeningInventoryHistory({ show, batches, onSelect }: Props): Rea
                       className="mt-1.5"
                     />
                   </span>
-                  <MoneyValue
-                    amount={batch.totalValue}
-                    variant="compact"
-                    size="sm"
-                    align="right"
-                  />
+                  <MoneyValue amount={batch.totalValue} variant="compact" size="sm" align="right" />
                   <AppIcon
                     name="chevron_right"
                     className="icon-md shrink-0 text-on-surface-variant/60"

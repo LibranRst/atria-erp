@@ -109,12 +109,7 @@ export function ExpenseProposalCard({
         <div className="flex items-baseline justify-between gap-3 px-4 py-3">
           <dt className="text-support font-semibold text-on-surface-variant">Total</dt>
           <dd className="min-w-0">
-            <MoneyValue
-              amount={proposal.amount.amount}
-              variant="compact"
-              size="lg"
-              align="right"
-            />
+            <MoneyValue amount={proposal.amount.amount} variant="compact" size="lg" align="right" />
           </dd>
         </div>
       </dl>

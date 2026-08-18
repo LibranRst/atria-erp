@@ -35,9 +35,12 @@ import {
   formatShortDate,
   shortMoney,
 } from "@/features/finance-dashboard/utils/dashboard-formatters";
-import type { ApprovalDetail } from "@/lib/finance/approval-types";
-import { approvalIsWaitingLong, type ApprovalQueueSummary } from "@/lib/finance/approval-summary";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import type { ApprovalDetail } from "@atria/core/finance/approval-types";
+import {
+  approvalIsWaitingLong,
+  type ApprovalQueueSummary,
+} from "@atria/core/finance/approval-summary";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 
 type ApprovalDecision = {
   readonly item: ApprovalDetail;

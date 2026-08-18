@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import {
   canUseTemporaryPasswordDuringDeveloperSimulation,
   isDeveloperAccountSimulationEnabled,
-} from "@/lib/auth/developer-account-simulation";
+} from "@atria/core/auth/developer-account-simulation";
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const sessionCookie = request.cookies.get("better-auth.session_token");

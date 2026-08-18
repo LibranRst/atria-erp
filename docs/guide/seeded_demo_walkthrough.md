@@ -376,12 +376,12 @@ Buka tombol chat di header (kiri atas). Tombol hanya muncul untuk Owner, Finance
 
 Tanyakan berturut-turut dan bandingkan angkanya dengan layar terkait:
 
-| Pertanyaan                                        | Expected                                                                     |
-| ------------------------------------------------- | ---------------------------------------------------------------------------- |
-| "Berapa sisa budget proyek Sudirman?"             | Satu kartu budget Sudirman saja, bukan daftar seluruh proyek                  |
-| "Proyek mana yang budgetnya paling mengkhawatirkan?" | Satu kartu berisi hanya proyek berisiko; Senopati dan Brawijaya tidak muncul  |
-| "Berapa total kas kita?"                          | Kartu saldo; totalnya sama dengan `/ledger` tab Rekening                      |
-| "Ada tagihan vendor yang jatuh tempo?"            | Kartu tagihan; yang telat berada di baris teratas                             |
+| Pertanyaan                                           | Expected                                                                     |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------- |
+| "Berapa sisa budget proyek Sudirman?"                | Satu kartu budget Sudirman saja, bukan daftar seluruh proyek                 |
+| "Proyek mana yang budgetnya paling mengkhawatirkan?" | Satu kartu berisi hanya proyek berisiko; Senopati dan Brawijaya tidak muncul |
+| "Berapa total kas kita?"                             | Kartu saldo; totalnya sama dengan `/ledger` tab Rekening                     |
+| "Ada tagihan vendor yang jatuh tempo?"               | Kartu tagihan; yang telat berada di baris teratas                            |
 
 Periksa juga: jejak "N sumber data dibaca" bisa dibuka, angka di kartu cocok dengan halaman aslinya,
 dan menekan kartu membuka rute terkait sambil menutup sheet.
@@ -399,22 +399,22 @@ konfirmasi. Ini penjaga terhadap dokumen ganda.
 
 ## 13. Negative test ringkas
 
-| Test                                               | Expected                       |
-| -------------------------------------------------- | ------------------------------ |
-| `db:seed` dijalankan lagi pada DB berisi data      | Ditolak tanpa delete           |
-| Demo reset tanpa `--confirm-reset`                 | Ditolak                        |
-| Payment invoice > outstanding                      | Ditolak, saldo tidak berubah   |
-| Vendor payment Rp10 juta sebelum Owner approval    | Ditolak                        |
-| PM membuka project yang tidak di-assign            | Forbidden/tidak terlihat       |
-| Purchasing membuka saldo atau margin komersial     | Tidak memperoleh akses         |
-| Cocokkan rekening/arah/amount yang berbeda         | Ditolak                        |
-| Impor file CSV yang sama dua kali                  | Duplicate dilewati             |
-| Edit/delete cash transaction yang sudah reconciled | Ditolak                        |
-| Stock use melebihi available stock                 | Ditolak                        |
-| Closing Menteng sebelum semua blocker selesai      | Ditolak dan blocker dijelaskan |
+| Test                                                   | Expected                                         |
+| ------------------------------------------------------ | ------------------------------------------------ |
+| `db:seed` dijalankan lagi pada DB berisi data          | Ditolak tanpa delete                             |
+| Demo reset tanpa `--confirm-reset`                     | Ditolak                                          |
+| Payment invoice > outstanding                          | Ditolak, saldo tidak berubah                     |
+| Vendor payment Rp10 juta sebelum Owner approval        | Ditolak                                          |
+| PM membuka project yang tidak di-assign                | Forbidden/tidak terlihat                         |
+| Purchasing membuka saldo atau margin komersial         | Tidak memperoleh akses                           |
+| Cocokkan rekening/arah/amount yang berbeda             | Ditolak                                          |
+| Impor file CSV yang sama dua kali                      | Duplicate dilewati                               |
+| Edit/delete cash transaction yang sudah reconciled     | Ditolak                                          |
+| Stock use melebihi available stock                     | Ditolak                                          |
+| Closing Menteng sebelum semua blocker selesai          | Ditolak dan blocker dijelaskan                   |
 | PM bertanya ke asisten soal proyek yang bukan miliknya | Dijawab di luar akses, tanpa membocorkan datanya |
-| Purchasing atau Sales membuka tombol asisten AI    | Tombol tidak muncul            |
-| Menekan Konfirmasi dua kali pada satu kartu usulan | Hanya satu pengajuan tercatat  |
+| Purchasing atau Sales membuka tombol asisten AI        | Tombol tidak muncul                              |
+| Menekan Konfirmasi dua kali pada satu kartu usulan     | Hanya satu pengajuan tercatat                    |
 
 ## 14. Mengulang atau mengaudit hasil
 

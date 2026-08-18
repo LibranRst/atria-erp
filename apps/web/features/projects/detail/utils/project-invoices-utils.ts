@@ -1,4 +1,4 @@
-import { formatShortIdr } from "@/lib/utils/money";
+import { formatShortIdr } from "@atria/core/utils/money";
 import type { ClientInvoiceItem } from "../types/project-invoices-types";
 
 export function formatShortRp(value: number): string {

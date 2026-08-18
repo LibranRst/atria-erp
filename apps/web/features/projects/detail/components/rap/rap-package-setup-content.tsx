@@ -2,8 +2,8 @@
 
 import React from "react";
 
-import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import type { ProjectCategoryPlanItemView } from "../shared/rap-rab-manager";
 import { AppIcon } from "@/components/ui";
 export function PackageSetupContent({

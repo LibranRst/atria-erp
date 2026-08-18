@@ -17,7 +17,7 @@ import {
   TextInput,
   ValuePreviewStrip,
 } from "@/components/ui";
-import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@/lib/utils/money";
+import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@atria/core/utils/money";
 import type {
   CategoryPlanFormState,
   PricingTemplateOption,

@@ -9,16 +9,16 @@ import {
   calculateTargetGross,
   calculateUsedPercentage,
   getBudgetCategoryStatus,
-} from "@/lib/budget/excel-budget";
+} from "@atria/core/budget/excel-budget";
 import { syncProjectBudgetCategories } from "@/lib/budget/budget-sync";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   approveCanonicalProjectBudgetSchema,
   createProjectBudgetFromRatiosSchema,
   type CreateProjectBudgetFromRatiosInput,
   updateProjectBudgetCategoryAllocationSchema,
   type UpdateProjectBudgetCategoryAllocationInput,
-} from "@/lib/validations/budget";
+} from "@atria/core/validations/budget";
 import {
   aggregateOwnerBudgetDashboard,
   assertBudgetAccess,

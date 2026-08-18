@@ -4,8 +4,8 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { auditLog, materialInventory, stockMovement } from "@/db/schema";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { emergencyAdjustmentSchema } from "@/lib/validations/warehouse";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { emergencyAdjustmentSchema } from "@atria/core/validations/warehouse";
 import {
   getWarehouseUser as user,
   refreshWarehouse as refresh,

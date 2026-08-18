@@ -4,6 +4,14 @@ You are working on Atria ERP for Dekoria, an interior design and build company. 
 
 The product promise is: **Project Budget Control upgraded into a real ERP with material stock visibility.** Workbook logic is source material for ratios and team habits, but user-facing screens must not be labeled as Excel.
 
+## Workspace Layout
+
+This repo is a **Bun workspace monorepo**. The Next.js app lives in `apps/web/`; the root holds only workspace config, `docs/`, and the top-level `*.md` files. Unqualified paths in this document (`app/`, `lib/`, `features/`, `components/`, `db/`) are relative to `apps/web/`, and the `@/*` alias resolves there.
+
+Run scripts from the repo root (`bun run test`, `bun run build`, `bun run lint`). **Never run a bare `bun test` from the root** — `bunfig.toml` lives in `apps/web/` and is loaded from the current directory; without it the `server-only` preload is missing and feature server tests fail. Use `cd apps/web && bun test <file>` for single files.
+
+A cross-platform Expo client (`apps/mobile/`) is being added. See `docs/plans/2026-08-15-expo-cross-platform-migration.md` for the plan and `docs/plans/2026-08-15-expo-migration-handoff.md` for current progress and the cross-agent handoff prompt.
+
 ## Planning and Documentation
 
 1. Read existing schema, actions, docs, and UI before changing code.

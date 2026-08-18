@@ -15,7 +15,7 @@ import type {
 } from "@/app/actions/material/opening-inventory";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
 import type { SettingsOverview } from "@/app/actions/settings/system";
-import type { OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
+import type { OwnerOnboardingOverview } from "@atria/core/onboarding/owner-onboarding";
 
 export type SettingsPageData =
   | {

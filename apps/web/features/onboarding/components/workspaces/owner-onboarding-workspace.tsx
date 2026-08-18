@@ -10,7 +10,7 @@ import {
   pauseOwnerOnboarding,
 } from "@/app/actions/onboarding";
 import type { OwnerOnboardingWorkspaceData } from "@/features/onboarding/server/get-owner-onboarding-workspace-data";
-import type { OnboardingStepId } from "@/lib/onboarding/owner-onboarding";
+import type { OnboardingStepId } from "@atria/core/onboarding/owner-onboarding";
 import { OnboardingStepContent } from "./onboarding-step-content";
 import { OnboardingWorkspaceActions } from "./onboarding-workspace-actions";
 import { OnboardingWorkspaceHeader } from "./onboarding-workspace-header";

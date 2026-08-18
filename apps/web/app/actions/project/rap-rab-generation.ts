@@ -14,14 +14,14 @@ import {
   rabEstimateBundle,
   rabEstimateItem,
 } from "@/db/schema";
-import { getNextRabRevision } from "@/lib/project/rab-selection";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { getNextRabRevision } from "@atria/core/project/rab-selection";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   generateRabFromRapSchema,
   generateRabFromSelectedSourcesSchema,
   type GenerateRabFromRapInput,
   type GenerateRabFromSelectedSourcesInput,
-} from "@/lib/validations/rap-rab";
+} from "@atria/core/validations/rap-rab";
 import {
   assertProjectMutationAccess,
   buildRabCategoryPlanItemValues,

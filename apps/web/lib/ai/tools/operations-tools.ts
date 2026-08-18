@@ -9,7 +9,7 @@ import {
   projectRapItem,
   stockMovement,
 } from "@/db/schema";
-import { projectMaterialProjection } from "@/lib/material/project-material-projection";
+import { projectMaterialProjection } from "@atria/core/material/project-material-projection";
 import { tool } from "ai";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";

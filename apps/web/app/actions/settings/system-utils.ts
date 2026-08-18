@@ -15,7 +15,7 @@ import {
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName, type PermissionKey } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import type {
   BudgetAllocationSettingRow,
   ExpenseCategorySettingRow,

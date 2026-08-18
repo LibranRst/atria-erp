@@ -65,6 +65,7 @@ atria-erp/
 ## 4. Canonical Business Enums & Taxonomies
 
 ### A. Expense & Budget Categories (Code-Locked)
+
 1. `MATERIAL`: Linked to Material Master, RAP items, inventory purchases, vendor bills.
 2. `TUKANG`: Linked to Tukang Work Packages and wage claims.
 3. `OPERASIONAL`: Field consumables, meals, transport, minor tools.
@@ -72,6 +73,7 @@ atria-erp/
 5. `SUBCON`: Subcontractor work packages and third-party bills.
 
 ### B. User Roles & RBAC Matrix
+
 - `OWNER`: Full global financial visibility, approval authority over all expenses ≥ Rp 5,000,000, margin overrides.
 - `FINANCE_ADMIN`: Full finance workspace, creates budgets, processes bills, reconciles bank mutations.
 - `PURCHASING`: Material Master, inventory stock, stock movements, vendor bills.
@@ -79,13 +81,16 @@ atria-erp/
 - `DESIGNER`: Scoped to assigned projects; view-only or draft project estimates.
 
 ### C. Approval Status Lifecycle
+
 - `DRAFT` $\rightarrow$ `PENDING_FINANCE` $\rightarrow$ `PENDING_OWNER` $\rightarrow$ `APPROVED` (or `REJECTED` / `REVISED`).
 
 ### D. Cash Reconciliation Lifecycle
+
 - `UNRECONCILED` $\rightarrow$ `PENDING_MATCH` $\rightarrow$ `RECONCILED` (or `EXCEPTION`).
 - Reconciled rows are permanently immutable.
 
 ### E. Stock Movement Types
+
 - `STOCK_IN` (receipt / opening stock), `STOCK_OUT`, `RESERVE` (project allocation), `USE` (project site consumption), `RETURN` (unused material returned), `TRANSFER` (inter-warehouse), `ADJUSTMENT`, `WASTE`.
 
 ---

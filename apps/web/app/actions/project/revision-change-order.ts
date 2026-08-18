@@ -14,10 +14,13 @@ import {
   rabEstimate,
   rabEstimateItem,
 } from "@/db/schema";
-import { calculateRabSellingUnitPrice } from "@/lib/project/rap-rab";
-import { calculateQuotationTotal } from "@/lib/project/quotation-total";
-import { assertRabRevisionCanBeVoided, isOpenChangeOrderStatus } from "@/lib/project/rab-selection";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { calculateRabSellingUnitPrice } from "@atria/core/project/rap-rab";
+import { calculateQuotationTotal } from "@atria/core/project/quotation-total";
+import {
+  assertRabRevisionCanBeVoided,
+  isOpenChangeOrderStatus,
+} from "@atria/core/project/rab-selection";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   confirmChangeOrderClientSchema,
   createCategoryPlanRevisionSchema,
@@ -25,7 +28,7 @@ import {
   createRapRevisionSchema,
   refreshRabSourcesSchema,
   voidRabRevisionSchema,
-} from "@/lib/validations/workflow-governance";
+} from "@atria/core/validations/workflow-governance";
 import {
   assertRevisionProjectScope,
   getRevisionActionUser,

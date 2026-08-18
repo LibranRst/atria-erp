@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
-import { ACTIVITY_DETAIL_KINDS, dateValue, moneyValue, quantityValue, textValue } from "./types";
-import { activityDetailRequestSchema } from "./validation";
+import {
+  ACTIVITY_DETAIL_KINDS,
+  dateValue,
+  moneyValue,
+  quantityValue,
+  textValue,
+} from "@atria/core/activity-detail/types";
+import { activityDetailRequestSchema } from "@atria/core/activity-detail/validation";
 
 describe("activity detail contract", () => {
   test("accepts every canonical activity kind with a UUID", () => {

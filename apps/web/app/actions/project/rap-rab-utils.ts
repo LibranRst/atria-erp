@@ -6,9 +6,15 @@ import { materialMaster } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
-import { calculateRabSellingUnitPrice, getRapItemAvailabilityStatus } from "@/lib/project/rap-rab";
-import type { ActionResponse } from "@/lib/types/action-response";
-import type { AddProjectRapItemInput, UpdateProjectRapItemInput } from "@/lib/validations/rap-rab";
+import {
+  calculateRabSellingUnitPrice,
+  getRapItemAvailabilityStatus,
+} from "@atria/core/project/rap-rab";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import type {
+  AddProjectRapItemInput,
+  UpdateProjectRapItemInput,
+} from "@atria/core/validations/rap-rab";
 
 export type SessionUser = {
   readonly id: string;

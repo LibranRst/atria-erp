@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { projectMaterialProjection } from "@/lib/material/project-material-projection";
+import { projectMaterialProjection } from "@atria/core/material/project-material-projection";
 import {
   materialCategory,
   materialInventory,
@@ -12,7 +12,7 @@ import {
 } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { assertPermission } from "@/lib/auth/permissions";
-import { ActionResponse } from "@/lib/types/action-response";
+import { ActionResponse } from "@atria/core/types/action-response";
 import {
   AdjustMaterialStockInput,
   CreateMaterialCategoryInput,
@@ -26,7 +26,7 @@ import {
   createMaterialCategorySchema,
   createMaterialSchema,
   materialInventoryQuerySchema,
-} from "@/lib/validations/material";
+} from "@atria/core/validations/material";
 import { calculateInventoryStatus, getSessionUser } from "./inventory-utils";
 import {
   adjustMaterialStock as adjustMaterialStockWrite,

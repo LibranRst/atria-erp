@@ -1,6 +1,6 @@
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import type { GoodsReceiptVendorBillOption } from "@/features/materials/utils/goods-receipt-prefill";
-import { createClientId } from "@/lib/utils/client-id";
+import { createClientId } from "@atria/core/utils/client-id";
 
 export type GoodsReceiptRapOption = {
   readonly id: string;

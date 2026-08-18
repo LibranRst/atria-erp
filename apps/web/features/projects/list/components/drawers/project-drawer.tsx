@@ -4,7 +4,7 @@ import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createProjectAction, updateProjectAction } from "@/app/actions/project/crud";
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 import { AppIcon, BottomSheet, OperationalFormSheet } from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 import { toast } from "sonner";

@@ -12,9 +12,9 @@ import type {
 import { db } from "@/db";
 import { inventoryOpeningBatch } from "@/db/schema";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { getOpeningInventoryIneligibleReason } from "@/lib/material/opening-inventory-eligibility";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { previewInitialStockImportSchema } from "@/lib/validations/material";
+import { getOpeningInventoryIneligibleReason } from "@atria/core/material/opening-inventory-eligibility";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { previewInitialStockImportSchema } from "@atria/core/validations/material";
 
 export async function getInitialStockCandidates(): Promise<
   ActionResponse<readonly InitialStockCandidate[]>

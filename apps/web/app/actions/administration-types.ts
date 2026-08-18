@@ -1,5 +1,5 @@
 import type { vendor } from "@/db/schema";
-import type { AdministrationCapabilities } from "@/lib/auth/administration-access";
+import type { AdministrationCapabilities } from "@atria/core/auth/administration-access";
 
 export type AdministrationUser = {
   readonly id: string;

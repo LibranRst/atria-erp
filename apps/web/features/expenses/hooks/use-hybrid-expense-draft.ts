@@ -4,7 +4,7 @@ import React from "react";
 
 import { saveExpenseDraft, type ExpenseDraftRecord } from "@/app/actions/finance/expense-drafts";
 import type { ExpenseDraftPayload } from "@/features/expenses/types/expense-form-types";
-import { expenseDraftPayloadSchema } from "@/lib/validations/expense-draft";
+import { expenseDraftPayloadSchema } from "@atria/core/validations/expense-draft";
 
 const LOCAL_KEY_PREFIX = "atria:expense-draft";
 const AUTOSAVE_DELAY_MS = 1_200;

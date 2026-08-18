@@ -18,9 +18,9 @@ import {
   Textarea,
   UsageBlockMeter,
 } from "@/components/ui";
-import type { IndicatorTone } from "@/lib/types/indicator-tone";
+import type { IndicatorTone } from "@atria/core/types/indicator-tone";
 import { categoryTab, statusTone } from "../../utils/project-overview-utils";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { cn } from "@/lib/utils/cn";
 export { ProjectIdentityHeader } from "./project-identity-header";
 

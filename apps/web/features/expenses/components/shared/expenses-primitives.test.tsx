@@ -46,7 +46,7 @@ describe("Expenses Dashboard visual language", () => {
     expect(html).toContain(">Pengajuan</span>");
     expect(html).toContain("inline-grid h-5 min-w-5");
     expect(html).toContain("min-h-8");
-    expect(html).toContain("rounded-3xl");
+    expect(html).toContain("rounded-owner");
   });
 
   test("uses a route-specific loading skeleton with grouped rows", () => {

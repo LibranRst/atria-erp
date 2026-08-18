@@ -1,6 +1,6 @@
 import "server-only";
 
-import { formatIdr } from "@/lib/utils/money";
+import { formatIdr } from "@atria/core/utils/money";
 
 /**
  * Pembantu bersama untuk seluruh registry tool AI.

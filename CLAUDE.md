@@ -12,45 +12,61 @@ AI CFO/financial briefing remains deferred **from the Dashboard** — no AI card
 
 User-facing copy and much of the domain-code commenting are Bahasa Indonesia. Match the surrounding language when editing.
 
+## Workspace Layout
+
+This is a **Bun workspace monorepo**. The Next.js app is `apps/web/`; the repo root holds only workspace config, `docs/`, and the top-level `*.md` files. Root `package.json` declares `"workspaces": ["apps/*", "packages/*"]`, and every root script fans out with `bun --filter`.
+
+A cross-platform Expo client (`apps/mobile/`) and shared packages (`packages/core`, `packages/tokens`) are being added — see `docs/plans/2026-08-15-expo-cross-platform-migration.md` for the plan and `docs/plans/2026-08-15-expo-migration-handoff.md` for current progress. Until those exist, `apps/web` is the only package.
+
 ## Common Commands
 
-Bun is the package manager/runtime; `bun.lock` is committed.
+Bun is the package manager/runtime; `bun.lock` is committed. `pnpm` is not used — do not reintroduce a pnpm lockfile.
+
+Run these from the **repo root**:
 
 ```bash
 bun install
-bun run dev            # Next dev server with localhost + LAN host (scripts/dev-lan.mjs)
+bun run dev            # Next dev server with localhost + LAN host (apps/web/scripts/dev-lan.mjs)
 bun run dev:default    # plain `next dev`
 bun run build
+bun run test           # whole suite, via `bun --filter '*' test`
 bun run lint           # eslint
 bun run lint:fix
 bun run format         # prettier --write .
 bun run tailwind:format  # canonical Tailwind class order (eslint --fix) + prettier
 ```
 
-Tests are Bun Test, colocated next to the code they cover (`lib/**`, `app/actions/**`, `components/**`, `db/seed/**`). There is no `test` script:
+Tests are Bun Test, colocated next to the code they cover (`lib/**`, `app/actions/**`, `components/**`, `db/seed/**`).
+
+**Never run a bare `bun test` from the repo root.** `bunfig.toml` lives in `apps/web/` and is loaded from the current working directory; without it the `mock.module("server-only")` preload is missing and every `features/**/server/*.test.ts` fails. Use the root `bun run test`, or `cd apps/web` first:
 
 ```bash
-bun test                              # whole suite
-bun test lib/finance/dashboard.test.ts  # single file
-bun test --test-name-pattern "reconcile"
+cd apps/web && bun test                                # whole suite
+cd apps/web && bun test lib/finance/dashboard.test.ts  # single file
+cd apps/web && bun test lib/architecture/              # boundary tests
+cd apps/web && bun test --test-name-pattern "reconcile"
 ```
+
+**`bun run test` never touches Postgres.** Eleven suites call real Server Actions against seeded fixtures; they are gated behind `describeIntegration` (`lib/testing/integration-db.ts`) and skip unless `ATRIA_TEST_DATABASE_URL` is set. `scripts/test-preload.ts` also repoints `DATABASE_URL` at a dead address when that variable is absent, so a DB test that forgets the gate fails loudly instead of silently mutating development data. Baseline is **491 pass + 71 skip**; those 71 are gated, not broken. Point `ATRIA_TEST_DATABASE_URL` only at a disposable `db:demo:reset` database — the suites write to seed fixtures and do not fully restore them. See `docs/plans/2026-08-17-test-database-isolation.md`.
 
 Database scripts (all destructive ones require `--confirm-reset`):
 
 ```bash
 bun run db:seed              # insert-only; refuses a non-empty or production DB
 bun run db:reset             # empty DB for production-style UAT
-bun run db:demo:reset        # connected demo dataset + CSV fixtures in .atria-demo/
+bun run db:demo:reset        # connected demo dataset + CSV fixtures in apps/web/.atria-demo/
 bun run db:demo:verify
 ```
 
-Drizzle migrations live in `drizzle/`; config is `drizzle.config.ts`. Check `package.json` before running any script — do not infer commands from docs.
+`.env` and `.env.example` live in `apps/web/`, next to the code that reads them. Drizzle migrations live in `apps/web/drizzle/`; config is `apps/web/drizzle.config.ts`. Check `package.json` before running any script — do not infer commands from docs.
 
 ## Architecture
 
-Layering runs database → auth/RBAC → transaction helpers → Server Actions → UI. Read-only data fetching happens in Server Components; Client Components are for interaction, local state, animation, camera/upload, and forms. All mutations are Server Actions — no internal REST endpoints for mutations. Exactly two API routes exist: Better Auth at `app/api/auth/[...better-auth]/route.ts`, and the AI chat stream at `app/api/ai/chat/route.ts`. The AI chat route is a deliberate, bounded exception because `useChat` needs an HTTP transport for token streaming; it is read-only (every tool exposed to the model is read-only, enforced by `lib/ai/tools/read-only.test.ts`) and verifies session plus `use:ai_chat` before doing anything. Do not add further API routes, and do not add write capability to this one.
+Layering runs database → auth/RBAC → transaction helpers → Server Actions → UI. Read-only data fetching happens in Server Components; Client Components are for interaction, local state, animation, camera/upload, and forms. All mutations are Server Actions — no internal REST endpoints for mutations. The set of API routes is closed and **enforced by an allowlist assertion** in `lib/architecture/server-boundaries.test.ts`, not by prose. Two exist today: Better Auth at `app/api/auth/[...better-auth]/route.ts`, and the AI chat stream at `app/api/ai/chat/route.ts`. The AI chat route is a deliberate, bounded exception because `useChat` needs an HTTP transport for token streaming; it is read-only (every tool exposed to the model is read-only, enforced by `lib/ai/tools/read-only.test.ts`) and verifies session plus `use:ai_chat` before doing anything. Do not add write capability to it.
 
-Three source roots, with enforced boundaries:
+A third route, `app/api/trpc/[trpc]/route.ts`, is planned as the bridge for the native client — React Native cannot invoke Server Actions. It is bounded the same way: it may only expose procedures that delegate to use-cases in `apps/web/server/usecases/**`, it never contains business logic or touches Drizzle directly, and every mutation goes through the same use-case its Server Action counterpart calls. Adding it means updating the allowlist assertion deliberately. Do not add a fourth.
+
+Three source roots inside `apps/web/`, with enforced boundaries:
 
 - `app/` — routes, layouts, `loading.tsx` skeletons, `error.tsx`, and `app/actions/**` (the `"use server"` modules, grouped by domain: `finance/`, `project/`, `material/`, `settings/`, `ai/`, `media/`, plus onboarding/administration/activity-detail families).
 - `features/<domain>/` — feature slices with `components/`, `hooks/`, `server/`, `types/`, `utils/`. Domains: activity-detail, administration, approvals, expenses, finance-dashboard, materials, onboarding, profile, projects, reconciliation, settings. `projects` nests `detail/`, `list/`, and `shared/` sub-slices that each follow the same shape. A slice holds one domain; anything cross-cutting belongs in `lib/` or `components/ui`.
@@ -58,20 +74,24 @@ Three source roots, with enforced boundaries:
 - `components/ui/**` and `components/layout/**` — shared primitives and the mobile shell/bottom nav. Application code imports shared UI from the `@/components/ui` barrel only; deep paths stay inside `components/ui/**`.
 - `db/` — `db/index.ts` client, `db/schema/{auth,projects,finance,materials,system}.ts` re-exported from `db/schema.ts`, seed under `db/seed/`.
 
-`lib/architecture/` holds executable architecture tests that fail the build-time suite.
+All paths above are relative to `apps/web/`, and the `@/*` alias resolves there — so `@/db`, `@/lib/finance`, and `@/components/ui` are unchanged from before the monorepo move.
+
+`apps/web/lib/architecture/` holds executable architecture tests that fail the build-time suite. They anchor on `import.meta.dir`, not `process.cwd()`, so they behave identically no matter where they are invoked from.
 
 `server-boundaries.test.ts` fails when:
 
 1. A `features/<domain>/actions/` folder exists (server entrypoints belong in `app/actions/`).
 2. A file under `features/**/server/**` does not start with `import "server-only";`.
-3. Any route `page.tsx` imports from `@/db` or `drizzle-orm` directly — pages must delegate to a server loader.
-4. A `"use server"` module exports anything other than directly declared `async` functions (no re-exports, consts, classes, or type-only value exports).
+3. A file under `server/**` does not start with `import "server-only";` — the use-case/tRPC layer.
+4. Any route `page.tsx` imports from `@/db` or `drizzle-orm` directly — pages must delegate to a server loader.
+5. A `"use server"` module exports anything other than directly declared `async` functions (no re-exports, consts, classes, or type-only value exports). This is what forces the thin-wrapper pattern: a Server Action may call a use-case, but may not `export { x } from "..."` it.
+6. `app/api/**` contains any `route.ts` outside the sanctioned allowlist. Adding one is a design decision, so the list is asserted explicitly rather than left to prose.
 
-`ui-import-boundaries.test.ts` fails when application code imports a deep `@/components/ui/**` path instead of the barrel, or when a feature re-exports a shared primitive as if it owned it.
+`ui-import-boundaries.test.ts` fails when application code imports a deep `@/components/ui/**` path instead of the barrel, or when a feature re-exports a shared primitive as if it owned it. It covers `apps/web` only — `apps/mobile` has its own primitive library and uses neither the barrel nor Tailwind.
 
-`feature-boundaries.test.ts` fails when a slice depends on another slice that the allowed-edge list in that file does not declare, when a declared edge no longer exists, or when a `shared-*` pseudo-domain reappears under `features/`. Adding an edge is a design decision: if three or more slices need the same thing, move it to `lib/` or `components/ui` instead.
+`feature-boundaries.test.ts` fails when a slice depends on another slice that the allowed-edge list in that file does not declare, when a declared edge no longer exists, or when a `shared-*` pseudo-domain reappears under `features/`. Adding an edge is a design decision: if three or more slices need the same thing, move it to `lib/`, `components/ui`, or `packages/core` instead.
 
-Keep these invariants in mind before moving code; run `bun test lib/architecture/` after restructuring.
+Keep these invariants in mind before moving code; run `cd apps/web && bun test lib/architecture/` after restructuring.
 
 ### Server Action contract
 

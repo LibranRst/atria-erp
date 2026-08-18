@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import type { FinanceApprovalDetail } from "@/lib/finance/approval-types";
-import { summarizeApprovals } from "@/lib/finance/approval-summary";
+import type { FinanceApprovalDetail } from "./approval-types";
+import { summarizeApprovals } from "./approval-summary";
 
 function approval(
   id: string,

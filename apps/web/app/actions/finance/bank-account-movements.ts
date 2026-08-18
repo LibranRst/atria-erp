@@ -11,13 +11,13 @@ import {
 import { db } from "@/db";
 import { bankAccount, cashTransaction } from "@/db/schema";
 import { mutateBalance } from "@/lib/finance/balance-mutation";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   postManualCashMovementSchema,
   transferBetweenBankAccountsSchema,
   type PostManualCashMovementInput,
   type TransferBetweenBankAccountsInput,
-} from "@/lib/validations/finance";
+} from "@atria/core/validations/finance";
 
 export async function postManualCashMovement(
   input: PostManualCashMovementInput,

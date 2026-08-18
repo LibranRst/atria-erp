@@ -6,13 +6,13 @@ import { toast } from "sonner";
 
 import { approveProjectChangeOrder } from "@/app/actions/project/revision-change-order";
 import { NativePanel } from "../shared/rap-rab-primitives";
-import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
+import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
 import type { ChangeOrderHistoryView, RabRevisionHistoryView } from "../shared/rap-rab-manager";
 import {
   ActivityDetailChevron,
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { AppIcon } from "@/components/ui";
 export function RabRevisionHistoryPanel({
   revisionHistory,

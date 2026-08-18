@@ -1,5 +1,5 @@
-import type { ApprovalDetail } from "@/lib/finance/approval-types";
-import { dashboardDueDayOffset } from "@/lib/finance/dashboard-overview";
+import type { ApprovalDetail } from "./approval-types";
+import { dashboardDueDayOffset } from "./dashboard-overview";
 
 export type ApprovalQueueSummary = {
   readonly totalCount: number;

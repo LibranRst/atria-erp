@@ -1,4 +1,4 @@
-import type { CashDirection } from "@/lib/finance/cash-direction";
+import type { CashDirection } from "@atria/core/finance/cash-direction";
 
 export type ReconciliationCashTransaction = {
   readonly id: string;

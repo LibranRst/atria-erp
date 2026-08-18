@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EXPENSE_CATEGORY_CODES } from "@/lib/budget/excel-budget";
+import { EXPENSE_CATEGORY_CODES } from "../budget/excel-budget";
 
 // Regex untuk memvalidasi UUID 36 karakter (mendukung dummy UUID buatan untuk testing/seeding)
 const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;

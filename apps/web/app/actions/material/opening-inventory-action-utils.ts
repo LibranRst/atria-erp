@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 export function refreshOpeningInventory(includeOwnerOnboarding = true): void {
   revalidatePath("/materials");

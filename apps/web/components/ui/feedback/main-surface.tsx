@@ -1,7 +1,7 @@
 import React from "react";
 
 import { cn } from "@/lib/utils/cn";
-import { formatIdr, formatTightIdr } from "@/lib/utils/money";
+import { formatIdr, formatTightIdr } from "@atria/core/utils/money";
 import { SectionCountPill, StatusBadge, type StatusBadgeTone } from "../badge/badge";
 import { SectionAction } from "../button/button";
 import { DuotoneIconTile } from "../icon/icon-tile";

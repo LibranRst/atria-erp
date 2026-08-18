@@ -22,7 +22,7 @@ import {
 } from "@/features/materials/components/sheets/material-operation-sheets";
 import type { MaterialTab } from "@/features/materials/utils/material-ui-utils";
 import { ActivityDetailSheet } from "@/features/activity-detail/components/activity-detail-sheet";
-import type { ActivityDetailRequest } from "@/lib/activity-detail/types";
+import type { ActivityDetailRequest } from "@atria/core/activity-detail/types";
 
 type OverviewTabProps = {
   readonly data: MaterialOperationsDashboard;

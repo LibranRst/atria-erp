@@ -6,7 +6,7 @@ import React from "react";
 import { AppIcon, SegmentedTabs } from "@/components/ui";
 import type { MaterialTab } from "@/features/materials/utils/material-ui-utils";
 import { materialTabs } from "@/features/materials/utils/material-ui-utils";
-import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
+import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@atria/core/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 export function MaterialTabsNavigation({
   value,

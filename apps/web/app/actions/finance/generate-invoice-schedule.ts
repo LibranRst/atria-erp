@@ -9,8 +9,8 @@ import { auditLog, clientInvoice, project } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
-import type { ActionResponse } from "@/lib/types/action-response";
-import { generateInvoiceScheduleSchema } from "@/lib/validations/workflow-governance";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { generateInvoiceScheduleSchema } from "@atria/core/validations/workflow-governance";
 
 type SessionUser = { readonly id: string; readonly roleId?: string };
 

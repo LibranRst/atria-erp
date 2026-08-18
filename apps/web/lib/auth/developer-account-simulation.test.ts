@@ -5,7 +5,7 @@ import {
   getDeveloperSimulationLandingRoute,
   developerAccountSimulationSchema,
   isDeveloperAccountSimulationEnabled,
-} from "./developer-account-simulation";
+} from "@atria/core/auth/developer-account-simulation";
 
 const simulationActionPath = new URL(
   "../../app/actions/developer-account-simulation.ts",

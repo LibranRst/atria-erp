@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseBankStatementCsv } from "@/lib/finance/bank-statement-csv";
+import { parseBankStatementCsv } from "./bank-statement-csv";
 
 describe("parseBankStatementCsv", () => {
   test("parses canonical comma CSV with inflow and outflow rows", () => {

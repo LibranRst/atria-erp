@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { submitFieldRequestsSchema } from "@/lib/validations/finance";
+import { type submitFieldRequestsSchema } from "./finance";
 
 const uuid = z
   .string()

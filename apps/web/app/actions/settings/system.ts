@@ -1,6 +1,6 @@
 "use server";
 
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   type ArchiveItemPriceLibraryItemInput,
   type ArchiveMaterialInput,
@@ -18,7 +18,7 @@ import {
   type UpdateMaterialInput,
   type UpdateMaterialInventoryDefaultsInput,
   type UpdateMaterialSettingDefaultsInput,
-} from "@/lib/validations/settings";
+} from "@atria/core/validations/settings";
 import type {
   BudgetAllocationCategoryRow,
   BudgetAllocationSettingRow,

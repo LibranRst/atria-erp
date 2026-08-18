@@ -1,6 +1,6 @@
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
-import { createClientId } from "@/lib/utils/client-id";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import { createClientId } from "@atria/core/utils/client-id";
 
 export type MaterialTab = "overview" | "inventory" | "needs" | "activity";
 export type ProjectOperation = "RESERVE" | "USE" | "RETURN" | "WASTE";

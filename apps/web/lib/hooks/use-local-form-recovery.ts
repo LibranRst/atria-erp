@@ -6,7 +6,7 @@ import type { z } from "zod";
 import {
   parseLocalFormRecovery,
   serializeLocalFormRecovery,
-} from "@/lib/forms/local-form-recovery";
+} from "@atria/core/forms/local-form-recovery";
 
 export function useLocalFormRecovery<TPayload>({
   storageKey,

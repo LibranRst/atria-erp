@@ -21,7 +21,7 @@ import {
   cashTransactionNeedsAction,
   statementRowNeedsAction,
 } from "@/features/reconciliation/utils/reconciliation-presentation";
-import { formatIdr } from "@/lib/utils/money";
+import { formatIdr } from "@atria/core/utils/money";
 import {
   directionCopy,
   formatReconciliationDate,

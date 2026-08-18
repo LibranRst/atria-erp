@@ -8,7 +8,7 @@ import {
   getOwnerOnboardingProgress,
   ONBOARDING_STEP_IDS,
   type OnboardingStepId,
-} from "@/lib/onboarding/owner-onboarding";
+} from "@atria/core/onboarding/owner-onboarding";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { ONBOARDING_STEP_COPY } from "./onboarding-workspace-presentation";
 

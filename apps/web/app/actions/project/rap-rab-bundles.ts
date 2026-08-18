@@ -4,14 +4,14 @@ import { eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import { auditLog, rabEstimate, rabEstimateBundle, rabEstimateItem } from "@/db/schema";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   addRabManualItemSchema,
   createRabBundleSchema,
   deleteRabBundleSchema,
   updateRabBundleSchema,
   type AddRabManualItemInput,
-} from "@/lib/validations/rap-rab";
+} from "@atria/core/validations/rap-rab";
 import { assertProjectMutationAccess, getSessionUser, toError } from "./rap-rab-utils";
 
 export async function addRabManualItem(

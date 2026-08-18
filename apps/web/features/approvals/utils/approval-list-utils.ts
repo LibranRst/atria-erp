@@ -1,5 +1,5 @@
-import type { ApprovalDetail } from "@/lib/finance/approval-types";
-export { approvalIsCritical } from "@/lib/finance/approval-summary";
+import type { ApprovalDetail } from "@atria/core/finance/approval-types";
+export { approvalIsCritical } from "@atria/core/finance/approval-summary";
 
 export type ApprovalGroup = {
   readonly label: string;

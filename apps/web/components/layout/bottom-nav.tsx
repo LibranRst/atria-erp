@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
 import { authClient } from "@/lib/auth-client";
-import { ROLE_ID_TO_NAME } from "@/lib/auth/permissions";
+import { ROLE_ID_TO_NAME } from "@atria/core/auth/permissions";
 import { useProjectState } from "@/features/projects/detail/components/shared/project-state-context";
 import { updateBrowserUrl } from "@/lib/utils/use-url-search-param";
 import { toast } from "sonner";

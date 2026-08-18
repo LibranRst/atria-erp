@@ -7,7 +7,7 @@ import type { OwnerOnboardingBankAccount } from "@/app/actions/onboarding-types"
 import { db } from "@/db";
 import { bankAccount, cashTransaction } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
-import type { ActionResponse } from "@/lib/types/action-response";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 export async function getOwnerOnboardingBankAccounts(): Promise<
   ActionResponse<readonly OwnerOnboardingBankAccount[]>

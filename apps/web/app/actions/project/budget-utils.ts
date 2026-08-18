@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { auditLog, clientInvoice, project } from "@/db/schema";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { resolveRoleName } from "@/lib/auth/permissions";
-import { ActionResponse } from "@/lib/types/action-response";
+import { ActionResponse } from "@atria/core/types/action-response";
 import { getServerSession } from "@/lib/server/session";
 import { eq, sql } from "drizzle-orm";
 

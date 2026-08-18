@@ -17,14 +17,14 @@ import {
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
-import { getBudgetCategoryStatus } from "@/lib/budget/excel-budget";
-import { getRapItemAvailabilityStatus } from "@/lib/project/rap-rab";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { getBudgetCategoryStatus } from "@atria/core/budget/excel-budget";
+import { getRapItemAvailabilityStatus } from "@atria/core/project/rap-rab";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   copyTemplateToCategoryPlanSchema,
   copyTemplateToRapSchema,
   reallocateProjectBudgetSchema,
-} from "@/lib/validations/workflow-governance";
+} from "@atria/core/validations/workflow-governance";
 
 type SessionUser = { readonly id: string; readonly roleId?: string };
 type RapItem = typeof projectRapItem.$inferSelect;

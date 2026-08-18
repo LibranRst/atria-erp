@@ -2,7 +2,12 @@ import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-const WORKSPACE_ROOT = process.cwd();
+// Di-anchor ke lokasi file ini, bukan `process.cwd()`, supaya hasilnya sama
+// dari mana pun suite dijalankan. `apps/mobile` sengaja di luar jangkauan:
+// slice itu punya library primitive sendiri dan tidak memakai barrel
+// `@/components/ui` maupun Tailwind.
+const APP_ROOT = path.resolve(import.meta.dir, "..", "..");
+const REPO_ROOT = path.resolve(APP_ROOT, "..", "..");
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx"]);
 
 /**
@@ -25,13 +30,13 @@ function collectSourceFiles(directory: string): string[] {
 }
 
 function relativePath(filePath: string): string {
-  return path.relative(WORKSPACE_ROOT, filePath);
+  return path.relative(REPO_ROOT, filePath);
 }
 
 function consumerFiles(): string[] {
-  return CONSUMER_ROOTS.flatMap((root) =>
-    collectSourceFiles(path.join(WORKSPACE_ROOT, root)),
-  ).filter((filePath) => !filePath.endsWith(".stories.tsx"));
+  return CONSUMER_ROOTS.flatMap((root) => collectSourceFiles(path.join(APP_ROOT, root))).filter(
+    (filePath) => !filePath.endsWith(".stories.tsx"),
+  );
 }
 
 describe("shared UI import boundaries", () => {
@@ -66,7 +71,7 @@ describe("shared UI import boundaries", () => {
    */
   test("no icon library other than the shared AppIcon is imported", () => {
     const FORBIDDEN = ["lucide-react", "@heroicons/react", "react-icons"];
-    const uiFiles = collectSourceFiles(path.join(WORKSPACE_ROOT, "components", "ui"));
+    const uiFiles = collectSourceFiles(path.join(APP_ROOT, "components", "ui"));
     const offenders = [...consumerFiles(), ...uiFiles].flatMap((filePath) => {
       // Berkas tes boleh menyebut nama paketnya justru untuk menegaskan ketiadaannya.
       if (filePath.endsWith("app-icon.tsx") || /\.test\.tsx?$/.test(filePath)) return [];

@@ -19,8 +19,8 @@ import type {
   ActivityFact,
   ActivityStatusTone,
   ActivityValue,
-} from "@/lib/activity-detail/types";
-import { formatBusinessLabel } from "@/lib/presentation/business-labels";
+} from "@atria/core/activity-detail/types";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { isActivityDetailSourceRepresentedInCurrentContext } from "../utils/activity-detail-source-navigation";
 
 type ActivityDetailSheetProps = {

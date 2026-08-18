@@ -4,7 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 
 import { AppIcon, MoneyValue } from "@/components/ui";
-import type { IndicatorTone } from "@/lib/types/indicator-tone";
+import type { IndicatorTone } from "@atria/core/types/indicator-tone";
 import type { DashboardCategory } from "@/features/finance-dashboard/types/dashboard-types";
 import { transitionSpringSmooth } from "@/lib/utils/motion";
 import { categoryTone } from "@/features/finance-dashboard/components/shared/dashboard-tone";

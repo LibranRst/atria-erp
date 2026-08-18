@@ -7,8 +7,8 @@ import { getActiveProjectsForExpense, type ProjectForExpense } from "@/app/actio
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
-import { ActionResponse } from "@/lib/types/action-response";
-import { submitVendorBillSchema, SubmitVendorBillInput } from "@/lib/validations/finance";
+import { ActionResponse } from "@atria/core/types/action-response";
+import { submitVendorBillSchema, SubmitVendorBillInput } from "@atria/core/validations/finance";
 import { createVendorBillTx } from "@/lib/finance/vendor-bill-write";
 
 export async function submitVendorBill(

@@ -12,11 +12,11 @@ import {
   user,
   vendor,
 } from "@/db/schema";
-import { getAdministrationCapabilities } from "@/lib/auth/administration-access";
+import { getAdministrationCapabilities } from "@atria/core/auth/administration-access";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { OWNER_ROLE_ID, STAFF_ROLE_IDS, SYSTEM_ROLES } from "@/lib/auth/role-constants";
-import { DEFAULT_EXPENSE_CATEGORIES } from "@/lib/budget/excel-budget";
-import type { ActionResponse } from "@/lib/types/action-response";
+import { OWNER_ROLE_ID, STAFF_ROLE_IDS, SYSTEM_ROLES } from "@atria/core/auth/role-constants";
+import { DEFAULT_EXPENSE_CATEGORIES } from "@atria/core/budget/excel-budget";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import { getAdministrationActor as currentUser } from "./administration-action-utils";
 import type { AdministrationOverview, ProductionReadinessItem } from "./administration-types";
 export async function getAdministrationOverview(): Promise<ActionResponse<AdministrationOverview>> {

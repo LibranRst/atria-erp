@@ -4,7 +4,10 @@ import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { ConfirmationModal } from "@/components/ui";
-import type { OnboardingStepId, OwnerOnboardingOverview } from "@/lib/onboarding/owner-onboarding";
+import type {
+  OnboardingStepId,
+  OwnerOnboardingOverview,
+} from "@atria/core/onboarding/owner-onboarding";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 type InitialStockDecision = "NO_LEGACY_STOCK" | "HAS_LEGACY_STOCK" | "SKIPPED";

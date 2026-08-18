@@ -4,7 +4,7 @@ import type {
   ProjectBudgetCategoryOption,
 } from "@/features/expenses/types/expense-form-types";
 import { createBlankExpenseLine } from "@/features/expenses/utils/expense-form-utils";
-import { createClientId } from "@/lib/utils/client-id";
+import { createClientId } from "@atria/core/utils/client-id";
 
 interface UseExpenseLineMutationsProps {
   readonly budgetCategories: readonly ProjectBudgetCategoryOption[];

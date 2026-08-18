@@ -8,17 +8,25 @@ import type {
   ProjectStatus,
   UserData,
 } from "@/features/projects/list/types/project-list-types";
-import { resolveRoleName } from "@/lib/auth/permissions";
 import { scopeProjectQuery } from "@/lib/auth/scoping";
-import { resolveEffectiveProjectHealth } from "@/lib/project/effective-health";
-import { requireServerSession } from "@/lib/server/session";
+import { actorHasPermission } from "@atria/core/auth/permissions";
+import { resolveEffectiveProjectHealth } from "@atria/core/project/effective-health";
+import type { Actor } from "@/server/actor";
 
-export type ProjectListPageData = {
+export type ProjectListReadyData = {
+  readonly status: "ready";
   readonly projects: ProjectItem[];
   readonly clients: ClientData[];
   readonly users: UserData[];
   readonly isAllowedToCreate: boolean;
 };
+
+/**
+ * Loader melaporkan status, bukan melakukan `redirect()`. `redirect()` adalah
+ * control-flow throw milik Next dan tidak bisa menyeberang ke prosedur tRPC —
+ * pemanggil web yang menerjemahkan `restricted` menjadi redirect.
+ */
+export type ProjectListPageData = ProjectListReadyData | { readonly status: "restricted" };
 
 function toProjectStatus(status: string): ProjectStatus {
   if (
@@ -39,10 +47,15 @@ function toFinancialHealth(status: string): FinancialHealth {
   return "HEALTHY";
 }
 
-export async function getProjectListPageData(): Promise<ProjectListPageData> {
-  const session = await requireServerSession();
-  const roleName = await resolveRoleName(session.user.roleId);
-  const projectFilter = scopeProjectQuery(session.user.id, roleName);
+export async function getProjectListPageData(actor: Actor): Promise<ProjectListPageData> {
+  const roleName = actor.roleName;
+  if (!actorHasPermission(roleName, "view:budget")) {
+    return { status: "restricted" };
+  }
+
+  // Scope proyek tetap ditegakkan server: PM hanya menerima proyek miliknya,
+  // dan peran tanpa akses menerima filter yang mengembalikan nol baris.
+  const projectFilter = scopeProjectQuery(actor.userId, roleName);
 
   const [projects, clients, users] = await Promise.all([
     db.query.project.findMany({
@@ -71,6 +84,7 @@ export async function getProjectListPageData(): Promise<ProjectListPageData> {
   ]);
 
   return {
+    status: "ready",
     projects: projects.map((projectRow) => {
       const contractValue = Number(projectRow.totalContractValue);
       const budget = projectRow.canonicalBudgets[0] ?? null;

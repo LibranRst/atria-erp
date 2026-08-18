@@ -32,9 +32,9 @@ import {
   approvalRequiresOpeningReason,
 } from "@/features/approvals/components/shared/approval-decision-reason-fields";
 import { usePreservedScrollHeight } from "@/lib/hooks/use-preserved-scroll-height";
-import { summarizeApprovals } from "@/lib/finance/approval-summary";
-import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@/lib/presentation/presentation-flags";
-import { getErrorMessage } from "@/lib/utils/error-message";
+import { summarizeApprovals } from "@atria/core/finance/approval-summary";
+import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@atria/core/presentation/presentation-flags";
+import { getErrorMessage } from "@atria/core/utils/error-message";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import {
   ApprovalDecisionSubject,

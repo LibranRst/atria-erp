@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CASH_DIRECTIONS } from "@/lib/finance/cash-direction";
+import { CASH_DIRECTIONS } from "../finance/cash-direction";
 
 const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 const stockHandlingSchema = z.enum([
@@ -258,6 +258,17 @@ export const approveFieldRequestSchema = z.object({
 });
 
 export type ApproveFieldRequestInput = z.input<typeof approveFieldRequestSchema>;
+
+export const payFieldRequestSchema = z.object({
+  projectCostId: z.string().regex(uuidRegex, "ID Biaya Proyek tidak valid."),
+  bankAccountId: z.string().regex(uuidRegex, "ID Rekening tidak valid."),
+  referenceNumber: z
+    .string()
+    .trim()
+    .min(1, "Nomor referensi bank wajib diisi.")
+    .max(100, "Nomor referensi bank maksimal 100 karakter."),
+});
+export type PayFieldRequestInput = z.infer<typeof payFieldRequestSchema>;
 
 export const createClientInvoiceSchema = z.object({
   projectId: z.string().regex(uuidRegex, "ID Proyek tidak valid."),

@@ -2,7 +2,7 @@
 import { AppIcon, Badge, MetricGrid } from "@/components/ui";
 import React from "react";
 
-import { formatShortIdr as formatShortRp } from "@/lib/utils/money";
+import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
 import type {
   ProjectCategoryPlanItemView,
   RapSetupStage,
