@@ -231,7 +231,7 @@ export function FormDisclosure({
           {description ? (
             <span
               className={cx(
-                "mt-0.5 block truncate text-[10px] text-on-surface-variant",
+                "mt-0.5 block truncate text-meta text-on-surface-variant",
                 compact ? "leading-[1.2]" : "leading-4",
               )}
             >
@@ -243,8 +243,8 @@ export function FormDisclosure({
           animate={{ rotate: expanded ? 180 : 0 }}
           transition={transitionSpringSnappy}
           className={cx(
-            "shrink-0 text-on-surface-variant",
-            compact ? "text-[18px]" : "text-[20px]",
+            "flex shrink-0 items-center justify-center text-on-surface-variant",
+            compact ? "icon-md" : "icon-lg",
           )}
           aria-hidden="true"
         >
