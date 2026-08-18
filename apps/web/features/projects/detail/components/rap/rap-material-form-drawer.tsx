@@ -75,7 +75,7 @@ export function RapMaterialFormDrawer({
           ? "Lengkapi nama, area, satuan, dan jumlah material."
           : undefined
       }
-      statusText={`${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit} · Perlu dibeli ${formNeedToBuy.toLocaleString("id-ID")} · ${formatRp(formEstimatedTotal)}`}
+      statusText={`${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit} · Perlu diamankan ${formNeedToBuy.toLocaleString("id-ID")} · ${formatRp(formEstimatedTotal)}`}
       statusTone={
         !rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity
           ? "warning"
@@ -87,7 +87,7 @@ export function RapMaterialFormDrawer({
       <div className="space-y-md">
         <FieldContextLine tone={formNeedToBuy > 0 ? "warning" : "success"}>
           {rapForm.name || "Material belum diisi"} · Total {formTotalQty.toLocaleString("id-ID")}{" "}
-          {rapForm.unit} · Perlu dibeli {formNeedToBuy.toLocaleString("id-ID")} ·{" "}
+          {rapForm.unit} · Perlu diamankan {formNeedToBuy.toLocaleString("id-ID")} ·{" "}
           {formatRp(formEstimatedTotal)}
         </FieldContextLine>
         <form id="rap-material-item-form" onSubmit={handleSubmitRapItem} className="space-y-md">
@@ -239,7 +239,7 @@ export function RapMaterialFormDrawer({
                     value: `${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit}`,
                   },
                   {
-                    label: "Perlu dibeli",
+                    label: "Perlu diamankan",
                     value: `${formNeedToBuy.toLocaleString("id-ID")} ${rapForm.unit}`,
                     tone: formNeedToBuy > 0 ? "warning" : "success",
                   },

@@ -52,6 +52,7 @@ export interface RapManagerDerivedValues {
   readonly selectedMaterial: MaterialOption | undefined;
   readonly formTotalQty: number;
   readonly formNeedToBuy: number;
+  readonly formAvailableStock: number;
   readonly formEstimatedTotal: number;
   readonly categoryFormEstimatedTotal: number;
   readonly packageItemCount: number;
@@ -103,7 +104,18 @@ export function getRapManagerDerivedValues({
   const selectedMaterial = materials.find((material) => material.id === rapForm.materialId);
   const formTotalQty =
     (Number(rapForm.requiredQuantity) || 0) + (Number(rapForm.bufferQuantity) || 0);
-  const formNeedToBuy = Math.max(0, formTotalQty - (selectedMaterial?.availableStock ?? 0));
+  /**
+   * Sama seperti `projectMaterialProjection`: stok gudang yang masih bebas belum
+   * menjadi milik proyek ini sampai direservasi, jadi ia tidak mengurangi
+   * kebutuhan pembelian. Sebelumnya form mengurangkan `availableStock` sehingga
+   * menampilkan "Perlu dibeli 0" saat menyusun RAP, lalu daftar RAP langsung
+   * membantah dengan "Beli 20" untuk item yang sama.
+   *
+   * Jumlah stok bebas tetap ditampilkan terpisah sebagai konteks pada pemilih
+   * Material Master ("Tersedia 22"), bukan dengan mengecilkan kebutuhan.
+   */
+  const formNeedToBuy = formTotalQty;
+  const formAvailableStock = selectedMaterial?.availableStock ?? 0;
   const formEstimatedTotal = formTotalQty * (Number(rapForm.estimatedUnitCost) || 0);
   const categoryFormEstimatedTotal =
     (Number(categoryPlanForm.quantity) || 0) * (Number(categoryPlanForm.estimatedUnitCost) || 0);
@@ -116,6 +128,7 @@ export function getRapManagerDerivedValues({
     selectedMaterial,
     formTotalQty,
     formNeedToBuy,
+    formAvailableStock,
     formEstimatedTotal,
     categoryFormEstimatedTotal,
     packageItemCount: tukangPlanItems.length + subconPlanItems.length,

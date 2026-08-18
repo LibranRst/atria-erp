@@ -74,3 +74,20 @@ describe("project material projection", () => {
     expect(projection.needToBuy).toBe(0);
   });
 });
+
+describe("free warehouse stock is not secured stock", () => {
+  // Regresi: form RAP dahulu mengurangkan stok gudang bebas dari kebutuhan,
+  // menampilkan "Perlu dibeli 0" padahal daftar RAP langsung menyatakan
+  // "Beli 20" untuk item yang sama. Stok bebas milik gudang, bukan proyek.
+  test("counts nothing as secured before the project reserves or receives", () => {
+    const projection = projectMaterialProjection([], 20);
+    expect(projection.securedQuantity).toBe(0);
+    expect(projection.needToBuy).toBe(20);
+  });
+
+  test("only a reservation turns warehouse stock into secured stock", () => {
+    const projection = projectMaterialProjection([{ movementType: "RESERVE", quantity: 20 }], 20);
+    expect(projection.reservedQuantity).toBe(20);
+    expect(projection.needToBuy).toBe(0);
+  });
+});
