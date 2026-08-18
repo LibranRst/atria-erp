@@ -57,7 +57,11 @@ describe("exceedsProjectUsage", () => {
 describe("reservedAfterOwnRelease", () => {
   test("releases only as much of its own reservation as it actually moved", () => {
     expect(
-      reservedAfterOwnRelease({ reserved: BigInt(20), ownReserved: BigInt(8), quantity: BigInt(3) }),
+      reservedAfterOwnRelease({
+        reserved: BigInt(20),
+        ownReserved: BigInt(8),
+        quantity: BigInt(3),
+      }),
     ).toBe(BigInt(17));
   });
 

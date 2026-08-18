@@ -37,11 +37,13 @@ Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
 Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
-**Bagian C:** tujuh belas dari delapan belas negative test terbukti — enam belas
-dijalankan langsung di aplikasi, satu (Archived account) dikunci lewat test
-arsitektur. Tujuh di antaranya sekaligus dikunci unit test. Sisa satu,
-**Cross-project reserve**, menuntut dua proyek `ACTIVE` sekaligus. Rinciannya
-ada di akhir Bagian C.
+**Bagian C:** delapan belas dari delapan belas negative test terbukti — enam
+belas dijalankan langsung di aplikasi, satu (Archived account) dikunci lewat
+test arsitektur, dan satu (**Cross-project reserve**) dibuktikan lewat
+integration test yang memanggil Server Action asli di atas database demo
+sekali pakai, karena butir itu menuntut dua proyek `ACTIVE` sekaligus.
+Delapan di antaranya sekaligus dikunci unit test. Rinciannya ada di akhir
+Bagian C.
 
 **Seluruh bagian runbook kini pernah dijalankan langsung terhadap aplikasi.**
 B11 ditutup terakhir: jalur pembatalan revisi (revisi menjadi `VOID`, baseline
@@ -49,9 +51,6 @@ dan budget tidak bergeser) maupun Change Order yang disetujui. Kontrak
 Rp5.000.000 menjadi Rp6.000.000, internal budget mengikuti ke Rp5.400.000,
 kelima alokasi kategori ter-rescale tepat pada rasio default, RAB lama menjadi
 `SUPERSEDED`, dan kas tidak bergerak.
-
-Yang belum dijalankan tinggal satu butir Bagian C — **Cross-project reserve** —
-karena menuntut dua proyek `ACTIVE` sekaligus.
 
 B7.2 dan B8 sudah dijalankan; hasil akhirnya cocok persis dengan tabel B10, dan
 justru dari skenario B7.2 cacat aturan persetujuan gabungan ditemukan.
@@ -958,8 +957,11 @@ Negative test: reserve tambahan 3 harus ditolak karena available hanya 2.
 ##### B4-opsional. Cross-project reserve
 
 Satu-satunya butir Bagian C yang menuntut **dua proyek `ACTIVE` sekaligus**.
-Jalankan tepat di titik ini — setelah reserve 8, sebelum Goods Receipt B5.4 —
-karena sesudah stok gudang naik menjadi 30 nominal ujinya harus ikut membesar.
+Guard-nya sudah dibuktikan otomatis di lapisan Server Action (lihat akhir
+Bagian C), jadi langkah ini **opsional** — gunanya hanya melihat penolakan itu
+di layar. Jalankan tepat di titik ini — setelah reserve 8, sebelum Goods Receipt
+B5.4 — karena sesudah stok gudang naik menjadi 30 nominal ujinya harus ikut
+membesar.
 
 1. Sebagai Owner, jalankan ulang B1–B3 secara minimal untuk proyek kedua
    (`UAT Proyek B — Cross Reserve`): kontrak kecil, satu item RAP
@@ -1747,13 +1749,26 @@ Satu catatan yang tetap berlaku untuk Archived account: penolakannya benar dan
 terjadi sebelum saldo tersentuh, tetapi pesannya berbunyi `BANK_ACCOUNT_NOT_FOUND`
 alih-alih menjelaskan bahwa rekening sudah diarsipkan.
 
-**Belum dijalankan live (1):** Cross-project reserve.
+**Dibuktikan lewat integration test (1):** Cross-project reserve.
 
-Yang tersisa menuntut **dua proyek `ACTIVE` sekaligus**, karena yang diuji
-adalah proyek B memakai stok yang direservasi proyek A — selama sesi verifikasi
-tidak pernah ada dua proyek aktif berbarengan. Resepnya kini tertulis sebagai
-langkah opsional di akhir B4 dan dapat dijalankan dalam satu kali putaran
-runbook.
+Butir ini menuntut **dua proyek `ACTIVE` sekaligus**, karena yang diuji adalah
+proyek B memakai stok yang direservasi proyek A — selama sesi verifikasi manual
+tidak pernah ada dua proyek aktif berbarengan. Karena itu ia dibuktikan di
+lapisan Server Action, bukan lewat UI:
+`lib/material/cross-project-reserve.integration.test.ts` memanggil
+`reserveMaterialForProject` dan `useMaterialForProject` yang sebenarnya terhadap
+database demo sekali pakai (`ATRIA_TEST_DATABASE_URL`).
+
+Yang dibuktikan: proyek A mengunci 8 dari 12 lembar; pemakaian 5 oleh proyek B
+ditolak tanpa partial write — stok tetap 12, reservasi tetap 8, dan proyek B
+tidak meninggalkan `stock_movement`; sementara pemakaian 4 oleh proyek B
+diterima dan reservasi proyek A tetap utuh di 8. Test ini sudah dibuktikan
+menggigit: mengganti `ownReserved` menjadi seluruh reservasi gudang — kekeliruan
+paling wajar di titik ini — membuat proyek B menghabiskan kunci proyek A hingga
+stok tersisa 3 dan reservasi jatuh ke 0, dan kedua assert gagal.
+
+Yang tidak dibuktikan oleh test itu: jalur UI-nya. Resep manual di akhir B4
+tetap berlaku bila ingin melihat penolakannya di layar.
 
 Guard-nya sendiri bukan kotak hitam: `violatesOtherProjectReservation` dan
 `reservedAfterOwnRelease` di `packages/core/src/material/stock-guards.ts` adalah
