@@ -5,9 +5,9 @@ Audit pendamping: `docs/guide/workflow_audit_2026-07-16.md`
 
 ## Status verifikasi
 
-Dokumen ini dijalankan ulang terhadap aplikasi pada 17 Agustus 2026, dari database
-yang benar-benar dikosongkan, dan setiap angka dicocokkan langsung ke Postgres —
-bukan hanya ke tampilan layar.
+Dokumen ini dijalankan ulang terhadap aplikasi pada 17–18 Agustus 2026, dari
+database yang benar-benar dikosongkan, dan setiap angka dicocokkan langsung ke
+Postgres — bukan hanya ke tampilan layar.
 
 **Sudah dijalankan dan cocok sampai rupiah terakhir:** A0 bootstrap, seluruh langkah
 onboarding 1–6 beserta Ringkasan, B1 pembuatan project, B2 RAP (Material, Tukang,
@@ -27,26 +27,32 @@ saldo, pencocokan hanya memindahkan status (BCA tetap Rp109.000.000), impor ulan
 file yang sama melewati seluruh baris duplikat, fallback manual dengan fingerprint
 sama ditolak, dan pengecualian tersimpan dengan `reconciled` tetap `false`.
 
-**Dua ekspektasi B9.4 belum dapat dibuktikan pada run ini:** penanda aging
-**Perlu diperiksa** untuk transaksi berumur lebih dari 3 hari (seluruh transaksi
-UAT masih berumur nol hari), dan penolakan closing proyek karena kas belum cocok
-— yang terakhir baru diuji pada B12.
+**Satu ekspektasi B9.4 belum dapat dibuktikan pada run ini:** penanda aging
+**Perlu diperiksa** untuk transaksi berumur lebih dari 3 hari, karena seluruh
+transaksi UAT masih berumur nol hari. Penolakan closing karena kas belum cocok
+sudah terbukti pada B12 — checklist menolak dengan bunyi `8 transaksi kas proyek
+belum cocok dengan mutasi bank atau belum memiliki pengecualian tercatat.`
 
 Angka acuan §3.4 terbukti apa adanya: contract Rp17.000.000, Internal Budget
 Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
-**Sudah dijalankan sebagian:** Bagian C — tujuh belas dari delapan belas negative
-test terbukti, tujuh di antaranya juga dikunci test otomatis, satu terverifikasi dari kode, tujuh sisanya menunggu
-proyek `ACTIVE` baru. Rinciannya ada di akhir Bagian C.
+**Bagian C:** tujuh belas dari delapan belas negative test terbukti — enam belas
+dijalankan langsung di aplikasi, satu (Archived account) dikunci lewat test
+arsitektur. Tujuh di antaranya sekaligus dikunci unit test. Sisa satu,
+**Cross-project reserve**, menuntut dua proyek `ACTIVE` sekaligus. Rinciannya
+ada di akhir Bagian C.
 
-**Belum dijalankan ulang:** B11 revisi dan Change Order. B7.2 dan B8 sudah
-dijalankan — hasil akhirnya cocok persis dengan tabel B10, dan justru dari
-skenario B7.2 cacat aturan persetujuan gabungan ditemukan.
-Bagian-bagian itu masih berisi ekspektasi hasil desain, bukan hasil pengamatan.
+**Belum dijalankan penuh:** hanya B11. Jalur pembatalan revisi sudah terbukti
+(revisi menjadi `VOID`, baseline dan budget tidak bergeser), tetapi alur Change
+Order yang disetujui beserta invoice selisihnya belum pernah dijalankan — bagian
+itu masih berisi ekspektasi desain, bukan hasil pengamatan.
 
-Tiga belas cacat aplikasi ditemukan dan diperbaiki selama proses ini; yang paling
-memengaruhi cara membaca runbook:
+B7.2 dan B8 sudah dijalankan; hasil akhirnya cocok persis dengan tabel B10, dan
+justru dari skenario B7.2 cacat aturan persetujuan gabungan ditemukan.
+
+Enam belas cacat aplikasi ditemukan selama proses ini dan lima belas diperbaiki;
+yang paling memengaruhi cara membaca runbook:
 
 - Panel dampak budget pada review tagihan vendor **dan** pada sheet persetujuan
   dahulu memproyeksikan realisasi naik untuk tagihan kategori Material. Tagihan
@@ -70,10 +76,24 @@ memengaruhi cara membaca runbook:
 - Hasil **Periksa kesiapan closing** dahulu dirender di bawah lipatan layar tanpa
   digulirkan ke tampilan, sehingga daftar blocker — satu-satunya penjelasan
   mengapa proyek belum bisa ditutup — tidak terlihat.
+- Alasan penolakan pembayaran vendor dahulu ditulis ke
+  `vendor_payment.reference_number` — field nomor mutasi bank yang dipakai
+  rekonsiliasi — lalu ditampilkan sebagai "Ref <satu kalimat penuh>".
 - Ketiga sheet pada `/reconciliation` dahulu menonaktifkan tombol utamanya tanpa
   menjelaskan alasannya. Aturan alasan pengecualian minimal 10 karakter sama
   sekali tidak terlihat dari layar; sekarang footer menyebutkan syarat yang
   belum terpenuhi, sama seperti sheet lain di aplikasi.
+
+**Satu cacat sengaja belum tuntas:** daftar termin pada tab Pembayaran masih
+tertinggal satu aksi setelah invoice dibuat. Invalidasi cache sudah ditambahkan
+dan jalur pembayaran sudah benar, tetapi jeda pada pembuatan invoice belum
+hilang. Muat ulang halaman menampilkan data yang benar.
+
+Dua ketidakcocokan tampilan yang diketahui dan belum diperbaiki: form Tambah
+Material RAP menghitung stok gudang yang belum direservasi sebagai sudah
+tersedia (`Perlu dibeli 0`) sementara tab Stok proyek menghitungnya belum aman
+(`Beli 20`) — angka tab Stok yang lebih konservatif adalah yang benar untuk
+pengadaan.
 
 Dokumen ini adalah runbook acceptance test. Ikuti urutannya, ganti role sesuai instruksi, dan catat nilai sebelum/sesudah setiap action. Jangan memakai project atau transaksi seed sebagai titik awal.
 
