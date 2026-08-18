@@ -49,6 +49,14 @@ dijanjikan (reserve mengunci tanpa memindahkan stok fisik) dan **tidak membuat
 satu pun cash transaction**; waste tanpa catatan audit ditolak; pemakaian
 melebihi isi gudang ditolak tanpa menggeser stok.
 
+**Gudang (bagian 11.2 dan 11.4):** goods receipt menaikkan stok sebesar
+quantity yang diposting, dan posting kedua dengan nomor receipt yang sama
+ditolak tanpa menggeser stok; transfer memindahkan tanpa menciptakan —
+lokasi asal turun, tujuan naik, total perusahaan tetap; stock count hanya
+menghasilkan adjustment untuk item yang selisih, dan **menuntut approver yang
+berbeda dari penghitungnya**; emergency adjustment menolak alasan di bawah 10
+karakter lalu terposting dengan alasan yang layak.
+
 **Closing (bagian 12):** Senopati dilaporkan tanpa blocker dan benar-benar
 tertutup menjadi `COMPLETED` dengan end date terisi, sementara Menteng tetap
 diblokir dan penutupannya ditolak.
@@ -71,12 +79,7 @@ sebenarnya diuji adalah ketiga jalur tersebut.
 
 1. **Jalur klik.** Semuanya dibuktikan di lapisan Server Action, bukan lewat
    layar. Tombol, sheet, dan penempatan angka pada UI belum ditelusuri.
-2. **Bagian 11.2 dan 11.4.** Fixture-nya sudah diperiksa ada dan berstatus
-   benar — dua GRN `POSTED` bertaut vendor bill, dua stock transfer `POSTED`,
-   satu stock count `POSTED` dan satu `PENDING_APPROVAL` — tetapi entry baru
-   (posting ulang GRN, transfer material, stock count, emergency adjustment)
-   belum dijalankan.
-3. **Bagian 12A (Asisten AI).** Jawaban model bersifat non-deterministik dan
+2. **Bagian 12A (Asisten AI).** Jawaban model bersifat non-deterministik dan
    menuntut jaringan, jadi tidak dijadikan test. Yang sudah dipaku hanyalah
    aturan aksesnya — Owner, Finance Admin, dan PM boleh; Purchasing, Sales,
    Designer, dan Marketing tidak (`packages/core/src/auth/ai-chat-access.test.ts`).
@@ -418,7 +421,14 @@ Setiap form memakai **Tinjau** lalu **Catat**. Operasi stock tidak membuat cash 
 ### 11.4 Transfer dan stock count
 
 - Transfer material memakai **Tinjau → Posting** dan menghasilkan movement OUT asal serta IN tujuan.
-- Stock count memakai **Tinjau → Kirim**. Hanya variance non-zero yang menghasilkan adjustment.
+  Material harus **sudah mempunyai baris inventory di kedua lokasi**; tombolnya
+  dinonaktifkan dengan alasan "Inventory material belum tersedia di lokasi sumber
+  atau tujuan" bila belum. Pada seed demo hanya dua pasangan yang memenuhi syarat:
+  Multipleks 18mm (Gudang Utama ↔ Gudang Transit Menteng) dan Cabinet Hardware Set
+  Soft-close (Gudang Utama ↔ Workshop Cikupa).
+- Stock count memakai **Tinjau → Kirim**. Hanya variance non-zero yang menghasilkan adjustment,
+  dan **penghitungnya sendiri tidak boleh menyetujui** — approval menuntut user lain
+  (Owner dapat memakai emergency override dengan alasan).
 - Emergency adjustment wajib mempunyai alasan audit dan memakai **Tinjau → Posting**.
 
 ## 12. Dashboard, profitability, dan closing
