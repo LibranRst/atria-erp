@@ -12,33 +12,65 @@ Untuk UAT production-style dari data kosong, gunakan
 Diperiksa 18 Agustus 2026 terhadap database demo sekali pakai hasil
 `db:demo:reset`, bukan terhadap database development.
 
-**Terbukti terhadap aplikasi (bagian 3, 4, 5, 8):** seluruh angka statis yang
-dikutip panduan ini cocok dengan seed — keempat saldo rekening, indikator dua
+**Seluruh bagian 3 sampai 12 kini terbukti terhadap aplikasi.** Bagian 6 sampai
+12 dijalankan berurutan lewat Server Action asli oleh
+`lib/finance/demo-walkthrough.integration.test.ts` — 21 test, satu rantai, dalam
+urutan yang sama dengan panduan ini.
+
+**Angka statis (bagian 3, 4, 5, 8):** keempat saldo rekening, indikator dua
 transaksi belum rekonsiliasi, nominal dan status setiap expense serta vendor
 bill, hitungan rekonsiliasi 2/2/9, formula budget 90% dengan rasio
 18/35/1/0,5/0 dan buffer 45,5%, header Menteng Rp800 juta / Rp720 juta / target
 gross Rp80 juta, alokasi Subcon Rp0 pada Sudirman, budget Brawijaya yang masih
 `DRAFT` tanpa transaksi, serta invoice `INV/2026/002` Rp320 juta dengan
-Rp120 juta diterima.
+Rp120 juta diterima — semuanya cocok dengan seed.
 
-**Terbukti dijalankan (bagian 6 sampai 9):** seluruh tulang punggung kas
-dijalankan berurutan lewat Server Action asli oleh
-`lib/finance/demo-walkthrough.integration.test.ts`, dan mendarat persis pada
-saldo yang dijanjikan: Kas Budi Rp14.150.000 → Rp13.100.000 → Rp8.100.000,
-Mandiri Rp500.000.000 → Rp493.800.000, BCA Rp655.000.000 → Rp651.000.000 →
+**Tulang punggung kas (bagian 6 sampai 9):** mendarat persis pada saldo yang
+dijanjikan — Kas Budi Rp14.150.000 → Rp13.100.000 → Rp8.100.000, Mandiri
+Rp500.000.000 → Rp493.800.000, BCA Rp655.000.000 → Rp651.000.000 →
 Rp641.000.000 → Rp841.000.000 → Rp836.000.000. Termasuk maker-checker 6.2,
 penolakan vendor payment Rp10 juta sebelum approval Owner, penolakan
 overpayment invoice, dan transfer internal yang tidak mengubah kas bersih.
 
-**Terbukti sebagai fixture, belum diklik (bagian 10 sampai 12):** batch opening
-stock `OPB-2026-07-0002` memang `PENDING_APPROVAL` dengan maker Purchasing;
-kedua GRN tercatat POSTED terhadap vendor bill; ketiga CSV `.atria-demo/` ada;
-dan Senopati memang siap ditutup — tanpa invoice, bill, biaya, atau reservasi
-terbuka, dengan satu RAB approved serta invoice Rp500 juta yang sudah paid dan
-reconciled. Jalur UI-nya sendiri belum ditelusuri.
+**Rekonsiliasi (bagian 10):** pengecualian terdokumentasi tanpa menggerakkan
+saldo dan dapat dicabut; alasan di bawah 10 karakter ditolak; kedua pasangan
+seed cocok tanpa saldo bergerak; pencocokan lintas rekening ditolak. Yang
+terpenting, sesudah ketiga CSV `.atria-demo/` diimpor, **setiap transaksi yang
+dibuat walkthrough ini menemukan tepat satu lawan** pada rekening dan arah yang
+sama — diperiksa sebagai perbandingan himpunan, bukan sekadar jumlah baris.
+Impor ulang file yang sama melewatkan seluruh baris dan saldo tetap.
 
-**Belum diverifikasi:** bagian 12A (Asisten AI) sepenuhnya, karena menuntut
-`DEEPSEEK_API_KEY`; serta jalur klik bagian 10, 11, dan 12.
+**Material (bagian 11):** batch opening `OPB-2026-07-0002` ditolak ketika
+pembuatnya sendiri yang menyetujui, lalu terposting ketika Owner yang
+menyetujui; siklus reserve → use → return → waste bergerak persis seperti yang
+dijanjikan (reserve mengunci tanpa memindahkan stok fisik) dan **tidak membuat
+satu pun cash transaction**; waste tanpa catatan audit ditolak.
+
+**Closing (bagian 12):** Senopati dilaporkan tanpa blocker dan benar-benar
+tertutup menjadi `COMPLETED` dengan end date terisi, sementara Menteng tetap
+diblokir dan penutupannya ditolak.
+
+**Belum diverifikasi — dan hanya ini yang tersisa:**
+
+1. **Jalur klik.** Semuanya dibuktikan di lapisan Server Action, bukan lewat
+   layar. Tombol, sheet, dan penempatan angka pada UI belum ditelusuri.
+2. **Bagian 12A (Asisten AI).** Jawaban model bersifat non-deterministik dan
+   menuntut jaringan, jadi tidak dijadikan test. Yang sudah dipaku hanyalah
+   aturan aksesnya — Owner, Finance Admin, dan PM boleh; Purchasing, Sales,
+   Designer, dan Marketing tidak (`packages/core/src/auth/ai-chat-access.test.ts`).
+
+### Menjalankan ulang rantainya
+
+Suite ini mengonsumsi fixture-nya, jadi ia memeriksa baseline demo lebih dulu
+dan menyebut perintah yang harus dijalankan alih-alih gagal beruntun:
+
+```bash
+bun run db:demo:reset --confirm-reset
+cd apps/web && ATRIA_TEST_DATABASE_URL="<url database demo>" bun test lib/finance/demo-walkthrough.integration.test.ts
+```
+
+Arahkan `ATRIA_TEST_DATABASE_URL` hanya ke database demo sekali pakai, tidak
+pernah ke database development.
 
 ## 1. Persiapan dan reset
 
