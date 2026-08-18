@@ -37,7 +37,7 @@ Rp15.300.000, alokasi 5.814.000 / 4.284.000 / 3.060.000 / 612.000 / 306.000, dan
 buffer Rp1.224.000.
 
 **Sudah dijalankan sebagian:** Bagian C — sepuluh dari delapan belas negative
-test terbukti live, satu terverifikasi dari kode, tujuh sisanya menunggu
+test terbukti live, tujuh dikunci test otomatis, satu terverifikasi dari kode, tujuh sisanya menunggu
 proyek `ACTIVE` baru. Rinciannya ada di akhir Bagian C.
 
 **Belum dijalankan ulang:** B11 revisi dan Change Order. B7.2 dan B8 sudah
@@ -1648,20 +1648,28 @@ data untuk form pembuatan proyek — bukan kebocoran proyek yang di-scope.
 Sebagai catatan tambahan, menu navigasi juga ikut menyempit mengikuti peran: PM
 hanya melihat Proyek, Material & Stok, Kas & Tagihan, dan Profil.
 
-**Terverifikasi dari kode, belum dijalankan live (1):** Archived account.
-`recordBankAccountMovement` dan jalur transfer mencari rekening dengan filter
-`isActive = true`, sehingga rekening terarsip ditolak sebagai
-`BANK_ACCOUNT_NOT_FOUND` sebelum saldo tersentuh. Pesannya berbunyi "tidak
-ditemukan", bukan "sudah diarsipkan" — perilakunya benar, tetapi kalimatnya
-belum menjelaskan sebab sebenarnya.
+**Terverifikasi dari kode dan dikunci test (7):** Archived account, Vendor
+over-schedule, Early vendor pay, Rejected payment, Excess return, Reserved
+reversal, dan Direct second RAB.
 
-**Belum dapat dijalankan (7):**
+Ketujuhnya sebelumnya tidak punya satu pun test. Lima aturan pembayaran vendor
+dan stok kini menjadi fungsi murni di `@atria/core` yang dipanggil langsung oleh
+action, dengan 28 test; penjagaan rekening terarsip dikunci oleh test arsitektur
+`lib/architecture/cash-movement-guards.test.ts` yang sudah dibuktikan menggigit.
 
-- **Cross-project reserve, Excess return, Reserved reversal, Vendor
-  over-schedule, Early vendor pay, Rejected payment, dan Direct second RAB**
-  memerlukan proyek berstatus `ACTIVE`. Proyek UAT pertama sudah `COMPLETED`
-  sehingga seluruh action pencatatan menolaknya lewat
-  `assertProjectStatusIsOperational`.
+Satu catatan yang tetap berlaku untuk Archived account: penolakannya benar dan
+terjadi sebelum saldo tersentuh, tetapi pesannya berbunyi `BANK_ACCOUNT_NOT_FOUND`
+alih-alih menjelaskan bahwa rekening sudah diarsipkan.
+
+**Belum dijalankan live (8):** ketujuh butir di atas plus Cross-project reserve.
+
+Seluruhnya memerlukan proyek berstatus `ACTIVE`; proyek UAT pertama sudah
+`COMPLETED` sehingga action pencatatan menolaknya lewat
+`assertProjectStatusIsOperational`. Scaffold `UAT Pantry Budi — Guard Tests`
+sudah dibuat sebagai `DRAFT` dan tinggal dibawa melalui RAP → RAB → aktivasi.
+
+**Cross-project reserve** menuntut lebih dari itu: dua proyek `ACTIVE` sekaligus,
+karena yang diuji adalah proyek B memakai stok yang direservasi proyek A.
 
 ## BAGIAN D — Cara menilai hasil UAT
 
