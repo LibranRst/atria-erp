@@ -1554,11 +1554,23 @@ Contoh form invoice dan pelunasan selisih untuk revision di atas:
 
 Bila menjalankan optional revision ini, jangan memakai angka closing base scenario secara mentah: contract, receipts, cash, budget allocation, gross, dan margin harus dihitung ulang dari baseline Rp18.000.000.
 
+Saat Change Order disetujui, seluruh perubahan berikut terjadi dalam satu
+transaksi: baseline lama menjadi `SUPERSEDED`, revisi menjadi `APPROVED`,
+`total_contract_value` dan `internal_budget` diperbarui, dan alokasi kategori
+di-rescale mengikuti rasio default. Kas serta invoice **tidak** ikut berubah —
+selisih kontrak harus ditagihkan sendiri lewat invoice tambahan.
+
 Negative tests:
 
 - direct approve revision tanpa Change Order harus ditolak;
 - cancel draft revision harus membuat revision `VOID`, tidak mengubah baseline atau budget;
 - Change Order tanpa client confirmation tidak boleh approved.
+
+**Separation of duties yang tidak tertulis di atas:** pembuat Change Order tidak
+dapat menyetujuinya sendiri. Menekan **Setujui Perubahan** sebagai pembuat hanya
+memunculkan pesan `Change Order sudah dikonfirmasi klien dan menunggu approval
+Owner/Finance lain.` — statusnya berhenti di `PENDING_APPROVAL`, dan tombol
+**Setujui** baru muncul setelah berganti ke Owner/Finance yang berbeda.
 
 ### B12. Project Closing
 
