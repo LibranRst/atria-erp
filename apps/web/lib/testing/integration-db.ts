@@ -20,3 +20,17 @@ export const INTEGRATION_DATABASE_ENV = "ATRIA_TEST_DATABASE_URL";
 export const hasIntegrationDatabase = Boolean(process.env[INTEGRATION_DATABASE_ENV]);
 
 export const describeIntegration = hasIntegrationDatabase ? describe : describe.skip;
+
+/**
+ * Gerbang kedua, untuk suite yang menuntut database **kosong** — bukan seed
+ * demo. Yang diuji di sana adalah keadaan awal `financial_workflow_guide.md`:
+ * loader halaman yang membaca nol proyek, nol rekening, dan nol transaksi.
+ *
+ * Sengaja dipisahkan dari `ATRIA_TEST_DATABASE_URL` karena kedua kebutuhan itu
+ * bertolak belakang; satu variabel tidak bisa memenuhi keduanya sekaligus.
+ */
+export const INTEGRATION_EMPTY_DATABASE_ENV = "ATRIA_TEST_EMPTY_DATABASE_URL";
+
+export const describeEmptyIntegration = process.env[INTEGRATION_EMPTY_DATABASE_ENV]
+  ? describe
+  : describe.skip;

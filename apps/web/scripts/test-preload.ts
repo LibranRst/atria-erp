@@ -20,8 +20,14 @@ mock.module("server-only", () => ({}));
  * ke sana. Ketika tidak, `DATABASE_URL` ditunjuk ke alamat buntu supaya
  * koneksi yang lolos dari `describeIntegration` gagal cepat dan terlihat,
  * bukan diam-diam menulis ke database development.
+ *
+ * `ATRIA_TEST_EMPTY_DATABASE_URL` melayani kebutuhan yang berlawanan: suite
+ * yang menguji keadaan nol baris. Keduanya tidak pernah dipakai bersamaan —
+ * satu menuntut seed demo, satunya menuntut database kosong — jadi yang
+ * disetel-lah yang dipakai, dan seed demo menang bila keduanya ada.
  */
-const testDatabaseUrl = process.env.ATRIA_TEST_DATABASE_URL;
+const testDatabaseUrl =
+  process.env.ATRIA_TEST_DATABASE_URL ?? process.env.ATRIA_TEST_EMPTY_DATABASE_URL;
 
 process.env.DATABASE_URL = testDatabaseUrl
   ? testDatabaseUrl
