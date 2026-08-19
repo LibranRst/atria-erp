@@ -1,7 +1,7 @@
 # Umpan balik kontrol yang dinonaktifkan
 
 Tanggal: 2026-08-19
-Status: dalam pengerjaan
+Status: selesai
 
 ## Masalah
 
@@ -62,6 +62,36 @@ Menambahkan `disabledReason` pada komponen yang belum punya, didahulukan yang
 dilewati kedua runbook. Copy-nya mengikuti `clarify`: menyebut apa yang kurang
 dan apa langkah berikutnya, bukan menyalahkan; bahasa Indonesia, sesuai
 sekitarnya.
+
+## Hasil
+
+Tahap 1 selesai: `SheetFooterActions` menonaktifkan secara lunak, alasannya
+tertaut dan diumumkan, aktivasinya dijaga di primitif. Dipaku enam test dan
+sudah dibuktikan menggigit — primitif versi lama menggagalkan empat di
+antaranya. Ketiga puluh sembilan pemakai yang sudah ada ikut terangkat tanpa
+perubahan tampilan apa pun.
+
+Tahap 2 selesai untuk sepuluh kendali yang benar-benar membuntukan:
+
+- rekening bank — menambah rekening hanya milik Owner, jadi tombolnya tidak
+  lagi dirender mati untuk peran lain dan empty state yang menjelaskan;
+- rekening terarsip — sebabnya disebut sekali per grup, menunjuk kendali
+  pengaktifan yang ada di sheet yang sama;
+- tujuan transfer — ternyata bukan soal izin melainkan tidak adanya rekening
+  aktif lain, dan sekarang itulah yang tertulis;
+- ambang alasan pada review onboarding dan penolakan budget — dulu hanya hidup
+  di placeholder yang hilang begitu diketik;
+- prasyarat proyek pada item expense, nilai kontrak pada termin, material pada
+  stok awal, dan pengaturan alokasi yang hilang.
+
+Dua sengaja tidak disentuh: baris inventori material bukan tombol mati
+melainkan turun menjadi read-only dengan chevron ikut hilang, dan tombol kirim
+chat yang redup saat kotak pesan kosong tidak perlu kalimat.
+
+Koreksi atas angka pembuka: dari 52 komponen tanpa alasan, sebagian besar
+adalah keadaan `pending` yang sudah menampilkan spinner berikut labelnya, atau
+kendali batas baris yang jelas dari posisinya. Yang benar-benar membuntukan
+berjumlah sekitar dua belas.
 
 ## Di luar cakupan
 
