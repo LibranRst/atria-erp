@@ -147,7 +147,33 @@ Script menolak berjalan tanpa `DATABASE_URL` dan tanpa flag konfirmasi. Ketika `
 
 ## 2. Akun dan tanggung jawab role
 
-Gunakan empat akun berbeda. Email aktual boleh berbeda, tetapi role harus sama.
+Gunakan empat akun berbeda. Email dan password boleh diganti, tetapi rolenya harus sama.
+
+### Kredensial UAT
+
+Satu password untuk keempatnya, dengan email berpola `role@dekoria.test` — supaya
+tidak perlu diingat satu per satu di tengah pengujian. Buat akunnya pada A0
+(Owner) dan A2 (tiga staff).
+
+| Role            | Email                     | Password        |
+| --------------- | ------------------------- | --------------- |
+| Owner           | `owner@dekoria.test`      | `Dekoria123456` |
+| Finance Admin   | `finance@dekoria.test`    | `Dekoria123456` |
+| Project Manager | `pm@dekoria.test`         | `Dekoria123456` |
+| Purchasing      | `purchasing@dekoria.test` | `Dekoria123456` |
+
+Password itu memenuhi aturan aplikasi — minimal 12 karakter dengan huruf besar,
+huruf kecil, dan angka — dan sengaja dibuat mudah diingat karena keempat akun ini
+hanya hidup di database UAT lokal. **Jangan pernah memakai pola ini pada
+deployment yang bisa diakses orang lain.**
+
+Berbeda dari akun demo (`ronald@dekoria.com` / `password123`) pada
+[`seeded_demo_walkthrough.md`](./seeded_demo_walkthrough.md) — domain `.test`
+versus `.com` — karena keduanya hidup di database yang berbeda dan tidak boleh
+tertukar saat login.
+
+Sesudah Account Switcher aktif pada A3, cukup password Owner yang benar-benar
+dipakai; perpindahan role berikutnya berjalan tanpa login ulang.
 
 | Role            | Tanggung jawab dalam simulasi                                                             | Tidak boleh                                                    |
 | --------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
@@ -325,12 +351,12 @@ Jika Dashboard, Project Overview, Expenses, Materials, dan Stok Project menunjuk
 
 Contoh form **Buat Owner pertama**:
 
-| Field            | Wajib | Contoh UAT                       | Catatan                                                              |
-| ---------------- | ----- | -------------------------------- | -------------------------------------------------------------------- |
-| Bootstrap secret | Ya    | `<nilai ATRIA_BOOTSTRAP_SECRET>` | Ambil dari environment; jangan dicatat di bukti UAT atau screenshot. |
-| Nama Owner       | Ya    | `Owner UAT Dekoria`              | Menjadi identitas Owner pertama.                                     |
-| Email            | Ya    | `owner.uat@dekoria.test`         | Gunakan alamat test yang dapat dibedakan dari akun staff.            |
-| Password awal    | Ya    | `OwnerUAT2026!`                  | Minimal 12 karakter, mengandung huruf besar, kecil, dan angka.       |
+| Field            | Wajib | Contoh UAT                       | Catatan                                                                       |
+| ---------------- | ----- | -------------------------------- | ----------------------------------------------------------------------------- |
+| Bootstrap secret | Ya    | `<nilai ATRIA_BOOTSTRAP_SECRET>` | Ambil dari environment; jangan dicatat di bukti UAT atau screenshot.          |
+| Nama Owner       | Ya    | `Owner UAT Dekoria`              | Menjadi identitas Owner pertama.                                              |
+| Email            | Ya    | `owner@dekoria.test`             | Pola `role@dekoria.test`; lihat tabel kredensial di bagian 2.                 |
+| Password awal    | Ya    | `Dekoria123456`                  | Sama untuk keempat akun UAT. Memenuhi syarat 12 karakter + besar/kecil/angka. |
 
 Expected:
 
@@ -406,11 +432,11 @@ Ikuti urutan langkah di bawah ini untuk mengisi data kontrol UAT langsung dari d
 - **Aksi (1) - Buat Akun Tim**:
   - Pada tab **Tim**, klik tambah user lewat drawer sebanyak 3 kali untuk membuat peran staff berikut:
 
-    | Nama user        | Email                         | Role              | Password sementara |
-    | ---------------- | ----------------------------- | ----------------- | ------------------ |
-    | `Finance UAT`    | `finance.uat@dekoria.test`    | `Finance Admin`   | `FinanceTemp2026!` |
-    | `PM UAT Nara`    | `pm.uat@dekoria.test`         | `Project Manager` | `PmTempUAT2026!`   |
-    | `Purchasing UAT` | `purchasing.uat@dekoria.test` | `Purchasing`      | `PurchTemp2026!`   |
+    | Nama user        | Email                     | Role              | Password sementara |
+    | ---------------- | ------------------------- | ----------------- | ------------------ |
+    | `Finance UAT`    | `finance@dekoria.test`    | `Finance Admin`   | `Dekoria123456`    |
+    | `PM UAT Nara`    | `pm@dekoria.test`         | `Project Manager` | `Dekoria123456`    |
+    | `Purchasing UAT` | `purchasing@dekoria.test` | `Purchasing`      | `Dekoria123456`    |
 
   - Password sementara tidak memblokir readiness onboarding. Forced-password flow diuji setelah control room selesai agar Owner tidak perlu meninggalkan workspace pada rangkaian setup ini.
 - **Aksi (2) - Tambah Vendor Master**:
