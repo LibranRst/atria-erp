@@ -31,6 +31,8 @@ type ResultShellProps = {
   /** Tautan ke data aslinya. `null` berarti kartu tampil tanpa affordance tekan. */
   readonly href?: string | null;
   readonly linkLabel?: string;
+  /** Dipanggil saat tautan di atas ditekan, biasanya untuk menutup sheet chat. */
+  readonly onNavigate?: () => void;
   readonly children: React.ReactNode;
 };
 
@@ -42,6 +44,7 @@ export function ResultShell({
   appliedFilters,
   href,
   linkLabel = "Buka di aplikasi",
+  onNavigate,
   children,
 }: ResultShellProps): React.JSX.Element {
   const reduceMotion = useReducedMotion();
@@ -89,6 +92,7 @@ export function ResultShell({
       {href && (
         <Link
           href={href}
+          onClick={onNavigate}
           className="flex min-h-12 items-center justify-between gap-3 border-t border-black/5.5 px-4 text-support font-semibold text-on-surface-variant transition-colors duration-200 hover:bg-surface-container-low hover:text-on-surface focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none"
         >
           <span>{linkLabel}</span>

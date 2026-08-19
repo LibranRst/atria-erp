@@ -77,6 +77,39 @@ export function permissionDenied(what: string): { readonly error: string } {
 }
 
 /**
+ * Topik yang tool-nya digerbangi izin atau lingkup global, dipasangkan dengan
+ * penjelasan singkat untuk system prompt.
+ *
+ * Setiap entri di sini HARUS mencerminkan gerbang `hasPermission`/`hasGlobalScope`
+ * yang sungguh ada di tool terkait (lihat `finance-tools.ts`). Daftar ini yang
+ * membuat `suggestFollowUps` tidak menyarankan pertanyaan yang tool-nya sendiri
+ * pasti akan menolak — tanpa ini, model hanya tahu "proyek yang dia pegang
+ * sendiri" secara umum, dan tidak tahu ada tool yang tertutup total untuk
+ * perannya (saldo bank, antrean persetujuan lintas proyek).
+ */
+const RESTRICTED_TOPICS: readonly {
+  readonly isRestricted: (context: AiToolContext) => boolean;
+  readonly label: string;
+}[] = [
+  {
+    // Cermin gerbang getBankBalances di finance-tools.ts.
+    isRestricted: (context) => !hasPermission(context, "view:bank_account"),
+    label: "saldo dan mutasi rekening bank perusahaan",
+  },
+  {
+    // Cermin gerbang getPendingApprovals di finance-tools.ts.
+    isRestricted: (context) => !hasGlobalScope(context),
+    label: "antrean persetujuan lintas seluruh proyek perusahaan",
+  },
+];
+
+export function unavailableTopicsForRole(context: AiToolContext): string[] {
+  return RESTRICTED_TOPICS.filter((topic) => topic.isRestricted(context)).map(
+    (topic) => topic.label,
+  );
+}
+
+/**
  * Daftar id proyek yang boleh dibaca sesi ini.
  *
  * Dipakai oleh tool yang mengembalikan banyak baris lintas proyek, supaya

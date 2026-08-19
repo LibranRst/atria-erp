@@ -103,6 +103,7 @@ export function ProjectBudgetResult({
       title={projectName ?? "Budget proyek"}
       href={projectBudgetHref(projectId)}
       linkLabel="Buka budget proyek"
+      onNavigate={context.onNavigate}
       trailing={
         <MoneyValue
           amount={data.internalBudget.amount}

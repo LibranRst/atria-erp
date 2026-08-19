@@ -6,7 +6,7 @@ import * as React from "react";
 
 import { bankAccountsHref } from "../../utils/deep-links";
 import { ResultRow, ResultShell } from "./result-shell";
-import type { ToolResultProps } from "./types";
+import { EMPTY_TOOL_RESULT_CONTEXT, type ToolResultProps } from "./types";
 
 /**
  * Saldo seluruh rekening aktif.
@@ -15,7 +15,10 @@ import type { ToolResultProps } from "./types";
  * pertanyaan "kas kita berapa"; rincian per rekening menyusul sebagai baris.
  */
 
-export function BankBalancesResult({ output }: ToolResultProps): React.JSX.Element | null {
+export function BankBalancesResult({
+  output,
+  context = EMPTY_TOOL_RESULT_CONTEXT,
+}: ToolResultProps): React.JSX.Element | null {
   const parsed = getBankBalancesOutputSchema.safeParse(output);
   if (!parsed.success) return null;
 
@@ -28,6 +31,7 @@ export function BankBalancesResult({ output }: ToolResultProps): React.JSX.Eleme
       title="Saldo rekening"
       href={bankAccountsHref()}
       linkLabel="Buka rekening"
+      onNavigate={context.onNavigate}
     >
       <div className="px-4 pb-3">
         <MoneyValue amount={data.totalAvailable.amount} variant="compact" size="2xl" align="left" />

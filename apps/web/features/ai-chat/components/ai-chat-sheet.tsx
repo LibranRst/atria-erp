@@ -441,6 +441,7 @@ export function AiChatSheet({
                               showFollowUps={!isBusy && index === messages.length - 1}
                               onFollowUp={submit}
                               isBusy={isBusy}
+                              onNavigate={onClose}
                             />
                           </motion.div>
                         ))}

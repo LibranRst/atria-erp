@@ -7,7 +7,7 @@ import * as React from "react";
 
 import { expensesHref } from "../../utils/deep-links";
 import { ResultRow, ResultShell } from "./result-shell";
-import type { ToolResultProps } from "./types";
+import { EMPTY_TOOL_RESULT_CONTEXT, type ToolResultProps } from "./types";
 
 /**
  * Tagihan vendor yang belum lunas dan mendekati jatuh tempo.
@@ -36,7 +36,10 @@ const TIMING_RANK: Record<UpcomingBill["timing"], number> = {
   UPCOMING: 2,
 };
 
-export function UpcomingBillsResult({ output }: ToolResultProps): React.JSX.Element | null {
+export function UpcomingBillsResult({
+  output,
+  context = EMPTY_TOOL_RESULT_CONTEXT,
+}: ToolResultProps): React.JSX.Element | null {
   const parsed = getUpcomingBillsOutputSchema.safeParse(output);
   if (!parsed.success) return null;
 
@@ -58,6 +61,7 @@ export function UpcomingBillsResult({ output }: ToolResultProps): React.JSX.Elem
       appliedFilters={data.appliedFilters}
       href={expensesHref()}
       linkLabel="Buka pengeluaran"
+      onNavigate={context.onNavigate}
       trailing={
         <MoneyValue
           amount={data.totalOutstanding.amount}

@@ -49,6 +49,15 @@ type ChatMessageProps = {
   readonly showFollowUps: boolean;
   readonly onFollowUp: (question: string) => void;
   readonly isBusy: boolean;
+  /**
+   * Dipanggil saat sebuah kartu menavigasi ke rute lain di aplikasi.
+   *
+   * Menutup sheet lewat efek yang mengamati pathname tidak menangkap kasus
+   * pengguna sudah berada di rute tujuan — Next.js tidak menganggap itu sebagai
+   * navigasi, jadi pathname-nya tidak pernah berubah. Ini dipanggil langsung
+   * dari klik tautannya sendiri, jadi tidak bergantung pada rute berubah.
+   */
+  readonly onNavigate: () => void;
 };
 
 export function ChatMessage({
@@ -58,6 +67,7 @@ export function ChatMessage({
   showFollowUps,
   onFollowUp,
   isBusy,
+  onNavigate,
 }: ChatMessageProps): React.JSX.Element {
   const reduceMotion = useReducedMotion();
 
@@ -135,7 +145,7 @@ export function ChatMessage({
             <Renderer
               key={`${message.id}-card-${index}`}
               output={output}
-              context={{ projectNames, projectId: readToolProjectId(part) }}
+              context={{ projectNames, projectId: readToolProjectId(part), onNavigate }}
             />
           ),
         });

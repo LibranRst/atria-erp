@@ -8,7 +8,7 @@ import * as React from "react";
 
 import { projectOverviewHref } from "../../utils/deep-links";
 import { ResultShell } from "./result-shell";
-import type { ToolResultProps } from "./types";
+import { EMPTY_TOOL_RESULT_CONTEXT, type ToolResultProps } from "./types";
 
 /**
  * Proyek yang perlu perhatian, masing-masing dengan kategori terburuknya.
@@ -29,7 +29,10 @@ const HEALTH_LABEL: Record<string, string> = {
   CRITICAL: "Kritis",
 };
 
-export function ProjectsAtRiskResult({ output }: ToolResultProps): React.JSX.Element | null {
+export function ProjectsAtRiskResult({
+  output,
+  context = EMPTY_TOOL_RESULT_CONTEXT,
+}: ToolResultProps): React.JSX.Element | null {
   const parsed = getProjectsAtRiskOutputSchema.safeParse(output);
   if (!parsed.success) return null;
 
@@ -107,6 +110,7 @@ export function ProjectsAtRiskResult({ output }: ToolResultProps): React.JSX.Ele
             <Link
               key={item.projectId}
               href={href}
+              onClick={context.onNavigate}
               className="flex min-h-14 items-center gap-3 px-4 py-2.5 transition-colors duration-200 hover:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none"
             >
               {body}

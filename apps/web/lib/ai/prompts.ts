@@ -2,6 +2,7 @@ import "server-only";
 
 import { TOOLS_WITH_CARDS } from "./tool-output";
 import type { ChatProviderName } from "./providers";
+import { hasGlobalScope, unavailableTopicsForRole, type AiToolContext } from "./tools/context";
 
 /**
  * Nama tool yang hasilnya dirender sebagai kartu, disebut apa adanya ke model.
@@ -78,7 +79,7 @@ Hasil tool ditampilkan apa adanya sebagai kartu. Mengambil lebih banyak daripada
 SARAN LANJUTAN
 Setelah jawaban Anda selesai, panggil suggestFollowUps satu kali sebagai langkah terakhir, berisi paling banyak tiga pertanyaan lanjutan yang pendek.
 - Tulis dari sudut pandang pengguna, seperti yang akan dia ketik sendiri.
-- Setiap pertanyaan harus bisa dijawab oleh tool yang Anda miliki.
+- Setiap pertanyaan harus bisa dijawab oleh tool yang Anda miliki DAN berada dalam akses peran pengguna ini — periksa KONTEKS PENGGUNA di bawah, dan jangan menyarankan topik yang tercantum di TOPIK TIDAK TERSEDIA bila bagian itu ada, sekalipun jawabannya terdengar berguna.
 - Jangan mengulang pertanyaan yang barusan dijawab.
 - Lewati langkah ini kalau percakapannya jelas sudah selesai, misalnya pengguna hanya mengucapkan terima kasih.
 
@@ -103,18 +104,27 @@ KELENGKAPAN PEMANGGILAN TOOL
 export function buildSystemPrompt(
   provider: ChatProviderName,
   userName: string,
-  roleName: string,
+  context: AiToolContext,
 ): string {
   const addendum = provider === "DEEPSEEK" ? DEEPSEEK_ADDENDUM : GEMINI_ADDENDUM;
+  const unavailableTopics = unavailableTopicsForRole(context);
   return `${SHARED_PROMPT}
 ${addendum}
 
 KONTEKS PENGGUNA
 Nama: ${userName}
-Peran: ${roleName}
+Peran: ${context.roleName}
 ${
-  roleName === "OWNER" || roleName === "FINANCE_ADMIN"
+  hasGlobalScope(context)
     ? "Pengguna ini memiliki akses finansial global ke seluruh proyek."
     : "Pengguna ini hanya memiliki akses ke proyek yang dia pegang sendiri."
+}${
+  unavailableTopics.length > 0
+    ? `
+
+TOPIK TIDAK TERSEDIA
+Tool untuk topik berikut akan menolak peran ini. Jangan menjawabnya, dan JANGAN PERNAH menyarankannya lewat suggestFollowUps:
+${unavailableTopics.map((topic) => `- ${topic}`).join("\n")}`
+    : ""
 }`;
 }

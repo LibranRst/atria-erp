@@ -41,7 +41,10 @@ function healthLabel(health: string): string {
   return HEALTH_LABEL[health] ?? health;
 }
 
-export function ProjectsResult({ output }: ToolResultProps): React.JSX.Element | null {
+export function ProjectsResult({
+  output,
+  context = EMPTY_TOOL_RESULT_CONTEXT,
+}: ToolResultProps): React.JSX.Element | null {
   const parsed = listProjectsOutputSchema.safeParse(output);
   if (!parsed.success) return null;
 
@@ -91,6 +94,7 @@ export function ProjectsResult({ output }: ToolResultProps): React.JSX.Element |
             <Link
               key={item.projectId}
               href={href}
+              onClick={context.onNavigate}
               className="flex min-h-14 items-center gap-3 px-4 py-2.5 transition-colors duration-200 hover:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none"
             >
               {body}
@@ -128,6 +132,7 @@ export function ProjectHealthResult({
       title={resolveProjectName(context, data.projectName, projectId) ?? data.projectName}
       href={projectOverviewHref(projectId)}
       linkLabel="Buka proyek"
+      onNavigate={context.onNavigate}
       trailing={<StatusBadge tone={healthTone(data.health)} label={healthLabel(data.health)} />}
     >
       {data.totalAllocated && data.totalActual && data.totalRemaining && (

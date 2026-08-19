@@ -86,7 +86,7 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
         try {
           const result = streamText({
             model: resolveChatModel(provider),
-            system: buildSystemPrompt(provider, input.userName, input.toolContext.roleName),
+            system: buildSystemPrompt(provider, input.userName, input.toolContext),
             messages: await convertToModelMessages(input.messages),
             tools: buildAiTools(input.toolContext),
             stopWhen: stepCountIs(MAX_STEPS),

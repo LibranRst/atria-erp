@@ -50,7 +50,10 @@ function waitingLabel(days: number): string {
   return `Menunggu ${days} hari`;
 }
 
-export function PendingApprovalsResult({ output }: ToolResultProps): React.JSX.Element | null {
+export function PendingApprovalsResult({
+  output,
+  context = EMPTY_TOOL_RESULT_CONTEXT,
+}: ToolResultProps): React.JSX.Element | null {
   const parsed = getPendingApprovalsOutputSchema.safeParse(output);
   if (!parsed.success) return null;
 
@@ -71,6 +74,7 @@ export function PendingApprovalsResult({ output }: ToolResultProps): React.JSX.E
       appliedFilters={data.appliedFilters}
       href={approvalsHref()}
       linkLabel="Buka persetujuan"
+      onNavigate={context.onNavigate}
     >
       <div className="divide-y divide-black/5.5 border-t border-black/5.5">
         {shown.map((approval, index) => (
@@ -126,6 +130,7 @@ export function MaterialShortageResult({
       title={`${itemCount} item perlu dibeli`}
       href={materialsHref()}
       linkLabel="Buka material"
+      onNavigate={context.onNavigate}
       trailing={
         data.estimatedTotalPurchaseCost && (
           <MoneyValue
@@ -186,7 +191,10 @@ const EXPENSE_STATUS_LABEL: Record<string, string> = {
   PAID: "Lunas",
 };
 
-export function RecentExpensesResult({ output }: ToolResultProps): React.JSX.Element | null {
+export function RecentExpensesResult({
+  output,
+  context = EMPTY_TOOL_RESULT_CONTEXT,
+}: ToolResultProps): React.JSX.Element | null {
   const parsed = getRecentExpensesOutputSchema.safeParse(output);
   if (!parsed.success) return null;
 
@@ -203,6 +211,7 @@ export function RecentExpensesResult({ output }: ToolResultProps): React.JSX.Ele
       appliedFilters={parsed.data.appliedFilters}
       href={expensesHref()}
       linkLabel="Buka pengeluaran"
+      onNavigate={context.onNavigate}
     >
       <div className="divide-y divide-black/5.5 border-t border-black/5.5">
         {shown.map((expense, index) => (

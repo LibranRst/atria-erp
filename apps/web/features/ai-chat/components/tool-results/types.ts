@@ -22,6 +22,15 @@ export type ToolResultContext = {
   readonly projectNames: Readonly<Record<string, string>>;
   /** Id proyek dari argumen tool ini, bila ada. */
   readonly projectId?: string;
+  /**
+   * Dipanggil saat kartu menavigasi ke rute lain di aplikasi.
+   *
+   * Efek yang menutup sheet berdasarkan perubahan pathname tidak pernah
+   * terpicu kalau tujuannya adalah rute yang sedang dibuka pengguna — Next.js
+   * tidak menganggap itu navigasi. Menutup langsung di sini tidak bergantung
+   * pada perbandingan rute sama sekali, jadi kasus itu ikut tertangani.
+   */
+  readonly onNavigate?: () => void;
 };
 
 /**
