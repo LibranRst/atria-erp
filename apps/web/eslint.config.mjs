@@ -35,6 +35,11 @@ const eslintConfig = defineConfig([
     ".design-sync/.cache/**",
     ".design-sync/node_modules/**",
 
+    // Keluaran build Storybook: sudah di-gitignore, tetapi eslint tidak membaca
+    // .gitignore, sehingga bundel terminifikasinya ikut dilint dan menggagalkan
+    // gate dengan galat yang bukan milik kode sumber mana pun.
+    "storybook-static/**",
+
     // Default ignores of eslint-config-next:
     ".next/**",
     "dist/**",

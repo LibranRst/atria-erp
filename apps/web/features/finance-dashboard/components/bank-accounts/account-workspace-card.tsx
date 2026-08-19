@@ -94,6 +94,14 @@ export function AccountWorkspaceCard({
           onClick={onEdit}
         />
       </div>
+      {/* Hanya kasus terarsip yang dijelaskan di kartu: itu keadaan tak lazim
+          yang memang tidak terbaca dari tombol. Alasan tujuan transfer dijelaskan
+          di sheet detail, supaya daftar kartu tidak mengulang kalimat yang sama. */}
+      {!account.isActive ? (
+        <p className="px-1 text-meta font-medium text-on-surface-variant">
+          Diarsipkan — buka rekening ini untuk mengaktifkannya kembali.
+        </p>
+      ) : null}
     </article>
   );
 }

@@ -163,8 +163,12 @@ export function InitialStockSetupPanel({
                 <span className="block text-[12px] leading-5 font-bold text-on-surface">
                   Ada stok lama
                 </span>
+                {/* Barisnya sudah punya slot deskripsi; mengisinya dengan sebab
+                    lebih jujur daripada menambah baris alasan di bawah tombol. */}
                 <span className="block text-[9px] leading-4 text-on-surface-variant">
-                  Catat manual atau import CSV.
+                  {eligible === 0
+                    ? "Daftarkan materialnya lebih dulu pada langkah material."
+                    : "Catat manual atau import CSV."}
                 </span>
               </span>
               <AppIcon name="chevron_right" className="text-[17px] text-on-surface-variant/55" />

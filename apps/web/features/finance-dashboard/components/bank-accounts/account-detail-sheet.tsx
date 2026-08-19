@@ -65,6 +65,19 @@ export function AccountDetailSheet({
           </section>
 
           <section className="space-y-2.5 rounded-owner bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
+            {/* Satu baris untuk seluruh grup, bukan satu per tombol: penyebabnya
+                sama untuk semuanya, dan pemulihannya ada di sheet yang sama. */}
+            <div aria-live="polite">
+              {!presentedAccount.isActive ? (
+                <p className="px-1 text-meta font-medium text-on-surface-variant">
+                  Rekening ini diarsipkan. Aktifkan kembali di bawah untuk mencatat mutasi.
+                </p>
+              ) : !canTransfer ? (
+                <p className="px-1 text-meta font-medium text-on-surface-variant">
+                  Transfer butuh setidaknya satu rekening aktif lain sebagai tujuan.
+                </p>
+              ) : null}
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"

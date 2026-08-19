@@ -48,7 +48,14 @@ export function FinancialDefaultsPanel({
         <div className="space-y-3">
           <OnboardingToolbar
             title="Komposisi default"
-            detail="Berlaku saat proyek baru dibuat."
+            /* Tanpa pengaturan alokasi, panel di bawah menampilkan 0% di semua
+               kolom dan tombolnya mati; sebutkan sebabnya di slot detail yang
+               memang sudah ada, bukan biarkan angka nol berbicara sendiri. */
+            detail={
+              budget
+                ? "Berlaku saat proyek baru dibuat."
+                : "Pengaturan alokasi default belum tersedia."
+            }
             actionLabel="Sesuaikan"
             disabled={!budget}
             onAction={() => setEditingBudget(true)}

@@ -74,6 +74,14 @@ export function ProjectInvoicesSummary({
           {schedulePending ? "Membuat termin…" : "Buat termin 30% · 35% · 25% · 10%"}
         </button>
       ) : null}
+      {/* Termin dihitung dari nilai kontrak, jadi tanpa nilai itu tidak ada
+          yang bisa dibagi. Teksnya memakai tint di atas permukaan gelap ini,
+          bukan abu-abu netral. */}
+      {contractValue <= 0 && !schedulePending ? (
+        <p className="mt-2 px-1 text-meta font-medium text-white/60">
+          Isi nilai kontrak proyek dulu; termin dihitung dari nilai itu.
+        </p>
+      ) : null}
       {createError || createSuccess ? (
         <p
           className={`mt-3 rounded-2xl px-3 py-2 text-support ${createError ? "bg-error/18 text-critical-on-inverse" : "bg-white/10 text-white"}`}
