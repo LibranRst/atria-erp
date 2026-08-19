@@ -35,17 +35,20 @@ function EmptyAccountsState({
       />
       <h3 className="mt-3 text-base font-bold text-on-surface">Belum ada rekening</h3>
       <p className="mx-auto mt-1 max-w-65 text-xs leading-5 text-on-surface-variant">
-        Tambahkan rekening kas perusahaan untuk mulai mencatat saldo dan mutasi.
+        {canCreate
+          ? "Tambahkan rekening kas perusahaan untuk mulai mencatat saldo dan mutasi."
+          : "Rekening kas perusahaan belum dibuat. Hanya Owner yang dapat menambahkannya."}
       </p>
-      <button
-        type="button"
-        disabled={!canCreate}
-        onClick={onCreate}
-        className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.97] disabled:opacity-45"
-      >
-        <AppIcon name="add" className="icon-sm" />
-        Tambah rekening
-      </button>
+      {canCreate ? (
+        <button
+          type="button"
+          onClick={onCreate}
+          className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.97]"
+        >
+          <AppIcon name="add" className="icon-sm" />
+          Tambah rekening
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -205,16 +208,20 @@ export function BankAccountsOverview({
               Pilih rekening untuk melihat transaksi dan tindakan.
             </p>
           </div>
-          <button
-            type="button"
-            disabled={!canCreate}
-            onClick={onCreate}
-            className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-surface-container-low px-3 text-meta font-semibold text-on-surface outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-high disabled:opacity-45"
-          >
-            <AppIcon name="add" className="icon-xs" />
-            <span className="hidden min-[360px]:inline">Tambah rekening</span>
-            <span className="min-[360px]:hidden">Tambah</span>
-          </button>
+          {/* Menambah rekening hanya milik Owner. Tombol mati permanen di header
+              hanya menjadi gangguan bagi peran lain; ketiadaannya sudah jujur,
+              dan empty state yang menjelaskan siapa yang berwenang. */}
+          {canCreate ? (
+            <button
+              type="button"
+              onClick={onCreate}
+              className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-surface-container-low px-3 text-meta font-semibold text-on-surface outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-high"
+            >
+              <AppIcon name="add" className="icon-xs" />
+              <span className="hidden min-[360px]:inline">Tambah rekening</span>
+              <span className="min-[360px]:hidden">Tambah</span>
+            </button>
+          ) : null}
         </div>
         {accounts.length === 0 ? (
           <EmptyAccountsState canCreate={canCreate} onCreate={onCreate} />

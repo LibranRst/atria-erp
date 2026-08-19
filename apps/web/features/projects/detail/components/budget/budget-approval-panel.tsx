@@ -158,6 +158,15 @@ export function BudgetApprovalPanel({
                 disabled={isPending}
               />
             </FormField>
+            {/* Ambang tiga karakter tidak tertulis di mana pun sebelumnya:
+                tombolnya sekadar mati sampai kebetulan cukup panjang. */}
+            <div aria-live="polite">
+              {!isPending && rejectionNotes.trim().length < 3 ? (
+                <p className="px-1 text-meta font-medium text-on-surface-variant">
+                  Tulis alasan revisinya lebih dulu, minimal 3 karakter.
+                </p>
+              ) : null}
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <motion.button
                 type="button"

@@ -253,6 +253,16 @@ export function ExpenseItemsSection({
         {removed && insertIndex === lines.length ? renderRemovedBanner() : null}
       </div>
 
+      {/* Item hanya bisa disusun setelah proyeknya dipilih, karena kategori
+          budget dan daftar materialnya mengikuti proyek itu. Sebelumnya tombol
+          ini sekadar mati tanpa menyebut syaratnya. */}
+      <div aria-live="polite">
+        {!selectedProjectId && !disabled ? (
+          <p className="px-1 text-meta font-medium text-on-surface-variant">
+            Pilih proyek dulu untuk menambahkan item.
+          </p>
+        ) : null}
+      </div>
       <motion.button
         type="button"
         whileTap={{ scale: 0.97 }}

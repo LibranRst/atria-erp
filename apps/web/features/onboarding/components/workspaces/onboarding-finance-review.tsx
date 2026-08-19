@@ -23,6 +23,8 @@ export function OnboardingFinanceReview({
     React.useState<readonly InventoryOpeningBatchView[]>(pendingBatches);
   const [activeId, setActiveId] = React.useState<string | null>(pendingBatches[0]?.id ?? null);
   const [reason, setReason] = React.useState("");
+  const REASON_MINIMUM = 10;
+  const reasonShortfall = Math.max(0, REASON_MINIMUM - reason.trim().length);
   const [pending, startTransition] = React.useTransition();
   const active = remainingBatches.find((batch) => batch.id === activeId) ?? remainingBatches[0];
 
@@ -188,6 +190,17 @@ export function OnboardingFinanceReview({
           placeholder="Minimal 10 karakter berdasarkan hasil pemeriksaan"
           className="mt-2"
         />
+      </div>
+      {/* Syaratnya sebelumnya hanya hidup di placeholder, yang justru hilang
+          begitu pengguna mulai mengetik: lima karakter masuk, kedua tombol mati,
+          dan tidak ada yang menjelaskan apa pun. Baris ini menetap selama masih
+          kurang dan mengumumkan sisanya saat berubah. */}
+      <div aria-live="polite">
+        {!pending && reasonShortfall > 0 ? (
+          <p className="px-1 text-meta font-medium text-on-surface-variant">
+            Alasan keputusan kurang {reasonShortfall} karakter lagi.
+          </p>
+        ) : null}
       </div>
       <div className="grid grid-cols-2 gap-2.5">
         <button

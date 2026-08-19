@@ -43,6 +43,12 @@ export type ButtonProps = Omit<
     readonly children?: ReactNode;
   };
 
+/**
+ * Tombol yang dinonaktifkan lewat atribut `disabled` keluar dari urutan fokus,
+ * sehingga pengguna keyboard dan pembaca layar tidak pernah menemukannya —
+ * apalagi alasan penolakannya. Karena itu pemanggil yang menyertakan alasan
+ * memakai `aria-disabled`, dan gaya redupnya ikut mengenali varian itu.
+ */
 export function Button({
   children,
   className = "",
@@ -65,7 +71,7 @@ export function Button({
       disabled={disabled || pending}
       whileTap={{ scale: reduceMotion ? 1 : 0.97 }}
       transition={transitionSpringSnappy}
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 ${variantClass[variant]} ${sizeClass[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 aria-disabled:cursor-not-allowed aria-disabled:opacity-45 ${variantClass[variant]} ${sizeClass[size]} ${fullWidth ? "w-full" : ""} ${className}`}
     >
       {!pending && leadingIcon ? <span aria-hidden="true">{leadingIcon}</span> : null}
       <span>{accessibleChildren}</span>
