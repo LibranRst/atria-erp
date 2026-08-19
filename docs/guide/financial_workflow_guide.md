@@ -1777,6 +1777,20 @@ dipanggil oleh `useMaterialForProject` serta `wasteMaterialForProject` —
 sebelumnya action menyimpan salinan aritmetika yang sama secara inline, sehingga
 test memaku salinan, bukan jalur produksi.
 
+### Yang dijaga test otomatis
+
+Runbook ini dijalankan manual, dan pemeriksaan manual tidak bertahan melewati
+refactor berikutnya. Satu bagian yang khas milik runbook ini — proyek yang
+lahir dari nol, yang tidak pernah disentuh walkthrough demo karena seed-nya
+sudah membawa anggaran jadi — kini dikunci
+`lib/budget/project-budget-derivation.integration.test.ts`: internal budget,
+target gross, dan kelima alokasi kategori harus turun dari pengaturan alokasi
+yang sedang aktif, bukan dari angka yang ditanam di test. Membuat proyek juga
+tidak boleh menggerakkan kas.
+
+Sisa runbook berbagi jalur yang sama dengan walkthrough demo, dan jalur itu
+dijaga `lib/finance/demo-walkthrough.integration.test.ts`.
+
 ## BAGIAN D — Cara menilai hasil UAT
 
 ### PASS
