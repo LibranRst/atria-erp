@@ -116,7 +116,7 @@ export function DashboardOverviewTab({
           <OverviewPriorityList actions={data.actions} />
         )}
       </OverviewPreviewSection>
-      <OverviewPreviewSection title="Budget berisiko" href="/ledger?tab=budget">
+      <OverviewPreviewSection title="Project berisiko" href="/ledger?tab=budget">
         {data.riskyProjects.length === 0 ? (
           <OverviewPreviewEmpty>Semua project aktif masih dalam batas budget.</OverviewPreviewEmpty>
         ) : (

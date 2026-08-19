@@ -286,14 +286,16 @@ export function ApprovalList({
     <div className="space-y-sm">
       <SummarySurface
         ariaLabel="Antrean persetujuan"
-        eyebrow="Keputusan"
+        eyebrow="Antrean keputusan"
         icon="approval"
         status={approvals.length > 0 ? "Perlu ditinjau" : "Selesai"}
         statusTone={approvals.length > 0 ? "warning" : "positive"}
       >
         <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
           <div className="min-w-0">
-            <p className="font-mono text-focal font-black text-on-surface">{approvals.length}</p>
+            <p className="financial-amount text-[36px] leading-none font-extrabold tracking-[-0.045em] text-on-surface max-[430px]:text-[32px]">
+              {approvals.length}
+            </p>
             <p className="text-meta font-semibold text-on-surface-variant">
               persetujuan menunggu keputusan
             </p>
@@ -302,7 +304,7 @@ export function ApprovalList({
             <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total antrean</p>
             <MoneyValue
               amount={approvalSummary.totalAmount}
-              variant="compact"
+              variant="fullDynamic"
               size="lg"
               align="right"
               className="mt-1"

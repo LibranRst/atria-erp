@@ -105,7 +105,12 @@ export function ApprovalQueueRow({
           />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-start justify-between gap-2">
-              <MoneyValue amount={item.amount} variant="compact" size="lg" className="min-w-0" />
+              <MoneyValue
+                amount={item.amount}
+                variant="fullDynamic"
+                size="lg"
+                className="min-w-0"
+              />
               <span
                 className={`max-w-[42%] shrink-0 text-right text-eyebrow font-semibold ${reasonClass}`}
               >

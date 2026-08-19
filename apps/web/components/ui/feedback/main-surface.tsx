@@ -1,10 +1,10 @@
 import React from "react";
 
 import { cn } from "@/lib/utils/cn";
-import { formatIdr, formatTightIdr } from "@atria/core/utils/money";
 import { SectionCountPill, StatusBadge, type StatusBadgeTone } from "../badge/badge";
 import { SectionAction } from "../button/button";
 import { DuotoneIconTile } from "../icon/icon-tile";
+import { MoneyValue, type MoneyValueVariant } from "./page-primitives";
 
 export type SummarySurfaceTone = "critical" | "warning" | "positive" | "neutral";
 export type InlineStateTone = "neutral" | "positive" | "warning" | "critical" | "pending";
@@ -307,12 +307,14 @@ export function SummaryFact({
   label,
   value,
   amount,
+  variant,
   tone = "default",
   children,
 }: {
   readonly label: string;
   readonly value?: string;
   readonly amount?: number;
+  readonly variant?: MoneyValueVariant;
   readonly tone?: "default" | "danger" | "warning" | "positive";
   readonly children?: React.ReactNode;
 }): React.JSX.Element {
@@ -325,27 +327,32 @@ export function SummaryFact({
           ? "text-success"
           : "text-on-surface";
 
-  const displayValue = amount !== undefined ? formatTightIdr(amount) : value;
-  const exactValue = amount !== undefined ? formatIdr(amount) : value;
-
   return (
     <div className="flex min-w-0 flex-col gap-1 rounded-inset bg-white px-2.5 py-2 max-[430px]:px-2">
       <p className="line-clamp-2 text-[9px] leading-[1.35] font-bold tracking-wide text-on-surface-variant/55 uppercase">
         {label}
       </p>
-      {children ?? (
-        <span className="money-value-fit block min-w-0">
-          <span
-            className={cn(
-              "financial-amount money-value-fit__primary block font-sans font-extrabold tracking-[-0.02em] tabular-nums",
-              toneClass,
-            )}
-            title={exactValue}
-          >
-            {displayValue}
+      {children ??
+        (amount !== undefined ? (
+          <MoneyValue
+            amount={amount}
+            variant={variant ?? "fullDynamic"}
+            tone={tone === "positive" ? "success" : tone}
+            size="md"
+          />
+        ) : (
+          <span className="money-value-fit block min-w-0">
+            <span
+              className={cn(
+                "financial-amount money-value-fit__primary block font-sans font-extrabold tracking-[-0.02em] tabular-nums",
+                toneClass,
+              )}
+              title={value}
+            >
+              {value}
+            </span>
           </span>
-        </span>
-      )}
+        ))}
     </div>
   );
 }

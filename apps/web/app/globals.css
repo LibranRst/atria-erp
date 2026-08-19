@@ -334,12 +334,13 @@ body {
 
 .money-value-dynamic__text {
   font-size: clamp(var(--money-value-min), var(--money-value-fluid), var(--money-value-max));
-  line-height: 1.12;
+  line-height: 1.18;
   overflow-wrap: normal;
   word-break: keep-all;
   white-space: nowrap;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
+  padding-right: 2px;
 }
 
 .money-value-exact {

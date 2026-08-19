@@ -14,7 +14,6 @@ import {
 } from "@/components/ui";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@atria/core/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
-import { formatTightIdr } from "@atria/core/utils/money";
 import type { FilterId } from "../../types/project-list-types";
 import { PROJECT_FILTERS, type ProjectPortfolioSummary } from "../../utils/project-list-utils";
 export function ProjectListHeader({
@@ -44,7 +43,7 @@ export function ProjectListHeader({
       >
         <div className="flex flex-row items-end justify-between px-3.5 pt-3.5 pb-2">
           <div className="min-w-0">
-            <p className="font-mono text-[36px] leading-none font-black text-on-surface max-[430px]:text-[32px]">
+            <p className="financial-amount text-[36px] leading-none font-extrabold tracking-[-0.045em] text-on-surface max-[430px]:text-[32px]">
               {summary.activeCount}
             </p>
             <p className="text-meta font-semibold text-on-surface-variant">
@@ -66,11 +65,12 @@ export function ProjectListHeader({
         </div>
 
         <div className="grid grid-cols-3 gap-2 px-2 pt-2 pb-2">
-          <SummaryFact label="Budget" value={formatTightIdr(summary.activeInternalBudget)} />
-          <SummaryFact label="Aktual" value={formatTightIdr(summary.activeActualCost)} />
+          <SummaryFact label="Budget" amount={summary.activeInternalBudget} variant="compact" />
+          <SummaryFact label="Aktual" amount={summary.activeActualCost} variant="compact" />
           <SummaryFact
             label="Sisa budget"
-            value={formatTightIdr(summary.activeRemainingBudget)}
+            amount={summary.activeRemainingBudget}
+            variant="compact"
             tone={summary.activeRemainingBudget < 0 ? "danger" : "default"}
           />
         </div>

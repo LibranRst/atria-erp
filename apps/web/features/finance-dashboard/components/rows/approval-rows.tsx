@@ -58,7 +58,7 @@ export function ApprovalWorkbenchRow({
           />
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <MoneyValue amount={item.amount} variant="compact" size="lg" />
+              <MoneyValue amount={item.amount} variant="fullDynamic" size="lg" />
               <span
                 className={`shrink-0 text-eyebrow font-semibold ${critical ? "text-error" : "text-warning"}`}
               >

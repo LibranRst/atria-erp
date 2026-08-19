@@ -11,7 +11,15 @@ const config: StorybookConfig = {
   addons: ["@storybook/addon-a11y"],
   framework: {
     name: "@storybook/nextjs",
-    options: {},
+    options: {
+      builder: {
+        // Tanpa `fsCache`, setiap `storybook dev` membangun ulang seluruh bundle
+        // preview dari nol. `lazyCompilation` hanya berlaku di dev (builder
+        // mengabaikannya saat build produksi), jadi story dikompilasi saat dibuka.
+        fsCache: true,
+        lazyCompilation: true,
+      },
+    },
   },
   staticDirs: ["../public"],
   webpackFinal: async (webpackConfig, { configType }) => {

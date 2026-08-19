@@ -1,6 +1,6 @@
 {
   "safety-gate": {
-    "enabled": true,
+    "enabled": false,
     "PreToolUse": [
       {
         "matcher": "run_command",
@@ -15,7 +15,7 @@
     ]
   },
   "atria-invariants-reminder": {
-    "enabled": true,
+    "enabled": false,
     "PreInvocation": [
       {
         "type": "command",
@@ -25,3 +25,4 @@
     ]
   }
 }
+

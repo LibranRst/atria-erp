@@ -24,5 +24,14 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "scratch"]
+  "exclude": [
+    "node_modules",
+    "scratch",
+    ".next/cache",
+    ".next/dev/cache",
+    ".next/server",
+    ".next/dev/server",
+    ".next/static",
+    ".next/dev/static"
+  ]
 }

@@ -76,51 +76,63 @@ export function SettingsHub({
         description="Formula yang dipakai saat budget dan master data baru disiapkan."
       />
 
-      <section className="overflow-hidden rounded-[30px] bg-surface-inverse px-5 py-5 text-white shadow-inverse max-[430px]:rounded-[26px] max-[430px]:px-4 max-[430px]:py-4">
+      <section
+        className="relative isolate overflow-hidden rounded-owner bg-surface-inverse px-5 py-5 text-on-primary shadow-inverse ring-1 ring-white/8 max-[430px]:px-4 max-[430px]:py-4"
+        aria-label="Posisi default formula budget"
+      >
+        <span
+          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/20"
+          aria-hidden="true"
+        />
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-eyebrow font-bold tracking-[0.15em] text-white/48 uppercase">
+          <div className="min-w-0">
+            <p className="text-eyebrow font-bold tracking-[0.18em] text-white/52 uppercase">
               Budget Internal
             </p>
-            <p className="mt-2 font-mono text-[29px] leading-none font-black tracking-[-0.03em] tabular-nums">
+            <p className="financial-amount mt-1.5 text-[36px] leading-none font-extrabold tracking-[-0.045em] text-white tabular-nums max-[430px]:text-[32px]">
               {percent(data.budgetCapRatio)}
             </p>
           </div>
           <WorkspaceStatusLabel label="Untuk proyek baru" tone="inverse" />
         </div>
-        <div className="mt-5 grid grid-cols-2 divide-x divide-white/10 border-y border-white/10 py-3.5">
-          <div className="pr-4">
-            <p className="text-eyebrow font-bold tracking-widest text-white/45 uppercase">
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="flex w-full min-w-0 flex-col gap-2 rounded-inset bg-white/8 p-3">
+            <p className="text-[9px] leading-none font-bold tracking-[0.12em] text-white/52 uppercase">
               Margin target
             </p>
-            <p className="mt-1.5 font-mono text-[16px] font-bold tabular-nums">
+            <p className="financial-amount mt-1 font-sans text-lg font-extrabold tracking-tight text-white tabular-nums max-[430px]:text-[16px]">
               {percent(1 - data.budgetCapRatio)}
             </p>
           </div>
-          <div className="pl-4 text-right">
-            <p className="text-eyebrow font-bold tracking-widest text-white/45 uppercase">
+          <div className="flex w-full min-w-0 flex-col gap-2 rounded-inset bg-white/8 p-3">
+            <p className="text-[9px] leading-none font-bold tracking-[0.12em] text-white/52 uppercase">
               Buffer kategori
             </p>
-            <p className="mt-1.5 font-mono text-[16px] font-bold tabular-nums">
+            <p className="financial-amount mt-1 font-sans text-lg font-extrabold tracking-tight text-white tabular-nums max-[430px]:text-[16px]">
               {percent(data.unallocatedBufferRatio)}
             </p>
           </div>
         </div>
-        <div className="mt-4 rounded-inset bg-white/7.5 p-3.5 ring-1 ring-white/6">
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <p className="text-eyebrow font-bold tracking-widest text-white/45 uppercase">
+
+        <div className="mt-4 rounded-inset bg-white/8 p-3.5 ring-1 ring-white/6 max-[430px]:mt-3 max-[430px]:p-3">
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-row justify-between">
+              <p className="text-[9px] leading-none font-bold tracking-wide text-white/50 uppercase">
                 Pembagian kategori
               </p>
-              <p className="mt-1 font-mono text-[14px] font-bold tabular-nums">
-                {percent(data.categoryAllocationRatio)}
+              <p className="text-[9px] leading-none font-bold tracking-wide text-white/50 uppercase">
+                Sisa buffer
               </p>
             </div>
-            <p className="text-right text-[10px] leading-[1.3] text-white/55">
-              Sisa tetap menjadi
-              <br />
-              buffer internal
-            </p>
+            <div className="flex flex-row items-end justify-between">
+              <p className="mt-1 font-sans text-lg font-extrabold tracking-tight text-white tabular-nums max-[430px]:text-[16px]">
+                {percent(data.categoryAllocationRatio)}
+              </p>
+              <p className="mt-1 font-sans text-sm font-bold tracking-[-0.02em] text-white/80 tabular-nums">
+                {percent(data.unallocatedBufferRatio)}
+              </p>
+            </div>
           </div>
           <div
             className="mt-3 flex h-2 overflow-hidden rounded-full bg-white/10"
@@ -129,12 +141,12 @@ export function SettingsHub({
             <span className="bg-white" style={{ width: `${allocationWidth}%` }} />
             <span className="bg-white/25" style={{ width: `${bufferWidth}%` }} />
           </div>
-          <div className="mt-2 flex justify-between text-[8px] font-bold tracking-[0.08em] text-white/45 uppercase">
-            <span>Teralokasi</span>
-            <span>Buffer</span>
+          <div className="mt-3 flex items-center justify-between gap-3 text-meta font-semibold text-white/58">
+            <span>Teralokasi {percent(data.categoryAllocationRatio)}</span>
+            <span>Buffer internal {percent(data.unallocatedBufferRatio)}</span>
           </div>
         </div>
-        <p className="mt-3 text-[10px] leading-[1.35] text-white/48">
+        <p className="mt-3 px-1 text-[10px] leading-[1.35] text-white/48">
           Perubahan default tidak mengubah budget proyek yang sudah aktif.
         </p>
       </section>

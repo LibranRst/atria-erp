@@ -167,11 +167,11 @@ export function MoneyValue({
   if (variant === "fullDynamic") {
     return (
       <span
-        className={`money-value-dynamic leading-5 ${moneyDynamicSizeClass(size)} ${alignClass} ${className}`}
+        className={`money-value-dynamic ${moneyDynamicSizeClass(size)} ${alignClass} ${className}`}
         title={fullValue}
       >
         <span
-          className={`financial-amount money-value-dynamic__text block font-sans leading-4 font-extrabold tracking-[-0.035em] tabular-nums ${valueClass}`}
+          className={`financial-amount money-value-dynamic__text block font-sans font-extrabold tracking-[-0.025em] tabular-nums ${valueClass}`}
         >
           {fullValue}
         </span>

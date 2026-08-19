@@ -35,13 +35,13 @@ export function CashDueTab({
         statusTone={(overdue?.count ?? 0) > 0 ? "critical" : "positive"}
       >
         <div className="flex items-end justify-between gap-4 px-3.5 pt-3 pb-1">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-eyebrow font-semibold text-on-surface-variant/60">
               Outstanding 7 hari
             </p>
             <MoneyValue
               amount={urgentTotal}
-              variant="compact"
+              variant="fullDynamic"
               size="lg"
               tone={urgentTotal > data.summary.cashAvailable ? "danger" : "default"}
               className="mt-1"

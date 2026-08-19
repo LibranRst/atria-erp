@@ -14,7 +14,6 @@ import {
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
 import { CategoryUsageRow } from "@/features/finance-dashboard/components/rows/category-rows";
 import { ProjectRiskRow } from "@/features/finance-dashboard/components/rows/project-rows";
-import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 
 export function BudgetRiskTab({
   data,
@@ -72,7 +71,7 @@ export function BudgetRiskTab({
         <div className="grid grid-cols-2 gap-2 px-2 pb-2">
           <SummaryFact
             label="Sisa"
-            value={shortMoney(data.summary.remainingBudget)}
+            amount={data.summary.remainingBudget}
             tone={budgetDanger ? "danger" : "positive"}
           />
           <SummaryFact

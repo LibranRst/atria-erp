@@ -122,7 +122,7 @@ export function FieldClaimRow({
             </p>
             <MoneyValue
               amount={amountNum}
-              variant="compact"
+              variant="fullDynamic"
               size="sm"
               align="right"
               className="shrink-0"
@@ -294,7 +294,7 @@ function CompactClaimRow({
             </p>
             <MoneyValue
               amount={amount}
-              variant="compact"
+              variant="fullDynamic"
               align="right"
               size="sm"
               className="shrink-0"

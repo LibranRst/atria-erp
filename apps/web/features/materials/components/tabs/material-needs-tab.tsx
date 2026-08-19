@@ -40,14 +40,14 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
     <div className="space-y-sm">
       <SummarySurface
         ariaLabel="Posisi kebutuhan material"
-        eyebrow="Kebutuhan"
+        eyebrow="Kebutuhan material"
         icon="shopping_cart_checkout"
         status="Perlu dibeli"
         statusTone="warning"
       >
         <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
           <div className="min-w-0">
-            <p className="font-mono text-[36px] leading-none font-black text-on-surface tabular-nums max-[430px]:text-[32px]">
+            <p className="financial-amount text-[36px] leading-none font-extrabold tracking-[-0.045em] text-on-surface tabular-nums max-[430px]:text-[32px]">
               {shortages.length}
             </p>
             <p className="text-meta font-semibold text-on-surface-variant">
@@ -60,7 +60,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
             </p>
             <MoneyValue
               amount={totalEstimate}
-              variant="compact"
+              variant="fullDynamic"
               size="lg"
               align="right"
               className="mt-1"
