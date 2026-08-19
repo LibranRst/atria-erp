@@ -14,7 +14,7 @@ Diperiksa 18 Agustus 2026 terhadap database demo sekali pakai hasil
 
 **Seluruh bagian 3 sampai 12 kini terbukti terhadap aplikasi.** Bagian 6 sampai
 12 dijalankan berurutan lewat Server Action asli oleh
-`lib/finance/demo-walkthrough.integration.test.ts` — 21 test, satu rantai, dalam
+`lib/finance/demo-walkthrough.integration.test.ts` — 23 test, satu rantai, dalam
 urutan yang sama dengan panduan ini.
 
 **Angka statis (bagian 3, 4, 5, 8):** keempat saldo rekening, indikator dua
