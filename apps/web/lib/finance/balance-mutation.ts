@@ -43,28 +43,6 @@ export function fromCents(cents: bigint): string {
   return `${sign}${integerPart}.${formattedFraction}`;
 }
 
-/**
- * Memastikan entri transaksi kas tidak diubah/dihapus jika sudah berstatus 'reconciled'.
- * Jika sudah direkonsiliasi, fungsi akan melempar kesalahan (error) dan memicu pembatalan.
- *
- * @param tx Drizzle Transaction database instance
- * @param transactionId ID dari cash_transaction yang dicari
- */
-export async function checkReconciledTransaction(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  transactionId: string,
-): Promise<void> {
-  const transaction = await tx.query.cashTransaction.findFirst({
-    where: eq(cashTransaction.id, transactionId),
-  });
-
-  if (transaction?.reconciled) {
-    throw new Error(
-      "MUTATION_REJECTED: Transaksi buku besar yang telah direkonsiliasi tidak dapat diubah atau dihapus.",
-    );
-  }
-}
-
 interface MutateBalanceArgs {
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0];
   bankAccountId: string;
