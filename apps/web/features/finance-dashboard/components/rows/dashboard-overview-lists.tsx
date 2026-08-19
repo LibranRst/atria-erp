@@ -168,7 +168,7 @@ export function OverviewCashRows({
             </span>
             <MoneyValue
               amount={transaction.amount}
-              variant="compact"
+              variant="fullDynamic"
               prefix={incoming ? "+" : "-"}
               tone={incoming ? "primary" : "default"}
               align="right"

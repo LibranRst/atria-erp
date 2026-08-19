@@ -304,7 +304,7 @@ export function ApprovalList({
             <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total antrean</p>
             <MoneyValue
               amount={approvalSummary.totalAmount}
-              variant="fullDynamic"
+              variant="compact"
               size="lg"
               align="right"
               className="mt-1"

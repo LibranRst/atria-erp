@@ -60,7 +60,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
             </p>
             <MoneyValue
               amount={totalEstimate}
-              variant="fullDynamic"
+              variant="compact"
               size="lg"
               align="right"
               className="mt-1"

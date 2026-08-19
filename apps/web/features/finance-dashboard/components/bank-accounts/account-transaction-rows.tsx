@@ -45,7 +45,7 @@ export function AccountTransactionRows({
           </span>
           <MoneyValue
             amount={transaction.amount}
-            variant="compact"
+            variant="fullDynamic"
             prefix={transaction.type === "INFLOW" ? "+" : "-"}
             tone={transaction.type === "INFLOW" ? "primary" : "danger"}
             align="right"
