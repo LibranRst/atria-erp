@@ -38,16 +38,24 @@ const items: readonly HeaderMenuItem[] = [
   },
 ];
 
-function Demo({ initialOpen }: { readonly initialOpen: boolean }): React.JSX.Element {
+function Demo({
+  initialOpen,
+  pathname = "/expenses",
+  title = "Kas & Tagihan",
+}: {
+  readonly initialOpen: boolean;
+  readonly pathname?: string;
+  readonly title?: string;
+}): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(initialOpen);
   return (
-    <div className="flex h-64 w-64 items-start justify-center pt-2">
+    <div className="flex h-96 w-80 items-start justify-center pt-2">
       <HeaderMorphMenu
         isOpen={isOpen}
         items={items}
-        pathname="/expenses"
+        pathname={pathname}
         searchParams={new URLSearchParams()}
-        title="Kas & Tagihan"
+        title={title}
         onToggle={() => setIsOpen((current) => !current)}
         onClose={() => setIsOpen(false)}
       />
@@ -61,4 +69,25 @@ export const Closed: Story = {
 
 export const Open: Story = {
   render: () => <Demo initialOpen />,
+};
+
+/**
+ * Judul pendek. Rumus lama memaksanya ke lantai 124px — sekitar 42px lebih lebar
+ * daripada tulisannya sendiri. Sekarang lebarnya diukur.
+ */
+export const ShortTitle: Story = {
+  render: () => <Demo initialOpen={false} pathname="/projects" title="Proyek" />,
+};
+
+/** Judul terpanjang yang ada, sebagai batas atas. */
+export const LongTitle: Story = {
+  render: () => <Demo initialOpen={false} pathname="/settings" title="Kategori Pengeluaran" />,
+};
+
+/**
+ * Rute yang bukan salah satu tujuan menu. Tidak ada baris yang disorot, dan
+ * judulnya memudar di tempat alih-alih melayang ke baris yang keliru.
+ */
+export const NoActiveRoute: Story = {
+  render: () => <Demo initialOpen pathname="/rute-lain" title="Halaman Lain" />,
 };

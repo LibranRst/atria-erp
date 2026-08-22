@@ -2,117 +2,119 @@
 
 import React, { Suspense } from "react";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { AppTopBar, TopBarControl, TOP_BAR_INSET_PX } from "@/components/layout/app-top-bar";
 import { HeaderMorphMenu } from "@/components/layout/header-morph-menu";
-import { getHeaderMenuItems, getPageTitle } from "@/components/layout/header-menu-config";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { getPageTitle } from "@/components/layout/header-menu-config";
+import { useHeaderMenu } from "@/components/layout/use-header-menu";
+import { TopBarSlotsProvider, useTopBarSlots } from "@/components/layout/top-bar-slots";
+import { usePathname, useRouter } from "next/navigation";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { GlobalExpenseDrawer } from "@/features/expenses/components/sheets/global-drawer";
 import { GlobalProjectDrawer } from "@/features/projects/list/components/drawers/global-project-drawer";
 import { GlobalVendorBillDrawer } from "@/features/expenses/components/sheets/global-vendor-bill-drawer";
 import { GlobalInvoiceDrawer } from "@/features/projects/detail/components/invoices/global-invoice-drawer";
 import { ProjectStateProvider } from "@/features/projects/detail/components/shared/project-state-context";
-import { authClient } from "@/lib/auth-client";
-import { ROLE_ID_TO_NAME, ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
-import { transitionSpringBouncy, transitionSpringSmooth } from "@/lib/utils/motion";
-import { AppIcon, ConnectivityBanner } from "@/components/ui";
-import { AiChatLauncher } from "@/features/ai-chat/components/ai-chat-launcher";
+import { AppIcon, ConnectivityBanner, IconButton, IconButtonLink } from "@/components/ui";
 import { DeveloperSimulationBanner } from "@/features/profile/components/developer/developer-simulation-banner";
 import { ActivityDetailProvider } from "@/features/activity-detail/components/activity-detail-provider";
 type MobileShellProps = Readonly<{
   children: React.ReactNode;
 }>;
 
-type SessionUserWithRole = {
-  readonly roleId?: unknown;
-};
-
-function getRoleName(user: unknown): string | null {
-  if (typeof user !== "object" || user === null || !("roleId" in user)) {
-    return null;
-  }
-
-  const roleId = (user as SessionUserWithRole).roleId;
-  return typeof roleId === "string" ? (ROLE_ID_TO_NAME[roleId] ?? null) : null;
-}
+const AVATAR_SRC =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuADXAgU9ZnQpX6SfXgQYugUs6zX_n5ZV1XzT3Xc0d3G0yfv06OjXLk-TGGlBYiXk8tf9MdiMQcVbLDEq93hiTESrINtDyGHnL4pjx1XN8uwqX5MOijHuYwCpcbc-cqQkVqpYi45yqRRYmD8h3RIOeurq-84cqZ33gtgCs8vmsCbbFt9gvEUp9BKLVNN4g7EdQ7I6Y_5rx_5-58PaiB0aya8NlPT0fvzxtPrvTspuv_czI9U5EpCRvLlY8x_tNrPwgtNZqeO_bLNxXjy";
 
 /**
- * Tombol asisten AI hanya muncul untuk peran yang benar-benar memilikinya,
- * dibaca dari matriks izin yang sama dengan yang ditegakkan di server.
+ * Perakit bilah atas untuk seluruh rute selain asisten AI.
+ *
+ * Isinya hanya penentuan apa yang masuk ke tiap slot; geometri, penengahan, dan
+ * topeng gradien milik `AppTopBar`.
  */
-function canUseAiChat(roleName: string | null): boolean {
-  return roleName !== null && (ROLE_PERMISSIONS[roleName] ?? []).includes("use:ai_chat");
-}
-
 function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React.JSX.Element {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const { data: session } = authClient.useSession();
-  const routeKey = `${pathname}?${searchParams.toString()}`;
+  const { pathname, searchParams, items, canUseAiChat, routeKey } = useHeaderMenu();
   const [openRouteKey, setOpenRouteKey] = React.useState<string | null>(null);
   const isMenuOpen = openRouteKey === routeKey;
   const hasBackButton = !isRootRoute;
 
-  const pageTitle = React.useMemo(() => getPageTitle(pathname), [pathname]);
-  const roleName = React.useMemo(() => getRoleName(session?.user ?? null), [session?.user]);
-  const menuItems = React.useMemo(() => getHeaderMenuItems(roleName), [roleName]);
+  /**
+   * Rute boleh menitipkan isi slotnya sendiri. Bilahnya tetap satu instance,
+   * jadi menyeberangi batas rute memorf lebar pil alih-alih menukar dua bilah.
+   */
+  const override = useTopBarSlots();
+  const pageTitle = React.useMemo(
+    () => override?.title ?? getPageTitle(pathname),
+    [override?.title, pathname],
+  );
 
   return (
-    <header
-      className={`fixed top-0 left-0 flex h-14 w-full items-center select-none ${
-        isMenuOpen ? "z-90" : "z-50"
-      }`}
-    >
-      <div className="mx-auto flex h-full w-full max-w-md items-center justify-between px-margin-mobile">
-        <div className="relative h-10 w-22 shrink-0">
-          <AnimatePresence>
-            {hasBackButton && (
-              <motion.button
-                key="header-back-button"
-                type="button"
+    <AppTopBar
+      elevated={isMenuOpen}
+      left={
+        override?.left ?? [
+          /*
+           * Baris flex biasa dengan `key` stabil, bukan dua kepingan bertumpuk
+           * dengan geseran `x: 46` yang ditulis tangan. Angka itu ternyata
+           * memang hasil alami flex — lebar tombol 40px ditambah jarak 6px —
+           * jadi menuliskannya hanya menduplikasi apa yang sudah dihitung tata
+           * letak. Koreografinya sendiri milik `TopBarControl`.
+           */
+          hasBackButton ? (
+            <TopBarControl key="back">
+              <IconButton
+                label="Kembali"
+                size="compact"
                 onClick={() => router.back()}
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.7 }}
-                transition={hasBackButton ? transitionSpringBouncy : transitionSpringSmooth}
-                className="absolute top-0 left-0 z-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white text-on-surface-variant shadow-control ring-1 ring-ring-subtle transition-colors duration-200 after:absolute after:-inset-1 after:content-[''] hover:bg-surface-container-low active:scale-95"
-                aria-label="Go back"
-              >
-                <AppIcon name="chevron_left" className="icon-2xl" />
-              </motion.button>
-            )}
-          </AnimatePresence>
-
-          {canUseAiChat(roleName) && <AiChatLauncher shifted={hasBackButton} />}
-        </div>
-
+                icon={<AppIcon name="chevron_left" className="icon-md" />}
+              />
+            </TopBarControl>
+          ) : null,
+          canUseAiChat ? (
+            <TopBarControl key="ai-chat">
+              <IconButtonLink label="Buka asisten AI" href="/ai" size="compact">
+                <AppIcon name="chat" aria-hidden="true" className="icon-md" />
+              </IconButtonLink>
+            </TopBarControl>
+          ) : null,
+        ]
+      }
+      center={
         <HeaderMorphMenu
           isOpen={isMenuOpen}
-          items={menuItems}
+          items={items}
           pathname={pathname}
           searchParams={searchParams}
           title={pageTitle}
           onToggle={() => setOpenRouteKey((current) => (current === routeKey ? null : routeKey))}
           onClose={() => setOpenRouteKey(null)}
         />
-
-        <div className="flex h-10 w-22 shrink-0 items-center justify-end">
-          <Link
-            href="/profile"
-            className="relative h-8 w-8 shrink-0 overflow-visible rounded-full shadow-control ring-1 ring-ring-subtle transition-transform after:absolute after:-inset-2 after:content-[''] active:scale-95"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              alt="Avatar"
-              className="h-full w-full rounded-full object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuADXAgU9ZnQpX6SfXgQYugUs6zX_n5ZV1XzT3Xc0d3G0yfv06OjXLk-TGGlBYiXk8tf9MdiMQcVbLDEq93hiTESrINtDyGHnL4pjx1XN8uwqX5MOijHuYwCpcbc-cqQkVqpYi45yqRRYmD8h3RIOeurq-84cqZ33gtgCs8vmsCbbFt9gvEUp9BKLVNN4g7EdQ7I6Y_5rx_5-58PaiB0aya8NlPT0fvzxtPrvTspuv_czI9U5EpCRvLlY8x_tNrPwgtNZqeO_bLNxXjy"
-            />
-          </Link>
-        </div>
-      </div>
-    </header>
+      }
+      right={
+        override?.right ?? [
+          /*
+           * Tanpa pergeseran tempat: avatar satu-satunya penghuni slot kanan
+           * pada rute biasa, jadi ia tidak pernah pindah — ia digantikan oleh
+           * kontrol halaman AI. Skala dan opasitas saja.
+           */
+          <TopBarControl key="profile" reflow={false}>
+            <IconButtonLink
+              label="Profil Saya"
+              href="/profile"
+              size="compact"
+              className="overflow-hidden"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt=""
+                aria-hidden="true"
+                className="h-full w-full object-cover"
+                src={AVATAR_SRC}
+              />
+            </IconButtonLink>
+          </TopBarControl>,
+        ]
+      }
+    />
   );
 }
 
@@ -124,6 +126,17 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
     pathname === "/setup" ||
     pathname.startsWith("/onboarding") ||
     pathname === "/profile/password";
+
+  const isAiPage = pathname === "/ai";
+  /**
+   * Bilah atas kini satu untuk seluruh aplikasi, termasuk `/ai` — itulah yang
+   * membuat pil judul bisa bermorf saat menyeberangi batas rute alih-alih
+   * ditukar. Yang tetap disembunyikan di `/ai` hanyalah kelengkapan lain:
+   * navigasi bawah, spanduk, dan jarak isi — layar percakapan mengatur ruangnya
+   * sendiri.
+   */
+  const hideTopBar = isLoginPage;
+  const hideStandardChrome = isLoginPage || isAiPage;
 
   // Check if current route is a root-level tab route
   const isRootRoute = React.useMemo(() => {
@@ -141,66 +154,81 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
   return (
     <ProjectStateProvider>
       <ActivityDetailProvider>
-        <div className="min-h-screen bg-background font-sans text-on-surface">
-          {/* Top AppBar - Fixed, contents centered to match page width */}
-          {!isLoginPage && (
-            <Suspense
-              fallback={<div className="h-14 border-b border-outline-variant/10 bg-surface" />}
+        <TopBarSlotsProvider>
+          <div className="min-h-screen bg-background font-sans text-on-surface">
+            {/* Top AppBar - Fixed, contents centered to match page width */}
+            {/*
+             * Fallback `null`, bukan sebuah blok setinggi bilah.
+             *
+             * `MobileHeader` merender bilah `fixed` yang tidak memakan ruang
+             * aliran sama sekali; blok pengganti setinggi 56px **dalam** aliran
+             * mendorong seluruh isi halaman turun selama boundary tertunda, lalu
+             * menyentaknya naik. Ruangnya sudah disediakan `TOP_BAR_INSET_PX` di
+             * bawah, dan blok itu juga menggambar bilah buram bergaris bawah yang
+             * tidak pernah ada dalam rancangan aslinya.
+             */}
+            {!hideTopBar && (
+              <Suspense fallback={null}>
+                <MobileHeader isRootRoute={isRootRoute} />
+              </Suspense>
+            )}
+
+            {!hideStandardChrome && <ConnectivityBanner />}
+
+            {/* Screen Content */}
+            <main
+              // Jarak atas diturunkan dari geometri bilah, bukan ditulis sebagai
+              // `pt-20`. Nilainya tetap 80px, jadi tidak ada halaman yang bergeser.
+              style={hideStandardChrome ? undefined : { paddingTop: TOP_BAR_INSET_PX }}
+              className={
+                isAiPage
+                  ? "mx-auto h-dvh w-full max-w-md overflow-hidden p-0"
+                  : isLoginPage
+                    ? "mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-margin-mobile pt-6 pb-6"
+                    : "mx-auto w-full max-w-md space-y-lg px-margin-mobile pb-[calc(10rem+env(safe-area-inset-bottom))]"
+              }
             >
-              <MobileHeader isRootRoute={isRootRoute} />
-            </Suspense>
-          )}
+              {children}
+            </main>
 
-          {!isLoginPage && <ConnectivityBanner />}
+            {!hideStandardChrome ? <DeveloperSimulationBanner /> : null}
 
-          {/* Screen Content - Space-y-lg handles margins between widgets automatically */}
-          <main
-            className={`mx-auto w-full max-w-md px-margin-mobile ${
-              isLoginPage
-                ? "flex min-h-screen flex-col justify-center pt-6 pb-6"
-                : "space-y-lg pt-20 pb-[calc(10rem+env(safe-area-inset-bottom))]"
-            }`}
-          >
-            {children}
-          </main>
+            {/* Bottom Navigation wrapped in Suspense */}
+            {!hideStandardChrome && (
+              <Suspense fallback={null}>
+                <BottomNav />
+              </Suspense>
+            )}
 
-          {!isLoginPage ? <DeveloperSimulationBanner /> : null}
+            {/* Global Expense Drawer wrapped in Suspense */}
+            {!isLoginPage && (
+              <Suspense fallback={null}>
+                <GlobalExpenseDrawer />
+              </Suspense>
+            )}
 
-          {/* Bottom Navigation wrapped in Suspense */}
-          {!isLoginPage && (
-            <Suspense fallback={null}>
-              <BottomNav />
-            </Suspense>
-          )}
+            {/* Global Project Drawer wrapped in Suspense */}
+            {!isLoginPage && (
+              <Suspense fallback={null}>
+                <GlobalProjectDrawer />
+              </Suspense>
+            )}
 
-          {/* Global Expense Drawer wrapped in Suspense */}
-          {!isLoginPage && (
-            <Suspense fallback={null}>
-              <GlobalExpenseDrawer />
-            </Suspense>
-          )}
+            {/* Global Vendor Bill Drawer wrapped in Suspense */}
+            {!isLoginPage && (
+              <Suspense fallback={null}>
+                <GlobalVendorBillDrawer />
+              </Suspense>
+            )}
 
-          {/* Global Project Drawer wrapped in Suspense */}
-          {!isLoginPage && (
-            <Suspense fallback={null}>
-              <GlobalProjectDrawer />
-            </Suspense>
-          )}
-
-          {/* Global Vendor Bill Drawer wrapped in Suspense */}
-          {!isLoginPage && (
-            <Suspense fallback={null}>
-              <GlobalVendorBillDrawer />
-            </Suspense>
-          )}
-
-          {/* Global Client Invoice Drawer wrapped in Suspense */}
-          {!isLoginPage && (
-            <Suspense fallback={null}>
-              <GlobalInvoiceDrawer />
-            </Suspense>
-          )}
-        </div>
+            {/* Global Client Invoice Drawer wrapped in Suspense */}
+            {!isLoginPage && (
+              <Suspense fallback={null}>
+                <GlobalInvoiceDrawer />
+              </Suspense>
+            )}
+          </div>
+        </TopBarSlotsProvider>
       </ActivityDetailProvider>
     </ProjectStateProvider>
   );

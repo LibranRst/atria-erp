@@ -48,7 +48,7 @@ export function StatusBadge({
   return (
     <span
       {...props}
-      className={`inline-flex min-h-6 items-center gap-1.5 rounded-full px-2.5 text-eyebrow font-bold tracking-wide uppercase shadow-control ${toneClass[tone]} ${className}`}
+      className={`inline-flex min-h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-eyebrow font-bold tracking-wide whitespace-nowrap uppercase shadow-control ${toneClass[tone]} ${className}`}
     >
       {showMarker ? (
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" />

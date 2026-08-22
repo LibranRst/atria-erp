@@ -1,3 +1,5 @@
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
+
 export type HeaderMenuItem = {
   readonly label: string;
   readonly href: string;
@@ -49,6 +51,12 @@ const HEADER_MENU_ITEMS: readonly HeaderMenuItem[] = [
     match: (path): boolean => path.startsWith("/settings"),
   },
   {
+    label: "Asisten AI",
+    href: "/ai",
+    iconName: "chat",
+    match: (path): boolean => path === "/ai",
+  },
+  {
     label: "Profil Saya",
     href: "/profile",
     iconName: "person",
@@ -59,6 +67,14 @@ const HEADER_MENU_ITEMS: readonly HeaderMenuItem[] = [
 export function getHeaderMenuItems(roleName: string | null): readonly HeaderMenuItem[] {
   return HEADER_MENU_ITEMS.filter((item) => {
     if (!roleName) return false;
+
+    // Dibaca dari matriks izin yang sama dengan yang ditegakkan di server, bukan
+    // dari daftar peran yang ditulis ulang di sini: rute AI sudah memeriksa
+    // `use:ai_chat` sebelum melakukan apa pun, dan menunya tidak boleh
+    // menawarkan pintu yang akan ditolak.
+    if (item.label === "Asisten AI") {
+      return (ROLE_PERMISSIONS[roleName] ?? []).includes("use:ai_chat");
+    }
 
     if (item.label === "Dashboard") {
       return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
@@ -95,5 +111,9 @@ export function getPageTitle(pathname: string): string {
   if (pathname === "/settings/materials") return "Material Master";
   if (pathname === "/approvals") return "Persetujuan";
   if (pathname === "/reconciliation") return "Rekonsiliasi";
+  // Halaman AI menyetel judulnya sendiri karena berganti mengikuti keadaan
+  // dalam halaman (percakapan ↔ riwayat). Entri ini yang menjaga kedua sumber
+  // tetap sepakat kalau ada yang membacanya lewat rute.
+  if (pathname === "/ai") return "Asisten AI";
   return "Finance ERP";
 }

@@ -87,6 +87,7 @@ export function QuickActionFab({
   return (
     <div className="relative z-30 h-14 w-14 shrink-0">
       <motion.div
+        initial={false}
         onClick={() => {
           if (!isOpen) onOpen();
         }}
@@ -106,6 +107,7 @@ export function QuickActionFab({
         }`}
       >
         <motion.div
+          initial={false}
           animate={{
             opacity: isOpen ? 0 : 1,
             scale: isOpen ? 0.75 : 1,
@@ -118,6 +120,7 @@ export function QuickActionFab({
 
         <motion.div
           ref={contentRef}
+          initial={false}
           animate={{
             opacity: isOpen ? 1 : 0,
             scale: isOpen ? 1 : 0.95,

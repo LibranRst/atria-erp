@@ -6,6 +6,7 @@ import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
 
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon } from "../icon/app-icon";
+import { Tooltip } from "../overlay/anchored-surfaces";
 
 export type ButtonVariant = "primary" | "secondary" | "tertiary" | "criticalQuiet" | "critical";
 export type ButtonSize = "default" | "compact";
@@ -108,35 +109,107 @@ export function ButtonLink({
   );
 }
 
+/**
+ * Ukuran tombol ikon.
+ *
+ * `compact` dipakai bilah mengambang yang menumpuk beberapa kontrol di lebar
+ * ponsel; 48px bertiga plus judul terlalu padat di 375px. Ukurannya sendiri
+ * 40px, tetapi pseudo-element melebarkan area sentuh kembali ke 48px sehingga
+ * tetap memenuhi target sentuh yang diwajibkan panduan.
+ */
+const iconSizeClass: Record<ButtonSize, string> = {
+  default: "h-12 w-12",
+  compact: "relative h-10 w-10 after:absolute after:-inset-1 after:content-['']",
+};
+
 export type IconButtonProps = Omit<
   HTMLMotionProps<"button">,
   "children" | "ref" | "transition" | "whileTap"
 > & {
   readonly label: string;
   readonly icon: ReactNode;
-  readonly variant?: Exclude<ButtonVariant, "tertiary">;
+  readonly variant?: ButtonVariant;
+  readonly size?: ButtonSize;
 };
 
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { label, icon, variant = "secondary", className = "", ...props },
+  { label, icon, variant = "secondary", size = "default", className = "", ...props },
   ref,
 ): React.JSX.Element {
   const reduceMotion = useReducedMotion();
-  return (
+  const control = (
     <motion.button
       ref={ref}
       {...props}
       type={props.type ?? "button"}
       aria-label={label}
-      title={label}
       whileTap={{ scale: reduceMotion ? 1 : 0.97 }}
       transition={transitionSpringSnappy}
-      className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 ${variantClass[variant]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 ${iconSizeClass[size]} ${variantClass[variant]} ${className}`}
     >
       <span aria-hidden="true">{icon}</span>
     </motion.button>
   );
+
+  return (
+    <Tooltip
+      content={label}
+      disabled={Boolean(
+        props.disabled || props["aria-expanded"] === true || props["aria-expanded"] === "true",
+      )}
+    >
+      {control}
+    </Tooltip>
+  );
 });
+
+export type IconButtonLinkProps = ComponentPropsWithoutRef<typeof Link> & {
+  readonly label: string;
+  readonly variant?: ButtonVariant;
+  readonly size?: ButtonSize;
+};
+
+/**
+ * Kembaran `IconButton` yang benar-benar sebuah tautan.
+ *
+ * Bilah atas memuat dua kontrol bundar yang menuju rute lain: pintasan asisten
+ * AI dan avatar. Keduanya butuh `href` sungguhan agar bisa dibuka di tab baru
+ * dan terbaca sebagai navigasi, jadi keduanya tidak bisa memakai `IconButton` —
+ * dan tanpa komponen ini keduanya menyalin sendiri kelas chrome-nya, persis
+ * kebiasaan yang membuat dua bilah atas menyimpang satu sama lain.
+ */
+export function IconButtonLink({
+  label,
+  children,
+  variant = "secondary",
+  size = "default",
+  className = "",
+  ...props
+}: IconButtonLinkProps): React.JSX.Element {
+  const control = (
+    <Link
+      {...props}
+      aria-label={label}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 active:scale-95 ${iconSizeClass[size]} ${variantClass[variant]} ${className}`}
+    >
+      {children}
+    </Link>
+  );
+
+  return (
+    <Tooltip
+      content={label}
+      disabled={Boolean(
+        props["aria-expanded"] === true ||
+        props["aria-expanded"] === "true" ||
+        props["aria-disabled"] === true ||
+        props["aria-disabled"] === "true",
+      )}
+    >
+      {control}
+    </Tooltip>
+  );
+}
 
 type SectionActionProps = {
   readonly label: string;

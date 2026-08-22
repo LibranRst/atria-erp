@@ -83,6 +83,19 @@ export const Icon: StoryObj<typeof IconButton> = {
   },
 };
 
+export const IconCompact: StoryObj<typeof IconButton> = {
+  render: (args) => (
+    <div className="flex items-center gap-3">
+      <IconButton {...args} size="default" label="Ukuran bawaan" />
+      <IconButton {...args} size="compact" label="Ukuran ringkas" />
+    </div>
+  ),
+  args: {
+    icon: <AppIcon name="close" className="h-5 w-5" />,
+    variant: "secondary",
+  },
+};
+
 export const SectionActionDefault: StoryObj<typeof SectionAction> = {
   render: (args) => <SectionAction {...args} />,
   args: {
