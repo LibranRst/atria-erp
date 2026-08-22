@@ -112,12 +112,15 @@ function moneyCompactSizeClass(size: MoneyValueSize = "md"): string {
   return "text-row";
 }
 
-function moneyDynamicSizeClass(size: MoneyValueSize = "lg"): string {
-  if (size === "hero" || size === "2xl") return "money-value-dynamic--hero";
-  if (size === "fit") return "money-value-dynamic--sm";
-  if (size === "md") return "money-value-dynamic--md";
-  if (size === "sm" || size === "xs") return "money-value-dynamic--sm";
-  return "money-value-dynamic--lg";
+function moneyDynamicSizeClass(size: MoneyValueSize = "md"): string {
+  if (size === "hero") return "text-[28px] leading-tight";
+  if (size === "2xl") return "text-[22px] leading-7";
+  if (size === "xl") return "text-[17px] leading-5.5";
+  if (size === "lg") return "text-section leading-tight";
+  if (size === "xs") return "text-[10px] leading-3";
+  if (size === "sm") return "text-[12px] leading-4";
+  if (size === "fit") return "text-sm leading-5";
+  return "text-row leading-5";
 }
 
 /**
@@ -167,11 +170,11 @@ export function MoneyValue({
   if (variant === "fullDynamic") {
     return (
       <span
-        className={`money-value-dynamic ${moneyDynamicSizeClass(size)} ${alignClass} ${className}`}
+        className={`money-value-dynamic block min-w-0 ${alignClass} ${className}`}
         title={fullValue}
       >
         <span
-          className={`financial-amount money-value-dynamic__text block font-sans font-extrabold tracking-[-0.025em] tabular-nums ${valueClass}`}
+          className={`financial-amount money-value-dynamic__text block font-sans font-extrabold tracking-[-0.025em] whitespace-nowrap tabular-nums ${moneyDynamicSizeClass(size)} ${valueClass}`}
         >
           {fullValue}
         </span>
