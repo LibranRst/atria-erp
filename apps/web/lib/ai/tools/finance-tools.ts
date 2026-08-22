@@ -112,6 +112,9 @@ export function buildFinanceTools(context: AiToolContext) {
           ]),
           totalWaiting: details.length,
           approvals: details.map((detail) => ({
+            approvalId: detail.id,
+            referenceId: detail.referenceId,
+            type: detail.type,
             projectName: detail.projectName,
             description: detail.description,
             amount: money(String(detail.amount)),

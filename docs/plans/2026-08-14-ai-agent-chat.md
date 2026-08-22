@@ -324,3 +324,114 @@ Kartu budget hanya menampilkan kategori bermasalah plus dua kategori teratas seb
 - [DeepSeek API Docs](https://api-docs.deepseek.com/)
 - [DeepSeek V4 Preview Release](https://api-docs.deepseek.com/news/news260424/)
 - [DeepSeek-V4-Flash-0731 agentic upgrade](https://www.marktechpost.com/2026/07/31/deepseek-upgrades-deepseek-v4-flash-0731-with-major-agentic-and-coding-gains/)
+
+## Penanda kemajuan balasan
+
+Hanya ada **satu** penanda proses: `PendingReplyIndicator` di dalam transcript,
+tepat pada slot calon jawaban asisten. Ia bukan bubble, card, rail, atau bagian
+composer. Saat idle tidak ada status tambahan; perubahan tombol kirim menjadi stop
+sudah cukup menunjukkan bahwa request dapat dibatalkan.
+
+Transcript dikelompokkan menjadi giliran stabil. Slot asisten lahir bersama pesan
+user dan tetap memakai key serta parent yang sama ketika SDK kemudian menambahkan
+pesan asisten. Karena ownership tidak berpindah antara `AiChatView` dan
+`ChatMessage`, perubahan fase tidak dapat me-remount indicator atau menjalankan
+initial animation lagi.
+
+Indicator berupa assistant row tanpa background: tiga dots ink berdiri sendiri,
+gap 10px, label `text-row` semibold, dan ruang vertikal 8px. Tidak ada circle atau
+tile di belakang dots. Presentasi visual ditandai dekoratif dan tidak menerima
+pointer event; satu elemen `sr-only` yang persisten menjadi satu-satunya
+`role="status"` dengan `aria-live="polite"`.
+
+Tiga fasenya:
+
+1. `analyzing` — "Menganalisis…"
+2. `fetching` — "Mengambil data…"
+3. `composing` — "Menyusun jawaban…"
+
+Indicator menunggu 180ms sebelum terlihat supaya jawaban hampir seketika tidak
+menghasilkan flash. Fase biasa harus stabil selama 400ms sebelum mengganti label,
+tetapi `fetching` berubah langsung ketika tool dimulai. Tool trace running/sukses
+ditahan paling lama 400ms agar fase itu sempat terbaca. Teks non-whitespace dan
+failure tidak pernah ditahan.
+
+Sesudah ambang tampil, indicator masuk sekali dengan rise-fade kecil. Perubahan
+fase tidak mengulang entrance itu karena label dan container tetap node yang sama.
+Tool trace atau bubble pertama mengambil alih grid slot melalui opacity crossfade
+tanpa scale atau layout animation. Setelah konten nyata pertama muncul, indicator
+tidak boleh kembali pada reply tersebut. Pada reduced motion dots menjadi statis,
+rise dihapus, dan handoff berlangsung instan. Stop dan error langsung
+menyembunyikan indicator tanpa status tambahan.
+
+Indicator yang transparan tetap berada di grid selama handoff, tetapi wajib
+`pointer-events-none`; content reply berada pada layer eksplisit di depannya. Tool
+trace memiliki satu button owner untuk ikon, summary, dan chevron, plus effective
+touch area 48px, sehingga seluruh capsule dapat membuka disclosure.
+
+Status kini tidak berada di footer, sehingga perubahan fase tidak memengaruhi
+`bottomInset`, tinggi gradien, atau posisi composer. `ResizeObserver` footer tetap
+diperlukan hanya untuk perubahan tinggi composer, textarea, morphed input, dan safe
+area.
+
+Tool trace tetap live sebagai satu summary compact per balasan. Running maupun
+failure tidak lagi memaksa detail terbuka dan kemudian menutup sendiri; disclosure
+sepenuhnya milik pengguna. Summary memperbarui node yang sama, sedangkan rincian
+hanya beranimasi setelah tindakan buka/tutup pengguna.
+
+## Multi-bubble text streaming
+
+Satu `UIMessage` asisten tetap menjadi satu giliran dan satu record persistence,
+tetapi setiap `TextUIPart` non-whitespace dirender sebagai bubble independen.
+Boundary native AI SDK dipakai apa adanya: delta berikutnya memperpanjang bubble
+dengan key `${message.id}-text-${partIndex}`, sedangkan text part baru membuat
+bubble baru. Paragraf dan Markdown di dalam satu part tidak dipecah lagi.
+
+Urutan presentasi tetap: satu consolidated tool trace, seluruh bubble teks, kartu
+hasil/usulan, lalu follow-up chips. Fragmen pendek tidak digabung atau disembunyikan,
+dan system prompt tidak diarahkan untuk sengaja menghasilkan lebih banyak bubble.
+
+Saat live streaming, bubble baru melakukan rise-fade satu kali. Bubble pertama yang
+menggantikan pending indicator hanya melakukan rise karena opacity crossfade sudah
+dimiliki parent; token update tidak mengulang entrance. History dan reduced-motion
+langsung memakai keadaan settled.
+
+## Kontrak jawaban ringkas
+
+Shared system prompt untuk DeepSeek dan Gemini memakai jawaban answer-first sekitar
+60–100 kata secara default. Pertanyaan sederhana boleh lebih pendek; permintaan
+detail atau fakta keputusan boleh lebih panjang. Nominal/status utama, blocker,
+risiko, konsekuensi, dan next action tidak boleh dikorbankan demi batas kata.
+
+Jawaban rutin memakai prosa pendek dan maksimal tiga bullet bila perlu. Model tidak
+menarasikan tool progress, mengulang pertanyaan, menyalin row yang sudah tampil di
+kartu, atau menutup dengan tawaran bantuan generik. Untuk card-backed answer, teks
+hanya membawa agregat, maksimal satu entitas prioritas, takeaway, dan next action.
+
+Follow-up menargetkan dua pertanyaan kontekstual, maksimal tiga, dan boleh satu bila
+tidak ada pilihan kedua yang berguna. `suggestFollowUps` menjadi terminal hanya
+setelah jawaban teks tersedia; guard ini mencegah duplikasi pasca-tool sekaligus
+mencegah Gemini meninggalkan chips tanpa jawaban ketika memanggil tool terlalu
+awal. Setiap pertanyaan menerima hingga 100 karakter agar konteks Bahasa Indonesia
+tidak gagal validasi hanya karena melewati batas lama 80 karakter. Rubric dan hasil sample provider dicatat di
+`docs/guide/ai-response-contract-eval.md`.
+
+## History workspace dan preferensi personal
+
+Riwayat AI tetap menjadi state di dalam `/ai`, tetapi sekarang menyediakan search
+server-side, cursor pagination, kelompok Hari ini/Kemarin/7 hari terakhir/Lebih
+lama, jumlah pesan, rename, dan delete terkonfirmasi. Percakapan kosong tidak lagi
+dibuat saat tombol new chat ditekan; API membuat record pada pesan pertama.
+
+Menu tiga titik pada setiap row memakai `ActionMenu` yang anchored ke trigger,
+bukan sheet aksi generik. Pemilihan "Ganti judul…" menutup menu lebih dulu lalu
+membuka `CompactFormDialog`; "Hapus percakapan…" selalu diteruskan ke
+`ConfirmationDialog`.
+Dengan demikian perintah lokal tetap ringan tanpa menurunkan proteksi untuk
+mutasi destruktif.
+
+Setiap user dengan `use:ai_chat` memiliki satu `ai_user_preference`: gaya jawaban,
+fokus utama, catatan opsional 300 karakter, dan waktu update. Preset diterjemahkan
+server-side. Catatan disisipkan sebagai JSON string di blok non-authoritative dan
+tidak boleh mengubah scope, default project, permission, tools, facts, atau
+guardrails. Preference terbaru berlaku mulai pesan berikutnya di seluruh history.

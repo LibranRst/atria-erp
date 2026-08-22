@@ -246,7 +246,10 @@ export function RecentExpensesResult({
 // Kategori biaya
 // ==========================================
 
-export function ExpenseCategoriesResult({ output }: ToolResultProps): React.JSX.Element | null {
+export function ExpenseCategoriesResult({
+  output,
+  context = EMPTY_TOOL_RESULT_CONTEXT,
+}: ToolResultProps): React.JSX.Element | null {
   const parsed = getExpenseCategoriesOutputSchema.safeParse(output);
   if (!parsed.success) return null;
 
@@ -254,7 +257,13 @@ export function ExpenseCategoriesResult({ output }: ToolResultProps): React.JSX.
   if (categories.length === 0) return null;
 
   return (
-    <ResultShell eyebrow="Pengaturan" title="Kategori biaya">
+    <ResultShell
+      eyebrow="Pengaturan"
+      title="Kategori biaya"
+      href="/settings/categories"
+      linkLabel="Buka pengaturan kategori"
+      onNavigate={context.onNavigate}
+    >
       <div className="flex flex-wrap gap-1.5 border-t border-black/5.5 px-4 py-3">
         {categories.map((category) => (
           <span

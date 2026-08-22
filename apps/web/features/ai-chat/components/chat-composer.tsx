@@ -18,6 +18,16 @@ const MAX_LENGTH = 2000;
 const MAX_TEXTAREA_HEIGHT = 120;
 
 /**
+ * Identitas bersama dengan panel input AI.
+ *
+ * Keduanya tidak pernah tampil bersamaan — panel menggantikan komposer saat AI
+ * meminta data. `layoutId` yang sama membuat Framer menganimasikan perpindahan
+ * itu sebagai satu benda yang berubah bentuk, bukan satu elemen hilang dan
+ * elemen lain muncul. Itulah arti "morph" pada fitur ini.
+ */
+export const COMPOSER_MORPH_LAYOUT_ID = "ai-composer-surface";
+
+/**
  * Pesan hanya boleh dikirim jika ada isi dan tidak ada jawaban yang sedang berjalan.
  */
 export function canSendDraft(value: string, isBusy: boolean): boolean {
@@ -78,6 +88,7 @@ export function ChatComposer({
     <div className="flex items-center gap-2">
       <motion.div
         layout
+        layoutId={reduceMotion ? undefined : COMPOSER_MORPH_LAYOUT_ID}
         transition={reduceMotion ? undefined : transitionSpringSmooth}
         className={`relative flex min-h-12 min-w-0 flex-1 items-center bg-white px-5 py-2.5 shadow-control ring-1 ring-ring-control transition-all duration-200 focus-within:ring-2 focus-within:ring-focus-ring ${
           isMultiline ? "rounded-[22px]" : "rounded-full"

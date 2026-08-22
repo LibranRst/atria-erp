@@ -9,7 +9,15 @@ import {
   vendorPayment,
 } from "./finance";
 import { itemPriceLibrary } from "./materials";
-import { aiRun, appConfig, approval, attachment, auditLog, notification } from "./system";
+import {
+  aiRun,
+  aiUserPreference,
+  appConfig,
+  approval,
+  attachment,
+  auditLog,
+  notification,
+} from "./system";
 
 // ==========================================
 // // 1. Peran Otorisasi (Role)
@@ -74,6 +82,7 @@ export const userRelations = relations(user, ({ one, many }) => ({
   developerSimulationSessions: many(session, { relationName: "developerActor" }),
   accounts: many(account),
   formDrafts: many(formDraft),
+  aiPreference: one(aiUserPreference),
 }));
 
 // ==========================================

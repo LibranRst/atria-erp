@@ -34,7 +34,12 @@ export function BankBalancesResult({
       onNavigate={context.onNavigate}
     >
       <div className="px-4 pb-3">
-        <MoneyValue amount={data.totalAvailable.amount} variant="compact" size="2xl" align="left" />
+        <MoneyValue
+          amount={data.totalAvailable.amount}
+          variant="fullDynamic"
+          size="2xl"
+          align="left"
+        />
       </div>
 
       <div className="divide-y divide-black/5.5 border-t border-black/5.5">
@@ -46,7 +51,7 @@ export function BankBalancesResult({
             value={
               <MoneyValue
                 amount={account.balance.amount}
-                variant="compact"
+                variant="fullDynamic"
                 size="sm"
                 align="right"
               />

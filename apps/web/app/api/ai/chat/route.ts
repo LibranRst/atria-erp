@@ -8,6 +8,7 @@ import {
 } from "@/lib/ai/conversation-store";
 import { checkRateLimit } from "@/lib/ai/rate-limit";
 import type { AiToolContext } from "@/lib/ai/tools/context";
+import { loadAiPreference } from "@/lib/ai/user-preference";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { getServerSession } from "@/lib/server/session";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
@@ -110,12 +111,14 @@ export async function POST(request: Request): Promise<Response> {
     userId: session.user.id,
     roleName,
   };
+  const preference = await loadAiPreference(session.user.id);
 
   const { stream } = runChatStream({
     messages,
     toolContext,
     userName: session.user.name,
     conversationId: conversation.id,
+    preference,
     onAssistantMessage: async ({ message, provider, inputTokens, outputTokens }) => {
       await appendMessage({
         conversationId: conversation.id,

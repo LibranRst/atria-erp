@@ -121,6 +121,20 @@ export const aiConversationRelations = relations(aiConversation, ({ one, many })
   messages: many(aiMessage),
 }));
 
+export const aiUserPreference = pgTable("ai_user_preference", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  responseStyle: varchar("response_style", { length: 30 }).notNull().default("STANDARD"),
+  primaryFocus: varchar("primary_focus", { length: 30 }).notNull().default("AUTO"),
+  customNote: varchar("custom_note", { length: 300 }),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const aiUserPreferenceRelations = relations(aiUserPreference, ({ one }) => ({
+  user: one(user, { fields: [aiUserPreference.userId], references: [user.id] }),
+}));
+
 // ==========================================
 // // 18C. Pesan AI Chat (AI Message)
 // ==========================================

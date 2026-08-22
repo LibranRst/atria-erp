@@ -1,31 +1,29 @@
 import "server-only";
 
 import { db } from "@/db";
-import { expenseCategory, project, projectBudgetCategory, projectBudgets } from "@/db/schema";
+import {
+  approval,
+  expenseCategory,
+  project,
+  projectBudgetCategory,
+  projectBudgets,
+  projectCost,
+  projectExpenses,
+  user,
+} from "@/db/schema";
 import { tool } from "ai";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import {
   canAccessProject,
+  hasGlobalScope,
   hasPermission,
   permissionDenied,
   PROJECT_ACCESS_DENIED,
   type AiToolContext,
 } from "./context";
-import { money } from "./shared";
-
-/**
- * Tool usulan pengajuan biaya lapangan.
- *
- * PENTING: tool ini TIDAK MENULIS APA PUN. Ia hanya menerjemahkan maksud pengguna
- * menjadi usulan yang sudah lengkap dan terverifikasi — proyek nyata, kategori
- * budget nyata, nominal terhitung — lalu mengembalikannya sebagai data.
- *
- * Antarmuka merender hasilnya sebagai kartu usulan. Penulisan baru terjadi ketika
- * manusia menekan tombol konfirmasi, yang memanggil Server Action `submitFieldRequest`
- * dengan validasi Zod dan RBAC-nya sendiri. Tidak ada jalur auto-submit.
- */
+import { money, toNumber } from "./shared";
 
 const MAX_DESCRIPTION = 500;
 
@@ -33,7 +31,7 @@ export function buildProposalTools(context: AiToolContext) {
   return {
     proposeExpenseDraft: tool({
       description:
-        "Prepare a draft field expense for the user to review and confirm. This does NOT submit anything: it resolves the project and budget category, computes the total, and returns a proposal card. Only call this when the user clearly wants to record a new expense.",
+        "Prepare a draft field expense for the user to review and confirm. This does NOT submit anything: it resolves the project and budget category, computes the total, remaining budget diff, and returns a proposal card. Only call this when the user clearly wants to record a new expense.",
       inputSchema: z.object({
         projectId: z.guid().describe("The project id, obtained from listProjects."),
         categoryCode: z
@@ -93,8 +91,6 @@ export function buildProposalTools(context: AiToolContext) {
           };
         }
 
-        // Kategori budget harus milik budget proyek ini; mencocokkan hanya lewat
-        // expenseCategoryId bisa mengambil baris milik proyek lain.
         const budgetCategoryRow = await db.query.projectBudgetCategory.findFirst({
           where: and(
             eq(projectBudgetCategory.projectBudgetId, budget.id),
@@ -109,11 +105,13 @@ export function buildProposalTools(context: AiToolContext) {
           };
         }
 
-        const remaining = Number(budgetCategoryRow.remainingAmount);
-        const exceedsRemaining = Number.isFinite(remaining) && amount > remaining;
+        const remaining = toNumber(budgetCategoryRow.remainingAmount);
+        const remainingAfter = remaining - amount;
+        const exceedsRemaining = amount > remaining;
 
         return {
           proposal: {
+            kind: "FIELD_EXPENSE" as const,
             projectId,
             projectName: projectRow.name,
             projectBudgetCategoryId: budgetCategoryRow.id,
@@ -124,10 +122,134 @@ export function buildProposalTools(context: AiToolContext) {
             unitPrice: money(String(unitPrice)),
             amount: money(String(amount)),
             remainingBeforeSubmit: money(budgetCategoryRow.remainingAmount),
+            remainingAfterSubmit: money(String(remainingAfter)),
             exceedsRemaining,
           },
           instruction:
             "Sampaikan ringkasan usulan ini kepada pengguna dalam satu kalimat singkat. Kartu konfirmasi sudah ditampilkan otomatis, jadi jangan menuliskan ulang seluruh rinciannya dan jangan mengaku sudah mengirim apa pun. Pengajuan baru terkirim setelah pengguna menekan tombol konfirmasi.",
+        };
+      },
+    }),
+
+    proposeExpenseReview: tool({
+      description:
+        "Prepare a proposal to VERIFY, APPROVE, or REJECT a pending field expense claim. Use action 'VERIFY' to verify a submitted claim, 'APPROVE' to approve (or verify & approve) a claim, or 'REJECT' to reject it. Only available to Owner / Finance Admin. Does NOT execute decision until user clicks confirm.",
+      inputSchema: z.object({
+        expenseId: z.guid().describe("The expense ID obtained from getPendingExpenseApprovals or getPendingApprovals."),
+        action: z.enum(["VERIFY", "APPROVE", "REJECT"]).default("APPROVE").describe("Action to take: VERIFY (verifikasi pengajuan SUBMITTED), APPROVE (setujui), or REJECT (tolak)."),
+        notes: z.string().optional().describe("Notes or reason for verification / approval / rejection."),
+      }),
+      execute: async ({ expenseId, action, notes }) => {
+        if (!hasPermission(context, "approve:cost") || !hasGlobalScope(context)) {
+          return permissionDenied("persetujuan pengeluaran");
+        }
+
+        // Cari row cost baik lewat projectCost.id, projectExpenses.id, atau approval
+        let costRow: {
+          id: string;
+          projectId: string;
+          requestedById: string;
+          description: string;
+          amount: string;
+          status: string;
+        } | null = null;
+
+        // 1. Coba cari di projectCost langsung
+        const pc = await db.query.projectCost.findFirst({
+          where: eq(projectCost.id, expenseId),
+        });
+        if (pc) {
+          costRow = {
+            id: pc.id,
+            projectId: pc.projectId,
+            requestedById: pc.requestedById,
+            description: pc.description,
+            amount: pc.amount,
+            status: pc.status,
+          };
+        } else {
+          // 2. Coba cari di projectExpenses
+          const pe = await db.query.projectExpenses.findFirst({
+            where: eq(projectExpenses.id, expenseId),
+          });
+          if (pe) {
+            costRow = {
+              id: pe.legacyProjectCostId || pe.id,
+              projectId: pe.projectId,
+              requestedById: pe.requestedById,
+              description: pe.description,
+              amount: pe.amount,
+              status: pe.status,
+            };
+          } else {
+            // 3. Coba cari di approval record
+            const app = await db.query.approval.findFirst({
+              where: eq(approval.id, expenseId),
+            });
+            if (app && app.referenceType === "project_cost") {
+              const pcFromApp = await db.query.projectCost.findFirst({
+                where: eq(projectCost.id, app.referenceId),
+              });
+              if (pcFromApp) {
+                costRow = {
+                  id: pcFromApp.id,
+                  projectId: pcFromApp.projectId,
+                  requestedById: pcFromApp.requestedById,
+                  description: pcFromApp.description,
+                  amount: pcFromApp.amount,
+                  status: pcFromApp.status,
+                };
+              }
+            }
+          }
+        }
+
+        if (!costRow) {
+          return { error: "Pengajuan pengeluaran tidak ditemukan." };
+        }
+
+        if (costRow.status !== "SUBMITTED" && costRow.status !== "VERIFIED") {
+          return { error: `Pengeluaran ini tidak dalam status menunggu verifikasi atau persetujuan (status saat ini: ${costRow.status}).` };
+        }
+
+        const projectRow = await db.query.project.findFirst({
+          where: eq(project.id, costRow.projectId),
+          columns: { name: true },
+        });
+
+        const requester = await db.query.user.findFirst({
+          where: eq(user.id, costRow.requestedById),
+          columns: { name: true },
+        });
+
+        const actionLabel =
+          action === "VERIFY"
+            ? "Verifikasi Pengajuan"
+            : action === "APPROVE"
+              ? "Setujui Pengajuan"
+              : "Tolak Pengajuan";
+
+        const defaultNotes =
+          action === "VERIFY"
+            ? "Diverifikasi via AI Assistant"
+            : action === "APPROVE"
+              ? "Disetujui via AI Assistant"
+              : "Ditolak via AI Assistant";
+
+        return {
+          proposal: {
+            kind: "EXPENSE_REVIEW" as const,
+            expenseId: costRow.id,
+            action,
+            actionLabel,
+            description: costRow.description,
+            amount: money(costRow.amount),
+            projectName: projectRow?.name ?? "Proyek",
+            requesterName: requester?.name ?? "PM",
+            notes: notes ?? defaultNotes,
+          },
+          instruction:
+            `Sampaikan ringkasan usulan ${actionLabel.toLowerCase()} biaya kepada pengguna. Kartu konfirmasi sudah ditampilkan otomatis.`,
         };
       },
     }),

@@ -77,7 +77,6 @@ export const spinAnimation = { rotate: 360 };
 export const pulseAnimation = { opacity: [0.45, 1, 0.45] };
 export const thinkingDotAnimation = {
   opacity: [0.25, 1, 0.25],
-  scale: [0.8, 1, 0.8],
 };
 
 export const fadeVariants = {

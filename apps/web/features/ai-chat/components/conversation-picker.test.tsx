@@ -3,6 +3,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { ConversationPicker, formatUpdatedAt } from "./conversation-picker";
+import { ConversationHistoryWorkspace, groupConversations } from "./conversation-history-workspace";
 
 const now = new Date("2026-08-14T12:00:00Z");
 
@@ -100,5 +101,39 @@ describe("daftar percakapan", () => {
     );
 
     expect(html).toContain("Memuat daftar percakapan");
+  });
+});
+
+describe("pengelompokan history workspace", () => {
+  test("mengelompokkan berdasarkan aktivitas tanpa mengubah urutan", () => {
+    const items = [
+      { id: "a", title: "Hari ini", updatedAt: "2026-08-14T10:00:00Z", messageCount: 2 },
+      { id: "b", title: "Kemarin", updatedAt: "2026-08-13T10:00:00Z", messageCount: 4 },
+      { id: "c", title: "Minggu", updatedAt: "2026-08-10T10:00:00Z", messageCount: 6 },
+      { id: "d", title: "Lama", updatedAt: "2026-07-01T10:00:00Z", messageCount: 8 },
+    ];
+
+    expect(groupConversations(items, now).map((group) => group.label)).toEqual([
+      "Hari ini",
+      "Kemarin",
+      "7 hari terakhir",
+      "Lebih lama",
+    ]);
+  });
+
+  test("memimpin dengan new chat, preferensi, search, dan skeleton struktural", () => {
+    const html = renderToStaticMarkup(
+      <ConversationHistoryWorkspace
+        activeId={null}
+        onSelect={() => undefined}
+        onNewConversation={() => undefined}
+        onActiveDeleted={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("Mulai percakapan baru");
+    expect(html).toContain("Preferensi asisten");
+    expect(html).toContain("Cari percakapan");
+    expect(html).toContain("Memuat riwayat");
   });
 });

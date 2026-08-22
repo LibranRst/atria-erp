@@ -72,3 +72,25 @@ describe("penggabungan jejak berulang", () => {
     expect(collapseTraces([])).toEqual([]);
   });
 });
+
+describe("jejak tool yang terputus", () => {
+  it("tool tertahan dianggap masih berjalan selama aliran belum berhenti", () => {
+    expect(toolTraceState("input-available", false)).toBe("running");
+  });
+
+  it("tool tertahan menjadi terputus begitu aliran berhenti", () => {
+    // Serikat keadaan SDK tidak punya nilai "dibatalkan"; yang membedakan hanya
+    // konteksnya — masih tertahan padahal alirannya sudah usai.
+    expect(toolTraceState("input-available", true)).toBe("interrupted");
+    expect(toolTraceState("input-streaming", true)).toBe("interrupted");
+  });
+
+  it("tool yang sudah punya hasil tidak terpengaruh berhentinya aliran", () => {
+    expect(toolTraceState("output-available", true)).toBe("done");
+    expect(toolTraceState("output-error", true)).toBe("failed");
+  });
+
+  it("yang terputus memakai kalimat pekerjaan yang sedang berjalan", () => {
+    expect(toolLabel("getProjectBudget", "interrupted")).toBe("Membaca budget dan realisasi biaya");
+  });
+});

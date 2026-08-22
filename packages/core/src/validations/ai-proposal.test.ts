@@ -1,4 +1,12 @@
-import { aiExpenseProposalSchema } from "./ai-proposal";
+import {
+  aiCreateProjectProposalSchema,
+  aiExpenseProposalSchema,
+  aiExpenseReviewProposalSchema,
+  aiGoodsReceiptProposalSchema,
+  aiPayVendorBillProposalSchema,
+  aiRecordClientPaymentProposalSchema,
+  aiSetupBudgetProposalSchema,
+} from "./ai-proposal";
 import { describe, expect, it } from "bun:test";
 
 const base = {
@@ -18,8 +26,6 @@ describe("validasi konfirmasi usulan pengeluaran AI", () => {
   });
 
   it("menerima uuid gaya seed yang bukan RFC 4122", () => {
-    // Data seed dan demo memakai id seperti ini; validasi ketat akan menolak
-    // baris yang benar-benar ada di database.
     const result = aiExpenseProposalSchema.safeParse({
       ...base,
       projectId: "11111111-1111-1111-1111-111111111111",
@@ -61,7 +67,6 @@ describe("validasi konfirmasi usulan pengeluaran AI", () => {
   });
 
   it("mengabaikan bidang tambahan yang diselundupkan, termasuk penanganan stok", () => {
-    // Jalur AI tidak boleh memicu efek samping stok.
     const result = aiExpenseProposalSchema.safeParse({
       ...base,
       stockHandling: "RESERVE_AND_USE",
@@ -71,5 +76,104 @@ describe("validasi konfirmasi usulan pengeluaran AI", () => {
     expect(result.success).toBe(true);
     expect(result.success && "stockHandling" in result.data).toBe(false);
     expect(result.success && "materialId" in result.data).toBe(false);
+  });
+});
+
+describe("validasi konfirmasi usulan aksi ERP lainnya", () => {
+  it("validasi review pengeluaran (approve/reject)", () => {
+    const valid = {
+      toolCallId: "call_rev1",
+      conversationId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      expenseId: "77777777-7777-7777-7777-777777777772",
+      action: "APPROVE",
+      notes: "Sesuai anggaran",
+    };
+    expect(aiExpenseReviewProposalSchema.safeParse(valid).success).toBe(true);
+    expect(aiExpenseReviewProposalSchema.safeParse({ ...valid, action: "INVALID" }).success).toBe(false);
+  });
+
+  it("validasi usulan pembuatan proyek baru", () => {
+    const valid = {
+      toolCallId: "call_proj1",
+      conversationId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      name: "Renovasi Apartemen Menteng",
+      clientId: "66666666-6666-6666-6666-666666666661",
+      projectManagerId: "22222222-2222-2222-2222-222222222222",
+      totalContractValue: 250000000,
+      location: "Jakarta Pusat",
+    };
+    expect(aiCreateProjectProposalSchema.safeParse(valid).success).toBe(true);
+    expect(aiCreateProjectProposalSchema.safeParse({ ...valid, name: "" }).success).toBe(false);
+  });
+
+  it("validasi usulan setup budget proyek", () => {
+    const valid = {
+      toolCallId: "call_bud1",
+      conversationId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      projectId: "77777777-7777-7777-7777-777777777772",
+      contractValue: 250000000,
+      budgetCapRatio: 0.85,
+      categories: [
+        {
+          expenseCategoryId: "88888888-8888-8888-8888-888888888881",
+          ratioPercentage: 0.45,
+          sortOrder: 1,
+        },
+        {
+          expenseCategoryId: "88888888-8888-8888-8888-888888888882",
+          ratioPercentage: 0.35,
+          sortOrder: 2,
+        },
+      ],
+    };
+    expect(aiSetupBudgetProposalSchema.safeParse(valid).success).toBe(true);
+    expect(aiSetupBudgetProposalSchema.safeParse({ ...valid, categories: [] }).success).toBe(false);
+  });
+
+  it("validasi usulan pembayaran tagihan vendor", () => {
+    const valid = {
+      toolCallId: "call_pay1",
+      conversationId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      vendorPaymentId: "55555555-5555-5555-5555-555555555551",
+      bankAccountId: "44444444-4444-4444-4444-444444444441",
+      referenceNumber: "TRF-VEND-001",
+      amountPaid: 15000000,
+    };
+    expect(aiPayVendorBillProposalSchema.safeParse(valid).success).toBe(true);
+    expect(aiPayVendorBillProposalSchema.safeParse({ ...valid, amountPaid: 0 }).success).toBe(false);
+  });
+
+  it("validasi usulan pencatatan pembayaran klien", () => {
+    const valid = {
+      toolCallId: "call_rec1",
+      conversationId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      clientInvoiceId: "33333333-3333-3333-3333-333333333331",
+      bankAccountId: "44444444-4444-4444-4444-444444444441",
+      amountPaid: 50000000,
+      paymentDate: "2026-08-19",
+      referenceNumber: "BCA-IN-9921",
+    };
+    expect(aiRecordClientPaymentProposalSchema.safeParse(valid).success).toBe(true);
+    expect(aiRecordClientPaymentProposalSchema.safeParse({ ...valid, referenceNumber: "" }).success).toBe(false);
+  });
+
+  it("validasi usulan goods receipt", () => {
+    const valid = {
+      toolCallId: "call_gr1",
+      conversationId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      projectId: "77777777-7777-7777-7777-777777777772",
+      inventoryLocationId: "99999999-9999-9999-9999-999999999991",
+      receiptNumber: "GR-2026-08-001",
+      receivedAt: "2026-08-19",
+      items: [
+        {
+          materialId: "11111111-2222-3333-4444-555555555555",
+          quantity: 20,
+          unitCost: 85000,
+        },
+      ],
+    };
+    expect(aiGoodsReceiptProposalSchema.safeParse(valid).success).toBe(true);
+    expect(aiGoodsReceiptProposalSchema.safeParse({ ...valid, items: [] }).success).toBe(false);
   });
 });

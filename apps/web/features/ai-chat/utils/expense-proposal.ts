@@ -23,6 +23,7 @@ export type ExpenseProposal = {
   readonly unitPrice: ProposalMoney;
   readonly amount: ProposalMoney;
   readonly remainingBeforeSubmit: ProposalMoney;
+  readonly remainingAfterSubmit?: ProposalMoney;
   readonly exceedsRemaining: boolean;
 };
 

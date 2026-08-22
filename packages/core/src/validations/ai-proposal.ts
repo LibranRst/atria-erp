@@ -33,3 +33,135 @@ export const aiExpenseProposalSchema = z.object({
 });
 
 export type AiExpenseProposalInput = z.infer<typeof aiExpenseProposalSchema>;
+
+export const aiExpenseReviewProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  expenseId: z.string().regex(uuidRegex, "ID Pengeluaran tidak valid."),
+  action: z.enum(["APPROVE", "REJECT", "VERIFY"]),
+  notes: z.string().max(500).optional(),
+});
+
+export type AiExpenseReviewProposalInput = z.infer<typeof aiExpenseReviewProposalSchema>;
+
+export const aiDisburseExpenseProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  expenseId: z.string().regex(uuidRegex, "ID Pengeluaran tidak valid."),
+  bankAccountId: z.string().regex(uuidRegex, "ID Akun Bank tidak valid."),
+  referenceNumber: z.string().min(1, "Nomor referensi pembayaran wajib diisi.").max(100),
+});
+
+export type AiDisburseExpenseProposalInput = z.infer<typeof aiDisburseExpenseProposalSchema>;
+
+export const aiCreateProjectProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  name: z.string().min(1, "Nama proyek wajib diisi").max(200),
+  clientId: z.string().regex(uuidRegex, "ID Klien tidak valid.").optional().or(z.literal("")),
+  newClientName: z.string().max(200).optional().or(z.literal("")),
+  newClientPhone: z.string().max(50).optional().or(z.literal("")),
+  projectManagerId: z.string().regex(uuidRegex, "ID Project Manager tidak valid."),
+  totalContractValue: z.number().nonnegative().default(0),
+  startDate: z.string().optional().or(z.literal("")),
+  endDate: z.string().optional().or(z.literal("")),
+  location: z.string().max(300).optional().or(z.literal("")),
+  notes: z.string().max(1000).optional().or(z.literal("")),
+});
+
+export type AiCreateProjectProposalInput = z.infer<typeof aiCreateProjectProposalSchema>;
+
+export const aiSetupBudgetProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  projectId: z.string().regex(uuidRegex, "ID Proyek tidak valid."),
+  contractValue: z.number().nonnegative(),
+  budgetCapRatio: z.number().positive().max(1),
+  categories: z
+    .array(
+      z.object({
+        expenseCategoryId: z.string().regex(uuidRegex, "ID Kategori Biaya tidak valid."),
+        ratioPercentage: z.number().nonnegative().max(1),
+        sortOrder: z.number().int().nonnegative(),
+      }),
+    )
+    .min(1, "Minimal satu kategori budget harus dialokasikan."),
+  notes: z.string().max(1000).optional(),
+});
+
+export type AiSetupBudgetProposalInput = z.infer<typeof aiSetupBudgetProposalSchema>;
+
+export const aiPayVendorBillProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  vendorPaymentId: z.string().regex(uuidRegex, "ID Jadwal Pembayaran tidak valid."),
+  bankAccountId: z.string().regex(uuidRegex, "ID Akun Bank tidak valid."),
+  referenceNumber: z.string().min(1, "Nomor referensi pembayaran wajib diisi.").max(100),
+  amountPaid: z.number().positive("Nominal pembayaran harus lebih besar dari 0."),
+});
+
+export type AiPayVendorBillProposalInput = z.infer<typeof aiPayVendorBillProposalSchema>;
+
+export const aiRecordClientPaymentProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  clientInvoiceId: z.string().regex(uuidRegex, "ID Invoice Klien tidak valid."),
+  bankAccountId: z.string().regex(uuidRegex, "ID Akun Bank tidak valid."),
+  amountPaid: z.number().positive("Nominal pembayaran harus lebih besar dari 0."),
+  paymentDate: z.string().min(1, "Tanggal pembayaran wajib diisi."),
+  referenceNumber: z.string().min(1, "Nomor referensi mutasi bank wajib diisi.").max(100),
+});
+
+export type AiRecordClientPaymentProposalInput = z.infer<typeof aiRecordClientPaymentProposalSchema>;
+
+export const aiGoodsReceiptProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  projectId: z.string().regex(uuidRegex, "ID Proyek tidak valid."),
+  inventoryLocationId: z.string().regex(uuidRegex, "ID Lokasi Gudang tidak valid."),
+  receiptNumber: z.string().min(1, "Nomor Goods Receipt wajib diisi.").max(100),
+  receivedAt: z.string().min(1, "Tanggal penerimaan wajib diisi."),
+  vendorBillId: z.string().regex(uuidRegex, "ID Tagihan Vendor tidak valid.").optional().or(z.literal("")),
+  note: z.string().max(500).optional().or(z.literal("")),
+  items: z
+    .array(
+      z.object({
+        materialId: z.string().regex(uuidRegex, "ID Material tidak valid."),
+        quantity: z.number().positive("Kuantitas barang harus lebih besar dari 0."),
+        unitCost: z.number().nonnegative("Harga per unit tidak boleh negatif."),
+        projectRapItemId: z.string().regex(uuidRegex, "ID Item RAP tidak valid.").optional().or(z.literal("")),
+        note: z.string().max(200).optional(),
+      }),
+    )
+    .min(1, "Minimal satu item barang harus dicatat."),
+});
+
+export type AiGoodsReceiptProposalInput = z.infer<typeof aiGoodsReceiptProposalSchema>;

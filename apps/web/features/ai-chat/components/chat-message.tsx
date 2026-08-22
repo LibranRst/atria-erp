@@ -5,9 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 
 import { transitionSpringSmooth } from "@/lib/utils/motion";
-
-import { cleanAnswerText } from "../utils/answer-text";
-import { readExpenseProposal } from "../utils/expense-proposal";
+import { readAnyProposal } from "../utils/proposal-reader";
 import {
   collapseTraces,
   toolLabel,
@@ -15,50 +13,75 @@ import {
   toolTraceState,
   type ToolTraceState,
 } from "../utils/tool-labels";
+import { USER_MESSAGE_ATTRIBUTE } from "../hooks/use-chat-scroll";
 import { ChatBubble } from "./chat-bubble";
+import { ChatMarkdown } from "./chat-markdown";
 import { ExpenseProposalCard } from "./expense-proposal-card";
+import { CreateProjectProposalCard } from "./proposal-cards/create-project-proposal-card";
+import { SetupBudgetProposalCard } from "./proposal-cards/setup-budget-proposal-card";
+import { VendorPaymentProposalCard } from "./proposal-cards/vendor-payment-proposal-card";
+import { ClientPaymentProposalCard } from "./proposal-cards/client-payment-proposal-card";
+import { GoodsReceiptProposalCard } from "./proposal-cards/goods-receipt-proposal-card";
+import { ExpenseReviewProposalCard } from "./proposal-cards/expense-review-proposal-card";
+import { DisburseExpenseProposalCard } from "./proposal-cards/disburse-expense-proposal-card";
 import { FollowUpChips, readFollowUps } from "./follow-up-chips";
 import { ToolTraceList } from "./tool-trace";
 import { resolveToolResultRenderer, selectVisibleCards } from "./tool-results";
 import { collectProjectNames, readToolProjectId } from "../utils/message-context";
 
-/**
- * Satu giliran percakapan.
- *
- * Urutan baca sengaja tidak mengikuti urutan kedatangan stream: gelembung
- * ringkasan tampil lebih dulu, baru kartu data, baru chip lanjutan. Ini
- * kebalikan dari urutan tool-call → teks yang sebenarnya terjadi di stream
- * (kartu justru siap lebih dulu), jadi kartu memang bisa "menyusul" muncul di
- * bawah gelembung yang sudah tampil — itu tukar tambah yang disengaja demi
- * urutan baca yang lebih natural (kesimpulan dulu, detail pendukung berikutnya).
- *
- * Kartu sengaja berada DI LUAR gelembung. Menumpuk padding gelembung di atas
- * padding kartu menyempitkan kolom angka sampai nilai uang utama terpaksa wrap
- * di layar 320px.
- */
-
 type ChatMessageProps = {
   readonly message: UIMessage;
   readonly conversationId: string | null;
-  /** Peta toolCallId → id dokumen untuk kartu usulan yang sudah dieksekusi. */
+  /** Peta toolCallId -> id dokumen untuk kartu usulan yang sudah dieksekusi. */
   readonly confirmedProposals: Record<string, string>;
-  /**
-   * Chip saran hanya ditawarkan pada balasan terakhir. Menampilkannya di balasan
-   * lama akan mengundang pengguna melanjutkan percakapan dari tengah riwayat.
-   */
   readonly showFollowUps: boolean;
   readonly onFollowUp: (question: string) => void;
   readonly isBusy: boolean;
-  /**
-   * Dipanggil saat sebuah kartu menavigasi ke rute lain di aplikasi.
-   *
-   * Menutup sheet lewat efek yang mengamati pathname tidak menangkap kasus
-   * pengguna sudah berada di rute tujuan — Next.js tidak menganggap itu sebagai
-   * navigasi, jadi pathname-nya tidak pernah berubah. Ini dipanggil langsung
-   * dari klik tautannya sendiri, jadi tidak bergantung pada rute berubah.
-   */
-  readonly onNavigate: () => void;
+  /** Benar hanya untuk pesan yang jawabannya sedang mengalir saat ini. */
+  readonly isStreaming: boolean;
+  /** Parent sudah menangani opacity crossfade dari pending indicator. */
+  readonly handoffFromIndicator: boolean;
+  readonly onNavigate?: () => void;
 };
+
+export type AssistantTextBubble = {
+  readonly key: string;
+  readonly text: string;
+  readonly isFirst: boolean;
+};
+
+export type AssistantBubbleEntrance = "none" | "rise" | "riseFade";
+
+/**
+ * Text part adalah boundary native AI SDK untuk satu episode teks. Indeks part
+ * tetap stabil ketika delta berikutnya memperpanjang teks yang sama.
+ */
+export function projectAssistantTextBubbles(message: UIMessage): readonly AssistantTextBubble[] {
+  const bubbles: AssistantTextBubble[] = [];
+
+  message.parts.forEach((part, index) => {
+    if (part.type !== "text" || part.text.trim().length === 0) return;
+
+    bubbles.push({
+      key: `${message.id}-text-${index}`,
+      text: part.text,
+      isFirst: bubbles.length === 0,
+    });
+  });
+
+  return bubbles;
+}
+
+export function resolveAssistantBubbleEntrance(options: {
+  readonly isStreaming: boolean;
+  readonly isFirst: boolean;
+  readonly handoffFromIndicator: boolean;
+  readonly reduceMotion: boolean;
+}): AssistantBubbleEntrance {
+  if (!options.isStreaming || options.reduceMotion) return "none";
+  if (options.isFirst && options.handoffFromIndicator) return "rise";
+  return "riseFade";
+}
 
 export function ChatMessage({
   message,
@@ -67,6 +90,8 @@ export function ChatMessage({
   showFollowUps,
   onFollowUp,
   isBusy,
+  isStreaming,
+  handoffFromIndicator,
   onNavigate,
 }: ChatMessageProps): React.JSX.Element {
   const reduceMotion = useReducedMotion();
@@ -82,6 +107,7 @@ export function ChatMessage({
         initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={transitionSpringSmooth}
+        {...{ [USER_MESSAGE_ATTRIBUTE]: "" }}
       >
         <ChatBubble side="user">{text}</ChatBubble>
       </motion.div>
@@ -90,18 +116,16 @@ export function ChatMessage({
 
   const rawTraces: { key: string; label: string; state: ToolTraceState }[] = [];
   const cards: { toolName: string; node: React.JSX.Element }[] = [];
-  const paragraphs: React.JSX.Element[] = [];
+  const assistantTextBubbles = projectAssistantTextBubbles(message);
   let followUps: readonly string[] = [];
 
-  // Dikumpulkan lebih dulu supaya kartu apa pun di balasan ini bisa memulihkan
-  // nama proyeknya, termasuk kartu yang muncul sebelum daftar proyek dibaca.
   const projectNames = collectProjectNames(message);
 
   message.parts.forEach((part, index) => {
     const toolName = toolNameFromPartType(part.type);
 
     if (toolName) {
-      const state = toolTraceState((part as { state?: string }).state);
+      const state = toolTraceState((part as { state?: string }).state, !isStreaming);
       rawTraces.push({
         key: `${message.id}-tool-${index}`,
         label: toolLabel(toolName, state),
@@ -116,24 +140,146 @@ export function ChatMessage({
         return;
       }
 
-      if (toolName === "proposeExpenseDraft") {
-        const proposal = readExpenseProposal(output);
-        const toolCallId = (part as { toolCallId?: string }).toolCallId;
+      // Periksa apakah ini salah satu tool usulan (proposal)
+      const toolCallId = (part as { toolCallId?: string }).toolCallId;
+      const proposal = readAnyProposal(output);
 
-        if (proposal && toolCallId) {
+      if (proposal && toolCallId) {
+        const isConfirmed = toolCallId in confirmedProposals;
+
+        if (proposal.kind === "CREATE_PROJECT") {
           cards.push({
             toolName,
             node: (
-              <ExpenseProposalCard
+              <CreateProjectProposalCard
                 key={`${message.id}-proposal-${index}`}
                 proposal={proposal}
                 toolCallId={toolCallId}
                 conversationId={conversationId}
-                alreadyConfirmed={toolCallId in confirmedProposals}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
               />
             ),
           });
+          return;
         }
+
+        if (proposal.kind === "SETUP_BUDGET") {
+          cards.push({
+            toolName,
+            node: (
+              <SetupBudgetProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
+
+        if (proposal.kind === "PAY_VENDOR_BILL") {
+          cards.push({
+            toolName,
+            node: (
+              <VendorPaymentProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
+
+        if (proposal.kind === "RECORD_CLIENT_PAYMENT") {
+          cards.push({
+            toolName,
+            node: (
+              <ClientPaymentProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
+
+        if (proposal.kind === "POST_GOODS_RECEIPT") {
+          cards.push({
+            toolName,
+            node: (
+              <GoodsReceiptProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
+
+        if (proposal.kind === "EXPENSE_REVIEW") {
+          cards.push({
+            toolName,
+            node: (
+              <ExpenseReviewProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
+
+        if (proposal.kind === "DISBURSE_EXPENSE") {
+          cards.push({
+            toolName,
+            node: (
+              <DisburseExpenseProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
+
+        // Default: FIELD_EXPENSE
+        cards.push({
+          toolName,
+          node: (
+            <ExpenseProposalCard
+              key={`${message.id}-proposal-${index}`}
+              proposal={proposal}
+              toolCallId={toolCallId}
+              conversationId={conversationId}
+              alreadyConfirmed={isConfirmed}
+              onNavigate={onNavigate}
+            />
+          ),
+        });
         return;
       }
 
@@ -152,43 +298,64 @@ export function ChatMessage({
       }
       return;
     }
-
-    if (part.type === "text" && part.text.length > 0) {
-      paragraphs.push(
-        <p
-          key={`${message.id}-text-${index}`}
-          className="text-row leading-relaxed font-semibold whitespace-pre-wrap text-on-surface"
-        >
-          {cleanAnswerText(part.text)}
-        </p>,
-      );
-    }
   });
 
   const traces = collapseTraces(rawTraces);
-  // Kartu pencarian disaring di sini, bukan di renderer, karena keputusannya
-  // butuh tahu kartu apa saja yang muncul di balasan yang sama.
-  const visibleCards = selectVisibleCards(cards);
+  /**
+   * Kartu baru ditahan sampai jawaban selesai mengalir. Memunculkannya di
+   * tengah aliran menggeser teks yang sedang dibaca dan membuat kartu itu
+   * sendiri terbaca setengah jadi. Penahanan ini hanya berlaku untuk pesan yang
+   * sedang berjalan — kartu di percakapan sebelumnya tetap di tempatnya.
+   */
+  const visibleCards = isStreaming ? [] : selectVisibleCards(cards);
 
   return (
-    <motion.div
-      initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={transitionSpringSmooth}
-      className="space-y-2.5"
-    >
+    <div className="space-y-3.5">
       <ToolTraceList traces={traces} />
-      {paragraphs.length > 0 && (
-        <ChatBubble side="assistant">
-          <div className="space-y-2.5">{paragraphs}</div>
-        </ChatBubble>
+      {assistantTextBubbles.length > 0 && (
+        <div className="space-y-3.5">
+          {assistantTextBubbles.map((bubble) => {
+            const entrance = resolveAssistantBubbleEntrance({
+              isStreaming,
+              isFirst: bubble.isFirst,
+              handoffFromIndicator,
+              reduceMotion: Boolean(reduceMotion),
+            });
+
+            return (
+              <motion.div
+                key={bubble.key}
+                initial={
+                  entrance === "none"
+                    ? false
+                    : entrance === "rise"
+                      ? { y: 6 }
+                      : { opacity: 0, y: 6 }
+                }
+                animate={{ opacity: 1, y: 0 }}
+                transition={entrance === "none" ? { duration: 0 } : transitionSpringSmooth}
+              >
+                <ChatBubble side="assistant">
+                  <ChatMarkdown content={bubble.text} />
+                </ChatBubble>
+              </motion.div>
+            );
+          })}
+        </div>
       )}
       {visibleCards.length > 0 && (
-        <div className="space-y-2.5">{visibleCards.map((card) => card.node)}</div>
+        <motion.div
+          initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={transitionSpringSmooth}
+          className="space-y-3"
+        >
+          {visibleCards.map((card) => card.node)}
+        </motion.div>
       )}
       {showFollowUps && (
         <FollowUpChips questions={followUps} onSelect={onFollowUp} disabled={isBusy} />
       )}
-    </motion.div>
+    </div>
   );
 }

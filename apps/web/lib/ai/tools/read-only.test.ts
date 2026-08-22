@@ -84,25 +84,47 @@ describe("registry tool AI", () => {
     expect(Object.keys(tools).sort()).toEqual([
       "getBankBalances",
       "getExpenseCategories",
+      "getInventoryLocations",
+      "getMaterialCatalog",
       "getMaterialShortage",
       "getPendingApprovals",
+      "getPendingExpenseApprovals",
       "getProjectBudget",
       "getProjectHealth",
       "getProjectsAtRisk",
       "getRecentExpenses",
+      "getUnpaidClientInvoices",
+      "getUnpaidVendorBills",
       "getUpcomingBills",
+      "listClients",
       "listProjects",
+      "listVendors",
+      "proposeCreateProject",
+      "proposeDisburseExpense",
       "proposeExpenseDraft",
+      "proposeExpenseReview",
+      "proposeGoodsReceipt",
+      "proposeRecordClientPayment",
+      "proposeSetupProjectBudget",
+      "proposeVendorBillPayment",
+      "requestUserInput",
       "suggestFollowUps",
     ]);
   });
 
-  test("hanya satu tool yang menyiapkan usulan, dan namanya menyatakan itu usulan", () => {
-    const proposalSource = readFileSync(path.join(TOOLS_DIRECTORY, "proposal-tools.ts"), "utf8");
+  test("semua tool usulan diawali dengan kata propose", () => {
+    const proposalFiles = [
+      "proposal-tools.ts",
+      "project-proposal-tools.ts",
+      "finance-proposal-tools.ts",
+      "material-proposal-tools.ts",
+    ];
 
-    // Nama tool sengaja diawali "propose" supaya model tidak memperlakukannya
-    // sebagai perintah eksekusi.
-    expect(proposalSource).toContain("proposeExpenseDraft");
-    expect(proposalSource).not.toContain("submitExpense");
+    for (const file of proposalFiles) {
+      const source = readFileSync(path.join(TOOLS_DIRECTORY, file), "utf8");
+      expect(source).not.toContain("submitExpense");
+      expect(source).not.toContain("createProjectAction");
+      expect(source).not.toContain("payVendorBill");
+    }
   });
 });

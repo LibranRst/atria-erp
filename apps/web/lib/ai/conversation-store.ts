@@ -3,7 +3,7 @@ import "server-only";
 import { db } from "@/db";
 import { aiConversation, aiMessage, aiProposalConfirmation } from "@/db/schema";
 import type { UIMessage } from "ai";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, isNull, lt, or } from "drizzle-orm";
 
 import type { ChatProviderName } from "./providers";
 
@@ -21,6 +21,93 @@ export type StoredConversation = {
   readonly title: string | null;
   readonly updatedAt: Date;
 };
+
+export type ConversationSummary = StoredConversation & { readonly messageCount: number };
+export type ConversationPage = {
+  readonly items: readonly ConversationSummary[];
+  readonly nextCursor: string | null;
+};
+
+type ConversationCursor = { readonly updatedAt: string; readonly id: string };
+
+function encodeConversationCursor(value: ConversationCursor): string {
+  return Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+}
+
+function decodeConversationCursor(value?: string): ConversationCursor | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as unknown;
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const candidate = parsed as { updatedAt?: unknown; id?: unknown };
+    return typeof candidate.updatedAt === "string" && typeof candidate.id === "string"
+      ? { updatedAt: candidate.updatedAt, id: candidate.id }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function listConversationPage(input: {
+  readonly userId: string;
+  readonly query?: string;
+  readonly cursor?: string;
+  readonly limit?: number;
+}): Promise<ConversationPage> {
+  const limit = Math.min(50, Math.max(1, Math.floor(input.limit ?? 30)));
+  const query = input.query?.trim();
+  const cursor = decodeConversationCursor(input.cursor);
+  const cursorDate = cursor ? new Date(cursor.updatedAt) : null;
+  const rows = await db
+    .select({
+      id: aiConversation.id,
+      title: aiConversation.title,
+      updatedAt: aiConversation.updatedAt,
+      messageCount: count(aiMessage.id),
+    })
+    .from(aiConversation)
+    .innerJoin(aiMessage, eq(aiMessage.conversationId, aiConversation.id))
+    .where(
+      and(
+        eq(aiConversation.userId, input.userId),
+        query ? ilike(aiConversation.title, `%${query}%`) : undefined,
+        cursor && cursorDate && Number.isFinite(cursorDate.getTime())
+          ? or(
+              lt(aiConversation.updatedAt, cursorDate),
+              and(eq(aiConversation.updatedAt, cursorDate), lt(aiConversation.id, cursor.id)),
+            )
+          : undefined,
+      ),
+    )
+    .groupBy(aiConversation.id)
+    .orderBy(desc(aiConversation.updatedAt), desc(aiConversation.id))
+    .limit(limit + 1);
+  const hasMore = rows.length > limit;
+  const items = rows
+    .slice(0, limit)
+    .map((row) => ({ ...row, messageCount: Number(row.messageCount) }));
+  const last = items[items.length - 1];
+  return {
+    items,
+    nextCursor:
+      hasMore && last
+        ? encodeConversationCursor({ updatedAt: last.updatedAt.toISOString(), id: last.id })
+        : null,
+  };
+}
+
+export async function renameConversation(
+  conversationId: string,
+  userId: string,
+  title: string,
+): Promise<boolean> {
+  const rows = await db
+    .update(aiConversation)
+    .set({ title })
+    .where(and(eq(aiConversation.id, conversationId), eq(aiConversation.userId, userId)))
+    .returning({ id: aiConversation.id });
+  return rows.length > 0;
+}
 
 /**
  * Mengambil percakapan milik pengguna. Mengembalikan null jika percakapan
@@ -85,17 +172,74 @@ export async function listConversations(
 }
 
 export async function loadConversationMessages(conversationId: string): Promise<UIMessage[]> {
-  const rows = await db.query.aiMessage.findMany({
-    where: eq(aiMessage.conversationId, conversationId),
-    columns: { id: true, role: true, parts: true },
-    orderBy: [asc(aiMessage.createdAt)],
-  });
+  const [rows, confirmedRows] = await Promise.all([
+    db.query.aiMessage.findMany({
+      where: eq(aiMessage.conversationId, conversationId),
+      columns: { id: true, role: true, parts: true },
+      orderBy: [asc(aiMessage.createdAt)],
+    }),
+    db.query.aiProposalConfirmation.findMany({
+      where: eq(aiProposalConfirmation.conversationId, conversationId),
+      columns: { toolCallId: true, documentId: true, proposalType: true, createdAt: true },
+    }),
+  ]);
 
-  return rows.map((row) => ({
-    id: row.id,
-    role: row.role === "user" ? "user" : "assistant",
-    parts: row.parts as UIMessage["parts"],
-  }));
+  const confirmedMap = new Map<
+    string,
+    { documentId: string; proposalType: string; createdAt: Date }
+  >();
+  for (const row of confirmedRows) {
+    confirmedMap.set(row.toolCallId, {
+      documentId: row.documentId,
+      proposalType: row.proposalType,
+      createdAt: row.createdAt,
+    });
+  }
+
+  return rows.map((row) => {
+    const parts = row.parts as UIMessage["parts"];
+    if (row.role !== "assistant" || confirmedMap.size === 0 || !Array.isArray(parts)) {
+      return {
+        id: row.id,
+        role: row.role === "user" ? "user" : "assistant",
+        parts,
+      };
+    }
+
+    const enrichedParts = parts.map((part) => {
+      const toolCallId = (part as { toolCallId?: string }).toolCallId;
+      if (!toolCallId || !confirmedMap.has(toolCallId)) {
+        return part;
+      }
+
+      const conf = confirmedMap.get(toolCallId)!;
+      const originalOutput = (part as { output?: unknown }).output;
+      if (typeof originalOutput === "object" && originalOutput !== null) {
+        const outputObj = originalOutput as Record<string, unknown>;
+        return {
+          ...part,
+          output: {
+            ...outputObj,
+            isConfirmedByUser: true,
+            confirmation: {
+              status: "CONFIRMED_AND_EXECUTED",
+              proposalType: conf.proposalType,
+              documentId: conf.documentId,
+              confirmedAt: conf.createdAt.toISOString(),
+            },
+            instruction: `STATUS: Usulan ini TELAH DIKONFIRMASI oleh pengguna dan BERHASIL DIEKSEKUSI ke database (ID Dokumen: ${conf.documentId}). Transaksi sudah selesai diproses. Jika pengguna bertanya tentang statusnya, konfirmasikan bahwa aksi telah berhasil dilakukan.`,
+          },
+        };
+      }
+      return part;
+    });
+
+    return {
+      id: row.id,
+      role: "assistant",
+      parts: enrichedParts as UIMessage["parts"],
+    };
+  });
 }
 
 /**

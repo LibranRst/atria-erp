@@ -14,26 +14,28 @@ describe("jejak tool yang diringkas", () => {
     );
 
     expect(html).toContain("4 sumber data dibaca");
-    // Rincian disembunyikan sampai dibuka, supaya jawaban tidak terdorong ke bawah.
     expect(html).not.toContain("Daftar proyek dibaca");
     expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain("aria-controls=");
+    expect(html).toContain("after:-inset-y-2");
+    expect(html.match(/pointer-events-none/g)).toHaveLength(3);
   });
 
-  test("membuka rincian dengan sendirinya selama masih berjalan", () => {
-    // Saat berjalan justru itu isinya yang berguna: pengguna melihat apa yang
-    // sedang diambil, bukan sekadar bahwa ada sesuatu yang berjalan.
+  test("tetap compact dan dapat dibuka pengguna selama tool berjalan", () => {
     const html = renderToStaticMarkup(
       <ToolTraceList
         traces={[{ key: "a", label: "Membaca daftar proyek", state: "running", count: 1 }]}
       />,
     );
 
-    expect(html).toContain("Mengambil data…");
-    expect(html).toContain("Membaca daftar proyek");
-    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain("0 dari 1 sumber dibaca");
+    expect(html).not.toContain("Membaca daftar proyek");
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).not.toContain("disabled");
+    expect(html).toContain("rotate-0");
   });
 
-  test("membuka rincian dan menyebut jumlah kegagalan ketika ada tool yang gagal", () => {
+  test("tetap compact dan dapat dibuka pengguna ketika tool gagal", () => {
     const html = renderToStaticMarkup(
       <ToolTraceList
         traces={[
@@ -43,8 +45,23 @@ describe("jejak tool yang diringkas", () => {
       />,
     );
 
-    expect(html).toContain("2 sumber data dibaca, 1 gagal");
-    expect(html).toContain("Gagal membaca budget");
+    expect(html).toContain("1 sumber data dibaca, 1 gagal");
+    expect(html).not.toContain("Gagal membaca budget");
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).not.toContain("disabled");
+  });
+
+  test("menyebut jejak yang terputus terpisah dari yang gagal", () => {
+    const html = renderToStaticMarkup(
+      <ToolTraceList
+        traces={[
+          done("Daftar proyek dibaca"),
+          { key: "b", label: "Membaca budget", state: "interrupted", count: 1 },
+        ]}
+      />,
+    );
+
+    expect(html).toContain("1 sumber data dibaca, 1 dihentikan");
   });
 
   test("tidak merender apa-apa ketika tidak ada tool yang dipanggil", () => {

@@ -436,3 +436,9 @@ erDiagram
 ```
 
 - Guided setup fields: `setup_stage`, `tukang_scope_skipped`, `subcon_scope_skipped`, and `setup_updated_by_id`.
+# AI User Preference
+
+`ai_user_preference` menyimpan satu preferensi asisten per user: `response_style`,
+`primary_focus`, `custom_note` maksimal 300 karakter, dan `updated_at`. `user_id`
+adalah primary key sekaligus foreign key cascade ke `user`; tidak ada preference
+lintas user atau organisasi.

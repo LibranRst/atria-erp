@@ -4,29 +4,17 @@ import { confirmAiExpenseProposal } from "@/app/actions/ai/confirm-expense-propo
 import { AppIcon, Button, MoneyValue, StatusBadge } from "@/components/ui";
 import { transitionSpringSmooth } from "@/lib/utils/motion";
 import { motion, useReducedMotion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 
 import type { ExpenseProposal } from "../utils/expense-proposal";
-
-/**
- * Kartu usulan pengeluaran.
- *
- * Asisten hanya boleh mengusulkan. Kartu ini menampilkan seluruh rincian yang
- * akan tercatat, lalu penulisan dilakukan oleh Server Action ber-RBAC yang sama
- * dengan form manual — dipicu tombol konfirmasi, tidak pernah otomatis.
- *
- * Status "sudah dikonfirmasi" datang dari database (`alreadyConfirmed`), bukan
- * hanya dari state komponen. Tanpa itu, kartu lama akan tampil seolah belum
- * dikirim setiap kali riwayat dimuat ulang, dan pengguna bisa membuat dokumen
- * kedua untuk usulan yang sama.
- */
 
 type ExpenseProposalCardProps = {
   readonly proposal: ExpenseProposal;
   readonly toolCallId: string;
   readonly conversationId: string | null;
-  /** Terisi bila usulan ini sudah pernah dieksekusi menjadi dokumen. */
   readonly alreadyConfirmed: boolean;
+  readonly onNavigate?: () => void;
 };
 
 type SubmitState =
@@ -40,7 +28,9 @@ export function ExpenseProposalCard({
   toolCallId,
   conversationId,
   alreadyConfirmed,
+  onNavigate,
 }: ExpenseProposalCardProps): React.JSX.Element {
+  const router = useRouter();
   const reduceMotion = useReducedMotion();
   const [state, setState] = React.useState<SubmitState>(
     alreadyConfirmed ? { kind: "submitted" } : { kind: "idle" },
@@ -75,6 +65,10 @@ export function ExpenseProposalCard({
     }
     setState({ kind: "failed", message: response.error.message });
   }
+
+  const remainingAfter =
+    proposal.remainingAfterSubmit?.formatted ??
+    `Rp ${(proposal.remainingBeforeSubmit.amount - proposal.amount.amount).toLocaleString("id-ID")}`;
 
   return (
     <motion.section
@@ -114,6 +108,26 @@ export function ExpenseProposalCard({
         </div>
       </dl>
 
+      {/* Visual Diff: Dampak Sisa Budget */}
+      <div className="border-t border-black/5.5 bg-surface-container-low/40 px-4 py-2.5">
+        <div className="flex items-center justify-between text-support font-semibold">
+          <span className="text-on-surface-variant">Sisa budget {proposal.categoryName}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-meta text-on-surface-variant/70 line-through">
+              {proposal.remainingBeforeSubmit.formatted}
+            </span>
+            <span className="text-on-surface-variant/40">→</span>
+            <span
+              className={
+                proposal.exceedsRemaining ? "font-bold text-critical" : "font-bold text-on-surface"
+              }
+            >
+              {remainingAfter}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {proposal.exceedsRemaining && !isSubmitted && (
         <p className="flex items-start gap-2 border-t border-black/5.5 bg-critical-container px-4 py-3 text-support font-semibold text-critical">
           <AppIcon name="warning" aria-hidden="true" className="mt-px icon-sm shrink-0" />
@@ -126,13 +140,30 @@ export function ExpenseProposalCard({
 
       <div className="border-t border-black/5.5 px-4 py-3.5">
         {isSubmitted ? (
-          <p className="flex items-start gap-2 text-support font-semibold text-on-surface-variant">
-            <AppIcon name="check_circle" aria-hidden="true" className="mt-px icon-sm shrink-0" />
-            <span>
-              Pengajuan tercatat dan menunggu verifikasi. Lanjutkan di menu Pengeluaran untuk
-              melampirkan nota.
-            </span>
-          </p>
+          <div className="space-y-2">
+            <p className="flex items-start gap-2 text-support font-semibold text-on-surface-variant">
+              <AppIcon
+                name="check_circle"
+                aria-hidden="true"
+                className="mt-px icon-sm shrink-0 text-primary"
+              />
+              <span>
+                Pengajuan tercatat dan menunggu verifikasi. Lanjutkan di menu Pengeluaran untuk
+                melampirkan nota.
+              </span>
+            </p>
+            <Button
+              variant="secondary"
+              size="compact"
+              className="mt-1 w-full"
+              onClick={() => {
+                onNavigate?.();
+                router.push("/expenses");
+              }}
+            >
+              Lihat Daftar Pengeluaran
+            </Button>
+          </div>
         ) : (
           <div className="space-y-2.5">
             {state.kind === "failed" && (

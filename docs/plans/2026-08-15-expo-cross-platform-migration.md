@@ -209,16 +209,17 @@ Kalau nanti NativeWind v5 stabil, migrasi dari `packages/tokens` ke preset Tailw
 
 ### 3c. Peta porting dependensi
 
-| Web                                  | Mobile                                                                          | Catatan                                                                                                                                            |
-| ------------------------------------ | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@phosphor-icons/react/ssr`          | `phosphor-react-native` 3.0.6                                                   | Nama & weight identik → tabel `componentNameByLegacyName` (118 key) di `AppIcon` pindah 1:1. Ukuran jadi `size={20}`, bukan class `icon-lg`.       |
-| `next/font` Manrope + JetBrains Mono | `@expo-google-fonts/manrope`, `@expo-google-fonts/jetbrains-mono` + `expo-font` |                                                                                                                                                    |
-| `framer-motion`                      | `react-native-reanimated` 4.5                                                   | `stiffness`/`damping`/`mass` dari `lib/utils/motion.ts` masuk langsung ke `withSpring`. 8 preset + 4 variant set jadi `packages/tokens/motion.ts`. |
-| `sonner`                             | `sonner-native` 0.27                                                            | API sepadan; ~120 baris override toast (radius 24px, tombol capsule, `shadow-raised`) jadi style props.                                            |
-| `shadow-*` (inset rim + drop)        | `boxShadow` style prop                                                          | New Arch mendukung `inset`. iOS penuh; Android inset butuh API 29+ → di bawah itu, jatuhkan rim, pertahankan drop shadow.                          |
-| `after:-inset-*` hit area            | `hitSlop`                                                                       | Dipakai di compact button, back button, avatar, section action, tab.                                                                               |
-| `localStorage` draft recovery        | `react-native-mmkv`                                                             | `lib/forms/local-form-recovery.ts` sudah menerima storage adapter.                                                                                 |
-| `<input type="file" capture>`        | `expo-image-picker` / `expo-camera`                                             | Alur sesudahnya (`signImagekit()` → upload ImageKit → `processReceipt()`) tidak berubah.                                                           |
+| Web                                  | Mobile                                                                                     | Catatan                                                                                                                                            |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@phosphor-icons/react/ssr`          | `phosphor-react-native` 3.0.6                                                              | Nama & weight identik → tabel `componentNameByLegacyName` (118 key) di `AppIcon` pindah 1:1. Ukuran jadi `size={20}`, bukan class `icon-lg`.       |
+| `next/font` Manrope + JetBrains Mono | `@expo-google-fonts/manrope`, `@expo-google-fonts/jetbrains-mono` + `expo-font`            |                                                                                                                                                    |
+| `framer-motion`                      | `react-native-reanimated` 4.5                                                              | `stiffness`/`damping`/`mass` dari `lib/utils/motion.ts` masuk langsung ke `withSpring`. 8 preset + 4 variant set jadi `packages/tokens/motion.ts`. |
+| `sonner`                             | `sonner-native` 0.27                                                                       | API sepadan; ~120 baris override toast (radius 24px, tombol capsule, `shadow-raised`) jadi style props.                                            |
+| `shadow-*` (inset rim + drop)        | `boxShadow` style prop                                                                     | New Arch mendukung `inset`. iOS penuh; Android inset butuh API 29+ → di bawah itu, jatuhkan rim, pertahankan drop shadow.                          |
+| `after:-inset-*` hit area            | `hitSlop`                                                                                  | Dipakai di compact button, back button, avatar, section action, tab.                                                                               |
+| `AdaptiveSelect`                     | native menu/picker untuk daftar pendek; native modal/search surface untuk konteks kompleks | Pertahankan taxonomy berdasarkan kompleksitas. Jangan mem-port `@floating-ui/react`, dan jangan memaksa search/calendar menjadi form sheet.        |
+| `localStorage` draft recovery        | `react-native-mmkv`                                                                        | `lib/forms/local-form-recovery.ts` sudah menerima storage adapter.                                                                                 |
+| `<input type="file" capture>`        | `expo-image-picker` / `expo-camera`                                                        | Alur sesudahnya (`signImagekit()` → upload ImageKit → `processReceipt()`) tidak berubah.                                                           |
 
 **Satu yang benar-benar butuh desain ulang:** `MoneyValue` varian `fullDynamic` memakai CSS container query (`clamp(min, 8.25cqw–10cqw, max)`). RN tidak punya padanannya. Ganti dengan `numberOfLines={1}` + `adjustsFontSizeToFit` + `minimumFontScale` yang diturunkan dari rasio min/max yang sama. Ini primitive paling banyak dipakai (126 call site), jadi selesaikan lebih dulu dan uji di lebar 320/360/390/430.
 
@@ -226,7 +227,7 @@ Kalau nanti NativeWind v5 stabil, migrasi dari `packages/tokens` ke preset Tailw
 
 Bangun 12 ini dulu — ini yang membawa produk:
 
-`AppIcon` (333) · `FormField` (158) · `MoneyValue` (126) · `FormSection` (120) · `TextInput` (71) · `SheetSelect` (65) · `GroupedSurface` (50) · `BottomSheet` (35) · `StatusBadge` (33) · `Button` (32) · `SegmentedTabs` (27) · `FactRow`/`SummaryFact` (27)
+`AppIcon` (333) · `FormField` (158) · `MoneyValue` (126) · `FormSection` (120) · `TextInput` (71) · `AdaptiveSelect` (pengganti `SheetSelect`, 65 call site web saat migrasi) · `GroupedSurface` (50) · `BottomSheet` (35) · `StatusBadge` (33) · `Button` (32) · `SegmentedTabs` (27) · `FactRow`/`SummaryFact` (27)
 
 Aturan yang harus ikut porting, bukan hanya tampilannya:
 

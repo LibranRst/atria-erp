@@ -34,6 +34,12 @@ export const TOOLS_WITH_CARDS = [
   "getMaterialShortage",
   "getRecentExpenses",
   "getExpenseCategories",
+  "listVendors",
+  "listClients",
+  "getMaterialCatalog",
+  "getUnpaidVendorBills",
+  "getUnpaidClientInvoices",
+  "getPendingExpenseApprovals",
 ] as const;
 
 export type ToolWithCard = (typeof TOOLS_WITH_CARDS)[number];

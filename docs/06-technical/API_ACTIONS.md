@@ -185,3 +185,8 @@ Tukang/Subcon expense and vendor bill flows may optionally link to `project_cate
 - A cash transaction written by an internal action starts with `reconciled = false`. Reconciliation fields may be set only after an imported bank-statement row is matched and approved.
 - `reconciled = true` requires a matched `bank_statement_row`. A documented exception uses `reconciliation_exception_reason`, `reconciliation_exception_at`, and `reconciliation_exception_by_id`; it never impersonates a bank match.
 - A non-empty bank reference is unique per bank account. Reusing it must fail safely without creating another cash movement.
+# AI History & Preference Actions
+
+- `listAiConversations({ query?, cursor?, limit? })` — title search per-user dengan cursor dan message count.
+- `renameAiConversation({ conversationId, title })` — rename milik session tanpa mengubah waktu aktivitas.
+- `getAiPreference()` / `saveAiPreference(input)` / `resetAiPreference()` — preference personal bagi role dengan `use:ai_chat`.

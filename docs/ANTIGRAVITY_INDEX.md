@@ -38,7 +38,7 @@ atria-erp/
 │   ├── api/                    # API Route handlers (Better Auth, webhook endpoints)
 │   └── globals.css             # Theme tokens & CSS variables
 ├── components/                 # Shared UI primitives
-│   └── ui/                     # Design primitives (MoneyValue, Button, SegmentedTabs, Drawer, Badge)
+│   └── ui/                     # Public shared UI inventory; consumers import only from @/components/ui
 ├── db/                         # Database schema & migrations
 │   ├── schema/                 # Drizzle schema table definitions
 │   ├── index.ts                # Drizzle database client instance
@@ -59,6 +59,12 @@ atria-erp/
 ├── docs/                       # Project documentation & architectural plans
 └── .agents/                    # Antigravity rules, skills, hooks & configurations
 ```
+
+### Shared UI First
+
+Before adding UI, inspect `apps/web/components/ui/index.ts`, the component stories/tests, and the relevant taxonomy in `DESIGN.md`. The mandatory decision order is **reuse → compose/extend → create**. Feature code owns domain data and workflow composition; it does not recreate shared portal, focus, dismissal, collision, keyboard, money-formatting, motion, or touch-target behavior.
+
+The canonical contextual surfaces are `ActionMenu`, `AdaptiveSelect`, `SelectionDialog`, `SearchDialog`, `CompactFormDialog`, `CalendarDialog`, `ConfirmationDialog`, `SuccessDialog`, `AnchoredFilterPanel`, `FormSheet`, `DetailSheet`, `ContextPopover`, and `Tooltip`. Full decision rules and the acceptance checklist live in `.agents/rules/05-shared-ui-first.md`; detailed visual and interaction taxonomy lives in `DESIGN.md`.
 
 ---
 

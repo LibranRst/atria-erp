@@ -4,6 +4,7 @@ import { convertToModelMessages, createUIMessageStream, stepCountIs, streamText 
 import type { UIMessage, UIMessageChunk } from "ai";
 
 import { buildSystemPrompt } from "./prompts";
+import { shouldStopAfterFinalFollowUps } from "./chat-stop-conditions";
 import {
   isFallbackWorthyError,
   resolveChatModel,
@@ -12,6 +13,7 @@ import {
 } from "./providers";
 import { buildAiTools } from "./tools";
 import type { AiToolContext } from "./tools/context";
+import type { AiPreferenceInput } from "@atria/core/validations/ai-preference";
 
 /**
  * Batas langkah agent. DeepSeek V4 Flash cenderung sangat sering memanggil tool,
@@ -39,6 +41,7 @@ export type ChatStreamInput = {
   readonly toolContext: AiToolContext;
   readonly userName: string;
   readonly conversationId: string;
+  readonly preference: AiPreferenceInput;
   readonly onAssistantMessage: (event: {
     message: UIMessage;
     provider: ChatProviderName;
@@ -86,10 +89,15 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
         try {
           const result = streamText({
             model: resolveChatModel(provider),
-            system: buildSystemPrompt(provider, input.userName, input.toolContext),
+            system: buildSystemPrompt(
+              provider,
+              input.userName,
+              input.toolContext,
+              input.preference,
+            ),
             messages: await convertToModelMessages(input.messages),
             tools: buildAiTools(input.toolContext),
-            stopWhen: stepCountIs(MAX_STEPS),
+            stopWhen: [stepCountIs(MAX_STEPS), ({ steps }) => shouldStopAfterFinalFollowUps(steps)],
           });
 
           const uiStream = result.toUIMessageStream({

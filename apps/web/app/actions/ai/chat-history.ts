@@ -4,14 +4,17 @@ import {
   createConversation,
   deleteConversation,
   findOwnedConversation,
-  listConversations,
+  listConversationPage,
   loadConfirmedProposals,
   loadConversationMessages,
+  renameConversation,
+  type ConversationPage,
 } from "@/lib/ai/conversation-store";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { getServerSession } from "@/lib/server/session";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import type { UIMessage } from "ai";
+import { z } from "zod";
 
 /**
  * Riwayat percakapan AI milik pengguna.
@@ -20,12 +23,6 @@ import type { UIMessage } from "ai";
  * Percakapan orang lain selalu dilaporkan sebagai tidak ditemukan, sehingga
  * keberadaannya tidak bocor lewat perbedaan pesan kesalahan.
  */
-
-type ConversationSummary = {
-  readonly id: string;
-  readonly title: string | null;
-  readonly updatedAt: string;
-};
 
 type ConversationPayload = {
   readonly conversationId: string | null;
@@ -73,8 +70,8 @@ export async function getLatestAiConversation(): Promise<ActionResponse<Conversa
   if (!access.ok) return access.response;
 
   try {
-    const conversations = await listConversations(access.userId, 1);
-    const latest = conversations[0];
+    const page = await listConversationPage({ userId: access.userId, limit: 1 });
+    const latest = page.items[0];
 
     if (!latest) {
       return {
@@ -128,22 +125,76 @@ export async function getAiConversation(
 /**
  * Daftar percakapan untuk pemilih di dalam sheet chat.
  */
-export async function listAiConversations(): Promise<
-  ActionResponse<readonly ConversationSummary[]>
-> {
+const listInputSchema = z.object({
+  query: z.string().trim().max(80).optional(),
+  cursor: z.string().max(500).optional(),
+  limit: z.number().int().min(1).max(50).optional(),
+});
+
+export type ConversationPagePayload = {
+  readonly items: readonly {
+    readonly id: string;
+    readonly title: string | null;
+    readonly updatedAt: string;
+    readonly messageCount: number;
+  }[];
+  readonly nextCursor: string | null;
+};
+
+export async function listAiConversations(
+  input?: unknown,
+): Promise<ActionResponse<ConversationPagePayload>> {
   const access = await requireChatAccess();
   if (!access.ok) return access.response;
-
-  const conversations = await listConversations(access.userId, 30);
+  const parsed = listInputSchema.safeParse(input ?? {});
+  if (!parsed.success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Pencarian riwayat tidak valid." },
+    };
+  const page: ConversationPage = await listConversationPage({
+    userId: access.userId,
+    ...parsed.data,
+  });
 
   return {
     success: true,
-    data: conversations.map((conversation) => ({
-      id: conversation.id,
-      title: conversation.title,
-      updatedAt: conversation.updatedAt.toISOString(),
-    })),
+    data: {
+      items: page.items.map((conversation) => ({
+        id: conversation.id,
+        title: conversation.title,
+        updatedAt: conversation.updatedAt.toISOString(),
+        messageCount: conversation.messageCount,
+      })),
+      nextCursor: page.nextCursor,
+    },
   };
+}
+
+const renameSchema = z.object({
+  conversationId: z.string().uuid(),
+  title: z.string().trim().min(1).max(80),
+});
+
+export async function renameAiConversation(
+  input: unknown,
+): Promise<ActionResponse<{ title: string }>> {
+  const access = await requireChatAccess();
+  if (!access.ok) return access.response;
+  const parsed = renameSchema.safeParse(input);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Judul percakapan tidak valid." },
+    };
+  const renamed = await renameConversation(
+    parsed.data.conversationId,
+    access.userId,
+    parsed.data.title,
+  );
+  return renamed
+    ? { success: true, data: { title: parsed.data.title } }
+    : { success: false, error: { code: "NOT_FOUND", message: "Percakapan tidak ditemukan." } };
 }
 
 /**
