@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { AppIcon, BottomSheet } from "@/components/ui";
+import { AppIcon, DetailSheet } from "@/components/ui";
 import {
   projectHealthLabel,
   projectHealthReasonLabel,
@@ -103,7 +103,7 @@ export function ProjectIdentityHeader({
           </div>
         </div>
       </section>
-      <BottomSheet open={detailOpen} title="Detail Proyek" onClose={() => setDetailOpen(false)}>
+      <DetailSheet open={detailOpen} title="Detail Proyek" onClose={() => setDetailOpen(false)}>
         <div className="overflow-hidden rounded-[22px] bg-white shadow-surface ring-1 ring-ring-subtle">
           <DetailRow
             label="Klien"
@@ -145,7 +145,7 @@ export function ProjectIdentityHeader({
           />
           {project.notes && <DetailRow label="Catatan" value={project.notes} />}
         </div>
-      </BottomSheet>
+      </DetailSheet>
     </>
   );
 }

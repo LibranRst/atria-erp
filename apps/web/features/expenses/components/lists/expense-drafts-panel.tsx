@@ -9,7 +9,7 @@ import {
   listExpenseDrafts,
   type ExpenseDraftSummary,
 } from "@/app/actions/finance/expense-drafts";
-import { AppIcon, ConfirmationSheet, GroupedSurface } from "@/components/ui";
+import { AppIcon, ConfirmationDialog, GroupedSurface } from "@/components/ui";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { transitionSpringSnappy, transitionSpringSmooth } from "@/lib/utils/motion";
 function savedTimeLabel(value: Date): string {
@@ -148,7 +148,7 @@ export function ExpenseDraftsPanel({
         </AnimatePresence>
       </GroupedSurface>
 
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={discardTarget !== null}
         title="Buang Draft?"
         description={`Draft ${discardTarget?.projectName ?? "pengeluaran"} dan attachment yang belum diajukan akan dihapus.`}

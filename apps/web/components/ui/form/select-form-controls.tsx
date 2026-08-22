@@ -2,15 +2,22 @@
 
 import React from "react";
 
-import { BottomSheet } from "../overlay/bottom-sheet";
+import { AnchoredListbox } from "../overlay/anchored-listbox";
+import { SearchDialog, SelectionDialog } from "../overlay/dialogs";
+import {
+  resolveSelectPresentation,
+  selectDialogNeedsSearch,
+  type SelectPresentation,
+} from "../overlay/interaction-surface-policy";
 import { Button } from "../button/button";
 import { FormField } from "./basic-form-controls";
 import type { SelectOption } from "./form-control-types";
 import { cx, selectedOptionLabel } from "./form-control-utils";
 import { useFormPresentation } from "./form-presentation-context";
 import { AppIcon } from "@/components/ui/icon/app-icon";
+import { DialogOptionList, type DialogOptionListHandle } from "./dialog-option-list";
 
-export function SheetSelect({
+export function AdaptiveSelect({
   id,
   label,
   value,
@@ -30,6 +37,7 @@ export function SheetSelect({
   createActionLabel,
   createActionDescription,
   onCreateAction,
+  presentation = "auto",
 }: {
   readonly id?: string;
   readonly label: string;
@@ -50,20 +58,117 @@ export function SheetSelect({
   readonly createActionLabel?: string;
   readonly createActionDescription?: string;
   readonly onCreateAction?: () => void;
+  readonly presentation?: SelectPresentation;
 }): React.JSX.Element {
   const grouped = useFormPresentation() === "grouped";
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
-  const [pendingValue, setPendingValue] = React.useState<string | null>(null);
-  const [pendingCreateAction, setPendingCreateAction] = React.useState(false);
+  const optionListRef = React.useRef<DialogOptionListHandle>(null);
   const selected = options.find((option) => option.value === value);
-  const searchable = options.length > 6;
+  const hasCreateAction = Boolean(createActionLabel && onCreateAction);
+  const resolvedPresentation = resolveSelectPresentation({
+    options,
+    presentation,
+    hasCreateAction,
+  });
+  const searchable = selectDialogNeedsSearch({ options, hasCreateAction });
+  const normalizedQuery = query.trim().toLocaleLowerCase("id-ID");
   const filtered = options.filter((option) => {
     const text =
-      `${option.label} ${option.description ?? ""} ${option.meta ?? ""} ${option.group ?? ""}`.toLowerCase();
-    return text.includes(query.toLowerCase());
+      `${option.label} ${option.description ?? ""} ${option.meta ?? ""} ${option.group ?? ""}`.toLocaleLowerCase(
+        "id-ID",
+      );
+    return text.includes(normalizedQuery);
   });
-  const groups = Array.from(new Set(filtered.map((option) => option.group ?? "")));
+
+  function selectOption(option: SelectOption): void {
+    setOpen(false);
+    setQuery("");
+    onChange(option.value);
+  }
+
+  const dialogContent = (
+    <div className="space-y-3">
+      <DialogOptionList
+        key={searchable ? query : "selection"}
+        ref={optionListRef}
+        label={title ?? label}
+        value={value}
+        options={filtered}
+        emptyText={emptyText}
+        onSelect={selectOption}
+      />
+      {createActionLabel && onCreateAction ? (
+        <Button
+          type="button"
+          variant="secondary"
+          fullWidth
+          leadingIcon={<AppIcon name="add" className="icon-sm" />}
+          trailingIcon={<AppIcon name="chevron_right" className="icon-md shrink-0" />}
+          onClick={() => {
+            setOpen(false);
+            setQuery("");
+            onCreateAction();
+          }}
+          className="justify-between text-accent"
+        >
+          {createActionDescription ? (
+            <span className="min-w-0 text-left">
+              <span className="block truncate">{createActionLabel}</span>
+              <span className="block truncate text-meta font-normal text-on-surface-variant">
+                {createActionDescription}
+              </span>
+            </span>
+          ) : (
+            createActionLabel
+          )}
+        </Button>
+      ) : null}
+    </div>
+  );
+
+  const trigger = (
+    <button
+      id={id}
+      type="button"
+      aria-haspopup={resolvedPresentation === "menu" ? "listbox" : "dialog"}
+      aria-expanded={resolvedPresentation === "dialog" ? open : undefined}
+      disabled={disabled || readOnly}
+      onClick={
+        resolvedPresentation === "dialog"
+          ? () => {
+              setQuery("");
+              setOpen(true);
+            }
+          : undefined
+      }
+      className={cx(
+        grouped
+          ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
+          : "flex w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left shadow-control transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
+        !grouped && (compact ? "min-h-11" : "min-h-12"),
+        !grouped && compact && "bg-surface-container-low",
+        readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
+      )}
+    >
+      <span className="min-w-0">
+        <span
+          className={cx(
+            "block truncate text-sm leading-4 font-bold",
+            selected ? "text-on-surface" : "text-on-surface-variant/65",
+          )}
+        >
+          {selected?.label || placeholder}
+        </span>
+        {(selected?.description || selected?.meta) && (
+          <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
+            {selected.description ?? selected.meta}
+          </span>
+        )}
+      </span>
+      <AppIcon name="expand_more" className="icon-sm shrink-0 text-on-surface-variant" />
+    </button>
+  );
 
   return (
     <FormField
@@ -75,142 +180,56 @@ export function SheetSelect({
       optional={optional}
       readOnly={readOnly}
     >
-      <button
-        id={id}
-        type="button"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        disabled={disabled || readOnly}
-        onClick={() => {
-          setQuery("");
-          setOpen(true);
-        }}
-        className={cx(
-          grouped
-            ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
-            : "flex w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left shadow-control transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
-          !grouped && (compact ? "min-h-11" : "min-h-12"),
-          !grouped && compact && "bg-surface-container-low",
-          readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
+      <div className="min-w-0">
+        {resolvedPresentation === "menu" ? (
+          <AnchoredListbox
+            trigger={trigger}
+            label={title ?? label}
+            value={value}
+            options={options}
+            onChange={onChange}
+          />
+        ) : (
+          trigger
         )}
-      >
-        <span className="min-w-0">
-          <span
-            className={cx(
-              "block truncate text-sm leading-4 font-bold",
-              selected ? "text-on-surface" : "text-on-surface-variant/65",
-            )}
-          >
-            {selected?.label || placeholder}
-          </span>
-          {(selected?.description || selected?.meta) && (
-            <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
-              {selected.description ?? selected.meta}
-            </span>
-          )}
-        </span>
-        <AppIcon name="expand_more" className="icon-sm shrink-0 text-on-surface-variant" />
-      </button>
-      <BottomSheet
-        open={open}
-        title={title ?? label}
-        onClose={() => setOpen(false)}
-        onExitComplete={() => {
-          if (pendingCreateAction) {
-            setPendingCreateAction(false);
-            onCreateAction?.();
-            return;
-          }
-          const nextValue = pendingValue;
-          if (nextValue === null) return;
-          setPendingValue(null);
-          onChange(nextValue);
-        }}
-      >
-        <div className="space-y-sm">
-          {searchable && (
-            <SearchField value={query} onChange={setQuery} placeholder={searchPlaceholder} />
-          )}
-          {filtered.length === 0 ? (
-            <p className="rounded-2xl bg-surface-container-low p-4 text-center text-xs text-on-surface-variant">
-              {emptyText}
-            </p>
-          ) : (
-            groups.map((group) => (
-              <div key={group || "ungrouped"} className="space-y-2">
-                {group && (
-                  <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
-                    {group}
-                  </p>
-                )}
-                <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-ring-subtle">
-                  {filtered
-                    .filter((option) => (option.group ?? "") === group)
-                    .map((option) => {
-                      const active = option.value === value;
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          disabled={option.disabled}
-                          onClick={() => {
-                            setPendingValue(option.value);
-                            setOpen(false);
-                          }}
-                          className={cx(
-                            "flex min-h-14 w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition active:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50",
-                            active ? "bg-accent-container text-accent" : "text-on-surface",
-                          )}
-                        >
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-xs leading-4 font-bold">
-                              {option.label}
-                            </span>
-                            {option.description || option.meta || option.disabledReason ? (
-                              <span className="mt-0.5 block text-meta text-on-surface-variant">
-                                {option.disabledReason ?? option.description ?? option.meta}
-                              </span>
-                            ) : null}
-                          </span>
-                          {active ? <AppIcon name="check" className="icon-sm shrink-0" /> : null}
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
-            ))
-          )}
-          {createActionLabel && onCreateAction ? (
-            <Button
-              type="button"
-              variant="secondary"
-              fullWidth
-              leadingIcon={<AppIcon name="add" className="icon-sm" />}
-              trailingIcon={<AppIcon name="chevron_right" className="icon-md shrink-0" />}
-              onClick={() => {
-                setPendingValue(null);
-                setPendingCreateAction(true);
-                setOpen(false);
-              }}
-              className="justify-between text-accent"
-            >
-              {createActionDescription ? (
-                <span className="min-w-0 text-left">
-                  <span className="block truncate">{createActionLabel}</span>
-                  <span className="block truncate text-meta font-normal text-on-surface-variant">
-                    {createActionDescription}
-                  </span>
-                </span>
-              ) : (
-                createActionLabel
-              )}
-            </Button>
-          ) : null}
-        </div>
-      </BottomSheet>
+      </div>
+      {searchable ? (
+        <SearchDialog
+          open={resolvedPresentation === "dialog" && open}
+          title={title ?? label}
+          query={query}
+          onQueryChange={setQuery}
+          searchPlaceholder={searchPlaceholder}
+          onSearchKeyDown={(event) => {
+            if (event.key !== "ArrowDown") return;
+            event.preventDefault();
+            optionListRef.current?.focusFirst();
+          }}
+          onClose={() => {
+            setOpen(false);
+            setQuery("");
+          }}
+        >
+          {dialogContent}
+        </SearchDialog>
+      ) : (
+        <SelectionDialog
+          open={resolvedPresentation === "dialog" && open}
+          title={title ?? label}
+          onClose={() => setOpen(false)}
+        >
+          {dialogContent}
+        </SelectionDialog>
+      )}
     </FormField>
   );
 }
+
+/**
+ * @deprecated Gunakan `AdaptiveSelect`. Alias ini dipertahankan selama satu
+ * siklus migrasi agar cabang lama tidak rusak ketika di-merge.
+ */
+export const SheetSelect = AdaptiveSelect;
 
 export function ComboboxField({
   id,
@@ -238,12 +257,13 @@ export function ComboboxField({
   const grouped = useFormPresentation() === "grouped";
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
-  const [pendingValue, setPendingValue] = React.useState<string | null>(null);
+  const optionListRef = React.useRef<DialogOptionListHandle>(null);
   const uniqueOptions = Array.from(new Set([...options, value].filter(Boolean)));
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = query.trim().toLocaleLowerCase("id-ID");
   const filteredOptions = normalizedQuery
-    ? uniqueOptions.filter((option) => option.toLowerCase().includes(normalizedQuery))
+    ? uniqueOptions.filter((option) => option.toLocaleLowerCase("id-ID").includes(normalizedQuery))
     : uniqueOptions;
+  const dialogOptions = filteredOptions.map((option) => ({ value: option, label: option }));
   const customValue = query.trim();
   const canUseCustomValue =
     allowCustomValue &&
@@ -252,95 +272,81 @@ export function ComboboxField({
 
   return (
     <FormField label={label} helper={helper} error={error} htmlFor={id}>
-      <button
-        id={id}
-        type="button"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        disabled={disabled}
-        onClick={() => {
-          setQuery("");
-          setOpen(true);
-        }}
-        className={cx(
-          grouped
-            ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
-            : "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left shadow-control transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
-        )}
-      >
-        <span
+      <div className="min-w-0">
+        <button
+          id={id}
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          disabled={disabled}
+          onClick={() => {
+            setQuery("");
+            setOpen(true);
+          }}
           className={cx(
-            "block min-w-0 truncate text-sm font-bold",
-            value ? "text-on-surface" : "text-on-surface-variant/65",
+            grouped
+              ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
+              : "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left shadow-control transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
           )}
         >
-          {value || placeholder}
-        </span>
-        <AppIcon name="expand_more" className="icon-sm shrink-0 text-on-surface-variant" />
-      </button>
-      <BottomSheet
+          <span
+            className={cx(
+              "block min-w-0 truncate text-sm font-bold",
+              value ? "text-on-surface" : "text-on-surface-variant/65",
+            )}
+          >
+            {value || placeholder}
+          </span>
+          <AppIcon name="expand_more" className="icon-sm shrink-0 text-on-surface-variant" />
+        </button>
+      </div>
+      <SearchDialog
         open={open}
         title={label}
-        onClose={() => setOpen(false)}
-        onExitComplete={() => {
-          const nextValue = pendingValue;
-          if (nextValue === null) return;
-          setPendingValue(null);
-          onChange(nextValue);
+        query={query}
+        onQueryChange={setQuery}
+        searchPlaceholder={`Cari ${label.toLocaleLowerCase("id-ID")}...`}
+        onSearchKeyDown={(event) => {
+          if (event.key !== "ArrowDown") return;
+          event.preventDefault();
+          optionListRef.current?.focusFirst();
+        }}
+        onClose={() => {
+          setOpen(false);
+          setQuery("");
         }}
       >
-        <div className="space-y-sm">
-          <SearchField
-            value={query}
-            onChange={setQuery}
-            placeholder={`Cari ${label.toLowerCase()}...`}
+        <div className="space-y-3">
+          <DialogOptionList
+            key={query}
+            ref={optionListRef}
+            label={label}
+            value={value}
+            options={dialogOptions}
+            emptyText={canUseCustomValue ? "" : "Belum ada pilihan."}
+            onSelect={(option) => {
+              setOpen(false);
+              setQuery("");
+              onChange(option.value);
+            }}
           />
-          {filteredOptions.length === 0 && !canUseCustomValue ? (
-            <p className="rounded-2xl bg-surface-container-low p-4 text-center text-xs text-on-surface-variant">
-              Belum ada pilihan.
-            </p>
-          ) : null}
-          {filteredOptions.length > 0 || canUseCustomValue ? (
-            <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-[22px] bg-surface-container-lowest ring-1 ring-ring-subtle">
-              {filteredOptions.map((option) => {
-                const active = option === value;
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => {
-                      setPendingValue(option);
-                      setOpen(false);
-                    }}
-                    className={cx(
-                      "flex min-h-12 w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition active:bg-surface-container-low",
-                      active ? "bg-accent-container text-accent" : "text-on-surface",
-                    )}
-                  >
-                    <span className="min-w-0 flex-1 truncate text-xs font-bold">{option}</span>
-                    {active ? <AppIcon name="check" className="icon-sm shrink-0" /> : null}
-                  </button>
-                );
-              })}
-              {canUseCustomValue ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPendingValue(customValue);
-                    setOpen(false);
-                  }}
-                  className="flex min-h-12 w-full min-w-0 items-center justify-between gap-3 bg-accent-container px-4 py-3 text-left text-accent transition active:bg-accent-container"
-                >
-                  <span className="min-w-0 truncate text-xs font-bold">
-                    Gunakan &quot;{customValue}&quot;
-                  </span>
-                  <AppIcon name="add" className="icon-sm shrink-0" />
-                </button>
-              ) : null}
-            </div>
+          {canUseCustomValue ? (
+            <Button
+              type="button"
+              variant="secondary"
+              fullWidth
+              leadingIcon={<AppIcon name="add" className="icon-sm" />}
+              onClick={() => {
+                setOpen(false);
+                setQuery("");
+                onChange(customValue);
+              }}
+            >
+              Gunakan &quot;{customValue}&quot;
+            </Button>
           ) : null}
         </div>
-      </BottomSheet>
+      </SearchDialog>
     </FormField>
   );
 }
@@ -405,19 +411,22 @@ export function FilterSelect({
   value,
   options,
   onChange,
+  presentation = "auto",
 }: {
   readonly label: string;
   readonly value: string;
   readonly options: readonly SelectOption[];
   readonly onChange: (value: string) => void;
+  readonly presentation?: SelectPresentation;
 }): React.JSX.Element {
   return (
-    <SheetSelect
+    <AdaptiveSelect
       compact
       label={label}
       value={value}
       options={options}
       onChange={onChange}
+      presentation={presentation}
       placeholder={selectedOptionLabel(options, value) || label}
     />
   );

@@ -4,13 +4,13 @@ import React from "react";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
-  ConfirmationSheet,
+  ConfirmationDialog,
   FieldContextLine,
   FormField,
   FormRiskNotice,
   FormSection,
   QuantityStepper,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   WorkflowFormSheet,
 } from "@/components/ui";
@@ -221,7 +221,7 @@ export function ProjectMaterialOperationSheet({
               title="Proyek dan material"
               helper={operationCopy?.contextHelper ?? "Pilih konteks operasi material."}
             >
-              <SheetSelect
+              <AdaptiveSelect
                 label="Proyek"
                 value={projectId}
                 onChange={onProjectChange}
@@ -232,7 +232,7 @@ export function ProjectMaterialOperationSheet({
                 placeholder="Pilih proyek"
                 required
               />
-              <SheetSelect
+              <AdaptiveSelect
                 label="RAP material"
                 value={rapItemId}
                 onChange={onRapItemChange}
@@ -249,7 +249,7 @@ export function ProjectMaterialOperationSheet({
                 disabled={!projectId}
                 required
               />
-              <SheetSelect
+              <AdaptiveSelect
                 label="Lokasi inventori"
                 value={locationId}
                 onChange={onLocationChange}
@@ -311,7 +311,7 @@ export function ProjectMaterialOperationSheet({
           </div>
         )}
       </WorkflowFormSheet>
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={confirmClose}
         title="Buang perubahan operasi material?"
         description="Data yang belum dicatat akan hilang."

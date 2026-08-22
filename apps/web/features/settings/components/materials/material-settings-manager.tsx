@@ -3,13 +3,18 @@
 import React from "react";
 import { motion } from "framer-motion";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
-import { ConfirmationSheet, EmptyState, WorkspaceModuleHeader } from "@/components/ui";
+import {
+  AppIcon,
+  ConfirmationDialog,
+  EmptyState,
+  FilterSelect,
+  WorkspaceModuleHeader,
+} from "@/components/ui";
 import { SettingsHeader } from "../shared/settings-ui";
-import { AppIcon, ConfirmationModal, FilterSelect } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
 import { MaterialImportSheet } from "./material-import-sheet";
-import { MaterialCategoryComposerSheet } from "./material-category-composer-sheet";
+import { MaterialCategoryComposerDialog } from "./material-category-composer-dialog";
 import { MaterialDetailSheet } from "./material-detail-sheet";
 import { MaterialEditorSheet } from "./material-editor-sheet";
 import { MaterialInventoryDefaultSheet } from "./material-inventory-default-sheet";
@@ -67,6 +72,8 @@ export function MaterialSettingsManager({
   const [search, setSearch] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState("ALL");
   const [vendorFilter, setVendorFilter] = React.useState("ALL");
+  const [categoryFilterDraft, setCategoryFilterDraft] = React.useState("ALL");
+  const [vendorFilterDraft, setVendorFilterDraft] = React.useState("ALL");
   const [status, setStatus] = React.useState("ACTIVE");
   const [message, setMessage] = React.useState<string | null>(null);
   const [showImport, setShowImport] = React.useState(false);
@@ -273,23 +280,37 @@ export function MaterialSettingsManager({
           filterTitle="Filter material"
           onStatusChange={setStatus}
           onSearchChange={setSearch}
-          onResetFilters={() => {
+          onClearFilters={() => {
             setCategoryFilter("ALL");
             setVendorFilter("ALL");
             setStatus("ALL");
           }}
+          onOpenFilters={() => {
+            setCategoryFilterDraft(categoryFilter);
+            setVendorFilterDraft(vendorFilter);
+          }}
+          onApplyFilters={() => {
+            setCategoryFilter(categoryFilterDraft);
+            setVendorFilter(vendorFilterDraft);
+          }}
+          onResetFilterDraft={() => {
+            setCategoryFilterDraft("ALL");
+            setVendorFilterDraft("ALL");
+          }}
         >
           <FilterSelect
             label="Kategori"
-            value={categoryFilter}
+            value={categoryFilterDraft}
             options={categoryFilters}
-            onChange={setCategoryFilter}
+            onChange={setCategoryFilterDraft}
+            presentation="dialog"
           />
           <FilterSelect
             label="Vendor"
-            value={vendorFilter}
+            value={vendorFilterDraft}
             options={vendorFilters}
-            onChange={setVendorFilter}
+            onChange={setVendorFilterDraft}
+            presentation="dialog"
           />
         </SettingsFilterBar>
       ) : null}
@@ -338,7 +359,7 @@ export function MaterialSettingsManager({
         onDetailsOpenChange={setShowMaterialDetails}
         onCreateCategory={() => setShowCategoryComposer(true)}
       />
-      <MaterialCategoryComposerSheet
+      <MaterialCategoryComposerDialog
         open={showCategoryComposer}
         name={categoryName}
         pending={pending}
@@ -358,7 +379,7 @@ export function MaterialSettingsManager({
         onDraftChange={setInventoryEdit}
         onSubmit={saveInventory}
       />
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={Boolean(confirmMaterial)}
         title={confirmMaterial?.isActive ? "Arsipkan material?" : "Aktifkan kembali material?"}
         description={
@@ -372,7 +393,7 @@ export function MaterialSettingsManager({
         onClose={() => setConfirmMaterial(null)}
         onConfirm={confirmToggle}
       />
-      <ConfirmationModal
+      <ConfirmationDialog
         open={pendingClose !== null}
         title="Buang perubahan yang belum disimpan?"
         description={

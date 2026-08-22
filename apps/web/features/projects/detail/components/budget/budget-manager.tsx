@@ -4,7 +4,7 @@ import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { getErrorMessage } from "@atria/core/utils/error-message";
 import { toast } from "sonner";
-import { ConfirmationSheet } from "@/components/ui";
+import { ConfirmationDialog } from "@/components/ui";
 import {
   createProjectBudget,
   createBudgetItem,
@@ -329,7 +329,7 @@ export function BudgetManager({
           onRejectBudgetSubmit={handleRejectBudgetSubmit}
         />
       )}
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={confirmItemClose}
         title="Buang item yang belum ditambahkan?"
         description="Isian item Project Budget ini akan dikosongkan. Item yang sudah tersimpan tidak berubah."

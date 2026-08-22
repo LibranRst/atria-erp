@@ -29,5 +29,8 @@ describe("BottomSheet floating chrome", () => {
       "border-t border-outline-variant/15 bg-background px-margin-mobile",
     );
     expect(source).not.toContain("bg-background px-margin-mobile backdrop-blur-md");
+    // Anchored select/menu di dalam sheet harus berada di atas sheet induknya,
+    // tanpa menaikkan layer global di atas confirmation sheet berikutnya.
+    expect(source).toContain("<OverlayLayerProvider anchored={zIndex + 2}>");
   });
 });

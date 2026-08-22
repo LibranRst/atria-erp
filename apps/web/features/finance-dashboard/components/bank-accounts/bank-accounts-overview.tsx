@@ -176,13 +176,16 @@ export function BankAccountsOverview({
         }
         statusTone={unreconciledCount > 0 ? "warning" : "positive"}
       >
-        <MoneyValue
-          amount={totalCash}
-          variant="fullDynamic"
-          size="hero"
-          tone={totalCash < 0 ? "danger" : "default"}
-          className="mt-1 px-3 pt-5 pb-3"
-        />
+        <div className="px-3.5 pt-3 pb-1">
+          <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total saldo kas</p>
+          <MoneyValue
+            amount={totalCash}
+            variant="fullDynamic"
+            size="hero"
+            tone={totalCash < 0 ? "danger" : "default"}
+            className="mt-1"
+          />
+        </div>
         <div className="grid grid-cols-3 gap-2 px-2 pt-1 pb-2">
           <SummaryFact label="Rekening aktif" value={String(activeAccounts)} />
           <SummaryFact

@@ -11,7 +11,7 @@ import {
   FormSection,
   MoneyImpactRow,
   MoneyInput,
-  SheetSelect,
+  AdaptiveSelect,
   TextInput,
   useSheetPresenceValue,
   WorkflowFormSheet,
@@ -174,7 +174,7 @@ export function ClientPaymentSheet({
                 helper="Rekening dan nominal yang benar-benar diterima."
               >
                 <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <SheetSelect
+                  <AdaptiveSelect
                     label="Rekening Penerima Dana (DEBIT)"
                     value={selectedBankId}
                     disabled={isPending}

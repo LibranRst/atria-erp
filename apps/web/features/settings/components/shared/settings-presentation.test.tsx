@@ -11,6 +11,10 @@ import {
   settingsTabUrl,
 } from "../../utils/settings-tabs-config";
 
+const filterBarPath = new URL("./settings-filter-bar.tsx", import.meta.url);
+const materialManagerPath = new URL("../materials/material-settings-manager.tsx", import.meta.url);
+const libraryManagerPath = new URL("../library/library-settings-manager.tsx", import.meta.url);
+
 describe("Settings presentation", () => {
   test("keeps query and legacy settings routes compatible", () => {
     expect(parseSettingsTab("materials")).toBe("materials");
@@ -79,7 +83,10 @@ describe("Settings presentation", () => {
         filterTitle="Filter data"
         onStatusChange={() => undefined}
         onSearchChange={() => undefined}
-        onResetFilters={() => undefined}
+        onClearFilters={() => undefined}
+        onOpenFilters={() => undefined}
+        onApplyFilters={() => undefined}
+        onResetFilterDraft={() => undefined}
       >
         <span>Isi filter</span>
       </SettingsFilterBar>,
@@ -87,6 +94,23 @@ describe("Settings presentation", () => {
     expect(html).toContain('data-control-mode="filter"');
     expect(html).toContain("Buka filter data");
     expect(html).toContain(">2<");
+  });
+
+  test("keeps secondary filter changes as a local draft until apply", async () => {
+    const [bar, materials, library] = await Promise.all([
+      Bun.file(filterBarPath).text(),
+      Bun.file(materialManagerPath).text(),
+      Bun.file(libraryManagerPath).text(),
+    ]);
+
+    expect(bar).toContain("onResetFilterDraft");
+    expect(bar).toContain("onApplyFilters();");
+    expect(bar).toContain("<AnchoredFilterPanel");
+    expect(bar).not.toContain("<BottomSheet");
+    expect(materials).toContain("categoryFilterDraft");
+    expect(materials).toContain("setCategoryFilter(categoryFilterDraft)");
+    expect(library).toContain("typeDraft");
+    expect(library).toContain("setType(typeDraft)");
   });
 
   test("uses a route-specific structural skeleton", () => {

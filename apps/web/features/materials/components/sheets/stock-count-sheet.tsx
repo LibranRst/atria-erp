@@ -9,7 +9,7 @@ import {
   FormSection,
   MaterialUnsavedChangesModal,
   QuantityStepper,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   TextInput,
   WorkflowFormSheet,
@@ -238,7 +238,7 @@ export function StockCountSheet({
               title="Lokasi inventori"
               helper="Pilih lokasi fisik yang sedang diperiksa."
             >
-              <SheetSelect
+              <AdaptiveSelect
                 label="Lokasi"
                 value={locationId}
                 onChange={onLocationChange}

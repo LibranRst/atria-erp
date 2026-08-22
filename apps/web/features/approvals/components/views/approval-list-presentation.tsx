@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import {
   AppIcon,
-  BottomSheet,
+  DetailSheet,
   DuotoneIconTile,
   GroupedSurface,
   MoneyValue,
@@ -163,7 +163,7 @@ export function ApprovalDetailSheet({
   } = useSheetPresenceValue(item, item?.id);
 
   return (
-    <BottomSheet
+    <DetailSheet
       open={open}
       title="Detail persetujuan"
       onClose={onClose}
@@ -177,7 +177,7 @@ export function ApprovalDetailSheet({
       {presentedItem ? (
         <ApprovalDetailContent item={presentedItem} onOpenReceipt={onOpenReceipt} />
       ) : null}
-    </BottomSheet>
+    </DetailSheet>
   );
 }
 

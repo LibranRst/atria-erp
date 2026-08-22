@@ -15,7 +15,7 @@ import type { ProjectForExpense } from "@/app/actions/project/budget";
 import {
   AppIcon,
   Button,
-  ConfirmationSheet,
+  ConfirmationDialog,
   DatePickerField,
   FinanceUnsavedChangesModal,
   FormField,
@@ -23,8 +23,8 @@ import {
   FormSection,
   MoneyInput,
   type OperationSuccess,
-  OperationSuccessSheet,
-  SheetSelect,
+  OperationSuccessDialog,
+  AdaptiveSelect,
   Textarea,
   TextInput,
   useAnimatedSheetClose,
@@ -439,7 +439,7 @@ export function VendorBillForm({
                 helper="Proyek dari halaman aktif dipakai sebagai default aman."
               >
                 <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <SheetSelect
+                  <AdaptiveSelect
                     label="Vendor"
                     value={payload.vendorId}
                     disabled={pending}
@@ -450,7 +450,7 @@ export function VendorBillForm({
                     }))}
                     required
                   />
-                  <SheetSelect
+                  <AdaptiveSelect
                     label="Proyek"
                     value={payload.projectId}
                     disabled={pending}
@@ -465,7 +465,7 @@ export function VendorBillForm({
                     }))}
                     required
                   />
-                  <SheetSelect
+                  <AdaptiveSelect
                     label="Kategori Budget"
                     value={payload.projectBudgetCategoryId}
                     disabled={pending || !payload.projectId}
@@ -485,7 +485,7 @@ export function VendorBillForm({
                     required
                   />
                   {selectedCategory && ["TUKANG", "SUBCON"].includes(selectedCategory.code) ? (
-                    <SheetSelect
+                    <AdaptiveSelect
                       label={selectedCategory.code === "SUBCON" ? "Paket Subkon" : "Paket Tukang"}
                       optional
                       value={payload.projectCategoryPlanItemId}
@@ -547,7 +547,7 @@ export function VendorBillForm({
         onDiscard={() => void discardAndClose()}
         onContinue={() => setConfirmClose(false)}
       />
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={Boolean(pendingProjectId)}
         title="Ganti proyek?"
         description="Kategori budget dan tautan paket akan dikosongkan agar tagihan tidak terhubung ke proyek yang salah."
@@ -559,7 +559,7 @@ export function VendorBillForm({
           setPendingProjectId(null);
         }}
       />
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={Boolean(pendingDiscardDraftId)}
         title="Buang draft tagihan?"
         description="Draft ini akan dihapus dan tidak dapat dilanjutkan lagi. Belum ada tagihan atau saldo kas yang berubah."
@@ -571,7 +571,7 @@ export function VendorBillForm({
           setPendingDiscardDraftId(null);
         }}
       />
-      <OperationSuccessSheet
+      <OperationSuccessDialog
         success={success}
         secondaryLabel="Tambah"
         onClose={() => setSuccess(null)}

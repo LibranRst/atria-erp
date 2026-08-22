@@ -4,9 +4,13 @@ import React from "react";
 import { motion } from "framer-motion";
 import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
-import { ConfirmationSheet, EmptyState, WorkspaceModuleHeader } from "@/components/ui";
+import {
+  ConfirmationDialog,
+  EmptyState,
+  FilterSelect,
+  WorkspaceModuleHeader,
+} from "@/components/ui";
 import { SettingsHeader } from "../shared/settings-ui";
-import { ConfirmationModal, FilterSelect } from "@/components/ui";
 import { createClientId } from "@atria/core/utils/client-id";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
@@ -138,6 +142,8 @@ export function LibrarySettingsManager({
   const [type, setType] = React.useState("ALL");
   const [status, setStatus] = React.useState("ACTIVE");
   const [categoryId, setCategoryId] = React.useState("ALL");
+  const [typeDraft, setTypeDraft] = React.useState("ALL");
+  const [categoryIdDraft, setCategoryIdDraft] = React.useState("ALL");
   const [message, setMessage] = React.useState<string | null>(null);
   const categoryFilters = React.useMemo(
     () => [
@@ -381,18 +387,37 @@ export function LibrarySettingsManager({
           filterTitle="Filter template"
           onStatusChange={setStatus}
           onSearchChange={setSearch}
-          onResetFilters={() => {
+          onClearFilters={() => {
             setType("ALL");
             setCategoryId("ALL");
             setStatus("ALL");
           }}
+          onOpenFilters={() => {
+            setTypeDraft(type);
+            setCategoryIdDraft(categoryId);
+          }}
+          onApplyFilters={() => {
+            setType(typeDraft);
+            setCategoryId(categoryIdDraft);
+          }}
+          onResetFilterDraft={() => {
+            setTypeDraft("ALL");
+            setCategoryIdDraft("ALL");
+          }}
         >
-          <FilterSelect label="Tipe" value={type} options={TYPE_FILTERS} onChange={setType} />
+          <FilterSelect
+            label="Tipe"
+            value={typeDraft}
+            options={TYPE_FILTERS}
+            onChange={setTypeDraft}
+            presentation="dialog"
+          />
           <FilterSelect
             label="Kategori"
-            value={categoryId}
+            value={categoryIdDraft}
             options={categoryFilters}
-            onChange={setCategoryId}
+            onChange={setCategoryIdDraft}
+            presentation="dialog"
           />
         </SettingsFilterBar>
       )}
@@ -459,7 +484,7 @@ export function LibrarySettingsManager({
         )}
         canDelete={(draft?.components.length ?? 0) > 1}
       />
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={Boolean(confirmItem)}
         title={confirmItem?.isActive ? "Arsipkan template?" : "Aktifkan kembali template?"}
         description={
@@ -473,7 +498,7 @@ export function LibrarySettingsManager({
         onClose={() => setConfirmItem(null)}
         onConfirm={confirmToggle}
       />
-      <ConfirmationModal
+      <ConfirmationDialog
         open={confirmClose}
         title="Buang perubahan template?"
         description="Rincian biaya, harga klien, dan catatan yang belum disimpan akan hilang."
@@ -506,7 +531,7 @@ export function LibrarySettingsManager({
           </div>
         }
       />
-      <ConfirmationModal
+      <ConfirmationDialog
         open={confirmComponentClose}
         title="Buang perubahan komponen?"
         description="Isian komponen ini belum diterapkan ke template harga."

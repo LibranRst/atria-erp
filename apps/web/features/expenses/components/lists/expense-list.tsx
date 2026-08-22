@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   AppIcon,
   type OperationSuccess,
-  OperationSuccessSheet,
+  OperationSuccessDialog,
   SegmentedTabs,
 } from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
@@ -346,7 +346,10 @@ export function ExpenseList({
           disbursementRecovery.setPayload((current) => ({ ...current, refNumber: value }))
         }
       />
-      <OperationSuccessSheet success={operationSuccess} onClose={() => setOperationSuccess(null)} />
+      <OperationSuccessDialog
+        success={operationSuccess}
+        onClose={() => setOperationSuccess(null)}
+      />
     </div>
   );
 }

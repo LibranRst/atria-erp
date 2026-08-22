@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { AppIcon, FormField, QuantityStepper, SheetSelect } from "@/components/ui";
+import { AppIcon, FormField, QuantityStepper, AdaptiveSelect } from "@/components/ui";
 import type { MaterialOption } from "@/features/materials/types/material-operation-dialog-types";
 import type { SimpleItem } from "@/features/materials/utils/material-ui-utils";
 
@@ -55,7 +55,7 @@ export function ItemRows({
               <AppIcon name="delete" className="icon-md" />
             </button>
           </div>
-          <SheetSelect
+          <AdaptiveSelect
             label="Material"
             value={item.materialId}
             options={options}

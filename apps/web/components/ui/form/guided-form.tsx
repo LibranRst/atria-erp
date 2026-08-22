@@ -3,7 +3,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { BottomSheet } from "../overlay/bottom-sheet";
+import { FormSheet } from "../overlay/semantic-sheets";
 import { cx } from "./form-control-utils";
 import {
   type FormPresentation,
@@ -129,7 +129,7 @@ export function OperationalFormSheet({
     ) : undefined;
 
   return (
-    <BottomSheet
+    <FormSheet
       open={open}
       title={title}
       action={action}
@@ -143,7 +143,7 @@ export function OperationalFormSheet({
           {children}
         </div>
       </FormSheetPresentationBoundary>
-    </BottomSheet>
+    </FormSheet>
   );
 }
 
@@ -504,7 +504,7 @@ export function WorkflowFormSheet({
   readonly onSecondary?: () => void;
 }): React.JSX.Element {
   return (
-    <BottomSheet
+    <FormSheet
       open={open}
       title={title}
       onClose={onClose}
@@ -543,7 +543,7 @@ export function WorkflowFormSheet({
       }
     >
       <FormSheetPresentationBoundary>{children}</FormSheetPresentationBoundary>
-    </BottomSheet>
+    </FormSheet>
   );
 }
 

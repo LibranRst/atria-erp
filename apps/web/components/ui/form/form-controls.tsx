@@ -10,12 +10,14 @@ export {
 } from "./basic-form-controls";
 export { DatePickerField } from "./date-form-controls";
 export {
+  AdaptiveSelect,
   ComboboxField,
   FilterSelect,
   SearchField,
   SearchInput,
   SheetSelect,
 } from "./select-form-controls";
+export type { SelectPresentation } from "../overlay/interaction-surface-policy";
 export { COMMON_ROOM_OPTIONS, COMMON_UNIT_OPTIONS } from "./form-control-types";
 export type { SelectOption } from "./form-control-types";
 export type { FormFieldLayout, FormPresentation } from "./form-presentation-context";

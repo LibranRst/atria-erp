@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import { createProjectAction, updateProjectAction } from "@/app/actions/project/crud";
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
 import { getErrorMessage } from "@atria/core/utils/error-message";
-import { AppIcon, BottomSheet, OperationalFormSheet } from "@/components/ui";
+import { AppIcon, OperationalFormSheet, SuccessDialog } from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 import { toast } from "sonner";
-import { ProjectCreatedSuccess } from "./project-drawer-sections";
 import { ProjectDrawerFormFields } from "./project-drawer-form-fields";
 import { ProjectRecoveryModal } from "./project-recovery-modal";
 import { ProjectReviewSheet } from "./project-review-sheet";
@@ -306,23 +305,30 @@ export function ProjectDrawer({
 
   if (createdProjectId) {
     return (
-      <BottomSheet
+      <SuccessDialog
         open={isOpen}
         title="Proyek berhasil dibuat"
+        description="Proyek dibuat sebagai Draft dan anggaran awal kategorinya sudah disiapkan. Lengkapi setup sebelum proyek diaktifkan."
+        facts={[]}
+        primaryLabel="Buat RAP"
+        secondaryLabel="Lihat Overview"
+        tertiaryLabel="Kembali ke Daftar"
         onClose={() => {
           if (!isPending) handleClose();
         }}
-      >
-        <ProjectCreatedSuccess
-          projectId={createdProjectId}
-          onClose={onClose}
-          onNavigate={(href) => router.push(href)}
-          onReturn={() => {
-            onClose();
-            router.refresh();
-          }}
-        />
-      </BottomSheet>
+        onPrimary={() => {
+          onClose();
+          router.push(`/projects/${createdProjectId}?tab=rap`);
+        }}
+        onSecondary={() => {
+          onClose();
+          router.push(`/projects/${createdProjectId}`);
+        }}
+        onTertiary={() => {
+          onClose();
+          router.refresh();
+        }}
+      />
     );
   }
 

@@ -65,6 +65,7 @@ A cross-platform Expo client (`apps/mobile/`) is being added. The official Expo 
 
 Before writing or editing UI, load `.agents/skills/impeccable/SKILL.md` and consult `DESIGN.md`, `PRODUCT.md`, and `.impeccable/design.json`.
 
+- **Shared UI First**: Follow `.agents/rules/05-shared-ui-first.md`. Before adding a component, inspect `apps/web/components/ui/index.ts`, relevant stories/tests, and a production call site. Reuse first, extend or compose second, and create a primitive only when the current interaction contract is materially insufficient. Never recreate portal, dialog, sheet, select, popover, tooltip, focus, dismissal, money, motion, or touch-target infrastructure inside a feature. Name the reused/extended primitive—or justify a new one—in the final handoff.
 - **Mobile 320–430 px is the Source of Truth**: The fixed `max-w-md` shell remains one column at every viewport. Desktop browser preview alone is not acceptance evidence.
 - **iOS-Inspired Contextual Form Style (Paten)**:
   - **Standalone Inputs & Dropdowns**: Outside grouped forms, MUST use a white fully rounded control (`rounded-full`) with minimum height `min-h-12` (48px) and side padding `px-5`.
@@ -91,6 +92,7 @@ This repository is configured with project-specific customizations in `.agents/`
   - `02-finance-safety.md`: Ledger safety, transaction locking, audit logs, reconciliation.
   - `03-material-control.md`: RAP/RAB isolation, stock movements, vendor bills, goods receipt.
   - `04-codebase-standards.md`: Strict TypeScript, server actions, Zod schemas, RBAC.
+  - `05-shared-ui-first.md`: Mandatory shared-component discovery, reuse/extension order, contextual surface taxonomy, and ownership guardrails.
 - **Skills (`.agents/skills/`)**:
   - `impeccable`: Canonical UI design, audit, polish, accessibility, responsive, and motion workflow driven by `PRODUCT.md`, `DESIGN.md`, and `.impeccable/design.json`.
   - `atria-finance`: Runbook for ledger, cash transaction, and reconciliation workflows.

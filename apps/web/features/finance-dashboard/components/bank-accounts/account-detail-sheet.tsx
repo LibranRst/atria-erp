@@ -1,6 +1,6 @@
 import React from "react";
 
-import { AppIcon, BottomSheet, Button, useSheetPresenceValue } from "@/components/ui";
+import { AppIcon, DetailSheet, Button, useSheetPresenceValue } from "@/components/ui";
 import { BankAccountCard } from "@/features/finance-dashboard/components/cards/dashboard-cards";
 import { AccountTransactionRows } from "./account-transaction-rows";
 import type { BankAccount } from "@/features/finance-dashboard/types/bank-account-types";
@@ -36,7 +36,7 @@ export function AccountDetailSheet({
   );
 
   return (
-    <BottomSheet
+    <DetailSheet
       open={open && account !== null}
       title={presentedAccount?.name ?? "Rekening"}
       onClose={onClose}
@@ -144,6 +144,6 @@ export function AccountDetailSheet({
           </section>
         </div>
       ) : null}
-    </BottomSheet>
+    </DetailSheet>
   );
 }

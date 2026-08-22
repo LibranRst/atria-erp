@@ -10,7 +10,7 @@ import {
   MoneyInput,
   NumericInput,
   OperationalFormSheet,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   TextInput,
 } from "@/components/ui";
@@ -78,7 +78,7 @@ export function MaterialEditorSheet({
             title="Identitas utama"
             helper="Nama, kategori, dan satuan dipakai di RAP, stok, dan transaksi."
           >
-            <SheetSelect
+            <AdaptiveSelect
               label="Kategori material"
               value={draft.categoryId}
               onChange={(value) => onDraftChange({ ...draft, categoryId: value })}
@@ -137,7 +137,7 @@ export function MaterialEditorSheet({
                   onChange={(value) => onDraftChange({ ...draft, color: value })}
                 />
               </FormField>
-              <SheetSelect
+              <AdaptiveSelect
                 label="Vendor default"
                 value={draft.defaultVendorId ?? ""}
                 onChange={(value) => onDraftChange({ ...draft, defaultVendorId: value || null })}
@@ -160,7 +160,7 @@ export function MaterialEditorSheet({
               title="Default inventori awal"
               helper="Pilih lokasi; stok minimum dan harga acuan boleh tetap nol."
             >
-              <SheetSelect
+              <AdaptiveSelect
                 label="Lokasi"
                 value={draft.locationId}
                 onChange={(value) => onDraftChange({ ...draft, locationId: value })}

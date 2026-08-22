@@ -23,7 +23,7 @@ import {
   MoneyInput,
   OperationalFormSheet,
   PageHeader,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   TextInput,
   WorkflowFormSheet,
@@ -392,7 +392,7 @@ export function ReconciliationWorkspace({
             </button>
           }
         >
-          <SheetSelect
+          <AdaptiveSelect
             label="Rekening"
             value={importDraft.bankAccountId}
             options={accountOptions}
@@ -482,7 +482,7 @@ export function ReconciliationWorkspace({
           title="Rincian mutasi"
           helper="Salin satu transaksi persis seperti yang terlihat pada rekening koran."
         >
-          <SheetSelect
+          <AdaptiveSelect
             label="Rekening"
             value={draft.bankAccountId}
             options={accountOptions}
@@ -495,7 +495,7 @@ export function ReconciliationWorkspace({
             onChange={(transactionDate) => setDraft((current) => ({ ...current, transactionDate }))}
             required
           />
-          <SheetSelect
+          <AdaptiveSelect
             label="Arah mutasi"
             value={draft.type}
             options={[
@@ -576,7 +576,7 @@ export function ReconciliationWorkspace({
                   : "Pilih bukti bank dengan rekening, arah, dan nominal yang sama."
               }
             >
-              <SheetSelect
+              <AdaptiveSelect
                 label={matchingStatements.length === 1 ? "Pasangan terpilih" : "Pilih pasangan"}
                 value={selectedStatementId ?? ""}
                 options={matchingStatements.map((row: ReconciliationStatementRow) => ({

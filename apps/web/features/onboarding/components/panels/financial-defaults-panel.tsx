@@ -3,7 +3,7 @@
 import React from "react";
 
 import type { SettingsOverview } from "@/app/actions/settings/system";
-import { BottomSheet, ConfirmationModal, SegmentedTabs } from "@/components/ui";
+import { FormSheet, ConfirmationDialog, SegmentedTabs } from "@/components/ui";
 import { BudgetSettingsManager } from "@/features/settings/components/budget/budget-settings-manager";
 import { CategorySettingsManager } from "@/features/settings/components/categories/category-settings-manager";
 import {
@@ -105,7 +105,7 @@ export function FinancialDefaultsPanel({
       )}
 
       {budget ? (
-        <BottomSheet
+        <FormSheet
           open={editingBudget}
           title="Sesuaikan default budget"
           initialExpanded
@@ -124,10 +124,10 @@ export function FinancialDefaultsPanel({
             }}
             onDirtyChange={setBudgetDirty}
           />
-        </BottomSheet>
+        </FormSheet>
       ) : null}
 
-      <ConfirmationModal
+      <ConfirmationDialog
         open={confirmClose}
         title="Buang perubahan?"
         description="Perubahan default budget yang belum disimpan akan hilang."

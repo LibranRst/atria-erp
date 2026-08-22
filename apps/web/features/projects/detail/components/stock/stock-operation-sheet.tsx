@@ -12,16 +12,16 @@ import {
   wasteMaterialForProject,
 } from "@/app/actions/material/inventory";
 import {
-  ConfirmationSheet,
+  ConfirmationDialog,
   FieldContextLine,
   FormField,
   FormRiskNotice,
   FormSection,
   type OperationSuccess,
-  OperationSuccessSheet,
+  OperationSuccessDialog,
   QuantityStepper,
   SegmentedTabs,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   WorkflowFormSheet,
 } from "@/components/ui";
@@ -298,7 +298,7 @@ export function StockOperationSheet({
               title="Material proyek"
               helper={operation ? CONTEXT_HELPERS[operation] : "Pilih konteks operasi material."}
             >
-              <SheetSelect
+              <AdaptiveSelect
                 label="RAP material"
                 value={rapItemId}
                 onChange={(value) => {
@@ -309,7 +309,7 @@ export function StockOperationSheet({
                 placeholder="Pilih kebutuhan material"
                 required
               />
-              <SheetSelect
+              <AdaptiveSelect
                 label="Lokasi inventori"
                 value={locationId}
                 disabled={!material}
@@ -394,7 +394,7 @@ export function StockOperationSheet({
           </div>
         )}
       </WorkflowFormSheet>
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={confirmWaste}
         title="Konfirmasi material terbuang"
         description={`Stok akan berkurang dan ${money.format(estimatedImpact)} tetap menjadi biaya proyek. Aksi ini tercatat di audit log.`}
@@ -404,7 +404,7 @@ export function StockOperationSheet({
         onClose={() => setConfirmWaste(false)}
         onConfirm={submit}
       />
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={confirmClose}
         title="Buang perubahan operasi material?"
         description="Data yang belum dicatat akan hilang."
@@ -416,7 +416,7 @@ export function StockOperationSheet({
           setOperation(null);
         }}
       />
-      <OperationSuccessSheet success={success} onClose={() => setSuccess(null)} />
+      <OperationSuccessDialog success={success} onClose={() => setSuccess(null)} />
     </>
   );
 }

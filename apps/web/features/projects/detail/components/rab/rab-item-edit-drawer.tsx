@@ -4,7 +4,7 @@ import React from "react";
 
 import {
   Badge,
-  BottomSheet,
+  DetailSheet,
   ChoiceRow,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
@@ -60,7 +60,7 @@ export function RabItemEditDrawer({
 
   if (!editable) {
     return (
-      <BottomSheet
+      <DetailSheet
         open={open}
         title="Detail Item RAB"
         onClose={closeRabItemEditor}
@@ -114,7 +114,7 @@ export function RabItemEditDrawer({
             <FactRow label="Tampil ke Klien" value={item.isHidden ? "Tidak (Tersembunyi)" : "Ya"} />
           </div>
         </div>
-      </BottomSheet>
+      </DetailSheet>
     );
   }
 

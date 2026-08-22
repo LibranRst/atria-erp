@@ -4,13 +4,13 @@ import React from "react";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
-  ConfirmationSheet,
+  ConfirmationDialog,
   FormField,
   FormRiskNotice,
   FormSection,
   OptionChoiceGroup,
   QuantityStepper,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   WorkflowFormSheet,
 } from "@/components/ui";
@@ -159,7 +159,7 @@ export function EmergencyAdjustSheet({
               title="Material dan lokasi"
               helper="Pastikan stok dikoreksi pada material dan lokasi fisik yang tepat."
             >
-              <SheetSelect
+              <AdaptiveSelect
                 label="Lokasi inventori"
                 value={locationId}
                 onChange={onLocationChange}
@@ -167,7 +167,7 @@ export function EmergencyAdjustSheet({
                 placeholder="Pilih lokasi"
                 required
               />
-              <SheetSelect
+              <AdaptiveSelect
                 label="Material"
                 value={item?.materialId ?? ""}
                 onChange={(value) =>
@@ -231,7 +231,7 @@ export function EmergencyAdjustSheet({
           </div>
         )}
       </WorkflowFormSheet>
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={confirmClose}
         title="Buang perubahan penyesuaian?"
         description="Data yang belum diposting akan hilang."

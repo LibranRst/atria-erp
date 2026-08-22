@@ -3,7 +3,7 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { ConfirmationModal } from "@/components/ui";
+import { ConfirmationDialog } from "@/components/ui";
 import type {
   OnboardingStepId,
   OwnerOnboardingOverview,
@@ -108,7 +108,7 @@ export function OnboardingWorkspaceActions({
         ) : null}
       </footer>
 
-      <ConfirmationModal
+      <ConfirmationDialog
         open={exitConfirmOpen}
         title="Jeda setup sekarang?"
         description="Semua progres dan data yang telah Anda isi tersimpan dengan aman. Anda dapat melanjutkan setup ini kapan saja melalui Dashboard atau menu Pengaturan."

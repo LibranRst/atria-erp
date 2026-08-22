@@ -46,27 +46,29 @@ export function MaterialsTab({
             : "positive"
         }
       >
-        <div className="grid grid-cols-2 gap-2 px-2 pt-2">
-          <div className="min-w-0 rounded-inset bg-surface-container-lowest p-3">
-            <p className="text-eyebrow font-semibold text-on-surface-variant/60">Stok tersedia</p>
-            <MoneyValue
-              amount={data.stockIssues.reusableStockValue}
-              variant="compact"
-              size="lg"
-              className="mt-1"
-            />
-          </div>
-          <div className="min-w-0 rounded-inset bg-surface-container-lowest p-3 text-right">
-            <p className="text-eyebrow font-semibold text-on-surface-variant/60">
-              Total nilai stok
-            </p>
-            <MoneyValue
-              amount={data.stockIssues.totalStockValue}
-              variant="compact"
-              size="lg"
-              align="right"
-              className="mt-1"
-            />
+        <div className="px-3.5 pt-3 pb-1">
+          <div className="grid grid-cols-2">
+            <div className="min-w-0 pr-3">
+              <p className="text-eyebrow font-semibold text-on-surface-variant/60">Stok tersedia</p>
+              <MoneyValue
+                amount={data.stockIssues.reusableStockValue}
+                variant="compact"
+                size="lg"
+                className="mt-1"
+              />
+            </div>
+            <div className="min-w-0 pl-3 text-right">
+              <p className="text-eyebrow font-semibold text-on-surface-variant/60">
+                Total nilai stok
+              </p>
+              <MoneyValue
+                amount={data.stockIssues.totalStockValue}
+                variant="compact"
+                size="lg"
+                align="right"
+                className="mt-1"
+              />
+            </div>
           </div>
         </div>
         {materialBudget ? (

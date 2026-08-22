@@ -5,7 +5,7 @@ import React from "react";
 import {
   Badge,
   type BadgeStatus,
-  BottomSheet,
+  DetailSheet,
   FactRow,
   MoneyValue,
   useSheetPresenceValue,
@@ -46,7 +46,7 @@ export function RapItemDetailDrawer({
   if (!item) return null;
 
   return (
-    <BottomSheet
+    <DetailSheet
       open={open}
       title="Detail Material RAP"
       onClose={() => setRapDetailItemId(null)}
@@ -136,7 +136,7 @@ export function RapItemDetailDrawer({
           )}
         </div>
       </div>
-    </BottomSheet>
+    </DetailSheet>
   );
 }
 
@@ -172,7 +172,7 @@ export function PackageDetailDrawer({
   const editable = canEditCategoryPlan && item.status === "DRAFT";
 
   return (
-    <BottomSheet
+    <DetailSheet
       open={open}
       title="Detail Paket Kerja"
       onClose={() => setPackageDetailItemId(null)}
@@ -292,6 +292,6 @@ export function PackageDetailDrawer({
           {item.vendorName && <FactRow label="Vendor Utama" value={item.vendorName} />}
         </div>
       </div>
-    </BottomSheet>
+    </DetailSheet>
   );
 }

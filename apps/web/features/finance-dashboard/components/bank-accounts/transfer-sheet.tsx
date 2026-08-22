@@ -10,7 +10,7 @@ import {
   MoneyImpactRow,
   MoneyInput,
   type SelectOption,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   TextInput,
   WorkflowFormSheet,
@@ -143,7 +143,7 @@ export function TransferSheet({
                   terkoreksi manual setelah dicatat.
                 </FormRiskNotice>
               ) : null}
-              <SheetSelect
+              <AdaptiveSelect
                 label="Ke rekening"
                 value={draft.toBankAccountId}
                 onChange={(value) => patch({ toBankAccountId: value })}

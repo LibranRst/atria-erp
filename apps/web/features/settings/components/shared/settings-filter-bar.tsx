@@ -3,8 +3,8 @@
 import React from "react";
 
 import {
+  AnchoredFilterPanel,
   AppIcon,
-  BottomSheet,
   ExclusiveSearchFilterBar,
   type SegmentedTabOption,
 } from "@/components/ui";
@@ -19,7 +19,10 @@ export function SettingsFilterBar<TValue extends string>({
   filterTitle,
   onStatusChange,
   onSearchChange,
-  onResetFilters,
+  onClearFilters,
+  onOpenFilters,
+  onApplyFilters,
+  onResetFilterDraft,
   children,
 }: {
   readonly status: TValue;
@@ -32,14 +35,17 @@ export function SettingsFilterBar<TValue extends string>({
   readonly filterTitle: string;
   readonly onStatusChange: (value: TValue) => void;
   readonly onSearchChange: (value: string) => void;
-  readonly onResetFilters: () => void;
+  readonly onClearFilters: () => void;
+  readonly onOpenFilters: () => void;
+  readonly onApplyFilters: () => void;
+  readonly onResetFilterDraft: () => void;
   readonly children: React.ReactNode;
 }): React.JSX.Element {
   const [mode, setMode] = React.useState<"filter" | "search">("filter");
   const [filterOpen, setFilterOpen] = React.useState(false);
 
   function changeMode(next: "filter" | "search"): void {
-    if (next === "search") onResetFilters();
+    if (next === "search") onClearFilters();
     if (next === "filter") onSearchChange("");
     setMode(next);
   }
@@ -65,49 +71,57 @@ export function SettingsFilterBar<TValue extends string>({
           />
         </div>
         {mode === "filter" ? (
-          <button
-            type="button"
-            onClick={() => {
-              onSearchChange("");
-              setFilterOpen(true);
+          <AnchoredFilterPanel
+            open={filterOpen}
+            title={filterTitle}
+            trigger={
+              <button
+                type="button"
+                className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/96 text-on-surface shadow-surface ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                aria-label={`Buka ${filterTitle.toLocaleLowerCase("id-ID")}`}
+              >
+                <AppIcon name="tune" className="icon-md" aria-hidden="true" />
+                {filterCount > 0 ? (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary font-mono text-[8px] leading-none font-black text-white">
+                    {filterCount}
+                  </span>
+                ) : null}
+              </button>
+            }
+            onOpenChange={(nextOpen) => {
+              if (nextOpen) {
+                onSearchChange("");
+                onOpenFilters();
+              }
+              setFilterOpen(nextOpen);
             }}
-            className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/96 text-on-surface shadow-surface ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-            aria-label={`Buka ${filterTitle.toLowerCase()}`}
+            onDismiss={onOpenFilters}
+            actions={
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={onResetFilterDraft}
+                  className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onApplyFilters();
+                    setFilterOpen(false);
+                  }}
+                  className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white"
+                >
+                  Terapkan filter
+                </button>
+              </div>
+            }
           >
-            <AppIcon name="tune" className="icon-md" aria-hidden="true" />
-            {filterCount > 0 ? (
-              <span className="absolute -top-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary font-mono text-[8px] leading-none font-black text-white">
-                {filterCount}
-              </span>
-            ) : null}
-          </button>
+            {children}
+          </AnchoredFilterPanel>
         ) : null}
       </div>
-      <BottomSheet
-        open={filterOpen}
-        title={filterTitle}
-        onClose={() => setFilterOpen(false)}
-        footer={
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={onResetFilters}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
-            >
-              Reset
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterOpen(false)}
-              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white"
-            >
-              Terapkan filter
-            </button>
-          </div>
-        }
-      >
-        <div className="space-y-3">{children}</div>
-      </BottomSheet>
     </>
   );
 }

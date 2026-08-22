@@ -18,7 +18,7 @@ import {
   defaultPaymentDate,
   formatShortRp,
 } from "../../utils/project-invoices-utils";
-import { type OperationSuccess, OperationSuccessSheet } from "@/components/ui";
+import { type OperationSuccess, OperationSuccessDialog } from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 
 const clientPaymentRecoverySchema = z.object({
@@ -254,7 +254,10 @@ export function ProjectInvoices({
         }}
         onSubmit={handleSubmit}
       />
-      <OperationSuccessSheet success={operationSuccess} onClose={() => setOperationSuccess(null)} />
+      <OperationSuccessDialog
+        success={operationSuccess}
+        onClose={() => setOperationSuccess(null)}
+      />
     </div>
   );
 }

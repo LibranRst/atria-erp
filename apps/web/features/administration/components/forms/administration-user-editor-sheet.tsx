@@ -4,11 +4,11 @@ import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
 import {
   AppIcon,
-  BottomSheet,
+  FormSheet,
   FormField,
   FormSection,
   SheetFooterActions,
-  SheetSelect,
+  AdaptiveSelect,
   TextInput,
 } from "@/components/ui";
 import type { EditorMode, UserFormState } from "./administration-editor-types";
@@ -52,7 +52,7 @@ export function AdministrationUserEditorSheet({
   onToggle: toggleSelectedUser,
 }: Props): React.JSX.Element {
   return (
-    <BottomSheet
+    <FormSheet
       open={open}
       title={editorMode === "EDIT_USER" ? "Edit user" : "Tambah user"}
       onClose={closeEditor}
@@ -124,7 +124,7 @@ export function AdministrationUserEditorSheet({
               <TextInput id="administration-user-role-fixed" value="Owner" readOnly />
             </FormField>
           ) : (
-            <SheetSelect
+            <AdaptiveSelect
               id="administration-user-role"
               label="Role"
               value={userForm.roleId}
@@ -173,6 +173,6 @@ export function AdministrationUserEditorSheet({
           </div>
         ) : null}
       </form>
-    </BottomSheet>
+    </FormSheet>
   );
 }

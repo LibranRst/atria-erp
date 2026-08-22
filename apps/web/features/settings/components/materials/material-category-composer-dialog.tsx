@@ -1,6 +1,12 @@
 import React from "react";
-import { FormField, FormSection, OperationalFormSheet, TextInput } from "@/components/ui";
-type MaterialCategoryComposerSheetProps = {
+import {
+  CompactFormDialog,
+  FormField,
+  FormSection,
+  SheetFooterActions,
+  TextInput,
+} from "@/components/ui";
+type MaterialCategoryComposerDialogProps = {
   readonly open: boolean;
   readonly name: string;
   readonly pending: boolean;
@@ -9,28 +15,34 @@ type MaterialCategoryComposerSheetProps = {
   readonly onSubmit: () => void;
 };
 
-export function MaterialCategoryComposerSheet({
+export function MaterialCategoryComposerDialog({
   open,
   name,
   pending,
   onClose,
   onNameChange,
   onSubmit,
-}: MaterialCategoryComposerSheetProps): React.JSX.Element {
+}: MaterialCategoryComposerDialogProps): React.JSX.Element {
   const trimmedName = name.trim();
   return (
-    <OperationalFormSheet
+    <CompactFormDialog
       open={open}
       title="Kategori Material Baru"
       onClose={onClose}
       pending={pending}
-      disabled={!trimmedName}
-      disabledReason={!trimmedName ? "Isi nama kategori material." : undefined}
-      submitLabel="Tambah"
-      submittingLabel="Menambahkan…"
-      onSubmit={onSubmit}
-      statusText={trimmedName ? `${trimmedName} · Siap ditambahkan` : "Nama kategori belum diisi"}
-      statusTone={trimmedName ? "success" : "warning"}
+      actions={
+        <SheetFooterActions
+          disabledReason={!trimmedName ? "Isi nama kategori material." : undefined}
+          secondary={{ label: "Batal", onClick: onClose, disabled: pending }}
+          primary={{
+            label: "Tambah",
+            pendingLabel: "Menambahkan…",
+            pending,
+            disabled: !trimmedName,
+            onClick: onSubmit,
+          }}
+        />
+      }
     >
       <FormSection
         title="Nama kategori"
@@ -45,6 +57,6 @@ export function MaterialCategoryComposerSheet({
           />
         </FormField>
       </FormSection>
-    </OperationalFormSheet>
+    </CompactFormDialog>
   );
 }

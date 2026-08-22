@@ -12,49 +12,13 @@ import {
   MIN_SHEET_HEIGHT,
   SHEET_TOP_GAP,
 } from "./bottom-sheet-metrics";
-import { SheetFooterActions } from "./sheet-footer-actions";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import { IconButton } from "../button/button";
+import { OverlayLayerProvider } from "./overlay-layer-context";
+import { deactivateOverlay, isTopOverlay, lockBodyScroll, promoteOverlay } from "./overlay-stack";
 
-let nextSheetLayer = 200;
-let activeSheetIds: string[] = [];
-let bodyLockCount = 0;
-let originalBodyOverflow = "";
 const SNAP_DISTANCE = 42;
 const SNAP_VELOCITY = 520;
-
-function promoteSheet(sheetId: string): number {
-  activeSheetIds = activeSheetIds.filter((id) => id !== sheetId);
-  activeSheetIds.push(sheetId);
-  nextSheetLayer += 2;
-  return nextSheetLayer;
-}
-
-function deactivateSheet(sheetId: string): void {
-  activeSheetIds = activeSheetIds.filter((id) => id !== sheetId);
-}
-
-function isTopSheet(sheetId: string): boolean {
-  return activeSheetIds.at(-1) === sheetId;
-}
-
-function lockBodyScroll(): () => void {
-  if (bodyLockCount === 0) {
-    originalBodyOverflow = document.body.style.overflow;
-  }
-  bodyLockCount += 1;
-  document.body.style.overflow = "hidden";
-
-  let released = false;
-  return () => {
-    if (released) return;
-    released = true;
-    bodyLockCount = Math.max(0, bodyLockCount - 1);
-    if (bodyLockCount === 0) {
-      document.body.style.overflow = originalBodyOverflow;
-    }
-  };
-}
 
 function subscribeToDocumentBody(): () => void {
   return () => undefined;
@@ -68,7 +32,7 @@ function getServerDocumentBody(): null {
   return null;
 }
 
-type BottomSheetProps = {
+export type BottomSheetProps = {
   readonly open: boolean;
   readonly title: string;
   readonly children: React.ReactNode;
@@ -223,7 +187,7 @@ export function BottomSheet({
 
   useEffect(() => {
     if (!open) return undefined;
-    const layer = promoteSheet(sheetId);
+    const layer = promoteOverlay(sheetId);
     const animationFrame = window.requestAnimationFrame(() => {
       setZIndex(layer);
       sheetRef.current?.focus({ preventScroll: true });
@@ -242,7 +206,7 @@ export function BottomSheet({
     const releaseBodyScroll = lockBodyScroll();
 
     function onKeyDown(event: KeyboardEvent): void {
-      if (!isTopSheet(activeSheetId)) return;
+      if (!isTopOverlay(activeSheetId)) return;
       if (event.key === "Escape") {
         onCloseRef.current();
         return;
@@ -269,7 +233,7 @@ export function BottomSheet({
 
     window.addEventListener("keydown", onKeyDown);
     return () => {
-      deactivateSheet(activeSheetId);
+      deactivateOverlay(activeSheetId);
       releaseBodyScroll();
       window.removeEventListener("keydown", onKeyDown);
 
@@ -310,7 +274,7 @@ export function BottomSheet({
   const sheet = (
     <AnimatePresence onExitComplete={onExitComplete}>
       {open && (
-        <>
+        <OverlayLayerProvider anchored={zIndex + 2}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -403,6 +367,7 @@ export function BottomSheet({
 
             <div
               ref={bodyRef}
+              data-sheet-body="true"
               className={`no-scrollbar min-h-0 flex-1 overscroll-contain ${
                 contentOverflows ? "overflow-y-auto" : "overflow-y-hidden"
               }`}
@@ -444,7 +409,7 @@ export function BottomSheet({
               </div>
             )}
           </motion.section>
-        </>
+        </OverlayLayerProvider>
       )}
     </AnimatePresence>
   );
@@ -452,230 +417,9 @@ export function BottomSheet({
   return createPortal(sheet, portalNode);
 }
 
-export type ConfirmationModalTone = "default" | "warning" | "danger";
-
-type ConfirmationModalProps = {
-  readonly open: boolean;
-  readonly title: string;
-  readonly description?: string;
-  readonly tone?: ConfirmationModalTone;
-  readonly pending?: boolean;
-  readonly children?: React.ReactNode;
-  readonly actions: React.ReactNode;
-  readonly onClose: () => void;
-};
-
-export function ConfirmationModal({
-  open,
-  title,
-  description,
-  tone = "default",
-  pending = false,
-  children,
-  actions,
-  onClose,
-}: ConfirmationModalProps): React.JSX.Element | null {
-  const dialogRef = React.useRef<HTMLElement>(null);
-  const dialogId = React.useId();
-  const titleId = `${dialogId}-title`;
-  const descriptionId = `${dialogId}-description`;
-  const onCloseRef = React.useRef(onClose);
-  const pendingRef = React.useRef(pending);
-  const [zIndex, setZIndex] = React.useState(220);
-  const portalNode = React.useSyncExternalStore(
-    subscribeToDocumentBody,
-    getDocumentBody,
-    getServerDocumentBody,
-  );
-
-  React.useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  React.useEffect(() => {
-    pendingRef.current = pending;
-  }, [pending]);
-
-  function requestClose(): void {
-    if (pendingRef.current) return;
-    onCloseRef.current();
-  }
-
-  React.useEffect(() => {
-    if (!open) return undefined;
-    const activeDialogId = dialogId;
-    const previousFocus =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const layer = promoteSheet(activeDialogId);
-    const releaseBodyScroll = lockBodyScroll();
-    const animationFrame = window.requestAnimationFrame(() => {
-      setZIndex(layer);
-      dialogRef.current?.focus({ preventScroll: true });
-    });
-
-    function onKeyDown(event: KeyboardEvent): void {
-      if (!isTopSheet(activeDialogId)) return;
-      if (event.key === "Escape") {
-        event.preventDefault();
-        requestClose();
-        return;
-      }
-      if (event.key !== "Tab" || !dialogRef.current) return;
-      const focusable = Array.from(
-        dialogRef.current.querySelectorAll<HTMLElement>(
-          "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex='-1'])",
-        ),
-      );
-      if (focusable.length === 0) {
-        event.preventDefault();
-        dialogRef.current.focus();
-        return;
-      }
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener("keydown", onKeyDown);
-      deactivateSheet(activeDialogId);
-      releaseBodyScroll();
-      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
-    };
-  }, [dialogId, open]);
-
-  if (portalNode === null) return null;
-
-  const toneClass =
-    tone === "danger"
-      ? "bg-error-container/25 text-error"
-      : tone === "warning"
-        ? "bg-warning/12 text-warning"
-        : "bg-primary/10 text-primary";
-
-  return createPortal(
-    <AnimatePresence>
-      {open ? (
-        <>
-          <motion.div
-            aria-hidden="true"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={transitionEaseSmooth}
-            className="fixed -inset-10 cursor-default bg-black/45 backdrop-blur-[2px]"
-            style={{ zIndex }}
-            onClick={requestClose}
-          />
-          <div
-            className="pointer-events-none fixed inset-0 flex items-center justify-center p-4 sm:p-6"
-            style={{ zIndex: zIndex + 1 }}
-          >
-            <motion.section
-              ref={dialogRef}
-              tabIndex={-1}
-              role="alertdialog"
-              aria-modal="true"
-              aria-labelledby={titleId}
-              aria-describedby={description ? descriptionId : undefined}
-              initial={{ opacity: 0, scale: 0.94, y: 14 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 10 }}
-              transition={transitionSpringSmooth}
-              className="no-scrollbar pointer-events-auto max-h-[min(82dvh,620px)] w-full max-w-90 overflow-y-auto rounded-owner bg-background p-5 shadow-overlay ring-1 ring-white/10 outline-none"
-            >
-              <div
-                className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}
-              >
-                {tone === "default" ? (
-                  <AppIcon name="check" className="icon-xl" aria-hidden="true" />
-                ) : (
-                  <AppIcon name="warning" className="icon-xl" aria-hidden="true" />
-                )}
-              </div>
-              <div className="mt-4 text-center">
-                <h2 id={titleId} className="text-lg leading-6 font-bold text-on-surface">
-                  {title}
-                </h2>
-                {description ? (
-                  <p
-                    id={descriptionId}
-                    className="mx-auto mt-2 max-w-75 text-sm leading-5 text-on-surface-variant"
-                  >
-                    {description}
-                  </p>
-                ) : null}
-              </div>
-              {children ? (
-                <div className="mt-4 rounded-[22px] bg-surface-container-lowest p-4 ring-1 ring-ring-subtle">
-                  {children}
-                </div>
-              ) : null}
-              <div className="mt-5">{actions}</div>
-            </motion.section>
-          </div>
-        </>
-      ) : null}
-    </AnimatePresence>,
-    portalNode,
-  );
-}
-
-type ConfirmationSheetProps = {
-  readonly open: boolean;
-  readonly title: string;
-  readonly description: string;
-  readonly confirmLabel: string;
-  readonly danger?: boolean;
-  readonly pending?: boolean;
-  readonly disabled?: boolean;
-  readonly children?: React.ReactNode;
-  readonly onClose: () => void;
-  readonly onConfirm: () => void;
-};
-
-export function ConfirmationSheet({
-  open,
-  title,
-  description,
-  confirmLabel,
-  danger = false,
-  pending = false,
-  disabled = false,
-  children,
-  onClose,
-  onConfirm,
-}: ConfirmationSheetProps): React.JSX.Element | null {
-  return (
-    <ConfirmationModal
-      open={open}
-      title={title}
-      description={description}
-      tone={danger ? "danger" : "default"}
-      pending={pending}
-      onClose={onClose}
-      actions={
-        <SheetFooterActions
-          secondary={{ label: "Batal", onClick: onClose, disabled: pending }}
-          primary={{
-            label: confirmLabel,
-            pending,
-            disabled,
-            onClick: onConfirm,
-            variant: danger ? "critical" : "primary",
-          }}
-        />
-      }
-    >
-      {children}
-    </ConfirmationModal>
-  );
-}
+/** @deprecated Gunakan `ConfirmationDialog` dari `./dialogs`. */
+export {
+  ConfirmationDialog as ConfirmationModal,
+  ConfirmationDialog as ConfirmationSheet,
+} from "./dialogs";
+export type { ConfirmationDialogTone as ConfirmationModalTone } from "./dialogs";

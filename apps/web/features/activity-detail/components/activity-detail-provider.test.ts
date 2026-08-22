@@ -9,7 +9,7 @@ describe("activity detail UI contract", () => {
     const sheetSource = await Bun.file(sheetPath).text();
     const combinedSource = `${providerSource}\n${sheetSource}`;
 
-    expect(combinedSource).toContain("<BottomSheet");
+    expect(combinedSource).toContain("<DetailSheet");
     expect(combinedSource).toContain("<SheetFooterActions");
     expect(combinedSource).toContain('state.status === "success" && actions');
     expect(combinedSource).toContain("<ActivityDetailStatusFooter");

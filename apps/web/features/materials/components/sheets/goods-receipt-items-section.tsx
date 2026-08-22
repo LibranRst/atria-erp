@@ -6,7 +6,7 @@ import {
   FormField,
   MoneyInput,
   QuantityStepper,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
@@ -118,7 +118,7 @@ export function GoodsReceiptItemsSection({
 
             {editingKey === item.key ? (
               <div className="space-y-2.5 border-t border-outline-variant/15 bg-surface-container-low/65 p-3">
-                <SheetSelect
+                <AdaptiveSelect
                   label="Material"
                   value={item.materialId}
                   options={materialOptions}
@@ -128,7 +128,7 @@ export function GoodsReceiptItemsSection({
                   placeholder="Pilih material"
                   required
                 />
-                <SheetSelect
+                <AdaptiveSelect
                   label="Tautan RAP"
                   optional
                   value={item.projectRapItemId}

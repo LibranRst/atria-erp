@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { OperationSuccessSheet } from "@/components/ui";
+import { OperationSuccessDialog } from "@/components/ui";
 import {
   VendorDisbursePaymentSheet,
   VendorSchedulePaymentSheet,
@@ -99,7 +99,7 @@ export function VendorBillList({
         onRefNumberChange={operations.setRefNumber}
       />
 
-      <OperationSuccessSheet success={operations.success} onClose={operations.clearSuccess} />
+      <OperationSuccessDialog success={operations.success} onClose={operations.clearSuccess} />
     </div>
   );
 }

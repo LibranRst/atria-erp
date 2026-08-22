@@ -12,7 +12,7 @@ import {
   MoneyInput,
   NumericInput,
   OperationalFormSheet,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   TextInput,
   ValuePreviewStrip,
@@ -99,7 +99,7 @@ export function CategoryPlanFormDrawer({
               helper="Mulai dari template bila lingkup serupa pernah digunakan, lalu sesuaikan untuk proyek ini."
             >
               <div>
-                <SheetSelect
+                <AdaptiveSelect
                   label="Gunakan template Library"
                   value={categoryPlanForm.templateId}
                   onChange={handleCategoryTemplateChange}
@@ -135,7 +135,7 @@ export function CategoryPlanFormDrawer({
             helper="Kategori menentukan hubungan paket dengan budget Tukang atau Subcon."
           >
             <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-              <SheetSelect
+              <AdaptiveSelect
                 label="Kategori Budget"
                 value={categoryPlanForm.projectBudgetCategoryId}
                 onChange={(value) =>
@@ -158,7 +158,7 @@ export function CategoryPlanFormDrawer({
                 options={COMMON_ROOM_OPTIONS}
                 placeholder="Pilih atau ketik area"
               />
-              <SheetSelect
+              <AdaptiveSelect
                 label="Vendor"
                 optional
                 value={categoryPlanForm.vendorId}

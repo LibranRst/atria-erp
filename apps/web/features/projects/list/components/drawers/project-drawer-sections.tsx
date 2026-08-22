@@ -10,7 +10,7 @@ import {
   COMMON_ROOM_OPTIONS,
   DatePickerField,
   FormField,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   TextInput,
 } from "@/components/ui";
@@ -236,7 +236,7 @@ export function ProjectClientFields({
 }): React.JSX.Element {
   return (
     <div className="divide-y divide-outline-variant/20">
-      <SheetSelect
+      <AdaptiveSelect
         label="Jenis klien"
         value={isNewClient ? "new" : "existing"}
         options={[
@@ -279,7 +279,7 @@ export function ProjectClientFields({
           </FormField>
         </div>
       ) : (
-        <SheetSelect
+        <AdaptiveSelect
           label="Klien Terdaftar"
           value={clientId}
           onChange={onClientIdChange}
@@ -356,13 +356,13 @@ export function ProjectEditStateFields({
   );
   return (
     <div className="divide-y divide-outline-variant/20">
-      <SheetSelect
+      <AdaptiveSelect
         label="Status Proyek"
         value={status}
         onChange={(value) => onStatusChange(value as ProjectStatusOption)}
         options={statusOptions}
       />
-      <SheetSelect
+      <AdaptiveSelect
         label="Kesehatan Finansial"
         value={financialHealth}
         onChange={(value) => onFinancialHealthChange(value as ProjectFinancialHealthOption)}

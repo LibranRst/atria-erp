@@ -8,8 +8,9 @@ import { toast } from "sonner";
 import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
 import { decideInventoryOpening } from "@/app/actions/material/opening-inventory";
 import {
-  BottomSheet,
-  ConfirmationSheet,
+  DetailSheet,
+  CompactFormDialog,
+  ConfirmationDialog,
   DetailSection,
   ExclusiveSearchFilterBar,
   MoneyValue,
@@ -464,7 +465,7 @@ export function ApprovalList({
         onDecision={requestDecision}
       />
 
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={decision?.status === "APPROVED"}
         title="Setujui pengajuan?"
         description={
@@ -507,12 +508,23 @@ export function ApprovalList({
             ) : null}
           </div>
         ) : null}
-      </ConfirmationSheet>
+      </ConfirmationDialog>
 
-      <BottomSheet
+      <CompactFormDialog
         open={decision?.status === "REJECTED"}
         title="Alasan penolakan"
         onClose={closeDecision}
+        pending={pending}
+        actions={
+          <button
+            type="button"
+            disabled={pending || rejectionReason.trim().length < rejectionMinimum}
+            onClick={confirmDecision}
+            className="min-h-12 w-full rounded-full bg-error px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
+          >
+            {pending ? "Menyimpan penolakan" : "Tolak pengajuan"}
+          </button>
+        }
       >
         <div className="space-y-md">
           {decision?.item ? <ApprovalDecisionSubject item={decision.item} /> : null}
@@ -544,18 +556,10 @@ export function ApprovalList({
               Minimal {rejectionMinimum} karakter.
             </p>
           </div>
-          <button
-            type="button"
-            disabled={pending || rejectionReason.trim().length < rejectionMinimum}
-            onClick={confirmDecision}
-            className="min-h-12 w-full rounded-full bg-error px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
-          >
-            {pending ? "Menyimpan penolakan" : "Tolak pengajuan"}
-          </button>
         </div>
-      </BottomSheet>
+      </CompactFormDialog>
 
-      <BottomSheet
+      <DetailSheet
         open={activeImage !== null}
         title="Bukti pengajuan"
         onClose={() => setActiveImage(null)}
@@ -568,7 +572,7 @@ export function ApprovalList({
             className="max-h-[68dvh] w-full rounded-owner bg-surface-container object-contain"
           />
         ) : null}
-      </BottomSheet>
+      </DetailSheet>
     </div>
   );
 }

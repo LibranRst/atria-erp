@@ -6,7 +6,7 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
-  SheetSelect,
+  AdaptiveSelect,
   TextInput,
   useSheetPresenceValue,
   WorkflowFormSheet,
@@ -205,7 +205,7 @@ export function FieldDisbursementSheet({
                 helper="Pilih rekening bank sumber kas kecil proyek dan isi nomor referensi transfer."
               >
                 <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <SheetSelect
+                  <AdaptiveSelect
                     label="Rekening Sumber Dana"
                     value={selectedBankId}
                     disabled={pending}

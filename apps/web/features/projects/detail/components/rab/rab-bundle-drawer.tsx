@@ -4,11 +4,11 @@ import React from "react";
 import { motion } from "framer-motion";
 
 import {
-  BottomSheet,
+  DetailSheet,
   ChoiceRow,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
-  ConfirmationModal,
+  ConfirmationDialog,
   FactRow,
   FormField,
   FormSection,
@@ -55,7 +55,7 @@ export function RabBundleDrawer({
 
   if (!editable && bundleEditorOpen) {
     return (
-      <BottomSheet
+      <DetailSheet
         open={bundleEditorOpen}
         title="Detail Paket RAB"
         onClose={() => setBundleEditorOpen(false)}
@@ -123,7 +123,7 @@ export function RabBundleDrawer({
             </div>
           )}
         </div>
-      </BottomSheet>
+      </DetailSheet>
     );
   }
 
@@ -259,7 +259,7 @@ export function RabBundleDrawer({
           ) : null}
         </div>
       </OperationalFormSheet>
-      <ConfirmationModal
+      <ConfirmationDialog
         open={confirmDelete}
         title="Bongkar paket RAB?"
         description="Item anggota kembali tampil sebagai baris terpisah. Nilai dan sumber item tidak dihapus."

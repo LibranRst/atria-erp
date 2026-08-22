@@ -34,6 +34,7 @@
     "@atria/core": "workspace:*",
     "@atria/tokens": "workspace:*",
     "@better-auth/expo": "^1.6.29",
+    "@floating-ui/react": "^0.27.20",
     "@google/genai": "^2.8.0",
     "@neondatabase/serverless": "^1.1.0",
     "@phosphor-icons/react": "^2.1.10",

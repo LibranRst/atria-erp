@@ -37,5 +37,6 @@ This rule governs coding standards, type safety, server action patterns, and err
 ## 4. UI Component Conventions
 - Place domain-agnostic UI primitives in `components/ui/` (e.g. `MoneyValue`, `Button`, `SegmentedTabs`, `Drawer`, `Badge`).
 - Place feature-specific components in `features/<feature>/components/`.
+- Follow `05-shared-ui-first.md` before adding a component. The `@/components/ui` barrel is the public inventory; feature code composes that inventory and does not duplicate its interaction infrastructure.
 - Use `clsx` and `tailwind-merge` (`cn(...)` helper in `lib/utils.ts`) for conditional class concatenation.
 - Avoid ad-hoc inline styles; use semantic Tailwind utility classes defined in `app/globals.css` and `DESIGN.md`.

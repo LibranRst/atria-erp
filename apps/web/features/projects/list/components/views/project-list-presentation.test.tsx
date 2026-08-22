@@ -31,6 +31,14 @@ function project(overrides: Partial<ProjectItem> = {}): ProjectItem {
   };
 }
 
+function classTokensOf(html: string, text: string): readonly string[] {
+  const textIndex = html.indexOf(text);
+  if (textIndex < 0) return [];
+  const tagStart = html.lastIndexOf("<span", textIndex);
+  const classAttribute = /class="([^"]*)"/.exec(html.slice(tagStart, textIndex));
+  return classAttribute ? classAttribute[1].split(" ").filter(Boolean) : [];
+}
+
 describe("project list presentation", () => {
   test("uses the shared compact count pill for visible project results", () => {
     const html = renderToStaticMarkup(<ProjectListSectionHeader count={12} />);
@@ -55,7 +63,11 @@ describe("project list presentation", () => {
     expect(html).toContain('aria-label="Buka project Menteng Villa"');
     expect(html).toContain('aria-label="Edit Menteng Villa"');
     expect(html).toContain("Klien Ronald · PM Budi");
-    expect(html).toContain("inline-flex min-h-6 items-center");
+    // Asserted class by class so the shared StatusBadge stays free to reorder or add utilities.
+    const statusPillClasses = classTokensOf(html, "Aktif");
+    for (const utility of ["inline-flex", "min-h-6", "items-center", "rounded-full", "uppercase"]) {
+      expect(statusPillClasses).toContain(utility);
+    }
     expect(html).not.toContain("folder_open");
     expect(html).not.toContain("h-18.5");
     expect(html).not.toContain("Buka project<");

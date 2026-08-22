@@ -1,5 +1,5 @@
 "use client";
-import { AppIcon, Badge, type BadgeStatus, ConfirmationModal, MoneyValue } from "@/components/ui";
+import { AppIcon, Badge, type BadgeStatus, ConfirmationDialog, MoneyValue } from "@/components/ui";
 import React from "react";
 import { motion } from "framer-motion";
 
@@ -285,7 +285,7 @@ export function RabDraftActionsPanel({
           </button>
         )}
       </NativePanel>
-      <ConfirmationModal
+      <ConfirmationDialog
         open={confirmApprove}
         title="Setujui RAB klien?"
         description="RAB menjadi baseline klien yang tidak dapat diedit langsung. Perubahan berikutnya harus melalui revisi dan Change Order."

@@ -3,7 +3,7 @@
 import React from "react";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
-import { BottomSheet } from "../overlay/bottom-sheet";
+import { CalendarDialog } from "../overlay/dialogs";
 import { FormField } from "./basic-form-controls";
 import { cx, formatDateLabel, parseIsoDate } from "./form-control-utils";
 import { formatIsoDate } from "@atria/core/utils/date";
@@ -68,7 +68,7 @@ export function DatePickerField({
         </span>
         <AppIcon name="event" className="icon-sm text-on-surface-variant" />
       </button>
-      <BottomSheet open={open} title={label} onClose={() => setOpen(false)}>
+      <CalendarDialog open={open} title={label} onClose={() => setOpen(false)}>
         <div className="rounded-3xl bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
           <div className="flex items-center justify-between">
             <button
@@ -130,7 +130,7 @@ export function DatePickerField({
             })}
           </div>
         </div>
-      </BottomSheet>
+      </CalendarDialog>
     </FormField>
   );
 }

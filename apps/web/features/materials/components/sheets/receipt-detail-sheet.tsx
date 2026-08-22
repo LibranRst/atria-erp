@@ -5,7 +5,7 @@ import React from "react";
 import type { ReceiptView } from "@/app/actions/material/operations-dashboard";
 import {
   Badge,
-  BottomSheet,
+  DetailSheet,
   Button,
   FactRow,
   MoneyValue,
@@ -38,7 +38,7 @@ export function ReceiptDetailSheet({
   } = useSheetPresenceValue(receipt, receipt?.id);
 
   return (
-    <BottomSheet
+    <DetailSheet
       open={open}
       title={presentedReceipt?.receiptNumber ?? "Detail Penerimaan"}
       onClose={onClose}
@@ -123,6 +123,6 @@ export function ReceiptDetailSheet({
           )}
         </div>
       )}
-    </BottomSheet>
+    </DetailSheet>
   );
 }

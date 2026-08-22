@@ -14,7 +14,7 @@ import {
   MoneyValue,
   NumericInput,
   OperationalFormSheet,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   TextInput,
 } from "@/components/ui";
@@ -122,7 +122,7 @@ export function LibraryTemplateEditorSheet({
             title="Identitas template"
             helper="Tipe menentukan konteks dan kategori budget yang digunakan."
           >
-            <SheetSelect
+            <AdaptiveSelect
               label="Tipe item"
               value={draft.itemType}
               onChange={(value) => onItemTypeChange(value as ItemType)}
@@ -133,7 +133,7 @@ export function LibraryTemplateEditorSheet({
                 { value: "SUBCON_PACKAGE", label: "Paket Subcon" },
               ]}
             />
-            <SheetSelect
+            <AdaptiveSelect
               label="Kategori pengeluaran"
               readOnly={draft.itemType !== "CLIENT_LINE"}
               value={draft.expenseCategoryId}
@@ -185,7 +185,7 @@ export function LibraryTemplateEditorSheet({
               error={!draft.unit.trim() ? "Satuan wajib diisi." : undefined}
             />
             {draft.itemType === "MATERIAL_ITEM" ? (
-              <SheetSelect
+              <AdaptiveSelect
                 label="Tautan Material Master"
                 value={draft.materialId ?? ""}
                 onChange={(value) => onDraftChange({ ...draft, materialId: value || null })}
@@ -256,7 +256,7 @@ export function LibraryTemplateEditorSheet({
             title="Harga untuk klien"
             helper="Rekomendasi harga dan margin dihitung dari total komponen."
           >
-            <SheetSelect
+            <AdaptiveSelect
               label="Metode harga"
               value={draft.pricingMode}
               onChange={(value) =>
@@ -370,7 +370,7 @@ export function LibraryTemplateEditorSheet({
                 value={draft.effectiveFrom}
                 onChange={(value) => onDraftChange({ ...draft, effectiveFrom: value })}
               />
-              <SheetSelect
+              <AdaptiveSelect
                 label="Vendor default"
                 value={draft.defaultVendorId ?? ""}
                 onChange={(value) => onDraftChange({ ...draft, defaultVendorId: value || null })}
@@ -379,7 +379,7 @@ export function LibraryTemplateEditorSheet({
                   ...vendors.map((vendor) => ({ value: vendor.id, label: vendor.name })),
                 ]}
               />
-              <SheetSelect
+              <AdaptiveSelect
                 label="Sumber harga"
                 value={draft.priceSourceType}
                 onChange={(value) =>

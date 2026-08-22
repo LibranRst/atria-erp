@@ -7,7 +7,7 @@ import type {
   InitialStockCandidate,
   InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
-import { AppIcon, BottomSheet, ConfirmationSheet, MoneyValue } from "@/components/ui";
+import { AppIcon, ConfirmationDialog, DetailSheet, FormSheet, MoneyValue } from "@/components/ui";
 import { OpeningInventoryWorkspace } from "@/features/materials/components/workspaces/opening-inventory-workspace";
 import { OnboardingFinanceReview } from "@/features/onboarding/components/workspaces/onboarding-finance-review";
 import { startDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
@@ -245,7 +245,7 @@ export function InitialStockSetupPanel({
           Setelah diajukan, stok tetap nol sampai Finance Admin atau Owner lain menyetujuinya.
         </OnboardingNotice>
       ) : null}
-      <BottomSheet
+      <FormSheet
         open={composerOpen}
         title="Catat saldo awal stok"
         initialExpanded
@@ -263,8 +263,8 @@ export function InitialStockSetupPanel({
             onMutationComplete();
           }}
         />
-      </BottomSheet>
-      <BottomSheet
+      </FormSheet>
+      <DetailSheet
         open={detailBatch !== null}
         title="Detail saldo awal"
         onClose={() => setDetailBatch(null)}
@@ -325,8 +325,8 @@ export function InitialStockSetupPanel({
             ))}
           </div>
         ) : null}
-      </BottomSheet>
-      <ConfirmationSheet
+      </DetailSheet>
+      <ConfirmationDialog
         open={simulationConfirmationBatch !== null}
         title="Masuk sebagai Finance Admin?"
         description="Session efektif akan berpindah sementara agar Anda dapat memeriksa saldo awal tanpa logout dari akun Owner."
@@ -361,7 +361,7 @@ export function InitialStockSetupPanel({
             </div>
           </div>
         ) : null}
-      </ConfirmationSheet>
+      </ConfirmationDialog>
     </OnboardingStage>
   );
 }

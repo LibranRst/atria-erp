@@ -6,9 +6,10 @@ import { toast } from "sonner";
 import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
 import { decideInventoryOpening } from "@/app/actions/material/opening-inventory";
 import {
-  BottomSheet,
+  DetailSheet,
   Button,
-  ConfirmationSheet,
+  CompactFormDialog,
+  ConfirmationDialog,
   DetailSection,
   MoneyValue,
   RowGroup,
@@ -252,7 +253,7 @@ export function ApprovalsTab({
         )}
       </DetailSection>
 
-      <BottomSheet
+      <DetailSheet
         open={approvalOpen}
         title="Tinjau Persetujuan"
         onClose={() => setSelectedApproval(null)}
@@ -377,9 +378,9 @@ export function ApprovalsTab({
             ) : null}
           </div>
         ) : null}
-      </BottomSheet>
+      </DetailSheet>
 
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={decision?.status === "APPROVED"}
         title="Setujui pengajuan?"
         description={
@@ -418,12 +419,29 @@ export function ApprovalsTab({
             onEmergencyReasonChange={setEmergencyReason}
           />
         ) : null}
-      </ConfirmationSheet>
+      </ConfirmationDialog>
 
-      <BottomSheet
+      <CompactFormDialog
         open={decision?.status === "REJECTED"}
         title="Alasan Penolakan"
         onClose={closeDecision}
+        pending={pending}
+        actions={
+          <Button
+            type="button"
+            variant="critical"
+            fullWidth
+            disabled={
+              pending ||
+              rejectionReason.trim().length < (decision?.item.type === "inventory_opening" ? 10 : 5)
+            }
+            pending={pending}
+            pendingLabel="Menyimpan penolakan"
+            onClick={confirmDecision}
+          >
+            Tolak pengajuan
+          </Button>
+        }
       >
         <div className="space-y-md">
           <div className="rounded-inset bg-error-container/25 p-4 text-xs leading-5 text-error">
@@ -456,22 +474,8 @@ export function ApprovalsTab({
               Minimal {decision?.item.type === "inventory_opening" ? 10 : 5} karakter.
             </p>
           </div>
-          <Button
-            type="button"
-            variant="critical"
-            fullWidth
-            disabled={
-              pending ||
-              rejectionReason.trim().length < (decision?.item.type === "inventory_opening" ? 10 : 5)
-            }
-            pending={pending}
-            pendingLabel="Menyimpan penolakan"
-            onClick={confirmDecision}
-          >
-            Tolak pengajuan
-          </Button>
         </div>
-      </BottomSheet>
+      </CompactFormDialog>
     </div>
   );
 }

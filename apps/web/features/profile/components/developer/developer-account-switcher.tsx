@@ -5,7 +5,7 @@ import React from "react";
 import { toast } from "sonner";
 
 import { startDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
-import { AppIcon, ConfirmationSheet, StatusBadge } from "@/components/ui";
+import { AppIcon, ConfirmationDialog, StatusBadge } from "@/components/ui";
 import {
   getDeveloperSimulationRoleLabel,
   type DeveloperAccountSimulationState,
@@ -121,7 +121,7 @@ export function DeveloperAccountSwitcher({
         </div>
       </div>
 
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={selected !== null}
         title={`Simulasikan ${selected?.name ?? "akun ini"}?`}
         description={

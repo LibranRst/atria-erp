@@ -11,7 +11,7 @@ import {
   MoneyInput,
   NumericInput,
   OperationalFormSheet,
-  SheetSelect,
+  AdaptiveSelect,
   TextInput,
   ValuePreviewStrip,
 } from "@/components/ui";
@@ -89,7 +89,7 @@ export function LibraryCostComponentSheet({
             title="Jenis & nama biaya"
             helper="Satu komponen mewakili satu sumber biaya yang dapat digunakan kembali."
           >
-            <SheetSelect
+            <AdaptiveSelect
               label="Tipe komponen"
               value={componentEditor.componentType}
               onChange={(value) => patchComponent({ componentType: value as ComponentType })}

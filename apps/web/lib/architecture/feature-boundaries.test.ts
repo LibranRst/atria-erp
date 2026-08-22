@@ -35,6 +35,18 @@ const ALLOWED_EDGES: Readonly<Record<string, readonly string[]>> = {
   settings: ["materials", "administration"],
 };
 
+/**
+ * Slice yang boleh menjangkau `components/layout`.
+ *
+ * Arah lalu lintas normalnya satu jalur: `components/layout` menyusun halaman
+ * dan karena itu mengimpor slice, bukan sebaliknya. `ai-chat` adalah kekecualian
+ * yang disengaja — halaman AI merender bilah atasnya sendiri karena tombol
+ * kembalinya bergantung pada state lokalnya, jadi ia memakai `AppTopBar`,
+ * `HeaderMorphMenu`, dan `useHeaderMenu` langsung. Tanpa daftar ini tepi itu
+ * tidak terlihat oleh pengujian mana pun dan bisa menyebar diam-diam.
+ */
+const ALLOWED_LAYOUT_IMPORTERS: readonly string[] = ["ai-chat"];
+
 function collectSourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const entryPath = path.join(directory, entry.name);
@@ -82,6 +94,31 @@ describe("feature slice boundaries", () => {
     );
 
     expect(stale.sort()).toEqual([]);
+  });
+
+  test("only the slices that declare it may reach into components/layout", () => {
+    const offenders = new Set<string>();
+    for (const filePath of collectSourceFiles(FEATURES_ROOT)) {
+      if (filePath.endsWith(".stories.tsx") || /\.test\.tsx?$/.test(filePath)) continue;
+      if (!readFileSync(filePath, "utf8").includes("@/components/layout")) continue;
+
+      const slice = sliceOf(filePath);
+      if (!ALLOWED_LAYOUT_IMPORTERS.includes(slice)) offenders.add(slice);
+    }
+
+    expect([...offenders].sort()).toEqual([]);
+  });
+
+  test("every slice allowed into components/layout still goes there", () => {
+    const importers = new Set(
+      collectSourceFiles(FEATURES_ROOT)
+        .filter((filePath) => readFileSync(filePath, "utf8").includes("@/components/layout"))
+        .map(sliceOf),
+    );
+
+    const stale = ALLOWED_LAYOUT_IMPORTERS.filter((slice) => !importers.has(slice));
+
+    expect(stale).toEqual([]);
   });
 
   test("no slice keeps cross-cutting infrastructure that is not its own domain", () => {

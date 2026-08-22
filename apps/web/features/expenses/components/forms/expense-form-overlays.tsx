@@ -2,11 +2,10 @@
 
 import { motion } from "framer-motion";
 import {
-  ConfirmationModal,
-  ConfirmationSheet,
+  ConfirmationDialog,
   FinanceUnsavedChangesModal,
   type OperationSuccess,
-  OperationSuccessSheet,
+  OperationSuccessDialog,
 } from "@/components/ui";
 import type { ExpenseReceiptOcrResult } from "@/features/expenses/utils/expense-receipt-ocr";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
@@ -70,7 +69,7 @@ export function ExpenseFormOverlays({
         onContinue={onContinueEditing}
       />
 
-      <ConfirmationModal
+      <ConfirmationDialog
         open={conflictOpen}
         title="Draft Berubah"
         description="Draft ini diperbarui dari sesi lain. Muat versi server atau pertahankan isian lokal sebagai draft terpisah."
@@ -100,7 +99,7 @@ export function ExpenseFormOverlays({
         }
       />
 
-      <ConfirmationModal
+      <ConfirmationDialog
         open={pendingOcr !== null}
         title="Gabungkan Hasil Scan"
         description={`${pendingOcr?.lines.length ?? 0} item terdeteksi. Item yang sudah Anda isi tidak akan diubah tanpa pilihan eksplisit.`}
@@ -129,7 +128,7 @@ export function ExpenseFormOverlays({
         }
       />
 
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={projectChange !== null}
         title="Ganti proyek?"
         description="Kategori, tautan RAP, material, paket, dan lokasi stok akan dikosongkan. Nominal dan keterangan tetap aman."
@@ -139,7 +138,7 @@ export function ExpenseFormOverlays({
         onConfirm={onConfirmProjectChange}
       />
 
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={Boolean(pendingDiscardDraftId)}
         title="Buang draft pengeluaran?"
         description="Draft ini akan dihapus dan tidak dapat dilanjutkan lagi. Belum ada transaksi atau saldo kas yang berubah."
@@ -149,7 +148,7 @@ export function ExpenseFormOverlays({
         onConfirm={onConfirmDiscardDraft}
       />
 
-      <OperationSuccessSheet
+      <OperationSuccessDialog
         success={success}
         secondaryLabel="Tambah Pengeluaran"
         onClose={onCloseSuccess}

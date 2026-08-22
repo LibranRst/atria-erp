@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReconciliationWorkspace } from "@/app/actions/finance/reconciliation-workspace";
-import { BottomSheet, FormSection, useSheetPresenceValue } from "@/components/ui";
+import { DetailSheet, FormSection, useSheetPresenceValue } from "@/components/ui";
 import {
   directionCopy,
   EvidenceDescription,
@@ -22,7 +22,7 @@ export function ReconciliationHistorySheet({
   const { presentedValue, handleExitComplete } = useSheetPresenceValue(selected, selected?.id);
 
   return (
-    <BottomSheet
+    <DetailSheet
       open={selected !== null}
       title="Detail rekonsiliasi"
       onClose={onClose}
@@ -65,6 +65,6 @@ export function ReconciliationHistorySheet({
           </p>
         </div>
       ) : null}
-    </BottomSheet>
+    </DetailSheet>
   );
 }

@@ -10,8 +10,8 @@ import { GoodsReceiptSheet } from "@/features/materials/components/sheets/goods-
 import {
   AppIcon,
   Badge,
-  ConfirmationSheet,
-  OperationSuccessSheet,
+  ConfirmationDialog,
+  OperationSuccessDialog,
   PageHeader,
   SwitchRow,
   Textarea,
@@ -375,7 +375,7 @@ export function MaterialsControlCenter({
           setDecisionReason("");
         }}
       />
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={Boolean(decision)}
         title={
           decision?.type.includes("RECEIPT")
@@ -455,8 +455,8 @@ export function MaterialsControlCenter({
             </AnimatePresence>
           </div>
         ) : null}
-      </ConfirmationSheet>
-      <OperationSuccessSheet success={success} onClose={() => setSuccess(null)} />
+      </ConfirmationDialog>
+      <OperationSuccessDialog success={success} onClose={() => setSuccess(null)} />
     </section>
   );
 }

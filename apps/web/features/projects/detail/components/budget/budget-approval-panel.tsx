@@ -1,5 +1,5 @@
 "use client";
-import { AppIcon, ConfirmationModal, FormField, Textarea } from "@/components/ui";
+import { AppIcon, ConfirmationDialog, FormField, Textarea } from "@/components/ui";
 import React from "react";
 import { motion } from "framer-motion";
 
@@ -30,7 +30,7 @@ export function BudgetDraftActions({
         <AppIcon name="publish" className="icon-md" />
         <span>Tinjau & Ajukan Project Budget</span>
       </motion.button>
-      <ConfirmationModal
+      <ConfirmationDialog
         open={confirmSubmit}
         title="Ajukan Project Budget?"
         description="Item tidak dapat ditambah selama menunggu persetujuan. Owner akan meninjau plafon dan alokasi sebelum budget aktif."
@@ -108,7 +108,7 @@ export function BudgetApprovalPanel({
           <span>Setujui Project Budget</span>
         </button>
       </div>
-      <ConfirmationModal
+      <ConfirmationDialog
         open={confirmApprove}
         title="Setujui Project Budget?"
         description="Plafon kategori menjadi baseline aktif untuk pengeluaran, kontrol budget, dan pelaporan project."
@@ -140,7 +140,7 @@ export function BudgetApprovalPanel({
           </div>
         }
       />
-      <ConfirmationModal
+      <ConfirmationDialog
         open={showRejectForm}
         title="Tolak dan minta revisi?"
         description="Project Budget kembali editable. Jelaskan bagian yang harus diperbaiki agar PM dapat menindaklanjuti."

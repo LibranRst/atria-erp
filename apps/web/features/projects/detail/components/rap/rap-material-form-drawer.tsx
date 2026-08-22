@@ -12,7 +12,7 @@ import {
   MoneyInput,
   OperationalFormSheet,
   QuantityStepper,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   TextInput,
   ValuePreviewStrip,
@@ -97,7 +97,7 @@ export function RapMaterialFormDrawer({
           >
             {!editingRapItemId && (
               <div>
-                <SheetSelect
+                <AdaptiveSelect
                   label="Gunakan template Library"
                   value={rapForm.templateId}
                   onChange={handleRapTemplateChange}
@@ -122,7 +122,7 @@ export function RapMaterialFormDrawer({
                 </p>
               </div>
             )}
-            <SheetSelect
+            <AdaptiveSelect
               label="Material Master"
               value={rapForm.materialId}
               onChange={handleMaterialChange}
@@ -205,7 +205,7 @@ export function RapMaterialFormDrawer({
                 showPreview={false}
               />
             </FormField>
-            <SheetSelect
+            <AdaptiveSelect
               label="Sumber Pemenuhan"
               value={rapForm.source}
               onChange={(value) =>

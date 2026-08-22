@@ -10,7 +10,7 @@ import {
 } from "./guided-form";
 import { FormPresentationProvider } from "./form-presentation-context";
 import { ValuePreviewStrip } from "./form-support";
-import { SheetSelect } from "./select-form-controls";
+import { AdaptiveSelect } from "./select-form-controls";
 
 describe("iOS grouped form presentation", () => {
   test("renders one white grouped panel with borderless field rows", () => {
@@ -19,7 +19,7 @@ describe("iOS grouped form presentation", () => {
         <FormField label="Nama" required>
           <TextInput value="Atria" onChange={() => undefined} />
         </FormField>
-        <SheetSelect
+        <AdaptiveSelect
           label="Status"
           value="ACTIVE"
           onChange={() => undefined}

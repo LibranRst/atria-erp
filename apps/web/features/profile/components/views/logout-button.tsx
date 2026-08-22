@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-import { AppIcon, ConfirmationSheet } from "@/components/ui";
+import { AppIcon, ConfirmationDialog } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 export function LogoutButton(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -52,7 +52,7 @@ export function LogoutButton(): React.JSX.Element {
         <AppIcon name="chevron_right" className="icon-md shrink-0 leading-none text-error/70" />
       </motion.button>
 
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={confirmOpen}
         title="Keluar dari akun?"
         description="Sesi pada perangkat ini akan berakhir. Anda perlu masuk kembali untuk menggunakan Atria ERP."

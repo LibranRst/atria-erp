@@ -9,7 +9,7 @@ import {
   MoneyInput,
   OperationalFormSheet,
   QuantityStepper,
-  SheetSelect,
+  AdaptiveSelect,
   TextInput,
 } from "@/components/ui";
 import type {
@@ -81,7 +81,7 @@ export function BudgetItemForm({
           </div>
 
           <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
-            <SheetSelect
+            <AdaptiveSelect
               label="Kategori Budget"
               value={form.selectedCategoryId}
               onChange={setters.setSelectedCategoryId}

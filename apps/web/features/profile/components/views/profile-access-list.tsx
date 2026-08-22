@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { AppIcon, BottomSheet, GroupedSurface } from "@/components/ui";
+import { AppIcon, DetailSheet, GroupedSurface } from "@/components/ui";
 import type { ProfileAccessGroup } from "@/features/profile/utils/profile-access";
 export function ProfileAccessList({
   groups,
@@ -64,7 +64,7 @@ export function ProfileAccessList({
         </div>
       </GroupedSurface>
 
-      <BottomSheet
+      <DetailSheet
         open={selectedGroup !== null}
         title={selectedGroup?.title ?? "Detail akses"}
         onClose={() => setSelectedKey(null)}
@@ -114,7 +114,7 @@ export function ProfileAccessList({
             ) : null}
           </div>
         ) : null}
-      </BottomSheet>
+      </DetailSheet>
     </>
   );
 }

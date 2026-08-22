@@ -4,11 +4,11 @@ import React from "react";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
-  ConfirmationSheet,
+  ConfirmationDialog,
   FormField,
   FormRiskNotice,
   FormSection,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   TextInput,
   WorkflowFormSheet,
@@ -232,14 +232,14 @@ export function TransferSheet({
             </FormSection>
             <FormSection title="Lokasi transfer" helper="Sumber dan tujuan harus berbeda.">
               <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
-                <SheetSelect
+                <AdaptiveSelect
                   label="Dari"
                   value={fromLocationId}
                   onChange={onFromLocationChange}
                   options={locationOptions}
                   placeholder="Dari"
                 />
-                <SheetSelect
+                <AdaptiveSelect
                   label="Tujuan"
                   value={toLocationId}
                   onChange={onToLocationChange}
@@ -263,7 +263,7 @@ export function TransferSheet({
           </div>
         )}
       </WorkflowFormSheet>
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={confirmClose}
         title="Buang perubahan transfer?"
         description="Data transfer yang belum diposting akan hilang."

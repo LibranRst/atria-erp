@@ -13,7 +13,7 @@ import {
   MoneyValue,
   NumericInput,
   type SelectOption,
-  SheetSelect,
+  AdaptiveSelect,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import type { DraftLine } from "./opening-inventory-utils";
@@ -125,7 +125,7 @@ export function OpeningInventoryManualEntry({
                 ) : undefined
               }
             >
-              <SheetSelect
+              <AdaptiveSelect
                 label="Material & lokasi"
                 value={line.materialInventoryId}
                 onChange={(materialInventoryId) => onPatchLine(line.key, { materialInventoryId })}

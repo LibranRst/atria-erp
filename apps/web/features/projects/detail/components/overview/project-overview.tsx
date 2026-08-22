@@ -9,10 +9,11 @@ import { reallocateProjectBudget } from "@/app/actions/project/workflow-governan
 import {
   AppIcon,
   Badge,
-  BottomSheet,
   BudgetSplitIndicator,
+  DetailSheet,
   FormField,
   FormSection,
+  FormSheet,
   MoneyValue,
   NumericInput,
   Textarea,
@@ -367,7 +368,7 @@ export function ProjectOverview({
         </section>
       ) : null}
 
-      <BottomSheet
+      <DetailSheet
         open={Boolean(selectedCategory)}
         title={selectedCategory?.name ?? "Detail kategori"}
         onClose={() => setSelectedCategoryId(null)}
@@ -412,8 +413,8 @@ export function ProjectOverview({
             </div>
           </div>
         ) : null}
-      </BottomSheet>
-      <BottomSheet
+      </DetailSheet>
+      <FormSheet
         open={reallocationOpen}
         title="Atur alokasi budget"
         onClose={() => !savingAllocation && setReallocationOpen(false)}
@@ -484,7 +485,7 @@ export function ProjectOverview({
             </FormSection>
           ) : null}
         </div>
-      </BottomSheet>
+      </FormSheet>
     </div>
   );
 }

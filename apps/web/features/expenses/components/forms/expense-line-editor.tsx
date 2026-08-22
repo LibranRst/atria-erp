@@ -3,7 +3,7 @@
 import React from "react";
 
 import {
-  ConfirmationSheet,
+  ConfirmationDialog,
   FieldContextLine,
   FormField,
   FormRiskNotice,
@@ -11,7 +11,7 @@ import {
   MoneyInput,
   OptionChoiceGroup,
   QuantityStepper,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   useAnimatedSheetClose,
   WorkflowFormSheet,
@@ -182,7 +182,7 @@ export function ExpenseLineEditor({
             helper="Kategori budget, rincian biaya, dan keterangan."
           >
             <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-              <SheetSelect
+              <AdaptiveSelect
                 label="Kategori Pengeluaran"
                 value={draft.projectBudgetCategoryId}
                 onChange={requestCategoryChange}
@@ -289,7 +289,7 @@ export function ExpenseLineEditor({
                     }
                   />
                 </div>
-                <SheetSelect
+                <AdaptiveSelect
                   label="Material"
                   value={draft.materialId}
                   onChange={(materialId) => patch({ materialId, projectRapItemId: "" }, "material")}
@@ -304,7 +304,7 @@ export function ExpenseLineEditor({
                   }
                 />
                 {draft.stockHandling !== "EXPENSE_ONLY" ? (
-                  <SheetSelect
+                  <AdaptiveSelect
                     label="Lokasi Stok"
                     value={draft.inventoryLocationId}
                     onChange={(inventoryLocationId) => patch({ inventoryLocationId }, "location")}
@@ -321,7 +321,7 @@ export function ExpenseLineEditor({
                     }
                   />
                 ) : null}
-                <SheetSelect
+                <AdaptiveSelect
                   label="Item RAP"
                   value={draft.projectRapItemId}
                   onChange={(projectRapItemId) => {
@@ -362,7 +362,7 @@ export function ExpenseLineEditor({
           {isPackage ? (
             <FormSection title={packageLabel} helper="Tautkan ke paket pekerjaan yang sesuai.">
               <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                <SheetSelect
+                <AdaptiveSelect
                   label={packageLabel}
                   value={draft.projectCategoryPlanItemId}
                   onChange={(projectCategoryPlanItemId) => patch({ projectCategoryPlanItemId })}
@@ -386,7 +386,7 @@ export function ExpenseLineEditor({
         </div>
       </WorkflowFormSheet>
 
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={pendingCategoryId !== null}
         title="Ganti kategori?"
         description="Tautan material, RAP, paket, atau lokasi stok pada item ini akan dikosongkan. Nominal dan keterangan tetap aman."

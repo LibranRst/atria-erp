@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AppIcon, FormRiskNotice, FormSection, SheetSelect } from "@/components/ui";
+import { AppIcon, FormRiskNotice, FormSection, AdaptiveSelect } from "@/components/ui";
 import { ExpenseItemsSection } from "@/features/expenses/components/forms/expense-form-sections";
 import { ExpenseReceiptUpload } from "@/features/expenses/components/forms/expense-receipt-upload";
 import type {
@@ -81,7 +81,7 @@ export function ExpenseFormEntryFields({
         title="Proyek"
         helper="Kategori, budget, stok, dan approval mengikuti proyek ini."
       >
-        <SheetSelect
+        <AdaptiveSelect
           label="Proyek"
           value={payload.projectId}
           onChange={onProjectChange}

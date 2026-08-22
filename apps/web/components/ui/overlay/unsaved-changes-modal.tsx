@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-import { ConfirmationModal } from "@/components/ui/overlay/bottom-sheet";
+import { ConfirmationDialog } from "@/components/ui/overlay/dialogs";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 /**
@@ -40,7 +40,7 @@ export function UnsavedChangesModal({
   readonly onContinue: () => void;
 }): React.JSX.Element {
   return (
-    <ConfirmationModal
+    <ConfirmationDialog
       open={open}
       title={title}
       description={description}

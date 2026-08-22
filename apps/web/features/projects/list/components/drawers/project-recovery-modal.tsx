@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-import { ConfirmationModal } from "@/components/ui";
+import { ConfirmationDialog } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 export function ProjectRecoveryModal({
@@ -16,7 +16,7 @@ export function ProjectRecoveryModal({
   readonly onDiscard: () => void;
 }): React.JSX.Element {
   return (
-    <ConfirmationModal
+    <ConfirmationDialog
       open={open}
       title="Tutup form proyek?"
       description="Isian sudah aman di perangkat ini dan dapat dilanjutkan saat form dibuka kembali."

@@ -8,7 +8,7 @@ import {
   WorkspaceStatusLabel,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { BottomSheet } from "@/components/ui";
+import { DetailSheet } from "@/components/ui";
 import type { DetailNextAction } from "../../types/material-types";
 
 type Props = {
@@ -51,7 +51,7 @@ export function MaterialDetailSheet({
     onClose();
   };
   return (
-    <BottomSheet
+    <DetailSheet
       open={Boolean(material)}
       title="Detail Material"
       onClose={onClose}
@@ -191,6 +191,6 @@ export function MaterialDetailSheet({
           ) : null}
         </div>
       ) : null}
-    </BottomSheet>
+    </DetailSheet>
   );
 }

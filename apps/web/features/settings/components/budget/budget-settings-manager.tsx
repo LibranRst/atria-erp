@@ -10,7 +10,7 @@ import {
 import { SettingsHeader } from "../shared/settings-ui";
 import {
   AppIcon,
-  ConfirmationModal,
+  ConfirmationDialog,
   FormField,
   FormRiskNotice,
   FormSection,
@@ -384,7 +384,7 @@ export function BudgetSettingsManager({
           </motion.button>
         </div>
       ) : null}
-      <ConfirmationModal
+      <ConfirmationDialog
         open={confirmSave}
         title="Terapkan default budget baru?"
         description="Perubahan berlaku untuk project baru dan proses setup berikutnya. Project Budget yang sudah aktif tidak diubah diam-diam."

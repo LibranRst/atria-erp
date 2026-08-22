@@ -39,6 +39,10 @@ function consumerFiles(): string[] {
   );
 }
 
+function productionConsumerFiles(): string[] {
+  return consumerFiles().filter((filePath) => !/\.test\.tsx?$/.test(filePath));
+}
+
 describe("shared UI import boundaries", () => {
   test("application code imports shared UI through the barrel only", () => {
     const offenders = consumerFiles().flatMap((filePath) => {
@@ -59,6 +63,76 @@ describe("shared UI import boundaries", () => {
         ...source.matchAll(/export\s+\{[^}]*\}\s+from\s+"(@\/components\/ui[^"]*)"/g),
       ];
       return passThrough.map((match) => `${relativePath(filePath)} re-exports ${match[1]}`);
+    });
+
+    expect(offenders).toEqual([]);
+  });
+
+  test("application code uses AdaptiveSelect instead of the deprecated SheetSelect alias", () => {
+    const deprecatedName = "Sheet" + "Select";
+    const allowedFiles = new Set([
+      path.join(APP_ROOT, "components", "ui", "index.ts"),
+      path.join(APP_ROOT, "components", "ui", "form", "form-controls.tsx"),
+      path.join(APP_ROOT, "components", "ui", "form", "select-form-controls.tsx"),
+    ]);
+    const offenders = collectSourceFiles(APP_ROOT)
+      .filter((filePath) => !allowedFiles.has(filePath) && filePath !== import.meta.path)
+      .filter((filePath) => readFileSync(filePath, "utf8").includes(deprecatedName))
+      .map(relativePath);
+
+    expect(offenders).toEqual([]);
+  });
+
+  test("application code uses semantic dialogs and sheets instead of deprecated overlay names", () => {
+    const forbidden = new Set([
+      "Bottom" + "Sheet",
+      "Confirmation" + "Sheet",
+      "Confirmation" + "Modal",
+      "OperationSuccess" + "Sheet",
+    ]);
+    const offenders = consumerFiles().flatMap((filePath) => {
+      const source = readFileSync(filePath, "utf8");
+      const imports = [
+        ...source.matchAll(/import\s*\{([\s\S]*?)\}\s*from\s*"@\/components\/ui";/g),
+      ];
+      return imports.flatMap((match) =>
+        match[1]
+          .split(",")
+          .map(
+            (name) =>
+              name
+                .trim()
+                .replace(/^type\s+/, "")
+                .split(/\s+as\s+/)[0],
+          )
+          .filter((name) => forbidden.has(name))
+          .map((name) => `${relativePath(filePath)} imports deprecated ${name}`),
+      );
+    });
+
+    expect(offenders).toEqual([]);
+  });
+
+  test("overlay infrastructure stays inside shared UI", () => {
+    const infrastructureMarkers = [
+      {
+        label: "imports Floating UI directly",
+        pattern: /from\s+["']@floating-ui\/react["']/,
+      },
+      {
+        label: "creates a portal directly",
+        pattern: /\bcreatePortal\s*\(/,
+      },
+      {
+        label: "declares raw modal semantics",
+        pattern: /aria-modal\s*=/,
+      },
+    ] as const;
+    const offenders = productionConsumerFiles().flatMap((filePath) => {
+      const source = readFileSync(filePath, "utf8");
+      return infrastructureMarkers
+        .filter(({ pattern }) => pattern.test(source))
+        .map(({ label }) => `${relativePath(filePath)} ${label}`);
     });
 
     expect(offenders).toEqual([]);

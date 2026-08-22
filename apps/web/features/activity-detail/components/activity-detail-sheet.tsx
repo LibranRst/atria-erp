@@ -6,7 +6,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { getActivityDetail } from "@/app/actions/activity-detail";
 import {
   AppIcon,
-  BottomSheet,
+  DetailSheet,
   Button,
   MoneyValue,
   SheetFooterActions,
@@ -367,7 +367,7 @@ function ActiveDetailSheetInner({
   const source = state.status === "success" ? state.detail.source : null;
 
   return (
-    <BottomSheet
+    <DetailSheet
       open={open}
       title="Detail aktivitas"
       onClose={onClose}
@@ -415,7 +415,7 @@ function ActiveDetailSheetInner({
       ) : (
         <DetailContent detail={state.detail} />
       )}
-    </BottomSheet>
+    </DetailSheet>
   );
 }
 

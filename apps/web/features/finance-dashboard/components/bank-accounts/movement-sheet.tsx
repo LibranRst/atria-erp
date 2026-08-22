@@ -9,7 +9,7 @@ import {
   FormSection,
   MoneyImpactRow,
   MoneyInput,
-  SheetSelect,
+  AdaptiveSelect,
   Textarea,
   TextInput,
   WorkflowFormSheet,
@@ -172,7 +172,7 @@ export function MovementSheet({
                 Saldo: {shortMoney(account?.balance ?? 0)} -&gt; {shortMoney(projectedBalance)}
               </FieldContextLine>
               <FormSection title="Klasifikasi" helper="Untuk rekonsiliasi dan audit.">
-                <SheetSelect
+                <AdaptiveSelect
                   label="Kategori"
                   value={draft.category}
                   onChange={(value) => patch({ category: toMovementCategory(value) })}

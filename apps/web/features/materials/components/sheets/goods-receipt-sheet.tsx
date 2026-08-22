@@ -8,15 +8,15 @@ import { toast } from "sonner";
 import { postGoodsReceipt } from "@/app/actions/material/goods-receipt";
 import {
   AppIcon,
-  ConfirmationSheet,
+  ConfirmationDialog,
   DatePickerField,
   FieldContextLine,
   FormField,
   FormRiskNotice,
   FormSection,
   type OperationSuccess,
-  OperationSuccessSheet,
-  SheetSelect,
+  OperationSuccessDialog,
+  AdaptiveSelect,
   Textarea,
   TextInput,
   WorkflowFormSheet,
@@ -342,7 +342,7 @@ export function GoodsReceiptSheet({
               title="Sumber & Lokasi"
               helper="Koneksikan ke tagihan vendor atau project untuk alokasi stok."
             >
-              <SheetSelect
+              <AdaptiveSelect
                 label="Tagihan vendor"
                 optional
                 value={vendorBillId}
@@ -351,7 +351,7 @@ export function GoodsReceiptSheet({
                 placeholder="Tanpa tagihan vendor"
                 searchPlaceholder="Cari nomor, vendor, atau project..."
               />
-              <SheetSelect
+              <AdaptiveSelect
                 label="Project"
                 value={projectId}
                 options={projectOptions}
@@ -359,7 +359,7 @@ export function GoodsReceiptSheet({
                 placeholder="Pilih project"
                 required
               />
-              <SheetSelect
+              <AdaptiveSelect
                 label="Lokasi inventori"
                 value={locationId}
                 options={locationOptions}
@@ -407,7 +407,7 @@ export function GoodsReceiptSheet({
           </div>
         )}
       </WorkflowFormSheet>
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={confirmClose}
         title="Buang perubahan penerimaan?"
         description="Data yang belum diposting akan hilang."
@@ -420,7 +420,7 @@ export function GoodsReceiptSheet({
           closeImmediately();
         }}
       />
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={Boolean(pendingProjectId)}
         title="Ganti project?"
         description="Tautan RAP dan item yang sudah diisi akan dikosongkan agar material tidak masuk ke project yang salah."
@@ -432,7 +432,7 @@ export function GoodsReceiptSheet({
           setPendingProjectId(null);
         }}
       />
-      <ConfirmationSheet
+      <ConfirmationDialog
         open={Boolean(pendingVendorBillId)}
         title="Ganti tagihan vendor?"
         description="Project, material, tautan RAP, nominal, dan catatan yang sedang diisi akan diganti dengan data dari tagihan baru."
@@ -445,7 +445,7 @@ export function GoodsReceiptSheet({
           setPendingVendorBillId(null);
         }}
       />
-      <OperationSuccessSheet
+      <OperationSuccessDialog
         success={success}
         secondaryLabel="Tambah"
         onClose={() => setSuccess(null)}

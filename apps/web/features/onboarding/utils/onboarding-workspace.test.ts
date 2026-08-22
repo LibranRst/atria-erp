@@ -139,7 +139,7 @@ describe("inline owner onboarding workspace", () => {
 
   test("confirms inline Finance simulation with the shared modal", async () => {
     const source = await Bun.file(initialStockPanelPath).text();
-    expect(source).toContain("ConfirmationSheet");
+    expect(source).toContain("ConfirmationDialog");
     expect(source).toContain("Masuk sebagai Finance Admin?");
     expect(source).toContain("Konsekuensi audit");
     expect(source).toContain('context: "ONBOARDING_SETUP_REVIEW"');

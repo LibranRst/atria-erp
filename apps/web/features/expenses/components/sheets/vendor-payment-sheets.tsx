@@ -8,7 +8,7 @@ import {
   FormRiskNotice,
   FormSection,
   MoneyInput,
-  SheetSelect,
+  AdaptiveSelect,
   TextInput,
   useSheetPresenceValue,
   WorkflowFormSheet,
@@ -163,7 +163,7 @@ export function VendorSchedulePaymentSheet({
                 helper="Jadwalkan pembayaran untuk dicatat sebagai kewajiban kas masa depan."
               >
                 <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <SheetSelect
+                  <AdaptiveSelect
                     label="Rekening Rencana"
                     value={selectedBankId}
                     disabled={isPending}
@@ -337,7 +337,7 @@ export function VendorDisbursePaymentSheet({
                 helper="Pilih rekening bank sumber dan masukkan bukti transfer."
               >
                 <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <SheetSelect
+                  <AdaptiveSelect
                     label="Rekening Sumber Dana"
                     value={disburseBankId}
                     disabled={isPending}

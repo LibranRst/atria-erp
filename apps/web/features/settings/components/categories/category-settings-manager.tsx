@@ -10,7 +10,7 @@ import {
 import { SettingsHeader } from "../shared/settings-ui";
 import {
   AppIcon,
-  ConfirmationModal,
+  ConfirmationDialog,
   FormField,
   FormSection,
   GroupedSurface,
@@ -222,7 +222,7 @@ export function CategorySettingsManager({
           </FormSection>
         ) : null}
       </OperationalFormSheet>
-      <ConfirmationModal
+      <ConfirmationDialog
         open={confirmClose}
         title="Buang perubahan kategori?"
         description="Nama dan deskripsi akan kembali ke versi terakhir yang tersimpan."

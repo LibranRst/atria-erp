@@ -15,8 +15,8 @@ import {
   FormSection,
   MoneyInput,
   type OperationSuccess,
-  OperationSuccessSheet,
-  SheetSelect,
+  OperationSuccessDialog,
+  AdaptiveSelect,
   Textarea,
   TextInput,
   WorkflowFormSheet,
@@ -244,7 +244,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                       onChange={(value) => patch({ invoiceNumber: value })}
                     />
                   </FormField>
-                  <SheetSelect
+                  <AdaptiveSelect
                     label="Tahap Tagihan"
                     value={draft.payload.stage}
                     disabled={isPending}
@@ -303,7 +303,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
         }}
         onContinue={() => setConfirmClose(false)}
       />
-      <OperationSuccessSheet
+      <OperationSuccessDialog
         success={success}
         secondaryLabel="Tambah"
         onClose={() => setSuccess(null)}

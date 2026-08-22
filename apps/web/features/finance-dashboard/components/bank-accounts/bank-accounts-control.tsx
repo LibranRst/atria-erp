@@ -3,7 +3,7 @@
 import React from "react";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import { OperationSuccessSheet } from "@/components/ui";
+import { OperationSuccessDialog } from "@/components/ui";
 import { useBankAccountsControl } from "@/features/finance-dashboard/hooks/use-bank-accounts-control";
 import type { BankAccount } from "@/features/finance-dashboard/types/bank-account-types";
 import { AccountDetailSheet } from "./account-detail-sheet";
@@ -94,7 +94,7 @@ export function BankAccountsControl({
         onSave={control.saveTransfer}
       />
 
-      <OperationSuccessSheet success={control.success} onClose={control.clearSuccess} />
+      <OperationSuccessDialog success={control.success} onClose={control.clearSuccess} />
     </>
   );
 }

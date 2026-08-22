@@ -8,7 +8,7 @@ describe("developer account simulation UI contract", () => {
     const source = await Bun.file(switcherPath).text();
     expect(source).toContain("Simulasi developer");
     expect(source).toContain("divide-y divide-black");
-    expect(source).toContain("ConfirmationSheet");
+    expect(source).toContain("ConfirmationDialog");
     expect(source).toContain("Session ini benar-benar memakai role terpilih");
     expect(source).toContain("Password sementara");
     expect(source).toContain('tone="warning" label="Development"');

@@ -5,7 +5,7 @@ import {
   FormDisclosure,
   FormField,
   FormSection,
-  SheetSelect,
+  AdaptiveSelect,
   SmartDefaultHint,
   Textarea,
   TextInput,
@@ -79,7 +79,7 @@ export function ProjectDrawerFormFields({
             onNewClientAddressChange={(newClientAddress) => onPatch({ newClientAddress })}
           />
         ) : null}
-        <SheetSelect
+        <AdaptiveSelect
           label="Project Manager"
           value={draft.projectManagerId}
           onChange={(projectManagerId) => onPatch({ projectManagerId })}

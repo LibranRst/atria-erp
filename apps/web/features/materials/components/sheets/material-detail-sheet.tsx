@@ -4,7 +4,7 @@ import React from "react";
 
 import type { MaterialMovementView } from "@/app/actions/material/operations-dashboard";
 import type { MaterialInventoryRow } from "@/app/actions/material/inventory";
-import { BottomSheet, MoneyValue, SheetSection, useSheetPresenceValue } from "@/components/ui";
+import { DetailSheet, MoneyValue, SheetSection, useSheetPresenceValue } from "@/components/ui";
 import {
   MaterialStatusLabel,
   type MaterialTone,
@@ -48,7 +48,7 @@ export function MaterialDetail({
     : [];
 
   return (
-    <BottomSheet
+    <DetailSheet
       open={open}
       title={material?.name ?? "Detail material"}
       onClose={onClose}
@@ -140,7 +140,7 @@ export function MaterialDetail({
           </SheetSection>
         </div>
       ) : null}
-    </BottomSheet>
+    </DetailSheet>
   );
 }
 

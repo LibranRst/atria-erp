@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { MoneyValue } from "./page-primitives";
-import { SearchInput, SheetSelect } from "../form/select-form-controls";
+import { SearchInput, AdaptiveSelect } from "../form/select-form-controls";
 
 describe("financial and select primitives", () => {
   test("keeps large full financial values on one dynamic line", () => {
@@ -40,7 +40,7 @@ describe("financial and select primitives", () => {
 
   test("uses explicit compact spacing for selected option context", () => {
     const html = renderToStaticMarkup(
-      <SheetSelect
+      <AdaptiveSelect
         label="Status proyek"
         value="ACTIVE"
         onChange={() => undefined}
@@ -58,7 +58,7 @@ describe("financial and select primitives", () => {
     expect(html).toContain("mt-0.5 block truncate text-meta");
   });
 
-  test("keeps picker search visible against the gray sheet canvas", () => {
+  test("keeps picker search visible against the neutral dialog canvas", () => {
     const html = renderToStaticMarkup(
       <SearchInput value="" onChange={() => undefined} placeholder="Cari tagihan" />,
     );

@@ -3,7 +3,7 @@
 import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
 import {
-  BottomSheet,
+  FormSheet,
   FormField,
   FormSection,
   SheetFooterActions,
@@ -36,7 +36,7 @@ export function AdministrationVendorEditorSheet({
   onToggle: toggleSelectedVendor,
 }: Props): React.JSX.Element {
   return (
-    <BottomSheet
+    <FormSheet
       open={open}
       title={editorMode === "EDIT_VENDOR" ? "Edit vendor" : "Tambah vendor"}
       onClose={closeEditor}
@@ -157,6 +157,6 @@ export function AdministrationVendorEditorSheet({
           </FormField>
         </FormSection>
       </form>
-    </BottomSheet>
+    </FormSheet>
   );
 }

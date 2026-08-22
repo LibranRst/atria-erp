@@ -4,9 +4,8 @@ import React from "react";
 import { motion } from "framer-motion";
 
 import {
-  BottomSheet,
-  ConfirmationModal,
-  ConfirmationSheet,
+  DetailSheet,
+  ConfirmationDialog,
   DatePickerField,
   FormField,
   FormRiskNotice,
@@ -143,7 +142,7 @@ export function ChangeOrderDrawer({
           </FormSection>
         </div>
       </OperationalFormSheet>
-      <ConfirmationModal
+      <ConfirmationDialog
         open={confirmApprove}
         title="Setujui Change Order?"
         description="Nilai RAB dan kontrak proyek akan diperbarui. Revisi yang disetujui menjadi baseline baru dan tidak diedit langsung."
@@ -181,7 +180,7 @@ export function ChangeOrderDrawer({
           <MiniMoneyMetric label="Nilai baru" value={visibleRabValue} />
           <MiniMoneyMetric label="Selisih" value={valueDelta} />
         </MetricGrid>
-      </ConfirmationModal>
+      </ConfirmationDialog>
     </>
   );
 }
@@ -202,7 +201,7 @@ export function VoidRevisionDrawer({
   readonly isPending: boolean;
 }): React.JSX.Element {
   return (
-    <ConfirmationSheet
+    <ConfirmationDialog
       open={voidRevisionOpen}
       title="Batalkan Revisi?"
       description="Revisi ini akan ditandai VOID. RAB approved, nilai kontrak, budget, RAP, dan paket tidak berubah."
@@ -222,7 +221,7 @@ export function VoidRevisionDrawer({
           placeholder="Contoh: Klien membatalkan perubahan lingkup"
         />
       </FormField>
-    </ConfirmationSheet>
+    </ConfirmationDialog>
   );
 }
 
@@ -244,7 +243,7 @@ export function ChangeOrderDetailDrawer({
   if (!order) return null;
 
   return (
-    <BottomSheet
+    <DetailSheet
       open={open}
       title="Detail Change Order"
       onClose={() => setHistoryDetailId(null)}
@@ -293,6 +292,6 @@ export function ChangeOrderDetailDrawer({
           </p>
         </div>
       </div>
-    </BottomSheet>
+    </DetailSheet>
   );
 }
