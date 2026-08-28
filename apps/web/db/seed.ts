@@ -157,21 +157,29 @@ export async function seedDemoDatabase(): Promise<void> {
         id: "00000000-0000-0000-0000-000000000001",
         name: "owner",
         description: "Pemilik Perusahaan (Full Access & Approver)",
+              dataScope: "GLOBAL",
+        isSystem: true,
       },
       {
         id: "00000000-0000-0000-0000-000000000002",
         name: "finance_admin",
         description: "Finance & Bookkeeper (Verifikator & Rekonsiliasi)",
+              dataScope: "GLOBAL",
+        isSystem: true,
       },
       {
         id: "00000000-0000-0000-0000-000000000003",
         name: "project_manager",
         description: "Manajer Proyek Lapangan (Pengaju Biaya & Operator)",
+              dataScope: "ASSIGNED",
+        isSystem: true,
       },
       {
         id: "00000000-0000-0000-0000-000000000004",
         name: "purchasing",
         description: "Tim Purchasing & Material Control",
+              dataScope: "NONE",
+        isSystem: true,
       },
     ]);
 

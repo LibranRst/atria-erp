@@ -11,6 +11,22 @@ ALTER TABLE "role" ADD COLUMN "updated_at" timestamp DEFAULT now() NOT NULL;--> 
 ALTER TABLE "role_permission" ADD CONSTRAINT "role_permission_role_id_role_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."role"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "role_permission_unique_idx" ON "role_permission" USING btree ("role_id","permission_key");--> statement-breakpoint
 CREATE INDEX "role_permission_role_id_idx" ON "role_permission" USING btree ("role_id");--> statement-breakpoint
+-- Empat peran sistem ditanam di sini, bukan hanya diperbarui.
+--
+-- Sebelumnya migrasi ini hanya ber-UPDATE, dengan asumsi barisnya sudah dibuat
+-- `/setup` saat runtime. Asumsi itu benar untuk database yang sudah berjalan dan
+-- salah untuk database baru: INSERT izin di bawah menabrak foreign key ke
+-- `role`, sehingga `drizzle-kit migrate` tidak pernah bisa membangun database
+-- dari nol — memblokir provisioning tenant baru, CI, dan developer baru.
+--
+-- `ON CONFLICT DO NOTHING` membuat baris ini tidak menyentuh database yang sudah
+-- punya perannya; UPDATE di bawah tetap yang menentukan nilai akhirnya.
+INSERT INTO "role" ("id", "name", "description") VALUES
+  ('00000000-0000-0000-0000-000000000001', 'owner', 'Pemilik perusahaan dan approver utama.'),
+  ('00000000-0000-0000-0000-000000000002', 'finance_admin', 'Finance, verifikasi, pembayaran, dan rekonsiliasi.'),
+  ('00000000-0000-0000-0000-000000000003', 'project_manager', 'Pengelola proyek dan pengaju biaya.'),
+  ('00000000-0000-0000-0000-000000000004', 'purchasing', 'Purchasing dan material control.')
+ON CONFLICT ("id") DO NOTHING;--> statement-breakpoint
 -- Empat peran sistem: cakupan data dan penanda kekebalan.
 -- Nilainya persis perilaku sebelum migrasi ini, sehingga database yang sudah
 -- berjalan naik tanpa satu pun perubahan yang terlihat pengguna.
