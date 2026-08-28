@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
+import { DEKORIA_TENANT_ID } from "@/db/schema";
+
 import {
   mapProjectCostApprovalDetail,
   mapInventoryOpeningApprovalDetail,
@@ -12,6 +14,7 @@ import {
 
 const approvalRecord = {
   id: "approval-1",
+  tenantId: DEKORIA_TENANT_ID,
   approverId: "owner-1",
   referenceType: "project_cost",
   referenceId: "cost-1",
@@ -24,6 +27,7 @@ describe("approval detail mapping", () => {
   test("maps project cost approvals into shared approval detail shape", () => {
     const cost = {
       id: "cost-1",
+      tenantId: DEKORIA_TENANT_ID,
       projectId: "project-1",
       projectBudgetItemId: "budget-item-1",
       projectBudgetCategoryId: "budget-category-1",
@@ -38,6 +42,7 @@ describe("approval detail mapping", () => {
       receiptImageUrl: "https://example.com/receipt.jpg",
       status: "VERIFIED",
       budgetOverrun: true,
+      requiresOwnerApproval: true,
       bankAccountId: null,
       cashTransactionId: null,
       verifiedById: "finance-1",
@@ -81,15 +86,18 @@ describe("approval detail mapping", () => {
     const paymentApproval = {
       ...approvalRecord,
       id: "approval-2",
+      tenantId: DEKORIA_TENANT_ID,
       referenceType: "vendor_payment",
       referenceId: "payment-1",
     } satisfies VendorPaymentApprovalSource["approval"];
     const payment = {
       id: "payment-1",
+      tenantId: DEKORIA_TENANT_ID,
       vendorBillId: "bill-1",
       bankAccountId: "bank-1",
       cashTransactionId: null,
       amountPaid: "4500000.00",
+      requiresOwnerApproval: true,
       status: "PENDING",
       paymentDate: new Date("2026-06-24T09:00:00.000Z"),
       paidById: "finance-1",
@@ -176,6 +184,7 @@ describe("approval detail mapping", () => {
       approval: approvalRecord,
       cost: {
         id: "cost-priority",
+        tenantId: DEKORIA_TENANT_ID,
         projectId: "project-1",
         projectBudgetItemId: null,
         projectBudgetCategoryId: "category-1",
@@ -190,6 +199,7 @@ describe("approval detail mapping", () => {
         receiptImageUrl: null,
         status: "VERIFIED",
         budgetOverrun: true,
+        requiresOwnerApproval: true,
         bankAccountId: null,
         cashTransactionId: null,
         verifiedById: null,

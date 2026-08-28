@@ -11,6 +11,8 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { tenant } from "./tenant";
+import { DEKORIA_TENANT_ID } from "./tenant-constants";
 import { user } from "./auth";
 import { expenseCategory, materialCategory, project, projectRapItem } from "./projects";
 import { projectCost, vendor, vendorBill } from "./finance";
@@ -22,6 +24,10 @@ export const materialMaster = pgTable(
   "material_master",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     categoryId: uuid("category_id")
       .notNull()
       .references(() => materialCategory.id, { onDelete: "restrict" }),
@@ -62,14 +68,25 @@ export const materialMasterRelations = relations(materialMaster, ({ one, many })
 // ==========================================
 // // 14C. Lokasi Inventory (Inventory Location)
 // ==========================================
-export const inventoryLocation = pgTable("inventory_location", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: varchar("name", { length: 100 }).notNull().unique(),
-  description: text("description"),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const inventoryLocation = pgTable(
+  "inventory_location",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("il_tenant_name_uidx").on(table.tenantId, table.name),
+    index("il_tenant_id_idx").on(table.tenantId),
+  ],
+);
 
 export const inventoryLocationRelations = relations(inventoryLocation, ({ many }) => ({
   inventory: many(materialInventory),
@@ -83,6 +100,10 @@ export const materialInventory = pgTable(
   "material_inventory",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     materialId: uuid("material_id")
       .notNull()
       .references(() => materialMaster.id, { onDelete: "restrict" }),
@@ -121,7 +142,11 @@ export const stockTransfer = pgTable(
   "stock_transfer",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    transferNumber: varchar("transfer_number", { length: 100 }).notNull().unique(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    transferNumber: varchar("transfer_number", { length: 100 }).notNull(),
     fromLocationId: uuid("from_location_id")
       .notNull()
       .references(() => inventoryLocation.id, { onDelete: "restrict" }),
@@ -139,6 +164,8 @@ export const stockTransfer = pgTable(
   (table) => [
     index("st_from_location_idx").on(table.fromLocationId),
     index("st_to_location_idx").on(table.toLocationId),
+    uniqueIndex("st_tenant_transfer_number_uidx").on(table.tenantId, table.transferNumber),
+    index("st_tenant_id_idx").on(table.tenantId),
   ],
 );
 
@@ -146,7 +173,11 @@ export const stockCount = pgTable(
   "stock_count",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    countNumber: varchar("count_number", { length: 100 }).notNull().unique(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    countNumber: varchar("count_number", { length: 100 }).notNull(),
     inventoryLocationId: uuid("inventory_location_id")
       .notNull()
       .references(() => inventoryLocation.id, { onDelete: "restrict" }),
@@ -166,6 +197,8 @@ export const stockCount = pgTable(
   (table) => [
     index("sc_location_idx").on(table.inventoryLocationId),
     index("sc_status_idx").on(table.status),
+    uniqueIndex("sc_tenant_count_number_uidx").on(table.tenantId, table.countNumber),
+    index("sc_tenant_id_idx").on(table.tenantId),
   ],
 );
 
@@ -176,6 +209,10 @@ export const itemPriceLibrary = pgTable(
   "item_price_library",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     expenseCategoryId: uuid("expense_category_id")
       .notNull()
       .references(() => expenseCategory.id, { onDelete: "restrict" }),
@@ -210,7 +247,7 @@ export const itemPriceLibrary = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex("ipl_code_uidx").on(table.code),
+    uniqueIndex("ipl_tenant_code_uidx").on(table.tenantId, table.code),
     index("ipl_expense_category_id_idx").on(table.expenseCategoryId),
     index("ipl_material_id_idx").on(table.materialId),
     index("ipl_default_vendor_id_idx").on(table.defaultVendorId),
@@ -246,6 +283,10 @@ export const itemPriceLibraryCostComponent = pgTable(
   "item_price_library_cost_component",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     itemPriceLibraryId: uuid("item_price_library_id")
       .notNull()
       .references(() => itemPriceLibrary.id, { onDelete: "cascade" }),
@@ -289,6 +330,10 @@ export const stockMovement = pgTable(
   "stock_movement",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     materialId: uuid("material_id")
       .notNull()
       .references(() => materialMaster.id, { onDelete: "restrict" }),
@@ -357,7 +402,11 @@ export const inventoryOpeningBatch = pgTable(
   "inventory_opening_batch",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    batchNumber: varchar("batch_number", { length: 100 }).notNull().unique(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    batchNumber: varchar("batch_number", { length: 100 }).notNull(),
     cutoverDate: timestamp("cutover_date").notNull(),
     status: varchar("status", { length: 50 }).notNull().default("PENDING_APPROVAL"),
     note: text("note").notNull(),
@@ -379,6 +428,8 @@ export const inventoryOpeningBatch = pgTable(
   (table) => [
     index("iob_status_idx").on(table.status),
     index("iob_requested_by_idx").on(table.requestedById),
+    uniqueIndex("iob_tenant_batch_number_uidx").on(table.tenantId, table.batchNumber),
+    index("iob_tenant_id_idx").on(table.tenantId),
   ],
 );
 
@@ -386,6 +437,10 @@ export const inventoryOpeningItem = pgTable(
   "inventory_opening_item",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     batchId: uuid("batch_id")
       .notNull()
       .references(() => inventoryOpeningBatch.id, { onDelete: "cascade" }),
@@ -452,6 +507,10 @@ export const stockTransferItem = pgTable(
   "stock_transfer_item",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     stockTransferId: uuid("stock_transfer_id")
       .notNull()
       .references(() => stockTransfer.id, { onDelete: "cascade" }),
@@ -478,6 +537,10 @@ export const stockCountItem = pgTable(
   "stock_count_item",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     stockCountId: uuid("stock_count_id")
       .notNull()
       .references(() => stockCount.id, { onDelete: "cascade" }),
@@ -555,6 +618,10 @@ export const goodsReceipt = pgTable(
   "goods_receipt",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     vendorBillId: uuid("vendor_bill_id").references(() => vendorBill.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
@@ -562,7 +629,7 @@ export const goodsReceipt = pgTable(
     inventoryLocationId: uuid("inventory_location_id")
       .notNull()
       .references(() => inventoryLocation.id, { onDelete: "restrict" }),
-    receiptNumber: varchar("receipt_number", { length: 100 }).notNull().unique(),
+    receiptNumber: varchar("receipt_number", { length: 100 }).notNull(),
     status: varchar("status", { length: 50 }).notNull().default("DRAFT"),
     receivedAt: timestamp("received_at").notNull(),
     note: text("note"),
@@ -584,6 +651,8 @@ export const goodsReceipt = pgTable(
     index("gr_project_id_idx").on(table.projectId),
     index("gr_inventory_location_id_idx").on(table.inventoryLocationId),
     index("gr_status_idx").on(table.status),
+    uniqueIndex("gr_tenant_receipt_number_uidx").on(table.tenantId, table.receiptNumber),
+    index("gr_tenant_id_idx").on(table.tenantId),
   ],
 );
 
@@ -591,6 +660,10 @@ export const goodsReceiptItem = pgTable(
   "goods_receipt_item",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     goodsReceiptId: uuid("goods_receipt_id")
       .notNull()
       .references(() => goodsReceipt.id, { onDelete: "cascade" }),

@@ -13,6 +13,8 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { tenant } from "./tenant";
+import { DEKORIA_TENANT_ID } from "./tenant-constants";
 import { user } from "./auth";
 import { clientInvoice, projectCost, vendor, vendorBill } from "./finance";
 import { goodsReceipt, itemPriceLibrary, materialMaster, stockMovement } from "./materials";
@@ -20,16 +22,27 @@ import { goodsReceipt, itemPriceLibrary, materialMaster, stockMovement } from ".
 // ==========================================
 // // 3. Klien (Client)
 // ==========================================
-export const client = pgTable("client", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: varchar("name", { length: 255 }).notNull(),
-  companyName: varchar("company_name", { length: 255 }),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  phone: varchar("phone", { length: 50 }).notNull(),
-  address: text("address"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const client = pgTable(
+  "client",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    companyName: varchar("company_name", { length: 255 }),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 50 }).notNull(),
+    address: text("address"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("client_tenant_email_uidx").on(table.tenantId, table.email),
+    index("client_tenant_id_idx").on(table.tenantId),
+  ],
+);
 
 export const clientRelations = relations(client, ({ many }) => ({
   projects: many(project),
@@ -42,6 +55,10 @@ export const project = pgTable(
   "project",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     name: varchar("name", { length: 255 }).notNull(),
     clientId: uuid("client_id")
       .notNull()
@@ -98,6 +115,10 @@ export const formDraft = pgTable(
   "form_draft",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     ownerUserId: uuid("owner_user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -139,6 +160,10 @@ export const projectBudget = pgTable(
   "project_budget",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
@@ -184,6 +209,10 @@ export const projectBudgetItem = pgTable(
   "project_budget_item",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectBudgetId: uuid("project_budget_id")
       .notNull()
       .references(() => projectBudget.id, { onDelete: "cascade" }),
@@ -227,7 +256,11 @@ export const expenseCategory = pgTable(
   "expense_category",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    code: varchar("code", { length: 50 }).notNull().unique(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    code: varchar("code", { length: 50 }).notNull(),
     name: varchar("name", { length: 100 }).notNull(),
     description: text("description"),
     defaultRatio: numeric("default_ratio", { precision: 8, scale: 6 })
@@ -238,7 +271,11 @@ export const expenseCategory = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => [index("ec_code_idx").on(table.code)],
+  (table) => [
+    uniqueIndex("ec_tenant_code_uidx").on(table.tenantId, table.code),
+    index("ec_tenant_id_idx").on(table.tenantId),
+    index("ec_code_idx").on(table.code),
+  ],
 );
 
 export const expenseCategoryRelations = relations(expenseCategory, ({ many }) => ({
@@ -256,6 +293,10 @@ export const budgetAllocationSetting = pgTable(
   "budget_allocation_setting",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     name: varchar("name", { length: 120 }).notNull(),
     status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
     budgetCapRatio: numeric("budget_cap_ratio", { precision: 8, scale: 6 })
@@ -290,6 +331,10 @@ export const budgetAllocationSettingCategory = pgTable(
   "budget_allocation_setting_category",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     budgetAllocationSettingId: uuid("budget_allocation_setting_id")
       .notNull()
       .references(() => budgetAllocationSetting.id, { onDelete: "cascade" }),
@@ -336,6 +381,10 @@ export const projectBudgets = pgTable(
   "project_budgets",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
@@ -397,6 +446,10 @@ export const projectBudgetCategory = pgTable(
   "project_budget_category",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectBudgetId: uuid("project_budget_id")
       .notNull()
       .references(() => projectBudgets.id, { onDelete: "cascade" }),
@@ -463,6 +516,10 @@ export const projectCategoryPlanItem = pgTable(
   "project_category_plan_item",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
@@ -561,6 +618,10 @@ export const projectExpenses = pgTable(
   "project_expenses",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "restrict" }),
@@ -675,6 +736,10 @@ export const projectProfitabilitySnapshot = pgTable(
   "project_profitability_snapshot",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
@@ -769,12 +834,23 @@ export const projectProfitabilitySnapshotRelations = relations(
 // ==========================================
 // // 14A. Kategori Material (Material Category)
 // ==========================================
-export const materialCategory = pgTable("material_category", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: varchar("name", { length: 100 }).notNull().unique(),
-  description: text("description"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const materialCategory = pgTable(
+  "material_category",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("mc_tenant_name_uidx").on(table.tenantId, table.name),
+    index("mc_tenant_id_idx").on(table.tenantId),
+  ],
+);
 
 export const materialCategoryRelations = relations(materialCategory, ({ many }) => ({
   materials: many(materialMaster),
@@ -787,6 +863,10 @@ export const projectRap = pgTable(
   "project_rap",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
@@ -841,6 +921,10 @@ export const projectRapItem = pgTable(
   "project_rap_item",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectRapId: uuid("project_rap_id")
       .notNull()
       .references(() => projectRap.id, { onDelete: "cascade" }),
@@ -903,6 +987,10 @@ export const rabEstimate = pgTable(
   "rab_estimate",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
@@ -962,6 +1050,10 @@ export const rabEstimateBundle = pgTable(
   "rab_estimate_bundle",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     rabEstimateId: uuid("rab_estimate_id")
       .notNull()
       .references(() => rabEstimate.id, { onDelete: "cascade" }),
@@ -986,6 +1078,10 @@ export const rabEstimateItem = pgTable(
   "rab_estimate_item",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     rabEstimateId: uuid("rab_estimate_id")
       .notNull()
       .references(() => rabEstimate.id, { onDelete: "cascade" }),
@@ -1060,6 +1156,10 @@ export const projectChangeOrder = pgTable(
   "project_change_order",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "restrict" }),

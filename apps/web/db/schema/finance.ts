@@ -10,6 +10,8 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { tenant } from "./tenant";
+import { DEKORIA_TENANT_ID } from "./tenant-constants";
 import { user } from "./auth";
 import {
   project,
@@ -27,8 +29,12 @@ export const bankAccount = pgTable(
   "bank_account",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     name: varchar("name", { length: 100 }).notNull(),
-    accountNumber: varchar("account_number", { length: 50 }).notNull().unique(),
+    accountNumber: varchar("account_number", { length: 50 }).notNull(),
     bankName: varchar("bank_name", { length: 100 }).notNull(),
     holderName: varchar("holder_name", { length: 255 }).notNull(),
     balance: numeric("balance", { precision: 15, scale: 2 }).default("0.00").notNull(),
@@ -39,7 +45,11 @@ export const bankAccount = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => [index("ba_is_active_idx").on(table.isActive)],
+  (table) => [
+    uniqueIndex("ba_tenant_account_number_uidx").on(table.tenantId, table.accountNumber),
+    index("ba_tenant_id_idx").on(table.tenantId),
+    index("ba_is_active_idx").on(table.isActive),
+  ],
 );
 
 export const bankAccountRelations = relations(bankAccount, ({ many }) => ({
@@ -57,6 +67,10 @@ export const cashTransaction = pgTable(
   "cash_transaction",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     bankAccountId: uuid("bank_account_id")
       .notNull()
       .references(() => bankAccount.id, { onDelete: "restrict" }),
@@ -110,6 +124,10 @@ export const projectCost = pgTable(
   "project_cost",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "restrict" }),
@@ -134,6 +152,15 @@ export const projectCost = pgTable(
     receiptImageUrl: text("receipt_image_url"),
     status: varchar("status", { length: 50 }).notNull(), // SUBMITTED, VERIFIED, APPROVED, PAID, REJECTED
     budgetOverrun: boolean("budget_overrun").default(false).notNull(),
+    /*
+     * Keputusan persetujuan yang dibekukan saat pengajuan dibuat.
+     *
+     * Ambangnya bisa diubah Owner lewat Settings; tanpa pembekuan ini,
+     * menurunkan ambang akan diam-diam mengubah status pengajuan yang sudah
+     * menunggu keputusan. Yang disimpan adalah keputusannya, bukan angkanya —
+     * alur kerja bertanya "apakah ini butuh Owner", bukan "berapa ambangnya".
+     */
+    requiresOwnerApproval: boolean("requires_owner_approval").default(false).notNull(),
     bankAccountId: uuid("bank_account_id").references(() => bankAccount.id, {
       onDelete: "restrict",
     }),
@@ -219,10 +246,14 @@ export const clientInvoice = pgTable(
   "client_invoice",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "restrict" }),
-    invoiceNumber: varchar("invoice_number", { length: 100 }).notNull().unique(),
+    invoiceNumber: varchar("invoice_number", { length: 100 }).notNull(),
     amount: numeric("amount", { precision: 15, scale: 2 }).notNull(),
     status: varchar("status", { length: 50 }).notNull(), // UNPAID, PARTIALLY_PAID, PAID, OVERDUE, VOID
     stage: varchar("stage", { length: 50 }).notNull(), // DP, PROGRESS_1, PROGRESS_2, PELUNASAN, RETENTION, AD_HOC
@@ -231,7 +262,11 @@ export const clientInvoice = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => [index("ci_project_id_idx").on(table.projectId)],
+  (table) => [
+    uniqueIndex("ci_tenant_invoice_number_uidx").on(table.tenantId, table.invoiceNumber),
+    index("ci_tenant_id_idx").on(table.tenantId),
+    index("ci_project_id_idx").on(table.projectId),
+  ],
 );
 
 export const clientInvoiceRelations = relations(clientInvoice, ({ one, many }) => ({
@@ -246,6 +281,10 @@ export const clientPayment = pgTable(
   "client_payment",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     clientInvoiceId: uuid("client_invoice_id")
       .notNull()
       .references(() => clientInvoice.id, { onDelete: "restrict" }),
@@ -293,19 +332,30 @@ export const clientPaymentRelations = relations(clientPayment, ({ one }) => ({
 // ==========================================
 // // 13. Vendor
 // ==========================================
-export const vendor = pgTable("vendor", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).unique(),
-  phone: varchar("phone", { length: 50 }).notNull(),
-  address: text("address"),
-  bankName: varchar("bank_name", { length: 100 }),
-  bankAccountNumber: varchar("bank_account_number", { length: 50 }),
-  bankAccountHolder: varchar("bank_account_holder", { length: 255 }),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const vendor = pgTable(
+  "vendor",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 50 }).notNull(),
+    address: text("address"),
+    bankName: varchar("bank_name", { length: 100 }),
+    bankAccountNumber: varchar("bank_account_number", { length: 50 }),
+    bankAccountHolder: varchar("bank_account_holder", { length: 255 }),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("vendor_tenant_email_uidx").on(table.tenantId, table.email),
+    index("vendor_tenant_id_idx").on(table.tenantId),
+  ],
+);
 
 export const vendorRelations = relations(vendor, ({ many }) => ({
   bills: many(vendorBill),
@@ -319,6 +369,10 @@ export const vendorBill = pgTable(
   "vendor_bill",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     vendorId: uuid("vendor_id")
       .notNull()
       .references(() => vendor.id, { onDelete: "restrict" }),
@@ -339,7 +393,7 @@ export const vendorBill = pgTable(
       () => projectCategoryPlanItem.id,
       { onDelete: "restrict" },
     ),
-    billNumber: varchar("bill_number", { length: 100 }).notNull().unique(),
+    billNumber: varchar("bill_number", { length: 100 }).notNull(),
     amount: numeric("amount", { precision: 15, scale: 2 }).notNull(),
     status: varchar("status", { length: 50 }).notNull(), // UNPAID, PARTIALLY_PAID, PAID, OVERDUE, VOID
     dueDate: timestamp("due_date").notNull(),
@@ -355,6 +409,8 @@ export const vendorBill = pgTable(
     index("vb_material_id_idx").on(table.materialId),
     index("vb_project_rap_item_id_idx").on(table.projectRapItemId),
     index("vb_project_category_plan_item_id_idx").on(table.projectCategoryPlanItemId),
+    uniqueIndex("vb_tenant_bill_number_uidx").on(table.tenantId, table.billNumber),
+    index("vb_tenant_id_idx").on(table.tenantId),
   ],
 );
 
@@ -392,6 +448,10 @@ export const vendorPayment = pgTable(
   "vendor_payment",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     vendorBillId: uuid("vendor_bill_id")
       .notNull()
       .references(() => vendorBill.id, { onDelete: "restrict" }),
@@ -403,6 +463,15 @@ export const vendorPayment = pgTable(
     }),
     amountPaid: numeric("amount_paid", { precision: 15, scale: 2 }).notNull(),
     status: varchar("status", { length: 50 }).notNull().default("PENDING"), // PENDING, PROCESSING, COMPLETED, FAILED
+    /*
+     * Keputusan persetujuan yang dibekukan saat pengajuan dibuat.
+     *
+     * Ambangnya bisa diubah Owner lewat Settings; tanpa pembekuan ini,
+     * menurunkan ambang akan diam-diam mengubah status pengajuan yang sudah
+     * menunggu keputusan. Yang disimpan adalah keputusannya, bukan angkanya —
+     * alur kerja bertanya "apakah ini butuh Owner", bukan "berapa ambangnya".
+     */
+    requiresOwnerApproval: boolean("requires_owner_approval").default(false).notNull(),
     paymentDate: timestamp("payment_date").notNull(),
     paidById: uuid("paid_by_id")
       .notNull()
@@ -444,6 +513,10 @@ export const bankStatementImport = pgTable(
   "bank_statement_import",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     bankAccountId: uuid("bank_account_id")
       .notNull()
       .references(() => bankAccount.id, { onDelete: "restrict" }),
@@ -475,6 +548,10 @@ export const bankStatementRow = pgTable(
   "bank_statement_row",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     importId: uuid("import_id")
       .notNull()
       .references(() => bankStatementImport.id, { onDelete: "cascade" }),
@@ -493,7 +570,7 @@ export const bankStatementRow = pgTable(
   (table) => [
     index("bsr_import_id_idx").on(table.importId),
     index("bsr_matched_cash_transaction_idx").on(table.matchedCashTransactionId),
-    uniqueIndex("bsr_fingerprint_uidx").on(table.fingerprint),
+    uniqueIndex("bsr_tenant_fingerprint_uidx").on(table.tenantId, table.fingerprint),
   ],
 );
 

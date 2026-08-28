@@ -7,9 +7,12 @@ import {
   boolean,
   integer,
   index,
+  uniqueIndex,
   jsonb,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { tenant } from "./tenant";
+import { DEKORIA_TENANT_ID } from "./tenant-constants";
 import { user } from "./auth";
 
 // ==========================================
@@ -19,6 +22,10 @@ export const attachment = pgTable(
   "attachment",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     fileName: varchar("file_name", { length: 255 }).notNull(),
     fileUrl: text("file_url").notNull(),
     fileSize: integer("file_size").notNull(),
@@ -48,6 +55,10 @@ export const approval = pgTable(
   "approval",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     approverId: uuid("approver_id")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
@@ -78,6 +89,10 @@ export const aiRun = pgTable(
   "ai_run",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     runType: varchar("run_type", { length: 50 }).notNull(), // OCR_RECEIPT, FINANCIAL_BRIEFING
     runById: uuid("run_by_id")
       .notNull()
@@ -103,6 +118,10 @@ export const aiConversation = pgTable(
   "ai_conversation",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -142,6 +161,10 @@ export const aiMessage = pgTable(
   "ai_message",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     conversationId: uuid("conversation_id")
       .notNull()
       .references(() => aiConversation.id, { onDelete: "cascade" }),
@@ -149,7 +172,7 @@ export const aiMessage = pgTable(
     // Disimpan sebagai UIMessage parts agar riwayat bisa dirender ulang persis,
     // termasuk jejak pemanggilan tool.
     parts: jsonb("parts").notNull(),
-    provider: varchar("provider", { length: 20 }), // DEEPSEEK, GEMINI
+    provider: varchar("provider", { length: 20 }), // OPENROUTER, DEEPSEEK, GEMINI
     inputTokens: integer("input_tokens"),
     outputTokens: integer("output_tokens"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -180,7 +203,11 @@ export const aiProposalConfirmation = pgTable(
   "ai_proposal_confirmation",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    toolCallId: varchar("tool_call_id", { length: 128 }).notNull().unique(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    toolCallId: varchar("tool_call_id", { length: 128 }).notNull(),
     conversationId: uuid("conversation_id")
       .notNull()
       .references(() => aiConversation.id, { onDelete: "cascade" }),
@@ -191,7 +218,10 @@ export const aiProposalConfirmation = pgTable(
     documentId: uuid("document_id").notNull(), // Id dokumen yang tercipta, mis. project_cost
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [index("ai_proposal_conversation_id_idx").on(table.conversationId)],
+  (table) => [
+    uniqueIndex("ai_proposal_tenant_tool_call_uidx").on(table.tenantId, table.toolCallId),
+    index("ai_proposal_conversation_id_idx").on(table.conversationId),
+  ],
 );
 
 export const aiProposalConfirmationRelations = relations(aiProposalConfirmation, ({ one }) => ({
@@ -209,6 +239,10 @@ export const notification = pgTable(
   "notification",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -234,6 +268,10 @@ export const auditLog = pgTable(
   "audit_log",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
@@ -259,14 +297,25 @@ export const auditLogRelations = relations(auditLog, ({ one }) => ({
 // ==========================================
 // // 21. Konfigurasi Aplikasi (App Config)
 // ==========================================
-export const appConfig = pgTable("app_config", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  key: varchar("key", { length: 100 }).notNull().unique(),
-  value: text("value").notNull(),
-  description: text("description"),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  updatedById: uuid("updated_by_id").references(() => user.id, { onDelete: "restrict" }),
-});
+export const appConfig = pgTable(
+  "app_config",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    key: varchar("key", { length: 100 }).notNull(),
+    value: text("value").notNull(),
+    description: text("description"),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    updatedById: uuid("updated_by_id").references(() => user.id, { onDelete: "restrict" }),
+  },
+  (table) => [
+    uniqueIndex("app_config_tenant_key_uidx").on(table.tenantId, table.key),
+    index("app_config_tenant_id_idx").on(table.tenantId),
+  ],
+);
 
 export const appConfigRelations = relations(appConfig, ({ one }) => ({
   updatedBy: one(user, { fields: [appConfig.updatedById], references: [user.id] }),

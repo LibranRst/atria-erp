@@ -225,6 +225,34 @@
       "when": 1787238550328,
       "tag": "0031_ai_history_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1787640156909,
+      "tag": "0032_add_requires_owner_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1787640691489,
+      "tag": "0033_add_role_permission",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1787652935610,
+      "tag": "0034_grant_owner_manage_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1787843842880,
+      "tag": "0035_tenant_foundation",
+      "breakpoints": true
     }
   ]
 }
