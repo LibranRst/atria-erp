@@ -93,11 +93,20 @@ tertinggal satu aksi setelah invoice dibuat. Invalidasi cache sudah ditambahkan
 dan jalur pembayaran sudah benar, tetapi jeda pada pembuatan invoice belum
 hilang. Muat ulang halaman menampilkan data yang benar.
 
-Dua ketidakcocokan tampilan yang diketahui dan belum diperbaiki: form Tambah
-Material RAP menghitung stok gudang yang belum direservasi sebagai sudah
+**Sudah diperbaiki sejak dokumen ini ditulis (27 Agustus 2026):** form Tambah
+Material RAP dahulu menghitung stok gudang yang belum direservasi sebagai sudah
 tersedia (`Perlu dibeli 0`) sementara tab Stok proyek menghitungnya belum aman
-(`Beli 20`) — angka tab Stok yang lebih konservatif adalah yang benar untuk
-pengadaan.
+(`Beli 20`). Angka tab Stok yang lebih konservatif memang yang benar untuk
+pengadaan, dan form kini mengikuti aturan yang sama: stok bebas ditampilkan
+terpisah sebagai konteks (`Tersedia 22`), tidak mengecilkan kebutuhan. Labelnya
+juga berubah menjadi **Perlu diamankan**, karena stok gudang yang belum
+direservasi memang belum aman untuk proyek ini.
+
+Aturan itu kini dikunci
+[`features/projects/detail/utils/rap-manager-utils.test.ts`](../../apps/web/features/projects/detail/utils/rap-manager-utils.test.ts),
+termasuk satu test yang membandingkan angka form dengan `projectMaterialProjection`
+secara langsung — dua layar yang dahulu saling membantah sekarang gagal bersama
+kalau berbeda lagi.
 
 Dokumen ini adalah runbook acceptance test. Ikuti urutannya, ganti role sesuai instruksi, dan catat nilai sebelum/sesudah setiap action. Jangan memakai project atau transaksi seed sebagai titik awal.
 
