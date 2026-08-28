@@ -10,7 +10,7 @@ AI is read-only by default. It may analyze, summarize, classify, and propose act
 
 Reachable from the chat button in the app header; there is no AI entry point on the Dashboard.
 
-- Model: `deepseek-v4-flash` primary, `gemini-3.7-flash` fallback. Fallback is decided **before the first token** only; a mid-stream failure surfaces as a retryable error instead of splicing two streams (`lib/ai/chat-stream.ts`).
+- Model: `stealth/ox-alpha` via OpenRouter primary **while the preview stays free ($0/$0)**, then `deepseek-v4-flash`, then `gemini-3.7-flash`. Removing `OPENROUTER_API_KEY` from the environment skips OpenRouter entirely; 401/402/429/5xx from it fall back at runtime. Fallback is decided **before the first token** only; a mid-stream failure surfaces as a retryable error instead of splicing two streams (`lib/ai/chat-stream.ts`).
 - Transport: `app/api/ai/chat/route.ts`, the one internal API route, opened because `useChat` needs HTTP streaming. Read-only.
 - Tools live in `lib/ai/tools/`. Every tool is read-only; `lib/ai/tools/read-only.test.ts` fails the suite if one ever writes.
 - Session identity and role are closed over from the verified session — the model never supplies a user id or role. Any `projectId` the model provides is re-checked with `canAccessProject` before a query runs.

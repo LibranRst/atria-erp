@@ -32,9 +32,9 @@ Do not create a feature-local parallel primitive because its markup appears quic
 Use the existing taxonomy rather than recreating an overlay locally:
 
 - Local commands: `ActionMenu`.
-- Short single selection: `AdaptiveSelect` anchored listbox.
-- Contextual 3–6 option selection: `SelectionDialog`.
-- Search, grouping, custom values, combobox, or larger option sets: `SearchDialog` / `ComboboxField`.
+- Any selection that does not need search: `AdaptiveSelect` anchored listbox, including contextual/grouped/disabled options.
+- More than six options, create/custom values, or combobox: `SearchDialog` / `ComboboxField`.
+- `SelectionDialog` is an explicit protected-context override only; it is not the automatic presentation for ordinary selects.
 - One or two compact form fields: `CompactFormDialog`.
 - Date selection: `CalendarDialog` / `DatePickerField`.
 - Irreversible decision: `ConfirmationDialog`.

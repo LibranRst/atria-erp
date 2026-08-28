@@ -6,9 +6,10 @@ Atria Web tidak lagi memakai bottom sheet sebagai jawaban default untuk setiap
 pilihan atau menu. Bobot surface mengikuti pekerjaan:
 
 - filter utama 2–4 opsi tetap terlihat sebagai pills;
-- action lokal dan single-select 1–6 label-only memakai anchored surface;
-- contextual options memakai SelectionDialog; search/custom input memakai
-  SearchDialog; dua filter memakai anchored panel;
+- action lokal dan seluruh single-select yang tidak membutuhkan search memakai
+  anchored surface, termasuk contextual/grouped/disabled options;
+- SelectionDialog hanya explicit override; lebih dari enam opsi, search/custom
+  input memakai SearchDialog; dua filter memakai anchored panel;
 - sheet hanya untuk form tiga field atau lebih, review kompleks, dan detail;
 - popover hanya membawa disclosure ringan;
 - tooltip hanya menjelaskan label non-kritis dan tidak mencegat tap.

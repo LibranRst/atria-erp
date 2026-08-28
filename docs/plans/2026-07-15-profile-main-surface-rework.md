@@ -1,5 +1,11 @@
 # Rework Profile dengan Design Language Atria
 
+> **Sebagian batasan dokumen ini sudah dicabut (2026-08-24).** Larangan "tidak
+> ada edit nama/avatar, perubahan password" berlaku untuk lingkup rework visual
+> ini saja, dan sejak itu dibuka oleh
+> [2026-08-24-profile-self-service.md](2026-08-24-profile-self-service.md).
+> Pengelolaan sesi/perangkat masih ditunda.
+
 ## Tujuan
 
 Menyelaraskan `/profile` dengan hierarchy, density, grouped surfaces, state, dan motion Dashboard/Expenses tanpa menambah mutation akun, schema, atau permission baru.

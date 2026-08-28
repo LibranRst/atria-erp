@@ -290,6 +290,14 @@
       "css": ".ds-card { background: #ffffff; border-radius: 28px; box-shadow: inset 0 0 0 1px color-mix(in srgb, #3c3c43 2%, transparent), inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03), 0 3px 8px rgb(24 24 23 / 0.05); overflow: hidden; } .ds-card-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; font-size: 12px; color: #181817; } .ds-card-row:not(:last-child) { border-bottom: 1px solid rgba(0,0,0,0.055); } .ds-card-row strong { font-variant-numeric: tabular-nums; font-weight: 800; }"
     },
     {
+      "name": "Selection & Search Dialogs",
+      "kind": "overlay",
+      "refersTo": "selection-dialog",
+      "description": "Solid grouped-iOS choice dialogs matching the live component: soft scrim, a raised tonal canvas/header, one compact inset white option group, shared dividers, and terracotta selected label/check. Selection keeps an inline header close; searchable selection adds a detached search capsule and close circle above the results plane.",
+      "html": "<div class=\"ds-search-utility\"><div class=\"ds-search-capsule\">Cari kategori</div><button class=\"ds-search-close\" aria-label=\"Tutup\"></button></div><section class=\"ds-selection-dialog\"><header><h2>Pilih kategori</h2><button aria-label=\"Tutup\"></button></header><div class=\"ds-option-group\"><button class=\"ds-choice-row\">Material<svg class=\"ds-choice-check\" aria-hidden=\"true\"></svg></button><button class=\"ds-choice-row\">Tukang</button></div></section>",
+      "css": ".ds-search-utility { display: flex; gap: 8px; margin-bottom: 8px; } .ds-search-capsule { min-height: 48px; flex: 1; border-radius: 9999px; background: #ffffff; } .ds-search-close { width: 40px; height: 40px; border-radius: 9999px; background: #ffffff; } .ds-selection-dialog { width: min(360px, calc(100vw - 32px)); overflow: hidden; border-radius: 28px; background: #efeff2; } .ds-selection-dialog header, .ds-choice-group { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: #efeff2; } .ds-option-group { margin: 0 8px 8px; overflow: hidden; border-radius: 24px; background: #ffffff; } .ds-choice-row { display: flex; min-height: 48px; width: 100%; align-items: center; padding: 12px 20px; border: 0; border-top: 1px solid rgba(0,0,0,.055); background: #ffffff; text-align: left; } .ds-choice-row[aria-selected=\"true\"] { color: #b84b2c; } .ds-choice-check { margin-left: auto; color: #b84b2c; }"
+    },
+    {
       "name": "Status Badge",
       "kind": "chip",
       "refersTo": "badge-status",
@@ -354,6 +362,11 @@
         "name": "The Lift-Is-Not-Loud Rule",
         "body": "The resting lift must stay imperceptible element-by-element. If a shadow is legible on its own, it belongs to floating chrome (`raised`/`floating`/`sheet`/`overlay`), not to a resting surface — and if a static card reaches for `shadow-floating`, the role is wrong, not the value.",
         "section": "elevation"
+      },
+      {
+        "name": "The Selection-Stays-Flat Rule",
+        "body": "Selection and searchable-selection dialogs use one compact inset white option group with shared dividers. A selected row keeps the same white surface and is identified by a terracotta label plus check, never by another nested owner card or full-row tint.",
+        "section": "components"
       }
     ],
     "dos": [
@@ -363,6 +376,7 @@
       "Do keep primary monetary values on one line with tabular numerals at 320–430px, falling back to a compact value + exact secondary value when the full amount is too long.",
       "Do combine status with copy and an icon/shape/position — never color alone.",
       "Do keep motion purposeful and spring-based (`lib/utils/motion.ts` presets only) — selection, origin, continuity, feedback.",
+      "Do keep selection/search options in one compact inset white group and indicate selection with terracotta label plus the shared check glyph rather than a filled rectangle.",
       "Do put simple repeated events, transactions, and master-data rows on one grouped surface with dividers; reserve an individual card for a genuinely independent, decision-heavy entity.",
       "Do keep every main route's `loading.tsx` a structural skeleton matching the final hierarchy (header/tabs, focal summary, expected rows, nav clearance) — never a centered spinner or generic loading card.",
       "Do keep effective touch targets at 48×48px even when a visible control is drawn smaller (32–40px), and preserve keyboard focus order, screen-reader labels, safe-area clearance, and reduced-motion behavior throughout."
@@ -377,6 +391,7 @@
       "Don't ship a generic admin-dashboard or spreadsheet-like composition — a repeated formula of summary card, header pill, and identical rounded cards for every section is a tell that the content pattern wasn't chosen deliberately.",
       "Don't use an inset metric grid for a single title/meta/value row, activity/history/transactions, or more than three equal-weight cells in one mobile row; don't give a metric cell its own shadow, elevation, or oversized radius that competes with its owning surface.",
       "Don't nest a capsule inside another owning surface for ordinary grouped rows, or place a colored vertical severity rail or short attention marker beside an ordinary list icon — a continuous connector is timeline-only.",
+      "Don't add another owner card inside the shared option group or tint the full selected row.",
       "Don't leave a hidden action or an ambiguous icon-only control without an accessible label, or build UI from placeholder/dummy data when real domain data exists."
     ]
   }

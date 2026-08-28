@@ -34,6 +34,15 @@ This rule governs all UI/UX styling, layout, typography, components, and interac
 - Top radius: large soft rounded corners `rounded-t-[28px]`.
 - Always include an iOS pull bar (`w-10 h-1 bg-black/20 rounded-full mx-auto my-2`).
 
+### D. Selection & Search Dialogs
+- Ordinary non-search selection uses `AdaptiveSelect`'s anchored listbox, including contextual/grouped rows. Use `SelectionDialog` only for an explicit protected-context override and `SearchDialog` only when search/create/custom behavior is required.
+- Choice presentation uses the live component's soft scrim, `shadow-raised surface-container-low` canvas/header, and compact inset white option group; no blur or glass.
+- Choice rows share one grouped white surface with consistent dividers; do not add another nested owner card.
+- Selected rows keep the same white surface and use terracotta label + check; do not add a rectangular selected fill.
+- `SelectionDialog` stays one calm plane with the standard compact close control in its header.
+- `SearchDialog` uses a detached floating utility row: search capsule plus close circle above the edge-to-edge results plane.
+- The visible white `DialogOptionList` surface owns measured height animation and remains mounted across query changes; never key it by query or use layout scale that stretches option rows.
+
 ---
 
 ## 3. Financial Display with `MoneyValue`
