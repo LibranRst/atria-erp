@@ -474,3 +474,20 @@ body {
     transform 150ms ease,
     opacity 150ms ease !important;
 }
+
+/* Hide native browser search cancel and decoration buttons across WebKit, Blink, and Edge */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+input[type="search"]::-ms-clear,
+input[type="search"]::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
+}

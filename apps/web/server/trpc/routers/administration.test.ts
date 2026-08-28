@@ -1,3 +1,4 @@
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -28,6 +29,9 @@ const temporaryPasswordActor: Actor = {
   email: "staf.baru@dekoria.com",
   isActive: true,
   mustChangePassword: true,
+  sessionId: "test-session",
+  permissions: ROLE_PERMISSIONS["PROJECT_MANAGER"] ?? [],
+  dataScope: "ASSIGNED",
   developerActorUserId: null,
 };
 

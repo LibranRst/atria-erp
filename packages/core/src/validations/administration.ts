@@ -4,13 +4,20 @@ const uuid = z.string().uuid("ID tidak valid.");
 const canonicalRoleId = z
   .string()
   .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "ID role tidak valid.");
-const password = z
+/**
+ * Kebijakan kata sandi tunggal untuk seluruh aplikasi. Diekspor supaya jalur
+ * ganti kata sandi mandiri (`./profile`) memakai aturan yang sama persis —
+ * kebijakan yang disalin adalah kebijakan yang akan menyimpang.
+ */
+export const passwordPolicySchema = z
   .string()
   .min(12, "Password minimal 12 karakter.")
   .max(128)
   .regex(/[A-Z]/, "Password wajib memiliki huruf besar.")
   .regex(/[a-z]/, "Password wajib memiliki huruf kecil.")
   .regex(/[0-9]/, "Password wajib memiliki angka.");
+
+const password = passwordPolicySchema;
 
 export const bootstrapOwnerSchema = z.object({
   bootstrapSecret: z.string().min(16, "Bootstrap secret tidak valid."),

@@ -4,8 +4,29 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { DialogOptionList } from "./dialog-option-list";
 
 const sourcePath = new URL("./dialog-option-list.tsx", import.meta.url);
+const controlsPath = new URL("./select-form-controls.tsx", import.meta.url);
+const composerPath = new URL(
+  "../../../features/ai-chat/components/morphed-input-composer.tsx",
+  import.meta.url,
+);
 
 describe("DialogOptionList", () => {
+  test("search filtering preserves the list instance instead of keying it by query", async () => {
+    const [list, controls, composer] = await Promise.all([
+      Bun.file(sourcePath).text(),
+      Bun.file(controlsPath).text(),
+      Bun.file(composerPath).text(),
+    ]);
+
+    expect(list).toContain("animateHeight");
+    expect(list).toContain("new ResizeObserver(measure)");
+    expect(list).toContain("{ height: measuredHeight }");
+    expect(list).toContain("<motion.div");
+    expect(controls).not.toContain('key={searchable ? query : "selection"}');
+    expect(controls).not.toContain("key={query}");
+    expect(composer).not.toContain("key={selectSearchQuery}");
+  });
+
   test("exposes selected and blocked options without hiding the reason", () => {
     const html = renderToStaticMarkup(
       <DialogOptionList

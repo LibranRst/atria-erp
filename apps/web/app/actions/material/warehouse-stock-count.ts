@@ -1,5 +1,6 @@
 "use server";
 
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -182,7 +183,11 @@ export async function approveStockCount(input: unknown): Promise<ActionResponse<
       const selfApproval = count.createdById === actor.id;
       if (
         selfApproval &&
-        !(roleName === "OWNER" && parsed.data.emergencyOverride && parsed.data.reason)
+        !(
+          actorHasPermission(roleName, "override:self_approval") &&
+          parsed.data.emergencyOverride &&
+          parsed.data.reason
+        )
       )
         throw new Error(
           "MAKER_CHECKER_REQUIRED: Stock count harus disetujui user lain. Owner dapat memakai emergency override dengan alasan.",

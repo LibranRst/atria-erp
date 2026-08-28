@@ -79,9 +79,12 @@ describe("registry tool AI", () => {
 
   test("registry memuat seluruh tool yang diharapkan dan tidak lebih", async () => {
     const { buildAiTools } = await import("@/lib/ai/tools");
-    const tools = buildAiTools({ userId: "user-1", roleName: "OWNER" });
+    const { aiToolContextForRole } = await import("@/lib/testing/ai-tool-context");
+    const tools = buildAiTools(aiToolContextForRole("OWNER"));
 
     expect(Object.keys(tools).sort()).toEqual([
+      "analyzeRoleChangeImpact",
+      "explainUserAccess",
       "getBankBalances",
       "getExpenseCategories",
       "getInventoryLocations",
@@ -100,15 +103,19 @@ describe("registry tool AI", () => {
       "listProjects",
       "listVendors",
       "proposeCreateProject",
+      "proposeCreateRole",
       "proposeDisburseExpense",
       "proposeExpenseDraft",
       "proposeExpenseReview",
       "proposeGoodsReceipt",
       "proposeRecordClientPayment",
+      "proposeRoleChange",
       "proposeSetupProjectBudget",
       "proposeVendorBillPayment",
       "requestUserInput",
       "suggestFollowUps",
+      "suggestRoleReview",
+      "whoCanDo",
     ]);
   });
 
@@ -118,6 +125,7 @@ describe("registry tool AI", () => {
       "project-proposal-tools.ts",
       "finance-proposal-tools.ts",
       "material-proposal-tools.ts",
+      "role-tools.ts",
     ];
 
     for (const file of proposalFiles) {

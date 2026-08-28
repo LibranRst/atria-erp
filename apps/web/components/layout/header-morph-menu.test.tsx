@@ -2,9 +2,15 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { HeaderMorphMenu } from "./header-morph-menu";
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
+
 import { getHeaderMenuItems, getPageTitle } from "./header-menu-config";
 
-const items = getHeaderMenuItems("OWNER");
+function menuFor(roleName: string) {
+  return getHeaderMenuItems(ROLE_PERMISSIONS[roleName] ?? []);
+}
+
+const items = menuFor("OWNER");
 
 function render(overrides: Partial<Parameters<typeof HeaderMorphMenu>[0]> = {}): string {
   return renderToStaticMarkup(
@@ -120,7 +126,7 @@ describe("header menu configuration", () => {
     // Dibaca dari matriks izin yang sama dengan yang ditegakkan rute AI, bukan
     // dari daftar peran yang ditulis ulang: menu tidak boleh menawarkan pintu
     // yang akan ditolak.
-    const labels = (role: string) => getHeaderMenuItems(role).map((item) => item.label);
+    const labels = (role: string) => menuFor(role).map((item) => item.label);
 
     expect(labels("OWNER")).toContain("Asisten AI");
     expect(labels("PROJECT_MANAGER")).toContain("Asisten AI");
@@ -133,7 +139,7 @@ describe("header menu configuration", () => {
   });
 
   test("keeps the AI route reachable as a real destination", () => {
-    const ai = getHeaderMenuItems("OWNER").find((item) => item.label === "Asisten AI");
+    const ai = menuFor("OWNER").find((item) => item.label === "Asisten AI");
 
     expect(ai?.href).toBe("/ai");
     expect(ai?.match("/ai", new URLSearchParams())).toBe(true);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
 import Link from "next/link";
 import React from "react";
 
@@ -19,6 +20,7 @@ type NeedsTabProps = {
 };
 
 export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
+  const can = useCan();
   const shortages = data.shortages.filter((row) => row.needToBuy > 0);
   const anchors = Array.from(new Map(shortages.map((row) => [row.projectRapId, row])).values());
   const totalEstimate = shortages.reduce((sum, row) => sum + row.estimatedTotalCost, 0);
@@ -132,7 +134,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
                   ))}
                 </div>
 
-                {project && data.roleName !== "PURCHASING" ? (
+                {project && can("view:project") ? (
                   <div className="border-t border-black/5.5 px-3.5 py-2.5">
                     <Link
                       href={`/projects/${project.id}?tab=rap`}

@@ -1,3 +1,4 @@
+import { getFieldCostApprovalThresholdRupiah } from "@/lib/finance/approval-thresholds";
 import "server-only";
 
 import crypto from "crypto";
@@ -106,6 +107,8 @@ export async function submitExpenseDraftUseCase(
   if (!scoped.success) return scoped;
 
   try {
+    // Ambang dibaca sebelum transaksi dibuka; keputusannya dibekukan ke baris.
+    const ownerApprovalThreshold = await getFieldCostApprovalThresholdRupiah();
     const result = await db.transaction(async (tx) => {
       const receiptGroupId = crypto.randomUUID();
       const [claimed] = await tx
@@ -142,6 +145,7 @@ export async function submitExpenseDraftUseCase(
           receiptGroupId,
           item,
           includeApprovalCategoryLabel: true,
+          ownerApprovalThreshold,
         });
         costs.push(cost);
         await writeFieldRequestAuditTx(tx, {

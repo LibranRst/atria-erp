@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
 import React from "react";
 import Link from "next/link";
 
@@ -25,6 +26,7 @@ export function DashboardOverviewTab({
   readonly financialPosition: React.ReactNode;
   readonly onboarding: OwnerOnboardingOverview | null;
 }): React.JSX.Element {
+  const can = useCan();
   const nextDue = data.dashboardDetails.cashDueGroups.flatMap((group) => group.items).slice(0, 3);
   const materialAttention = data.dashboardDetails.materials
     .filter((item) => item.severity !== "INFO")
@@ -105,8 +107,8 @@ export function DashboardOverviewTab({
 
       {financialPosition}
       <OverviewPreviewSection
-        title={data.role === "OWNER" ? "Perlu keputusan" : "Prioritas finance"}
-        href={data.role === "OWNER" ? "/ledger?tab=approvals" : "/ledger?tab=cash"}
+        title={can("decide:all_approvals") ? "Perlu keputusan" : "Prioritas finance"}
+        href={can("decide:all_approvals") ? "/ledger?tab=approvals" : "/ledger?tab=cash"}
       >
         {data.actions.length === 0 ? (
           <OverviewPreviewEmpty>

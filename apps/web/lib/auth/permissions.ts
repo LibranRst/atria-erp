@@ -7,6 +7,8 @@ import {
 } from "@atria/core/auth/permissions";
 import { eq } from "drizzle-orm";
 
+import { roleHasPermission } from "./role-access";
+
 /**
  * Sisi server dari perizinan: resolusi peran lewat database dan assertion yang
  * melempar error.
@@ -66,12 +68,21 @@ export async function assertPermission(
   user: UserSessionAuth,
   permission: PermissionKey,
 ): Promise<void> {
-  let roleName = user.role?.toUpperCase();
-
-  if (!roleName && user.roleId) {
-    roleName = await resolveRoleName(user.roleId);
+  /*
+   * Izin dibaca dari database, bukan dari matriks kode: sejak peran bisa
+   * disunting Owner, matriks hanyalah nilai seed. Jalur nama-peran di bawah
+   * tersisa untuk pemanggil lama yang hanya memegang nama tanpa `roleId`.
+   */
+  if (user.roleId) {
+    const allowed = await roleHasPermission(user.roleId, permission);
+    if (!allowed) {
+      const roleName = await resolveRoleName(user.roleId);
+      throw new Error(`FORBIDDEN: Peran ${roleName} tidak memiliki izin ${permission}`);
+    }
+    return;
   }
 
+  const roleName = user.role?.toUpperCase();
   if (!roleName) {
     throw new Error("FORBIDDEN: Pengguna tidak memiliki peran yang valid.");
   }
@@ -79,4 +90,18 @@ export async function assertPermission(
   if (!actorHasPermission(roleName, permission)) {
     throw new Error(`FORBIDDEN: Peran ${roleName} tidak memiliki izin ${permission}`);
   }
+}
+
+/**
+ * Pemeriksaan izin untuk pemanggil yang sudah memegang `Actor`.
+ *
+ * Membaca daftar yang sudah diselesaikan sekali di awal request alih-alih
+ * menanyakan ulang ke database — satu request tidak boleh pernah menegakkan
+ * dua jawaban berbeda untuk pengguna yang sama.
+ */
+export function actorCan(
+  actor: { readonly permissions: readonly PermissionKey[] },
+  permission: PermissionKey,
+): boolean {
+  return actor.permissions.includes(permission);
 }

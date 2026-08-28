@@ -10,9 +10,14 @@ import {
 
 const now = new Date("2026-06-22T00:00:00.000Z");
 
+/**
+ * Kartu dashboard sekarang diurutkan oleh `approve:cost`, bukan nama peran.
+ * Test tetap menyebut peran supaya kasusnya tetap terbaca — Owner memutuskan
+ * persetujuan biaya, Finance Admin tidak.
+ */
 function input(role: "OWNER" | "FINANCE_ADMIN"): FinanceDashboardCoreInput {
   return {
-    role,
+    decidesCostApprovals: role === "OWNER",
     cashAvailable: 500,
     now,
     pendingApprovals: 2,

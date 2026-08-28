@@ -3,13 +3,14 @@
 import type { ProductionReadinessItem } from "@/app/actions/administration";
 import type { SettingsHubOverview } from "@/app/actions/settings/system";
 import {
-  AppIcon,
+  DuotoneIconTile,
   GroupedSurface,
   WorkspaceModuleHeader,
   WorkspaceRowChevron,
   WorkspaceStatusLabel,
 } from "@/components/ui";
 import type { SettingsTab } from "../../utils/settings-tabs-config";
+import { SettingsInverseSurface } from "../shared/settings-inverse-surface";
 
 function percent(value: number): string {
   return new Intl.NumberFormat("id-ID", { style: "percent", maximumFractionDigits: 1 }).format(
@@ -24,13 +25,12 @@ export function SettingsHub({
 }: {
   readonly data: SettingsHubOverview;
   readonly readiness?: readonly ProductionReadinessItem[];
-  readonly hideHeader?: boolean;
   readonly onSelectTab: (tab: SettingsTab) => void;
 }): React.JSX.Element {
   const modules = [
     {
-      tab: "budget",
-      title: "Alokasi Budget",
+      tab: "financial" as const,
+      title: "Alokasi Budget & Finansial",
       description: "Batas internal, margin, pembagian kategori, dan buffer.",
       metric: percent(data.budgetCapRatio),
       label: "batas budget",
@@ -38,31 +38,22 @@ export function SettingsHub({
       access: data.permissions.canManageBudgetSettings,
     },
     {
-      tab: "categories",
-      title: "Kategori Pengeluaran",
-      description: "Kelompok biaya baku untuk budget dan laporan.",
-      metric: String(data.activeCategoryCount),
-      label: "kategori aktif",
-      icon: "layers" as const,
-      access: data.permissions.canManageExpenseCategories,
-    },
-    {
-      tab: "library",
-      title: "Library Item & Harga",
-      description: "Template biaya, harga klien, paket kerja, dan RAB.",
-      metric: String(data.activeItemCount),
-      label: "template aktif",
-      icon: "inventory" as const,
-      access: data.permissions.canManageItemLibrary,
-    },
-    {
-      tab: "materials",
-      title: "Material Master",
-      description: "Identitas material serta default inventori per lokasi.",
-      metric: String(data.activeMaterialCount),
-      label: "material aktif",
+      tab: "catalog" as const,
+      title: "Material Master & Library Harga",
+      description: "Template biaya, harga klien, dan spesifikasi material master.",
+      metric: String(data.activeMaterialCount + data.activeItemCount),
+      label: "item katalog",
       icon: "inventory_2" as const,
-      access: data.permissions.canManageMaterialSettings,
+      access: data.permissions.canManageMaterialSettings || data.permissions.canManageItemLibrary,
+    },
+    {
+      tab: "organization" as const,
+      title: "Tim & Vendor",
+      description: "Manajemen hak akses anggota tim dan daftar kontak vendor.",
+      metric: "Akses",
+      label: "organisasi",
+      icon: "group" as const,
+      access: data.permissions.canManageUsers || data.permissions.canManageVendors,
     },
   ] as const;
   const allocationWidth = Math.min(100, Math.max(0, data.categoryAllocationRatio * 100));
@@ -76,14 +67,7 @@ export function SettingsHub({
         description="Formula yang dipakai saat budget dan master data baru disiapkan."
       />
 
-      <section
-        className="relative isolate overflow-hidden rounded-owner bg-surface-inverse px-5 py-5 text-on-primary shadow-inverse ring-1 ring-white/8 max-[430px]:px-4 max-[430px]:py-4"
-        aria-label="Posisi default formula budget"
-      >
-        <span
-          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/20"
-          aria-hidden="true"
-        />
+      <SettingsInverseSurface label="Posisi default formula budget">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-eyebrow font-bold tracking-[0.18em] text-white/52 uppercase">
@@ -149,7 +133,7 @@ export function SettingsHub({
         <p className="mt-3 px-1 text-[10px] leading-[1.35] text-white/48">
           Perubahan default tidak mengubah budget proyek yang sudah aktif.
         </p>
-      </section>
+      </SettingsInverseSurface>
 
       {readiness.length > 0 ? (
         <section className="space-y-2">
@@ -172,11 +156,12 @@ export function SettingsHub({
                 const iconName = item.ready ? "check_circle" : "data_alert";
                 return (
                   <div key={item.id} className="flex min-h-17 items-center gap-3 px-3.5 py-3">
-                    <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.ready ? "bg-success-container text-success" : "bg-warning-container text-warning"}`}
-                    >
-                      <AppIcon name={iconName} className="icon-sm" aria-hidden="true" />
-                    </span>
+                    <DuotoneIconTile
+                      name={iconName}
+                      tone={item.ready ? "neutral" : "attention"}
+                      className="h-9 w-9"
+                      iconClassName="icon-sm"
+                    />
                     <span className="min-w-0 flex-1">
                       <span className="block text-row font-bold text-on-surface">{item.label}</span>
                       <span className="mt-0.5 block text-[10px] leading-[1.35] text-on-surface-variant">
@@ -211,9 +196,7 @@ export function SettingsHub({
                   onClick={() => onSelectTab(module.tab)}
                   className="flex min-h-20.5 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface">
-                    <AppIcon name={module.icon} className="icon-sm" aria-hidden="true" />
-                  </span>
+                  <DuotoneIconTile name={module.icon} className="h-9 w-9" iconClassName="icon-sm" />
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-center gap-2">
                       <span className="truncate text-row font-bold text-on-surface">

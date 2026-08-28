@@ -123,10 +123,8 @@ export function MaterialFoundationPanel({
           initialCategories={settings.materialCategories}
           vendors={settings.vendors}
           locations={locations}
-          roleName={settings.roleName}
           canManage={settings.permissions.canManageMaterialSettings}
           presentation="onboarding"
-          hideHeader
           onMutationComplete={onMutationComplete}
         />
       )}

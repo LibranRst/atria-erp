@@ -14,7 +14,7 @@ export async function getActiveProjectsForExpense(): Promise<ActionResponse<Proj
     const sessionResult = await getBudgetActionSession("Sesi tidak valid. Harap login kembali.");
     if (!sessionResult.success) return sessionResult;
     const { user, roleName } = sessionResult.data;
-    const projectFilter = scopeProjectQuery(user.id, roleName);
+    const projectFilter = await scopeProjectQuery(user.id, roleName);
 
     const projectsData = await db.query.project.findMany({
       where: projectFilter

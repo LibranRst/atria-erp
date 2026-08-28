@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { getErrorMessage } from "@atria/core/utils/error-message";
@@ -41,8 +42,8 @@ export function BudgetManager({
   projectId,
   budget,
   costCategories,
-  userRole,
 }: BudgetManagerProps): React.JSX.Element {
+  const can = useCan();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -65,8 +66,14 @@ export function BudgetManager({
   const [success, setSuccess] = useState<string | null>(null);
 
   // Otorisasi sederhana
-  const canManage = userRole === "OWNER" || userRole === "PROJECT_MANAGER";
-  const canApprove = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
+  /*
+   * `update:budget` juga dipegang Finance Admin, sementara versi berbasis nama
+   * peran menyembunyikan kontrol ini darinya — padahal server
+   * (`workflow-governance.ts`) sejak dulu mengizinkannya. Yang berubah di sini
+   * adalah UI menyusul aturan servernya, bukan aturannya yang dilonggarkan.
+   */
+  const canManage = can("update:budget");
+  const canApprove = can("approve:budget");
 
   const budgetItems = budget?.items || [];
   const budgetItemForm: BudgetItemFormState = {

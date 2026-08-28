@@ -29,10 +29,8 @@ export function LibraryPanel({
           isActive: row.isActive,
         }))}
         vendors={settings.vendors}
-        roleName={settings.roleName}
         canManage={settings.permissions.canManageItemLibrary}
         presentation="onboarding"
-        hideHeader
         onMutationComplete={onMutationComplete}
       />
     </OnboardingStage>

@@ -252,6 +252,7 @@ export interface ProjectTabsProps {
   readonly project: ProjectData;
   readonly costCategories: readonly unknown[];
   readonly userRole: string;
+  readonly vendorPaymentApprovalThreshold: number;
   readonly userId: string;
   readonly bankAccounts: BankAccountItem[];
   readonly costs: ProjectTabCost[];

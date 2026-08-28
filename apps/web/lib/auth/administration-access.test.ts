@@ -1,6 +1,22 @@
 import { describe, expect, test } from "bun:test";
 
 import { getAdministrationCapabilities } from "@atria/core/auth/administration-access";
+import { ROLE_PERMISSIONS, type PermissionKey } from "@atria/core/auth/permissions";
+
+/**
+ * Kemampuan administrasi sekarang diturunkan dari izin. Test tetap menguji
+ * keempat peran bawaan lewat matriks seed-nya, supaya batas yang dijaga di sini
+ * tetap batas yang sama seperti sebelum penyatuan peran — ditambah satu kasus
+ * peran buatan, yang justru menjadi alasan perubahannya.
+ */
+function capabilitiesOf(permissions: readonly PermissionKey[]) {
+  const held = new Set<PermissionKey>(permissions);
+  return getAdministrationCapabilities((permission) => held.has(permission));
+}
+
+function capabilitiesOfSeedRole(roleName: string) {
+  return capabilitiesOf(ROLE_PERMISSIONS[roleName] ?? []);
+}
 
 const administrationStaffActionPath = new URL(
   "../../app/actions/administration-staff.ts",
@@ -13,24 +29,43 @@ const administrationVendorActionPath = new URL(
 
 describe("administration role boundary", () => {
   test("keeps user administration owner-only", () => {
-    expect(getAdministrationCapabilities("OWNER")).toMatchObject({
+    expect(capabilitiesOfSeedRole("OWNER")).toMatchObject({
       canViewUsers: true,
       canManageUsers: true,
     });
-    expect(getAdministrationCapabilities("FINANCE_ADMIN")).toMatchObject({
+    expect(capabilitiesOfSeedRole("FINANCE_ADMIN")).toMatchObject({
       canViewUsers: false,
       canManageUsers: false,
     });
   });
 
   test("allows Finance Admin to manage vendors", () => {
-    expect(getAdministrationCapabilities("FINANCE_ADMIN")).toMatchObject({
+    expect(capabilitiesOfSeedRole("FINANCE_ADMIN")).toMatchObject({
       canViewVendors: true,
       canManageVendors: true,
     });
-    expect(getAdministrationCapabilities("PURCHASING")).toMatchObject({
+    expect(capabilitiesOfSeedRole("PURCHASING")).toMatchObject({
       canViewVendors: false,
       canManageVendors: false,
+    });
+  });
+
+  test("grants a custom role exactly what its permissions say", () => {
+    expect(capabilitiesOf(["manage:users"])).toMatchObject({
+      canViewUsers: true,
+      canManageUsers: true,
+      canViewVendors: false,
+      canManageVendors: false,
+      canManageRoles: false,
+    });
+    expect(capabilitiesOf(["manage:roles"])).toMatchObject({
+      canManageRoles: true,
+      canManageUsers: false,
+    });
+    expect(capabilitiesOf([])).toMatchObject({
+      canViewUsers: false,
+      canViewVendors: false,
+      canManageRoles: false,
     });
   });
 

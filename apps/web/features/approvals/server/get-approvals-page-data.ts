@@ -1,3 +1,4 @@
+import { getFieldCostApprovalThresholdRupiah } from "@/lib/finance/approval-thresholds";
 import "server-only";
 
 import { desc, eq } from "drizzle-orm";
@@ -6,6 +7,7 @@ import { db } from "@/db";
 import { bankAccount, projectCost } from "@/db/schema";
 import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import { getPendingApprovalDetails, rankPendingApprovals } from "@/lib/finance/approval-details";
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import type { Actor } from "@/server/actor";
 
 export type ApprovalsPageData =
@@ -35,7 +37,7 @@ export type ApprovalsPageData =
 
 export async function getApprovalsPageData(actor: Actor): Promise<ApprovalsPageData> {
   const roleName = actor.roleName;
-  if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN") {
+  if (!actorHasPermission(roleName, "view:approval_queue")) {
     return { status: "restricted" };
   }
 
@@ -52,15 +54,25 @@ export async function getApprovalsPageData(actor: Actor): Promise<ApprovalsPageD
       orderBy: [desc(projectCost.updatedAt)],
     }),
   ]);
-  const approvals = rankPendingApprovals(pendingDetails, referenceDate);
+  const approvals = rankPendingApprovals(
+    pendingDetails,
+    referenceDate,
+    await getFieldCostApprovalThresholdRupiah(),
+  );
 
   return {
     status: "ready",
-    approvals:
-      roleName === "FINANCE_ADMIN"
-        ? approvals.filter((item) => item.type === "inventory_opening")
-        : approvals,
-    canEmergencyOverride: roleName === "OWNER",
+    /*
+     * Pemutus penuh melihat seluruh antrean; peran lain hanya melihat jenis
+     * yang memang menjadi tanggung jawabnya. Hari ini penyempitan itu berhenti
+     * di opening inventory — perilaku yang dipertahankan apa adanya dari versi
+     * berbasis nama peran, dan yang layak ditinjau ulang saat peran menjadi
+     * dinamis.
+     */
+    approvals: actorHasPermission(roleName, "decide:all_approvals")
+      ? approvals
+      : approvals.filter((item) => item.type === "inventory_opening"),
+    canEmergencyOverride: actorHasPermission(roleName, "override:self_approval"),
     referenceDateIso: referenceDate.toISOString(),
     bankAccounts: accounts.map((account) => ({
       id: account.id,

@@ -3,12 +3,12 @@
 import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { account, auditLog, session, user } from "@/db/schema";
+import { account, auditLog, role, session, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { resolveActor } from "@/server/actor";
 import { changeTemporaryPasswordUseCase } from "@/server/usecases/administration/change-temporary-password";
-import { OWNER_ROLE_ID, STAFF_ROLE_IDS } from "@atria/core/auth/role-constants";
+import { OWNER_ROLE_ID } from "@atria/core/auth/role-constants";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createStaffUserSchema,
@@ -34,10 +34,16 @@ export async function createStaffUser(
   if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   await assertPermission(actor, "manage:users");
-  if (!STAFF_ROLE_IDS.has(validation.data.roleId))
+  // Peran yang sah adalah peran yang ada di database, bukan empat UUID bawaan:
+  // peran buatan Owner harus bisa ditugaskan, peran yang sudah dihapus tidak.
+  const assignedRole = await db.query.role.findFirst({
+    where: eq(role.id, validation.data.roleId),
+    columns: { id: true },
+  });
+  if (!assignedRole)
     return {
       success: false,
-      error: { code: "VALIDATION_ERROR", message: "Role tidak diizinkan." },
+      error: { code: "VALIDATION_ERROR", message: "Role tidak ditemukan." },
     };
   try {
     const passwordHash = await auth.$context.then((context) =>
@@ -112,10 +118,11 @@ export async function updateStaffUser(
         where: eq(user.id, validation.data.userId),
       });
       if (!existing) throw new Error("USER_NOT_FOUND");
-      const keepsExistingOwnerRole =
-        existing.roleId === OWNER_ROLE_ID && validation.data.roleId === OWNER_ROLE_ID;
-      if (!STAFF_ROLE_IDS.has(validation.data.roleId) && !keepsExistingOwnerRole)
-        throw new Error("ROLE_NOT_ALLOWED");
+      const assignedRole = await tx.query.role.findFirst({
+        where: eq(role.id, validation.data.roleId),
+        columns: { id: true },
+      });
+      if (!assignedRole) throw new Error("ROLE_NOT_ALLOWED");
       if (
         existing.roleId === OWNER_ROLE_ID &&
         (validation.data.roleId !== OWNER_ROLE_ID || !validation.data.isActive)
@@ -164,7 +171,7 @@ export async function updateStaffUser(
     if (message === "ROLE_NOT_ALLOWED")
       return {
         success: false,
-        error: { code: "VALIDATION_ERROR", message: "Role tidak diizinkan." },
+        error: { code: "VALIDATION_ERROR", message: "Role tidak ditemukan." },
       };
     if (message === "USER_NOT_FOUND")
       return { success: false, error: { code: "NOT_FOUND", message: "User tidak ditemukan." } };

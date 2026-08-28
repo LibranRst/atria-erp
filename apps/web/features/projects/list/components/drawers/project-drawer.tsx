@@ -3,7 +3,7 @@
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createProjectAction, updateProjectAction } from "@/app/actions/project/crud";
-import { signImagekit } from "@/app/actions/media/sign-imagekit";
+import { uploadToImageKit } from "@/lib/media/upload-to-imagekit";
 import { getErrorMessage } from "@atria/core/utils/error-message";
 import { AppIcon, OperationalFormSheet, SuccessDialog } from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
@@ -22,10 +22,6 @@ import {
   projectFormDraftSchema,
   type ProjectFormDraft,
 } from "../../utils/project-form-draft";
-
-interface ImageKitUploadResponse {
-  readonly url: string;
-}
 
 export function ProjectDrawer({
   isOpen,
@@ -157,39 +153,14 @@ export function ProjectDrawer({
     setIsUploadingCover(true);
 
     try {
-      const signRes = await signImagekit();
-      if (!signRes.success) {
-        throw new Error(signRes.error.message || "Gagal melakukan otentikasi unggah cover.");
-      }
-
-      const { token, expire, signature } = signRes.data;
-      const safeFileName = `project-cover-${Date.now()}-${file.name.replaceAll(" ", "_")}`;
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("fileName", safeFileName);
-      formData.append(
-        "publicKey",
-        process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "public_PRvr9hXwFetaQx4ZejdGwJ1Ue8=",
-      );
-      formData.append("signature", signature);
-      formData.append("token", token);
-      formData.append("expire", expire.toString());
-      formData.append("folder", "/project-covers");
-
-      const uploadRes = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
-        method: "POST",
-        body: formData,
+      const uploaded = await uploadToImageKit({
+        file,
+        folder: "/project-covers",
+        fileNamePrefix: "project-cover",
+        subject: "cover proyek",
       });
 
-      if (!uploadRes.ok) {
-        const errorData = (await uploadRes.json()) as {
-          readonly message?: string;
-        };
-        throw new Error(errorData.message || "Gagal mengunggah cover proyek.");
-      }
-
-      const uploadData = (await uploadRes.json()) as ImageKitUploadResponse;
-      patch({ coverImageUrl: uploadData.url });
+      patch({ coverImageUrl: uploaded.url });
       toast.success("Cover proyek berhasil diunggah.");
     } catch (err: unknown) {
       const errMsg = getErrorMessage(err, "Terjadi kesalahan saat mengunggah cover proyek.");

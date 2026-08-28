@@ -7,6 +7,7 @@ import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon } from "../icon/app-icon";
 import { Tooltip } from "../overlay/anchored-surfaces";
+import { cn } from "@/lib/utils/cn";
 
 export type ButtonVariant = "primary" | "secondary" | "tertiary" | "criticalQuiet" | "critical";
 export type ButtonSize = "default" | "compact";
@@ -145,7 +146,10 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
       aria-label={label}
       whileTap={{ scale: reduceMotion ? 1 : 0.97 }}
       transition={transitionSpringSnappy}
-      className={`inline-flex shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 ${iconSizeClass[size]} ${variantClass[variant]} ${className}`}
+      className={cn(
+        `inline-flex shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 ${iconSizeClass[size]} ${variantClass[variant]}`,
+        className,
+      )}
     >
       <span aria-hidden="true">{icon}</span>
     </motion.button>

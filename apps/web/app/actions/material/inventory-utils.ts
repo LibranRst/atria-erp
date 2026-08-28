@@ -1,3 +1,4 @@
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import { db } from "@/db";
 import {
   auditLog,
@@ -85,7 +86,12 @@ export async function assertProjectScopeForMaterialAction(
   roleName: string,
 ): Promise<void> {
   if (!projectId) return;
-  if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN" && roleName !== "PURCHASING") {
+  /*
+   * Peran yang memindahkan stok bekerja lintas proyek — gudang bukan milik satu
+   * proyek — sehingga pemeriksaan akses proyek memang dilewati untuk mereka.
+   * Itu properti pekerjaannya, dinyatakan sebagai izin, bukan daftar nama peran.
+   */
+  if (!actorHasPermission(roleName, "create:stock_movement")) {
     await assertProjectAccess(projectId, userId, roleName);
   }
   await assertProjectIsOperational(projectId);

@@ -1,5 +1,6 @@
 "use client";
 
+import { OWNER_ROLE_ID } from "@atria/core/auth/role-constants";
 import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
 import {
@@ -59,7 +60,7 @@ export function AdministrationUserEditorSheet({
       footer={
         <SheetFooterActions
           secondary={
-            editorMode === "EDIT_USER" && selectedUser && selectedUser.roleName !== "OWNER"
+            editorMode === "EDIT_USER" && selectedUser && selectedUser.roleId !== OWNER_ROLE_ID
               ? {
                   label: selectedUser.isActive ? "Nonaktifkan" : "Aktifkan",
                   disabled: pending,
@@ -114,7 +115,7 @@ export function AdministrationUserEditorSheet({
               />
             </FormField>
           )}
-          {selectedUser?.roleName === "OWNER" ? (
+          {selectedUser?.roleId === OWNER_ROLE_ID ? (
             <FormField
               label="Role"
               htmlFor="administration-user-role-fixed"

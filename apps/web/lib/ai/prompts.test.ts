@@ -1,13 +1,10 @@
 import { buildPreferencePrompt, buildSystemPrompt } from "@/lib/ai/prompts";
-import type { AiToolContext } from "@/lib/ai/tools/context";
+import { aiToolContextForRole } from "@/lib/testing/ai-tool-context";
 import { describe, expect, it } from "bun:test";
 
 describe("buildSystemPrompt", () => {
   it("menyertakan daftar topik tidak tersedia untuk peran berlingkup proyek", () => {
-    const context: AiToolContext = {
-      userId: "00000000-0000-0000-0000-000000000001",
-      roleName: "PROJECT_MANAGER",
-    };
+    const context = aiToolContextForRole("PROJECT_MANAGER", { userId: "00000000-0000-0000-0000-000000000001" });
     const prompt = buildSystemPrompt("DEEPSEEK", "Siti Aminah", context);
 
     expect(prompt).toContain("Tool untuk topik berikut akan menolak peran ini");
@@ -16,23 +13,17 @@ describe("buildSystemPrompt", () => {
   });
 
   it("tidak menyertakan pembatasan apa pun untuk peran berlingkup global", () => {
-    const context: AiToolContext = {
-      userId: "00000000-0000-0000-0000-000000000002",
-      roleName: "OWNER",
-    };
+    const context = aiToolContextForRole("OWNER", { userId: "00000000-0000-0000-0000-000000000002" });
     const prompt = buildSystemPrompt("DEEPSEEK", "Ronald", context);
 
     expect(prompt).not.toContain("Tool untuk topik berikut akan menolak peran ini");
     expect(prompt).toContain("akses finansial global");
   });
 
-  it.each(["DEEPSEEK", "GEMINI"] as const)(
+  it.each(["OPENROUTER", "DEEPSEEK", "GEMINI"] as const)(
     "memberi %s kontrak jawaban ringkas yang sama",
     (provider) => {
-      const context: AiToolContext = {
-        userId: "00000000-0000-0000-0000-000000000003",
-        roleName: "OWNER",
-      };
+      const context = aiToolContextForRole("OWNER", { userId: "00000000-0000-0000-0000-000000000003" });
       const prompt = buildSystemPrompt(provider, "Ronald", context);
 
       expect(prompt).toContain("Mulai dengan kesimpulan atau jawaban paling penting");
@@ -53,10 +44,7 @@ describe("buildSystemPrompt", () => {
   );
 
   it("mengarahkan follow-up ke pertanyaan kontekstual tanpa memaksakan filler", () => {
-    const context: AiToolContext = {
-      userId: "00000000-0000-0000-0000-000000000004",
-      roleName: "PROJECT_MANAGER",
-    };
+    const context = aiToolContextForRole("PROJECT_MANAGER", { userId: "00000000-0000-0000-0000-000000000004" });
     const prompt = buildSystemPrompt("DEEPSEEK", "Siti", context);
 
     expect(prompt).toContain("Targetkan 2 pertanyaan");

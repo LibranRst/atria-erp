@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
+import { transitionSpringSmooth } from "@/lib/utils/motion";
 import { AppIcon } from "../icon/app-icon";
 import type { SelectOption } from "./form-control-types";
 import { cx } from "./form-control-utils";
@@ -17,10 +19,11 @@ export const DialogOptionList = React.forwardRef<
     readonly value: string;
     readonly options: readonly SelectOption[];
     readonly emptyText: string;
+    readonly animateHeight?: boolean;
     readonly onSelect: (option: SelectOption) => void;
   }
 >(function DialogOptionList(
-  { label, value, options, emptyText, onSelect },
+  { label, value, options, emptyText, animateHeight = false, onSelect },
   forwardedRef,
 ): React.JSX.Element {
   const listId = React.useId();
@@ -32,6 +35,37 @@ export const DialogOptionList = React.forwardRef<
   const optionRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
   const typeahead = React.useRef("");
   const typeaheadTimer = React.useRef<number | null>(null);
+  const contentRef = React.useRef<HTMLDivElement | null>(null);
+  const [measuredHeight, setMeasuredHeight] = React.useState<number | null>(null);
+  const reduceMotion = useReducedMotion();
+
+  React.useEffect(() => {
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex);
+  }, [firstEnabledIndex, selectedIndex]);
+
+  React.useLayoutEffect(() => {
+    if (!animateHeight) return undefined;
+    const content = contentRef.current;
+    if (!content) return undefined;
+
+    function measure(): void {
+      const nextHeight = contentRef.current?.getBoundingClientRect().height;
+      if (nextHeight === undefined) return;
+      setMeasuredHeight((current) =>
+        current !== null && Math.abs(current - nextHeight) < 0.25 ? current : nextHeight,
+      );
+    }
+
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [animateHeight]);
 
   const focusIndex = React.useCallback(
     (candidate: number, direction: 1 | -1 = 1): void => {
@@ -98,82 +132,88 @@ export const DialogOptionList = React.forwardRef<
     if (match >= 0) focusIndex(match);
   }
 
-  if (options.length === 0) {
-    if (!emptyText) return <></>;
-    return (
-      <p className="rounded-inset bg-white p-4 text-center text-support text-on-surface-variant">
-        {emptyText}
-      </p>
-    );
-  }
-
   const groups = Array.from(new Set(options.map((option) => option.group ?? "")));
   return (
-    <div role="listbox" aria-label={label} onKeyDown={onKeyDown} className="space-y-3">
-      {groups.map((group) => (
-        <div key={group || "ungrouped"} className="space-y-2">
-          {group ? (
-            <p className="px-1 text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
-              {group}
-            </p>
-          ) : null}
-          <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-inset bg-white ring-1 ring-ring-subtle">
-            {options.map((option, index) => {
-              if ((option.group ?? "") !== group) return null;
-              const selected = option.value === value;
-              const reasonId = option.disabledReason
-                ? `${listId}-option-${index}-disabled-reason`
-                : undefined;
-              return (
-                <button
-                  key={option.value}
-                  ref={(node) => {
-                    optionRefs.current[index] = node;
-                  }}
-                  type="button"
-                  role="option"
-                  aria-selected={selected}
-                  aria-disabled={option.disabled ? "true" : undefined}
-                  aria-describedby={reasonId}
-                  tabIndex={activeIndex === index ? 0 : -1}
-                  onClick={() => {
-                    if (!option.disabled) onSelect(option);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key !== "Enter" && event.key !== " ") return;
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (!option.disabled) onSelect(option);
-                  }}
-                  className={cx(
-                    "flex min-h-12 w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset",
-                    selected ? "bg-primary text-on-primary" : "text-on-surface",
-                    option.disabled && "cursor-not-allowed opacity-55",
-                  )}
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-row font-bold">{option.label}</span>
-                    {option.description || option.meta || option.disabledReason ? (
-                      <span
-                        id={reasonId}
-                        className={cx(
-                          "mt-0.5 block text-meta",
-                          selected ? "text-on-primary/75" : "text-on-surface-variant",
-                        )}
-                      >
-                        {option.disabledReason ?? option.description ?? option.meta}
+    <motion.div
+      role="listbox"
+      aria-label={label}
+      onKeyDown={onKeyDown}
+      initial={false}
+      animate={animateHeight && measuredHeight !== null ? { height: measuredHeight } : undefined}
+      transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
+      className="overflow-hidden rounded-3xl bg-white"
+    >
+      <div ref={contentRef} className="flow-root">
+        {options.length === 0 && emptyText ? (
+          <p className="px-5 py-8 text-center text-support text-on-surface-variant">{emptyText}</p>
+        ) : null}
+        {groups.map((group) => (
+          <div key={group || "ungrouped"}>
+            {group ? (
+              <p className="bg-surface-container-low px-5 py-2.5 text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+                {group}
+              </p>
+            ) : null}
+            <div className="divide-y divide-outline-variant/20">
+              {options.map((option, index) => {
+                if ((option.group ?? "") !== group) return null;
+                const selected = option.value === value;
+                const reasonId = option.disabledReason
+                  ? `${listId}-option-${index}-disabled-reason`
+                  : undefined;
+                return (
+                  <button
+                    key={option.value}
+                    ref={(node) => {
+                      optionRefs.current[index] = node;
+                    }}
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    aria-disabled={option.disabled ? "true" : undefined}
+                    aria-describedby={reasonId}
+                    tabIndex={activeIndex === index ? 0 : -1}
+                    onClick={() => {
+                      if (!option.disabled) onSelect(option);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter" && event.key !== " ") return;
+                      event.preventDefault();
+                      event.stopPropagation();
+                      if (!option.disabled) onSelect(option);
+                    }}
+                    className={cx(
+                      "flex min-h-12 w-full min-w-0 items-center gap-3 bg-white px-5 py-3 text-left text-on-surface transition-colors outline-none hover:bg-surface-container-low/70 focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container",
+                      option.disabled && "cursor-not-allowed opacity-55",
+                    )}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className={cx("block text-row font-bold", selected && "text-accent")}>
+                        {option.label}
                       </span>
+                      {option.description || option.meta || option.disabledReason ? (
+                        <span
+                          id={reasonId}
+                          className={cx("mt-0.5 block text-meta", "text-on-surface-variant")}
+                        >
+                          {option.disabledReason ?? option.description ?? option.meta}
+                        </span>
+                      ) : null}
+                    </span>
+                    {selected ? (
+                      <AppIcon
+                        name="check"
+                        className="icon-sm shrink-0 text-accent"
+                        aria-hidden="true"
+                      />
                     ) : null}
-                  </span>
-                  {selected ? (
-                    <AppIcon name="check" className="icon-sm shrink-0" aria-hidden="true" />
-                  ) : null}
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </motion.div>
   );
 });

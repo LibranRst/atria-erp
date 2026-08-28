@@ -10,7 +10,14 @@ import {
   type EffectiveProjectHealthReason,
 } from "../project/effective-health";
 
-export type DashboardRole = "OWNER" | "FINANCE_ADMIN";
+/**
+ * Nama peran pemanggil, bukan daftar tertutup.
+ *
+ * Dulu union dua nama peran, yang berarti setiap peran baru harus mengubah tipe
+ * ini sebelum dashboard bisa merendernya sama sekali. Siapa yang boleh membuka
+ * dashboard ditentukan `view:ledger` di use-case-nya, bukan oleh bentuk tipe.
+ */
+export type DashboardRole = string;
 export type DashboardSeverity = "CRITICAL" | "WARNING" | "INFO";
 export type DashboardPageTab =
   "overview" | "approvals" | "budget" | "cash" | "accounts" | "materials";
@@ -112,7 +119,15 @@ export type FinanceDashboardOverviewCore = {
 };
 
 export type FinanceDashboardCoreInput = {
-  readonly role: DashboardRole;
+  /**
+   * Apakah pembacanya yang memutuskan persetujuan biaya lapangan.
+   *
+   * Dulu ini `role === "OWNER"`. Yang sebenarnya dimaksud bukan nama perannya
+   * melainkan `approve:cost`: kartu persetujuan naik ke atas untuk orang yang
+   * benar-benar bisa menekan tombolnya, dan hitungan tertunda hanya berarti
+   * bagi orang itu.
+   */
+  readonly decidesCostApprovals: boolean;
   readonly cashAvailable: number;
   readonly receivables: readonly DashboardOpenDocument[];
   readonly payables: readonly DashboardOpenDocument[];
@@ -308,7 +323,10 @@ export function buildFinanceDashboardCore(
     ownerPriority: number,
     financePriority: number,
   ): void => {
-    actions.push({ ...action, priority: input.role === "OWNER" ? ownerPriority : financePriority });
+    actions.push({
+      ...action,
+      priority: input.decidesCostApprovals ? ownerPriority : financePriority,
+    });
   };
   if (input.pendingApprovals > 0) {
     addAction(
@@ -385,7 +403,7 @@ export function buildFinanceDashboardCore(
     );
   }
   const priorityCounts = {
-    approvals: input.role === "OWNER" ? input.pendingApprovals : 0,
+    approvals: input.decidesCostApprovals ? input.pendingApprovals : 0,
     budget: allRiskyProjects.length,
     cash:
       input.payables.filter(

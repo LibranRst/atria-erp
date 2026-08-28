@@ -14,7 +14,7 @@ export type NewExpensePageData = {
 };
 
 export async function getNewExpensePageData(actor: Actor): Promise<NewExpensePageData> {
-  const projectFilter = scopeProjectQuery(actor.userId, actor.roleName);
+  const projectFilter = await scopeProjectQuery(actor.userId, actor.roleName);
 
   const [projects, materials, locations] = await Promise.all([
     db.query.project.findMany({

@@ -1,5 +1,7 @@
 "use client";
 
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import { useCan } from "@/components/auth/permissions-provider";
 import React from "react";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
@@ -27,11 +29,8 @@ import { CashDueTab } from "../tabs/tab-cash-due";
 import { DashboardOverviewTab } from "../tabs/tab-overview";
 import { MaterialsTab } from "../tabs/tab-materials";
 
-function parseDashboardTab(
-  value: string | null,
-  role: FinanceDashboardOverview["role"],
-): DashboardPageTab {
-  if (value === "approvals" && (role === "OWNER" || role === "FINANCE_ADMIN")) return "approvals";
+function parseDashboardTab(value: string | null, canSeeApprovalQueue: boolean): DashboardPageTab {
+  if (value === "approvals" && canSeeApprovalQueue) return "approvals";
   if (value === "budget" || value === "cash" || value === "accounts" || value === "materials")
     return value;
   return "overview";
@@ -48,6 +47,7 @@ function DashboardTabsNav({
   readonly data: FinanceDashboardOverview;
   readonly onChange: (value: DashboardPageTab) => void;
 }): React.JSX.Element {
+  const can = useCan();
   const options: Array<{
     readonly value: DashboardPageTab;
     readonly label: string;
@@ -60,7 +60,7 @@ function DashboardTabsNav({
       icon: <AppIcon name="space_dashboard" className="text-[15px]" />,
     },
   ];
-  if (data.role === "OWNER" || data.role === "FINANCE_ADMIN") {
+  if (can("view:approval_queue")) {
     options.push({
       value: "approvals",
       label: "Persetujuan",
@@ -272,6 +272,7 @@ export function FinanceDashboard({
   readonly userName: string;
   readonly onboarding: OwnerOnboardingOverview | null;
 }): React.JSX.Element {
+  const can = useCan();
   const tabParam = useUrlSearchParam("tab");
   const { online, refreshFailed, refreshing, refresh } = useDashboardRefresh(data.generatedAt);
   const [referenceDate] = React.useState(() => new Date());
@@ -281,7 +282,7 @@ export function FinanceDashboard({
   const [approvalSummary, setApprovalSummary] = React.useState(
     data.dashboardDetails.approvalSummary,
   );
-  const activeTab = parseDashboardTab(tabParam, data.role);
+  const activeTab = parseDashboardTab(tabParam, can("view:approval_queue"));
   const today = referenceDate.toLocaleDateString("id-ID", {
     weekday: "long",
     day: "numeric",
@@ -301,13 +302,13 @@ export function FinanceDashboard({
         financialPosition={<FinancialPosition summary={data.summary} />}
         onboarding={onboarding}
       />
-    ) : activeTab === "approvals" && (data.role === "OWNER" || data.role === "FINANCE_ADMIN") ? (
+    ) : activeTab === "approvals" && can("view:approval_queue") ? (
       <ApprovalsTab
         approvals={approvals}
         approvalSummary={approvalSummary}
         setApprovals={setApprovals}
         setApprovalSummary={setApprovalSummary}
-        canEmergencyOverride={data.role === "OWNER"}
+        canEmergencyOverride={can("override:self_approval")}
       />
     ) : activeTab === "budget" ? (
       <BudgetRiskTab data={data} />
@@ -324,7 +325,7 @@ export function FinanceDashboard({
       <PageHeader
         title={`Halo, ${userName.split(" ")[0]}`}
         subtitle={today}
-        action={<Badge status="PRIMARY">{data.role === "OWNER" ? "OWNER" : "FINANCE"}</Badge>}
+        action={<Badge status="PRIMARY">{formatBusinessLabel(data.role)}</Badge>}
       />
       <DashboardTabsNav
         activeTab={activeTab}

@@ -9,13 +9,41 @@ import {
   selectDialogNeedsSearch,
   type SelectPresentation,
 } from "../overlay/interaction-surface-policy";
-import { Button } from "../button/button";
 import { FormField } from "./basic-form-controls";
 import type { SelectOption } from "./form-control-types";
 import { cx, selectedOptionLabel } from "./form-control-utils";
 import { useFormPresentation } from "./form-presentation-context";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import { DialogOptionList, type DialogOptionListHandle } from "./dialog-option-list";
+
+function DialogCreateActionRow({
+  label,
+  description,
+  onClick,
+}: {
+  readonly label: string;
+  readonly description?: string;
+  readonly onClick: () => void;
+}): React.JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-12 w-full min-w-0 items-center gap-3 border-t border-outline-variant/20 bg-white px-5 py-3 text-left text-accent outline-none hover:bg-surface-container-low/70 focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container"
+    >
+      <AppIcon name="add" className="icon-sm shrink-0" aria-hidden="true" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-row font-bold">{label}</span>
+        {description ? (
+          <span className="mt-0.5 block truncate text-meta font-normal text-on-surface-variant">
+            {description}
+          </span>
+        ) : null}
+      </span>
+      <AppIcon name="chevron_right" className="icon-md shrink-0" aria-hidden="true" />
+    </button>
+  );
+}
 
 export function AdaptiveSelect({
   id,
@@ -88,41 +116,26 @@ export function AdaptiveSelect({
   }
 
   const dialogContent = (
-    <div className="space-y-3">
+    <div>
       <DialogOptionList
-        key={searchable ? query : "selection"}
         ref={optionListRef}
         label={title ?? label}
         value={value}
         options={filtered}
         emptyText={emptyText}
+        animateHeight={searchable}
         onSelect={selectOption}
       />
       {createActionLabel && onCreateAction ? (
-        <Button
-          type="button"
-          variant="secondary"
-          fullWidth
-          leadingIcon={<AppIcon name="add" className="icon-sm" />}
-          trailingIcon={<AppIcon name="chevron_right" className="icon-md shrink-0" />}
+        <DialogCreateActionRow
+          label={createActionLabel}
+          description={createActionDescription}
           onClick={() => {
             setOpen(false);
             setQuery("");
             onCreateAction();
           }}
-          className="justify-between text-accent"
-        >
-          {createActionDescription ? (
-            <span className="min-w-0 text-left">
-              <span className="block truncate">{createActionLabel}</span>
-              <span className="block truncate text-meta font-normal text-on-surface-variant">
-                {createActionDescription}
-              </span>
-            </span>
-          ) : (
-            createActionLabel
-          )}
-        </Button>
+        />
       ) : null}
     </div>
   );
@@ -188,6 +201,7 @@ export function AdaptiveSelect({
             value={value}
             options={options}
             onChange={onChange}
+            emptyText={emptyText}
           />
         ) : (
           trigger
@@ -316,14 +330,14 @@ export function ComboboxField({
           setQuery("");
         }}
       >
-        <div className="space-y-3">
+        <div>
           <DialogOptionList
-            key={query}
             ref={optionListRef}
             label={label}
             value={value}
             options={dialogOptions}
             emptyText={canUseCustomValue ? "" : "Belum ada pilihan."}
+            animateHeight
             onSelect={(option) => {
               setOpen(false);
               setQuery("");
@@ -331,19 +345,14 @@ export function ComboboxField({
             }}
           />
           {canUseCustomValue ? (
-            <Button
-              type="button"
-              variant="secondary"
-              fullWidth
-              leadingIcon={<AppIcon name="add" className="icon-sm" />}
+            <DialogCreateActionRow
+              label={`Gunakan "${customValue}"`}
               onClick={() => {
                 setOpen(false);
                 setQuery("");
                 onChange(customValue);
               }}
-            >
-              Gunakan &quot;{customValue}&quot;
-            </Button>
+            />
           ) : null}
         </div>
       </SearchDialog>
@@ -388,7 +397,7 @@ export function SearchInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel ?? placeholder}
-        className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-on-surface-variant/55"
+        className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-on-surface-variant/55 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
       />
       {showClear && value ? (
         <button

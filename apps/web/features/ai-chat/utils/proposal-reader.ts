@@ -5,6 +5,8 @@ import type { ClientPaymentProposalData } from "../components/proposal-cards/cli
 import type { GoodsReceiptProposalData } from "../components/proposal-cards/goods-receipt-proposal-card";
 import type { ExpenseReviewProposalData } from "../components/proposal-cards/expense-review-proposal-card";
 import type { DisburseExpenseProposalData } from "../components/proposal-cards/disburse-expense-proposal-card";
+import type { RoleChangeProposalData } from "../components/proposal-cards/role-change-proposal-card";
+import type { CreateRoleProposalData } from "../components/proposal-cards/role-create-proposal-card";
 import type { ExpenseProposal } from "./expense-proposal";
 
 export type AnyAiProposal =
@@ -15,7 +17,9 @@ export type AnyAiProposal =
   | ClientPaymentProposalData
   | GoodsReceiptProposalData
   | ExpenseReviewProposalData
-  | DisburseExpenseProposalData;
+  | DisburseExpenseProposalData
+  | RoleChangeProposalData
+  | CreateRoleProposalData;
 
 export function readAnyProposal(output: unknown): AnyAiProposal | null {
   if (typeof output !== "object" || output === null) return null;
@@ -24,6 +28,26 @@ export function readAnyProposal(output: unknown): AnyAiProposal | null {
 
   const candidate = proposal as Record<string, unknown>;
   const kind = candidate.kind as string | undefined;
+
+  if (kind === "CREATE_ROLE") {
+    if (
+      typeof candidate.displayName === "string" &&
+      typeof candidate.dataScope === "string" &&
+      Array.isArray(candidate.permissions)
+    ) {
+      return candidate as unknown as CreateRoleProposalData;
+    }
+  }
+
+  if (kind === "ROLE_PERMISSION_CHANGE") {
+    if (
+      typeof candidate.roleId === "string" &&
+      Array.isArray(candidate.grant) &&
+      Array.isArray(candidate.revoke)
+    ) {
+      return candidate as unknown as RoleChangeProposalData;
+    }
+  }
 
   if (kind === "CREATE_PROJECT") {
     if (typeof candidate.name === "string" && typeof candidate.totalContractValue === "object") {

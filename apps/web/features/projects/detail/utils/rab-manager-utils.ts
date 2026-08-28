@@ -1,3 +1,4 @@
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import { calculateQuotationTotal } from "@atria/core/project/quotation-total";
 import type {
   ManualQuotationLine,
@@ -73,7 +74,7 @@ export function getRabManagerDerivedValues({
   readonly selectedCategoryQuotationIds: readonly string[];
   readonly manualQuotationLine: ManualQuotationLine;
 }): RabManagerDerivedValues {
-  const canApproveRab = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
+  const canApproveRab = actorHasPermission(userRole, "approve:rab");
   const visibleRabValue = rabEstimate
     ? calculateQuotationTotal(rabEstimate.items, rabEstimate.bundles)
     : 0;

@@ -1,3 +1,4 @@
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import "server-only";
 
 import { getBudgetAllocationDefault } from "@/app/actions/project/excel-budget-utils";
@@ -28,7 +29,7 @@ export async function createProjectUseCase(
     };
   }
 
-  if (actor.roleName !== "OWNER" && actor.roleName !== "FINANCE_ADMIN") {
+  if (!actorHasPermission(actor.roleName, "create:project")) {
     return {
       success: false,
       error: {

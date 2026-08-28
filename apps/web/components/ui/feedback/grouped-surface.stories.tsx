@@ -17,9 +17,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const WithRows: StoryObj = {
-  render: () => (
-    <GroupedSurface>
+export const WithRows: Story = {
+  args: {
+    children: (
       <RowGroup>
         <InlineStateRow
           icon="receipt_long"
@@ -33,6 +33,6 @@ export const WithRows: StoryObj = {
           tone="positive"
         />
       </RowGroup>
-    </GroupedSurface>
-  ),
+    ),
+  },
 };

@@ -1,3 +1,4 @@
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -19,7 +20,7 @@ export async function getOnboardingActor(): Promise<OnboardingActor> {
 
 export async function requireOnboardingOwner(): Promise<OnboardingActor> {
   const current = await getOnboardingActor();
-  if ((await resolveRoleName(current.roleId)) !== "OWNER") {
+  if (!actorHasPermission(await resolveRoleName(current.roleId), "manage:onboarding")) {
     throw new Error("FORBIDDEN");
   }
   return current;

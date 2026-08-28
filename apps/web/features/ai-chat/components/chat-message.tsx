@@ -18,6 +18,8 @@ import { ChatBubble } from "./chat-bubble";
 import { ChatMarkdown } from "./chat-markdown";
 import { ExpenseProposalCard } from "./expense-proposal-card";
 import { CreateProjectProposalCard } from "./proposal-cards/create-project-proposal-card";
+import { RoleChangeProposalCard } from "./proposal-cards/role-change-proposal-card";
+import { RoleCreateProposalCard } from "./proposal-cards/role-create-proposal-card";
 import { SetupBudgetProposalCard } from "./proposal-cards/setup-budget-proposal-card";
 import { VendorPaymentProposalCard } from "./proposal-cards/vendor-payment-proposal-card";
 import { ClientPaymentProposalCard } from "./proposal-cards/client-payment-proposal-card";
@@ -146,6 +148,40 @@ export function ChatMessage({
 
       if (proposal && toolCallId) {
         const isConfirmed = toolCallId in confirmedProposals;
+
+        if (proposal.kind === "CREATE_ROLE") {
+          cards.push({
+            toolName,
+            node: (
+              <RoleCreateProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
+
+        if (proposal.kind === "ROLE_PERMISSION_CHANGE") {
+          cards.push({
+            toolName,
+            node: (
+              <RoleChangeProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
 
         if (proposal.kind === "CREATE_PROJECT") {
           cards.push({

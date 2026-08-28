@@ -96,10 +96,8 @@ export function FinancialDefaultsPanel({
       ) : (
         <CategorySettingsManager
           initialCategories={settings.expenseCategories}
-          roleName={settings.roleName}
           canManage={settings.permissions.canManageExpenseCategories}
           presentation="onboarding"
-          hideHeader
           onMutationComplete={onMutationComplete}
         />
       )}
@@ -113,10 +111,8 @@ export function FinancialDefaultsPanel({
         >
           <BudgetSettingsManager
             initialSetting={budget}
-            roleName={settings.roleName}
             canManage={settings.permissions.canManageBudgetSettings}
             presentation="onboarding"
-            hideHeader
             onMutationComplete={() => {
               setBudgetDirty(false);
               setEditingBudget(false);

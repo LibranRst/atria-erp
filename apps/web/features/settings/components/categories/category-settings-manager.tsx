@@ -1,17 +1,16 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   updateExpenseCategoryDetails,
   type ExpenseCategorySettingRow,
 } from "@/app/actions/settings/system";
-import { SettingsHeader } from "../shared/settings-ui";
 import {
-  AppIcon,
   ConfirmationDialog,
+  DuotoneIconTile,
   FormField,
+  FormRiskNotice,
   FormSection,
   GroupedSurface,
   MetadataChip,
@@ -22,22 +21,17 @@ import {
   WorkspaceRowChevron,
   WorkspaceStatusLabel,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 type CategorySettingsManagerProps = {
   readonly initialCategories: readonly ExpenseCategorySettingRow[];
-  readonly roleName: string;
   readonly canManage: boolean;
-  readonly hideHeader?: boolean;
   readonly presentation?: "settings" | "onboarding";
   readonly onMutationComplete?: () => void;
 };
 
 export function CategorySettingsManager({
   initialCategories,
-  roleName,
   canManage,
-  hideHeader = false,
   presentation = "settings",
   onMutationComplete,
 }: CategorySettingsManagerProps): React.JSX.Element {
@@ -95,25 +89,17 @@ export function CategorySettingsManager({
 
   return (
     <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
-      {presentation === "onboarding" ? null : hideHeader ? (
+      {presentation === "onboarding" ? null : (
         <WorkspaceModuleHeader
           eyebrow="Kategori baku"
           title="Kategori Pengeluaran"
           description="Lima kelompok biaya yang menjaga budget dan laporan tetap konsisten."
         />
-      ) : (
-        <SettingsHeader
-          eyebrow="Kategori baku"
-          title="Kategori Pengeluaran"
-          description="Lima kelompok biaya yang menjaga budget dan laporan tetap konsisten."
-          role={roleName}
-          canManage={canManage}
-        />
       )}
       {message && (
-        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-support text-primary ring-1 ring-primary/15">
+        <FormRiskNotice title="Status kategori" tone="success">
           {message}
-        </p>
+        </FormRiskNotice>
       )}
       <GroupedSurface>
         <div className="divide-y divide-black/5.5">
@@ -125,9 +111,7 @@ export function CategorySettingsManager({
               className="flex min-h-21.5 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
               aria-label={`${canManage ? "Edit" : "Lihat"} ${category.name}`}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
-                <AppIcon name="lock" className="icon-sm" aria-hidden="true" />
-              </span>
+              <DuotoneIconTile name="lock" className="h-9 w-9" iconClassName="icon-sm" />
               <span className="min-w-0 flex-1">
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-row font-bold text-on-surface">
@@ -178,9 +162,7 @@ export function CategorySettingsManager({
             helper="Nama dan penjelasan tampil di budget, transaksi, dan laporan."
           >
             <div className="flex min-h-14 items-center gap-3 px-4 py-2.5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant">
-                <AppIcon name="lock" className="icon-sm" aria-hidden="true" />
-              </span>
+              <DuotoneIconTile name="lock" className="h-9 w-9" iconClassName="icon-sm" />
               <div className="min-w-0 flex-1">
                 <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
                   Kode kategori
@@ -226,34 +208,14 @@ export function CategorySettingsManager({
         open={confirmClose}
         title="Buang perubahan kategori?"
         description="Nama dan deskripsi akan kembali ke versi terakhir yang tersimpan."
-        tone="danger"
+        danger
+        confirmLabel="Buang Perubahan"
+        onConfirm={() => {
+          setEditing(null);
+          setEditingBaseline(null);
+          setConfirmClose(false);
+        }}
         onClose={() => setConfirmClose(false)}
-        actions={
-          <div className="grid grid-cols-2 gap-2">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => setConfirmClose(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
-            >
-              Lanjut Mengedit
-            </motion.button>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => {
-                setEditing(null);
-                setEditingBaseline(null);
-                setConfirmClose(false);
-              }}
-              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
-            >
-              Buang Perubahan
-            </motion.button>
-          </div>
-        }
       />
     </section>
   );

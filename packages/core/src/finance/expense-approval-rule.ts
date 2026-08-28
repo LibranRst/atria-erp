@@ -1,4 +1,16 @@
-export const OWNER_APPROVAL_AMOUNT_THRESHOLD = 5_000_000;
+import {
+  DEFAULT_OWNER_APPROVAL_THRESHOLD_CENTS,
+  thresholdCentsToRupiah,
+} from "./approval-thresholds";
+
+/**
+ * @deprecated Ambang sekarang datang dari konfigurasi (`app_config`). Konstanta
+ * ini hanya tersisa sebagai nilai seed dan cadangan bagi pemanggil yang belum
+ * membaca konfigurasi.
+ */
+export const OWNER_APPROVAL_AMOUNT_THRESHOLD = thresholdCentsToRupiah(
+  DEFAULT_OWNER_APPROVAL_THRESHOLD_CENTS,
+);
 
 export type ExpenseApprovalInput = {
   /** Nominal pengajuan yang sedang dinilai. */
@@ -11,6 +23,11 @@ export type ExpenseApprovalInput = {
    * lebih dulu karena pengajuan itu sendiri masih tercatat sebagai pending.
    */
   readonly otherPendingAmount: number;
+  /**
+   * Ambang persetujuan Owner dalam rupiah. Wajib diisi pemanggil sisi server
+   * dari konfigurasi; nilai seed dipakai hanya bila tidak diberikan.
+   */
+  readonly ownerApprovalThreshold?: number;
 };
 
 export type ExpenseApprovalDecision = {
@@ -35,6 +52,7 @@ export function decideExpenseApproval(input: ExpenseApprovalInput): ExpenseAppro
   const isOverrun = committed + input.amount > input.allocatedAmount;
   return {
     isOverrun,
-    requiresOwnerApproval: input.amount >= OWNER_APPROVAL_AMOUNT_THRESHOLD || isOverrun,
+    requiresOwnerApproval:
+      input.amount >= (input.ownerApprovalThreshold ?? OWNER_APPROVAL_AMOUNT_THRESHOLD) || isOverrun,
   };
 }

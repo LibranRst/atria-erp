@@ -1,5 +1,6 @@
 "use server";
 
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { and, eq, inArray } from "drizzle-orm";
@@ -45,7 +46,8 @@ export async function postGoodsReceipt(input: unknown): Promise<ActionResponse<G
   try {
     await assertPermission(user, "create:stock_movement");
     const roleName = await resolveRoleName(user.roleId ?? "");
-    if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN" && roleName !== "PURCHASING") {
+    // Lihat catatan yang sama di `inventory-utils.ts`.
+    if (!actorHasPermission(roleName, "create:stock_movement")) {
       await assertProjectAccess(validation.data.projectId, user.id, roleName);
     }
     await assertProjectIsOperational(validation.data.projectId);

@@ -1,3 +1,4 @@
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import "server-only";
 
 import { eq } from "drizzle-orm";
@@ -305,11 +306,12 @@ export async function getOwnerOnboardingOverviewUseCase(
   return {
     success: true,
     data: {
-      canManageOnboarding: roleName === "OWNER",
+      canManageOnboarding: actorHasPermission(roleName, "manage:onboarding"),
       state,
       hasPersistedState: Boolean(persisted.state),
       freshInstall,
-      shouldAutoOpen: roleName === "OWNER" && !persisted.state && freshInstall,
+      shouldAutoOpen:
+        actorHasPermission(roleName, "manage:onboarding") && !persisted.state && freshInstall,
       readiness,
       blockers: gates.blockers,
       warnings: gates.warnings,

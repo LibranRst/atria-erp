@@ -1,5 +1,6 @@
 "use server";
 
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import { cookies } from "next/headers";
 import { and, desc, eq, lt, ne, or } from "drizzle-orm";
 
@@ -278,8 +279,7 @@ export async function getMaterialOperationsDashboard(): Promise<
     ]);
     if (!inventoryResult.success) return inventoryResult;
     const shortages = shortageResult.success ? shortageResult.data : [];
-    const operational =
-      roleName === "OWNER" || roleName === "FINANCE_ADMIN" || roleName === "PURCHASING";
+    const operational = actorHasPermission(roleName, "create:stock_movement");
     const billOptions = bills
       .filter((row) => row.budgetCategory.expenseCategory.code === "MATERIAL")
       .map((row) => {
@@ -332,12 +332,12 @@ export async function getMaterialOperationsDashboard(): Promise<
         capabilities: {
           canReceive: operational,
           canOperate: operational,
-          canTransfer: roleName === "OWNER" || roleName === "PURCHASING",
-          canCount: roleName === "OWNER" || roleName === "PURCHASING",
-          canApproveCount: roleName === "OWNER" || roleName === "FINANCE_ADMIN",
-          canRequestReversal: roleName === "OWNER" || roleName === "PURCHASING",
-          canApproveReversal: roleName === "OWNER" || roleName === "FINANCE_ADMIN",
-          canEmergencyAdjust: roleName === "OWNER",
+          canTransfer: actorHasPermission(roleName, "transfer:stock"),
+          canCount: actorHasPermission(roleName, "create:stock_count"),
+          canApproveCount: actorHasPermission(roleName, "approve:stock_count"),
+          canRequestReversal: actorHasPermission(roleName, "request:goods_receipt_reversal"),
+          canApproveReversal: actorHasPermission(roleName, "approve:goods_receipt_reversal"),
+          canEmergencyAdjust: actorHasPermission(roleName, "adjust:stock"),
         },
         inventory: inventoryResult.data,
         shortages,

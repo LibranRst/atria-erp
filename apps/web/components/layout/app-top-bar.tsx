@@ -180,7 +180,27 @@ export function AppTopBar({
         className="pointer-events-none fixed inset-x-0 top-0 z-30 mx-auto w-full max-w-md bg-linear-to-b from-background via-background/90 to-transparent"
       />
 
-      <header
+      {/*
+       * `layoutScroll` DAN `layoutRoot` — keduanya, karena bilahnya
+       * `position: fixed`.
+       *
+       * Proyeksi Framer mencatat kotak anak dalam koordinat halaman, yaitu
+       * termasuk `scrollY`. Untuk elemen fixed itu keliru: ia tidak ikut
+       * bergulir. Ketika perpindahan rute mengembalikan gulir ke nol — dari
+       * daftar proyek yang sudah digulir 2400px ke halaman detail — cuplikan
+       * "sebelum" terekam 2408 sementara "sesudah" terukur 8, dan tombol chat
+       * terbang dari dasar layar ke tempatnya.
+       *
+       * Diukur: puncak `top` 2408px sebelum, 8px sesudah, sementara geseran
+       * mendatarnya (48 → 94px saat tombol kembali muncul) tetap utuh.
+       *
+       * `layoutRoot` saja TIDAK cukup — sudah dicoba dan tombolnya masih
+       * terbang. `layoutScroll` yang membuat Framer membaca gulir bilah ini
+       * sendiri, yang selalu nol, alih-alih mewarisi gulir halaman.
+       */}
+      <motion.header
+        layoutScroll
+        layoutRoot
         style={{ height: TOP_BAR_BAND_PX }}
         className={`pointer-events-none fixed inset-x-0 top-0 mx-auto grid w-full max-w-md items-center gap-2 px-margin-mobile select-none ${GRID_TEMPLATE} ${
           elevated ? "z-90" : "z-50"
@@ -197,7 +217,7 @@ export function AppTopBar({
         <TopBarSlot className="justify-self-end" anchorX="right">
           {right}
         </TopBarSlot>
-      </header>
+      </motion.header>
     </>
   );
 }

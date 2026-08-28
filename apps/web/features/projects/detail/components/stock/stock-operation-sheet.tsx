@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
 import { toast } from "sonner";
 
 import { useMemo, useState, useTransition } from "react";
@@ -53,13 +54,12 @@ export function StockOperationSheet({
   projectId,
   rap,
   materials,
-  userRole,
 }: {
   readonly projectId: string;
   readonly rap: RapView | null;
   readonly materials: readonly MaterialOption[];
-  readonly userRole: string;
 }): React.JSX.Element | null {
+  const can = useCan();
   const router = useRouter();
   const [operation, setOperation] = useState<Operation | null>(null);
   const [rapItemId, setRapItemId] = useState("");
@@ -72,8 +72,7 @@ export function StockOperationSheet({
   const [success, setSuccess] = useState<OperationSuccess | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
   const [pending, startTransition] = useTransition();
-  const canOperate =
-    userRole === "OWNER" || userRole === "FINANCE_ADMIN" || userRole === "PURCHASING";
+  const canOperate = can("create:stock_movement");
   const rapItem = rap?.items.find((item) => item.id === rapItemId) ?? null;
   const material = materials.find((item) => item.id === rapItem?.materialId) ?? null;
   const inventories = material?.inventories ?? [];

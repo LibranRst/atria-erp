@@ -1,4 +1,4 @@
-export type AdministrationTab = "USERS" | "VENDORS";
+export type AdministrationTab = "USERS" | "VENDORS" | "ROLES";
 export type EditorMode = "NEW_USER" | "EDIT_USER" | "NEW_VENDOR" | "EDIT_VENDOR" | null;
 
 export type UserFormState = {

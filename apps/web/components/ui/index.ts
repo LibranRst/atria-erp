@@ -24,6 +24,8 @@ export { AppIcon } from "./icon/app-icon";
 export type { AppIconName, AppIconProps } from "./icon/app-icon";
 export { DuotoneIconTile } from "./icon/icon-tile";
 export type { IconTileTone } from "./icon/icon-tile";
+export { UserAvatar } from "./identity/user-avatar";
+export type { UserAvatarProps } from "./identity/user-avatar";
 
 // Status, hitungan, dan metadata
 export {

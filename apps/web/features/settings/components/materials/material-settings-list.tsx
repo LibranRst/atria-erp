@@ -1,7 +1,7 @@
 import React from "react";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
 import {
-  AppIcon,
+  DuotoneIconTile,
   GroupedSurface,
   WorkspaceRowChevron,
   WorkspaceStatusLabel,
@@ -24,39 +24,40 @@ export function MaterialSettingsList({
             type="button"
             key={material.id}
             onClick={() => onSelect(material)}
-            className="flex min-h-22 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
+            className="flex min-h-20 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/75"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface">
-              <AppIcon name="warehouse" className="icon-sm" aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="truncate text-[13px] leading-5 font-bold text-on-surface">
-                  {material.name}
-                </span>
-              </span>
-              <span className="mt-1 block truncate text-meta text-on-surface-variant">
-                {[material.brand, material.code, material.color, material.unit]
+            <DuotoneIconTile name="warehouse" className="h-9 w-9" iconClassName="icon-sm" />
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="truncate text-row font-bold text-on-surface">{material.name}</span>
+                <WorkspaceStatusLabel
+                  label={material.isActive ? material.categoryName : "Arsip"}
+                  tone={material.isActive ? "neutral" : "inactive"}
+                />
+              </div>
+              <p className="mt-0.5 truncate text-meta text-on-surface-variant">
+                {[
+                  material.brand,
+                  material.code,
+                  material.color,
+                  material.unit ? `Satuan ${material.unit}` : "",
+                ]
                   .filter(Boolean)
-                  .join(" · ") || "Detail material belum dilengkapi"}
-              </span>
-              <span className="flex min-w-0 items-center gap-2 text-[9px] leading-4 text-on-surface-variant">
-                <span className="truncate">{material.inventory.length} lokasi default</span>
-                {material.defaultVendorName ? (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    <span className="truncate">{material.defaultVendorName}</span>
-                  </>
-                ) : null}
-              </span>
-            </span>
-            <div className="flex min-w-0 items-center gap-2">
-              <WorkspaceStatusLabel
-                label={material.isActive ? material.categoryName : "Diarsipkan"}
-                tone={material.isActive ? "neutral" : "inactive"}
-              />
-              <WorkspaceRowChevron />
+                  .join(" · ") || "Detail material"}
+              </p>
+              {material.inventory.length > 0 || material.defaultVendorName ? (
+                <p className="mt-1 flex min-w-0 items-center gap-1.5 text-meta text-on-surface-variant/80">
+                  <span>{material.inventory.length} lokasi default</span>
+                  {material.defaultVendorName ? (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span className="truncate">Vendor: {material.defaultVendorName}</span>
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
             </div>
+            <WorkspaceRowChevron />
           </button>
         ))}
       </div>

@@ -1,19 +1,18 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
 import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
 import {
+  AppIcon,
   ConfirmationDialog,
   EmptyState,
   FilterSelect,
-  WorkspaceModuleHeader,
+  FormRiskNotice,
 } from "@/components/ui";
-import { SettingsHeader } from "../shared/settings-ui";
 import { createClientId } from "@atria/core/utils/client-id";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
+import { evaluateLibraryDraft } from "../../library/library-draft-rules";
 import { LibraryCostComponentSheet } from "./library-cost-component-sheet";
 import { LibraryTemplateEditorSheet } from "./library-template-editor-sheet";
 import { LibraryTemplateList } from "./library-template-list";
@@ -31,9 +30,7 @@ type Props = {
   readonly categories: readonly ExpenseCategorySettingRow[];
   readonly materials: readonly MaterialOption[];
   readonly vendors: readonly VendorOption[];
-  readonly roleName: string;
   readonly canManage: boolean;
-  readonly hideHeader?: boolean;
   readonly presentation?: "settings" | "onboarding";
   readonly onMutationComplete?: () => void;
 };
@@ -120,9 +117,7 @@ export function LibrarySettingsManager({
   categories,
   materials,
   vendors,
-  roleName,
   canManage,
-  hideHeader = false,
   presentation = "settings",
   onMutationComplete,
 }: Props): React.JSX.Element {
@@ -145,6 +140,11 @@ export function LibrarySettingsManager({
   const [typeDraft, setTypeDraft] = React.useState("ALL");
   const [categoryIdDraft, setCategoryIdDraft] = React.useState("ALL");
   const [message, setMessage] = React.useState<string | null>(null);
+  const suspendedFiltersRef = React.useRef<{
+    readonly type: string;
+    readonly categoryId: string;
+    readonly status: string;
+  } | null>(null);
   const categoryFilters = React.useMemo(
     () => [
       { value: "ALL", label: "Semua kategori" },
@@ -179,29 +179,10 @@ export function LibrarySettingsManager({
   const grossMargin = clientPrice > 0 ? ((clientPrice - internalCost) / clientPrice) * 100 : 0;
   const draftDirty = Boolean(draft && JSON.stringify(draft) !== draftBaseline);
   const activeFilterCount = Number(type !== "ALL") + Number(categoryId !== "ALL");
-  const draftCompletionItems = draft
-    ? [
-        draft.expenseCategoryId &&
-          categories.some((category) => category.id === draft.expenseCategoryId),
-        draft.name.trim().length >= 2,
-        draft.itemCategory.trim().length >= 2,
-        draft.unit.trim().length > 0,
-        draft.effectiveFrom.trim().length > 0 &&
-          !Number.isNaN(new Date(draft.effectiveFrom).getTime()),
-        draft.sourceNote.trim().length >= 3,
-        draft.pricingMode === "MARGIN_BASED" || draft.fixedClientPrice > 0,
-        draft.components.length > 0,
-        ...draft.components.flatMap((component) => [
-          component.label.trim().length >= 2,
-          Number(component.quantity) > 0,
-          component.unit.trim().length > 0,
-          Number(component.unitCost) >= 0,
-        ]),
-      ]
-    : [];
-  const draftCompletedCount = draftCompletionItems.filter(Boolean).length;
-  const draftCompletionTotal = draftCompletionItems.length || 1;
-  const canSaveDraft = Boolean(draft && draftCompletedCount === draftCompletionTotal);
+  const { canSave: canSaveDraft, disabledReason: draftDisabledReason } = evaluateLibraryDraft(
+    draft,
+    categories,
+  );
   const componentEditorValid = Boolean(
     componentEditor &&
     componentEditor.label.trim().length >= 2 &&
@@ -212,32 +193,6 @@ export function LibrarySettingsManager({
   const componentEditorDirty = Boolean(
     componentEditor && JSON.stringify(componentEditor) !== componentEditorBaseline,
   );
-  const draftDisabledReason = !draft
-    ? undefined
-    : !draft.expenseCategoryId ||
-        !categories.some((category) => category.id === draft.expenseCategoryId)
-      ? "Pilih kategori pengeluaran yang valid."
-      : draft.name.trim().length < 2
-        ? "Isi nama template minimal 2 karakter."
-        : draft.itemCategory.trim().length < 2
-          ? "Isi kategori item minimal 2 karakter."
-          : !draft.unit.trim()
-            ? "Isi satuan."
-            : !draft.effectiveFrom.trim() || Number.isNaN(new Date(draft.effectiveFrom).getTime())
-              ? "Isi tanggal berlaku yang valid."
-              : draft.sourceNote.trim().length < 3
-                ? "Isi catatan sumber harga minimal 3 karakter."
-                : draft.pricingMode === "FIXED_CLIENT_PRICE" && draft.fixedClientPrice <= 0
-                  ? "Harga tetap untuk klien harus lebih dari 0."
-                  : draft.components.some(
-                        (component) =>
-                          component.label.trim().length < 2 ||
-                          Number(component.quantity) <= 0 ||
-                          !component.unit.trim() ||
-                          Number(component.unitCost) < 0,
-                      )
-                    ? "Lengkapi nama minimal 2 karakter, jumlah, satuan, dan biaya satuan di setiap komponen."
-                    : undefined;
 
   function openDraft(next: Draft): void {
     setDraft(next);
@@ -327,34 +282,10 @@ export function LibrarySettingsManager({
   });
   return (
     <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
-      {presentation === "onboarding" ? null : hideHeader ? (
-        <WorkspaceModuleHeader
-          eyebrow="Template proyek berulang"
-          title="Library Item & Harga"
-          description="Biaya internal, harga klien, paket kerja, dan baris RAB yang dapat digunakan kembali."
-          actionLabel="Tambah"
-          actionDisabled={!canManage}
-          onAction={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
-        />
-      ) : (
-        <SettingsHeader
-          eyebrow="Template proyek berulang"
-          title="Library Item & Harga"
-          description="Template untuk RAP, paket kerja, Subcon, dan baris RAB."
-          role={roleName}
-          canManage={canManage}
-        />
-      )}
-      {presentation === "settings" ? (
-        <p className="text-[10px] leading-[1.35] text-on-surface-variant">
-          <strong className="font-bold text-on-surface">Harga tersimpan sebagai snapshot.</strong>{" "}
-          Perubahan Library tidak mengubah RAB lama secara diam-diam.
-        </p>
-      ) : null}
       {message && (
-        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-support text-primary ring-1 ring-primary/15">
+        <FormRiskNotice title="Status template" tone="success">
           {message}
-        </p>
+        </FormRiskNotice>
       )}
       {presentation === "onboarding" ? (
         <div className="flex min-w-0 items-center justify-between gap-3 px-1">
@@ -362,7 +293,7 @@ export function LibrarySettingsManager({
             <span className="block text-[13px] leading-5 font-bold text-on-surface">
               Template tersimpan
             </span>
-            <span className="block text-[9px] leading-4 text-on-surface-variant">
+            <span className="block text-meta text-on-surface-variant">
               {items.filter((row) => row.isActive).length} template aktif
             </span>
           </span>
@@ -376,50 +307,72 @@ export function LibrarySettingsManager({
           </button>
         </div>
       ) : (
-        <SettingsFilterBar
-          status={status}
-          statusOptions={STATUS_FILTERS}
-          search={search}
-          filterCount={activeFilterCount}
-          searchPlaceholder="Cari template, kode, kategori"
-          searchAriaLabel="Cari template harga"
-          layoutPrefix="settings-library"
-          filterTitle="Filter template"
-          onStatusChange={setStatus}
-          onSearchChange={setSearch}
-          onClearFilters={() => {
-            setType("ALL");
-            setCategoryId("ALL");
-            setStatus("ALL");
-          }}
-          onOpenFilters={() => {
-            setTypeDraft(type);
-            setCategoryIdDraft(categoryId);
-          }}
-          onApplyFilters={() => {
-            setType(typeDraft);
-            setCategoryId(categoryIdDraft);
-          }}
-          onResetFilterDraft={() => {
-            setTypeDraft("ALL");
-            setCategoryIdDraft("ALL");
-          }}
-        >
-          <FilterSelect
-            label="Tipe"
-            value={typeDraft}
-            options={TYPE_FILTERS}
-            onChange={setTypeDraft}
-            presentation="dialog"
-          />
-          <FilterSelect
-            label="Kategori"
-            value={categoryIdDraft}
-            options={categoryFilters}
-            onChange={setCategoryIdDraft}
-            presentation="dialog"
-          />
-        </SettingsFilterBar>
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <SettingsFilterBar
+              status={status}
+              statusOptions={STATUS_FILTERS}
+              search={search}
+              filterCount={activeFilterCount}
+              searchPlaceholder="Cari template, kode, kategori"
+              searchAriaLabel="Cari template harga"
+              layoutPrefix="settings-library"
+              filterTitle="Filter template"
+              onStatusChange={setStatus}
+              onSearchChange={setSearch}
+              onEnterSearch={() => {
+                suspendedFiltersRef.current = { type, categoryId, status };
+                setType("ALL");
+                setCategoryId("ALL");
+                setStatus("ALL");
+              }}
+              onExitSearch={() => {
+                const suspended = suspendedFiltersRef.current;
+                if (!suspended) return;
+                setType(suspended.type);
+                setCategoryId(suspended.categoryId);
+                setStatus(suspended.status);
+                suspendedFiltersRef.current = null;
+              }}
+              onOpenFilters={() => {
+                setTypeDraft(type);
+                setCategoryIdDraft(categoryId);
+              }}
+              onApplyFilters={() => {
+                setType(typeDraft);
+                setCategoryId(categoryIdDraft);
+              }}
+              onResetFilterDraft={() => {
+                setTypeDraft("ALL");
+                setCategoryIdDraft("ALL");
+              }}
+            >
+              <FilterSelect
+                label="Tipe"
+                value={typeDraft}
+                options={TYPE_FILTERS}
+                onChange={setTypeDraft}
+              />
+              <FilterSelect
+                label="Kategori"
+                value={categoryIdDraft}
+                options={categoryFilters}
+                onChange={setCategoryIdDraft}
+              />
+            </SettingsFilterBar>
+          </div>
+          {canManage ? (
+            <button
+              type="button"
+              onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
+              className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control"
+              title="Tambah Template Baru"
+            >
+              <AppIcon name="add" className="icon-sm" />
+              <span className="ml-1 max-[420px]:hidden">Tambah</span>
+            </button>
+          ) : null}
+        </div>
       )}
       {filtered.length === 0 ? (
         <EmptyState
@@ -502,67 +455,27 @@ export function LibrarySettingsManager({
         open={confirmClose}
         title="Buang perubahan template?"
         description="Rincian biaya, harga klien, dan catatan yang belum disimpan akan hilang."
-        tone="danger"
+        danger
+        confirmLabel="Buang Perubahan"
+        onConfirm={() => {
+          setDraft(null);
+          setDraftBaseline("");
+          setConfirmClose(false);
+        }}
         onClose={() => setConfirmClose(false)}
-        actions={
-          <div className="grid grid-cols-2 gap-2">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => setConfirmClose(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
-            >
-              Lanjut Mengedit
-            </motion.button>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => {
-                setDraft(null);
-                setDraftBaseline("");
-                setConfirmClose(false);
-              }}
-              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
-            >
-              Buang Perubahan
-            </motion.button>
-          </div>
-        }
       />
       <ConfirmationDialog
         open={confirmComponentClose}
         title="Buang perubahan komponen?"
         description="Isian komponen ini belum diterapkan ke template harga."
-        tone="danger"
+        danger
+        confirmLabel="Buang Perubahan"
+        onConfirm={() => {
+          setComponentEditor(null);
+          setComponentEditorBaseline("");
+          setConfirmComponentClose(false);
+        }}
         onClose={() => setConfirmComponentClose(false)}
-        actions={
-          <div className="grid grid-cols-2 gap-2">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => setConfirmComponentClose(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
-            >
-              Lanjut Mengedit
-            </motion.button>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => {
-                setComponentEditor(null);
-                setComponentEditorBaseline("");
-                setConfirmComponentClose(false);
-              }}
-              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
-            >
-              Buang Perubahan
-            </motion.button>
-          </div>
-        }
       />
     </section>
   );

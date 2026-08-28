@@ -21,6 +21,16 @@ export type ProposalCardShellProps = {
   readonly errorMessage?: string;
   readonly isAlreadyConfirmed: boolean;
   readonly warningMessage?: string | null;
+  /**
+   * Bobot tombol konfirmasi.
+   *
+   * `quiet` untuk keputusan yang justru sebaiknya ditimbang, bukan ditekan
+   * cepat: footer-nya memakai kanvas aplikasi dan tombolnya jadi pil putih
+   * alih-alih balok hitam selebar kartu. Perubahan izin memakai ini — satu
+   * ketukan yang terlihat "besar" mendorong orang menekannya lebih dulu dan
+   * membacanya belakangan.
+   */
+  readonly confirmEmphasis?: "primary" | "quiet";
   readonly confirmLabel?: string;
   readonly submittedMessage?: string;
   readonly onConfirm: () => Promise<void>;
@@ -37,6 +47,7 @@ export function ProposalCardShell({
   errorMessage,
   isAlreadyConfirmed,
   warningMessage,
+  confirmEmphasis = "primary",
   confirmLabel = "Konfirmasi dan Eksekusi",
   submittedMessage = "Aksi berhasil dikonfirmasi dan tercatat di sistem.",
   onConfirm,
@@ -47,6 +58,7 @@ export function ProposalCardShell({
   const reduceMotion = useReducedMotion();
   const isSubmitted = status === "submitted" || isAlreadyConfirmed;
   const isSubmitting = status === "submitting";
+  const quiet = confirmEmphasis === "quiet";
 
   return (
     <motion.section
@@ -85,7 +97,7 @@ export function ProposalCardShell({
       )}
 
       {/* Footer / Aksi Konfirmasi */}
-      <div className="border-t border-black/5.5 px-4 py-3.5">
+      <div className={`border-t border-black/5.5 px-4 py-3.5 ${quiet ? "bg-surface" : ""}`}>
         {isSubmitted ? (
           <div className="space-y-2">
             <p className="flex items-start gap-2 text-support font-semibold text-on-surface-variant">
@@ -119,7 +131,7 @@ export function ProposalCardShell({
               </p>
             )}
             <Button
-              variant="primary"
+              variant={quiet ? "secondary" : "primary"}
               className="w-full"
               disabled={isSubmitting}
               onClick={() => void onConfirm()}

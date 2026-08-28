@@ -563,7 +563,16 @@ export function OptionChoiceGroup<TValue extends string>({
   readonly onChange: (value: TValue) => void;
 }): React.JSX.Element {
   return (
-    <fieldset className="space-y-2 rounded-2xl bg-surface-container-low">
+    /*
+     * `min-w-0` wajib di sini, bukan kosmetik.
+     *
+     * `fieldset` bawaan browser punya `min-inline-size: min-content`, dan
+     * deskripsi pilihan memakai `truncate` (`white-space: nowrap`) — sehingga
+     * min-content-nya menjadi selebar teks utuh. Tanpa ini, satu deskripsi
+     * panjang melebarkan grup melewati sheet pada layar 320–390 px alih-alih
+     * terpotong seperti yang dijanjikan `truncate`.
+     */
+    <fieldset className="min-w-0 space-y-2 rounded-2xl bg-surface-container-low">
       <p className="px-3 pt-3 text-xs font-semibold text-on-surface">{label}</p>
       <div className="space-y-2 px-2 pb-2">
         {options.map((option) => {

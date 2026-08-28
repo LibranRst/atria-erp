@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
 import { useRouter } from "next/navigation";
 import React, { useState, useTransition } from "react";
 import { z } from "zod";
@@ -45,9 +46,9 @@ interface ExpenseListProps {
   projectId?: string;
   initialCosts: ExpenseCostItem[];
   bankAccounts: BankAccountItem[];
-  userRole: string;
   vendorBills?: VendorListBill[];
   vendorPayments?: VendorListPayment[];
+  vendorPaymentApprovalThreshold: number;
   vendors?: VendorListVendor[];
   projects?: VendorListProject[];
   pendingApprovalsCount?: number;
@@ -57,13 +58,14 @@ export function ExpenseList({
   projectId,
   initialCosts,
   bankAccounts,
-  userRole,
   vendorBills = [],
   vendorPayments = [],
+  vendorPaymentApprovalThreshold,
   vendors = [],
   projects = [],
   pendingApprovalsCount = 0,
 }: ExpenseListProps): React.JSX.Element {
+  const can = useCan();
   const router = useRouter();
   const shouldOpenVendorBill = useUrlSearchParam("new-vendor-bill") === "true";
   const shouldShowVendorBills = useUrlSearchParam("view") === "vendor-bills";
@@ -95,7 +97,7 @@ export function ExpenseList({
   const [success, setSuccess] = useState<string | null>(null);
   const [operationSuccess, setOperationSuccess] = useState<OperationSuccess | null>(null);
 
-  const isOwnerOrFinance = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
+  const isOwnerOrFinance = can("view:bank_account");
 
   const selectTab = React.useCallback(
     (nextTab: ExpenseListTab): void => {
@@ -281,7 +283,7 @@ export function ExpenseList({
         <FieldClaimsPanel
           leadingContent={
             <>
-              {userRole === "OWNER" && pendingApprovalsCount > 0 ? (
+              {can("decide:all_approvals") && pendingApprovalsCount > 0 ? (
                 <PendingApprovalsBanner count={pendingApprovalsCount} />
               ) : null}
               <ExpenseDraftsPanel projectId={projectId} />
@@ -308,17 +310,17 @@ export function ExpenseList({
       ) : (
         <VendorBillList
           leadingContent={
-            userRole === "OWNER" && pendingApprovalsCount > 0 ? (
+            can("decide:all_approvals") && pendingApprovalsCount > 0 ? (
               <PendingApprovalsBanner count={pendingApprovalsCount} />
             ) : null
           }
           projectId={projectId}
           vendorBills={vendorBills}
           vendorPayments={vendorPayments}
+          vendorPaymentApprovalThreshold={vendorPaymentApprovalThreshold}
           vendors={vendors}
           projects={projects}
           bankAccounts={bankAccounts}
-          userRole={userRole}
         />
       )}
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { getVendorPaymentApprovalThresholdCents } from "@/lib/finance/approval-thresholds";
 import { db } from "@/db";
 import {
   auditLog,
@@ -63,6 +64,8 @@ export async function scheduleVendorBillPayment(
     }
 
     // Run inside database transaction block
+    // Ambang dibaca sebelum transaksi; keputusannya dibekukan ke baris jadwal.
+    const ownerApprovalThresholdCents = await getVendorPaymentApprovalThresholdCents();
     const paymentResult = await db.transaction(async (tx) => {
       // 1. Verify vendor bill status is UNPAID or PARTIALLY_PAID
       const [bill] = await tx
@@ -124,7 +127,7 @@ export async function scheduleVendorBillPayment(
       const allocatedCents = parseNumericToCents(budgetCategory.allocatedAmount);
       const spentCents = parseNumericToCents(budgetCategory.actualAmount);
       const isOverrun = spentCents > allocatedCents;
-      const requiresApproval = amountPaidCents >= BigInt(500_000_000) || isOverrun;
+      const requiresApproval = amountPaidCents >= ownerApprovalThresholdCents || isOverrun;
 
       // 3. Pre-generate payment UUID
       const paymentId = crypto.randomUUID();
@@ -144,7 +147,7 @@ export async function scheduleVendorBillPayment(
 
         const notes = isOverrun
           ? "Pembayaran melebihi plafon anggaran belanja (Budget Overrun)."
-          : "Nominal transaksi mencapai/melebihi Rp 5.000.000.";
+          : "Nominal transaksi mencapai ambang persetujuan Owner.";
 
         await tx.insert(approval).values({
           approverId: ownerUser.id,
@@ -168,6 +171,7 @@ export async function scheduleVendorBillPayment(
           status: "PENDING",
           paymentDate,
           paidById: session.user.id,
+          requiresOwnerApproval: requiresApproval,
           referenceNumber: null,
           createdAt: new Date(),
         })

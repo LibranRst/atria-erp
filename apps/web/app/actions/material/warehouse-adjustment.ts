@@ -1,5 +1,6 @@
 "use server";
 
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { auditLog, materialInventory, stockMovement } from "@/db/schema";
@@ -29,7 +30,8 @@ export async function emergencyAdjustStock(
   try {
     await assertPermission(actor, "adjust:stock");
     const role = await resolveRoleName(actor.roleId ?? "");
-    if (role !== "OWNER") throw new Error("FORBIDDEN: Emergency adjustment hanya untuk Owner.");
+    if (!actorHasPermission(role, "adjust:stock"))
+      throw new Error("FORBIDDEN: Peran Anda tidak berhak melakukan emergency adjustment.");
     const result = await db.transaction(async (tx) => {
       const [inventory] = await tx
         .select()

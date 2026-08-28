@@ -24,6 +24,8 @@ import { getBillPaymentSummary } from "@/features/expenses/utils/vendor-bill-lis
 
 type VendorSchedulePaymentSheetProps = {
   readonly bill: VendorListBill | null;
+  /** Ambang dari konfigurasi server; klien hanya menjelaskan, tidak memutuskan. */
+  readonly ownerApprovalThreshold: number;
   readonly bankAccounts: readonly VendorListBankAccount[];
   readonly isPending: boolean;
   readonly error: string | null;
@@ -41,6 +43,7 @@ type VendorSchedulePaymentSheetProps = {
 
 export function VendorSchedulePaymentSheet({
   bill,
+  ownerApprovalThreshold,
   bankAccounts,
   isPending,
   error,
@@ -142,10 +145,14 @@ export function VendorSchedulePaymentSheet({
                 </div>
               </FormSection>
               <FormRiskNotice
-                title={amount >= 5_000_000 ? "Memerlukan persetujuan Owner" : "Saldo belum berubah"}
-                tone={amount >= 5_000_000 ? "warning" : "default"}
+                title={
+                  amount >= ownerApprovalThreshold
+                    ? "Memerlukan persetujuan Owner"
+                    : "Saldo belum berubah"
+                }
+                tone={amount >= ownerApprovalThreshold ? "warning" : "default"}
               >
-                {amount >= 5_000_000
+                {amount >= ownerApprovalThreshold
                   ? "Nominal ini membuat approval sebelum pembayaran dapat dicairkan."
                   : "Saldo baru berkurang ketika pembayaran dicairkan dengan bukti transfer."}
               </FormRiskNotice>

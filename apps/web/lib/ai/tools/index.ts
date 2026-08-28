@@ -9,6 +9,7 @@ import { buildOperationsTools } from "./operations-tools";
 import { buildProjectProposalTools } from "./project-proposal-tools";
 import { buildProjectTools } from "./project-tools";
 import { buildProposalTools } from "./proposal-tools";
+import { buildRoleTools } from "./role-tools";
 import { buildSuggestionTools } from "./suggestion-tools";
 import type { AiToolContext } from "./context";
 
@@ -25,6 +26,7 @@ export function buildAiTools(context: AiToolContext) {
     ...buildFinanceTools(context),
     ...buildOperationsTools(context),
     ...buildLookupTools(context),
+    ...buildRoleTools(context),
     ...buildProposalTools(context),
     ...buildProjectProposalTools(context),
     ...buildFinanceProposalTools(context),

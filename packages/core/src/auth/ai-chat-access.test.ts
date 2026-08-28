@@ -14,7 +14,7 @@ describe("akses asisten AI", () => {
     expect(actorHasPermission(role, "use:ai_chat")).toBe(true);
   });
 
-  test.each(["PURCHASING", "SALES", "DESIGNER", "MARKETING"])(
+  test.each(["PURCHASING", "SITE_SUPERVISOR", "UNKNOWN_ROLE"])(
     "%s tidak boleh membuka chat",
     (role) => {
       expect(actorHasPermission(role, "use:ai_chat")).toBe(false);

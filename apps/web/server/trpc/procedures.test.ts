@@ -1,3 +1,4 @@
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
 import { describe, expect, test } from "bun:test";
 import { TRPCError } from "@trpc/server";
 
@@ -20,6 +21,9 @@ const baseActor: Actor = {
   email: "ronald@dekoria.com",
   isActive: true,
   mustChangePassword: false,
+  sessionId: "test-session",
+  permissions: ROLE_PERMISSIONS["OWNER"] ?? [],
+  dataScope: "GLOBAL",
   developerActorUserId: null,
 };
 

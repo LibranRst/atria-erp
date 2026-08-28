@@ -1,3 +1,4 @@
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import type {
   CategoryPlanFormState,
   MaterialOption,
@@ -68,18 +69,13 @@ export function getInitialRapOverviewFilter(): RapOverviewFilter {
 }
 
 export function getRapPermissions(userRole: string): RapManagerPermissions {
-  const canEditRap =
-    userRole === "OWNER" ||
-    userRole === "FINANCE_ADMIN" ||
-    userRole === "PROJECT_MANAGER" ||
-    userRole === "PURCHASING";
-  const canEditCategoryPlan =
-    userRole === "OWNER" || userRole === "FINANCE_ADMIN" || userRole === "PROJECT_MANAGER";
+  const canEditRap = actorHasPermission(userRole, "view:rap");
+  const canEditCategoryPlan = actorHasPermission(userRole, "create:rap");
 
   return {
     canEditRap,
     canEditCategoryPlan,
-    canFinalizeRap: userRole === "OWNER" || userRole === "FINANCE_ADMIN",
+    canFinalizeRap: actorHasPermission(userRole, "lock:rap"),
   };
 }
 

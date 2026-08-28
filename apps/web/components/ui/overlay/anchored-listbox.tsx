@@ -40,6 +40,7 @@ type AnchoredListboxProps = {
   readonly value: string;
   readonly options: readonly SelectOption[];
   readonly onChange: (value: string) => void;
+  readonly emptyText?: string;
   readonly placement?: Placement;
 };
 
@@ -60,8 +61,10 @@ function AnchoredListboxClient({
   value,
   options,
   onChange,
+  emptyText = "Tidak ada opsi.",
   placement = "bottom-start",
 }: AnchoredListboxProps): React.JSX.Element {
+  const listboxId = React.useId();
   const [open, setOpen] = React.useState(false);
   const selectedIndex = options.findIndex((option) => option.value === value);
   const [activeIndex, setActiveIndex] = React.useState<number | null>(
@@ -137,6 +140,7 @@ function AnchoredListboxClient({
   }) as unknown as React.HTMLAttributes<HTMLElement> & { ref: React.Ref<HTMLElement> };
 
   const transformOrigin = resolvedPlacement.startsWith("top") ? "bottom" : "top";
+  const groups = Array.from(new Set(options.map((option) => option.group ?? "")));
 
   function selectOption(option: SelectOption): void {
     if (option.disabled) return;
@@ -167,42 +171,75 @@ function AnchoredListboxClient({
                   style={{ maxHeight: "inherit", transformOrigin }}
                   className="w-full overflow-y-auto overscroll-contain rounded-inset bg-white p-1.5 shadow-raised ring-1 ring-ring-control"
                 >
-                  {options.map((option, index) => {
-                    const active = option.value === value;
-                    return (
-                      <button
-                        key={option.value}
-                        ref={(node) => {
-                          itemRefs.current[index] = node;
-                        }}
-                        type="button"
-                        role="option"
-                        aria-selected={active}
-                        disabled={option.disabled}
-                        tabIndex={activeIndex === index ? 0 : -1}
-                        {...getItemProps({
-                          onClick: () => selectOption(option),
-                          onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {
-                            if (event.key !== "Enter" && event.key !== " ") return;
-                            event.preventDefault();
-                            selectOption(option);
-                          },
-                        })}
-                        className={`flex min-h-12 w-full items-center gap-3 rounded-full px-3.5 py-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-45 ${
-                          active
-                            ? "bg-primary text-on-primary"
-                            : "text-on-surface hover:bg-surface-container-low focus-visible:bg-surface-container-low"
-                        }`}
-                      >
-                        <span className="min-w-0 flex-1 truncate text-row font-bold">
-                          {option.label}
-                        </span>
-                        {active ? (
-                          <AppIcon name="check" className="icon-sm shrink-0" aria-hidden="true" />
-                        ) : null}
-                      </button>
-                    );
-                  })}
+                  {options.length === 0 ? (
+                    <p className="px-3.5 py-4 text-center text-support text-on-surface-variant">
+                      {emptyText}
+                    </p>
+                  ) : null}
+                  {groups.map((group) => (
+                    <div key={group || "ungrouped"}>
+                      {group ? (
+                        <p className="px-3.5 pt-2.5 pb-1.5 text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+                          {group}
+                        </p>
+                      ) : null}
+                      {options.map((option, index) => {
+                        if ((option.group ?? "") !== group) return null;
+                        const active = option.value === value;
+                        const reasonId = option.disabledReason
+                          ? `${listboxId}-option-${index}-disabled-reason`
+                          : undefined;
+                        return (
+                          <button
+                            key={option.value}
+                            ref={(node) => {
+                              itemRefs.current[index] = node;
+                            }}
+                            type="button"
+                            role="option"
+                            aria-selected={active}
+                            aria-disabled={option.disabled ? "true" : undefined}
+                            aria-describedby={reasonId}
+                            tabIndex={activeIndex === index ? 0 : -1}
+                            {...getItemProps({
+                              onClick: () => selectOption(option),
+                              onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                selectOption(option);
+                              },
+                            })}
+                            className={`flex min-h-12 w-full items-center gap-3 rounded-full px-3.5 py-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+                              option.disabled ? "cursor-not-allowed opacity-45" : ""
+                            } ${
+                              active
+                                ? "bg-primary text-on-primary"
+                                : "text-on-surface hover:bg-surface-container-low focus-visible:bg-surface-container-low"
+                            }`}
+                          >
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-row font-bold">{option.label}</span>
+                              {option.description || option.meta || option.disabledReason ? (
+                                <span
+                                  id={reasonId}
+                                  className={`mt-0.5 block text-meta ${active ? "text-on-primary/75" : "text-on-surface-variant"}`}
+                                >
+                                  {option.disabledReason ?? option.description ?? option.meta}
+                                </span>
+                              ) : null}
+                            </span>
+                            {active ? (
+                              <AppIcon
+                                name="check"
+                                className="icon-sm shrink-0"
+                                aria-hidden="true"
+                              />
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </motion.div>
               </div>
             </FloatingFocusManager>

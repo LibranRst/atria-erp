@@ -16,6 +16,10 @@ export type PermissionKey =
   | "view:ledger"
   | "create:ledger"
   | "reconcile:ledger"
+  | "view:project"
+  | "create:project"
+  | "activate:project"
+  | "close:project"
   | "view:budget"
   | "create:budget"
   | "update:budget"
@@ -23,6 +27,7 @@ export type PermissionKey =
   | "view:cost"
   | "create:cost"
   | "update:cost"
+  | "verify:cost"
   | "approve:cost"
   | "pay:cost"
   | "view:vendor_bill"
@@ -33,6 +38,9 @@ export type PermissionKey =
   | "create:client_invoice"
   | "update:client_invoice"
   | "reconcile:client_invoice"
+  | "view:approval_queue"
+  | "decide:all_approvals"
+  | "override:self_approval"
   | "view:profitability"
   | "view:ai_brief"
   | "use:ai_chat"
@@ -58,12 +66,16 @@ export type PermissionKey =
   | "create:rab"
   | "update:rab"
   | "approve:rab"
+  | "manage:onboarding"
+  | "review:onboarding"
   | "view:settings"
+  | "manage:approval_settings"
   | "manage:budget_settings"
   | "manage:expense_categories"
   | "manage:item_library"
   | "manage:material_settings"
   | "manage:users"
+  | "manage:roles"
   | "manage:vendors"
   | "create:opening_inventory"
   | "approve:opening_inventory"
@@ -72,6 +84,17 @@ export type PermissionKey =
 // 2. Matriks Otorisasi Berdasarkan Peran (Role Permission Matrix)
 export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
   OWNER: [
+    "manage:roles",
+    "manage:approval_settings",
+    "manage:onboarding",
+    "view:project",
+    "create:project",
+    "activate:project",
+    "close:project",
+    "verify:cost",
+    "view:approval_queue",
+    "decide:all_approvals",
+    "override:self_approval",
     "view:bank_account",
     "create:bank_account",
     "update:bank_account",
@@ -133,6 +156,13 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "reverse:opening_inventory",
   ],
   FINANCE_ADMIN: [
+    "review:onboarding",
+    "view:project",
+    "create:project",
+    "activate:project",
+    "close:project",
+    "verify:cost",
+    "view:approval_queue",
     "use:ai_chat",
     "view:bank_account",
     "update:bank_account", // No Create or Delete for bank accounts
@@ -182,6 +212,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "approve:opening_inventory",
   ],
   PROJECT_MANAGER: [
+    "view:project",
     "use:ai_chat",
     "view:budget",
     "create:budget",
@@ -221,10 +252,48 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "manage:material_settings",
     "create:opening_inventory",
   ],
-  SALES: ["view:budget", "view:client_invoice", "create:client_invoice", "update:client_invoice"],
-  DESIGNER: ["view:budget", "view:rap", "view:rab"],
-  MARKETING: [],
 };
+
+/**
+ * Cakupan data proyek per peran.
+ *
+ * `GLOBAL` melihat seluruh proyek; `ASSIGNED` hanya proyek yang ditugaskan
+ * kepadanya. Aturan ini sebelumnya ditulis dua kali — sekali untuk kueri
+ * halaman (`lib/auth/scoping.ts`) dan sekali lagi untuk tool AI
+ * (`lib/ai/tools/context.ts`) — sehingga batas AI bisa menyimpang dari batas
+ * halaman tanpa ada yang menyadarinya. Sekarang keduanya membaca dari sini.
+ *
+ * Pada fase peran dinamis, nilai ini pindah menjadi kolom `role.data_scope`;
+ * tabel di bawah menjadi seed-nya, sama seperti `ROLE_PERMISSIONS`.
+ */
+export type RoleDataScope = "GLOBAL" | "ASSIGNED" | "NONE";
+
+const ROLE_DATA_SCOPE: Record<string, RoleDataScope> = {
+  OWNER: "GLOBAL",
+  FINANCE_ADMIN: "GLOBAL",
+  PROJECT_MANAGER: "ASSIGNED",
+  /*
+   * `NONE`, bukan `GLOBAL`, dan itu memang perilaku hari ini: Purchasing tidak
+   * pernah lolos `scopeProjectQuery`. Yang membuatnya seolah punya akses global
+   * adalah domain material — di sana pemeriksaan akses proyek DILEWATI untuk
+   * peran yang memindahkan stok, karena gudang memang bukan milik satu proyek.
+   * Itu properti pekerjaannya, bukan properti cakupan datanya, jadi ia
+   * dinyatakan sebagai izin (`create:stock_movement`) di call site material.
+   */
+  PURCHASING: "NONE",
+};
+
+/**
+ * Peran tak dikenal mendapat `NONE`: gagal ke arah tertutup, bukan terbuka.
+ */
+export function getRoleDataScope(roleName: string | null | undefined): RoleDataScope {
+  if (!roleName) return "NONE";
+  return ROLE_DATA_SCOPE[roleName.toUpperCase()] ?? "NONE";
+}
+
+export function hasGlobalDataScope(roleName: string | null | undefined): boolean {
+  return getRoleDataScope(roleName) === "GLOBAL";
+}
 
 // 3. Pemetaan Cepat UUID Peran ke Nama Peran (Static Mapping)
 export const ROLE_ID_TO_NAME: Record<string, string> = {
@@ -232,9 +301,6 @@ export const ROLE_ID_TO_NAME: Record<string, string> = {
   "00000000-0000-0000-0000-000000000002": "FINANCE_ADMIN",
   "00000000-0000-0000-0000-000000000003": "PROJECT_MANAGER",
   "00000000-0000-0000-0000-000000000004": "PURCHASING",
-  "00000000-0000-0000-0000-000000000005": "SALES",
-  "00000000-0000-0000-0000-000000000006": "DESIGNER",
-  "00000000-0000-0000-0000-000000000007": "MARKETING",
 };
 
 /**
@@ -252,6 +318,10 @@ export function resolveStaticRoleName(roleId: string): string | undefined {
  * Memeriksa apakah sebuah peran memiliki izin tertentu. Murni dan sinkron,
  * sehingga aman dipakai di Client Component maupun klien native.
  */
-export function actorHasPermission(roleName: string, permission: PermissionKey): boolean {
+export function actorHasPermission(
+  roleName: string | null | undefined,
+  permission: PermissionKey,
+): boolean {
+  if (!roleName) return false;
   return (ROLE_PERMISSIONS[roleName] ?? []).includes(permission);
 }

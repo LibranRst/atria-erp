@@ -39,6 +39,8 @@ export async function createSubmittedFieldRequestTx(
     readonly receiptGroupId?: string | null;
     readonly item: FieldRequestSubmissionItem;
     readonly includeApprovalCategoryLabel?: boolean;
+    /** Ambang persetujuan Owner dalam rupiah, dibaca pemanggil dari konfigurasi. */
+    readonly ownerApprovalThreshold: number;
   },
 ): Promise<typeof projectCost.$inferSelect> {
   const budgetContext = await resolveBudgetCategoryForExpense({
@@ -80,6 +82,7 @@ export async function createSubmittedFieldRequestTx(
     allocatedAmount: Number(budgetCategory.allocatedAmount),
     actualAmount: Number(budgetCategory.actualAmount),
     otherPendingAmount: Number(budgetCategory.pendingAmount),
+    ownerApprovalThreshold: args.ownerApprovalThreshold,
   });
   const projectCostId = crypto.randomUUID();
 
@@ -108,6 +111,7 @@ export async function createSubmittedFieldRequestTx(
       description: args.item.description,
       receiptImageUrl: args.receiptImageUrl || null,
       status: "SUBMITTED",
+      requiresOwnerApproval: requiresApproval,
       budgetOverrun: isOverrun,
       createdAt: new Date(),
       updatedAt: new Date(),

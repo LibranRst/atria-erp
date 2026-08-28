@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
 import React, { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { LockedTabState } from "../shared/project-tab-states";
@@ -15,7 +16,6 @@ import type { TabId } from "../shared/project-tabs";
 interface ProfitabilityPanelProps {
   readonly projectId: string;
   readonly projectStatus: string;
-  readonly userRole: string;
   readonly contractValue: number;
   readonly totalAllocated: number;
   readonly projectedGrossProfit: number;
@@ -34,7 +34,6 @@ interface ProfitabilityPanelProps {
 export function ProfitabilityPanel({
   projectId,
   projectStatus,
-  userRole,
   contractValue,
   totalAllocated,
   projectedGrossProfit,
@@ -49,6 +48,7 @@ export function ProfitabilityPanel({
   nextSetupIcon,
   setActiveTab,
 }: ProfitabilityPanelProps): React.JSX.Element {
+  const can = useCan();
   const [closingChecklist, setClosingChecklist] = useState<ProjectClosingChecklist | null>(null);
   const [closingMessage, setClosingMessage] = useState<string | null>(null);
   const [closingNote, setClosingNote] = useState("");
@@ -118,7 +118,7 @@ export function ProfitabilityPanel({
         cashPosition={cashPosition}
       />
 
-      {(userRole === "OWNER" || userRole === "FINANCE_ADMIN") && (
+      {can("view:profitability") && (
         <ProjectClosingSection
           projectStatus={projectStatus}
           closingChecklist={closingChecklist}

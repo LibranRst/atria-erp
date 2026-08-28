@@ -1,3 +1,6 @@
+import { getApprovalThresholds } from "@/lib/finance/approval-thresholds";
+import { thresholdCentsToRupiah } from "@atria/core/finance/approval-thresholds";
+import { actorHasPermission, getRoleDataScope } from "@atria/core/auth/permissions";
 import "server-only";
 
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -31,7 +34,7 @@ import {
 export async function getProjectDetailData(projectId: string): Promise<ProjectTabsProps> {
   const session = await requireServerSession();
   const roleName = (await resolveRoleName(session.user.roleId)) ?? "UNKNOWN";
-  const isFinanceOperator = roleName === "OWNER" || roleName === "FINANCE_ADMIN";
+  const isFinanceOperator = actorHasPermission(roleName, "view:bank_account");
 
   try {
     await assertProjectAccess(projectId, session.user.id, roleName);
@@ -181,7 +184,7 @@ export async function getProjectDetailData(projectId: string): Promise<ProjectTa
     orderBy: [desc(stockMovement.createdAt)],
   });
 
-  const isPM = roleName === "PROJECT_MANAGER";
+  const isPM = getRoleDataScope(roleName) === "ASSIGNED";
   const pmProjectFilter = isPM ? eq(project.projectManagerId, session.user.id) : undefined;
   const projectsData = await db.query.project.findMany({
     where: pmProjectFilter
@@ -245,6 +248,9 @@ export async function getProjectDetailData(projectId: string): Promise<ProjectTa
     project: projectData,
     costCategories: costCategoriesData,
     userRole: roleName,
+    vendorPaymentApprovalThreshold: thresholdCentsToRupiah(
+      (await getApprovalThresholds()).vendorPaymentCents,
+    ),
     userId: session.user.id,
     bankAccounts: bankAccountsData,
     costs: costsForList,

@@ -62,9 +62,12 @@ type VendorPaymentOperations = {
 export function useVendorPaymentOperations({
   projectId,
   bankAccounts,
+  ownerApprovalThreshold,
 }: {
   readonly projectId?: string;
   readonly bankAccounts: readonly VendorListBankAccount[];
+  /** Ambang dari konfigurasi server; dipakai untuk menjelaskan hasil, bukan memutuskan. */
+  readonly ownerApprovalThreshold: number;
 }): VendorPaymentOperations {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
@@ -164,7 +167,7 @@ export function useVendorPaymentOperations({
         setSuccess({
           title: "Pembayaran vendor dijadwalkan",
           description:
-            Number(scheduleAmount) >= 5_000_000
+            Number(scheduleAmount) >= ownerApprovalThreshold
               ? "Rencana dibuat dan menunggu persetujuan Owner sebelum dapat dicairkan."
               : "Rencana dibuat. Saldo rekening belum berubah sampai pembayaran dicairkan.",
           facts: [

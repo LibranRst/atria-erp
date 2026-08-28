@@ -22,12 +22,12 @@ export default async function ExpensesPage(): Promise<React.JSX.Element> {
       <ExpenseList
         initialCosts={data.initialCosts}
         bankAccounts={data.bankAccounts}
-        userRole={data.userRole}
         vendorBills={data.vendorBills}
         vendorPayments={data.vendorPayments}
         vendors={data.vendors}
         projects={data.projects}
         pendingApprovalsCount={data.pendingApprovalsCount}
+        vendorPaymentApprovalThreshold={data.vendorPaymentApprovalThreshold}
       />
     </section>
   );

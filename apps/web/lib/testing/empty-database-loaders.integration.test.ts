@@ -1,3 +1,4 @@
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
 import { expect, it, mock } from "bun:test";
 
 import { getApprovalsPageData } from "@/features/approvals/server/get-approvals-page-data";
@@ -36,6 +37,9 @@ const OWNER: Actor = {
   email: "owner@example.com",
   isActive: true,
   mustChangePassword: false,
+  sessionId: "test-session",
+  permissions: ROLE_PERMISSIONS["OWNER"] ?? [],
+  dataScope: "GLOBAL",
   developerActorUserId: null,
 };
 

@@ -2,7 +2,8 @@ import "server-only";
 
 import { db } from "@/db";
 import { project } from "@/db/schema";
-import { ROLE_PERMISSIONS, type PermissionKey } from "@/lib/auth/permissions";
+import type { RoleDataScope } from "@atria/core/auth/permissions";
+import { type PermissionKey } from "@/lib/auth/permissions";
 import { and, eq, inArray } from "drizzle-orm";
 
 /**
@@ -15,16 +16,29 @@ import { and, eq, inArray } from "drizzle-orm";
 export type AiToolContext = {
   readonly userId: string;
   readonly roleName: string;
+  readonly roleId: string;
+  /**
+   * Izin efektif sesi, diselesaikan dari database di route handler.
+   *
+   * Dulu tool menurunkannya sendiri dari `ROLE_PERMISSIONS[roleName]`. Sejak
+   * izin sebuah peran bisa disunting Owner, matriks itu hanya nilai awal —
+   * membacanya di sini membuat batas asisten menyimpang dari batas yang
+   * ditegakkan Server Action, tanpa ada yang menyadarinya.
+   */
+  readonly permissions: readonly PermissionKey[];
+  readonly dataScope: RoleDataScope;
 };
 
 /**
- * Peran dengan akses finansial global. Peran lain dibatasi pada proyek
- * yang mereka pegang sendiri.
+ * Cakupan data tool AI adalah cakupan data yang sama dengan halaman.
+ *
+ * Dulu himpunan peran ini ditulis ulang di sini, sehingga batas AI bisa
+ * menyimpang dari batas halaman tanpa ada yang menyadarinya — persis kelas
+ * kesalahan yang paling mahal untuk asisten yang membaca data finansial.
+ * Sekarang cakupannya datang dari kolom `role.data_scope` yang sama.
  */
-const GLOBAL_SCOPE_ROLES = new Set(["OWNER", "FINANCE_ADMIN"]);
-
 export function hasGlobalScope(context: AiToolContext): boolean {
-  return GLOBAL_SCOPE_ROLES.has(context.roleName);
+  return context.dataScope === "GLOBAL";
 }
 
 /**
@@ -65,11 +79,11 @@ export const PROJECT_ACCESS_DENIED = {
  *
  * Tool mengembalikan penolakan sebagai data supaya model bisa menjelaskannya
  * kepada pengguna, bukan melempar error yang menghentikan seluruh jawaban.
- * Sumber kebenarannya tetap `ROLE_PERMISSIONS` yang sama dengan yang ditegakkan
- * di Server Action.
+ * Sumber kebenarannya adalah daftar izin efektif yang sama dengan yang
+ * ditegakkan Server Action.
  */
 export function hasPermission(context: AiToolContext, permission: PermissionKey): boolean {
-  return (ROLE_PERMISSIONS[context.roleName] ?? []).includes(permission);
+  return context.permissions.includes(permission);
 }
 
 export function permissionDenied(what: string): { readonly error: string } {
@@ -100,6 +114,11 @@ const RESTRICTED_TOPICS: readonly {
     // Cermin gerbang getPendingApprovals di finance-tools.ts.
     isRestricted: (context) => !hasGlobalScope(context),
     label: "antrean persetujuan lintas seluruh proyek perusahaan",
+  },
+  {
+    // Cermin gerbang whoCanDo dan analyzeRoleChangeImpact di role-tools.ts.
+    isRestricted: (context) => !hasPermission(context, "manage:roles"),
+    label: "daftar pemegang izin dan simulasi perubahan peran",
   },
 ];
 

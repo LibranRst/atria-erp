@@ -34,11 +34,11 @@ describe("AdaptiveSelect", () => {
     expect(renderSelect(options(6))).toContain('aria-haspopup="listbox"');
   });
 
-  test("renders a dialog trigger for long or contextual options", () => {
+  test("renders a dialog trigger only when search is needed", () => {
     expect(renderSelect(options(7))).toContain('aria-haspopup="dialog"');
     expect(
       renderSelect([{ value: "0", label: "Aktif", description: "Proyek sedang berjalan" }]),
-    ).toContain('aria-haspopup="dialog"');
+    ).toContain('aria-haspopup="listbox"');
   });
 
   test("honors explicit presentation overrides", () => {

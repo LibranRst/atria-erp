@@ -40,7 +40,7 @@ export function CompactFormDialog({
 }
 
 export function SelectionDialog(props: DialogShellProps): React.JSX.Element {
-  return <DialogFrame {...props} />;
+  return <DialogFrame {...props} presentation="choice" />;
 }
 
 export function SearchDialog({
@@ -71,11 +71,11 @@ export function SearchDialog({
       description={description}
       pending={pending}
       placement="top"
-      footer={footer}
-      onClose={onClose}
-    >
-      <div className="sticky top-0 z-10 -mx-1 mb-3 bg-surface-container-low px-1 pb-1">
-        <div className="flex min-h-12 items-center gap-2 rounded-full bg-white px-4 shadow-control ring-1 ring-ring-control focus-within:ring-2 focus-within:ring-focus-ring">
+      presentation="choice"
+      showCloseButton={false}
+      detachedCloseButton
+      utility={
+        <div className="flex min-h-12 items-center gap-2 rounded-full bg-white px-4 shadow-raised ring-1 ring-ring-control focus-within:ring-2 focus-within:ring-focus-ring">
           <AppIcon name="search" className="icon-sm shrink-0 text-on-surface-variant" />
           <input
             type="search"
@@ -86,7 +86,7 @@ export function SearchDialog({
             aria-label={searchPlaceholder}
             autoFocus
             data-dialog-autofocus="true"
-            className="min-w-0 flex-1 bg-transparent text-base font-semibold text-on-surface outline-none placeholder:text-on-surface-variant/55"
+            className="min-w-0 flex-1 bg-transparent text-base font-semibold text-on-surface outline-none placeholder:text-on-surface-variant/55 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           />
           {query ? (
             <button
@@ -99,7 +99,10 @@ export function SearchDialog({
             </button>
           ) : null}
         </div>
-      </div>
+      }
+      footer={footer}
+      onClose={onClose}
+    >
       {children}
     </DialogFrame>
   );

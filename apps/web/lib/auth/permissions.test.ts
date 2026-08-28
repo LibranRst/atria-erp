@@ -16,6 +16,13 @@ describe("Atria ERP RBAC - permissions.ts", () => {
   });
 
   // Test assertPermission
+  /*
+   * Fixture memakai `role` (nama), bukan `roleId`.
+   *
+   * Sejak izin pindah ke tabel `role_permission`, jalur `roleId` membaca
+   * database — dan test unit ini menguji **matriks seed**, bukan kueri. Jalur
+   * database dikunci terpisah di `lib/auth/role-access` beserta cadangannya.
+   */
   describe("assertPermission", () => {
     it("harus mengizinkan OWNER melakukan tindakan apa pun", async () => {
       const ownerUser = { id: "user-owner-id", role: "owner" };
@@ -26,7 +33,7 @@ describe("Atria ERP RBAC - permissions.ts", () => {
     });
 
     it("harus memvalidasi izin FINANCE_ADMIN dengan benar", async () => {
-      const financeUser = { id: "user-fin-id", roleId: "00000000-0000-0000-0000-000000000002" };
+      const financeUser = { id: "user-fin-id", role: "finance_admin" };
 
       // Diizinkan rekonsiliasi ledger
       await expect(assertPermission(financeUser, "reconcile:ledger")).resolves.toBeUndefined();
@@ -50,7 +57,7 @@ describe("Atria ERP RBAC - permissions.ts", () => {
     });
 
     it("harus membatasi izin PROJECT_MANAGER hanya pada pengajuan biaya dan draf anggaran", async () => {
-      const pmUser = { id: "user-pm-id", roleId: "00000000-0000-0000-0000-000000000003" };
+      const pmUser = { id: "user-pm-id", role: "project_manager" };
 
       // Diizinkan membuat draf anggaran
       await expect(assertPermission(pmUser, "create:budget")).resolves.toBeUndefined();
@@ -64,7 +71,7 @@ describe("Atria ERP RBAC - permissions.ts", () => {
     it("harus memberi Purchasing akses material dan membatasi akses ledger", async () => {
       const purchasingUser = {
         id: "user-purchasing-id",
-        roleId: "00000000-0000-0000-0000-000000000004",
+        role: "purchasing",
       };
 
       await expect(assertPermission(purchasingUser, "view:inventory")).resolves.toBeUndefined();
@@ -86,7 +93,7 @@ describe("Atria ERP RBAC - permissions.ts", () => {
     });
 
     it("harus membatasi PM agar hanya membaca inventory dan RAP tanpa mutasi stock global", async () => {
-      const pmUser = { id: "user-pm-id", roleId: "00000000-0000-0000-0000-000000000003" };
+      const pmUser = { id: "user-pm-id", role: "project_manager" };
 
       await expect(assertPermission(pmUser, "view:inventory")).resolves.toBeUndefined();
       await expect(assertPermission(pmUser, "view:rap")).resolves.toBeUndefined();
@@ -110,16 +117,16 @@ describeIntegration("Atria ERP Project Scoping - scoping.ts", () => {
 
   // Test scopeProjectQuery
   describe("scopeProjectQuery", () => {
-    it("harus mengembalikan undefined untuk OWNER dan FINANCE_ADMIN agar tidak difilter", () => {
-      const ownerFilter = scopeProjectQuery("user-owner-id", "OWNER");
-      const finFilter = scopeProjectQuery("user-fin-id", "FINANCE_ADMIN");
+    it("harus mengembalikan undefined untuk OWNER dan FINANCE_ADMIN agar tidak difilter", async () => {
+      const ownerFilter = await scopeProjectQuery("user-owner-id", "OWNER");
+      const finFilter = await scopeProjectQuery("user-fin-id", "FINANCE_ADMIN");
 
       expect(ownerFilter).toBeUndefined();
       expect(finFilter).toBeUndefined();
     });
 
-    it("harus mengembalikan filter PM yang sesuai untuk PROJECT_MANAGER", () => {
-      const pmFilter = scopeProjectQuery("user-pm-id", "PROJECT_MANAGER");
+    it("harus mengembalikan filter PM yang sesuai untuk PROJECT_MANAGER", async () => {
+      const pmFilter = await scopeProjectQuery("user-pm-id", "PROJECT_MANAGER");
 
       expect(pmFilter).toBeDefined();
 

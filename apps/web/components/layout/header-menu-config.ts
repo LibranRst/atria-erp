@@ -1,4 +1,4 @@
-import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
+import type { PermissionKey } from "@atria/core/auth/permissions";
 
 export type HeaderMenuItem = {
   readonly label: string;
@@ -64,33 +64,29 @@ const HEADER_MENU_ITEMS: readonly HeaderMenuItem[] = [
   },
 ];
 
-export function getHeaderMenuItems(roleName: string | null): readonly HeaderMenuItem[] {
+/**
+ * Menu bilah atas dibaca dari izin efektif sesi.
+ *
+ * Sebelumnya daftar ini diturunkan dari nama peran lalu dicari di matriks seed
+ * — dua lapis yang sama-sama buta terhadap peran buatan Owner: peran baru tidak
+ * punya nama di peta UUID statis, sehingga menunya kosong berapa pun izin yang
+ * diberikan. Sesi tanpa izin sama sekali tetap tidak mendapat menu.
+ */
+export function getHeaderMenuItems(
+  permissions: readonly PermissionKey[],
+): readonly HeaderMenuItem[] {
+  if (permissions.length === 0) return [];
+  const held = new Set<PermissionKey>(permissions);
+  const can = (permission: PermissionKey): boolean => held.has(permission);
+
   return HEADER_MENU_ITEMS.filter((item) => {
-    if (!roleName) return false;
-
-    // Dibaca dari matriks izin yang sama dengan yang ditegakkan di server, bukan
-    // dari daftar peran yang ditulis ulang di sini: rute AI sudah memeriksa
-    // `use:ai_chat` sebelum melakukan apa pun, dan menunya tidak boleh
-    // menawarkan pintu yang akan ditolak.
-    if (item.label === "Asisten AI") {
-      return (ROLE_PERMISSIONS[roleName] ?? []).includes("use:ai_chat");
-    }
-
-    if (item.label === "Dashboard") {
-      return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
-    }
-
-    if (item.label === "Persetujuan") {
-      return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
-    }
-
-    if (item.label === "Rekonsiliasi") {
-      return roleName === "OWNER" || roleName === "FINANCE_ADMIN";
-    }
-
-    if (item.label === "Pengaturan ERP") {
-      return roleName === "OWNER" || roleName === "FINANCE_ADMIN" || roleName === "PURCHASING";
-    }
+    // Rute AI sudah memeriksa `use:ai_chat` sebelum melakukan apa pun, dan
+    // menunya tidak boleh menawarkan pintu yang akan ditolak.
+    if (item.label === "Asisten AI") return can("use:ai_chat");
+    if (item.label === "Dashboard") return can("view:ledger");
+    if (item.label === "Persetujuan") return can("view:approval_queue");
+    if (item.label === "Rekonsiliasi") return can("reconcile:ledger");
+    if (item.label === "Pengaturan ERP") return can("view:settings");
 
     return true;
   });

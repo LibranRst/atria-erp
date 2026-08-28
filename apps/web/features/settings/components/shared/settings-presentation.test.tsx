@@ -17,10 +17,11 @@ const libraryManagerPath = new URL("../library/library-settings-manager.tsx", im
 
 describe("Settings presentation", () => {
   test("keeps query and legacy settings routes compatible", () => {
-    expect(parseSettingsTab("materials")).toBe("materials");
-    expect(parseSettingsTab("unknown")).toBe("overview");
-    expect(settingsTabFromPathname("/settings/library")).toBe("library");
-    expect(settingsTabUrl("budget")).toBe("/settings?tab=budget");
+    expect(parseSettingsTab("materials")).toBe("catalog");
+    expect(parseSettingsTab("unknown")).toBe("financial");
+    expect(settingsTabFromPathname("/settings/library")).toBe("catalog");
+    expect(settingsTabUrl("financial")).toBe("/settings");
+    expect(settingsTabUrl("catalog")).toBe("/settings?tab=catalog");
   });
 
   test("renders a default-project posture and role-aware grouped modules", () => {
@@ -31,10 +32,10 @@ describe("Settings presentation", () => {
           permissions: {
             canManageBudgetSettings: true,
             canManageExpenseCategories: true,
-            canManageItemLibrary: false,
+            canManageItemLibrary: true,
             canManageMaterialSettings: true,
-            canManageUsers: true,
-            canManageVendors: true,
+            canManageUsers: false,
+            canManageVendors: false,
           },
           budgetCapRatio: 0.9,
           categoryAllocationRatio: 0.545,
@@ -55,14 +56,14 @@ describe("Settings presentation", () => {
     expect(html).toContain("divide-y");
   });
 
-  test("keeps five peer modules in overflow-capable document-flow navigation", () => {
+  test("keeps consolidated core modules in navigation", () => {
     const html = renderToStaticMarkup(
-      <SettingsNavigation value="overview" onChange={() => undefined} />,
+      <SettingsNavigation value="financial" onChange={() => undefined} />,
     );
-    expect(html).toContain('data-sticky="false"');
-    expect(html).toContain("Ringkasan");
-    expect(html).toContain("Budget");
-    expect(html).toContain("Material");
+    expect(html).not.toContain("data-sticky");
+    expect(html).toContain("Finansial");
+    expect(html).toContain("Katalog");
+    expect(html).toContain("Organisasi");
     expect(html).toContain('role="tablist"');
   });
 
@@ -83,7 +84,8 @@ describe("Settings presentation", () => {
         filterTitle="Filter data"
         onStatusChange={() => undefined}
         onSearchChange={() => undefined}
-        onClearFilters={() => undefined}
+        onEnterSearch={() => undefined}
+        onExitSearch={() => undefined}
         onOpenFilters={() => undefined}
         onApplyFilters={() => undefined}
         onResetFilterDraft={() => undefined}
@@ -105,12 +107,16 @@ describe("Settings presentation", () => {
 
     expect(bar).toContain("onResetFilterDraft");
     expect(bar).toContain("onApplyFilters();");
+    expect(bar).toContain("onEnterSearch();");
+    expect(bar).toContain("onExitSearch();");
     expect(bar).toContain("<AnchoredFilterPanel");
     expect(bar).not.toContain("<BottomSheet");
     expect(materials).toContain("categoryFilterDraft");
     expect(materials).toContain("setCategoryFilter(categoryFilterDraft)");
     expect(library).toContain("typeDraft");
     expect(library).toContain("setType(typeDraft)");
+    expect(materials).toContain("suspendedFiltersRef.current");
+    expect(library).toContain("suspendedFiltersRef.current");
   });
 
   test("uses a route-specific structural skeleton", () => {

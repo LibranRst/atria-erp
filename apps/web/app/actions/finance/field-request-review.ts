@@ -10,7 +10,7 @@ import {
 } from "@/lib/budget/budget-sync";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { decideExpenseApproval } from "@atria/core/finance/expense-approval-rule";
-import { resolveRoleName } from "@/lib/auth/permissions";
+import { actorHasPermission, resolveRoleName } from "@/lib/auth/permissions";
 import {
   approveFieldRequestSchema,
   type ApproveFieldRequestInput,
@@ -34,7 +34,7 @@ export async function verifyFieldRequest(
     if (!authResult.success) return authResult;
     const currentUser = authResult.data.user;
     const roleName = await resolveRoleName(currentUser.roleId);
-    if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN") {
+    if (!actorHasPermission(roleName, "verify:cost")) {
       return {
         success: false,
         error: {
@@ -83,7 +83,13 @@ export async function verifyFieldRequest(
             otherPendingAmount: Math.max(0, Number(budgetCategory.pendingAmount) - amount),
           }).isOverrun
         : false;
-      const requiresApproval = amount >= 5000000 || cost.budgetOverrun || overrunNow;
+      /*
+       * Keputusan ambang dibaca dari baris pengajuan, bukan dihitung ulang:
+       * ambang bisa berubah setelah pengajuan masuk, dan pengajuan yang sudah
+       * menunggu tidak boleh berpindah jalur karena angka di Settings digeser.
+       * Overrun tetap dinilai ulang — itu memang kondisi yang bisa berubah.
+       */
+      const requiresApproval = cost.requiresOwnerApproval || cost.budgetOverrun || overrunNow;
       const nextStatus = requiresApproval ? "VERIFIED" : "APPROVED";
 
       const [updatedCost] = await tx

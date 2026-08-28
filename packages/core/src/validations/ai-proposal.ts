@@ -165,3 +165,54 @@ export const aiGoodsReceiptProposalSchema = z.object({
 });
 
 export type AiGoodsReceiptProposalInput = z.infer<typeof aiGoodsReceiptProposalSchema>;
+
+/**
+ * Usulan perubahan izin peran dari kartu asisten.
+ *
+ * Hanya membawa apa yang dibutuhkan untuk **mengulang** keputusannya di server:
+ * peran mana, dan kunci mana yang ditambah/dicabut. Tidak ada label, tidak ada
+ * ringkasan dampak, tidak ada daftar pengguna — semuanya diturunkan ulang dari
+ * database saat konfirmasi, karena isi kartu datang dari klien dan tidak boleh
+ * menjadi dasar penulisan.
+ */
+export const aiRoleChangeProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  roleId: z.string().regex(uuidRegex, "ID peran tidak valid."),
+  grant: z.array(z.string().min(1)).max(50),
+  revoke: z.array(z.string().min(1)).max(50),
+});
+
+export type AiRoleChangeProposalInput = z.infer<typeof aiRoleChangeProposalSchema>;
+
+/**
+ * Usulan pembuatan peran baru dari kartu asisten.
+ *
+ * Berbeda dari perubahan izin, pembuatan peran tidak mengubah kemampuan siapa
+ * pun saat diterapkan: peran baru selalu nol pemegang, dan penugasan orang ke
+ * dalamnya menuntut `manage:users` yang tertutup dari jalur asisten. Yang
+ * dijaga di sini bukan dampak seketikanya, melainkan isi peran itu ketika
+ * seseorang ditugaskan ke dalamnya berbulan-bulan kemudian.
+ */
+export const aiCreateRoleProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  name: z
+    .string()
+    .trim()
+    .min(3, "Nama peran minimal 3 karakter.")
+    .max(50, "Nama peran maksimal 50 karakter."),
+  description: z.string().trim().max(255).optional(),
+  dataScope: z.enum(["GLOBAL", "ASSIGNED", "NONE"]),
+  permissions: z.array(z.string().min(1)).max(200),
+});
+
+export type AiCreateRoleProposalInput = z.infer<typeof aiCreateRoleProposalSchema>;

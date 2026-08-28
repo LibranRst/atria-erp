@@ -1,5 +1,6 @@
 "use server";
 
+import { getVendorPaymentApprovalThresholdCents } from "@/lib/finance/approval-thresholds";
 import { db } from "@/db";
 import {
   vendorBill,
@@ -64,6 +65,7 @@ export async function payVendorBill(
     }
 
     // Execute inside a database transaction block (Option A)
+    const ownerApprovalThresholdCents = await getVendorPaymentApprovalThresholdCents();
     const result = await db.transaction(async (tx) => {
       // 1. Fetch and Lock the vendor payment record
       const [payment] = await tx
@@ -134,11 +136,14 @@ export async function payVendorBill(
       ) {
         throw new Error("PAYMENT_EXCEEDS_VENDOR_BILL_OUTSTANDING");
       }
-      const requiresApproval = vendorPaymentRequiresOwnerApproval({
-        amountCents: paymentAmountCents,
-        categoryAllocatedCents: parseNumericToCents(budgetCategory.allocatedAmount),
-        categoryActualCents: parseNumericToCents(budgetCategory.actualAmount),
-      });
+      const requiresApproval =
+        payment.requiresOwnerApproval ||
+        vendorPaymentRequiresOwnerApproval({
+          amountCents: paymentAmountCents,
+          categoryAllocatedCents: parseNumericToCents(budgetCategory.allocatedAmount),
+          categoryActualCents: parseNumericToCents(budgetCategory.actualAmount),
+          ownerApprovalThresholdCents,
+        });
 
       const appRecord = requiresApproval
         ? await tx.query.approval.findFirst({

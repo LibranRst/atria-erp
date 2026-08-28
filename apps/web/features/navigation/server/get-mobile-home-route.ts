@@ -1,3 +1,4 @@
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import "server-only";
 
 import { eq } from "drizzle-orm";
@@ -19,7 +20,7 @@ export type MobileHomeRoute = {
 };
 
 export async function getMobileHomeRoute(actor: Actor): Promise<MobileHomeRoute> {
-  if (actor.roleName === "OWNER") {
+  if (actorHasPermission(actor.roleName, "manage:onboarding")) {
     const onboarding = await getOwnerOnboardingOverviewUseCase({
       id: actor.userId,
       roleId: actor.roleId,
@@ -30,7 +31,7 @@ export async function getMobileHomeRoute(actor: Actor): Promise<MobileHomeRoute>
     return { route: "/ledger", onboardingStep: null };
   }
 
-  if (actor.roleName === "FINANCE_ADMIN") {
+  if (actorHasPermission(actor.roleName, "review:onboarding")) {
     const [stateRow, pending] = await Promise.all([
       db.query.appConfig.findFirst({
         where: eq(appConfig.key, OWNER_ONBOARDING_CONFIG_KEY),
@@ -47,7 +48,17 @@ export async function getMobileHomeRoute(actor: Actor): Promise<MobileHomeRoute>
     return { route: "/ledger", onboardingStep: null };
   }
 
-  if (actor.roleName === "PURCHASING") {
+  /*
+   * Tangga tujuan: buku kas dulu, lalu proyek, lalu gudang. Peran tanpa
+   * ketiganya mendarat di daftar proyek — halaman paling tidak berbahaya.
+   */
+  if (actorHasPermission(actor.roleName, "view:ledger")) {
+    return { route: "/ledger", onboardingStep: null };
+  }
+  if (actorHasPermission(actor.roleName, "view:project")) {
+    return { route: "/projects", onboardingStep: null };
+  }
+  if (actorHasPermission(actor.roleName, "view:inventory")) {
     return { route: "/materials", onboardingStep: null };
   }
   return { route: "/projects", onboardingStep: null };

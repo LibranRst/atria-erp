@@ -1,61 +1,53 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   updateBudgetAllocationDefaults,
+  updateExpenseCategoryDetails,
   type BudgetAllocationSettingRow,
+  type ExpenseCategorySettingRow,
 } from "@/app/actions/settings/system";
-import { SettingsHeader } from "../shared/settings-ui";
 import {
   AppIcon,
+  Button,
   ConfirmationDialog,
+  DuotoneIconTile,
   FormField,
-  FormRiskNotice,
   FormSection,
   GroupedSurface,
+  MetadataChip,
   MoneyInput,
   MoneyValue,
   NumericInput,
+  OperationalFormSheet,
+  SwitchRow,
   Textarea,
   TextInput,
-  WorkspaceModuleHeader,
   WorkspaceStatusLabel,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
-const fullMoney = (value: number): string => `Rp ${Math.round(value).toLocaleString("id-ID")}`;
+import { SettingsInverseSurface } from "../shared/settings-inverse-surface";
+
 const percent = (value: number): string =>
   new Intl.NumberFormat("id-ID", {
     style: "percent",
     maximumFractionDigits: 1,
   }).format(value);
 
-/**
- * Rasio disimpan sebagai pecahan, tetapi diedit sebagai persen. `rasio * 100`
- * membocorkan galat IEEE-754 pada sebagian nilai — `0.28 * 100` menghasilkan
- * `28.000000000000004`, dan angka mentah itu tampil di dalam input.
- *
- * Kolom rasio adalah numeric dengan 6 desimal, jadi persennya hanya bermakna
- * sampai 4 desimal. Pembulatan di bawah menghapus galat tanpa membuang
- * presisi yang benar-benar disimpan.
- */
 const ratioToPercentInput = (ratio: number): number => Math.round(ratio * 1_000_000) / 10_000;
 
 type BudgetSettingsManagerProps = {
   readonly initialSetting: BudgetAllocationSettingRow;
-  readonly roleName: string;
+  readonly initialCategories?: readonly ExpenseCategorySettingRow[];
   readonly canManage: boolean;
-  readonly hideHeader?: boolean;
   readonly presentation?: "settings" | "onboarding";
   readonly onMutationComplete?: () => void;
   readonly onDirtyChange?: (dirty: boolean) => void;
 };
 
 export function BudgetSettingsManager({
-  hideHeader = false,
   initialSetting,
-  roleName,
+  initialCategories = [],
   canManage,
   presentation = "settings",
   onMutationComplete,
@@ -63,25 +55,34 @@ export function BudgetSettingsManager({
 }: BudgetSettingsManagerProps): React.JSX.Element {
   const [setting, setSetting] = React.useState(initialSetting);
   const [baseline, setBaseline] = React.useState(initialSetting);
+  const [categories, setCategories] = React.useState(initialCategories);
   const [confirmSave, setConfirmSave] = React.useState(false);
   const [sampleValue, setSampleValue] = React.useState(100_000_000);
-  const [message, setMessage] = React.useState<string | null>(null);
+  const [editingCategory, setEditingCategory] = React.useState<ExpenseCategorySettingRow | null>(
+    null,
+  );
+  const [editingCategoryBaseline, setEditingCategoryBaseline] =
+    React.useState<ExpenseCategorySettingRow | null>(null);
+  const [confirmCategoryClose, setConfirmCategoryClose] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
+  const [categoryPending, startCategoryTransition] = React.useTransition();
+
   const allocation = setting.categories.reduce(
     (sum, category) => sum + (category.isEnabled ? category.ratioPercentage : 0),
     0,
   );
   const internalBudget = sampleValue * setting.budgetCapRatio;
-  const allocated = internalBudget * allocation;
-  const buffer = Math.max(0, internalBudget - allocated);
   const overLimit = allocation > 1.000001;
   const dirty = JSON.stringify(setting) !== JSON.stringify(baseline);
+
   React.useEffect(() => {
     onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
 
-  function save(): void {
-    setMessage(null);
+  const allocationWidth = Math.min(100, Math.max(0, allocation * 100));
+  const bufferWidth = Math.min(100, Math.max(0, (1 - allocation) * 100));
+
+  function saveBudget(): void {
     startTransition(async () => {
       const result = await updateBudgetAllocationDefaults({
         budgetAllocationSettingId: setting.id,
@@ -98,105 +99,150 @@ export function BudgetSettingsManager({
         setSetting(result.data);
         setBaseline(result.data);
         setConfirmSave(false);
-        setMessage("Default budget berhasil disimpan.");
-        toast.success("Default budget berhasil disimpan.");
+        toast.success("Default formula budget berhasil disimpan.");
         onMutationComplete?.();
       } else {
-        setMessage(result.error.message);
         toast.error(result.error.message);
       }
     });
   }
 
+  function openCategoryEditor(
+    categoryId: string,
+    categoryCode: string,
+    categoryName: string,
+  ): void {
+    const existing = categories.find((c) => c.id === categoryId || c.code === categoryCode);
+    const catToEdit: ExpenseCategorySettingRow = existing ?? {
+      id: categoryId,
+      code: categoryCode,
+      name: categoryName,
+      description: "",
+      defaultRatio: 0,
+      sortOrder: 0,
+      isActive: true,
+      isCore: true,
+    };
+    setEditingCategory(catToEdit);
+    setEditingCategoryBaseline(catToEdit);
+  }
+
+  function saveCategory(): void {
+    if (!editingCategory) return;
+    startCategoryTransition(async () => {
+      const result = await updateExpenseCategoryDetails({
+        expenseCategoryId: editingCategory.id,
+        name: editingCategory.name,
+        description: editingCategory.description,
+      });
+      if (result.success) {
+        setCategories((current) =>
+          current.map((row) => (row.id === result.data.id ? result.data : row)),
+        );
+        // Also update name in current setting categories if matched
+        setSetting((current) => ({
+          ...current,
+          categories: current.categories.map((cat) =>
+            cat.id === editingCategory.id || cat.code === editingCategory.code
+              ? { ...cat, name: result.data.name }
+              : cat,
+          ),
+        }));
+        setEditingCategory(null);
+        setEditingCategoryBaseline(null);
+        toast.success("Informasi kategori diperbarui.");
+        onMutationComplete?.();
+      } else {
+        toast.error(result.error.message);
+      }
+    });
+  }
+
+  const editingNameValid = Boolean(editingCategory?.name.trim());
+  const editingCategoryDirty = Boolean(
+    editingCategory &&
+    editingCategoryBaseline &&
+    (editingCategory.name !== editingCategoryBaseline.name ||
+      editingCategory.description !== editingCategoryBaseline.description),
+  );
+
   return (
     <section className="min-w-0 space-y-sm">
-      {presentation === "onboarding" ? null : hideHeader ? (
-        <WorkspaceModuleHeader
-          eyebrow="Default finansial"
-          title="Alokasi Budget"
-          description="Atur hubungan Budget Internal, margin target, pembagian kategori, dan buffer."
-        />
-      ) : (
-        <SettingsHeader
-          eyebrow="Default finansial"
-          title="Alokasi Budget"
-          description="Rasio kategori memakai Budget Internal. Buffer dan margin kotor dihitung terpisah."
-          role={roleName}
-          canManage={canManage}
-        />
-      )}
+      {/* Hero Focal Summary Card */}
+      <SettingsInverseSurface label="Ringkasan Formula Budget">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-eyebrow font-bold tracking-[0.18em] text-white/52 uppercase">
+              Batas Budget Internal
+            </p>
+            <p className="financial-amount mt-1 text-[34px] leading-none font-extrabold tracking-[-0.045em] text-white tabular-nums max-[430px]:text-[30px]">
+              {percent(setting.budgetCapRatio)}
+            </p>
+          </div>
+          <WorkspaceStatusLabel label="Default Proyek Baru" tone="inverse" />
+        </div>
 
-      {presentation === "settings" ? (
-        <FormSection
-          presentation="plain"
-          title="Simulasi nilai proyek"
-          helper="Nilai contoh membantu membaca dampak formula dan tidak ikut disimpan."
-        >
-          <FormField
-            label="Nilai proyek contoh"
-            helper="Hanya untuk simulasi; tidak ikut disimpan."
+        <div className="mt-4 grid grid-cols-2 gap-2.5">
+          <div className="flex w-full min-w-0 flex-col gap-1 rounded-inset bg-white/8 p-3">
+            <p className="text-[9px] leading-none font-bold tracking-[0.12em] text-white/52 uppercase">
+              Target Margin
+            </p>
+            <p className="financial-amount mt-0.5 font-sans text-base font-extrabold tracking-tight text-white tabular-nums">
+              {percent(1 - setting.budgetCapRatio)}
+            </p>
+          </div>
+          <div className="flex w-full min-w-0 flex-col gap-1 rounded-inset bg-white/8 p-3">
+            <p className="text-[9px] leading-none font-bold tracking-[0.12em] text-white/52 uppercase">
+              Sisa Buffer
+            </p>
+            <p
+              className={`financial-amount mt-0.5 font-sans text-base font-extrabold tracking-tight tabular-nums ${
+                overLimit ? "text-error" : "text-white"
+              }`}
+            >
+              {overLimit ? "Over 100%" : percent(Math.max(0, 1 - allocation))}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3.5 rounded-inset bg-white/8 p-3 ring-1 ring-white/6">
+          <div className="flex items-center justify-between text-meta font-medium text-white/70">
+            <span>Teralokasi {percent(allocation)}</span>
+            <span>Buffer {percent(Math.max(0, 1 - allocation))}</span>
+          </div>
+          <div
+            className="mt-2 flex h-2 overflow-hidden rounded-full bg-white/10"
+            aria-label={`Alokasi ${percent(allocation)}, buffer ${percent(Math.max(0, 1 - allocation))}`}
           >
-            <MoneyInput
-              value={sampleValue}
-              onChange={(value) => setSampleValue(Number(value || 0))}
+            <span
+              className={overLimit ? "bg-error" : "bg-white"}
+              style={{ width: `${allocationWidth}%` }}
             />
-          </FormField>
-          <GroupedSurface>
-            <dl className="divide-y divide-black/5.5 px-4">
-              {[
-                {
-                  label: "Budget Internal",
-                  value: internalBudget,
-                  tone: "primary" as const,
-                },
-                {
-                  label: "Margin kotor",
-                  value: sampleValue - internalBudget,
-                  tone: "default" as const,
-                },
-                {
-                  label: "Teralokasi",
-                  value: allocated,
-                  tone: "default" as const,
-                },
-                { label: "Buffer", value: buffer, tone: "warning" as const },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex min-h-12 items-center justify-between gap-3 py-2.5"
-                >
-                  <dt className="text-support text-on-surface-variant">{item.label}</dt>
-                  <dd className="min-w-0">
-                    <MoneyValue
-                      amount={item.value}
-                      variant="compact"
-                      size="xs"
-                      align="right"
-                      tone={item.tone}
-                    />
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </GroupedSurface>
-        </FormSection>
-      ) : null}
+            {!overLimit && bufferWidth > 0 ? (
+              <span className="bg-white/25" style={{ width: `${bufferWidth}%` }} />
+            ) : null}
+          </div>
+        </div>
+      </SettingsInverseSurface>
 
+      {/* Formula & Project Simulation */}
       <FormSection
-        title="Formula proyek baru"
-        helper="Perubahan menjadi default berikutnya; proyek aktif tidak berubah otomatis."
+        title="Formula & Parameter"
+        helper="Nilai proyek simulasi hanya untuk memverifikasi rasio nominal dan tidak ikut tersimpan."
       >
-        <FormField label="Nama default" htmlFor="budget-default-name">
+        <FormField label="Nama Preset Formula" htmlFor="budget-default-name">
           <TextInput
             id="budget-default-name"
             disabled={!canManage}
             value={setting.name}
             onChange={(value) => setSetting({ ...setting, name: value })}
+            placeholder="Contoh: Standar Residential"
           />
         </FormField>
+
         <FormField
           label="Batas Budget Internal (%)"
-          helper={`Target margin kotor saat ini ${percent(1 - setting.budgetCapRatio)}.`}
+          helper={`Target margin kotor: ${percent(1 - setting.budgetCapRatio)}`}
         >
           <NumericInput
             min={0}
@@ -212,130 +258,127 @@ export function BudgetSettingsManager({
             suffix="%"
           />
         </FormField>
-        <FormField label="Catatan" htmlFor="budget-default-notes">
+
+        {presentation === "settings" ? (
+          <FormField label="Simulasi Nilai Proyek (Rp)" helper="Uji coba nominal proyek">
+            <MoneyInput
+              value={sampleValue}
+              onChange={(value) => setSampleValue(Number(value || 0))}
+            />
+          </FormField>
+        ) : null}
+
+        <FormField label="Catatan Formula" htmlFor="budget-default-notes" optional>
           <Textarea
             id="budget-default-notes"
             disabled={!canManage}
             value={setting.notes ?? ""}
             onChange={(value) => setSetting({ ...setting, notes: value })}
+            placeholder="Catatan panduan alokasi proyek..."
+            rows={2}
           />
         </FormField>
       </FormSection>
 
-      <FormSection
-        presentation="plain"
-        title={presentation === "onboarding" ? "Pembagian budget" : "Pembagian kategori"}
-        helper="Bagikan Budget Internal ke kategori aktif. Total tidak boleh lebih dari 100%."
-      >
-        <div className="flex min-w-0 items-end justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-title font-semibold text-on-surface">Pembagian Budget Internal</h2>
-          </div>
-          <p
-            className={`financial-amount shrink-0 font-mono text-lg font-bold tabular-nums ${overLimit ? "text-error" : "text-on-surface"}`}
-          >
-            {percent(allocation)}
-          </p>
-        </div>
-        <div
-          className="mt-sm flex h-2 overflow-hidden rounded-full bg-surface-container"
-          aria-label={`Teralokasi ${percent(allocation)}, buffer ${percent(Math.max(0, 1 - allocation))}`}
-        >
-          <span
-            className={overLimit ? "bg-error" : "bg-primary"}
-            style={{ width: `${Math.min(100, allocation * 100)}%` }}
+      {/* 5 Categories Allocation */}
+      <section className="space-y-2">
+        <div className="flex min-h-8 items-center justify-between px-1">
+          <h2 className="text-section font-bold text-on-surface">Alokasi 5 Kategori Pengeluaran</h2>
+          <WorkspaceStatusLabel
+            label={`${percent(allocation)} Teralokasi`}
+            tone={overLimit ? "critical" : "neutral"}
           />
-          {!overLimit ? (
-            <span
-              className="bg-primary/18"
-              style={{ width: `${Math.max(0, 100 - allocation * 100)}%` }}
-            />
-          ) : null}
         </div>
-        <div className="mt-2 flex min-w-0 justify-between gap-3 text-meta text-on-surface-variant">
-          <span className="min-w-0">Teralokasi {fullMoney(allocated)}</span>
-          <span className="shrink-0">Buffer {percent(Math.max(0, 1 - allocation))}</span>
-        </div>
-        <GroupedSurface className="mt-md">
+
+        <GroupedSurface>
           <div className="divide-y divide-black/5.5">
             {setting.categories.map((category, index) => {
               const categoryAmount =
                 internalBudget * (category.isEnabled ? category.ratioPercentage : 0);
+              const isEnabled = category.isEnabled;
+
               return (
                 <div
                   key={category.id}
-                  className={`min-w-0 px-3.5 py-3 ${category.isEnabled ? "bg-white" : "bg-surface-container-low/35"}`}
+                  className={`min-w-0 p-3.5 transition-colors ${
+                    isEnabled ? "bg-white" : "bg-surface-container-low/40"
+                  }`}
                 >
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <motion.button
-                      type="button"
-                      role="switch"
-                      aria-checked={category.isEnabled}
-                      aria-label={`${category.isEnabled ? "Nonaktifkan" : "Aktifkan"} ${category.name}`}
-                      whileTap={{ scale: 0.96 }}
-                      transition={transitionSpringSnappy}
-                      className={`relative h-7 w-12 shrink-0 rounded-full p-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${category.isEnabled ? "bg-primary" : "bg-outline-variant/35"}`}
-                      disabled={!canManage}
-                      onClick={() =>
-                        setSetting({
-                          ...setting,
-                          categories: setting.categories.map((row, rowIndex) =>
-                            rowIndex === index ? { ...row, isEnabled: !row.isEnabled } : row,
-                          ),
-                        })
-                      }
-                    >
-                      <motion.span
-                        layout
-                        transition={transitionSpringSnappy}
-                        className={`block h-5 w-5 rounded-full bg-white shadow-control ${category.isEnabled ? "ml-5" : "ml-0"}`}
-                      />
-                    </motion.button>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-on-surface">{category.name}</p>
-                      <p className="truncate text-eyebrow tracking-wide text-on-surface-variant uppercase">
-                        {category.code}
-                      </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openCategoryEditor(category.id, category.code, category.name)
+                        }
+                        className="group flex min-w-0 items-center gap-1.5 text-left outline-none"
+                        title="Klik untuk melihat / mengedit detail kategori"
+                      >
+                        <span className="truncate text-row font-bold text-on-surface group-hover:text-primary">
+                          {category.name}
+                        </span>
+                        <AppIcon
+                          name="edit"
+                          className="icon-xs shrink-0 text-on-surface-variant/40 group-hover:text-primary"
+                        />
+                      </button>
+                      <WorkspaceStatusLabel label={category.code} tone="neutral" />
                     </div>
-                    <div className="max-w-[42%] shrink-0 text-right">
+
+                    <div className="flex items-center gap-3">
                       <MoneyValue
                         amount={categoryAmount}
                         variant="compact"
                         size="xs"
                         align="right"
+                        className={
+                          isEnabled ? "font-semibold text-on-surface" : "text-on-surface-variant/50"
+                        }
                       />
-                      <div className="mt-1 flex justify-end">
-                        <WorkspaceStatusLabel
-                          label={
-                            category.isEnabled ? percent(category.ratioPercentage) : "Nonaktif"
-                          }
-                          tone={category.isEnabled ? "neutral" : "inactive"}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {category.isEnabled ? (
-                    <div className="relative mt-2">
-                      <NumericInput
-                        min={0}
-                        max={100}
-                        disabled={!canManage || !category.isEnabled}
-                        value={ratioToPercentInput(category.ratioPercentage)}
-                        onChange={(value) =>
+                      <SwitchRow
+                        checked={isEnabled}
+                        disabled={!canManage}
+                        onChange={() =>
                           setSetting({
                             ...setting,
                             categories: setting.categories.map((row, rowIndex) =>
-                              rowIndex === index
-                                ? {
-                                    ...row,
-                                    ratioPercentage: Number(value || 0) / 100,
-                                  }
-                                : row,
+                              rowIndex === index ? { ...row, isEnabled: !row.isEnabled } : row,
                             ),
                           })
                         }
-                        suffix="%"
+                        title=""
+                        switchLabel={`${isEnabled ? "Nonaktifkan" : "Aktifkan"} ${category.name}`}
                       />
+                    </div>
+                  </div>
+
+                  {isEnabled ? (
+                    <div className="mt-2.5 flex items-center gap-3">
+                      <div className="flex-1">
+                        <NumericInput
+                          min={0}
+                          max={100}
+                          disabled={!canManage}
+                          value={ratioToPercentInput(category.ratioPercentage)}
+                          onChange={(value) =>
+                            setSetting({
+                              ...setting,
+                              categories: setting.categories.map((row, rowIndex) =>
+                                rowIndex === index
+                                  ? {
+                                      ...row,
+                                      ratioPercentage: Number(value || 0) / 100,
+                                    }
+                                  : row,
+                              ),
+                            })
+                          }
+                          suffix="%"
+                        />
+                      </div>
+                      <span className="shrink-0 text-meta font-medium text-on-surface-variant">
+                        dari Budget Internal
+                      </span>
                     </div>
                   ) : null}
                 </div>
@@ -343,92 +386,155 @@ export function BudgetSettingsManager({
             })}
           </div>
         </GroupedSurface>
-        {overLimit ? (
-          <FormRiskNotice title="Alokasi melebihi 100%" tone="danger">
-            Kurangi rasio kategori sebelum menyimpan default.
-          </FormRiskNotice>
-        ) : (
-          <FormRiskNotice title="Buffer tetap terlihat" tone="success">
-            Sisa {percent(Math.max(0, 1 - allocation))} tidak dialokasikan dan tetap menjadi buffer
-            Budget Internal.
-          </FormRiskNotice>
-        )}
-      </FormSection>
+      </section>
 
-      {message ? (
-        <p
-          className={`rounded-2xl px-3 py-2.5 text-[11px] leading-[1.35] ${overLimit ? "bg-error/[0.07] text-error" : "bg-success/[0.07] text-success"}`}
-        >
-          {message}
-        </p>
-      ) : null}
+      {/* Sticky Save Bar */}
       {canManage && dirty ? (
-        <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 min-w-0 space-y-1 rounded-[22px] bg-white/96 p-2 shadow-raised ring-1 ring-ring-subtle backdrop-blur-xl">
-          <p
-            className={`px-1 text-support ${overLimit ? "font-bold text-error" : "text-on-surface-variant"}`}
-          >
-            {overLimit
-              ? "Total kategori melebihi 100%. Kurangi rasio sebelum menyimpan."
-              : `Teralokasi ${percent(allocation)} · Buffer ${percent(Math.max(0, 1 - allocation))}`}
-          </p>
-          <motion.button
+        <div className="sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-10 min-w-0 space-y-1.5 rounded-owner bg-white p-3 shadow-raised ring-1 ring-ring-subtle">
+          <div className="flex items-center justify-between px-1 text-meta">
+            <span
+              className={overLimit ? "font-bold text-error" : "font-medium text-on-surface-variant"}
+            >
+              {overLimit
+                ? "Total alokasi melebihi 100%!"
+                : `Teralokasi ${percent(allocation)} · Buffer ${percent(Math.max(0, 1 - allocation))}`}
+            </span>
+            <span className="font-mono font-bold text-on-surface">
+              {percent(setting.budgetCapRatio)} Cap
+            </span>
+          </div>
+          <Button
             type="button"
+            fullWidth
             disabled={pending || overLimit}
             onClick={() => setConfirmSave(true)}
-            whileTap={{ scale: 0.97 }}
-            transition={transitionSpringSnappy}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
+            leadingIcon={<AppIcon name="save" className="icon-sm" />}
           >
-            <AppIcon name="save" className="icon-sm" />
-            {pending ? "Menyimpan…" : "Tinjau perubahan"}
-          </motion.button>
+            {pending ? "Menyimpan…" : "Simpan Perubahan Budget"}
+          </Button>
         </div>
       ) : null}
+
+      {/* Category Editor Bottom Sheet */}
+      <OperationalFormSheet
+        open={Boolean(editingCategory)}
+        title={canManage ? "Edit Kategori Pengeluaran" : "Detail Kategori Pengeluaran"}
+        onClose={() => {
+          if (editingCategoryDirty) setConfirmCategoryClose(true);
+          else {
+            setEditingCategory(null);
+            setEditingCategoryBaseline(null);
+          }
+        }}
+        pending={categoryPending}
+        disabled={!canManage || !editingNameValid || !editingCategoryDirty}
+        disabledReason={
+          !canManage
+            ? "Akses hanya baca."
+            : !editingNameValid
+              ? "Nama kategori wajib diisi."
+              : !editingCategoryDirty
+                ? "Belum ada perubahan."
+                : undefined
+        }
+        submitLabel="Simpan Kategori"
+        submittingLabel="Menyimpan…"
+        onSubmit={saveCategory}
+        statusText={
+          editingCategory
+            ? `${editingCategory.name.trim() || "Kategori"} · Kode ${editingCategory.code}`
+            : undefined
+        }
+        statusTone={!editingNameValid ? "warning" : editingCategoryDirty ? "success" : "default"}
+      >
+        {editingCategory ? (
+          <FormSection
+            title="Identitas Kategori"
+            helper="Nama dan deskripsi tampil pada seluruh budget proyek, pengeluaran, dan laporan."
+          >
+            <div className="flex min-h-12 items-center gap-3 px-4 py-2">
+              <DuotoneIconTile name="lock" className="h-8 w-8" iconClassName="icon-xs" />
+              <div className="min-w-0 flex-1">
+                <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+                  Kode Kategori
+                </p>
+                <p className="mt-0.5 text-sm font-bold text-on-surface">{editingCategory.code}</p>
+              </div>
+              <MetadataChip>Baku</MetadataChip>
+            </div>
+            <FormField
+              label="Nama Kategori"
+              htmlFor="edit-category-name"
+              required
+              error={!editingNameValid ? "Nama kategori wajib diisi." : undefined}
+            >
+              <TextInput
+                id="edit-category-name"
+                disabled={!canManage}
+                value={editingCategory.name}
+                onChange={(value) => setEditingCategory({ ...editingCategory, name: value })}
+              />
+            </FormField>
+            <FormField
+              label="Deskripsi Kategori"
+              htmlFor="edit-category-desc"
+              optional
+              helper="Penjelasan cakupan pengeluaran dalam kategori ini."
+            >
+              <Textarea
+                id="edit-category-desc"
+                disabled={!canManage}
+                value={editingCategory.description ?? ""}
+                onChange={(value) => setEditingCategory({ ...editingCategory, description: value })}
+                rows={3}
+              />
+            </FormField>
+          </FormSection>
+        ) : null}
+      </OperationalFormSheet>
+
+      {/* Confirmation Dialogs */}
       <ConfirmationDialog
         open={confirmSave}
-        title="Terapkan default budget baru?"
-        description="Perubahan berlaku untuk project baru dan proses setup berikutnya. Project Budget yang sudah aktif tidak diubah diam-diam."
+        title="Terapkan Default Budget Baru?"
+        description="Perubahan akan menjadi formula default untuk seluruh proyek baru berikutnya. Proyek aktif tidak berubah."
         tone="warning"
+        pending={pending}
+        disabled={overLimit}
         onClose={() => setConfirmSave(false)}
-        actions={
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-surface-container-low p-3 text-center">
-              <div>
-                <p className="text-eyebrow font-bold text-on-surface-variant uppercase">
-                  Internal budget
-                </p>
-                <p className="mt-1 text-sm font-bold">{percent(setting.budgetCapRatio)}</p>
-              </div>
-              <div>
-                <p className="text-eyebrow font-bold text-on-surface-variant uppercase">
-                  Buffer kategori
-                </p>
-                <p className="mt-1 text-sm font-bold">{percent(Math.max(0, 1 - allocation))}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.97 }}
-                transition={transitionSpringSnappy}
-                onClick={() => setConfirmSave(false)}
-                className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
-              >
-                Kembali
-              </motion.button>
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.97 }}
-                transition={transitionSpringSnappy}
-                disabled={pending || overLimit}
-                onClick={save}
-                className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white disabled:opacity-40"
-              >
-                Simpan Default
-              </motion.button>
-            </div>
+        confirmLabel="Terapkan Formula"
+        onConfirm={saveBudget}
+      >
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="rounded-inset bg-surface-container-low p-2">
+            <p className="text-eyebrow font-bold text-on-surface-variant uppercase">Batas Budget</p>
+            <p className="mt-0.5 text-sm font-bold text-on-surface">
+              {percent(setting.budgetCapRatio)}
+            </p>
           </div>
-        }
+          <div className="rounded-inset bg-surface-container-low p-2">
+            <p className="text-eyebrow font-bold text-on-surface-variant uppercase">
+              Buffer Kategori
+            </p>
+            <p className="mt-0.5 text-sm font-bold text-on-surface">
+              {percent(Math.max(0, 1 - allocation))}
+            </p>
+          </div>
+        </div>
+      </ConfirmationDialog>
+
+      <ConfirmationDialog
+        open={confirmCategoryClose}
+        title="Buang Perubahan Kategori?"
+        description="Nama dan deskripsi kategori akan kembali ke versi sebelumnya."
+        danger
+        confirmLabel="Buang"
+        onConfirm={() => {
+          setEditingCategory(null);
+          setEditingCategoryBaseline(null);
+          setConfirmCategoryClose(false);
+        }}
+        onClose={() => setConfirmCategoryClose(false)}
       />
     </section>
   );

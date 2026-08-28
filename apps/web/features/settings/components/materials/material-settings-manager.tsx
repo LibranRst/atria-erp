@@ -1,17 +1,14 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
 import {
   AppIcon,
   ConfirmationDialog,
   EmptyState,
   FilterSelect,
-  WorkspaceModuleHeader,
+  FormRiskNotice,
 } from "@/components/ui";
-import { SettingsHeader } from "../shared/settings-ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
 import { MaterialImportSheet } from "./material-import-sheet";
 import { MaterialCategoryComposerDialog } from "./material-category-composer-dialog";
@@ -31,9 +28,7 @@ type MaterialSettingsManagerProps = {
   readonly initialCategories: readonly SettingsOption[];
   readonly vendors: readonly SettingsOption[];
   readonly locations: readonly SettingsOption[];
-  readonly roleName: string;
   readonly canManage: boolean;
-  readonly hideHeader?: boolean;
   readonly presentation?: "settings" | "onboarding";
   readonly onMutationComplete?: () => void;
 };
@@ -49,9 +44,7 @@ export function MaterialSettingsManager({
   initialCategories,
   vendors,
   locations,
-  roleName,
   canManage,
-  hideHeader = false,
   presentation = "settings",
   onMutationComplete,
 }: MaterialSettingsManagerProps): React.JSX.Element {
@@ -77,6 +70,11 @@ export function MaterialSettingsManager({
   const [status, setStatus] = React.useState("ACTIVE");
   const [message, setMessage] = React.useState<string | null>(null);
   const [showImport, setShowImport] = React.useState(false);
+  const suspendedFiltersRef = React.useRef<{
+    readonly category: string;
+    readonly vendor: string;
+    readonly status: string;
+  } | null>(null);
   const categoryFilters = React.useMemo(
     () => [
       { value: "ALL", label: "Semua kategori" },
@@ -206,28 +204,10 @@ export function MaterialSettingsManager({
     });
   return (
     <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
-      {presentation === "onboarding" ? null : hideHeader ? (
-        <WorkspaceModuleHeader
-          eyebrow="Identitas dan default"
-          title="Material Master"
-          description="Kelola identitas material dan default inventori tanpa mencampur operasi stok."
-          actionLabel="Tambah"
-          actionDisabled={!canManage}
-          onAction={() => openMaterial(blank())}
-        />
-      ) : (
-        <SettingsHeader
-          eyebrow="Identitas dan default material"
-          title="Material Master"
-          description="Identitas material dan default inventori. Pergerakan stok tetap dilakukan di Material & Stok."
-          role={roleName}
-          canManage={canManage}
-        />
-      )}
       {message && (
-        <p className="rounded-2xl bg-primary/5 px-3 py-2.5 text-support text-primary ring-1 ring-primary/15">
+        <FormRiskNotice title="Status material" tone="success">
           {message}
-        </p>
+        </FormRiskNotice>
       )}
       {presentation === "onboarding" ? (
         <div className="flex min-w-0 items-center justify-between gap-3 px-1">
@@ -235,7 +215,7 @@ export function MaterialSettingsManager({
             <span className="block text-[13px] leading-5 font-bold text-on-surface">
               Material Master
             </span>
-            <span className="block text-[9px] leading-4 text-on-surface-variant">
+            <span className="block text-meta text-on-surface-variant">
               {materials.filter((row) => row.isActive).length} material aktif
             </span>
           </span>
@@ -244,7 +224,7 @@ export function MaterialSettingsManager({
               type="button"
               onClick={() => setShowImport(true)}
               disabled={!canManage}
-              className="relative min-h-10 rounded-full px-3 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
+              className="relative min-h-10 rounded-full bg-accent/8 px-3 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
             >
               Import
             </button>
@@ -258,62 +238,90 @@ export function MaterialSettingsManager({
             </button>
           </span>
         </div>
-      ) : canManage ? (
-        <button
-          type="button"
-          onClick={() => setShowImport(true)}
-          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-4 text-meta font-bold text-accent shadow-control ring-1 ring-ring-subtle"
-        >
-          <AppIcon name="upload_file" className="text-[17px]" />
-          Import CSV
-        </button>
-      ) : null}
-      {presentation === "settings" ? (
-        <SettingsFilterBar
-          status={status}
-          statusOptions={STATUS_FILTERS}
-          search={search}
-          filterCount={activeFilterCount}
-          searchPlaceholder="Cari material, kode, merek"
-          searchAriaLabel="Cari material master"
-          layoutPrefix="settings-material"
-          filterTitle="Filter material"
-          onStatusChange={setStatus}
-          onSearchChange={setSearch}
-          onClearFilters={() => {
-            setCategoryFilter("ALL");
-            setVendorFilter("ALL");
-            setStatus("ALL");
-          }}
-          onOpenFilters={() => {
-            setCategoryFilterDraft(categoryFilter);
-            setVendorFilterDraft(vendorFilter);
-          }}
-          onApplyFilters={() => {
-            setCategoryFilter(categoryFilterDraft);
-            setVendorFilter(vendorFilterDraft);
-          }}
-          onResetFilterDraft={() => {
-            setCategoryFilterDraft("ALL");
-            setVendorFilterDraft("ALL");
-          }}
-        >
-          <FilterSelect
-            label="Kategori"
-            value={categoryFilterDraft}
-            options={categoryFilters}
-            onChange={setCategoryFilterDraft}
-            presentation="dialog"
-          />
-          <FilterSelect
-            label="Vendor"
-            value={vendorFilterDraft}
-            options={vendorFilters}
-            onChange={setVendorFilterDraft}
-            presentation="dialog"
-          />
-        </SettingsFilterBar>
-      ) : null}
+      ) : (
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <SettingsFilterBar
+              status={status}
+              statusOptions={STATUS_FILTERS}
+              search={search}
+              filterCount={activeFilterCount}
+              searchPlaceholder="Cari material, kode, merek"
+              searchAriaLabel="Cari material master"
+              layoutPrefix="settings-material"
+              filterTitle="Filter material"
+              onStatusChange={setStatus}
+              onSearchChange={setSearch}
+              onEnterSearch={() => {
+                suspendedFiltersRef.current = {
+                  category: categoryFilter,
+                  vendor: vendorFilter,
+                  status,
+                };
+                setCategoryFilter("ALL");
+                setVendorFilter("ALL");
+                setStatus("ALL");
+              }}
+              onExitSearch={() => {
+                const suspended = suspendedFiltersRef.current;
+                if (!suspended) return;
+                setCategoryFilter(suspended.category);
+                setVendorFilter(suspended.vendor);
+                setStatus(suspended.status);
+                suspendedFiltersRef.current = null;
+              }}
+              onOpenFilters={() => {
+                setCategoryFilterDraft(categoryFilter);
+                setVendorFilterDraft(vendorFilter);
+              }}
+              onApplyFilters={() => {
+                setCategoryFilter(categoryFilterDraft);
+                setVendorFilter(vendorFilterDraft);
+              }}
+              onResetFilterDraft={() => {
+                setCategoryFilterDraft("ALL");
+                setVendorFilterDraft("ALL");
+              }}
+            >
+              <FilterSelect
+                label="Kategori"
+                value={categoryFilterDraft}
+                options={categoryFilters}
+                onChange={setCategoryFilterDraft}
+              />
+              <FilterSelect
+                label="Vendor default"
+                value={vendorFilterDraft}
+                options={vendorFilters}
+                onChange={setVendorFilterDraft}
+              />
+              {canManage ? (
+                <div className="mt-2 border-t border-black/5.5 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowImport(true)}
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface hover:bg-surface-container-high"
+                  >
+                    <AppIcon name="upload_file" className="icon-sm" />
+                    Import Material dari CSV
+                  </button>
+                </div>
+              ) : null}
+            </SettingsFilterBar>
+          </div>
+          {canManage ? (
+            <button
+              type="button"
+              onClick={() => openMaterial(blank())}
+              className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control"
+              title="Tambah Material Baru"
+            >
+              <AppIcon name="add" className="icon-sm" />
+              <span className="ml-1 max-[420px]:hidden">Tambah</span>
+            </button>
+          ) : null}
+        </div>
+      )}
       {filtered.length === 0 ? (
         <EmptyState
           title={materials.length === 0 ? "Belum ada material" : "Material tidak ditemukan"}
@@ -401,41 +409,21 @@ export function MaterialSettingsManager({
             ? "Perubahan identitas dan default material akan hilang."
             : "Perubahan minimum stok dan harga referensi akan hilang."
         }
-        tone="danger"
+        danger
+        confirmLabel="Buang Perubahan"
+        onConfirm={() => {
+          if (pendingClose === "MATERIAL") {
+            setDraft(null);
+            setDraftBaseline("");
+            setShowCategoryComposer(false);
+          } else {
+            setInventoryEdit(null);
+            setInventoryOriginal(null);
+            setInventoryBaseline("");
+          }
+          setPendingClose(null);
+        }}
         onClose={() => setPendingClose(null)}
-        actions={
-          <div className="grid grid-cols-2 gap-2">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => setPendingClose(null)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
-            >
-              Lanjut Mengedit
-            </motion.button>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => {
-                if (pendingClose === "MATERIAL") {
-                  setDraft(null);
-                  setDraftBaseline("");
-                  setShowCategoryComposer(false);
-                } else {
-                  setInventoryEdit(null);
-                  setInventoryOriginal(null);
-                  setInventoryBaseline("");
-                }
-                setPendingClose(null);
-              }}
-              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white"
-            >
-              Buang Perubahan
-            </motion.button>
-          </div>
-        }
       />
     </section>
   );

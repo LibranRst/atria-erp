@@ -18,6 +18,7 @@ import {
 } from "./operations-result";
 import { ProjectBudgetResult } from "./project-budget-result";
 import { ProjectsAtRiskResult } from "./projects-at-risk-result";
+import { RoleReviewResult } from "./role-review-result";
 import { ProjectHealthResult, ProjectsResult } from "./projects-result";
 import { UpcomingBillsResult } from "./upcoming-bills-result";
 
@@ -38,6 +39,7 @@ const TOOL_RESULT_RENDERERS: Readonly<Record<string, ToolResultRenderer>> = {
   getUnpaidVendorBills: UpcomingBillsResult,
   getUnpaidClientInvoices: UnpaidClientInvoicesResult,
   getPendingExpenseApprovals: PendingExpenseApprovalsResult,
+  suggestRoleReview: RoleReviewResult,
 };
 
 const SUPPORTING_RESULT_TOOLS = new Set([

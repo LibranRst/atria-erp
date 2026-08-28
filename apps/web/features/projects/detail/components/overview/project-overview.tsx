@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -46,7 +47,6 @@ export type ProjectReadinessItem = {
 
 type ProjectOverviewProps = {
   readonly budget: ProjectBudgetDashboard | null;
-  readonly userRole: string;
   readonly contractValue: number;
   readonly actions: readonly ProjectOverviewAction[];
   readonly readiness: readonly ProjectReadinessItem[];
@@ -78,12 +78,12 @@ function SectionHeading({
 
 export function ProjectOverview({
   budget,
-  userRole,
   contractValue,
   actions,
   readiness,
   onNavigate,
 }: ProjectOverviewProps): React.JSX.Element {
+  const can = useCan();
   const router = useRouter();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [reallocationOpen, setReallocationOpen] = useState(false);
@@ -102,7 +102,7 @@ export function ProjectOverview({
   const remaining = budget?.remainingBudget ?? 0;
   const used = budget?.usedPercentage ?? 0;
   const margin = budget?.projectedMarginPercentage ?? (contractValue > 0 ? 100 : 0);
-  const canReallocate = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
+  const canReallocate = can("approve:budget");
   const totalRatio = Object.values(ratios).reduce((sum, value) => sum + Number(value || 0), 0);
 
   async function saveReallocation(): Promise<void> {

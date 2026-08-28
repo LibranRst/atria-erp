@@ -1,3 +1,5 @@
+import { getFieldCostApprovalThresholdRupiah } from "@/lib/finance/approval-thresholds";
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import "server-only";
 
 import { desc, eq, inArray } from "drizzle-orm";
@@ -77,7 +79,7 @@ export async function getFinanceDashboardOverviewUseCase(
   actor: Actor,
 ): Promise<ActionResponse<FinanceDashboardOverview>> {
   const resolvedRole = actor.roleName;
-  if (resolvedRole !== "OWNER" && resolvedRole !== "FINANCE_ADMIN") {
+  if (!actorHasPermission(resolvedRole, "view:ledger")) {
     return {
       success: false,
       error: {
@@ -120,7 +122,7 @@ export async function getFinanceDashboardOverviewUseCase(
     ]);
 
     const optionalResults = await Promise.allSettled([
-      role === "OWNER" || role === "FINANCE_ADMIN"
+      actorHasPermission(role, "view:approval_queue")
         ? getPendingApprovalDetails()
         : Promise.resolve([]),
       db.query.materialInventory.findMany({ with: { material: true, location: true } }),
@@ -156,10 +158,11 @@ export async function getFinanceDashboardOverviewUseCase(
       [],
       unavailableSources,
     );
-    const approvalDetails =
-      role === "FINANCE_ADMIN"
-        ? rawApprovalDetails.filter((item) => item.type === "inventory_opening")
-        : rawApprovalDetails;
+    // Penyempitan yang sama dengan halaman Persetujuan; satu aturan, dua tempat
+    // yang membacanya lewat izin yang sama.
+    const approvalDetails = actorHasPermission(role, "decide:all_approvals")
+      ? rawApprovalDetails
+      : rawApprovalDetails.filter((item) => item.type === "inventory_opening");
     const inventoryRows = optionalData(optionalResults[1], "inventori", [], unavailableSources);
     const rapItems = optionalData(optionalResults[2], "kebutuhan RAP", [], unavailableSources);
     const transactions = optionalData(optionalResults[3], "aktivitas kas", [], unavailableSources);
@@ -176,7 +179,11 @@ export async function getFinanceDashboardOverviewUseCase(
       unavailableSources,
     );
     const now = new Date();
-    const rankedApprovalDetails = rankPendingApprovals(approvalDetails, now);
+    const rankedApprovalDetails = rankPendingApprovals(
+      approvalDetails,
+      now,
+      await getFieldCostApprovalThresholdRupiah(),
+    );
     const pendingApprovalCount = rankedApprovalDetails.length;
 
     const totalStockValue = inventoryRows.reduce(
@@ -372,7 +379,7 @@ export async function getFinanceDashboardOverviewUseCase(
     }));
 
     const core = buildFinanceDashboardCore({
-      role,
+      decidesCostApprovals: actorHasPermission(role, "approve:cost"),
       cashAvailable: accounts.reduce((sum, account) => sum + Number(account.balance), 0),
       receivables: invoices.map((invoice) => ({
         amount: Number(invoice.amount),

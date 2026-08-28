@@ -13,8 +13,9 @@ import {
   vendor,
 } from "@/db/schema";
 import { getAdministrationCapabilities } from "@atria/core/auth/administration-access";
-import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { OWNER_ROLE_ID, STAFF_ROLE_IDS, SYSTEM_ROLES } from "@atria/core/auth/role-constants";
+import { assertPermission } from "@/lib/auth/permissions";
+import { getRolePermissions } from "@/lib/auth/role-access";
+import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@atria/core/auth/role-constants";
 import { DEFAULT_EXPENSE_CATEGORIES } from "@atria/core/budget/excel-budget";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { getAdministrationActor as currentUser } from "./administration-action-utils";
@@ -23,12 +24,12 @@ export async function getAdministrationOverview(): Promise<ActionResponse<Admini
   const actor = await currentUser();
   if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  const roleName = await resolveRoleName(actor.roleId);
-  const capabilities = getAdministrationCapabilities(roleName);
-  if (!capabilities.canViewUsers && !capabilities.canViewVendors) {
+  const permissions = new Set(await getRolePermissions(actor.roleId));
+  const capabilities = getAdministrationCapabilities((permission) => permissions.has(permission));
+  if (!capabilities.canViewUsers && !capabilities.canViewVendors && !capabilities.canManageRoles) {
     return {
       success: false,
-      error: { code: "FORBIDDEN", message: "Administrasi hanya tersedia untuk Owner dan Finance." },
+      error: { code: "FORBIDDEN", message: "Peran Anda tidak memiliki akses administrasi." },
     };
   }
   const [users, vendors, roles] = await Promise.all([
@@ -56,9 +57,10 @@ export async function getAdministrationOverview(): Promise<ActionResponse<Admini
         mustChangePassword: row.mustChangePassword,
       })),
       vendors,
-      roles: roles
-        .filter((row) => STAFF_ROLE_IDS.has(row.id))
-        .map((row) => ({ id: row.id, name: row.name.toUpperCase() })),
+      // Setiap peran yang ada di database bisa ditugaskan — termasuk peran
+      // buatan Owner. Menyaringnya ke empat peran bawaan akan membuat peran
+      // baru bisa dibuat tetapi tidak pernah bisa dipakai siapa pun.
+      roles: roles.map((row) => ({ id: row.id, name: row.name.toUpperCase() })),
     },
   };
 }

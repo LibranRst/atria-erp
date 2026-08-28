@@ -14,15 +14,19 @@ import { GlobalProjectDrawer } from "@/features/projects/list/components/drawers
 import { GlobalVendorBillDrawer } from "@/features/expenses/components/sheets/global-vendor-bill-drawer";
 import { GlobalInvoiceDrawer } from "@/features/projects/detail/components/invoices/global-invoice-drawer";
 import { ProjectStateProvider } from "@/features/projects/detail/components/shared/project-state-context";
-import { AppIcon, ConnectivityBanner, IconButton, IconButtonLink } from "@/components/ui";
+import {
+  AppIcon,
+  ConnectivityBanner,
+  IconButton,
+  IconButtonLink,
+  UserAvatar,
+} from "@/components/ui";
+import { getProfileInitials } from "@atria/core/presentation/user-identity";
 import { DeveloperSimulationBanner } from "@/features/profile/components/developer/developer-simulation-banner";
 import { ActivityDetailProvider } from "@/features/activity-detail/components/activity-detail-provider";
 type MobileShellProps = Readonly<{
   children: React.ReactNode;
 }>;
-
-const AVATAR_SRC =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuADXAgU9ZnQpX6SfXgQYugUs6zX_n5ZV1XzT3Xc0d3G0yfv06OjXLk-TGGlBYiXk8tf9MdiMQcVbLDEq93hiTESrINtDyGHnL4pjx1XN8uwqX5MOijHuYwCpcbc-cqQkVqpYi45yqRRYmD8h3RIOeurq-84cqZ33gtgCs8vmsCbbFt9gvEUp9BKLVNN4g7EdQ7I6Y_5rx_5-58PaiB0aya8NlPT0fvzxtPrvTspuv_czI9U5EpCRvLlY8x_tNrPwgtNZqeO_bLNxXjy";
 
 /**
  * Perakit bilah atas untuk seluruh rute selain asisten AI.
@@ -32,7 +36,8 @@ const AVATAR_SRC =
  */
 function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React.JSX.Element {
   const router = useRouter();
-  const { pathname, searchParams, items, canUseAiChat, routeKey } = useHeaderMenu();
+  const { pathname, searchParams, items, canUseAiChat, routeKey, userName, userImageUrl } =
+    useHeaderMenu();
   const [openRouteKey, setOpenRouteKey] = React.useState<string | null>(null);
   const isMenuOpen = openRouteKey === routeKey;
   const hasBackButton = !isRootRoute;
@@ -103,12 +108,16 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
               size="compact"
               className="overflow-hidden"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                alt=""
-                aria-hidden="true"
-                className="h-full w-full object-cover"
-                src={AVATAR_SRC}
+              {/*
+               * Selama sesi belum terbaca, inisial cadangan yang tampil — bukan
+               * kerangka. Bilah atas hadir di setiap rute, dan sesuatu yang
+               * berkedip di sana akan berkedip di setiap perpindahan halaman.
+               */}
+              <UserAvatar
+                imageUrl={userImageUrl}
+                initials={getProfileInitials(userName ?? "")}
+                renderPx={40}
+                className="h-full w-full text-[13px]"
               />
             </IconButtonLink>
           </TopBarControl>,

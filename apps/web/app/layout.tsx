@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 import { MobileShell } from "@/components/layout/mobile-shell";
+import { PermissionsProvider } from "@/components/auth/permissions-provider";
+import { resolveActor } from "@/server/actor";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -36,15 +38,24 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>): React.JSX.Element {
+}>): Promise<React.JSX.Element> {
+  /*
+   * Diselesaikan di layout, sekali per request: seluruh pohon klien membaca
+   * izin yang sama dengan yang ditegakkan server pada request itu juga.
+   * `resolveActor` mengembalikan `null` pada halaman publik (login, setup),
+   * dan daftar kosong di sana memang jawaban yang benar.
+   */
+  const actor = await resolveActor();
   return (
     <html lang="id" className={`${manrope.variable} ${jetbrains.variable} h-full antialiased`}>
       <body className="min-h-full bg-background font-sans text-[16px] font-normal text-on-surface">
-        <MobileShell>{children}</MobileShell>
+        <PermissionsProvider permissions={actor?.permissions ?? []}>
+          <MobileShell>{children}</MobileShell>
+        </PermissionsProvider>
         <Toaster position="top-center" offset={72} mobileOffset={72} richColors />
       </body>
     </html>

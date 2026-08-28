@@ -6,6 +6,7 @@ import { asc } from "drizzle-orm";
 import { getActiveProjectsForExpense, type ProjectForExpense } from "@/app/actions/project/budget";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
+import { getRoleDataScope } from "@atria/core/auth/permissions";
 import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
 import { ActionResponse } from "@atria/core/types/action-response";
 import { submitVendorBillSchema, SubmitVendorBillInput } from "@atria/core/validations/finance";
@@ -62,7 +63,9 @@ export async function submitVendorBill(
     // PM Scoping check
     try {
       const userRoleName = await resolveRoleName(session.user.roleId);
-      if (userRoleName === "PROJECT_MANAGER") {
+      // Peran bercakupan tertugas dibatasi pada proyek yang dipegangnya;
+      // cakupan global tidak perlu diperiksa lagi di sini.
+      if (getRoleDataScope(userRoleName) === "ASSIGNED") {
         await assertProjectAccess(projectId, session.user.id, userRoleName);
       }
       await assertProjectIsOperational(projectId);

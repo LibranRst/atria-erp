@@ -1,5 +1,6 @@
 "use client";
 
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import React from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -179,8 +180,8 @@ export function useBankAccountsControl({
   const accountDraft = accountRecovery.payload;
   const movementDraft = movementRecovery.payload.draft;
   const transferDraft = transferRecovery.payload.draft;
-  const canCreate = role === "OWNER";
-  const canArchive = role === "OWNER";
+  const canCreate = actorHasPermission(role, "create:bank_account");
+  const canArchive = actorHasPermission(role, "delete:bank_account");
   const transferOptions = accountOptions(items, selected?.id);
   const totalCash = items.reduce((sum, account) => sum + account.balance, 0);
   const activeAccounts = items.filter((account) => account.isActive).length;

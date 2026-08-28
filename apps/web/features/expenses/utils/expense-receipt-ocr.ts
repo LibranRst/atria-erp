@@ -1,20 +1,11 @@
 import { processReceipt } from "@/app/actions/ai/process-receipt";
-import { signImagekit } from "@/app/actions/media/sign-imagekit";
+import { uploadToImageKit } from "@/lib/media/upload-to-imagekit";
 import type { ExpenseLine, ExpenseFormProject } from "../types/expense-form-types";
 import { inferExpenseCategoryCode } from "@/features/expenses/utils/expense-form-utils";
 
 type BudgetCategory = NonNullable<
   NonNullable<ExpenseFormProject["canonicalBudgets"]>[number]["categories"]
 >[number];
-
-type ImageKitUploadResponse = {
-  readonly fileId: string;
-  readonly name: string;
-  readonly url: string;
-  readonly size: number;
-  readonly fileType?: string;
-  readonly message?: string;
-};
 
 export type ExpenseReceiptOcrResult = {
   readonly attachment: {
@@ -35,44 +26,13 @@ export async function uploadAndParseExpenseReceipt({
   readonly file: File;
   readonly budgetCategories: readonly BudgetCategory[];
 }): Promise<ExpenseReceiptOcrResult> {
-  const signRes = await signImagekit();
-  if (!signRes.success) {
-    throw new Error(signRes.error.message || "Gagal melakukan otentikasi unggah berkas.");
-  }
-
-  const { token, expire, signature } = signRes.data;
-  const safeFileName = `receipt-${new Date().getTime()}-${file.name.replaceAll(" ", "_")}`;
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("fileName", safeFileName);
-  formData.append(
-    "publicKey",
-    process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "public_PRvr9hXwFetaQx4ZejdGwJ1Ue8=",
-  );
-  formData.append("signature", signature);
-  formData.append("token", token);
-  formData.append("expire", expire.toString());
-  formData.append("folder", "/field-receipts");
-
-  const uploadRes = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
-    method: "POST",
-    body: formData,
+  const attachment = await uploadToImageKit({
+    file,
+    folder: "/field-receipts",
+    fileNamePrefix: "receipt",
+    subject: "nota",
   });
-
-  if (!uploadRes.ok) {
-    const errData = (await uploadRes.json()) as Partial<ImageKitUploadResponse>;
-    throw new Error(errData.message || "Gagal mengunggah gambar ke storage CDN.");
-  }
-
-  const uploadData = (await uploadRes.json()) as ImageKitUploadResponse;
-  const imageUrl = uploadData.url;
-  const attachment = {
-    fileId: uploadData.fileId,
-    url: imageUrl,
-    fileName: uploadData.name || safeFileName,
-    mimeType: file.type || uploadData.fileType || "image/jpeg",
-    size: uploadData.size || file.size,
-  };
+  const imageUrl = attachment.url;
   const ocrRes = await processReceipt(imageUrl);
 
   if (!ocrRes.success) {

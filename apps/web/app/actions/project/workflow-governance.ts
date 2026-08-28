@@ -15,7 +15,7 @@ import {
   projectRapItem,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
+import { actorHasPermission, assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { getBudgetCategoryStatus } from "@atria/core/budget/excel-budget";
 import { getRapItemAvailabilityStatus } from "@atria/core/project/rap-rab";
@@ -258,8 +258,12 @@ export async function reallocateProjectBudget(input: unknown): Promise<
     if (!budget) throw new Error("PROJECT_BUDGET_NOT_FOUND");
     const roleName = await assertScopedPermission(user, budget.projectId, "update:budget");
     if (budget.status === "APPROVED") {
-      if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN")
-        throw new Error("FORBIDDEN: Budget approved hanya dapat direalokasi Owner/Finance.");
+      // Mengubah budget yang sudah disetujui menuntut wewenang yang sama dengan
+      // menyetujuinya — `update:budget` saja tidak cukup.
+      if (!actorHasPermission(roleName, "approve:budget"))
+        throw new Error(
+          "FORBIDDEN: Budget approved hanya dapat direalokasi oleh penyetuju budget.",
+        );
       if (!validation.data.reason || validation.data.reason.length < 10)
         throw new Error("Alasan minimal 10 karakter wajib untuk budget approved.");
     }

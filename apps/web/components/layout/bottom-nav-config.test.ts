@@ -1,10 +1,17 @@
 import { describe, expect, test } from "bun:test";
 
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
+
 import { buildFabActions } from "./bottom-nav-config";
 
+/**
+ * Aksi cepat sekarang menerima daftar izin efektif. Test tetap menyebut peran
+ * bawaan dan menurunkan izinnya dari matriks seed, supaya batas yang diuji di
+ * sini tetap batas yang sama seperti sebelumnya.
+ */
 function actions(roleName: string, pathname: string) {
   return buildFabActions({
-    roleName,
+    permissions: ROLE_PERMISSIONS[roleName] ?? [],
     pathname,
     isProjectDetail: /^\/projects\/[^/]+/.test(pathname),
     isCurrentProjectLocked: false,
@@ -17,9 +24,14 @@ describe("contextual FAB actions", () => {
     expect(actions("OWNER", "/projects").map((item) => item.label)).toEqual(["Project Baru"]);
   });
 
-  test("keeps Finance focused on expense and vendor bill actions", () => {
+  test("tidak menawarkan Finance pintu pengajuan biaya yang ditolak server", () => {
+    /*
+     * Sebelum aksi cepat mengikuti izin, Finance Admin melihat "Expense
+     * Lapangan" di sini — padahal `submitFieldRequest` menuntut `create:cost`
+     * yang tidak dipegangnya, sehingga tombol itu selalu berakhir FORBIDDEN.
+     * Yang berubah adalah tombolnya menyusul aturan server, bukan aturannya.
+     */
     expect(actions("FINANCE_ADMIN", "/expenses").map((item) => item.label)).toEqual([
-      "Expense Lapangan",
       "Tagihan Vendor",
     ]);
   });

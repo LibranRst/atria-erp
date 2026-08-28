@@ -1,5 +1,6 @@
 "use server";
 
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import { eq } from "drizzle-orm";
 
 import { getMaterialInventory } from "@/app/actions/material/inventory";
@@ -191,7 +192,8 @@ export async function getInventoryOpeningBatches(): Promise<
         reversedByName: reversedBy?.name ?? null,
         itemCount: items.length,
         totalValue: items.reduce((sum, item) => sum + item.totalValue, 0),
-        canReverse: roleName === "OWNER" && row.status === "POSTED",
+        canReverse:
+          actorHasPermission(roleName, "reverse:opening_inventory") && row.status === "POSTED",
         items,
       };
     }),

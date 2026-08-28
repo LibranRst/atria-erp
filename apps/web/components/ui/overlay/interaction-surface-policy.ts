@@ -11,20 +11,11 @@ type SelectSurfaceContext = {
   readonly hasCreateAction?: boolean;
 };
 
-function isSimpleOption(option: SelectOption): boolean {
-  return (
-    option.description === undefined &&
-    option.meta === undefined &&
-    option.group === undefined &&
-    option.disabledReason === undefined
-  );
-}
-
 /**
  * Menentukan bobot surface dari isi pilihan, bukan dari fitur pemanggil.
- * Menu hanya dipakai untuk daftar pendek yang dapat dipahami lewat satu label;
- * konteks yang butuh pencarian atau penjelasan mendapat dialog yang sesuai,
- * tanpa mengubah pilihan ringan menjadi workflow sheet.
+ * Semua pilihan yang tidak membutuhkan pencarian tetap anchored di trigger,
+ * termasuk row berdeskripsi, grouped, atau memiliki disabled reason. Dialog
+ * hanya dipakai ketika daftar panjang/create action memang membutuhkan search.
  */
 export function resolveSelectPresentation({
   options,
@@ -34,12 +25,7 @@ export function resolveSelectPresentation({
   if (presentation === "menu") return "menu";
   if (presentation === "dialog" || presentation === "sheet") return "dialog";
 
-  const isShortSimpleList =
-    options.length >= 1 &&
-    options.length <= SIMPLE_SELECT_OPTION_LIMIT &&
-    options.every(isSimpleOption);
-
-  return isShortSimpleList && !hasCreateAction ? "menu" : "dialog";
+  return selectDialogNeedsSearch({ options, hasCreateAction }) ? "dialog" : "menu";
 }
 
 export function selectDialogNeedsSearch({

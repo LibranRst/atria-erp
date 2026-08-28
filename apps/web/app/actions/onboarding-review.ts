@@ -1,5 +1,6 @@
 "use server";
 
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import { eq } from "drizzle-orm";
 
 import {
@@ -38,7 +39,7 @@ export async function hasPendingOnboardingSetupApproval(): Promise<boolean> {
 export async function getOnboardingReviewState(): Promise<ActionResponse<OnboardingReviewState>> {
   const session = await requireServerSession();
   const roleName = await resolveRoleName(session.user.roleId);
-  if (roleName !== "FINANCE_ADMIN")
+  if (!actorHasPermission(roleName, "review:onboarding"))
     return {
       success: false,
       error: {

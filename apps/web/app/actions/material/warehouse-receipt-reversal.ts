@@ -1,5 +1,6 @@
 "use server";
 
+import { actorHasPermission } from "@atria/core/auth/permissions";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
@@ -90,7 +91,11 @@ export async function approveGoodsReceiptReversal(
       const selfApproval = receipt.reversalRequestedById === actor.id;
       if (
         selfApproval &&
-        !(roleName === "OWNER" && parsed.data.emergencyOverride && parsed.data.reason)
+        !(
+          actorHasPermission(roleName, "override:self_approval") &&
+          parsed.data.emergencyOverride &&
+          parsed.data.reason
+        )
       )
         throw new Error(
           "MAKER_CHECKER_REQUIRED: Reversal receipt harus disetujui user lain. Owner dapat memakai emergency override dengan alasan.",

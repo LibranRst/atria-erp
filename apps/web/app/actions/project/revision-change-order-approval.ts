@@ -1,5 +1,6 @@
 "use server";
 
+import { actorHasPermission } from "@/lib/auth/permissions";
 import { revalidatePath } from "next/cache";
 import { eq, inArray } from "drizzle-orm";
 
@@ -51,13 +52,17 @@ export async function approveProjectChangeOrder(
       ) {
         throw new Error("Change Order belum memiliki konfirmasi client yang lengkap.");
       }
+      // `approve:rab` sudah menjadi gerbangnya; pemeriksaan nama peran di
+      // bawahnya menyaring himpunan yang sama dan tidak pernah menolak apa pun.
       const roleName = await assertRevisionProjectScope(user, changeOrder.projectId, "approve:rab");
-      if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN")
-        throw new Error("FORBIDDEN: Approval Change Order hanya untuk Owner/Finance.");
       const selfApproval = changeOrder.createdById === user.id;
       if (
         selfApproval &&
-        !(roleName === "OWNER" && validation.data.emergencyOverride && validation.data.reason)
+        !(
+          actorHasPermission(roleName, "override:self_approval") &&
+          validation.data.emergencyOverride &&
+          validation.data.reason
+        )
       ) {
         throw new Error(
           "MAKER_CHECKER_REQUIRED: Change Order harus disetujui user lain. Owner dapat memakai emergency override dengan alasan.",

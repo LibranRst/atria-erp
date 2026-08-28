@@ -8,7 +8,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { auditLog, project, projectBudgets, projectRap, rabEstimate } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { resolveRoleName } from "@/lib/auth/permissions";
+import { actorHasPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { getProjectActivationReadiness } from "@atria/core/project/activation-readiness";
 import type { ActionResponse } from "@atria/core/types/action-response";
 
@@ -53,7 +53,7 @@ export async function activateProjectAction(
   }
 
   const roleName = await resolveRoleName(user.roleId ?? "");
-  if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN") {
+  if (!actorHasPermission(roleName, "activate:project")) {
     return {
       success: false,
       error: {

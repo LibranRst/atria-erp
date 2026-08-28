@@ -14,7 +14,7 @@ import {
   projectProfitabilitySnapshot,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
+import { actorHasPermission, assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
 import { calculateOutstandingProjectReservations } from "@/app/actions/material/inventory-utils";
@@ -47,8 +47,8 @@ async function assertClosingAccess(user: SessionUser, projectId: string): Promis
   await assertPermission(user, "update:budget");
   await assertPermission(user, "view:profitability");
   const roleName = await resolveRoleName(user.roleId ?? "");
-  if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN")
-    throw new Error("FORBIDDEN: Project closing hanya untuk Owner/Finance.");
+  if (!actorHasPermission(roleName, "close:project"))
+    throw new Error("FORBIDDEN: Peran Anda tidak berhak menutup proyek.");
   await assertProjectAccess(projectId, user.id, roleName);
 }
 

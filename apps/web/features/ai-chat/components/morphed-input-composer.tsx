@@ -512,12 +512,12 @@ export function MorphedInputComposer({
           }}
         >
           <DialogOptionList
-            key={selectSearchQuery}
             ref={selectOptionListRef}
             label={`Pilih ${fieldNoun(currentField.label)}`}
             value={currentValue}
             options={filteredOptions}
             emptyText="Tidak ada opsi yang sesuai pencarian."
+            animateHeight
             onSelect={(option) => selectOption(option.value)}
           />
         </SearchDialog>

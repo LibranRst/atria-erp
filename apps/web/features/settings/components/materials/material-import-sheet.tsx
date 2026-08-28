@@ -140,7 +140,7 @@ export function MaterialImportSheet({
       onPrimary={() => void commit()}
     >
       <div className="space-y-4">
-        <section className="rounded-[26px] bg-white p-4 shadow-control ring-1 ring-ring-subtle">
+        <section className="rounded-inset bg-white p-4 shadow-control ring-1 ring-ring-subtle">
           <p className="text-row font-bold text-on-surface">Template CSV</p>
           <p className="mt-1 text-meta text-on-surface-variant">
             Wajib: name, category, unit, location. Opsional: minimum_stock, last_purchase_price,

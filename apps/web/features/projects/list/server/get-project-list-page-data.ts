@@ -55,7 +55,7 @@ export async function getProjectListPageData(actor: Actor): Promise<ProjectListP
 
   // Scope proyek tetap ditegakkan server: PM hanya menerima proyek miliknya,
   // dan peran tanpa akses menerima filter yang mengembalikan nol baris.
-  const projectFilter = scopeProjectQuery(actor.userId, roleName);
+  const projectFilter = await scopeProjectQuery(actor.userId, roleName);
 
   const [projects, clients, users] = await Promise.all([
     db.query.project.findMany({
@@ -139,6 +139,6 @@ export async function getProjectListPageData(actor: Actor): Promise<ProjectListP
     }),
     clients: clients.map((client) => ({ id: client.id, name: client.name })),
     users: users.map((user) => ({ id: user.id, name: user.name })),
-    isAllowedToCreate: roleName === "OWNER" || roleName === "FINANCE_ADMIN",
+    isAllowedToCreate: actorHasPermission(roleName, "create:project"),
   };
 }

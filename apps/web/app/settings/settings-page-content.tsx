@@ -10,7 +10,7 @@ type SettingsPageContentProps = {
 };
 
 export async function SettingsPageContent({
-  initialTab = "overview",
+  initialTab = "financial",
 }: SettingsPageContentProps): Promise<React.JSX.Element> {
   const data = await getSettingsPageData();
 
@@ -43,6 +43,7 @@ export async function SettingsPageContent({
       onboarding={data.onboarding}
       initialStock={data.initialStock}
       openingBatches={data.openingBatches}
+      approvalThresholds={data.approvalThresholds}
     />
   );
 }

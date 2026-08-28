@@ -20,12 +20,12 @@ describe("resolveSelectPresentation", () => {
     );
   });
 
-  test("uses a dialog for empty or long lists", () => {
-    expect(resolveSelectPresentation({ options: [] })).toBe("dialog");
+  test("keeps empty and non-search lists anchored, but searches long lists", () => {
+    expect(resolveSelectPresentation({ options: [] })).toBe("menu");
     expect(resolveSelectPresentation({ options: simpleOptions(7) })).toBe("dialog");
   });
 
-  test("uses a dialog when an option needs supporting context", () => {
+  test("keeps contextual options anchored when search is unnecessary", () => {
     const contextualFields = [
       { description: "Keterangan" },
       { meta: "Metadata" },
@@ -38,7 +38,7 @@ describe("resolveSelectPresentation", () => {
         resolveSelectPresentation({
           options: [{ value: "one", label: "Satu", ...context }],
         }),
-      ).toBe("dialog");
+      ).toBe("menu");
     }
   });
 

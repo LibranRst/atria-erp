@@ -15,6 +15,20 @@ function ProfileRowSkeleton(): React.JSX.Element {
   );
 }
 
+/** Baris hak akses lebih tinggi dan berakhir dengan label status, bukan teks. */
+function AccessRowSkeleton(): React.JSX.Element {
+  return (
+    <div className="flex min-h-18 items-center gap-3 px-3.5 py-3">
+      <div className="h-10 w-10 shrink-0 rounded-[14px] bg-surface-container" aria-hidden="true" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <SkeletonLine className="h-3 w-36" />
+        <SkeletonLine className="h-2.5 w-28 bg-surface-container-low" />
+      </div>
+      <SkeletonLine className="h-6 w-16 bg-surface-container-low" />
+    </div>
+  );
+}
+
 export default function ProfileLoading(): React.JSX.Element {
   return (
     <div
@@ -62,7 +76,7 @@ export default function ProfileLoading(): React.JSX.Element {
         </div>
         <div className="divide-y divide-black/5.5 overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle max-[430px]:rounded-3xl">
           {[0, 1, 2, 3].map((row) => (
-            <ProfileRowSkeleton key={row} />
+            <AccessRowSkeleton key={row} />
           ))}
         </div>
       </section>

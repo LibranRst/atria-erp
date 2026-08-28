@@ -3,24 +3,17 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
-import { authClient } from "@/lib/auth-client";
-import { ROLE_ID_TO_NAME } from "@atria/core/auth/permissions";
+import { usePermissions } from "@/components/auth/permissions-provider";
 import { useProjectState } from "@/features/projects/detail/components/shared/project-state-context";
 import { updateBrowserUrl } from "@/lib/utils/use-url-search-param";
 import { toast } from "sonner";
-import {
-  buildFabActions,
-  getRoleNavItems,
-  type FabAction,
-  type SessionUserWithRole,
-} from "./bottom-nav-config";
+import { buildFabActions, getRoleNavItems, type FabAction } from "./bottom-nav-config";
 import { BottomNavBackdrop, BottomTabBar, QuickActionFab } from "./bottom-nav-parts";
 
 export function BottomNav(): React.JSX.Element | null {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session } = authClient.useSession();
   const [isFabOpen, setIsFabOpen] = React.useState(false);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [menuHeight, setMenuHeight] = React.useState<number | null>(null);
@@ -43,15 +36,20 @@ export function BottomNav(): React.JSX.Element | null {
     return () => window.clearTimeout(timeoutId);
   }, [pathname, searchParams]);
 
-  const roleId = session?.user ? (session.user as SessionUserWithRole).roleId : null;
-  const roleName = roleId ? ROLE_ID_TO_NAME[roleId] : null;
+  /*
+   * Tab dan aksi cepat dibaca dari izin efektif yang diselesaikan server, bukan
+   * dari pencarian UUID peran di peta statis: peran buatan Owner tidak ada di
+   * peta itu, sehingga pemegangnya selalu mendarat di bilah "peran tidak
+   * dikenal" apa pun izin yang diberikan padanya.
+   */
+  const permissions = usePermissions();
 
   const { isLocked, projectId } = useProjectState();
   const isCurrentProjectLocked = React.useMemo(() => {
     return !!(isLocked && projectId && pathname.includes(projectId));
   }, [isLocked, projectId, pathname]);
 
-  const filteredNavItems = React.useMemo(() => getRoleNavItems(roleName), [roleName]);
+  const filteredNavItems = React.useMemo(() => getRoleNavItems(permissions), [permissions]);
   const isProjectDetail = pathname.startsWith("/projects/");
 
   const activeIndex = React.useMemo(() => {
@@ -79,13 +77,13 @@ export function BottomNav(): React.JSX.Element | null {
   const fabActions: readonly FabAction[] = React.useMemo(
     () =>
       buildFabActions({
-        roleName,
+        permissions,
         pathname,
         isProjectDetail,
         isCurrentProjectLocked,
         withQuery,
       }),
-    [isProjectDetail, pathname, roleName, withQuery, isCurrentProjectLocked],
+    [isProjectDetail, pathname, permissions, withQuery, isCurrentProjectLocked],
   );
 
   React.useEffect(() => {

@@ -8,8 +8,13 @@
  * Seluruh nominal memakai `bigint` sen, sesuai aturan uang di CLAUDE.md.
  */
 
-/** Ambang persetujuan Owner: Rp5.000.000 dalam sen. */
-export const OWNER_APPROVAL_PAYMENT_THRESHOLD_CENTS = BigInt(500_000_000);
+import { DEFAULT_OWNER_APPROVAL_THRESHOLD_CENTS } from "./approval-thresholds";
+
+/**
+ * @deprecated Ambang sekarang datang dari konfigurasi (`app_config`). Konstanta
+ * ini hanya tersisa sebagai nilai seed dan cadangan.
+ */
+export const OWNER_APPROVAL_PAYMENT_THRESHOLD_CENTS = DEFAULT_OWNER_APPROVAL_THRESHOLD_CENTS;
 
 /**
  * Sisa tagihan yang boleh dibayar atau dijadwalkan.
@@ -43,13 +48,17 @@ export function vendorPaymentRequiresOwnerApproval({
   amountCents,
   categoryAllocatedCents,
   categoryActualCents,
+  ownerApprovalThresholdCents,
 }: {
   readonly amountCents: bigint;
   readonly categoryAllocatedCents: bigint;
   readonly categoryActualCents: bigint;
+  /** Ambang dalam sen dari konfigurasi; seed dipakai bila tidak diberikan. */
+  readonly ownerApprovalThresholdCents?: bigint;
 }): boolean {
   const isOverrun = categoryActualCents > categoryAllocatedCents;
-  return amountCents >= OWNER_APPROVAL_PAYMENT_THRESHOLD_CENTS || isOverrun;
+  const threshold = ownerApprovalThresholdCents ?? OWNER_APPROVAL_PAYMENT_THRESHOLD_CENTS;
+  return amountCents >= threshold || isOverrun;
 }
 
 export type VendorPaymentApprovalGate =

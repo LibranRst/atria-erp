@@ -1,5 +1,7 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { useId, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { transitionSpringSmooth } from "@/lib/utils/motion";
@@ -45,6 +47,7 @@ export function MaterialsControlCenter({
 }: {
   readonly data: MaterialOperationsDashboard;
 }): React.JSX.Element {
+  const can = useCan();
   const documentToken = useId().replaceAll(":", "").toUpperCase();
   const urlTab = useUrlSearchParam("tab");
   const tab = toMaterialTab(urlTab);
@@ -407,14 +410,14 @@ export function MaterialsControlCenter({
         onConfirm={decide}
       >
         {decision &&
-        ((data.roleName === "OWNER" &&
+        ((can("override:self_approval") &&
           !decision.type.includes("REJECT") &&
           !decision.type.includes("REQUEST")) ||
           decision.type.includes("REJECT") ||
           decision.type.includes("REQUEST") ||
           emergencyOverride) ? (
           <div className="space-y-2 text-left">
-            {data.roleName === "OWNER" &&
+            {can("override:self_approval") &&
             !decision.type.includes("REJECT") &&
             !decision.type.includes("REQUEST") ? (
               <div className="mb-2">
@@ -462,7 +465,7 @@ export function MaterialsControlCenter({
 }
 
 function roleLabel(roleName: string): string {
-  if (roleName === "FINANCE_ADMIN") return "FINANCE";
-  if (roleName === "PURCHASING") return "PURCHASING";
-  return "OWNER";
+  // Label peran, bukan keputusan akses: nama perannya sendiri yang ditampilkan
+  // supaya peran kustom tidak menyamar sebagai Owner.
+  return formatBusinessLabel(roleName).toUpperCase();
 }

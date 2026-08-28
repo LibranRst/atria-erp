@@ -3,15 +3,12 @@
 import { motion, useReducedMotion } from "framer-motion";
 import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
-import {
-  AppIcon,
-  GroupedSurface,
-  SegmentedTabs,
-  WorkspaceModuleHeader,
-  WorkspaceStatusLabel,
-} from "@/components/ui";
+import { AppIcon, GroupedSurface, SegmentedTabs, WorkspaceStatusLabel } from "@/components/ui";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { ROLE_DEEP_LINK_PARAMS, ROLE_WORKSPACE_VALUE } from "@atria/core/auth/role-deep-link";
+import { useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { RoleAccessManager } from "../roles/role-access-manager";
 import { AdministrationUserEditorSheet } from "../forms/administration-user-editor-sheet";
 import { AdministrationVendorEditorSheet } from "../forms/administration-vendor-editor-sheet";
 import { useAdministrationMutations } from "../../hooks/use-administration-mutations";
@@ -55,10 +52,25 @@ export function AdministrationManager({
   readonly onMutationComplete?: () => void;
 }): React.JSX.Element {
   const [data, setData] = React.useState(initialData);
-  const [activeTab, setActiveTab] = React.useState<AdministrationTab>(() =>
-    initialData.capabilities.canViewUsers ? "USERS" : "VENDORS",
-  );
+  /*
+   * Tab entitas bisa ditunjuk dari luar lewat `?admin=roles`.
+   *
+   * Itu yang membuat kartu asisten bisa mendarat di tempat yang tepat alih-alih
+   * di halaman Pengaturan lalu menyuruh orang mencari sendiri.
+   */
+  const workspaceParam = useBrowserUrlSearchParam(ROLE_DEEP_LINK_PARAMS.workspace);
+  const newRoleParam = useBrowserUrlSearchParam(ROLE_DEEP_LINK_PARAMS.newRole);
+  const [activeTab, setActiveTab] = React.useState<AdministrationTab>(() => {
+    if (presentation === "settings" && workspaceParam === ROLE_WORKSPACE_VALUE) return "ROLES";
+    if (initialData.capabilities.canViewUsers) return "USERS";
+    if (initialData.capabilities.canViewVendors) return "VENDORS";
+    // Peran adalah satu-satunya modul yang tersisa untuk peran yang hanya
+    // memegang `manage:roles`; onboarding tidak pernah mendarat di sini.
+    return presentation === "settings" ? "ROLES" : "VENDORS";
+  });
   const [editorMode, setEditorMode] = React.useState<EditorMode>(null);
+  const [roleCreateOpen, setRoleCreateOpen] = React.useState(false);
+  const [roleCreateLinkConsumed, setRoleCreateLinkConsumed] = React.useState(false);
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(null);
   const [selectedVendorId, setSelectedVendorId] = React.useState<string | null>(null);
   const [userForm, setUserForm] = React.useState<UserFormState>(EMPTY_USER_FORM);
@@ -77,6 +89,11 @@ export function AdministrationManager({
   }
 
   function openCreate(): void {
+    if (activeTab === "ROLES") {
+      if (!data.capabilities.canManageRoles) return;
+      setRoleCreateOpen(true);
+      return;
+    }
     if (activeTab === "USERS") {
       if (!data.capabilities.canManageUsers) return;
       setSelectedUserId(null);
@@ -103,13 +120,43 @@ export function AdministrationManager({
       setSelectedUserId,
       setSelectedVendorId,
     });
+  /*
+   * Label tab tanpa hitungan.
+   * Dengan tiga tab dan tombol buat di baris yang sama, "Anggota Tim (5)" pada
+   * 320 px menyusut jadi "Anggot…" — hitungan yang terpotong lebih buruk
+   * daripada tidak ada, dan angkanya tetap terbaca utuh di kepala daftar
+   * tepat di bawahnya.
+   */
+  const showRoles = presentation === "settings" && data.capabilities.canManageRoles;
+
+  /*
+   * `?newRole=1` membuka sheet pembuatan peran. Diputuskan di sini karena
+   * state-nya milik komponen ini — sekali saja, supaya pengguna tetap bisa
+   * menutupnya tanpa ia terbuka lagi.
+   */
+  if (showRoles && newRoleParam === "1" && !roleCreateLinkConsumed) {
+    setRoleCreateLinkConsumed(true);
+    setRoleCreateOpen(true);
+  }
+  const createActionLabel =
+    activeTab === "USERS"
+      ? "Tambah User"
+      : activeTab === "VENDORS"
+        ? "Tambah Vendor"
+        : "Peran Baru";
+  const createActionTitle =
+    activeTab === "USERS"
+      ? "Tambah Anggota Tim"
+      : activeTab === "VENDORS"
+        ? "Tambah Vendor Baru"
+        : "Buat Peran Baru";
   const tabOptions = [
     ...(data.capabilities.canViewUsers
       ? [
           {
             value: "USERS" as const,
-            label: "User",
-            icon: <AppIcon name="group" className="icon-sm" aria-hidden="true" />,
+            label: "Tim",
+            icon: <AppIcon name="group" className="h-3.75 w-3.75" aria-hidden="true" />,
           },
         ]
       : []),
@@ -118,53 +165,37 @@ export function AdministrationManager({
           {
             value: "VENDORS" as const,
             label: "Vendor",
-            icon: <AppIcon name="domain" className="icon-sm" aria-hidden="true" />,
+            icon: <AppIcon name="domain" className="h-3.75 w-3.75" aria-hidden="true" />,
+          },
+        ]
+      : []),
+    // Peran hanya relevan di Settings: onboarding menyiapkan tim, bukan
+    // mendefinisikan ulang akses.
+    ...(showRoles
+      ? [
+          {
+            value: "ROLES" as const,
+            label: "Peran",
+            icon: <AppIcon name="verified_user" className="h-3.75 w-3.75" aria-hidden="true" />,
           },
         ]
       : []),
   ];
   const canManageActiveTab =
-    activeTab === "USERS" ? data.capabilities.canManageUsers : data.capabilities.canManageVendors;
+    activeTab === "USERS"
+      ? data.capabilities.canManageUsers
+      : activeTab === "VENDORS"
+        ? data.capabilities.canManageVendors
+        : data.capabilities.canManageRoles;
   return (
     <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
-      {presentation === "settings" ? (
-        <WorkspaceModuleHeader
-          eyebrow="Kontrol akses"
-          title="Tim & Vendor"
-          description={
-            data.capabilities.canViewUsers
-              ? `${activeUserCount} user aktif · ${activeVendorCount} vendor aktif. Riwayat transaksi tetap tersimpan saat akses dinonaktifkan.`
-              : `${activeVendorCount} vendor aktif. Finance dapat memperbarui vendor tanpa memperoleh akses manajemen user.`
-          }
-          actionLabel={
-            canManageActiveTab
-              ? activeTab === "USERS"
-                ? "Tambah user"
-                : "Tambah vendor"
-              : undefined
-          }
-          onAction={canManageActiveTab ? openCreate : undefined}
-        />
-      ) : null}
-
-      {tabOptions.length > 1 ? (
-        <SegmentedTabs
-          value={activeTab}
-          onChange={setActiveTab}
-          options={tabOptions}
-          ariaLabel="Jenis data administrasi"
-          layoutId="administration-entity-tabs"
-          density={presentation === "onboarding" ? "compact" : "default"}
-        />
-      ) : null}
-
       {presentation === "onboarding" ? (
         <div className="flex min-w-0 items-center justify-between gap-3 px-1">
           <span className="min-w-0">
             <span className="block text-[13px] leading-5 font-bold text-on-surface">
               {activeTab === "USERS" ? "Tim internal" : "Vendor"}
             </span>
-            <span className="block text-[9px] leading-4 text-on-surface-variant">
+            <span className="block text-meta text-on-surface-variant">
               {activeTab === "USERS"
                 ? `${activeUserCount} akun aktif`
                 : `${activeVendorCount} vendor aktif`}
@@ -180,9 +211,44 @@ export function AdministrationManager({
             </button>
           ) : null}
         </div>
-      ) : null}
+      ) : (
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          {tabOptions.length > 1 ? (
+            <div className="min-w-0 flex-1">
+              <SegmentedTabs
+                value={activeTab}
+                onChange={setActiveTab}
+                options={tabOptions}
+                ariaLabel="Jenis data administrasi"
+                layoutId="administration-entity-tabs"
+                density="compact"
+                scrollable
+                fillAvailableSpace
+              />
+            </div>
+          ) : null}
+          {canManageActiveTab ? (
+            <button
+              type="button"
+              onClick={openCreate}
+              /*
+               * `max-[420px]:w-12 px-0` menjaga lingkarannya benar-benar bulat.
+               * Tanpa itu, label yang disembunyikan menyisakan `px-3.5` di
+               * kedua sisi sehingga tombolnya 44×48 — lonjong, bukan lingkaran.
+               */
+              className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
+              title={createActionTitle}
+            >
+              <AppIcon name="add" className="icon-sm" />
+              <span className="ml-1 max-[420px]:hidden">{createActionLabel}</span>
+            </button>
+          ) : null}
+        </div>
+      )}
 
-      {activeTab === "USERS" ? (
+      {activeTab === "ROLES" ? (
+        <RoleAccessManager createOpen={roleCreateOpen} onCreateOpenChange={setRoleCreateOpen} />
+      ) : activeTab === "USERS" ? (
         <section className="space-y-2">
           {presentation === "settings" ? (
             <div className="flex min-h-8 items-center justify-between gap-3 px-1">

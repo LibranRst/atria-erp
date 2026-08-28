@@ -8,6 +8,7 @@ import { shouldStopAfterFinalFollowUps } from "../lib/ai/chat-stop-conditions";
 import { resolveChatModel, resolveProviderChain, type ChatProviderName } from "../lib/ai/providers";
 import { buildSuggestionTools } from "../lib/ai/tools/suggestion-tools";
 import type { AiToolContext } from "../lib/ai/tools/context";
+import { aiToolContextForRole } from "../lib/testing/ai-tool-context";
 
 type EvalScenario = {
   readonly id: string;
@@ -131,10 +132,9 @@ const scenarios: readonly EvalScenario[] = [
   },
 ];
 
-const context: AiToolContext = {
+const context: AiToolContext = aiToolContextForRole("OWNER", {
   userId: "00000000-0000-0000-0000-000000000099",
-  roleName: "OWNER",
-};
+});
 
 function wordCount(text: string): number {
   const normalized = text.trim();

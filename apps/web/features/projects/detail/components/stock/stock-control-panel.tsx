@@ -17,7 +17,6 @@ interface StockControlPanelProps {
   readonly rap: RapView | null;
   readonly materials: readonly MaterialOption[];
   readonly stockMovements: readonly StockMovement[];
-  readonly userRole: string;
   readonly isLocked: boolean;
   readonly nextSetupTab: TabId;
   readonly nextSetupLabel: string;
@@ -46,7 +45,6 @@ export function StockControlPanel({
   rap,
   materials,
   stockMovements,
-  userRole,
   isLocked,
   nextSetupTab,
   nextSetupLabel,
@@ -95,12 +93,7 @@ export function StockControlPanel({
           <QuantityFact label="Tersisa" value={leftoverQty} />
         </div>
         <div className="mt-4">
-          <StockOperationSheet
-            projectId={projectId}
-            rap={rap}
-            materials={materials}
-            userRole={userRole}
-          />
+          <StockOperationSheet projectId={projectId} rap={rap} materials={materials} />
         </div>
       </section>
 

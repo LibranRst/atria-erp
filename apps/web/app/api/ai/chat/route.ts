@@ -10,6 +10,7 @@ import { checkRateLimit } from "@/lib/ai/rate-limit";
 import type { AiToolContext } from "@/lib/ai/tools/context";
 import { loadAiPreference } from "@/lib/ai/user-preference";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
+import { getRoleAccess } from "@/lib/auth/role-access";
 import { getServerSession } from "@/lib/server/session";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
 import { randomUUID } from "node:crypto";
@@ -107,9 +108,13 @@ export async function POST(request: Request): Promise<Response> {
 
   const messages: UIMessage[] = [...history, userMessage];
 
+  const roleAccess = await getRoleAccess(session.user.roleId);
   const toolContext: AiToolContext = {
     userId: session.user.id,
     roleName,
+    roleId: session.user.roleId,
+    permissions: roleAccess?.permissions ?? [],
+    dataScope: roleAccess?.dataScope ?? "NONE",
   };
   const preference = await loadAiPreference(session.user.id);
 

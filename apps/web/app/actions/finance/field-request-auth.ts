@@ -3,7 +3,12 @@
 import { cookies } from "next/headers";
 
 import { auth } from "@/lib/auth";
-import { assertPermission, resolveRoleName, type PermissionKey } from "@/lib/auth/permissions";
+import {
+  actorHasPermission,
+  assertPermission,
+  resolveRoleName,
+  type PermissionKey,
+} from "@/lib/auth/permissions";
 import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
 import type { ActionResponse } from "@atria/core/types/action-response";
 
@@ -80,7 +85,7 @@ export async function authorizeOwnerVendorApproval(): Promise<AuthResult> {
   }
 
   const userRoleName = await resolveRoleName(user.roleId);
-  if (userRoleName !== "OWNER") {
+  if (!actorHasPermission(userRoleName, "approve:cost")) {
     return {
       success: false,
       error: {

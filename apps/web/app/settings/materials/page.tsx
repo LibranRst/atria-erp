@@ -3,5 +3,5 @@ import { SettingsPageContent } from "../settings-page-content";
 export const dynamic = "force-dynamic";
 
 export default async function MaterialSettingsPage(): Promise<React.JSX.Element> {
-  return <SettingsPageContent initialTab="materials" />;
+  return <SettingsPageContent initialTab="catalog" />;
 }

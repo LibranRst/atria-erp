@@ -1,3 +1,4 @@
+import { OWNER_APPROVAL_AMOUNT_THRESHOLD } from "@atria/core/finance/expense-approval-rule";
 import { desc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -8,7 +9,7 @@ import type {
   InventoryOpeningApprovalDetail,
 } from "@atria/core/finance/approval-types";
 import { dashboardDueDayOffset } from "@atria/core/finance/dashboard-overview";
-import { resolveRoleName } from "@/lib/auth/permissions";
+import { actorHasPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { getServerSession } from "@/lib/server/session";
 
 type ApprovalRecord = typeof approval.$inferSelect;
@@ -209,6 +210,12 @@ function approvalUrgency(item: ApprovalDetail, now: Date): number {
 export function rankPendingApprovals(
   approvals: readonly ApprovalDetail[],
   now: Date,
+  /**
+   * Ambang untuk penandaan prioritas "Nominal perlu perhatian". Nilai seed
+   * dipakai bila pemanggil belum membaca konfigurasi — ini penandaan tampilan,
+   * bukan gerbang keputusan.
+   */
+  ownerApprovalThreshold: number = OWNER_APPROVAL_AMOUNT_THRESHOLD,
 ): readonly ApprovalDetail[] {
   return approvals
     .map((item): ApprovalDetail => {
@@ -250,7 +257,7 @@ export function rankPendingApprovals(
           priorityReason: `Menunggu ${waitingDays} hari`,
         };
       }
-      if (item.amount >= 5_000_000) {
+      if (item.amount >= ownerApprovalThreshold) {
         return {
           ...item,
           priority: "WARNING",
@@ -328,7 +335,9 @@ export async function getPendingApprovalDetails(
   const session = await getServerSession();
   const currentUserId = session?.user?.id ?? null;
   const roleName = session?.user?.roleId ? await resolveRoleName(session.user.roleId) : null;
-  const isOwner = roleName === "OWNER";
+  // Override darurat pada persetujuan diri sendiri — hak yang berdiri sendiri,
+  // bukan konsekuensi dari kebetulan bernama Owner.
+  const isOwner = roleName ? actorHasPermission(roleName, "override:self_approval") : false;
 
   const records = await db.query.approval.findMany({
     where: eq(approval.status, "PENDING"),

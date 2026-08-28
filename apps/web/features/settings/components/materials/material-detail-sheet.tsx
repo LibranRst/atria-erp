@@ -89,7 +89,7 @@ export function MaterialDetailSheet({
     >
       {material ? (
         <div className="space-y-lg">
-          <section className="overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
+          <section className="overflow-hidden rounded-inset bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
             <div className="p-4">
               <div className="flex min-w-0 items-center justify-between gap-2">
                 <p className="truncate text-eyebrow font-bold tracking-widest text-on-surface-variant uppercase">

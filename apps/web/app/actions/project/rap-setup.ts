@@ -227,9 +227,13 @@ export async function finalizeProjectInternalPlan(input: unknown): Promise<Actio
       if (!rap) throw new Error("RAP_NOT_FOUND");
       if (rap.status !== "DRAFT" || rap.setupStage !== "REVIEW")
         throw new Error("RAP belum berada pada tahap Review.");
-      const roleName = await assertScoped(user, rap.projectId, "lock:rap");
-      if (roleName !== "OWNER" && roleName !== "FINANCE_ADMIN")
-        throw new Error("FORBIDDEN: Finalisasi hanya untuk Owner/Finance.");
+      /*
+       * `lock:rap` sendiri sudah menjadi gerbangnya. Pemeriksaan nama peran di
+       * bawahnya dulu menyaring himpunan yang persis sama, jadi ia tidak pernah
+       * menolak siapa pun — yang ia lakukan hanya membuat izin ini berhenti
+       * bekerja begitu diberikan kepada peran lain.
+       */
+      await assertScoped(user, rap.projectId, "lock:rap");
       if (rap.items.length === 0) throw new Error("Material RAP masih kosong.");
       const packages = await tx.query.projectCategoryPlanItem.findMany({
         where: eq(projectCategoryPlanItem.projectId, rap.projectId),

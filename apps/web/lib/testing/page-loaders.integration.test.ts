@@ -1,3 +1,4 @@
+import { getRoleDataScope, ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
 import { beforeAll, afterAll, expect, it, mock } from "bun:test";
 
 import { db } from "@/db";
@@ -54,6 +55,9 @@ function persona(
       email,
       isActive: true,
       mustChangePassword: false,
+      sessionId: "test-session",
+      permissions: ROLE_PERMISSIONS[roleName] ?? [],
+      dataScope: getRoleDataScope(roleName),
       developerActorUserId: null,
     },
   };

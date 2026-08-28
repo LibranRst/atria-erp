@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
 import React from "react";
 
 import { OperationSuccessDialog } from "@/components/ui";
@@ -35,7 +36,7 @@ interface VendorBillListProps {
   readonly vendors: VendorListVendor[];
   readonly projects: VendorListProject[];
   readonly bankAccounts: VendorListBankAccount[];
-  readonly userRole: string;
+  readonly vendorPaymentApprovalThreshold: number;
 }
 
 export function VendorBillList({
@@ -44,12 +45,16 @@ export function VendorBillList({
   vendorBills,
   vendorPayments,
   bankAccounts,
-  userRole,
+  vendorPaymentApprovalThreshold,
 }: VendorBillListProps): React.JSX.Element {
-  const operations = useVendorPaymentOperations({ projectId, bankAccounts });
-  const isOwnerOrFinance = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
-  const canCreateVendorBill =
-    isOwnerOrFinance || userRole === "PROJECT_MANAGER" || userRole === "PURCHASING";
+  const can = useCan();
+  const operations = useVendorPaymentOperations({
+    projectId,
+    bankAccounts,
+    ownerApprovalThreshold: vendorPaymentApprovalThreshold,
+  });
+  const isOwnerOrFinance = can("view:bank_account");
+  const canCreateVendorBill = can("view:vendor_bill");
 
   return (
     <div className="space-y-sm">
@@ -69,6 +74,7 @@ export function VendorBillList({
         key={operations.selectedBill?.id ?? "vendor-schedule-closed"}
         bill={operations.selectedBill}
         bankAccounts={bankAccounts}
+        ownerApprovalThreshold={vendorPaymentApprovalThreshold}
         isPending={operations.pending}
         error={operations.error}
         selectedBankId={operations.selectedBankId}

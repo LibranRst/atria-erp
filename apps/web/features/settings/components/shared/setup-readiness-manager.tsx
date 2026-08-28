@@ -11,6 +11,7 @@ import type {
 import { OpeningInventoryWorkspace } from "@/features/materials/components/workspaces/opening-inventory-workspace";
 import {
   AppIcon,
+  DuotoneIconTile,
   GroupedSurface,
   MetadataChip,
   WorkspaceModuleHeader,
@@ -21,6 +22,7 @@ import type {
   OnboardingStepStatus,
   OwnerOnboardingOverview,
 } from "@atria/core/onboarding/owner-onboarding";
+import { SettingsInverseSurface } from "./settings-inverse-surface";
 
 function tone(status: OnboardingStepStatus): "positive" | "inactive" | "neutral" {
   if (status === "READY" || status === "NOT_APPLICABLE") return "positive";
@@ -72,7 +74,7 @@ export function SetupReadinessManager({
         title="Kesiapan setup"
         description="Status berasal dari data nyata. Menyelesaikan onboarding tidak menyembunyikan konfigurasi yang masih kosong."
       />
-      <section className="rounded-[26px] bg-surface-inverse p-4 text-white shadow-inverse">
+      <SettingsInverseSurface label="Status onboarding">
         <div className="flex items-start justify-between gap-4">
           <span>
             <span className="block text-eyebrow font-bold tracking-[0.13em] text-white/50 uppercase">
@@ -107,7 +109,7 @@ export function SetupReadinessManager({
             role Anda.
           </p>
         )}
-      </section>
+      </SettingsInverseSurface>
       <GroupedSurface>
         <div className="divide-y divide-black/5.5">
           {overview.readiness
@@ -139,8 +141,10 @@ export function SetupReadinessManager({
                   href={href}
                   className="flex min-h-18 items-center gap-3 px-3.5 py-3 outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
                 >
-                  <AppIcon
-                    className={`icon-md h-9 w-9 shrink-0 rounded-[13px] p-2 ${item.ready ? "bg-success-container text-success" : "bg-warning-container text-warning"}`}
+                  <DuotoneIconTile
+                    className="h-9 w-9"
+                    iconClassName="icon-sm"
+                    tone={item.ready ? "neutral" : "attention"}
                     name={
                       item.ready
                         ? "check"

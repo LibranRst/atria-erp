@@ -242,3 +242,25 @@ export const createMaterialCategorySettingSchema = z.object({
 export type CreateMaterialCategorySettingInput = z.infer<
   typeof createMaterialCategorySettingSchema
 >;
+
+/**
+ * Ambang persetujuan Owner, dalam SEN.
+ *
+ * Nol sah dan berarti "semua butuh persetujuan Owner". Batas atas Rp1 triliun
+ * mencegah salah ketik satuan — memasukkan rupiah ke kolom sen akan tertangkap
+ * di sini alih-alih diam-diam melumpuhkan gerbang persetujuan.
+ */
+export const updateApprovalThresholdsSchema = z.object({
+  fieldCostCents: z
+    .number()
+    .int("Ambang harus bilangan bulat sen.")
+    .min(0, "Ambang tidak boleh negatif.")
+    .max(100_000_000_000, "Ambang melebihi batas wajar."),
+  vendorPaymentCents: z
+    .number()
+    .int("Ambang harus bilangan bulat sen.")
+    .min(0, "Ambang tidak boleh negatif.")
+    .max(100_000_000_000, "Ambang melebihi batas wajar."),
+});
+
+export type UpdateApprovalThresholdsInput = z.infer<typeof updateApprovalThresholdsSchema>;

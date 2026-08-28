@@ -1,4 +1,13 @@
-import { pgTable, uuid, varchar, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  timestamp,
+  boolean,
+  index,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { budgetAllocationSetting, formDraft, project, projectBudget } from "./projects";
 import {
@@ -26,11 +35,54 @@ export const role = pgTable("role", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 50 }).notNull().unique(), // owner, finance_admin, project_manager, dll
   description: text("description"),
+  /**
+   * Cakupan data proyek peran ini: `GLOBAL` melihat seluruh proyek,
+   * `ASSIGNED` hanya yang ditugaskan kepadanya, `NONE` tidak sama sekali.
+   *
+   * Tanpa kolom ini, peran buatan Owner akan selalu mendapat nol baris dari
+   * `scopeProjectQuery` — fiturnya lahir mati.
+   */
+  dataScope: varchar("data_scope", { length: 20 }).notNull().default("NONE"),
+  /**
+   * Peran sistem tidak bisa dihapus atau diganti nama. Owner juga tidak bisa
+   * diubah izinnya — itulah yang menutup penguncian-diri tanpa logika
+   * "minimal satu peran punya X" yang rumit dan mudah salah.
+   */
+  isSystem: boolean("is_system").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+/**
+ * Izin sebagai data, bukan konstanta kode.
+ *
+ * `ROLE_PERMISSIONS` di `@atria/core` turun status menjadi seed tabel ini —
+ * pola yang sama dengan default alokasi budget dan master data: Settings adalah
+ * sumber kebenaran, kode hanya menyediakan nilai awal.
+ */
+export const rolePermission = pgTable(
+  "role_permission",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    roleId: uuid("role_id")
+      .notNull()
+      .references(() => role.id, { onDelete: "cascade" }),
+    permissionKey: varchar("permission_key", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("role_permission_unique_idx").on(table.roleId, table.permissionKey),
+    index("role_permission_role_id_idx").on(table.roleId),
+  ],
+);
+
+export const rolePermissionRelations = relations(rolePermission, ({ one }) => ({
+  role: one(role, { fields: [rolePermission.roleId], references: [role.id] }),
+}));
 
 export const roleRelations = relations(role, ({ many }) => ({
   users: many(user),
+  permissions: many(rolePermission),
 }));
 
 // ==========================================

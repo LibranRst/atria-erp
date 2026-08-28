@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
 import React, { useState, useTransition } from "react";
 import { z } from "zod";
 import { recordClientPayment } from "@/app/actions/finance/record-client-payment";
@@ -49,9 +50,9 @@ export function ProjectInvoices({
   projectId,
   invoices,
   bankAccounts,
-  userRole,
   contractValue,
 }: ProjectInvoicesProps): React.JSX.Element {
+  const can = useCan();
   const router = useRouter();
   const [selectedInvoice, setSelectedInvoice] = useState<ClientInvoiceItem | null>(null);
 
@@ -98,7 +99,7 @@ export function ProjectInvoices({
   const [success, setSuccess] = useState<string | null>(null);
   const [operationSuccess, setOperationSuccess] = useState<OperationSuccess | null>(null);
 
-  const isOwnerOrFinance = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
+  const isOwnerOrFinance = can("create:client_invoice");
   const { totalInvoiceAmount, totalPaidAmount, unpaidAmount } = calculateInvoiceTotals(invoices);
 
   function handleGenerateSchedule(): void {

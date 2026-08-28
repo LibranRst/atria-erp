@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import React from "react";
 
-import { AppIcon, Badge, type BadgeStatus } from "@/components/ui";
+import { AppIcon, Badge, UserAvatar, type BadgeStatus } from "@/components/ui";
+import { useProfileActions } from "./profile-actions-provider";
 export function ProfileIdentitySurface({
   displayName,
   displayEmail,
@@ -25,7 +25,17 @@ export function ProfileIdentitySurface({
   readonly accessibleModuleCount: number;
   readonly moduleCount: number;
 }): React.JSX.Element {
-  const [showImage, setShowImage] = React.useState<boolean>(Boolean(imageUrl));
+  const actions = useProfileActions();
+
+  const avatar = (
+    <UserAvatar
+      imageUrl={imageUrl}
+      initials={initials}
+      displayName={displayName}
+      renderPx={64}
+      className="h-16 w-16 text-[23px] tracking-tight shadow-raised ring-1 ring-ring-subtle max-[430px]:h-14 max-[430px]:w-14 max-[430px]:text-[20px]"
+    />
+  );
 
   return (
     <section
@@ -37,20 +47,29 @@ export function ProfileIdentitySurface({
         aria-hidden="true"
       />
       <div className="flex min-w-0 items-start gap-3.5">
-        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-[23px] leading-none font-bold tracking-tight text-on-primary shadow-raised ring-1 ring-ring-subtle max-[430px]:h-14 max-[430px]:w-14 max-[430px]:text-[20px]">
-          <span aria-hidden={showImage}>{initials}</span>
-          {showImage && imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={`Foto profil ${displayName}`}
-              fill
-              sizes="64px"
-              unoptimized
-              className="object-cover"
-              onError={() => setShowImage(false)}
-            />
-          ) : null}
-        </div>
+        {actions ? (
+          /*
+           * Jalan pintas, bukan satu-satunya pintu: baris "Ubah profil" di grup
+           * di bawah membuka sheet yang sama. Avatar sendiri sudah 64 px, jadi
+           * target sentuhnya lewat dari 48 px tanpa padding tambahan.
+           */
+          <button
+            type="button"
+            onClick={actions.openEditProfile}
+            aria-label="Ubah profil"
+            className="group relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
+          >
+            {avatar}
+            <span
+              className="absolute -right-0.5 -bottom-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-surface text-on-surface-variant shadow-control ring-1 ring-ring-subtle"
+              aria-hidden="true"
+            >
+              <AppIcon name="photo_camera" className="icon-xs leading-none" />
+            </span>
+          </button>
+        ) : (
+          avatar
+        )}
 
         <div className="min-w-0 flex-1 pt-0.5">
           <div className="flex min-w-0 items-center justify-between gap-2">

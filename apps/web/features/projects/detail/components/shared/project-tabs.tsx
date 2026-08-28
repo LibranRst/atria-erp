@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/components/auth/permissions-provider";
 import React from "react";
 import { RapRabManager } from "./rap-rab-manager";
 import { ProjectInvoices } from "../invoices/project-invoices";
@@ -28,6 +29,7 @@ export type {
 export function ProjectTabs({
   project,
   userRole,
+  vendorPaymentApprovalThreshold,
   bankAccounts,
   costs,
   vendorBills,
@@ -40,6 +42,7 @@ export function ProjectTabs({
   materialMasterCatalog,
   pricingTemplateCatalog,
 }: ProjectTabsProps): React.JSX.Element {
+  const can = useCan();
   const tabParam = useUrlSearchParam("tab");
   const isLocked = !projectBudgetDashboard || projectBudgetDashboard.status !== "APPROVED";
   const { setProjectState } = useProjectState();
@@ -78,7 +81,7 @@ export function ProjectTabs({
     raps: project.raps,
     rabEstimates: project.rabEstimates,
   });
-  const canActivateProject = userRole === "OWNER" || userRole === "FINANCE_ADMIN";
+  const canActivateProject = can("activate:project");
 
   const {
     contractValue,
@@ -161,7 +164,6 @@ export function ProjectTabs({
         {activeTab === "overview" && (
           <ProjectOverview
             budget={projectBudgetDashboard}
-            userRole={userRole}
             contractValue={contractValue}
             actions={overviewActions}
             readiness={readiness}
@@ -217,7 +219,6 @@ export function ProjectTabs({
             rap={rapForManager}
             materials={materialOptions}
             stockMovements={stockMovements}
-            userRole={userRole}
             isLocked={isLocked}
             nextSetupTab={nextSetupTab}
             nextSetupLabel={nextSetupLabel}
@@ -237,10 +238,10 @@ export function ProjectTabs({
           ) : (
             <div className="space-y-sm">
               <ExpenseList
+                vendorPaymentApprovalThreshold={vendorPaymentApprovalThreshold}
                 projectId={project.id}
                 initialCosts={costs}
                 bankAccounts={bankAccounts}
-                userRole={userRole}
                 vendorBills={vendorBills}
                 vendorPayments={vendorPayments}
                 vendors={vendors}
@@ -271,7 +272,6 @@ export function ProjectTabs({
           <ProfitabilityPanel
             projectId={project.id}
             projectStatus={project.status}
-            userRole={userRole}
             contractValue={contractValue}
             totalAllocated={totalAllocated}
             projectedGrossProfit={projectedGrossProfit}

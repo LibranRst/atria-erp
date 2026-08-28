@@ -1,27 +1,32 @@
 import { db } from "@/db";
 import { project } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getRoleDataScopeByName } from "./role-access";
 import { resolveRoleName } from "./permissions";
 
 /**
  * Menghasilkan kondisi filter Drizzle ORM untuk kueri tabel `project`.
  *
- * - OWNER & FINANCE_ADMIN: Mengembalikan `undefined` (tidak ada filter, akses global).
- * - PROJECT_MANAGER: Mengembalikan filter `eq(project.projectManagerId, userId)`.
- * - Peran lainnya: Mengembalikan kondisi palsu agar data tidak bocor.
+ * Cakupannya datang dari `getRoleDataScope`, satu-satunya tabel cakupan di
+ * aplikasi — sebelumnya aturan yang sama ditulis ulang di tool AI dan
+ * dilewati lagi dengan cara ketiga di domain material.
+ *
+ * - `GLOBAL`: Mengembalikan `undefined` (tidak ada filter penugasan).
+ * - `ASSIGNED`: Mengembalikan filter `eq(project.projectManagerId, userId)`.
+ * - `NONE`: Mengembalikan kondisi palsu agar data tidak bocor.
  *
  * @param userId ID pengguna aktif
  * @param roleName Nama peran (misal: "PROJECT_MANAGER")
  * @returns Ekspresi Drizzle SQL filter atau `undefined`
  */
-export function scopeProjectQuery(userId: string, roleName: string) {
-  const normalizedRole = roleName.toUpperCase();
+export async function scopeProjectQuery(userId: string, roleName: string) {
+  const scope = await getRoleDataScopeByName(roleName);
 
-  if (normalizedRole === "OWNER" || normalizedRole === "FINANCE_ADMIN") {
+  if (scope === "GLOBAL") {
     return undefined; // Akses global - tidak ada filter penugasan proyek
   }
 
-  if (normalizedRole === "PROJECT_MANAGER") {
+  if (scope === "ASSIGNED") {
     return eq(project.projectManagerId, userId);
   }
 
@@ -37,6 +42,7 @@ export function scopeProjectQuery(userId: string, roleName: string) {
  * @param projectId ID proyek target
  * @param userId ID pengguna aktif
  * @param roleIdOrName ID Peran (UUID) atau nama peran string (misal: "PROJECT_MANAGER")
+ * @see getRoleDataScope — satu-satunya sumber cakupan data proyek
  */
 export async function assertProjectAccess(
   projectId: string,
@@ -50,15 +56,16 @@ export async function assertProjectAccess(
     roleName = await resolveRoleName(roleIdOrName);
   }
 
-  const normalizedRole = roleName.toUpperCase();
+  const scope = await getRoleDataScopeByName(roleName);
 
-  // OWNER dan FINANCE_ADMIN memiliki otorisasi penuh secara global
-  if (normalizedRole === "OWNER" || normalizedRole === "FINANCE_ADMIN") {
+  // Cakupan global: otorisasi penuh tanpa memeriksa penugasan
+  if (scope === "GLOBAL") {
     return;
   }
 
-  // Hanya PROJECT_MANAGER yang memiliki penugasan proyek pada fase finance saat ini.
-  if (normalizedRole === "PROJECT_MANAGER") {
+  // Cakupan tertugas — hari ini satu-satunya penugasan adalah kolom
+  // `project.projectManagerId`.
+  if (scope === "ASSIGNED") {
     const assignedProject = await db.query.project.findFirst({
       where: and(eq(project.id, projectId), eq(project.projectManagerId, userId)),
     });

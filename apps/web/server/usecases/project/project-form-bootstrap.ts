@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { project } from "@/db/schema";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import type { Actor } from "@/server/actor";
-import { actorHasPermission } from "@atria/core/auth/permissions";
+import { getRoleDataScope, actorHasPermission } from "@atria/core/auth/permissions";
 import type { ProjectItem } from "@atria/core/types/projects";
 import type { ProjectFormBootstrapInput } from "@atria/core/validations/project";
 import { eq } from "drizzle-orm";
@@ -60,7 +60,7 @@ export async function getProjectFormBootstrap(
   actor: Actor,
   input: ProjectFormBootstrapInput,
 ): Promise<ProjectFormBootstrapData> {
-  const canCreate = actor.roleName === "OWNER" || actor.roleName === "FINANCE_ADMIN";
+  const canCreate = actorHasPermission(actor.roleName, "create:project");
   const canUpdate = actorHasPermission(actor.roleName, "update:budget");
 
   if (!actorHasPermission(actor.roleName, "view:budget")) return { status: "restricted" };
@@ -116,7 +116,9 @@ export async function getProjectFormBootstrap(
     projectManagers: users
       .filter(
         (candidate) =>
-          (candidate.isActive && candidate.role.name.toUpperCase() === "PROJECT_MANAGER") ||
+          // Kandidat PM adalah pemegang peran bercakupan tertugas — properti
+          // peran, bukan namanya, sehingga peran kustom ikut memenuhi syarat.
+          (candidate.isActive && getRoleDataScope(candidate.role.name) === "ASSIGNED") ||
           candidate.id === projectRecord?.projectManagerId,
       )
       .map(({ id, name }) => ({ id, name })),

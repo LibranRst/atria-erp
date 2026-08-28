@@ -1,3 +1,5 @@
+import { getApprovalThresholds } from "@/lib/finance/approval-thresholds";
+import { thresholdCentsToRupiah } from "@atria/core/finance/approval-thresholds";
 import "server-only";
 
 import { and, desc, eq, inArray, type SQL } from "drizzle-orm";
@@ -22,6 +24,7 @@ import type {
   VendorListVendor,
 } from "@atria/core/types/expenses";
 import { getPendingApprovalDetails } from "@/lib/finance/approval-details";
+import { actorHasPermission, getRoleDataScope } from "@atria/core/auth/permissions";
 import type { Actor } from "@/server/actor";
 import {
   canExposeExpenseBankAccounts,
@@ -32,6 +35,12 @@ export type ExpensesPageReadyData = {
   readonly status: "ready";
   readonly initialCosts: ExpenseCostItem[];
   readonly bankAccounts: BankAccountItem[];
+  /**
+   * Ambang persetujuan Owner dalam rupiah, dibaca server dari konfigurasi.
+   * Klien memakainya untuk menjelaskan konsekuensi sebelum submit — bukan untuk
+   * memutuskan sendiri, karena keputusannya tetap milik server.
+   */
+  readonly vendorPaymentApprovalThreshold: number;
   readonly userRole: string;
   readonly vendorBills: VendorListBill[];
   readonly vendorPayments: VendorListPayment[];
@@ -62,16 +71,27 @@ function toExpenseCostStatus(status: string): ExpenseCostItem["status"] {
 
 export async function getExpensesPageData(actor: Actor): Promise<ExpensesPageData> {
   const roleName = actor.roleName ?? "UNKNOWN";
-  const isPM = roleName === "PROJECT_MANAGER";
+  /*
+   * Tiga pertanyaan, tiga izin — bukan tiga nama peran.
+   *
+   * `isScopedToOwnWork` adalah cakupan data, `isFinanceOperator` adalah hak
+   * melihat rekening, dan `canViewCosts` adalah hak melihat biaya lapangan.
+   * Peran gudang lolos ke halaman ini lewat tagihan vendor, bukan lewat biaya
+   * lapangan — itulah kenapa daftar biayanya kosong, dan sekarang alasannya
+   * tertulis alih-alih tersembunyi di balik satu nama peran.
+   */
+  const isScopedToOwnWork = getRoleDataScope(roleName) === "ASSIGNED";
   const isFinanceOperator = canExposeExpenseBankAccounts(roleName);
-  const isPurchasing = roleName === "PURCHASING";
-  if (!isFinanceOperator && !isPM && !isPurchasing) return { status: "restricted" };
+  const canViewCosts = actorHasPermission(roleName, "view:cost");
+  const canViewVendorBills = actorHasPermission(roleName, "view:vendor_bill");
+  if (!canViewCosts && !canViewVendorBills) return { status: "restricted" };
 
-  const costFilter = isPM
+  const isPM = isScopedToOwnWork;
+  const costFilter = isScopedToOwnWork
     ? eq(projectCost.requestedById, actor.userId)
-    : isPurchasing
-      ? eq(projectCost.id, "00000000-0000-0000-0000-000000000000")
-      : undefined;
+    : canViewCosts
+      ? undefined
+      : eq(projectCost.id, "00000000-0000-0000-0000-000000000000");
 
   const costsData = await db.query.projectCost.findMany({
     where: costFilter,
@@ -285,8 +305,11 @@ export async function getExpensesPageData(actor: Actor): Promise<ExpensesPageDat
     })),
   }));
 
-  const pendingApprovalsCount =
-    roleName === "OWNER" ? (await getPendingApprovalDetails()).length : 0;
+  // Hitungan ini adalah "berapa yang menunggu keputusan Anda", jadi ia
+  // mengikuti hak memutuskan seluruh antrean, bukan sekadar melihatnya.
+  const pendingApprovalsCount = actorHasPermission(roleName, "decide:all_approvals")
+    ? (await getPendingApprovalDetails()).length
+    : 0;
 
   return {
     status: "ready",
@@ -298,5 +321,8 @@ export async function getExpensesPageData(actor: Actor): Promise<ExpensesPageDat
     vendors: vendorsData,
     projects: projectsForForms,
     pendingApprovalsCount,
+    vendorPaymentApprovalThreshold: thresholdCentsToRupiah(
+      (await getApprovalThresholds()).vendorPaymentCents,
+    ),
   };
 }

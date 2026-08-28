@@ -33,6 +33,9 @@ type DialogFrameProps = {
   readonly icon?: React.ReactNode;
   readonly tone?: "default" | "warning" | "critical";
   readonly showCloseButton?: boolean;
+  readonly utility?: React.ReactNode;
+  readonly detachedCloseButton?: boolean;
+  readonly presentation?: "default" | "choice";
   readonly children?: React.ReactNode;
   readonly footer?: React.ReactNode;
   readonly onClose: () => void;
@@ -49,6 +52,9 @@ export function DialogFrame({
   icon,
   tone = "default",
   showCloseButton = true,
+  utility,
+  detachedCloseButton = false,
+  presentation = "default",
   children,
   footer,
   onClose,
@@ -158,6 +164,7 @@ export function DialogFrame({
       : tone === "warning"
         ? "bg-warning/12 text-warning"
         : "bg-primary/10 text-primary";
+  const choicePresentation = presentation === "choice";
   return createPortal(
     <AnimatePresence>
       {open ? (
@@ -168,7 +175,7 @@ export function DialogFrame({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={reduceMotion ? { duration: 0 } : transitionEaseSmooth}
-            className="fixed -inset-10 bg-black/45"
+            className={`fixed -inset-10 ${choicePresentation ? "bg-primary/32" : "bg-black/45"}`}
             style={{ zIndex }}
             onClick={requestClose}
           />
@@ -192,48 +199,77 @@ export function DialogFrame({
               animate={{ opacity: 1, scale: 1 }}
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
               transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
-              className="pointer-events-auto flex max-h-[min(78dvh,560px)] w-full max-w-90 flex-col overflow-hidden rounded-owner bg-surface-container-low shadow-overlay ring-1 ring-ring-control outline-none"
+              className={`pointer-events-none flex max-h-[min(78dvh,560px)] w-full max-w-90 flex-col outline-none ${utility || detachedCloseButton ? "gap-2" : ""}`}
             >
-              <div className={`shrink-0 px-5 pt-5 ${align === "center" ? "text-center" : ""}`}>
-                {icon ? (
-                  <div
-                    className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}
-                  >
-                    {icon}
-                  </div>
-                ) : null}
-                <div className="flex min-w-0 items-start gap-3">
-                  <div className="min-w-0 flex-1">
-                    <h2 id={titleId} className="text-section font-bold text-on-surface">
-                      {title}
-                    </h2>
-                    {description ? (
-                      <p id={descriptionId} className="mt-1 text-support text-on-surface-variant">
-                        {description}
-                      </p>
-                    ) : null}
-                  </div>
-                  {showCloseButton ? (
+              {utility || detachedCloseButton ? (
+                <div className="pointer-events-auto flex min-h-10 shrink-0 items-center gap-2">
+                  {utility ? (
+                    <div className="min-w-0 flex-1">{utility}</div>
+                  ) : (
+                    <span className="flex-1" />
+                  )}
+                  {detachedCloseButton ? (
                     <IconButton
                       label="Tutup"
                       size="compact"
-                      variant="tertiary"
+                      variant="secondary"
+                      className="shadow-raised"
                       icon={<AppIcon name="close" className="icon-md" />}
                       onClick={requestClose}
                     />
                   ) : null}
                 </div>
+              ) : null}
+
+              <div
+                className={`pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-owner ring-1 ring-ring-control ${choicePresentation ? "bg-surface-container-low shadow-raised" : "bg-surface-container-low shadow-overlay"}`}
+              >
+                <div
+                  className={`shrink-0 px-5 ${choicePresentation ? "bg-surface-container-low py-4" : "pt-5"} ${align === "center" ? "text-center" : ""}`}
+                >
+                  {icon ? (
+                    <div
+                      className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full ${toneClass}`}
+                    >
+                      {icon}
+                    </div>
+                  ) : null}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h2 id={titleId} className="text-section font-bold text-on-surface">
+                        {title}
+                      </h2>
+                      {description ? (
+                        <p id={descriptionId} className="mt-1 text-support text-on-surface-variant">
+                          {description}
+                        </p>
+                      ) : null}
+                    </div>
+                    {showCloseButton ? (
+                      <IconButton
+                        label="Tutup"
+                        size="compact"
+                        variant="tertiary"
+                        className="h-auto w-10 text-on-surface-variant"
+                        icon={<AppIcon name="close" className="icon-md" />}
+                        onClick={requestClose}
+                      />
+                    ) : null}
+                  </div>
+                </div>
+                {children ? (
+                  <div
+                    className={`no-scrollbar mx-2 mb-2 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-3xl ${choicePresentation ? "" : "bg-white px-5 py-4"}`}
+                  >
+                    {children}
+                  </div>
+                ) : null}
+                {footer ? (
+                  <div className="shrink-0 bg-surface-container-low px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+                    {footer}
+                  </div>
+                ) : null}
               </div>
-              {children ? (
-                <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
-                  {children}
-                </div>
-              ) : null}
-              {footer ? (
-                <div className="shrink-0 bg-surface-container-low px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-                  {footer}
-                </div>
-              ) : null}
             </motion.section>
           </div>
         </OverlayLayerProvider>

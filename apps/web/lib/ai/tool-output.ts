@@ -40,6 +40,7 @@ export const TOOLS_WITH_CARDS = [
   "getUnpaidVendorBills",
   "getUnpaidClientInvoices",
   "getPendingExpenseApprovals",
+  "suggestRoleReview",
 ] as const;
 
 export type ToolWithCard = (typeof TOOLS_WITH_CARDS)[number];
@@ -299,3 +300,35 @@ export const getProjectsAtRiskOutputSchema = z.object({
 
 export type ProjectsAtRiskOutput = z.infer<typeof getProjectsAtRiskOutputSchema>;
 export type ProjectAtRisk = z.infer<typeof projectAtRiskSchema>;
+
+// ==========================================
+// suggestRoleReview
+// ==========================================
+
+/**
+ * Kartu serah-terima perubahan peran.
+ *
+ * Ia sengaja TIDAK berbentuk kartu usulan seperti `proposeExpenseDraft`: tidak
+ * ada tombol konfirmasi, dan tidak ada Server Action di ujungnya. Yang
+ * dibawanya hanyalah tautan ke penyunting peran dengan sakelar yang disarankan
+ * tersorot — keputusannya tetap terjadi di layar yang dirancang untuk itu.
+ * Alasannya tercatat di `docs/plans/2026-08-25-ai-role-intelligence.md`.
+ */
+const suggestedPermissionSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+});
+
+export const roleReviewOutputSchema = z.object({
+  roleId: z.string(),
+  roleName: z.string(),
+  reason: z.string(),
+  href: z.string(),
+  grant: z.array(suggestedPermissionSchema),
+  revoke: z.array(suggestedPermissionSchema),
+  affectedUsers: z.number(),
+  criticalGaps: z.array(z.object({ permission: z.string(), consequence: z.string() })),
+  blockedGrants: z.array(z.string()),
+});
+
+export type RoleReviewOutput = z.infer<typeof roleReviewOutputSchema>;

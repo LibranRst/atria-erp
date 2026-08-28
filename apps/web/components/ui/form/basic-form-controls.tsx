@@ -456,34 +456,62 @@ export function QuantityStepper({
   );
 }
 
+/**
+ * Baris pilihan dalam daftar.
+ *
+ * `selectionMode="radio"` untuk pilihan yang saling meniadakan: indikatornya
+ * menjadi titik, semantiknya `role="radio"` + `aria-checked` (bungkus dengan
+ * `role="radiogroup"` di sisi pemanggil), dan menekan baris yang sudah terpilih
+ * tidak membatalkannya — pada pilihan tunggal, "tidak memilih apa pun" bukan
+ * keadaan yang sah.
+ */
 export function ChoiceRow({
   checked,
   onChange,
   title,
   description,
   disabled,
+  selectionMode = "checkbox",
+  emphasis = "accent",
 }: {
   readonly checked: boolean;
   readonly onChange: (checked: boolean) => void;
   readonly title: string;
   readonly description?: string;
   readonly disabled?: boolean;
+  readonly selectionMode?: "checkbox" | "radio";
+  /**
+   * `neutral` menahan warna aksen pada indikatornya saja.
+   *
+   * Untuk daftar pendek, label beraksen menegaskan pilihan. Untuk matriks padat
+   * — daftar izin sebuah peran bisa 54 baris menyala — mewarnai seluruh label
+   * mengubah aksen menjadi latar, dan justru baris yang MATI yang menonjol.
+   */
+  readonly emphasis?: "accent" | "neutral";
 }): React.JSX.Element {
   const grouped = useFormPresentation() === "grouped";
+  const radio = selectionMode === "radio";
+  const tintLabel = emphasis === "accent";
   return (
     <button
       type="button"
       disabled={disabled}
-      onClick={() => onChange(!checked)}
-      aria-pressed={checked}
+      onClick={() => onChange(radio ? true : !checked)}
+      role={radio ? "radio" : undefined}
+      aria-checked={radio ? checked : undefined}
+      aria-pressed={radio ? undefined : checked}
       className={cx(
         grouped
           ? "flex min-h-14 w-full items-center gap-3 bg-surface-container-lowest px-4 py-3 text-left transition active:bg-surface-container-low disabled:opacity-45"
           : "flex min-h-12 w-full items-center gap-3 rounded-full border px-5 py-3 text-left shadow-control transition active:scale-[0.99] disabled:opacity-45",
         checked
           ? grouped
-            ? "text-accent"
-            : "border-accent bg-accent-container text-accent"
+            ? tintLabel
+              ? "text-accent"
+              : "text-on-surface"
+            : tintLabel
+              ? "border-accent bg-accent-container text-accent"
+              : "border-accent/40 bg-surface-container-lowest text-on-surface"
           : grouped
             ? "text-on-surface"
             : "border-outline-variant/15 bg-surface-container-lowest text-on-surface",
@@ -492,10 +520,21 @@ export function ChoiceRow({
       <span
         className={cx(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
-          checked ? "border-accent bg-accent text-white" : "border-outline-variant bg-surface",
+          checked
+            ? radio
+              ? "border-accent bg-surface"
+              : "border-accent bg-accent text-white"
+            : "border-outline-variant bg-surface",
         )}
+        aria-hidden="true"
       >
-        {checked && <AppIcon name="check" className="h-3 w-3" />}
+        {checked ? (
+          radio ? (
+            <span className="block h-2.5 w-2.5 rounded-full bg-accent" />
+          ) : (
+            <AppIcon name="check" className="h-3 w-3" />
+          )
+        ) : null}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-xs font-bold">{title}</span>
@@ -513,12 +552,18 @@ export function SwitchRow({
   title,
   description,
   disabled,
+  trailing,
+  switchLabel,
 }: {
   readonly checked: boolean;
   readonly onChange: (checked: boolean) => void;
   readonly title: string;
   readonly description?: string;
   readonly disabled?: boolean;
+  /** Nilai/status ringkas di antara label dan sakelar (mis. nominal uang). */
+  readonly trailing?: React.ReactNode;
+  /** Label aksesibel sakelar; default memakai `title`. */
+  readonly switchLabel?: string;
 }): React.JSX.Element {
   return (
     <div
@@ -535,12 +580,22 @@ export function SwitchRow({
           </span>
         )}
       </div>
+      {trailing ? <span className="shrink-0">{trailing}</span> : null}
       <button
         type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={switchLabel ?? title}
         disabled={disabled}
         onClick={() => onChange(!checked)}
+        /*
+         * Sakelarnya digambar 44×24, tetapi area sentuhnya dilebarkan lewat
+         * `after:` menjadi 52×48 sesuai aturan target sentuh 48 px. Tanpa ini
+         * ia jadi kontrol tersulit disentuh di aplikasi — dan layar peran
+         * menampilkan 71 di antaranya.
+         */
         className={cx(
-          "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+          "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 after:absolute after:-inset-x-1 after:-inset-y-3 after:content-[''] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
           checked ? "bg-success" : "bg-surface-container-high",
         )}
       >

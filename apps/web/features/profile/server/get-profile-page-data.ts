@@ -4,12 +4,13 @@ import { getDeveloperAccountSimulationState } from "@/app/actions/developer-acco
 import {
   countAccessibleProfileModules,
   formatProfileRole,
-  getProfileInitials,
   summarizeProfileAccess,
   type ProfileAccessGroup,
 } from "@/features/profile/utils/profile-access";
 import type { DeveloperAccountSimulationState } from "@atria/core/auth/developer-account-simulation";
-import { resolveRoleName, ROLE_PERMISSIONS, type PermissionKey } from "@/lib/auth/permissions";
+import { getProfileInitials } from "@atria/core/presentation/user-identity";
+import { resolveRoleName, type PermissionKey } from "@/lib/auth/permissions";
+import { getRolePermissions } from "@/lib/auth/role-access";
 import { requireServerSession } from "@/lib/server/session";
 
 export type ProfileRoleStatus = "PRIMARY" | "APPROVED" | "PENDING" | "DRAFT";
@@ -28,20 +29,31 @@ export type ProfilePageData = {
   readonly developerSimulation: DeveloperAccountSimulationState | null;
 };
 
-function getProfileRoleStatus(roleName: string): ProfileRoleStatus {
-  if (roleName === "OWNER") return "PRIMARY";
-  if (roleName === "FINANCE_ADMIN") return "APPROVED";
-  if (roleName === "PROJECT_MANAGER") return "PENDING";
+function getProfileRoleStatus(permissions: ReadonlySet<PermissionKey>): ProfileRoleStatus {
+  // Nada badge mengikuti jangkauan wewenang, bukan nama peran, supaya peran
+  // kustom mendapat nada yang masuk akal alih-alih selalu jatuh ke "DRAFT".
+  if (permissions.has("decide:all_approvals")) return "PRIMARY";
+  if (permissions.has("view:ledger")) return "APPROVED";
+  if (permissions.has("view:project")) return "PENDING";
   return "DRAFT";
 }
 
 export async function getProfilePageData(): Promise<ProfilePageData> {
   const session = await requireServerSession();
   const roleName = await resolveRoleName(session.user.roleId);
-  const permissions: readonly PermissionKey[] = ROLE_PERMISSIONS[roleName] ?? [];
+  /*
+   * Izin dibaca dari database, bukan matriks seed.
+   *
+   * Halaman ini menjawab "saya boleh apa saja", jadi ia harus membaca daftar
+   * yang sama dengan yang ditegakkan server. Sejak izin sebuah peran bisa
+   * disunting Owner, matriks kode hanya nilai awal — membacanya di sini akan
+   * membuat Profile memperlihatkan akses yang sudah dicabut.
+   */
+  const permissions: readonly PermissionKey[] = await getRolePermissions(session.user.roleId);
+  const held = new Set<PermissionKey>(permissions);
   const accessGroups = summarizeProfileAccess(permissions);
   const displayName = session.user.name || "Pengguna Atria";
-  const simulation = roleName === "OWNER" ? await getDeveloperAccountSimulationState() : null;
+  const simulation = held.has("manage:users") ? await getDeveloperAccountSimulationState() : null;
 
   return {
     displayName,
@@ -49,11 +61,11 @@ export async function getProfilePageData(): Promise<ProfilePageData> {
     imageUrl: session.user.image,
     initials: getProfileInitials(displayName),
     roleLabel: formatProfileRole(roleName),
-    roleStatus: getProfileRoleStatus(roleName),
+    roleStatus: getProfileRoleStatus(held),
     isActive: session.user.isActive,
     accessibleModuleCount: countAccessibleProfileModules(accessGroups),
     accessGroups,
-    canAccessSettings: permissions.includes("view:settings"),
+    canAccessSettings: held.has("view:settings"),
     developerSimulation: simulation?.success && simulation.data.enabled ? simulation.data : null,
   };
 }

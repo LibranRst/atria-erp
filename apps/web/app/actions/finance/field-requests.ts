@@ -1,5 +1,6 @@
 "use server";
 
+import { getFieldCostApprovalThresholdRupiah } from "@/lib/finance/approval-thresholds";
 import { db } from "@/db";
 import { projectCost } from "@/db/schema";
 import { ActionResponse } from "@atria/core/types/action-response";
@@ -48,12 +49,16 @@ export async function submitFieldRequest(
     if (!authResult.success) return authResult;
     const currentUser = authResult.data.user;
 
+    // Dibaca sebelum transaksi dibuka: ambang adalah konfigurasi, dan
+    // keputusan yang lahir darinya dibekukan ke baris pengajuan.
+    const ownerApprovalThreshold = await getFieldCostApprovalThresholdRupiah();
     const result = await db.transaction(async (tx) => {
       return createSubmittedFieldRequestTx(tx, {
         projectId,
         requestedById: currentUser.id,
         receiptImageUrl,
         item: validation.data,
+        ownerApprovalThreshold,
       });
     });
 
@@ -94,6 +99,7 @@ export async function submitFieldRequests(
     const currentUser = authResult.data.user;
 
     const receiptGroupId = crypto.randomUUID();
+    const ownerApprovalThreshold = await getFieldCostApprovalThresholdRupiah();
 
     const results = await db.transaction(async (tx) => {
       const createdCosts: Array<typeof projectCost.$inferSelect> = [];
@@ -106,6 +112,7 @@ export async function submitFieldRequests(
           receiptGroupId,
           item,
           includeApprovalCategoryLabel: true,
+          ownerApprovalThreshold,
         });
 
         createdCosts.push(cost);

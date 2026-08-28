@@ -1,3 +1,4 @@
+import type { PermissionKey } from "@atria/core/auth/permissions";
 import {
   getRoleNavItems as getSharedRoleNavItems,
   ROLE_NAV_ITEMS,
@@ -19,10 +20,6 @@ export type FabAction = {
   readonly disabled?: boolean;
 };
 
-export type SessionUserWithRole = {
-  readonly roleId?: string;
-};
-
 const navMatchByHref: Record<RoleNavItem["href"], NavItem["match"]> = {
   "/ledger": (path, params): boolean => path === "/ledger" && params.get("brief") !== "true",
   "/projects": (path): boolean => path.startsWith("/projects"),
@@ -35,34 +32,43 @@ export const NAV_ITEMS: readonly NavItem[] = ROLE_NAV_ITEMS.map((item) => ({
   match: navMatchByHref[item.href],
 }));
 
-export function getRoleNavItems(roleName: string | null): readonly NavItem[] {
-  return getSharedRoleNavItems(roleName).map((item) => ({
+export function getRoleNavItems(permissions: readonly PermissionKey[]): readonly NavItem[] {
+  return getSharedRoleNavItems(permissions).map((item) => ({
     ...item,
     match: navMatchByHref[item.href],
   }));
 }
 
 export function buildFabActions({
-  roleName,
+  permissions,
   pathname,
   isProjectDetail,
   isCurrentProjectLocked,
   withQuery,
 }: {
-  readonly roleName: string | null;
+  readonly permissions: readonly PermissionKey[];
   readonly pathname: string;
   readonly isProjectDetail: boolean;
   readonly isCurrentProjectLocked: boolean;
   readonly withQuery: (key: string, value?: string, targetPath?: string) => string;
 }): readonly FabAction[] {
-  const isOwnerOrFinance = roleName === "OWNER" || roleName === "FINANCE_ADMIN";
-  const isPurchasing = roleName === "PURCHASING";
-  const isOperational = isOwnerOrFinance || isPurchasing;
+  /*
+   * Aksi cepat mengikuti izin, bukan nama peran: satu tombol yang muncul untuk
+   * peran yang tidak berhak hanya menawarkan pintu yang akan ditolak server.
+   *
+   * Izinnya datang sebagai daftar efektif dari sesi, bukan hasil pencarian nama
+   * peran di matriks seed — peran buatan Owner tidak ada di matriks itu.
+   */
+  const held = new Set<PermissionKey>(permissions);
+  const can = (permission: PermissionKey): boolean => held.has(permission);
+  const isOperational = can("create:stock_movement");
+  const canCreateInvoice = can("create:client_invoice");
+  const canCreateProject = can("create:project");
   const isMaterialsPage = pathname.startsWith("/materials");
   const isProjectsPage = pathname === "/projects";
   const isExpensesPage = pathname.startsWith("/expenses");
-  const canSubmitExpense = isOwnerOrFinance || roleName === "PROJECT_MANAGER";
-  const canCreateVendorBill = canSubmitExpense || isPurchasing;
+  const canSubmitExpense = can("create:cost");
+  const canCreateVendorBill = can("create:vendor_bill");
 
   if (isMaterialsPage && isOperational) {
     const actions: FabAction[] = [
@@ -104,7 +110,7 @@ export function buildFabActions({
       },
     ];
 
-    if (roleName === "OWNER" || isPurchasing) {
+    if (can("create:stock_count")) {
       actions.push(
         {
           label: "Transfer Stok",
@@ -121,7 +127,7 @@ export function buildFabActions({
       );
     }
 
-    if (roleName === "OWNER") {
+    if (can("adjust:stock")) {
       actions.push({
         label: "Penyesuaian Darurat",
         description: "Owner-only correction",
@@ -168,7 +174,7 @@ export function buildFabActions({
       },
     ];
 
-    if (isOwnerOrFinance) {
+    if (canCreateInvoice) {
       actions.push({
         label: "Invoice Klien",
         description: isCurrentProjectLocked
@@ -184,7 +190,7 @@ export function buildFabActions({
   }
 
   if (isProjectsPage) {
-    if (isOwnerOrFinance) {
+    if (canCreateProject) {
       return [
         {
           label: "Project Baru",
@@ -206,7 +212,7 @@ export function buildFabActions({
       ];
     }
 
-    return isPurchasing
+    return canCreateVendorBill && !canSubmitExpense
       ? [
           {
             label: "Tagihan Vendor",
@@ -264,7 +270,7 @@ export function buildFabActions({
           },
         ]
       : []),
-    ...(isOwnerOrFinance
+    ...(canCreateProject
       ? [
           {
             label: "Project Baru",
