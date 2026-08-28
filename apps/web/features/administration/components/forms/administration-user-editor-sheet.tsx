@@ -109,7 +109,7 @@ export function AdministrationUserEditorSheet({
                 type="email"
                 value={userForm.email}
                 onChange={(value) => setUserForm((current) => ({ ...current, email: value }))}
-                placeholder="nama@dekoria.com"
+                placeholder="nama@perusahaan.com"
                 autoComplete="email"
                 required
               />

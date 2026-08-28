@@ -89,7 +89,7 @@ export default function LoginPage(): React.JSX.Element {
                   value={email}
                   onChange={updateEmail}
                   disabled={isLoading}
-                  placeholder="nama@dekoria.com"
+                  placeholder="nama@perusahaan.com"
                   autoComplete="email"
                   inputMode="email"
                   autoFocus

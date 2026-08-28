@@ -3,7 +3,7 @@ import { AiChatView } from "@/features/ai-chat/components/ai-chat-view";
 
 export const metadata: Metadata = {
   title: "Asisten AI | Atria ERP",
-  description: "Asisten Cerdas Keuangan dan Kontrol Material Proyek Dekoria",
+  description: "Asisten cerdas keuangan dan kontrol material proyek",
 };
 
 export default function AiPage(): React.JSX.Element {

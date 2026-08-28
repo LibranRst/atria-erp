@@ -1,4 +1,5 @@
 import { runChatStream } from "@/lib/ai/chat-stream";
+import { getCompanyIdentity } from "@/lib/company/identity";
 import {
   appendMessage,
   createConversation,
@@ -117,6 +118,7 @@ export async function POST(request: Request): Promise<Response> {
     dataScope: roleAccess?.dataScope ?? "NONE",
   };
   const preference = await loadAiPreference(session.user.id);
+  const company = await getCompanyIdentity();
 
   const { stream } = runChatStream({
     messages,
@@ -124,6 +126,7 @@ export async function POST(request: Request): Promise<Response> {
     userName: session.user.name,
     conversationId: conversation.id,
     preference,
+    companyName: company.name,
     onAssistantMessage: async ({ message, provider, inputTokens, outputTokens }) => {
       await appendMessage({
         conversationId: conversation.id,

@@ -102,7 +102,7 @@ export function SetupOwnerForm(): React.JSX.Element {
               onChange={(email) => setForm((current) => ({ ...current, email }))}
               type="email"
               autoComplete="email"
-              placeholder="owner@dekoria.com"
+              placeholder="owner@perusahaan.com"
               disabled={pending}
               required
             />

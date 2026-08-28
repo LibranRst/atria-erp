@@ -22,6 +22,7 @@
     "db:seed": "bun --filter @atria/web db:seed",
     "db:demo:reset": "bun --filter @atria/web db:demo:reset",
     "db:demo:verify": "bun --filter @atria/web db:demo:verify",
+    "db:provision": "bun --filter @atria/web db:provision",
     "db:check-invariants": "bun --filter @atria/web db:check-invariants",
     "db:restore-drill": "bun --filter @atria/web db:restore-drill",
     "format": "prettier --write . --ignore-unknown",

@@ -42,6 +42,7 @@ export type ChatStreamInput = {
   readonly userName: string;
   readonly conversationId: string;
   readonly preference: AiPreferenceInput;
+  readonly companyName: string;
   readonly onAssistantMessage: (event: {
     message: UIMessage;
     provider: ChatProviderName;
@@ -94,6 +95,7 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
               input.userName,
               input.toolContext,
               input.preference,
+              input.companyName,
             ),
             messages: await convertToModelMessages(input.messages),
             tools: buildAiTools(input.toolContext),

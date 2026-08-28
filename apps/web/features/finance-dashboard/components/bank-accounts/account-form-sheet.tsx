@@ -260,7 +260,7 @@ export function AccountFormSheet({
                 <TextInput
                   value={draft.holderName}
                   onChange={(value) => patch({ holderName: value })}
-                  placeholder="PT Dekoria Desain Estetika"
+                  placeholder="Nama perusahaan sesuai rekening"
                 />
               </FormField>
             </FormSection>

@@ -7,7 +7,15 @@ import { hasGlobalScope, unavailableTopicsForRole, type AiToolContext } from "./
 
 const TOOL_CARD_NAMES = TOOLS_WITH_CARDS.join(", ");
 
-const SHARED_PROMPT = `Anda adalah asisten AI di dalam Atria ERP, aplikasi ERP finansial dan kontrol material untuk Dekoria (perusahaan desain dan bangun interior).
+/**
+ * Nama perusahaan datang dari `tenant.name`, bukan dari konstanta.
+ *
+ * Satu instance melayani satu perusahaan; menuliskan "Dekoria" di sini membuat
+ * asisten memperkenalkan diri sebagai milik perusahaan lain di layar pelanggan
+ * yang baru saja membayar.
+ */
+const sharedPrompt = (companyName: string) =>
+  `Anda adalah asisten AI di dalam Atria ERP, aplikasi ERP finansial dan kontrol material untuk ${companyName} (perusahaan desain dan bangun interior).
 
 PERAN & KEMAMPUAN ANDA
 Anda memandu dan membantu pengguna dalam seluruh siklus proyek:
@@ -115,10 +123,11 @@ export function buildSystemPrompt(
   userName: string,
   context: AiToolContext,
   preference?: AiPreferenceInput,
+  companyName = "perusahaan ini",
 ): string {
   const addendum = PROVIDER_ADDENDUM[provider];
   const unavailableTopics = unavailableTopicsForRole(context);
-  return `${SHARED_PROMPT}
+  return `${sharedPrompt(companyName)}
 ${addendum}
 
 KONTEKS PENGGUNA
