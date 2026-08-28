@@ -1,4 +1,5 @@
 import { Pool, type PoolClient } from "pg";
+import { DEKORIA_TENANT_ID } from "@/db/schema/tenant-constants";
 
 const RESET_CONFIRMATION_FLAG = "--confirm-reset";
 const PRODUCTION_OVERRIDE_FLAG = "--allow-production";
@@ -77,6 +78,27 @@ async function verifyTablesAreEmpty(
   }
 }
 
+/**
+ * Menanam ulang baris tenant perancah setelah truncate.
+ *
+ * `truncate ... cascade` mengosongkan `tenant` juga, padahal 53 tabel memakai
+ * `tenant_id NOT NULL DEFAULT '<uuid-dekoria>'` dengan foreign key ke sana.
+ * Tanpa baris ini, insert pertama onboarding langsung gagal foreign key dan
+ * database yang "bersih" justru tidak bisa dipakai memulai apa pun.
+ *
+ * Baris ini bagian dari kondisi awal yang sah, bukan data bisnis: ia lahir
+ * bersama migrasi 0035 dan harus selalu ada.
+ */
+async function seedScaffoldingTenant(client: PoolClient): Promise<void> {
+  await client.query(
+    `insert into "tenant" ("id", "name", "slug", "status", "notes")
+     values ($1, 'Dekoria', 'dekoria', 'ACTIVE',
+             'Tenant perancah. Lihat docs/plans/2026-08-27-tenant-foundation.md.')
+     on conflict ("id") do nothing`,
+    [DEKORIA_TENANT_ID],
+  );
+}
+
 async function resetDatabase(): Promise<void> {
   const args = process.argv.slice(2);
   assertResetAllowed(args);
@@ -118,7 +140,9 @@ async function resetDatabase(): Promise<void> {
     }
 
     await verifyTablesAreEmpty(client, tableNames);
+    await seedScaffoldingTenant(client);
     console.log("Database berhasil dikosongkan dan sudah diverifikasi.");
+    console.log("Baris tenant perancah ditanam ulang supaya onboarding bisa dimulai.");
     console.log(
       "Schema serta metadata migration tetap dipertahankan. Buka /setup untuk membuat Owner pertama.",
     );
