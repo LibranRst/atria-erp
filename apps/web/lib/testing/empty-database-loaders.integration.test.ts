@@ -1,5 +1,6 @@
 import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
-import { expect, it, mock } from "bun:test";
+import { SYSTEM_ROLES } from "@atria/core/auth/role-constants";
+import { beforeAll, expect, it, mock } from "bun:test";
 
 import { getApprovalsPageData } from "@/features/approvals/server/get-approvals-page-data";
 import { getExpensesPageData } from "@/features/expenses/server/get-expenses-page-data";
@@ -11,6 +12,8 @@ import { getMaterialOperationsDashboard } from "@/app/actions/material/operation
 import { auth } from "@/lib/auth";
 import type { Actor } from "@/server/actor";
 import { describeEmptyIntegration } from "@/lib/testing/integration-db";
+import { db } from "@/db";
+import { role } from "@/db/schema";
 
 /**
  * Keadaan awal `docs/guide/financial_workflow_guide.md`: Owner baru saja dibuat
@@ -76,6 +79,27 @@ const LOADERS: ReadonlyArray<readonly [string, () => Promise<unknown>]> = [
 ];
 
 describeEmptyIntegration("page loaders pada database kosong", () => {
+  /**
+   * `/setup` menanam `SYSTEM_ROLES` sebelum membuat Owner pertama, jadi baris
+   * peran selalu ada begitu ada orang yang bisa memanggil loader sama sekali.
+   *
+   * Tanpa langkah ini suite menguji keadaan yang tidak pernah terjadi: database
+   * tanpa satu pun baris `role`, di mana `getRoleAccess` mengembalikan `null`
+   * dan setiap loader berpagar izin melempar FORBIDDEN. Yang gagal bukan
+   * aplikasinya, melainkan panggung yang dipasang keliru — dan kegagalan itu
+   * membuat jaring pengaman ini tidak pernah bisa dijalankan.
+   *
+   * `role_permission` sengaja dibiarkan kosong. Itulah keadaan sesudah reset,
+   * dan cadangan ke matriks kode di `getRoleAccess` memang dirancang untuk
+   * menutupnya — suite ini sekaligus membuktikan cadangan itu bekerja.
+   */
+  beforeAll(async () => {
+    await db
+      .insert(role)
+      .values([...SYSTEM_ROLES])
+      .onConflictDoNothing();
+  });
+
   for (const [label, load] of LOADERS) {
     it(`loader ${label} bertahan tanpa satu baris pun`, async () => {
       expect(await load()).toBeDefined();
