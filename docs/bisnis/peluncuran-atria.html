@@ -553,6 +553,16 @@ docs/guide/restore-drill.md</code></pre>
       </div>
     </label>
 
+    <label class="task" data-kind="do" data-id="t29">
+      <input type="checkbox">
+      <div>
+        <div class="t-head"><p class="t-title">Lepaskan <code>getPendingApprovalDetails</code> dari sesi</p><span class="tag do">Kerjakan</span></div>
+        <p class="t-body">Satu fungsi, di <code>lib/finance/approval-details.ts</code>. Dia manggil <code>getServerSession()</code> cuma buat dapat dua hal — <code>currentUserId</code> dan apakah pemanggilnya Owner — padahal kedua pemanggilnya (<code>/expenses</code> dan <code>/approvals</code>) sudah megang <code>Actor</code> yang isinya persis itu. Terima <code>Actor</code> sebagai parameter, hapus pembacaan sesinya.</p>
+        <p class="t-body">Ketahuan waktu <code>bun run perf:loaders</code> nggak bisa ngukur kedua halaman itu: <code>cookies()</code> kepanggil di luar request, dan loadernya berhenti sebelum satu query pun jalan.</p>
+        <span class="risk"><b>Memblokir</b>Jalur tRPC untuk <code>apps/mobile</code>. Selama sesi dibaca sedalam itu, kedua loader nggak bisa dipakai ulang lewat tRPC tanpa bawa request scope — padahal seluruh alasan pola <code>Actor</code> ada justru supaya satu badan logika bisa dipakai dua transport.</span>
+      </div>
+    </label>
+
     <label class="task" data-kind="decide" data-id="t14">
       <input type="checkbox">
       <div>
