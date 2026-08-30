@@ -193,7 +193,10 @@
     gap: 0 14px;
     background: var(--surface);
     border: 1px solid var(--rule);
-    border-left-width: 3px;
+    /* Rel kiri berwarna menandai jenis tugas, supaya 27 kartu bisa dipindai
+       cepat: mana yang keputusan, mana yang tinggal dijalankan. Sengaja 2px —
+       cukup untuk dipindai, tipis untuk tidak jadi tab dekoratif. */
+    border-left-width: 2px;
     padding: 18px 20px;
     margin-bottom: 12px;
   }
@@ -324,7 +327,6 @@
   .shipped {
     background: var(--done-wash);
     border: 1px solid var(--rule);
-    border-left: 3px solid var(--done);
     padding: 20px 22px;
     margin-bottom: 44px;
   }
