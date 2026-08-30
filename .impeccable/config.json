@@ -1,0 +1,35 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "docs/bisnis/**"
+        ],
+        "createdAt": "2026-08-30T01:46:01.085Z",
+        "reason": "Dokumen bisnis mandiri, bukan antarmuka ERP; DESIGN.md mengatur aplikasinya, halaman ini sengaja punya identitas visual sendiri"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "docs/bisnis/**"
+        ],
+        "createdAt": "2026-08-30T01:46:01.112Z",
+        "reason": "Dokumen bisnis mandiri, bukan antarmuka ERP; DESIGN.md mengatur aplikasinya, halaman ini sengaja punya identitas visual sendiri"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "docs/bisnis/**"
+        ],
+        "createdAt": "2026-08-30T01:46:01.140Z",
+        "reason": "Dokumen bisnis mandiri, bukan antarmuka ERP; DESIGN.md mengatur aplikasinya, halaman ini sengaja punya identitas visual sendiri"
+      }
+    ]
+  }
+}
