@@ -1,0 +1,1055 @@
+<title>Bekal Bisnis Atria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:    #F2F5F4;
+    --surface:  #FFFFFF;
+    --ink:      #141A19;
+    --muted:    #5B6B67;
+    --seal:     #0F5F52;
+    --seal-dim: #0F5F5214;
+    --oxblood:  #7A3030;
+    --oxblood-dim: #7A303014;
+    --rule:     #D5DEDB;
+    --rule-soft:#E4EAE8;
+
+    --display: "Spectral", Georgia, "Times New Roman", serif;
+    --body: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+    --measure: 68ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:    #0E1413;
+      --surface:  #161E1C;
+      --ink:      #E6EBE9;
+      --muted:    #93A29E;
+      --seal:     #4FB8A3;
+      --seal-dim: #4FB8A31F;
+      --oxblood:  #E2A3A3;
+      --oxblood-dim: #E2A3A31A;
+      --rule:     #25302D;
+      --rule-soft:#1D2725;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:    #0E1413;
+    --surface:  #161E1C;
+    --ink:      #E6EBE9;
+    --muted:    #93A29E;
+    --seal:     #4FB8A3;
+    --seal-dim: #4FB8A31F;
+    --oxblood:  #E2A3A3;
+    --oxblood-dim: #E2A3A31A;
+    --rule:     #25302D;
+    --rule-soft:#1D2725;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0 20px 96px;
+  }
+
+  .wrap {
+    max-width: var(--measure);
+    margin: 0 auto;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 72px 0 40px;
+    border-bottom: 3px double var(--rule);
+    margin-bottom: 48px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--seal);
+    margin: 0 0 20px;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(38px, 7vw, 54px);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 20px;
+  }
+
+  .standfirst {
+    font-family: var(--display);
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0;
+    max-width: 54ch;
+  }
+
+  .standfirst em { color: var(--ink); font-style: italic; }
+
+  /* ---------- sections ---------- */
+
+  section { margin-bottom: 72px; }
+
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .sec-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--seal);
+    letter-spacing: 0.08em;
+    flex: none;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(25px, 4vw, 31px);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .sec-intro {
+    color: var(--muted);
+    margin: 18px 0 32px;
+  }
+
+  h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 21px;
+    line-height: 1.3;
+    text-wrap: balance;
+    margin: 40px 0 12px;
+  }
+
+  h4 {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 16px;
+    margin: 28px 0 8px;
+  }
+
+  p { margin: 0 0 18px; }
+  p:last-child { margin-bottom: 0; }
+
+  a { color: var(--seal); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, .term:focus-visible {
+    outline: 2px solid var(--seal);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  strong { font-weight: 600; }
+
+  ul, ol { margin: 0 0 18px; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  li:last-child { margin-bottom: 0; }
+
+  .money, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* ---------- glossary ---------- */
+
+  .glossary-group {
+    margin-bottom: 36px;
+  }
+
+  .group-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule-soft);
+    margin-bottom: 4px;
+  }
+
+  .term {
+    border-bottom: 1px solid var(--rule-soft);
+    padding: 18px 0;
+  }
+
+  .term dt {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  .term dt .id {
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: 8px;
+  }
+
+  .term dd {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .term dd .you {
+    display: block;
+    margin-top: 10px;
+    padding-left: 14px;
+    border-left: 2px solid var(--seal);
+    color: var(--ink);
+    font-size: 15.5px;
+  }
+
+  .term dd .you b {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--seal);
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  /* ---------- callouts ---------- */
+
+  .note {
+    background: var(--seal-dim);
+    border-left: 3px solid var(--seal);
+    padding: 20px 22px;
+    margin: 28px 0;
+    font-size: 16px;
+  }
+
+  .warn {
+    background: var(--oxblood-dim);
+    border-left: 3px solid var(--oxblood);
+    padding: 20px 22px;
+    margin: 28px 0;
+    font-size: 16px;
+  }
+
+  .note .label, .warn .label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .note .label { color: var(--seal); }
+  .warn .label { color: var(--oxblood); }
+
+  /* ---------- pull ---------- */
+
+  .pull {
+    font-family: var(--display);
+    font-size: 22px;
+    line-height: 1.45;
+    font-style: italic;
+    color: var(--ink);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 26px 0;
+    margin: 36px 0;
+    text-wrap: balance;
+  }
+
+  /* ---------- table ---------- */
+
+  .table-scroll { overflow-x: auto; margin: 24px 0; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 460px;
+    font-size: 15.5px;
+  }
+
+  th {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 0 16px 10px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  td {
+    padding: 13px 16px 13px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+
+  td:last-child, th:last-child { padding-right: 0; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ---------- document panel (drafts) ---------- */
+
+  .doc {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 40px 36px;
+    margin: 32px 0;
+  }
+
+  .doc-head {
+    text-align: center;
+    padding-bottom: 24px;
+    border-bottom: 3px double var(--rule);
+    margin-bottom: 32px;
+  }
+
+  .doc-head .kind {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--seal);
+    margin: 0 0 10px;
+  }
+
+  .doc-head .title {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 23px;
+    line-height: 1.25;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+
+  .doc-head .parties {
+    font-size: 14.5px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .clause {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 0 14px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .clause:last-of-type { border-bottom: none; }
+
+  .clause .n {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--seal);
+    padding-top: 2px;
+  }
+
+  .clause h5 {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 15.5px;
+    margin: 0 0 6px;
+  }
+
+  .clause p {
+    margin: 0 0 10px;
+    font-size: 15.5px;
+    color: var(--muted);
+  }
+  .clause p:last-child { margin-bottom: 0; }
+  .clause p.text { color: var(--ink); }
+
+  .fill {
+    font-family: var(--mono);
+    font-size: 14px;
+    background: var(--seal-dim);
+    color: var(--seal);
+    padding: 1px 5px;
+  }
+
+  .signature {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 3px double var(--rule);
+  }
+
+  .sig-block {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .sig-line {
+    height: 52px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 8px;
+  }
+
+  /* ---------- script ---------- */
+
+  .script {
+    font-family: var(--display);
+    font-size: 19px;
+    line-height: 1.6;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 28px 30px;
+    margin: 24px 0;
+  }
+
+  .script p { margin-bottom: 14px; }
+
+  .do-dont {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin: 28px 0;
+  }
+
+  @media (min-width: 620px) {
+    .do-dont { grid-template-columns: 1fr 1fr; }
+  }
+
+  .dd-col h4 {
+    margin-top: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .dd-col.yes h4 { color: var(--seal); }
+  .dd-col.no  h4 { color: var(--oxblood); }
+
+  .dd-col ul { padding-left: 18px; font-size: 15.5px; color: var(--muted); }
+
+  /* ---------- close ---------- */
+
+  .colophon {
+    margin-top: 80px;
+    padding-top: 28px;
+    border-top: 3px double var(--rule);
+    font-size: 14.5px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 560px) {
+    body { font-size: 16px; padding: 0 18px 72px; }
+    .doc { padding: 28px 20px; }
+    .clause { grid-template-columns: 32px 1fr; }
+    .signature { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Untuk Libran · Agustus 2026</p>
+    <h1>Bekal Bisnis Atria</h1>
+    <p class="standfirst">Kamus istilah, cara mikir harga, dan dua draf kesepakatan — untuk ngubah tool internal jadi produk yang dibayar orang, <em>tanpa ngerusak hubungan sama sodara sendiri.</em></p>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2>Kamus: istilah yang bakal lo denger</h2>
+    </div>
+    <p class="sec-intro">Ini bukan daftar lengkap. Ini istilah yang bakal muncul di percakapan lo dalam 6 bulan ke depan, dijelasin pakai situasi lo sendiri. Baca sekali, balik lagi pas ketemu di lapangan.</p>
+
+    <div class="glossary-group">
+      <p class="group-label">Kepemilikan</p>
+      <dl>
+        <div class="term">
+          <dt>Hak Kekayaan Intelektual <span class="id">HKI / IP</span></dt>
+          <dd>Kepemilikan atas sesuatu yang nggak berbentuk fisik — kode, desain, nama, tulisan. Kode Atria itu otomatis dilindungi hak cipta sejak lo tulis, tanpa perlu didaftarin. Di Indonesia hak cipta diatur UU No. 28 Tahun 2014.
+            <span class="you"><b>Di kasus lo</b>Yang jadi masalah bukan “ada hak ciptanya atau nggak” — pasti ada. Yang jadi masalah: <em>siapa pemegangnya</em>, karena lo bikin ini selagi digaji Dekoria dan nggak ada satu dokumen pun yang nyebutin.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>Lisensi</dt>
+          <dd>Izin memakai, bukan penyerahan kepemilikan. Kayak nyewa rumah: penyewa boleh tinggal, tapi sertifikatnya tetep atas nama pemilik.
+            <span class="you"><b>Di kasus lo</b>Vendor yang bayar per tahun itu <em>beli lisensi</em>, bukan beli Atria. Kalimat ini harus eksplisit di perjanjian, karena orang awam sering ngira “gue udah bayar, berarti punya gue”.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>Lisensi abadi <span class="id">perpetual</span></dt>
+          <dd>Bayar sekali, pakai selamanya. Lawan dari langganan. Biasanya masih ditambah biaya maintenance tahunan kalau mau dapat update.
+            <span class="you"><b>Di kasus lo</b>Ini yang gue saranin buat Dekoria: lisensi abadi, gratis, nggak bisa dicabut. Itu ngasih bos lo kepastian penuh bahwa perusahaannya nggak akan pernah kehilangan tool-nya — dan itu yang sebenernya dia takutin.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>Source code escrow</dt>
+          <dd>Salinan kode dititipin ke pihak ketiga netral (biasanya notaris), dengan perjanjian: kalau pembuatnya bangkrut, hilang, atau meninggal, customer berhak dapat kodenya.
+            <span class="you"><b>Di kasus lo</b>Customer serius bakal nanya “kalau lo kenapa-napa, ERP kami gimana?” Ini jawabannya. Belum perlu sekarang, tapi tau istilahnya bikin lo kelihatan nggak amatir pas ditanya.</span>
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="glossary-group">
+      <p class="group-label">Uang</p>
+      <dl>
+        <div class="term">
+          <dt>SaaS <span class="id">Software as a Service</span></dt>
+          <dd>Software yang diakses lewat internet dan dibayar berkala, bukan dibeli putus lalu dipasang sendiri. Penjual yang ngurus server, backup, dan update.
+            <span class="you"><b>Di kasus lo</b>Atria itu SaaS. Artinya lo nggak cuma jual software — lo jual <em>janji bahwa besok pagi masih nyala</em>. Itu bagian yang paling sering diremehkan orang teknis. Bentuk persisnya dibahas di §03.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>ARR <span class="id">Annual Recurring Revenue</span></dt>
+          <dd>Total pendapatan langganan yang berulang tiap tahun. Tiga vendor bayar <span class="money">Rp 12.000.000</span>/tahun = ARR <span class="money">Rp 36.000.000</span>. Uang proyek sekali jalan nggak dihitung — yang dihitung cuma yang berulang.
+            <span class="you"><b>Di kasus lo</b>Ini angka yang bikin bos lo ngerti kenapa ini beda dari proyek interior. Proyek selesai, uangnya berhenti. Langganan jalan terus selama produknya kepakai.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>Churn</dt>
+          <dd>Persentase customer yang berhenti berlangganan. Churn tinggi artinya lo terus-terusan nyari customer baru cuma buat jalan di tempat.
+            <span class="you"><b>Di kasus lo</b>ERP itu churn-nya rendah secara alami — begitu data keuangan setahun ada di dalam, pindah itu nyakitin. Itu kekuatan lo. Tapi itu juga berarti <em>tanggung jawab lo lebih berat</em>: mereka nggak bisa pergi meski produknya lagi jelek.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>Channel partner <span class="id">reseller</span></dt>
+          <dd>Orang atau perusahaan yang jualin produk lo ke jaringannya, dibayar komisi dari tiap penjualan yang mereka bawa. Mereka nggak punya produknya.
+            <span class="you"><b>Di kasus lo</b>Ini persis peran bos lo, sesuai kata-kata lo sendiri: “bantu nyebarin”. Komisi channel partner di software biasanya <span class="money">20–30%</span>. Kasih dia <span class="money">30%</span> — dia bawa akses dan kepercayaan yang lo nggak punya.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>Design partner</dt>
+          <dd>Customer pertama yang dikasih harga khusus atau gratis, dengan imbalan: mereka pakai serius, ngasih masukan jujur, dan boleh disebut sebagai referensi.
+            <span class="you"><b>Di kasus lo</b>Vendor kolaborasi Polda itu design partner, bukan customer. Mereka bakal nemuin 20 bug buat lo. Nagih mereka di ronde pertama artinya lo jual janji uptime yang belum bisa lo tepatin.</span>
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="glossary-group">
+      <p class="group-label">Kewajiban &amp; risiko</p>
+      <dl>
+        <div class="term">
+          <dt>SLA <span class="id">Service Level Agreement</span></dt>
+          <dd>Janji terukur soal kualitas layanan: berapa persen waktu sistem harus nyala, berapa lama lo harus bales keluhan, seberapa cepat bug parah diperbaiki.
+            <span class="you"><b>Di kasus lo</b>Jangan janji <span class="num">99,9%</span> — itu cuma <span class="num">43</span> menit mati per bulan dan lo sendirian. Mulai dari yang jujur: <em>“jam kerja Senin–Jumat, balas dalam 1 hari kerja, bug yang bikin angka salah diprioritaskan.”</em> Janji kecil yang ditepati jauh lebih berharga daripada janji besar yang meleset.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>Batas tanggung jawab <span class="id">liability cap</span></dt>
+          <dd>Klausul yang membatasi ganti rugi maksimal kalau terjadi kesalahan. Standarnya: setinggi-tingginya sebesar biaya langganan yang sudah dibayar dalam 12 bulan terakhir.
+            <span class="you"><b>Di kasus lo</b>Ini klausul paling penting di seluruh dokumen. Atria megang uang orang. Kalau ada bug dan vendor salah bayar <span class="money">Rp 50.000.000</span>, tanpa klausul ini secara teori lo yang nanggung. Dengan klausul ini, maksimal sebesar yang mereka bayar ke lo.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>Pengendali data vs pemroses data</dt>
+          <dd>Pengendali menentukan data dipakai untuk apa; pemroses cuma menyimpan dan mengolah atas perintah pengendali. Vendor adalah pengendali data keuangannya sendiri — lo cuma pemroses.
+            <span class="you"><b>Di kasus lo</b>Ini yang harus lo tulis, karena data keuangan vendor bakal duduk di database yang sama dengan data Dekoria — kompetitor mereka. Perjanjian harus bilang tegas: lo nyimpen, lo nggak akses, Dekoria nggak akses.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>Kerahasiaan <span class="id">NDA</span></dt>
+          <dd>Perjanjian untuk nggak nyebarin informasi rahasia pihak lain.
+            <span class="you"><b>Di kasus lo</b>Di industri interior yang komunitasnya kecil, ini bukan formalitas. Sekali harga vendor bocor ke kompetitornya lewat Atria, produk lo mati di komunitas itu — dan kabarnya nyebar lebih cepat dari fiturnya.</span>
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="glossary-group">
+      <p class="group-label">Badan usaha</p>
+      <dl>
+        <div class="term">
+          <dt>Perorangan</dt>
+          <dd>Usaha atas nama pribadi. Nggak ada pemisahan antara harta usaha dan harta pribadi — kalau usahanya punya utang atau digugat, harta pribadi ikut kena.
+            <span class="you"><b>Di kasus lo</b>Kalau Dekoria bentuknya ini, dan sesuatu salah di project Polda, yang kena adalah <em>orang</em>, bukan perusahaan. Ini alasan paling kuat buat berhenti nerima uang ke rekening pribadi.</span>
+          </dd>
+        </div>
+        <div class="term">
+          <dt>CV <span class="id">Commanditaire Vennootschap</span></dt>
+          <dd>Persekutuan dua orang atau lebih. Lebih murah dan cepat daripada PT, tapi sekutu aktifnya tetep nanggung sampai harta pribadi.</dd>
+        </div>
+        <div class="term">
+          <dt>PT <span class="id">Perseroan Terbatas</span></dt>
+          <dd>Badan hukum yang terpisah dari pemiliknya. Kalau PT digugat, yang dipertaruhkan modal PT — bukan rumah lo. Sejak UU Cipta Kerja ada juga <strong>PT Perorangan</strong> untuk usaha mikro/kecil: satu pendiri, biaya jauh lebih ringan dari PT biasa.
+            <span class="you"><b>Di kasus lo</b>Kalau serius jualan, produknya sebaiknya punya badan usaha sendiri — terpisah dari Dekoria. Bukan buat pajak. Buat <em>cerita</em>: “data lo dipegang PT Atria” itu kalimat yang bisa lo ucapkan. “Data lo dipegang kompetitor lo” bukan.</span>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2>Bentuk bisnisnya, sekali lihat</h2>
+    </div>
+    <p class="sec-intro">Empat pihak, dan tiap panah itu perjanjian yang berbeda. Kalau salah satu panah nggak pernah ditulis, di situlah nanti ributnya.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Pihak</th><th>Perannya</th><th>Dapat apa</th><th>Perjanjiannya</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Lo</strong></td>
+            <td>Pemilik &amp; pembuat produk</td>
+            <td>Pendapatan langganan dikurangi komisi</td>
+            <td>Kesepakatan §05</td>
+          </tr>
+          <tr>
+            <td><strong>Bos lo</strong></td>
+            <td>Channel partner</td>
+            <td>Komisi <span class="money">30%</span> + Dekoria pakai gratis selamanya</td>
+            <td>Kesepakatan §05</td>
+          </tr>
+          <tr>
+            <td><strong>Dekoria</strong></td>
+            <td>Pemakai pertama, ketua project Polda</td>
+            <td>Lisensi abadi, gratis, nggak bisa dicabut</td>
+            <td>Kesepakatan §05</td>
+          </tr>
+          <tr>
+            <td><strong>Vendor kolaborasi</strong></td>
+            <td>Design partner, lalu customer</td>
+            <td>Lisensi tahunan + ruang project bersama</td>
+            <td>Perjanjian §07</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span class="label">Yang gampang kelewat</span>
+      Dekoria memakai Atria <strong>dan</strong> Dekoria menjual Atria — itu dua hubungan berbeda dengan pihak yang kebetulan sama. Tulis terpisah. Kalau digabung, nanti nggak ada yang bisa jawab apakah Dekoria berhenti pakai kalau berhenti jualan.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2>“Ini SaaS beneran, bukan?”</h2>
+    </div>
+    <p class="sec-intro">Pertanyaan yang bakal muncul, dari bos lo maupun dari calon pelanggan. Jawabannya ya — dan ini cara menjelaskannya tanpa harus ngajarin siapa pun soal database.</p>
+
+    <p><strong>SaaS itu model penyampaian dan penagihan, bukan bentuk database.</strong> Yang menentukan ada empat, dan Atria memenuhi keempatnya.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Syarat</th><th>Atria</th></tr></thead>
+        <tbody>
+          <tr><td>Diakses lewat internet, bukan dipasang di server pelanggan</td><td>Mereka cukup buka alamatnya</td></tr>
+          <tr><td><strong>Kamu</strong> yang mengoperasikan — server, pencadangan, pembaruan</td><td>Database dan deployment di tanganmu</td></tr>
+          <tr><td>Dibayar berkala, bukan beli putus</td><td>Per tahun</td></tr>
+          <tr><td>Yang dibeli hak pakai, bukan kepemilikan</td><td>Lisensi, lihat §01</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Yang <em>bukan</em> bagian dari definisi: apakah semua pelanggan berbagi satu database.</p>
+
+    <h3>Tiga bentuk, dan hanya satu yang bukan SaaS</h3>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Bentuk</th><th>Artinya</th><th>SaaS?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Single-tenant</strong><br><span class="fill">← Atria</span></td><td>Satu instance per perusahaan. Database sendiri, alamat sendiri, Owner sendiri.</td><td>Ya</td></tr>
+          <tr><td><strong>Multi-tenant</strong></td><td>Satu instance dipakai semua pelanggan, dipisahkan per baris data.</td><td>Ya</td></tr>
+          <tr><td><strong>On-premise</strong></td><td>Pelanggan menjalankannya sendiri di server mereka.</td><td><strong>Bukan</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Bedanya bentuk pertama dengan yang ketiga cuma satu: <strong>siapa yang mengoperasikan.</strong> Selama database dan deployment-nya kamu yang pegang dan pelanggan tinggal masuk, itu SaaS.</p>
+
+    <div class="note">
+      <span class="label">Dan ini bukan bentuk kelas dua</span>
+      Banyak SaaS B2B yang serius justru single-tenant, terutama yang menyentuh keuangan dan data teregulasi. Sebagian bahkan <strong>menjual instance terpisah sebagai paket yang lebih mahal</strong>, karena isolasinya sendiri yang dibayar.
+    </div>
+
+    <h3>Dari sisi pelanggan, tidak ada bedanya</h3>
+    <p>Mereka dapat alamat, masuk, bayar tahunan. Tidak ada satu pun di layar yang menyebut “single-tenant”.</p>
+
+    <p>Justru sebaliknya. Ketika mereka bertanya <em>“data kami campur dengan Dekoria tidak?”</em> — dan mereka pasti bertanya, karena Dekoria kompetitor mereka — jawabannya satu kalimat:</p>
+
+    <div class="pull">“Tidak. Database perusahaan Anda terpisah sendiri.”</div>
+
+    <p>Kalau bentuknya multi-tenant, kalimat itu berubah menjadi penjelasan teknis kepada orang yang tidak ingin mendengarnya.</p>
+
+    <h3>Yang ditukar</h3>
+
+    <div class="do-dont">
+      <div class="dd-col yes">
+        <h4>Didapat</h4>
+        <ul>
+          <li>Isolasi yang bisa dijanjikan tanpa syarat — dan <strong>tidak bisa bocor karena bug</strong>, sebab datanya memang tidak berada di tempat yang sama.</li>
+          <li>Pencadangan dan pemulihan per pelanggan.</li>
+          <li>Bisa pindah ke multi-tenant nanti, satu pelanggan pada satu waktu.</li>
+        </ul>
+      </div>
+      <div class="dd-col no">
+        <h4>Dilepas</h4>
+        <ul>
+          <li>Pendaftaran mandiri — tiap pelanggan disiapkan manual.</li>
+          <li>Fitur lintas perusahaan, seperti project kolaborasi.</li>
+          <li>Pembaruan berjalan per instance, bukan sekali untuk semua.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Kapan bentuk ini berhenti masuk akal</h3>
+    <p>Di kisaran <strong>belasan pelanggan</strong>. Migrasi dikali lima belas, pencadangan dikali lima belas, latihan pemulihan dikali lima belas — dan kamu masih satu orang. Di titik itu multi-tenant bukan lagi kemewahan.</p>
+
+    <p>Tetapi di titik itu pula pendapatannya sudah cukup membiayai pekerjaan itu. Urutannya memang begitu: <strong>jual dulu, bangun tenancy dengan uangnya</strong> — bukan membangun tenancy lebih dulu sambil berharap ada yang membeli.</p>
+
+    <div class="warn">
+      <span class="label">Satu hal yang wajib beda per pelanggan</span>
+      Kunci rahasia sesi (<span class="fill">BETTER_AUTH_SECRET</span>) harus <strong>dibuat baru untuk setiap pelanggan</strong>, tidak boleh disalin. Kalau sama, sesi yang sah di satu perusahaan berlaku di perusahaan lain — satu variabel yang membatalkan seluruh pemisahan di atas.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <h2>Cara mikir harga</h2>
+    </div>
+    <p class="sec-intro">Lo bilang nol pengalaman soal ini. Nggak apa-apa — kebanyakan orang teknis salah di titik yang sama, dan salahnya selalu ke arah yang sama: kemurahan.</p>
+
+    <h3>Jangan hitung dari biaya lo</h3>
+    <p>Naluri orang teknis: hitung biaya server, tambahin sedikit, jadi harga. Itu salah. Server Atria mungkin <span class="money">Rp 300.000</span> sebulan — kalau lo hitung dari situ, lo bakal jual <span class="money">Rp 500.000</span> dan bingung kenapa capek terus.</p>
+
+    <h3>Hitung dari nilai yang mereka rasakan</h3>
+    <p>Pertanyaannya bukan “ini biayanya berapa”, tapi <strong>“tanpa ini, mereka rugi berapa setahun?”</strong> Satu pembayaran vendor dobel yang nggak ketahuan. Satu proyek yang ketahuan rugi setelah selesai, bukan di tengah jalan. Satu stok material yang kebeli dua kali karena nggak ada yang tau gudang masih ada.</p>
+
+    <p>Kalau Atria nyegah <em>satu</em> kejadian <span class="money">Rp 10.000.000</span> setahun, harga <span class="money">Rp 12.000.000</span> setahun itu masih gampang dijelasin — dan itu belum ngitung waktu yang nggak kebuang.</p>
+
+    <div class="pull">Turunin harga itu gampang dan bikin orang senang. Naikin harga ke customer yang udah jalan itu percakapan paling nggak enak yang ada.</div>
+
+    <h3>Tiga aturan praktis</h3>
+    <ul>
+      <li><strong>Mulai dari angka yang bikin lo agak nggak nyaman nyebutin.</strong> Kalau nyebut harganya gampang banget, kemurahan.</li>
+      <li><strong>Satu harga dulu, jangan bikin paket.</strong> Basic/Pro/Enterprise itu masalah yang lo belum punya. Satu angka, per perusahaan, per tahun.</li>
+      <li><strong>Cek pembanding, jangan nebak.</strong> Sebelum nentuin, lihat harga software akuntansi lokal yang dipakai UKM di Indonesia. Lo nggak harus ngikutin — tapi lo harus tau lo di atas atau di bawah, dan kenapa.</li>
+    </ul>
+
+    <div class="note">
+      <span class="label">Saran konkret</span>
+      Vendor Polda: <strong>gratis satu tahun penuh</strong> sebagai design partner, dengan perjanjian tertulis yang tetap lengkap — SLA, data, batas tanggung jawab, semuanya. Gratis itu soal angkanya nol, bukan soal nggak ada perjanjian. Customer <em>kedua</em> baru bayar penuh, pakai bukti bahwa Polda berhasil.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">05</span>
+      <h2>Yang berubah begitu ada yang bayar</h2>
+    </div>
+    <p class="sec-intro">Hari ini kalau Atria mati, lo betulin pas sempat. Begitu ada yang bayar, itu berhenti jadi pilihan. Lima hal ini muncul di hari pertama, dan semuanya harus punya jawaban sebelum uangnya masuk.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Kewajiban</th><th>Pertanyaan yang harus lo jawab</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Nyala</strong></td><td>Kalau mati jam 10 malam, siapa yang tau? Ada yang ngasih kabar, atau nunggu ada yang komplain?</td></tr>
+          <tr><td><strong>Backup</strong></td><td>Backup yang belum pernah dites restore itu bukan backup — itu perasaan. Kapan terakhir lo beneran restore?</td></tr>
+          <tr><td><strong>Dukungan</strong></td><td>Mereka ngeluh ke mana, dan lo janji bales dalam berapa lama? WhatsApp pribadi itu jawaban yang buruk tapi jujur — lebih baik daripada nggak ada jawaban.</td></tr>
+          <tr><td><strong>Ekspor data</strong></td><td>Mereka bisa ambil semua datanya sendiri, kapan aja, tanpa minta izin lo? Kalau nggak bisa, mereka bakal ragu mulai.</td></tr>
+          <tr><td><strong>Keamanan</strong></td><td>Siapa yang bisa lihat data siapa, dan apa buktinya? “Percaya sama gue” bukan jawaban yang laku ke orang yang naruh keuangan perusahaannya.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="warn">
+      <span class="label">Yang paling sering dilupain</span>
+      <strong>Ekspor data.</strong> Terdengar kayak fitur buat orang yang mau kabur, jadi sering ditunda. Padahal justru sebaliknya — ini yang bikin orang <em>berani mulai</em>. Nggak ada yang mau naruh keuangan setahun di tempat yang nggak bisa mereka tinggalin.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">06</span>
+      <h2>Draf kesepakatan dengan bos lo</h2>
+    </div>
+    <p class="sec-intro">Satu halaman, cukup ditandatangani berdua di atas materai. Ini bukan dokumen hukum jadi — ini <strong>daftar hal yang harus kalian sepakati</strong>, ditulis supaya bisa dibaca bareng tanpa canggung. Bawa ke notaris kalau angkanya udah mulai serius.</p>
+
+    <div class="doc">
+      <div class="doc-head">
+        <p class="kind">Draf · belum ditandatangani</p>
+        <p class="title">Kesepakatan Kepemilikan &amp; Kerja Sama Atria ERP</p>
+        <p class="parties">Antara <span class="fill">[Nama lo]</span> dan <span class="fill">[Nama bos lo]</span></p>
+      </div>
+
+      <div class="clause">
+        <span class="n">01</span>
+        <div>
+          <h5>Kepemilikan produk</h5>
+          <p class="text">Seluruh kode, desain, dan nama Atria ERP dimiliki oleh <span class="fill">[Nama lo]</span>, termasuk seluruh pengembangan sebelum dan sesudah kesepakatan ini.</p>
+          <p>Ini klausul intinya. Kalau kalian sepakatnya kepemilikan bersama, ganti kalimatnya jadi persentase yang jelas — tapi jangan dibiarkan nggak disebut.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">02</span>
+        <div>
+          <h5>Hak pakai Dekoria</h5>
+          <p class="text">Dekoria memperoleh lisensi abadi, gratis, dan tidak dapat dicabut untuk memakai Atria ERP bagi operasional perusahaannya, termasuk seluruh pembaruan, tanpa batas waktu dan tanpa syarat.</p>
+          <p>Ini yang bikin klausul 01 gampang disetujui. Bos lo nggak akan pernah kehilangan tool-nya — apa pun yang terjadi antara kalian berdua.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">03</span>
+        <div>
+          <h5>Peran pemasaran</h5>
+          <p class="text"><span class="fill">[Nama bos lo]</span> bertindak sebagai mitra pemasaran dan memperoleh komisi sebesar <span class="fill">30%</span> dari nilai langganan yang dibayarkan pelanggan yang ia bawa, selama pelanggan tersebut aktif berlangganan.</p>
+          <p>“Selama pelanggan aktif” itu penting — dia dapat komisi berulang, bukan cuma tahun pertama. Itu yang bikin dia punya alasan buat bantu jaga pelanggannya tetap senang, bukan cuma nutup penjualan lalu hilang.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">04</span>
+        <div>
+          <h5>Penerimaan pembayaran</h5>
+          <p class="text">Seluruh pembayaran pelanggan diterima melalui rekening <span class="fill">[badan usaha / rekening khusus]</span>, bukan rekening pribadi salah satu pihak. Komisi dibayarkan paling lambat <span class="fill">14</span> hari setelah dana masuk.</p>
+          <p>Nyampur uang pelanggan ke rekening pribadi itu masalah yang paling gampang dihindari sekarang, dan paling mahal kalau kejadian.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">05</span>
+        <div>
+          <h5>Tanggung jawab teknis</h5>
+          <p class="text"><span class="fill">[Nama lo]</span> bertanggung jawab atas pengembangan, pemeliharaan, keamanan data, dan dukungan teknis. <span class="fill">[Nama bos lo]</span> tidak menjanjikan fitur, tanggal rilis, atau kemampuan sistem kepada pelanggan tanpa persetujuan tertulis.</p>
+          <p>Klausul ini murni buat ngelindungin lo dari janji yang dibuat di ruangan yang lo nggak hadir. Ini kejadian di setiap bisnis software, tanpa kecuali, tanpa ada yang berniat jahat.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">06</span>
+        <div>
+          <h5>Kalau salah satu berhenti</h5>
+          <p class="text">Jika salah satu pihak berhenti terlibat, hak pakai Dekoria pada klausul 02 tetap berlaku, dan komisi atas pelanggan yang sudah berjalan tetap dibayarkan selama <span class="fill">12</span> bulan berikutnya.</p>
+          <p>Ini klausul yang paling nggak enak dibahas dan paling penting ada. Sekali ditulis, nggak akan pernah dibahas lagi — dan itu justru gunanya.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">07</span>
+        <div>
+          <h5>Kalau berbeda pendapat</h5>
+          <p class="text">Perbedaan pendapat diselesaikan secara musyawarah terlebih dahulu, dengan melibatkan <span class="fill">[nama keluarga / pihak netral yang dipercaya keduanya]</span> jika diperlukan.</p>
+          <p>Buat kesepakatan keluarga, klausul ini lebih realistis daripada nyebut pengadilan — dan lebih mungkin beneran kepakai.</p>
+        </div>
+      </div>
+
+      <div class="signature">
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <span class="fill">[Nama lo]</span><br>Pemilik produk
+        </div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <span class="fill">[Nama bos lo]</span><br>Mitra pemasaran · Dekoria
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">07</span>
+      <h2>Cara ngomongnya</h2>
+    </div>
+    <p class="sec-intro">Dokumennya gampang. Yang susah percakapannya — karena dia sodara lo, lo percaya sama dia, dan lo takut ini kedengeran kayak curiga. Ini cara supaya nggak.</p>
+
+    <h3>Jangan pakai kata “kontrak”</h3>
+    <p>Ke keluarga, “kontrak” kedengeran kayak tuduhan. Pakai <em>“ditulis”</em>, <em>“dicatat”</em>, atau <em>“disepakati di kertas”</em>. Isinya sama persis, rasanya beda jauh.</p>
+
+    <h3>Buka pakai pihak ketiga, bukan pakai diri lo</h3>
+    <p>Jangan mulai dari “gue mau ini punya gue”. Mulai dari kenyataan bahwa ada orang luar yang mau bayar — dan orang luar itu butuh kejelasan yang kalian berdua belum punya.</p>
+
+    <div class="script">
+      <p>“Bang, ini kan mau ada vendor yang bayar buat pakai Atria. Nah gue kepikiran, kita berdua belum pernah nulis apa-apa soal ini — siapa punya apa, siapa dapat berapa.</p>
+      <p>Bukan karena gue nggak percaya sama Abang. Justru karena gue nggak mau ada apa-apa antara kita gara-gara duit orang lain. Kalau ditulis sekarang selagi semuanya masih enak, nanti nggak ada yang perlu diinget-inget lagi.</p>
+      <p>Gue udah bikin draf-nya, satu halaman doang. Coba Abang baca, terus kita ubah bareng mana yang menurut Abang nggak pas.”</p>
+    </div>
+
+    <div class="do-dont">
+      <div class="dd-col yes">
+        <h4>Lakukan</h4>
+        <ul>
+          <li>Bawa drafnya, jangan cuma ide. Orang lebih gampang ngereaksi tulisan daripada bikin dari nol.</li>
+          <li>Sebut klausul hak pakai Dekoria <strong>duluan</strong> — sebelum klausul kepemilikan. Itu yang bikin dia tenang.</li>
+          <li>Bilang terus terang angka komisinya, dan bilang lo yang usulin. Itu ngakuin jasa dia secara nyata.</li>
+          <li>Kasih dia waktu baca sendiri. Jangan nunggu jawaban di tempat.</li>
+        </ul>
+      </div>
+      <div class="dd-col no">
+        <h4>Hindari</h4>
+        <ul>
+          <li>Ngomongin ini pertama kali di depan vendor atau orang lain.</li>
+          <li>Nunggu sampai uangnya udah masuk. Setelah ada duit di meja, posisi lo lebih lemah, bukan lebih kuat.</li>
+          <li>Ngumpulin bukti diam-diam — SSD pribadi, email pribadi, commit malam — tanpa pernah ngomong. Itu kelihatannya kayak sembunyi-sembunyi, bukan kayak hati-hati.</li>
+          <li>Bilang “ini kan gue yang bikin sendiri”. Bener, tapi itu bunyinya nagih, dan bikin dia defensif.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="label">Kenapa ini nggak bisa ditunda</span>
+      Lo punya satu momen di mana percakapan ini masih gampang: <strong>sekarang, sebelum ada yang bayar.</strong> Setelah uang masuk, tiap kalimat yang sama akan kedengeran seperti tuntutan — bukan karena lo berubah, tapi karena situasinya berubah.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">08</span>
+      <h2>Draf perjanjian dengan vendor</h2>
+    </div>
+    <p class="sec-intro">Yang ini beda register — dipakai sama orang luar, jadi bahasanya formal. Tetap satu halaman. Dipakai juga untuk vendor Polda meskipun mereka gratis, karena gratis itu soal angkanya nol, bukan soal nggak ada aturannya.</p>
+
+    <div class="doc">
+      <div class="doc-head">
+        <p class="kind">Draf · belum ditandatangani</p>
+        <p class="title">Perjanjian Langganan Atria ERP</p>
+        <p class="parties">Antara <span class="fill">[Penyedia]</span> dan <span class="fill">[Nama perusahaan vendor]</span></p>
+      </div>
+
+      <div class="clause">
+        <span class="n">01</span>
+        <div>
+          <h5>Yang diperoleh Pelanggan</h5>
+          <p class="text">Hak pakai (lisensi) atas Atria ERP selama masa langganan. Perjanjian ini tidak mengalihkan kepemilikan perangkat lunak.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">02</span>
+        <div>
+          <h5>Biaya dan masa berlaku</h5>
+          <p class="text"><span class="fill">Rp [angka]</span> per tahun, dibayar di muka, untuk <span class="fill">[jumlah]</span> pengguna. Untuk masa design partner: <span class="fill">Rp 0</span> selama 12 bulan pertama.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">03</span>
+        <div>
+          <h5>Kepemilikan dan kerahasiaan data</h5>
+          <p class="text">Seluruh data yang dimasukkan Pelanggan tetap milik Pelanggan. Penyedia menyimpan dan memproses data tersebut semata-mata untuk menjalankan layanan, tidak mengaksesnya kecuali atas permintaan Pelanggan untuk keperluan dukungan teknis, dan tidak membagikannya kepada pihak mana pun — termasuk pelanggan lain dan perusahaan yang terafiliasi dengan Penyedia.</p>
+          <p>Kalimat terakhir itu jantungnya. Vendor bakal nanya kenapa datanya duduk di sistem yang sama dengan kompetitornya — ini jawabannya, tertulis.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">04</span>
+        <div>
+          <h5>Data pada project kolaborasi</h5>
+          <p class="text">Pada project yang dikerjakan bersama, Pelanggan membagikan kepada pemimpin project hanya: nilai kontrak paket, progres pengerjaan, tagihan yang diajukan, dan pembayaran yang diterima. Biaya internal, margin, dan data pemasok Pelanggan tidak dibagikan dalam bentuk apa pun.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">05</span>
+        <div>
+          <h5>Tingkat layanan</h5>
+          <p class="text">Dukungan pada hari kerja Senin–Jumat, <span class="fill">[jam]</span>. Keluhan dijawab paling lambat <span class="fill">1</span> hari kerja. Gangguan yang menyebabkan pencatatan keuangan tidak akurat ditangani sebagai prioritas utama. Pencadangan data dilakukan harian.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">06</span>
+        <div>
+          <h5>Ekspor dan pengakhiran</h5>
+          <p class="text">Pelanggan dapat mengekspor seluruh datanya kapan saja tanpa persetujuan Penyedia. Setelah langganan berakhir, akun menjadi hanya-baca selama <span class="fill">90</span> hari. Setelah itu data operasional dihapus, sedangkan catatan buku besar dan jejak audit disimpan sebagai arsip terkunci sesuai sifat sistem pembukuan yang tidak dapat diubah.</p>
+          <p>Kalimat terakhir itu janji, bukan kejutan. Buku besar Atria memang sengaja nggak bisa dihapus — dan itu harus disebut di depan, bukan pas mereka minta hapus.</p>
+        </div>
+      </div>
+
+      <div class="clause">
+        <span class="n">07</span>
+        <div>
+          <h5>Batas tanggung jawab</h5>
+          <p class="text">Tanggung jawab Penyedia atas segala kerugian dibatasi setinggi-tingginya sebesar biaya langganan yang telah dibayarkan Pelanggan dalam 12 bulan terakhir. Pelanggan tetap bertanggung jawab memverifikasi seluruh keputusan keuangan sebelum dieksekusi.</p>
+        </div>
+      </div>
+
+      <div class="signature">
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <span class="fill">[Penyedia]</span>
+        </div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <span class="fill">[Nama perusahaan vendor]</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">09</span>
+      <h2>Yang harus lo tanya ke ahlinya</h2>
+    </div>
+    <p class="sec-intro">Gue bukan pengacara dan bukan akuntan. Dokumen ini gunanya supaya lo masuk ke ruangan mereka udah tau mau nanya apa — bukan supaya lo nggak perlu ke sana.</p>
+
+    <h4>Ke notaris</h4>
+    <ul>
+      <li>Karya yang dibuat karyawan selama masa kerja, tanpa perjanjian tertulis — hak ciptanya jatuh ke siapa menurut UU No. 28 Tahun 2014?</li>
+      <li>Kesepakatan dua orang di atas materai itu cukup, atau harus akta notaris supaya kuat?</li>
+      <li>Kalau mau bikin badan usaha buat produknya, PT Perorangan atau CV yang lebih masuk buat skala ini?</li>
+    </ul>
+
+    <h4>Ke konsultan pajak</h4>
+    <ul>
+      <li>Pendapatan langganan software itu kena pajak apa, dan siapa yang wajib mungut?</li>
+      <li>Komisi ke mitra pemasaran dicatatnya gimana, dan ada potongan pajaknya nggak?</li>
+      <li>Kapan wajib jadi Pengusaha Kena Pajak?</li>
+    </ul>
+
+    <div class="warn">
+      <span class="label">Satu hal, sebelum semuanya</span>
+      Sebelum ke notaris, sebelum nentuin harga, sebelum bikin badan usaha — <strong>ngobrol dulu sama bos lo</strong>. Semua yang di dokumen ini nggak ada artinya kalau kalian berdua belum pernah menyebut topiknya dengan suara keras.
+    </div>
+  </section>
+
+  <p class="colophon">
+    Disusun setelah sesi pembedahan rencana Atria ERP, 26 Agustus 2026. Angka komisi, harga, dan jangka waktu di dokumen ini adalah <em>usulan</em> — semuanya boleh diubah. Yang nggak boleh diubah cuma satu: harus ada yang tertulis, dan harus sebelum uang pertama masuk.
+  </p>
+
+</div>

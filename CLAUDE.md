@@ -144,6 +144,7 @@ Mobile-first for field PMs; should feel like a premium native iOS-style WebView.
 - Technical: `docs/06-technical/ARCHITECTURE.md`, `AUTH_AND_PERMISSION.md`, `API_ACTIONS.md`, `AI_AGENT_ARCHITECTURE.md`
 - Build order and roadmap: `docs/07-development/IMPLEMENTATION_ORDER.md`, `ROADMAP.md`, `TASK_BREAKDOWN.md`
 - Manual verification: `docs/guide/seeded_demo_walkthrough.md` (seeded sandbox), `docs/guide/financial_workflow_guide.md` (empty-DB UAT)
+- Selling and launching: `docs/bisnis/` — standalone HTML, outside the `DESIGN.md` system on purpose; `peluncuran-atria.html` is the open task/decision list, `bekal-bisnis-atria.html` the commercial background
 
 ## Agent Workflow Requirements
 
