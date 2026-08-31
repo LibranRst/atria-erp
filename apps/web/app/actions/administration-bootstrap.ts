@@ -169,8 +169,11 @@ export async function bootstrapFirstOwner(
           description: "First Owner dan canonical settings telah diprovision.",
           updatedById: created.id,
         })
+        // Kunci uniknya (tenant_id, key), bukan key saja — satu instance memang
+        // hanya melayani satu perusahaan, tapi ON CONFLICT harus menyebut
+        // constraint yang benar-benar ada atau Postgres menolak querynya.
         .onConflictDoUpdate({
-          target: appConfig.key,
+          target: [appConfig.tenantId, appConfig.key],
           set: { value: new Date().toISOString(), updatedById: created.id, updatedAt: new Date() },
         });
       await tx.insert(auditLog).values({
