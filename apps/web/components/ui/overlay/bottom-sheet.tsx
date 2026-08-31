@@ -353,7 +353,16 @@ export function BottomSheet({
                   className="absolute top-1/2 left-margin-mobile z-10 -translate-y-1/2 shadow-control"
                 />
 
-                <div className="pointer-events-none absolute top-1/2 left-1/2 w-[min(58vw,15rem)] -translate-x-1/2 -translate-y-1/2 text-center">
+                {/*
+                  Lebarnya diturunkan dari header, bukan dari viewport. Sisi kiri
+                  dipakai tombol tutup: 20px margin + 48px tombol + 4px jeda =
+                  72px, dicerminkan ke kanan supaya judulnya tetap benar-benar di
+                  tengah. Ukuran lama `min(58vw,15rem)` menaksir ruang itu dari
+                  lebar layar, padahal sheet-nya sendiri dibatasi lebar shell —
+                  di 375px taksirannya meleset 3px dan judul sependek "Sesuaikan
+                  default budget" ikut terpotong.
+                */}
+                <div className="pointer-events-none absolute top-1/2 left-1/2 w-[calc(100%-9rem)] -translate-x-1/2 -translate-y-1/2 text-center">
                   <h2 className="truncate font-sans text-[18px] leading-tight font-semibold text-on-surface">
                     {title}
                   </h2>
