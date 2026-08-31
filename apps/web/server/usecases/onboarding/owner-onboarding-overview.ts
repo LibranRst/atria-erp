@@ -25,6 +25,7 @@ import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@atria/core/auth/role-constants";
 import { DEFAULT_EXPENSE_CATEGORIES } from "@atria/core/budget/excel-budget";
 import {
   DEFAULT_OWNER_ONBOARDING_STATE,
+  resolveEffectiveOnboardingStep,
   deriveOwnerOnboardingGates,
   type OnboardingStepId,
   type OnboardingStepStatus,
@@ -159,28 +160,11 @@ export async function getOwnerOnboardingOverviewUseCase(
     initial_stock: initialStockReady,
     summary: rawState.status === "COMPLETED",
   };
-  const setupStepIds: readonly OnboardingStepId[] = [
-    "financial_defaults",
-    "team_vendors",
-    "bank_accounts",
-    "material_foundation",
-    "item_library",
-    "initial_stock",
-  ];
-  const firstUnreadySetupStepId = setupStepIds.find((id) => !preReadinessMap[id]);
-  const isCurrentStepReady = preReadinessMap[rawState.currentStep];
-  const effectiveCurrentStep: OnboardingStepId = (() => {
-    if (rawState.status === "COMPLETED") return "summary";
-    if (
-      isCurrentStepReady ||
-      (rawState.currentStep === "welcome" &&
-        firstUnreadySetupStepId &&
-        firstUnreadySetupStepId !== "welcome")
-    ) {
-      return firstUnreadySetupStepId ?? "summary";
-    }
-    return rawState.currentStep;
-  })();
+  const effectiveCurrentStep = resolveEffectiveOnboardingStep({
+    status: rawState.status,
+    currentStep: rawState.currentStep,
+    readiness: preReadinessMap,
+  });
   const state: OwnerOnboardingState = {
     ...rawState,
     currentStep: effectiveCurrentStep,

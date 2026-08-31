@@ -68,6 +68,31 @@ export const ownerOnboardingStateSchema = z.object({
 });
 
 export type OwnerOnboardingState = z.infer<typeof ownerOnboardingStateSchema>;
+
+/**
+ * Langkah mana yang sebenarnya dibuka, setelah kesiapan data ikut dihitung.
+ *
+ * Aturannya satu kalimat: **selama langkah yang tersimpan belum selesai,
+ * langkah itulah yang dibuka.** Baru ketika ia sudah selesai, Owner dilompatkan
+ * ke pekerjaan pertama yang masih tersisa — supaya langkah yang datanya sudah
+ * benar tidak perlu diklik ulang.
+ *
+ * `welcome` ikut aturan yang sama, dan itu disengaja. Ia dianggap selesai hanya
+ * setelah masuk `reviewedSteps`, yaitu setelah Owner benar-benar melewatinya.
+ * Melompatinya karena "masih ada setup yang belum beres" akan selalu benar di
+ * instance baru — di sanalah seluruh setup memang belum beres — sehingga layar
+ * sambutan tidak akan pernah bisa dilihat satu pelanggan pun.
+ */
+export function resolveEffectiveOnboardingStep(input: {
+  readonly status: OwnerOnboardingState["status"];
+  readonly currentStep: OnboardingStepId;
+  readonly readiness: Readonly<Record<OnboardingStepId, boolean>>;
+}): OnboardingStepId {
+  if (input.status === "COMPLETED") return "summary";
+  if (!input.readiness[input.currentStep]) return input.currentStep;
+  return OWNER_ONBOARDING_SETUP_STEP_IDS.find((id) => !input.readiness[id]) ?? "summary";
+}
+
 export type OnboardingStepStatus =
   "READY" | "INCOMPLETE" | "SKIPPED" | "REVIEWED" | "PENDING_APPROVAL" | "NOT_APPLICABLE";
 
