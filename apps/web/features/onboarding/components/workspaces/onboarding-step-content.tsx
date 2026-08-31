@@ -1,6 +1,6 @@
 import React from "react";
 
-import { AppIcon, StatusBadge } from "@/components/ui";
+import { AppIcon, DuotoneIconTile, StatusBadge } from "@/components/ui";
 import { FinancialDefaultsPanel } from "@/features/onboarding/components/panels/financial-defaults-panel";
 import { InitialStockSetupPanel } from "@/features/onboarding/components/panels/initial-stock-setup-panel";
 import { LibraryPanel } from "@/features/onboarding/components/panels/library-panel";
@@ -30,10 +30,7 @@ function FactRow({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-17.5 items-center gap-3 px-4 py-3">
-      <AppIcon
-        name={icon}
-        className="flex! icon-lg h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-primary"
-      />
+      <DuotoneIconTile name={icon} />
       <span className="min-w-0 flex-1">
         <span className="block text-row font-bold text-on-surface">{title}</span>
         <span className="mt-0.5 block text-meta text-on-surface-variant">{detail}</span>
@@ -280,7 +277,15 @@ export function OnboardingStepContent({
       {step === "summary" ? (
         <OnboardingSummary overview={data.overview} onNavigate={onNavigate} />
       ) : null}
-      {step !== "summary" ? <OnboardingVerificationPanel snapshot={snapshot} /> : null}
+      {/*
+        Tidak di welcome: panel ini melaporkan kesiapan data satu langkah, dan di
+        layar sambutan belum ada satu pun data yang bisa dilaporkan. Yang muncul
+        cuma "Setup siap dimulai." — sebuah pengungkap yang dibuka untuk tidak
+        memberitahu apa-apa, tepat di layar yang tugasnya menjelaskan alurnya.
+      */}
+      {step !== "summary" && step !== "welcome" ? (
+        <OnboardingVerificationPanel snapshot={snapshot} />
+      ) : null}
     </>
   );
 }
