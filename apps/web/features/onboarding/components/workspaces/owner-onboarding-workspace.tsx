@@ -26,13 +26,35 @@ export function OwnerOnboardingWorkspace({
 }): React.JSX.Element {
   const router = useRouter();
   const [step, setStep] = React.useState<OnboardingStepId>(initialStep);
+  const [serverStep, setServerStep] = React.useState<OnboardingStepId>(initialStep);
   const [showExitConfirm, setShowExitConfirm] = React.useState(false);
+
+  // Menyesuaikan langkah ketika server mengirim jawaban yang berbeda dari yang
+  // sudah dipilih di klien — misalnya karena langkah tujuan ternyata datanya
+  // sudah lengkap dan dilewati.
+  //
+  // Dulu penyelarasan ini dilakukan dengan `key` di halaman: setiap ganti
+  // langkah, seluruh workspace dibongkar dan dibangun ulang. Padahal `navigate`
+  // sudah menyetel langkahnya di klien lebih dulu, jadi yang dibongkar itu
+  // pohon yang isinya sudah benar — dan itulah kedipannya. Pola ini menyetel
+  // ulang state saat render, sebelum React sempat menampilkan apa pun.
+  if (initialStep !== serverStep) {
+    setServerStep(initialStep);
+    setStep(initialStep);
+  }
   const [refreshing, startRefresh] = React.useTransition();
   const [pending, startTransition] = React.useTransition();
 
   function navigate(next: OnboardingStepId): void {
     setStep(next);
-    router.replace(`/onboarding?step=${next}`, { scroll: false });
+    // Di dalam transisi, supaya React menahan layar yang sekarang sampai data
+    // langkah berikutnya siap. Tanpa itu, navigasi yang dipanggil langsung —
+    // tombol kembali di header — menjatuhkan halaman ke `loading.tsx` dulu:
+    // isi, lalu kerangka, lalu isi lagi. Sekaligus menyalakan `refreshing`,
+    // jadi tombolnya terkunci selama perpindahan.
+    startRefresh(() => {
+      router.replace(`/onboarding?step=${next}`, { scroll: false });
+    });
   }
 
   function refreshWorkspace(): void {

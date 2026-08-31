@@ -27,7 +27,11 @@ export default async function OwnerOnboardingPage({
     : result.data.overview.state.currentStep;
   return (
     <OwnerOnboardingWorkspace
-      key={`${activeStep}-${result.data.overview.state.status}`}
+      // Sengaja tidak memuat langkah: workspace menyelaraskan langkahnya
+      // sendiri dari prop, dan me-remount-nya setiap klik "Lanjut" adalah
+      // kedipan yang dilaporkan. Status tetap di sini karena perpindahannya
+      // memang menandai sesi yang berbeda.
+      key={result.data.overview.state.status}
       initialData={result.data}
       initialStep={activeStep}
     />
