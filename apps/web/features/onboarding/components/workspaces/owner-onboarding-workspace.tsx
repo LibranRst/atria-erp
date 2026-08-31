@@ -53,8 +53,14 @@ export function OwnerOnboardingWorkspace({
         toast.error(result.error.message);
         return;
       }
+      // Tanpa router.refresh() di sini. `advanceOwnerOnboardingStep` sudah
+      // memanggil revalidatePath("/onboarding"), jadi navigasi di bawah ini
+      // sendiri yang mengambil data baru. Menambahkan refresh membuat satu klik
+      // "Lanjut" memicu dua render server berturut-turut atas data yang sama —
+      // dan karena halaman ini force-dynamic, dua-duanya benar-benar menembak
+      // ketujuh sumber datanya. Itu yang terasa seperti halaman ke-refresh dua
+      // kali.
       navigate(result.data.nextStep);
-      router.refresh();
     });
   }
 
