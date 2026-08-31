@@ -45,6 +45,22 @@ type BudgetSettingsManagerProps = {
   readonly onDirtyChange?: (dirty: boolean) => void;
 };
 
+/**
+ * Jarak bilah simpan dari dasar layar, per konteks pemakaian.
+ *
+ * Di Settings ada bottom nav yang menempati dasar layar, jadi bilahnya harus
+ * naik melewatinya. Di dalam sheet onboarding tidak ada apa-apa di sana —
+ * memakai jarak yang sama menyisakan 80px ruang kosong di bawah tombol, dan
+ * tombolnya terbaca menggantung terlalu tinggi.
+ *
+ * Sisa 0.75rem pada varian sheet disengaja: menempel rata di 0 membuat bilahnya
+ * terlihat menyatu dengan tepi layar alih-alih mengambang di atas isinya.
+ */
+const STICKY_SAVE_BOTTOM: Record<"settings" | "onboarding", string> = {
+  settings: "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
+  onboarding: "bottom-[calc(0.75rem+env(safe-area-inset-bottom))]",
+};
+
 export function BudgetSettingsManager({
   initialSetting,
   initialCategories = [],
@@ -390,7 +406,9 @@ export function BudgetSettingsManager({
 
       {/* Sticky Save Bar */}
       {canManage && dirty ? (
-        <div className="sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-10 min-w-0 space-y-1.5 rounded-owner bg-white p-3 shadow-raised ring-1 ring-ring-subtle">
+        <div
+          className={`sticky ${STICKY_SAVE_BOTTOM[presentation]} z-10 min-w-0 space-y-1.5 rounded-owner bg-white p-3 shadow-raised ring-1 ring-ring-subtle`}
+        >
           <div className="flex items-center justify-between px-1 text-meta">
             <span
               className={overLimit ? "font-bold text-error" : "font-medium text-on-surface-variant"}
