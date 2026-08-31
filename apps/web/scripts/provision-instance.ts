@@ -17,6 +17,7 @@ import { Pool } from "@neondatabase/serverless";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { DEKORIA_TENANT_ID } from "@/db/schema/tenant-constants";
+import { countAllRows } from "./row-census";
 
 const PASS = "[32m✓[0m";
 const FAIL = "[31m✗[0m";
@@ -58,13 +59,11 @@ const existing = await pool.query<{ n: number }>(
   `SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public'`,
 );
 if (existing.rows[0].n > 0) {
-  const rows = await pool.query<{ n: number }>(
-    `SELECT COALESCE(sum(n_live_tup),0)::int AS n FROM pg_stat_user_tables`,
-  );
-  if (rows.rows[0].n > 0) {
+  const rows = await countAllRows(pool);
+  if (rows > 0) {
     await pool.end();
     fail(
-      `Database ini sudah berisi ${rows.rows[0].n} baris data.\n` +
+      `Database ini sudah berisi ${rows} baris data.\n` +
         "  Provisioning dibatalkan — instance yang sudah berjalan tidak boleh ditimpa.",
     );
   }

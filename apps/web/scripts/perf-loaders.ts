@@ -37,6 +37,7 @@ import { getSettingsPageData } from "@/features/settings/server/get-settings-pag
 import { getReconciliationWorkspace } from "@/app/actions/finance/reconciliation-workspace";
 import { getMaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import { getRoleAccess } from "@/lib/auth/role-access";
+import { countAllRows } from "./row-census";
 import { db, pool } from "@/db";
 import { role, user } from "@/db/schema";
 import type { Actor } from "@/server/actor";
@@ -117,13 +118,6 @@ function isRequestBound(message: string): boolean {
   return message.includes("outside a request scope") || message.includes("was called outside");
 }
 
-async function countRows(): Promise<number> {
-  const result = await pool.query<{ n: number }>(
-    `SELECT COALESCE(sum(n_live_tup), 0)::int AS n FROM pg_stat_user_tables`,
-  );
-  return result.rows[0]?.n ?? 0;
-}
-
 /** Median dari beberapa kali jalan, supaya satu hiccup jaringan tidak menang. */
 async function measure(load: () => Promise<unknown>): Promise<number> {
   for (let i = 0; i < WARMUP_RUNS; i += 1) await load();
@@ -144,7 +138,7 @@ async function main(): Promise<void> {
   console.log(`Waktu loader halaman utama\n${DIM}  ${target}${RESET}\n`);
 
   const actor = await resolveOwnerActor();
-  const rows = await countRows();
+  const rows = await countAllRows(pool);
 
   const loaders: ReadonlyArray<readonly [string, () => Promise<unknown>]> = [
     ["/ledger", () => getFinanceDashboardPageData(actor)],
