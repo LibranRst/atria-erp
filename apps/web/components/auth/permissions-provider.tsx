@@ -17,16 +17,32 @@ import type { PermissionKey } from "@atria/core/auth/permissions";
  * `router.refresh()`, dan tidak pernah ditanam ke sesi atau token — izin yang
  * ditanam basi persis ketika ketepatannya paling penting.
  */
+export type CurrentUserProfile = {
+  readonly name: string | null;
+  readonly image: string | null;
+};
+
 const PermissionsContext = React.createContext<readonly PermissionKey[]>([]);
+const CurrentUserContext = React.createContext<CurrentUserProfile | null>(null);
 
 export function PermissionsProvider({
   permissions,
+  user = null,
   children,
 }: {
   readonly permissions: readonly PermissionKey[];
+  readonly user?: CurrentUserProfile | null;
   readonly children: React.ReactNode;
 }): React.JSX.Element {
-  return <PermissionsContext.Provider value={permissions}>{children}</PermissionsContext.Provider>;
+  return (
+    <PermissionsContext.Provider value={permissions}>
+      <CurrentUserContext.Provider value={user}>{children}</CurrentUserContext.Provider>
+    </PermissionsContext.Provider>
+  );
+}
+
+export function useCurrentUserProfile(): CurrentUserProfile | null {
+  return React.useContext(CurrentUserContext);
 }
 
 /** `false` di luar provider — gagal ke arah tertutup, bukan terbuka. */

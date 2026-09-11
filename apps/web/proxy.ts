@@ -1,3 +1,4 @@
+import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
@@ -7,9 +8,16 @@ import {
 } from "@atria/core/auth/developer-account-simulation";
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  const sessionCookie = request.cookies.get("better-auth.session_token");
+  /*
+   * `getSessionCookie` membaca nama cookie sesuai konfigurasi Better Auth.
+   * Menuliskan `better-auth.session_token` langsung akan gagal di produksi:
+   * di atas HTTPS Better Auth memakai prefiks `__Secure-`, sehingga pemeriksaan
+   * manual tidak pernah menemukan sesi yang sah dan setiap halaman dipantulkan
+   * kembali ke `/login`.
+   */
+  const sessionCookie = getSessionCookie(request);
 
-  if (!sessionCookie?.value) {
+  if (!sessionCookie) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

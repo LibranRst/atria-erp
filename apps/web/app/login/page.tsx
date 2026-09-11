@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
 import { AppIcon, Button, FormField, FormSection, TextInput } from "@/components/ui";
+import { getPostLoginRedirectDestination } from "@/app/actions/auth-navigation";
+import { navigateAfterLogin } from "./login-navigation";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage(): React.JSX.Element {
@@ -13,7 +14,6 @@ export default function LoginPage(): React.JSX.Element {
   const [password, setPassword] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   function updateEmail(value: string): void {
     setEmail(value);
@@ -60,8 +60,13 @@ export default function LoginPage(): React.JSX.Element {
       }
 
       toast.success("Berhasil masuk.");
-      router.push("/");
-      router.refresh();
+      let destination = "/";
+      try {
+        destination = await getPostLoginRedirectDestination();
+      } catch (err) {
+        console.error("Gagal mendapatkan rute post-login, fallback ke root:", err);
+      }
+      navigateAfterLogin(window.location, destination);
     } catch (err: unknown) {
       console.error("Login unexpected error:", err);
       setError("Atria belum dapat memverifikasi akun. Coba lagi.");
