@@ -1,0 +1,52 @@
+# Konteks build proyek Vercel `atria-erp` adalah repo root (Root Directory
+# `apps/web`), jadi berkas di luar aplikasi web ikut terunggah dan menghabiskan
+# batas 15.000 berkas per deployment. Daftar ini hanya membuang hal yang tidak
+# pernah disentuh `next build`; `apps/web`, `packages/`, dan konfigurasi
+# workspace tetap ikut.
+#
+# Vercel CLI tidak membaca `.gitignore`, jadi ketergantungan dan berkas
+# lingkungan harus disebut ulang di sini.
+
+# Ketergantungan: selalu dipasang ulang dari lockfile di mesin build.
+node_modules/
+**/node_modules/
+
+# Berkas lingkungan lokal berisi kredensial nyata. Build hanya boleh memakai
+# variabel yang disuntikkan proyek Vercel.
+.env
+**/.env
+**/.env.*
+!**/.env.example
+
+# Keluaran build yang dibuat ulang di mesin Vercel
+**/.next/
+**/dist/
+**/*.tsbuildinfo
+next-env.d.ts
+
+# Alat dan state agen lokal
+.claude/
+.agents/
+.superpowers/
+.impeccable/
+
+# Proses desain dan sinkronisasi design system
+.design-sync/
+.ds-sync/
+ds-bundle/
+
+# Berkas kerja lokal
+.playwright-cli/
+output/
+scratch/
+.atria-demo/
+
+# Dokumentasi produk dan panduan (tidak dipakai runtime)
+docs/
+
+# Klien native punya proyek Expo sendiri, bukan bagian build web
+apps/mobile/
+
+# Artefak Storybook dan cache pengujian
+storybook-static/
+**/coverage/

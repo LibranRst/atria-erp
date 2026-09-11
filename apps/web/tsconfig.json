@@ -27,6 +27,7 @@
   "exclude": [
     "node_modules",
     "scratch",
+    "workers",
     ".next/cache",
     ".next/dev/cache",
     ".next/server",
