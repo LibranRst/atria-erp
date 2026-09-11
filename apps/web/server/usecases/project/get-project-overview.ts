@@ -134,6 +134,13 @@ export async function getProjectOverviewData(
 
   const readiness: readonly ProjectOverviewReadinessItem[] = [
     {
+      id: "pm",
+      label: "Project Manager",
+      value: projectRecord.projectManager?.name ?? "Belum ada",
+      detail: projectRecord.projectManager?.name ? "Penanggung jawab aktif" : "Perlu ditugaskan",
+      tone: projectRecord.projectManager ? "APPROVED" : "WARNING",
+    },
+    {
       id: "rab",
       label: "RAB",
       value: latestRabEstimate
@@ -204,6 +211,7 @@ export async function getProjectOverviewData(
     .map((category) => category.name);
 
   const actions = buildProjectOverviewActions({
+    hasProjectManager: Boolean(projectRecord.projectManagerId),
     hasRap: Boolean(activeRap),
     rapStatus: activeRap?.status ?? null,
     rapSetupStage: activeRap?.setupStage ?? null,

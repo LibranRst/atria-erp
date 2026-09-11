@@ -9,6 +9,7 @@ import type {
   RabRevisionHistoryView,
   RapView,
 } from "../types/rap-rab-types";
+import { isRabManualSourceType } from "../types/rap-rab-types";
 import type { RabBundleForm, RabChangeOrderForm } from "../types/rab-drawer-types";
 
 export const emptyManualQuotationLine: ManualQuotationLine = {
@@ -17,6 +18,7 @@ export const emptyManualQuotationLine: ManualQuotationLine = {
   quantity: "1",
   unit: "ls",
   unitPrice: "",
+  itemNature: "PRODUCTION",
 };
 
 export const emptyRabBundleForm: RabBundleForm = {
@@ -59,12 +61,23 @@ export function getInitialSelectedCategoryQuotationIds(
     .map((item) => item.id);
 }
 
+export function getInitialSelectedBaselineManualItemIds(
+  rabEstimate: RabEstimateView | null,
+): string[] {
+  return (
+    rabEstimate?.items
+      .filter((item) => isRabManualSourceType(item.sourceType))
+      .map((item) => item.id) ?? []
+  );
+}
+
 export function getRabManagerDerivedValues({
   userRole,
   rabEstimate,
   revisionHistory,
   selectedRapQuotationIds,
   selectedCategoryQuotationIds,
+  selectedBaselineManualItemIds,
   manualQuotationLine,
 }: {
   readonly userRole: string;
@@ -72,6 +85,7 @@ export function getRabManagerDerivedValues({
   readonly revisionHistory: readonly RabRevisionHistoryView[];
   readonly selectedRapQuotationIds: readonly string[];
   readonly selectedCategoryQuotationIds: readonly string[];
+  readonly selectedBaselineManualItemIds?: readonly string[];
   readonly manualQuotationLine: ManualQuotationLine;
 }): RabManagerDerivedValues {
   const canApproveRab = actorHasPermission(userRole, "approve:rab");
@@ -92,6 +106,7 @@ export function getRabManagerDerivedValues({
     selectedQuotationSourceCount:
       selectedRapQuotationIds.length +
       selectedCategoryQuotationIds.length +
+      (selectedBaselineManualItemIds?.length ?? 0) +
       (hasManualQuotationLine ? 1 : 0),
     sortedRabItems: getSortedRabItems(rabEstimate),
   };
@@ -103,6 +118,7 @@ export function buildManualQuotationLines(manualQuotationLine: ManualQuotationLi
   quantity: number;
   unit: string;
   unitPrice: number;
+  itemNature: "PRODUCTION" | "SERVICE_FEE";
 }[] {
   return manualQuotationLine.clientLabel.trim()
     ? [
@@ -112,6 +128,7 @@ export function buildManualQuotationLines(manualQuotationLine: ManualQuotationLi
           quantity: Number(manualQuotationLine.quantity),
           unit: manualQuotationLine.unit.trim(),
           unitPrice: Number(manualQuotationLine.unitPrice) || 0,
+          itemNature: manualQuotationLine.itemNature ?? "PRODUCTION",
         },
       ]
     : [];

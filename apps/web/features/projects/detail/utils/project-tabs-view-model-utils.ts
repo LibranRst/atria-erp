@@ -79,6 +79,7 @@ export function calculateInvoiceOutstanding(invoices: ProjectTabsProps["invoices
 }
 
 export function buildReadiness({
+  projectManagerName,
   latestRabEstimate,
   activeRap,
   rapForManager,
@@ -86,6 +87,7 @@ export function buildReadiness({
   invoiceOutstanding,
   overdueInvoiceCount,
 }: {
+  readonly projectManagerName?: string | null;
   readonly latestRabEstimate: RabEstimateForSelection;
   readonly activeRap: ProjectTabsProps["project"]["raps"][number] | null;
   readonly rapForManager: ReturnType<typeof buildRapForManager>;
@@ -94,6 +96,14 @@ export function buildReadiness({
   readonly overdueInvoiceCount: number;
 }): readonly ProjectReadinessItem[] {
   return [
+    {
+      id: "pm",
+      label: "Project Manager",
+      value: projectManagerName ?? "Belum ada",
+      detail: projectManagerName ? "Penanggung jawab aktif" : "Perlu ditugaskan",
+      tab: "overview",
+      tone: projectManagerName ? "APPROVED" : "WARNING",
+    },
     {
       id: "rab",
       label: "RAB",

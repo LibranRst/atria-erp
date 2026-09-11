@@ -73,6 +73,7 @@ export interface RapView {
 export interface RabItemView {
   readonly id: string;
   readonly sourceType: string;
+  readonly itemNature: "PRODUCTION" | "SERVICE_FEE";
   readonly sourceProjectRapItemId: string | null;
   readonly sourceProjectCategoryPlanItemId: string | null;
   readonly clientLabel: string;
@@ -209,7 +210,12 @@ export type ManualQuotationLine = {
   quantity: string;
   unit: string;
   unitPrice: string;
+  itemNature?: "PRODUCTION" | "SERVICE_FEE";
 };
 
 export type RapSetupStage = "MATERIAL" | "TUKANG" | "SUBCON" | "REVIEW";
 export type RapOverviewFilter = "MATERIAL" | "TUKANG" | "SUBCON";
+
+export function isRabManualSourceType(sourceType: string | null | undefined): boolean {
+  return sourceType === "MANUAL" || sourceType === "MANUAL_CLIENT_LINE";
+}

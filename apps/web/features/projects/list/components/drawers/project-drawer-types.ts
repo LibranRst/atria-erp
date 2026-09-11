@@ -12,7 +12,7 @@ export type ProjectDrawerData = {
   readonly id: string;
   readonly name: string;
   readonly clientId: string;
-  readonly projectManagerId: string;
+  readonly projectManagerId: string | null;
   readonly status: "DRAFT" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
   readonly financialHealth: "HEALTHY" | "WARNING" | "CRITICAL";
   readonly totalContractValue: number;

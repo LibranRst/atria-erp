@@ -1,11 +1,12 @@
 import { actorHasPermission } from "@atria/core/auth/permissions";
 import "server-only";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { getBudgetAllocationDefault } from "@/app/actions/project/excel-budget-utils";
 import { db } from "@/db";
-import { auditLog, client, project } from "@/db/schema";
-import { insertCanonicalProjectBudgetTx } from "@/lib/budget/project-budget-creation";
+import { auditLog } from "@/db/schema";
 import type { Actor } from "@/server/actor";
+import { insertProjectWithCanonicalBudgetTx } from "@/server/usecases/project/project-creation-write";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { createProjectSchema, type CreateProjectInput } from "@atria/core/validations/project";
 
@@ -40,78 +41,47 @@ export async function createProjectUseCase(
   }
 
   const data = validation.data;
-  let finalClientId = data.clientId;
 
   try {
     const allocationDefault = await getBudgetAllocationDefault();
     const result = await db.transaction(async (tx) => {
-      // 1. Create client if it's new
-      if (!finalClientId) {
-        if (!data.newClientName) {
-          throw new Error("Nama klien baru harus diisi jika tidak memilih klien terdaftar.");
-        }
-        const [newClient] = await tx
-          .insert(client)
-          .values({
-            id: crypto.randomUUID(),
-            name: data.newClientName,
-            companyName: "",
-            email:
-              data.newClientEmail ||
-              `${data.newClientName.toLowerCase().replace(/\s+/g, "")}@example.com`,
-            phone: data.newClientPhone || "-",
-            address: data.newClientAddress || "-",
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .returning();
-        finalClientId = newClient.id;
-      }
-
-      // 2. Insert project
-      const [newProject] = await tx
-        .insert(project)
-        .values({
-          id: crypto.randomUUID(),
-          name: data.name,
-          clientId: finalClientId,
-          projectManagerId: data.projectManagerId,
-          status: "DRAFT",
-          financialHealth: "HEALTHY",
-          totalContractValue: data.totalContractValue.toFixed(2),
-          startDate: data.startDate ? new Date(data.startDate) : null,
-          endDate: data.endDate ? new Date(data.endDate) : null,
-          location: data.location || null,
-          roomArea: data.roomArea || null,
-          projectType: data.projectType || null,
-          coverImageUrl: data.coverImageUrl || null,
-          notes: data.notes || null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
-
-      const newBudget = await insertCanonicalProjectBudgetTx({
+      const created = await insertProjectWithCanonicalBudgetTx({
         tx,
-        projectId: newProject.id,
-        contractValue: Number(newProject.totalContractValue),
-        approvedRabValue: Number(newProject.totalContractValue),
+        input: {
+          ...data,
+          projectManagerId: data.projectManagerId,
+          approvedRabValue: data.totalContractValue,
+        },
         allocation: allocationDefault,
-        notes: "Inisialisasi anggaran kategori otomatis dari pengaturan sistem.",
       });
 
-      // 3. Write audit log
       await tx.insert(auditLog).values({
         id: crypto.randomUUID(),
         userId: actor.userId,
         action: "CREATE_PROJECT",
         targetTable: "project",
-        targetId: newProject.id,
-        newState: JSON.stringify({ project: newProject, canonicalBudgetId: newBudget.id }),
+        targetId: created.project.id,
+        newState: JSON.stringify({
+          project: created.project,
+          canonicalBudgetId: created.budgetId,
+        }),
         createdAt: new Date(),
       });
 
-      return newProject;
+      if (created.project.projectManagerId)
+        await recordNotificationEvent(tx, {
+          referenceType: "project",
+          referenceId: created.project.id,
+          projectId: created.project.id,
+          stage: "INITIAL_ASSIGNMENT",
+          title: "Penugasan proyek baru",
+          message: created.project.name,
+          recipients: [created.project.projectManagerId],
+          permission: "view:project",
+          actionUrl: `/projects/${created.project.id}`,
+          actorId: actor.userId,
+        });
+      return created.project;
     });
 
     return { success: true, data: { id: result.id } };

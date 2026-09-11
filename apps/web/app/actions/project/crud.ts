@@ -4,8 +4,16 @@ import { resolveActor } from "@/server/actor";
 import { createProjectUseCase } from "@/server/usecases/project/create-project";
 import { getProjectFormBootstrap } from "@/server/usecases/project/project-form-bootstrap";
 import { updateProjectUseCase } from "@/server/usecases/project/update-project";
+import {
+  assignProjectManagerUseCase,
+  type AssignProjectManagerResult,
+} from "@/server/usecases/project/assign-project-manager";
 import type { ActionResponse } from "@atria/core/types/action-response";
-import type { CreateProjectInput, UpdateProjectInput } from "@atria/core/validations/project";
+import type {
+  AssignProjectManagerInput,
+  CreateProjectInput,
+  UpdateProjectInput,
+} from "@atria/core/validations/project";
 
 export async function createProjectAction(
   input: CreateProjectInput,
@@ -25,6 +33,16 @@ export async function updateProjectAction(
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   }
   return updateProjectUseCase(actor, input);
+}
+
+export async function assignProjectManagerAction(
+  input: AssignProjectManagerInput,
+): Promise<ActionResponse<AssignProjectManagerResult>> {
+  const actor = await resolveActor();
+  if (!actor) {
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  }
+  return assignProjectManagerUseCase(actor, input);
 }
 
 export async function getProjectFormData(): Promise<

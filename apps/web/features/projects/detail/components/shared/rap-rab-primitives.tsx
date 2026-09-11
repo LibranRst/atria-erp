@@ -58,8 +58,9 @@ export function RabMoneyBlock({
   return <MoneyMetricPill label={label} amount={value} variant="fullDynamic" valueSize="md" />;
 }
 
-export function rabSourceLabel(sourceType: string): string {
+export function rabSourceLabel(sourceType: string, itemNature?: string): string {
+  if (itemNature === "SERVICE_FEE") return "Jasa & Fee";
   if (sourceType === "RAP_MATERIAL") return "Material";
   if (sourceType === "CATEGORY_PLAN") return "Paket kerja";
-  return "Manual";
+  return "Pekerjaan fisik";
 }

@@ -48,6 +48,7 @@ export async function addRabManualItem(
         .values({
           rabEstimateId: estimate.id,
           sourceType: "MANUAL",
+          itemNature: validation.data.itemNature ?? "PRODUCTION",
           clientLabel: validation.data.clientLabel,
           description: validation.data.description ?? null,
           quantity: validation.data.quantity.toFixed(2),

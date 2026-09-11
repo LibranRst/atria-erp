@@ -38,6 +38,7 @@ interface UseRabManagerActionsProps {
   readonly baselineApprovedRabId: string | null;
   readonly selectedRapQuotationIds: readonly string[];
   readonly selectedCategoryQuotationIds: readonly string[];
+  readonly selectedBaselineManualItemIds?: readonly string[];
   readonly manualQuotationLine: ManualQuotationLine;
   readonly setManualQuotationLine: (line: ManualQuotationLine) => void;
   readonly rabDraftEdits: Record<string, RabItemView>;
@@ -78,6 +79,7 @@ export function useRabManagerActions({
   baselineApprovedRabId,
   selectedRapQuotationIds,
   selectedCategoryQuotationIds,
+  selectedBaselineManualItemIds,
   manualQuotationLine,
   setManualQuotationLine,
   rabDraftEdits,
@@ -135,6 +137,7 @@ export function useRabManagerActions({
           projectId,
           selectedRapQuotationIds,
           selectedCategoryQuotationIds,
+          selectedBaselineManualItemIds,
           manualQuotationLine,
         }),
       );
@@ -158,10 +161,7 @@ export function useRabManagerActions({
     }
     resetMessages();
     startTransition(async () => {
-      const res = await updateRabEstimateItem({
-        rabEstimateItemId: item.id,
-        ...buildRabItemUpdatePayload(draft),
-      });
+      const res = await updateRabEstimateItem(buildRabItemUpdatePayload(draft));
       if (!res.success) {
         toast.error(res.error.message);
         return;

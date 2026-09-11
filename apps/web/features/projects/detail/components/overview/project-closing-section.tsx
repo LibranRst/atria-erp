@@ -139,9 +139,9 @@ function ClosingFact({
       <span className="text-meta font-semibold text-on-surface-variant">{label}</span>
       <MoneyValue
         amount={amount}
-        variant="compact"
+        variant="fullDynamic"
         align="right"
-        size="sm"
+        size="md"
         tone={amount < 0 ? "danger" : "default"}
       />
     </div>

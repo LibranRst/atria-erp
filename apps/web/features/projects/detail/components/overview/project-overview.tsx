@@ -6,17 +6,25 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import type { ProjectBudgetDashboard } from "@/app/actions/project/excel-budget";
+import {
+  approveProjectBudget,
+  rejectProjectBudget,
+  submitProjectBudget,
+} from "@/app/actions/project/excel-budget";
 import { reallocateProjectBudget } from "@/app/actions/project/workflow-governance";
 import {
   AppIcon,
   Badge,
   BudgetSplitIndicator,
+  Button,
+  CompactFormDialog,
+  ConfirmationDialog,
   DetailSheet,
   FormField,
   FormSection,
-  FormSheet,
   MoneyValue,
   NumericInput,
+  OperationalFormSheet,
   Textarea,
   UsageBlockMeter,
 } from "@/components/ui";
@@ -26,7 +34,8 @@ import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { cn } from "@/lib/utils/cn";
 export { ProjectIdentityHeader } from "./project-identity-header";
 
-export type ProjectOverviewTab = "rab" | "rap" | "stok" | "expenses" | "payments" | "profitability";
+export type ProjectOverviewTab =
+  "overview" | "rab" | "rap" | "stok" | "expenses" | "payments" | "profitability";
 
 export type ProjectOverviewAction = {
   readonly id: string;
@@ -51,6 +60,7 @@ type ProjectOverviewProps = {
   readonly actions: readonly ProjectOverviewAction[];
   readonly readiness: readonly ProjectReadinessItem[];
   readonly onNavigate: (tab: ProjectOverviewTab) => void;
+  readonly onAssignPm?: () => void;
 };
 
 function categoryTone(status: string): IndicatorTone {
@@ -62,16 +72,21 @@ function categoryTone(status: string): IndicatorTone {
 function SectionHeading({
   title,
   supporting,
+  action,
 }: {
   readonly title: string;
   readonly supporting?: string;
+  readonly action?: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <header className="px-1 pt-2">
-      <h2 className="text-title font-semibold text-on-surface">{title}</h2>
-      {supporting ? (
-        <p className="mt-0.5 text-support text-on-surface-variant">{supporting}</p>
-      ) : null}
+    <header className="flex items-start justify-between gap-3 px-1 pt-2">
+      <div className="min-w-0 flex-1">
+        <h2 className="text-xl font-semibold text-on-surface">{title}</h2>
+        {supporting ? (
+          <p className="mt-0.5 text-support text-on-surface-variant">{supporting}</p>
+        ) : null}
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
     </header>
   );
 }
@@ -82,12 +97,18 @@ export function ProjectOverview({
   actions,
   readiness,
   onNavigate,
+  onAssignPm,
 }: ProjectOverviewProps): React.JSX.Element {
   const can = useCan();
   const router = useRouter();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [reallocationOpen, setReallocationOpen] = useState(false);
   const [reallocationReason, setReallocationReason] = useState("");
+  const [budgetDecision, setBudgetDecision] = useState<"submit" | "approve" | "reject" | null>(
+    null,
+  );
+  const [budgetRejectionReason, setBudgetRejectionReason] = useState("");
+  const [budgetDecisionPending, startBudgetDecision] = React.useTransition();
   const [ratios, setRatios] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       (budget?.categories ?? []).map((category) => [
@@ -102,8 +123,19 @@ export function ProjectOverview({
   const remaining = budget?.remainingBudget ?? 0;
   const used = budget?.usedPercentage ?? 0;
   const margin = budget?.projectedMarginPercentage ?? (contractValue > 0 ? 100 : 0);
-  const canReallocate = can("approve:budget");
+  const canReallocate = can("approve:budget") && budget?.status === "APPROVED";
+  const canUpdateBudget = can("update:budget");
+  const canApproveBudget = can("approve:budget");
   const totalRatio = Object.values(ratios).reduce((sum, value) => sum + Number(value || 0), 0);
+  const reallocationDirty = Boolean(
+    budget &&
+    (reallocationReason.trim().length > 0 ||
+      budget.categories.some(
+        (category) =>
+          ratios[category.id] !==
+          ((category.allocatedAmount / Math.max(budget.internalBudget, 1)) * 100).toFixed(1),
+      )),
+  );
 
   async function saveReallocation(): Promise<void> {
     if (!budget) return;
@@ -138,6 +170,32 @@ export function ProjectOverview({
     );
     setReallocationReason("");
     setReallocationOpen(true);
+  }
+
+  function runBudgetDecision(kind: "submit" | "approve" | "reject"): void {
+    if (!budget) return;
+    startBudgetDecision(async () => {
+      const result =
+        kind === "submit"
+          ? await submitProjectBudget(budget.budgetId)
+          : kind === "approve"
+            ? await approveProjectBudget(budget.budgetId)
+            : await rejectProjectBudget(budget.budgetId, budgetRejectionReason);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
+      toast.success(
+        kind === "submit"
+          ? "Project Budget diajukan."
+          : kind === "approve"
+            ? "Project Budget disetujui."
+            : "Project Budget dikembalikan untuk revisi.",
+      );
+      setBudgetDecision(null);
+      setBudgetRejectionReason("");
+      router.refresh();
+    });
   }
 
   return (
@@ -188,21 +246,125 @@ export function ProjectOverview({
             tone={remaining < 0 ? "critical" : used >= 80 ? "warning" : "positive"}
           />
 
-          <div className="mt-1 flex flex-row gap-3">
-            <FinancialFact label="Nilai proyek" amount={budget.contractValue} />
-            <FinancialFact label="Budget" amount={budget.internalBudget} />
+          <div className="mt-2 space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <FinancialFact label="Nilai proyek" amount={budget.contractValue} />
+              <FinancialFact label="Budget" amount={budget.internalBudget} />
+            </div>
             <FinancialFact label="Realisasi" amount={budget.actualCost} />
           </div>
-          <div className="mt-3 flex items-center justify-between rounded-[18px] bg-white/[0.07] px-3 py-2.5">
-            <span className="text-meta font-semibold text-white/60">Margin proyeksi</span>
-            <span
-              className={`financial-amount font-mono text-row font-bold tabular-nums ${margin < 10 ? "text-critical-on-inverse" : "text-white"}`}
-            >
-              {margin.toFixed(1)}%
-            </span>
-          </div>
+          {budget.serviceFeeTotal > 0 ? (
+            <div className="mt-3 space-y-2 rounded-[18px] bg-white/[0.07] p-3 text-meta">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <div>
+                  <span className="font-semibold text-white">Margin Murni Produksi</span>
+                  <p className="text-[11px] text-white/50">Murni belanja fisik (lapangan)</p>
+                </div>
+                <div className="text-right">
+                  <MoneyValue
+                    amount={budget.physicalMarginAmount}
+                    variant="fullDynamic"
+                    tone="inverse"
+                    align="right"
+                    size="md"
+                  />
+                  <span className="block font-mono text-[11px] text-white/60 tabular-nums">
+                    {budget.physicalMarginPercentage.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-0.5">
+                <div>
+                  <span className="font-semibold text-white">Margin Total Proyek</span>
+                  <p className="text-[11px] text-white/50">Gabungan fisik + fee jasa</p>
+                </div>
+                <div className="text-right">
+                  <MoneyValue
+                    amount={budget.targetGrossAmount}
+                    variant="fullDynamic"
+                    tone="inverse"
+                    align="right"
+                    size="md"
+                  />
+                  <span className="block font-mono text-[11px] text-white/60 tabular-nums">
+                    {margin.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-3 flex items-center justify-between rounded-[18px] bg-white/[0.07] px-3 py-2.5">
+              <span className="text-meta font-semibold text-white/60">Margin proyeksi</span>
+              <div className="text-right">
+                <MoneyValue
+                  amount={budget.projectedMarginAmount}
+                  variant="fullDynamic"
+                  tone="inverse"
+                  align="right"
+                  size="md"
+                />
+                <span
+                  className={`block font-mono text-[11px] tabular-nums ${margin < 10 ? "text-critical-on-inverse" : "text-white/60"}`}
+                >
+                  {margin.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          )}
         </section>
       )}
+
+      {budget && (budget.status === "DRAFT" || budget.status === "PENDING_APPROVAL") ? (
+        <section className="rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+                Workflow Project Budget
+              </p>
+              <h2 className="mt-1 text-row font-semibold text-on-surface">
+                {budget.status === "PENDING_APPROVAL"
+                  ? "Menunggu keputusan Owner"
+                  : "Budget masih dalam draf"}
+              </h2>
+              <p className="mt-1 text-support text-on-surface-variant">
+                {budget.status === "PENDING_APPROVAL"
+                  ? "Periksa plafon internal dan alokasi kategori sebelum pekerjaan finansial dibuka."
+                  : "Pastikan nilai proyek dan pembagian kategori sudah benar sebelum diajukan."}
+              </p>
+            </div>
+            <Badge status={budget.status === "PENDING_APPROVAL" ? "WARNING" : "DRAFT"}>
+              {budget.status === "PENDING_APPROVAL" ? "Perlu keputusan" : "Draf"}
+            </Badge>
+          </div>
+
+          {budget.status === "DRAFT" && canUpdateBudget ? (
+            <Button
+              fullWidth
+              className="mt-4"
+              pending={budgetDecisionPending}
+              onClick={() => setBudgetDecision("submit")}
+            >
+              Ajukan Project Budget
+            </Button>
+          ) : null}
+
+          {budget.status === "PENDING_APPROVAL" && canApproveBudget ? (
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button
+                variant="criticalQuiet"
+                pending={budgetDecisionPending}
+                onClick={() => setBudgetDecision("reject")}
+              >
+                Minta revisi
+              </Button>
+              <Button pending={budgetDecisionPending} onClick={() => setBudgetDecision("approve")}>
+                Setujui budget
+              </Button>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="space-y-2.5">
         <SectionHeading
@@ -214,7 +376,13 @@ export function ProjectOverview({
             <button
               key={item.id}
               type="button"
-              onClick={() => onNavigate(item.tab)}
+              onClick={() => {
+                if (item.id === "pm" && onAssignPm) {
+                  onAssignPm();
+                } else {
+                  onNavigate(item.tab);
+                }
+              }}
               className={`flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-primary">
@@ -251,6 +419,50 @@ export function ProjectOverview({
         </div>
       </section>
 
+      <ConfirmationDialog
+        open={budgetDecision === "submit" || budgetDecision === "approve"}
+        title={budgetDecision === "approve" ? "Setujui Project Budget?" : "Ajukan Project Budget?"}
+        description={
+          budgetDecision === "approve"
+            ? "Plafon internal menjadi baseline aktif untuk kontrol budget dan transaksi proyek."
+            : "Budget akan dikunci sementara dan dikirim kepada pihak yang berwenang untuk diputuskan."
+        }
+        confirmLabel={budgetDecision === "approve" ? "Setujui" : "Ajukan"}
+        pending={budgetDecisionPending}
+        onClose={() => setBudgetDecision(null)}
+        onConfirm={() => runBudgetDecision(budgetDecision === "approve" ? "approve" : "submit")}
+      />
+
+      <CompactFormDialog
+        open={budgetDecision === "reject"}
+        title="Minta revisi budget"
+        pending={budgetDecisionPending}
+        onClose={() => setBudgetDecision(null)}
+        actions={
+          <Button
+            variant="critical"
+            fullWidth
+            pending={budgetDecisionPending}
+            disabled={budgetRejectionReason.trim().length < 3}
+            onClick={() => runBudgetDecision("reject")}
+          >
+            Kembalikan untuk revisi
+          </Button>
+        }
+      >
+        <FormField label="Alasan revisi" helper="Minimal 3 karakter." required>
+          <Textarea
+            id="project-budget-rejection"
+            autoFocus
+            rows={4}
+            value={budgetRejectionReason}
+            onChange={setBudgetRejectionReason}
+            placeholder="Contoh: Alokasi Material perlu disesuaikan dengan RAP terbaru"
+            disabled={budgetDecisionPending}
+          />
+        </FormField>
+      </CompactFormDialog>
+
       <section className="space-y-2.5">
         <SectionHeading
           title="Perlu tindakan"
@@ -271,7 +483,13 @@ export function ProjectOverview({
               <button
                 key={action.id}
                 type="button"
-                onClick={() => onNavigate(action.tab)}
+                onClick={() => {
+                  if (action.id === "assign-pm" && onAssignPm) {
+                    onAssignPm();
+                  } else {
+                    onNavigate(action.tab);
+                  }
+                }}
                 className={`flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
               >
                 <span
@@ -305,61 +523,64 @@ export function ProjectOverview({
 
       {budget ? (
         <section className="space-y-2.5">
-          <div className="flex items-center justify-between gap-3">
-            <SectionHeading
-              title="Budget per kategori"
-              supporting="Bandingkan realisasi dan sisa pada setiap pos."
-            />
-            {canReallocate ? (
-              <button
-                type="button"
-                onClick={openReallocation}
-                className="min-h-12 rounded-full px-3 text-meta font-bold text-primary"
-              >
-                Atur alokasi
-              </button>
-            ) : null}
-          </div>
+          <SectionHeading
+            title="Budget per kategori"
+            supporting="Bandingkan realisasi dan sisa pada setiap pos."
+            action={
+              canReallocate ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="compact"
+                  onClick={openReallocation}
+                >
+                  Atur alokasi
+                </Button>
+              ) : undefined
+            }
+          />
           <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
             {budget.categories.map((category, index) => (
               <button
                 key={category.id}
                 type="button"
                 onClick={() => setSelectedCategoryId(category.id)}
-                className={`block min-h-19.5 w-full px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
+                className={`block w-full px-4 py-3.5 text-left outline-none transition-colors focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
               >
-                <span className="flex items-start justify-between gap-3">
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className="truncate text-xs font-bold text-on-surface">
-                        {category.name}
-                      </span>
-                      <Badge status={statusTone(category.status)}>
-                        {category.status === "SAFE"
-                          ? "Aman"
-                          : category.status === "WATCH"
-                            ? "Dipantau"
-                            : category.status === "OVER_BUDGET"
-                              ? "Terlampaui"
-                              : formatBusinessLabel(category.status)}
-                      </Badge>
+                <span className="flex items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate text-xs font-bold text-on-surface">
+                      {category.name}
                     </span>
+                    <Badge status={statusTone(category.status)}>
+                      {category.status === "SAFE"
+                        ? "Aman"
+                        : category.status === "WATCH"
+                          ? "Dipantau"
+                          : category.status === "OVER_BUDGET"
+                            ? "Terlampaui"
+                            : formatBusinessLabel(category.status)}
+                    </Badge>
+                  </span>
+                  <MoneyValue
+                    amount={category.remainingAmount}
+                    variant="fullDynamic"
+                    tone={category.remainingAmount < 0 ? "danger" : "default"}
+                    align="right"
+                    size="sm"
+                    className="shrink-0"
+                  />
+                </span>
+                <span className="mt-2.5 flex items-center justify-between gap-3">
+                  <span className="min-w-0 flex-1">
                     <UsageBlockMeter
                       value={category.usedPercentage}
                       tone={categoryTone(category.status)}
+                      className="mt-0"
                     />
                   </span>
-                  <span className="max-w-[42%] shrink-0">
-                    <MoneyValue
-                      amount={category.remainingAmount}
-                      variant="compact"
-                      tone={category.remainingAmount < 0 ? "danger" : "default"}
-                      align="right"
-                      size="sm"
-                    />
-                    <span className="mt-1 block text-right font-mono text-eyebrow font-bold text-on-surface-variant">
-                      {category.usedPercentage.toFixed(1)}%
-                    </span>
+                  <span className="w-12 shrink-0 text-right font-mono text-eyebrow font-bold tabular-nums text-on-surface-variant">
+                    {category.usedPercentage.toFixed(1)}%
                   </span>
                 </span>
               </button>
@@ -414,33 +635,51 @@ export function ProjectOverview({
           </div>
         ) : null}
       </DetailSheet>
-      <FormSheet
+      <OperationalFormSheet
+        dismissal={{
+          mode: "confirm",
+          dirty: reallocationDirty,
+          onDiscard: () => {
+            setRatios(
+              Object.fromEntries(
+                (budget?.categories ?? []).map((category) => [
+                  category.id,
+                  (
+                    (category.allocatedAmount / Math.max(budget?.internalBudget ?? 1, 1)) *
+                    100
+                  ).toFixed(1),
+                ]),
+              ),
+            );
+            setReallocationReason("");
+          },
+          description: "Perubahan alokasi budget yang belum disimpan akan hilang.",
+        }}
+        pending={savingAllocation}
         open={reallocationOpen}
         title="Atur alokasi budget"
         onClose={() => !savingAllocation && setReallocationOpen(false)}
-        footer={
-          <div className="space-y-2">
-            <p
-              className={`px-1 text-meta font-medium ${totalRatio > 100 ? "text-error" : "text-on-surface-variant"}`}
-            >
-              {totalRatio > 100
-                ? "Total alokasi melebihi 100%. Kurangi salah satu kategori."
-                : `${totalRatio.toFixed(1)}% dialokasikan · ${Math.max(0, 100 - totalRatio).toFixed(1)}% menjadi buffer.`}
-            </p>
-            <button
-              type="button"
-              disabled={
-                savingAllocation ||
-                totalRatio > 100.0001 ||
-                (budget?.status === "APPROVED" && reallocationReason.trim().length < 10)
-              }
-              onClick={() => void saveReallocation()}
-              className="min-h-12 w-full rounded-full bg-primary text-xs font-bold text-white disabled:opacity-40"
-            >
-              {savingAllocation ? "Menyimpan…" : "Simpan alokasi"}
-            </button>
-          </div>
+        submitLabel="Simpan alokasi"
+        submittingLabel="Menyimpan…"
+        disabled={
+          savingAllocation ||
+          totalRatio > 100.0001 ||
+          (budget?.status === "APPROVED" && reallocationReason.trim().length < 10)
         }
+        disabledReason={
+          totalRatio > 100.0001
+            ? "Total alokasi melebihi 100%. Kurangi salah satu kategori."
+            : budget?.status === "APPROVED" && reallocationReason.trim().length < 10
+              ? "Tulis alasan perubahan minimal 10 karakter."
+              : undefined
+        }
+        statusText={
+          totalRatio > 100
+            ? "Total alokasi melebihi 100%. Kurangi salah satu kategori."
+            : `${totalRatio.toFixed(1)}% dialokasikan · ${Math.max(0, 100 - totalRatio).toFixed(1)}% menjadi buffer.`
+        }
+        statusTone={totalRatio > 100 ? "danger" : "default"}
+        onSubmit={() => void saveReallocation()}
       >
         <div className="space-y-4">
           <FormSection
@@ -485,7 +724,7 @@ export function ProjectOverview({
             </FormSection>
           ) : null}
         </div>
-      </FormSheet>
+      </OperationalFormSheet>
     </div>
   );
 }
@@ -493,31 +732,25 @@ export function ProjectOverview({
 function FinancialFact({
   label,
   amount,
-  align = "left",
+  size = "md",
+  className,
 }: {
   readonly label: string;
   readonly amount: number;
-  readonly align?: "left" | "center" | "right";
+  readonly size?: "sm" | "md";
+  readonly className?: string;
 }): React.JSX.Element {
-  const alignClass = align === "right" ? "pl-2 text-right" : "pr-2 text-left";
   return (
     <div
       className={cn(
-        "flex w-full min-w-0 flex-col gap-2 rounded-2xl bg-white/[0.07] p-3",
-        alignClass,
+        "flex w-full min-w-0 flex-col gap-1.5 rounded-2xl bg-white/[0.07] p-3 text-left",
+        className,
       )}
     >
-      <p className="truncate text-[8px] leading-none font-bold tracking-wide text-white/50 uppercase">
+      <p className="truncate text-[9px] leading-none font-bold tracking-wider text-white/50 uppercase">
         {label}
       </p>
-      <MoneyValue
-        amount={amount}
-        variant="compact"
-        tone="inverse"
-        align={align === "right" ? "right" : "left"}
-        size="xs"
-        className={align === "center" ? "text-center" : ""}
-      />
+      <MoneyValue amount={amount} variant="fullDynamic" tone="inverse" size={size} />
     </div>
   );
 }
@@ -536,7 +769,7 @@ function DetailMoneyRow({
       <span className="text-xs font-semibold text-on-surface-variant">{label}</span>
       <MoneyValue
         amount={amount}
-        variant="compact"
+        variant="fullDynamic"
         tone={danger ? "danger" : "default"}
         align="right"
         size="sm"

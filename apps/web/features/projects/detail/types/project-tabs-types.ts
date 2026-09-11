@@ -97,6 +97,7 @@ interface ProjectRapData {
 interface RabEstimateItemData {
   readonly id: string;
   readonly sourceType: string;
+  readonly itemNature?: string | null;
   readonly sourceProjectRapItemId: string | null;
   readonly sourceProjectCategoryPlanItemId: string | null;
   readonly clientLabel: string;
@@ -209,6 +210,8 @@ export type ProjectTabCost = ExpenseCostItem & ProjectCostLinkData;
 export interface ProjectData {
   id: string;
   name: string;
+  clientId: string;
+  projectManagerId: string | null;
   totalContractValue: string;
   financialHealth: string;
   location: string | null;
@@ -265,6 +268,12 @@ export interface ProjectTabsProps {
   readonly projectBudgetDashboard: ProjectBudgetDashboard | null;
   readonly materialMasterCatalog: MaterialOption[];
   readonly pricingTemplateCatalog: PricingTemplateOption[];
+  readonly clients?: readonly { readonly id: string; readonly name: string }[];
+  readonly projectManagers?: readonly {
+    readonly id: string;
+    readonly name: string;
+    readonly email: string | null;
+  }[];
 }
 
 export const TABS = [

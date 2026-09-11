@@ -1,4 +1,5 @@
 "use server";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
@@ -393,6 +394,18 @@ export async function confirmChangeOrderClient(
         originalState: JSON.stringify(existing),
         newState: JSON.stringify(rows[0]),
       });
+      await recordNotificationEvent(tx, {
+        referenceType: "change_order",
+        referenceId: existing.id,
+        projectId: existing.projectId,
+        stage: `PENDING_APPROVAL:${rows[0].updatedAt.toISOString()}`,
+        title: "Perubahan proyek menunggu persetujuan",
+        message: "Konfirmasi klien telah dicatat.",
+        permission: "approve:rab",
+        actionRequired: true,
+        actionUrl: `/projects/${existing.projectId}?tab=rab`,
+        actorId: user.id,
+      });
       return rows;
     });
     revalidatePath(`/projects/${updated.projectId}`);
@@ -483,6 +496,29 @@ export async function voidRabRevision(
           cancelledChangeOrderId: cancelledChangeOrder?.id ?? null,
         }),
       });
+      await recordNotificationEvent(tx, {
+        referenceType: "rab",
+        referenceId: voided.id,
+        projectId: voided.projectId,
+        stage: "VOID",
+        title: "Revisi RAB dibatalkan",
+        message: "Revisi ini tidak lagi digunakan.",
+        permission: "view:rab",
+        actionUrl: `/projects/${voided.projectId}`,
+        actorId: user.id,
+      });
+      if (cancelledChangeOrder)
+        await recordNotificationEvent(tx, {
+          referenceType: "change_order",
+          referenceId: cancelledChangeOrder.id,
+          projectId: voided.projectId,
+          stage: "CANCELLED",
+          title: "Perubahan proyek dibatalkan",
+          message: "Revisi terkait telah dibatalkan.",
+          permission: "view:rab",
+          actionUrl: `/projects/${voided.projectId}`,
+          actorId: user.id,
+        });
       return voided;
     });
     revalidatePath(`/projects/${result.projectId}`);

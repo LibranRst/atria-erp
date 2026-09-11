@@ -134,7 +134,7 @@ export async function getProjectListPageData(actor: Actor): Promise<ProjectListP
         usedPercentage,
         remainingBudget,
         clientName: projectRow.client?.name ?? "-",
-        pmName: projectRow.projectManager?.name ?? "-",
+        pmName: projectRow.projectManager?.name ?? "Belum ditugaskan",
       };
     }),
     clients: clients.map((client) => ({ id: client.id, name: client.name })),

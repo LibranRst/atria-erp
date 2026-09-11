@@ -13,6 +13,7 @@ export interface ClientInvoiceItem {
   readonly dueDate: Date;
   readonly createdAt: Date;
   readonly payments: InvoicePaymentItem[];
+  readonly stage?: string;
 }
 
 export interface BankAccountItem {

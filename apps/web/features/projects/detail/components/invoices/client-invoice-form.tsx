@@ -6,14 +6,18 @@ import { z } from "zod";
 import { toast } from "sonner";
 
 import { createClientInvoice } from "@/app/actions/finance/create-client-invoice";
+import { getInvoicePrefillContext } from "@/app/actions/finance/get-invoice-prefill-context";
+import type { InvoicePrefillResult } from "@atria/core/finance/invoice-prefill";
+import { cn } from "@/lib/utils/cn";
 import {
+  AppIcon,
   DatePickerField,
-  FieldContextLine,
   FinanceUnsavedChangesModal,
   FormField,
   FormRiskNotice,
   FormSection,
   MoneyInput,
+  MoneyValue,
   type OperationSuccess,
   OperationSuccessDialog,
   AdaptiveSelect,
@@ -59,12 +63,10 @@ const INVOICE_STAGE_OPTIONS: ReadonlyArray<{
 ];
 
 function initialInvoiceDraft(): ClientInvoiceRecovery {
-  const year = new Date().getFullYear();
-  const randomSuffix = Math.floor(100 + Math.random() * 900);
   return {
-    invoiceNumber: `INV/${year}/${randomSuffix}-AD_HOC`,
+    invoiceNumber: "",
     amount: "",
-    stage: "AD_HOC",
+    stage: "DP",
     dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     notes: "",
   };
@@ -78,6 +80,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
   const [confirmClose, setConfirmClose] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
+  const [prefill, setPrefill] = React.useState<InvoicePrefillResult | null>(null);
   const projectId = React.useMemo(() => {
     const parts = pathname.split("/");
     const projectIndex = parts.indexOf("projects");
@@ -89,6 +92,49 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
     schema: clientInvoiceRecoverySchema,
     initialPayload,
   });
+  const { setPayload } = draft;
+
+  // Prefill otomatis saat form dibuka
+  React.useEffect(() => {
+    if (!open || !projectId) return;
+
+    let active = true;
+
+    getInvoicePrefillContext({ projectId })
+      .then((res) => {
+        if (!active) return;
+        if (res.success && res.data) {
+          const data = res.data;
+          setPrefill(data);
+
+          setPayload((prev) => {
+            const currentNum = prev.invoiceNumber.trim();
+            const isPlaceholderOrEmpty =
+              !currentNum || currentNum.includes("-AD_HOC") || currentNum === "";
+
+            // Auto-fill jika nomor invoice masih kosong/placeholder atau nominal belum terisi
+            return {
+              ...prev,
+              invoiceNumber: isPlaceholderOrEmpty
+                ? data.suggestedInvoiceNumber
+                : prev.invoiceNumber,
+              amount: prev.amount !== "" ? prev.amount : String(data.suggestedAmount || ""),
+              stage: prev.stage === "AD_HOC" || !prev.stage ? data.suggestedStage : prev.stage,
+              dueDate: prev.dueDate || data.suggestedDueDate,
+              notes: prev.notes ? prev.notes : data.suggestedNotes,
+            };
+          });
+        }
+      })
+      .catch(() => {
+        // Abaikan error jaringan non-fatal saat prefill
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [open, projectId, setPayload]);
+
   const amount = Number(draft.payload.amount || 0);
   const stageLabel =
     INVOICE_STAGE_OPTIONS.find((option) => option.value === draft.payload.stage)?.label ??
@@ -169,6 +215,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? "Tinjau invoice klien" : "Buat invoice klien"}
         onClose={requestClose}
@@ -213,16 +260,14 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                     dateStyle: "long",
                   })}
                 />
+                {draft.payload.notes.trim() ? (
+                  <ReviewFact label="Catatan" value={draft.payload.notes} stacked />
+                ) : null}
               </FormSection>
               <FormRiskNotice title="Belum mengubah saldo kas" tone="default">
                 Invoice mencatat piutang proyek. Saldo baru bertambah saat pembayaran klien dicatat
                 secara terpisah.
               </FormRiskNotice>
-              {draft.payload.notes ? (
-                <p className="rounded-2xl bg-surface-container-low px-4 py-3 text-xs leading-5">
-                  {draft.payload.notes}
-                </p>
-              ) : null}
             </div>
           ) : (
             <form
@@ -232,60 +277,169 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
               }}
               className="space-y-md"
             >
+              {prefill && (
+                <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-eyebrow font-bold tracking-[0.16em] text-on-surface-variant uppercase">
+                        Sisa Belum Ditagih
+                      </p>
+                      <MoneyValue
+                        amount={prefill.remainingUnbilled}
+                        variant="fullDynamic"
+                        size="lg"
+                        className="mt-1 font-bold text-primary"
+                      />
+                      <p className="mt-1 text-meta text-on-surface-variant">
+                        {prefill.activeInvoicesCount} termin aktif ·{" "}
+                        {prefill.totalContractValue > 0
+                          ? ((prefill.totalInvoiced / prefill.totalContractValue) * 100).toFixed(0)
+                          : 0}
+                        % nilai kontrak sudah terbit
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-surface-container-low px-3 py-1 font-mono text-xs font-bold text-on-surface ring-1 ring-ring-subtle">
+                      {prefill.projectCode}
+                    </span>
+                  </div>
+
+                  <div className="mt-3.5 grid grid-cols-2 gap-2 border-t border-outline-variant/15 pt-3">
+                    <div className="rounded-2xl bg-surface-container-low p-2.5 text-left">
+                      <p className="truncate text-eyebrow font-bold tracking-wider text-on-surface-variant uppercase">
+                        Nilai Kontrak
+                      </p>
+                      <div className="mt-0.5">
+                        <MoneyValue
+                          amount={prefill.totalContractValue}
+                          variant="fullDynamic"
+                          size="sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="rounded-2xl bg-surface-container-low p-2.5 text-left">
+                      <p className="truncate text-eyebrow font-bold tracking-wider text-on-surface-variant uppercase">
+                        Sudah Ditagih
+                      </p>
+                      <div className="mt-0.5">
+                        <MoneyValue
+                          amount={prefill.totalInvoiced}
+                          variant="fullDynamic"
+                          size="sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <FormSection
                 title="Identitas invoice"
-                helper="Nomor disiapkan otomatis dan tetap dapat diubah."
+                helper="Nomor disiapkan otomatis sesuai kode proyek dan dapat disesuaikan."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <FormField label="Nomor Invoice" required>
-                    <TextInput
-                      value={draft.payload.invoiceNumber}
-                      disabled={isPending}
-                      onChange={(value) => patch({ invoiceNumber: value })}
-                    />
-                  </FormField>
-                  <AdaptiveSelect
-                    label="Tahap Tagihan"
-                    value={draft.payload.stage}
+                <FormField label="Nomor Invoice" required>
+                  <TextInput
+                    value={draft.payload.invoiceNumber}
                     disabled={isPending}
-                    onChange={(value) => {
-                      const parsed = invoiceStageSchema.safeParse(value);
-                      if (parsed.success) patch({ stage: parsed.data });
-                    }}
-                    options={INVOICE_STAGE_OPTIONS}
+                    onChange={(value) => patch({ invoiceNumber: value })}
                   />
-                </div>
+                </FormField>
+                {prefill?.suggestedInvoiceNumber &&
+                  draft.payload.invoiceNumber !== prefill.suggestedInvoiceNumber && (
+                    <div className="flex items-center justify-between bg-surface-container-low/50 px-4 py-2 text-meta">
+                      <span className="text-on-surface-variant">
+                        Nomor kanonis:{" "}
+                        <strong className="font-mono text-on-surface">
+                          {prefill.suggestedInvoiceNumber}
+                        </strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => patch({ invoiceNumber: prefill.suggestedInvoiceNumber })}
+                        className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary hover:bg-primary/15 active:scale-[0.98]"
+                      >
+                        Terapkan
+                      </button>
+                    </div>
+                  )}
+                <AdaptiveSelect
+                  label="Tahap Tagihan"
+                  value={draft.payload.stage}
+                  disabled={isPending}
+                  onChange={(value) => {
+                    const parsed = invoiceStageSchema.safeParse(value);
+                    if (parsed.success) patch({ stage: parsed.data });
+                  }}
+                  options={INVOICE_STAGE_OPTIONS}
+                />
               </FormSection>
-              <FormSection title="Nilai dan tenggat" helper="Nominal tidak ditebak oleh sistem.">
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <FormField label="Nominal Tagihan" required>
-                    <MoneyInput
-                      value={draft.payload.amount}
-                      disabled={isPending}
-                      onChange={(value) => patch({ amount: value })}
-                    />
-                  </FormField>
-                  <DatePickerField
-                    label="Tanggal Jatuh Tempo"
-                    value={draft.payload.dueDate}
+              <FormSection
+                title="Nilai dan tenggat"
+                helper="Pilih persentase cepat atau masukkan nominal khusus."
+              >
+                {prefill?.presets && prefill.presets.length > 0 && (
+                  <div className="px-4 pt-3 pb-2.5">
+                    <span className="block text-[11px] font-semibold text-on-surface-variant">
+                      Pilihan termin cepat:
+                    </span>
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      {prefill.presets.map((preset) => {
+                        const isSelected =
+                          Number(draft.payload.amount) === preset.amount &&
+                          draft.payload.stage === preset.stage;
+                        return (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => {
+                              patch({
+                                amount: String(preset.amount),
+                                stage: preset.stage,
+                                notes: preset.notes,
+                              });
+                            }}
+                            className={cn(
+                              "inline-flex min-h-8 items-center rounded-full px-3 py-1 text-xs font-semibold transition-all select-none",
+                              isSelected
+                                ? "bg-primary text-white shadow-xs ring-1 ring-primary"
+                                : "bg-surface-container-low text-on-surface ring-1 ring-ring-subtle hover:bg-surface-container",
+                            )}
+                          >
+                            {preset.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                <FormField label="Nominal Tagihan" required>
+                  <MoneyInput
+                    value={draft.payload.amount}
                     disabled={isPending}
-                    onChange={(value) => patch({ dueDate: value })}
-                    required
+                    onChange={(value) => patch({ amount: value })}
                   />
-                  <FormField label="Catatan" optional>
-                    <Textarea
-                      value={draft.payload.notes}
-                      disabled={isPending}
-                      onChange={(value) => patch({ notes: value })}
-                      placeholder="Detail yang membantu tim finance"
-                      rows={2}
-                    />
-                  </FormField>
-                </div>
+                </FormField>
+                <DatePickerField
+                  label="Tanggal Jatuh Tempo"
+                  value={draft.payload.dueDate}
+                  disabled={isPending}
+                  onChange={(value) => patch({ dueDate: value })}
+                  required
+                />
+                <FormField label="Catatan" optional>
+                  <Textarea
+                    value={draft.payload.notes}
+                    disabled={isPending}
+                    onChange={(value) => patch({ notes: value })}
+                    placeholder="Detail yang membantu tim finance"
+                    rows={2}
+                  />
+                </FormField>
               </FormSection>
-              <FieldContextLine tone="success">
-                Draft lokal diperbarui setiap kali data berubah.
-              </FieldContextLine>
+              <div className="flex items-center gap-2 px-1 text-meta text-on-surface-variant/75">
+                <AppIcon name="check-circle" className="icon-xs text-primary" />
+                <span>Draft lokal diperbarui otomatis setiap kali data berubah.</span>
+              </div>
             </form>
           )}
         </div>
@@ -320,10 +474,22 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
 function ReviewFact({
   label,
   value,
+  stacked = false,
 }: {
   readonly label: string;
   readonly value: React.ReactNode;
+  readonly stacked?: boolean;
 }): React.JSX.Element {
+  if (stacked) {
+    return (
+      <div className="px-4 py-3 text-xs">
+        <span className="text-on-surface-variant font-medium">{label}</span>
+        <p className="mt-1 font-medium text-on-surface leading-relaxed whitespace-pre-wrap">
+          {value}
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
       <span className="shrink-0 text-on-surface-variant">{label}</span>

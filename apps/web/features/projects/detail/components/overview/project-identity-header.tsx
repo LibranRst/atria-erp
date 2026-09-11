@@ -44,10 +44,16 @@ export function ProjectIdentityHeader({
   project,
   effectiveHealth,
   healthReasons,
+  canEdit = false,
+  onEdit,
+  onAssignPm,
 }: {
   readonly project: IdentityProject;
   readonly effectiveHealth: EffectiveProjectHealth;
   readonly healthReasons: readonly EffectiveProjectHealthReason[];
+  readonly canEdit?: boolean;
+  readonly onEdit?: () => void;
+  readonly onAssignPm?: () => void;
 }): React.JSX.Element {
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -62,14 +68,26 @@ export function ProjectIdentityHeader({
             aria-hidden="true"
           />
 
-          <button
-            type="button"
-            onClick={() => setDetailOpen(true)}
-            className="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-control backdrop-blur-2xl"
-            aria-label="Lihat detail proyek"
-          >
-            <AppIcon name="info" className="icon-lg" />
-          </button>
+          <div className="absolute top-3 right-3 flex items-center gap-2">
+            {canEdit && onEdit ? (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-on-surface shadow-control backdrop-blur-2xl transition active:scale-95"
+                aria-label="Edit proyek"
+              >
+                <AppIcon name="edit" className="icon-md" />
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setDetailOpen(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-on-surface shadow-control backdrop-blur-2xl transition active:scale-95"
+              aria-label="Lihat detail proyek"
+            >
+              <AppIcon name="info" className="icon-lg" />
+            </button>
+          </div>
 
           <div className="absolute inset-x-0 bottom-0 p-4">
             <div className="flex min-w-0 items-center justify-between gap-3">
@@ -92,14 +110,30 @@ export function ProjectIdentityHeader({
             <h1 className="mt-2 line-clamp-2 max-w-[95%] text-[21px] leading-6.5 font-bold tracking-tight text-white">
               {project.name}
             </h1>
-            <p className="mt-2 flex min-w-0 items-center gap-1.5 truncate text-meta font-medium text-white/65">
-              <AppIcon name="location_on" className="shrink-0 text-[13px]" />
-              <span className="truncate">{project.location || "Lokasi belum diisi"}</span>
+            <div className="mt-2.5 flex min-w-0 items-center gap-1.5 text-meta font-medium text-white/70">
+              <AppIcon name="location_on" className="shrink-0 text-[13px] text-white/50" />
+              <span className="min-w-0 truncate">{project.location || "Lokasi belum diisi"}</span>
               <span className="shrink-0 text-white/30">·</span>
-              <span className="max-w-[42%] shrink-0 truncate">
-                PM {project.projectManager?.name || "belum diisi"}
-              </span>
-            </p>
+              {project.projectManager?.name ? (
+                <span className="max-w-[48%] shrink-0 truncate text-white/90">
+                  PM {project.projectManager.name}
+                </span>
+              ) : canEdit && onAssignPm ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAssignPm();
+                  }}
+                  className="inline-flex min-h-6 shrink-0 items-center gap-1 rounded-full bg-white/20 px-2.5 text-eyebrow font-bold tracking-wide text-white uppercase shadow-control ring-1 ring-white/30 backdrop-blur-md transition hover:bg-white/25 active:scale-95"
+                >
+                  <AppIcon name="person_add" className="text-[12px]" />
+                  <span>Tugaskan PM</span>
+                </button>
+              ) : (
+                <span className="shrink-0 text-white/50">PM belum diisi</span>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -145,6 +179,21 @@ export function ProjectIdentityHeader({
           />
           {project.notes && <DetailRow label="Catatan" value={project.notes} />}
         </div>
+        {canEdit && onEdit ? (
+          <div className="mt-4 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setDetailOpen(false);
+                onEdit();
+              }}
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-control transition active:scale-[0.98]"
+            >
+              <AppIcon name="edit" className="icon-md" />
+              <span>Edit Proyek</span>
+            </button>
+          </div>
+        ) : null}
       </DetailSheet>
     </>
   );

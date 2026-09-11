@@ -39,6 +39,12 @@ export function InternalRevisionDrawer({
 }): React.JSX.Element {
   return (
     <OperationalFormSheet
+      dismissal={{
+        mode: "confirm",
+        dirty: internalRevisionReason.length > 0 || reviseMaterial || revisionPackageIds.length > 0,
+        onDiscard: () => undefined,
+        description: "Pilihan revisi RAP yang belum dibuat akan hilang.",
+      }}
       open={internalRevisionOpen}
       title="Buat Revisi RAP"
       onClose={() => setInternalRevisionOpen(false)}

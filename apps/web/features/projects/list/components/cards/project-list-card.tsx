@@ -81,7 +81,16 @@ export function ProjectListCard({
 
         <div className={`px-2.5 pt-3 ${needsAttention ? "pb-3" : "pb-4"}`}>
           <p className="truncate text-support font-semibold text-on-surface-variant">
-            Klien {project.clientName} · PM {project.pmName}
+            {project.projectManagerId ? (
+              `Klien ${project.clientName} · PM ${project.pmName}`
+            ) : (
+              <>
+                Klien {project.clientName} ·{" "}
+                <span className="inline-flex items-center rounded-md bg-warning-container/35 px-1.5 py-0.5 text-eyebrow font-bold text-warning">
+                  PM belum ditugaskan
+                </span>
+              </>
+            )}
           </p>
 
           <div className="mt-3 grid grid-cols-2 gap-3">

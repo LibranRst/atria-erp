@@ -135,6 +135,7 @@ export function buildProjectTabsViewModel({
     (category) => category.status === "CRITICAL" || category.status === "OVER_BUDGET",
   );
   const readiness = buildReadiness({
+    projectManagerName: project.projectManager?.name ?? null,
     latestRabEstimate,
     activeRap,
     rapForManager,
@@ -143,6 +144,7 @@ export function buildProjectTabsViewModel({
     overdueInvoiceCount,
   });
   const overviewActions = buildProjectOverviewActions({
+    hasProjectManager: Boolean(project.projectManagerId),
     hasRap: Boolean(activeRap),
     rapStatus: activeRap?.status ?? null,
     rapSetupStage: activeRap?.setupStage ?? null,

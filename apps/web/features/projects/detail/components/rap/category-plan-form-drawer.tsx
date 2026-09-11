@@ -6,16 +6,17 @@ import {
   ComboboxField,
   COMMON_ROOM_OPTIONS,
   COMMON_UNIT_OPTIONS,
-  FieldContextLine,
   FormField,
   FormSection,
   MoneyInput,
+  MoneyValue,
   NumericInput,
   OperationalFormSheet,
   AdaptiveSelect,
   Textarea,
   TextInput,
   ValuePreviewStrip,
+  useFormDirtySnapshot,
 } from "@/components/ui";
 import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@atria/core/utils/money";
 import type {
@@ -52,8 +53,19 @@ export function CategoryPlanFormDrawer({
   readonly isPending: boolean;
   readonly categoryFormEstimatedTotal: number;
 }): React.JSX.Element {
+  const dirty = useFormDirtySnapshot(
+    showCategoryPlanForm,
+    editingCategoryPlanItemId ?? "new-category-plan",
+    JSON.stringify(categoryPlanForm),
+  );
   return (
     <OperationalFormSheet
+      dismissal={{
+        mode: "confirm",
+        dirty,
+        onDiscard: () => closeCategoryPlanForm(),
+        description: "Perubahan paket kerja yang belum disimpan akan hilang.",
+      }}
       open={showCategoryPlanForm}
       title={editingCategoryPlanItemId ? "Edit Paket Kerja" : "Tambah Paket Tukang/Subcon"}
       onClose={closeCategoryPlanForm}
@@ -81,13 +93,43 @@ export function CategoryPlanFormDrawer({
       }
     >
       <div className="space-y-md">
-        <FieldContextLine tone={categoryFormEstimatedTotal > 0 ? "success" : "default"}>
-          {categoryPlanForm.name || "Paket belum diisi"} ·{" "}
-          {budgetCategories.find(
-            (category) => category.id === categoryPlanForm.projectBudgetCategoryId,
-          )?.name ?? "kategori belum dipilih"}{" "}
-          · {formatRp(categoryFormEstimatedTotal)}
-        </FieldContextLine>
+        <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+                Paket Rencana RAP
+              </p>
+              <h3 className="mt-0.5 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
+                {categoryPlanForm.name || "Nama paket belum diisi"}
+              </h3>
+              <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
+                {budgetCategories.find(
+                  (category) => category.id === categoryPlanForm.projectBudgetCategoryId,
+                )?.name ?? "Kategori belum dipilih"}
+                {categoryPlanForm.area ? ` · Area ${categoryPlanForm.area}` : ""}
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+                Estimasi Biaya
+              </p>
+              <div className="mt-0.5">
+                <MoneyValue
+                  amount={categoryFormEstimatedTotal}
+                  variant="fullDynamic"
+                  size="sm"
+                  align="right"
+                  className="font-bold text-primary"
+                />
+              </div>
+              {categoryPlanForm.quantity && categoryPlanForm.unit && (
+                <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+                  Volume {categoryPlanForm.quantity} {categoryPlanForm.unit}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
         <form
           id="category-plan-item-form"
           onSubmit={handleSubmitCategoryPlanItem}
@@ -134,116 +176,113 @@ export function CategoryPlanFormDrawer({
             title="Identitas & lingkup"
             helper="Kategori menentukan hubungan paket dengan budget Tukang atau Subcon."
           >
-            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-              <AdaptiveSelect
-                label="Kategori Budget"
-                value={categoryPlanForm.projectBudgetCategoryId}
+            <AdaptiveSelect
+              label="Kategori Budget"
+              value={categoryPlanForm.projectBudgetCategoryId}
+              onChange={(value) =>
+                setCategoryPlanForm((curr) => ({
+                  ...curr,
+                  projectBudgetCategoryId: value,
+                }))
+              }
+              options={budgetCategories.map((category) => ({
+                value: category.id,
+                label: category.name,
+              }))}
+              placeholder="Pilih kategori"
+              required
+            />
+            <ComboboxField
+              label="Area / Lingkup"
+              value={categoryPlanForm.area}
+              onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, area: value }))}
+              options={COMMON_ROOM_OPTIONS}
+              placeholder="Pilih atau ketik area"
+            />
+            <AdaptiveSelect
+              label="Vendor"
+              optional
+              value={categoryPlanForm.vendorId}
+              onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, vendorId: value }))}
+              options={[
+                { value: "", label: "Tanpa vendor" },
+                ...vendors.map((vendor) => ({
+                  value: vendor.id,
+                  label: vendor.name,
+                })),
+              ]}
+            />
+            <FormField label="Nama Paket">
+              <TextInput
+                value={categoryPlanForm.name}
+                onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, name: value }))}
+                placeholder="Nama paket kerja"
+              />
+            </FormField>
+            <FormField label="Lingkup Pekerjaan">
+              <Textarea
+                rows={2}
+                value={categoryPlanForm.scopeDescription}
                 onChange={(value) =>
                   setCategoryPlanForm((curr) => ({
                     ...curr,
-                    projectBudgetCategoryId: value,
+                    scopeDescription: value,
                   }))
                 }
-                options={budgetCategories.map((category) => ({
-                  value: category.id,
-                  label: category.name,
-                }))}
-                placeholder="Pilih kategori"
-                required
+                placeholder="Scope pekerjaan internal"
               />
-              <ComboboxField
-                label="Area / Lingkup"
-                value={categoryPlanForm.area}
-                onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, area: value }))}
-                options={COMMON_ROOM_OPTIONS}
-                placeholder="Pilih atau ketik area"
-              />
-              <AdaptiveSelect
-                label="Vendor"
-                optional
-                value={categoryPlanForm.vendorId}
-                onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, vendorId: value }))}
-                options={[
-                  { value: "", label: "Tanpa vendor" },
-                  ...vendors.map((vendor) => ({
-                    value: vendor.id,
-                    label: vendor.name,
-                  })),
-                ]}
-              />
-              <FormField label="Nama Paket">
-                <TextInput
-                  value={categoryPlanForm.name}
-                  onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, name: value }))}
-                  placeholder="Nama paket kerja"
-                />
-              </FormField>
-              <FormField label="Lingkup Pekerjaan">
-                <Textarea
-                  rows={2}
-                  value={categoryPlanForm.scopeDescription}
-                  onChange={(value) =>
-                    setCategoryPlanForm((curr) => ({
-                      ...curr,
-                      scopeDescription: value,
-                    }))
-                  }
-                  placeholder="Scope pekerjaan internal"
-                />
-              </FormField>
-            </div>
+            </FormField>
           </FormSection>
 
           <FormSection
             title="Jumlah & biaya"
             helper="Estimasi ini hanya untuk kontrol internal; RAB klien dibuat dari salinan yang aman."
           >
-            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-              <FormField label="Jumlah">
-                <NumericInput
-                  value={categoryPlanForm.quantity}
-                  onChange={(value) =>
-                    setCategoryPlanForm((curr) => ({
-                      ...curr,
-                      quantity: value,
-                    }))
-                  }
-                  min={0}
-                />
-              </FormField>
-              <ComboboxField
-                label="Satuan"
-                value={categoryPlanForm.unit}
-                onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, unit: value }))}
-                options={COMMON_UNIT_OPTIONS}
-                placeholder="Pilih satuan"
+            <FormField label="Jumlah">
+              <NumericInput
+                value={categoryPlanForm.quantity}
+                onChange={(value) =>
+                  setCategoryPlanForm((curr) => ({
+                    ...curr,
+                    quantity: value,
+                  }))
+                }
+                min={0}
               />
-              <FormField label="Biaya per Satuan">
-                <MoneyInput
-                  value={categoryPlanForm.estimatedUnitCost}
-                  onChange={(value) =>
-                    setCategoryPlanForm((curr) => ({
-                      ...curr,
-                      estimatedUnitCost: value,
-                    }))
-                  }
-                  showPreview={false}
-                />
-              </FormField>
-              <FormField label="Catatan Internal">
-                <Textarea
-                  rows={2}
-                  value={categoryPlanForm.internalNote}
-                  onChange={(value) =>
-                    setCategoryPlanForm((curr) => ({
-                      ...curr,
-                      internalNote: value,
-                    }))
-                  }
-                  placeholder="Catatan internal, tidak tampil ke klien"
-                />
-              </FormField>
-            </div>
+            </FormField>
+            <ComboboxField
+              label="Satuan"
+              value={categoryPlanForm.unit}
+              onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, unit: value }))}
+              options={COMMON_UNIT_OPTIONS}
+              placeholder="Pilih satuan"
+            />
+            <FormField label="Biaya per Satuan">
+              <MoneyInput
+                value={categoryPlanForm.estimatedUnitCost}
+                onChange={(value) =>
+                  setCategoryPlanForm((curr) => ({
+                    ...curr,
+                    estimatedUnitCost: value,
+                  }))
+                }
+                showPreview={false}
+              />
+            </FormField>
+            <FormField label="Catatan Internal">
+              <Textarea
+                rows={2}
+                value={categoryPlanForm.internalNote}
+                onChange={(value) =>
+                  setCategoryPlanForm((curr) => ({
+                    ...curr,
+                    internalNote: value,
+                  }))
+                }
+                placeholder="Catatan internal, tidak tampil ke klien"
+              />
+            </FormField>
+          </FormSection>
 
             <div className="p-3">
               <ValuePreviewStrip
@@ -260,7 +299,6 @@ export function CategoryPlanFormDrawer({
                 ]}
               />
             </div>
-          </FormSection>
         </form>
       </div>
     </OperationalFormSheet>

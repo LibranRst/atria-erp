@@ -1,4 +1,5 @@
 "use server";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -6,10 +7,18 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { auditLog, project, projectBudgets, projectRap, rabEstimate } from "@/db/schema";
+import {
+  auditLog,
+  project,
+  projectBudgets,
+  projectRap,
+  rabEstimate,
+  user as userTable,
+} from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { actorHasPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { getProjectActivationReadiness } from "@atria/core/project/activation-readiness";
+import { getRoleDataScope } from "@atria/core/auth/permissions";
 import type { ActionResponse } from "@atria/core/types/action-response";
 
 const activateProjectSchema = z.object({
@@ -73,6 +82,14 @@ export async function activateProjectAction(
       if (!projectRecord) throw new Error("PROJECT_NOT_FOUND");
       if (projectRecord.status !== "DRAFT") throw new Error("PROJECT_NOT_DRAFT");
 
+      const projectManager = projectRecord.projectManagerId
+        ? await tx.query.user.findFirst({
+            where: eq(userTable.id, projectRecord.projectManagerId),
+            columns: { id: true, isActive: true },
+            with: { role: { columns: { name: true } } },
+          })
+        : null;
+
       const budgets = await tx
         .select({ status: projectBudgets.status })
         .from(projectBudgets)
@@ -93,6 +110,9 @@ export async function activateProjectAction(
         .for("update");
       const readiness = getProjectActivationReadiness({
         projectStatus: projectRecord.status,
+        projectManagerReady: Boolean(
+          projectManager?.isActive && getRoleDataScope(projectManager.role.name) === "ASSIGNED",
+        ),
         budgetStatus: budgets.find((budget) => budget.status === "APPROVED")?.status,
         raps,
         rabEstimates: rabs,
@@ -115,6 +135,17 @@ export async function activateProjectAction(
         createdAt: new Date(),
       });
 
+      await recordNotificationEvent(tx, {
+        referenceType: "project",
+        referenceId: updatedProject.id,
+        projectId: updatedProject.id,
+        stage: "ACTIVE",
+        title: "Proyek diaktifkan",
+        message: updatedProject.name,
+        permission: "view:project",
+        actionUrl: `/projects/${updatedProject.id}`,
+        actorId: user.id,
+      });
       return updatedProject;
     });
 
@@ -132,7 +163,7 @@ export async function activateProjectAction(
       PROJECT_ACTIVATION_NOT_READY: {
         code: "FORBIDDEN",
         message:
-          "Proyek belum siap diaktifkan. Pastikan Budget disetujui, RAP terkunci, dan RAB klien disetujui.",
+          "Proyek belum siap diaktifkan. Pastikan Project Manager aktif sudah ditugaskan, Budget disetujui, RAP terkunci, dan RAB klien disetujui.",
       },
     };
     return {

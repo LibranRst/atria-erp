@@ -1,4 +1,5 @@
 "use server";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { eq } from "drizzle-orm";
 
@@ -263,6 +264,17 @@ export async function lockProjectRap(
         targetId: rap.id,
         originalState: JSON.stringify(rap),
         newState: JSON.stringify(updated),
+      });
+      await recordNotificationEvent(tx, {
+        referenceType: "rap",
+        referenceId: updated.id,
+        projectId: updated.projectId,
+        stage: "LOCKED",
+        title: "Rencana pelaksanaan dikunci",
+        message: "Rencana internal proyek siap digunakan.",
+        permission: "view:rap",
+        actionUrl: `/projects/${updated.projectId}?tab=materials`,
+        actorId: user.id,
       });
       return updated;
     });

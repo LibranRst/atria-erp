@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { Badge, MoneyValue } from "@/components/ui";
+import { AppIcon, Badge, MoneyValue } from "@/components/ui";
 import type { ClientInvoiceItem } from "../../types/project-invoices-types";
 import {
   calculateInvoicePaidAmount,
@@ -72,15 +72,38 @@ function ProjectInvoiceTimelineRow({
   const remaining = calculateInvoiceRemaining(invoice);
   const due = new Date(invoice.dueDate);
   const isCritical = invoice.status === "OVERDUE";
+  const handleOpenDetail = React.useCallback(() => {
+    openActivityDetail(
+      { kind: "CLIENT_INVOICE", id: invoice.id },
+      remaining > 0 && isOwnerOrFinance
+        ? {
+            actions: {
+              primary: {
+                label: "Catat Pembayaran",
+                onClick: () => onRecordPayment(invoice),
+              },
+            },
+          }
+        : remaining <= 0
+          ? {
+              footerStatus: {
+                label: "Invoice telah lunas",
+                tone: "success",
+              },
+            }
+          : undefined,
+    );
+  }, [openActivityDetail, invoice, remaining, isOwnerOrFinance, onRecordPayment]);
+
   return (
     <div
       role="button"
       tabIndex={0}
-      onClick={() => openActivityDetail({ kind: "CLIENT_INVOICE", id: invoice.id })}
+      onClick={handleOpenDetail}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          openActivityDetail({ kind: "CLIENT_INVOICE", id: invoice.id });
+          handleOpenDetail();
         }
       }}
       className="relative flex min-h-12 gap-3 rounded-2xl p-2 transition-all outline-none focus-visible:bg-surface-container-low active:scale-98 active:bg-surface-container-low/40"
@@ -125,15 +148,34 @@ function ProjectInvoiceTimelineRow({
         </div>
         <div className="mt-2 flex items-end justify-between gap-3">
           <div>
-            <p className="text-[8px] leading-5 font-bold tracking-wide text-on-surface-variant uppercase">
-              Sisa dari tagihan
-            </p>
-            <MoneyValue
-              amount={remaining}
-              variant="compact"
-              tone={isCritical ? "danger" : "default"}
-              size="sm"
-            />
+            {remaining <= 0 ? (
+              <>
+                <p className="text-[8px] leading-5 font-bold tracking-wide text-success uppercase">
+                  Total diterima
+                </p>
+                <div className="flex items-center gap-1">
+                  <AppIcon name="check_circle" className="text-[13px] text-success" />
+                  <MoneyValue
+                    amount={totalPaid}
+                    variant="compact"
+                    tone="default"
+                    size="sm"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-[8px] leading-5 font-bold tracking-wide text-on-surface-variant uppercase">
+                  Sisa dari tagihan
+                </p>
+                <MoneyValue
+                  amount={remaining}
+                  variant="compact"
+                  tone={isCritical ? "danger" : "default"}
+                  size="sm"
+                />
+              </>
+            )}
           </div>
           {remaining > 0 && isOwnerOrFinance ? (
             <button

@@ -1,4 +1,5 @@
 "use server";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { actorHasPermission } from "@/lib/auth/permissions";
 import { revalidatePath } from "next/cache";
@@ -15,7 +16,10 @@ import {
   projectRap,
   rabEstimate,
 } from "@/db/schema";
-import { getBudgetCategoryStatus } from "@atria/core/budget/excel-budget";
+import {
+  calculateRabBudgetDerivation,
+  getBudgetCategoryStatus,
+} from "@atria/core/budget/excel-budget";
 import { calculateQuotationTotal } from "@atria/core/project/quotation-total";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { approveChangeOrderSchema } from "@atria/core/validations/workflow-governance";
@@ -104,24 +108,27 @@ export async function approveProjectChangeOrder(
         with: { categories: true },
       });
       if (budget) {
-        const internalBudget = approvedValue * Number(budget.budgetCapRatio);
+        const budgetCapRatio = Number(budget.budgetCapRatio);
+        const derivation = calculateRabBudgetDerivation({
+          items: revised.items,
+          bundles: revised.bundles,
+          budgetCapRatio,
+        });
+
         await tx
           .update(projectBudgets)
           .set({
-            contractValue: approvedValue.toFixed(2),
-            approvedRabValue: approvedValue.toFixed(2),
-            internalBudget: internalBudget.toFixed(2),
-            targetGrossAmount: (approvedValue - internalBudget).toFixed(2),
-            targetGrossPercentage:
-              approvedValue > 0
-                ? (((approvedValue - internalBudget) / approvedValue) * 100).toFixed(4)
-                : "0.0000",
+            contractValue: derivation.approvedValue.toFixed(2),
+            approvedRabValue: derivation.approvedValue.toFixed(2),
+            internalBudget: derivation.internalBudget.toFixed(2),
+            targetGrossAmount: derivation.targetGrossAmount.toFixed(2),
+            targetGrossPercentage: derivation.targetGrossPercentage.toFixed(4),
             updatedAt: new Date(),
           })
           .where(eq(projectBudgets.id, budget.id));
         for (const category of budget.categories) {
           if (category.isManualOverride) continue;
-          const allocated = internalBudget * Number(category.ratioPercentage);
+          const allocated = derivation.internalBudget * Number(category.ratioPercentage);
           const actual = Number(category.actualAmount);
           const used = allocated > 0 ? (actual / allocated) * 100 : actual > 0 ? 100 : 0;
           await tx
@@ -203,6 +210,17 @@ export async function approveProjectChangeOrder(
           ...approved,
           emergencyReason: selfApproval ? validation.data.reason : null,
         }),
+      });
+      await recordNotificationEvent(tx, {
+        referenceType: "change_order",
+        referenceId: approved.id,
+        projectId: approved.projectId,
+        stage: "APPROVED",
+        title: "Perubahan proyek disetujui",
+        message: "Budget dan rencana proyek telah diperbarui.",
+        permission: "view:rab",
+        actionUrl: `/projects/${approved.projectId}`,
+        actorId: user.id,
       });
       return approved;
     });

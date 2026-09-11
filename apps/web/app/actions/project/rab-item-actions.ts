@@ -47,6 +47,7 @@ export async function updateRabEstimateItem(
           unit: validation.data.unit,
           unitPrice: validation.data.unitPrice.toFixed(2),
           lineTotal: lineTotal.toFixed(2),
+          itemNature: validation.data.itemNature ?? item.itemNature,
           displayOrder: validation.data.displayOrder ?? item.displayOrder,
           isHidden: validation.data.isHidden ?? item.isHidden,
           isBundle: validation.data.isBundle ?? item.isBundle,

@@ -49,6 +49,8 @@ export type {
   RapOverviewFilter,
 };
 
+import type { RabExportMetadata } from "../../utils/rab-export-utils";
+
 interface RapRabManagerProps {
   readonly projectId: string;
   readonly rap: RapView | null;
@@ -64,6 +66,7 @@ interface RapRabManagerProps {
   readonly revisionHistory: readonly RabRevisionHistoryView[];
   readonly staleSourceLabels: readonly string[];
   readonly mode?: "all" | "rap" | "rab";
+  readonly exportMetadata?: RabExportMetadata;
 }
 
 export function RapRabManager({
@@ -81,6 +84,7 @@ export function RapRabManager({
   revisionHistory,
   staleSourceLabels,
   mode = "all",
+  exportMetadata,
 }: RapRabManagerProps): React.JSX.Element {
   const rapManager = useRapManager({
     projectId,
@@ -208,6 +212,7 @@ export function RapRabManager({
             revisionHistory={revisionHistory}
             changeOrders={changeOrders}
             setHistoryDetailId={rabManager.setHistoryDetailId}
+            exportMetadata={exportMetadata}
           />
         </div>
       )}

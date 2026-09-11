@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -7,6 +7,7 @@ import {
   expenseCategory,
   projectBudgetCategory,
   projectBudgets,
+  rabEstimate,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
@@ -57,6 +58,10 @@ export type ProjectBudgetDashboard = {
   readonly targetGrossPercentage: number;
   readonly projectedMarginAmount: number;
   readonly projectedMarginPercentage: number;
+  readonly productionScopeTotal: number;
+  readonly serviceFeeTotal: number;
+  readonly physicalMarginAmount: number;
+  readonly physicalMarginPercentage: number;
   readonly projectProgressPercentage: number;
   readonly categories: readonly BudgetCategoryDashboardItem[];
 };
@@ -218,6 +223,10 @@ export function buildProjectBudgetDashboardFromBudget(
       expenseCategory: { code: string; name: string };
     })[];
   },
+  context?: {
+    serviceFeeTotal?: number;
+    productionScopeTotal?: number;
+  },
 ): ProjectBudgetDashboard {
   const categories = mapBudgetCategories(budget.categories);
   const actualCost = categories.reduce((sum, item) => sum + item.actualAmount, 0);
@@ -230,6 +239,32 @@ export function buildProjectBudgetDashboardFromBudget(
   const projectedMarginAmount = contractValue - Math.max(actualCost, internalBudget);
   const projectedMarginPercentage =
     contractValue > 0 ? (projectedMarginAmount / contractValue) * 100 : 0;
+
+  let serviceFeeTotal = context?.serviceFeeTotal;
+  let productionScopeTotal = context?.productionScopeTotal;
+
+  if (serviceFeeTotal === undefined || productionScopeTotal === undefined) {
+    const budgetCapRatio = Number(budget.budgetCapRatio ?? "0.9");
+    const targetGrossAmount = Number(budget.targetGrossAmount);
+    if (budgetCapRatio > 0 && targetGrossAmount > (contractValue - internalBudget) * 0.99) {
+      const derivedProdScope = Math.round(internalBudget / budgetCapRatio);
+      const derivedFee = Math.max(0, contractValue - derivedProdScope);
+      if (derivedFee > 0) {
+        serviceFeeTotal = derivedFee;
+        productionScopeTotal = derivedProdScope;
+      } else {
+        serviceFeeTotal = 0;
+        productionScopeTotal = contractValue;
+      }
+    } else {
+      serviceFeeTotal = 0;
+      productionScopeTotal = contractValue;
+    }
+  }
+
+  const physicalMarginAmount = productionScopeTotal - Math.max(actualCost, internalBudget);
+  const physicalMarginPercentage =
+    productionScopeTotal > 0 ? (physicalMarginAmount / productionScopeTotal) * 100 : 0;
 
   return {
     projectId: budget.projectId,
@@ -248,6 +283,10 @@ export function buildProjectBudgetDashboardFromBudget(
     targetGrossPercentage: Number(budget.targetGrossPercentage),
     projectedMarginAmount,
     projectedMarginPercentage,
+    productionScopeTotal,
+    serviceFeeTotal,
+    physicalMarginAmount,
+    physicalMarginPercentage,
     projectProgressPercentage: Number(budget.projectProgressPercentage),
     categories,
   };
@@ -256,21 +295,39 @@ export function buildProjectBudgetDashboardFromBudget(
 export async function buildProjectBudgetDashboard(
   projectId: string,
 ): Promise<ProjectBudgetDashboard | null> {
-  const budget = await db.query.projectBudgets.findFirst({
-    where: eq(projectBudgets.projectId, projectId),
-    with: {
-      project: true,
-      categories: {
-        with: {
-          expenseCategory: true,
+  const [budget, latestApprovedRab] = await Promise.all([
+    db.query.projectBudgets.findFirst({
+      where: eq(projectBudgets.projectId, projectId),
+      with: {
+        project: true,
+        categories: {
+          with: {
+            expenseCategory: true,
+          },
         },
       },
-    },
-  });
+    }),
+    db.query.rabEstimate.findFirst({
+      where: and(eq(rabEstimate.projectId, projectId), eq(rabEstimate.status, "APPROVED")),
+      with: { items: true },
+      orderBy: [desc(rabEstimate.revision)],
+    }),
+  ]);
 
   if (!budget) return null;
 
-  return buildProjectBudgetDashboardFromBudget(budget);
+  const serviceFeeTotal = latestApprovedRab
+    ? latestApprovedRab.items
+        .filter((item) => !item.bundleId && !item.isHidden && item.itemNature === "SERVICE_FEE")
+        .reduce((sum, item) => sum + Number(item.lineTotal), 0)
+    : 0;
+
+  const productionScopeTotal = Math.max(0, Number(budget.contractValue) - serviceFeeTotal);
+
+  return buildProjectBudgetDashboardFromBudget(budget, {
+    serviceFeeTotal,
+    productionScopeTotal,
+  });
 }
 
 export function aggregateOwnerBudgetDashboard(

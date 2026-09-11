@@ -103,6 +103,8 @@ export function RapRabWorkflowDrawers({
         setSelectedRapQuotationIds={rabManager.setSelectedRapQuotationIds}
         selectedCategoryQuotationIds={rabManager.selectedCategoryQuotationIds}
         setSelectedCategoryQuotationIds={rabManager.setSelectedCategoryQuotationIds}
+        selectedBaselineManualItemIds={rabManager.selectedBaselineManualItemIds}
+        setSelectedBaselineManualItemIds={rabManager.setSelectedBaselineManualItemIds}
         manualQuotationLine={rabManager.manualQuotationLine}
         setManualQuotationLine={rabManager.setManualQuotationLine}
         handleGenerateRab={rabManager.handleGenerateRab}

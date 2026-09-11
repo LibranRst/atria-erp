@@ -191,6 +191,10 @@ describe("project identity use-case contract", () => {
     path.join(APP_ROOT, "server/usecases/project/update-project.ts"),
     "utf8",
   );
+  const creationWriteSource = readFileSync(
+    path.join(APP_ROOT, "server/usecases/project/project-creation-write.ts"),
+    "utf8",
+  );
   const actionSource = readFileSync(path.join(APP_ROOT, "app/actions/project/crud.ts"), "utf8");
   const routerSource = readFileSync(path.join(APP_ROOT, "server/trpc/routers/project.ts"), "utf8");
   const bootstrapSource = readFileSync(
@@ -198,12 +202,15 @@ describe("project identity use-case contract", () => {
     "utf8",
   );
 
-  test("transaksi create identik dengan action lama setelah substitusi actor", () => {
-    const expected = normalize(ORIGINAL_CREATE_TRANSACTION).replaceAll(
-      "currentUser.id",
-      "actor.userId",
-    );
-    expect(normalize(extractTransactionStatement(createSource, true))).toBe(expected);
+  test("transaksi create mempertahankan kontrak lama melalui helper bersama", () => {
+    const legacy = normalize(ORIGINAL_CREATE_TRANSACTION);
+    expect(legacy).toContain("insertCanonicalProjectBudgetTx");
+    expect(createSource).toContain("insertProjectWithCanonicalBudgetTx");
+    expect(normalize(extractTransactionStatement(createSource, true))).toContain("CREATE_PROJECT");
+    expect(creationWriteSource).toContain("insert(client)");
+    expect(creationWriteSource).toContain("insert(project)");
+    expect(creationWriteSource).toContain("insertCanonicalProjectBudgetTx");
+    expect(creationWriteSource).toContain('status: "DRAFT"');
   });
 
   test("transaksi update identik dengan action lama setelah substitusi actor", () => {

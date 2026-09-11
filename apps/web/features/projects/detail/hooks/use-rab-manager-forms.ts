@@ -16,6 +16,7 @@ import {
   createEmptyRabChangeOrderForm,
   emptyManualQuotationLine,
   emptyRabBundleForm,
+  getInitialSelectedBaselineManualItemIds,
   getInitialSelectedCategoryQuotationIds,
   getInitialSelectedRapQuotationIds,
   toggleBundleItemInForm,
@@ -34,6 +35,8 @@ interface UseRabManagerFormsResult {
   readonly setSelectedRapQuotationIds: Dispatch<SetStateAction<string[]>>;
   readonly selectedCategoryQuotationIds: string[];
   readonly setSelectedCategoryQuotationIds: Dispatch<SetStateAction<string[]>>;
+  readonly selectedBaselineManualItemIds: string[];
+  readonly setSelectedBaselineManualItemIds: Dispatch<SetStateAction<string[]>>;
   readonly manualQuotationLine: ManualQuotationLine;
   readonly setManualQuotationLine: Dispatch<SetStateAction<ManualQuotationLine>>;
   readonly changeOrderForm: RabChangeOrderForm;
@@ -76,6 +79,9 @@ export function useRabManagerForms({
   );
   const [selectedCategoryQuotationIds, setSelectedCategoryQuotationIds] = useState<string[]>(() =>
     getInitialSelectedCategoryQuotationIds(categoryPlanItems),
+  );
+  const [selectedBaselineManualItemIds, setSelectedBaselineManualItemIds] = useState<string[]>(() =>
+    getInitialSelectedBaselineManualItemIds(rabEstimate),
   );
   const [manualQuotationLine, setManualQuotationLine] =
     useState<ManualQuotationLine>(emptyManualQuotationLine);
@@ -135,6 +141,8 @@ export function useRabManagerForms({
     setSelectedRapQuotationIds,
     selectedCategoryQuotationIds,
     setSelectedCategoryQuotationIds,
+    selectedBaselineManualItemIds,
+    setSelectedBaselineManualItemIds,
     manualQuotationLine,
     setManualQuotationLine,
     changeOrderForm,

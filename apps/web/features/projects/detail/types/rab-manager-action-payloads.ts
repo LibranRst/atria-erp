@@ -6,17 +6,22 @@ export function buildGenerateRabPayload({
   projectId,
   selectedRapQuotationIds,
   selectedCategoryQuotationIds,
+  selectedBaselineManualItemIds,
   manualQuotationLine,
 }: {
   readonly projectId: string;
   readonly selectedRapQuotationIds: readonly string[];
   readonly selectedCategoryQuotationIds: readonly string[];
+  readonly selectedBaselineManualItemIds?: readonly string[];
   readonly manualQuotationLine: ManualQuotationLine;
 }) {
   return {
     projectId,
     projectRapItemIds: [...selectedRapQuotationIds],
     projectCategoryPlanItemIds: [...selectedCategoryQuotationIds],
+    selectedBaselineManualItemIds: selectedBaselineManualItemIds
+      ? [...selectedBaselineManualItemIds]
+      : undefined,
     manualLines: buildManualQuotationLines(manualQuotationLine),
     title: "Client Estimate / Quotation",
   };
@@ -24,11 +29,13 @@ export function buildGenerateRabPayload({
 
 export function buildRabItemUpdatePayload(draft: RabItemView) {
   return {
+    rabEstimateItemId: draft.id,
     clientLabel: draft.clientLabel,
     description: draft.description || undefined,
     quantity: Number(draft.quantity),
     unit: draft.unit,
     unitPrice: Number(draft.unitPrice),
+    itemNature: draft.itemNature,
     displayOrder: Number(draft.displayOrder),
     isHidden: draft.isHidden,
     isBundle: draft.isBundle,
@@ -49,6 +56,7 @@ export function buildManualRabItemPayload({
     quantity: Number(manualQuotationLine.quantity),
     unit: manualQuotationLine.unit.trim(),
     unitPrice: Number(manualQuotationLine.unitPrice),
+    itemNature: manualQuotationLine.itemNature ?? "PRODUCTION",
   };
 }
 

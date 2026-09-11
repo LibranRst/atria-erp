@@ -27,7 +27,7 @@ export type ProjectFormDraft = z.infer<typeof projectFormDraftSchema>;
 type ExistingProject = {
   readonly name: string;
   readonly clientId: string;
-  readonly projectManagerId: string;
+  readonly projectManagerId: string | null;
   readonly status: ProjectStatusOption;
   readonly financialHealth: ProjectFinancialHealthOption;
   readonly startDate?: string | null;

@@ -39,6 +39,7 @@ export function useRabManager({
     setRabDraftEdits,
     selectedRapQuotationIds,
     selectedCategoryQuotationIds,
+    selectedBaselineManualItemIds,
     manualQuotationLine,
     setManualQuotationLine,
     changeOrderForm,
@@ -59,6 +60,7 @@ export function useRabManager({
     baselineApprovedRabId,
     selectedRapQuotationIds,
     selectedCategoryQuotationIds,
+    selectedBaselineManualItemIds,
     manualQuotationLine,
     setManualQuotationLine,
     rabDraftEdits,
@@ -90,6 +92,7 @@ export function useRabManager({
     revisionHistory,
     selectedRapQuotationIds,
     selectedCategoryQuotationIds,
+    selectedBaselineManualItemIds,
     manualQuotationLine,
   });
 

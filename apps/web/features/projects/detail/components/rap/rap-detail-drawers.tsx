@@ -3,8 +3,10 @@
 import React from "react";
 
 import {
+  AppIcon,
   Badge,
   type BadgeStatus,
+  Button,
   DetailSheet,
   FactRow,
   MoneyValue,
@@ -54,28 +56,32 @@ export function RapItemDetailDrawer({
       footer={
         canEditRap && rap?.status === "DRAFT" ? (
           <div className="grid grid-cols-2 gap-2">
-            <button
+            <Button
               type="button"
+              variant="primary"
               disabled={pending}
+              leadingIcon={<AppIcon name="edit" className="icon-sm" />}
               onClick={() => {
                 setRapDetailItemId(null);
                 openEditRapForm(item);
               }}
-              className="min-h-12 rounded-full bg-surface-container text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
+              fullWidth
             >
               Edit Material
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="criticalQuiet"
               disabled={pending}
+              leadingIcon={<AppIcon name="delete" className="icon-sm" />}
               onClick={() => {
                 setRapDetailItemId(null);
                 handleDeleteRapItem(item.id);
               }}
-              className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error transition active:scale-[0.97] disabled:opacity-50"
+              fullWidth
             >
               Hapus
-            </button>
+            </Button>
           </div>
         ) : undefined
       }
@@ -119,8 +125,8 @@ export function RapItemDetailDrawer({
             value={
               <MoneyValue
                 amount={Number(item.estimatedTotalCost)}
-                variant="compact"
-                size="sm"
+                variant="fullDynamic"
+                size="md"
                 align="right"
               />
             }
@@ -182,53 +188,65 @@ export function PackageDetailDrawer({
           <div className="grid gap-2">
             {editable && (
               <div className="grid grid-cols-2 gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   disabled={pending}
+                  leadingIcon={<AppIcon name="edit" className="icon-sm" />}
                   onClick={() => {
                     setPackageDetailItemId(null);
                     openEditCategoryPlanForm(item);
                   }}
-                  className="min-h-12 rounded-full bg-surface-container text-xs font-bold transition active:scale-[0.97] disabled:opacity-50"
+                  fullWidth
                 >
                   Edit
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="primary"
                   disabled={pending}
+                  pending={pending}
+                  pendingLabel="Memproses…"
+                  leadingIcon={<AppIcon name="check" className="icon-sm" />}
                   onClick={() => {
                     handleMarkCategoryPlanActive(item.id);
                   }}
-                  className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary text-xs font-bold text-on-primary transition active:scale-[0.97] disabled:opacity-50"
+                  fullWidth
                 >
-                  {pending ? "Memproses…" : "Tandai Siap"}
-                </button>
+                  Tandai Siap
+                </Button>
               </div>
             )}
             {editable && (
-              <button
+              <Button
                 type="button"
+                variant="criticalQuiet"
                 disabled={pending}
+                leadingIcon={<AppIcon name="delete" className="icon-sm" />}
                 onClick={() => {
                   setPackageDetailItemId(null);
                   handleDeleteCategoryPlanItem(item.id);
                 }}
-                className="min-h-12 rounded-full bg-error-container/25 text-xs font-bold text-error transition active:scale-[0.97] disabled:opacity-50"
+                fullWidth
               >
                 Hapus Paket
-              </button>
+              </Button>
             )}
             {item.status === "ACTIVE" && (
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 disabled={pending}
+                pending={pending}
+                pendingLabel="Memproses…"
+                leadingIcon={<AppIcon name="edit" className="icon-sm" />}
                 onClick={() => {
                   handleReopenPackage(item.id);
                 }}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary/10 text-xs font-bold text-primary transition active:scale-[0.97] disabled:opacity-50"
+                fullWidth
               >
-                {pending ? "Memproses…" : "Edit Lagi"}
-              </button>
+                Edit Lagi
+              </Button>
             )}
           </div>
         ) : undefined

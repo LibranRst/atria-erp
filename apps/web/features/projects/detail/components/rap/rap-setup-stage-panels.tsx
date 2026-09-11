@@ -1,5 +1,5 @@
 "use client";
-import { AppIcon, Badge, MetricGrid } from "@/components/ui";
+import { AppIcon, Badge, MetricGrid, MetricPill, MoneyMetricPill } from "@/components/ui";
 import React from "react";
 
 import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
@@ -40,7 +40,7 @@ export function MaterialRapStagePanel({
       }
     >
       <MetricGrid>
-        <MiniMoneyMetric label="Estimasi" value={plannedCost} />
+        <MiniMoneyMetric label="Estimasi" variant="fullDynamic" value={plannedCost} />
         <MiniMetric
           label="Perlu Dibeli"
           value={needToBuy.toLocaleString("id-ID")}
@@ -209,20 +209,29 @@ export function ReviewInternalPlanPanel({
       action={<Badge status="WARNING">Belum Final</Badge>}
     >
       <MetricGrid>
-        <MiniMoneyMetric label="Material" value={plannedCost} />
+        <MoneyMetricPill label="Material" amount={plannedCost} variant="fullDynamic" />
         {rap.tukangScopeSkipped ? (
-          <MiniMetric label="Tukang" value="Tidak digunakan" />
+          <MetricPill label="Tukang" value="Tidak digunakan" wrapMode="truncate" />
         ) : (
-          <MiniMoneyMetric label="Tukang" value={sumPackageCost(tukangPlanItems)} />
+          <MoneyMetricPill
+            label="Tukang"
+            amount={sumPackageCost(tukangPlanItems)}
+            variant="fullDynamic"
+          />
         )}
         {rap.subconScopeSkipped ? (
-          <MiniMetric label="Subcon" value="Tidak digunakan" />
+          <MetricPill label="Subcon" value="Tidak digunakan" wrapMode="truncate" />
         ) : (
-          <MiniMoneyMetric label="Subcon" value={sumPackageCost(subconPlanItems)} />
+          <MoneyMetricPill
+            label="Subcon"
+            amount={sumPackageCost(subconPlanItems)}
+            variant="fullDynamic"
+          />
         )}
-        <MiniMoneyMetric
+        <MoneyMetricPill
           label="Total Plan"
-          value={plannedCost + sumPackageCost(tukangPlanItems) + sumPackageCost(subconPlanItems)}
+          amount={plannedCost + sumPackageCost(tukangPlanItems) + sumPackageCost(subconPlanItems)}
+          variant="fullDynamic"
         />
       </MetricGrid>
       <div className="mt-sm space-y-2">

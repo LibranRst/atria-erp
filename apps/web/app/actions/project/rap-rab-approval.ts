@@ -1,4 +1,5 @@
 "use server";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { and, eq, inArray, ne } from "drizzle-orm";
 
@@ -12,8 +13,10 @@ import {
   projectRap,
   rabEstimate,
 } from "@/db/schema";
-import { getBudgetCategoryStatus } from "@atria/core/budget/excel-budget";
-import { calculateQuotationTotal } from "@atria/core/project/quotation-total";
+import {
+  calculateRabBudgetDerivation,
+  getBudgetCategoryStatus,
+} from "@atria/core/budget/excel-budget";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { approveRabEstimateSchema } from "@atria/core/validations/rap-rab";
 import { assertProjectMutationAccess, getSessionUser, toError } from "./rap-rab-utils";
@@ -57,7 +60,20 @@ export async function approveRabEstimate(
         throw new Error("RAB approved sudah ada. Gunakan Change Order untuk revision berikutnya.");
       }
 
-      const approvedValue = calculateQuotationTotal(estimate.items, estimate.bundles);
+      const budget = await tx.query.projectBudgets.findFirst({
+        where: eq(projectBudgets.projectId, estimate.projectId),
+        with: {
+          categories: true,
+        },
+      });
+
+      const budgetCapRatio = budget ? Number(budget.budgetCapRatio) : 0.9;
+      const derivation = calculateRabBudgetDerivation({
+        items: estimate.items,
+        bundles: estimate.bundles,
+        budgetCapRatio,
+      });
+      const approvedValue = derivation.approvedValue;
 
       const [updated] = await tx
         .update(rabEstimate)
@@ -78,26 +94,15 @@ export async function approveRabEstimate(
         })
         .where(eq(project.id, estimate.projectId));
 
-      const budget = await tx.query.projectBudgets.findFirst({
-        where: eq(projectBudgets.projectId, estimate.projectId),
-        with: {
-          categories: true,
-        },
-      });
       if (budget) {
-        const ratio = Number(budget.budgetCapRatio);
-        const internalBudget = approvedValue * ratio;
-        const targetGrossAmount = approvedValue - internalBudget;
-
         await tx
           .update(projectBudgets)
           .set({
-            contractValue: approvedValue.toFixed(2),
-            approvedRabValue: approvedValue.toFixed(2),
-            internalBudget: internalBudget.toFixed(2),
-            targetGrossAmount: targetGrossAmount.toFixed(2),
-            targetGrossPercentage:
-              approvedValue > 0 ? ((targetGrossAmount / approvedValue) * 100).toFixed(4) : "0.0000",
+            contractValue: derivation.approvedValue.toFixed(2),
+            approvedRabValue: derivation.approvedValue.toFixed(2),
+            internalBudget: derivation.internalBudget.toFixed(2),
+            targetGrossAmount: derivation.targetGrossAmount.toFixed(2),
+            targetGrossPercentage: derivation.targetGrossPercentage.toFixed(4),
             status: "APPROVED",
             updatedAt: new Date(),
           })
@@ -106,7 +111,7 @@ export async function approveRabEstimate(
         for (const cat of budget.categories) {
           if (!cat.isManualOverride) {
             const catRatio = Number(cat.ratioPercentage);
-            const allocatedAmount = internalBudget * catRatio;
+            const allocatedAmount = derivation.internalBudget * catRatio;
             const actualAmount = Number(cat.actualAmount);
             const usedPercentage = allocatedAmount > 0 ? (actualAmount / allocatedAmount) * 100 : 0;
 
@@ -158,6 +163,17 @@ export async function approveRabEstimate(
         newState: JSON.stringify(updated),
       });
 
+      await recordNotificationEvent(tx, {
+        referenceType: "rab",
+        referenceId: updated.id,
+        projectId: updated.projectId,
+        stage: "APPROVED",
+        title: "RAB disetujui",
+        message: "Persetujuan RAB telah dicatat.",
+        permission: "view:rab",
+        actionUrl: `/projects/${updated.projectId}`,
+        actorId: user.id,
+      });
       return updated;
     });
 

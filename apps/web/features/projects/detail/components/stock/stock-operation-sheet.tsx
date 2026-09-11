@@ -14,7 +14,6 @@ import {
 } from "@/app/actions/material/inventory";
 import {
   ConfirmationDialog,
-  FieldContextLine,
   FormField,
   FormRiskNotice,
   FormSection,
@@ -26,6 +25,7 @@ import {
   Textarea,
   WorkflowFormSheet,
 } from "@/components/ui";
+import { InventoryStockStatusCard } from "@/features/materials/components/shared/inventory-stock-status-card";
 import { StockImpactRow } from "@/features/materials/components/shared/stock-impact-row";
 import type { MaterialOption, RapView } from "../shared/rap-rab-manager";
 
@@ -212,6 +212,7 @@ export function StockOperationSheet({
         ))}
       </div>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={Boolean(operation)}
         title={
           reviewing
@@ -319,11 +320,13 @@ export function StockOperationSheet({
               />
             </FormSection>
             {inventory && (
-              <FieldContextLine tone={inventory.availableStock <= 0 ? "danger" : "success"}>
-                Fisik {inventory.currentStock.toLocaleString("id-ID")} · Reservasi{" "}
-                {inventory.reservedStock.toLocaleString("id-ID")} · Tersedia{" "}
-                {inventory.availableStock.toLocaleString("id-ID")}
-              </FieldContextLine>
+              <InventoryStockStatusCard
+                locationName={inventory.locationName}
+                currentStock={inventory.currentStock}
+                reservedStock={inventory.reservedStock}
+                availableStock={inventory.availableStock}
+                unit={rapItem?.unit ?? material?.unit}
+              />
             )}
             {operation === "USE" || operation === "WASTE" ? (
               <FormRiskNotice
@@ -344,14 +347,7 @@ export function StockOperationSheet({
                 operation ? DETAIL_HELPERS[operation] : "Lengkapi jumlah dan catatan operasi."
               }
             >
-              <FormField
-                label={
-                  (rapItem?.unit ?? material?.unit)
-                    ? `Jumlah (${rapItem?.unit ?? material?.unit})`
-                    : "Jumlah"
-                }
-                required
-              >
+              <FormField label="Jumlah" required>
                 <QuantityStepper
                   value={quantity}
                   unit={rapItem?.unit ?? material?.unit}

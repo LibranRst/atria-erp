@@ -139,10 +139,10 @@ function CashRow({
       </span>
       <MoneyValue
         amount={amount}
-        variant="compact"
+        variant="fullDynamic"
         tone={danger ? "danger" : strong ? "primary" : "default"}
         align="right"
-        size="sm"
+        size="md"
       />
     </div>
   );

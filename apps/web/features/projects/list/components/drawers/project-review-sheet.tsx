@@ -43,6 +43,7 @@ export function ProjectReviewSheet({
 }): React.JSX.Element {
   return (
     <WorkflowFormSheet
+      dismissal={{ mode: "discard" }}
       open={open}
       title={editMode ? "Tinjau Perubahan Proyek" : "Tinjau Proyek Baru"}
       primaryLabel={editMode ? "Simpan" : "Buat"}

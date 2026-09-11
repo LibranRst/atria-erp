@@ -306,6 +306,7 @@ export function ProjectDrawer({
   return (
     <>
       <OperationalFormSheet
+        dismissal={{ mode: "managed" }}
         open={isOpen && !reviewing}
         title={editProject ? "Edit Proyek" : "Buat Proyek Baru"}
         onClose={() => {

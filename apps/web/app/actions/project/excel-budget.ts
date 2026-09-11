@@ -1,9 +1,10 @@
 "use server";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { project, projectBudgetCategory, projectBudgets } from "@/db/schema";
+import { auditLog, project, projectBudgetCategory, projectBudgets } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
 import {
   calculateTargetGross,
@@ -15,6 +16,7 @@ import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   approveCanonicalProjectBudgetSchema,
   createProjectBudgetFromRatiosSchema,
+  rejectCanonicalProjectBudgetSchema,
   type CreateProjectBudgetFromRatiosInput,
   updateProjectBudgetCategoryAllocationSchema,
   type UpdateProjectBudgetCategoryAllocationInput,
@@ -214,6 +216,81 @@ export async function updateProjectBudgetCategoryAllocation(
   return { success: true, data: dashboard };
 }
 
+export async function submitProjectBudget(
+  projectBudgetId: string,
+): Promise<ActionResponse<ProjectBudgetDashboard>> {
+  const validation = approveCanonicalProjectBudgetSchema.safeParse({ projectBudgetId });
+  if (!validation.success) {
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID budget proyek tidak valid." },
+    };
+  }
+  const user = await getSessionUser();
+  if (!user) {
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  }
+  const budget = await db.query.projectBudgets.findFirst({
+    where: eq(projectBudgets.id, validation.data.projectBudgetId),
+  });
+  if (!budget) {
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Budget proyek tidak ditemukan." },
+    };
+  }
+  if (budget.status !== "DRAFT") {
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "Hanya budget Draft yang dapat diajukan." },
+    };
+  }
+  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(
+    user,
+    budget.projectId,
+    "update:budget",
+  );
+  if (accessError) return accessError;
+
+  await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(projectBudgets)
+      .set({ status: "PENDING_APPROVAL", updatedAt: new Date() })
+      .where(and(eq(projectBudgets.id, budget.id), eq(projectBudgets.status, "DRAFT")))
+      .returning();
+    if (!updated) throw new Error("Status budget sudah berubah. Muat ulang halaman.");
+    await tx.insert(auditLog).values({
+      userId: user.id,
+      action: "SUBMIT_CANONICAL_PROJECT_BUDGET",
+      targetTable: "project_budgets",
+      targetId: updated.id,
+      originalState: JSON.stringify(budget),
+      newState: JSON.stringify(updated),
+    });
+    await recordNotificationEvent(tx, {
+      referenceType: "project_budget",
+      referenceId: updated.id,
+      projectId: updated.projectId,
+      stage: "PENDING_APPROVAL",
+      title: "Project Budget menunggu persetujuan",
+      message: "Plafon internal dan alokasi kategori siap ditinjau.",
+      permission: "approve:budget",
+      actionRequired: true,
+      actionUrl: `/projects/${updated.projectId}`,
+      actorId: user.id,
+    });
+  });
+
+  const dashboard = await buildProjectBudgetDashboard(budget.projectId);
+  if (!dashboard) {
+    return {
+      success: false,
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Dashboard budget gagal dibaca." },
+    };
+  }
+  return { success: true, data: dashboard };
+}
+
 export async function approveProjectBudget(
   projectBudgetId: string,
 ): Promise<ActionResponse<ProjectBudgetDashboard>> {
@@ -239,6 +316,12 @@ export async function approveProjectBudget(
       error: { code: "NOT_FOUND", message: "Budget proyek tidak ditemukan." },
     };
   }
+  if (budget.status !== "PENDING_APPROVAL") {
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "Budget tidak sedang menunggu persetujuan." },
+    };
+  }
 
   const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(
     user,
@@ -247,15 +330,39 @@ export async function approveProjectBudget(
   );
   if (accessError) return accessError;
 
-  await db
-    .update(projectBudgets)
-    .set({
-      status: "APPROVED",
-      approvedById: user.id,
-      approvedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(projectBudgets.id, budget.id));
+  await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(projectBudgets)
+      .set({
+        status: "APPROVED",
+        approvedById: user.id,
+        approvedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(projectBudgets.id, budget.id), eq(projectBudgets.status, "PENDING_APPROVAL")))
+      .returning();
+    if (!updated) throw new Error("Status budget sudah berubah. Muat ulang halaman.");
+    await tx.insert(auditLog).values({
+      userId: user.id,
+      action: "APPROVE_CANONICAL_PROJECT_BUDGET",
+      targetTable: "project_budgets",
+      targetId: updated.id,
+      originalState: JSON.stringify(budget),
+      newState: JSON.stringify(updated),
+    });
+    await recordNotificationEvent(tx, {
+      referenceType: "project_budget",
+      referenceId: budget.id,
+      projectId: budget.projectId,
+      stage: "APPROVED",
+      title: "Budget proyek disetujui",
+      message: "Budget proyek siap digunakan.",
+      permission: "view:budget",
+      actionUrl: `/projects/${budget.projectId}?tab=budget`,
+      actorId: user.id,
+    });
+    return updated;
+  });
 
   const dashboard = await buildProjectBudgetDashboard(budget.projectId);
   if (!dashboard) {
@@ -265,6 +372,90 @@ export async function approveProjectBudget(
     };
   }
 
+  return { success: true, data: dashboard };
+}
+
+export async function rejectProjectBudget(
+  projectBudgetId: string,
+  reason: string,
+): Promise<ActionResponse<ProjectBudgetDashboard>> {
+  const validation = rejectCanonicalProjectBudgetSchema.safeParse({ projectBudgetId, reason });
+  if (!validation.success) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: validation.error.issues[0]?.message ?? "Data penolakan budget tidak valid.",
+      },
+    };
+  }
+  const user = await getSessionUser();
+  if (!user) {
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  }
+  const budget = await db.query.projectBudgets.findFirst({
+    where: eq(projectBudgets.id, validation.data.projectBudgetId),
+  });
+  if (!budget) {
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Budget proyek tidak ditemukan." },
+    };
+  }
+  if (budget.status !== "PENDING_APPROVAL") {
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "Budget tidak sedang menunggu persetujuan." },
+    };
+  }
+  const accessError = await assertBudgetAccess<ProjectBudgetDashboard>(
+    user,
+    budget.projectId,
+    "approve:budget",
+  );
+  if (accessError) return accessError;
+
+  await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(projectBudgets)
+      .set({
+        status: "DRAFT",
+        approvedById: null,
+        approvedAt: null,
+        notes: `${budget.notes ?? ""}\nRevisi diminta: ${validation.data.reason}`.trim(),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(projectBudgets.id, budget.id), eq(projectBudgets.status, "PENDING_APPROVAL")))
+      .returning();
+    if (!updated) throw new Error("Status budget sudah berubah. Muat ulang halaman.");
+    await tx.insert(auditLog).values({
+      userId: user.id,
+      action: "REJECT_CANONICAL_PROJECT_BUDGET",
+      targetTable: "project_budgets",
+      targetId: updated.id,
+      originalState: JSON.stringify(budget),
+      newState: JSON.stringify({ ...updated, rejectionReason: validation.data.reason }),
+    });
+    await recordNotificationEvent(tx, {
+      referenceType: "project_budget",
+      referenceId: updated.id,
+      projectId: updated.projectId,
+      stage: "REJECTED",
+      title: "Budget proyek perlu direvisi",
+      message: validation.data.reason,
+      permission: "update:budget",
+      actionUrl: `/projects/${updated.projectId}`,
+      actorId: user.id,
+    });
+  });
+
+  const dashboard = await buildProjectBudgetDashboard(budget.projectId);
+  if (!dashboard) {
+    return {
+      success: false,
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Dashboard budget gagal dibaca." },
+    };
+  }
   return { success: true, data: dashboard };
 }
 
@@ -378,7 +569,7 @@ export async function getOwnerBudgetDashboard(): Promise<ActionResponse<OwnerBud
     },
   });
 
-  const projects = budgets.map(buildProjectBudgetDashboardFromBudget);
+  const projects = budgets.map((budget) => buildProjectBudgetDashboardFromBudget(budget));
 
   return {
     success: true,

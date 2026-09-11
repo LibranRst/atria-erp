@@ -84,6 +84,7 @@ export function buildRabEstimateForManager(
     items: latestRabEstimate.items.map((item) => ({
       id: item.id,
       sourceType: item.sourceType,
+      itemNature: (item.itemNature as "PRODUCTION" | "SERVICE_FEE") ?? "PRODUCTION",
       sourceProjectRapItemId: item.sourceProjectRapItemId,
       sourceProjectCategoryPlanItemId: item.sourceProjectCategoryPlanItemId,
       clientLabel: item.clientLabel,

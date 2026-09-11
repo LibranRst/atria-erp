@@ -1,4 +1,5 @@
 "use server";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -288,6 +289,17 @@ export async function completeProject(
         targetTable: "project",
         targetId: checklist.projectId,
         newState: JSON.stringify({ checklist, closingNote: validation.data.closingNote }),
+      });
+      await recordNotificationEvent(tx, {
+        referenceType: "project",
+        referenceId: checklist.projectId,
+        projectId: checklist.projectId,
+        stage: "COMPLETED",
+        title: "Proyek selesai",
+        message: "Penutupan proyek telah dicatat.",
+        permission: "view:project",
+        actionUrl: `/projects/${checklist.projectId}`,
+        actorId: user.id,
       });
     });
     revalidatePath(`/projects/${checklist.projectId}`);

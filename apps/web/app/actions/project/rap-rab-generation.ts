@@ -280,10 +280,16 @@ export async function generateRabFromSelectedSources(
       });
 
       const baselineManualItems = baselineItems
-        .filter((item) => item.sourceType === "MANUAL")
+        .filter(
+          (item) =>
+            (item.sourceType === "MANUAL" || item.sourceType === "MANUAL_CLIENT_LINE") &&
+            (!validation.data.selectedBaselineManualItemIds ||
+              validation.data.selectedBaselineManualItemIds.includes(item.id)),
+        )
         .map((item) => ({
           rabEstimateId: estimate.id,
           sourceType: "MANUAL",
+          itemNature: item.itemNature ?? "PRODUCTION",
           sourceProjectRapItemId: null,
           sourceProjectCategoryPlanItemId: null,
           sourceLibraryItemId: item.sourceLibraryItemId,
@@ -308,6 +314,7 @@ export async function generateRabFromSelectedSources(
         .map((item, index) => ({
           rabEstimateId: estimate.id,
           sourceType: "MANUAL",
+          itemNature: item.itemNature ?? "PRODUCTION",
           sourceProjectRapItemId: null,
           sourceProjectCategoryPlanItemId: null,
           sourceLibraryItemId: null,
@@ -356,8 +363,8 @@ export async function generateRabFromSelectedSources(
             )
               return true;
             return (
-              oldMember.sourceType === "MANUAL" &&
-              candidate.sourceType === "MANUAL" &&
+              (oldMember.sourceType === "MANUAL" || oldMember.sourceType === "MANUAL_CLIENT_LINE") &&
+              (candidate.sourceType === "MANUAL" || candidate.sourceType === "MANUAL_CLIENT_LINE") &&
               candidate.clientLabel === oldMember.clientLabel
             );
           });

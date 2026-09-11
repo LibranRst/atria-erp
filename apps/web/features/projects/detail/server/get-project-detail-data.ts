@@ -244,6 +244,26 @@ export async function getProjectDetailData(projectId: string): Promise<ProjectTa
   const costsForList = mapCostsForList(costsData);
   const invoicesForClient = mapClientInvoices(projectData.clientInvoices);
 
+  const [clientsData, usersData] = await Promise.all([
+    db.query.client.findMany({
+      columns: { id: true, name: true },
+      orderBy: (table, { asc }) => [asc(table.name)],
+    }),
+    db.query.user.findMany({
+      columns: { id: true, isActive: true, name: true, email: true },
+      with: { role: { columns: { name: true } } },
+      orderBy: (table, { asc }) => [asc(table.name)],
+    }),
+  ]);
+
+  const projectManagers = usersData
+    .filter(
+      (candidate) =>
+        (candidate.isActive && getRoleDataScope(candidate.role.name) === "ASSIGNED") ||
+        candidate.id === projectData.projectManagerId,
+    )
+    .map(({ id, name, email }) => ({ id, name, email }));
+
   return {
     project: projectData,
     costCategories: costCategoriesData,
@@ -263,5 +283,7 @@ export async function getProjectDetailData(projectId: string): Promise<ProjectTa
     projectBudgetDashboard,
     materialMasterCatalog,
     pricingTemplateCatalog: mapPricingTemplateCatalog(pricingTemplateCatalog),
+    clients: clientsData,
+    projectManagers,
   };
 }

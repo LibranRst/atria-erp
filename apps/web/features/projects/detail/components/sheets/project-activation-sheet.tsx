@@ -41,6 +41,7 @@ export function ProjectActivationSheet({
 
   return (
     <WorkflowFormSheet
+      dismissal={{ mode: "discard" }}
       open={open}
       title="Proyek siap diaktifkan"
       primaryLabel="Aktifkan"

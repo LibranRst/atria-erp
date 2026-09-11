@@ -123,7 +123,11 @@ export function ProjectCoverField({
   const busy = isUploading || isPending;
 
   return (
-    <FormField label="Cover proyek" optional>
+    <fieldset className="group/form min-w-0 space-y-1 bg-surface-container-lowest px-4 py-3">
+      <legend className="flex w-full items-center justify-between gap-2 text-meta font-bold tracking-[0.08em] text-on-surface uppercase">
+        <span>Cover proyek</span>
+        <span className="text-[8px] text-on-surface-variant/75">Opsional</span>
+      </legend>
       {coverImageUrl ? (
         <div className="space-y-2.5">
           <div className="relative aspect-video overflow-hidden rounded-3xl bg-surface-container-low ring-1 ring-ring-control">
@@ -201,7 +205,7 @@ export function ProjectCoverField({
           />
         </motion.label>
       )}
-    </FormField>
+    </fieldset>
   );
 }
 
@@ -235,7 +239,7 @@ export function ProjectClientFields({
   readonly onNewClientAddressChange: (value: string) => void;
 }): React.JSX.Element {
   return (
-    <div className="divide-y divide-outline-variant/20">
+    <>
       <AdaptiveSelect
         label="Jenis klien"
         value={isNewClient ? "new" : "existing"}
@@ -247,7 +251,7 @@ export function ProjectClientFields({
       />
 
       {isNewClient ? (
-        <div className="divide-y divide-outline-variant/20">
+        <>
           <FormField label="Nama Klien" required>
             <TextInput
               value={newClientName}
@@ -277,7 +281,7 @@ export function ProjectClientFields({
               placeholder="Alamat domisili klien..."
             />
           </FormField>
-        </div>
+        </>
       ) : (
         <AdaptiveSelect
           label="Klien Terdaftar"
@@ -288,7 +292,7 @@ export function ProjectClientFields({
           required
         />
       )}
-    </div>
+    </>
   );
 }
 
@@ -316,7 +320,7 @@ export function ProjectDetailFields({
   readonly onProjectTypeChange: (value: string) => void;
 }): React.JSX.Element {
   return (
-    <div className="divide-y divide-outline-variant/20">
+    <>
       <DatePickerField label="Tanggal Mulai" value={startDate} onChange={onStartDateChange} />
       <DatePickerField label="Tanggal Selesai" value={endDate} onChange={onEndDateChange} />
       <FormField label="Lokasi">
@@ -336,7 +340,7 @@ export function ProjectDetailFields({
         options={PROJECT_TYPE_OPTIONS}
         placeholder="Pilih atau ketik tipe"
       />
-    </div>
+    </>
   );
 }
 
@@ -355,7 +359,7 @@ export function ProjectEditStateFields({
     (option) => option.value !== "COMPLETED" || status === "COMPLETED",
   );
   return (
-    <div className="divide-y divide-outline-variant/20">
+    <>
       <AdaptiveSelect
         label="Status Proyek"
         value={status}
@@ -368,6 +372,7 @@ export function ProjectEditStateFields({
         onChange={(value) => onFinancialHealthChange(value as ProjectFinancialHealthOption)}
         options={FINANCIAL_HEALTH_OPTIONS}
       />
-    </div>
+    </>
   );
 }
+

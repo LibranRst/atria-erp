@@ -21,6 +21,7 @@ import {
 } from "../../utils/project-invoices-utils";
 import { type OperationSuccess, OperationSuccessDialog } from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
+import { derivePaymentReference } from "@atria/core/finance/invoice-prefill";
 
 const clientPaymentRecoverySchema = z.object({
   invoiceId: z.string(),
@@ -40,17 +41,23 @@ export type {
 
 interface ProjectInvoicesProps {
   projectId: string;
+  projectName?: string;
+  clientName?: string;
   invoices: ClientInvoiceItem[];
   bankAccounts: BankAccountItem[];
   userRole: string;
   contractValue: number;
+  onNavigateClosing?: () => void;
 }
 
 export function ProjectInvoices({
   projectId,
+  projectName,
+  clientName,
   invoices,
   bankAccounts,
   contractValue,
+  onNavigateClosing,
 }: ProjectInvoicesProps): React.JSX.Element {
   const can = useCan();
   const router = useRouter();
@@ -127,8 +134,48 @@ export function ProjectInvoices({
     });
   }
 
+  const handleBankChange = React.useCallback(
+    (newBankId: string) => {
+      const currentBank = bankAccounts.find((a) => a.id === selectedBankId);
+      const newBank = bankAccounts.find((a) => a.id === newBankId);
+      if (selectedInvoice && currentBank && newBank) {
+        const prevSuggested = derivePaymentReference({
+          bankName: currentBank.bankName || currentBank.name,
+          invoiceNumber: selectedInvoice.invoiceNumber,
+          projectName,
+          clientName,
+          stage: selectedInvoice.stage,
+        });
+        const nextSuggested = derivePaymentReference({
+          bankName: newBank.bankName || newBank.name,
+          invoiceNumber: selectedInvoice.invoiceNumber,
+          projectName,
+          clientName,
+          stage: selectedInvoice.stage,
+        });
+        // Jika nomor referensi masih kosong atau persis sama dengan format standar sebelumnya,
+        // perbarui otomatis ke format standar bank yang baru.
+        if (!refNumber.trim() || refNumber === prevSuggested) {
+          patchPayment({ selectedBankId: newBankId, refNumber: nextSuggested });
+          return;
+        }
+      }
+      patchPayment({ selectedBankId: newBankId });
+    },
+    [bankAccounts, selectedBankId, selectedInvoice, projectName, clientName, refNumber, patchPayment],
+  );
+
   const handleRecordPaymentClick = (invoice: ClientInvoiceItem) => {
     const remaining = calculateInvoiceRemaining(invoice);
+    const initialBank = bankAccounts[0];
+    const initialBankName = initialBank?.bankName || initialBank?.name;
+    const suggestedRef = derivePaymentReference({
+      bankName: initialBankName,
+      invoiceNumber: invoice.invoiceNumber,
+      projectName,
+      clientName,
+      stage: invoice.stage,
+    });
 
     setSelectedInvoice(invoice);
     setError(null);
@@ -137,8 +184,8 @@ export function ProjectInvoices({
     paymentRecovery.reset({
       invoiceId: invoice.id,
       amountPaid: remaining.toFixed(2),
-      selectedBankId: bankAccounts[0]?.id ?? "",
-      refNumber: "",
+      selectedBankId: initialBank?.id ?? "",
+      refNumber: suggestedRef,
       paymentDate: defaultPaymentDate(),
     });
   };
@@ -224,6 +271,7 @@ export function ProjectInvoices({
         unpaidAmount={unpaidAmount}
         onCreateInvoiceClick={handleCreateInvoiceClick}
         onGenerateSchedule={handleGenerateSchedule}
+        onNavigateClosing={onNavigateClosing}
       />
 
       <ProjectInvoicesList
@@ -233,17 +281,18 @@ export function ProjectInvoices({
       />
 
       <ClientPaymentSheet
-        key={selectedInvoice?.id ?? "client-payment-closed"}
         selectedInvoice={selectedInvoice}
         bankAccounts={bankAccounts}
         amountPaid={amountPaid}
         setAmountPaid={(value) => patchPayment({ amountPaid: value })}
         selectedBankId={selectedBankId}
-        setSelectedBankId={(value) => patchPayment({ selectedBankId: value })}
+        setSelectedBankId={handleBankChange}
         refNumber={refNumber}
         setRefNumber={(value) => patchPayment({ refNumber: value })}
         paymentDate={paymentDate}
         setPaymentDate={(value) => patchPayment({ paymentDate: value })}
+        projectName={projectName}
+        clientName={clientName}
         isDirty={paymentRecovery.isDirty}
         isPending={isPending}
         error={error}

@@ -160,7 +160,7 @@ export function BudgetApprovalPanel({
             </FormField>
             {/* Ambang tiga karakter tidak tertulis di mana pun sebelumnya:
                 tombolnya sekadar mati sampai kebetulan cukup panjang. */}
-            <div aria-live="polite">
+            <div aria-live="polite" className="empty:hidden">
               {!isPending && rejectionNotes.trim().length < 3 ? (
                 <p className="px-1 text-meta font-medium text-on-surface-variant">
                   Tulis alasan revisinya lebih dulu, minimal 3 karakter.
