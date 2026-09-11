@@ -27,9 +27,9 @@ describe("developer account simulation UI contract", () => {
     expect(source).toContain("leading-5 font-bold text-on-surface");
     expect(source).toContain("text-meta text-on-surface-variant");
     expect(source).not.toContain("mt-0.5 block truncate");
-    expect(source).toContain('"Kembali"');
-    expect(source).toContain("min-h-12");
-    expect(source).toContain("flex h-10 items-center");
+    expect(source).toContain("Button");
+    expect(source).toContain('size="compact"');
+    expect(source).toContain("Kembali");
     expect(source).toContain("stopDeveloperAccountSimulation");
     expect(source).not.toContain("initial={{");
   });

@@ -85,6 +85,15 @@ describe("sheet ubah profil", () => {
     expect(source).toContain("URL.revokeObjectURL");
   });
 
+  test("perubahan nama atau foto memakai shared dirty-close confirmation", async () => {
+    const source = await Bun.file(editSheetPath).text();
+
+    expect(source).toContain('mode: "confirm"');
+    expect(source).toContain("dirty,");
+    expect(source).toContain("onDiscard: discardEdits");
+    expect(source).toContain("blocked: busy");
+  });
+
   test("bilah atas dan halaman profil sama-sama disegarkan setelah simpan", async () => {
     const source = await Bun.file(editSheetPath).text();
 
@@ -117,6 +126,12 @@ describe("sheet ganti password", () => {
     expect(statusText).toContain("Perangkat lain akan keluar otomatis");
     expect(statusText).toContain("Perangkat ini tetap masuk");
   });
+
+  test("menandai password sebagai isian ephemeral yang dibuang saat ditutup", async () => {
+    const source = await Bun.file(passwordSheetPath).text();
+
+    expect(source).toContain('dismissal={{ mode: "discard" }}');
+  });
 });
 
 describe("pemicu sheet", () => {
@@ -133,7 +148,9 @@ describe("pemicu sheet", () => {
 
     expect(source.match(/<EditProfileSheet/g)).toHaveLength(1);
     expect(source.match(/<ChangePasswordSheet/g)).toHaveLength(1);
-    // State direset dengan memasang ulang, bukan dengan membersihkan manual.
+    // State direset dengan memasang ulang, bukan hanya mengandalkan state lama
+    // yang tersembunyi ketika sheet ditutup.
     expect(source).toContain("key={`edit-${editSession}`}");
+    expect(source).toContain("key={`password-${passwordSession}`}");
   });
 });

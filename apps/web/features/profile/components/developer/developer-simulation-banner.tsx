@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import React from "react";
 import { toast } from "sonner";
 
@@ -8,8 +7,7 @@ import { stopDeveloperAccountSimulation } from "@/app/actions/developer-account-
 import { authClient } from "@/lib/auth-client";
 import { ROLE_ID_TO_NAME } from "@atria/core/auth/permissions";
 import { formatProfileRole } from "@/features/profile/utils/profile-access";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button } from "@/components/ui";
 type SessionShape = {
   readonly session?: { readonly developerActorUserId?: unknown };
   readonly user?: {
@@ -59,7 +57,7 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 mx-auto w-full max-w-md px-margin-mobile">
       <aside
-        className="pointer-events-auto relative isolate flex min-h-15 min-w-0 items-center gap-2 overflow-hidden rounded-[22px] bg-white/88 p-1.5 pl-2 shadow-floating ring-1 ring-ring-subtle backdrop-blur-xl"
+        className="pointer-events-auto relative isolate flex min-h-13 min-w-0 items-center gap-2 overflow-hidden rounded-[22px] bg-white/88 p-1.5 pl-2 shadow-floating ring-1 ring-ring-subtle backdrop-blur-xl"
         aria-live="polite"
         aria-label="Mode simulasi developer aktif"
       >
@@ -77,18 +75,18 @@ export function DeveloperSimulationBanner(): React.JSX.Element | null {
             {simulation.userName}
           </span>
         </span>
-        <motion.button
+        <Button
           type="button"
+          size="compact"
+          variant="primary"
           onClick={restoreOwner}
           disabled={pending}
-          whileTap={pending ? undefined : { scale: 0.97 }}
-          transition={transitionSpringSnappy}
-          className="flex min-h-12 shrink-0 items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-55"
+          pending={pending}
+          pendingLabel="Memulihkan…"
+          className="shrink-0"
         >
-          <span className="flex h-10 items-center rounded-full bg-on-surface px-3.5 text-meta font-bold text-white shadow-control">
-            {pending ? "Memulihkan…" : "Kembali"}
-          </span>
-        </motion.button>
+          Kembali
+        </Button>
       </aside>
     </div>
   );

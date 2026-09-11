@@ -57,6 +57,7 @@ export function ChangePasswordSheet({
 
   return (
     <OperationalFormSheet
+      dismissal={{ mode: "discard" }}
       open={open}
       title="Ganti password"
       submitLabel="Simpan password"

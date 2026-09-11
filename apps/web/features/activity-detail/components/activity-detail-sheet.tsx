@@ -100,7 +100,7 @@ function Value({
     return (
       <MoneyValue
         amount={value.value}
-        variant="compact"
+        variant="fullDynamic"
         size="sm"
         align={align}
         tone={value.value < 0 ? "danger" : "default"}

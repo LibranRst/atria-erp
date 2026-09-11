@@ -93,6 +93,7 @@ export function EditProfileSheet({
   const nameError = getDisplayNameError(name);
   const canSubmit = canSubmitProfile(name) && !uploading;
   const busy = uploading || pending;
+  const dirty = name !== displayName || photo.kind !== "untouched";
 
   /**
    * Satu baris keterangan yang berganti isi, bukan tumpukan pesan.
@@ -185,6 +186,17 @@ export function EditProfileSheet({
     setPhoto({ kind: "removed" });
   }
 
+  function discardEdits(): void {
+    setName(displayName);
+    setPhoto({ kind: "untouched" });
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+    setLastFile(null);
+    setUploadError(null);
+  }
+
   async function submit(): Promise<void> {
     if (!canSubmit) return;
 
@@ -208,6 +220,13 @@ export function EditProfileSheet({
 
   return (
     <OperationalFormSheet
+      dismissal={{
+        mode: "confirm",
+        dirty,
+        blocked: busy,
+        onDiscard: discardEdits,
+        description: "Perubahan nama atau foto profil yang belum disimpan akan hilang.",
+      }}
       open={open}
       title="Ubah profil"
       submitLabel="Simpan"

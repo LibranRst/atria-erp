@@ -19,6 +19,10 @@ import {
 } from "@atria/core/auth/developer-account-simulation";
 import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@atria/core/auth/role-constants";
 import {
+  OWNER_ONBOARDING_V2_CONFIG_KEY,
+  parseOwnerQuickStartState,
+} from "@atria/core/onboarding/organization-setup";
+import {
   OWNER_ONBOARDING_CONFIG_KEY,
   parseOwnerOnboardingState,
 } from "@atria/core/onboarding/owner-onboarding";
@@ -105,9 +109,9 @@ export async function getDeveloperAccountSimulationState(): Promise<
   }
 
   const [onboardingRow, staffRows] = await Promise.all([
-    db.query.appConfig.findFirst({
-      where: eq(appConfig.key, OWNER_ONBOARDING_CONFIG_KEY),
-      columns: { value: true },
+    db.query.appConfig.findMany({
+      where: inArray(appConfig.key, [OWNER_ONBOARDING_V2_CONFIG_KEY, OWNER_ONBOARDING_CONFIG_KEY]),
+      columns: { key: true, value: true },
     }),
     db.query.user.findMany({
       where: and(eq(user.isActive, true), inArray(user.roleId, REQUIRED_SIMULATION_ROLE_IDS)),
@@ -123,7 +127,12 @@ export async function getDeveloperAccountSimulationState(): Promise<
     }),
   ]);
   const onboardingCompleted =
-    parseOwnerOnboardingState(onboardingRow?.value)?.status === "COMPLETED";
+    parseOwnerQuickStartState(
+      onboardingRow.find((row) => row.key === OWNER_ONBOARDING_V2_CONFIG_KEY)?.value,
+    )?.status === "COMPLETED" ||
+    parseOwnerOnboardingState(
+      onboardingRow.find((row) => row.key === OWNER_ONBOARDING_CONFIG_KEY)?.value,
+    )?.status === "COMPLETED";
   const readyRoleIds = new Set(staffRows.map((row) => row.roleId));
   const teamReady = REQUIRED_SIMULATION_ROLE_IDS.every((roleId) => readyRoleIds.has(roleId));
   const targets = staffRows
@@ -203,12 +212,21 @@ export async function startDeveloperAccountSimulation(
       if (!actor) throw new Error("OWNER_REQUIRED");
 
       if (validation.data.context === "GENERAL") {
-        const onboardingRow = await tx.query.appConfig.findFirst({
-          where: eq(appConfig.key, OWNER_ONBOARDING_CONFIG_KEY),
-          columns: { value: true },
+        const onboardingRows = await tx.query.appConfig.findMany({
+          where: inArray(appConfig.key, [
+            OWNER_ONBOARDING_V2_CONFIG_KEY,
+            OWNER_ONBOARDING_CONFIG_KEY,
+          ]),
+          columns: { key: true, value: true },
         });
-        if (parseOwnerOnboardingState(onboardingRow?.value)?.status !== "COMPLETED")
-          throw new Error("ONBOARDING_REQUIRED");
+        const quickStartCompleted =
+          parseOwnerQuickStartState(
+            onboardingRows.find((row) => row.key === OWNER_ONBOARDING_V2_CONFIG_KEY)?.value,
+          )?.status === "COMPLETED" ||
+          parseOwnerOnboardingState(
+            onboardingRows.find((row) => row.key === OWNER_ONBOARDING_CONFIG_KEY)?.value,
+          )?.status === "COMPLETED";
+        if (!quickStartCompleted) throw new Error("ONBOARDING_REQUIRED");
         const staffRows = await tx.query.user.findMany({
           where: and(eq(user.isActive, true), inArray(user.roleId, REQUIRED_SIMULATION_ROLE_IDS)),
           columns: { roleId: true },
