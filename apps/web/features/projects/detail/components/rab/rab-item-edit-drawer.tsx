@@ -9,7 +9,6 @@ import {
   ComboboxField,
   COMMON_UNIT_OPTIONS,
   FactRow,
-  FieldContextLine,
   FormField,
   FormSection,
   MoneyInput,
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui";
 import { rabSourceLabel } from "../shared/rap-rab-primitives";
 import type { RabEstimateView, RabItemView } from "../shared/rap-rab-manager";
+import { isRabManualSourceType } from "../../types/rap-rab-types";
 
 export function RabItemEditDrawer({
   rabItemEditorId,
@@ -71,7 +71,7 @@ export function RabItemEditDrawer({
             <div className="min-w-0">
               <p className="text-base font-bold text-on-surface">{item.clientLabel}</p>
               <p className="mt-0.5 text-xs text-on-surface-variant">
-                Sumber: {rabSourceLabel(item.sourceType)} · aman untuk klien
+                Sumber: {rabSourceLabel(item.sourceType, item.itemNature)} · aman untuk klien
               </p>
             </div>
             {item.isHidden && <Badge status="WARNING">Tersembunyi</Badge>}
@@ -87,13 +87,17 @@ export function RabItemEditDrawer({
               </div>
             )}
 
+            <FactRow
+              label="Sifat Komponen"
+              value={item.itemNature === "SERVICE_FEE" ? "Jasa Desain & Fee" : "Pekerjaan Fisik"}
+            />
             <FactRow label="Jumlah" value={`${item.quantity} ${item.unit}`} />
             <FactRow
               label="Harga Satuan Klien"
               value={
                 <MoneyValue
                   amount={Number(item.unitPrice)}
-                  variant="compact"
+                  variant="fullDynamic"
                   size="sm"
                   align="right"
                 />
@@ -104,7 +108,7 @@ export function RabItemEditDrawer({
               value={
                 <MoneyValue
                   amount={Number(item.quantity) * Number(item.unitPrice)}
-                  variant="compact"
+                  variant="fullDynamic"
                   size="sm"
                   align="right"
                   tone="default"
@@ -120,6 +124,12 @@ export function RabItemEditDrawer({
 
   return (
     <OperationalFormSheet
+      dismissal={{
+        mode: "confirm",
+        dirty: changed,
+        onDiscard: () => undefined,
+        description: "Perubahan item RAB yang belum disimpan akan hilang.",
+      }}
       open={open}
       onExitComplete={handleExitComplete}
       title="Edit Item RAB"
@@ -133,61 +143,86 @@ export function RabItemEditDrawer({
       statusTone={total > 0 ? "success" : "warning"}
     >
       <div className="space-y-md">
-        <FieldContextLine>{rabSourceLabel(item.sourceType)} · aman untuk klien</FieldContextLine>
+        <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+                Rincian Item RAB
+              </p>
+              <h3 className="mt-0.5 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
+                {draft.clientLabel || "Item RAB"}
+              </h3>
+              <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
+                Sumber {rabSourceLabel(item.sourceType)}
+                {draft.unit ? ` · ${draft.quantity} ${draft.unit}` : ""}
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-eyebrow font-bold text-success ring-1 ring-success/20">
+                Aman untuk klien
+              </span>
+              <div className="mt-1.5">
+                <MoneyValue
+                  amount={total}
+                  variant="fullDynamic"
+                  size="sm"
+                  align="right"
+                  className="font-bold text-on-surface"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
         <FormSection
           title="Tampilan untuk klien"
           helper="Hanya nama, deskripsi, jumlah, satuan, dan harga di bagian ini yang masuk ke RAB klien."
         >
-          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-            <FormField label="Nama item" required>
-              <TextInput
-                disabled={!editable}
-                value={draft.clientLabel}
-                onChange={(value) => handleRabEditChange(item, { clientLabel: value })}
-                placeholder="Nama item untuk klien"
-              />
-            </FormField>
-            <FormField label="Deskripsi untuk klien" optional>
-              <Textarea
-                disabled={!editable}
-                rows={3}
-                value={draft.description ?? ""}
-                onChange={(value) => handleRabEditChange(item, { description: value })}
-                placeholder="Deskripsi pekerjaan"
-              />
-            </FormField>
-          </div>
+          <FormField label="Nama item" required>
+            <TextInput
+              disabled={!editable}
+              value={draft.clientLabel}
+              onChange={(value) => handleRabEditChange(item, { clientLabel: value })}
+              placeholder="Nama item untuk klien"
+            />
+          </FormField>
+          <FormField label="Deskripsi untuk klien" optional>
+            <Textarea
+              disabled={!editable}
+              rows={3}
+              value={draft.description ?? ""}
+              onChange={(value) => handleRabEditChange(item, { description: value })}
+              placeholder="Deskripsi pekerjaan"
+            />
+          </FormField>
         </FormSection>
 
         <FormSection
           title="Jumlah & harga"
           helper="Subtotal diperbarui langsung sebelum perubahan disimpan."
         >
-          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-            <FormField label="Jumlah">
-              <NumericInput
-                value={draft.quantity}
-                onChange={(value) => handleRabEditChange(item, { quantity: value })}
-                disabled={!editable}
-              />
-            </FormField>
-            <ComboboxField
-              label="Satuan"
-              value={draft.unit}
-              onChange={(value) => handleRabEditChange(item, { unit: value })}
-              options={COMMON_UNIT_OPTIONS}
+          <FormField label="Jumlah">
+            <NumericInput
+              value={draft.quantity}
+              onChange={(value) => handleRabEditChange(item, { quantity: value })}
               disabled={!editable}
-              placeholder="Pilih satuan"
             />
-            <FormField label="Harga satuan klien">
-              <MoneyInput
-                value={draft.unitPrice}
-                onChange={(value) => handleRabEditChange(item, { unitPrice: value })}
-                showPreview={false}
-                disabled={!editable}
-              />
-            </FormField>
-          </div>
+          </FormField>
+          <ComboboxField
+            label="Satuan"
+            value={draft.unit}
+            onChange={(value) => handleRabEditChange(item, { unit: value })}
+            options={COMMON_UNIT_OPTIONS}
+            disabled={!editable}
+            placeholder="Pilih satuan"
+          />
+          <FormField label="Harga satuan klien">
+            <MoneyInput
+              value={draft.unitPrice}
+              onChange={(value) => handleRabEditChange(item, { unitPrice: value })}
+              showPreview={false}
+              disabled={!editable}
+            />
+          </FormField>
           <div className="p-3">
             <ValuePreviewStrip
               items={[
@@ -196,6 +231,28 @@ export function RabItemEditDrawer({
             />
           </div>
         </FormSection>
+
+        {isRabManualSourceType(item.sourceType) && (
+          <FormSection
+            title="Sifat komponen biaya"
+            helper="Tentukan apakah item ini memerlukan belanja fisik lapangan atau jasa keahlian studio."
+          >
+            <div className="space-y-1.5 p-3">
+              <ChoiceRow
+                checked={(draft.itemNature ?? "PRODUCTION") === "PRODUCTION"}
+                onChange={() => handleRabEditChange(item, { itemNature: "PRODUCTION" })}
+                title="Pekerjaan Fisik Tambahan"
+                description="Memerlukan belanja material/tukang. Masuk ke pagu belanja fisik lapangan."
+              />
+              <ChoiceRow
+                checked={draft.itemNature === "SERVICE_FEE"}
+                onChange={() => handleRabEditChange(item, { itemNature: "SERVICE_FEE" })}
+                title="Jasa Desain & Manajemen Fee"
+                description="Jasa profesional studio. 100% margin kotor tanpa menambah pagu belanja lapangan."
+              />
+            </div>
+          </FormSection>
+        )}
 
         <FormSection
           title="Visibilitas"

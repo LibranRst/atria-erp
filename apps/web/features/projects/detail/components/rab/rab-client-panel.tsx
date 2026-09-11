@@ -5,6 +5,8 @@ import React from "react";
 import { RabEmptyState } from "./rab-empty-state";
 import { RabClientSummaryPanel, RabDraftActionsPanel, RabItemsPanel } from "./rab-client-sections";
 import { RabRevisionHistoryPanel } from "./rab-revision-history-panel";
+import { RabExportDrawer } from "./rab-export-drawer";
+import type { RabExportMetadata } from "../../utils/rab-export-utils";
 import type {
   RapView,
   RabEstimateView,
@@ -36,6 +38,7 @@ export function RabClientPanel({
   revisionHistory,
   changeOrders,
   setHistoryDetailId,
+  exportMetadata,
 }: {
   readonly rabEstimate: RabEstimateView | null;
   readonly isRevisionDraft: boolean;
@@ -58,7 +61,10 @@ export function RabClientPanel({
   readonly revisionHistory: readonly RabRevisionHistoryView[];
   readonly changeOrders: readonly ChangeOrderHistoryView[];
   readonly setHistoryDetailId: (id: string | null) => void;
+  readonly exportMetadata?: RabExportMetadata;
 }): React.JSX.Element {
+  const [exportDrawerOpen, setExportDrawerOpen] = React.useState(false);
+
   if (!rabEstimate) {
     return <RabEmptyState canManageRab={canManageRab} setSourcePickerOpen={setSourcePickerOpen} />;
   }
@@ -76,6 +82,7 @@ export function RabClientPanel({
         canManageRab={canManageRab}
         rap={rap}
         setSourcePickerOpen={setSourcePickerOpen}
+        onOpenExport={() => setExportDrawerOpen(true)}
       />
 
       <RabItemsPanel
@@ -103,6 +110,17 @@ export function RabClientPanel({
         revisionHistory={revisionHistory}
         changeOrders={changeOrders}
         setHistoryDetailId={setHistoryDetailId}
+      />
+
+      <RabExportDrawer
+        open={exportDrawerOpen}
+        onClose={() => setExportDrawerOpen(false)}
+        rabEstimate={rabEstimate}
+        meta={
+          exportMetadata || {
+            projectName: "Proyek",
+          }
+        }
       />
     </>
   );

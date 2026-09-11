@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
 
 import {
   DetailSheet,
@@ -10,18 +9,55 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
-  MetricGrid,
-  OperationalFormSheet,
+  MoneyValue,
   Textarea,
   TextInput,
   useSheetPresenceValue,
-  ValuePreviewStrip,
+  useFormDirtySnapshot,
+  WorkflowFormSheet,
 } from "@/components/ui";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
-import { MiniMoneyMetric, RabMoneyBlock } from "../shared/rap-rab-primitives";
 import type { ChangeOrderHistoryView, RabRevisionHistoryView } from "../shared/rap-rab-manager";
 import type { RabChangeOrderForm } from "../../types/rab-drawer-types";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+
+function formatDateDisplay(value: string | null | undefined): string {
+  if (!value) return "–";
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+  return new Date(year, month - 1, day).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function ReviewRow({
+  label,
+  value,
+  subvalue,
+}: {
+  readonly label: string;
+  readonly value: React.ReactNode;
+  readonly subvalue?: string;
+}): React.JSX.Element {
+  return (
+    <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+      <span className="shrink-0 font-medium text-on-surface-variant">{label}</span>
+      <div className="text-right">
+        <span className="font-bold text-on-surface">{value}</span>
+        {subvalue ? <p className="mt-0.5 text-[10px] text-on-surface-variant">{subvalue}</p> : null}
+      </div>
+    </div>
+  );
+}
 
 export function ChangeOrderDrawer({
   changeOrderOpen,
@@ -42,146 +78,240 @@ export function ChangeOrderDrawer({
   readonly approvedBaseline: RabRevisionHistoryView | null;
   readonly visibleRabValue: number;
 }): React.JSX.Element {
-  const [confirmApprove, setConfirmApprove] = React.useState(false);
+  const [reviewing, setReviewing] = React.useState(false);
+
   const formValid =
     changeOrderForm.reason.trim().length >= 10 &&
     changeOrderForm.scopeSummary.trim().length >= 10 &&
     changeOrderForm.clientReference.trim().length >= 3;
-  const valueDelta = visibleRabValue - (approvedBaseline?.value ?? 0);
+
+  const previousValue = approvedBaseline?.value ?? 0;
+  const valueDelta = visibleRabValue - previousValue;
+  const baseRevision = approvedBaseline?.revision ?? 1;
+  const targetRevision = baseRevision + 1;
+
+  const dirty = useFormDirtySnapshot(
+    changeOrderOpen,
+    "change-order",
+    JSON.stringify(changeOrderForm),
+  );
+
+  function handleDiscard(): void {
+    setReviewing(false);
+    setChangeOrderForm({
+      reason: "",
+      scopeSummary: "",
+      clientReference: "",
+      clientConfirmedAt: "",
+    });
+  }
+
+  function handleClose(): void {
+    setReviewing(false);
+    setChangeOrderOpen(false);
+  }
 
   return (
-    <>
-      <OperationalFormSheet
-        open={changeOrderOpen}
-        title="Proses Change Order"
-        onClose={() => setChangeOrderOpen(false)}
-        submitLabel="Tinjau"
-        submittingLabel="Memproses…"
-        pending={isPending}
-        disabled={!formValid}
-        disabledReason={
-          !formValid
-            ? "Lengkapi alasan, ringkasan lingkup, dan referensi persetujuan klien."
-            : undefined
+    <WorkflowFormSheet
+      dismissal={{
+        mode: "confirm",
+        dirty,
+        onDiscard: handleDiscard,
+        description: "Data Change Order yang belum diproses akan hilang.",
+      }}
+      open={changeOrderOpen}
+      title={reviewing ? "Tinjau Change Order" : "Proses Change Order"}
+      onClose={handleClose}
+      primaryLabel={reviewing ? "Setujui Perubahan" : "Lanjut Tinjau"}
+      secondaryLabel={reviewing ? "Ubah" : undefined}
+      pending={isPending}
+      pendingLabel="Memproses…"
+      disabled={!formValid}
+      disabledReason={
+        !formValid
+          ? "Lengkapi alasan (min 10 karakter), ringkasan lingkup, dan referensi persetujuan klien."
+          : undefined
+      }
+      onPrimary={() => {
+        if (reviewing) {
+          handleApproveChangeOrder();
+        } else {
+          setReviewing(true);
         }
-        onSubmit={() => setConfirmApprove(true)}
-        statusText={`Nilai baru Rp ${visibleRabValue.toLocaleString("id-ID")} · Selisih Rp ${valueDelta.toLocaleString("id-ID")}`}
-        statusTone={!formValid || valueDelta > 0 ? "warning" : "success"}
-      >
-        <div className="space-y-md">
-          <FormSection
-            title="1 · Dampak nilai"
-            helper="Perbandingan ini akan menjadi baseline kontrak baru setelah persetujuan final."
-          >
-            <ValuePreviewStrip
-              items={[
-                { label: "Sebelum", amount: approvedBaseline?.value ?? 0 },
-                { label: "Sesudah", amount: visibleRabValue, tone: "success" },
-                {
-                  label: "Selisih",
-                  amount: valueDelta,
-                  tone: valueDelta > 0 ? "warning" : "default",
-                },
-              ]}
-            />
-          </FormSection>
-          <FormSection
-            title="2 · Alasan & lingkup"
-            helper="Jelaskan perubahan secara spesifik agar riwayat revisi mudah diaudit."
-          >
-            <FormField label="Alasan perubahan" helper="Minimal 10 karakter.">
-              <Textarea
-                rows={3}
-                value={changeOrderForm.reason}
-                onChange={(value) => setChangeOrderForm((curr) => ({ ...curr, reason: value }))}
-              />
-            </FormField>
-            <FormField label="Ringkasan lingkup lama ke baru">
-              <Textarea
-                rows={4}
-                value={changeOrderForm.scopeSummary}
-                onChange={(value) =>
-                  setChangeOrderForm((curr) => ({
-                    ...curr,
-                    scopeSummary: value,
-                  }))
-                }
-              />
-            </FormField>
-          </FormSection>
-          <FormSection
-            title="3 · Bukti persetujuan klien"
-            helper="Pastikan persetujuan klien sudah tersedia sebelum meninjau Change Order."
-          >
-            <FormField label="Referensi persetujuan klien">
-              <TextInput
-                value={changeOrderForm.clientReference}
-                onChange={(value) =>
-                  setChangeOrderForm((curr) => ({
-                    ...curr,
-                    clientReference: value,
-                  }))
-                }
-                placeholder="Contoh: Email 22 Juni 2026"
-              />
-            </FormField>
-            <DatePickerField
-              label="Tanggal persetujuan klien"
-              value={changeOrderForm.clientConfirmedAt}
-              onChange={(value) =>
-                setChangeOrderForm((curr) => ({
-                  ...curr,
-                  clientConfirmedAt: value,
-                }))
-              }
-            />
-            <FormRiskNotice title="Belum mengubah kontrak" tone="default">
-              Form ini hanya menyiapkan review. Nilai kontrak berubah setelah konfirmasi final di
-              popup berikutnya.
-            </FormRiskNotice>
-          </FormSection>
-        </div>
-      </OperationalFormSheet>
-      <ConfirmationDialog
-        open={confirmApprove}
-        title="Setujui Change Order?"
-        description="Nilai RAB dan kontrak proyek akan diperbarui. Revisi yang disetujui menjadi baseline baru dan tidak diedit langsung."
-        tone="warning"
-        onClose={() => setConfirmApprove(false)}
-        actions={
-          <div className="grid grid-cols-2 gap-2">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              onClick={() => setConfirmApprove(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
-            >
-              Kembali
-            </motion.button>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              disabled={isPending}
-              onClick={() => {
-                setConfirmApprove(false);
-                handleApproveChangeOrder();
-              }}
-              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white disabled:opacity-40"
-            >
-              Setujui Perubahan
-            </motion.button>
+      }}
+      onSecondary={() => setReviewing(false)}
+      statusText={`Nilai baru Rp ${visibleRabValue.toLocaleString("id-ID")} · Selisih ${valueDelta >= 0 ? "+" : ""}Rp ${valueDelta.toLocaleString("id-ID")}`}
+      statusTone={!formValid || valueDelta > 0 ? "warning" : "success"}
+    >
+      <div className="space-y-md">
+        {/* Context Card: Perbandingan Nilai Kontrak */}
+        <div className="rounded-3xl bg-surface-container-lowest p-4 ring-1 ring-ring-subtle shadow-surface">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-meta font-bold uppercase tracking-[0.12em] text-on-surface-variant">
+              Revisi Baseline Kontrak
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-meta font-bold text-primary">
+              R{baseRevision} → R{targetRevision}
+            </span>
           </div>
-        }
-      >
-        <MetricGrid>
-          <MiniMoneyMetric label="Nilai sebelumnya" value={approvedBaseline?.value ?? 0} />
-          <MiniMoneyMetric label="Nilai baru" value={visibleRabValue} />
-          <MiniMoneyMetric label="Selisih" value={valueDelta} />
-        </MetricGrid>
-      </ConfirmationDialog>
-    </>
+
+          <div className="mt-3 grid grid-cols-3 divide-x divide-outline-variant/20 rounded-2xl bg-surface-container-low p-2.5">
+            <div className="px-2 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                Sebelum
+              </p>
+              <div className="mt-1 flex justify-center font-mono text-xs font-bold tabular-nums text-on-surface">
+                <MoneyValue amount={previousValue} variant="compact" size="xs" align="center" />
+              </div>
+            </div>
+            <div className="px-2 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                Sesudah
+              </p>
+              <div className="mt-1 flex justify-center font-mono text-xs font-bold tabular-nums text-on-surface">
+                <MoneyValue amount={visibleRabValue} variant="compact" size="xs" align="center" />
+              </div>
+            </div>
+            <div className="px-2 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                Selisih
+              </p>
+              <div
+                className={`mt-1 flex justify-center font-mono text-xs font-bold tabular-nums ${
+                  valueDelta > 0
+                    ? "text-warning"
+                    : valueDelta < 0
+                      ? "text-success"
+                      : "text-on-surface-variant"
+                }`}
+              >
+                <MoneyValue
+                  amount={Math.abs(valueDelta)}
+                  variant="compact"
+                  size="xs"
+                  align="center"
+                  prefix={valueDelta > 0 ? "+ " : valueDelta < 0 ? "- " : ""}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {reviewing ? (
+          /* Step 2: Review Mode */
+          <div className="space-y-md">
+            <FormSection
+              title="Rincian pengajuan Change Order"
+              helper="Periksa kembali detail revisi sebelum memperbarui baseline kontrak resmi."
+            >
+              <ReviewRow
+                label="Target revisi"
+                value={`R${baseRevision} → R${targetRevision}`}
+              />
+              <ReviewRow
+                label="Alasan perubahan"
+                value={changeOrderForm.reason}
+              />
+              <ReviewRow
+                label="Ringkasan lingkup"
+                value={changeOrderForm.scopeSummary}
+              />
+              <ReviewRow
+                label="Referensi persetujuan"
+                value={changeOrderForm.clientReference}
+              />
+              <ReviewRow
+                label="Tanggal persetujuan"
+                value={formatDateDisplay(changeOrderForm.clientConfirmedAt)}
+              />
+            </FormSection>
+
+            <FormRiskNotice title="Persetujuan mengikat kontrak" tone="warning">
+              Setelah disetujui, nilai kontrak dan baseline RAB proyek akan diperbarui menjadi R{targetRevision}. Revisi sebelumnya akan terkunci sebagai riwayat audit dan tidak dapat diedit langsung.
+            </FormRiskNotice>
+          </div>
+        ) : (
+          /* Step 1: Input Mode */
+          <>
+            <FormSection
+              title="Alasan & lingkup revisi"
+              helper="Jelaskan latar belakang dan perubahan pekerjaan secara spesifik untuk transparansi audit."
+            >
+              <FormField
+                label="Alasan perubahan"
+                required
+                helper="Minimal 10 karakter latar belakang revisi"
+              >
+                <Textarea
+                  rows={3}
+                  value={changeOrderForm.reason}
+                  onChange={(value) =>
+                    setChangeOrderForm((curr) => ({ ...curr, reason: value }))
+                  }
+                  placeholder="Contoh: Permintaan penambahan pekerjaan partisi dan upgrade material lantai oleh klien."
+                />
+              </FormField>
+              <FormField
+                label="Ringkasan lingkup pekerjaan"
+                required
+                helper="Rincian pekerjaan tambah/kurang dari baseline sebelumnya"
+              >
+                <Textarea
+                  rows={3}
+                  value={changeOrderForm.scopeSummary}
+                  onChange={(value) =>
+                    setChangeOrderForm((curr) => ({
+                      ...curr,
+                      scopeSummary: value,
+                    }))
+                  }
+                  placeholder="Contoh: Pekerjaan partisi gypsum 2 sisi R2 ditambah 24 m2, penyesuaian tipe vinyl flooring area living."
+                />
+              </FormField>
+            </FormSection>
+
+            <FormSection
+              title="Persetujuan klien"
+              helper="Pastikan persetujuan resmi klien sudah diterima sebelum memproses revisi kontrak."
+            >
+              <FormField
+                label="Referensi persetujuan"
+                required
+                helper="Nomor surat, nomor SPK, judul email, atau bukti pesan resmi"
+              >
+                <TextInput
+                  value={changeOrderForm.clientReference}
+                  onChange={(value) =>
+                    setChangeOrderForm((curr) => ({
+                      ...curr,
+                      clientReference: value,
+                    }))
+                  }
+                  placeholder="Contoh: Email konfirmasi Pak Budi (22 Juni 2026)"
+                />
+              </FormField>
+              <DatePickerField
+                label="Tanggal persetujuan klien"
+                value={changeOrderForm.clientConfirmedAt}
+                onChange={(value) =>
+                  setChangeOrderForm((curr) => ({
+                    ...curr,
+                    clientConfirmedAt: value,
+                  }))
+                }
+              />
+            </FormSection>
+
+            <FormRiskNotice
+              title="Perubahan baseline resmi"
+              tone={valueDelta > 0 ? "warning" : "default"}
+            >
+              Form ini menyiapkan pengajuan perubahan kontrak. Baseline resmi proyek baru akan diperbarui setelah Anda meninjau dan menyetujui langkah berikutnya.
+            </FormRiskNotice>
+          </>
+        )}
+      </div>
+    </WorkflowFormSheet>
   );
 }
 
@@ -249,47 +379,102 @@ export function ChangeOrderDetailDrawer({
       onClose={() => setHistoryDetailId(null)}
       onExitComplete={handleExitComplete}
     >
-      <div className="space-y-sm">
-        <MetricGrid>
-          <RabMoneyBlock label="Sebelum" value={Number(order.previousContractValue)} />
-          <RabMoneyBlock label="Selisih" value={Number(order.valueDelta)} />
-          <RabMoneyBlock label="Sesudah" value={Number(order.revisedContractValue)} />
-        </MetricGrid>
-        <div className="rounded-2xl bg-primary/5 p-3 text-xs font-bold text-primary">
-          Sumber: {order.sourceRevisionSummary}
+      <div className="space-y-md">
+        {/* Comparison Header Card */}
+        <div className="rounded-3xl bg-surface-container-lowest p-4 ring-1 ring-ring-subtle shadow-surface">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-meta font-bold uppercase tracking-[0.12em] text-on-surface-variant">
+              Riwayat Revisi Kontrak
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-meta font-bold text-primary">
+              R{order.baseRevision} → R{order.revisedRevision}
+            </span>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 divide-x divide-outline-variant/20 rounded-2xl bg-surface-container-low p-2.5">
+            <div className="px-2 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                Sebelum
+              </p>
+              <div className="mt-1 flex justify-center font-mono text-xs font-bold tabular-nums text-on-surface">
+                <MoneyValue
+                  amount={Number(order.previousContractValue)}
+                  variant="compact"
+                  size="xs"
+                  align="center"
+                />
+              </div>
+            </div>
+            <div className="px-2 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                Sesudah
+              </p>
+              <div className="mt-1 flex justify-center font-mono text-xs font-bold tabular-nums text-on-surface">
+                <MoneyValue
+                  amount={Number(order.revisedContractValue)}
+                  variant="compact"
+                  size="xs"
+                  align="center"
+                />
+              </div>
+            </div>
+            <div className="px-2 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                Selisih
+              </p>
+              <div
+                className={`mt-1 flex justify-center font-mono text-xs font-bold tabular-nums ${
+                  Number(order.valueDelta) > 0
+                    ? "text-warning"
+                    : Number(order.valueDelta) < 0
+                      ? "text-success"
+                      : "text-on-surface-variant"
+                }`}
+              >
+                <MoneyValue
+                  amount={Math.abs(Number(order.valueDelta))}
+                  variant="compact"
+                  size="xs"
+                  align="center"
+                  prefix={
+                    Number(order.valueDelta) > 0
+                      ? "+ "
+                      : Number(order.valueDelta) < 0
+                        ? "- "
+                        : ""
+                  }
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="rounded-2xl bg-surface-container-low p-3">
-          <p className="text-[9px] font-bold text-on-surface-variant uppercase">Alasan</p>
-          <p className="mt-1 text-xs leading-5">{order.reason}</p>
-        </div>
-        <div className="rounded-2xl bg-surface-container-low p-3">
-          <p className="text-eyebrow font-bold text-on-surface-variant uppercase">
-            Scope R{order.baseRevision} → R{order.revisedRevision}
-          </p>
-          <p className="mt-1 text-xs leading-5">{order.scopeSummary}</p>
-        </div>
-        <div className="rounded-2xl bg-surface-container-low p-3 text-xs leading-5">
-          <p>
-            <strong>Bukti persetujuan klien:</strong>{" "}
-            {order.clientConfirmationReference ?? "Belum ada"}
-          </p>
-          <p>
-            <strong>Tanggal persetujuan klien:</strong>{" "}
-            {order.clientConfirmedAt
-              ? new Date(order.clientConfirmedAt).toLocaleDateString("id-ID")
-              : "Belum"}
-          </p>
-          <p>
-            <strong>Dibuat oleh:</strong> {order.createdByName} ·{" "}
-            {new Date(order.createdAt).toLocaleDateString("id-ID")}
-          </p>
-          <p>
-            <strong>Disetujui oleh:</strong> {order.approvedByName ?? "Belum"}
-            {order.approvedAt ? ` · ${new Date(order.approvedAt).toLocaleDateString("id-ID")}` : ""}
-          </p>
-          <p>
-            <strong>Status:</strong> {formatBusinessLabel(order.status)}
-          </p>
+
+        {/* Audit Facts */}
+        <div className="overflow-hidden rounded-3xl bg-surface-container-lowest divide-y divide-outline-variant/20 ring-1 ring-ring-subtle shadow-surface">
+          <ReviewRow label="Status" value={formatBusinessLabel(order.status)} />
+          <ReviewRow label="Sumber" value={order.sourceRevisionSummary} />
+          <ReviewRow label="Alasan perubahan" value={order.reason} />
+          <ReviewRow label="Lingkup pekerjaan" value={order.scopeSummary} />
+          <ReviewRow
+            label="Referensi persetujuan"
+            value={order.clientConfirmationReference ?? "Belum ada"}
+          />
+          <ReviewRow
+            label="Tanggal persetujuan klien"
+            value={formatDateDisplay(order.clientConfirmedAt ? String(order.clientConfirmedAt) : null)}
+          />
+          <ReviewRow
+            label="Dibuat oleh"
+            value={order.createdByName}
+            subvalue={new Date(order.createdAt).toLocaleDateString("id-ID", { dateStyle: "long" })}
+          />
+          {order.approvedByName ? (
+            <ReviewRow
+              label="Disetujui oleh"
+              value={order.approvedByName}
+              subvalue={order.approvedAt ? new Date(order.approvedAt).toLocaleDateString("id-ID", { dateStyle: "long" }) : undefined}
+            />
+          ) : null}
         </div>
       </div>
     </DetailSheet>

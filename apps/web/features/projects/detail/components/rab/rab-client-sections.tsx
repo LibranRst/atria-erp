@@ -14,6 +14,8 @@ import type {
   RabRevisionHistoryView,
   RapView,
 } from "../shared/rap-rab-manager";
+import { isRabManualSourceType } from "../../types/rap-rab-types";
+import { cn } from "@/lib/utils/cn";
 
 function toBadgeStatus(status: string): BadgeStatus {
   if (status === "LOCKED" || status === "READY" || status === "APPROVED") {
@@ -46,6 +48,7 @@ export function RabClientSummaryPanel({
   canManageRab,
   rap,
   setSourcePickerOpen,
+  onOpenExport,
 }: {
   readonly rabEstimate: RabEstimateView;
   readonly isRevisionDraft: boolean;
@@ -57,10 +60,16 @@ export function RabClientSummaryPanel({
   readonly canManageRab: boolean;
   readonly rap: RapView | null;
   readonly setSourcePickerOpen: (open: boolean) => void;
+  readonly onOpenExport?: () => void;
 }): React.JSX.Element {
   const visibleItemCount =
     rabEstimate.items.filter((item) => !item.isHidden).length +
     rabEstimate.bundles.filter((bundle) => !bundle.isHidden).length;
+
+  const serviceFeeTotal = rabEstimate.items
+    .filter((item) => !item.bundleId && !item.isHidden && item.itemNature === "SERVICE_FEE")
+    .reduce((sum, item) => sum + Number(item.lineTotal), 0);
+  const productionTotal = Math.max(0, visibleRabValue - serviceFeeTotal);
 
   return (
     <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
@@ -77,13 +86,58 @@ export function RabClientSummaryPanel({
             className="mt-1"
           />
         </div>
-        <Badge status={toBadgeStatus(rabEstimate.status)}>
-          {rabStatusLabel(rabEstimate.status)}
-        </Badge>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <Badge status={toBadgeStatus(rabEstimate.status)}>
+            {rabStatusLabel(rabEstimate.status)}
+          </Badge>
+          {onOpenExport ? (
+            <button
+              type="button"
+              onClick={onOpenExport}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-support font-bold text-white ring-1 ring-white/15 transition-transform hover:bg-white/15 active:scale-98"
+              title="Export Dokumen RAB ke PDF, Gambar WhatsApp, atau Excel"
+            >
+              <AppIcon name="description" className="text-sm" />
+              <span>Export Dokumen</span>
+            </button>
+          ) : null}
+        </div>
       </div>
       <p className="mt-1 truncate text-meta text-white/60">
         {rabEstimate.title} · {visibleItemCount} item tampil
       </p>
+      {serviceFeeTotal > 0 && !isRevisionDraft && (
+        <div className="mt-4 border-t border-white/12 pt-3">
+          <div className="grid grid-cols-2 divide-x divide-white/12 pb-2.5">
+            <RabFact label="Porsi Fisik/Produksi" value={productionTotal} />
+            <RabFact label="Jasa Desain & Fee" value={serviceFeeTotal} align="right" />
+          </div>
+          <div className="mt-2 flex items-center justify-between rounded-[14px] bg-white/5 px-3 py-2 text-meta text-white/70">
+            <span className="text-[11px] text-white/60">
+              Margin Fisik:{" "}
+              <strong className="font-mono text-white">
+                {productionTotal > 0
+                  ? (((productionTotal - productionTotal * 0.9) / productionTotal) * 100).toFixed(1)
+                  : "0.0"}
+                %
+              </strong>
+            </span>
+            <span className="text-[11px] text-white/60">
+              Margin Total:{" "}
+              <strong className="font-mono text-white">
+                {visibleRabValue > 0
+                  ? (
+                      ((serviceFeeTotal + (productionTotal - productionTotal * 0.9)) /
+                        visibleRabValue) *
+                      100
+                    ).toFixed(1)
+                  : "0.0"}
+                %
+              </strong>
+            </span>
+          </div>
+        </div>
+      )}
       {isRevisionDraft && approvedBaseline && (
         <div className="mt-4 grid grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-4">
           <RabFact label="Disetujui" value={approvedBaseline.value} />
@@ -137,13 +191,13 @@ function RabFact({
   const className =
     align === "center" ? "px-2 text-center" : align === "right" ? "pl-2 text-right" : "pr-2";
   return (
-    <div className={className}>
+    <div className={cn(className, "space-y-2")}>
       <p className="truncate text-[8px] font-bold tracking-wide text-white/50 uppercase">{label}</p>
       <MoneyValue
         amount={value}
-        variant="compact"
+        variant="fullDynamic"
         tone={danger ? "danger" : "inverse"}
-        size="xs"
+        size="md"
         align={align === "right" ? "right" : "left"}
         className={align === "center" ? "text-center" : ""}
       />
@@ -362,6 +416,7 @@ function RabItemRow({
   readonly item: RabItemView;
   readonly setRabItemEditorId: (id: string | null) => void;
 }): React.JSX.Element {
+  const isService = item.itemNature === "SERVICE_FEE";
   return (
     <button
       type="button"
@@ -369,16 +424,31 @@ function RabItemRow({
       className="w-full p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75 text-primary">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isService ? "bg-secondary-container/40 text-secondary" : "bg-white/75 text-primary"}`}
+        >
           <AppIcon
-            name={item.sourceType === "MANUAL" ? "edit_note" : "format_list_bulleted"}
+            name={
+              isService
+                ? "design_services"
+                : isRabManualSourceType(item.sourceType)
+                  ? "edit_note"
+                  : "format_list_bulleted"
+            }
             className="text-[19px]"
           />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-bold">{item.clientLabel}</span>
+          <span className="flex items-center gap-1.5">
+            <span className="truncate text-sm font-bold">{item.clientLabel}</span>
+            {isService && (
+              <span className="inline-flex shrink-0 rounded-full bg-secondary-container/50 px-2 py-0.5 text-[10px] font-semibold text-secondary">
+                Jasa & Fee
+              </span>
+            )}
+          </span>
           <span className="block truncate text-meta text-on-surface-variant">
-            {rabSourceLabel(item.sourceType)} - {item.quantity} {item.unit}
+            {rabSourceLabel(item.sourceType, item.itemNature)} · {item.quantity} {item.unit}
           </span>
           {item.isHidden && (
             <span className="mt-1 inline-flex rounded-full bg-error-container/30 px-2 py-0.5 text-eyebrow font-bold text-error">

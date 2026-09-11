@@ -13,7 +13,8 @@ import {
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button, CompactFormDialog, FormField, Textarea } from "@/components/ui";
+
 export function RabRevisionHistoryPanel({
   revisionHistory,
   changeOrders,
@@ -27,15 +28,50 @@ export function RabRevisionHistoryPanel({
   const { openActivityDetail } = useActivityDetail();
   const [pendingId, setPendingId] = React.useState<string | null>(null);
 
+  const [overrideOrderId, setOverrideOrderId] = React.useState<string | null>(null);
+  const [overrideReason, setOverrideReason] = React.useState("");
+  const [overridePending, setOverridePending] = React.useState(false);
+
   async function approve(orderId: string): Promise<void> {
     setPendingId(orderId);
     const result = await approveProjectChangeOrder({ changeOrderId: orderId });
     setPendingId(null);
     if (!result.success) {
+      if (
+        result.error.message.includes("MAKER_CHECKER_REQUIRED") ||
+        result.error.message.includes("disetujui user lain")
+      ) {
+        setOverrideOrderId(orderId);
+        setOverrideReason("");
+        return;
+      }
       toast.error(result.error.message);
       return;
     }
     toast.success("Change Order disetujui dan baseline kontrak diperbarui.");
+    router.refresh();
+  }
+
+  async function submitEmergencyOverride(): Promise<void> {
+    if (!overrideOrderId) return;
+    if (overrideReason.trim().length < 10) {
+      toast.error("Alasan persetujuan darurat minimal 10 karakter.");
+      return;
+    }
+    setOverridePending(true);
+    const result = await approveProjectChangeOrder({
+      changeOrderId: overrideOrderId,
+      emergencyOverride: true,
+      reason: overrideReason.trim(),
+    });
+    setOverridePending(false);
+    if (!result.success) {
+      toast.error(result.error.message);
+      return;
+    }
+    setOverrideOrderId(null);
+    setOverrideReason("");
+    toast.success("Change Order disetujui dengan persetujuan darurat (Emergency Override).");
     router.refresh();
   }
 
@@ -104,6 +140,46 @@ export function RabRevisionHistoryPanel({
           </div>
         ))}
       </div>
+
+      <CompactFormDialog
+        open={overrideOrderId !== null}
+        title="Persetujuan Darurat (Emergency Override)"
+        pending={overridePending}
+        onClose={() => {
+          if (!overridePending) {
+            setOverrideOrderId(null);
+            setOverrideReason("");
+          }
+        }}
+        actions={
+          <Button
+            variant="primary"
+            fullWidth
+            pending={overridePending}
+            disabled={overrideReason.trim().length < 10}
+            onClick={() => void submitEmergencyOverride()}
+          >
+            Setujui Darurat
+          </Button>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-xs leading-relaxed text-on-surface-variant">
+            Change Order ini dibuat oleh akun Anda. Sesuai prinsip Maker-Checker, persetujuan memerlukan otorisasi pihak lain (Finance/Owner). Sebagai Owner, Anda dapat memakai hak persetujuan darurat dengan alasan tertulis.
+          </p>
+          <FormField label="Alasan Persetujuan Darurat" helper="Minimal 10 karakter alasan tertulis." required>
+            <Textarea
+              id="co-emergency-override-reason"
+              autoFocus
+              rows={3}
+              value={overrideReason}
+              onChange={setOverrideReason}
+              placeholder="Contoh: Klien mengonfirmasi via WA dan meminta pengerjaan add-on segera dimulai."
+              disabled={overridePending}
+            />
+          </FormField>
+        </div>
+      </CompactFormDialog>
     </NativePanel>
   );
 }

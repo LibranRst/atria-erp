@@ -19,6 +19,7 @@ import {
   Textarea,
   TextInput,
   ValuePreviewStrip,
+  useFormDirtySnapshot,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import type { RabEstimateView } from "../shared/rap-rab-manager";
@@ -50,6 +51,11 @@ export function RabBundleDrawer({
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const bundleTotal = Number(bundleForm.quantity) * Number(bundleForm.unitPrice);
   const editable = rabEstimate?.status === "DRAFT";
+  const dirty = useFormDirtySnapshot(
+    bundleEditorOpen,
+    editingBundleId ?? "new-bundle",
+    JSON.stringify(bundleForm),
+  );
 
   const bundleItems = rabEstimate?.items.filter((item) => item.bundleId === editingBundleId) ?? [];
 
@@ -130,6 +136,12 @@ export function RabBundleDrawer({
   return (
     <>
       <OperationalFormSheet
+        dismissal={{
+          mode: "confirm",
+          dirty,
+          onDiscard: () => undefined,
+          description: "Perubahan paket RAB yang belum disimpan akan hilang.",
+        }}
         open={bundleEditorOpen}
         title={editingBundleId ? "Edit Paket RAB" : "Buat Paket RAB"}
         onClose={() => setBundleEditorOpen(false)}
@@ -163,52 +175,48 @@ export function RabBundleDrawer({
             title="Tampilan paket"
             helper="Nama dan deskripsi ini akan dibaca klien di RAB."
           >
-            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-              <FormField label="Nama paket">
-                <TextInput
-                  value={bundleForm.clientLabel}
-                  onChange={(value) => setBundleForm((curr) => ({ ...curr, clientLabel: value }))}
-                  placeholder="Nama paket untuk klien"
-                />
-              </FormField>
-              <FormField label="Deskripsi untuk klien" optional>
-                <Textarea
-                  rows={3}
-                  value={bundleForm.description}
-                  onChange={(value) => setBundleForm((curr) => ({ ...curr, description: value }))}
-                  placeholder="Deskripsi lingkup paket"
-                />
-              </FormField>
-            </div>
+            <FormField label="Nama paket">
+              <TextInput
+                value={bundleForm.clientLabel}
+                onChange={(value) => setBundleForm((curr) => ({ ...curr, clientLabel: value }))}
+                placeholder="Nama paket untuk klien"
+              />
+            </FormField>
+            <FormField label="Deskripsi untuk klien" optional>
+              <Textarea
+                rows={3}
+                value={bundleForm.description}
+                onChange={(value) => setBundleForm((curr) => ({ ...curr, description: value }))}
+                placeholder="Deskripsi lingkup paket"
+              />
+            </FormField>
           </FormSection>
 
           <FormSection
             title="Jumlah & harga"
             helper="Harga paket menggantikan tampilan harga tiap item anggota."
           >
-            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-              <FormField label="Jumlah">
-                <NumericInput
-                  min={0.01}
-                  value={bundleForm.quantity}
-                  onChange={(value) => setBundleForm((curr) => ({ ...curr, quantity: value }))}
-                />
-              </FormField>
-              <ComboboxField
-                label="Satuan"
-                value={bundleForm.unit}
-                onChange={(value) => setBundleForm((curr) => ({ ...curr, unit: value }))}
-                options={COMMON_UNIT_OPTIONS}
-                placeholder="Pilih satuan"
+            <FormField label="Jumlah">
+              <NumericInput
+                min={0.01}
+                value={bundleForm.quantity}
+                onChange={(value) => setBundleForm((curr) => ({ ...curr, quantity: value }))}
               />
-              <FormField label="Harga paket untuk klien">
-                <MoneyInput
-                  value={bundleForm.unitPrice}
-                  onChange={(value) => setBundleForm((curr) => ({ ...curr, unitPrice: value }))}
-                  showPreview={false}
-                />
-              </FormField>
-            </div>
+            </FormField>
+            <ComboboxField
+              label="Satuan"
+              value={bundleForm.unit}
+              onChange={(value) => setBundleForm((curr) => ({ ...curr, unit: value }))}
+              options={COMMON_UNIT_OPTIONS}
+              placeholder="Pilih satuan"
+            />
+            <FormField label="Harga paket untuk klien">
+              <MoneyInput
+                value={bundleForm.unitPrice}
+                onChange={(value) => setBundleForm((curr) => ({ ...curr, unitPrice: value }))}
+                showPreview={false}
+              />
+            </FormField>
             <div className="p-3">
               <ValuePreviewStrip
                 items={[
