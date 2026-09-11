@@ -1,3 +1,4 @@
+import { recordNotificationEvent } from "@/server/services/notification-events";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
 
@@ -157,5 +158,17 @@ export async function createSubmittedFieldRequestTx(
     projectBudgetCategoryId: budgetContext.projectBudgetCategoryId,
   });
 
+  await recordNotificationEvent(tx, {
+    referenceType: "project_cost",
+    referenceId: cost.id,
+    projectId: cost.projectId,
+    stage: "SUBMITTED",
+    title: "Biaya menunggu verifikasi",
+    message: cost.description,
+    permission: "verify:cost",
+    actionRequired: true,
+    actionUrl: "/expenses?filter=NEEDS_VERIFICATION",
+    actorId: args.requestedById,
+  });
   return cost;
 }

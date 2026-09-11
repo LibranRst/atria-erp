@@ -31,7 +31,5 @@ export default async function LedgerPage(): Promise<React.JSX.Element> {
     );
   }
 
-  return (
-    <FinanceDashboard data={data.overview} userName={data.userName} onboarding={data.onboarding} />
-  );
+  return <FinanceDashboard data={data.overview} userName={data.userName} setup={data.setup} />;
 }

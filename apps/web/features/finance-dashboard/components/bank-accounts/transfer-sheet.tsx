@@ -2,7 +2,6 @@ import React from "react";
 
 import {
   DatePickerField,
-  FieldContextLine,
   FinanceUnsavedChangesModal,
   FormField,
   FormRiskNotice,
@@ -16,7 +15,7 @@ import {
   WorkflowFormSheet,
 } from "@/components/ui";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
-import { InfoPill } from "./info-pill";
+import { BankAccountContextCard } from "./bank-account-context-card";
 import type {
   BankAccount,
   TransferDraft,
@@ -83,6 +82,7 @@ export function TransferSheet({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? "Tinjau transfer rekening" : "Transfer rekening"}
         onClose={requestClose}
@@ -101,10 +101,7 @@ export function TransferSheet({
       >
         <div className="space-y-md">
           {account ? (
-            <InfoPill
-              label="Dari rekening"
-              value={`${account.name} • ${shortMoney(account.balance)}`}
-            />
+            <BankAccountContextCard account={account} eyebrow="Rekening Sumber" />
           ) : null}
           {reviewing ? (
             <>
@@ -124,12 +121,30 @@ export function TransferSheet({
                 title="Referensi transfer"
                 helper="Sistem mencatat dua baris ledger berpasangan."
               >
-                <FieldContextLine>
-                  {draft.transactionDate} · {draft.referenceNumber || "Tanpa nomor referensi"}
-                </FieldContextLine>
-                <p className="rounded-2xl bg-surface-container-low px-4 py-3 text-xs leading-5 text-on-surface">
-                  {draft.description}
-                </p>
+                <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+                  <span className="shrink-0 text-on-surface-variant">Tanggal</span>
+                  <span className="text-right font-bold text-on-surface">
+                    {draft.transactionDate
+                      ? new Date(draft.transactionDate).toLocaleDateString("id-ID", {
+                          dateStyle: "long",
+                        })
+                      : "–"}
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+                  <span className="shrink-0 text-on-surface-variant">Nomor referensi</span>
+                  <span className="text-right font-bold text-on-surface">
+                    {draft.referenceNumber || "Tanpa nomor referensi"}
+                  </span>
+                </div>
+                {draft.description ? (
+                  <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+                    <span className="shrink-0 text-on-surface-variant">Keterangan</span>
+                    <span className="text-right font-medium text-on-surface">
+                      {draft.description}
+                    </span>
+                  </div>
+                ) : null}
               </FormSection>
             </>
           ) : (
@@ -143,19 +158,29 @@ export function TransferSheet({
                   terkoreksi manual setelah dicatat.
                 </FormRiskNotice>
               ) : null}
-              <AdaptiveSelect
-                label="Ke rekening"
-                value={draft.toBankAccountId}
-                onChange={(value) => patch({ toBankAccountId: value })}
-                options={options}
-              />
-              <FormField label="Nominal">
-                <MoneyInput value={draft.amount} onChange={(value) => patch({ amount: value })} />
-              </FormField>
-              <FieldContextLine tone={projectedSourceBalance < 0 ? "danger" : "default"}>
-                Tujuan: {selectedTarget?.label ?? "belum dipilih"} · Sumber{" "}
-                {shortMoney(account?.balance ?? 0)} -&gt; {shortMoney(projectedSourceBalance)}
-              </FieldContextLine>
+              <FormSection
+                title="Tujuan & nominal"
+                helper={
+                  projectedSourceBalance < 0
+                    ? `Peringatan: Saldo sumber minus (${shortMoney(projectedSourceBalance)})`
+                    : selectedTarget
+                      ? `Tujuan: ${selectedTarget.label} · Saldo sumber: ${shortMoney(account?.balance ?? 0)} → ${shortMoney(projectedSourceBalance)}`
+                      : "Pilih rekening tujuan dan nominal transfer."
+                }
+              >
+                <AdaptiveSelect
+                  label="Ke rekening"
+                  value={draft.toBankAccountId}
+                  onChange={(value) => patch({ toBankAccountId: value })}
+                  options={options}
+                />
+                <FormField label="Nominal" required>
+                  <MoneyInput
+                    value={draft.amount}
+                    onChange={(value) => patch({ amount: value })}
+                  />
+                </FormField>
+              </FormSection>
               <FormSection
                 title="Referensi audit"
                 helper="Tanggal, referensi, dan deskripsi untuk rekonsiliasi."

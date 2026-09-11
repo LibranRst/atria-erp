@@ -256,7 +256,7 @@ export function ExpenseItemsSection({
       {/* Item hanya bisa disusun setelah proyeknya dipilih, karena kategori
           budget dan daftar materialnya mengikuti proyek itu. Sebelumnya tombol
           ini sekadar mati tanpa menyebut syaratnya. */}
-      <div aria-live="polite">
+      <div aria-live="polite" className="empty:hidden">
         {!selectedProjectId && !disabled ? (
           <p className="px-1 text-meta font-medium text-on-surface-variant">
             Pilih proyek dulu untuk menambahkan item.

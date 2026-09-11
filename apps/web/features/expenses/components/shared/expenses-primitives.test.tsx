@@ -8,9 +8,14 @@ import { VendorPaymentCard } from "@/features/expenses/components/lists/vendor-b
 import { VendorBillCard } from "@/features/expenses/components/lists/vendor-bill-cards";
 
 import { ActivityDetailProvider } from "@/features/activity-detail/components/activity-detail-provider";
+import {
+  VendorBillScheduleContextCard,
+  VendorPaymentDisburseContextCard,
+} from "@/features/expenses/components/sheets/vendor-payment-sheets";
 
 const vendorCardsPath = new URL("../lists/vendor-bill-cards.tsx", import.meta.url);
 const fieldClaimRowsPath = new URL("../lists/field-claim-rows.tsx", import.meta.url);
+const vendorPaymentSheetsPath = new URL("../sheets/vendor-payment-sheets.tsx", import.meta.url);
 
 describe("Expenses Dashboard visual language", () => {
   test("renders a contextual financial summary without changing its values", () => {
@@ -176,4 +181,135 @@ describe("Expenses Dashboard visual language", () => {
     expect(`${vendorSource}\n${fieldSource}`).toContain("openActivityDetail({ kind:");
     expect(`${vendorSource}\n${fieldSource}`).toContain("activityDetailOptions");
   });
+
+  test("renders structured context card for vendor bill payment scheduling with calm luxury layout", () => {
+    const mockBill = {
+      id: "bill-1",
+      vendorId: "v-1",
+      projectId: "proj-1",
+      projectBudgetItemId: "item-1",
+      projectBudgetCategoryId: "cat-1",
+      billNumber: "INV-2026-001",
+      amount: "25000000",
+      status: "PARTIALLY_PAID",
+      dueDate: new Date("2026-03-20"),
+      notes: null,
+      vendor: { id: "v-1", name: "PT Surya Abadi" },
+      project: { id: "proj-1", name: "Villa Ubud" },
+      budgetItem: { id: "item-1", name: "Material Kayu", allocatedAmount: "50000000", actualSpent: "25000000" },
+      payments: [],
+    };
+
+    const html = renderToStaticMarkup(
+      <VendorBillScheduleContextCard
+        bill={mockBill}
+        remaining={15000000}
+        totalScheduledOrPaid={10000000}
+      />,
+    );
+
+    expect(html).toContain("PT Surya Abadi");
+    expect(html).toContain("Tagihan INV-2026-001");
+    expect(html).toContain("Villa Ubud");
+    expect(html).toContain("Sisa Tagihan");
+    expect(html).toContain("Total Tagihan");
+    expect(html).toContain("Sebagian");
+    expect(html).toContain("rounded-owner");
+    expect(html).toContain("bg-surface-container-low");
+    expect(html).toContain("Sudah terjadwal Rp 10.000.000");
+    expect(html).toContain("Budget Material Kayu");
+  });
+
+  test("renders structured context card for vendor payment disbursement", () => {
+    const mockPayment = {
+      id: "pay-1",
+      vendorBillId: "bill-1",
+      bankAccountId: "acc-1",
+      amountPaid: "10000000",
+      status: "APPROVED",
+      paymentDate: new Date("2026-03-10"),
+      referenceNumber: "TRX-001",
+      bankAccount: { id: "acc-1", name: "BCA Operasional", bankName: "BCA", balance: "100000000" },
+      vendorBill: {
+        billNumber: "INV-2026-001",
+        vendor: { name: "PT Surya Abadi" },
+        project: { name: "Villa Ubud" },
+      },
+    };
+
+    const html = renderToStaticMarkup(
+      <VendorPaymentDisburseContextCard
+        payment={mockPayment}
+        amount={10000000}
+      />,
+    );
+
+    expect(html).toContain("Pencairan Tagihan");
+    expect(html).toContain("PT Surya Abadi");
+    expect(html).toContain("Tagihan INV-2026-001");
+    expect(html).toContain("Villa Ubud");
+    expect(html).toContain("Siap Cair");
+    expect(html).toContain("Nominal Pencairan");
+    expect(html).toContain("BCA Operasional");
+    expect(html).toContain("rounded-owner");
+  });
+
+  test("ensures vendor payment sheets use structured context cards instead of raw text line", async () => {
+    const sheetsSource = await Bun.file(vendorPaymentSheetsPath).text();
+
+    expect(sheetsSource).toContain("<VendorBillScheduleContextCard");
+    expect(sheetsSource).toContain("<VendorPaymentDisburseContextCard");
+    expect(sheetsSource).not.toContain("<FieldContextLine");
+  });
+
+  test("renders structured budget impact card for expense line editor", async () => {
+    const { ExpenseLineBudgetContextCard } = await import("../forms/expense-line-context-cards");
+    const html = renderToStaticMarkup(
+      <ExpenseLineBudgetContextCard
+        categoryName="Material"
+        amount={1500000}
+        remaining={2000000}
+        usedPercentage={45}
+      />,
+    );
+
+    expect(html).toContain("Dampak Anggaran Kategori");
+    expect(html).toContain("Kategori Material");
+    expect(html).toContain("Pagu Aman");
+    expect(html).toContain("Subtotal Item Ini");
+    expect(html).toContain("Sisa Pagu Setelahnya");
+    expect(html).toContain("45% pagu terpakai");
+    expect(html).toContain("rounded-owner");
+  });
+
+  test("renders structured stock checking card for expense line editor", async () => {
+    const { ExpenseLineStockContextCard } = await import("../forms/expense-line-context-cards");
+    const html = renderToStaticMarkup(
+      <ExpenseLineStockContextCard
+        materialName="Cat Dinding Dulux 20L"
+        unit="Pail"
+        availableStock={10}
+        requiredQuantity={4}
+        stockHandling="STOCK_IN"
+      />,
+    );
+
+    expect(html).toContain("Pengecekan Stok Gudang");
+    expect(html).toContain("Cat Dinding Dulux 20L");
+    expect(html).toContain("Stok Cukup");
+    expect(html).toContain("Stok Tersedia");
+    expect(html).toContain("Kebutuhan Item");
+    expect(html).toContain("Stok Masuk Gudang");
+    expect(html).toContain("rounded-owner");
+  });
+
+  test("ensures expense line editor uses structured context cards instead of raw text line", async () => {
+    const lineEditorPath = new URL("../forms/expense-line-editor.tsx", import.meta.url);
+    const lineEditorSource = await Bun.file(lineEditorPath).text();
+
+    expect(lineEditorSource).toContain("<ExpenseLineBudgetContextCard");
+    expect(lineEditorSource).toContain("<ExpenseLineStockContextCard");
+    expect(lineEditorSource).not.toContain("<FieldContextLine");
+  });
 });
+

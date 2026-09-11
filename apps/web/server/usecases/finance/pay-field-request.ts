@@ -1,3 +1,4 @@
+import { recordNotificationEvent } from "@/server/services/notification-events";
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
@@ -145,12 +146,30 @@ export async function payFieldRequestUseCase(
         },
       });
 
-      return { costId: cost.id, nextBalance: newBalance };
+      await recordNotificationEvent(tx, {
+        referenceType: "project_cost",
+        referenceId: cost.id,
+        projectId: cost.projectId,
+        stage: "PAID",
+        title: "Biaya telah dibayar",
+        message: cost.description,
+        recipients: [cost.requestedById],
+        actionUrl: `/projects/${cost.projectId}?tab=budget`,
+        actorId: actor.userId,
+      });
+      return {
+        costId: cost.id,
+        nextBalance: newBalance,
+        requestedById: cost.requestedById,
+        description: cost.description,
+        amount: Number(cost.amount),
+        projectId: cost.projectId,
+      };
     });
 
     return {
       success: true,
-      data: result,
+      data: { costId: result.costId, nextBalance: result.nextBalance },
     };
   } catch (error: unknown) {
     return mapPayFieldRequestError(error);

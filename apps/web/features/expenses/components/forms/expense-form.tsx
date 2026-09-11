@@ -422,6 +422,7 @@ export function ExpenseForm({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open && success === null}
         title={
           reviewOpen

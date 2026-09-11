@@ -9,6 +9,7 @@ import {
   FormSection,
   MoneyInput,
   MoneyValue,
+  SwitchRow,
   TextInput,
   WorkflowFormSheet,
 } from "@/components/ui";
@@ -198,6 +199,7 @@ export function AccountFormSheet({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? "Tinjau rekening" : title}
         onClose={requestClose}
@@ -206,7 +208,6 @@ export function AccountFormSheet({
         disabledReason={disabledReason}
         primaryLabel={reviewing ? (draft.id ? "Simpan" : "Tambah") : "Tinjau"}
         secondaryLabel={reviewing ? "Ubah" : undefined}
-        actionLayout={reviewing ? "stacked" : "split"}
         pendingLabel="Menyimpan…"
         onExitComplete={() => {
           setReviewing(false);
@@ -281,17 +282,16 @@ export function AccountFormSheet({
                   </FormField>
                 ) : null}
                 {canEditStatus ? (
-                  <FormField label="Status rekening" layout="inline">
-                    <button
-                      type="button"
-                      onClick={() => patch({ isActive: !draft.isActive })}
-                      className={`min-h-8 rounded-full px-3 text-meta font-bold active:scale-[0.97] ${
-                        draft.isActive ? "bg-primary/8 text-primary" : "bg-error/8 text-error"
-                      }`}
-                    >
-                      {draft.isActive ? "Aktif" : "Diarsipkan"}
-                    </button>
-                  </FormField>
+                  <SwitchRow
+                    title="Status rekening"
+                    description={
+                      draft.isActive
+                        ? "Tersedia untuk transaksi baru."
+                        : "Tidak tersedia untuk transaksi baru."
+                    }
+                    checked={draft.isActive}
+                    onChange={(isActive) => patch({ isActive })}
+                  />
                 ) : null}
               </FormSection>
             ) : null}

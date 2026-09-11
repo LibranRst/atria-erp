@@ -1,3 +1,6 @@
+import "server-only";
+
+import { recordNotificationEvent } from "@/server/services/notification-events";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -98,6 +101,18 @@ export async function createVendorBillTx(
       billNumber: created.billNumber,
       status: created.status,
     }),
+  });
+  await recordNotificationEvent(tx, {
+    referenceType: "vendor_bill",
+    referenceId: created.id,
+    projectId: created.projectId,
+    stage: "CREATED",
+    title: "Tagihan vendor siap dijadwalkan",
+    message: created.billNumber,
+    permission: "pay:vendor_bill",
+    actionRequired: true,
+    actionUrl: `/projects/${created.projectId}?tab=budget`,
+    actorId: input.requestedById,
   });
   return created;
 }

@@ -13,9 +13,10 @@ function ColorInput({
   readonly onChange: (value: string) => void;
 }): React.JSX.Element {
   const grouped = useFormPresentation() === "grouped";
+  const inputId = React.useId();
   return (
-    <FormField label={label}>
-      <label
+    <FormField label={label} htmlFor={inputId}>
+      <div
         className={
           grouped
             ? "flex min-h-9 items-center gap-3 bg-transparent"
@@ -31,13 +32,14 @@ function ColorInput({
           {value.toUpperCase()}
         </span>
         <input
+          id={inputId}
           type="color"
           value={value}
           onChange={(event) => onChange(event.target.value)}
           className="h-8 w-8 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           aria-label={label}
         />
-      </label>
+      </div>
     </FormField>
   );
 }

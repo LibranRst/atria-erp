@@ -1,4 +1,6 @@
 "use server";
+import { reconcileVendorBillAction } from "@/server/services/notification-job";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { getVendorPaymentApprovalThresholdCents } from "@/lib/finance/approval-thresholds";
 import { db } from "@/db";
@@ -23,6 +25,7 @@ import { getErrorMessage } from "@atria/core/utils/error-message";
 import crypto from "crypto";
 import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
 import { parseNumericToCents } from "@/lib/finance/balance-mutation";
+import { formatIdr } from "@atria/core/utils/money";
 
 export async function scheduleVendorBillPayment(
   input: SchedulePaymentInput,
@@ -191,6 +194,21 @@ export async function scheduleVendorBillPayment(
         }),
       });
 
+      await recordNotificationEvent(tx, {
+        referenceType: "vendor_payment",
+        referenceId: newPayment.id,
+        projectId: bill.projectId,
+        stage: "SCHEDULED",
+        title: requiresApproval
+          ? "Pembayaran vendor menunggu persetujuan"
+          : "Pembayaran vendor siap diproses",
+        message: `Pembayaran senilai ${formatIdr(Number(newPayment.amountPaid))}.`,
+        permission: requiresApproval ? "decide:all_approvals" : "pay:vendor_bill",
+        actionRequired: true,
+        actionUrl: requiresApproval ? "/approvals" : `/projects/${bill.projectId}?tab=budget`,
+        actorId: session.user.id,
+      });
+      await reconcileVendorBillAction(tx, vendorBillId);
       return newPayment;
     });
 

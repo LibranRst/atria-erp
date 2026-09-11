@@ -15,6 +15,7 @@ import type {
   VendorListPayment,
 } from "@/features/expenses/types/vendor-bill-list-types";
 import { getBillPaymentSummary } from "@/features/expenses/utils/vendor-bill-list-utils";
+import { deriveVendorPaymentReference } from "@atria/core/finance/invoice-prefill";
 import { getErrorMessage } from "@atria/core/utils/error-message";
 
 const vendorScheduleRecoverySchema = z.object({
@@ -117,10 +118,18 @@ export function useVendorPaymentOperations({
     setSelectedPayment(payment);
     setError(null);
     if (disburseRecovery.isDirty && disburseRecovery.payload.paymentId === payment.id) return;
+    const initialBank =
+      bankAccounts.find((b) => b.id === payment.bankAccountId) ?? bankAccounts[0];
+    const initialSuggestedRef = deriveVendorPaymentReference({
+      bankName: initialBank?.bankName || initialBank?.name,
+      vendorName: payment.vendorBill?.vendor?.name,
+      billNumber: payment.vendorBill?.billNumber,
+      projectName: payment.vendorBill?.project?.name,
+    });
     disburseRecovery.reset({
       paymentId: payment.id,
-      disburseBankId: payment.bankAccountId,
-      refNumber: "",
+      disburseBankId: initialBank?.id ?? payment.bankAccountId,
+      refNumber: initialSuggestedRef,
     });
   }
 
@@ -282,7 +291,32 @@ export function useVendorPaymentOperations({
     setSelectedBankId: (selectedBankId) => patchSchedule({ selectedBankId }),
     setScheduleAmount: (scheduleAmount) => patchSchedule({ scheduleAmount }),
     setScheduleDate: (scheduleDate) => patchSchedule({ scheduleDate }),
-    setDisburseBankId: (disburseBankId) => patchDisburse({ disburseBankId }),
+    setDisburseBankId: (disburseBankId) => {
+      const currentBankId = disburseRecovery.payload.disburseBankId;
+      const currentBank = bankAccounts.find((b) => b.id === currentBankId);
+      const newBank = bankAccounts.find((b) => b.id === disburseBankId);
+      const prevRef = disburseRecovery.payload.refNumber;
+
+      if (selectedPayment) {
+        const prevSuggested = deriveVendorPaymentReference({
+          bankName: currentBank?.bankName || currentBank?.name,
+          vendorName: selectedPayment.vendorBill?.vendor?.name,
+          billNumber: selectedPayment.vendorBill?.billNumber,
+          projectName: selectedPayment.vendorBill?.project?.name,
+        });
+        const nextSuggested = deriveVendorPaymentReference({
+          bankName: newBank?.bankName || newBank?.name,
+          vendorName: selectedPayment.vendorBill?.vendor?.name,
+          billNumber: selectedPayment.vendorBill?.billNumber,
+          projectName: selectedPayment.vendorBill?.project?.name,
+        });
+        if (!prevRef.trim() || prevRef === prevSuggested) {
+          patchDisburse({ disburseBankId, refNumber: nextSuggested });
+          return;
+        }
+      }
+      patchDisburse({ disburseBankId });
+    },
     setRefNumber: (refNumber) => patchDisburse({ refNumber }),
     clearSuccess: () => setSuccess(null),
   };

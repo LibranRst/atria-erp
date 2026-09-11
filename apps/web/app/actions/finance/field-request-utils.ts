@@ -31,10 +31,9 @@ export async function createProjectCostApprovalTx(
   },
 ): Promise<void> {
   const approverId = await findOwnerUserIdTx(tx);
-  const prefix = args.label ? `[Kategori: ${args.label}] ` : "";
   const notes = args.isOverrun
-    ? `${prefix}Pengeluaran lapangan melebihi plafon anggaran${args.label ? "." : " (Budget Overrun)."}`
-    : `${prefix}Nominal pengeluaran lapangan mencapai/melebihi Rp 5.000.000.`;
+    ? `Pengeluaran lapangan melebihi plafon anggaran${args.label ? ` ${args.label}.` : " (Budget Overrun)."}`
+    : "Nominal pengeluaran lapangan mencapai/melebihi Rp 5.000.000.";
 
   await tx.insert(approval).values({
     approverId,

@@ -2,7 +2,6 @@ import React from "react";
 
 import {
   DatePickerField,
-  FieldContextLine,
   FinanceUnsavedChangesModal,
   FormField,
   FormRiskNotice,
@@ -10,6 +9,7 @@ import {
   MoneyImpactRow,
   MoneyInput,
   AdaptiveSelect,
+  SegmentedTabs,
   Textarea,
   TextInput,
   WorkflowFormSheet,
@@ -17,7 +17,7 @@ import {
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { movementCategoryOptions } from "@/features/finance-dashboard/utils/bank-account-constants";
-import { InfoPill } from "./info-pill";
+import { BankAccountContextCard } from "./bank-account-context-card";
 import type {
   BankAccount,
   CashMovementCategory,
@@ -84,6 +84,7 @@ export function MovementSheet({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
         title={
           reviewing ? "Tinjau mutasi kas" : draft.type === "INFLOW" ? "Kas masuk" : "Kas keluar"
@@ -103,7 +104,7 @@ export function MovementSheet({
       >
         <div className="space-y-md">
           {account ? (
-            <InfoPill label="Rekening" value={`${account.name} • ${shortMoney(account.balance)}`} />
+            <BankAccountContextCard account={account} eyebrow="Rekening" />
           ) : null}
           {reviewing ? (
             <>
@@ -117,17 +118,38 @@ export function MovementSheet({
                 title="Yang akan dicatat"
                 helper="Mutasi ini menambah baris ledger dan tidak mengubah transaksi lama."
               >
-                <FieldContextLine>
-                  {draft.type === "INFLOW" ? "Kas masuk" : "Kas keluar"} ·{" "}
-                  {movementCategoryOptions.find((option) => option.value === draft.category)
-                    ?.label ?? formatBusinessLabel(draft.category, "FINANCE")}
-                </FieldContextLine>
-                <FieldContextLine>
-                  {draft.transactionDate} · {draft.referenceNumber || "Tanpa nomor referensi"}
-                </FieldContextLine>
-                <p className="rounded-2xl bg-surface-container-low px-4 py-3 text-xs leading-5 text-on-surface">
-                  {draft.description}
-                </p>
+                <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+                  <span className="shrink-0 text-on-surface-variant">Arah & kategori</span>
+                  <span className="text-right font-bold text-on-surface">
+                    {draft.type === "INFLOW" ? "Kas masuk" : "Kas keluar"} ·{" "}
+                    {movementCategoryOptions.find((option) => option.value === draft.category)
+                      ?.label ?? formatBusinessLabel(draft.category, "FINANCE")}
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+                  <span className="shrink-0 text-on-surface-variant">Tanggal</span>
+                  <span className="text-right font-bold text-on-surface">
+                    {draft.transactionDate
+                      ? new Date(draft.transactionDate).toLocaleDateString("id-ID", {
+                          dateStyle: "long",
+                        })
+                      : "–"}
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+                  <span className="shrink-0 text-on-surface-variant">Nomor referensi</span>
+                  <span className="text-right font-bold text-on-surface">
+                    {draft.referenceNumber || "Tanpa nomor referensi"}
+                  </span>
+                </div>
+                {draft.description ? (
+                  <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
+                    <span className="shrink-0 text-on-surface-variant">Keterangan</span>
+                    <span className="text-right font-medium text-on-surface">
+                      {draft.description}
+                    </span>
+                  </div>
+                ) : null}
               </FormSection>
             </>
           ) : (
@@ -141,36 +163,36 @@ export function MovementSheet({
                   ledger.
                 </FormRiskNotice>
               ) : null}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => patch({ type: "INFLOW", category: "owner_capital" })}
-                  className={`min-h-12 rounded-full px-4 text-xs font-bold active:scale-[0.97] ${
-                    draft.type === "INFLOW"
-                      ? "bg-primary text-on-primary"
-                      : "bg-surface-container-low text-on-surface"
-                  }`}
-                >
-                  Kas masuk
-                </button>
-                <button
-                  type="button"
-                  onClick={() => patch({ type: "OUTFLOW", category: "bank_fee" })}
-                  className={`min-h-12 rounded-full px-4 text-xs font-bold active:scale-[0.97] ${
-                    draft.type === "OUTFLOW"
-                      ? "bg-error text-white"
-                      : "bg-surface-container-low text-on-surface"
-                  }`}
-                >
-                  Kas keluar
-                </button>
-              </div>
-              <FormField label="Nominal">
-                <MoneyInput value={draft.amount} onChange={(value) => patch({ amount: value })} />
-              </FormField>
-              <FieldContextLine tone={projectedBalance < 0 ? "danger" : "default"}>
-                Saldo: {shortMoney(account?.balance ?? 0)} -&gt; {shortMoney(projectedBalance)}
-              </FieldContextLine>
+              <SegmentedTabs<"INFLOW" | "OUTFLOW">
+                ariaLabel="Arah mutasi kas"
+                value={draft.type}
+                fillAvailableSpace
+                options={[
+                  { value: "INFLOW", label: "Kas masuk" },
+                  { value: "OUTFLOW", label: "Kas keluar" },
+                ]}
+                onChange={(nextType) =>
+                  patch({
+                    type: nextType,
+                    category: nextType === "INFLOW" ? "owner_capital" : "bank_fee",
+                  })
+                }
+              />
+              <FormSection
+                title="Nominal mutasi"
+                helper={
+                  projectedBalance < 0
+                    ? `Peringatan: Saldo menjadi minus (${shortMoney(projectedBalance)})`
+                    : `Estimasi saldo: ${shortMoney(account?.balance ?? 0)} → ${shortMoney(projectedBalance)}`
+                }
+              >
+                <FormField label="Nominal" required>
+                  <MoneyInput
+                    value={draft.amount}
+                    onChange={(value) => patch({ amount: value })}
+                  />
+                </FormField>
+              </FormSection>
               <FormSection title="Klasifikasi" helper="Untuk rekonsiliasi dan audit.">
                 <AdaptiveSelect
                   label="Kategori"

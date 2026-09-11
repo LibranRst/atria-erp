@@ -2,9 +2,9 @@ import { actorHasPermission } from "@atria/core/auth/permissions";
 import "server-only";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import { getOwnerOnboardingOverviewUseCase } from "@/server/usecases/onboarding/owner-onboarding-overview";
+import { getOrganizationSetupOverviewUseCase } from "@/server/usecases/onboarding/organization-setup-overview";
 import { getFinanceDashboardOverviewUseCase } from "@/server/usecases/finance/dashboard-overview";
-import type { OwnerOnboardingOverview } from "@atria/core/onboarding/owner-onboarding";
+import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
 import type { Actor } from "@/server/actor";
 
 export type FinanceDashboardPageData =
@@ -19,7 +19,7 @@ export type FinanceDashboardPageData =
       readonly status: "ready";
       readonly overview: FinanceDashboardOverview;
       readonly userName: string;
-      readonly onboarding: OwnerOnboardingOverview | null;
+      readonly setup: OrganizationSetupOverview | null;
     };
 
 export async function getFinanceDashboardPageData(actor: Actor): Promise<FinanceDashboardPageData> {
@@ -28,10 +28,10 @@ export async function getFinanceDashboardPageData(actor: Actor): Promise<Finance
     return { status: "restricted" };
   }
 
-  const [overview, onboarding] = await Promise.all([
+  const [overview, setup] = await Promise.all([
     getFinanceDashboardOverviewUseCase(actor),
     actorHasPermission(roleName, "manage:onboarding")
-      ? getOwnerOnboardingOverviewUseCase({ id: actor.userId, roleId: actor.roleId })
+      ? getOrganizationSetupOverviewUseCase(actor)
       : Promise.resolve(null),
   ]);
 
@@ -43,6 +43,6 @@ export async function getFinanceDashboardPageData(actor: Actor): Promise<Finance
     status: "ready",
     overview: overview.data,
     userName: actor.name,
-    onboarding: onboarding?.success ? onboarding.data : null,
+    setup: setup?.success ? setup.data : null,
   };
 }

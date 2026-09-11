@@ -4,18 +4,21 @@ import React from "react";
 
 import {
   ConfirmationDialog,
-  FieldContextLine,
   FormField,
-  FormRiskNotice,
   FormSection,
   MoneyInput,
+  NumericInput,
   OptionChoiceGroup,
-  QuantityStepper,
   AdaptiveSelect,
   Textarea,
   useAnimatedSheetClose,
   WorkflowFormSheet,
 } from "@/components/ui";
+import {
+  ExpenseLineBudgetContextCard,
+  ExpenseLineStockContextCard,
+} from "./expense-line-context-cards";
+import { InventoryLocationSheet } from "@/features/materials/components/sheets/inventory-location-sheet";
 import type {
   CategoryPlanItemOption,
   ExpenseFormProject,
@@ -63,6 +66,13 @@ export function ExpenseLineEditor({
   const [draft, setDraft] = React.useState<ExpenseLine>(line);
   const [touched, setTouched] = React.useState<Record<string, boolean>>({});
   const [pendingCategoryId, setPendingCategoryId] = React.useState<string | null>(null);
+  const [addedLocations, setAddedLocations] = React.useState<readonly InventoryLocationOption[]>([]);
+  const [showLocationComposer, setShowLocationComposer] = React.useState(false);
+
+  const allLocations = React.useMemo(() => {
+    const existingIds = new Set(inventoryLocations.map((loc) => loc.id));
+    return [...inventoryLocations, ...addedLocations.filter((loc) => !existingIds.has(loc.id))];
+  }, [inventoryLocations, addedLocations]);
 
   const animatedClose = useAnimatedSheetClose(open, onClose);
 
@@ -157,6 +167,7 @@ export function ExpenseLineEditor({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "preserve" }}
         open={animatedClose.visible}
         title={`Rincian item ${index + 1}`}
         primaryLabel="Simpan"
@@ -181,40 +192,40 @@ export function ExpenseLineEditor({
             title="Informasi item"
             helper="Kategori budget, rincian biaya, dan keterangan."
           >
-            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-              <AdaptiveSelect
-                label="Kategori Pengeluaran"
-                value={draft.projectBudgetCategoryId}
-                onChange={requestCategoryChange}
-                options={budgetOptions}
-                placeholder="Pilih kategori"
-                required
-                error={
-                  touched.category && !draft.projectBudgetCategoryId
-                    ? "Pilih kategori pengeluaran."
-                    : undefined
-                }
+            <AdaptiveSelect
+              label="Kategori Pengeluaran"
+              value={draft.projectBudgetCategoryId}
+              onChange={requestCategoryChange}
+              options={budgetOptions}
+              placeholder="Pilih kategori"
+              required
+              error={
+                touched.category && !draft.projectBudgetCategoryId
+                  ? "Pilih kategori pengeluaran."
+                  : undefined
+              }
+            />
+
+            <FormField
+              label="Keterangan"
+              required
+              error={
+                touched.description && draft.description.trim().length < 5
+                  ? "Tulis keterangan minimal 5 karakter."
+                  : undefined
+              }
+            >
+              <Textarea
+                value={draft.description}
+                onChange={(description) => patch({ description }, "description")}
+                rows={2}
+                placeholder="Contoh: Cat dinding putih 20 kg"
               />
+            </FormField>
 
+            <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
               <FormField
-                label="Keterangan"
-                required
-                error={
-                  touched.description && draft.description.trim().length < 5
-                    ? "Tulis keterangan minimal 5 karakter."
-                    : undefined
-                }
-              >
-                <Textarea
-                  value={draft.description}
-                  onChange={(description) => patch({ description }, "description")}
-                  rows={2}
-                  placeholder="Contoh: Cat dinding putih 20 kg"
-                />
-              </FormField>
-
-              <FormField
-                label={selectedMaterial ? `Jumlah (${selectedMaterial.unit})` : "Jumlah"}
+                label="Jumlah"
                 required
                 error={
                   touched.quantity && (draft.quantity === "" || Number(draft.quantity) <= 0)
@@ -222,8 +233,11 @@ export function ExpenseLineEditor({
                     : undefined
                 }
               >
-                <QuantityStepper
+                <NumericInput
                   value={draft.quantity}
+                  min={0}
+                  placeholder="0"
+                  suffix={selectedMaterial?.unit}
                   onChange={(value) => {
                     const clean = cleanLeadingZeros(value);
                     patch({ quantity: clean === "" ? "" : Math.max(0, Number(clean)) }, "quantity");
@@ -255,16 +269,12 @@ export function ExpenseLineEditor({
           </FormSection>
 
           {selectedCategory ? (
-            <FieldContextLine tone={overBudget ? "danger" : "success"}>
-              Rp {amount.toLocaleString("id-ID")} dari sisa Rp {remaining.toLocaleString("id-ID")}{" "}
-              kategori {selectedCategory.name}.
-            </FieldContextLine>
-          ) : null}
-
-          {overBudget ? (
-            <FormRiskNotice title="Melebihi sisa kategori" tone="danger">
-              Pengajuan tetap dapat ditinjau. Jalur approval akan mengikuti aturan budget di server.
-            </FormRiskNotice>
+            <ExpenseLineBudgetContextCard
+              categoryName={selectedCategory.name}
+              amount={amount}
+              remaining={remaining}
+              usedPercentage={selectedCategory.usedPercentage}
+            />
           ) : null}
 
           {isMaterial ? (
@@ -272,115 +282,112 @@ export function ExpenseLineEditor({
               title="Perlakuan material & stok"
               helper="Opsi perlakuan stok dan tautan catalog/RAP."
             >
-              <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                <div className="mx-3 mt-3 border-b-0">
-                  <OptionChoiceGroup
-                    label="Perlakuan Stok"
-                    value={draft.stockHandling}
-                    options={STOCK_HANDLING_OPTIONS}
-                    onChange={(stockHandling) =>
-                      patch({
-                        stockHandling,
-                        inventoryLocationId:
-                          stockHandling === "EXPENSE_ONLY"
-                            ? ""
-                            : draft.inventoryLocationId || defaultInventoryLocationId,
-                      })
-                    }
-                  />
-                </div>
+              <div className="mx-3 mt-3 border-b-0">
+                <OptionChoiceGroup
+                  label="Perlakuan Stok"
+                  value={draft.stockHandling}
+                  options={STOCK_HANDLING_OPTIONS}
+                  onChange={(stockHandling) =>
+                    patch({
+                      stockHandling,
+                      inventoryLocationId:
+                        stockHandling === "EXPENSE_ONLY"
+                          ? ""
+                          : draft.inventoryLocationId || defaultInventoryLocationId,
+                    })
+                  }
+                />
+              </div>
+              <AdaptiveSelect
+                label="Material"
+                value={draft.materialId}
+                onChange={(materialId) => patch({ materialId, projectRapItemId: "" }, "material")}
+                options={materialSelectOptions}
+                placeholder="Pilih material"
+                required={draft.stockHandling !== "EXPENSE_ONLY"}
+                optional={draft.stockHandling === "EXPENSE_ONLY"}
+                error={
+                  touched.material && draft.stockHandling !== "EXPENSE_ONLY" && !draft.materialId
+                    ? "Pilih material untuk perubahan stok."
+                    : undefined
+                }
+              />
+              {draft.stockHandling !== "EXPENSE_ONLY" ? (
                 <AdaptiveSelect
-                  label="Material"
-                  value={draft.materialId}
-                  onChange={(materialId) => patch({ materialId, projectRapItemId: "" }, "material")}
-                  options={materialSelectOptions}
-                  placeholder="Pilih material"
-                  required={draft.stockHandling !== "EXPENSE_ONLY"}
-                  optional={draft.stockHandling === "EXPENSE_ONLY"}
+                  label="Lokasi Stok"
+                  value={draft.inventoryLocationId}
+                  onChange={(inventoryLocationId) => patch({ inventoryLocationId }, "location")}
+                  options={allLocations.map((location) => ({
+                    value: location.id,
+                    label: location.name,
+                  }))}
+                  placeholder="Pilih lokasi"
+                  createActionLabel="Buat lokasi baru"
+                  createActionDescription="Tambahkan lokasi gudang atau workshop baru."
+                  onCreateAction={() => setShowLocationComposer(true)}
+                  required
                   error={
-                    touched.material && draft.stockHandling !== "EXPENSE_ONLY" && !draft.materialId
-                      ? "Pilih material untuk perubahan stok."
+                    touched.location && !draft.inventoryLocationId
+                      ? "Pilih lokasi stok."
                       : undefined
                   }
                 />
-                {draft.stockHandling !== "EXPENSE_ONLY" ? (
-                  <AdaptiveSelect
-                    label="Lokasi Stok"
-                    value={draft.inventoryLocationId}
-                    onChange={(inventoryLocationId) => patch({ inventoryLocationId }, "location")}
-                    options={inventoryLocations.map((location) => ({
-                      value: location.id,
-                      label: location.name,
-                    }))}
-                    placeholder="Pilih lokasi"
-                    required
-                    error={
-                      touched.location && !draft.inventoryLocationId
-                        ? "Pilih lokasi stok."
-                        : undefined
-                    }
-                  />
-                ) : null}
-                <AdaptiveSelect
-                  label="Item RAP"
-                  value={draft.projectRapItemId}
-                  onChange={(projectRapItemId) => {
-                    const rapItem = rapItems.find((item) => item.id === projectRapItemId);
-                    patch({
-                      projectRapItemId,
-                      materialId: rapItem?.materialId ?? draft.materialId,
-                    });
-                  }}
-                  options={[
-                    { value: "", label: "Tidak ditautkan" },
-                    ...rapItems
-                      .filter((item) => !draft.materialId || item.materialId === draft.materialId)
-                      .map((item) => ({
-                        value: item.id,
-                        label: `${item.area} · ${item.label}`,
-                        description: `${item.quantity} ${item.unit}`,
-                      })),
-                  ]}
-                  optional
-                />
-              </div>
+              ) : null}
+              <AdaptiveSelect
+                label="Item RAP"
+                value={draft.projectRapItemId}
+                onChange={(projectRapItemId) => {
+                  const rapItem = rapItems.find((item) => item.id === projectRapItemId);
+                  patch({
+                    projectRapItemId,
+                    materialId: rapItem?.materialId ?? draft.materialId,
+                  });
+                }}
+                options={[
+                  { value: "", label: "Tidak ditautkan" },
+                  ...rapItems
+                    .filter((item) => !draft.materialId || item.materialId === draft.materialId)
+                    .map((item) => ({
+                      value: item.id,
+                      label: `${item.area} · ${item.label}`,
+                      description: `${item.quantity} ${item.unit}`,
+                    })),
+                ]}
+                optional
+              />
             </FormSection>
           ) : null}
 
           {selectedMaterial && draft.quantity !== "" && isMaterial ? (
-            <FieldContextLine
-              tone={
-                selectedMaterial.availableStock >= Number(draft.quantity) ? "success" : "warning"
-              }
-            >
-              Stok tersedia {selectedMaterial.availableStock.toLocaleString("id-ID")}{" "}
-              {selectedMaterial.unit}; kebutuhan {Number(draft.quantity).toLocaleString("id-ID")}{" "}
-              {selectedMaterial.unit}.
-            </FieldContextLine>
+            <ExpenseLineStockContextCard
+              materialName={selectedMaterial.name}
+              unit={selectedMaterial.unit}
+              availableStock={selectedMaterial.availableStock}
+              requiredQuantity={Number(draft.quantity)}
+              stockHandling={draft.stockHandling}
+            />
           ) : null}
 
           {isPackage ? (
             <FormSection title={packageLabel} helper="Tautkan ke paket pekerjaan yang sesuai.">
-              <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                <AdaptiveSelect
-                  label={packageLabel}
-                  value={draft.projectCategoryPlanItemId}
-                  onChange={(projectCategoryPlanItemId) => patch({ projectCategoryPlanItemId })}
-                  options={[
-                    { value: "", label: "Tidak ditautkan" },
-                    ...categoryPlanItems
-                      .filter(
-                        (item) => item.projectBudgetCategoryId === draft.projectBudgetCategoryId,
-                      )
-                      .map((item) => ({
-                        value: item.id,
-                        label: `${item.area} · ${item.label}`,
-                        description: `Estimasi Rp ${Number(item.estimatedTotalCost).toLocaleString("id-ID")}`,
-                      })),
-                  ]}
-                  optional
-                />
-              </div>
+              <AdaptiveSelect
+                label={packageLabel}
+                value={draft.projectCategoryPlanItemId}
+                onChange={(projectCategoryPlanItemId) => patch({ projectCategoryPlanItemId })}
+                options={[
+                  { value: "", label: "Tidak ditautkan" },
+                  ...categoryPlanItems
+                    .filter(
+                      (item) => item.projectBudgetCategoryId === draft.projectBudgetCategoryId,
+                    )
+                    .map((item) => ({
+                      value: item.id,
+                      label: `${item.area} · ${item.label}`,
+                      description: `Estimasi Rp ${Number(item.estimatedTotalCost).toLocaleString("id-ID")}`,
+                    })),
+                ]}
+                optional
+              />
             </FormSection>
           ) : null}
         </div>
@@ -394,6 +401,15 @@ export function ExpenseLineEditor({
         onClose={() => setPendingCategoryId(null)}
         onConfirm={() => {
           if (pendingCategoryId) applyCategory(pendingCategoryId);
+        }}
+      />
+      <InventoryLocationSheet
+        open={showLocationComposer}
+        onClose={() => setShowLocationComposer(false)}
+        onSuccess={(newLocation) => {
+          setAddedLocations((curr) => [...curr, newLocation]);
+          patch({ inventoryLocationId: newLocation.id }, "location");
+          setShowLocationComposer(false);
         }}
       />
     </>

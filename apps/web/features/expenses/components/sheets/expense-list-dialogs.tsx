@@ -1,11 +1,11 @@
 "use client";
 import {
   AppIcon,
-  FieldContextLine,
   FinanceUnsavedChangesModal,
   FormField,
   FormRiskNotice,
   FormSection,
+  MediaPreviewDialog,
   AdaptiveSelect,
   TextInput,
   useSheetPresenceValue,
@@ -17,6 +17,7 @@ import type {
   BankAccountItem,
   ExpenseCostItem,
 } from "@/features/expenses/types/expense-list-types";
+import { deriveExpensePaymentReference } from "@atria/core/finance/invoice-prefill";
 
 type ReceiptImageLightboxProps = {
   readonly imageUrl: string | null;
@@ -27,33 +28,15 @@ export function ReceiptImageLightbox({
   imageUrl,
   onClose,
 }: ReceiptImageLightboxProps): React.JSX.Element | null {
-  if (!imageUrl) return null;
-
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-100 flex items-center justify-center bg-black/95 p-md transition-opacity duration-200"
-    >
-      <div className="relative max-h-full max-w-full" onClick={(event) => event.stopPropagation()}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={imageUrl}
-          alt="Receipt Zoomed"
-          className="max-h-[80vh] max-w-full rounded-2xl border border-white/5 object-contain shadow-overlay"
-        />
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-black/60 text-white transition-transform active:scale-90"
-          aria-label="Tutup nota"
-        >
-          <AppIcon name="close" />
-        </button>
-        <p className="mt-md text-center font-sans text-[8px] font-bold tracking-wider text-white/70 uppercase">
-          Ketuk di luar gambar untuk menutup
-        </p>
-      </div>
-    </div>
+    <MediaPreviewDialog
+      open={Boolean(imageUrl)}
+      title="Pratinjau nota"
+      imageUrl={imageUrl}
+      alt="Bukti nota pengeluaran"
+      caption="Ketuk di luar dialog atau tekan Escape untuk menutup."
+      onClose={onClose}
+    />
   );
 }
 
@@ -95,9 +78,36 @@ export function FieldDisbursementSheet({
   } = useSheetPresenceValue(selectedCost, selectedCost?.id);
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
+
+  const handleExit = React.useCallback((): void => {
+    handleExitComplete();
+    setReviewing(false);
+    setConfirmClose(false);
+  }, [handleExitComplete]);
+
+  const prevCostIdRef = React.useRef(selectedCost?.id);
+  React.useEffect(() => {
+    if (selectedCost?.id !== prevCostIdRef.current) {
+      prevCostIdRef.current = selectedCost?.id;
+      setReviewing(false);
+      setConfirmClose(false);
+    }
+  }, [selectedCost?.id]);
+
   if (!presentedCost) return null;
   const amount = Number(presentedCost.amount);
   const selectedAccount = bankAccounts.find((account) => account.id === selectedBankId);
+  const suggestedRef = presentedCost
+    ? deriveExpensePaymentReference({
+        bankName: selectedAccount?.bankName || selectedAccount?.name,
+        projectName: presentedCost.project?.name,
+        categoryCode:
+          presentedCost.budgetCategory?.expenseCategory?.code ||
+          presentedCost.budgetItem?.costCategory?.name ||
+          presentedCost.budgetItem?.name,
+        costTitle: presentedCost.description,
+      })
+    : "";
   const before = Number(selectedAccount?.balance ?? 0);
   const after = before - amount;
   const canContinue = Boolean(selectedBankId && refNumber.trim()) && after >= 0;
@@ -124,8 +134,9 @@ export function FieldDisbursementSheet({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
-        onExitComplete={handleExitComplete}
+        onExitComplete={handleExit}
         title={reviewing ? "Tinjau pencairan dana" : "Pencairan dana"}
         onClose={requestClose}
         pending={pending}
@@ -145,24 +156,27 @@ export function FieldDisbursementSheet({
               <div className="leading-relaxed">{error}</div>
             </div>
           )}
-          {success ? <FieldContextLine tone="success">{success}</FieldContextLine> : null}
+          {success ? (
+            <div className="flex items-start gap-3 rounded-2xl bg-success/10 p-3.5 text-xs font-medium text-success ring-1 ring-success/20">
+              <AppIcon name="check-circle" className="icon-md shrink-0 text-success" />
+              <div className="leading-relaxed">{success}</div>
+            </div>
+          ) : null}
 
           <FormSection title="Rincian Pengeluaran">
-            <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-              <ReviewFact
-                label="Jumlah Pencairan"
-                value={
-                  <span className="font-numeral text-[14px] font-bold text-primary">
-                    Rp {Number(presentedCost.amount).toLocaleString("id-ID")}
-                  </span>
-                }
-              />
-              <ReviewFact label="Proyek" value={presentedCost.project?.name ?? "–"} />
-              <ReviewFact label="Pengaju (PM)" value={presentedCost.requestedBy?.name ?? "–"} />
-              {presentedCost.description && (
-                <ReviewFact label="Keterangan" value={presentedCost.description} />
-              )}
-            </div>
+            <ReviewFact
+              label="Jumlah Pencairan"
+              value={
+                <span className="font-numeral text-[14px] font-bold text-primary">
+                  Rp {Number(presentedCost.amount).toLocaleString("id-ID")}
+                </span>
+              }
+            />
+            <ReviewFact label="Proyek" value={presentedCost.project?.name ?? "–"} />
+            <ReviewFact label="Pengaju (PM)" value={presentedCost.requestedBy?.name ?? "–"} />
+            {presentedCost.description && (
+              <ReviewFact label="Keterangan" value={presentedCost.description} />
+            )}
           </FormSection>
 
           {reviewing ? (
@@ -171,20 +185,18 @@ export function FieldDisbursementSheet({
                 title="Dampak Keuangan"
                 helper="Periksa dampak pencairan dana pada saldo kas rekening."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <ReviewFact label="Rekening Sumber" value={selectedAccount?.name ?? "–"} />
-                  <ReviewFact
-                    label="Saldo Rekening"
-                    value={
-                      <span
-                        className={after < 0 ? "font-bold text-error" : "font-bold text-primary"}
-                      >
-                        Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
-                      </span>
-                    }
-                  />
-                  <ReviewFact label="Referensi transfer" value={refNumber} />
-                </div>
+                <ReviewFact label="Rekening Sumber" value={selectedAccount?.name ?? "–"} />
+                <ReviewFact
+                  label="Saldo Rekening"
+                  value={
+                    <span
+                      className={after < 0 ? "font-bold text-error" : "font-bold text-primary"}
+                    >
+                      Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
+                    </span>
+                  }
+                />
+                <ReviewFact label="Referensi transfer" value={refNumber} />
               </FormSection>
               <FormRiskNotice title="Pencairan final" tone="warning">
                 Sistem menandai pengeluaran lunas, mencatat ledger rekonsiliasi, dan menyinkronkan
@@ -202,31 +214,46 @@ export function FieldDisbursementSheet({
             >
               <FormSection
                 title="Pencairan Pengeluaran"
-                helper="Pilih rekening bank sumber kas kecil proyek dan isi nomor referensi transfer."
+                helper="Pilih rekening bank sumber kas kecil proyek. Nomor referensi terisi otomatis dan dapat disesuaikan."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <AdaptiveSelect
-                    label="Rekening Sumber Dana"
-                    value={selectedBankId}
-                    disabled={pending}
-                    onChange={onBankChange}
-                    options={bankAccounts.map((acc) => ({
-                      value: acc.id,
-                      label: `${acc.bankName} - ${acc.name}`,
-                      description: `Saldo Rp ${Number(acc.balance).toLocaleString("id-ID")}`,
-                    }))}
-                    required
-                  />
+                <AdaptiveSelect
+                  label="Rekening Sumber Dana"
+                  value={selectedBankId}
+                  disabled={pending}
+                  onChange={onBankChange}
+                  options={bankAccounts.map((acc) => ({
+                    value: acc.id,
+                    label: `${acc.bankName} - ${acc.name}`,
+                    description: `Saldo Rp ${Number(acc.balance).toLocaleString("id-ID")}`,
+                  }))}
+                  required
+                />
 
-                  <FormField label="Nomor Referensi Bukti Transfer" required>
-                    <TextInput
-                      value={refNumber}
-                      disabled={pending}
-                      onChange={onRefNumberChange}
-                      placeholder="Contoh: TRF-BCA-10294"
-                    />
-                  </FormField>
-                </div>
+                <FormField label="Nomor Referensi Bukti Transfer" required>
+                  <TextInput
+                    value={refNumber}
+                    disabled={pending}
+                    onChange={onRefNumberChange}
+                    placeholder={
+                      suggestedRef ? `Contoh: ${suggestedRef}` : "Contoh: TRF-BCA-BSR-OPS"
+                    }
+                  />
+                </FormField>
+                {suggestedRef && refNumber !== suggestedRef ? (
+                  <div className="flex items-center justify-between bg-surface-container-low/50 px-4 py-2 text-meta">
+                    <span className="text-on-surface-variant">
+                      Format standar:{" "}
+                      <strong className="font-mono text-on-surface">{suggestedRef}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onRefNumberChange(suggestedRef)}
+                      className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary/15 active:scale-[0.98]"
+                    >
+                      Gunakan
+                    </button>
+                  </div>
+                ) : null}
               </FormSection>
             </form>
           )}

@@ -21,7 +21,7 @@ import type { DashboardPageTab } from "@/features/finance-dashboard/types/dashbo
 import { resolveDashboardDataStatus } from "@/features/finance-dashboard/utils/dashboard-data-status";
 import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
-import type { OwnerOnboardingOverview } from "@atria/core/onboarding/owner-onboarding";
+import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
 import { ApprovalsTab } from "../tabs/dashboard-approvals-tab";
 import { AccountsTab } from "../tabs/tab-accounts";
 import { BudgetRiskTab } from "../tabs/tab-budget-risk";
@@ -266,11 +266,11 @@ function DataStatus({
 export function FinanceDashboard({
   data,
   userName,
-  onboarding,
+  setup,
 }: {
   readonly data: FinanceDashboardOverview;
   readonly userName: string;
-  readonly onboarding: OwnerOnboardingOverview | null;
+  readonly setup: OrganizationSetupOverview | null;
 }): React.JSX.Element {
   const can = useCan();
   const tabParam = useUrlSearchParam("tab");
@@ -300,7 +300,7 @@ export function FinanceDashboard({
       <DashboardOverviewTab
         data={data}
         financialPosition={<FinancialPosition summary={data.summary} />}
-        onboarding={onboarding}
+        setup={setup}
       />
     ) : activeTab === "approvals" && can("view:approval_queue") ? (
       <ApprovalsTab

@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -68,6 +69,17 @@ export async function generateClientInvoiceSchedule(
           })
           .returning();
         created.push(invoice);
+        await recordNotificationEvent(tx, {
+          referenceType: "client_invoice",
+          referenceId: invoice.id,
+          projectId: invoice.projectId,
+          stage: "CREATED",
+          title: "Jadwal invoice klien dibuat",
+          message: invoice.invoiceNumber,
+          permission: "view:client_invoice",
+          actionUrl: `/projects/${invoice.projectId}?tab=payments`,
+          actorId: user.id,
+        });
       }
       await tx.insert(auditLog).values({
         userId: user.id,

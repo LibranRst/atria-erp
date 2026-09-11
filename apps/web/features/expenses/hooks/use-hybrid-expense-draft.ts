@@ -282,15 +282,6 @@ export function useHybridExpenseDraft(
     };
   }, []);
 
-  React.useEffect(() => {
-    function warnBeforeUnload(event: BeforeUnloadEvent): void {
-      if (changeVersionRef.current === savedVersionRef.current) return;
-      event.preventDefault();
-    }
-    window.addEventListener("beforeunload", warnBeforeUnload);
-    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
-  }, []);
-
   const statusLabel: Record<ExpenseDraftSyncStatus, string> = {
     idle: "Belum ada perubahan",
     dirty: "Belum tersinkron",

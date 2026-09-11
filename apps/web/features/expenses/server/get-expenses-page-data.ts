@@ -97,6 +97,11 @@ export async function getExpensesPageData(actor: Actor): Promise<ExpensesPageDat
     where: costFilter,
     with: {
       project: true,
+      budgetCategory: {
+        with: {
+          expenseCategory: true,
+        },
+      },
       budgetItem: {
         with: {
           costCategory: true,

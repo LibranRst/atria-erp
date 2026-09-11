@@ -36,6 +36,14 @@ export async function resolveProjectCost(
   });
   if (!row) return null;
   await requireProject(row.projectId, user, roleName);
+
+  const approvalRow = await db.query.approval.findFirst({
+    where: (table, { and, eq }) =>
+      and(eq(table.referenceType, "project_cost"), eq(table.referenceId, row.id)),
+  });
+  const audit = await latestAudit("project_cost", row.id);
+  const isEmergencyOverride = audit?.action === "EMERGENCY_APPROVE_FIELD_REQUEST";
+
   return {
     kind: "PROJECT_COST",
     id: row.id,
@@ -54,6 +62,10 @@ export async function resolveProjectCost(
       fact("Harga satuan", moneyValue(Number(row.unitPrice))),
       fact("Subtotal", moneyValue(Number(row.amount))),
       fact("Pengaju", textValue(row.requestedBy.name)),
+      ...(row.approvedBy ? [fact("Disetujui oleh", textValue(row.approvedBy.name))] : []),
+      ...(isEmergencyOverride
+        ? [fact("Metode persetujuan", textValue("Emergency Override (Persetujuan Sendiri)"))]
+        : []),
       ...(row.bankAccount ? [fact("Rekening", textValue(row.bankAccount.name))] : []),
     ],
     comparisons: [],
@@ -80,6 +92,7 @@ export async function resolveProjectCost(
       ...(row.budgetOverrun
         ? [fact("Budget", textValue("Melebihi budget dan membutuhkan perhatian"))]
         : []),
+      ...(approvalRow?.notes ? [fact("Catatan persetujuan", textValue(approvalRow.notes))] : []),
     ],
     source: { label: "Buka pengeluaran", href: "/expenses?tab=field-claims" },
     evidenceIncomplete: false,

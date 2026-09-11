@@ -77,7 +77,7 @@ export function ReconciliationEmptyState({
           {history
             ? "Pasangan yang sudah dikonfirmasi akan tersimpan di sini."
             : statement
-              ? "Impor CSV rekening koran untuk menemukan pasangan secara otomatis."
+              ? "Import file rekening koran untuk menemukan pasangan secara otomatis."
               : "Tidak ada transaksi internal yang perlu ditinjau."}
         </p>
       </div>

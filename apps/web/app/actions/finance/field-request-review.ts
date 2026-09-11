@@ -1,9 +1,12 @@
 "use server";
+import { reconcileVendorBillAction } from "@/server/services/notification-job";
+import { vendorBill } from "@/db/schema";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { projectBudgetCategory, projectCost, vendorPayment } from "@/db/schema";
+import { approval, projectBudgetCategory, projectCost, vendorPayment } from "@/db/schema";
 import {
   ensureCanonicalExpenseForProjectCost,
   syncProjectBudgetCategory,
@@ -17,6 +20,7 @@ import {
 } from "@atria/core/validations/finance";
 import { authorizeFieldRequestAction, authorizeOwnerVendorApproval } from "./field-request-auth";
 import {
+  createProjectCostApprovalTx,
   mapApproveFieldRequestError,
   mapApproveVendorPaymentError,
   mapVerifyFieldRequestError,
@@ -71,6 +75,7 @@ export async function verifyFieldRequest(
       const budgetCategory = cost.projectBudgetCategoryId
         ? await tx.query.projectBudgetCategory.findFirst({
             where: eq(projectBudgetCategory.id, cost.projectBudgetCategoryId),
+            with: { expenseCategory: true },
           })
         : null;
       const overrunNow = budgetCategory
@@ -92,10 +97,28 @@ export async function verifyFieldRequest(
       const requiresApproval = cost.requiresOwnerApproval || cost.budgetOverrun || overrunNow;
       const nextStatus = requiresApproval ? "VERIFIED" : "APPROVED";
 
+      if (requiresApproval) {
+        const existingApproval = await tx.query.approval.findFirst({
+          where: and(
+            eq(approval.referenceType, "project_cost"),
+            eq(approval.referenceId, projectCostId),
+          ),
+        });
+        if (!existingApproval) {
+          await createProjectCostApprovalTx(tx, {
+            projectCostId,
+            isOverrun: cost.budgetOverrun || overrunNow,
+            label: budgetCategory?.expenseCategory?.name,
+          });
+        }
+      }
+
       const [updatedCost] = await tx
         .update(projectCost)
         .set({
           status: nextStatus,
+          requiresOwnerApproval: cost.requiresOwnerApproval || requiresApproval,
+          budgetOverrun: cost.budgetOverrun || overrunNow,
           verifiedById: currentUser.id,
           verifiedAt: new Date(),
           updatedAt: new Date(),
@@ -121,6 +144,40 @@ export async function verifyFieldRequest(
         projectBudgetCategoryId: syncedCategoryId,
       });
 
+      await recordNotificationEvent(tx, {
+        referenceType: "project_cost",
+        referenceId: updatedCost.id,
+        projectId: updatedCost.projectId,
+        stage: `${updatedCost.status}:${updatedCost.updatedAt.toISOString()}`,
+        title:
+          updatedCost.status === "VERIFIED"
+            ? "Biaya menunggu persetujuan"
+            : updatedCost.status === "APPROVED"
+              ? "Biaya disetujui"
+              : "Biaya ditolak",
+        message: updatedCost.description,
+        permission: updatedCost.status === "VERIFIED" ? "decide:all_approvals" : undefined,
+        recipients: updatedCost.status === "VERIFIED" ? undefined : [updatedCost.requestedById],
+        actionRequired: updatedCost.status === "VERIFIED",
+        actionUrl:
+          updatedCost.status === "VERIFIED"
+            ? "/approvals"
+            : `/projects/${updatedCost.projectId}?tab=budget`,
+        actorId: currentUser.id,
+      });
+      if (updatedCost.status === "APPROVED")
+        await recordNotificationEvent(tx, {
+          referenceType: "project_cost",
+          referenceId: updatedCost.id,
+          projectId: updatedCost.projectId,
+          stage: `READY_TO_PAY:${updatedCost.updatedAt.toISOString()}`,
+          title: "Biaya siap dibayar",
+          message: updatedCost.description,
+          permission: "pay:cost",
+          actionRequired: true,
+          actionUrl: `/projects/${updatedCost.projectId}?tab=budget`,
+          actorId: currentUser.id,
+        });
       return updatedCost;
     });
 
@@ -212,6 +269,40 @@ export async function approveFieldRequest(
         projectBudgetCategoryId: syncedCategoryId,
       });
 
+      await recordNotificationEvent(tx, {
+        referenceType: "project_cost",
+        referenceId: updatedCost.id,
+        projectId: updatedCost.projectId,
+        stage: `${updatedCost.status}:${updatedCost.updatedAt.toISOString()}`,
+        title:
+          updatedCost.status === "VERIFIED"
+            ? "Biaya menunggu persetujuan"
+            : updatedCost.status === "APPROVED"
+              ? "Biaya disetujui"
+              : "Biaya ditolak",
+        message: updatedCost.description,
+        permission: updatedCost.status === "VERIFIED" ? "decide:all_approvals" : undefined,
+        recipients: updatedCost.status === "VERIFIED" ? undefined : [updatedCost.requestedById],
+        actionRequired: updatedCost.status === "VERIFIED",
+        actionUrl:
+          updatedCost.status === "VERIFIED"
+            ? "/approvals"
+            : `/projects/${updatedCost.projectId}?tab=budget`,
+        actorId: currentUser.id,
+      });
+      if (updatedCost.status === "APPROVED")
+        await recordNotificationEvent(tx, {
+          referenceType: "project_cost",
+          referenceId: updatedCost.id,
+          projectId: updatedCost.projectId,
+          stage: `READY_TO_PAY:${updatedCost.updatedAt.toISOString()}`,
+          title: "Biaya siap dibayar",
+          message: updatedCost.description,
+          permission: "pay:cost",
+          actionRequired: true,
+          actionUrl: `/projects/${updatedCost.projectId}?tab=budget`,
+          actorId: currentUser.id,
+        });
       return updatedCost;
     });
 
@@ -288,6 +379,25 @@ export async function approveVendorPayment(
         newState: { paymentStatus: payment.status, approved: status === "APPROVED", status },
       });
 
+      const notificationBill = await tx.query.vendorBill.findFirst({
+        where: eq(vendorBill.id, payment.vendorBillId),
+      });
+      if (notificationBill)
+        await recordNotificationEvent(tx, {
+          referenceType: "vendor_payment",
+          referenceId: payment.id,
+          projectId: notificationBill.projectId,
+          stage: status,
+          title:
+            status === "APPROVED" ? "Pembayaran vendor siap diproses" : "Pembayaran vendor ditolak",
+          message: notificationBill.billNumber,
+          permission: status === "APPROVED" ? "pay:vendor_bill" : "view:vendor_bill",
+          recipients: status === "REJECTED" ? [payment.paidById] : undefined,
+          actionRequired: status === "APPROVED",
+          actionUrl: `/projects/${notificationBill.projectId}?tab=budget`,
+          actorId: currentUser.id,
+        });
+      await reconcileVendorBillAction(tx, payment.vendorBillId);
       return { paymentId: vendorPaymentId, status };
     });
 

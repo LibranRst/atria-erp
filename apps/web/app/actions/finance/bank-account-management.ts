@@ -13,6 +13,7 @@ import { db } from "@/db";
 import { auditLog, bankAccount } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
 import { mutateBalance } from "@/lib/finance/balance-mutation";
+import { recordReadinessMilestonesTx } from "@/lib/onboarding/readiness-events";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createBankAccountSchema,
@@ -73,6 +74,11 @@ export async function createBankAccount(
           userId: authResult.data.user.id,
         });
       }
+      await recordReadinessMilestonesTx({
+        tx,
+        actorUserId: authResult.data.user.id,
+        changedItem: "bank_account",
+      });
       const latest = await tx.query.bankAccount.findFirst({
         where: eq(bankAccount.id, created.id),
       });

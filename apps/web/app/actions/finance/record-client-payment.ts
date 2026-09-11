@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { recordNotificationEvent } from "@/server/services/notification-events";
+import { reconcileClientInvoiceAction } from "@/server/services/notification-job";
 
 import { db } from "@/db";
 import {
@@ -202,6 +204,20 @@ export async function recordClientPayment(
         newState: JSON.stringify({ invoiceStatus: nextStatus, paymentId: clientPaymentId }),
         createdAt: new Date(),
       });
+
+      await recordNotificationEvent(tx, {
+        referenceType: "client_payment",
+        referenceId: payment.id,
+        projectId: invoice.projectId,
+        stage: nextStatus,
+        title:
+          nextStatus === "PAID" ? "Invoice klien telah lunas" : "Pembayaran invoice klien diterima",
+        message: invoice.invoiceNumber,
+        permission: "view:client_invoice",
+        actionUrl: `/projects/${invoice.projectId}?tab=payments`,
+        actorId: session.user.id,
+      });
+      await reconcileClientInvoiceAction(tx, invoice.id);
 
       return {
         paymentId: clientPaymentId,

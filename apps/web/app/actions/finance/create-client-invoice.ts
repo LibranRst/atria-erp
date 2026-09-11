@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { db } from "@/db";
 import { clientInvoice, auditLog, project } from "@/db/schema";
@@ -137,6 +138,18 @@ export async function createClientInvoice(
           dueDate,
         }),
         createdAt: new Date(),
+      });
+
+      await recordNotificationEvent(tx, {
+        referenceType: "client_invoice",
+        referenceId: inserted.id,
+        projectId: inserted.projectId,
+        stage: "CREATED",
+        title: "Invoice klien dibuat",
+        message: inserted.invoiceNumber,
+        permission: "view:client_invoice",
+        actionUrl: `/projects/${inserted.projectId}?tab=payments`,
+        actorId: session.user.id,
       });
 
       return inserted;

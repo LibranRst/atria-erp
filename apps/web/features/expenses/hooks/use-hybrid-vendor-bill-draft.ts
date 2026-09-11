@@ -239,15 +239,6 @@ export function useHybridVendorBillDraft(initialPayload: VendorBillDraftPayload)
     };
   }, []);
 
-  React.useEffect(() => {
-    function warnBeforeUnload(event: BeforeUnloadEvent): void {
-      if (!dirty) return;
-      event.preventDefault();
-    }
-    window.addEventListener("beforeunload", warnBeforeUnload);
-    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
-  }, [dirty]);
-
   return {
     payload,
     draftId,

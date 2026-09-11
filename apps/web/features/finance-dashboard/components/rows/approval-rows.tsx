@@ -5,12 +5,6 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import { AppIcon, DuotoneIconTile, MoneyValue } from "@/components/ui";
 import type { ApprovalDetail } from "@atria/core/finance/approval-types";
-import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
-import {
-  getApprovalBudgetImpact,
-  RISK_LIMIT_THRESHOLD,
-  RISK_WARNING_THRESHOLD,
-} from "@atria/core/finance/budget-indicator";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 const dashboardRowPressScale = { scale: 0.985 } as const;
 
@@ -92,93 +86,5 @@ export function ApprovalWorkbenchRow({
         </div>
       </motion.button>
     </div>
-  );
-}
-
-export function ApprovalBudgetContext({
-  item,
-}: {
-  readonly item: ApprovalDetail;
-}): React.JSX.Element {
-  // Lihat catatan pada `consumesBudgetActual`: pembelian persediaan tidak
-  // menaikkan realisasi kategori, jadi proyeksinya harus datar.
-  const consumesActual = item.consumesBudgetActual;
-  const nextSpent = consumesActual ? item.actualSpent + item.amount : item.actualSpent;
-  const impact = getApprovalBudgetImpact(
-    item.allocatedAmount,
-    item.actualSpent,
-    consumesActual ? item.amount : 0,
-  );
-  const critical = item.budgetOverrun || impact.afterPercentage >= RISK_LIMIT_THRESHOLD;
-  const warning = !critical && impact.afterPercentage >= RISK_WARNING_THRESHOLD;
-  const impactLabel = !consumesActual
-    ? "Menjadi nilai persediaan, bukan realisasi"
-    : critical
-      ? impact.overflowPercentage > 0
-        ? `Melewati budget ${impact.overflowPercentage.toFixed(0)}%`
-        : "Pengajuan menambah risiko budget"
-      : warning
-        ? `Tersisa ${(RISK_LIMIT_THRESHOLD - impact.afterPercentage).toFixed(0)}% sebelum batas`
-        : "Masih dalam batas budget";
-
-  return (
-    <section className="overflow-hidden rounded-owner bg-surface-container-lowest ring-1 ring-ring-subtle">
-      <div className="flex items-center justify-between gap-3 px-4 py-3.5">
-        <div className="min-w-0">
-          <p className="truncate text-meta font-extrabold tracking-wide text-on-surface-variant/60 uppercase">
-            Konteks budget
-          </p>
-          <p className="mt-1 truncate text-xs font-bold text-on-surface">{item.budgetItemName}</p>
-        </div>
-        <span
-          className={`financial-amount shrink-0 text-xs font-extrabold ${critical ? "text-error" : "text-on-surface"}`}
-        >
-          {impact.afterPercentage.toFixed(0)}%
-        </span>
-      </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-t border-outline-variant/20 px-4 py-3.5 text-meta font-semibold text-on-surface-variant">
-        <div className="min-w-0">
-          <span>Sekarang</span>
-          <MoneyValue amount={item.actualSpent} variant="compact" size="sm" className="mt-0.5" />
-          <p className="mt-1 font-mono text-eyebrow font-bold">
-            {impact.beforePercentage.toFixed(0)}% budget
-          </p>
-        </div>
-        <span
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-on-surface-variant/55 ring-1 ring-ring-subtle"
-          aria-hidden="true"
-        >
-          <AppIcon name="arrow_forward" className="text-[15px]" />
-        </span>
-        <div className="min-w-0 text-right">
-          <span>Setelah disetujui</span>
-          <MoneyValue
-            amount={nextSpent}
-            variant="compact"
-            tone={critical ? "danger" : "default"}
-            align="right"
-            size="sm"
-            className="mt-0.5"
-          />
-          <p
-            className={`mt-1 font-mono text-eyebrow font-bold ${critical ? "text-error" : warning ? "text-warning" : ""}`}
-          >
-            {impact.afterPercentage.toFixed(0)}% budget
-          </p>
-        </div>
-      </div>
-      <div
-        className={`flex min-h-10 items-center justify-between gap-2 border-t border-outline-variant/20 px-4 py-2.5 text-eyebrow font-bold ${critical ? "text-error" : warning ? "text-warning" : ""}`}
-      >
-        <span className="inline-flex min-w-0 items-center gap-1.5">
-          <AppIcon
-            name={critical ? "report" : warning ? "warning" : "check_circle"}
-            className="icon-xs shrink-0"
-          />
-          <span className="truncate">{impactLabel}</span>
-        </span>
-        <span className="shrink-0 font-mono">+{shortMoney(item.amount)}</span>
-      </div>
-    </section>
   );
 }

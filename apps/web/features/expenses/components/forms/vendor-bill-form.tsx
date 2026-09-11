@@ -31,6 +31,8 @@ import {
   WorkflowFormSheet,
 } from "@/components/ui";
 import { useHybridVendorBillDraft } from "@/features/expenses/hooks/use-hybrid-vendor-bill-draft";
+import { VendorCreateSheet } from "@/features/administration/components/forms/vendor-create-sheet";
+import { deriveSuggestedVendorBillNumber } from "@atria/core/finance/invoice-prefill";
 import type { VendorBillDraftPayload } from "@atria/core/validations/vendor-bill-draft";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 export interface VendorBillFormVendor {
@@ -76,6 +78,8 @@ export function VendorBillForm({
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
   const [drafts, setDrafts] = React.useState<readonly VendorBillDraftSummary[]>([]);
+  const [addedVendors, setAddedVendors] = React.useState<readonly VendorBillFormVendor[]>([]);
+  const [showVendorComposer, setShowVendorComposer] = React.useState(false);
   const currentProjectId = React.useMemo(() => {
     const parts = pathname.split("/");
     const index = parts.indexOf("projects");
@@ -96,7 +100,33 @@ export function VendorBillForm({
     activeProject?.categoryPlanItems?.filter(
       (item) => item.projectBudgetCategoryId === payload.projectBudgetCategoryId,
     ) ?? [];
-  const selectedVendor = vendors.find((vendor) => vendor.id === payload.vendorId);
+  const allVendors = React.useMemo(() => {
+    const existingIds = new Set(vendors.map((v) => v.id));
+    return [...vendors, ...addedVendors.filter((v) => !existingIds.has(v.id))];
+  }, [vendors, addedVendors]);
+  const selectedVendor = allVendors.find((vendor) => vendor.id === payload.vendorId);
+  const suggestedBillNumber = selectedVendor?.name
+    ? deriveSuggestedVendorBillNumber({
+        vendorName: selectedVendor.name,
+        projectName: activeProject?.name,
+      })
+    : "";
+
+  const updatePayload = draft.updatePayload;
+  const prevSuggestedRef = React.useRef("");
+
+  React.useEffect(() => {
+    if (!suggestedBillNumber) return;
+    const prevSuggested = prevSuggestedRef.current;
+    updatePayload((current) => {
+      if (!current.billNumber.trim() || current.billNumber === prevSuggested) {
+        return { ...current, billNumber: suggestedBillNumber };
+      }
+      return current;
+    });
+    prevSuggestedRef.current = suggestedBillNumber;
+  }, [suggestedBillNumber, updatePayload]);
+
   const amount = Number(payload.amount || 0);
   const remainingBefore = Number(selectedCategory?.remainingAmount ?? 0);
   /**
@@ -256,6 +286,7 @@ export function VendorBillForm({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={animatedClose.visible}
         title={reviewing ? "Tinjau tagihan vendor" : "Tagihan vendor baru"}
         onClose={requestClose}
@@ -376,38 +407,36 @@ export function VendorBillForm({
                 title="Tagihan yang akan dibuat"
                 helper="Periksa dokumen dan dampak budget sebelum membuat tagihan."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <ReviewFact label="Vendor" value={selectedVendor?.name ?? "–"} />
-                  <ReviewFact label="Proyek" value={activeProject?.name ?? "–"} />
-                  <ReviewFact label="Kategori" value={selectedCategory?.name ?? "–"} />
-                  <ReviewFact label="Nomor" value={payload.billNumber} />
-                  <ReviewFact label="Nominal" value={`Rp ${amount.toLocaleString("id-ID")}`} />
-                  <ReviewFact
-                    label="Jatuh tempo"
-                    value={new Date(payload.dueDate).toLocaleDateString("id-ID", {
-                      dateStyle: "long",
-                    })}
-                  />
-                  <ReviewFact
-                    label="Sisa budget kategori"
-                    value={
-                      isInventoryPurchase ? (
-                        <span className="font-bold text-on-surface">
-                          Rp {remainingBefore.toLocaleString("id-ID")} · tetap
-                        </span>
-                      ) : (
-                        <span
-                          className={
-                            remainingAfter < 0 ? "font-bold text-error" : "font-bold text-primary"
-                          }
-                        >
-                          Rp {remainingBefore.toLocaleString("id-ID")} → Rp{" "}
-                          {remainingAfter.toLocaleString("id-ID")}
-                        </span>
-                      )
-                    }
-                  />
-                </div>
+                <ReviewFact label="Vendor" value={selectedVendor?.name ?? "–"} />
+                <ReviewFact label="Proyek" value={activeProject?.name ?? "–"} />
+                <ReviewFact label="Kategori" value={selectedCategory?.name ?? "–"} />
+                <ReviewFact label="Nomor" value={payload.billNumber} />
+                <ReviewFact label="Nominal" value={`Rp ${amount.toLocaleString("id-ID")}`} />
+                <ReviewFact
+                  label="Jatuh tempo"
+                  value={new Date(payload.dueDate).toLocaleDateString("id-ID", {
+                    dateStyle: "long",
+                  })}
+                />
+                <ReviewFact
+                  label="Sisa budget kategori"
+                  value={
+                    isInventoryPurchase ? (
+                      <span className="font-bold text-on-surface">
+                        Rp {remainingBefore.toLocaleString("id-ID")} · tetap
+                      </span>
+                    ) : (
+                      <span
+                        className={
+                          remainingAfter < 0 ? "font-bold text-error" : "font-bold text-primary"
+                        }
+                      >
+                        Rp {remainingBefore.toLocaleString("id-ID")} → Rp{" "}
+                        {remainingAfter.toLocaleString("id-ID")}
+                      </span>
+                    )
+                  }
+                />
               </FormSection>
               <FormRiskNotice
                 title={
@@ -438,104 +467,125 @@ export function VendorBillForm({
                 title="Vendor dan proyek"
                 helper="Proyek dari halaman aktif dipakai sebagai default aman."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
+                <AdaptiveSelect
+                  label="Vendor"
+                  value={payload.vendorId}
+                  disabled={pending}
+                  onChange={(value) => patch({ vendorId: value })}
+                  options={allVendors.map((vendor) => ({
+                    value: vendor.id,
+                    label: vendor.name,
+                  }))}
+                  createActionLabel="Buat vendor baru"
+                  createActionDescription="Tambahkan vendor baru ke daftar pilihan."
+                  onCreateAction={() => setShowVendorComposer(true)}
+                  required
+                />
+                <AdaptiveSelect
+                  label="Proyek"
+                  value={payload.projectId}
+                  disabled={pending}
+                  onChange={(value) => {
+                    if (payload.projectBudgetCategoryId && value !== payload.projectId)
+                      setPendingProjectId(value);
+                    else applyProject(value);
+                  }}
+                  options={projects.map((project) => ({
+                    value: project.id,
+                    label: project.name,
+                  }))}
+                  required
+                />
+                <AdaptiveSelect
+                  label="Kategori Budget"
+                  value={payload.projectBudgetCategoryId}
+                  disabled={pending || !payload.projectId}
+                  onChange={(value) =>
+                    patch({
+                      projectBudgetCategoryId: value,
+                      projectBudgetItemId: "",
+                      projectCategoryPlanItemId: "",
+                    })
+                  }
+                  options={categories.map((category) => ({
+                    value: category.id,
+                    label: category.name,
+                    description: `Sisa Rp ${Number(category.remainingAmount).toLocaleString("id-ID")}`,
+                    meta: `${category.usedPercentage}% terpakai`,
+                  }))}
+                  required
+                />
+                {selectedCategory && ["TUKANG", "SUBCON"].includes(selectedCategory.code) ? (
                   <AdaptiveSelect
-                    label="Vendor"
-                    value={payload.vendorId}
-                    disabled={pending}
-                    onChange={(value) => patch({ vendorId: value })}
-                    options={vendors.map((vendor) => ({
-                      value: vendor.id,
-                      label: vendor.name,
-                    }))}
-                    required
+                    label={selectedCategory.code === "SUBCON" ? "Paket Subkon" : "Paket Tukang"}
+                    optional
+                    value={payload.projectCategoryPlanItemId}
+                    onChange={(value) => patch({ projectCategoryPlanItemId: value })}
+                    options={[
+                      { value: "", label: "Tanpa tautan paket" },
+                      ...packageOptions.map((item) => ({
+                        value: item.id,
+                        label: `${item.area} · ${item.label}`,
+                        description: `${item.quantity} ${item.unit}`,
+                      })),
+                    ]}
                   />
-                  <AdaptiveSelect
-                    label="Proyek"
-                    value={payload.projectId}
-                    disabled={pending}
-                    onChange={(value) => {
-                      if (payload.projectBudgetCategoryId && value !== payload.projectId)
-                        setPendingProjectId(value);
-                      else applyProject(value);
-                    }}
-                    options={projects.map((project) => ({
-                      value: project.id,
-                      label: project.name,
-                    }))}
-                    required
-                  />
-                  <AdaptiveSelect
-                    label="Kategori Budget"
-                    value={payload.projectBudgetCategoryId}
-                    disabled={pending || !payload.projectId}
-                    onChange={(value) =>
-                      patch({
-                        projectBudgetCategoryId: value,
-                        projectBudgetItemId: "",
-                        projectCategoryPlanItemId: "",
-                      })
-                    }
-                    options={categories.map((category) => ({
-                      value: category.id,
-                      label: category.name,
-                      description: `Sisa Rp ${Number(category.remainingAmount).toLocaleString("id-ID")}`,
-                      meta: `${category.usedPercentage}% terpakai`,
-                    }))}
-                    required
-                  />
-                  {selectedCategory && ["TUKANG", "SUBCON"].includes(selectedCategory.code) ? (
-                    <AdaptiveSelect
-                      label={selectedCategory.code === "SUBCON" ? "Paket Subkon" : "Paket Tukang"}
-                      optional
-                      value={payload.projectCategoryPlanItemId}
-                      onChange={(value) => patch({ projectCategoryPlanItemId: value })}
-                      options={[
-                        { value: "", label: "Tanpa tautan paket" },
-                        ...packageOptions.map((item) => ({
-                          value: item.id,
-                          label: `${item.area} · ${item.label}`,
-                          description: `${item.quantity} ${item.unit}`,
-                        })),
-                      ]}
-                    />
-                  ) : null}
-                </div>
+                ) : null}
               </FormSection>
-              <FormSection title="Dokumen tagihan" helper="Nominal dan nomor selalu diisi manual.">
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <FormField label="Nomor Tagihan" required>
-                    <TextInput
-                      value={payload.billNumber}
-                      disabled={pending}
-                      onChange={(value) => patch({ billNumber: value })}
-                      placeholder="Contoh: BILL-2026-099"
-                    />
-                  </FormField>
-                  <FormField label="Nominal Tagihan" required>
-                    <MoneyInput
-                      value={payload.amount}
-                      disabled={pending}
-                      onChange={(value) => patch({ amount: value === "" ? "" : Number(value) })}
-                    />
-                  </FormField>
-                  <DatePickerField
-                    label="Tanggal Jatuh Tempo"
-                    value={payload.dueDate}
+              <FormSection
+                title="Dokumen tagihan"
+                helper="Nomor tagihan terisi otomatis sesuai vendor dan dapat disesuaikan. Nominal diisi sesuai invoice fisik."
+              >
+                <FormField label="Nomor Tagihan" required>
+                  <TextInput
+                    value={payload.billNumber}
                     disabled={pending}
-                    onChange={(value) => patch({ dueDate: value })}
-                    required
+                    onChange={(value) => patch({ billNumber: value })}
+                    placeholder={
+                      suggestedBillNumber
+                        ? `Contoh: ${suggestedBillNumber}`
+                        : "Contoh: INV-SA-2026-8891"
+                    }
                   />
-                  <FormField label="Catatan" optional>
-                    <Textarea
-                      value={payload.notes}
-                      disabled={pending}
-                      onChange={(value) => patch({ notes: value })}
-                      rows={2}
-                      placeholder="Detail untuk tim finance"
-                    />
-                  </FormField>
-                </div>
+                </FormField>
+                {suggestedBillNumber && payload.billNumber !== suggestedBillNumber ? (
+                  <div className="flex items-center justify-between bg-surface-container-low/50 px-4 py-2 text-meta">
+                    <span className="text-on-surface-variant">
+                      Format standar:{" "}
+                      <strong className="font-mono text-on-surface">{suggestedBillNumber}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => patch({ billNumber: suggestedBillNumber })}
+                      className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary/15 active:scale-[0.98]"
+                    >
+                      Gunakan
+                    </button>
+                  </div>
+                ) : null}
+                <FormField label="Nominal Tagihan" required>
+                  <MoneyInput
+                    value={payload.amount}
+                    disabled={pending}
+                    onChange={(value) => patch({ amount: value === "" ? "" : Number(value) })}
+                  />
+                </FormField>
+                <DatePickerField
+                  label="Tanggal Jatuh Tempo"
+                  value={payload.dueDate}
+                  disabled={pending}
+                  onChange={(value) => patch({ dueDate: value })}
+                  required
+                />
+                <FormField label="Catatan" optional>
+                  <Textarea
+                    value={payload.notes}
+                    disabled={pending}
+                    onChange={(value) => patch({ notes: value })}
+                    rows={2}
+                    placeholder="Detail untuk tim finance"
+                  />
+                </FormField>
               </FormSection>
             </form>
           )}
@@ -569,6 +619,16 @@ export function VendorBillForm({
         onConfirm={() => {
           if (pendingDiscardDraftId) void discardDraftById(pendingDiscardDraftId);
           setPendingDiscardDraftId(null);
+        }}
+      />
+      <VendorCreateSheet
+        open={showVendorComposer}
+        onClose={() => setShowVendorComposer(false)}
+        onSuccess={(newVendor) => {
+          setAddedVendors((curr) => [...curr, newVendor]);
+          patch({ vendorId: newVendor.id });
+          setShowVendorComposer(false);
+          router.refresh();
         }}
       />
       <OperationSuccessDialog

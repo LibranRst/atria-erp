@@ -25,22 +25,20 @@ export function ExpenseFormReview({
         title="Ringkasan pengeluaran"
         helper="Periksa kembali proyek, dokumen, dan perlakuan stok sebelum mengajukan."
       >
-        <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-          <ReviewFact label="Proyek" value={projectName} />
-          <ReviewFact label="Dokumen" value={documentName} />
-          <ReviewFact
-            label="Perubahan Stok"
-            value={
-              stockHandlingLabels.length === 0
-                ? "Tidak ada perubahan stok"
-                : stockHandlingLabels.join(" · ")
-            }
-          />
-          <ReviewFact
-            label="Langkah Berikutnya"
-            value="Finance memverifikasi, lalu approval mengikuti aturan budget proyek."
-          />
-        </div>
+        <ReviewFact label="Proyek" value={projectName} />
+        <ReviewFact label="Dokumen" value={documentName} />
+        <ReviewFact
+          label="Perubahan Stok"
+          value={
+            stockHandlingLabels.length === 0
+              ? "Tidak ada perubahan stok"
+              : stockHandlingLabels.join(" · ")
+          }
+        />
+        <ReviewFact
+          label="Langkah Berikutnya"
+          value="Finance memverifikasi, lalu approval mengikuti aturan budget proyek."
+        />
       </FormSection>
 
       {categorySummaries.length > 0 ? (
@@ -48,27 +46,25 @@ export function ExpenseFormReview({
           title="Dampak Budget"
           helper="Kondisi overbudget akan mengharuskan persetujuan khusus Owner."
         >
-          <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-            {categorySummaries.map(({ category, amount }) => {
-              const before = Number(category.remainingAmount);
-              const after = before - amount;
-              return (
-                <div key={category.id} className="px-4 py-3 text-xs">
-                  <div className="flex items-center justify-between gap-3 font-semibold">
-                    <span className="text-on-surface">{category.name}</span>
-                    <span className="font-bold text-primary tabular-nums">
-                      Rp {amount.toLocaleString("id-ID")}
-                    </span>
-                  </div>
-                  <p
-                    className={`mt-1 text-support font-medium ${after < 0 ? "font-bold text-error" : "text-on-surface-variant"}`}
-                  >
-                    Sisa: Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
-                  </p>
+          {categorySummaries.map(({ category, amount }) => {
+            const before = Number(category.remainingAmount);
+            const after = before - amount;
+            return (
+              <div key={category.id} className="px-4 py-3 text-xs">
+                <div className="flex items-center justify-between gap-3 font-semibold">
+                  <span className="text-on-surface">{category.name}</span>
+                  <span className="font-bold text-primary tabular-nums">
+                    Rp {amount.toLocaleString("id-ID")}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+                <p
+                  className={`mt-1 text-support font-medium ${after < 0 ? "font-bold text-error" : "text-on-surface-variant"}`}
+                >
+                  Sisa: Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
+                </p>
+              </div>
+            );
+          })}
         </FormSection>
       ) : null}
     </div>

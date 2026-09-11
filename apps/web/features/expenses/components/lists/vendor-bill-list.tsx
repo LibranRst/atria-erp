@@ -71,7 +71,6 @@ export function VendorBillList({
       />
 
       <VendorSchedulePaymentSheet
-        key={operations.selectedBill?.id ?? "vendor-schedule-closed"}
         bill={operations.selectedBill}
         bankAccounts={bankAccounts}
         ownerApprovalThreshold={vendorPaymentApprovalThreshold}
@@ -90,7 +89,6 @@ export function VendorBillList({
       />
 
       <VendorDisbursePaymentSheet
-        key={operations.selectedPayment?.id ?? "vendor-disburse-closed"}
         payment={operations.selectedPayment}
         bankAccounts={bankAccounts}
         isPending={operations.pending}

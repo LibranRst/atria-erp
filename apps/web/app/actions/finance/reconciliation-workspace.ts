@@ -1,5 +1,6 @@
 export {
   importBankStatementCsv,
+  importParsedBankStatementRows,
   recordBankStatementRow,
 } from "@/app/actions/finance/reconciliation-statement-actions";
 export { getReconciliationWorkspace } from "@/app/actions/finance/reconciliation-workspace-query";

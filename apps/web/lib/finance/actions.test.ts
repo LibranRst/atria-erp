@@ -12,6 +12,7 @@ import { auth } from "@/lib/auth";
 import { createProjectBudget, createBudgetItem } from "@/app/actions/project/budget";
 import { recordClientPayment } from "@/app/actions/finance/record-client-payment";
 import { createClientInvoice } from "@/app/actions/finance/create-client-invoice";
+import { getInvoicePrefillContext } from "@/app/actions/finance/get-invoice-prefill-context";
 import { getDashboardStats } from "@/app/actions/finance/get-dashboard-stats";
 import { describe, it, expect, afterAll, mock } from "bun:test";
 import { describeIntegration } from "@/lib/testing/integration-db";
@@ -371,6 +372,33 @@ describeIntegration("Atria ERP Server Actions - TSK-007", () => {
       expect(invoices).toHaveLength(0);
 
       await db.delete(project).where(eq(project.id, newProj.id));
+    });
+
+    it("harus menghasilkan prefill context invoice dengan nomor kanonis dan tahap DP untuk Owner", async () => {
+      mockUserSession(OWNER_USER);
+      const [testProj] = await db
+        .insert(project)
+        .values({
+          name: "Fit-Out Interior Bassura Studio",
+          clientId: "44444444-4444-4444-4444-444444444441",
+          projectManagerId: PM_BUDI_USER.id,
+          status: "ACTIVE",
+          totalContractValue: "50000000.00",
+        })
+        .returning();
+
+      const res = await getInvoicePrefillContext({ projectId: testProj.id });
+      expect(res.success).toBe(true);
+      if (res.success) {
+        expect(res.data.projectCode).toBe("BSR");
+        expect(res.data.suggestedInvoiceNumber).toContain("INV/");
+        expect(res.data.suggestedInvoiceNumber).toContain("BSR-001");
+        expect(res.data.suggestedStage).toBe("DP");
+        expect(res.data.suggestedAmount).toBe(25000000);
+        expect(res.data.remainingUnbilled).toBe(50000000);
+      }
+
+      await db.delete(project).where(eq(project.id, testProj.id));
     });
   });
 

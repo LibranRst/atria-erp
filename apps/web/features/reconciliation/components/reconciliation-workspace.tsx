@@ -4,12 +4,14 @@ import React from "react";
 import { toast } from "sonner";
 
 import {
-  importBankStatementCsv,
+  importParsedBankStatementRows,
   recordBankStatementRow,
   type ReconciliationCashTransaction,
   type ReconciliationStatementRow,
   type ReconciliationWorkspace as ReconciliationWorkspaceData,
 } from "@/app/actions/finance/reconciliation-workspace";
+import { analyzeBankStatement } from "@/app/actions/finance/analyze-bank-statement";
+import { parseBankStatementCsv } from "@atria/core/finance/bank-statement-csv";
 import {
   clearReconciliationException,
   markReconciliationException,
@@ -78,6 +80,16 @@ export function ReconciliationWorkspace({
     fileName: "",
     content: "",
   });
+  const [previewRows, setPreviewRows] = React.useState<
+    Array<{
+      transactionDate: string;
+      description: string;
+      amount: number;
+      type: "INFLOW" | "OUTFLOW";
+    }>
+  >([]);
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [detectedBank, setDetectedBank] = React.useState<string | null>(null);
 
   const selectedCash = data.cashTransactions.find((item) => item.id === selectedCashId) ?? null;
   const exceptionCash = data.cashTransactions.find((item) => item.id === exceptionCashId) ?? null;
@@ -109,6 +121,9 @@ export function ReconciliationWorkspace({
 
   function openImport(): void {
     setError(null);
+    setPreviewRows([]);
+    setIsAnalyzing(false);
+    setDetectedBank(null);
     setImportDraft({
       bankAccountId: data.bankAccounts[0]?.id ?? "",
       fileName: "",
@@ -145,24 +160,95 @@ export function ReconciliationWorkspace({
     updateUrlSearchParam("view", view === "statement" ? null : view, "replace");
   }
 
-  async function selectCsvFile(event: React.ChangeEvent<HTMLInputElement>): Promise<void> {
+  async function selectFile(event: React.ChangeEvent<HTMLInputElement>): Promise<void> {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.name.toLocaleLowerCase("id-ID").endsWith(".csv")) {
-      setError("Pilih file dengan format CSV.");
+    if (file.size > 10_000_000) {
+      setError("Ukuran file mutasi maksimal 10 MB.");
       return;
     }
-    if (file.size > 1_000_000) {
-      setError("Ukuran file rekening koran maksimal 1 MB.");
-      return;
-    }
-    const content = await file.text();
     setError(null);
     setImportDraft((current) => ({
       ...current,
       fileName: file.name,
-      content,
     }));
+
+    const lowerName = file.name.toLowerCase();
+    const isCsv = lowerName.endsWith(".csv");
+
+    if (isCsv) {
+      const content = await file.text();
+      try {
+        const parsed = parseBankStatementCsv(content);
+        const rows = parsed.map((r) => ({
+          transactionDate: r.transactionDate.toISOString().slice(0, 10),
+          description: r.description,
+          amount: Number(r.amount),
+          type: r.type,
+        }));
+        setPreviewRows(rows);
+        setDetectedBank(null);
+        return;
+      } catch {
+        // Format CSV bank non-standar, teruskan ke AI
+      }
+    }
+
+    setIsAnalyzing(true);
+    try {
+      let fileBase64: string | undefined;
+      let fileContent: string | undefined;
+
+      if (isCsv || lowerName.endsWith(".txt")) {
+        fileContent = await file.text();
+      } else {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("Gagal membaca berkas."));
+          reader.readAsDataURL(file);
+        });
+        const commaIndex = dataUrl.indexOf(",");
+        fileBase64 = commaIndex !== -1 ? dataUrl.slice(commaIndex + 1) : dataUrl;
+      }
+
+      const res = await analyzeBankStatement({
+        fileName: file.name,
+        fileBase64,
+        fileContent,
+        mimeType: file.type,
+      });
+
+      if (!res.success) {
+        setError(res.error.message);
+        return;
+      }
+
+      setPreviewRows(
+        res.data.rows.map((r) => ({
+          transactionDate: r.transactionDate,
+          description: r.description,
+          amount: r.amount,
+          type: r.type,
+        })),
+      );
+      setDetectedBank(res.data.detectedBankName ?? null);
+
+      if (res.data.detectedBankName) {
+        const matched = data.bankAccounts.find(
+          (acc) =>
+            acc.bankName.toLowerCase().includes(res.data.detectedBankName!.toLowerCase()) ||
+            acc.name.toLowerCase().includes(res.data.detectedBankName!.toLowerCase()),
+        );
+        if (matched) {
+          setImportDraft((curr) => ({ ...curr, bankAccountId: matched.id }));
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal menganalisis berkas rekening koran.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   }
 
   function downloadTemplate(): void {
@@ -180,9 +266,22 @@ export function ReconciliationWorkspace({
   }
 
   function submitImport(): void {
+    if (previewRows.length === 0) {
+      setError("Belum ada mutasi yang siap diimpor.");
+      return;
+    }
     setError(null);
     startTransition(async () => {
-      const result = await importBankStatementCsv(importDraft);
+      const result = await importParsedBankStatementRows({
+        bankAccountId: importDraft.bankAccountId,
+        fileName: importDraft.fileName || "Mutasi Rekening Koran",
+        rows: previewRows.map((r) => ({
+          transactionDate: new Date(r.transactionDate),
+          description: r.description,
+          amount: r.amount,
+          type: r.type,
+        })),
+      });
       if (!result.success) {
         setError(result.error.message);
         return;
@@ -196,6 +295,7 @@ export function ReconciliationWorkspace({
         toast.success(`${result.data.importedCount} mutasi berhasil diimpor.${duplicateCopy}`);
       }
       setImportOpen(false);
+      setPreviewRows([]);
       refresh();
     });
   }
@@ -276,11 +376,13 @@ export function ReconciliationWorkspace({
   // pengecualian khususnya tidak terlihat sama sekali dari layar.
   const exceptionDisabledReason =
     exceptionReason.trim().length < 10 ? "Tulis alasan minimal 10 karakter." : undefined;
-  const importDisabledReason = !importDraft.bankAccountId
-    ? "Pilih rekening tujuan."
-    : !importDraft.fileName || !importDraft.content
-      ? "Pilih file CSV rekening koran."
-      : undefined;
+  const importDisabledReason = isAnalyzing
+    ? "Sedang menganalisis berkas rekening koran…"
+    : !importDraft.bankAccountId
+      ? "Pilih rekening tujuan."
+      : previewRows.length === 0
+        ? "Pilih file mutasi bank untuk dipratinjau terlebih dahulu."
+        : undefined;
   const manualDisabledReason = !draft.bankAccountId
     ? "Pilih rekening mutasi."
     : !draft.transactionDate
@@ -311,6 +413,12 @@ export function ReconciliationWorkspace({
       />
 
       <OperationalFormSheet
+        dismissal={{
+          mode: "confirm",
+          dirty: exceptionReason !== (exceptionCash?.exceptionReason ?? ""),
+          onDiscard: () => setExceptionReason(exceptionCash?.exceptionReason ?? ""),
+          description: "Alasan pengecualian yang belum disimpan akan hilang.",
+        }}
         open={exceptionCash !== null}
         title="Catat pengecualian"
         submitLabel="Simpan alasan"
@@ -360,15 +468,36 @@ export function ReconciliationWorkspace({
       </OperationalFormSheet>
 
       <OperationalFormSheet
+        dismissal={{
+          mode: "confirm",
+          dirty: previewRows.length > 0 || Boolean(importDraft.fileName),
+          onDiscard: () => {
+            setImportDraft({
+              bankAccountId: data.bankAccounts[0]?.id ?? "",
+              fileName: "",
+              content: "",
+            });
+            setPreviewRows([]);
+          },
+          description: "Pratinjau mutasi rekening koran yang belum disimpan akan dibuang.",
+        }}
         open={importOpen}
         title="Impor rekening koran"
-        submitLabel="Impor"
-        submittingLabel="Mengimpor…"
-        pending={pending}
-        disabled={!importDraft.bankAccountId || !importDraft.fileName || !importDraft.content}
+        submitLabel={
+          previewRows.length > 0 ? `Simpan ${previewRows.length} Mutasi` : "Pilih Berkas"
+        }
+        submittingLabel="Menyimpan…"
+        pending={pending || isAnalyzing}
+        disabled={previewRows.length === 0 || !importDraft.bankAccountId || isAnalyzing}
         disabledReason={importDisabledReason}
-        statusText="Impor hanya menambah data pembanding dan tidak mengubah saldo."
-        statusTone="default"
+        statusText={
+          error
+            ? undefined
+            : previewRows.length > 0
+              ? `Periksa ${previewRows.length} mutasi sebelum disimpan ke buku besar.`
+              : "Unggah mutasi untuk dianalisis oleh AI atau format CSV standar Atria."
+        }
+        statusTone={error ? "danger" : "default"}
         error={
           error ? (
             <p className="text-xs text-error" role="alert">
@@ -376,12 +505,15 @@ export function ReconciliationWorkspace({
             </p>
           ) : undefined
         }
-        onClose={() => setImportOpen(false)}
+        onClose={() => {
+          setImportOpen(false);
+          setPreviewRows([]);
+        }}
         onSubmit={submitImport}
       >
         <FormSection
-          title="File rekening koran"
-          helper="Pilih rekening tujuan, lalu unggah CSV dengan format Atria."
+          title="Rekening tujuan"
+          helper="Pilih rekening bank tempat mutasi ini akan dicatat."
           action={
             <button
               type="button"
@@ -401,47 +533,185 @@ export function ReconciliationWorkspace({
             }
             required
           />
-          <div className="flex min-h-16 items-center gap-3 px-5 py-3">
-            <span
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant ring-1 ring-ring-subtle"
-              aria-hidden="true"
-            >
-              <AppIcon name="description" className="icon-md leading-none" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-on-surface">
-                {importDraft.fileName || "Belum ada file"}
+        </FormSection>
+
+        {isAnalyzing ? (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-[22px] bg-surface-container-low p-8 text-center ring-1 ring-ring-subtle">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <AppIcon name="sync" className="icon-lg animate-spin leading-none" />
+            </div>
+            <div>
+              <p className="text-row font-semibold text-on-surface">
+                Menganalisis rekening koran dengan AI…
               </p>
-              <p className="mt-0.5 text-meta text-on-surface-variant">
-                CSV · maksimal 1 MB · maksimal 500 baris
+              <p className="mt-1 text-meta text-on-surface-variant">
+                Mengekstrak baris transaksi dari {importDraft.fileName}
               </p>
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,text/csv"
-              className="sr-only"
-              onChange={selectCsvFile}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="relative inline-flex min-h-10 shrink-0 items-center rounded-full bg-surface-container-high px-3.5 text-meta font-semibold text-on-surface outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-highest"
-            >
-              Pilih file
-            </button>
           </div>
-        </FormSection>
+        ) : previewRows.length === 0 ? (
+          <FormSection
+            title="Unggah berkas mutasi"
+            helper="Pilih file CSV, spreadsheet Excel (.xlsx/.xls), PDF, atau gambar mutasi bank."
+          >
+            <div className="flex min-h-20 items-center gap-3 px-5 py-4">
+              <span
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-primary ring-1 ring-ring-subtle"
+                aria-hidden="true"
+              >
+                <AppIcon name="upload_file" className="icon-lg leading-none" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-on-surface">
+                  {importDraft.fileName || "Belum ada berkas"}
+                </p>
+                <p className="mt-0.5 text-meta text-on-surface-variant">
+                  CSV · XLSX · XLS · PDF · JPG/PNG · Maks 10 MB
+                </p>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,.pdf,application/pdf,image/*"
+                className="sr-only"
+                onChange={selectFile}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="relative inline-flex min-h-11 shrink-0 items-center rounded-full bg-primary px-4 text-meta font-semibold text-white shadow-control outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-primary/90"
+              >
+                Pilih berkas
+              </button>
+            </div>
+          </FormSection>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center rounded-full bg-surface-container-high px-2.5 py-1 text-meta font-semibold text-on-surface">
+                  {previewRows.length} baris terdeteksi
+                </span>
+                {detectedBank ? (
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-meta font-semibold text-primary">
+                    Bank: {detectedBank}
+                  </span>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPreviewRows([]);
+                  setImportDraft((c) => ({ ...c, fileName: "" }));
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                className="text-meta font-semibold text-primary hover:underline"
+              >
+                Ganti berkas
+              </button>
+            </div>
+
+            {/* Inset metric cells */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-[16px] bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
+                <p className="text-eyebrow font-semibold tracking-wider text-on-surface-variant uppercase">
+                  Total Masuk
+                </p>
+                <p className="mt-1 text-row font-bold text-success">
+                  {formatIdr(
+                    previewRows
+                      .filter((r) => r.type === "INFLOW")
+                      .reduce((sum, r) => sum + r.amount, 0),
+                  )}
+                </p>
+              </div>
+              <div className="rounded-[16px] bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
+                <p className="text-eyebrow font-semibold tracking-wider text-on-surface-variant uppercase">
+                  Total Keluar
+                </p>
+                <p className="mt-1 text-row font-bold text-error">
+                  {formatIdr(
+                    previewRows
+                      .filter((r) => r.type === "OUTFLOW")
+                      .reduce((sum, r) => sum + r.amount, 0),
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Tabel Baris Pratinjau */}
+            <div className="overflow-hidden rounded-inset bg-white ring-1 ring-ring-subtle">
+              <div className="border-b border-outline-variant/15 bg-surface-container-low/50 px-4 py-2.5 text-eyebrow font-semibold tracking-wider text-on-surface-variant uppercase">
+                Pratinjau Mutasi Rekening Koran
+              </div>
+              <div className="max-h-64 divide-y divide-outline-variant/10 overflow-y-auto">
+                {previewRows.map((row, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold text-on-surface">
+                        {row.description}
+                      </p>
+                      <p className="mt-0.5 text-meta text-on-surface-variant">
+                        {row.transactionDate}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2.5">
+                      <div className="text-right">
+                        <p
+                          className={`text-xs font-bold tabular-nums ${
+                            row.type === "INFLOW" ? "text-success" : "text-error"
+                          }`}
+                        >
+                          {row.type === "INFLOW" ? "+" : "-"} {formatIdr(row.amount)}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreviewRows((curr) =>
+                              curr.map((r, i) =>
+                                i === idx
+                                  ? { ...r, type: r.type === "INFLOW" ? "OUTFLOW" : "INFLOW" }
+                                  : r,
+                              ),
+                            )
+                          }
+                          title="Klik untuk mengubah Masuk / Keluar"
+                          className={`inline-flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold transition hover:opacity-80 active:scale-95 ${
+                            row.type === "INFLOW"
+                              ? "bg-success/10 text-success ring-1 ring-success/20"
+                              : "bg-error/10 text-error ring-1 ring-error/20"
+                          }`}
+                        >
+                          <span>{row.type === "INFLOW" ? "Masuk" : "Keluar"}</span>
+                          <AppIcon name="swap_horiz" className="h-2.5 w-2.5" />
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewRows((curr) => curr.filter((_, i) => i !== idx))}
+                        title="Hapus baris ini"
+                        className="flex h-7 w-7 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-error"
+                      >
+                        <AppIcon name="close" className="icon-xs leading-none" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-start gap-2 px-1 text-meta text-on-surface-variant">
           <AppIcon name="info" className="mt-0.5 icon-sm shrink-0 text-primary" />
           <p>
-            Isi tanggal dan deskripsi, lalu tepat satu kolom dana_masuk atau dana_keluar. Ingin
-            memasukkan satu transaksi saja?{" "}
+            AI membaca kolom tanggal, deskripsi, dan nominal secara otomatis. Ingin memasukkan satu
+            transaksi saja?{" "}
             <button
               type="button"
               onClick={() => {
                 setImportOpen(false);
+                setPreviewRows([]);
                 openManual();
               }}
               className="font-bold text-primary underline decoration-primary/25 underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
@@ -454,6 +724,14 @@ export function ReconciliationWorkspace({
       </OperationalFormSheet>
 
       <OperationalFormSheet
+        dismissal={{
+          mode: "confirm",
+          dirty:
+            JSON.stringify(draft) !==
+            JSON.stringify(newStatementDraft(data.bankAccounts[0]?.id ?? "")),
+          onDiscard: () => setDraft(newStatementDraft(data.bankAccounts[0]?.id ?? "")),
+          description: "Mutasi bank yang belum disimpan akan hilang.",
+        }}
         open={manualOpen}
         title="Catat mutasi bank"
         submitLabel="Simpan"
@@ -527,6 +805,12 @@ export function ReconciliationWorkspace({
       </OperationalFormSheet>
 
       <WorkflowFormSheet
+        dismissal={{
+          mode: "confirm",
+          dirty: selectedStatementId !== null,
+          onDiscard: () => setSelectedStatementId(null),
+          description: "Pilihan pencocokan yang belum dikonfirmasi akan dibuang.",
+        }}
         open={selectedCash !== null}
         title="Cocokkan transaksi"
         primaryLabel="Cocokkan"
@@ -541,7 +825,6 @@ export function ReconciliationWorkspace({
             : "Pencocokan hanya mengubah status, bukan saldo.")
         }
         statusTone={error ? "danger" : "default"}
-        actionLayout="stacked"
         onClose={() => setSelectedCashId(null)}
         onSecondary={() => {
           if (!selectedCash) return;

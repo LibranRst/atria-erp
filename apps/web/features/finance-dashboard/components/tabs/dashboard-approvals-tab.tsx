@@ -6,36 +6,31 @@ import { toast } from "sonner";
 import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
 import { decideInventoryOpening } from "@/app/actions/material/opening-inventory";
 import {
-  DetailSheet,
   Button,
   CompactFormDialog,
   ConfirmationDialog,
   DetailSection,
+  FormField,
+  MediaPreviewDialog,
   MoneyValue,
   RowGroup,
-  SheetFooterActions,
-  StatusBadge,
   SummaryFact,
   SummarySurface,
   Textarea,
-  useSheetPresenceValue,
 } from "@/components/ui";
 import {
   ApprovalDecisionReasonFields,
   approvalRequiresEmergencyOverride,
   approvalRequiresOpeningReason,
 } from "@/features/approvals/components/shared/approval-decision-reason-fields";
-import { InventoryOpeningApprovalItems } from "@/features/approvals/components/shared/inventory-opening-approval-items";
+import {
+  ApprovalDecisionSubject,
+  ApprovalDetailSheet,
+} from "@/features/approvals/components/views/approval-list-presentation";
 import { approvalIsCritical } from "@/features/approvals/utils/approval-list-utils";
-import {
-  ApprovalBudgetContext,
-  ApprovalWorkbenchRow,
-} from "@/features/finance-dashboard/components/rows/approval-rows";
+import { ApprovalWorkbenchRow } from "@/features/finance-dashboard/components/rows/approval-rows";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
-import {
-  formatShortDate,
-  shortMoney,
-} from "@/features/finance-dashboard/utils/dashboard-formatters";
+import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import {
   approvalIsWaitingLong,
@@ -65,11 +60,7 @@ export function ApprovalsTab({
 }: ApprovalsTabProps): React.JSX.Element {
   const router = useRouter();
   const [selectedApproval, setSelectedApproval] = React.useState<ApprovalDetail | null>(null);
-  const {
-    presentedValue: presentedApproval,
-    open: approvalOpen,
-    handleExitComplete: handleApprovalExitComplete,
-  } = useSheetPresenceValue(selectedApproval, selectedApproval?.id);
+  const [activeImage, setActiveImage] = React.useState<string | null>(null);
   const [decision, setDecision] = React.useState<ApprovalDecision | null>(null);
   const [rejectionReason, setRejectionReason] = React.useState("");
   const [approvalReason, setApprovalReason] = React.useState("");
@@ -253,136 +244,32 @@ export function ApprovalsTab({
         )}
       </DetailSection>
 
-      <DetailSheet
-        open={approvalOpen}
-        title="Tinjau Persetujuan"
-        onClose={() => setSelectedApproval(null)}
-        onExitComplete={handleApprovalExitComplete}
-        footer={
-          presentedApproval ? (
-            <SheetFooterActions
-              secondary={{
-                label: "Tolak",
-                disabled: pending,
-                onClick: () => requestDecision(presentedApproval, "REJECTED"),
-              }}
-              primary={{
-                label: "Setujui",
-                disabled: pending,
-                onClick: () => requestDecision(presentedApproval, "APPROVED"),
-              }}
-            />
-          ) : undefined
-        }
-      >
-        {presentedApproval ? (
-          <div className="space-y-md">
-            <section className="overflow-hidden rounded-owner bg-surface-container-lowest ring-1 ring-ring-subtle">
-              <div className="p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <StatusBadge
-                    tone={
-                      presentedApproval.priority === "CRITICAL"
-                        ? "critical"
-                        : presentedApproval.priority === "WARNING"
-                          ? "warning"
-                          : "pending"
-                    }
-                    label={presentedApproval.priorityReason}
-                  />
-                  <span className="shrink-0 text-meta font-semibold text-on-surface-variant">
-                    {formatShortDate(presentedApproval.createdAt)}
-                  </span>
-                </div>
-                <p className="mt-4 text-eyebrow font-bold tracking-[0.12em] text-on-surface-variant/65 uppercase">
-                  Nominal pengajuan
-                </p>
-                <MoneyValue
-                  amount={presentedApproval.amount}
-                  variant="fullDynamic"
-                  size="hero"
-                  className="mt-1"
-                />
-                <p className="mt-3 text-sm leading-[1.3] font-semibold text-on-surface">
-                  {presentedApproval.description}
-                </p>
-              </div>
-              {presentedApproval.notes ? (
-                <div className="border-t border-outline-variant/20 bg-surface-container-lowest px-4 py-3">
-                  <p className="text-[9px] leading-5 font-bold tracking-widest text-on-surface-variant/65 uppercase">
-                    Catatan pengajuan
-                  </p>
-                  <p className="text-xs leading-4 text-on-surface-variant">
-                    {presentedApproval.notes}
-                  </p>
-                </div>
-              ) : null}
-            </section>
+      <ApprovalDetailSheet
+        item={selectedApproval}
+        pending={pending}
+        onClose={() => {
+          if (!pending) setSelectedApproval(null);
+        }}
+        onOpenReceipt={setActiveImage}
+        onDecision={requestDecision}
+      />
 
-            <section className="overflow-hidden rounded-owner bg-surface-container-lowest ring-1 ring-ring-subtle">
-              {[
-                ["Proyek", presentedApproval.projectName],
-                ["Pengaju", presentedApproval.requestedBy],
-                ["Kategori", presentedApproval.budgetItemName],
-                [
-                  "Jatuh tempo",
-                  presentedApproval.dueDate
-                    ? formatShortDate(presentedApproval.dueDate)
-                    : "Tidak ditentukan",
-                ],
-              ].map(([label, value]) => (
-                <div
-                  key={label}
-                  className="flex min-h-12 items-center justify-between gap-4 border-b border-outline-variant/20 px-4 py-3 last:border-b-0"
-                >
-                  <p className="shrink-0 text-meta font-medium text-on-surface-variant">{label}</p>
-                  <p className="min-w-0 truncate text-right text-xs font-semibold text-on-surface">
-                    {value}
-                  </p>
-                </div>
-              ))}
-            </section>
-
-            {presentedApproval.type === "inventory_opening" ? (
-              <>
-                <InventoryOpeningApprovalItems item={presentedApproval} />
-                <section className="overflow-hidden rounded-owner bg-surface-container-lowest ring-1 ring-ring-subtle">
-                  <div className="px-4 py-3.5">
-                    <p className="text-meta font-bold tracking-widest text-on-surface-variant/65 uppercase">
-                      Dampak stok
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-on-surface">
-                      Setelah disetujui, stok dan nilai inventory bertambah. Kas, utang vendor, dan
-                      actual cost proyek tidak berubah.
-                    </p>
-                  </div>
-                </section>
-              </>
-            ) : (
-              <ApprovalBudgetContext item={presentedApproval} />
-            )}
-            {presentedApproval.receiptImageUrl ? (
-              <section className="space-y-2.5">
-                <h3 className="px-1 text-meta font-bold tracking-[0.11em] text-on-surface uppercase">
-                  Bukti pengajuan
-                </h3>
-                <div className="overflow-hidden rounded-owner bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={presentedApproval.receiptImageUrl}
-                    alt="Bukti pengajuan"
-                    className="max-h-70 w-full rounded-2xl bg-surface-container-low object-contain"
-                  />
-                </div>
-              </section>
-            ) : null}
-          </div>
-        ) : null}
-      </DetailSheet>
+      <MediaPreviewDialog
+        open={activeImage !== null}
+        title="Bukti pengajuan"
+        imageUrl={activeImage}
+        alt="Bukti pengajuan"
+        onClose={() => setActiveImage(null)}
+      />
 
       <ConfirmationDialog
         open={decision?.status === "APPROVED"}
         title="Setujui pengajuan?"
+        tone={
+          decision?.item && approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride)
+            ? "warning"
+            : "default"
+        }
         description={
           decision?.item.type === "inventory_opening"
             ? "Pastikan jumlah fisik, harga per unit, dan subtotal sudah sesuai. Keputusan dicatat dalam audit log."
@@ -403,21 +290,27 @@ export function ApprovalsTab({
         onClose={closeDecision}
         onConfirm={confirmDecision}
       >
-        {decision?.item &&
-        (approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride) ||
-          approvalRequiresOpeningReason(decision.item, canEmergencyOverride)) ? (
-          <ApprovalDecisionReasonFields
-            item={decision.item}
-            canEmergencyOverride={canEmergencyOverride}
-            approvalReason={approvalReason}
-            emergencyOverride={emergencyOverride}
-            emergencyReason={emergencyReason}
-            pending={pending}
-            idPrefix="dashboard-approval"
-            onApprovalReasonChange={setApprovalReason}
-            onEmergencyOverrideChange={setEmergencyOverride}
-            onEmergencyReasonChange={setEmergencyReason}
-          />
+        {decision?.item ? (
+          <div className="space-y-3">
+            <ApprovalDecisionSubject item={decision.item} />
+            {approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride) ||
+            approvalRequiresOpeningReason(decision.item, canEmergencyOverride) ? (
+              <div className="border-t border-black/5.5 pt-3">
+                <ApprovalDecisionReasonFields
+                  item={decision.item}
+                  canEmergencyOverride={canEmergencyOverride}
+                  approvalReason={approvalReason}
+                  emergencyOverride={emergencyOverride}
+                  emergencyReason={emergencyReason}
+                  pending={pending}
+                  idPrefix="dashboard-approval"
+                  onApprovalReasonChange={setApprovalReason}
+                  onEmergencyOverrideChange={setEmergencyOverride}
+                  onEmergencyReasonChange={setEmergencyReason}
+                />
+              </div>
+            ) : null}
+          </div>
         ) : null}
       </ConfirmationDialog>
 
@@ -444,17 +337,20 @@ export function ApprovalsTab({
         }
       >
         <div className="space-y-md">
+          {decision?.item ? (
+            <div className="rounded-inset bg-white p-4 ring-1 ring-ring-subtle">
+              <ApprovalDecisionSubject item={decision.item} />
+            </div>
+          ) : null}
           <div className="rounded-inset bg-error-container/25 p-4 text-xs leading-5 text-error">
             Pengajuan tidak akan dilanjutkan. Jelaskan alasan yang dapat ditindaklanjuti oleh
             pengaju.
           </div>
-          <div>
-            <label
-              htmlFor="dashboard-rejection-reason"
-              className="px-1 text-xs font-bold text-on-surface"
-            >
-              Alasan penolakan
-            </label>
+          <FormField
+            label="Alasan penolakan"
+            helper={`Minimal ${decision?.item.type === "inventory_opening" ? 10 : 5} karakter.`}
+            required
+          >
             <Textarea
               id="dashboard-rejection-reason"
               autoFocus
@@ -463,17 +359,13 @@ export function ApprovalsTab({
               onChange={setRejectionReason}
               disabled={pending}
               placeholder="Contoh: nominal belum sesuai dengan progres pekerjaan"
-              className="mt-2"
               aria-invalid={
                 rejectionReason.length > 0 &&
                 rejectionReason.trim().length <
                   (decision?.item.type === "inventory_opening" ? 10 : 5)
               }
             />
-            <p className="mt-1 px-1 text-meta text-on-surface-variant">
-              Minimal {decision?.item.type === "inventory_opening" ? 10 : 5} karakter.
-            </p>
-          </div>
+          </FormField>
         </div>
       </CompactFormDialog>
     </div>

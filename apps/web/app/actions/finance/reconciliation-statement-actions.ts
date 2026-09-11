@@ -12,8 +12,10 @@ import { parseBankStatementCsv } from "@atria/core/finance/bank-statement-csv";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   importBankStatementCsvSchema,
+  importParsedBankStatementRowsSchema,
   recordBankStatementRowSchema,
   type ImportBankStatementCsvInput,
+  type ImportParsedBankStatementRowsInput,
   type RecordBankStatementRowInput,
 } from "@atria/core/validations/finance";
 
@@ -203,6 +205,127 @@ export async function importBankStatementCsv(input: ImportBankStatementCsvInput)
         duplicateCount,
       };
     });
+    return { success: true, data: result };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal mengimpor rekening koran.";
+    return {
+      success: false,
+      error: {
+        code: message === "BANK_ACCOUNT_NOT_FOUND" ? "NOT_FOUND" : "TRANSACTION_FAILED",
+        message: message === "BANK_ACCOUNT_NOT_FOUND" ? "Rekening aktif tidak ditemukan." : message,
+      },
+    };
+  }
+}
+
+export async function importParsedBankStatementRows(
+  input: ImportParsedBankStatementRowsInput,
+): Promise<
+  ActionResponse<{
+    readonly importId: string | null;
+    readonly importedCount: number;
+    readonly duplicateCount: number;
+  }>
+> {
+  const parsed = importParsedBankStatementRowsSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Daftar mutasi rekening koran tidak valid." },
+    };
+  }
+  const authResult = await requireReconciliationUser();
+  if (!authResult.success) return authResult;
+
+  try {
+    const result = await db.transaction(async (tx) => {
+      const account = await tx.query.bankAccount.findFirst({
+        where: and(eq(bankAccount.id, parsed.data.bankAccountId), eq(bankAccount.isActive, true)),
+      });
+      if (!account) throw new Error("BANK_ACCOUNT_NOT_FOUND");
+
+      const preparedRows = parsed.data.rows.map((row) => {
+        const amountStr = row.amount.toFixed(2);
+        return {
+          transactionDate: row.transactionDate,
+          description: row.description.trim(),
+          amount: amountStr,
+          type: row.type,
+          fingerprint: createStatementFingerprint({
+            bankAccountId: account.id,
+            transactionDate: row.transactionDate,
+            type: row.type,
+            amount: amountStr,
+            description: row.description,
+          }),
+        };
+      });
+
+      const fingerprints = [...new Set(preparedRows.map((row) => row.fingerprint))];
+      const existing = fingerprints.length
+        ? await tx
+            .select({ fingerprint: bankStatementRow.fingerprint })
+            .from(bankStatementRow)
+            .where(inArray(bankStatementRow.fingerprint, fingerprints))
+        : [];
+      const seen = new Set(existing.flatMap((row) => (row.fingerprint ? [row.fingerprint] : [])));
+      const uniqueRows = preparedRows.filter((row) => {
+        if (seen.has(row.fingerprint)) return false;
+        seen.add(row.fingerprint);
+        return true;
+      });
+      const duplicateCount = preparedRows.length - uniqueRows.length;
+      if (uniqueRows.length === 0) {
+        return { importId: null, importedCount: 0, duplicateCount };
+      }
+
+      const dates = uniqueRows.map((row) => row.transactionDate.getTime());
+      const [statementImport] = await tx
+        .insert(bankStatementImport)
+        .values({
+          bankAccountId: account.id,
+          fileName: parsed.data.fileName,
+          fileUrl:
+            parsed.data.fileUrl ??
+            `parsed-import://reconciliation/${encodeURIComponent(parsed.data.fileName)}`,
+          importedById: authResult.data.id,
+          startDate: new Date(Math.min(...dates)),
+          endDate: new Date(Math.max(...dates)),
+        })
+        .returning();
+      if (!statementImport) throw new Error("BANK_STATEMENT_IMPORT_CREATE_FAILED");
+
+      await tx.insert(bankStatementRow).values(
+        uniqueRows.map((row) => ({
+          importId: statementImport.id,
+          transactionDate: row.transactionDate,
+          description: row.description,
+          amount: row.amount,
+          type: row.type,
+          fingerprint: row.fingerprint,
+        })),
+      );
+
+      await tx.insert(auditLog).values({
+        userId: authResult.data.id,
+        action: "IMPORT_BANK_STATEMENT",
+        targetTable: "bank_statement_import",
+        targetId: statementImport.id,
+        newState: JSON.stringify({
+          bankAccountId: account.id,
+          fileName: parsed.data.fileName,
+          importedCount: uniqueRows.length,
+          duplicateCount,
+        }),
+      });
+
+      return {
+        importId: statementImport.id,
+        importedCount: uniqueRows.length,
+        duplicateCount,
+      };
+    });
+
     return { success: true, data: result };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Gagal mengimpor rekening koran.";

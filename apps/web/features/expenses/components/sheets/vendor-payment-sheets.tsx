@@ -2,13 +2,15 @@
 import {
   AppIcon,
   DatePickerField,
-  FieldContextLine,
   FinanceUnsavedChangesModal,
   FormField,
   FormRiskNotice,
   FormSection,
   MoneyInput,
+  MoneyValue,
   AdaptiveSelect,
+  StatusBadge,
+  type StatusBadgeTone,
   TextInput,
   useSheetPresenceValue,
   WorkflowFormSheet,
@@ -21,6 +23,7 @@ import type {
   VendorListPayment,
 } from "@/features/expenses/types/vendor-bill-list-types";
 import { getBillPaymentSummary } from "@/features/expenses/utils/vendor-bill-list-utils";
+import { deriveVendorPaymentReference } from "@atria/core/finance/invoice-prefill";
 
 type VendorSchedulePaymentSheetProps = {
   readonly bill: VendorListBill | null;
@@ -65,6 +68,22 @@ export function VendorSchedulePaymentSheet({
   } = useSheetPresenceValue(bill, bill?.id);
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
+
+  const handleExit = React.useCallback((): void => {
+    handleExitComplete();
+    setReviewing(false);
+    setConfirmClose(false);
+  }, [handleExitComplete]);
+
+  const prevBillIdRef = React.useRef(bill?.id);
+  React.useEffect(() => {
+    if (bill?.id !== prevBillIdRef.current) {
+      prevBillIdRef.current = bill?.id;
+      setReviewing(false);
+      setConfirmClose(false);
+    }
+  }, [bill?.id]);
+
   if (!presentedBill) return null;
 
   const amount = Number(scheduleAmount || 0);
@@ -97,8 +116,9 @@ export function VendorSchedulePaymentSheet({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
-        onExitComplete={handleExitComplete}
+        onExitComplete={handleExit}
         title={reviewing ? "Tinjau rencana pembayaran" : "Jadwalkan pembayaran vendor"}
         onClose={requestClose}
         pending={isPending}
@@ -112,37 +132,36 @@ export function VendorSchedulePaymentSheet({
       >
         <div className="space-y-md">
           <PaymentError error={error} />
-          <FieldContextLine>
-            {presentedBill.vendor?.name} · Tagihan {presentedBill.billNumber} · Sisa Rp{" "}
-            {remaining.toLocaleString("id-ID")}
-          </FieldContextLine>
+          <VendorBillScheduleContextCard
+            bill={presentedBill}
+            remaining={remaining}
+            totalScheduledOrPaid={totalScheduledOrPaid}
+          />
           {reviewing ? (
             <div className="space-y-3">
               <FormSection
                 title="Rencana yang akan dibuat"
                 helper="Penjadwalan belum mengurangi saldo rekening."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <ReviewFact
-                    label="Rekening rencana"
-                    value={
-                      selectedAccount
-                        ? `${selectedAccount.bankName} · ${selectedAccount.name}`
-                        : "–"
-                    }
-                  />
-                  <ReviewFact
-                    label="Tanggal"
-                    value={new Date(scheduleDate).toLocaleDateString("id-ID", {
-                      dateStyle: "long",
-                    })}
-                  />
-                  <ReviewFact label="Nominal" value={`Rp ${amount.toLocaleString("id-ID")}`} />
-                  <ReviewFact
-                    label="Sisa setelah dijadwalkan"
-                    value={`Rp ${Math.max(0, remaining - amount).toLocaleString("id-ID")}`}
-                  />
-                </div>
+                <ReviewFact
+                  label="Rekening rencana"
+                  value={
+                    selectedAccount
+                      ? `${selectedAccount.bankName} · ${selectedAccount.name}`
+                      : "–"
+                  }
+                />
+                <ReviewFact
+                  label="Tanggal"
+                  value={new Date(scheduleDate).toLocaleDateString("id-ID", {
+                    dateStyle: "long",
+                  })}
+                />
+                <ReviewFact label="Nominal" value={`Rp ${amount.toLocaleString("id-ID")}`} />
+                <ReviewFact
+                  label="Sisa setelah dijadwalkan"
+                  value={`Rp ${Math.max(0, remaining - amount).toLocaleString("id-ID")}`}
+                />
               </FormSection>
               <FormRiskNotice
                 title={
@@ -169,35 +188,33 @@ export function VendorSchedulePaymentSheet({
                 title="Rencana Pembayaran"
                 helper="Jadwalkan pembayaran untuk dicatat sebagai kewajiban kas masa depan."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <AdaptiveSelect
-                    label="Rekening Rencana"
-                    value={selectedBankId}
+                <AdaptiveSelect
+                  label="Rekening Rencana"
+                  value={selectedBankId}
+                  disabled={isPending}
+                  onChange={onSelectedBankIdChange}
+                  options={bankAccounts.map((account) => ({
+                    value: account.id,
+                    label: `${account.bankName} - ${account.name}`,
+                    description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}`,
+                  }))}
+                  required
+                />
+                <DatePickerField
+                  label="Tanggal Pembayaran"
+                  value={scheduleDate}
+                  disabled={isPending}
+                  onChange={onScheduleDateChange}
+                  required
+                />
+                <FormField label="Nominal Pembayaran" required>
+                  <MoneyInput
+                    value={scheduleAmount}
                     disabled={isPending}
-                    onChange={onSelectedBankIdChange}
-                    options={bankAccounts.map((account) => ({
-                      value: account.id,
-                      label: `${account.bankName} - ${account.name}`,
-                      description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}`,
-                    }))}
-                    required
+                    onChange={onScheduleAmountChange}
+                    placeholder="Masukkan nominal"
                   />
-                  <DatePickerField
-                    label="Tanggal Pembayaran"
-                    value={scheduleDate}
-                    disabled={isPending}
-                    onChange={onScheduleDateChange}
-                    required
-                  />
-                  <FormField label="Nominal Pembayaran" required>
-                    <MoneyInput
-                      value={scheduleAmount}
-                      disabled={isPending}
-                      onChange={onScheduleAmountChange}
-                      placeholder="Masukkan nominal"
-                    />
-                  </FormField>
-                </div>
+                </FormField>
               </FormSection>
             </form>
           )}
@@ -255,10 +272,34 @@ export function VendorDisbursePaymentSheet({
   } = useSheetPresenceValue(payment, payment?.id);
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
+
+  const handleExit = React.useCallback((): void => {
+    handleExitComplete();
+    setReviewing(false);
+    setConfirmClose(false);
+  }, [handleExitComplete]);
+
+  const prevPaymentIdRef = React.useRef(payment?.id);
+  React.useEffect(() => {
+    if (payment?.id !== prevPaymentIdRef.current) {
+      prevPaymentIdRef.current = payment?.id;
+      setReviewing(false);
+      setConfirmClose(false);
+    }
+  }, [payment?.id]);
+
   if (!presentedPayment) return null;
 
   const amount = Number(presentedPayment.amountPaid);
   const selectedAccount = bankAccounts.find((account) => account.id === disburseBankId);
+  const suggestedRef = presentedPayment
+    ? deriveVendorPaymentReference({
+        bankName: selectedAccount?.bankName || selectedAccount?.name,
+        vendorName: presentedPayment.vendorBill?.vendor?.name,
+        billNumber: presentedPayment.vendorBill?.billNumber,
+        projectName: presentedPayment.vendorBill?.project?.name,
+      })
+    : "";
   const before = Number(selectedAccount?.balance ?? 0);
   const after = before - amount;
   const canContinue = Boolean(disburseBankId && refNumber.trim()) && after >= 0;
@@ -285,8 +326,9 @@ export function VendorDisbursePaymentSheet({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
-        onExitComplete={handleExitComplete}
+        onExitComplete={handleExit}
         title={reviewing ? "Tinjau pembayaran vendor" : "Cairkan pembayaran vendor"}
         onClose={requestClose}
         pending={isPending}
@@ -301,30 +343,28 @@ export function VendorDisbursePaymentSheet({
       >
         <div className="space-y-md">
           <PaymentError error={error} />
-          <FieldContextLine>
-            {presentedPayment.vendorBill?.vendor?.name} · {presentedPayment.vendorBill?.billNumber}{" "}
-            · Rp {amount.toLocaleString("id-ID")}
-          </FieldContextLine>
+          <VendorPaymentDisburseContextCard
+            payment={presentedPayment}
+            amount={amount}
+          />
           {reviewing ? (
             <div className="space-y-3">
               <FormSection
                 title="Dampak Keuangan"
                 helper="Periksa dampak pencairan dana pada saldo kas rekening."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <ReviewFact label="Rekening Sumber" value={selectedAccount?.name ?? "–"} />
-                  <ReviewFact
-                    label="Saldo Rekening"
-                    value={
-                      <span
-                        className={after < 0 ? "font-bold text-error" : "font-bold text-primary"}
-                      >
-                        Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
-                      </span>
-                    }
-                  />
-                  <ReviewFact label="Referensi transfer" value={refNumber} />
-                </div>
+                <ReviewFact label="Rekening Sumber" value={selectedAccount?.name ?? "–"} />
+                <ReviewFact
+                  label="Saldo Rekening"
+                  value={
+                    <span
+                      className={after < 0 ? "font-bold text-error" : "font-bold text-primary"}
+                    >
+                      Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
+                    </span>
+                  }
+                />
+                <ReviewFact label="Referensi transfer" value={refNumber} />
               </FormSection>
               <FormRiskNotice title="Transaksi kas final" tone="warning">
                 Setelah dikonfirmasi, sistem mencatat ledger rekonsiliasi dan menandai pembayaran
@@ -341,30 +381,45 @@ export function VendorDisbursePaymentSheet({
             >
               <FormSection
                 title="Pencairan Pembayaran"
-                helper="Pilih rekening bank sumber dan masukkan bukti transfer."
+                helper="Pilih rekening bank sumber. Nomor referensi terisi otomatis sesuai vendor dan dapat disesuaikan."
               >
-                <div className="grid grid-cols-1 divide-y divide-outline-variant/20">
-                  <AdaptiveSelect
-                    label="Rekening Sumber Dana"
-                    value={disburseBankId}
+                <AdaptiveSelect
+                  label="Rekening Sumber Dana"
+                  value={disburseBankId}
+                  disabled={isPending}
+                  onChange={onDisburseBankIdChange}
+                  options={bankAccounts.map((account) => ({
+                    value: account.id,
+                    label: `${account.bankName} - ${account.name}`,
+                    description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}`,
+                  }))}
+                  required
+                />
+                <FormField label="Nomor Referensi Bukti Transfer" required>
+                  <TextInput
+                    value={refNumber}
                     disabled={isPending}
-                    onChange={onDisburseBankIdChange}
-                    options={bankAccounts.map((account) => ({
-                      value: account.id,
-                      label: `${account.bankName} - ${account.name}`,
-                      description: `Saldo Rp ${Number(account.balance).toLocaleString("id-ID")}`,
-                    }))}
-                    required
+                    onChange={onRefNumberChange}
+                    placeholder={
+                      suggestedRef ? `Contoh: ${suggestedRef}` : "Contoh: TRF-BCA-VND-SA01"
+                    }
                   />
-                  <FormField label="Nomor Referensi Bukti Transfer" required>
-                    <TextInput
-                      value={refNumber}
-                      disabled={isPending}
-                      onChange={onRefNumberChange}
-                      placeholder="Contoh: TRF-BCA-55203"
-                    />
-                  </FormField>
-                </div>
+                </FormField>
+                {suggestedRef && refNumber !== suggestedRef ? (
+                  <div className="flex items-center justify-between bg-surface-container-low/50 px-4 py-2 text-meta">
+                    <span className="text-on-surface-variant">
+                      Format standar:{" "}
+                      <strong className="font-mono text-on-surface">{suggestedRef}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onRefNumberChange(suggestedRef)}
+                      className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary/15 active:scale-[0.98]"
+                    >
+                      Gunakan
+                    </button>
+                  </div>
+                ) : null}
               </FormSection>
             </form>
           )}
@@ -410,6 +465,164 @@ function ReviewFact({
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
       <span className="shrink-0 text-on-surface-variant">{label}</span>
       <span className="text-right font-bold text-on-surface">{value}</span>
+    </div>
+  );
+}
+
+export function VendorBillScheduleContextCard({
+  bill,
+  remaining,
+  totalScheduledOrPaid,
+}: {
+  readonly bill: VendorListBill;
+  readonly remaining: number;
+  readonly totalScheduledOrPaid: number;
+}): React.JSX.Element {
+  const dueDate = bill.dueDate ? new Date(bill.dueDate) : null;
+  const hasValidDueDate = Boolean(dueDate && !Number.isNaN(dueDate.getTime()));
+  const statusTone: StatusBadgeTone =
+    bill.status === "PAID"
+      ? "healthy"
+      : bill.status === "PARTIALLY_PAID"
+        ? "pending"
+        : "warning";
+  const statusLabel =
+    bill.status === "PAID"
+      ? "Lunas"
+      : bill.status === "PARTIALLY_PAID"
+        ? "Sebagian"
+        : "Belum Bayar";
+
+  return (
+    <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+            Tagihan Vendor
+          </p>
+          <h3 className="mt-0.5 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
+            {bill.vendor?.name ?? "Vendor"}
+          </h3>
+          <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
+            Tagihan {bill.billNumber}
+            {bill.project?.name ? ` · ${bill.project.name}` : ""}
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <StatusBadge tone={statusTone} label={statusLabel} />
+          {hasValidDueDate && dueDate && (
+            <p className="mt-1.5 text-eyebrow font-semibold text-on-surface-variant/70">
+              Tempo{" "}
+              {dueDate.toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+              })}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3.5 grid grid-cols-2 gap-2 border-t border-outline-variant/15 pt-3">
+        <div className="rounded-2xl bg-surface-container-low p-2.5">
+          <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+            Sisa Tagihan
+          </p>
+          <div className="mt-1">
+            <MoneyValue
+              amount={remaining}
+              variant="fullDynamic"
+              size="sm"
+              className="font-bold text-primary"
+            />
+          </div>
+          <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+            {totalScheduledOrPaid > 0
+              ? `Sudah terjadwal Rp ${totalScheduledOrPaid.toLocaleString("id-ID")}`
+              : "Belum ada rencana"}
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-surface-container-low p-2.5">
+          <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+            Total Tagihan
+          </p>
+          <div className="mt-1">
+            <MoneyValue
+              amount={Number(bill.amount)}
+              variant="fullDynamic"
+              size="sm"
+              className="font-bold text-on-surface"
+            />
+          </div>
+          <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+            {bill.budgetItem?.name ? `Budget ${bill.budgetItem.name}` : "Nilai tagihan vendor"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function VendorPaymentDisburseContextCard({
+  payment,
+  amount,
+}: {
+  readonly payment: VendorListPayment;
+  readonly amount: number;
+}): React.JSX.Element {
+  const bill = payment.vendorBill;
+  const paymentDate = payment.paymentDate ? new Date(payment.paymentDate) : null;
+  const hasValidPaymentDate = Boolean(paymentDate && !Number.isNaN(paymentDate.getTime()));
+
+  return (
+    <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+            Pencairan Tagihan
+          </p>
+          <h3 className="mt-0.5 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
+            {bill?.vendor?.name ?? "Vendor"}
+          </h3>
+          <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
+            Tagihan {bill?.billNumber ?? "–"}
+            {bill?.project?.name ? ` · ${bill.project.name}` : ""}
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <StatusBadge tone="warning" label="Siap Cair" />
+          {hasValidPaymentDate && paymentDate && (
+            <p className="mt-1.5 text-eyebrow font-semibold text-on-surface-variant/70">
+              Rencana{" "}
+              {paymentDate.toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+              })}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3.5 border-t border-outline-variant/15 pt-3">
+        <div className="rounded-2xl bg-surface-container-low p-2.5">
+          <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+            Nominal Pencairan
+          </p>
+          <div className="mt-1">
+            <MoneyValue
+              amount={amount}
+              variant="fullDynamic"
+              size="sm"
+              className="font-bold text-primary"
+            />
+          </div>
+          <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+            {payment.bankAccount?.name
+              ? `Rekening sumber: ${payment.bankAccount.name}`
+              : "Pencairan kas"}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

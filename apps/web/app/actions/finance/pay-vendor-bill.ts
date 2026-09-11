@@ -1,4 +1,6 @@
 "use server";
+import { reconcileVendorBillAction } from "@/server/services/notification-job";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { getVendorPaymentApprovalThresholdCents } from "@/lib/finance/approval-thresholds";
 import { db } from "@/db";
@@ -27,6 +29,7 @@ import { getErrorMessage } from "@atria/core/utils/error-message";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
 import { mutateBalance, parseNumericToCents } from "@/lib/finance/balance-mutation";
 import { assertProjectStatusIsOperational } from "@/lib/auth/scoping";
+import { formatIdr } from "@atria/core/utils/money";
 
 export async function payVendorBill(
   input: PayVendorBillInput,
@@ -252,12 +255,29 @@ export async function payVendorBill(
         createdAt: new Date(),
       });
 
-      return { paymentId: payment.id, nextBalance: newBalance };
+      await recordNotificationEvent(tx, {
+        referenceType: "vendor_payment",
+        referenceId: payment.id,
+        projectId: bill.projectId,
+        stage: "COMPLETED",
+        title: "Pembayaran vendor selesai",
+        message: `Pembayaran senilai ${formatIdr(Number(payment.amountPaid))}.`,
+        permission: "view:project",
+        actionUrl: `/projects/${bill.projectId}?tab=budget`,
+        actorId: session.user.id,
+      });
+      await reconcileVendorBillAction(tx, bill.id);
+      return {
+        paymentId: payment.id,
+        nextBalance: newBalance,
+        amountPaid: Number(payment.amountPaid),
+        projectId: bill.projectId,
+      };
     });
 
     return {
       success: true,
-      data: result,
+      data: { paymentId: result.paymentId, nextBalance: result.nextBalance },
     };
   } catch (error: unknown) {
     const errMsg = getErrorMessage(error, "");

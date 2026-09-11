@@ -713,6 +713,66 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
       }
     });
 
+    it("harus membuat record approval di tabel approval ketika pengeluaran baru terdeteksi overrun saat verifikasi", async () => {
+      mockUserSession(PM_BUDI_USER);
+
+      // 1. Submit pengeluaran A yang masih di dalam budget
+      const resA = await submitFieldRequest({
+        projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_OPERASIONAL_CATEGORY_ID,
+        quantity: 1,
+        unitPrice: 300000,
+        amount: 300000,
+        description: "Bensin operasional A",
+      });
+      expect(resA.success).toBe(true);
+      if (!resA.success) return;
+
+      // Pada saat diajukan, resA belum butuh approval dan belum ada record di tabel approval
+      expect(resA.data.requiresOwnerApproval).toBe(false);
+      expect(resA.data.budgetOverrun).toBe(false);
+
+      const approvalBefore = await db.query.approval.findFirst({
+        where: and(
+          eq(approval.referenceType, "project_cost"),
+          eq(approval.referenceId, resA.data.id),
+        ),
+      });
+      expect(approvalBefore).toBeUndefined();
+
+      // 2. Submit pengeluaran B yang mendorong kategori Operasional melebihi alokasinya
+      const resB = await submitFieldRequest({
+        projectId: MENTENG_PROJECT_ID,
+        projectBudgetCategoryId: MENTENG_OPERASIONAL_CATEGORY_ID,
+        quantity: 1,
+        unitPrice: 50000000, // Nilai besar agar pasti over-budget
+        amount: 50000000,
+        description: "Operasional darurat B yang menyebabkan overrun",
+      });
+      expect(resB.success).toBe(true);
+
+      // 3. Finance memverifikasi pengeluaran A
+      mockUserSession(FINANCE_USER);
+      const verifyRes = await verifyFieldRequest(resA.data.id);
+      expect(verifyRes.success).toBe(true);
+      if (!verifyRes.success) return;
+
+      // Status pengeluaran A harus VERIFIED karena overrunNow = true
+      expect(verifyRes.data.status).toBe("VERIFIED");
+      expect(verifyRes.data.budgetOverrun).toBe(true);
+      expect(verifyRes.data.requiresOwnerApproval).toBe(true);
+
+      // Record approval HARUS otomatis terbuat di tabel approval dengan status PENDING
+      const approvalAfter = await db.query.approval.findFirst({
+        where: and(
+          eq(approval.referenceType, "project_cost"),
+          eq(approval.referenceId, resA.data.id),
+        ),
+      });
+      expect(approvalAfter).toBeDefined();
+      expect(approvalAfter!.status).toBe("PENDING");
+    });
+
     it("harus mencatat material expense dengan stock in eksplisit dan menghubungkan stock movement", async () => {
       mockUserSession(PM_BUDI_USER);
 

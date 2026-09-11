@@ -20,6 +20,7 @@ const fieldDisbursementRecoverySchema = z.object({
 });
 
 import { payFieldRequest, verifyFieldRequest } from "@/app/actions/finance/field-requests";
+import { deriveExpensePaymentReference } from "@atria/core/finance/invoice-prefill";
 import { getErrorMessage } from "@atria/core/utils/error-message";
 import { updateUrlSearchParam, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { FieldDisbursementSheet } from "@/features/expenses/components/sheets/expense-list-dialogs";
@@ -69,12 +70,19 @@ export function ExpenseList({
   const router = useRouter();
   const shouldOpenVendorBill = useUrlSearchParam("new-vendor-bill") === "true";
   const shouldShowVendorBills = useUrlSearchParam("view") === "vendor-bills";
-  const shouldForceVendorBills = shouldOpenVendorBill || shouldShowVendorBills;
+  const filterParam = useUrlSearchParam("filter");
+  const validFilter =
+    filterParam === "NEEDS_VERIFICATION" ||
+    filterParam === "NEEDS_APPROVAL" ||
+    filterParam === "READY_TO_PAY"
+      ? (filterParam as FilterStatus)
+      : "ALL";
+  const shouldForceVendorBills = (shouldOpenVendorBill || shouldShowVendorBills) && !filterParam;
   const [activeTab, setActiveTab] = useState<ExpenseListTab>(
     shouldForceVendorBills ? "VENDOR_BILLS" : "FIELD_CLAIMS",
   );
   const displayedTab = shouldForceVendorBills ? "VENDOR_BILLS" : activeTab;
-  const [filter, setFilter] = useState<FilterStatus>("ALL");
+  const [filter, setFilter] = useState<FilterStatus>(validFilter);
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [selectedCost, setSelectedCost] = useState<ExpenseCostItem | null>(null);
@@ -107,6 +115,28 @@ export function ExpenseList({
     },
     [projectId],
   );
+
+  const handleFilterChange = React.useCallback(
+    (nextFilter: FilterStatus): void => {
+      setFilter(nextFilter);
+      if (projectId) return;
+      updateUrlSearchParam("filter", nextFilter === "ALL" ? null : nextFilter, "replace");
+    },
+    [projectId],
+  );
+
+  const [prevFilterParam, setPrevFilterParam] = useState(filterParam);
+  if (filterParam !== prevFilterParam) {
+    setPrevFilterParam(filterParam);
+    if (
+      filterParam === "NEEDS_VERIFICATION" ||
+      filterParam === "NEEDS_APPROVAL" ||
+      filterParam === "READY_TO_PAY"
+    ) {
+      setFilter(filterParam as FilterStatus);
+      setActiveTab("FIELD_CLAIMS");
+    }
+  }
 
   const openExpenseDrawer = React.useCallback((): void => {
     updateUrlSearchParam("new-expense", "true", "push");
@@ -192,10 +222,20 @@ export function ExpenseList({
     setError(null);
     setSuccess(null);
     if (disbursementRecovery.isDirty && disbursementRecovery.payload.costId === cost.id) return;
+    const initialBank = bankAccounts[0];
+    const initialSuggestedRef = deriveExpensePaymentReference({
+      bankName: initialBank?.bankName || initialBank?.name,
+      projectName: cost.project?.name,
+      categoryCode:
+        cost.budgetCategory?.expenseCategory?.code ||
+        cost.budgetItem?.costCategory?.name ||
+        cost.budgetItem?.name,
+      costTitle: cost.description,
+    });
     disbursementRecovery.reset({
       costId: cost.id,
-      selectedBankId: bankAccounts[0]?.id ?? "",
-      refNumber: "",
+      selectedBankId: initialBank?.id ?? "",
+      refNumber: initialSuggestedRef,
     });
   }
 
@@ -300,7 +340,7 @@ export function ExpenseList({
           isOwnerOrFinance={isOwnerOrFinance}
           pending={isPending}
           historyExpanded={isHistoryExpanded}
-          onFilterChange={setFilter}
+          onFilterChange={handleFilterChange}
           onHistoryExpandedChange={setIsHistoryExpanded}
           onOpenExpenseDrawer={openExpenseDrawer}
           onVerify={handleVerifyClick}
@@ -326,7 +366,6 @@ export function ExpenseList({
 
       <ReceiptImageLightbox imageUrl={activeImage} onClose={() => setActiveImage(null)} />
       <FieldDisbursementSheet
-        key={selectedCost?.id ?? "field-disbursement-closed"}
         selectedCost={selectedCost}
         bankAccounts={bankAccounts}
         selectedBankId={selectedBankId}
@@ -341,9 +380,40 @@ export function ExpenseList({
           closeDisburseForm();
         }}
         onSubmit={handleConfirmDisburse}
-        onBankChange={(value: string) =>
-          disbursementRecovery.setPayload((current) => ({ ...current, selectedBankId: value }))
-        }
+        onBankChange={(value: string) => {
+          const currentBankId = selectedBankId;
+          const currentBank = bankAccounts.find((b) => b.id === currentBankId);
+          const newBank = bankAccounts.find((b) => b.id === value);
+          if (selectedCost) {
+            const prevSuggested = deriveExpensePaymentReference({
+              bankName: currentBank?.bankName || currentBank?.name,
+              projectName: selectedCost.project?.name,
+              categoryCode:
+                selectedCost.budgetCategory?.expenseCategory?.code ||
+                selectedCost.budgetItem?.costCategory?.name ||
+                selectedCost.budgetItem?.name,
+              costTitle: selectedCost.description,
+            });
+            const nextSuggested = deriveExpensePaymentReference({
+              bankName: newBank?.bankName || newBank?.name,
+              projectName: selectedCost.project?.name,
+              categoryCode:
+                selectedCost.budgetCategory?.expenseCategory?.code ||
+                selectedCost.budgetItem?.costCategory?.name ||
+                selectedCost.budgetItem?.name,
+              costTitle: selectedCost.description,
+            });
+            if (!refNumber.trim() || refNumber === prevSuggested) {
+              disbursementRecovery.setPayload((current) => ({
+                ...current,
+                selectedBankId: value,
+                refNumber: nextSuggested,
+              }));
+              return;
+            }
+          }
+          disbursementRecovery.setPayload((current) => ({ ...current, selectedBankId: value }));
+        }}
         onRefNumberChange={(value: string) =>
           disbursementRecovery.setPayload((current) => ({ ...current, refNumber: value }))
         }

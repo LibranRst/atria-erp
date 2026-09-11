@@ -67,7 +67,7 @@ export function AccountDetailSheet({
           <section className="space-y-2.5 rounded-owner bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
             {/* Satu baris untuk seluruh grup, bukan satu per tombol: penyebabnya
                 sama untuk semuanya, dan pemulihannya ada di sheet yang sama. */}
-            <div aria-live="polite">
+            <div aria-live="polite" className="empty:hidden">
               {!presentedAccount.isActive ? (
                 <p className="px-1 text-meta font-medium text-on-surface-variant">
                   Rekening ini diarsipkan. Aktifkan kembali di bawah untuk mencatat mutasi.
