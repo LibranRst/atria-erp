@@ -44,6 +44,18 @@ function productionConsumerFiles(): string[] {
 }
 
 describe("shared UI import boundaries", () => {
+  test("every production form sheet declares its dismissal contract", () => {
+    const formSheetPattern = /<(FormSheet|OperationalFormSheet|WorkflowFormSheet)\b([\s\S]*?)>/g;
+    const offenders = productionConsumerFiles().flatMap((filePath) => {
+      const source = readFileSync(filePath, "utf8");
+      return [...source.matchAll(formSheetPattern)]
+        .filter((match) => !match[2].includes("dismissal="))
+        .map((match) => `${relativePath(filePath)} -> ${match[1]} has no dismissal policy`);
+    });
+
+    expect(offenders).toEqual([]);
+  });
+
   test("application code imports shared UI through the barrel only", () => {
     const offenders = consumerFiles().flatMap((filePath) => {
       const source = readFileSync(filePath, "utf8");
@@ -126,6 +138,10 @@ describe("shared UI import boundaries", () => {
       {
         label: "declares raw modal semantics",
         pattern: /aria-modal\s*=/,
+      },
+      {
+        label: "imports raw DialogFrame",
+        pattern: /import\s*\{[^}]*\bDialogFrame\b[^}]*\}\s*from\s*["']@\/components\/ui["']/s,
       },
     ] as const;
     const offenders = productionConsumerFiles().flatMap((filePath) => {

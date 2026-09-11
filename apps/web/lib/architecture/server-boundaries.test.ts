@@ -152,12 +152,15 @@ describe("server module architecture", () => {
      * Better Auth butuh permukaan HTTP; AI chat butuh transport token untuk
      * `useChat`; tRPC adalah satu-satunya jembatan untuk klien native, karena
      * React Native tidak bisa memanggil Server Action. Semua mutasi lain adalah
-     * Server Action. Menambah entri keempat adalah keputusan desain, bukan
+     * Server Action. Scheduler notifikasi memakai bearer secret tanpa sesi browser.
+     * Menambah handler lain adalah keputusan desain, bukan
      * formalitas — perbarui daftar ini hanya bersama alasannya di CLAUDE.md.
      */
     expect(handlers).toEqual([
       "ai/chat/route.ts",
       "auth/[...better-auth]/route.ts",
+      "internal/notifications/route.ts",
+      "notifications/stream/route.ts",
       "trpc/[trpc]/route.ts",
     ]);
   });

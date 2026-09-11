@@ -193,4 +193,6 @@ Langkah berikutnya:
   3. Ikuti onboarding enam langkah di docs/guide/financial_workflow_guide.md.
   4. Jalankan 'bun run db:check-invariants' setelah data pertama masuk.
 
-Selengkapnya: docs/guide/provision-instance.md`);
+Selengkapnya: docs/guide/provision-instance.md
+Untuk deployment Vercel (root directory monorepo, `.vercelignore`, variabel
+lingkungan, dan penjadwalan worker): docs/guide/vercel-deployment.md`);

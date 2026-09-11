@@ -63,9 +63,9 @@ export const project = pgTable(
     clientId: uuid("client_id")
       .notNull()
       .references(() => client.id, { onDelete: "restrict" }),
-    projectManagerId: uuid("project_manager_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "restrict" }),
+    projectManagerId: uuid("project_manager_id").references(() => user.id, {
+      onDelete: "restrict",
+    }),
     status: varchar("status", { length: 50 }).notNull(), // DRAFT, ACTIVE, ON_HOLD, COMPLETED, CANCELLED
     financialHealth: varchar("financial_health", { length: 50 }).notNull().default("HEALTHY"), // HEALTHY, WARNING, CRITICAL
     totalContractValue: numeric("total_contract_value", { precision: 15, scale: 2 }).notNull(),
@@ -1087,6 +1087,7 @@ export const rabEstimateItem = pgTable(
       .references(() => rabEstimate.id, { onDelete: "cascade" }),
     bundleId: uuid("bundle_id").references(() => rabEstimateBundle.id, { onDelete: "set null" }),
     sourceType: varchar("source_type", { length: 50 }).notNull().default("RAP_MATERIAL"),
+    itemNature: varchar("item_nature", { length: 50 }).notNull().default("PRODUCTION"),
     sourceProjectRapItemId: uuid("source_project_rap_item_id").references(() => projectRapItem.id, {
       onDelete: "set null",
     }),
@@ -1115,6 +1116,7 @@ export const rabEstimateItem = pgTable(
     index("rei_rab_estimate_id_idx").on(table.rabEstimateId),
     index("rei_bundle_id_idx").on(table.bundleId),
     index("rei_source_type_idx").on(table.sourceType),
+    index("rei_item_nature_idx").on(table.itemNature),
     index("rei_source_project_rap_item_id_idx").on(table.sourceProjectRapItemId),
     index("rei_source_project_category_plan_item_id_idx").on(table.sourceProjectCategoryPlanItemId),
     index("rei_source_library_item_id_idx").on(table.sourceLibraryItemId),

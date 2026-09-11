@@ -13,7 +13,7 @@ import {
 import { relations } from "drizzle-orm";
 import { tenant } from "./tenant";
 import { DEKORIA_TENANT_ID } from "./tenant-constants";
-import { user } from "./auth";
+import { session, user } from "./auth";
 
 // ==========================================
 // // 16. Berkas Lampiran (Attachment)
@@ -125,6 +125,7 @@ export const aiConversation = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    sessionId: text("session_id").references(() => session.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 200 }), // Diringkas dari pesan pertama pengguna
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -172,7 +173,7 @@ export const aiMessage = pgTable(
     // Disimpan sebagai UIMessage parts agar riwayat bisa dirender ulang persis,
     // termasuk jejak pemanggilan tool.
     parts: jsonb("parts").notNull(),
-    provider: varchar("provider", { length: 20 }), // OPENROUTER, DEEPSEEK, GEMINI
+    provider: varchar("provider", { length: 20 }), // NINEROUTER, OPENROUTER, DEEPSEEK, GEMINI
     inputTokens: integer("input_tokens"),
     outputTokens: integer("output_tokens"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -249,16 +250,137 @@ export const notification = pgTable(
     title: varchar("title", { length: 255 }).notNull(),
     message: text("message").notNull(),
     read: boolean("read").default(false).notNull(),
+    readAt: timestamp("read_at"),
+    projectId: uuid("project_id"),
+    requiredPermission: varchar("required_permission", { length: 100 }),
+    eventKey: varchar("event_key", { length: 255 }),
     severity: varchar("severity", { length: 20 }).default("INFO").notNull(), // INFO, WARNING, CRITICAL
+    category: varchar("category", { length: 50 }).default("INFORMATIONAL").notNull(), // ACTION_REQUIRED, INFORMATIONAL
     referenceType: varchar("reference_type", { length: 100 }),
     referenceId: uuid("reference_id"),
+    actionUrl: text("action_url"),
+    isResolved: boolean("is_resolved").default(false).notNull(),
+    resolvedAt: timestamp("resolved_at"),
+    resolvedById: uuid("resolved_by_id").references(() => user.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => [index("notif_user_id_idx").on(table.userId), index("notif_read_idx").on(table.read)],
+  (table) => [
+    uniqueIndex("notif_event_recipient_uidx").on(table.tenantId, table.userId, table.eventKey),
+    index("notif_feed_idx").on(
+      table.tenantId,
+      table.userId,
+      table.category,
+      table.isResolved,
+      table.createdAt,
+      table.id,
+    ),
+    index("notif_user_id_idx").on(table.userId),
+    index("notif_read_idx").on(table.read),
+    index("notif_user_category_idx").on(table.userId, table.category),
+    index("notif_ref_idx").on(table.referenceType, table.referenceId),
+    index("notif_stream_cursor_idx").on(table.tenantId, table.userId, table.updatedAt, table.id),
+  ],
 );
 
 export const notificationRelations = relations(notification, ({ one }) => ({
   user: one(user, { fields: [notification.userId], references: [user.id] }),
+  resolvedBy: one(user, {
+    fields: [notification.resolvedById],
+    references: [user.id],
+    relationName: "notificationResolver",
+  }),
+}));
+
+// ==========================================
+// // 19B. Langganan Push Token (User Push Subscription)
+// ==========================================
+export const userPushSubscription = pgTable(
+  "user_push_subscription",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    sessionId: text("session_id").references(() => session.id, { onDelete: "cascade" }),
+    platform: varchar("platform", { length: 20 }).notNull(), // WEB, EXPO_IOS, EXPO_ANDROID
+    token: text("token"),
+    endpoint: text("endpoint"),
+    p256dh: text("p256dh"),
+    auth: text("auth"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("push_sub_user_idx").on(table.userId),
+    index("push_sub_session_idx").on(table.sessionId),
+    index("push_sub_token_idx").on(table.token),
+  ],
+);
+
+export const userPushSubscriptionRelations = relations(userPushSubscription, ({ one, many }) => ({
+  user: one(user, { fields: [userPushSubscription.userId], references: [user.id] }),
+  session: one(session, {
+    fields: [userPushSubscription.sessionId],
+    references: [session.id],
+  }),
+  deliveries: many(notificationDelivery),
+}));
+
+// ==========================================
+// // 19C. Durable Push Delivery Outbox
+// ==========================================
+export const notificationDelivery = pgTable(
+  "notification_delivery",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    notificationId: uuid("notification_id")
+      .notNull()
+      .references(() => notification.id, { onDelete: "cascade" }),
+    pushSubscriptionId: uuid("push_subscription_id")
+      .notNull()
+      .references(() => userPushSubscription.id, { onDelete: "cascade" }),
+    channel: varchar("channel", { length: 20 }).notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("PENDING"),
+    attempts: integer("attempts").notNull().default(0),
+    receiptAttempts: integer("receipt_attempts").notNull().default(0),
+    nextAttemptAt: timestamp("next_attempt_at").defaultNow().notNull(),
+    leaseExpiresAt: timestamp("lease_expires_at"),
+    providerTicketId: varchar("provider_ticket_id", { length: 255 }),
+    lastError: text("last_error"),
+    sentAt: timestamp("sent_at"),
+    deliveredAt: timestamp("delivered_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("notif_delivery_notification_subscription_uidx").on(
+      table.notificationId,
+      table.pushSubscriptionId,
+    ),
+    index("notif_delivery_due_idx").on(table.tenantId, table.status, table.nextAttemptAt, table.id),
+    index("notif_delivery_ticket_idx").on(table.providerTicketId),
+  ],
+);
+
+export const notificationDeliveryRelations = relations(notificationDelivery, ({ one }) => ({
+  notification: one(notification, {
+    fields: [notificationDelivery.notificationId],
+    references: [notification.id],
+  }),
+  pushSubscription: one(userPushSubscription, {
+    fields: [notificationDelivery.pushSubscriptionId],
+    references: [userPushSubscription.id],
+  }),
 }));
 
 // ==========================================
@@ -295,6 +417,41 @@ export const auditLogRelations = relations(auditLog, ({ one }) => ({
 }));
 
 // ==========================================
+// // 20B. Event Quick Start & Readiness
+// ==========================================
+export const onboardingEvent = pgTable(
+  "onboarding_event",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    actorUserId: uuid("actor_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    eventType: varchar("event_type", { length: 64 }).notNull(),
+    stepId: varchar("step_id", { length: 50 }),
+    readinessItemId: varchar("readiness_item_id", { length: 50 }),
+    outcome: varchar("outcome", { length: 30 }).notNull().default("SUCCESS"),
+    errorCode: varchar("error_code", { length: 50 }),
+    durationMs: integer("duration_ms"),
+    idempotencyKey: varchar("idempotency_key", { length: 160 }),
+    metadata: jsonb("metadata").$type<Record<string, string | number | boolean | null>>(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("onboarding_event_idempotency_uidx").on(table.tenantId, table.idempotencyKey),
+    index("onboarding_event_actor_idx").on(table.actorUserId, table.createdAt),
+    index("onboarding_event_type_idx").on(table.tenantId, table.eventType, table.createdAt),
+  ],
+);
+
+export const onboardingEventRelations = relations(onboardingEvent, ({ one }) => ({
+  actor: one(user, { fields: [onboardingEvent.actorUserId], references: [user.id] }),
+}));
+
+// ==========================================
 // // 21. Konfigurasi Aplikasi (App Config)
 // ==========================================
 export const appConfig = pgTable(
@@ -320,3 +477,20 @@ export const appConfig = pgTable(
 export const appConfigRelations = relations(appConfig, ({ one }) => ({
   updatedBy: one(user, { fields: [appConfig.updatedById], references: [user.id] }),
 }));
+
+// Serializes periodic condition transitions and remembers recovery episodes.
+export const notificationCondition = pgTable(
+  "notification_condition",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    key: varchar("key", { length: 255 }).notNull(),
+    stage: varchar("stage", { length: 100 }).notNull().default(""),
+    revision: integer("revision").notNull().default(0),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex("notification_condition_key_uidx").on(table.tenantId, table.key)],
+);

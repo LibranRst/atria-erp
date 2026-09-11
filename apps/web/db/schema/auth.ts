@@ -26,6 +26,7 @@ import {
   attachment,
   auditLog,
   notification,
+  userPushSubscription,
 } from "./system";
 
 // ==========================================
@@ -123,6 +124,7 @@ export const userRelations = relations(user, ({ one, many }) => ({
   givenApprovals: many(approval, { relationName: "approver" }),
   triggeredAiRuns: many(aiRun, { relationName: "aiRunner" }),
   notifications: many(notification),
+  pushSubscriptions: many(userPushSubscription),
   auditLogs: many(auditLog),
   updatedConfigs: many(appConfig),
   updatedBudgetAllocationSettings: many(budgetAllocationSetting, {

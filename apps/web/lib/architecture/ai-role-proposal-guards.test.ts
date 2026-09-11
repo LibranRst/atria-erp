@@ -125,3 +125,68 @@ describe("pagar pembuatan peran lewat asisten", () => {
     expect(action).toContain("createRoleUseCase(\n    actor,");
   });
 });
+
+describe("pagar pembuatan pengguna lewat asisten", () => {
+  const USER_CREATE_ACTION = "app/actions/ai/confirm-create-user-proposal.ts";
+  const ROLE_TOOLS = "lib/ai/tools/role-tools.ts";
+
+  test("peran Owner ditolak saat pembuatan pengguna lewat kartu", () => {
+    expect(source(USER_CREATE_ACTION)).toContain("proposal.roleId === OWNER_ROLE_ID");
+    expect(source(ROLE_TOOLS)).toContain("match.id === OWNER_ROLE_ID");
+  });
+
+  test("hanya aktor dengan izin manage:users yang boleh mengeksekusi", () => {
+    expect(source(USER_CREATE_ACTION)).toContain('actorCan(actor, "manage:users")');
+    expect(source(ROLE_TOOLS)).toContain('hasPermission(context, "manage:users")');
+  });
+
+  test("email diperiksa sebelum menulis", () => {
+    expect(source(USER_CREATE_ACTION)).toContain("eq(user.email, proposal.email)");
+    expect(source(ROLE_TOOLS)).toContain("eq(user.email, normalizedEmail)");
+  });
+
+  test("kata sandi sementara wajib mematuhi kebijakan password", () => {
+    expect(source(USER_CREATE_ACTION)).toContain("aiCreateUserProposalSchema.safeParse");
+    expect(source(ROLE_TOOLS)).toContain("generateSecureTemporaryPassword");
+  });
+
+  test("audit pembuatan pengguna menandai asal usulan AI", () => {
+    expect(source(USER_CREATE_ACTION)).toContain('"AI_PROPOSAL"');
+    expect(source(USER_CREATE_ACTION)).toContain('"CREATE_STAFF_USER"');
+  });
+
+  test("satu kartu pembuatan user hanya bisa diterapkan sekali", () => {
+    expect(source(USER_CREATE_ACTION)).toContain("aiProposalConfirmation.toolCallId");
+    expect(source(USER_CREATE_ACTION)).toContain('"CREATE_USER"');
+  });
+});
+
+describe("pagar pembuatan pengguna batch lewat asisten", () => {
+  const BATCH_CREATE_ACTION = "app/actions/ai/confirm-create-user-batch-proposal.ts";
+  const ROLE_TOOLS = "lib/ai/tools/role-tools.ts";
+
+  test("peran Owner ditolak saat pembuatan pengguna batch lewat kartu", () => {
+    expect(source(BATCH_CREATE_ACTION)).toContain("u.roleId === OWNER_ROLE_ID");
+    expect(source(ROLE_TOOLS)).toContain("proposeCreateUserBatch");
+  });
+
+  test("hanya aktor dengan izin manage:users yang boleh mengeksekusi batch", () => {
+    expect(source(BATCH_CREATE_ACTION)).toContain('actorCan(actor, "manage:users")');
+  });
+
+  test("email duplikat internal maupun database ditolak", () => {
+    expect(source(BATCH_CREATE_ACTION)).toContain("emailSet.has(normalizedEmail)");
+    expect(source(ROLE_TOOLS)).toContain("emailSet.has(email)");
+  });
+
+  test("audit pembuatan batch menandai asal usulan AI", () => {
+    expect(source(BATCH_CREATE_ACTION)).toContain('"AI_PROPOSAL"');
+    expect(source(BATCH_CREATE_ACTION)).toContain('"CREATE_STAFF_USER_BATCH"');
+  });
+
+  test("idempotensi batch kartu terikat pada toolCallId", () => {
+    expect(source(BATCH_CREATE_ACTION)).toContain("aiProposalConfirmation.toolCallId");
+    expect(source(BATCH_CREATE_ACTION)).toContain('"CREATE_USER_BATCH"');
+  });
+});
+

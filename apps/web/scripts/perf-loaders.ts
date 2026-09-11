@@ -34,6 +34,7 @@ import { getExpensesPageData } from "@/features/expenses/server/get-expenses-pag
 import { getFinanceDashboardPageData } from "@/features/finance-dashboard/server/get-finance-dashboard-page-data";
 import { getProjectListPageData } from "@/features/projects/list/server/get-project-list-page-data";
 import { getSettingsPageData } from "@/features/settings/server/get-settings-page-data";
+import { getQuickStartWorkspaceDataForActor } from "@/features/onboarding/server/get-quick-start-workspace-data";
 import { getReconciliationWorkspace } from "@/app/actions/finance/reconciliation-workspace";
 import { getMaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import { getRoleAccess } from "@/lib/auth/role-access";
@@ -142,10 +143,12 @@ async function main(): Promise<void> {
 
   const loaders: ReadonlyArray<readonly [string, () => Promise<unknown>]> = [
     ["/ledger", () => getFinanceDashboardPageData(actor)],
+    ["/onboarding", () => getQuickStartWorkspaceDataForActor(actor)],
     ["/expenses", () => getExpensesPageData(actor)],
     ["/projects", () => getProjectListPageData(actor)],
     ["/approvals", () => getApprovalsPageData(actor)],
     ["/settings", () => getSettingsPageData()],
+    ["/settings?tab=readiness", () => getSettingsPageData({ activeTab: "readiness" })],
     ["/reconciliation", () => getReconciliationWorkspace()],
     ["/materials", () => getMaterialOperationsDashboard()],
   ];

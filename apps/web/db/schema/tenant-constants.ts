@@ -10,3 +10,6 @@
  * migrasi yang memindahkan seluruh baris.
  */
 export const DEKORIA_TENANT_ID = "00000000-0000-4000-8000-000000000001";
+
+/** Runtime scope for the single-company instance; schema defaults retain their legacy alias. */
+export const INSTANCE_TENANT_ID = DEKORIA_TENANT_ID;

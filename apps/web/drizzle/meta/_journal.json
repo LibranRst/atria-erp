@@ -253,6 +253,41 @@
       "when": 1787843842880,
       "tag": "0035_tenant_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1788171326426,
+      "tag": "0036_nice_jean_grey",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1788343898196,
+      "tag": "0037_glorious_queen_noir",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1788568928349,
+      "tag": "0038_notification_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1788673162035,
+      "tag": "0039_notification_sse_cursor",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1788771517482,
+      "tag": "0040_notification_delivery_outbox",
+      "breakpoints": true
     }
   ]
 }

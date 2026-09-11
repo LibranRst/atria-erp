@@ -8,18 +8,34 @@ import {
   clientInvoice,
   clientPayment,
   materialInventory,
+  notification,
   project,
   projectBudgetCategory,
   projectBudgets,
+  projectCategoryPlanItem,
+  projectChangeOrder,
   projectCost,
   projectExpenses,
   projectProfitabilitySnapshot,
+  projectRap,
+  projectRapItem,
   rabEstimate,
+  rabEstimateBundle,
+  rabEstimateItem,
+  role,
+  rolePermission,
   stockMovement,
   user,
   vendorBill,
   vendorPayment,
 } from "@/db/schema";
+import { calculateQuotationTotal } from "@atria/core/project/quotation-total";
+import {
+  normalizeNotificationReferenceType,
+  safeNotificationUrl,
+} from "@atria/core/notifications/types";
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
+import { SYSTEM_ROLES } from "@atria/core/auth/role-constants";
 import { DEMO_IDS, parseMoneyToMinor } from "@/db/seed/demo-contract";
 
 type VerificationReport = {
@@ -27,6 +43,11 @@ type VerificationReport = {
   readonly cashTransactions: number;
   readonly openReconciliationPairs: number;
   readonly projectsWithBudgets: number;
+  readonly rapDocuments: number;
+  readonly rabDocuments: number;
+  readonly pendingApprovals: number;
+  readonly notifications: number;
+  readonly unreadNotifications: number;
   readonly inventoryRows: number;
 };
 
@@ -56,6 +77,15 @@ export async function verifyDemoSeed(): Promise<VerificationReport> {
     snapshots,
     projects,
     rabs,
+    rapDocuments,
+    rapItems,
+    categoryPlanItems,
+    rabItems,
+    rabBundles,
+    changeOrders,
+    notifications,
+    roles,
+    rolePermissions,
   ] = await Promise.all([
     db.select().from(user),
     db.select().from(bankAccount),
@@ -76,6 +106,15 @@ export async function verifyDemoSeed(): Promise<VerificationReport> {
     db.select().from(projectProfitabilitySnapshot),
     db.select().from(project),
     db.select().from(rabEstimate),
+    db.select().from(projectRap),
+    db.select().from(projectRapItem),
+    db.select().from(projectCategoryPlanItem),
+    db.select().from(rabEstimateItem),
+    db.select().from(rabEstimateBundle),
+    db.select().from(projectChangeOrder),
+    db.select().from(notification),
+    db.select().from(role),
+    db.select().from(rolePermission),
   ]);
   const errors: string[] = [];
 
@@ -86,6 +125,25 @@ export async function verifyDemoSeed(): Promise<VerificationReport> {
       users.some((row) => row.id === DEMO_IDS.users.purchasing),
     "Akun role inti demo tidak lengkap.",
   );
+
+  expectInvariant(
+    errors,
+    SYSTEM_ROLES.every((sr) => roles.some((r) => r.id === sr.id && r.name === sr.name)),
+    "Daftar role sistem demo tidak lengkap.",
+  );
+
+  for (const systemRole of SYSTEM_ROLES) {
+    const expectedPerms = ROLE_PERMISSIONS[systemRole.name.toUpperCase()] ?? [];
+    const actualPerms = rolePermissions
+      .filter((rp) => rp.roleId === systemRole.id)
+      .map((rp) => rp.permissionKey);
+    expectInvariant(
+      errors,
+      actualPerms.length === expectedPerms.length &&
+        expectedPerms.every((key) => actualPerms.includes(key)),
+      `Izin default role ${systemRole.name} tidak lengkap di database (${actualPerms.length}/${expectedPerms.length}).`,
+    );
+  }
 
   for (const account of accounts) {
     const calculated = cashRows
@@ -264,6 +322,150 @@ export async function verifyDemoSeed(): Promise<VerificationReport> {
     "Senopati belum memenuhi baseline siap closing.",
   );
 
+  const budgetByProject = new Map(budgets.map((row) => [row.projectId, row]));
+  const rapById = new Map(rapDocuments.map((row) => [row.id, row]));
+  const planById = new Map(categoryPlanItems.map((row) => [row.id, row]));
+  const rabById = new Map(rabs.map((row) => [row.id, row]));
+
+  for (const item of rapItems) {
+    expectInvariant(
+      errors,
+      rapById.has(item.projectRapId),
+      `RAP item ${item.id} tidak memiliki dokumen RAP induk.`,
+    );
+  }
+  for (const item of rabItems) {
+    const estimate = rabById.get(item.rabEstimateId);
+    const sourceRapItem = item.sourceProjectRapItemId
+      ? rapItems.find((row) => row.id === item.sourceProjectRapItemId)
+      : null;
+    const sourceRap = sourceRapItem ? rapById.get(sourceRapItem.projectRapId) : null;
+    const sourcePlan = item.sourceProjectCategoryPlanItemId
+      ? planById.get(item.sourceProjectCategoryPlanItemId)
+      : null;
+    expectInvariant(
+      errors,
+      estimate !== undefined &&
+        (!item.sourceProjectRapItemId || sourceRap?.projectId === estimate.projectId) &&
+        (!item.sourceProjectCategoryPlanItemId || sourcePlan?.projectId === estimate.projectId),
+      `RAB item ${item.id} memakai sumber dari project lain.`,
+    );
+  }
+
+  const pakubuwonoBudget = budgetByProject.get(DEMO_IDS.projects.pakubuwono);
+  expectInvariant(
+    errors,
+    projects.some((row) => row.id === DEMO_IDS.projects.pakubuwono && row.status === "DRAFT") &&
+      pakubuwonoBudget?.status === "PENDING_APPROVAL" &&
+      !rapDocuments.some((row) => row.projectId === DEMO_IDS.projects.pakubuwono) &&
+      !rabs.some((row) => row.projectId === DEMO_IDS.projects.pakubuwono),
+    "Skenario Pakubuwono untuk approval Project Budget tidak lengkap.",
+  );
+
+  const cipeteRap = rapDocuments.find((row) => row.projectId === DEMO_IDS.projects.cipete);
+  const cipetePlans = categoryPlanItems.filter((row) => row.projectId === DEMO_IDS.projects.cipete);
+  expectInvariant(
+    errors,
+    budgetByProject.get(DEMO_IDS.projects.cipete)?.status === "APPROVED" &&
+      cipeteRap?.status === "DRAFT" &&
+      cipeteRap.setupStage === "REVIEW" &&
+      rapItems.filter((row) => row.projectRapId === cipeteRap.id).length >= 3 &&
+      cipetePlans.some(
+        (row) =>
+          row.expenseCategoryId === "31313131-3131-3131-3131-313131313101" &&
+          row.status === "ACTIVE",
+      ) &&
+      cipetePlans.some(
+        (row) =>
+          row.expenseCategoryId === "31313131-3131-3131-3131-313131313105" &&
+          row.status === "ACTIVE",
+      ) &&
+      !rabs.some((row) => row.projectId === DEMO_IDS.projects.cipete),
+    "Skenario Cipete untuk final review RAP tidak lengkap.",
+  );
+
+  const brawijayaRap = rapDocuments.find((row) => row.projectId === DEMO_IDS.projects.brawijaya);
+  const brawijayaRab = rabs.find(
+    (row) => row.projectId === DEMO_IDS.projects.brawijaya && row.status === "DRAFT",
+  );
+  const brawijayaRabItems = rabItems.filter((row) => row.rabEstimateId === brawijayaRab?.id);
+  const brawijayaBundles = rabBundles.filter((row) => row.rabEstimateId === brawijayaRab?.id);
+  expectInvariant(
+    errors,
+    budgetByProject.get(DEMO_IDS.projects.brawijaya)?.status === "APPROVED" &&
+      brawijayaRap?.status === "LOCKED" &&
+      brawijayaRap.setupStage === "COMPLETE" &&
+      brawijayaRab !== undefined &&
+      new Set(brawijayaRabItems.map((row) => row.sourceType)).size === 3 &&
+      brawijayaRabItems.some((row) => row.isHidden) &&
+      brawijayaBundles.length === 1 &&
+      calculateQuotationTotal(brawijayaRabItems, brawijayaBundles) === 950000000,
+    "Skenario Brawijaya untuk RAB draft campuran tidak lengkap atau nilainya berubah.",
+  );
+
+  const sudirmanRabs = rabs.filter((row) => row.projectId === DEMO_IDS.projects.sudirman);
+  const sudirmanOrder = changeOrders.find((row) => row.projectId === DEMO_IDS.projects.sudirman);
+  const sudirmanRevisedItems = rabItems.filter(
+    (row) => row.rabEstimateId === sudirmanOrder?.revisedRabEstimateId,
+  );
+  expectInvariant(
+    errors,
+    sudirmanRabs.some((row) => row.status === "APPROVED" && row.revision === 1) &&
+      sudirmanRabs.some((row) => row.status === "DRAFT" && row.revision === 2) &&
+      sudirmanOrder?.status === "PENDING_APPROVAL" &&
+      Boolean(sudirmanOrder.clientConfirmedAt && sudirmanOrder.clientConfirmationReference) &&
+      calculateQuotationTotal(sudirmanRevisedItems) ===
+        Number(sudirmanOrder.revisedContractValue) &&
+      Number(sudirmanOrder.revisedContractValue) - Number(sudirmanOrder.previousContractValue) ===
+        Number(sudirmanOrder.valueDelta),
+    "Skenario Sudirman untuk Change Order R2 tidak konsisten.",
+  );
+
+  const mentengVoid = rabs.find(
+    (row) =>
+      row.projectId === DEMO_IDS.projects.menteng && row.status === "VOID" && row.revision === 2,
+  );
+  expectInvariant(
+    errors,
+    Boolean(mentengVoid?.voidReason && mentengVoid.voidedAt && mentengVoid.voidedById) &&
+      changeOrders.some(
+        (row) => row.revisedRabEstimateId === mentengVoid?.id && row.status === "CANCELLED",
+      ),
+    "Histori pembatalan revisi RAB Menteng tidak lengkap.",
+  );
+
+  expectInvariant(
+    errors,
+    ["f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f009", "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f010"].every(
+      (referenceId) =>
+        costs.some((row) => row.id === referenceId && row.status === "VERIFIED") &&
+        approvals.some((row) => row.referenceId === referenceId && row.status === "PENDING"),
+    ),
+    "Antrean approval baseline Cipete tidak lengkap.",
+  );
+
+  const notificationKeys = notifications.map((row) => row.eventKey);
+  expectInvariant(
+    errors,
+    notifications.length >= 12 &&
+      notificationKeys.every(Boolean) &&
+      new Set(notificationKeys).size === notificationKeys.length &&
+      notifications.every(
+        (row) =>
+          (!row.read || Boolean(row.readAt)) &&
+          normalizeNotificationReferenceType(row.referenceType) !== null &&
+          safeNotificationUrl(row.actionUrl) !== null,
+      ) &&
+      notifications
+        .filter((row) => row.category === "ACTION_REQUIRED" && !row.isResolved)
+        .every(
+          (row) =>
+            Boolean(row.referenceType && row.referenceId) &&
+            row.eventKey?.startsWith(`${row.referenceType}:${row.referenceId}:lifecycle:`),
+        ),
+    "Notifikasi demo tidak mempunyai identity, read timestamp, reference type, atau tujuan aman yang lengkap.",
+  );
+
   if (errors.length > 0) {
     throw new Error(`Demo seed verification failed:\n- ${errors.join("\n- ")}`);
   }
@@ -272,6 +474,11 @@ export async function verifyDemoSeed(): Promise<VerificationReport> {
     cashTransactions: cashRows.length,
     openReconciliationPairs: cashRows.filter((row) => !row.reconciled).length,
     projectsWithBudgets: budgets.length,
+    rapDocuments: rapDocuments.length,
+    rabDocuments: rabs.length,
+    pendingApprovals: approvals.filter((row) => row.status === "PENDING").length,
+    notifications: notifications.length,
+    unreadNotifications: notifications.filter((row) => !row.read).length,
     inventoryRows: inventories.length,
   };
 }

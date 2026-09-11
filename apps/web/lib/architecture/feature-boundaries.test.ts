@@ -23,16 +23,17 @@ const ALLOWED_EDGES: Readonly<Record<string, readonly string[]>> = {
   // Halaman proyek menampilkan pengeluaran, stok, dan riwayat aktivitasnya.
   projects: ["expenses", "materials", "activity-detail"],
   // Dashboard menampilkan antrean persetujuan dan membuka detail aktivitas.
-  "finance-dashboard": ["approvals", "activity-detail"],
+  "finance-dashboard": ["approvals", "activity-detail", "onboarding"],
   // Baris material dan pengeluaran membuka sheet detail aktivitas.
+  // Pengeluaran juga membuka sheet pembuatan vendor dan lokasi secara kontekstual.
   materials: ["activity-detail"],
-  expenses: ["activity-detail"],
+  expenses: ["activity-detail", "administration", "materials"],
   // Persetujuan menilai pengajuan stok, jadi memakai penyajian material.
   approvals: ["materials"],
-  // Settings memuat master material dan menampung workspace administrasi.
+  // Settings menampung workspace administrasi, readiness onboarding, dan sheet lokasi/material.
   // Arahnya satu jalur: administration tidak lagi menunjuk balik ke settings
   // sejak primitif configuration-workspace naik ke `components/ui`.
-  settings: ["materials", "administration"],
+  settings: ["administration", "onboarding", "materials"],
 };
 
 /**
