@@ -20,6 +20,7 @@
     "mobile-tailwind:generate": "bun scripts/generate-mobile-tailwind-config.ts",
     "db:reset": "bun --filter @atria/web db:reset",
     "db:seed": "bun --filter @atria/web db:seed",
+    "db:seed:bassura": "bun --filter @atria/web db:seed:bassura",
     "db:demo:reset": "bun --filter @atria/web db:demo:reset",
     "db:demo:verify": "bun --filter @atria/web db:demo:verify",
     "db:provision": "bun --filter @atria/web db:provision",
