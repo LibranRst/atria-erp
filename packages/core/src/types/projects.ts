@@ -20,7 +20,7 @@ export interface ProjectItem {
   readonly id: string;
   readonly name: string;
   readonly clientId: string;
-  readonly projectManagerId: string;
+  readonly projectManagerId: string | null;
   readonly status: ProjectStatus;
   readonly financialHealth: FinancialHealth;
   readonly effectiveHealth: EffectiveProjectHealth;

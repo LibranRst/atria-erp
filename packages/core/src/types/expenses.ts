@@ -10,6 +10,13 @@ export interface ExpenseCostItem {
     id: string;
     name: string;
   } | null;
+  budgetCategory?: {
+    id: string;
+    expenseCategory?: {
+      code: string;
+      name: string;
+    } | null;
+  } | null;
   budgetItem: {
     id: string;
     name: string;

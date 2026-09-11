@@ -87,3 +87,69 @@ export function calculateTargetGross(
     percentage: contractValue > 0 ? (amount / contractValue) * 100 : 0,
   };
 }
+
+export interface RabItemForDerivation {
+  readonly bundleId?: string | null;
+  readonly isHidden: boolean;
+  readonly lineTotal: string | number;
+  readonly itemNature?: "PRODUCTION" | "SERVICE_FEE" | string | null;
+}
+
+export interface RabBundleForDerivation {
+  readonly id: string;
+  readonly isHidden: boolean;
+  readonly lineTotal: string | number;
+}
+
+export interface RabBudgetDerivationResult {
+  readonly approvedValue: number;
+  readonly productionScopeTotal: number;
+  readonly serviceFeeTotal: number;
+  readonly internalBudget: number;
+  readonly targetGrossAmount: number;
+  readonly targetGrossPercentage: number;
+  readonly productionGrossMarginAmount: number;
+  readonly productionGrossMarginPercentage: number;
+}
+
+export function calculateRabBudgetDerivation(params: {
+  readonly items: readonly RabItemForDerivation[];
+  readonly bundles?: readonly RabBundleForDerivation[];
+  readonly budgetCapRatio: number;
+}): RabBudgetDerivationResult {
+  const bundles = params.bundles ?? [];
+  const standalone = params.items
+    .filter((item) => !item.bundleId && !item.isHidden)
+    .reduce((sum, item) => sum + Number(item.lineTotal), 0);
+  const bundled = bundles
+    .filter((bundle) => !bundle.isHidden)
+    .reduce((sum, bundle) => sum + Number(bundle.lineTotal), 0);
+  const approvedValue = standalone + bundled;
+
+  const serviceFeeTotal = params.items
+    .filter((item) => !item.bundleId && !item.isHidden && item.itemNature === "SERVICE_FEE")
+    .reduce((sum, item) => sum + Number(item.lineTotal), 0);
+
+  const productionScopeTotal = Math.max(0, approvedValue - serviceFeeTotal);
+  const internalBudget = Math.round(productionScopeTotal * params.budgetCapRatio * 100) / 100;
+  const targetGrossAmount = Math.round((approvedValue - internalBudget) * 100) / 100;
+  const targetGrossPercentage =
+    approvedValue > 0 ? (targetGrossAmount / approvedValue) * 100 : 0;
+  const productionGrossMarginAmount =
+    Math.round((productionScopeTotal - internalBudget) * 100) / 100;
+  const productionGrossMarginPercentage =
+    productionScopeTotal > 0
+      ? (productionGrossMarginAmount / productionScopeTotal) * 100
+      : 0;
+
+  return {
+    approvedValue,
+    productionScopeTotal,
+    serviceFeeTotal,
+    internalBudget,
+    targetGrossAmount,
+    targetGrossPercentage,
+    productionGrossMarginAmount,
+    productionGrossMarginPercentage,
+  };
+}

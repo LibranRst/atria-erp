@@ -1,5 +1,7 @@
 import {
   aiCreateProjectProposalSchema,
+  aiCreateUserBatchProposalSchema,
+  aiCreateUserProposalSchema,
   aiExpenseProposalSchema,
   aiExpenseReviewProposalSchema,
   aiGoodsReceiptProposalSchema,
@@ -175,5 +177,51 @@ describe("validasi konfirmasi usulan aksi ERP lainnya", () => {
     };
     expect(aiGoodsReceiptProposalSchema.safeParse(valid).success).toBe(true);
     expect(aiGoodsReceiptProposalSchema.safeParse({ ...valid, items: [] }).success).toBe(false);
+  });
+
+  it("validasi usulan pembuatan pengguna baru (aiCreateUserProposalSchema)", () => {
+    const valid = {
+      toolCallId: "call_usr1",
+      conversationId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      name: "Budi Santoso",
+      email: "budi@dekoria.com",
+      roleId: "33333333-3333-3333-3333-333333333333",
+      temporaryPassword: "Dekoria-2026-Xk9mQz",
+    };
+    expect(aiCreateUserProposalSchema.safeParse(valid).success).toBe(true);
+    expect(aiCreateUserProposalSchema.safeParse({ ...valid, email: "bukan-email" }).success).toBe(false);
+    expect(aiCreateUserProposalSchema.safeParse({ ...valid, name: "A" }).success).toBe(false);
+    expect(aiCreateUserProposalSchema.safeParse({ ...valid, temporaryPassword: "pendek" }).success).toBe(false);
+    expect(aiCreateUserProposalSchema.safeParse({ ...valid, roleId: "bukan-uuid" }).success).toBe(false);
+    expect(aiCreateUserProposalSchema.safeParse({ ...valid, toolCallId: "" }).success).toBe(false);
+  });
+
+  it("validasi usulan pembuatan pengguna sekaligus (aiCreateUserBatchProposalSchema)", () => {
+    const valid = {
+      toolCallId: "call_batch1",
+      conversationId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      users: [
+        {
+          name: "Budi Santoso",
+          email: "budi@dekoria.com",
+          roleId: "33333333-3333-3333-3333-333333333333",
+          temporaryPassword: "Dekoria-2026-Xk9mQz",
+        },
+        {
+          name: "Siti Rahma",
+          email: "siti@dekoria.com",
+          roleId: "44444444-4444-4444-4444-444444444444",
+          temporaryPassword: "Dekoria-2026-Ab12Cd",
+        },
+      ],
+    };
+    expect(aiCreateUserBatchProposalSchema.safeParse(valid).success).toBe(true);
+    expect(aiCreateUserBatchProposalSchema.safeParse({ ...valid, users: [] }).success).toBe(false);
+    expect(
+      aiCreateUserBatchProposalSchema.safeParse({
+        ...valid,
+        users: [{ ...valid.users[0]!, email: "bukan-email" }],
+      }).success,
+    ).toBe(false);
   });
 });

@@ -54,8 +54,14 @@ export const projectOverviewInputSchema = z.object({
   projectId: z.string().min(1, "ID Proyek tidak valid"),
 });
 
+export const assignProjectManagerSchema = z.object({
+  projectId: z.string().min(1, "ID Proyek tidak valid"),
+  projectManagerId: z.string().min(1, "Project Manager wajib dipilih"),
+});
+
 export type CreateProjectInput = z.input<typeof createProjectSchema>;
 export type UpdateProjectInput = z.input<typeof updateProjectSchema>;
 export type UpdateProjectIdentityInput = z.input<typeof updateProjectIdentitySchema>;
 export type ProjectFormBootstrapInput = z.input<typeof projectFormBootstrapSchema>;
 export type ProjectOverviewInput = z.input<typeof projectOverviewInputSchema>;
+export type AssignProjectManagerInput = z.input<typeof assignProjectManagerSchema>;

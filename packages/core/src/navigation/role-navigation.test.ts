@@ -18,7 +18,7 @@ describe("role navigation", () => {
   });
 
   test("purchasing dan project manager mendapat tujuan operasional sesuai peran", () => {
-    expect(labelsForSeedRole("PURCHASING")).toEqual(["Projects", "Materials", "Expenses"]);
+    expect(labelsForSeedRole("PURCHASING")).toEqual(["Materials", "Expenses"]);
     expect(labelsForSeedRole("PROJECT_MANAGER")).toEqual(["Projects", "Materials", "Expenses"]);
   });
 

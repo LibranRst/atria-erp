@@ -6,6 +6,7 @@ describe("project activation readiness", () => {
   test("requires an approved budget, approved RAB, and its locked RAP baseline", () => {
     const readiness = getProjectActivationReadiness({
       projectStatus: "DRAFT",
+      projectManagerReady: true,
       budgetStatus: "APPROVED",
       raps: [{ id: "rap-1", status: "LOCKED" }],
       rabEstimates: [
@@ -23,6 +24,7 @@ describe("project activation readiness", () => {
   test("does not offer activation when an approved RAB is not tied to a locked RAP", () => {
     const readiness = getProjectActivationReadiness({
       projectStatus: "DRAFT",
+      projectManagerReady: true,
       budgetStatus: "APPROVED",
       raps: [{ id: "rap-1", status: "DRAFT" }],
       rabEstimates: [
@@ -35,5 +37,18 @@ describe("project activation readiness", () => {
 
     expect(readiness.isReady).toBe(false);
     expect(readiness.rapLocked).toBe(false);
+  });
+
+  test("keeps a Draft project blocked until an active PM is assigned", () => {
+    const readiness = getProjectActivationReadiness({
+      projectStatus: "DRAFT",
+      projectManagerReady: false,
+      budgetStatus: "APPROVED",
+      raps: [{ id: "rap-1", status: "LOCKED" }],
+      rabEstimates: [{ status: "APPROVED", sourceProjectRapId: "rap-1" }],
+    });
+
+    expect(readiness.isReady).toBe(false);
+    expect(readiness.projectManagerReady).toBe(false);
   });
 });

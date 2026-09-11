@@ -9,6 +9,7 @@ export type ActivationRab = {
 };
 
 export type ProjectActivationReadiness = {
+  readonly projectManagerReady: boolean;
   readonly budgetApproved: boolean;
   readonly rabApproved: boolean;
   readonly rapLocked: boolean;
@@ -17,11 +18,13 @@ export type ProjectActivationReadiness = {
 
 export function getProjectActivationReadiness({
   projectStatus,
+  projectManagerReady,
   budgetStatus,
   raps,
   rabEstimates,
 }: {
   readonly projectStatus: string;
+  readonly projectManagerReady: boolean;
   readonly budgetStatus: string | null | undefined;
   readonly raps: readonly ActivationRap[];
   readonly rabEstimates: readonly ActivationRab[];
@@ -36,9 +39,15 @@ export function getProjectActivationReadiness({
   const budgetApproved = budgetStatus === "APPROVED";
 
   return {
+    projectManagerReady,
     budgetApproved,
     rabApproved,
     rapLocked,
-    isReady: projectStatus === "DRAFT" && budgetApproved && rabApproved && rapLocked,
+    isReady:
+      projectStatus === "DRAFT" &&
+      projectManagerReady &&
+      budgetApproved &&
+      rabApproved &&
+      rapLocked,
   };
 }

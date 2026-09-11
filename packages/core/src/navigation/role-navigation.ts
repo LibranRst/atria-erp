@@ -20,12 +20,13 @@ const MAX_NAV_ITEMS = 3;
  * Sebuah tab layak muncul bila perannya benar-benar bisa melihat isinya.
  *
  * Beberapa rute punya lebih dari satu pintu masuk yang sah: Purchasing membuka
- * /expenses untuk tagihan vendor, bukan biaya lapangan, dan membuka /projects
- * lewat budget dan RAP. Karena itu syaratnya daftar, bukan satu kunci.
+ * /expenses untuk tagihan vendor, bukan biaya lapangan. Tab Projects khusus
+ * untuk peran yang memiliki hak akses proyek (Owner, Finance, PM), sementara
+ * Purchasing beroperasi dari Materials dan Expenses.
  */
 const NAV_REQUIREMENTS: Readonly<Record<string, readonly PermissionKey[]>> = {
   Dashboard: ["view:ledger"],
-  Projects: ["view:project", "view:budget", "view:rap"],
+  Projects: ["view:project"],
   Materials: ["view:inventory"],
   Expenses: ["view:cost", "view:vendor_bill"],
 };

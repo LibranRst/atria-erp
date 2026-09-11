@@ -117,6 +117,27 @@ export const importBankStatementCsvSchema = z.object({
 
 export type ImportBankStatementCsvInput = z.infer<typeof importBankStatementCsvSchema>;
 
+export const importParsedBankStatementRowsSchema = z.object({
+  bankAccountId: z.string().regex(uuidRegex, "ID rekening bank tidak valid."),
+  fileName: z.string().trim().min(1, "Nama file wajib diisi.").max(255),
+  fileUrl: z.string().optional().nullable(),
+  rows: z
+    .array(
+      z.object({
+        transactionDate: z.coerce.date(),
+        description: z.string().min(1, "Deskripsi mutasi tidak boleh kosong.").max(500),
+        amount: z.number().positive("Nominal mutasi harus lebih besar dari 0."),
+        type: z.enum(CASH_DIRECTIONS),
+      }),
+    )
+    .min(1, "Minimal 1 transaksi untuk diimpor.")
+    .max(500, "Maksimal 500 transaksi per file."),
+});
+
+export type ImportParsedBankStatementRowsInput = z.infer<
+  typeof importParsedBankStatementRowsSchema
+>;
+
 export const submitVendorBillSchema = z.object({
   vendorId: z.string().regex(uuidRegex, "ID Vendor tidak valid."),
   projectId: z.string().regex(uuidRegex, "ID Proyek tidak valid."),

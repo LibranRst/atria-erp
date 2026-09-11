@@ -39,6 +39,13 @@ export const transitionSpringBouncy: SpringMotionPreset = {
   mass: 1,
 };
 
+export const transitionSpringSoftBouncy: SpringMotionPreset = {
+  type: "spring",
+  stiffness: 290,
+  damping: 28,
+  mass: 0.95,
+};
+
 export const transitionSpringDefault: SpringMotionPreset = {
   type: "spring",
   stiffness: 320,

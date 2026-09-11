@@ -2,11 +2,12 @@ export type ProjectOverviewActionModel = {
   readonly id: string;
   readonly title: string;
   readonly description: string;
-  readonly tab: "rab" | "rap" | "stok" | "expenses" | "payments" | "profitability";
+  readonly tab: "overview" | "rab" | "rap" | "stok" | "expenses" | "payments" | "profitability";
   readonly severity: "CRITICAL" | "WARNING" | "INFO";
 };
 
 export type ProjectOverviewActionInput = {
+  readonly hasProjectManager?: boolean;
   readonly hasRap: boolean;
   readonly rapStatus: string | null;
   readonly rapSetupStage: string | null;
@@ -22,6 +23,15 @@ export function buildProjectOverviewActions(
   input: ProjectOverviewActionInput,
 ): readonly ProjectOverviewActionModel[] {
   const actions: ProjectOverviewActionModel[] = [];
+  if (input.hasProjectManager === false) {
+    actions.push({
+      id: "assign-pm",
+      title: "Tugaskan Project Manager",
+      description: "PM bertanggung jawab atas penyusunan RAP dan eksekusi proyek.",
+      tab: "overview",
+      severity: "CRITICAL",
+    });
+  }
   if (!input.hasRap) {
     actions.push({
       id: "create-rap",

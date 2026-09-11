@@ -234,7 +234,7 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
     key: "ai",
     title: "Asisten AI",
     description: "Tanya jawab data dan briefing keuangan.",
-    iconName: "chat",
+    iconName: "sparkle",
     permissions: ["view:ai_brief", "use:ai_chat"],
   },
 ];

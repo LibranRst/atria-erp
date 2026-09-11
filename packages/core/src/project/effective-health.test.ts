@@ -57,4 +57,19 @@ describe("effective project health", () => {
     expect(result.effectiveHealth).toBe("WARNING");
     expect(result.healthReasons).toEqual(["BUDGET_WATCH", "CATEGORY_WATCH", "MARGIN_BELOW_TARGET"]);
   });
+
+  test("does not falsely trigger MARGIN_BELOW_TARGET for micro floating-point discrepancies", () => {
+    const result = resolveEffectiveProjectHealth({
+      storedHealth: "HEALTHY",
+      remainingBudget: 45_000_000,
+      usedPercentage: 0,
+      categoryStatuses: ["SAFE", "SAFE", "SAFE", "SAFE", "SAFE"],
+      projectedMarginPercentage: 9.999999998,
+      targetMarginPercentage: 10,
+    });
+
+    expect(result.effectiveHealth).toBe("HEALTHY");
+    expect(result.healthReasons).toEqual([]);
+  });
 });
+

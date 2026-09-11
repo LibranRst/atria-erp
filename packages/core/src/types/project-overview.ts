@@ -11,7 +11,7 @@ export type ProjectOverviewCategory = {
   readonly status: string;
 };
 
-export type ProjectOverviewReadinessId = "rab" | "rap" | "material" | "billing";
+export type ProjectOverviewReadinessId = "pm" | "rab" | "rap" | "material" | "billing";
 
 export type ProjectOverviewReadinessItem = {
   readonly id: ProjectOverviewReadinessId;

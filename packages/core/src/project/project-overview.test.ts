@@ -46,4 +46,27 @@ describe("project overview actions", () => {
     });
     expect(actions.map((item) => item.id)).toEqual(["budget-risk", "material-shortage", "overdue"]);
   });
+
+  test("prioritizes PM assignment when project manager is missing", () => {
+    const actions = buildProjectOverviewActions({
+      hasProjectManager: false,
+      hasRap: false,
+      rapStatus: null,
+      rapSetupStage: null,
+      hasApprovedRab: false,
+      hasRabDraft: false,
+      criticalCategoryNames: [],
+      shortageCount: 0,
+      overdueInvoiceCount: 0,
+      overdueVendorBillCount: 0,
+    });
+    expect(actions[0]).toEqual({
+      id: "assign-pm",
+      title: "Tugaskan Project Manager",
+      description: "PM bertanggung jawab atas penyusunan RAP dan eksekusi proyek.",
+      tab: "overview",
+      severity: "CRITICAL",
+    });
+    expect(actions.map((item) => item.id)).toEqual(["assign-pm", "create-rap", "approve-rab"]);
+  });
 });

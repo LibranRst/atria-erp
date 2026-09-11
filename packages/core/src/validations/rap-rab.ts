@@ -49,12 +49,16 @@ export const generateRabFromRapSchema = z.object({
 
 export type GenerateRabFromRapInput = z.infer<typeof generateRabFromRapSchema>;
 
+export const rabItemNatureSchema = z.enum(["PRODUCTION", "SERVICE_FEE"]);
+export type RabItemNature = z.infer<typeof rabItemNatureSchema>;
+
 const manualRabLineSchema = z.object({
   clientLabel: z.string().min(3, "Label client minimal 3 karakter.").max(255),
   description: z.string().max(1000).optional().nullable(),
   quantity: z.number().positive("Jumlah wajib lebih besar dari 0."),
   unit: z.string().min(1, "Satuan wajib diisi.").max(50),
   unitPrice: z.number().min(0, "Harga jual tidak boleh negatif."),
+  itemNature: rabItemNatureSchema.default("PRODUCTION"),
   isHidden: z.boolean().optional(),
   isBundle: z.boolean().optional(),
 });
@@ -66,6 +70,9 @@ export const generateRabFromSelectedSourcesSchema = z
     projectCategoryPlanItemIds: z
       .array(uuidSchema("ID detail plan kategori tidak valid."))
       .default([]),
+    selectedBaselineManualItemIds: z
+      .array(uuidSchema("ID item manual baseline tidak valid."))
+      .optional(),
     manualLines: z.array(manualRabLineSchema).default([]),
     title: z.string().min(3).max(255).optional(),
     clientNotes: z.string().max(1000).optional().nullable(),
@@ -74,6 +81,7 @@ export const generateRabFromSelectedSourcesSchema = z
     (value) =>
       value.projectRapItemIds.length +
         value.projectCategoryPlanItemIds.length +
+        (value.selectedBaselineManualItemIds?.length ?? 0) +
         value.manualLines.length >
       0,
     {
@@ -92,6 +100,7 @@ export const updateRabEstimateItemSchema = z.object({
   quantity: z.number().positive("Jumlah wajib lebih besar dari 0."),
   unit: z.string().min(1, "Satuan wajib diisi.").max(50),
   unitPrice: z.number().min(0, "Harga jual tidak boleh negatif."),
+  itemNature: rabItemNatureSchema.optional(),
   displayOrder: z.number().int().min(0).optional(),
   isHidden: z.boolean().optional(),
   isBundle: z.boolean().optional(),
@@ -104,6 +113,7 @@ export const addRabManualItemSchema = z.object({
   quantity: z.number().positive("Jumlah wajib lebih besar dari 0."),
   unit: z.string().min(1, "Satuan wajib diisi.").max(50),
   unitPrice: z.number().min(0, "Harga jual tidak boleh negatif."),
+  itemNature: rabItemNatureSchema.default("PRODUCTION"),
   isHidden: z.boolean().optional(),
   isBundle: z.boolean().optional(),
 });

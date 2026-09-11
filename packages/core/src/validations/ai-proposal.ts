@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { passwordPolicySchema } from "./administration";
 
 const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
@@ -216,3 +217,102 @@ export const aiCreateRoleProposalSchema = z.object({
 });
 
 export type AiCreateRoleProposalInput = z.infer<typeof aiCreateRoleProposalSchema>;
+
+/**
+ * Usulan pembuatan akun pengguna baru dari kartu asisten.
+ *
+ * Menerima identitas pengguna, penugasan peran, dan kata sandi sementara
+ * yang dijamin memenuhi `passwordPolicySchema`.
+ */
+export const aiCreateUserProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  name: z.string().trim().min(2, "Nama pengguna minimal 2 karakter.").max(255),
+  email: z.string().trim().toLowerCase().email("Format email tidak valid."),
+  roleId: z.string().regex(uuidRegex, "ID peran tidak valid."),
+  temporaryPassword: passwordPolicySchema,
+});
+
+export type AiCreateUserProposalInput = z.infer<typeof aiCreateUserProposalSchema>;
+
+/**
+ * Item tunggal di dalam usulan batch pembuatan akun pengguna.
+ */
+export const aiCreateUserBatchItemSchema = z.object({
+  name: z.string().trim().min(2, "Nama pengguna minimal 2 karakter.").max(255),
+  email: z.string().trim().toLowerCase().email("Format email tidak valid."),
+  roleId: z.string().regex(uuidRegex, "ID peran tidak valid."),
+  temporaryPassword: passwordPolicySchema,
+});
+
+export type AiCreateUserBatchItemInput = z.infer<typeof aiCreateUserBatchItemSchema>;
+
+/**
+ * Usulan pembuatan akun pengguna sekaligus (batch) dari kartu asisten.
+ */
+export const aiCreateUserBatchProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  users: z
+    .array(aiCreateUserBatchItemSchema)
+    .min(1, "Minimal harus ada 1 pengguna.")
+    .max(20, "Maksimal 20 pengguna per satu kali batch."),
+});
+
+export type AiCreateUserBatchProposalInput = z.infer<typeof aiCreateUserBatchProposalSchema>;
+
+/**
+ * Pasangan rekonsiliasi yang diusulkan antara transaksi kas internal dan mutasi bank.
+ */
+export const aiBankReconciliationMatchSchema = z.object({
+  cashTransactionId: z.string().regex(uuidRegex, "ID transaksi kas tidak valid."),
+  statementRow: z.object({
+    transactionDate: z.coerce.date(),
+    description: z.string().min(1, "Deskripsi mutasi tidak boleh kosong.").max(500),
+    amount: z.number().positive("Nominal mutasi harus lebih besar dari 0."),
+    type: z.enum(["INFLOW", "OUTFLOW"]),
+  }),
+});
+
+export type AiBankReconciliationMatchInput = z.infer<typeof aiBankReconciliationMatchSchema>;
+
+/**
+ * Mutasi rekening koran yang belum tercatat pada transaksi kas internal.
+ */
+export const aiBankReconciliationUnmatchedMutationSchema = z.object({
+  transactionDate: z.coerce.date(),
+  description: z.string().min(1, "Deskripsi mutasi tidak boleh kosong.").max(500),
+  amount: z.number().positive("Nominal mutasi harus lebih besar dari 0."),
+  type: z.enum(["INFLOW", "OUTFLOW"]),
+});
+
+export type AiBankReconciliationUnmatchedMutationInput = z.infer<
+  typeof aiBankReconciliationUnmatchedMutationSchema
+>;
+
+/**
+ * Usulan rekonsiliasi bank yang dikonfirmasi dari kartu interaktif di AI Chat.
+ */
+export const aiBankReconciliationProposalSchema = z.object({
+  toolCallId: z
+    .string()
+    .trim()
+    .min(1, "Identitas usulan tidak valid.")
+    .max(128, "Identitas usulan tidak valid."),
+  conversationId: z.string().regex(uuidRegex, "ID percakapan tidak valid."),
+  bankAccountId: z.string().regex(uuidRegex, "ID Akun Bank tidak valid."),
+  matches: z.array(aiBankReconciliationMatchSchema),
+  unmatchedMutations: z.array(aiBankReconciliationUnmatchedMutationSchema).optional().default([]),
+  importUnmatched: z.boolean().optional().default(true),
+});
+
+export type AiBankReconciliationProposalInput = z.infer<typeof aiBankReconciliationProposalSchema>;
+

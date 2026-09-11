@@ -58,7 +58,7 @@ export function resolveEffectiveProjectHealth(
   } else if (
     typeof input.projectedMarginPercentage === "number" &&
     typeof input.targetMarginPercentage === "number" &&
-    input.projectedMarginPercentage < input.targetMarginPercentage
+    input.targetMarginPercentage - input.projectedMarginPercentage > 0.001
   ) {
     reasons.add("MARGIN_BELOW_TARGET");
   }

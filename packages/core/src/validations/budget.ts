@@ -59,6 +59,16 @@ export type ApproveCanonicalProjectBudgetInput = z.infer<
   typeof approveCanonicalProjectBudgetSchema
 >;
 
+export const rejectCanonicalProjectBudgetSchema = approveCanonicalProjectBudgetSchema.extend({
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Alasan revisi minimal 3 karakter.")
+    .max(1000, "Alasan revisi maksimal 1000 karakter."),
+});
+
+export type RejectCanonicalProjectBudgetInput = z.infer<typeof rejectCanonicalProjectBudgetSchema>;
+
 export const canonicalExpenseCategoryCodeSchema = z.enum(EXPENSE_CATEGORY_CODES);
 
 // 2. Skema Validasi Pencatatan Pembayaran Termin Klien
