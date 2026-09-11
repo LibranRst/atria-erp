@@ -47,15 +47,17 @@ dengan `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED="true"`.
 
 ## Peta skenario project
 
-| Project             | State awal | Tujuan demo                                                        |
-| ------------------- | ---------- | ------------------------------------------------------------------ |
-| Menteng Villa       | Active     | Budget, RAP/RAB, invoice parsial, expense, vendor, material, recon |
-| Sudirman Suites     | Active     | Approval > Rp5 juta, Subcon overrun, warning/critical              |
-| Brawijaya Residence | Active     | Sandbox penyusunan Project Budget dan RAB                          |
-| Senopati Office     | Active     | Semua blocker bersih; dapat dites melalui Project Closing          |
-| BSD Boutique Cafe   | Completed  | Referensi project historis sebelum migrasi penuh                   |
-| Kemang Townhouse    | On Hold    | Contoh project ditahan dengan alasan operasional                   |
-| PIK Shophouse       | Cancelled  | Contoh project dibatalkan tanpa transaksi aktif                    |
+| Project              | State awal                               | Tujuan demo                                          |
+| -------------------- | ---------------------------------------- | ---------------------------------------------------- |
+| Menteng Villa        | Active, RAB R1 approved, R2 void         | Finance/material utama dan histori revisi batal      |
+| Sudirman Suites      | Active, Change Order R2 pending approval | Approval revisi scope, RAB, dan budget berisiko      |
+| Brawijaya Residence  | Active, locked RAP, initial RAB draft    | RAB campuran, bundle, hidden line, dan approval awal |
+| Cipete House         | Active, RAP draft pada tahap Review      | Finalisasi Material/Tukang/Subcon lalu generate RAB  |
+| Pakubuwono Apartment | Draft, Project Budget pending approval   | Approve/reject budget dan gating workflow berikutnya |
+| Senopati Office      | Active, seluruh blocker bersih           | Project Closing                                      |
+| BSD Boutique Cafe    | Completed                                | Referensi project selesai                            |
+| Kemang Townhouse     | On Hold                                  | Contoh project ditahan dengan alasan operasional     |
+| PIK Shophouse        | Cancelled                                | Contoh project dibatalkan tanpa transaksi aktif      |
 
 Project draft/on-hold/cancelled boleh tidak mempunyai transaksi. Project aktif yang dipakai untuk
 workflow selalu mempunyai project, PM, client, budget/category, serta relasi detail yang sesuai.
@@ -98,6 +100,8 @@ melewati nilai invoice.
 - Expense Rp1,05 juta sudah approved dan dapat langsung dicairkan Finance.
 - Expense Rp5 juta serta Rp6,2 juta dimulai dari submitted/approval flow. Expense Rp6,2 juta berada
   pada category Subcon beralokasi Rp0, sehingga `budgetOverrun=true` dan wajib Owner.
+- Expense Cipete Rp7,5 juta dan Rp18 juta sudah `VERIFIED`, sehingga langsung muncul pada baseline
+  approval queue. Expense Rp18 juta berada pada Subcon beralokasi Rp0 dan menjadi contoh kritis.
 - Setiap canonical `project_expenses` yang mempunyai `legacyProjectCostId` harus sama project,
   category, quantity, unit cost, amount, dan statusnya dengan `project_cost`.
 
@@ -157,6 +161,10 @@ Seed dan `db:demo:verify` memeriksa sedikitnya:
 - open dan historical reconciliation one-to-one;
 - canonical/legacy expense tidak drift;
 - project, budget, category, material, RAP, bill, dan expense tidak cross-project;
+- Pakubuwono memiliki budget pending tanpa RAP/RAB, Cipete memiliki RAP Review tanpa RAB, dan
+  Brawijaya memiliki RAB draft campuran dengan total visible Rp950 juta;
+- Sudirman mempunyai baseline R1, revision R2, dan Change Order terkonfirmasi senilai Rp1,335 miliar;
+- Menteng mempunyai revision R2 void dengan Change Order cancelled;
 - budget snapshot sama dengan category detail;
 - stock sama dengan movement detail;
 - Senopati memiliki approved canonical budget, satu approved RAB, dan invoice lunas.

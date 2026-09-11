@@ -13,7 +13,11 @@ The database keeps the existing finance spine, introduces canonical project budg
 - `vendor`, `vendor_bill`, `vendor_payment`
 - `client_invoice`, `client_payment`
 - `bank_account`, `cash_transaction`, `bank_statement_import`, `bank_statement_row`
-- `attachment`, `approval`, `ai_run`, `notification`, `audit_log`, `app_config`
+- `attachment`, `approval`, `ai_run`, `notification`, `audit_log`, `app_config`, `onboarding_event`
+
+`project.project_manager_id` nullable hanya saat project masih `DRAFT` dari quick start. Aktivasi
+memerlukan akun PM aktif dengan data scope project. `onboarding_event` menyimpan event first-party
+tanpa nama, email, isi form, atau nilai finansial.
 
 `project_cost` is the implemented field expense table. Documentation and code should not refer to a separate `field_request` table unless one is intentionally introduced later.
 
@@ -436,9 +440,28 @@ erDiagram
 ```
 
 - Guided setup fields: `setup_stage`, `tukang_scope_skipped`, `subcon_scope_skipped`, and `setup_updated_by_id`.
+
 # AI User Preference
 
 `ai_user_preference` menyimpan satu preferensi asisten per user: `response_style`,
 `primary_focus`, `custom_note` maksimal 300 karakter, dan `updated_at`. `user_id`
 adalah primary key sekaligus foreign key cascade ke `user`; tidak ada preference
 lintas user atau organisasi.
+
+## Notification lifecycle
+
+`notification` additionally stores `read_at`, `project_id`, `required_permission`, `event_key`, and
+`updated_at`. The unique `(tenant_id, user_id, event_key)` index prevents duplicate event delivery
+to one recipient. The feed index covers company/user/category/resolution/creation/id; the SSE cursor
+index covers company/user/update/id. Every read or resolution mutation advances `updated_at`.
+`read` and `is_resolved` are independent: open actions remain actionable after reading.
+
+`notification_condition` stores a company-scoped rule key, current stage, revision and update time. Row locks serialize condition transitions and the scheduler execution. Recovery clears the stage; a subsequent recurrence increments the revision and produces a fresh event. No finance or stock balances are stored or changed by notification jobs.
+
+`user_push_subscription` stores Web Push or Expo credentials and, for new registrations, the Better Auth `session_id`. Deleting that session cascades the subscription so a logged-out device cannot keep receiving messages. `notification_delivery` is the durable outbox: one unique row per notification/subscription with channel, status, attempts, receipt attempts, retry time, processing lease, provider ticket, terminal error, and sent/delivered timestamps. Deleting a notification or subscription cascades its delivery rows.
+
+Migration `0038_notification_hardening` backfills read timestamps and known legacy project references.
+Migration `0039_notification_sse_cursor` adds the indexed change cursor used by the web SSE stream.
+Migration `0040_notification_delivery_outbox` adds session-bound subscriptions and the durable push outbox.
+See `docs/guide/notifications.md` for first-run reconciliation, synchronization, and the 30-day
+visibility policy.

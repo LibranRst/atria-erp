@@ -9,85 +9,33 @@ Untuk UAT production-style dari data kosong, gunakan
 
 ## Status verifikasi
 
-Diperiksa 18 Agustus 2026 terhadap database demo sekali pakai hasil
-`db:demo:reset`, bukan terhadap database development.
+Diperiksa 6 September 2026 terhadap database demo hasil `db:demo:reset`, bukan
+database pengguna. Verifier membaca ulang saldo, budget, stock, approval, RAP,
+RAB, source linkage, nilai quotation, dan Change Order setelah seed selesai.
 
-**Seluruh bagian 3 sampai 12 kini terbukti terhadap aplikasi.** Bagian 6 sampai
-12 dijalankan berurutan lewat Server Action asli oleh
-`lib/finance/demo-walkthrough.integration.test.ts` — 23 test, satu rantai, dalam
-urutan yang sama dengan panduan ini.
+Dataset mempunyai dua kelompok yang sengaja dipisahkan:
 
-**Angka statis (bagian 3, 4, 5, 8):** keempat saldo rekening, indikator dua
-transaksi belum rekonsiliasi, nominal dan status setiap expense serta vendor
-bill, hitungan rekonsiliasi 2/2/9, formula budget 90% dengan rasio
-18/35/1/0,5/0 dan buffer 45,5%, header Menteng Rp800 juta / Rp720 juta / target
-gross Rp80 juta, alokasi Subcon Rp0 pada Sudirman, budget Brawijaya yang masih
-`DRAFT` tanpa transaksi, serta invoice `INV/2026/002` Rp320 juta dengan
-Rp120 juta diterima — semuanya cocok dengan seed.
+- **baseline UI** untuk melihat state lengkap tanpa melakukan setup manual;
+- **walkthrough berurutan** untuk menguji mutasi finance, material,
+  rekonsiliasi, dan closing lewat Server Action asli.
 
-**Tulang punggung kas (bagian 6 sampai 9):** mendarat persis pada saldo yang
-dijanjikan — Kas Budi Rp14.150.000 → Rp13.100.000 → Rp8.100.000, Mandiri
-Rp500.000.000 → Rp493.800.000, BCA Rp655.000.000 → Rp651.000.000 →
-Rp641.000.000 → Rp841.000.000 → Rp836.000.000. Termasuk maker-checker 6.2,
-penolakan vendor payment Rp10 juta sebelum approval Owner, penolakan
-overpayment invoice, dan transfer internal yang tidak mengubah kas bersih.
+Baseline UI mencakup Project Budget menunggu approval, RAP draft pada tahap
+Review, RAP locked, RAB awal draft dengan bundle dan hidden line, RAB approved,
+RAB revision void, serta Change Order R2 menunggu approval. Antrean approval
+langsung mempunyai contoh Lapangan normal, Lapangan kritis, Vendor, dan Stok.
 
-**Rekonsiliasi (bagian 10):** pengecualian terdokumentasi tanpa menggerakkan
-saldo dan dapat dicabut; alasan di bawah 10 karakter ditolak; kedua pasangan
-seed cocok tanpa saldo bergerak; pencocokan lintas rekening ditolak dengan
-pesan ketidakcocokan yang benar; dan transaksi yang sudah direkonsiliasi
-membeku terhadap ketiga jalur tulis yang ada. Yang
-terpenting, sesudah ketiga CSV `.atria-demo/` diimpor, **setiap transaksi yang
-dibuat walkthrough ini menemukan tepat satu lawan** pada rekening dan arah yang
-sama — diperiksa sebagai perbandingan himpunan, bukan sekadar jumlah baris.
-Impor ulang file yang sama melewatkan seluruh baris dan saldo tetap.
+Hasil verifier baseline: 4 rekening, 11 transaksi kas, 2 pasangan rekonsiliasi
+terbuka, 6 canonical budget, 5 dokumen RAP, 6 dokumen RAB, 6 row approval
+`PENDING` (4 eligible langsung di UI), 12 notifikasi (9 belum dibaca), dan 12
+baris inventory.
 
-**Material (bagian 11):** batch opening `OPB-2026-07-0002` ditolak ketika
-pembuatnya sendiri yang menyetujui, lalu terposting ketika Owner yang
-menyetujui; siklus reserve → use → return → waste bergerak persis seperti yang
-dijanjikan (reserve mengunci tanpa memindahkan stok fisik) dan **tidak membuat
-satu pun cash transaction**; waste tanpa catatan audit ditolak; pemakaian
-melebihi isi gudang ditolak tanpa menggeser stok.
+Rantai finance pada bagian 6–12 tetap memakai fixture lama. Saldo awalnya masih:
+BCA Rp655.000.000, Kas Budi Rp14.150.000, Mandiri Rp500.000.000, dan Kas Siti
+Rp9.500.000. Menambah skenario project tidak membuat cash transaction baru.
 
-**Gudang (bagian 11.2 dan 11.4):** goods receipt menaikkan stok sebesar
-quantity yang diposting, dan posting kedua dengan nomor receipt yang sama
-ditolak tanpa menggeser stok; transfer memindahkan tanpa menciptakan —
-lokasi asal turun, tujuan naik, total perusahaan tetap; stock count hanya
-menghasilkan adjustment untuk item yang selisih, dan **menuntut approver yang
-berbeda dari penghitungnya**; emergency adjustment menolak alasan di bawah 10
-karakter lalu terposting dengan alasan yang layak.
-
-**Closing (bagian 12):** Senopati dilaporkan tanpa blocker dan benar-benar
-tertutup menjadi `COMPLETED` dengan end date terisi, sementara Menteng tetap
-diblokir dan penutupannya ditolak. Penutupannya dijalankan dua kali sekaligus
-dengan sengaja: hanya satu yang berhasil dan hanya satu snapshot profitability
-final yang tercipta.
-
-**Penjagaan script (bagian 1 dan 14):** `reset-demo-database.ts` tanpa
-`--confirm-reset` berhenti dengan pesan yang menyebut flag-nya, dan `db:seed`
-pada database yang sudah berisi data menolak dengan
-`DEMO_DATABASE_NOT_EMPTY` tanpa menghapus apa pun. Keduanya keluar dengan
-exit code 1, jadi kegagalannya terlihat, bukan diam-diam.
-
-**Catatan tentang baris "Edit/delete cash transaction yang sudah reconciled"
-pada bagian 13:** aplikasi tidak mempunyai jalur edit maupun delete untuk
-transaksi kas sama sekali — buku besar bersifat append-only. Satu-satunya yang
-boleh menulis ke `cash_transaction` adalah ketiga aksi rekonsiliasi, dan
-ketiganya menolak baris yang sudah direkonsiliasi di bawah row lock. Jadi
-harapan baris itu benar, tetapi tidak ada tombol yang bisa dicoba; yang
-sebenarnya diuji adalah ketiga jalur tersebut.
-
-**Belum diverifikasi — dan hanya ini yang tersisa:**
-
-1. **Jalur klik.** Semuanya dibuktikan di lapisan Server Action, bukan lewat
-   layar. Tombol, sheet, dan penempatan angka pada UI belum ditelusuri.
-2. **Bagian 12A (Asisten AI), bagian jawabannya saja.** Jawaban model bersifat
-   non-deterministik dan menuntut jaringan, jadi isi kartunya tidak dijadikan
-   test. Dua hal di sekitarnya sudah dipaku: aturan akses — Owner, Finance
-   Admin, dan PM boleh; Purchasing, Sales, Designer, dan Marketing tidak
-   (`packages/core/src/auth/ai-chat-access.test.ts`) — dan penjagaan dokumen
-   ganda pada kartu usulan
-   (`apps/web/lib/ai/confirm-expense-proposal.integration.test.ts`).
+Hal yang belum deterministik hanya jawaban model pada bagian Asisten AI. Akses,
+proposal, dan penjagaan duplikasi tetap diuji otomatis. Jalur klik perlu diuji
+manual dengan matriks skenario di bagian 3 dan 5.
 
 ### Menjalankan ulang rantainya
 
@@ -177,16 +125,41 @@ Gunakan tab/filter untuk menemukan:
 
 - expense Rp1.050.000 berstatus Approved;
 - expense Rp5.000.000 dan Rp6.200.000 yang masih perlu review;
+- expense Cipete Rp7.500.000 dan Rp18.000.000 yang sudah Verified dan langsung
+  terlihat pada antrean Owner;
 - payment vendor Rp4.000.000 dan Rp10.000.000 berstatus terjadwal;
 - dua vendor bill paid sebagai histori.
 
 ### 3.3 Projects — `/projects`
 
-- Menteng adalah skenario finance/material utama.
-- Sudirman menunjukkan risk dan approval.
-- Brawijaya adalah planning sandbox.
-- Senopati adalah project siap closing.
-- BSD, Kemang, dan PIK adalah referensi lifecycle.
+| Project              | Status awal                                        | Gunakan untuk                                    |
+| -------------------- | -------------------------------------------------- | ------------------------------------------------ |
+| Menteng Villa        | Active, RAB R1 approved, R2 void                   | Finance/material utama dan histori revisi batal  |
+| Sudirman Suites      | Active, RAB R1 approved, R2 + Change Order pending | Approval revisi scope dan budget berisiko        |
+| Brawijaya Residence  | Active, RAP locked, initial RAB draft              | Edit RAB, bundle, hidden line, dan approval awal |
+| Cipete House         | Active, RAP draft tahap Review                     | Finalisasi internal plan lalu generate RAB       |
+| Pakubuwono Apartment | Draft, Project Budget pending approval             | Approve/reject budget dan downstream gating      |
+| Senopati Office      | Active, seluruh kewajiban selesai                  | Project closing                                  |
+| Kemang Townhouse     | On Hold                                            | Filter lifecycle                                 |
+| BSD Boutique Cafe    | Completed                                          | Histori project selesai                          |
+| PIK Shophouse        | Cancelled                                          | Histori pembatalan project                       |
+
+Sebagai PM Budi hanya Menteng, Brawijaya, Cipete, Senopati, dan PIK yang boleh
+terlihat. Sebagai PM Siti hanya Sudirman, Pakubuwono, Kemang, dan BSD yang boleh
+terlihat. Owner dan Finance melihat seluruh project.
+
+### 3.4 Approvals — `/approvals`
+
+Sebelum walkthrough mengubah data, Owner langsung melihat:
+
+- **Rp18.000.000 · Cipete** — Lapangan, kritis karena Subcon beralokasi Rp0;
+- **Rp7.500.000 · Cipete** — Lapangan, sudah diverifikasi Finance;
+- **Rp10.000.000 · vendor** — pencairan yang membutuhkan Owner;
+- **OPB-2026-07-0002** — saldo awal stok Workshop Cikupa.
+
+Expense Menteng Rp5.000.000 dan Sudirman Rp6.200.000 belum tampil pada baseline
+karena masih `SUBMITTED`. Keduanya baru masuk antrean sesudah Lisa melakukan
+verifikasi pada langkah 6.2 dan 6.3. Ini perilaku yang benar, bukan data hilang.
 
 ### 3.4 Reconciliation — `/reconciliation`
 
@@ -224,6 +197,8 @@ Sebagai Owner, buka **Menteng Villa**:
 - target gross Rp80.000.000;
 - RAP material revision 1 sudah locked;
 - RAB client Rp800.000.000 sudah approved.
+- histori RAB mempunyai R2 berstatus **Dibatalkan** karena mini bar dibatalkan
+  klien; Change Order terkait juga `CANCELLED`.
 
 Di budget category, bedakan:
 
@@ -232,18 +207,112 @@ Di budget category, bedakan:
 - **Paid**: kas benar-benar keluar;
 - **Remaining**: allocation dikurangi consumed cost.
 
-### 5.2 Brawijaya planning sandbox
+### 5.2 Pakubuwono — keputusan Project Budget
 
-Buka **Brawijaya Residence — RAB Sandbox**. Canonical budget-nya masih Draft dan tidak mempunyai
-transaksi finance. Gunakan project ini untuk mencoba kontrol RAP/RAB tanpa mengubah skenario
-Menteng/Sudirman.
+Buka **Pakubuwono Apartment - Budget Review** sebagai Owner, lalu pilih
+**Ringkasan**. Keputusan berada pada surface **Workflow Project Budget**.
 
-Kontrol yang relevan:
+State awal:
 
-- **Gunakan template Library** mengambil referensi item/harga, tetapi row tetap editable;
-- **Tinjau** membuka review sebelum mutasi;
-- **Simpan/Buat** menyimpan draft atau dokumen;
-- approval budget/RAB harus dilakukan Owner dan meninggalkan audit evidence.
+- project `DRAFT`, PM Siti sudah ditugaskan;
+- contract value Rp650.000.000;
+- Internal Budget Rp585.000.000 atau 90%;
+- Project Budget `PENDING_APPROVAL`;
+- RAP dan RAB belum ada.
+
+Periksa seluruh kategori lalu pilih salah satu jalur:
+
+1. **Setujui Project Budget**: status menjadi Approved dan tab RAP dapat dipakai.
+2. **Tolak Budget**: isi alasan minimal tiga karakter; budget kembali editable.
+
+Approval budget belum mengaktifkan project. Aktivasi tetap harus ditolak sampai
+RAP terkunci dan RAB approved tersedia.
+
+### 5.3 Cipete — final review RAP
+
+Buka **Cipete House - RAP Review** sebagai Owner, Finance, atau PM Budi.
+
+State awal:
+
+- budget Approved: Rp420.000.000 dengan Internal Budget Rp378.000.000;
+- RAP R1 `DRAFT`, `setupStage=REVIEW`;
+- tiga item Material, satu paket Tukang, dan satu paket Subcon;
+- belum mempunyai RAB.
+
+Di tab RAP, pindah antar tahap 1–4 untuk memeriksa state lengkap. Pada Review,
+pastikan total Material, Tukang, Subcon, dan Total Plan tampil. Tekan
+**Finalisasi Internal Plan** sebagai role yang berizin.
+
+Expected:
+
+- RAP menjadi `LOCKED` dan setup selesai;
+- tidak ada cash transaction atau perubahan stok;
+- tab RAB menawarkan sumber Material, Tukang, dan Subcon;
+- setelah generate, RAB R1 tetap Draft sampai keputusan eksplisit Owner.
+
+### 5.4 Brawijaya — initial RAB draft lengkap
+
+Buka **Brawijaya Residence - RAB Sandbox**. Ini sandbox utama untuk mengetes UI
+RAB tanpa mengubah skenario Menteng dan Sudirman.
+
+State awal:
+
+- budget Approved, RAP R1 locked dengan empat material;
+- paket Tukang Rp95.000.000 dan Subcon Rp75.000.000;
+- RAB R1 `DRAFT` dengan ketiga source type: Material, Category Plan, dan Manual;
+- satu bundle **Paket built-in joinery** Rp610.000.000;
+- satu hidden line **Provisional sum dekorasi** Rp60.000.000;
+- nilai visible RAB tepat **Rp950.000.000**.
+
+Uji edit label/harga, buka detail bundle, tampilkan/sembunyikan line, tambah item
+manual, dan buat bundle baru. Hidden line tidak boleh ikut total. Pilih
+**Tinjau & Setujui RAB** untuk menguji approval awal.
+
+Expected setelah approval:
+
+- RAB menjadi Approved dan project value tetap Rp950.000.000;
+- RAP serta package yang dipakai menjadi locked;
+- perubahan berikutnya hanya dapat dilakukan melalui revision + Change Order.
+
+Reset demo untuk mengembalikan RAB ini ke Draft.
+
+### 5.5 Sudirman — Change Order R2 menunggu approval
+
+Buka **Sudirman Suites - Penthouse Fit-Out** sebagai Owner.
+
+State awal:
+
+- RAB R1 Approved Rp1.200.000.000;
+- RAP R1 locked sebagai baseline;
+- RAP R2 Draft dan RAB R2 Draft sebagai revisi aktif;
+- revisi visible Rp1.335.000.000, delta **+Rp135.000.000**;
+- Change Order sudah mempunyai bukti konfirmasi klien dan berstatus
+  `PENDING_APPROVAL`;
+- pembuatnya Lisa/Finance, sehingga Ronald/Owner memenuhi maker-checker.
+
+Buka ringkasan revisi dan histori Change Order. Periksa reference
+`WA-CLIENT-SUD-CO-02 / 20-07-2026`, lalu setujui sebagai Owner.
+
+Expected:
+
+- RAB R1 dan RAP R1 menjadi Superseded;
+- RAB R2 menjadi Approved, RAP R2 dan source package menjadi Locked;
+- project value, approved RAB, dan category allocations dihitung ulang dari
+  Rp1.335.000.000;
+- Change Order menyimpan Ronald sebagai approver;
+- approval ulang atau approval oleh maker tanpa emergency override ditolak.
+
+### 5.6 Urutan aman untuk visual regression
+
+Jika tujuan utama hanya memeriksa tampilan, gunakan urutan berikut agar state
+awal tidak cepat habis:
+
+1. baca Menteng dan histori pembatalannya tanpa mutasi;
+2. baca seluruh panel Sudirman sebelum menyetujui Change Order;
+3. edit Brawijaya, tetapi tunda approval sampai seluruh drawer diperiksa;
+4. finalisasi Cipete terakhir;
+5. gunakan Pakubuwono untuk mencoba approve atau reject budget;
+6. jalankan reset untuk mengembalikan semua state.
 
 ## 6. Expense: direct flow dan Owner approval
 
@@ -501,22 +570,22 @@ konfirmasi. Ini penjaga terhadap dokumen ganda.
 
 ## 13. Negative test ringkas
 
-| Test                                                   | Expected                                         |
-| ------------------------------------------------------ | ------------------------------------------------ |
-| `db:seed` dijalankan lagi pada DB berisi data          | Ditolak tanpa delete                             |
-| Demo reset tanpa `--confirm-reset`                     | Ditolak                                          |
-| Payment invoice > outstanding                          | Ditolak, saldo tidak berubah                     |
-| Vendor payment Rp10 juta sebelum Owner approval        | Ditolak                                          |
-| PM membuka project yang tidak di-assign                | Forbidden/tidak terlihat                         |
-| Purchasing membuka saldo atau margin komersial         | Tidak memperoleh akses                           |
-| Cocokkan rekening/arah/amount yang berbeda             | Ditolak                                          |
-| Impor file CSV yang sama dua kali                      | Duplicate dilewati                               |
-| Edit/delete cash transaction yang sudah reconciled     | Ditolak                                          |
-| Stock use melebihi available stock                     | Ditolak                                          |
-| Closing Menteng sebelum semua blocker selesai          | Ditolak dan blocker dijelaskan                   |
-| PM bertanya ke asisten soal proyek yang bukan miliknya | Dijawab di luar akses, tanpa membocorkan datanya |
-| Purchasing atau Sales membuka tombol asisten AI        | Tombol tidak muncul                              |
-| Menekan Konfirmasi dua kali pada satu kartu usulan     | Hanya satu pengajuan tercatat                    |
+| Test                                                   | Expected                                        |
+| ------------------------------------------------------ | ----------------------------------------------- |
+| `db:seed` dijalankan lagi pada DB berisi data          | Ditolak tanpa delete                            |
+| Demo reset tanpa `--confirm-reset`                     | Ditolak                                         |
+| Payment invoice > outstanding                          | Ditolak, saldo tidak berubah                    |
+| Vendor payment Rp10 juta sebelum Owner approval        | Ditolak                                         |
+| PM membuka project yang tidak di-assign                | Forbidden/tidak terlihat                        |
+| Purchasing membuka saldo atau margin komersial         | Tidak memperoleh akses                          |
+| Cocokkan rekening/arah/amount yang berbeda             | Ditolak                                         |
+| Impor file CSV yang sama dua kali                      | Duplicate dilewati                              |
+| Edit/delete cash transaction yang sudah reconciled     | Ditolak                                         |
+| Stock use melebihi available stock                     | Ditolak                                         |
+| Closing Menteng sebelum semua blocker selesai          | Ditolak dan blocker dijelaskan                  |
+| PM bertanya ke asisten soal proyek yang bukan miliknya | Ditolak/dibatasi tanpa membocorkan data project |
+| Purchasing atau Sales membuka tombol asisten AI        | Tombol tidak muncul                             |
+| Menekan Konfirmasi dua kali pada satu kartu usulan     | Hanya satu pengajuan tercatat                   |
 
 Baris terakhir dahulu hanya benar untuk penekanan **berurutan**. Dua permintaan
 yang benar-benar berlomba — bentuk klik ganda yang sesungguhnya — sama-sama

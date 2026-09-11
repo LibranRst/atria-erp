@@ -47,12 +47,12 @@ kesalahan yang tidak boleh mungkin terjadi.
 Setelah selesai, ia memeriksa empat hal dan menolak menyatakan siap bila salah
 satu gagal:
 
-| Pemeriksaan | Membuktikan |
-| --- | --- |
-| Tabel terbentuk | Seluruh migrasi jalan, bukan sebagian |
+| Pemeriksaan                | Membuktikan                                                                      |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| Tabel terbentuk            | Seluruh migrasi jalan, bukan sebagian                                            |
 | Peran sistem punya cakupan | Owner `GLOBAL`, bukan `NONE` — tanpa ini setiap daftar proyek kosong tanpa error |
-| Belum ada pengguna | Instance benar-benar baru, bukan salinan milik orang lain |
-| Baris pertama bisa ditulis | Onboarding benar-benar bisa dimulai, bukan hanya terlihat kosong |
+| Belum ada pengguna         | Instance benar-benar baru, bukan salinan milik orang lain                        |
+| Baris pertama bisa ditulis | Onboarding benar-benar bisa dimulai, bukan hanya terlihat kosong                 |
 
 Pemeriksaan terakhir yang paling berharga: ia menangkap kelas kesalahan di mana
 database terlihat bersih tetapi menolak tulisan pertama karena baris perancah
@@ -61,8 +61,8 @@ yang hilang.
 ```bash
 # 3. Deploy aplikasi dengan environment milik pelanggan
 # 4. Buka /setup, buat Owner pertama mereka
-# 5. Ikuti onboarding enam langkah
-#    docs/guide/financial_workflow_guide.md §A1–A2
+# 5. Selesaikan quick start dan review Kesiapan Operasional
+#    docs/guide/quick_start_operational_readiness.md
 # 6. Setelah data pertama masuk:
 bun run db:check-invariants
 ```
@@ -87,12 +87,12 @@ UPDATE tenant SET name = 'Nama Baru', slug = 'nama-baru';
 
 ## Yang harus diulang untuk setiap pelanggan
 
-| Hal | Kenapa |
-| --- | --- |
-| Migrasi | Instance terpisah, jadi tidak ikut naik sendiri saat instance lain di-deploy |
-| Retensi riwayat + latihan restore | Menempel pada project, bukan pada kode — lihat `restore-drill.md` |
-| Pemeriksaan invarian malam | Satu jadwal per instance |
-| Backup dan pemulihan | Tidak ada yang berbagi |
+| Hal                               | Kenapa                                                                       |
+| --------------------------------- | ---------------------------------------------------------------------------- |
+| Migrasi                           | Instance terpisah, jadi tidak ikut naik sendiri saat instance lain di-deploy |
+| Retensi riwayat + latihan restore | Menempel pada project, bukan pada kode — lihat `restore-drill.md`            |
+| Pemeriksaan invarian malam        | Satu jadwal per instance                                                     |
+| Backup dan pemulihan              | Tidak ada yang berbagi                                                       |
 
 Ini harga sebenarnya dari isolasi lewat batas database: **setiap pekerjaan
 operasional dikali jumlah pelanggan.** Di dua sampai lima pelanggan itu masih

@@ -38,7 +38,9 @@ Expense and vendor bill write paths are category-first. `projectBudgetCategoryId
 
 - `createProjectBudgetFromRatios(projectId, contractValue, ratioPresetId?)`
 - `updateProjectBudgetCategoryAllocation(projectBudgetCategoryId, ratioPercent | allocatedAmount)`
+- `submitProjectBudget(projectBudgetId)`
 - `approveProjectBudget(projectBudgetId)`
+- `rejectProjectBudget(projectBudgetId, reason)`
 - `recalculateProjectBudgetCategories(projectBudgetId)`
 - `getProjectBudgetDashboard(projectId)`
 - `getOwnerBudgetDashboard()`
@@ -48,6 +50,8 @@ These actions use canonical `project_budgets`, `expense_category`, `project_budg
 The legacy mutation exports `createProjectBudget`, `createBudgetItem`, `submitBudgetForApproval`, `approveBudget`, and `rejectBudget` are disabled compatibility endpoints. They return `FORBIDDEN`; new UI and integrations must use the canonical category-based actions above.
 
 `createProjectBudgetFromRatios` reads the active Budget Allocation Setting. Code constants are fallback/seed defaults only.
+Submit, approve, and reject use the canonical `DRAFT → PENDING_APPROVAL → APPROVED/DRAFT`
+lifecycle, write audit evidence, and resolve/create notification stages in the same transaction.
 
 ## Settings Actions
 
@@ -77,6 +81,14 @@ Settings actions are Zod-validated and RBAC-protected:
 
 - `getDeveloperAccountSimulationState()` reads the env/readiness gate and eligible active staff accounts.
 - `startDeveloperAccountSimulation({ targetUserId, context })` changes the current Better Auth session's effective user after locking the session. `GENERAL` requires completed onboarding, complete staff roles, and permanent target password. `ONBOARDING_SETUP_REVIEW` is restricted to an active Finance Admin and intentionally permits a temporary-password target during setup.
+
+## Quick Start & Operational Readiness
+
+- `getOrganizationSetupOverview()` returns the canonical quick-start journey plus required and recommended role-aware readiness items.
+- `advanceQuickStart({ stepId })` row-locks `owner_onboarding_v2`, validates finance readiness where required, writes audit/event rows, and rejects completed/stale transitions.
+- `pauseQuickStart({ currentStep })` atomically stores a paused state; completed quick start returns `CONFLICT`.
+- `createFirstProjectQuickStart(input)` atomically creates the client when needed, Draft project, canonical category budget, audit/event rows, and immutable quick-start completion. PM may be null only on this path.
+- `setInitialStockReadinessDecision({ decision })` updates the operational decision without reopening quick start.
 - `stopDeveloperAccountSimulation({ context })` restores `session.userId` from `session.developerActorUserId`. Restore remains callable for an existing simulation even when the feature flag is later disabled.
 
 The feature requires `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED=true` and is hard-disabled when `NODE_ENV=production`. Start/stop operations are transactional and audited. No password is read, reset, or bypassed.
@@ -185,8 +197,19 @@ Tukang/Subcon expense and vendor bill flows may optionally link to `project_cate
 - A cash transaction written by an internal action starts with `reconciled = false`. Reconciliation fields may be set only after an imported bank-statement row is matched and approved.
 - `reconciled = true` requires a matched `bank_statement_row`. A documented exception uses `reconciliation_exception_reason`, `reconciliation_exception_at`, and `reconciliation_exception_by_id`; it never impersonates a bank match.
 - A non-empty bank reference is unique per bank account. Reusing it must fail safely without creating another cash movement.
+
 # AI History & Preference Actions
 
 - `listAiConversations({ query?, cursor?, limit? })` — title search per-user dengan cursor dan message count.
 - `renameAiConversation({ conversationId, title })` — rename milik session tanpa mengubah waktu aktivitas.
 - `getAiPreference()` / `saveAiPreference(input)` / `resetAiPreference()` — preference personal bagi role dengan `use:ai_chat`.
+
+## Notifications
+
+- `getNotificationsAction()` returns the authenticated user's global `unreadCount`, unresolved `actionRequiredCount`, and `informationalUnreadCount`. The legacy `items` field remains as an empty compatibility field; list consumers use the paginated action.
+- `listNotificationsAction({ category, cursor? })` validates category and `(createdAt, id, resolved)` cursor, returning 20 items plus `hasMore` and `nextCursor`. Open actions precede resolved history; timestamps and IDs break ties.
+- `markNotificationReadAction({ id })` and `markAllNotificationsReadAction({ category? })` enforce current ownership, permissions, project scope, and retention. Invalid categories reject without broadening the mutation.
+- `openNotificationAction({ id })` rechecks eligibility and reference existence before returning a normalized internal project/workflow URL.
+- `registerPushTokenAction(input)` / `unregisterPushTokenAction(input)` and matching `notifications.registerPush` / `notifications.unregisterPush` tRPC procedures bind Web/Expo credentials to the authenticated user and session.
+- `GET /api/notifications/stream` is the authenticated SSE invalidation stream; it emits no notification body.
+- `GET|POST /api/internal/notifications?task=reconcile|deliveries|all` is a bearer-secret worker endpoint, not a user CRUD API. Vercel GET uses `CRON_SECRET`; generic POST may use `NOTIFICATION_JOB_SECRET`. See `docs/guide/notifications.md`.

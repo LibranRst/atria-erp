@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-15T09:54:20.000Z",
+  "generatedAt": "2026-09-09T03:24:28.000Z",
   "title": "Design System: Atria ERP",
   "extensions": {
     "colorMeta": {
@@ -367,6 +367,21 @@
         "name": "The Selection-Stays-Flat Rule",
         "body": "Selection and searchable-selection dialogs use one compact inset white option group with shared dividers. A selected row keeps the same white surface and is identified by a terracotta label plus check, never by another nested owner card or full-row tint.",
         "section": "components"
+      },
+      {
+        "name": "The Field-Association Rule",
+        "body": "FormField owns one stable label/control/message relationship. Shared controls inherit its generated ID, required state, invalid state, and helper or error description unless an explicit caller value is supplied. Read-only facts and choice groups use their own row or fieldset semantics instead of an orphaned label.",
+        "section": "components"
+      },
+      {
+        "name": "The Declared-Dismissal Rule",
+        "body": "Every editable form sheet declares whether close discards ephemeral input, confirms local dirty state, preserves parent or draft state, or delegates to an existing managed Save Draft / Discard / Continue flow. Backdrop, Escape, pull or header close, and programmatic close follow the same policy path.",
+        "section": "components"
+      },
+      {
+        "name": "The One-Overlay-Owner Rule",
+        "body": "Calendar, media preview, selection, search, confirmation, and morph-detail wrappers use the internal DialogFrame for focus, visual viewport, body lock, Escape, reduced motion, and layering. Raw DialogFrame never crosses into feature code.",
+        "section": "components"
       }
     ],
     "dos": [
@@ -377,6 +392,9 @@
       "Do combine status with copy and an icon/shape/position — never color alone.",
       "Do keep motion purposeful and spring-based (`lib/utils/motion.ts` presets only) — selection, origin, continuity, feedback.",
       "Do keep selection/search options in one compact inset white group and indicate selection with terracotta label plus the shared check glyph rather than a filled rectangle.",
+      "Do let FormField create and propagate the accessible label, control, helper, and error relationship by default.",
+      "Do declare discard, confirm, preserve, or managed dismissal behavior on every editable form sheet.",
+      "Do keep all modal focus, viewport, dismissal, reduced-motion, and layering behavior behind semantic shared wrappers.",
       "Do put simple repeated events, transactions, and master-data rows on one grouped surface with dividers; reserve an individual card for a genuinely independent, decision-heavy entity.",
       "Do keep every main route's `loading.tsx` a structural skeleton matching the final hierarchy (header/tabs, focal summary, expected rows, nav clearance) — never a centered spinner or generic loading card.",
       "Do keep effective touch targets at 48×48px even when a visible control is drawn smaller (32–40px), and preserve keyboard focus order, screen-reader labels, safe-area clearance, and reduced-motion behavior throughout."

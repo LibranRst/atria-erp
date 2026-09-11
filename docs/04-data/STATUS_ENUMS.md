@@ -10,6 +10,17 @@
 | `COMPLETED` | Project work and administration are closed.                                                   |
 | `CANCELLED` | Project is cancelled.                                                                         |
 
+## Owner Quick Start Status
+
+| Enum          | Meaning                                                                 |
+| :------------ | :---------------------------------------------------------------------- |
+| `IN_PROGRESS` | Owner sedang mereview default atau menyiapkan project pertama.          |
+| `PAUSED`      | Quick start dijeda; data tersimpan dan Dashboard menyediakan resume.    |
+| `COMPLETED`   | Project Draft pertama sudah dibuat; state ini tidak dapat dibuka ulang. |
+
+Operational readiness tidak memakai status quick-start. Ia selalu dihitung dari tim, rekening,
+fondasi material, dan keputusan saldo awal aktual.
+
 ## Project Financial Health
 
 | Enum       | Meaning                                                    |
@@ -25,7 +36,11 @@
 | `DRAFT`            | Internal budget is being prepared.                              |
 | `PENDING_APPROVAL` | Budget is waiting for Owner/Finance approval.                   |
 | `APPROVED`         | Budget is approved and should be treated as a control baseline. |
-| `REJECTED`         | Budget must be revised.                                         |
+| `REJECTED`         | Legacy/history state retained for compatibility.                |
+
+Pada workflow canonical, keputusan **Minta revisi** mengembalikan
+`PENDING_APPROVAL → DRAFT` dan menyimpan alasan pada audit trail agar budget
+langsung dapat diperbaiki lalu diajukan kembali.
 
 ## Budget Category Risk Status
 
