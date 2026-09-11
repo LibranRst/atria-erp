@@ -2,9 +2,11 @@
 
 import React from "react";
 
-import type { SettingsOverview } from "@/app/actions/settings/system";
-import { FormSheet, ConfirmationDialog, SegmentedTabs } from "@/components/ui";
-import { BudgetSettingsManager } from "@/features/settings/components/budget/budget-settings-manager";
+import type {
+  BudgetAllocationSettingRow,
+  ExpenseCategorySettingRow,
+} from "@/app/actions/settings/system";
+import { SegmentedTabs } from "@/components/ui";
 import { CategorySettingsManager } from "@/features/settings/components/categories/category-settings-manager";
 import {
   OnboardingNotice,
@@ -12,19 +14,25 @@ import {
   OnboardingSurface,
   OnboardingToolbar,
 } from "../shared/onboarding-primitives";
+import { OnboardingBudgetDefaultsSheet } from "./onboarding-budget-defaults-sheet";
 
 export function FinancialDefaultsPanel({
-  settings,
+  budgetSetting,
+  categories,
+  canManageBudget,
+  canManageCategories,
   onMutationComplete,
 }: {
-  readonly settings: SettingsOverview;
+  readonly budgetSetting: BudgetAllocationSettingRow | null;
+  readonly categories: readonly ExpenseCategorySettingRow[];
+  readonly canManageBudget: boolean;
+  readonly canManageCategories: boolean;
   readonly onMutationComplete: () => void;
 }): React.JSX.Element {
   const [tab, setTab] = React.useState<"BUDGET" | "CATEGORIES">("BUDGET");
   const [editingBudget, setEditingBudget] = React.useState(false);
-  const [budgetDirty, setBudgetDirty] = React.useState(false);
-  const [confirmClose, setConfirmClose] = React.useState(false);
-  const budget = settings.budgetAllocationSetting;
+  const [budgetEditorSession, setBudgetEditorSession] = React.useState(0);
+  const budget = budgetSetting;
   const allocation =
     budget?.categories
       .filter((row) => row.isEnabled)
@@ -58,7 +66,10 @@ export function FinancialDefaultsPanel({
             }
             actionLabel="Sesuaikan"
             disabled={!budget}
-            onAction={() => setEditingBudget(true)}
+            onAction={() => {
+              setBudgetEditorSession((current) => current + 1);
+              setEditingBudget(true);
+            }}
           />
           <OnboardingSurface>
             <div className="grid grid-cols-3 divide-x divide-black/5.5 px-2 py-4 text-center">
@@ -95,63 +106,23 @@ export function FinancialDefaultsPanel({
         </div>
       ) : (
         <CategorySettingsManager
-          initialCategories={settings.expenseCategories}
-          canManage={settings.permissions.canManageExpenseCategories}
+          initialCategories={categories}
+          canManage={canManageCategories}
           presentation="onboarding"
           onMutationComplete={onMutationComplete}
         />
       )}
 
       {budget ? (
-        <FormSheet
+        <OnboardingBudgetDefaultsSheet
+          key={`budget-defaults-${budgetEditorSession}`}
           open={editingBudget}
-          title="Sesuaikan default budget"
-          initialExpanded
-          onClose={() => (budgetDirty ? setConfirmClose(true) : setEditingBudget(false))}
-        >
-          <BudgetSettingsManager
-            initialSetting={budget}
-            canManage={settings.permissions.canManageBudgetSettings}
-            presentation="onboarding"
-            onMutationComplete={() => {
-              setBudgetDirty(false);
-              setEditingBudget(false);
-              onMutationComplete();
-            }}
-            onDirtyChange={setBudgetDirty}
-          />
-        </FormSheet>
+          initialSetting={budget}
+          canManage={canManageBudget}
+          onClose={() => setEditingBudget(false)}
+          onMutationComplete={onMutationComplete}
+        />
       ) : null}
-
-      <ConfirmationDialog
-        open={confirmClose}
-        title="Buang perubahan?"
-        description="Perubahan default budget yang belum disimpan akan hilang."
-        tone="warning"
-        onClose={() => setConfirmClose(false)}
-        actions={
-          <>
-            <button
-              type="button"
-              onClick={() => setConfirmClose(false)}
-              className="min-h-12 flex-1 rounded-full bg-surface-container-low px-4 text-xs font-bold text-on-surface"
-            >
-              Lanjut edit
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setConfirmClose(false);
-                setBudgetDirty(false);
-                setEditingBudget(false);
-              }}
-              className="min-h-12 flex-1 rounded-full bg-warning px-4 text-xs font-bold text-white"
-            >
-              Buang perubahan
-            </button>
-          </>
-        }
-      />
     </OnboardingStage>
   );
 }

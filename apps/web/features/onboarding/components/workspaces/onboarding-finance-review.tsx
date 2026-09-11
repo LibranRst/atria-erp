@@ -9,7 +9,7 @@ import {
   type InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
 import { stopDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
-import { AppIcon, MoneyValue, Textarea } from "@/components/ui";
+import { AppIcon, FormField, MoneyValue, Textarea } from "@/components/ui";
 import { InventoryOpeningApprovalItems } from "@/features/approvals/components/shared/inventory-opening-approval-items";
 export function OnboardingFinanceReview({
   pendingBatches,
@@ -138,7 +138,7 @@ export function OnboardingFinanceReview({
           budget, rekening, tim, dan margin Owner tidak ditampilkan.
         </p>
       </header>
-      <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-ring-subtle">
+      <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
         <div className="divide-y divide-outline-variant/20">
           <div className="flex items-center justify-between gap-3 px-4 py-3.5">
             <span className="text-xs font-semibold text-on-surface-variant">Batch</span>
@@ -167,20 +167,22 @@ export function OnboardingFinanceReview({
         </div>
       </div>
       <InventoryOpeningApprovalItems item={itemSource} />
-      <div className="rounded-3xl bg-white p-4 ring-1 ring-ring-subtle">
+      <div className="rounded-3xl bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
         <p className="text-xs font-bold text-on-surface">Dampak jika disetujui</p>
         <p className="mt-1 text-meta text-on-surface-variant">
           Mencatat pergerakan saldo awal stok, lalu mengisi stok fisik dan harga rata-rata. Kas,
           utang vendor, dan realisasi biaya proyek tidak berubah.
         </p>
       </div>
-      <div>
-        <label
-          htmlFor="onboarding-decision-reason"
-          className="px-1 text-xs font-bold text-on-surface"
-        >
-          Alasan keputusan
-        </label>
+      <FormField
+        label="Alasan keputusan"
+        helper={
+          !pending && reasonShortfall > 0
+            ? `Alasan keputusan kurang ${reasonShortfall} karakter lagi.`
+            : "Wajib diisi minimal 10 karakter agar alasan tercatat di audit log."
+        }
+        required
+      >
         <Textarea
           id="onboarding-decision-reason"
           rows={3}
@@ -188,20 +190,9 @@ export function OnboardingFinanceReview({
           disabled={pending}
           onChange={setReason}
           placeholder="Minimal 10 karakter berdasarkan hasil pemeriksaan"
-          className="mt-2"
+          aria-invalid={reason.length > 0 && reason.trim().length < 10}
         />
-      </div>
-      {/* Syaratnya sebelumnya hanya hidup di placeholder, yang justru hilang
-          begitu pengguna mulai mengetik: lima karakter masuk, kedua tombol mati,
-          dan tidak ada yang menjelaskan apa pun. Baris ini menetap selama masih
-          kurang dan mengumumkan sisanya saat berubah. */}
-      <div aria-live="polite">
-        {!pending && reasonShortfall > 0 ? (
-          <p className="px-1 text-meta font-medium text-on-surface-variant">
-            Alasan keputusan kurang {reasonShortfall} karakter lagi.
-          </p>
-        ) : null}
-      </div>
+      </FormField>
       <div className="grid grid-cols-2 gap-2.5">
         <button
           type="button"

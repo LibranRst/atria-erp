@@ -64,7 +64,9 @@ export function OnboardingWorkspaceActions({
             ) : null}
           </>
         ) : null}
-        {step === "initial_stock" ? (
+        {step === "initial_stock" &&
+        overview.state.initialStockDecision !== "UNDECIDED" &&
+        overview.state.initialStockDecision !== "SKIPPED" ? (
           <motion.button
             type="button"
             disabled={busy}

@@ -94,8 +94,7 @@ export function OwnerOnboardingWorkspace({
         return;
       }
       toast.success("Setup dijeda. Data yang sudah disimpan tetap aman.");
-      router.push("/ledger");
-      router.refresh();
+      window.location.replace("/ledger");
     });
   }
 
@@ -107,8 +106,7 @@ export function OwnerOnboardingWorkspace({
         return;
       }
       toast.success("Fondasi Atria siap digunakan.");
-      router.push(target === "project" ? "/projects?new-project=true" : "/ledger");
-      router.refresh();
+      window.location.replace(target === "project" ? "/projects?new-project=true" : "/ledger");
     });
   }
 

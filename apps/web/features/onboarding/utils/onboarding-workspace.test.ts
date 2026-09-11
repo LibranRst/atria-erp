@@ -20,6 +20,10 @@ const financialPanelPath = new URL(
   "../components/panels/financial-defaults-panel.tsx",
   import.meta.url,
 );
+const budgetDefaultsSheetPath = new URL(
+  "../components/panels/onboarding-budget-defaults-sheet.tsx",
+  import.meta.url,
+);
 const loaderPath = new URL("../server/get-owner-onboarding-workspace-data.ts", import.meta.url);
 const financeReviewPath = new URL(
   "../components/workspaces/onboarding-finance-review.tsx",
@@ -33,8 +37,24 @@ const initialStockPanelPath = new URL(
   "../components/panels/initial-stock-setup-panel.tsx",
   import.meta.url,
 );
+const openingEntryFormPath = new URL(
+  "../../materials/components/workspaces/opening-inventory-entry-form.tsx",
+  import.meta.url,
+);
 const dashboardTabsPath = new URL(
   "../../finance-dashboard/components/tabs/tab-overview.tsx",
+  import.meta.url,
+);
+const setupCardPath = new URL(
+  "../components/quick-start/organization-setup-card.tsx",
+  import.meta.url,
+);
+const quickStartWorkspacePath = new URL(
+  "../components/quick-start/quick-start-workspace.tsx",
+  import.meta.url,
+);
+const firstProjectPath = new URL(
+  "../components/quick-start/first-project-panel.tsx",
   import.meta.url,
 );
 
@@ -66,12 +86,20 @@ describe("inline owner onboarding workspace", () => {
   });
 
   test("uses dedicated onboarding presentation instead of Settings headers", async () => {
-    const source = await Bun.file(financialPanelPath).text();
-    expect(source).toContain('presentation="onboarding"');
+    const [source, sheet] = await Promise.all([
+      Bun.file(financialPanelPath).text(),
+      Bun.file(budgetDefaultsSheetPath).text(),
+    ]);
+    expect(source).toContain("OnboardingBudgetDefaultsSheet");
+    expect(source).not.toContain("BudgetSettingsManager");
+    expect(source).not.toContain("<FormSheet");
     expect(source).toContain("OnboardingStage");
     expect(source).toContain("OnboardingSurface");
-    expect(source).not.toContain("SettingsHeader");
-    expect(source).not.toContain("WorkspaceModuleHeader");
+    expect(sheet).toContain("WorkflowFormSheet");
+    expect(sheet).toContain("updateBudgetAllocationDefaults");
+    expect(sheet).toContain("Proyek aktif tidak berubah");
+    expect(sheet).not.toContain("sticky");
+    expect(sheet).not.toContain("SettingsInverseSurface");
   });
 
   test("loads independent setup sources in parallel with isolated source errors", async () => {
@@ -98,15 +126,50 @@ describe("inline owner onboarding workspace", () => {
   test("keeps pause confirmation and dashboard continuation accessible without decorative motion", async () => {
     const workspaceSource = await readWorkspaceSource();
     const dashboardSource = await Bun.file(dashboardTabsPath).text();
+    const setupCardSource = await Bun.file(setupCardPath).text();
 
     expect(workspaceSource).toContain("showExitConfirm");
     expect(workspaceSource).toContain("Jeda setup sekarang?");
     expect(workspaceSource).toContain("grid grid-cols-2 gap-2");
     expect(workspaceSource).toContain("transition={transitionSpringSnappy}");
-    expect(dashboardSource).toContain('role="progressbar"');
-    expect(dashboardSource).toContain("aria-valuetext");
-    expect(dashboardSource).toContain("Lanjutkan setup");
-    expect(dashboardSource).not.toContain("animate-pulse");
+    expect(dashboardSource).toContain("OrganizationSetupCard");
+    expect(setupCardSource).toContain('role="progressbar"');
+    expect(setupCardSource).toContain("aria-valuetext");
+    expect(setupCardSource).toContain("ButtonLink");
+    expect(setupCardSource).not.toContain("animate-pulse");
+  });
+
+  test("quick start reaches a real Draft project with honest financial inputs", async () => {
+    const workspace = await Bun.file(quickStartWorkspacePath).text();
+    const project = await Bun.file(firstProjectPath).text();
+
+    expect(workspace).toContain("Sekitar 10–15 menit");
+    expect(workspace).toContain("Quick start hanya membuat project Draft");
+    expect(project).toContain("createFirstProjectQuickStart");
+    expect(project).toContain("Nilai project");
+    expect(project).toContain("RAB disetujui");
+    expect(project).toContain("Belum ditugaskan");
+    expect(project).toContain("Preview budget awal");
+    expect(project).toContain('className="px-4 py-3"');
+  });
+
+  test("renders only the step whose data payload was loaded by the server", async () => {
+    const workspace = await Bun.file(quickStartWorkspacePath).text();
+    const loader = await Bun.file(
+      new URL("../server/get-quick-start-workspace-data.ts", import.meta.url),
+    ).text();
+
+    expect(loader).toContain("readonly activeStep: QuickStartStepId");
+    expect(loader).toContain("activeStep: step");
+    expect(workspace).toContain("initialData.activeStep");
+    expect(workspace).not.toContain("initialData.overview.quickStart.state.currentStep");
+    expect(workspace).not.toContain("setStep(result.data.currentStep)");
+  });
+
+  test("the legacy initial-stock footer cannot continue without an explicit decision", async () => {
+    const source = await Bun.file(workspaceActionsPath).text();
+    expect(source).toContain('overview.state.initialStockDecision !== "UNDECIDED"');
+    expect(source).toContain('overview.state.initialStockDecision !== "SKIPPED"');
   });
 
   test("keeps Finance setup review on the canonical opening mutation", async () => {
@@ -157,5 +220,21 @@ describe("inline owner onboarding workspace", () => {
     expect(source).toContain("wrap-anywhere");
     expect(source).toContain("Saldo awal sudah disetujui");
     expect(source).toContain("Catat saldo awal lainnya");
+  });
+
+  test("gives the onboarding saldo-awal sheet one fixed action owner", async () => {
+    const [panel, entry] = await Promise.all([
+      Bun.file(initialStockPanelPath).text(),
+      Bun.file(openingEntryFormPath).text(),
+    ]);
+
+    expect(panel).toContain("OpeningInventoryEntryForm");
+    expect(panel).toContain('presentation="sheet"');
+    expect(panel).not.toContain("OpeningInventoryWorkspace");
+    expect(panel).not.toContain("<FormSheet");
+    expect(entry).toContain("<OperationalFormSheet");
+    expect(entry).toContain('formId="onboarding-opening-inventory-form"');
+    expect(entry).toContain('submitLabel="Ajukan saldo awal"');
+    expect(entry).toContain("disabledReason={submitDisabledReason}");
   });
 });

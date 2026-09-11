@@ -1,9 +1,19 @@
 export default function OwnerOnboardingLoading(): React.JSX.Element {
   return (
     <section className="w-full space-y-5 px-1 pb-6" aria-label="Memuat onboarding Owner">
-      <div className="mx-auto h-1.5 w-12 rounded-full bg-surface-container-high" />
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center">
+        <div className="h-12 w-12" />
+        <div className="space-y-2 text-center">
+          <div className="mx-auto h-3 w-28 rounded-full bg-surface-container-high" />
+          <div className="mx-auto h-2.5 w-16 rounded-full bg-surface-container" />
+        </div>
+        <div className="ml-auto h-10 w-10 rounded-full bg-white shadow-control" />
+      </div>
+      <div className="flex gap-2">
+        <div className="h-2.5 flex-1 rounded-full bg-surface-container-high" />
+        <div className="h-2.5 flex-1 rounded-full bg-surface-container-high" />
+      </div>
       <div className="space-y-2 px-1">
-        <div className="h-3 w-28 rounded-full bg-surface-container-high" />
         <div className="h-8 w-56 rounded-full bg-surface-container-high" />
         <div className="h-4 w-full rounded-full bg-surface-container-high" />
       </div>

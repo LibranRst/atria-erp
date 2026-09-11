@@ -7,8 +7,14 @@ import type {
   InitialStockCandidate,
   InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
-import { AppIcon, ConfirmationDialog, DetailSheet, FormSheet, MoneyValue } from "@/components/ui";
-import { OpeningInventoryWorkspace } from "@/features/materials/components/workspaces/opening-inventory-workspace";
+import {
+  ConfirmationDialog,
+  DetailSheet,
+  DuotoneIconTile,
+  MoneyValue,
+  WorkspaceRowChevron,
+} from "@/components/ui";
+import { OpeningInventoryEntryForm } from "@/features/materials/components/workspaces/opening-inventory-entry-form";
 import { OnboardingFinanceReview } from "@/features/onboarding/components/workspaces/onboarding-finance-review";
 import { startDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
 import type { DeveloperAccountSimulationState } from "@atria/core/auth/developer-account-simulation";
@@ -97,20 +103,15 @@ export function InitialStockSetupPanel({
         <OnboardingSurface>
           <div className="px-4 py-4">
             <div className="flex items-start gap-3">
-              <AppIcon
-                name="task_alt"
-                className="flex! icon-lg h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-success/9 text-success"
-              />
+              <DuotoneIconTile name="task_alt" tone="success" />
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] leading-5 font-bold text-on-surface">
-                  Saldo awal sudah disetujui
-                </p>
+                <p className="text-row font-bold text-on-surface">Saldo awal sudah disetujui</p>
                 <p className="mt-1 text-meta text-on-surface-variant">
                   Stok fisik dan harga rata-rata sudah ditambahkan oleh{" "}
                   {postedBatch.approvedByName ?? "pemeriksa"}. Kas tidak berubah.
                 </p>
                 {pendingBatchCount > 0 ? (
-                  <p className="mt-2 text-meta font-semibold text-warning">
+                  <p className="mt-2 text-meta font-semibold text-warning-on-container">
                     {pendingBatchCount} pengajuan lain masih menunggu persetujuan.
                   </p>
                 ) : null}
@@ -120,7 +121,7 @@ export function InitialStockSetupPanel({
               <button
                 type="button"
                 onClick={() => setComposerOpen(true)}
-                className="mt-4 min-h-12 w-full rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface"
+                className="mt-4 min-h-12 w-full rounded-full bg-surface-container-low px-4 text-row font-bold text-on-surface ring-1 ring-ring-subtle transition-transform outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98]"
               >
                 Catat saldo awal lainnya
               </button>
@@ -129,103 +130,85 @@ export function InitialStockSetupPanel({
         </OnboardingSurface>
       ) : (
         <OnboardingSurface>
-          <div className="divide-y divide-black/5.5">
+          <div className="divide-y divide-outline-variant/20">
             <button
               type="button"
               onClick={onNoLegacyStock}
-              className="flex min-h-16.5 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
+              className="flex min-h-16.5 w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
             >
-              <AppIcon
-                name="check"
-                className="flex! icon-md h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-success/9 text-success"
-              />
+              <DuotoneIconTile name="archive" tone="neutral" />
               <span className="min-w-0 flex-1">
-                <span className="block text-[12px] leading-5 font-bold text-on-surface">
+                <span className="block text-row font-bold text-on-surface">
                   Tidak ada stok lama
                 </span>
-                <span className="block text-[9px] leading-4 text-on-surface-variant">
+                <span className="mt-0.5 block text-meta text-on-surface-variant">
                   Mulai inventory dari nol.
                 </span>
               </span>
-              <AppIcon name="chevron_right" className="text-[17px] text-on-surface-variant/55" />
+              <WorkspaceRowChevron />
             </button>
             <button
               type="button"
               disabled={eligible === 0}
               onClick={() => setComposerOpen(true)}
-              className="flex min-h-16.5 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low disabled:opacity-40"
+              className="flex min-h-16.5 w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low disabled:cursor-not-allowed"
             >
-              <AppIcon
-                name="inventory"
-                className="flex! icon-md h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-accent/8 text-accent"
-              />
+              <DuotoneIconTile name="inventory_2" tone={eligible === 0 ? "neutral" : "accent"} />
               <span className="min-w-0 flex-1">
-                <span className="block text-[12px] leading-5 font-bold text-on-surface">
-                  Ada stok lama
-                </span>
-                {/* Barisnya sudah punya slot deskripsi; mengisinya dengan sebab
-                    lebih jujur daripada menambah baris alasan di bawah tombol. */}
-                <span className="block text-[9px] leading-4 text-on-surface-variant">
+                <span className="block text-row font-bold text-on-surface">Ada stok lama</span>
+                <span className="mt-0.5 block text-meta text-on-surface-variant">
                   {eligible === 0
                     ? "Daftarkan materialnya lebih dulu pada langkah material."
                     : "Catat manual atau import CSV."}
                 </span>
               </span>
-              <AppIcon name="chevron_right" className="text-[17px] text-on-surface-variant/55" />
+              <WorkspaceRowChevron />
             </button>
             <button
               type="button"
               onClick={onSkip}
-              className="flex min-h-16.5 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
+              className="flex min-h-16.5 w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
             >
-              <AppIcon
-                name="schedule"
-                className="flex! icon-md h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant"
-              />
+              <DuotoneIconTile name="schedule" tone="neutral" />
               <span className="min-w-0 flex-1">
-                <span className="block text-[12px] leading-5 font-bold text-on-surface">
-                  Isi nanti
-                </span>
-                <span className="block text-[9px] leading-4 text-on-surface-variant">
+                <span className="block text-row font-bold text-on-surface">Isi nanti</span>
+                <span className="mt-0.5 block text-meta text-on-surface-variant">
                   Langkah ini tetap perlu dilengkapi sebelum setup selesai.
                 </span>
               </span>
-              <AppIcon name="chevron_right" className="text-[17px] text-on-surface-variant/55" />
+              <WorkspaceRowChevron />
             </button>
           </div>
         </OnboardingSurface>
       )}
       {batches.length > 0 ? (
         <OnboardingSurface>
-          <div className="divide-y divide-black/5.5">
+          <div className="divide-y divide-outline-variant/20">
             {batches.map((batch) => (
               <div key={batch.id} className="px-4 py-3">
                 <button
                   type="button"
                   onClick={() => setDetailBatch(batch)}
-                  className="flex min-h-13 w-full items-center gap-3 text-left"
+                  className="flex min-h-14 w-full items-center gap-3 text-left"
                 >
-                  <AppIcon
-                    name="inventory"
-                    className="flex! icon-md h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-on-surface-variant"
-                  />
+                  <DuotoneIconTile name="inventory_2" tone="neutral" />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[11px] leading-5 font-bold text-on-surface">
+                    <span className="block truncate text-row font-bold text-on-surface">
                       {batch.batchNumber}
                     </span>
-                    <span className="block text-[9px] leading-4 text-on-surface-variant">
+                    <span className="mt-0.5 block text-meta text-on-surface-variant">
                       {batch.itemCount} item · {batchStatus(batch.status)}
                     </span>
                   </span>
                   <MoneyValue amount={batch.totalValue} variant="compact" size="sm" align="right" />
-                  <AppIcon name="chevron_right" className="icon-md text-on-surface-variant" />
+                  <WorkspaceRowChevron />
                 </button>
                 {batch.status === "PENDING_APPROVAL" && simulation?.enabled && financeTarget ? (
                   <button
                     type="button"
                     disabled={simulationPending}
                     onClick={() => setSimulationConfirmationBatch(batch)}
-                    className="mt-2 min-h-12 w-full rounded-full bg-accent-container px-4 text-meta font-bold text-accent disabled:opacity-40"
+                    className="mt-2 min-h-12 w-full rounded-full bg-accent px-4 text-meta font-bold text-on-accent transition-transform outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98] disabled:opacity-40"
                   >
                     Simulasikan Finance Admin
                   </button>
@@ -245,25 +228,16 @@ export function InitialStockSetupPanel({
           Setelah diajukan, stok tetap nol sampai Finance Admin atau Owner lain menyetujuinya.
         </OnboardingNotice>
       ) : null}
-      <FormSheet
+      <OpeningInventoryEntryForm
+        eligibleInventory={candidates.filter((row) => row.eligible)}
+        presentation="sheet"
         open={composerOpen}
-        title="Catat saldo awal stok"
-        initialExpanded
         onClose={() => setComposerOpen(false)}
-      >
-        <OpeningInventoryWorkspace
-          inventory={candidates}
-          batches={batches}
-          embedded
-          showHeader={false}
-          showHistory={false}
-          setupOnly
-          onMutationComplete={() => {
-            setComposerOpen(false);
-            onMutationComplete();
-          }}
-        />
-      </FormSheet>
+        onMutationComplete={() => {
+          setComposerOpen(false);
+          onMutationComplete();
+        }}
+      />
       <DetailSheet
         open={detailBatch !== null}
         title="Detail saldo awal"

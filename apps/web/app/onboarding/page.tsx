@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 
-import { OwnerOnboardingWorkspace } from "@/features/onboarding/components/workspaces/owner-onboarding-workspace";
-import { getOwnerOnboardingWorkspaceData } from "@/features/onboarding/server/get-owner-onboarding-workspace-data";
+import { QuickStartWorkspace } from "@/features/onboarding/components/quick-start/quick-start-workspace";
+import { getQuickStartWorkspaceData } from "@/features/onboarding/server/get-quick-start-workspace-data";
 import {
-  onboardingStepIdSchema,
-  type OnboardingStepId,
-} from "@atria/core/onboarding/owner-onboarding";
+  quickStartStepIdSchema,
+  type QuickStartStepId,
+} from "@atria/core/onboarding/organization-setup";
 
 export const dynamic = "force-dynamic";
 
@@ -14,26 +14,22 @@ export default async function OwnerOnboardingPage({
 }: {
   readonly searchParams: Promise<{ readonly step?: string }>;
 }): Promise<React.JSX.Element> {
-  const result = await getOwnerOnboardingWorkspaceData();
+  const params = await searchParams;
+  const parsedStep = quickStartStepIdSchema.safeParse(params.step);
+  const requestedStep: QuickStartStepId | undefined = parsedStep.success
+    ? parsedStep.data
+    : undefined;
+  const result = await getQuickStartWorkspaceData(requestedStep);
   if (!result.success) {
     if (result.error.code === "UNAUTHORIZED") redirect("/login");
-    redirect("/");
+    if (result.error.code === "FORBIDDEN") redirect("/settings?tab=readiness");
+    throw new Error(result.error.message);
   }
-  if (!result.data.overview.canManageOnboarding) redirect("/settings?tab=setup");
-  const params = await searchParams;
-  const parsedStep = onboardingStepIdSchema.safeParse(params.step);
-  const activeStep: OnboardingStepId = parsedStep.success
-    ? parsedStep.data
-    : result.data.overview.state.currentStep;
-  return (
-    <OwnerOnboardingWorkspace
-      // Sengaja tidak memuat langkah: workspace menyelaraskan langkahnya
-      // sendiri dari prop, dan me-remount-nya setiap klik "Lanjut" adalah
-      // kedipan yang dilaporkan. Status tetap di sini karena perpindahannya
-      // memang menandai sesi yang berbeda.
-      key={result.data.overview.state.status}
-      initialData={result.data}
-      initialStep={activeStep}
-    />
-  );
+  if (result.data.overview.quickStart.state.status === "COMPLETED") {
+    redirect("/settings?tab=readiness");
+  }
+  if (requestedStep && requestedStep !== result.data.activeStep) {
+    redirect(`/onboarding?step=${result.data.activeStep}`);
+  }
+  return <QuickStartWorkspace initialData={result.data} />;
 }

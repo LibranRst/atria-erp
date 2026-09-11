@@ -211,7 +211,13 @@ export function OnboardingStepContent({
       ) : null}
       {step === "financial_defaults" ? (
         data.settings.status === "ready" ? (
-          <FinancialDefaultsPanel settings={data.settings.data} onMutationComplete={onRefresh} />
+          <FinancialDefaultsPanel
+            budgetSetting={data.settings.data.budgetAllocationSetting}
+            categories={data.settings.data.expenseCategories}
+            canManageBudget={data.settings.data.permissions.canManageBudgetSettings}
+            canManageCategories={data.settings.data.permissions.canManageExpenseCategories}
+            onMutationComplete={onRefresh}
+          />
         ) : (
           <SourceError source={data.settings} retry={onRefresh} />
         )

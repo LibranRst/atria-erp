@@ -47,6 +47,7 @@ export async function advanceOwnerOnboardingStep(input: unknown): Promise<
         .where(eq(appConfig.key, OWNER_ONBOARDING_CONFIG_KEY))
         .for("update");
       const base = parseOwnerOnboardingState(existing?.value) ?? DEFAULT_OWNER_ONBOARDING_STATE;
+      if (base.status === "COMPLETED") throw new Error("ONBOARDING_COMPLETED");
       const reviewed =
         validation.data.disposition === "REVIEWED"
           ? uniqueOnboardingSteps([...base.reviewedSteps, validation.data.stepId])
@@ -101,6 +102,15 @@ export async function advanceOwnerOnboardingStep(input: unknown): Promise<
     revalidateOnboardingPaths();
     return { success: true, data: { state: next, nextStep: destination } };
   } catch (error) {
+    if (error instanceof Error && error.message === "ONBOARDING_COMPLETED") {
+      return {
+        success: false,
+        error: {
+          code: "CONFLICT",
+          message: "Onboarding yang sudah selesai tidak dapat dibuka kembali.",
+        },
+      };
+    }
     return {
       success: false,
       error: {
@@ -127,6 +137,12 @@ export async function pauseOwnerOnboarding(
   try {
     const current = await requireOnboardingOwner();
     const persisted = await readPersistedOnboardingState();
+    if (persisted.state?.status === "COMPLETED") {
+      return {
+        success: false,
+        error: { code: "CONFLICT", message: "Onboarding yang sudah selesai tidak dapat dijeda." },
+      };
+    }
     const next: OwnerOnboardingState = {
       ...(persisted.state ?? DEFAULT_OWNER_ONBOARDING_STATE),
       status: "PAUSED",
