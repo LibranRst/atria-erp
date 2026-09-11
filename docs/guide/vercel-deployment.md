@@ -74,9 +74,21 @@ di `/setup`, lalu jalankan `bun run db:check-invariants` terhadap database itu.
 npx vercel deploy --prod --yes
 ```
 
-Repo juga sudah terhubung ke GitHub (`vercel git connect`), jadi push ke branch
-default `development` ikut memicu deployment produksi. Perintah CLI di atas tetap
-berguna untuk mendeploy perubahan yang belum di-commit.
+Repo sudah terhubung ke GitHub (`vercel git connect`), tapi integrasi itu belum
+menggantikan perintah di atas: **production branch proyek ini masih `main`**,
+sedangkan seluruh pekerjaan berjalan di `development` (branch default repo).
+Akibatnya push ke `development` hanya menghasilkan *preview deployment*, bukan
+rilis produksi, sampai salah satu dari dua hal dilakukan:
+
+1. Ubah production branch ke `development` — **Dashboard → Project → Settings →
+   Git → Production Branch** (tidak tersedia lewat CLI maupun REST API; hanya
+   dashboard), **atau**
+2. Deploy produksi lewat CLI seperti perintah di atas setiap kali rilis.
+
+Sampai salah satunya dipilih, `https://atria-erp.vercel.app` adalah hasil deploy
+CLI terakhir, dan hostname preview `atria-*.vercel.app` memuat commit terbaru.
+Jangan menunjuk production branch ke `main`: `main` tertinggal jauh di belakang
+`development`, sehingga rilis dari sana akan meregresi fitur yang sudah berjalan.
 
 ## Penjadwalan worker notifikasi
 
