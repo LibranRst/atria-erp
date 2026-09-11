@@ -73,7 +73,7 @@ function createInitialDraft(data: ProjectBootstrapReady): ProjectFormDraft {
     ...blankDraft(),
     name: project.name,
     clientId: project.clientId,
-    projectManagerId: project.projectManagerId,
+    projectManagerId: project.projectManagerId ?? "",
     startDate: project.startDate?.slice(0, 10) ?? "",
     endDate: project.endDate?.slice(0, 10) ?? "",
     location: project.location ?? "",

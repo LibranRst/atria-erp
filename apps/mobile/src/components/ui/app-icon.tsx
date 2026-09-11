@@ -107,6 +107,8 @@ const componentNameByLegacyName = {
   shopping_cart_checkout: "ShoppingCartIcon",
   south_west: "ArrowDownLeftIcon",
   space_dashboard: "SquaresFourIcon",
+  sparkle: "SparkleIcon",
+  sparkles: "SparkleIcon",
   swap_horiz: "ArrowsLeftRightIcon",
   sync: "ArrowsClockwiseIcon",
   sync_alt: "ArrowsLeftRightIcon",

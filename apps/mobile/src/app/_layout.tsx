@@ -18,6 +18,7 @@ import { Toaster } from "sonner-native";
 import { LaunchScreen } from "@/components/shell/launch-screen";
 import { AuthProvider, useAuth } from "@/providers/auth-provider";
 import { QueryProvider } from "@/providers/query-provider";
+import { PushNotificationsProvider } from "@/providers/push-notifications-provider";
 import { theme } from "@/theme";
 
 void SplashScreen.preventAutoHideAsync();
@@ -140,7 +141,9 @@ export default function RootLayout(): React.JSX.Element | null {
       <ThemeProvider value={navigationTheme}>
         <QueryProvider>
           <AuthProvider>
-            <RootNavigator />
+            <PushNotificationsProvider>
+              <RootNavigator />
+            </PushNotificationsProvider>
           </AuthProvider>
         </QueryProvider>
       </ThemeProvider>

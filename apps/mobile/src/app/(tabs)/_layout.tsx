@@ -1,4 +1,5 @@
 import { getRoleNavItems } from "@atria/core/navigation/role-navigation";
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { useMemo } from "react";
 
@@ -8,7 +9,12 @@ import { theme } from "@/theme";
 export default function TabsLayout(): React.JSX.Element {
   const { roleName } = useAuth();
   const allowedRoutes = useMemo(
-    () => new Set(getRoleNavItems(roleName).map((item) => item.href)),
+    () =>
+      new Set(
+        getRoleNavItems(roleName ? (ROLE_PERMISSIONS[roleName] ?? []) : []).map(
+          (item) => item.href,
+        ),
+      ),
     [roleName],
   );
 

@@ -2,6 +2,8 @@ import { resolveStaticRoleName } from "@atria/core/auth/permissions";
 import { createContext, useCallback, useContext, useMemo } from "react";
 
 import { authClient } from "@/lib/auth-client";
+import { clearStoredPushToken, readStoredPushToken } from "@/lib/push-token-storage";
+import { trpcClient } from "@/lib/trpc-client";
 
 export type MobileSessionUser = {
   readonly id: string;
@@ -66,11 +68,12 @@ export function AuthProvider({
     // sehingga panggilan sign-out ini akan ditolak. Kegagalannya diabaikan
     // dengan sengaja: token lokal tetap harus dibuang dan sesi tetap harus
     // di-refetch supaya gate kembali ke layar login.
-    try {
-      await authClient.signOut();
-    } catch {
-      // Sesi memang sudah tidak berlaku di server.
+    const push = await readStoredPushToken().catch(() => null);
+    if (push) {
+      await trpcClient.notifications.unregisterPush.mutate(push).catch(() => undefined);
     }
+    await clearStoredPushToken().catch(() => undefined);
+    await authClient.signOut().catch(() => undefined);
     await session.refetch();
   }, [session]);
 
