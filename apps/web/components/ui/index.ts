@@ -66,6 +66,7 @@ export {
 } from "./feedback/page-primitives";
 export type {
   MetricPillSurface,
+  MoneyValueProps,
   MoneyValueVariant,
   PillTabOption,
 } from "./feedback/page-primitives";
@@ -98,11 +99,16 @@ export type { SearchFilterMode } from "./navigation/exclusive-search-filter-bar"
 export { ConfirmationModal, ConfirmationSheet, SheetActionButton } from "./overlay/bottom-sheet";
 export type { ConfirmationModalTone } from "./overlay/bottom-sheet";
 export { FormSheet, DetailSheet } from "./overlay/semantic-sheets";
-export type { FormSheetProps, DetailSheetProps } from "./overlay/semantic-sheets";
+export type {
+  FormSheetDismissal,
+  FormSheetProps,
+  DetailSheetProps,
+} from "./overlay/semantic-sheets";
 export {
   CalendarDialog,
   CompactFormDialog,
   ConfirmationDialog,
+  MorphDetailDialog,
   SearchDialog,
   SelectionDialog,
   SuccessDialog,
@@ -110,14 +116,17 @@ export {
 export type {
   ConfirmationDialogProps,
   ConfirmationDialogTone,
+  DialogMorphOrigin,
   SuccessFact,
 } from "./overlay/dialogs";
+export { MediaPreviewDialog } from "./overlay/media-preview-dialog";
 export { AnchoredFilterPanel } from "./overlay/anchored-filter-panel";
 export { SheetFooterActions } from "./overlay/sheet-footer-actions";
+export type { SheetFooterAction } from "./overlay/sheet-footer-actions";
 export { OperationSuccessDialog, OperationSuccessSheet } from "./overlay/operation-success-dialog";
 export type { OperationSuccess } from "./overlay/operation-success-dialog";
 export { ActionMenu, ContextPopover, Tooltip } from "./overlay/anchored-surfaces";
-export type { ActionMenuItem, AnchoredTrigger } from "./overlay/anchored-surfaces";
+export type { ActionMenuItem, AnchoredTrigger, TooltipProps } from "./overlay/anchored-surfaces";
 export {
   FinanceUnsavedChangesModal,
   MaterialUnsavedChangesModal,
@@ -133,9 +142,12 @@ export {
   SwitchRow,
   COMMON_ROOM_OPTIONS,
   COMMON_UNIT_OPTIONS,
+  ColorPickerField,
+  CustomColorPicker,
+  type ColorPresetOption,
+  type CustomColorPickerProps,
   ComboboxField,
   DatePickerField,
-  FieldContextLine,
   FormDisclosure,
   FilterSelect,
   FormSection,
@@ -167,6 +179,7 @@ export type { SelectOption } from "./form/form-controls";
 export type { SelectPresentation } from "./form/form-controls";
 export type { FormFieldLayout, FormPresentation } from "./form/form-controls";
 export { useFormPresentation } from "./form/form-presentation-context";
+export { useFormDirtySnapshot } from "./form/use-form-dirty-snapshot";
 export { DialogOptionList } from "./form/dialog-option-list";
 export type { DialogOptionListHandle } from "./form/dialog-option-list";
 export { cx } from "./form/form-control-utils";

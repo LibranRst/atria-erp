@@ -52,4 +52,24 @@ describe("AdaptiveSelect", () => {
 
     expect(html).toContain('<div class="min-w-0"><button');
   });
+
+  test("generates a label and message association when no ID is supplied", () => {
+    const html = renderToStaticMarkup(
+      <AdaptiveSelect
+        label="Status"
+        helper="Pilih status proyek."
+        value="0"
+        options={options(2)}
+        onChange={() => undefined}
+      />,
+    );
+    const controlId = /<button[^>]*id="([^"]+)"/.exec(html)?.[1] ?? "";
+    const labelFor = /<label[^>]*for="([^"]+)"/.exec(html)?.[1] ?? "";
+    const messageId = /aria-describedby="([^"]+)"/.exec(html)?.[1] ?? "";
+
+    expect(controlId.length).toBeGreaterThan(0);
+    expect(labelFor).toBe(controlId);
+    expect(html).toContain(`id="${messageId}"`);
+    expect(html).toContain('aria-label="Status: Pilihan 1"');
+  });
 });

@@ -19,6 +19,10 @@ export const Compact: Story = {
   args: { variant: "compact" },
 };
 
+export const CompactDisabledTooltip: Story = {
+  args: { variant: "compact", showTooltip: false },
+};
+
 export const CompactWithFull: Story = {};
 
 export const FullDynamicHero: Story = {

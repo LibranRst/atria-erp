@@ -6,6 +6,11 @@ import { motion } from "framer-motion";
 import { transitionSpringBouncy } from "@/lib/utils/motion";
 
 import { type FormFieldLayout, useFormPresentation } from "./form-presentation-context";
+import {
+  FormFieldAssociationProvider,
+  mergeAriaIds,
+  useFormFieldAssociation,
+} from "./form-field-association-context";
 
 import {
   controlClass,
@@ -44,11 +49,24 @@ export function FormField({
   readonly children: React.ReactNode;
   readonly className?: string;
 }): React.JSX.Element {
+  const generatedId = React.useId();
   const adornment = fieldAdornment(required, optional);
   const presentation = useFormPresentation();
   const grouped = presentation === "grouped";
   const message = error ?? helper;
   const messageClass = error ? errorClass : helperClass;
+  const controlId = htmlFor ?? `${generatedId}-control`;
+  const labelId = `${generatedId}-label`;
+  const messageId = message ? (helperId ?? `${generatedId}-message`) : undefined;
+  const association = React.useMemo(
+    () => ({
+      controlId,
+      describedBy: messageId,
+      invalid: Boolean(error),
+      required: Boolean(required),
+    }),
+    [controlId, error, messageId, required],
+  );
 
   if (layout === "inline") {
     return (
@@ -63,12 +81,13 @@ export function FormField({
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5">
               <label
+                id={labelId}
                 className={cx(
                   labelClass,
                   grouped &&
                     "ml-0 text-meta tracking-[0.08em] transition-colors group-focus-within/form:text-accent",
                 )}
-                htmlFor={htmlFor}
+                htmlFor={controlId}
               >
                 {label}
               </label>
@@ -81,12 +100,14 @@ export function FormField({
               ) : null}
             </div>
             {message ? (
-              <p id={helperId} className={cx(messageClass, grouped && "mt-1 ml-0")}>
+              <p id={messageId} className={cx(messageClass, grouped && "mt-1 ml-0")}>
                 {message}
               </p>
             ) : null}
           </div>
-          <div className="min-w-0 shrink-0">{children}</div>
+          <FormFieldAssociationProvider value={association}>
+            <div className="min-w-0 shrink-0">{children}</div>
+          </FormFieldAssociationProvider>
           {adornment ? (
             <span className="shrink-0 text-[8px] font-bold tracking-wide text-on-surface-variant/75 uppercase">
               {adornment}
@@ -107,11 +128,12 @@ export function FormField({
     >
       <div className="flex min-w-0 items-center justify-between gap-2">
         <label
+          id={labelId}
           className={cx(
             labelClass,
             grouped && "ml-0 transition-colors group-focus-within/form:text-accent",
           )}
-          htmlFor={htmlFor}
+          htmlFor={controlId}
         >
           {label}
         </label>
@@ -126,13 +148,13 @@ export function FormField({
           )}
         </div>
       </div>
-      {children}
+      <FormFieldAssociationProvider value={association}>{children}</FormFieldAssociationProvider>
       {error ? (
-        <p id={helperId} className={cx(errorClass, grouped && "ml-0")}>
+        <p id={messageId} className={cx(errorClass, grouped && "ml-0")}>
           {error}
         </p>
       ) : helper ? (
-        <p id={helperId} className={cx(helperClass, grouped && "ml-0")}>
+        <p id={messageId} className={cx(helperClass, grouped && "ml-0")}>
           {helper}
         </p>
       ) : null}
@@ -148,6 +170,8 @@ export function TextInput({
   type = "text",
   value,
   onChange,
+  onFocus,
+  onBlur,
   placeholder,
   disabled,
   readOnly,
@@ -167,6 +191,8 @@ export function TextInput({
   readonly type?: TextInputType;
   readonly value: string;
   readonly onChange?: (value: string) => void;
+  readonly onFocus?: (event: React.FocusEvent<HTMLInputElement>) => void;
+  readonly onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
@@ -181,6 +207,11 @@ export function TextInput({
   readonly "aria-describedby"?: string;
   readonly "aria-invalid"?: boolean;
 }): React.JSX.Element {
+  const association = useFormFieldAssociation();
+  const resolvedId = id ?? association?.controlId;
+  const resolvedDescribedBy = mergeAriaIds(ariaDescribedBy, association?.describedBy);
+  const resolvedInvalid = ariaInvalid ?? association?.invalid;
+  const resolvedRequired = required ?? association?.required;
   const grouped = useFormPresentation() === "grouped";
   return (
     <div
@@ -197,20 +228,22 @@ export function TextInput({
         <span className="shrink-0 text-xs font-bold text-on-surface-variant">{prefix}</span>
       )}
       <input
-        id={id}
+        id={resolvedId}
         name={name}
         type={type}
         aria-label={ariaLabel}
-        aria-describedby={ariaDescribedBy}
-        aria-invalid={ariaInvalid}
+        aria-describedby={resolvedDescribedBy}
+        aria-invalid={resolvedInvalid || undefined}
         autoFocus={autoFocus}
         autoComplete={autoComplete}
         value={value}
         onChange={(event) => onChange?.(event.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         placeholder={placeholder}
         disabled={disabled}
         readOnly={readOnly}
-        required={required}
+        required={resolvedRequired}
         inputMode={inputMode}
         className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-on-surface caret-accent outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed"
       />
@@ -252,10 +285,15 @@ export function Textarea({
   readonly "aria-describedby"?: string;
   readonly "aria-invalid"?: boolean;
 }): React.JSX.Element {
+  const association = useFormFieldAssociation();
+  const resolvedId = id ?? association?.controlId;
+  const resolvedDescribedBy = mergeAriaIds(ariaDescribedBy, association?.describedBy);
+  const resolvedInvalid = ariaInvalid ?? association?.invalid;
+  const resolvedRequired = required ?? association?.required;
   const grouped = useFormPresentation() === "grouped";
   return (
     <textarea
-      id={id}
+      id={resolvedId}
       name={name}
       rows={rows}
       value={value}
@@ -264,10 +302,10 @@ export function Textarea({
       disabled={disabled}
       readOnly={readOnly}
       autoFocus={autoFocus}
-      required={required}
+      required={resolvedRequired}
       aria-label={ariaLabel}
-      aria-describedby={ariaDescribedBy}
-      aria-invalid={ariaInvalid}
+      aria-describedby={resolvedDescribedBy}
+      aria-invalid={resolvedInvalid || undefined}
       className={cx(
         grouped
           ? "min-h-20 w-full min-w-0 resize-none border-0 bg-transparent px-0 py-1 text-sm leading-5 font-semibold text-on-surface caret-accent outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed disabled:opacity-55"
@@ -287,6 +325,7 @@ export function NumericInput({
   name,
   value,
   onChange,
+  onBlur,
   min,
   max,
   placeholder,
@@ -294,6 +333,7 @@ export function NumericInput({
   suffix,
   prefix,
   className,
+  required,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
@@ -302,6 +342,7 @@ export function NumericInput({
   readonly name?: string;
   readonly value: string | number;
   readonly onChange: (value: string) => void;
+  readonly onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
   readonly min?: number;
   readonly max?: number;
   readonly placeholder?: string;
@@ -309,6 +350,7 @@ export function NumericInput({
   readonly suffix?: React.ReactNode;
   readonly prefix?: React.ReactNode;
   readonly className?: string;
+  readonly required?: boolean;
   readonly "aria-label"?: string;
   readonly "aria-describedby"?: string;
   readonly "aria-invalid"?: boolean;
@@ -318,6 +360,13 @@ export function NumericInput({
       id={id}
       name={name}
       value={toNumberString(value)}
+      onFocus={(event) => event.target.select()}
+      onBlur={(event) => {
+        if (value !== "" && min !== undefined && Number(value) < min) {
+          onChange(String(min));
+        }
+        onBlur?.(event);
+      }}
       onChange={(nextValue) => {
         const cleaned = decimalValue(nextValue);
         if (cleaned === "") {
@@ -326,7 +375,7 @@ export function NumericInput({
         }
         const numeric = Number(cleaned);
         if (Number.isNaN(numeric)) return;
-        if (min !== undefined && numeric < min) {
+        if (min !== undefined && min <= 0 && numeric < min) {
           onChange(String(min));
           return;
         }
@@ -342,6 +391,7 @@ export function NumericInput({
       suffix={suffix}
       inputMode="decimal"
       className={cx("font-mono tabular-nums", className)}
+      required={required}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
       aria-invalid={ariaInvalid}
@@ -356,7 +406,9 @@ export function MoneyInput({
   onChange,
   disabled,
   placeholder = "0",
-  showPreview = true,
+  showPreview,
+  required,
+  "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
 }: {
   readonly id?: string;
@@ -366,11 +418,15 @@ export function MoneyInput({
   readonly disabled?: boolean;
   readonly placeholder?: string;
   readonly showPreview?: boolean;
+  readonly required?: boolean;
   readonly "aria-describedby"?: string;
+  readonly "aria-invalid"?: boolean;
 }): React.JSX.Element {
+  const presentation = useFormPresentation();
+  const effectiveShowPreview = showPreview ?? presentation !== "grouped";
   const numeric = Number(value || 0);
   return (
-    <div className="space-y-1">
+    <div className={effectiveShowPreview ? "space-y-1" : undefined}>
       <NumericInput
         id={id}
         name={name}
@@ -381,9 +437,11 @@ export function MoneyInput({
         prefix="Rp"
         placeholder={placeholder}
         className="financial-amount"
+        required={required}
         aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
       />
-      {showPreview && (
+      {effectiveShowPreview && (
         <p className="financial-amount font-mono text-meta wrap-anywhere text-on-surface-variant">
           Rp {numeric.toLocaleString("id-ID")}
         </p>
@@ -393,25 +451,44 @@ export function MoneyInput({
 }
 
 export function QuantityStepper({
+  id,
+  name,
   value,
   onChange,
   unit,
   min = 0,
+  max,
   step = 1,
   disabled,
+  required,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: {
+  readonly id?: string;
+  readonly name?: string;
   readonly value: string | number;
   readonly onChange: (value: string) => void;
   readonly unit?: string;
   readonly min?: number;
+  readonly max?: number;
   readonly step?: number;
   readonly disabled?: boolean;
+  readonly required?: boolean;
+  readonly "aria-describedby"?: string;
+  readonly "aria-invalid"?: boolean;
 }): React.JSX.Element {
+  const association = useFormFieldAssociation();
+  const resolvedId = id ?? association?.controlId;
+  const resolvedDescribedBy = mergeAriaIds(ariaDescribedBy, association?.describedBy);
+  const resolvedInvalid = ariaInvalid ?? association?.invalid;
+  const resolvedRequired = required ?? association?.required;
   const grouped = useFormPresentation() === "grouped";
 
   function adjust(delta: number): void {
     const current = Number(value || 0);
-    const next = Math.max(min, Number((current + delta).toFixed(2)));
+    let next = Number((current + delta).toFixed(2));
+    if (min !== undefined) next = Math.max(min, next);
+    if (max !== undefined) next = Math.min(max, next);
     onChange(String(next));
   }
 
@@ -426,6 +503,7 @@ export function QuantityStepper({
     >
       <button
         type="button"
+        aria-label="Kurangi jumlah"
         disabled={disabled || Number(value || 0) <= min}
         onClick={() => adjust(-step)}
         className="flex items-center justify-center border-r border-outline-variant/25 text-on-surface-variant transition active:scale-95 disabled:opacity-35"
@@ -434,10 +512,36 @@ export function QuantityStepper({
       </button>
       <div className="flex min-w-0 items-center justify-center gap-1 px-2">
         <input
+          id={resolvedId}
+          name={name}
           value={toNumberString(value)}
           disabled={disabled}
           inputMode="decimal"
-          onChange={(event) => onChange(decimalValue(event.target.value))}
+          required={resolvedRequired}
+          aria-describedby={resolvedDescribedBy}
+          aria-invalid={resolvedInvalid || undefined}
+          onFocus={(event) => event.target.select()}
+          onChange={(event) => {
+            const cleaned = decimalValue(event.target.value);
+            if (cleaned === "") {
+              onChange("");
+              return;
+            }
+            const numeric = Number(cleaned);
+            if (Number.isNaN(numeric)) return;
+            if (max !== undefined && numeric > max) {
+              onChange(String(max));
+              return;
+            }
+            onChange(cleaned);
+          }}
+          onBlur={() => {
+            if (value === "" || Number.isNaN(Number(value))) {
+              onChange(String(min));
+            } else if (min !== undefined && Number(value) < min) {
+              onChange(String(min));
+            }
+          }}
           className="min-w-0 flex-1 bg-transparent text-center font-mono text-sm font-bold text-on-surface tabular-nums outline-none"
         />
         {unit && (
@@ -446,7 +550,8 @@ export function QuantityStepper({
       </div>
       <button
         type="button"
-        disabled={disabled}
+        aria-label="Tambah jumlah"
+        disabled={disabled || (max !== undefined && Number(value || 0) >= max)}
         onClick={() => adjust(step)}
         className="flex items-center justify-center border-l border-outline-variant/25 text-on-surface-variant transition active:scale-95 disabled:opacity-35"
       >
@@ -554,6 +659,7 @@ export function SwitchRow({
   disabled,
   trailing,
   switchLabel,
+  className,
 }: {
   readonly checked: boolean;
   readonly onChange: (checked: boolean) => void;
@@ -564,12 +670,16 @@ export function SwitchRow({
   readonly trailing?: React.ReactNode;
   /** Label aksesibel sakelar; default memakai `title`. */
   readonly switchLabel?: string;
+  readonly className?: string;
 }): React.JSX.Element {
+  const grouped = useFormPresentation() === "grouped";
   return (
     <div
       className={cx(
-        "flex items-center justify-between gap-4 bg-white transition-opacity",
+        "flex items-center justify-between gap-4 transition-opacity",
+        grouped ? "min-h-14 bg-surface-container-lowest px-4 py-3" : "bg-surface-container-lowest",
         disabled && "pointer-events-none opacity-45",
+        className,
       )}
     >
       <div className="min-w-0 flex-1 text-left">

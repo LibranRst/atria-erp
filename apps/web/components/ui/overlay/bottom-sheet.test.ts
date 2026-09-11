@@ -33,4 +33,13 @@ describe("BottomSheet floating chrome", () => {
     // tanpa menaikkan layer global di atas confirmation sheet berikutnya.
     expect(source).toContain("<OverlayLayerProvider anchored={zIndex + 2}>");
   });
+
+  test("removes automatic sheet travel for reduced-motion users", async () => {
+    const source = await Bun.file(bottomSheetPath).text();
+
+    expect(source).toContain("useReducedMotion");
+    expect(source).toContain("reduceMotion ? { y: 0, opacity: 0 }");
+    expect(source).toContain("reduceMotion ? { duration: 0 } : transitionSpringSmooth");
+    expect(source).toContain("reduceMotion ? { duration: 0 } : transitionEaseSmooth");
+  });
 });

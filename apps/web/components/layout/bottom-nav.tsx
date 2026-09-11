@@ -19,6 +19,34 @@ export function BottomNav(): React.JSX.Element | null {
   const [menuHeight, setMenuHeight] = React.useState<number | null>(null);
   const [clickedTabHref, setClickedTabHref] = React.useState<string | null>(null);
   const [hasMounted, setHasMounted] = React.useState(false);
+  const [isElevated, setIsElevated] = React.useState(false);
+
+  function handleOpenFab(): void {
+    setIsElevated(true);
+    setIsFabOpen(true);
+  }
+
+  function handleCloseFab(): void {
+    setIsFabOpen(false);
+  }
+
+  function handleExitComplete(): void {
+    setIsElevated(false);
+  }
+
+  // Tutup FAB dengan tombol Escape
+  React.useEffect(() => {
+    if (!isFabOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent): void {
+      if (event.key === "Escape") {
+        setIsFabOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFabOpen]);
 
   React.useEffect(() => {
     const animationFrame = window.requestAnimationFrame(() => {
@@ -126,8 +154,16 @@ export function BottomNav(): React.JSX.Element | null {
 
   return (
     <>
-      <div className="pointer-events-none fixed right-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] left-0 z-30 mx-auto flex w-fit max-w-md items-center gap-2 select-none">
-        <BottomNavBackdrop isOpen={isFabOpen} onClose={() => setIsFabOpen(false)} />
+      <div
+        className={`pointer-events-none fixed right-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] left-0 mx-auto flex w-fit max-w-md items-center gap-2 select-none ${
+          isElevated ? "z-70" : "z-30"
+        }`}
+      >
+        <BottomNavBackdrop
+          isOpen={isFabOpen}
+          onClose={handleCloseFab}
+          onExitComplete={handleExitComplete}
+        />
         <BottomTabBar
           activeIndex={activeIndex}
           clickedTabHref={clickedTabHref}
@@ -143,7 +179,7 @@ export function BottomNav(): React.JSX.Element | null {
             isOpen={isFabOpen}
             menuHeight={menuHeight}
             onAction={handleFabAction}
-            onOpen={() => setIsFabOpen(true)}
+            onOpen={handleOpenFab}
           />
         ) : null}
       </div>

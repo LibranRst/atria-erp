@@ -10,6 +10,7 @@ function Demo(): React.JSX.Element {
   return (
     <div className="h-140 w-full">
       <OperationalFormSheet
+        dismissal={{ mode: "discard" }}
         open={open}
         title="Catat Pengeluaran"
         submitLabel="Simpan"

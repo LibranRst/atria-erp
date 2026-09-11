@@ -3,7 +3,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { FormSheet } from "../overlay/semantic-sheets";
+import { FormSheet, type FormSheetDismissal } from "../overlay/semantic-sheets";
 import { cx } from "./form-control-utils";
 import {
   type FormPresentation,
@@ -11,6 +11,8 @@ import {
   useFormPresentation,
 } from "./form-presentation-context";
 import { SheetFooterActions } from "../overlay/sheet-footer-actions";
+import type { SheetFooterAction } from "../overlay/sheet-footer-actions";
+import { Button } from "../button/button";
 import type { FormRiskTone } from "./form-support";
 import { formatShortIdr } from "@atria/core/utils/money";
 import { transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
@@ -51,6 +53,8 @@ export function OperationalFormSheet({
   children,
   submitLabel,
   submittingLabel,
+  primaryLabel,
+  pendingLabel,
   pending,
   disabled,
   disabledReason,
@@ -66,12 +70,17 @@ export function OperationalFormSheet({
   onClose,
   onExitComplete,
   onSubmit,
+  onPrimary,
+  secondary,
+  dismissal,
 }: {
   readonly open: boolean;
   readonly title: string;
   readonly children: React.ReactNode;
-  readonly submitLabel: string;
+  readonly submitLabel?: string;
   readonly submittingLabel?: string;
+  readonly primaryLabel?: string;
+  readonly pendingLabel?: string;
   readonly pending?: boolean;
   readonly disabled?: boolean;
   readonly disabledReason?: string;
@@ -84,17 +93,27 @@ export function OperationalFormSheet({
   readonly danger?: boolean;
   readonly formId?: string;
   readonly hideSubmit?: boolean;
+  readonly secondary?: SheetFooterAction;
   readonly onClose: () => void;
   readonly onExitComplete?: () => void;
   readonly onSubmit?: () => void;
+  readonly onPrimary?: () => void;
+  readonly dismissal: FormSheetDismissal;
+  readonly description?: string;
+  readonly completion?: readonly [number, number];
 }): React.JSX.Element {
   const hasSubmitAction = !hideSubmit;
+  const effectiveSubmitLabel = submitLabel ?? primaryLabel ?? "Simpan";
+  const effectiveSubmittingLabel = submittingLabel ?? pendingLabel ?? "Menyimpan…";
+  const effectiveOnSubmit = formId ? undefined : (onSubmit ?? onPrimary);
+
   const footerContent =
     statusText ||
     (statusItems && statusItems.length > 0) ||
     review ||
     disabledReason ||
-    hasSubmitAction ? (
+    hasSubmitAction ||
+    secondary ? (
       <div className="space-y-2">
         {statusText ? (
           <p
@@ -111,17 +130,37 @@ export function OperationalFormSheet({
         {hasSubmitAction ? (
           <SheetFooterActions
             primary={{
-              label: submitLabel,
-              pendingLabel: submittingLabel,
+              label: effectiveSubmitLabel,
+              pendingLabel: effectiveSubmittingLabel,
               pending,
               disabled,
               form: formId,
               type: formId ? "submit" : "button",
-              onClick: formId ? undefined : onSubmit,
+              onClick: effectiveOnSubmit,
               variant: danger ? "critical" : "primary",
             }}
+            secondary={secondary}
             disabledReason={disabledReason}
           />
+        ) : secondary ? (
+          <div className="space-y-2">
+            <Button
+              type={secondary.type ?? "button"}
+              form={secondary.form}
+              onClick={secondary.onClick}
+              disabled={secondary.disabled}
+              pending={secondary.pending}
+              pendingLabel={secondary.pendingLabel}
+              variant={secondary.variant ?? "secondary"}
+              fullWidth
+              className="min-w-0"
+            >
+              {secondary.label}
+            </Button>
+            {disabledReason ? (
+              <p className="px-1 text-meta font-medium text-on-surface-variant">{disabledReason}</p>
+            ) : null}
+          </div>
         ) : disabledReason ? (
           <p className="px-1 text-meta font-medium text-on-surface-variant">{disabledReason}</p>
         ) : null}
@@ -132,6 +171,8 @@ export function OperationalFormSheet({
     <FormSheet
       open={open}
       title={title}
+      dismissal={dismissal}
+      pending={pending}
       action={action}
       onClose={onClose}
       onExitComplete={onExitComplete}
@@ -254,11 +295,15 @@ export function FormDisclosure({
       <AnimatePresence initial={false}>
         {expanded ? (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, height: 0, overflow: "hidden" }}
+            animate={{
+              opacity: 1,
+              height: "auto",
+              transitionEnd: { overflow: "visible" },
+            }}
+            exit={{ opacity: 0, height: 0, overflow: "hidden" }}
             transition={transitionEaseSmooth}
-            className="overflow-hidden"
+            className="min-w-0"
           >
             {children}
           </motion.div>
@@ -353,7 +398,7 @@ export function FormSection({
   return (
     <section className={cx("min-w-0 space-y-2.5", className)}>
       {hasHeader ? (
-        <div className="flex min-w-0 items-end justify-between gap-3">
+        <div className="flex min-w-0 items-end justify-between gap-3 px-1">
           <div className="min-w-0">
             {title ? (
               <h3 className="truncate text-meta font-bold tracking-[0.11em] text-on-surface uppercase">
@@ -483,6 +528,7 @@ export function WorkflowFormSheet({
   onExitComplete,
   onPrimary,
   onSecondary,
+  dismissal,
 }: {
   readonly open: boolean;
   readonly title: string;
@@ -497,16 +543,18 @@ export function WorkflowFormSheet({
   readonly statusText?: string;
   readonly statusTone?: FormRiskTone;
   readonly danger?: boolean;
-  readonly actionLayout?: "split" | "stacked";
   readonly onClose: () => void;
   readonly onExitComplete?: () => void;
   readonly onPrimary: () => void;
   readonly onSecondary?: () => void;
+  readonly dismissal: FormSheetDismissal;
 }): React.JSX.Element {
   return (
     <FormSheet
       open={open}
       title={title}
+      dismissal={dismissal}
+      pending={pending}
       onClose={onClose}
       onExitComplete={onExitComplete}
       footer={

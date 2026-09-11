@@ -157,7 +157,6 @@ function DialogGallery(): React.JSX.Element {
       <CalendarDialog
         open={calendarOpen}
         title="Pilih tanggal"
-        description="Agustus 2026"
         onClose={() => setCalendarOpen(false)}
       >
         <div className="grid grid-cols-7 gap-1 text-center">

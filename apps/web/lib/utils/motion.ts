@@ -13,6 +13,7 @@ import {
   transitionPulseSmooth as sharedTransitionPulseSmooth,
   transitionSpinLinear as sharedTransitionSpinLinear,
   transitionSpringBouncy as sharedTransitionSpringBouncy,
+  transitionSpringSoftBouncy as sharedTransitionSpringSoftBouncy,
   transitionSpringDefault as sharedTransitionSpringDefault,
   transitionSpringSmooth as sharedTransitionSpringSmooth,
   transitionSpringSnappy as sharedTransitionSpringSnappy,
@@ -22,6 +23,7 @@ import {
 export const transitionSpringSnappy: Transition = sharedTransitionSpringSnappy;
 export const transitionSpringSmooth: Transition = sharedTransitionSpringSmooth;
 export const transitionSpringBouncy: Transition = sharedTransitionSpringBouncy;
+export const transitionSpringSoftBouncy: Transition = sharedTransitionSpringSoftBouncy;
 export const transitionSpringDefault: Transition = sharedTransitionSpringDefault;
 export const transitionEaseSmooth: Transition = sharedTransitionEaseSmooth;
 export const transitionSpinLinear: Transition = sharedTransitionSpinLinear;

@@ -29,7 +29,7 @@ function DialogCreateActionRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-12 w-full min-w-0 items-center gap-3 border-t border-outline-variant/20 bg-white px-5 py-3 text-left text-accent outline-none hover:bg-surface-container-low/70 focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container"
+      className="mt-2 flex min-h-12 w-full min-w-0 items-center gap-3 rounded-3xl border-t border-outline-variant/20 bg-white px-5 py-3 text-left text-accent transition-all outline-none hover:bg-surface-container-lowest/50 focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container"
     >
       <AppIcon name="add" className="icon-sm shrink-0" aria-hidden="true" />
       <span className="min-w-0 flex-1">
@@ -88,6 +88,9 @@ export function AdaptiveSelect({
   readonly onCreateAction?: () => void;
   readonly presentation?: SelectPresentation;
 }): React.JSX.Element {
+  const generatedId = React.useId();
+  const controlId = id ?? `${generatedId}-control`;
+  const messageId = helper || error ? `${generatedId}-message` : undefined;
   const grouped = useFormPresentation() === "grouped";
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
@@ -116,7 +119,7 @@ export function AdaptiveSelect({
   }
 
   const dialogContent = (
-    <div>
+    <div className="space-y-2">
       <DialogOptionList
         ref={optionListRef}
         label={title ?? label}
@@ -142,10 +145,12 @@ export function AdaptiveSelect({
 
   const trigger = (
     <button
-      id={id}
+      id={controlId}
       type="button"
+      aria-label={`${label}: ${selected?.label || placeholder}`}
       aria-haspopup={resolvedPresentation === "menu" ? "listbox" : "dialog"}
       aria-expanded={resolvedPresentation === "dialog" ? open : undefined}
+      aria-describedby={messageId}
       disabled={disabled || readOnly}
       onClick={
         resolvedPresentation === "dialog"
@@ -179,7 +184,13 @@ export function AdaptiveSelect({
           </span>
         )}
       </span>
-      <AppIcon name="expand_more" className="icon-sm shrink-0 text-on-surface-variant" />
+      <AppIcon
+        name="expand_more"
+        className={cx(
+          "icon-sm shrink-0 text-on-surface-variant transition-transform duration-200",
+          open && "rotate-180",
+        )}
+      />
     </button>
   );
 
@@ -188,7 +199,8 @@ export function AdaptiveSelect({
       label={label}
       helper={helper}
       error={error}
-      htmlFor={id}
+      htmlFor={controlId}
+      helperId={messageId}
       required={required}
       optional={optional}
       readOnly={readOnly}
@@ -256,6 +268,8 @@ export function ComboboxField({
   error,
   disabled,
   allowCustomValue = true,
+  emptyText = "Tidak ada opsi.",
+  createCustomDescription,
 }: {
   readonly id?: string;
   readonly label: string;
@@ -267,7 +281,12 @@ export function ComboboxField({
   readonly error?: string;
   readonly disabled?: boolean;
   readonly allowCustomValue?: boolean;
+  readonly emptyText?: string;
+  readonly createCustomDescription?: string;
 }): React.JSX.Element {
+  const generatedId = React.useId();
+  const controlId = id ?? `${generatedId}-control`;
+  const messageId = helper || error ? `${generatedId}-message` : undefined;
   const grouped = useFormPresentation() === "grouped";
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
@@ -285,13 +304,15 @@ export function ComboboxField({
     !uniqueOptions.some((option) => option.toLowerCase() === customValue.toLowerCase());
 
   return (
-    <FormField label={label} helper={helper} error={error} htmlFor={id}>
+    <FormField label={label} helper={helper} error={error} htmlFor={controlId} helperId={messageId}>
       <div className="min-w-0">
         <button
-          id={id}
+          id={controlId}
           type="button"
+          aria-label={`${label}: ${value || placeholder}`}
           aria-haspopup="dialog"
           aria-expanded={open}
+          aria-describedby={messageId}
           disabled={disabled}
           onClick={() => {
             setQuery("");
@@ -311,7 +332,13 @@ export function ComboboxField({
           >
             {value || placeholder}
           </span>
-          <AppIcon name="expand_more" className="icon-sm shrink-0 text-on-surface-variant" />
+          <AppIcon
+            name="expand_more"
+            className={cx(
+              "icon-sm shrink-0 text-on-surface-variant transition-transform duration-200",
+              open && "rotate-180",
+            )}
+          />
         </button>
       </div>
       <SearchDialog
@@ -330,13 +357,13 @@ export function ComboboxField({
           setQuery("");
         }}
       >
-        <div>
+        <div className="space-y-2">
           <DialogOptionList
             ref={optionListRef}
             label={label}
             value={value}
             options={dialogOptions}
-            emptyText={canUseCustomValue ? "" : "Belum ada pilihan."}
+            emptyText={emptyText}
             animateHeight
             onSelect={(option) => {
               setOpen(false);
@@ -347,6 +374,7 @@ export function ComboboxField({
           {canUseCustomValue ? (
             <DialogCreateActionRow
               label={`Gunakan "${customValue}"`}
+              description={createCustomDescription}
               onClick={() => {
                 setOpen(false);
                 setQuery("");

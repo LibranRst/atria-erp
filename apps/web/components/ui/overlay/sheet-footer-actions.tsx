@@ -4,7 +4,7 @@ import React, { type ReactNode } from "react";
 
 import { Button, type ButtonVariant } from "../button/button";
 
-type SheetFooterAction = {
+export type SheetFooterAction = {
   readonly label: string;
   readonly pendingLabel?: string;
   readonly pending?: boolean;
@@ -12,9 +12,10 @@ type SheetFooterAction = {
   readonly form?: string;
   readonly type?: "button" | "submit";
   readonly onClick?: () => void;
+  readonly variant?: ButtonVariant;
 };
 
-type SheetFooterActionsProps = {
+export type SheetFooterActionsProps = {
   readonly primary: SheetFooterAction & {
     readonly variant?: Extract<ButtonVariant, "primary" | "critical">;
   };
@@ -60,7 +61,7 @@ export function SheetFooterActions({
   return (
     <div className="space-y-2">
       {status ? <div className="px-1">{status}</div> : null}
-      <div aria-live="polite">
+      <div aria-live="polite" className="empty:hidden">
         {disabledReason ? (
           <p id={reasonId} className="px-1 text-meta font-medium text-on-surface-variant">
             {disabledReason}
@@ -76,7 +77,7 @@ export function SheetFooterActions({
             disabled={secondary.disabled}
             pending={secondary.pending}
             pendingLabel={secondary.pendingLabel}
-            variant="secondary"
+            variant={secondary.variant ?? "secondary"}
             fullWidth
             className="min-w-0"
           >

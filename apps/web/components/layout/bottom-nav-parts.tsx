@@ -173,12 +173,14 @@ export function QuickActionFab({
 export function BottomNavBackdrop({
   isOpen,
   onClose,
+  onExitComplete,
 }: {
   readonly isOpen: boolean;
   readonly onClose: () => void;
+  readonly onExitComplete?: () => void;
 }): React.JSX.Element {
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onExitComplete}>
       {isOpen && (
         <motion.button
           type="button"

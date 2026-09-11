@@ -8,6 +8,7 @@ function Demo(): React.JSX.Element {
   return (
     <div className="h-120 w-full">
       <WorkflowFormSheet
+        dismissal={{ mode: "discard" }}
         open={open}
         title="Setujui Pengajuan"
         primaryLabel="Setujui"

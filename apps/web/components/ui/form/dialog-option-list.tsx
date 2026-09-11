@@ -41,6 +41,15 @@ export const DialogOptionList = React.forwardRef<
 
   React.useEffect(() => {
     setActiveIndex(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex);
+    if (selectedIndex >= 0) {
+      const timer = setTimeout(() => {
+        optionRefs.current[selectedIndex]?.scrollIntoView({
+          block: "nearest",
+          inline: "nearest",
+        });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
   }, [firstEnabledIndex, selectedIndex]);
 
   React.useLayoutEffect(() => {
@@ -49,10 +58,13 @@ export const DialogOptionList = React.forwardRef<
     if (!content) return undefined;
 
     function measure(): void {
-      const nextHeight = contentRef.current?.getBoundingClientRect().height;
-      if (nextHeight === undefined) return;
+      const el = contentRef.current;
+      if (!el) return;
+      // Gunakan offsetHeight/scrollHeight agar tidak terdistorsi oleh CSS transform scale saat animasi modal masuk
+      const nextHeight = Math.max(el.offsetHeight, el.scrollHeight);
+      if (!nextHeight) return;
       setMeasuredHeight((current) =>
-        current !== null && Math.abs(current - nextHeight) < 0.25 ? current : nextHeight,
+        current !== null && Math.abs(current - nextHeight) < 1 ? current : nextHeight,
       );
     }
 
@@ -75,7 +87,9 @@ export const DialogOptionList = React.forwardRef<
         const normalized = (next + options.length) % options.length;
         if (!options[normalized]?.disabled) {
           setActiveIndex(normalized);
-          optionRefs.current[normalized]?.focus({ preventScroll: true });
+          const node = optionRefs.current[normalized];
+          node?.focus({ preventScroll: true });
+          node?.scrollIntoView({ block: "nearest", inline: "nearest" });
           return;
         }
         next += direction;

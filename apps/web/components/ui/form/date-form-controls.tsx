@@ -5,8 +5,7 @@ import { AppIcon } from "@/components/ui/icon/app-icon";
 
 import { CalendarDialog } from "../overlay/dialogs";
 import { FormField } from "./basic-form-controls";
-import { cx, formatDateLabel, parseIsoDate } from "./form-control-utils";
-import { formatIsoDate } from "@atria/core/utils/date";
+import { cx, formatDateLabel } from "./form-control-utils";
 import { useFormPresentation } from "./form-presentation-context";
 
 export function DatePickerField({
@@ -30,26 +29,30 @@ export function DatePickerField({
   readonly required?: boolean;
   readonly error?: string;
 }): React.JSX.Element {
+  const generatedId = React.useId();
+  const controlId = id ?? `${generatedId}-control`;
+  const messageId = helper || error ? `${generatedId}-message` : undefined;
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
   const grouped = useFormPresentation() === "grouped";
-  const parsed = parseIsoDate(value);
   const [open, setOpen] = React.useState(false);
-  const [viewDate, setViewDate] = React.useState<Date>(parsed ?? new Date());
-  const monthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-  const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
-  const blanks = monthStart.getDay();
-  const monthLabel = new Intl.DateTimeFormat("id-ID", {
-    month: "long",
-    year: "numeric",
-  }).format(viewDate);
-  const selectedDate = parsed ? formatIsoDate(parsed) : "";
 
   return (
-    <FormField label={label} helper={helper} error={error} htmlFor={id} required={required}>
+    <FormField
+      label={label}
+      helper={helper}
+      error={error}
+      htmlFor={controlId}
+      helperId={messageId}
+      required={required}
+    >
       <button
-        id={id}
+        ref={triggerRef}
+        id={controlId}
         type="button"
+        aria-label={`${label}: ${value ? formatDateLabel(value) : placeholder}`}
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-describedby={messageId}
         disabled={disabled}
         onClick={() => setOpen(true)}
         className={cx(
@@ -68,69 +71,14 @@ export function DatePickerField({
         </span>
         <AppIcon name="event" className="icon-sm text-on-surface-variant" />
       </button>
-      <CalendarDialog open={open} title={label} onClose={() => setOpen(false)}>
-        <div className="rounded-3xl bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() =>
-                setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
-              }
-              className="flex h-11 w-11 items-center justify-center rounded-full text-accent transition active:bg-accent-container"
-              aria-label="Bulan sebelumnya"
-            >
-              <AppIcon name="chevron_left" className="icon-sm" />
-            </button>
-            <p className="text-sm font-bold text-on-surface">{monthLabel}</p>
-            <button
-              type="button"
-              onClick={() =>
-                setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
-              }
-              className="flex h-11 w-11 items-center justify-center rounded-full text-accent transition active:bg-accent-container"
-              aria-label="Bulan berikutnya"
-            >
-              <AppIcon name="chevron_right" className="icon-sm" />
-            </button>
-          </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-meta font-bold text-on-surface-variant uppercase">
-            {["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].map((day) => (
-              <span key={day} className="py-2">
-                {day}
-              </span>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: blanks }).map((_, index) => (
-              <span key={`blank-${index}`} />
-            ))}
-            {Array.from({ length: daysInMonth }).map((_, index) => {
-              const day = index + 1;
-              const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-              const iso = formatIsoDate(date);
-              const active = iso === selectedDate;
-              return (
-                <button
-                  key={iso}
-                  type="button"
-                  onClick={() => {
-                    onChange(iso);
-                    setOpen(false);
-                  }}
-                  className={cx(
-                    "flex aspect-square items-center justify-center rounded-full text-xs font-bold transition active:scale-95",
-                    active
-                      ? "bg-accent text-white"
-                      : "text-on-surface hover:bg-surface-container-low",
-                  )}
-                >
-                  {day}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </CalendarDialog>
+      <CalendarDialog
+        open={open}
+        title={label}
+        value={value}
+        onChange={onChange}
+        onClose={() => setOpen(false)}
+        returnFocusRef={triggerRef}
+      />
     </FormField>
   );
 }

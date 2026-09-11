@@ -172,7 +172,7 @@ export function SegmentedTabs<TValue extends string>({
           {typeof option.count === "number" ? (
             <span
               aria-label={`${option.count} ${option.label} memerlukan perhatian`}
-              className={`inline-flex min-w-4 items-center justify-center rounded-full px-1 font-sans text-eyebrow leading-4 font-extrabold tabular-nums ${active ? "bg-white/12 text-white" : "bg-surface-container text-on-surface"}`}
+              className={`inline-flex min-w-4 items-center justify-center rounded-full px-1 font-sans text-eyebrow leading-4 font-extrabold tabular-nums ${active ? "bg-white/12 text-white" : "bg-surface-container-high text-on-surface"}`}
             >
               {option.count > 99 ? "99+" : option.count}
             </span>
@@ -185,7 +185,7 @@ export function SegmentedTabs<TValue extends string>({
   if (scrollable) {
     return (
       <div
-        className={`relative w-full overflow-hidden rounded-full bg-surface-container-low p-1 ${className}`}
+        className={`relative w-full overflow-hidden rounded-full bg-surface-container p-1 ${className}`}
       >
         <div
           ref={scrollRef}
@@ -216,7 +216,7 @@ export function SegmentedTabs<TValue extends string>({
     <div className={className}>
       <div
         ref={tabListRef}
-        className="relative flex w-full overflow-hidden rounded-full bg-surface-container-low p-1 select-none"
+        className="relative flex w-full overflow-hidden rounded-full bg-surface-container p-1 select-none"
         role="tablist"
         aria-label={ariaLabel}
         data-indicator-id={activeLayoutId}

@@ -7,7 +7,10 @@ import type { RuleSetRule } from "webpack";
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
-  stories: ["../components/**/*.stories.@(ts|tsx)"],
+  stories: [
+    "../components/**/*.stories.@(ts|tsx)",
+    "../features/notifications/**/*.stories.@(ts|tsx)",
+  ],
   addons: ["@storybook/addon-a11y"],
   framework: {
     name: "@storybook/nextjs",

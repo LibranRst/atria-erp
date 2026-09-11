@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { IconButton } from "./button";
+import { Button, IconButton } from "./button";
 
 describe("IconButton size", () => {
   test("stays 48px by default so existing call sites are untouched", () => {
@@ -21,5 +21,21 @@ describe("IconButton size", () => {
     // 40px + 4px pada tiap sisi = 48px area sentuh efektif, sesuai panduan.
     expect(html).toContain("after:-inset-1");
     expect(html).toContain("relative");
+  });
+});
+
+describe("Button size and color contract", () => {
+  test("preserves text-on-primary with compact text-meta typography", () => {
+    const html = renderToStaticMarkup(
+      <Button variant="primary" size="compact">
+        Kembali
+      </Button>,
+    );
+
+    expect(html).toContain("bg-primary");
+    expect(html).toContain("text-on-primary");
+    expect(html).toContain("text-meta");
+    expect(html).toContain("h-10");
+    expect(html).toContain("Kembali");
   });
 });

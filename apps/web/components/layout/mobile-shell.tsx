@@ -24,6 +24,7 @@ import {
 import { getProfileInitials } from "@atria/core/presentation/user-identity";
 import { DeveloperSimulationBanner } from "@/features/profile/components/developer/developer-simulation-banner";
 import { ActivityDetailProvider } from "@/features/activity-detail/components/activity-detail-provider";
+import { NotificationBellButton } from "@/features/notifications";
 type MobileShellProps = Readonly<{
   children: React.ReactNode;
 }>;
@@ -40,7 +41,9 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
     useHeaderMenu();
   const [openRouteKey, setOpenRouteKey] = React.useState<string | null>(null);
   const isMenuOpen = openRouteKey === routeKey;
+  const isAiRoute = pathname === "/ai";
   const hasBackButton = !isRootRoute;
+  const canShowAiButton = canUseAiChat && !isAiRoute;
 
   /**
    * Rute boleh menitipkan isi slotnya sendiri. Bilahnya tetap satu instance,
@@ -74,10 +77,10 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
               />
             </TopBarControl>
           ) : null,
-          canUseAiChat ? (
+          canShowAiButton ? (
             <TopBarControl key="ai-chat">
               <IconButtonLink label="Buka asisten AI" href="/ai" size="compact">
-                <AppIcon name="chat" aria-hidden="true" className="icon-md" />
+                <AppIcon name="sparkle" aria-hidden="true" className="icon-md" />
               </IconButtonLink>
             </TopBarControl>
           ) : null,
@@ -95,33 +98,39 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
         />
       }
       right={
-        override?.right ?? [
-          /*
-           * Tanpa pergeseran tempat: avatar satu-satunya penghuni slot kanan
-           * pada rute biasa, jadi ia tidak pernah pindah — ia digantikan oleh
-           * kontrol halaman AI. Skala dan opasitas saja.
-           */
-          <TopBarControl key="profile" reflow={false}>
-            <IconButtonLink
-              label="Profil Saya"
-              href="/profile"
-              size="compact"
-              className="overflow-hidden"
-            >
-              {/*
-               * Selama sesi belum terbaca, inisial cadangan yang tampil — bukan
-               * kerangka. Bilah atas hadir di setiap rute, dan sesuatu yang
-               * berkedip di sana akan berkedip di setiap perpindahan halaman.
-               */}
-              <UserAvatar
-                imageUrl={userImageUrl}
-                initials={getProfileInitials(userName ?? "")}
-                renderPx={40}
-                className="h-full w-full text-[13px]"
-              />
-            </IconButtonLink>
-          </TopBarControl>,
-        ]
+        override?.right ??
+        (isAiRoute
+          ? []
+          : [
+              <TopBarControl key="notifications" reflow={false}>
+                <NotificationBellButton />
+              </TopBarControl>,
+              /*
+               * Tanpa pergeseran tempat: avatar satu-satunya penghuni slot kanan
+               * pada rute biasa, jadi ia tidak pernah pindah — ia digantikan oleh
+               * kontrol halaman AI. Skala dan opasitas saja.
+               */
+              <TopBarControl key="profile" reflow={false}>
+                <IconButtonLink
+                  label="Profil Saya"
+                  href="/profile"
+                  size="compact"
+                  className="overflow-hidden"
+                >
+                  {/*
+                   * Selama sesi belum terbaca, inisial cadangan yang tampil — bukan
+                   * kerangka. Bilah atas hadir di setiap rute, dan sesuatu yang
+                   * berkedip di sana akan berkedip di setiap perpindahan halaman.
+                   */}
+                  <UserAvatar
+                    imageUrl={userImageUrl}
+                    initials={getProfileInitials(userName ?? "")}
+                    renderPx={40}
+                    className="h-full w-full text-[13px]"
+                  />
+                </IconButtonLink>
+              </TopBarControl>,
+            ])
       }
     />
   );

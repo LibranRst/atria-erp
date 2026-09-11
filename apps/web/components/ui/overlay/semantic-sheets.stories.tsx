@@ -14,6 +14,7 @@ function FormSheetDemo(): React.JSX.Element {
         Buka drawer
       </Button>
       <FormSheet
+        dismissal={{ mode: "discard" }}
         open={open}
         title="Detail Pengeluaran"
         onClose={() => setOpen(false)}

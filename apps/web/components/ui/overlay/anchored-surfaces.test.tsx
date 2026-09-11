@@ -55,6 +55,18 @@ describe("anchored interaction surfaces", () => {
     ).toThrow(`ActionMenu menerima maksimal ${MAX_ACTION_MENU_ITEMS} tindakan.`);
   });
 
+  test("supports touch-enabled tooltips while leaving trigger safe during server rendering", () => {
+    const html = renderToStaticMarkup(
+      <Tooltip content="Rp 150.000.000" touch>
+        <span aria-label="Rp 150.000.000">Rp 150 jt</span>
+      </Tooltip>,
+    );
+
+    expect(html).toContain('aria-label="Rp 150.000.000"');
+    expect(html).toContain("Rp 150 jt");
+    expect(html).not.toContain("role=\"tooltip\"");
+  });
+
   test("centralizes collision, keyboard, typeahead, and delayed-action behavior", async () => {
     const source = await Bun.file(sourcePath).text();
     const listbox = await Bun.file(listboxPath).text();
@@ -68,6 +80,7 @@ describe("anchored interaction surfaces", () => {
     expect(source).toContain("pendingAction.current");
     expect(source).toContain("mouseOnly: true");
     expect(source).toContain("visibleOnly: true");
+    expect(source).toContain("ignoreMouse: true");
     expect(source).toContain("transitionSpringSnappy");
   });
 });

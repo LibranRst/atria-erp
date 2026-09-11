@@ -28,6 +28,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon, type AppIconName } from "../icon/app-icon";
 import { useOverlayLayers } from "./overlay-layer-context";
+import { getAnchoredContainerRadius } from "./anchored-listbox";
 
 export const ANCHORED_SURFACE_OFFSET_PX = 8;
 export const ANCHORED_SURFACE_GUTTER_PX = 12;
@@ -82,6 +83,7 @@ type SharedFloatingSurfaceProps = {
   readonly getFloatingProps: (userProps?: React.HTMLProps<HTMLElement>) => Record<string, unknown>;
   readonly children: React.ReactNode;
   readonly className?: string;
+  readonly radiusClass?: string;
   readonly ariaLabel?: string;
   readonly comfortable?: boolean;
 };
@@ -93,6 +95,7 @@ function FloatingSurface({
   getFloatingProps,
   children,
   className = "",
+  radiusClass = "rounded-[26px]",
   ariaLabel,
   comfortable = false,
 }: SharedFloatingSurfaceProps): React.JSX.Element {
@@ -113,7 +116,7 @@ function FloatingSurface({
         exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
         transition={reduceMotion ? { duration: 0 } : transitionSpringSnappy}
         style={{ maxHeight: "inherit", transformOrigin: transformOriginFor(placement) }}
-        className={`w-full overflow-y-auto overscroll-contain rounded-inset bg-white shadow-raised ring-1 ring-ring-control ${comfortable ? "p-4" : "p-1.5"}`}
+        className={`w-full overflow-y-auto overscroll-contain ${radiusClass} bg-white/95 shadow-floating ring-1 ring-ring-control backdrop-blur-xl ${comfortable ? "p-4" : "p-2"}`}
       >
         {children}
       </motion.div>
@@ -250,6 +253,9 @@ function ActionMenuClient({
     );
   }
 
+  const hasComplexContent = items.some((item) => Boolean(item.disabledReason));
+  const radiusClass = getAnchoredContainerRadius(items.length, hasComplexContent);
+
   return (
     <>
       <FloatingTrigger
@@ -266,9 +272,10 @@ function ActionMenuClient({
                 floatingStyles={floatingStyles}
                 setFloating={refs.setFloating}
                 getFloatingProps={getFloatingProps}
+                radiusClass={radiusClass}
                 ariaLabel={label}
               >
-                <div>
+                <div className="space-y-1">
                   {items.map((item, index) => {
                     const reasonId = item.disabledReason
                       ? `${context.floatingId}-${item.id}-reason`
@@ -292,7 +299,7 @@ function ActionMenuClient({
                             queueAction(item);
                           },
                         })}
-                        className={`flex min-h-12 w-full items-center gap-3 rounded-full px-3.5 py-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+                        className={`flex min-h-12 w-full items-center gap-3 rounded-full px-4 py-2.5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98] ${
                           item.tone === "critical"
                             ? "text-critical hover:bg-critical-container/60 focus-visible:bg-critical-container/60"
                             : "text-on-surface hover:bg-surface-container-low focus-visible:bg-surface-container-low"
@@ -421,11 +428,12 @@ function ContextPopoverClient({
   );
 }
 
-type TooltipProps = {
+export type TooltipProps = {
   readonly content: string;
   readonly children: AnchoredTrigger;
   readonly disabled?: boolean;
   readonly placement?: Placement;
+  readonly touch?: boolean;
 };
 
 export function Tooltip(props: TooltipProps): React.JSX.Element {
@@ -438,6 +446,7 @@ function TooltipClient({
   children,
   disabled = false,
   placement = "top",
+  touch = false,
 }: TooltipProps): React.JSX.Element {
   const [open, setOpen] = React.useState(false);
   const reduceMotion = useReducedMotion();
@@ -464,6 +473,10 @@ function TooltipClient({
     useFocus(context, { enabled: !disabled, visibleOnly: true }),
     useDismiss(context, { enabled: !disabled, referencePress: true }),
     useRole(context, { role: "tooltip", enabled: !disabled }),
+    useClick(context, {
+      enabled: !disabled && Boolean(touch),
+      ignoreMouse: true,
+    }),
   ]);
 
   return (
@@ -471,7 +484,30 @@ function TooltipClient({
       <FloatingTrigger
         trigger={children}
         referenceRef={refs.setReference}
-        getReferenceProps={getReferenceProps}
+        getReferenceProps={(userProps) => {
+          const baseProps = getReferenceProps(userProps);
+          if (!touch) return baseProps;
+          const originalOnClick = baseProps.onClick as
+            | React.MouseEventHandler<HTMLElement>
+            | undefined;
+          return {
+            ...baseProps,
+            onClick: (event: React.MouseEvent<HTMLElement>) => {
+              const nativeEvent = event.nativeEvent;
+              const isTouch =
+                ("pointerType" in nativeEvent && nativeEvent.pointerType === "touch") ||
+                ("touches" in nativeEvent);
+              if (isTouch) {
+                event.stopPropagation();
+                const target = event.currentTarget as HTMLElement | null;
+                if (target?.closest("a, button")) {
+                  event.preventDefault();
+                }
+              }
+              originalOnClick?.(event);
+            },
+          };
+        }}
       />
       <FloatingPortal>
         <AnimatePresence>

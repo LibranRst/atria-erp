@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useDragControls } from "framer-motion";
+import { AnimatePresence, motion, useDragControls, useReducedMotion } from "framer-motion";
 import type { PanInfo } from "framer-motion";
 
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
@@ -105,6 +105,7 @@ export function BottomSheet({
   const sheetId = React.useId();
   const onCloseRef = React.useRef(onClose);
   const dragControls = useDragControls();
+  const reduceMotion = useReducedMotion();
   const [zIndex, setZIndex] = useState(200);
   const [expanded, setExpanded] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(720);
@@ -279,7 +280,7 @@ export function BottomSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={transitionEaseSmooth}
+            transition={reduceMotion ? { duration: 0 } : transitionEaseSmooth}
             className="fixed -inset-10 cursor-pointer bg-black/40 backdrop-blur-sm"
             style={{ zIndex }}
             onClick={() => onCloseRef.current()}
@@ -289,14 +290,14 @@ export function BottomSheet({
           <motion.section
             ref={sheetRef}
             tabIndex={-1}
-            initial={{ y: "100%" }}
+            initial={reduceMotion ? { y: 0, opacity: 0 } : { y: "100%", opacity: 0 }}
             animate={{
-              y: hasMeasured ? 0 : "100%",
+              y: reduceMotion ? 0 : hasMeasured ? 0 : "100%",
               height: activeHeight,
               opacity: hasMeasured ? 1 : 0,
             }}
-            exit={{ y: "100%" }}
-            transition={transitionSpringSmooth}
+            exit={reduceMotion ? { y: 0, opacity: 0 } : { y: "100%", opacity: 0 }}
+            transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
             drag={canResize ? "y" : false}
             dragControls={dragControls}
             dragListener={false}

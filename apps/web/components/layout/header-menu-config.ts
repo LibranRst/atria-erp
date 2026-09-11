@@ -53,7 +53,7 @@ const HEADER_MENU_ITEMS: readonly HeaderMenuItem[] = [
   {
     label: "Asisten AI",
     href: "/ai",
-    iconName: "chat",
+    iconName: "sparkle",
     match: (path): boolean => path === "/ai",
   },
   {
@@ -93,6 +93,7 @@ export function getHeaderMenuItems(
 }
 
 export function getPageTitle(pathname: string): string {
+  if (pathname === "/notifications") return "Notifikasi";
   if (pathname === "/ledger") return "Dashboard";
   if (pathname === "/projects") return "Proyek";
   if (pathname.startsWith("/projects/")) return "Detail Proyek";

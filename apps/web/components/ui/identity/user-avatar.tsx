@@ -69,7 +69,9 @@ export function UserAvatar({
     <span
       className={`relative isolate flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary leading-none font-bold text-on-primary ${className}`}
     >
-      <span aria-hidden={showImage}>{initials}</span>
+      <span aria-hidden={showImage} suppressHydrationWarning>
+        {initials}
+      </span>
       {showImage && imageUrl ? (
         <Image
           src={withImageKitTransform(imageUrl, renderPx)}

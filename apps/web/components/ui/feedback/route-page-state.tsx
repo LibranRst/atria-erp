@@ -15,7 +15,20 @@ export function RoutePageLoading(): React.JSX.Element {
   );
 }
 
-export function RoutePageError({ reset }: { readonly reset: () => void }): React.JSX.Element {
+export function RoutePageError({
+  error,
+  reset,
+}: {
+  readonly error?: Error & { readonly digest?: string };
+  readonly reset: () => void;
+}): React.JSX.Element | null {
+  if (
+    error?.digest?.startsWith("NEXT_REDIRECT") ||
+    error?.message?.includes("NEXT_REDIRECT")
+  ) {
+    return null;
+  }
+
   return (
     <PageState
       kind="error"

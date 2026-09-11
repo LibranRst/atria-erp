@@ -55,6 +55,7 @@ const galleryNames: readonly AppIconName[] = [
   "sync",
   "refresh",
   "upload_file",
+  "attach_file",
   "content_copy",
   "edit",
   "delete",

@@ -1,3 +1,4 @@
+import { NotificationsProvider } from "@/features/notifications";
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 import { MobileShell } from "@/components/layout/mobile-shell";
@@ -50,11 +51,15 @@ export default async function RootLayout({
    * dan daftar kosong di sana memang jawaban yang benar.
    */
   const actor = await resolveActor();
+  const initialUser = actor ? { name: actor.name, image: actor.image ?? null } : null;
+
   return (
     <html lang="id" className={`${manrope.variable} ${jetbrains.variable} h-full antialiased`}>
       <body className="min-h-full bg-background font-sans text-[16px] font-normal text-on-surface">
-        <PermissionsProvider permissions={actor?.permissions ?? []}>
-          <MobileShell>{children}</MobileShell>
+        <PermissionsProvider permissions={actor?.permissions ?? []} user={initialUser}>
+          <NotificationsProvider>
+            <MobileShell>{children}</MobileShell>
+          </NotificationsProvider>
         </PermissionsProvider>
         <Toaster position="top-center" offset={72} mobileOffset={72} richColors />
       </body>

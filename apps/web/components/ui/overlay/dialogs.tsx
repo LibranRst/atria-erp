@@ -4,7 +4,7 @@ import React from "react";
 
 import { AppIcon } from "../icon/app-icon";
 import { Button } from "../button/button";
-import { DialogFrame } from "./dialog-frame";
+import { DialogFrame, type DialogMorphOrigin } from "./dialog-frame";
 import { SheetFooterActions } from "./sheet-footer-actions";
 
 type DialogShellProps = {
@@ -16,6 +16,55 @@ type DialogShellProps = {
   readonly onClose: () => void;
 };
 
+export type { DialogMorphOrigin } from "./dialog-frame";
+
+export function MorphDetailDialog({
+  open,
+  present,
+  title,
+  headerAction,
+  bodyHeader,
+  morphOrigin,
+  morphClosedContent,
+  returnFocusRef,
+  children,
+  onClose,
+  onExitComplete,
+}: {
+  readonly open: boolean;
+  readonly present: boolean;
+  readonly title: string;
+  readonly headerAction?: React.ReactNode;
+  readonly bodyHeader?: React.ReactNode;
+  readonly morphOrigin?: DialogMorphOrigin | null;
+  readonly morphClosedContent?: React.ReactNode;
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
+  readonly children: React.ReactNode;
+  readonly onClose: () => void;
+  readonly onExitComplete?: () => void;
+}): React.JSX.Element {
+  return (
+    <DialogFrame
+      presentation="choice"
+      open={open}
+      morphPresent={present}
+      title={title}
+      placement="top"
+      topInset="header"
+      showCloseButton={false}
+      headerAction={headerAction}
+      bodyHeader={bodyHeader}
+      morphOrigin={morphOrigin}
+      morphClosedContent={morphClosedContent}
+      returnFocusRef={returnFocusRef}
+      onClose={onClose}
+      onExitComplete={onExitComplete}
+    >
+      {children}
+    </DialogFrame>
+  );
+}
+
 export function CompactFormDialog({
   open,
   title,
@@ -23,14 +72,19 @@ export function CompactFormDialog({
   pending,
   children,
   actions,
+  showCloseButton = false,
   onClose,
-}: DialogShellProps & { readonly actions: React.ReactNode }): React.JSX.Element {
+}: DialogShellProps & {
+  readonly actions: React.ReactNode;
+  readonly showCloseButton?: boolean;
+}): React.JSX.Element {
   return (
     <DialogFrame
       open={open}
       title={title}
       description={description}
       pending={pending}
+      showCloseButton={showCloseButton}
       footer={actions}
       onClose={onClose}
     >
@@ -108,9 +162,7 @@ export function SearchDialog({
   );
 }
 
-export function CalendarDialog(props: DialogShellProps): React.JSX.Element {
-  return <DialogFrame {...props} />;
-}
+export { CalendarDialog, type CalendarDialogProps } from "./calendar-dialog";
 
 export type SuccessFact = {
   readonly label: string;

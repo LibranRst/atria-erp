@@ -69,7 +69,12 @@ function NestedSearchDialogDemo(): React.JSX.Element {
   return (
     <>
       <Button onClick={() => setOpen(true)}>Buka form searchable</Button>
-      <FormSheet open={open} title="Form proyek" onClose={() => setOpen(false)}>
+      <FormSheet
+        open={open}
+        title="Form proyek"
+        dismissal={{ mode: "discard" }}
+        onClose={() => setOpen(false)}
+      >
         <AdaptiveSelect
           label="Proyek"
           value={value}
@@ -87,7 +92,12 @@ function NestedSheetDemo(): React.JSX.Element {
   return (
     <>
       <Button onClick={() => setOpen(true)}>Buka form</Button>
-      <FormSheet open={open} title="Filter data" onClose={() => setOpen(false)}>
+      <FormSheet
+        open={open}
+        title="Filter data"
+        dismissal={{ mode: "discard" }}
+        onClose={() => setOpen(false)}
+      >
         <AdaptiveSelect label="Status" value={value} options={simpleOptions} onChange={setValue} />
       </FormSheet>
     </>

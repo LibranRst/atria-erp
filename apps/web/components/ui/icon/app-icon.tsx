@@ -6,12 +6,14 @@ import { ArrowDownIcon } from "@phosphor-icons/react/dist/ssr/ArrowDown";
 import { ArrowDownLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowDownLeft";
 import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import { ArrowUUpLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowUUpLeft";
 import { ArrowUpIcon } from "@phosphor-icons/react/dist/ssr/ArrowUp";
 import { ArrowUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
 import { ArrowsClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise";
 import { ArrowsLeftRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowsLeftRight";
 import { BankIcon } from "@phosphor-icons/react/dist/ssr/Bank";
+import { BellIcon } from "@phosphor-icons/react/dist/ssr/Bell";
 import { BellRingingIcon } from "@phosphor-icons/react/dist/ssr/BellRinging";
 import { BlueprintIcon } from "@phosphor-icons/react/dist/ssr/Blueprint";
 import { BoxArrowDownIcon } from "@phosphor-icons/react/dist/ssr/BoxArrowDown";
@@ -39,7 +41,9 @@ import { CodeIcon } from "@phosphor-icons/react/dist/ssr/Code";
 import { CopyIcon } from "@phosphor-icons/react/dist/ssr/Copy";
 import { DatabaseIcon } from "@phosphor-icons/react/dist/ssr/Database";
 import { DotsThreeIcon } from "@phosphor-icons/react/dist/ssr/DotsThree";
+import { DownloadSimpleIcon } from "@phosphor-icons/react/dist/ssr/DownloadSimple";
 import { EnvelopeIcon } from "@phosphor-icons/react/dist/ssr/Envelope";
+import { EyeIcon } from "@phosphor-icons/react/dist/ssr/Eye";
 import { FileArrowUpIcon } from "@phosphor-icons/react/dist/ssr/FileArrowUp";
 import { FileMagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/FileMagnifyingGlass";
 import { FileTextIcon } from "@phosphor-icons/react/dist/ssr/FileText";
@@ -63,12 +67,15 @@ import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGl
 import { MagnifyingGlassMinusIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlassMinus";
 import { MapPinIcon } from "@phosphor-icons/react/dist/ssr/MapPin";
 import { MapPinPlusIcon } from "@phosphor-icons/react/dist/ssr/MapPinPlus";
+import { PaletteIcon } from "@phosphor-icons/react/dist/ssr/Palette";
 import { MinusIcon } from "@phosphor-icons/react/dist/ssr/Minus";
 import { MoneyIcon } from "@phosphor-icons/react/dist/ssr/Money";
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr/Note";
 import { NotePencilIcon } from "@phosphor-icons/react/dist/ssr/NotePencil";
 import { PackageIcon } from "@phosphor-icons/react/dist/ssr/Package";
+import { PaperclipIcon } from "@phosphor-icons/react/dist/ssr/Paperclip";
 import { PaperPlaneRightIcon } from "@phosphor-icons/react/dist/ssr/PaperPlaneRight";
+import { PencilRulerIcon } from "@phosphor-icons/react/dist/ssr/PencilRuler";
 import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr/PencilSimple";
 import { PlayIcon } from "@phosphor-icons/react/dist/ssr/Play";
 import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
@@ -76,22 +83,26 @@ import { PlusCircleIcon } from "@phosphor-icons/react/dist/ssr/PlusCircle";
 import { PlusSquareIcon } from "@phosphor-icons/react/dist/ssr/PlusSquare";
 import { QuestionIcon } from "@phosphor-icons/react/dist/ssr/Question";
 import { ReceiptIcon } from "@phosphor-icons/react/dist/ssr/Receipt";
+import { RobotIcon } from "@phosphor-icons/react/dist/ssr/Robot";
 import { SealCheckIcon } from "@phosphor-icons/react/dist/ssr/SealCheck";
 import { ShieldIcon } from "@phosphor-icons/react/dist/ssr/Shield";
 import { ShieldCheckIcon } from "@phosphor-icons/react/dist/ssr/ShieldCheck";
 import { ShoppingCartIcon } from "@phosphor-icons/react/dist/ssr/ShoppingCart";
 import { SignOutIcon } from "@phosphor-icons/react/dist/ssr/SignOut";
 import { SlidersHorizontalIcon } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal";
+import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { SquaresFourIcon } from "@phosphor-icons/react/dist/ssr/SquaresFour";
 import { StackIcon } from "@phosphor-icons/react/dist/ssr/Stack";
 import { TagIcon } from "@phosphor-icons/react/dist/ssr/Tag";
 import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
 import { TrayIcon } from "@phosphor-icons/react/dist/ssr/Tray";
 import { TrayArrowDownIcon } from "@phosphor-icons/react/dist/ssr/TrayArrowDown";
+import { TrayArrowUpIcon } from "@phosphor-icons/react/dist/ssr/TrayArrowUp";
 import { TrendUpIcon } from "@phosphor-icons/react/dist/ssr/TrendUp";
 import { TruckIcon } from "@phosphor-icons/react/dist/ssr/Truck";
 import { UserIcon } from "@phosphor-icons/react/dist/ssr/User";
 import { UserCheckIcon } from "@phosphor-icons/react/dist/ssr/UserCheck";
+import { UserPlusIcon } from "@phosphor-icons/react/dist/ssr/UserPlus";
 import { UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
 import { WalletIcon } from "@phosphor-icons/react/dist/ssr/Wallet";
 import { WarehouseIcon } from "@phosphor-icons/react/dist/ssr/Warehouse";
@@ -122,15 +133,20 @@ const iconByLegacyName = {
   add_circle: PlusCircleIcon,
   add_location_alt: MapPinPlusIcon,
   add_photo: ImageSquareIcon,
+  alert_circle: WarningCircleIcon,
   analytics: ChartBarIcon,
   approval: SealCheckIcon,
   architecture: BlueprintIcon,
   archive: ArchiveIcon,
+  attach_file: PaperclipIcon,
   arrow_back: ArrowLeftIcon,
   arrow_downward: ArrowDownIcon,
   arrow_forward: ArrowRightIcon,
   arrow_upward: ArrowUpIcon,
   assignment_late: ClipboardTextIcon,
+  assignment_return: ArrowUUpLeftIcon,
+  bell: BellIcon,
+  bell_ringing: BellRingingIcon,
   cancel: XCircleIcon,
   category: TagIcon,
   chat: ChatCircleIcon,
@@ -144,17 +160,22 @@ const iconByLegacyName = {
   construction: HammerIcon,
   contactless: BroadcastIcon,
   content_copy: CopyIcon,
+  copy: CopyIcon,
   dashboard: SquaresFourIcon,
   data_alert: WarningCircleIcon,
   database: DatabaseIcon,
   delete: TrashIcon,
+  delete_sweep: TrashIcon,
   description: FileTextIcon,
+  design_services: PencilRulerIcon,
   developer_mode: CodeIcon,
   domain: BuildingsIcon,
   done: CheckIcon,
   edit: PencilSimpleIcon,
   edit_note: NotePencilIcon,
+  email: EnvelopeIcon,
   engineering: HardHatIcon,
+  download: DownloadSimpleIcon,
   error: WarningCircleIcon,
   event: CalendarIcon,
   event_available: CalendarCheckIcon,
@@ -191,11 +212,18 @@ const iconByLegacyName = {
   north_east: ArrowUpRightIcon,
   notes: NoteIcon,
   notification_important: BellRingingIcon,
+  notifications: BellIcon,
+  notifications_none: BellIcon,
+  open_in_new: ArrowSquareOutIcon,
+  outbox: TrayArrowUpIcon,
   password: KeyIcon,
+  paperclip: PaperclipIcon,
   payments: MoneyIcon,
   person: UserIcon,
+  person_add: UserPlusIcon,
   person_play: UserCheckIcon,
   photo_camera: CameraIcon,
+  palette: PaletteIcon,
   photo_library: ImageIcon,
   playlist_add: ListPlusIcon,
   priority_high: WarningIcon,
@@ -210,6 +238,7 @@ const iconByLegacyName = {
   request_quote: FileTextIcon,
   restore: ArrowCounterClockwiseIcon,
   resume: PlayIcon,
+  robot: RobotIcon,
   save: FloppyDiskIcon,
   schedule: ClockIcon,
   search: MagnifyingGlassIcon,
@@ -217,8 +246,11 @@ const iconByLegacyName = {
   send: PaperPlaneRightIcon,
   shield: ShieldIcon,
   shopping_cart_checkout: ShoppingCartIcon,
+  smart_toy: RobotIcon,
   south_west: ArrowDownLeftIcon,
   space_dashboard: SquaresFourIcon,
+  sparkle: SparkleIcon,
+  sparkles: SparkleIcon,
   swap_horiz: ArrowsLeftRightIcon,
   sync: ArrowsClockwiseIcon,
   sync_alt: ArrowsLeftRightIcon,
@@ -231,9 +263,9 @@ const iconByLegacyName = {
   verified: SealCheckIcon,
   verified_user: ShieldCheckIcon,
   warehouse: WarehouseIcon,
+  visibility: EyeIcon,
   warning: WarningIcon,
 } satisfies Record<string, PhosphorIcon>;
-
 export type AppIconName = keyof typeof iconByLegacyName;
 export type AppIconProps = Omit<ComponentPropsWithoutRef<"svg">, "children"> & {
   readonly name: AppIconName | string;

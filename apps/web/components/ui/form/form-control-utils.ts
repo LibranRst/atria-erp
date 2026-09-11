@@ -33,7 +33,29 @@ export function toNumberString(value: string | number): string {
 }
 
 export function decimalValue(value: string): string {
-  return value.replace(/[^\d.,]/g, "").replace(",", ".");
+  let cleaned = value.replace(/[^\d.,]/g, "").replace(",", ".");
+
+  // Discard extra decimal points, keeping only the first one
+  const parts = cleaned.split(".");
+  if (parts.length > 2) {
+    cleaned = parts[0] + "." + parts.slice(1).join("");
+  }
+
+  // Prepend "0" if user types a decimal point first (e.g. ".5" -> "0.5")
+  if (cleaned.startsWith(".")) {
+    cleaned = "0" + cleaned;
+  }
+
+  // Strip unwanted leading zeros (e.g. "01" -> "1", "00" -> "0", "00.5" -> "0.5")
+  // Keep single "0" or decimal fractions starting with "0."
+  if (cleaned.length > 1 && cleaned.startsWith("0") && !cleaned.startsWith("0.")) {
+    cleaned = cleaned.replace(/^0+/, "");
+    if (cleaned === "" || cleaned.startsWith(".")) {
+      cleaned = "0" + cleaned;
+    }
+  }
+
+  return cleaned;
 }
 
 export function formatDateLabel(value: string): string {

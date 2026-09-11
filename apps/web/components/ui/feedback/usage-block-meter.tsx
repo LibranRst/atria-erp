@@ -8,14 +8,16 @@ import { getUsageBlockFill, indicatorToneClass } from "@atria/core/finance/budge
 export function UsageBlockMeter({
   value,
   tone,
+  className = "mt-2.5",
 }: {
   readonly value: number;
   readonly tone: IndicatorTone;
+  readonly className?: string;
 }): React.JSX.Element {
   const fillClass = indicatorToneClass(tone);
   return (
     <div
-      className="mt-2.5 flex gap-1"
+      className={`flex w-full gap-1 ${className}`}
       role="img"
       aria-label={`Penggunaan kategori ${value.toFixed(0)} persen dalam lima bagian masing-masing 20 persen`}
     >

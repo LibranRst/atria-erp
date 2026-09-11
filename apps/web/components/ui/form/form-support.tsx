@@ -26,7 +26,7 @@ function toneClasses(tone: FormRiskTone): {
   }
   if (tone === "success") {
     return {
-      shell: "bg-primary/5 text-primary ring-primary/15",
+      shell: "bg-primary/5 text-primary ring-primary/10",
       icon: "text-primary",
     };
   }
@@ -76,7 +76,7 @@ export function ValuePreviewStrip({
   readonly lastItemFullWidth?: boolean;
 }): React.JSX.Element {
   return (
-    <div className={cx("grid gap-2", items.length === 1 ? "grid-cols-1" : "grid-cols-2")}>
+    <div className={cx("grid gap-3", items.length === 1 ? "grid-cols-1" : "grid-cols-2")}>
       {items.map((item, index) => {
         const classes = toneClasses(item.tone ?? "default");
         const isFullWidthLastItem =
@@ -96,8 +96,8 @@ export function ValuePreviewStrip({
             {typeof item.amount === "number" ? (
               <MoneyValue
                 amount={item.amount}
-                variant="compact"
-                size="sm"
+                variant="fullDynamic"
+                size="lg"
                 tone={
                   item.tone === "danger"
                     ? "danger"

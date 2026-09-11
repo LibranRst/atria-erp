@@ -16,46 +16,71 @@ export function MoneyImpactRow({
   before,
   delta,
   after,
+  sublabel,
+  note,
+  className,
 }: {
   readonly label: string;
   readonly before: number;
   readonly delta: number;
   readonly after: number;
+  readonly sublabel?: string;
+  readonly note?: React.ReactNode;
+  readonly className?: string;
 }): React.JSX.Element {
   const unsafe = after < 0;
   const money = (value: number): string =>
     `Rp ${Math.abs(value).toLocaleString("id-ID", { maximumFractionDigits: 0 })}`;
+  const deltaLabel = `${delta >= 0 ? "+" : "−"}${money(delta)}`;
+
   return (
-    <div className="rounded-2xl bg-surface-container-low px-4 py-3 ring-1 ring-ring-subtle">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-bold text-on-surface">{label}</p>
+    <section
+      className={cx(
+        "overflow-hidden rounded-[22px] bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle",
+        className,
+      )}
+    >
+      <div className="flex min-h-12 items-center justify-between gap-3 px-4 py-2.5">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-bold text-on-surface">{label}</p>
+          {sublabel ? (
+            <p className="mt-0.5 truncate text-[11px] font-medium text-on-surface-variant">
+              {sublabel}
+            </p>
+          ) : null}
+        </div>
         <p
           className={cx(
-            "shrink-0 text-xs font-bold",
+            "shrink-0 text-meta font-bold",
             unsafe ? "text-error" : delta >= 0 ? "text-primary" : "text-on-surface",
           )}
         >
-          {delta >= 0 ? "+" : "−"}
-          {money(delta)}
+          {deltaLabel}
         </p>
       </div>
-      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center">
-        <div>
+
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-outline-variant/15 bg-surface-container-lowest px-4 py-3 text-center">
+        <div className="min-w-0">
           <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
             Sebelum
           </p>
-          <p className="mt-0.5 text-sm font-semibold tabular-nums">{money(before)}</p>
+          <p className="mt-1 font-mono text-xs font-bold tabular-nums text-on-surface min-[360px]:text-sm">
+            {money(before)}
+          </p>
         </div>
-        <span className="text-on-surface-variant" aria-hidden="true">
+        <span
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-sm text-on-surface-variant ring-1 ring-ring-subtle"
+          aria-hidden="true"
+        >
           →
         </span>
-        <div>
+        <div className="min-w-0">
           <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
             Sesudah
           </p>
           <p
             className={cx(
-              "mt-0.5 text-sm font-bold tabular-nums",
+              "mt-1 font-mono text-xs font-bold tabular-nums min-[360px]:text-sm",
               unsafe ? "text-error" : "text-primary",
             )}
           >
@@ -64,6 +89,12 @@ export function MoneyImpactRow({
           </p>
         </div>
       </div>
-    </div>
+
+      {note ? (
+        <div className="border-t border-outline-variant/15 px-4 py-2.5 text-meta text-on-surface-variant">
+          {note}
+        </div>
+      ) : null}
+    </section>
   );
 }

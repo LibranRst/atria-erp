@@ -42,3 +42,17 @@ export const WithError: Story = {
 export const ReadOnly: Story = {
   render: () => <Demo readOnly />,
 };
+
+export const ExplicitAssociation: Story = {
+  render: () => (
+    <div className="w-80">
+      <FormField
+        label="Nomor referensi"
+        htmlFor="story-reference"
+        helper="Dipakai saat rekonsiliasi."
+      >
+        <TextInput id="story-reference" value="TRF-001" onChange={() => undefined} />
+      </FormField>
+    </div>
+  ),
+};

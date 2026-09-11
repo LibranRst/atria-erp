@@ -2,6 +2,7 @@ import type { JSX, ReactNode } from "react";
 
 import { formatIdr, formatShortIdr } from "@atria/core/utils/money";
 import { AppIcon } from "@/components/ui/icon/app-icon";
+import { Tooltip } from "../overlay/anchored-surfaces";
 
 type PageHeaderProps = {
   readonly title: string;
@@ -142,7 +143,7 @@ function moneySecondarySizeClass(size: MoneyValueSize = "md"): string {
 
 export type MoneyValueVariant = "compact" | "compactWithFull" | "fullDynamic";
 
-type MoneyValueProps = {
+export type MoneyValueProps = {
   readonly amount: number;
   readonly variant: MoneyValueVariant;
   readonly prefix?: string;
@@ -150,6 +151,7 @@ type MoneyValueProps = {
   readonly align?: "left" | "center" | "right";
   readonly size?: MoneyValueSize;
   readonly className?: string;
+  readonly showTooltip?: boolean;
 };
 
 export function MoneyValue({
@@ -160,6 +162,7 @@ export function MoneyValue({
   align = "left",
   size = "md",
   className = "",
+  showTooltip = true,
 }: MoneyValueProps): JSX.Element {
   const compactValue = `${prefix}${formatShortIdr(amount)}`;
   const fullValue = `${prefix}${formatIdr(amount)}`;
@@ -183,18 +186,31 @@ export function MoneyValue({
   }
 
   const fits = size === "fit";
+  const isAbbreviated = compactValue !== fullValue;
+  const hasTooltip = showTooltip && variant === "compact" && isAbbreviated;
+
+  const compactContent = (
+    <span
+      className={`financial-amount block font-sans leading-5 font-extrabold tracking-[-0.025em] whitespace-nowrap tabular-nums ${hasTooltip ? "cursor-default touch-manipulation select-none" : ""} ${moneyCompactSizeClass(size)} ${valueClass}`}
+      aria-label={hasTooltip ? fullValue : undefined}
+      title={typeof window === "undefined" ? fullValue : undefined}
+    >
+      {compactValue}
+    </span>
+  );
 
   return (
     <span
       className={`money-value-compact block min-w-0 space-y-0.5 ${fits ? "money-value-fit" : ""} ${alignClass} ${className}`}
     >
-      <span
-        className={`financial-amount block font-sans leading-5 font-extrabold tracking-[-0.025em] whitespace-nowrap tabular-nums ${moneyCompactSizeClass(size)} ${valueClass}`}
-        title={fullValue}
-      >
-        {compactValue}
-      </span>
-      {variant === "compactWithFull" && compactValue !== fullValue && (
+      {hasTooltip ? (
+        <Tooltip content={fullValue} touch>
+          {compactContent}
+        </Tooltip>
+      ) : (
+        compactContent
+      )}
+      {variant === "compactWithFull" && isAbbreviated && (
         <span
           className={`financial-amount block font-mono leading-4 tabular-nums ${fits ? "" : "money-value-exact"} ${moneySecondarySizeClass(size)} ${moneySecondaryToneClass(tone)}`}
         >

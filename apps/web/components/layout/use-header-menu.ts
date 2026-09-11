@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { usePermissions } from "@/components/auth/permissions-provider";
+import { useCurrentUserProfile, usePermissions } from "@/components/auth/permissions-provider";
 import type { PermissionKey } from "@atria/core/auth/permissions";
 import { usePathname, useSearchParams } from "next/navigation";
 import * as React from "react";
@@ -56,6 +56,7 @@ export function useHeaderMenu(): HeaderMenu {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: session } = authClient.useSession();
+  const initialProfile = useCurrentUserProfile();
 
   const permissions = usePermissions();
   const items = React.useMemo(() => getHeaderMenuItems(permissions), [permissions]);
@@ -64,8 +65,8 @@ export function useHeaderMenu(): HeaderMenu {
     pathname,
     searchParams,
     items,
-    userName: readStringField(session?.user ?? null, "name"),
-    userImageUrl: readStringField(session?.user ?? null, "image"),
+    userName: readStringField(session?.user ?? null, "name") ?? initialProfile?.name ?? null,
+    userImageUrl: readStringField(session?.user ?? null, "image") ?? initialProfile?.image ?? null,
     canUseAiChat: canUseAiChat(permissions),
     routeKey: `${pathname}?${searchParams.toString()}`,
   };

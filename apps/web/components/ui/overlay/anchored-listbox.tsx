@@ -55,6 +55,23 @@ export function AnchoredListbox(props: AnchoredListboxProps): React.JSX.Element 
   return <AnchoredListboxClient {...props} />;
 }
 
+export function getAnchoredContainerRadius(
+  itemCount: number,
+  hasComplexContent: boolean,
+): string {
+  if (itemCount <= 0) return "rounded-[24px]";
+  if (itemCount === 1) {
+    return hasComplexContent ? "rounded-[26px]" : "rounded-full";
+  }
+  if (itemCount === 2) {
+    return hasComplexContent ? "rounded-[26px]" : "rounded-[24px]";
+  }
+  if (itemCount <= 4) {
+    return "rounded-[28px]";
+  }
+  return "rounded-[32px]";
+}
+
 function AnchoredListboxClient({
   trigger,
   label,
@@ -141,6 +158,10 @@ function AnchoredListboxClient({
 
   const transformOrigin = resolvedPlacement.startsWith("top") ? "bottom" : "top";
   const groups = Array.from(new Set(options.map((option) => option.group ?? "")));
+  const hasComplexContent =
+    groups.some((group) => Boolean(group)) ||
+    options.some((opt) => Boolean(opt.description || opt.meta || opt.disabledReason));
+  const containerRadiusClass = getAnchoredContainerRadius(options.length, hasComplexContent);
 
   function selectOption(option: SelectOption): void {
     if (option.disabled) return;
@@ -169,17 +190,17 @@ function AnchoredListboxClient({
                   exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
                   transition={reduceMotion ? { duration: 0 } : transitionSpringSnappy}
                   style={{ maxHeight: "inherit", transformOrigin }}
-                  className="w-full overflow-y-auto overscroll-contain rounded-inset bg-white p-1.5 shadow-raised ring-1 ring-ring-control"
+                  className={`w-full overflow-y-auto overscroll-contain ${containerRadiusClass} bg-white/95 p-2 shadow-floating ring-1 ring-ring-control backdrop-blur-xl`}
                 >
                   {options.length === 0 ? (
-                    <p className="px-3.5 py-4 text-center text-support text-on-surface-variant">
+                    <p className="px-4 py-5 text-center text-support text-on-surface-variant">
                       {emptyText}
                     </p>
                   ) : null}
                   {groups.map((group) => (
-                    <div key={group || "ungrouped"}>
+                    <div key={group || "ungrouped"} className="space-y-1">
                       {group ? (
-                        <p className="px-3.5 pt-2.5 pb-1.5 text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+                        <p className="px-4 pt-2.5 pb-1 text-eyebrow font-bold tracking-wider text-on-surface-variant/80 uppercase">
                           {group}
                         </p>
                       ) : null}
@@ -209,11 +230,11 @@ function AnchoredListboxClient({
                                 selectOption(option);
                               },
                             })}
-                            className={`flex min-h-12 w-full items-center gap-3 rounded-full px-3.5 py-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+                            className={`flex min-h-12 w-full items-center gap-3 rounded-full px-4 py-2.5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98] ${
                               option.disabled ? "cursor-not-allowed opacity-45" : ""
                             } ${
                               active
-                                ? "bg-primary text-on-primary"
+                                ? "bg-primary text-on-primary shadow-xs"
                                 : "text-on-surface hover:bg-surface-container-low focus-visible:bg-surface-container-low"
                             }`}
                           >

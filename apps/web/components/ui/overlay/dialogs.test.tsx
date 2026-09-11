@@ -7,7 +7,8 @@ const framePath = new URL("./dialog-frame.tsx", import.meta.url);
 const dialogsPath = new URL("./dialogs.tsx", import.meta.url);
 const sheetsPath = new URL("./semantic-sheets.tsx", import.meta.url);
 const optionListPath = new URL("../form/dialog-option-list.tsx", import.meta.url);
-const calendarPath = new URL("../form/date-form-controls.tsx", import.meta.url);
+const calendarPath = new URL("./calendar-dialog.tsx", import.meta.url);
+const mediaPath = new URL("./media-preview-dialog.tsx", import.meta.url);
 
 describe("contextual dialog taxonomy", () => {
   test("centralizes focus, visual viewport, layering, and reduced-motion behavior", async () => {
@@ -22,12 +23,16 @@ describe("contextual dialog taxonomy", () => {
   });
 
   test("keeps search top-biased and compact/calendar dialogs centered", async () => {
-    const source = await Bun.file(dialogsPath).text();
+    const [source, calendar] = await Promise.all([
+      Bun.file(dialogsPath).text(),
+      Bun.file(calendarPath).text(),
+    ]);
 
     expect(source).toContain('placement="top"');
     expect(source).toContain("export function CompactFormDialog");
     expect(source).toContain("export function SelectionDialog");
-    expect(source).toContain("export function CalendarDialog");
+    expect(source).toContain("export { CalendarDialog");
+    expect(calendar).toContain("export function CalendarDialog");
   });
 
   test("animates filtered search-result height without layout scaling", async () => {
@@ -48,7 +53,7 @@ describe("contextual dialog taxonomy", () => {
   test("deepens the frame with one default or choice presentation", async () => {
     const source = await Bun.file(framePath).text();
 
-    expect(source).toContain('presentation?: "default" | "choice"');
+    expect(source).toContain('presentation?: "default" | "choice" | "calendar"');
     expect(source).toContain('const choicePresentation = presentation === "choice"');
     expect(source).toContain("detachedCloseButton");
     expect(source).toContain("utility");
@@ -72,7 +77,7 @@ describe("contextual dialog taxonomy", () => {
     expect(dialogs).not.toContain("sticky top-0");
     expect(dialogs).toContain('return <DialogFrame {...props} presentation="choice" />;');
     expect(options).toContain("divide-y divide-outline-variant/20");
-    expect(options).toContain("mx-2 mb-2 overflow-hidden rounded-3xl bg-white");
+    expect(options).toContain('className="overflow-hidden rounded-3xl bg-white"');
     expect(options).not.toContain("rounded-inset bg-white ring-1");
     expect(options).not.toContain("bg-accent-container text-accent");
     expect(options).toContain('selected && "text-accent"');
@@ -81,7 +86,17 @@ describe("contextual dialog taxonomy", () => {
     expect(options).toContain('className="icon-sm shrink-0 text-accent"');
     expect(options).toContain("bg-surface-container-low px-5 py-2.5");
     expect(options).toContain("active:bg-surface-container");
+    expect(calendar).toContain("<DialogFrame");
+    expect(calendar).toContain('presentation="calendar"');
     expect(calendar).toContain("rounded-3xl bg-surface-container-lowest");
+    expect(calendar).toContain('role="grid"');
+    expect(calendar).toContain("h-9 w-9");
+    expect(calendar).toContain("aspect-square");
+    expect(calendar).toContain("min-h-10");
+    expect(calendar).toContain("Hari Ini");
+    expect(calendar).not.toContain("createPortal");
+    expect(calendar).not.toContain("lockBodyScroll");
+    expect(calendar).not.toContain("transition: reduceMotion");
   });
 
   test("restores the previous visual hierarchy for non-selection dialogs", async () => {
@@ -117,5 +132,22 @@ describe("contextual dialog taxonomy", () => {
     expect(source).toContain("export function FormSheet");
     expect(source).toContain("export function DetailSheet");
     expect(source).toContain("<BottomSheet");
+  });
+
+  test("keeps media preview on the shared dialog foundation", async () => {
+    const source = await Bun.file(mediaPath).text();
+
+    expect(source).toContain("<DialogFrame");
+    expect(source).toContain('role="alert"');
+    expect(source).toContain("Pratinjau tidak dapat dimuat");
+    expect(source).not.toContain("createPortal");
+    expect(source).not.toContain("z-100");
+  });
+
+  test("exports a semantic morph wrapper instead of exposing raw DialogFrame", async () => {
+    const source = await Bun.file(dialogsPath).text();
+
+    expect(source).toContain("export function MorphDetailDialog");
+    expect(source).toContain('presentation="choice"');
   });
 });

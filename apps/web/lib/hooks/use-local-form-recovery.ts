@@ -74,15 +74,6 @@ export function useLocalFormRecovery<TPayload>({
     [initialPayload, storageKey],
   );
 
-  React.useEffect(() => {
-    function warnBeforeUnload(event: BeforeUnloadEvent): void {
-      if (!isDirty) return;
-      event.preventDefault();
-    }
-    window.addEventListener("beforeunload", warnBeforeUnload);
-    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
-  }, [isDirty]);
-
   return {
     payload,
     isDirty,

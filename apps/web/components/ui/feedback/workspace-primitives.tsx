@@ -14,6 +14,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import React from "react";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import { StatusBadge, type StatusBadgeTone } from "@/components/ui/badge/badge";
+import { cn } from "@/lib/utils/cn";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 export function WorkspaceModuleHeader({
@@ -24,7 +25,7 @@ export function WorkspaceModuleHeader({
   actionDisabled = false,
   onAction,
 }: {
-  readonly eyebrow: string;
+  readonly eyebrow?: string;
   readonly title: string;
   readonly description: string;
   readonly actionLabel?: string;
@@ -35,10 +36,14 @@ export function WorkspaceModuleHeader({
   return (
     <header className="flex min-w-0 items-end justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant/65 uppercase">
-          {eyebrow}
-        </p>
-        <h2 className="mt-1 text-[19px] leading-[1.12] font-semibold tracking-[-0.02em] text-on-surface">
+        {eyebrow ? (
+          <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant/65 uppercase">
+            {eyebrow}
+          </p>
+        ) : null}
+        <h2
+          className={`${eyebrow ? "mt-1" : ""} text-[19px] leading-[1.12] font-semibold tracking-[-0.02em] text-on-surface`}
+        >
           {title}
         </h2>
         <p className="mt-1 max-w-lg text-[11px] leading-[1.35] text-on-surface-variant">
@@ -90,13 +95,12 @@ export function WorkspaceStatusLabel({
   );
 }
 
-export function WorkspaceRowChevron(): React.JSX.Element {
+export function WorkspaceRowChevron({ className }: { readonly className?: string } = {}): React.JSX.Element {
   return (
-    <span
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-accent"
+    <AppIcon
+      name="chevron_right"
+      className={cn("icon-md shrink-0 text-on-surface-variant/40", className)}
       aria-hidden="true"
-    >
-      <AppIcon name="chevron_right" className="icon-sm" />
-    </span>
+    />
   );
 }

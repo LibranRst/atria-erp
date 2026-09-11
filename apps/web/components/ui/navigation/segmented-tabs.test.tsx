@@ -50,7 +50,7 @@ describe("segmented tabs", () => {
     expect(html).toContain("h-10 min-h-10");
     expect(html).toContain("after:-inset-y-1");
     expect(html).toContain("inline-flex min-w-4");
-    expect(html).toContain("bg-surface-container text-on-surface");
+    expect(html).toContain("bg-surface-container-high text-on-surface");
     expect(html).toContain("2 Budget memerlukan perhatian");
     expect(html).not.toContain("bg-critical-container");
   });

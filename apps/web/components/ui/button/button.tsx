@@ -10,7 +10,7 @@ import { Tooltip } from "../overlay/anchored-surfaces";
 import { cn } from "@/lib/utils/cn";
 
 export type ButtonVariant = "primary" | "secondary" | "tertiary" | "criticalQuiet" | "critical";
-export type ButtonSize = "default" | "compact";
+export type ButtonSize = "default" | "compact" | "mini";
 
 const variantClass: Record<ButtonVariant, string> = {
   primary: "bg-primary text-on-primary shadow-primary focus-visible:ring-focus-ring",
@@ -25,6 +25,7 @@ const sizeClass: Record<ButtonSize, string> = {
   default: "min-h-12 px-5 text-xs",
   compact:
     "relative h-10 px-3 text-meta after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+  mini: "relative h-8 px-3 text-meta after:absolute after:inset-x-0 after:-inset-y-2 after:content-['']",
 };
 
 type SharedButtonProps = {
@@ -73,7 +74,13 @@ export function Button({
       disabled={disabled || pending}
       whileTap={{ scale: reduceMotion ? 1 : 0.97 }}
       transition={transitionSpringSnappy}
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 aria-disabled:cursor-not-allowed aria-disabled:opacity-45 ${variantClass[variant]} ${sizeClass[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+      className={cn(
+        `inline-flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 aria-disabled:cursor-not-allowed aria-disabled:opacity-45`,
+        variantClass[variant],
+        sizeClass[size],
+        fullWidth ? "w-full" : "",
+        className,
+      )}
     >
       {!pending && leadingIcon ? <span aria-hidden="true">{leadingIcon}</span> : null}
       <span>{accessibleChildren}</span>
@@ -121,6 +128,7 @@ export function ButtonLink({
 const iconSizeClass: Record<ButtonSize, string> = {
   default: "h-12 w-12",
   compact: "relative h-10 w-10 after:absolute after:-inset-1 after:content-['']",
+  mini: "relative h-8 w-8 after:absolute after:-inset-2 after:content-['']",
 };
 
 export type IconButtonProps = Omit<

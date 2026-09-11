@@ -92,6 +92,7 @@ describe("iOS grouped form presentation", () => {
     );
 
     expect(html).toContain("space-y-2.5");
+    expect(html).toContain("items-end justify-between gap-3 px-1");
     expect(html).toContain("rounded-full");
   });
 
