@@ -194,5 +194,5 @@ Langkah berikutnya:
   4. Jalankan 'bun run db:check-invariants' setelah data pertama masuk.
 
 Selengkapnya: docs/guide/provision-instance.md
-Untuk deployment Vercel (root directory monorepo, `.vercelignore`, variabel
+Untuk deployment Vercel (root directory monorepo, berkas .vercelignore, variabel
 lingkungan, dan penjadwalan worker): docs/guide/vercel-deployment.md`);
