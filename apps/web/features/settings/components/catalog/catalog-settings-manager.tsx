@@ -6,10 +6,11 @@ import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library"
 import { AppIcon, SegmentedTabs } from "@/components/ui";
 import { MaterialSettingsManager } from "../materials/material-settings-manager";
 import { LibrarySettingsManager } from "../library/library-settings-manager";
+import { LocationSettingsManager } from "../locations/location-settings-manager";
 import type { MaterialOption, VendorOption } from "../../types/library-types";
 import type { SettingsOption } from "../../types/material-types";
 
-export type CatalogSubTab = "materials" | "library";
+export type CatalogSubTab = "materials" | "library" | "locations";
 
 type CatalogSettingsManagerProps = {
   readonly initialMaterials: readonly MaterialSettingRow[];
@@ -40,6 +41,7 @@ export function CatalogSettingsManager({
 
   const materialsCount = initialMaterials.filter((m) => m.isActive).length;
   const libraryCount = pricingTemplates.filter((p) => p.isActive).length;
+  const locationsCount = locations.length;
 
   return (
     <div className="space-y-sm">
@@ -49,16 +51,25 @@ export function CatalogSettingsManager({
         ariaLabel="Submodul Katalog"
         layoutId="settings-catalog-subtabs"
         density="compact"
+        fillAvailableSpace
         options={[
           {
             value: "materials",
-            label: `Material Master (${materialsCount})`,
+            label: "Material",
+            count: materialsCount > 0 ? materialsCount : undefined,
             icon: <AppIcon name="warehouse" className="h-3.75 w-3.75" aria-hidden="true" />,
           },
           {
             value: "library",
-            label: `Library Harga (${libraryCount})`,
+            label: "Library",
+            count: libraryCount > 0 ? libraryCount : undefined,
             icon: <AppIcon name="inventory" className="h-3.75 w-3.75" aria-hidden="true" />,
+          },
+          {
+            value: "locations",
+            label: "Lokasi",
+            count: locationsCount > 0 ? locationsCount : undefined,
+            icon: <AppIcon name="location_on" className="h-3.75 w-3.75" aria-hidden="true" />,
           },
         ]}
       />
@@ -73,13 +84,20 @@ export function CatalogSettingsManager({
             canManage={canManageMaterials}
             onMutationComplete={onMutationComplete}
           />
-        ) : (
+        ) : subTab === "library" ? (
           <LibrarySettingsManager
             initialItems={pricingTemplates}
             categories={expenseCategories}
             materials={initialMaterials as unknown as readonly MaterialOption[]}
             vendors={vendors}
             canManage={canManageLibrary}
+            onMutationComplete={onMutationComplete}
+          />
+        ) : (
+          <LocationSettingsManager
+            locations={locations}
+            activeMaterialCount={materialsCount}
+            canManage={canManageMaterials}
             onMutationComplete={onMutationComplete}
           />
         )}

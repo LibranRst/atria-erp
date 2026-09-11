@@ -1,42 +1,100 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import React from "react";
+import { toast } from "sonner";
 
 import type {
   InitialStockCandidate,
   InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
-import { OpeningInventoryWorkspace } from "@/features/materials/components/workspaces/opening-inventory-workspace";
+import { setInitialStockReadinessDecision } from "@/app/actions/quick-start";
 import {
   AppIcon,
-  DuotoneIconTile,
+  type AppIconName,
   GroupedSurface,
-  MetadataChip,
-  WorkspaceModuleHeader,
+  IconButtonLink,
   WorkspaceRowChevron,
   WorkspaceStatusLabel,
 } from "@/components/ui";
+import { InitialStockSetupPanel } from "@/features/onboarding/components/panels/initial-stock-setup-panel";
 import type {
-  OnboardingStepStatus,
-  OwnerOnboardingOverview,
-} from "@atria/core/onboarding/owner-onboarding";
-import { SettingsInverseSurface } from "./settings-inverse-surface";
+  OperationalReadinessItem,
+  OrganizationSetupOverview,
+} from "@atria/core/onboarding/organization-setup";
 
-function tone(status: OnboardingStepStatus): "positive" | "inactive" | "neutral" {
-  if (status === "READY" || status === "NOT_APPLICABLE") return "positive";
-  if (status === "PENDING_APPROVAL" || status === "REVIEWED") return "neutral";
-  return "inactive";
+function getReadinessIcon(id: string): AppIconName {
+  switch (id) {
+    case "core_team":
+      return "group";
+    case "bank_account":
+      return "account_balance";
+    case "material_foundation":
+      return "inventory";
+    case "initial_stock":
+      return "archive";
+    case "vendor":
+      return "handshake";
+    case "item_library":
+      return "category";
+    default:
+      return "fact_check";
+  }
 }
 
-function label(status: OnboardingStepStatus): string {
-  if (status === "READY") return "Siap";
-  if (status === "PENDING_APPROVAL") return "Pending";
-  if (status === "NOT_APPLICABLE") return "Tidak perlu";
-  if (status === "SKIPPED") return "Ditunda";
-  if (status === "REVIEWED") return "Ditinjau";
-  return "Lengkapi";
+function ReadinessRow({ item }: { readonly item: OperationalReadinessItem }): React.JSX.Element {
+  const iconName = getReadinessIcon(item.id);
+  const statusLabel = item.ready
+    ? item.status === "NOT_APPLICABLE"
+      ? "Tidak perlu"
+      : "Siap"
+    : item.status === "PENDING_APPROVAL"
+      ? "Menunggu"
+      : "Lengkapi";
+
+  const statusTone = item.ready
+    ? item.status === "NOT_APPLICABLE"
+      ? "neutral"
+      : "positive"
+    : item.status === "PENDING_APPROVAL"
+      ? "warning"
+      : "critical";
+
+  const content = (
+    <div className="flex min-h-18 w-full items-center gap-3 px-3.5 py-3 text-left">
+      <span
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant"
+        aria-hidden="true"
+      >
+        <AppIcon name={iconName} className="icon-md" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
+          {item.label}
+        </span>
+        <span className="block truncate text-meta text-on-surface-variant">
+          {item.detail}
+        </span>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <WorkspaceStatusLabel label={statusLabel} tone={statusTone} />
+        {item.action ? <WorkspaceRowChevron /> : null}
+      </div>
+    </div>
+  );
+
+  return item.action ? (
+    <Link
+      href={item.action.href}
+      className="block w-full text-left outline-none transition-colors hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/70"
+      aria-label={`${item.action.label}: ${item.label}`}
+    >
+      {content}
+    </Link>
+  ) : (
+    <div>{content}</div>
+  );
 }
 
 export function SetupReadinessManager({
@@ -44,128 +102,103 @@ export function SetupReadinessManager({
   inventory,
   batches,
 }: {
-  readonly overview: OwnerOnboardingOverview;
+  readonly overview: OrganizationSetupOverview;
   readonly inventory: readonly InitialStockCandidate[];
   readonly batches: readonly InventoryOpeningBatchView[];
 }): React.JSX.Element {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const [pending, startTransition] = React.useTransition();
   const showInitialStock = searchParams.get("flow") === "initial-stock";
-  const legacyReview = !overview.hasPersistedState && !overview.freshInstall;
+
+  function decide(decision: "NO_LEGACY_STOCK" | "SKIPPED"): void {
+    startTransition(async () => {
+      const result = await setInitialStockReadinessDecision({ decision });
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
+      toast.success(
+        decision === "NO_LEGACY_STOCK"
+          ? "Keputusan tanpa stok lama tersimpan."
+          : "Saldo awal dapat dilengkapi nanti.",
+      );
+      router.refresh();
+    });
+  }
+
   if (showInitialStock) {
     return (
       <section className="space-y-4">
-        <Link
-          href="/settings?tab=setup"
-          className="inline-flex min-h-12 items-center gap-1 rounded-full px-2 text-meta font-bold text-accent"
-        >
-          <AppIcon name="arrow_back" className="icon-md" />
-          Kembali ke kesiapan setup
-        </Link>
-        <OpeningInventoryWorkspace inventory={inventory} batches={batches} embedded />
+        <header className="flex items-center gap-3">
+          <IconButtonLink
+            href="/settings?tab=readiness"
+            label="Kembali ke kesiapan"
+            variant="secondary"
+            size="default"
+            className="shrink-0"
+          >
+            <AppIcon name="arrow_back" className="icon-md" />
+          </IconButtonLink>
+          <div className="min-w-0 flex-1">
+            <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+              Kesiapan operasional
+            </p>
+            <h2 className="text-lg font-bold tracking-tight text-on-surface">Saldo awal stok</h2>
+          </div>
+        </header>
+        <p className="text-support text-on-surface-variant">
+          Finalkan posisi stok fisik yang sudah dimiliki sebelum operasi inventory Atria berjalan.
+        </p>
+
+        <InitialStockSetupPanel
+          candidates={inventory}
+          batches={batches}
+          simulation={null}
+          onMutationComplete={() => router.refresh()}
+          onNoLegacyStock={() => decide("NO_LEGACY_STOCK")}
+          onSkip={() => decide("SKIPPED")}
+        />
+        {pending ? (
+          <p className="text-center text-meta text-on-surface-variant">Menyimpan keputusan…</p>
+        ) : null}
       </section>
     );
   }
 
-  const missing = overview.readiness.filter((item) => !item.ready && item.id !== "summary").length;
   return (
-    <section className="space-y-5">
-      <WorkspaceModuleHeader
-        eyebrow="Fondasi operasional"
-        title="Kesiapan setup"
-        description="Status berasal dari data nyata. Menyelesaikan onboarding tidak menyembunyikan konfigurasi yang masih kosong."
-      />
-      <SettingsInverseSurface label="Status onboarding">
-        <div className="flex items-start justify-between gap-4">
-          <span>
-            <span className="block text-eyebrow font-bold tracking-[0.13em] text-white/50 uppercase">
-              Status onboarding
-            </span>
-            <span className="mt-2 block text-[22px] font-bold tracking-[-0.03em]">
-              {legacyReview
-                ? "Review setup tersedia"
-                : overview.state.status === "COMPLETED"
-                  ? "Sudah diselesaikan"
-                  : overview.state.status === "PAUSED"
-                    ? "Sedang dijeda"
-                    : "Sedang berjalan"}
-            </span>
+    <section className="min-w-0 space-y-sm">
+      <section className="space-y-2">
+        <div className="flex min-h-8 items-center justify-between gap-3 px-1">
+          <h3 className="text-section font-bold text-on-surface">Fondasi utama</h3>
+          <span className="text-[9px] leading-4 font-semibold text-on-surface-variant">
+            {overview.requiredReadyCount} aktif dari {overview.requiredTotal}
           </span>
-          <MetadataChip className="bg-white/10 text-white/75">{missing} gap</MetadataChip>
         </div>
-        {overview.canManageOnboarding ? (
-          <Link
-            href={`/onboarding?step=${overview.state.currentStep}`}
-            className="mt-4 flex min-h-12 w-full items-center justify-center rounded-full bg-white px-5 text-xs font-bold text-primary"
-          >
-            {legacyReview
-              ? "Mulai review setup"
-              : overview.state.status === "COMPLETED"
-                ? "Review setup"
-                : "Lanjutkan onboarding"}
-          </Link>
-        ) : (
-          <p className="mt-4 border-t border-white/10 pt-3 text-meta text-white/55">
-            Progress onboarding hanya dapat diubah Owner. Aksi material tetap mengikuti permission
-            role Anda.
-          </p>
-        )}
-      </SettingsInverseSurface>
-      <GroupedSurface>
-        <div className="divide-y divide-black/5.5">
-          {overview.readiness
-            .filter((item) => item.id !== "summary")
-            .map((item) => {
-              const settingsHref =
-                item.id === "financial_defaults"
-                  ? "/settings?tab=budget"
-                  : item.id === "team_vendors"
-                    ? "/settings?tab=administration"
-                    : item.id === "bank_accounts"
-                      ? "/ledger?tab=accounts"
-                      : item.id === "material_foundation"
-                        ? "/settings?tab=materials"
-                        : item.id === "item_library"
-                          ? "/settings?tab=library"
-                          : item.id === "initial_stock"
-                            ? "/settings?tab=setup&flow=initial-stock"
-                            : "/settings?tab=setup";
-              const href =
-                item.id === "initial_stock"
-                  ? settingsHref
-                  : overview.canManageOnboarding
-                    ? item.href
-                    : settingsHref;
-              return (
-                <Link
-                  key={item.id}
-                  href={href}
-                  className="flex min-h-18 items-center gap-3 px-3.5 py-3 outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
-                >
-                  <DuotoneIconTile
-                    className="h-9 w-9"
-                    iconClassName="icon-sm"
-                    tone={item.ready ? "neutral" : "attention"}
-                    name={
-                      item.ready
-                        ? "check"
-                        : item.status === "PENDING_APPROVAL"
-                          ? "hourglass_top"
-                          : "priority_high"
-                    }
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-row font-bold text-on-surface">{item.label}</span>
-                    <span className="mt-0.5 block text-meta text-on-surface-variant">
-                      {item.detail}
-                    </span>
-                  </span>
-                  <WorkspaceStatusLabel label={label(item.status)} tone={tone(item.status)} />
-                  <WorkspaceRowChevron />
-                </Link>
-              );
-            })}
+        <GroupedSurface>
+          <div className="divide-y divide-outline-variant/20">
+            {overview.requiredReadiness.map((item) => (
+              <ReadinessRow key={item.id} item={item} />
+            ))}
+          </div>
+        </GroupedSurface>
+      </section>
+
+      <section className="space-y-2">
+        <div className="flex min-h-8 items-center justify-between gap-3 px-1">
+          <h3 className="text-section font-bold text-on-surface">Katalog & pendukung</h3>
+          <span className="text-[9px] leading-4 font-semibold text-on-surface-variant">
+            Opsional untuk RAP & RAB
+          </span>
         </div>
-      </GroupedSurface>
+        <GroupedSurface>
+          <div className="divide-y divide-outline-variant/20">
+            {overview.recommendedReadiness.map((item) => (
+              <ReadinessRow key={item.id} item={item} />
+            ))}
+          </div>
+        </GroupedSurface>
+      </section>
     </section>
   );
 }

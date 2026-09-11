@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCan } from "@/components/auth/permissions-provider";
 import { ApprovalControlManager } from "../budget/approval-control-manager";
 import type { ApprovalThresholdSettings } from "@/server/usecases/settings/approval-thresholds";
@@ -7,13 +8,12 @@ import React from "react";
 
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
 import type { SettingsOverview } from "@/app/actions/settings/system";
-import type { AdministrationOverview, ProductionReadinessItem } from "@/app/actions/administration";
-import type { OwnerOnboardingOverview } from "@atria/core/onboarding/owner-onboarding";
+import type { AdministrationOverview } from "@/app/actions/administration";
+import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
 import type {
   InitialStockCandidate,
   InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
-import Link from "next/link";
 import { GroupedSurface, InlineStateRow } from "@/components/ui";
 import { AdministrationManager } from "@/features/administration/components/workspaces/administration-manager";
 import { updateBrowserUrl, useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
@@ -21,6 +21,8 @@ import { BudgetSettingsManager } from "../budget/budget-settings-manager";
 import { CatalogSettingsManager } from "../catalog/catalog-settings-manager";
 import { SettingsNavigation } from "./settings-navigation";
 import { SettingsHeader } from "../shared/settings-ui";
+import { SetupReadinessManager } from "../shared/setup-readiness-manager";
+import { OrganizationSetupCard } from "@/features/onboarding/components/quick-start/organization-setup-card";
 import {
   parseSettingsTab,
   settingsTabUrl,
@@ -46,8 +48,7 @@ type SettingsDashboardProps = {
   readonly pricingTemplates: readonly PricingTemplateRow[];
   readonly initialTab?: SettingsTab;
   readonly administration: AdministrationOverview | null;
-  readonly readiness: readonly ProductionReadinessItem[];
-  readonly onboarding: OwnerOnboardingOverview | null;
+  readonly setup: OrganizationSetupOverview | null;
   readonly initialStock: readonly InitialStockCandidate[];
   readonly openingBatches: readonly InventoryOpeningBatchView[];
   readonly approvalThresholds: ApprovalThresholdSettings | null;
@@ -58,30 +59,39 @@ export function SettingsDashboard({
   overview,
   pricingTemplates,
   administration,
-  onboarding,
+  setup,
+  initialStock,
+  openingBatches,
   approvalThresholds,
 }: SettingsDashboardProps): React.JSX.Element {
+  const router = useRouter();
   const can = useCan();
   const tabParam = useBrowserUrlSearchParam("tab", initialTab === "financial" ? null : initialTab);
-  const activeTab = tabParam ? parseSettingsTab(tabParam) : initialTab;
+  const sectionParam = useBrowserUrlSearchParam("section");
+  const activeTab = parseSettingsTab(tabParam);
 
-  function changeTab(tab: SettingsTab): void {
-    updateBrowserUrl(settingsTabUrl(tab), "replace");
+  function changeTab(nextTab: SettingsTab): void {
+    updateBrowserUrl(settingsTabUrl(nextTab), "replace");
   }
-
-  const showOnboardingBanner = onboarding && onboarding.state.status !== "COMPLETED";
-  const setupSteps = onboarding
-    ? onboarding.readiness.filter((item) => item.id !== "welcome" && item.id !== "summary")
-    : [];
-  const completedSteps = setupSteps.filter((item) => item.ready).length;
-  const setupProgress =
-    setupSteps.length > 0 ? Math.round((completedSteps / setupSteps.length) * 100) : 0;
 
   let content: React.JSX.Element;
 
-  if (activeTab === "organization") {
+  if (activeTab === "readiness") {
+    content = setup ? (
+      <SetupReadinessManager overview={setup} inventory={initialStock} batches={openingBatches} />
+    ) : (
+      <ModuleUnavailableState
+        title="Kesiapan belum dapat dimuat"
+        description="Muat ulang halaman untuk membaca status fondasi operasional."
+      />
+    );
+  } else if (activeTab === "organization") {
     content = administration ? (
-      <AdministrationManager initialData={administration} presentation="settings" />
+      <AdministrationManager
+        initialData={administration}
+        presentation="settings"
+        onMutationComplete={() => router.refresh()}
+      />
     ) : (
       <ModuleUnavailableState
         title="Akses administrasi dibatasi"
@@ -91,6 +101,7 @@ export function SettingsDashboard({
   } else if (activeTab === "catalog") {
     content = (
       <CatalogSettingsManager
+        initialSubTab={sectionParam === "library" ? "library" : "materials"}
         initialMaterials={overview.materials}
         initialCategories={overview.materialCategories}
         pricingTemplates={pricingTemplates}
@@ -99,78 +110,67 @@ export function SettingsDashboard({
         locations={overview.inventoryLocations}
         canManageMaterials={overview.permissions.canManageMaterialSettings}
         canManageLibrary={overview.permissions.canManageItemLibrary}
+        onMutationComplete={() => router.refresh()}
       />
     );
   } else {
-    content = overview.budgetAllocationSetting ? (
+    content = (
       <div className="space-y-sm">
-        <BudgetSettingsManager
-          initialSetting={overview.budgetAllocationSetting}
-          initialCategories={overview.expenseCategories}
-          canManage={overview.permissions.canManageBudgetSettings}
-        />
+        {overview.budgetAllocationSetting ? (
+          <BudgetSettingsManager
+            initialSetting={overview.budgetAllocationSetting}
+            initialCategories={overview.expenseCategories}
+            canManage={overview.permissions.canManageBudgetSettings}
+            canManageCategories={overview.permissions.canManageExpenseCategories}
+            onMutationComplete={() => router.refresh()}
+          />
+        ) : (
+          <ModuleUnavailableState
+            title="Default budget belum tersedia"
+            description="Buat default alokasi budget terlebih dahulu sebelum mengatur formula dan kategori."
+          />
+        )}
         {approvalThresholds ? (
           <ApprovalControlManager
             fieldCostCents={approvalThresholds.fieldCostCents}
             vendorPaymentCents={approvalThresholds.vendorPaymentCents}
             canManage={can("manage:approval_settings")}
+            onMutationComplete={() => router.refresh()}
           />
         ) : null}
       </div>
-    ) : (
-      <ModuleUnavailableState
-        title="Default budget belum tersedia"
-        description="Buat default alokasi budget terlebih dahulu sebelum mengaturnya di sini."
-      />
+    );
+  }
+
+  const flowParam = useBrowserUrlSearchParam("flow");
+  const isSubflow = activeTab === "readiness" && Boolean(flowParam);
+
+  if (isSubflow) {
+    return (
+      <section className="min-w-0 space-y-sm pb-32 max-[430px]:-mx-1 max-[430px]:pb-28 md:pb-12">
+        {content}
+      </section>
     );
   }
 
   return (
-    <section className="min-w-0 space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6">
+    <section className="min-w-0 space-y-sm pb-32 max-[430px]:-mx-1 max-[430px]:pb-28 md:pb-12">
       <SettingsHeader
         title="Pengaturan"
         description="Konfigurasi default finansial, master data katalog, dan akses organisasi."
         role={overview.roleName}
       />
 
-      {showOnboardingBanner && onboarding ? (
-        <div className="flex items-center justify-between gap-3 rounded-owner bg-surface-inverse px-4 py-3 text-white shadow-inverse ring-1 ring-white/8">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-xs font-bold text-white">
-                Kesiapan Setup Organisasi ({setupProgress}%)
-              </span>
-              <span className="font-mono text-[10px] text-white/60">
-                {completedSteps}/{setupSteps.length} langkah
-              </span>
-            </div>
-            <div
-              className="mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-white/15"
-              role="progressbar"
-              aria-label="Kemajuan setup organisasi"
-              aria-valuenow={completedSteps}
-              aria-valuemin={0}
-              aria-valuemax={setupSteps.length}
-            >
-              <div
-                className="rounded-full bg-accent transition-all duration-300"
-                style={{ width: `${setupProgress}%` }}
-              />
-            </div>
-          </div>
-          <Link
-            href={`/onboarding?step=${onboarding.state.currentStep}`}
-            className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-primary hover:bg-white/90"
-          >
-            Lanjutkan
-          </Link>
-        </div>
+      {setup && activeTab !== "readiness" ? (
+        <OrganizationSetupCard overview={setup} density="settings" />
       ) : null}
 
       <SettingsNavigation
         value={activeTab}
         onChange={changeTab}
-        showAdministration={Boolean(administration)}
+        showAdministration={
+          overview.permissions.canManageUsers || overview.permissions.canManageVendors
+        }
       />
 
       <div className="min-w-0">{content}</div>

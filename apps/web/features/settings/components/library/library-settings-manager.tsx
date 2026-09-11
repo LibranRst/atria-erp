@@ -5,6 +5,7 @@ import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
 import {
   AppIcon,
+  COMMON_UNIT_OPTIONS,
   ConfirmationDialog,
   EmptyState,
   FilterSelect,
@@ -155,6 +156,16 @@ export function LibrarySettingsManager({
     ],
     [categories],
   );
+
+  const unitOptions = React.useMemo(() => {
+    const materialUnits = materials
+      .map((m) => m.unit?.trim())
+      .filter((u): u is string => Boolean(u));
+    const itemUnits = items
+      .map((i) => i.unit?.trim())
+      .filter((u): u is string => Boolean(u));
+    return Array.from(new Set([...COMMON_UNIT_OPTIONS, ...materialUnits, ...itemUnits]));
+  }, [materials, items]);
   const filtered = items.filter(
     (item) =>
       `${item.name} ${item.itemCategory} ${item.code ?? ""}`
@@ -365,7 +376,7 @@ export function LibrarySettingsManager({
             <button
               type="button"
               onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
-              className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control"
+              className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
               title="Tambah Template Baru"
             >
               <AppIcon name="add" className="icon-sm" />
@@ -396,6 +407,7 @@ export function LibrarySettingsManager({
         categories={categories}
         materials={materials}
         vendors={vendors}
+        unitOptions={unitOptions}
         canManage={canManage}
         pending={pending}
         canSave={canSaveDraft}
@@ -424,6 +436,7 @@ export function LibrarySettingsManager({
       />
       <LibraryCostComponentSheet
         componentEditor={componentEditor}
+        unitOptions={unitOptions}
         onRequestClose={requestComponentClose}
         onSubmit={saveComponent}
         patchComponent={patchComponent}

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   createMaterialCategorySetting,
   createMaterialWithInventoryDefaults,
+  getMaterialSettings,
   setMaterialActive,
   updateMaterial,
   updateMaterialSettingDefaults,
@@ -64,6 +65,7 @@ export function useMaterialSettingsMutations({
   setMessage,
 }: MaterialSettingsMutationArgs): MaterialSettingsMutations {
   const [pending, startTransition] = React.useTransition();
+
   const saveMaterial = (): void => {
     if (!draft || !canSaveMaterial) return;
     startTransition(async () => {
@@ -97,41 +99,30 @@ export function useMaterialSettingsMutations({
               },
             ],
           });
+
       if (!result.success) {
         setMessage(result.error.message);
         toast.error(result.error.message);
         return;
       }
-      if (draft.id) {
-        setMaterials((current) =>
-          current.map((row) =>
-            row.id === draft.id
-              ? {
-                  ...row,
-                  categoryId: draft.categoryId,
-                  defaultVendorId: draft.defaultVendorId,
-                  name: draft.name,
-                  specification: draft.specification,
-                  brand: draft.brand,
-                  code: draft.code,
-                  color: draft.color,
-                  unit: draft.unit,
-                  isActive: draft.isActive,
-                }
-              : row,
-          ),
-        );
+
+      const fresh = await getMaterialSettings();
+      if (fresh.success) {
+        setMaterials(fresh.data.materials);
+        setCategories(fresh.data.materialCategories);
       }
+
       setDraft(null);
       setDraftBaseline("");
-      const message = draft.id
+      const successMessage = draft.id
         ? "Material berhasil diperbarui."
         : "Material baru berhasil ditambahkan.";
-      setMessage(message);
-      toast.success(message);
+      setMessage(successMessage);
+      toast.success(successMessage);
       onMutationComplete?.();
     });
   };
+
   const confirmToggle = (): void => {
     if (!confirmMaterial) return;
     const target = confirmMaterial;
@@ -142,17 +133,25 @@ export function useMaterialSettingsMutations({
         toast.error(result.error.message);
         return;
       }
-      setMaterials((current) =>
-        current.map((row) =>
-          row.id === target.id ? { ...row, isActive: result.data.isActive } : row,
-        ),
-      );
+
+      const fresh = await getMaterialSettings();
+      if (fresh.success) {
+        setMaterials(fresh.data.materials);
+      } else {
+        setMaterials((current) =>
+          current.map((row) =>
+            row.id === target.id ? { ...row, isActive: result.data.isActive } : row,
+          ),
+        );
+      }
+
       setSelectedMaterial(null);
       setConfirmMaterial(null);
       toast.success("Material berhasil diperbarui.");
       onMutationComplete?.();
     });
   };
+
   const saveInventory = (): void => {
     if (!inventoryEdit) return;
     startTransition(async () => {
@@ -166,18 +165,25 @@ export function useMaterialSettingsMutations({
         toast.error(result.error.message);
         return;
       }
-      setMaterials((current) =>
-        current.map((material) =>
-          material.id === inventoryEdit.materialId
-            ? {
-                ...material,
-                inventory: material.inventory.map((row) =>
-                  row.id === result.data.id ? result.data : row,
-                ),
-              }
-            : material,
-        ),
-      );
+
+      const fresh = await getMaterialSettings();
+      if (fresh.success) {
+        setMaterials(fresh.data.materials);
+      } else {
+        setMaterials((current) =>
+          current.map((material) =>
+            material.id === inventoryEdit.materialId
+              ? {
+                  ...material,
+                  inventory: material.inventory.map((row) =>
+                    row.id === result.data.id ? result.data : row,
+                  ),
+                }
+              : material,
+          ),
+        );
+      }
+
       setInventoryEdit(null);
       setInventoryOriginal(null);
       setInventoryBaseline("");
@@ -186,6 +192,7 @@ export function useMaterialSettingsMutations({
       onMutationComplete?.();
     });
   };
+
   const addCategory = (): void => {
     const name = categoryName.trim();
     if (!name) return;
@@ -196,9 +203,16 @@ export function useMaterialSettingsMutations({
         toast.error(result.error.message);
         return;
       }
-      setCategories((current) =>
-        [...current, result.data].sort((a, b) => a.name.localeCompare(b.name)),
-      );
+
+      const fresh = await getMaterialSettings();
+      if (fresh.success) {
+        setCategories(fresh.data.materialCategories);
+      } else {
+        setCategories((current) =>
+          [...current, result.data].sort((a, b) => a.name.localeCompare(b.name)),
+        );
+      }
+
       if (draft) setDraft({ ...draft, categoryId: result.data.id });
       setCategoryName("");
       setShowCategoryComposer(false);
@@ -206,5 +220,6 @@ export function useMaterialSettingsMutations({
       onMutationComplete?.();
     });
   };
+
   return { pending, saveMaterial, confirmToggle, saveInventory, addCategory };
 }

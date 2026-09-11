@@ -27,6 +27,7 @@ import {
   WorkspaceStatusLabel,
 } from "@/components/ui";
 import { SettingsInverseSurface } from "../shared/settings-inverse-surface";
+import { SettingsBudgetSettingsManager } from "./settings-budget-settings-manager";
 
 const percent = (value: number): string =>
   new Intl.NumberFormat("id-ID", {
@@ -40,6 +41,7 @@ type BudgetSettingsManagerProps = {
   readonly initialSetting: BudgetAllocationSettingRow;
   readonly initialCategories?: readonly ExpenseCategorySettingRow[];
   readonly canManage: boolean;
+  readonly canManageCategories: boolean;
   readonly presentation?: "settings" | "onboarding";
   readonly onMutationComplete?: () => void;
   readonly onDirtyChange?: (dirty: boolean) => void;
@@ -61,7 +63,24 @@ const STICKY_SAVE_BOTTOM: Record<"settings" | "onboarding", string> = {
   onboarding: "bottom-[calc(0.75rem+env(safe-area-inset-bottom))]",
 };
 
-export function BudgetSettingsManager({
+export function BudgetSettingsManager(props: BudgetSettingsManagerProps): React.JSX.Element {
+  if ((props.presentation ?? "settings") === "settings") {
+    return (
+      <SettingsBudgetSettingsManager
+        initialSetting={props.initialSetting}
+        initialCategories={props.initialCategories ?? []}
+        canManageBudget={props.canManage}
+        canManageCategories={props.canManageCategories}
+        onMutationComplete={props.onMutationComplete}
+        onDirtyChange={props.onDirtyChange}
+      />
+    );
+  }
+
+  return <OnboardingBudgetSettingsManager {...props} />;
+}
+
+function OnboardingBudgetSettingsManager({
   initialSetting,
   initialCategories = [],
   canManage,
@@ -276,7 +295,7 @@ export function BudgetSettingsManager({
         </FormField>
 
         {presentation === "settings" ? (
-          <FormField label="Simulasi Nilai Proyek (Rp)" helper="Uji coba nominal proyek">
+          <FormField label="Simulasi Nilai Proyek" helper="Uji coba nominal proyek">
             <MoneyInput
               value={sampleValue}
               onChange={(value) => setSampleValue(Number(value || 0))}
@@ -435,6 +454,7 @@ export function BudgetSettingsManager({
 
       {/* Category Editor Bottom Sheet */}
       <OperationalFormSheet
+        dismissal={{ mode: "managed" }}
         open={Boolean(editingCategory)}
         title={canManage ? "Edit Kategori Pengeluaran" : "Detail Kategori Pengeluaran"}
         onClose={() => {

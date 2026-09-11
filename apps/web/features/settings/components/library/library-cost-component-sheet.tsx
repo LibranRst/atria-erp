@@ -40,6 +40,7 @@ const fullMoney = (value: number): string => `Rp ${Math.round(value).toLocaleStr
 
 type LibraryCostComponentSheetProps = {
   readonly componentEditor: CostComponentDraft | null;
+  readonly unitOptions?: readonly string[];
   readonly onRequestClose: () => void;
   readonly onSubmit: () => void;
   readonly patchComponent: (patch: Partial<CostComponentDraft>) => void;
@@ -53,6 +54,7 @@ type LibraryCostComponentSheetProps = {
 
 export function LibraryCostComponentSheet({
   componentEditor,
+  unitOptions,
   onRequestClose,
   onSubmit,
   patchComponent,
@@ -65,6 +67,7 @@ export function LibraryCostComponentSheet({
 }: LibraryCostComponentSheetProps): React.JSX.Element {
   return (
     <OperationalFormSheet
+      dismissal={{ mode: "managed" }}
       open={Boolean(componentEditor)}
       title={isExistingComponent ? "Edit Komponen Biaya" : "Tambah Komponen Biaya"}
       onClose={onRequestClose}
@@ -136,7 +139,7 @@ export function LibraryCostComponentSheet({
               label="Satuan"
               value={componentEditor.unit}
               onChange={(value) => patchComponent({ unit: value })}
-              options={COMMON_UNIT_OPTIONS}
+              options={unitOptions ?? COMMON_UNIT_OPTIONS}
               error={!componentEditor.unit.trim() ? "Satuan wajib diisi." : undefined}
             />
 

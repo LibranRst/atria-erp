@@ -14,11 +14,13 @@ import {
   Textarea,
   TextInput,
 } from "@/components/ui";
+
 type MaterialEditorSheetProps = {
   readonly draft: MaterialDraft | null;
   readonly categories: readonly SettingsOption[];
   readonly vendors: readonly SettingsOption[];
   readonly locations: readonly SettingsOption[];
+  readonly unitOptions?: readonly string[];
   readonly canManage: boolean;
   readonly pending: boolean;
   readonly canSave: boolean;
@@ -30,6 +32,8 @@ type MaterialEditorSheetProps = {
   readonly onDraftChange: (draft: MaterialDraft) => void;
   readonly onDetailsOpenChange: (open: boolean) => void;
   readonly onCreateCategory: () => void;
+  readonly onCreateLocation?: () => void;
+  readonly onCreateVendor?: () => void;
 };
 
 export function MaterialEditorSheet({
@@ -37,6 +41,7 @@ export function MaterialEditorSheet({
   categories,
   vendors,
   locations,
+  unitOptions,
   canManage,
   pending,
   canSave,
@@ -48,6 +53,8 @@ export function MaterialEditorSheet({
   onDraftChange,
   onDetailsOpenChange,
   onCreateCategory,
+  onCreateLocation,
+  onCreateVendor,
 }: MaterialEditorSheetProps): React.JSX.Element {
   const completedDetails = draft
     ? [draft.brand, draft.code, draft.color, draft.defaultVendorId, draft.specification].filter(
@@ -56,30 +63,31 @@ export function MaterialEditorSheet({
     : 0;
   return (
     <OperationalFormSheet
+      dismissal={{ mode: "managed" }}
       open={Boolean(draft)}
-      title={draft?.id ? "Edit Material" : "Tambah Material"}
-      onClose={onClose}
-      pending={pending}
-      disabled={!canManage || !canSave}
-      disabledReason={disabledReason}
+      title={draft?.id ? "Edit material" : "Material baru"}
       submitLabel="Simpan"
       submittingLabel="Menyimpan…"
-      onSubmit={onSubmit}
+      pending={pending}
+      disabled={!canSave}
+      disabledReason={disabledReason}
       statusText={
         draft
-          ? `${completion[0]} dari ${completion[1]} data wajib lengkap${draft.name.trim() ? ` · ${draft.name.trim()}` : ""}`
+          ? `${completion[0]} dari ${completion[1]} data utama lengkap`
           : undefined
       }
       statusTone={canSave ? "success" : "warning"}
+      onClose={onClose}
+      onSubmit={onSubmit}
     >
       {draft ? (
         <div className="space-y-md">
           <FormSection
-            title="Identitas utama"
-            helper="Nama, kategori, dan satuan dipakai di RAP, stok, dan transaksi."
+            title="Informasi utama"
+            helper="Kategori, nama, dan satuan wajib diisi untuk identifikasi stok."
           >
             <AdaptiveSelect
-              label="Kategori material"
+              label="Kategori"
               value={draft.categoryId}
               onChange={(value) => onDraftChange({ ...draft, categoryId: value })}
               options={categories.map((row) => ({ value: row.id, label: row.name }))}
@@ -102,7 +110,7 @@ export function MaterialEditorSheet({
               label="Satuan"
               value={draft.unit}
               onChange={(value) => onDraftChange({ ...draft, unit: value })}
-              options={COMMON_UNIT_OPTIONS}
+              options={unitOptions ?? COMMON_UNIT_OPTIONS}
               error={!draft.unit.trim() ? "Satuan wajib diisi." : undefined}
             />
           </FormSection>
@@ -145,6 +153,9 @@ export function MaterialEditorSheet({
                   { value: "", label: "Tanpa vendor default" },
                   ...vendors.map((row) => ({ value: row.id, label: row.name })),
                 ]}
+                createActionLabel="Buat vendor baru"
+                createActionDescription="Tambahkan vendor baru ke daftar pilihan."
+                onCreateAction={canManage ? onCreateVendor : undefined}
               />
               <FormField label="Spesifikasi" optional>
                 <Textarea
@@ -165,6 +176,9 @@ export function MaterialEditorSheet({
                 value={draft.locationId}
                 onChange={(value) => onDraftChange({ ...draft, locationId: value })}
                 options={locations.map((row) => ({ value: row.id, label: row.name }))}
+                createActionLabel="Buat lokasi baru"
+                createActionDescription="Tambahkan lokasi gudang atau workshop baru."
+                onCreateAction={canManage ? onCreateLocation : undefined}
                 error={
                   !draft.locationId
                     ? "Lokasi awal wajib dipilih agar stok tidak masuk tempat yang salah."

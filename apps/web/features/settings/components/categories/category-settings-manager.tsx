@@ -21,6 +21,7 @@ import {
   WorkspaceRowChevron,
   WorkspaceStatusLabel,
 } from "@/components/ui";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
 type CategorySettingsManagerProps = {
   readonly initialCategories: readonly ExpenseCategorySettingRow[];
@@ -117,7 +118,7 @@ export function CategorySettingsManager({
                   <span className="truncate text-row font-bold text-on-surface">
                     {category.name}
                   </span>
-                  <WorkspaceStatusLabel label={category.code} tone="neutral" />
+                  <WorkspaceStatusLabel label={formatBusinessLabel(category.code)} tone="neutral" />
                 </span>
                 <span className="mt-1 line-clamp-2 block text-[10px] leading-[1.3] text-on-surface-variant">
                   {category.description || "Belum ada deskripsi kategori."}
@@ -132,6 +133,7 @@ export function CategorySettingsManager({
         </div>
       </GroupedSurface>
       <OperationalFormSheet
+        dismissal={{ mode: "managed" }}
         open={Boolean(editing)}
         title={canManage ? "Edit Kategori" : "Detail Kategori"}
         onClose={requestClose}

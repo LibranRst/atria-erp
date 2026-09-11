@@ -7,12 +7,14 @@ import type { SettingsTab } from "@/features/settings/utils/settings-tabs-config
 
 type SettingsPageContentProps = {
   readonly initialTab?: SettingsTab;
+  readonly initialFlow?: string;
 };
 
 export async function SettingsPageContent({
   initialTab = "financial",
+  initialFlow,
 }: SettingsPageContentProps): Promise<React.JSX.Element> {
-  const data = await getSettingsPageData();
+  const data = await getSettingsPageData({ activeTab: initialTab, flow: initialFlow });
 
   if (data.status !== "ready") {
     if (data.status === "unauthorized") redirect("/login");
@@ -39,8 +41,7 @@ export async function SettingsPageContent({
       overview={data.overview}
       pricingTemplates={data.pricingTemplates}
       administration={data.administration}
-      readiness={data.readiness}
-      onboarding={data.onboarding}
+      setup={data.setup}
       initialStock={data.initialStock}
       openingBatches={data.openingBatches}
       approvalThresholds={data.approvalThresholds}

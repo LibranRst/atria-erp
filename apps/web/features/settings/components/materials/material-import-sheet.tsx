@@ -123,10 +123,16 @@ export function MaterialImportSheet({
 
   return (
     <WorkflowFormSheet
+      dismissal={{
+        mode: "confirm",
+        dirty: Boolean(input || preview || fileName),
+        onDiscard: reset,
+        description: "File dan hasil pratinjau yang belum diimpor akan dilepas dari form.",
+      }}
       open={open}
-      title="Import Material Master"
-      primaryLabel="Import"
-      pendingLabel="Mengimport…"
+      title="Impor Material Master"
+      primaryLabel="Impor"
+      pendingLabel="Mengimpor…"
       pending={pending}
       disabled={!canCommit}
       disabledReason={
@@ -134,13 +140,12 @@ export function MaterialImportSheet({
           ? "Perbaiki seluruh error CSV sebelum import."
           : "Upload dan validasi CSV terlebih dahulu."
       }
-      actionLayout="stacked"
       onClose={onClose}
       onExitComplete={reset}
       onPrimary={() => void commit()}
     >
       <div className="space-y-4">
-        <section className="rounded-inset bg-white p-4 shadow-control ring-1 ring-ring-subtle">
+        <section className="rounded-inset bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
           <p className="text-row font-bold text-on-surface">Template CSV</p>
           <p className="mt-1 text-meta text-on-surface-variant">
             Wajib: name, category, unit, location. Opsional: minimum_stock, last_purchase_price,

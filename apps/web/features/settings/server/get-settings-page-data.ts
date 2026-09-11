@@ -1,15 +1,15 @@
 import "server-only";
 
-import { getAdministrationOverview, getProductionReadiness } from "@/app/actions/administration";
+import { getAdministrationOverview } from "@/app/actions/administration";
 import {
   getInitialStockCandidates,
   getInventoryOpeningBatches,
 } from "@/app/actions/material/opening-inventory";
-import { getOwnerOnboardingOverview } from "@/app/actions/onboarding";
+import { getOrganizationSetupOverview } from "@/app/actions/organization-setup";
 import { getPricingTemplates } from "@/app/actions/settings/pricing-library";
 import { getApprovalThresholdSettings } from "@/app/actions/settings/approval-thresholds";
 import { getSettingsOverview } from "@/app/actions/settings/system";
-import type { AdministrationOverview, ProductionReadinessItem } from "@/app/actions/administration";
+import type { AdministrationOverview } from "@/app/actions/administration";
 import type {
   InitialStockCandidate,
   InventoryOpeningBatchView,
@@ -17,7 +17,8 @@ import type {
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
 import type { ApprovalThresholdSettings } from "@/server/usecases/settings/approval-thresholds";
 import type { SettingsOverview } from "@/app/actions/settings/system";
-import type { OwnerOnboardingOverview } from "@atria/core/onboarding/owner-onboarding";
+import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
+import type { SettingsTab } from "@/features/settings/utils/settings-tabs-config";
 
 export type SettingsPageData =
   | {
@@ -25,8 +26,7 @@ export type SettingsPageData =
       readonly overview: SettingsOverview;
       readonly pricingTemplates: readonly PricingTemplateRow[];
       readonly administration: AdministrationOverview | null;
-      readonly readiness: readonly ProductionReadinessItem[];
-      readonly onboarding: OwnerOnboardingOverview | null;
+      readonly setup: OrganizationSetupOverview | null;
       readonly initialStock: readonly InitialStockCandidate[];
       readonly openingBatches: readonly InventoryOpeningBatchView[];
       readonly approvalThresholds: ApprovalThresholdSettings | null;
@@ -37,13 +37,18 @@ export type SettingsPageData =
       readonly source: "settings" | "library";
     };
 
-export async function getSettingsPageData(): Promise<SettingsPageData> {
+export async function getSettingsPageData(
+  input: {
+    readonly activeTab?: SettingsTab;
+    readonly flow?: string;
+  } = {},
+): Promise<SettingsPageData> {
+  const loadInitialStock = input.activeTab === "readiness" && input.flow === "initial-stock";
   const [
     settings,
     templates,
     administration,
-    readiness,
-    onboarding,
+    setup,
     initialStock,
     openingBatches,
     approvalThresholds,
@@ -51,10 +56,16 @@ export async function getSettingsPageData(): Promise<SettingsPageData> {
     getSettingsOverview(),
     getPricingTemplates(true),
     getAdministrationOverview(),
-    getProductionReadiness(),
-    getOwnerOnboardingOverview(),
-    getInitialStockCandidates(),
-    getInventoryOpeningBatches(),
+    getOrganizationSetupOverview(),
+    loadInitialStock
+      ? getInitialStockCandidates()
+      : Promise.resolve({ success: true as const, data: [] as readonly InitialStockCandidate[] }),
+    loadInitialStock
+      ? getInventoryOpeningBatches()
+      : Promise.resolve({
+          success: true as const,
+          data: [] as readonly InventoryOpeningBatchView[],
+        }),
     getApprovalThresholdSettings(),
   ]);
 
@@ -84,8 +95,7 @@ export async function getSettingsPageData(): Promise<SettingsPageData> {
     overview: settings.data,
     pricingTemplates: templates.data,
     administration: administration.success ? administration.data : null,
-    readiness: readiness.success ? readiness.data : [],
-    onboarding: onboarding.success ? onboarding.data : null,
+    setup: setup.success ? setup.data : null,
     initialStock: initialStock.success ? initialStock.data : [],
     openingBatches: openingBatches.success ? openingBatches.data : [],
     approvalThresholds: approvalThresholds.success ? approvalThresholds.data : null,

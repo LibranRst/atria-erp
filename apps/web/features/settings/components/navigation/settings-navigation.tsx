@@ -21,6 +21,7 @@ export function SettingsNavigation({
       ariaLabel="Modul Pengaturan ERP"
       layoutId="settings-main-tabs"
       density="compact"
+      scrollable
       options={SETTINGS_TABS.filter(
         (module) => module.value !== "organization" || showAdministration,
       ).map((module) => ({

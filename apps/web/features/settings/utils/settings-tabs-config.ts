@@ -1,6 +1,6 @@
 import type { AppIconName } from "@/components/ui";
 
-export type SettingsTab = "financial" | "catalog" | "organization";
+export type SettingsTab = "readiness" | "financial" | "catalog" | "organization";
 
 export const SETTINGS_TABS: ReadonlyArray<{
   readonly value: SettingsTab;
@@ -8,12 +8,14 @@ export const SETTINGS_TABS: ReadonlyArray<{
   readonly shortLabel: string;
   readonly icon: AppIconName;
 }> = [
+  { value: "readiness", label: "Kesiapan Operasional", shortLabel: "Kesiapan", icon: "task_alt" },
   { value: "financial", label: "Finansial & Budget", shortLabel: "Finansial", icon: "trending_up" },
   { value: "catalog", label: "Katalog Master Data", shortLabel: "Katalog", icon: "inventory_2" },
   { value: "organization", label: "Tim, Vendor & Peran", shortLabel: "Organisasi", icon: "group" },
 ];
 
 export function parseSettingsTab(value: string | null): SettingsTab {
+  if (value === "readiness" || value === "setup") return "readiness";
   if (value === "catalog" || value === "library" || value === "materials") {
     return "catalog";
   }
@@ -29,6 +31,7 @@ export function parseSettingsTab(value: string | null): SettingsTab {
 }
 
 export function settingsTabFromPathname(pathname: string): SettingsTab | null {
+  if (pathname === "/settings/readiness" || pathname === "/settings/setup") return "readiness";
   if (
     pathname === "/settings/catalog" ||
     pathname === "/settings/library" ||

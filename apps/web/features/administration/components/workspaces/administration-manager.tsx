@@ -62,6 +62,20 @@ export function AdministrationManager({
   const newRoleParam = useBrowserUrlSearchParam(ROLE_DEEP_LINK_PARAMS.newRole);
   const [activeTab, setActiveTab] = React.useState<AdministrationTab>(() => {
     if (presentation === "settings" && workspaceParam === ROLE_WORKSPACE_VALUE) return "ROLES";
+    if (
+      presentation === "settings" &&
+      workspaceParam === "vendor" &&
+      initialData.capabilities.canViewVendors
+    ) {
+      return "VENDORS";
+    }
+    if (
+      presentation === "settings" &&
+      workspaceParam === "team" &&
+      initialData.capabilities.canViewUsers
+    ) {
+      return "USERS";
+    }
     if (initialData.capabilities.canViewUsers) return "USERS";
     if (initialData.capabilities.canViewVendors) return "VENDORS";
     // Peran adalah satu-satunya modul yang tersisa untuk peran yang hanya
@@ -138,12 +152,7 @@ export function AdministrationManager({
     setRoleCreateLinkConsumed(true);
     setRoleCreateOpen(true);
   }
-  const createActionLabel =
-    activeTab === "USERS"
-      ? "Tambah User"
-      : activeTab === "VENDORS"
-        ? "Tambah Vendor"
-        : "Peran Baru";
+  const createActionLabel = "Tambah";
   const createActionTitle =
     activeTab === "USERS"
       ? "Tambah Anggota Tim"
@@ -190,26 +199,39 @@ export function AdministrationManager({
   return (
     <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
       {presentation === "onboarding" ? (
-        <div className="flex min-w-0 items-center justify-between gap-3 px-1">
-          <span className="min-w-0">
-            <span className="block text-[13px] leading-5 font-bold text-on-surface">
-              {activeTab === "USERS" ? "Tim internal" : "Vendor"}
-            </span>
-            <span className="block text-meta text-on-surface-variant">
-              {activeTab === "USERS"
-                ? `${activeUserCount} akun aktif`
-                : `${activeVendorCount} vendor aktif`}
-            </span>
-          </span>
-          {canManageActiveTab ? (
-            <button
-              type="button"
-              onClick={openCreate}
-              className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
-            >
-              {activeTab === "USERS" ? "Tambah user" : "Tambah vendor"}
-            </button>
+        <div className="space-y-3">
+          {tabOptions.length > 1 ? (
+            <SegmentedTabs
+              value={activeTab}
+              onChange={setActiveTab}
+              options={tabOptions}
+              ariaLabel="Jenis data administrasi onboarding"
+              layoutId="onboarding-administration-tabs"
+              density="compact"
+              fillAvailableSpace
+            />
           ) : null}
+          <div className="flex min-w-0 items-center justify-between gap-3 px-1">
+            <span className="min-w-0">
+              <span className="block text-[13px] leading-5 font-bold text-on-surface">
+                {activeTab === "USERS" ? "Tim internal" : "Vendor"}
+              </span>
+              <span className="block text-meta text-on-surface-variant">
+                {activeTab === "USERS"
+                  ? `${activeUserCount} akun aktif`
+                  : `${activeVendorCount} vendor aktif`}
+              </span>
+            </span>
+            {canManageActiveTab ? (
+              <button
+                type="button"
+                onClick={openCreate}
+                className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
+              >
+                {activeTab === "USERS" ? "Tambah user" : "Tambah vendor"}
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : (
         <div className="flex min-w-0 items-center justify-between gap-2">

@@ -56,9 +56,16 @@ export function RoleCreateSheet({
 }): React.JSX.Element {
   const nameReady = form.name.trim().length >= 3;
   const source = roles.find((role) => role.id === form.duplicateFromRoleId);
+  const dirty = JSON.stringify(form) !== JSON.stringify(EMPTY_ROLE_CREATE_FORM);
 
   return (
     <OperationalFormSheet
+      dismissal={{
+        mode: "confirm",
+        dirty,
+        onDiscard: () => onFormChange(EMPTY_ROLE_CREATE_FORM),
+        description: "Data peran yang belum dibuat akan hilang.",
+      }}
       open={open}
       title="Peran baru"
       submitLabel="Buat peran"

@@ -5,10 +5,9 @@ import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
 import {
   AppIcon,
-  FormSheet,
   FormField,
   FormSection,
-  SheetFooterActions,
+  OperationalFormSheet,
   AdaptiveSelect,
   TextInput,
 } from "@/components/ui";
@@ -52,29 +51,44 @@ export function AdministrationUserEditorSheet({
   onFormChange: setUserForm,
   onToggle: toggleSelectedUser,
 }: Props): React.JSX.Element {
+  const baseline: UserFormState =
+    editorMode === "EDIT_USER" && selectedUser
+      ? {
+          name: selectedUser.name,
+          email: selectedUser.email,
+          roleId: selectedUser.roleId,
+          temporaryPassword: "",
+        }
+      : {
+          name: "",
+          email: "",
+          roleId: data.roles[0]?.id ?? "",
+          temporaryPassword: "",
+        };
+  const dirty = JSON.stringify(userForm) !== JSON.stringify(baseline);
+
   return (
-    <FormSheet
+    <OperationalFormSheet
+      dismissal={{
+        mode: "confirm",
+        dirty,
+        onDiscard: () => setUserForm(baseline),
+        description: "Perubahan data user yang belum disimpan akan hilang.",
+      }}
       open={open}
       title={editorMode === "EDIT_USER" ? "Edit user" : "Tambah user"}
       onClose={closeEditor}
-      footer={
-        <SheetFooterActions
-          secondary={
-            editorMode === "EDIT_USER" && selectedUser && selectedUser.roleId !== OWNER_ROLE_ID
-              ? {
-                  label: selectedUser.isActive ? "Nonaktifkan" : "Aktifkan",
-                  disabled: pending,
-                  onClick: () => void toggleSelectedUser(),
-                }
-              : undefined
-          }
-          primary={{
-            label: editorMode === "EDIT_USER" ? "Simpan" : "Tambah",
-            pending,
-            form: "administration-user-form",
-            type: "submit",
-          }}
-        />
+      formId="administration-user-form"
+      submitLabel={editorMode === "EDIT_USER" ? "Simpan" : "Tambah"}
+      pending={pending}
+      secondary={
+        editorMode === "EDIT_USER" && selectedUser && selectedUser.roleId !== OWNER_ROLE_ID
+          ? {
+              label: selectedUser.isActive ? "Nonaktifkan" : "Aktifkan",
+              disabled: pending,
+              onClick: () => void toggleSelectedUser(),
+            }
+          : undefined
       }
     >
       <form id="administration-user-form" onSubmit={submitUser} className="space-y-md">
@@ -174,6 +188,6 @@ export function AdministrationUserEditorSheet({
           </div>
         ) : null}
       </form>
-    </FormSheet>
+    </OperationalFormSheet>
   );
 }

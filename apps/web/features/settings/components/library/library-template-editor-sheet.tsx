@@ -32,6 +32,7 @@ type Props = {
   readonly categories: readonly ExpenseCategorySettingRow[];
   readonly materials: readonly MaterialOption[];
   readonly vendors: readonly VendorOption[];
+  readonly unitOptions?: readonly string[];
   readonly canManage: boolean;
   readonly pending: boolean;
   readonly canSave: boolean;
@@ -76,6 +77,7 @@ export function LibraryTemplateEditorSheet({
   categories,
   materials,
   vendors,
+  unitOptions,
   canManage,
   pending,
   canSave,
@@ -100,6 +102,7 @@ export function LibraryTemplateEditorSheet({
 }: Props): React.JSX.Element {
   return (
     <OperationalFormSheet
+      dismissal={{ mode: "managed" }}
       open={Boolean(draft)}
       title={draft?.id ? "Edit Template Harga" : "Tambah Template Harga"}
       onClose={onClose}
@@ -181,7 +184,7 @@ export function LibraryTemplateEditorSheet({
               label="Satuan"
               value={draft.unit}
               onChange={(value) => onDraftChange({ ...draft, unit: value })}
-              options={COMMON_UNIT_OPTIONS}
+              options={unitOptions ?? COMMON_UNIT_OPTIONS}
               error={!draft.unit.trim() ? "Satuan wajib diisi." : undefined}
             />
             {draft.itemType === "MATERIAL_ITEM" ? (

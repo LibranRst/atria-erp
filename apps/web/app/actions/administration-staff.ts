@@ -3,11 +3,13 @@
 import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { account, auditLog, role, session, user } from "@/db/schema";
+import { account, auditLog, role, session, tenantMember, user } from "@/db/schema";
+import { INSTANCE_TENANT_ID } from "@/db/schema/tenant-constants";
 import { auth } from "@/lib/auth";
 import { assertPermission } from "@/lib/auth/permissions";
 import { resolveActor } from "@/server/actor";
 import { changeTemporaryPasswordUseCase } from "@/server/usecases/administration/change-temporary-password";
+import { recordReadinessMilestonesTx } from "@/lib/onboarding/readiness-events";
 import { OWNER_ROLE_ID } from "@atria/core/auth/role-constants";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
@@ -68,6 +70,12 @@ export async function createStaffUser(
         userId: row.id,
         password: passwordHash,
       });
+      await tx.insert(tenantMember).values({
+        tenantId: INSTANCE_TENANT_ID,
+        userId: row.id,
+        roleId: row.roleId,
+        isActive: true,
+      });
       await tx.insert(auditLog).values({
         userId: actor.id,
         action: "CREATE_STAFF_USER",
@@ -79,6 +87,11 @@ export async function createStaffUser(
           roleId: row.roleId,
           mustChangePassword: true,
         }),
+      });
+      await recordReadinessMilestonesTx({
+        tx,
+        actorUserId: actor.id,
+        changedItem: "core_team",
       });
       return row;
     });
@@ -147,6 +160,19 @@ export async function updateStaffUser(
         .where(eq(user.id, existing.id))
         .returning();
       if (!updated.isActive) await tx.delete(session).where(eq(session.userId, updated.id));
+      await tx
+        .update(tenantMember)
+        .set({
+          roleId: validation.data.roleId,
+          isActive: validation.data.isActive,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(tenantMember.tenantId, INSTANCE_TENANT_ID),
+            eq(tenantMember.userId, updated.id),
+          ),
+        );
       await tx.insert(auditLog).values({
         userId: actor.id,
         action: "UPDATE_STAFF_USER",

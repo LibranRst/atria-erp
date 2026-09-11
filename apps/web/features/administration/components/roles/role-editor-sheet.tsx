@@ -5,6 +5,7 @@ import React from "react";
 import {
   AppIcon,
   ChoiceRow,
+  FactRow,
   FormDisclosure,
   FormField,
   FormSection,
@@ -106,8 +107,32 @@ export function RoleEditorSheet({
     onDraftChange({ ...draft, permissions: togglePermission(draft.permissions, key, next) });
   }
 
+  const baseline: RoleDraft = role
+    ? {
+        name: role.name,
+        description: role.description ?? "",
+        dataScope: role.dataScope,
+        permissions: [...role.permissions],
+      }
+    : {
+        name: "",
+        description: "",
+        dataScope: "NONE",
+        permissions: [],
+      };
+
   return (
     <OperationalFormSheet
+      dismissal={
+        readOnly
+          ? { mode: "discard" }
+          : {
+              mode: "confirm",
+              dirty,
+              onDiscard: () => onDraftChange(baseline),
+              description: "Perubahan detail dan izin peran yang belum disimpan akan hilang.",
+            }
+      }
       open={open}
       title={role ? draft.name : "Peran"}
       submitLabel="Simpan peran"
@@ -128,7 +153,7 @@ export function RoleEditorSheet({
       {totalSuggested > 0 ? (
         <GroupedSurface>
           <InlineStateRow
-            icon="chat"
+            icon="sparkle"
             tone="neutral"
             title={`${totalSuggested} saran dari asisten`}
             description="Baris bertanda Disarankan belum diterapkan. Anda yang menekannya."
@@ -183,12 +208,13 @@ export function RoleEditorSheet({
         }
       >
         {readOnly ? (
-          <FormField label="Proyek yang dapat diakses" readOnly>
-            <p className="text-row font-bold text-on-surface">
-              {DATA_SCOPE_OPTIONS.find((option) => option.value === draft.dataScope)?.label ??
-                draft.dataScope}
-            </p>
-          </FormField>
+          <FactRow
+            label="Proyek yang dapat diakses"
+            value={
+              DATA_SCOPE_OPTIONS.find((option) => option.value === draft.dataScope)?.label ??
+              draft.dataScope
+            }
+          />
         ) : (
           <div
             role="radiogroup"

@@ -1,6 +1,7 @@
 import React from "react";
 import {
   AppIcon,
+  FactRow,
   FormField,
   FormSection,
   MoneyInput,
@@ -30,6 +31,7 @@ export function MaterialInventoryDefaultSheet({
 }: MaterialInventoryDefaultSheetProps): React.JSX.Element {
   return (
     <OperationalFormSheet
+      dismissal={{ mode: "managed" }}
       open={Boolean(draft)}
       title="Default Inventori"
       onClose={onClose}
@@ -48,18 +50,19 @@ export function MaterialInventoryDefaultSheet({
             title="Default lokasi"
             helper="Atur batas minimum dan harga referensi tanpa mengubah stok saat ini."
           >
-            <FormField label="Lokasi inventori" readOnly>
-              <div className="flex min-h-8 items-center gap-2.5">
-                <AppIcon
-                  name="warehouse"
-                  className="icon-sm shrink-0 text-on-surface-variant"
-                  aria-hidden="true"
-                />
-                <span className="truncate text-sm font-bold text-on-surface">
-                  {draft.locationName}
+            <FactRow
+              label="Lokasi inventori"
+              value={
+                <span className="inline-flex min-w-0 items-center justify-end gap-2.5">
+                  <AppIcon
+                    name="warehouse"
+                    className="icon-sm shrink-0 text-on-surface-variant"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{draft.locationName}</span>
                 </span>
-              </div>
-            </FormField>
+              }
+            />
             <FormField label="Stok minimum">
               <NumericInput
                 min={0}

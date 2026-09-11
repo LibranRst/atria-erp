@@ -2,7 +2,9 @@
 
 import type { ProductionReadinessItem } from "@/app/actions/administration";
 import type { SettingsHubOverview } from "@/app/actions/settings/system";
+import { cn } from "@/lib/utils/cn";
 import {
+  AppIcon,
   DuotoneIconTile,
   GroupedSurface,
   WorkspaceModuleHeader,
@@ -156,11 +158,13 @@ export function SettingsHub({
                 const iconName = item.ready ? "check_circle" : "data_alert";
                 return (
                   <div key={item.id} className="flex min-h-17 items-center gap-3 px-3.5 py-3">
-                    <DuotoneIconTile
+                    <AppIcon
                       name={iconName}
-                      tone={item.ready ? "neutral" : "attention"}
-                      className="h-9 w-9"
-                      iconClassName="icon-sm"
+                      weight="duotone"
+                      className={cn(
+                        "icon-lg shrink-0",
+                        item.ready ? "text-primary" : "text-on-surface-variant/60",
+                      )}
                     />
                     <span className="min-w-0 flex-1">
                       <span className="block text-row font-bold text-on-surface">{item.label}</span>

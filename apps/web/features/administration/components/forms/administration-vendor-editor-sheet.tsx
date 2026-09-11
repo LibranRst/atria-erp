@@ -3,10 +3,9 @@
 import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
 import {
-  FormSheet,
   FormField,
   FormSection,
-  SheetFooterActions,
+  OperationalFormSheet,
   Textarea,
   TextInput,
 } from "@/components/ui";
@@ -35,29 +34,50 @@ export function AdministrationVendorEditorSheet({
   onFormChange: setVendorForm,
   onToggle: toggleSelectedVendor,
 }: Props): React.JSX.Element {
+  const baseline: VendorFormState =
+    editorMode === "EDIT_VENDOR" && selectedVendor
+      ? {
+          name: selectedVendor.name,
+          phone: selectedVendor.phone,
+          email: selectedVendor.email ?? "",
+          address: selectedVendor.address ?? "",
+          bankName: selectedVendor.bankName ?? "",
+          bankAccountNumber: selectedVendor.bankAccountNumber ?? "",
+          bankAccountHolder: selectedVendor.bankAccountHolder ?? "",
+        }
+      : {
+          name: "",
+          phone: "",
+          email: "",
+          address: "",
+          bankName: "",
+          bankAccountNumber: "",
+          bankAccountHolder: "",
+        };
+  const dirty = JSON.stringify(vendorForm) !== JSON.stringify(baseline);
+
   return (
-    <FormSheet
+    <OperationalFormSheet
+      dismissal={{
+        mode: "confirm",
+        dirty,
+        onDiscard: () => setVendorForm(baseline),
+        description: "Perubahan data vendor yang belum disimpan akan hilang.",
+      }}
       open={open}
       title={editorMode === "EDIT_VENDOR" ? "Edit vendor" : "Tambah vendor"}
       onClose={closeEditor}
-      footer={
-        <SheetFooterActions
-          secondary={
-            editorMode === "EDIT_VENDOR" && selectedVendor
-              ? {
-                  label: selectedVendor.isActive ? "Arsipkan" : "Aktifkan",
-                  disabled: pending,
-                  onClick: () => void toggleSelectedVendor(),
-                }
-              : undefined
-          }
-          primary={{
-            label: editorMode === "EDIT_VENDOR" ? "Simpan" : "Tambah",
-            pending,
-            form: "administration-vendor-form",
-            type: "submit",
-          }}
-        />
+      formId="administration-vendor-form"
+      submitLabel={editorMode === "EDIT_VENDOR" ? "Simpan" : "Tambah"}
+      pending={pending}
+      secondary={
+        editorMode === "EDIT_VENDOR" && selectedVendor
+          ? {
+              label: selectedVendor.isActive ? "Arsipkan" : "Aktifkan",
+              disabled: pending,
+              onClick: () => void toggleSelectedVendor(),
+            }
+          : undefined
       }
     >
       <form id="administration-vendor-form" onSubmit={submitVendor} className="space-y-md">
@@ -157,6 +177,6 @@ export function AdministrationVendorEditorSheet({
           </FormField>
         </FormSection>
       </form>
-    </FormSheet>
+    </OperationalFormSheet>
   );
 }

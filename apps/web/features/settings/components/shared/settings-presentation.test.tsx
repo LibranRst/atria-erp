@@ -64,6 +64,7 @@ describe("Settings presentation", () => {
     expect(html).toContain("Finansial");
     expect(html).toContain("Katalog");
     expect(html).toContain("Organisasi");
+    expect(html).toContain("Kesiapan");
     expect(html).toContain('role="tablist"');
   });
 
@@ -122,6 +123,7 @@ describe("Settings presentation", () => {
   test("uses a route-specific structural skeleton", () => {
     const html = renderToStaticMarkup(<SettingsLoading />);
     expect(html).toContain("Memuat Pengaturan ERP");
+    expect(html).toContain("rounded-owner bg-white p-4 shadow-surface");
     expect(html).toContain("bg-surface-inverse");
     expect(html).toContain("Default finansial dan master data sedang disiapkan");
   });

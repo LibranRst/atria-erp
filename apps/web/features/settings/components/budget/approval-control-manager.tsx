@@ -5,16 +5,18 @@ import { toast } from "sonner";
 
 import { updateApprovalThresholds } from "@/app/actions/settings/approval-thresholds";
 import {
-  Button,
   FormField,
   FormSection,
   GroupedSurface,
   InlineStateRow,
+  MainSection,
   MoneyInput,
   MoneyValue,
   OperationalFormSheet,
+  RowGroup,
+  SectionAction,
+  WorkspaceStatusLabel,
 } from "@/components/ui";
-import { SettingsInverseSurface } from "../shared/settings-inverse-surface";
 
 /**
  * Kontrol persetujuan: ambang nominal yang memaksa keputusan Owner.
@@ -30,10 +32,12 @@ export function ApprovalControlManager({
   fieldCostCents,
   vendorPaymentCents,
   canManage,
+  onMutationComplete,
 }: {
   readonly fieldCostCents: number;
   readonly vendorPaymentCents: number;
   readonly canManage: boolean;
+  readonly onMutationComplete?: () => void;
 }): React.JSX.Element {
   const [open, setOpen] = React.useState(false);
   const [pending, setPending] = React.useState(false);
@@ -62,24 +66,28 @@ export function ApprovalControlManager({
         : "Tidak ada perubahan.",
     );
     setOpen(false);
+    if (result.data.updated) {
+      onMutationComplete?.();
+    }
   }
 
   return (
-    <section className="space-y-2">
-      <SettingsInverseSurface label="Kontrol persetujuan">
-        <p className="text-eyebrow font-bold tracking-[0.16em] text-on-primary/70 uppercase">
-          Kontrol persetujuan
-        </p>
-        <h2 className="mt-1.5 text-[19px] leading-[1.15] font-bold tracking-[-0.02em]">
-          Ambang keputusan Owner
-        </h2>
-        <p className="mt-2 text-support text-on-primary/75">
-          Pengajuan yang mencapai ambang ini berhenti untuk diputus Owner.
-        </p>
-      </SettingsInverseSurface>
-
+    <MainSection
+      title="Persetujuan"
+      titleAction={
+        canManage ? undefined : <WorkspaceStatusLabel label="Hanya baca" tone="inactive" />
+      }
+      action={
+        canManage ? <SectionAction label="Ubah ambang" onClick={() => setOpen(true)} /> : undefined
+      }
+    >
       <GroupedSurface>
-        <div className="divide-y divide-black/5.5">
+        <RowGroup>
+          <InlineStateRow
+            icon="verified_user"
+            title="Ambang keputusan Owner"
+            description="Pengajuan yang mencapai nominal ini berhenti untuk diputus Owner."
+          />
           <ThresholdRow
             title="Pengeluaran lapangan"
             description="Biaya yang diajukan dari lokasi proyek."
@@ -95,18 +103,19 @@ export function ApprovalControlManager({
             title="Berlaku untuk pengajuan berikutnya"
             description="Pengajuan yang sudah menunggu keputusan tidak berpindah jalur."
           />
-        </div>
+        </RowGroup>
       </GroupedSurface>
 
-      {canManage ? (
-        <div className="px-1">
-          <Button type="button" variant="secondary" fullWidth onClick={() => setOpen(true)}>
-            Ubah ambang
-          </Button>
-        </div>
-      ) : null}
-
       <OperationalFormSheet
+        dismissal={{
+          mode: "confirm",
+          dirty,
+          onDiscard: () => {
+            setFieldCost(String(fieldCostCents / 100));
+            setVendorPayment(String(vendorPaymentCents / 100));
+          },
+          description: "Perubahan ambang persetujuan yang belum disimpan akan hilang.",
+        }}
         open={open}
         title="Ubah ambang persetujuan"
         submitLabel="Simpan ambang"
@@ -135,7 +144,7 @@ export function ApprovalControlManager({
           </FormField>
         </FormSection>
       </OperationalFormSheet>
-    </section>
+    </MainSection>
   );
 }
 
@@ -151,12 +160,10 @@ function ThresholdRow({
   return (
     <div className="flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-row font-bold text-on-surface">{title}</p>
-        <p className="mt-1 truncate text-[10px] leading-[1.3] text-on-surface-variant">
-          {description}
-        </p>
+        <p className="text-row font-bold text-on-surface">{title}</p>
+        <p className="mt-1 text-[10px] leading-[1.35] text-on-surface-variant">{description}</p>
       </div>
-      <MoneyValue amount={amount} variant="fullDynamic" />
+      <MoneyValue amount={amount} variant="fullDynamic" align="right" className="max-w-[45%]" />
     </div>
   );
 }

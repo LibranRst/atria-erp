@@ -1,11 +1,10 @@
 import React from "react";
 import {
   CompactFormDialog,
-  FormField,
-  FormSection,
   SheetFooterActions,
   TextInput,
 } from "@/components/ui";
+
 type MaterialCategoryComposerDialogProps = {
   readonly open: boolean;
   readonly name: string;
@@ -28,11 +27,11 @@ export function MaterialCategoryComposerDialog({
     <CompactFormDialog
       open={open}
       title="Kategori Material Baru"
+      description="Kategori baru langsung dipilih pada material yang sedang dibuat."
       onClose={onClose}
       pending={pending}
       actions={
         <SheetFooterActions
-          disabledReason={!trimmedName ? "Isi nama kategori material." : undefined}
           secondary={{ label: "Batal", onClick: onClose, disabled: pending }}
           primary={{
             label: "Tambah",
@@ -44,19 +43,15 @@ export function MaterialCategoryComposerDialog({
         />
       }
     >
-      <FormSection
-        title="Nama kategori"
-        helper="Kategori baru langsung dipilih pada Material yang sedang dibuat."
-      >
-        <FormField label="Nama kategori material" required>
-          <TextInput
-            autoFocus
-            value={name}
-            onChange={onNameChange}
-            placeholder="Contoh: Hardware"
-          />
-        </FormField>
-      </FormSection>
+      <div className="py-1">
+        <TextInput
+          autoFocus
+          value={name}
+          onChange={onNameChange}
+          placeholder="Contoh: Hardware, Finishing, Sanitair"
+          aria-label="Nama kategori material"
+        />
+      </div>
     </CompactFormDialog>
   );
 }

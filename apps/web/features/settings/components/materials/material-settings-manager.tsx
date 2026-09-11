@@ -1,14 +1,19 @@
 "use client";
 
 import React from "react";
+import { toast } from "sonner";
+import { createInventoryLocation } from "@/app/actions/material/warehouse";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
 import {
   AppIcon,
+  COMMON_UNIT_OPTIONS,
   ConfirmationDialog,
   EmptyState,
   FilterSelect,
   FormRiskNotice,
 } from "@/components/ui";
+import { InventoryLocationSheet } from "@/features/materials/components/sheets/inventory-location-sheet";
+import { VendorCreateSheet } from "@/features/administration/components/forms/vendor-create-sheet";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
 import { MaterialImportSheet } from "./material-import-sheet";
 import { MaterialCategoryComposerDialog } from "./material-category-composer-dialog";
@@ -42,14 +47,17 @@ const STATUS_FILTERS = [
 export function MaterialSettingsManager({
   initialMaterials,
   initialCategories,
-  vendors,
-  locations,
+  vendors: initialVendors,
+  locations: initialLocations,
   canManage,
   presentation = "settings",
   onMutationComplete,
 }: MaterialSettingsManagerProps): React.JSX.Element {
   const [materials, setMaterials] = React.useState(initialMaterials);
   const [categories, setCategories] = React.useState(initialCategories);
+  const [addedVendors, setAddedVendors] = React.useState<readonly SettingsOption[]>([]);
+  const [addedLocations, setAddedLocations] = React.useState<readonly SettingsOption[]>([]);
+  const [showVendorComposer, setShowVendorComposer] = React.useState(false);
   const [draft, setDraft] = React.useState<MaterialDraft | null>(null);
   const [inventoryEdit, setInventoryEdit] = React.useState<InventoryDraft | null>(null);
   const [draftBaseline, setDraftBaseline] = React.useState("");
@@ -60,8 +68,10 @@ export function MaterialSettingsManager({
   const [selectedMaterial, setSelectedMaterial] = React.useState<MaterialSettingRow | null>(null);
   const [detailNextAction, setDetailNextAction] = React.useState<DetailNextAction | null>(null);
   const [showCategoryComposer, setShowCategoryComposer] = React.useState(false);
+  const [showLocationComposer, setShowLocationComposer] = React.useState(false);
   const [showMaterialDetails, setShowMaterialDetails] = React.useState(false);
   const [categoryName, setCategoryName] = React.useState("");
+  const [newLocationName, setNewLocationName] = React.useState("");
   const [search, setSearch] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState("ALL");
   const [vendorFilter, setVendorFilter] = React.useState("ALL");
@@ -70,6 +80,48 @@ export function MaterialSettingsManager({
   const [status, setStatus] = React.useState("ACTIVE");
   const [message, setMessage] = React.useState<string | null>(null);
   const [showImport, setShowImport] = React.useState(false);
+  const [locationPending, startLocationTransition] = React.useTransition();
+
+  const locations = React.useMemo(() => {
+    const existingIds = new Set(initialLocations.map((loc) => loc.id));
+    return [...initialLocations, ...addedLocations.filter((loc) => !existingIds.has(loc.id))];
+  }, [initialLocations, addedLocations]);
+
+  const vendors = React.useMemo(() => {
+    const existingIds = new Set(initialVendors.map((vendor) => vendor.id));
+    return [...initialVendors, ...addedVendors.filter((vendor) => !existingIds.has(vendor.id))];
+  }, [initialVendors, addedVendors]);
+
+  const unitOptions = React.useMemo(() => {
+    const existingUnits = materials.map((m) => m.unit?.trim()).filter(Boolean);
+    return Array.from(new Set([...COMMON_UNIT_OPTIONS, ...existingUnits]));
+  }, [materials]);
+
+  function handleAddLocation(): void {
+    const trimmed = newLocationName.trim();
+    if (trimmed.length < 3) return;
+
+    startLocationTransition(async () => {
+      const result = await createInventoryLocation({
+        name: trimmed,
+        description: null,
+      });
+
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
+
+      setAddedLocations((current) => [...current, { id: result.data.id, name: result.data.name }]);
+      if (draft) {
+        setDraft((curr) => (curr ? { ...curr, locationId: result.data.id } : null));
+      }
+      setShowLocationComposer(false);
+      setNewLocationName("");
+      toast.success("Lokasi gudang baru berhasil ditambahkan.");
+      onMutationComplete?.();
+    });
+  }
   const suspendedFiltersRef = React.useRef<{
     readonly category: string;
     readonly vendor: string;
@@ -313,7 +365,7 @@ export function MaterialSettingsManager({
             <button
               type="button"
               onClick={() => openMaterial(blank())}
-              className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control"
+              className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
               title="Tambah Material Baru"
             >
               <AppIcon name="add" className="icon-sm" />
@@ -355,6 +407,7 @@ export function MaterialSettingsManager({
         categories={categories}
         vendors={vendors}
         locations={locations}
+        unitOptions={unitOptions}
         canManage={canManage}
         pending={pending}
         canSave={canSaveMaterial}
@@ -366,6 +419,8 @@ export function MaterialSettingsManager({
         onDraftChange={(nextDraft) => setDraft(nextDraft)}
         onDetailsOpenChange={setShowMaterialDetails}
         onCreateCategory={() => setShowCategoryComposer(true)}
+        onCreateLocation={() => setShowLocationComposer(true)}
+        onCreateVendor={() => setShowVendorComposer(true)}
       />
       <MaterialCategoryComposerDialog
         open={showCategoryComposer}
@@ -377,6 +432,30 @@ export function MaterialSettingsManager({
         }}
         onNameChange={setCategoryName}
         onSubmit={addCategory}
+      />
+      <InventoryLocationSheet
+        open={showLocationComposer}
+        pending={locationPending}
+        name={newLocationName}
+        activeMaterialCount={materials.filter((row) => row.isActive).length}
+        onNameChange={setNewLocationName}
+        onClose={() => {
+          setShowLocationComposer(false);
+          setNewLocationName("");
+        }}
+        onSubmit={handleAddLocation}
+      />
+      <VendorCreateSheet
+        open={showVendorComposer}
+        onClose={() => setShowVendorComposer(false)}
+        onSuccess={(newVendor) => {
+          setAddedVendors((curr) => [...curr, newVendor]);
+          if (draft) {
+            setDraft((curr) => (curr ? { ...curr, defaultVendorId: newVendor.id } : null));
+          }
+          setShowVendorComposer(false);
+          onMutationComplete?.();
+        }}
       />
       <MaterialInventoryDefaultSheet
         draft={inventoryEdit}

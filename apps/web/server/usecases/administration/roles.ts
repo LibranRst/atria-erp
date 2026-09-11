@@ -8,7 +8,7 @@ import { getAllPermissionKeys } from "@/lib/auth/role-access";
 import type { Actor } from "@/server/actor";
 import { actorCan } from "@/lib/auth/permissions";
 import { OWNER_ROLE_ID } from "@atria/core/auth/role-constants";
-import type { PermissionKey, RoleDataScope } from "@atria/core/auth/permissions";
+import { ROLE_PERMISSIONS, type PermissionKey, type RoleDataScope } from "@atria/core/auth/permissions";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createRoleSchema,
@@ -121,7 +121,10 @@ export async function listManagedRolesUseCase(
       isSystem: row.isSystem,
       isOwnerRole: row.id === OWNER_ROLE_ID,
       userCount: countByRole.get(row.id) ?? 0,
-      permissions: row.permissions.map((item) => item.permissionKey as PermissionKey),
+      permissions:
+        row.permissions.length > 0
+          ? row.permissions.map((item) => item.permissionKey as PermissionKey)
+          : (ROLE_PERMISSIONS[row.name.toUpperCase()] ?? []),
     })),
   };
 }
