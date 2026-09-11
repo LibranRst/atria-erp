@@ -19,6 +19,7 @@ export type Actor = {
   readonly roleName: string;
   readonly name: string;
   readonly email: string;
+  readonly image?: string | null;
   readonly isActive: boolean;
   readonly mustChangePassword: boolean;
   /**
@@ -47,6 +48,7 @@ type SessionUser = {
   readonly roleId: string;
   readonly name?: string | null;
   readonly email?: string | null;
+  readonly image?: string | null;
   readonly isActive?: boolean | null;
   readonly mustChangePassword?: boolean | null;
 };
@@ -76,6 +78,7 @@ async function toActor(
     dataScope: access?.dataScope ?? "NONE",
     name: user.name ?? "",
     email: user.email ?? "",
+    image: user.image ?? null,
     isActive: user.isActive ?? true,
     mustChangePassword: user.mustChangePassword ?? false,
     // Kosong hanya jika sesi tidak terbaca sama sekali. Konsumennya memakai ini

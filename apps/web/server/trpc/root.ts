@@ -5,6 +5,7 @@ import { administrationRouter } from "@/server/trpc/routers/administration";
 import { aiRouter } from "@/server/trpc/routers/ai";
 import { financeRouter } from "@/server/trpc/routers/finance";
 import { mediaRouter } from "@/server/trpc/routers/media";
+import { notificationsRouter } from "@/server/trpc/routers/notifications";
 import { profileRouter } from "@/server/trpc/routers/profile";
 import { projectRouter } from "@/server/trpc/routers/project";
 import { screenRouter } from "@/server/trpc/routers/screen";
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   ai: aiRouter,
   finance: financeRouter,
   media: mediaRouter,
+  notifications: notificationsRouter,
   profile: profileRouter,
   project: projectRouter,
   screen: screenRouter,
