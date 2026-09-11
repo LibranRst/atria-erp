@@ -13,4 +13,4 @@ export const geminiClient = new GoogleGenAI({
  * Model Gemini untuk OCR nota (multimodal).
  * Disatukan di sini supaya pembaruan versi model cukup dilakukan di satu tempat.
  */
-export const GEMINI_OCR_MODEL = "gemini-3.7-flash";
+export const GEMINI_OCR_MODEL = "gemini-3.8-flash";

@@ -71,4 +71,19 @@ describe("struktur composer", () => {
     expect(html).toContain("Hentikan jawaban");
     expect(html).not.toContain("Kirim pertanyaan");
   });
+
+  test("menampilkan tombol lampirkan berkas inline di dalam komposer", () => {
+    const html = renderToStaticMarkup(
+      <ChatComposer
+        value=""
+        onChange={() => undefined}
+        onSubmit={() => undefined}
+        onStop={() => undefined}
+        isBusy={false}
+      />,
+    );
+
+    expect(html).toContain('aria-label="Lampirkan berkas"');
+    expect(html).toContain('type="file"');
+  });
 });

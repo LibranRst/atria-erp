@@ -13,10 +13,13 @@ import {
   Button,
   CompactFormDialog,
   ConfirmationDialog,
-  FormSheet,
   FormField,
+  FormSection,
   IconButton,
+  OperationalFormSheet,
+  OptionChoiceGroup,
   SearchInput,
+  SegmentedTabs,
   SheetFooterActions,
   TextInput,
   Textarea,
@@ -262,7 +265,7 @@ export function ConversationHistoryWorkspace({
                     className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-3 text-left focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none"
                   >
                     <AppIcon
-                      name={conversation.id === activeId ? "check_circle" : "chat"}
+                      name={conversation.id === activeId ? "check_circle" : "sparkle"}
                       className="icon-sm shrink-0 text-on-surface-variant"
                     />
                     <span className="min-w-0 flex-1">
@@ -357,77 +360,64 @@ export function ConversationHistoryWorkspace({
         onConfirm={() => void remove()}
       />
 
-      <FormSheet
+      <OperationalFormSheet
+        dismissal={{
+          mode: "confirm",
+          dirty: JSON.stringify(preferenceDraft) !== JSON.stringify(preference),
+          onDiscard: () => setPreferenceDraft(preference),
+          description: "Perubahan preferensi asisten yang belum disimpan akan hilang.",
+        }}
         open={preferenceOpen}
         title="Preferensi asisten"
         onClose={() => setPreferenceOpen(false)}
-        footer={
-          <SheetFooterActions
-            secondary={{ label: "Reset", pending, onClick: () => void resetPreference() }}
-            primary={{ label: "Simpan", pending, onClick: () => void savePreference() }}
-          />
-        }
+        onSubmit={() => void savePreference()}
+        submitLabel="Simpan"
+        pending={pending}
+        secondary={{ label: "Reset", pending, onClick: () => void resetPreference() }}
       >
         <div className="space-y-5">
-          <fieldset className="space-y-2">
-            <legend className="text-row font-bold text-on-surface">Gaya jawaban</legend>
-            {STYLE_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() =>
-                  setPreferenceDraft((current) => ({ ...current, responseStyle: option.value }))
-                }
-                className={`flex min-h-12 w-full items-center justify-between rounded-full px-4 text-row font-semibold ring-1 ${preferenceDraft.responseStyle === option.value ? "bg-primary text-on-primary ring-primary" : "bg-white text-on-surface ring-ring-control"}`}
-              >
-                <span>{option.label}</span>
-                {preferenceDraft.responseStyle === option.value ? (
-                  <AppIcon name="check" className="icon-sm" />
-                ) : null}
-              </button>
-            ))}
-          </fieldset>
-          <fieldset className="space-y-2">
-            <legend className="text-row font-bold text-on-surface">Fokus utama</legend>
-            {FOCUS_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() =>
-                  setPreferenceDraft((current) => ({ ...current, primaryFocus: option.value }))
-                }
-                className={`flex min-h-12 w-full items-center justify-between rounded-full px-4 text-row font-semibold ring-1 ${preferenceDraft.primaryFocus === option.value ? "bg-primary text-on-primary ring-primary" : "bg-white text-on-surface ring-ring-control"}`}
-              >
-                <span>{option.label}</span>
-                {preferenceDraft.primaryFocus === option.value ? (
-                  <AppIcon name="check" className="icon-sm" />
-                ) : null}
-              </button>
-            ))}
-          </fieldset>
-          <div className="space-y-2">
-            <label htmlFor="ai-custom-note" className="text-row font-bold text-on-surface">
-              Catatan personal
-            </label>
-            <Textarea
-              id="ai-custom-note"
-              value={preferenceDraft.customNote ?? ""}
+          <FormSection title="Gaya jawaban" presentation="plain">
+            <SegmentedTabs
+              ariaLabel="Gaya jawaban"
+              value={preferenceDraft.responseStyle}
               onChange={(value) =>
-                setPreferenceDraft((current) => ({
-                  ...current,
-                  customNote: value.slice(0, 300) || null,
-                }))
+                setPreferenceDraft((current) => ({ ...current, responseStyle: value }))
               }
-              rows={4}
-              placeholder="Contoh: gunakan istilah yang mudah dipahami tim lapangan"
+              options={STYLE_OPTIONS}
+              fillAvailableSpace
             />
-            <p className="text-meta text-on-surface-variant">
-              Maksimal 300 karakter. Catatan hanya memengaruhi gaya, istilah, dan prioritas—bukan
-              izin atau fakta.
-            </p>
-          </div>
+          </FormSection>
+
+          <OptionChoiceGroup
+            label="Fokus utama"
+            value={preferenceDraft.primaryFocus}
+            onChange={(value) =>
+              setPreferenceDraft((current) => ({ ...current, primaryFocus: value }))
+            }
+            options={FOCUS_OPTIONS}
+          />
+
+          <FormSection>
+            <FormField
+              label="Catatan personal"
+              helper="Maksimal 300 karakter. Catatan hanya memengaruhi gaya, istilah, dan prioritas—bukan izin atau fakta."
+            >
+              <Textarea
+                id="ai-custom-note"
+                value={preferenceDraft.customNote ?? ""}
+                onChange={(value) =>
+                  setPreferenceDraft((current) => ({
+                    ...current,
+                    customNote: value.slice(0, 300) || null,
+                  }))
+                }
+                rows={4}
+                placeholder="Contoh: gunakan istilah yang mudah dipahami tim lapangan"
+              />
+            </FormField>
+          </FormSection>
         </div>
-      </FormSheet>
+      </OperationalFormSheet>
     </div>
   );
 }

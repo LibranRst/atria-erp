@@ -54,7 +54,7 @@ export function ChatEmptyState({ onSelect, disabled }: ChatEmptyStateProps): Rea
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-control"
           aria-hidden="true"
         >
-          <AppIcon name="smart_toy" className="icon-lg" />
+          <AppIcon name="sparkle" weight="fill" className="icon-lg" />
         </div>
         <div className="space-y-1">
           <h3 className="text-section font-bold tracking-[-0.015em] text-on-surface">
@@ -73,16 +73,14 @@ export function ChatEmptyState({ onSelect, disabled }: ChatEmptyStateProps): Rea
           Panduan Aksi Cepat
         </p>
         <div className="grid grid-cols-2 gap-2">
-          {QUICK_ACTIONS.map((action, index) => (
+          {QUICK_ACTIONS.map((action) => (
             <motion.button
               key={action.title}
               type="button"
               onClick={() => onSelect(action.prompt)}
               disabled={disabled}
-              initial={reduceMotion ? undefined : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
               whileTap={reduceMotion || disabled ? undefined : { scale: 0.97 }}
-              transition={{ ...transitionSpringSnappy, delay: index * 0.04 }}
+              transition={transitionSpringSnappy}
               className="group flex flex-col items-start gap-2 rounded-2xl bg-white p-3 text-left shadow-surface ring-1 ring-ring-subtle transition-all duration-200 hover:bg-surface-container-low hover:ring-ring-control focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none disabled:opacity-45"
             >
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container text-primary">
@@ -102,16 +100,14 @@ export function ChatEmptyState({ onSelect, disabled }: ChatEmptyStateProps): Rea
           Pertanyaan Analisis
         </p>
         <div className="space-y-1.5">
-          {ANALYSIS_QUESTIONS.map((question, index) => (
+          {ANALYSIS_QUESTIONS.map((question) => (
             <motion.button
               key={question}
               type="button"
               onClick={() => onSelect(question)}
               disabled={disabled}
-              initial={reduceMotion ? undefined : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
               whileTap={reduceMotion || disabled ? undefined : { scale: 0.98 }}
-              transition={{ ...transitionSpringSnappy, delay: index * 0.04 }}
+              transition={transitionSpringSnappy}
               className="flex w-full items-center justify-between gap-3 rounded-full bg-white px-4 py-3 text-left text-support font-semibold text-on-surface shadow-control ring-1 ring-ring-subtle transition-all duration-200 hover:bg-surface-container-low hover:ring-ring-control focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none disabled:opacity-45"
             >
               <span className="truncate">{question}</span>

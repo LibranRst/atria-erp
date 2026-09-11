@@ -7,6 +7,9 @@ import type { ExpenseReviewProposalData } from "../components/proposal-cards/exp
 import type { DisburseExpenseProposalData } from "../components/proposal-cards/disburse-expense-proposal-card";
 import type { RoleChangeProposalData } from "../components/proposal-cards/role-change-proposal-card";
 import type { CreateRoleProposalData } from "../components/proposal-cards/role-create-proposal-card";
+import type { CreateUserProposalData } from "../components/proposal-cards/user-create-proposal-card";
+import type { CreateUserBatchProposalData } from "../components/proposal-cards/user-batch-create-proposal-card";
+import type { BankReconciliationProposalData } from "../components/proposal-cards/ai-reconciliation-proposal-card";
 import type { ExpenseProposal } from "./expense-proposal";
 
 export type AnyAiProposal =
@@ -19,7 +22,10 @@ export type AnyAiProposal =
   | ExpenseReviewProposalData
   | DisburseExpenseProposalData
   | RoleChangeProposalData
-  | CreateRoleProposalData;
+  | CreateRoleProposalData
+  | CreateUserProposalData
+  | CreateUserBatchProposalData
+  | BankReconciliationProposalData;
 
 export function readAnyProposal(output: unknown): AnyAiProposal | null {
   if (typeof output !== "object" || output === null) return null;
@@ -28,6 +34,23 @@ export function readAnyProposal(output: unknown): AnyAiProposal | null {
 
   const candidate = proposal as Record<string, unknown>;
   const kind = candidate.kind as string | undefined;
+
+  if (kind === "CREATE_USER_BATCH") {
+    if (typeof candidate.count === "number" && Array.isArray(candidate.users)) {
+      return candidate as unknown as CreateUserBatchProposalData;
+    }
+  }
+
+  if (kind === "CREATE_USER") {
+    if (
+      typeof candidate.name === "string" &&
+      typeof candidate.email === "string" &&
+      typeof candidate.roleId === "string" &&
+      typeof candidate.temporaryPassword === "string"
+    ) {
+      return candidate as unknown as CreateUserProposalData;
+    }
+  }
 
   if (kind === "CREATE_ROLE") {
     if (
@@ -100,6 +123,12 @@ export function readAnyProposal(output: unknown): AnyAiProposal | null {
       typeof candidate.bankBalanceBefore === "object"
     ) {
       return candidate as unknown as DisburseExpenseProposalData;
+    }
+  }
+
+  if (kind === "BANK_RECONCILIATION") {
+    if (typeof candidate.bankAccountId === "string" && Array.isArray(candidate.matches)) {
+      return candidate as unknown as BankReconciliationProposalData;
     }
   }
 

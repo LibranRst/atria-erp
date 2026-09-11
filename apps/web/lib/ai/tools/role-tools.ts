@@ -9,6 +9,9 @@ import { z } from "zod";
 import { PERMISSION_LABELS } from "@atria/core/auth/permission-catalog";
 import { formatRoleLabel } from "@atria/core/presentation/role-label";
 import { buildRoleCreateHref, buildRoleEditorHref } from "@atria/core/auth/role-deep-link";
+import { OWNER_ROLE_ID } from "@atria/core/auth/role-constants";
+import { generateSecureTemporaryPassword } from "@atria/core/auth/temporary-password";
+import { passwordPolicySchema } from "@atria/core/validations/administration";
 import {
   describeForbiddenProposal,
   describePermissionEffect,
@@ -374,9 +377,315 @@ export function buildRoleTools(context: AiToolContext) {
       },
     }),
 
+    listRoles: tool({
+      description:
+        "List all roles registered in the company, including default system roles and custom roles created by Owner, their project data scopes, and how many active people hold each role. Call this to check available roles before proposing to assign a role to a user. Read-only.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        if (
+          !hasPermission(context, "manage:roles") &&
+          !hasPermission(context, "manage:users")
+        ) {
+          return permissionDenied("daftar peran");
+        }
+
+        const allRoles = await db.query.role.findMany({
+          orderBy: (table, { asc }) => [asc(table.name)],
+          with: {
+            users: {
+              where: eq(user.isActive, true),
+              columns: { id: true },
+            },
+          },
+        });
+
+        return {
+          roles: allRoles.map((r) => ({
+            roleId: r.id,
+            name: r.name.toUpperCase(),
+            displayName: formatRoleLabel(r.name),
+            description: r.description ?? "",
+            dataScope: r.dataScope,
+            scopeEffect: describeDataScopeForAi(r.dataScope),
+            isSystem: r.isSystem,
+            activeUserCount: r.users.length,
+          })),
+        };
+      },
+    }),
+
+    proposeCreateUser: tool({
+      description:
+        "Prepare a new staff user account for the Owner/admin to confirm and create from chat. Validates that the role exists, generates or validates a compliant temporary password, checks email availability, and presents a confirmation card with one-click credential copy. Creating an Owner account is forbidden on this path for superuser security and must be done in Settings. This tool does NOT write; the human confirms on the card.",
+      inputSchema: z.object({
+        name: z
+          .string()
+          .trim()
+          .min(2, "Nama pengguna minimal 2 karakter.")
+          .max(255)
+          .describe("Full name of the new team member, e.g. Budi Santoso."),
+        email: z
+          .string()
+          .trim()
+          .toLowerCase()
+          .email("Format email tidak valid.")
+          .describe("Email address for login, e.g. staf@perusahaan.id."),
+        roleNameOrId: z
+          .string()
+          .trim()
+          .min(2)
+          .describe("Role name (e.g. PROJECT_MANAGER, SITE_SUPERVISOR) or role UUID to assign."),
+        temporaryPassword: z
+          .string()
+          .trim()
+          .min(12)
+          .optional()
+          .describe(
+            "Optional temporary password meeting security policy. If omitted, a secure password is generated automatically.",
+          ),
+        reason: z
+          .string()
+          .trim()
+          .max(200)
+          .optional()
+          .describe("One sentence in Bahasa Indonesia explaining why this user is being added."),
+      }),
+      execute: async ({ name, email, roleNameOrId, temporaryPassword, reason }) => {
+        if (!hasPermission(context, "manage:users")) {
+          return permissionDenied("pembuatan pengguna baru");
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        const existingUser = await db.query.user.findFirst({
+          where: eq(user.email, normalizedEmail),
+          columns: { id: true, name: true, isActive: true },
+        });
+        if (existingUser) {
+          return {
+            error: `Email "${normalizedEmail}" sudah digunakan oleh akun "${existingUser.name}" (${existingUser.isActive ? "aktif" : "non-aktif"}). Silakan gunakan email yang berbeda.`,
+          };
+        }
+
+        const roles = await db.query.role.findMany();
+        const normalizedTarget = roleNameOrId.trim().toUpperCase().replaceAll(" ", "_");
+        const match = roles.find(
+          (r) =>
+            r.id === roleNameOrId.trim() ||
+            r.name.toUpperCase() === normalizedTarget ||
+            r.name.toLowerCase() === roleNameOrId.trim().toLowerCase() ||
+            formatRoleLabel(r.name).toLowerCase() === roleNameOrId.trim().toLowerCase(),
+        );
+
+        if (!match) {
+          return {
+            error: `Peran "${roleNameOrId}" tidak ditemukan dalam daftar peran terdaftar.`,
+            availableRoles: roles.map((r) => formatRoleLabel(r.name)),
+            suggestion:
+              "Jika peran ini memang belum ada (misal Estimator, Drafter, Mandor), panggil proposeCreateRole terlebih dahulu untuk membuat perannya dengan wewenang yang sesuai. Setelah peran dikonfirmasi, barulah buat user ini.",
+          };
+        }
+
+        if (match.id === OWNER_ROLE_ID) {
+          return {
+            error:
+              "Pembuatan akun dengan peran Owner tidak diizinkan lewat asisten AI demi keamanan akun superuser. Silakan buat akun Owner melalui menu Pengaturan.",
+            settingsHref: "/settings?tab=organization",
+          };
+        }
+
+        let effectivePassword = temporaryPassword;
+        if (!effectivePassword) {
+          effectivePassword = generateSecureTemporaryPassword();
+        } else {
+          const validation = passwordPolicySchema.safeParse(effectivePassword);
+          if (!validation.success) {
+            return {
+              error: `Kata sandi tidak memenuhi kebijakan keamanan: ${validation.error.issues[0]?.message ?? "Minimal 12 karakter dengan huruf besar, huruf kecil, dan angka."}`,
+            };
+          }
+        }
+
+        return {
+          proposal: {
+            kind: "CREATE_USER" as const,
+            name: name.trim(),
+            email: normalizedEmail,
+            roleId: match.id,
+            roleName: match.name.toUpperCase(),
+            roleDisplayName: formatRoleLabel(match.name),
+            roleDescription: match.description ?? "",
+            dataScope: match.dataScope,
+            scopeEffect: describeDataScopeForAi(match.dataScope),
+            temporaryPassword: effectivePassword,
+            reason:
+              reason?.trim() ||
+              `Penambahan staf baru sebagai ${formatRoleLabel(match.name)}`,
+            settingsHref: "/settings?tab=organization",
+          },
+        };
+      },
+    }),
+
+    proposeCreateUserBatch: tool({
+      description:
+        "Prepare a proposal card to create multiple new staff user accounts in one batch from chat. Always call listRoles first to check registered roles. Refuses creating Owner accounts. Validates all emails for uniqueness and auto-generates secure temporary passwords for omitted ones.",
+      inputSchema: z.object({
+        users: z
+          .array(
+            z.object({
+              name: z
+                .string()
+                .trim()
+                .min(2, "Nama pengguna minimal 2 karakter.")
+                .max(255)
+                .describe("Full name of the team member."),
+              email: z
+                .string()
+                .trim()
+                .toLowerCase()
+                .email("Format email tidak valid.")
+                .describe("Email address for login."),
+              roleNameOrId: z
+                .string()
+                .trim()
+                .min(2)
+                .describe("Role name (e.g. PROJECT_MANAGER, PURCHASING) or role UUID."),
+              temporaryPassword: z
+                .string()
+                .trim()
+                .min(12)
+                .optional()
+                .describe("Optional temporary password meeting security policy."),
+            }),
+          )
+          .min(1, "Daftar pengguna tidak boleh kosong.")
+          .max(20, "Maksimal 20 pengguna per satu kali batch usulan."),
+        reason: z
+          .string()
+          .trim()
+          .max(255)
+          .optional()
+          .describe("One sentence explaining the reason for this batch addition."),
+      }),
+      execute: async ({ users, reason }) => {
+        if (!hasPermission(context, "manage:users")) {
+          return permissionDenied("pembuatan pengguna baru sekaligus");
+        }
+
+        // Pagar 1: Deteksi email duplikat internal dalam batch
+        const emailSet = new Set<string>();
+        for (const u of users) {
+          const email = u.email.trim().toLowerCase();
+          if (emailSet.has(email)) {
+            return {
+              error: `Email "${email}" muncul lebih dari satu kali dalam daftar batch. Setiap anggota tim wajib menggunakan email yang unik.`,
+            };
+          }
+          emailSet.add(email);
+        }
+
+        // Pagar 2: Cek ke database apakah ada email yang sudah terdaftar
+        const existingUsers = await db.query.user.findMany({
+          columns: { email: true, name: true, isActive: true },
+        });
+        const existingEmailMap = new Map(existingUsers.map((eu) => [eu.email.toLowerCase(), eu]));
+        for (const u of users) {
+          const email = u.email.trim().toLowerCase();
+          const existing = existingEmailMap.get(email);
+          if (existing) {
+            return {
+              error: `Email "${email}" sudah digunakan oleh akun "${existing.name}" (${existing.isActive ? "aktif" : "non-aktif"}). Seluruh batch dibatalkan demi keamanan data.`,
+            };
+          }
+        }
+
+        // Pagar 3: Resolusi peran dan penolakan peran OWNER
+        const allRoles = await db.query.role.findMany();
+        const resolvedUsers: Array<{
+          name: string;
+          email: string;
+          roleId: string;
+          roleName: string;
+          roleDisplayName: string;
+          roleDescription: string;
+          dataScope: "GLOBAL" | "ASSIGNED" | "NONE";
+          scopeEffect: string;
+          temporaryPassword: string;
+        }> = [];
+
+        for (const u of users) {
+          const normalizedTarget = u.roleNameOrId.trim().toUpperCase().replaceAll(" ", "_");
+          const match = allRoles.find(
+            (r) =>
+              r.id === u.roleNameOrId.trim() ||
+              r.name.toUpperCase() === normalizedTarget ||
+              r.name.toLowerCase() === u.roleNameOrId.trim().toLowerCase() ||
+              formatRoleLabel(r.name).toLowerCase() === u.roleNameOrId.trim().toLowerCase(),
+          );
+
+          if (!match) {
+            return {
+              error: `Peran "${u.roleNameOrId}" untuk calon pengguna "${u.name}" tidak ditemukan dalam sistem.`,
+              availableRoles: allRoles.map((r) => formatRoleLabel(r.name)),
+              suggestion:
+                "Jika peran ini belum ada, buat terlebih dahulu perannya dengan proposeCreateRole. Setelah peran dibuat, barulah daftarkan pengguna ini.",
+            };
+          }
+
+          if (match.id === OWNER_ROLE_ID) {
+            return {
+              error: `Pembuatan akun "${u.name}" dengan peran Owner tidak diizinkan lewat asisten AI demi keamanan akun superuser. Silakan buat akun Owner melalui menu Pengaturan.`,
+              settingsHref: "/settings?tab=organization",
+            };
+          }
+
+          let effectivePassword = u.temporaryPassword;
+          if (!effectivePassword) {
+            effectivePassword = generateSecureTemporaryPassword();
+          } else {
+            const validation = passwordPolicySchema.safeParse(effectivePassword);
+            if (!validation.success) {
+              return {
+                error: `Kata sandi untuk "${u.name}" tidak memenuhi kebijakan keamanan: ${validation.error.issues[0]?.message ?? "Minimal 12 karakter dengan huruf besar, huruf kecil, dan angka."}`,
+              };
+            }
+          }
+
+          const roleScope: "GLOBAL" | "ASSIGNED" | "NONE" =
+            match.dataScope === "GLOBAL" || match.dataScope === "NONE"
+              ? match.dataScope
+              : "ASSIGNED";
+
+          resolvedUsers.push({
+            name: u.name.trim(),
+            email: u.email.trim().toLowerCase(),
+            roleId: match.id,
+            roleName: match.name.toUpperCase(),
+            roleDisplayName: formatRoleLabel(match.name),
+            roleDescription: match.description ?? "",
+            dataScope: roleScope,
+            scopeEffect: describeDataScopeForAi(roleScope),
+            temporaryPassword: effectivePassword,
+          });
+        }
+
+        return {
+          proposal: {
+            kind: "CREATE_USER_BATCH" as const,
+            count: resolvedUsers.length,
+            users: resolvedUsers,
+            reason:
+              reason?.trim() ||
+              `Penambahan ${resolvedUsers.length} anggota staf baru sekaligus`,
+            settingsHref: "/settings?tab=organization",
+          },
+        };
+      },
+    }),
+
     proposeCreateRole: tool({
       description:
-        "Prepare a brand new role for the user to confirm and create from chat. A new role has zero holders, so creating it changes nobody's access until a human assigns someone in Settings — which the assistant cannot do. Permissions that move money, administer users or roles, or override self-approval are refused here: say so plainly and hand off with the returned href instead of silently dropping them.",
+        "Prepare a brand new role for the user to confirm and create from chat. A new role has zero holders until a human assigns someone in Settings or confirms an account creation proposal. Permissions that move money, administer users or roles, or override self-approval are refused here: say so plainly and hand off with the returned href instead of silently dropping them.",
       inputSchema: z.object({
         name: z.string().min(3).max(50).describe("Role name, e.g. Site Supervisor."),
         description: z.string().max(255).optional().describe("One sentence in Bahasa Indonesia."),

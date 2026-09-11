@@ -20,7 +20,7 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("akses finansial global");
   });
 
-  it.each(["OPENROUTER", "DEEPSEEK", "GEMINI"] as const)(
+  it.each(["NINEROUTER", "OPENROUTER", "DEEPSEEK", "GEMINI"] as const)(
     "memberi %s kontrak jawaban ringkas yang sama",
     (provider) => {
       const context = aiToolContextForRole("OWNER", { userId: "00000000-0000-0000-0000-000000000003" });

@@ -1,8 +1,6 @@
 "use client";
 
 import { AppIcon } from "@/components/ui";
-import { transitionSpringSmooth } from "@/lib/utils/motion";
-import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import * as React from "react";
 
@@ -47,13 +45,8 @@ export function ResultShell({
   onNavigate,
   children,
 }: ResultShellProps): React.JSX.Element {
-  const reduceMotion = useReducedMotion();
-
   return (
-    <motion.section
-      initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={transitionSpringSmooth}
+    <section
       className="overflow-hidden rounded-owner bg-white shadow-surface ring-1 ring-ring-subtle"
       aria-label={title}
     >
@@ -99,7 +92,7 @@ export function ResultShell({
           <AppIcon name="chevron_right" aria-hidden="true" className="icon-sm shrink-0" />
         </Link>
       )}
-    </motion.section>
+    </section>
   );
 }
 

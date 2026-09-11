@@ -18,6 +18,8 @@ import { ClientPaymentProposalCard } from "./proposal-cards/client-payment-propo
 import { GoodsReceiptProposalCard } from "./proposal-cards/goods-receipt-proposal-card";
 import { ExpenseReviewProposalCard } from "./proposal-cards/expense-review-proposal-card";
 import { DisburseExpenseProposalCard } from "./proposal-cards/disburse-expense-proposal-card";
+import { UserCreateProposalCard } from "./proposal-cards/user-create-proposal-card";
+import { UserBatchCreateProposalCard } from "./proposal-cards/user-batch-create-proposal-card";
 import { readAnyProposal } from "../utils/proposal-reader";
 
 const money = (amount: number) => ({ amount, formatted: `Rp ${amount.toLocaleString("id-ID")}` });
@@ -294,5 +296,85 @@ describe("proposal cards rendering suite", () => {
       },
     };
     expect(readAnyProposal(budProposal)?.kind).toBe("SETUP_BUDGET");
+
+    const userProposal = {
+      proposal: {
+        kind: "CREATE_USER",
+        name: "Hendra",
+        email: "hendra@dekoria.com",
+        roleId: "33333333-3333-3333-3333-333333333333",
+        temporaryPassword: "Dekoria-2026-Xk9mQz",
+      },
+    };
+    expect(readAnyProposal(userProposal)?.kind).toBe("CREATE_USER");
+  });
+
+  test("UserCreateProposalCard renders name, role, and temporary password", () => {
+    const html = renderToStaticMarkup(
+      <UserCreateProposalCard
+        proposal={{
+          kind: "CREATE_USER",
+          name: "Siti Rahma",
+          email: "siti@dekoria.com",
+          roleId: "44444444-4444-4444-4444-444444444444",
+          roleName: "PURCHASING",
+          roleDisplayName: "Purchasing",
+          dataScope: "NONE",
+          scopeEffect: "Hanya modul material & gudang",
+          temporaryPassword: "Dekoria-2026-Ab12Cd",
+        }}
+        toolCallId="call_u1"
+        conversationId="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        alreadyConfirmed={false}
+      />,
+    );
+
+    expect(html).toContain("Siti Rahma");
+    expect(html).toContain("siti@dekoria.com");
+    expect(html).toContain("Purchasing");
+    expect(html).toContain("Dekoria-2026-Ab12Cd");
+    expect(html).toContain("Buat Pengguna Ini");
+  });
+
+  test("UserBatchCreateProposalCard renders multi-user list and batch button", () => {
+    const html = renderToStaticMarkup(
+      <UserBatchCreateProposalCard
+        proposal={{
+          kind: "CREATE_USER_BATCH",
+          count: 2,
+          users: [
+            {
+              name: "Hendra",
+              email: "hendra@dekoria.com",
+              roleId: "33333333-3333-3333-3333-333333333333",
+              roleName: "PROJECT_MANAGER",
+              roleDisplayName: "Project Manager",
+              dataScope: "ASSIGNED",
+              scopeEffect: "Hanya proyek yang ditugaskan",
+              temporaryPassword: "Dekoria-2026-Xk9mQz",
+            },
+            {
+              name: "Doni",
+              email: "doni@dekoria.com",
+              roleId: "44444444-4444-4444-4444-444444444444",
+              roleName: "PURCHASING",
+              roleDisplayName: "Purchasing",
+              dataScope: "NONE",
+              scopeEffect: "Hanya modul material & gudang",
+              temporaryPassword: "Dekoria-2026-Ab12Cd",
+            },
+          ],
+        }}
+        toolCallId="call_ubatch1"
+        conversationId="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        alreadyConfirmed={false}
+      />,
+    );
+
+    expect(html).toContain("2 Calon Anggota Tim");
+    expect(html).toContain("Hendra");
+    expect(html).toContain("Doni");
+    expect(html).toContain("Salin Semua Kredensial");
+    expect(html).toContain("Buat Semua Pengguna (2 Akun)");
   });
 });

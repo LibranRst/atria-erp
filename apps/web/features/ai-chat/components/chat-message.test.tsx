@@ -57,6 +57,23 @@ describe("ChatMessage assistant content", () => {
     expect(html).not.toContain("rounded-tl-md");
   });
 
+  test("menampilkan status menyusun jawaban ketika seluruh tool selesai namun teks belum mengalir", () => {
+    const html = render(
+      assistant([
+        {
+          type: "tool-getBankBalances",
+          toolCallId: "call-1",
+          state: "output-available",
+          output: { accounts: [] },
+        },
+      ]),
+    );
+
+    expect(html).toContain("1 sumber data dibaca");
+    expect(html).toContain("Menyusun jawaban…");
+    expect(html).not.toContain("rounded-tl-md");
+  });
+
   test("membuat bubble setelah teks bermakna pertama hadir", () => {
     const html = render(assistant([{ type: "text", state: "streaming", text: "Total kas" }]));
 

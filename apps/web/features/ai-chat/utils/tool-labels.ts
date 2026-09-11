@@ -132,6 +132,31 @@ const TOOL_LABELS: Record<
     done: "Usulan penerimaan barang disiapkan",
     failed: "Gagal menyiapkan penerimaan barang",
   },
+  listRoles: {
+    running: "Membaca daftar peran",
+    done: "Daftar peran dibaca",
+    failed: "Gagal membaca daftar peran",
+  },
+  proposeCreateRole: {
+    running: "Menyiapkan usulan peran baru",
+    done: "Usulan peran baru disiapkan",
+    failed: "Gagal menyiapkan usulan peran baru",
+  },
+  proposeCreateUser: {
+    running: "Menyiapkan usulan akun pengguna",
+    done: "Usulan akun pengguna disiapkan",
+    failed: "Gagal menyiapkan usulan akun pengguna",
+  },
+  proposeCreateUserBatch: {
+    running: "Menyiapkan usulan pembuatan tim sekaligus",
+    done: "Usulan pembuatan tim sekaligus disiapkan",
+    failed: "Gagal menyiapkan usulan tim",
+  },
+  proposeBankReconciliation: {
+    running: "Menyiapkan usulan rekonsiliasi mutasi bank",
+    done: "Usulan rekonsiliasi mutasi bank disiapkan",
+    failed: "Gagal menyiapkan usulan rekonsiliasi bank",
+  },
   requestUserInput: {
     running: "Menyiapkan form input interaktif",
     done: "Form input siap diisi",

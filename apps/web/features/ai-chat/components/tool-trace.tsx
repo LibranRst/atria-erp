@@ -3,10 +3,9 @@
 import { AppIcon } from "@/components/ui";
 import {
   collapseVariants,
-  pulseAnimation,
   spinAnimation,
-  transitionPulseSmooth,
   transitionSpinLinear,
+  transitionSpringSnappy,
   transitionSpringSmooth,
 } from "@/lib/utils/motion";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -64,12 +63,66 @@ export function ToolTraceList({ traces }: ToolTraceListProps): React.JSX.Element
   // Centang di sebelah "1 dihentikan" membacanya sebagai keberhasilan.
   const hasInterrupted = traces.some((trace) => trace.state === "interrupted");
   const [open, setOpen] = React.useState(false);
+  const userInteractedRef = React.useRef(false);
+  const collapseTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevRunningRef = React.useRef(isRunning);
   const detailsId = React.useId();
+
+  // Bersihkan timer pending saat komponen dilepas
+  React.useEffect(() => {
+    return () => {
+      if (collapseTimerRef.current) {
+        clearTimeout(collapseTimerRef.current);
+        collapseTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  // Kelola siklus auto-expand saat running dan auto-collapse halus saat selesai
+  React.useEffect(() => {
+    const wasRunning = prevRunningRef.current;
+    prevRunningRef.current = isRunning;
+
+    if (isRunning) {
+      if (collapseTimerRef.current) {
+        clearTimeout(collapseTimerRef.current);
+        collapseTimerRef.current = null;
+      }
+      if (!wasRunning) {
+        // Siklus baru dimulai
+        userInteractedRef.current = false;
+      }
+      if (!userInteractedRef.current) {
+        setOpen(true);
+      }
+    } else if (wasRunning && !isRunning) {
+      // Seluruh tool baru saja selesai
+      if (hasFailure) {
+        // Biarkan terbuka bila terjadi kegagalan agar pengguna tahu alasannya
+        return;
+      }
+      if (!userInteractedRef.current) {
+        // Beri jeda ~600ms agar centang terlihat sebelum menciut otomatis
+        collapseTimerRef.current = setTimeout(() => {
+          setOpen(false);
+          collapseTimerRef.current = null;
+        }, 600);
+      }
+    }
+  }, [hasFailure, isRunning]);
+
+  const handleToggle = React.useCallback(() => {
+    // Pengguna berinteraksi manual; jangan timpa keputusannya
+    userInteractedRef.current = true;
+    if (collapseTimerRef.current) {
+      clearTimeout(collapseTimerRef.current);
+      collapseTimerRef.current = null;
+    }
+    setOpen((current) => !current);
+  }, []);
 
   if (traces.length === 0) return null;
 
-  // Disclosure sepenuhnya milik pengguna. Perubahan running, selesai, atau gagal
-  // hanya memperbarui summary; ia tidak lagi membuka lalu menutup layout sendiri.
   const expanded = open;
 
   return (
@@ -77,12 +130,12 @@ export function ToolTraceList({ traces }: ToolTraceListProps): React.JSX.Element
       {/* Kapsul Pemicu (Trigger Button) */}
       <button
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={handleToggle}
         aria-expanded={expanded}
         aria-controls={detailsId}
         className="group relative inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-full border border-black/6 bg-surface-container-low/90 px-3 py-1 text-on-surface-variant shadow-control transition-all duration-200 after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] hover:bg-surface-container hover:text-on-surface focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none"
       >
-        <motion.span
+        <span
           className={`pointer-events-none flex shrink-0 ${
             isRunning
               ? "text-primary"
@@ -92,17 +145,32 @@ export function ToolTraceList({ traces }: ToolTraceListProps): React.JSX.Element
                   ? "text-on-surface-variant"
                   : "font-bold text-primary"
           }`}
-          animate={isRunning && !reduceMotion ? pulseAnimation : undefined}
-          transition={transitionPulseSmooth}
           aria-hidden="true"
         >
-          <AppIcon
-            name={
-              isRunning ? "database" : hasFailure ? "warning" : hasInterrupted ? "close" : "check"
-            }
-            className="icon-xs"
-          />
-        </motion.span>
+          {isRunning ? (
+            <motion.span
+              key="capsule-running"
+              className="flex shrink-0"
+              animate={reduceMotion ? undefined : spinAnimation}
+              transition={transitionSpinLinear}
+            >
+              <AppIcon name="progress_activity" className="icon-xs" />
+            </motion.span>
+          ) : (
+            <motion.span
+              key="capsule-static"
+              className="flex shrink-0"
+              initial={reduceMotion ? false : { scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              transition={transitionSpringSnappy}
+            >
+              <AppIcon
+                name={hasFailure ? "warning" : hasInterrupted ? "close" : "check"}
+                className="icon-xs"
+              />
+            </motion.span>
+          )}
+        </span>
 
         <span className="pointer-events-none text-meta font-bold tracking-tight text-on-surface">
           {summarize(traces)}
@@ -157,7 +225,7 @@ export function ToolTraceList({ traces }: ToolTraceListProps): React.JSX.Element
                       <div className="flex min-w-0 items-center gap-2.5">
                         {/* Ikon Status Bulat */}
                         <div
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors duration-200 ${
                             isTraceRunning
                               ? "bg-primary/10 text-primary"
                               : isTraceFailed
@@ -167,25 +235,37 @@ export function ToolTraceList({ traces }: ToolTraceListProps): React.JSX.Element
                                   : "bg-primary/8 text-primary"
                           }`}
                         >
-                          <motion.span
-                            className="flex shrink-0"
-                            animate={isTraceRunning && !reduceMotion ? spinAnimation : undefined}
-                            transition={transitionSpinLinear}
-                            aria-hidden="true"
-                          >
-                            <AppIcon
-                              name={
-                                isTraceRunning
-                                  ? "progress_activity"
-                                  : isTraceFailed
+                          {isTraceRunning ? (
+                            <motion.span
+                              key="row-running"
+                              className="flex shrink-0"
+                              animate={reduceMotion ? undefined : spinAnimation}
+                              transition={transitionSpinLinear}
+                              aria-hidden="true"
+                            >
+                              <AppIcon name="progress_activity" className="icon-xs" />
+                            </motion.span>
+                          ) : (
+                            <motion.span
+                              key={`row-${trace.state}`}
+                              className="flex shrink-0"
+                              initial={reduceMotion ? false : { scale: 0.8, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                              transition={transitionSpringSnappy}
+                              aria-hidden="true"
+                            >
+                              <AppIcon
+                                name={
+                                  isTraceFailed
                                     ? "warning"
                                     : isTraceInterrupted
                                       ? "close"
                                       : "check"
-                              }
-                              className="icon-xs"
-                            />
-                          </motion.span>
+                                }
+                                className="icon-xs"
+                              />
+                            </motion.span>
+                          )}
                         </div>
 
                         {/* Label Tindakan */}
@@ -210,15 +290,23 @@ export function ToolTraceList({ traces }: ToolTraceListProps): React.JSX.Element
                           </span>
                         )}
                         <span
-                          className={`rounded-full px-2 py-0.5 text-eyebrow font-bold tracking-wider uppercase ${
+                          className={`rounded-full px-2 py-0.5 text-eyebrow font-bold tracking-wider uppercase transition-colors duration-200 ${
                             isTraceRunning
                               ? "bg-primary/10 text-primary"
                               : isTraceFailed
                                 ? "bg-critical-container text-critical"
-                                : "bg-surface-container-low text-on-surface-variant"
+                                : isTraceInterrupted
+                                  ? "bg-surface-container text-on-surface-variant"
+                                  : "bg-surface-container-low text-primary"
                           }`}
                         >
-                          {isTraceRunning ? "Proses" : isTraceFailed ? "Gagal" : "Selesai"}
+                          {isTraceRunning
+                            ? "Proses"
+                            : isTraceFailed
+                              ? "Gagal"
+                              : isTraceInterrupted
+                                ? "Dihentikan"
+                                : "Selesai"}
                         </span>
                       </div>
                     </li>

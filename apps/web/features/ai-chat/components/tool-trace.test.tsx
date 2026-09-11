@@ -67,4 +67,20 @@ describe("jejak tool yang diringkas", () => {
   test("tidak merender apa-apa ketika tidak ada tool yang dipanggil", () => {
     expect(renderToStaticMarkup(<ToolTraceList traces={[]} />)).toBe("");
   });
+
+  test("memisahkan key animasi running dan static sehingga icon selesai tidak terus berputar", () => {
+    const runningHtml = renderToStaticMarkup(
+      <ToolTraceList
+        traces={[{ key: "tool-1", label: "Membaca kas", state: "running", count: 1 }]}
+      />,
+    );
+    expect(runningHtml).toContain("0 dari 1 sumber dibaca");
+
+    const doneHtml = renderToStaticMarkup(
+      <ToolTraceList
+        traces={[{ key: "tool-1", label: "Kas dibaca", state: "done", count: 1 }]}
+      />,
+    );
+    expect(doneHtml).toContain("1 sumber data dibaca");
+  });
 });

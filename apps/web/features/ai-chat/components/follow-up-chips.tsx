@@ -38,12 +38,12 @@ export function FollowUpChips({
 
   return (
     <ul className="flex flex-wrap gap-2 pt-1" aria-label="Pertanyaan lanjutan">
-      {questions.map((question, index) => (
+      {questions.map((question) => (
         <motion.li
           key={question}
           initial={reduceMotion ? undefined : { opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ ...transitionSpringSnappy, delay: index * 0.04 }}
+          transition={transitionSpringSnappy}
         >
           <motion.button
             type="button"

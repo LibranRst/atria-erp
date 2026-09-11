@@ -1,8 +1,6 @@
 "use client";
 
 import { AppIcon, Button, StatusBadge } from "@/components/ui";
-import { transitionSpringSmooth } from "@/lib/utils/motion";
-import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 
 /**
@@ -55,16 +53,12 @@ export function ProposalCardShell({
   viewActionLabel,
   onViewAction,
 }: ProposalCardShellProps): React.JSX.Element {
-  const reduceMotion = useReducedMotion();
   const isSubmitted = status === "submitted" || isAlreadyConfirmed;
   const isSubmitting = status === "submitting";
   const quiet = confirmEmphasis === "quiet";
 
   return (
-    <motion.section
-      initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={transitionSpringSmooth}
+    <section
       className="overflow-hidden rounded-owner bg-white shadow-surface ring-1 ring-ring-subtle"
       aria-label={title}
     >
@@ -144,7 +138,7 @@ export function ProposalCardShell({
           </div>
         )}
       </div>
-    </motion.section>
+    </section>
   );
 }
 

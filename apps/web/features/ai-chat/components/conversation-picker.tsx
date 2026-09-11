@@ -100,7 +100,7 @@ export function ConversationPicker({
                   aria-current={isActive ? "true" : undefined}
                 >
                   <AppIcon
-                    name={isActive ? "check_circle" : "chat"}
+                    name={isActive ? "check_circle" : "sparkle"}
                     aria-hidden="true"
                     className={`icon-sm shrink-0 ${isActive ? "text-on-surface" : "text-on-surface-variant"}`}
                   />

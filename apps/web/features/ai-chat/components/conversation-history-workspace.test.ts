@@ -15,4 +15,20 @@ describe("conversation history contextual actions", () => {
     expect(source).toContain("<ConfirmationDialog");
     expect(source).not.toContain('title={renameMode ? "Ganti judul" : "Aksi percakapan"}');
   });
+
+  test("uses FormSection, SegmentedTabs, OptionChoiceGroup, and FormField for assistant preferences", async () => {
+    const source = await Bun.file(sourcePath).text();
+
+    expect(source).toContain("<OperationalFormSheet");
+    expect(source).toContain('title="Preferensi asisten"');
+    expect(source).toContain('<FormSection title="Gaya jawaban"');
+    expect(source).toContain("<SegmentedTabs");
+    expect(source).toContain("options={STYLE_OPTIONS}");
+    expect(source).toContain("<OptionChoiceGroup");
+    expect(source).toContain('label="Fokus utama"');
+    expect(source).toContain("options={FOCUS_OPTIONS}");
+    expect(source).toContain("<FormField");
+    expect(source).toContain('label="Catatan personal"');
+    expect(source).not.toContain('<fieldset className="space-y-2">');
+  });
 });

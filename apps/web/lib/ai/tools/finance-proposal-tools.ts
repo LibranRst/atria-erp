@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   approval,
   bankAccount,
+  cashTransaction,
   client,
   clientInvoice,
   clientPayment,
@@ -16,7 +17,8 @@ import {
   vendorPayment,
 } from "@/db/schema";
 import { tool } from "ai";
-import { eq, asc } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
+import { normalizeCashDirection } from "@atria/core/finance/cash-direction";
 import { z } from "zod";
 
 import {
@@ -28,6 +30,35 @@ import {
   type AiToolContext,
 } from "./context";
 import { money, toNumber } from "./shared";
+
+export const bankReconciliationInputSchema = z.object({
+  bankAccountId: z
+    .guid()
+    .optional()
+    .describe(
+      "ID of the bank account. If omitted, uses the first active bank account.",
+    ),
+  mutations: z
+    .array(
+      z.object({
+        transactionDate: z
+          .string()
+          .describe("ISO transaction date string (YYYY-MM-DD)"),
+        description: z
+          .string()
+          .min(1)
+          .describe("Description / narrative of the mutation"),
+        amount: z.number().positive().describe("Positive transaction amount"),
+        type: z
+          .enum(["INFLOW", "OUTFLOW"])
+          .describe(
+            "Mutation direction: INFLOW for credit/money in, OUTFLOW for debit/money out",
+          ),
+      }),
+    )
+    .min(1)
+    .describe("List of parsed bank mutations to reconcile"),
+});
 
 export function buildFinanceProposalTools(context: AiToolContext) {
   return {
@@ -385,6 +416,173 @@ export function buildFinanceProposalTools(context: AiToolContext) {
           },
           instruction:
             "Sampaikan ringkasan usulan pencatatan pembayaran termin klien kepada pengguna. Kartu konfirmasi sudah ditampilkan otomatis.",
+        };
+      },
+    }),
+    proposeBankReconciliation: tool({
+      description:
+        "Prepare an AI bank reconciliation proposal comparing parsed bank statement mutations against unreconciled cash transactions. Finds 100% matched pairs and highlights unmatched statement rows. Does NOT write to DB.",
+      inputSchema: bankReconciliationInputSchema,
+      execute: async ({ bankAccountId, mutations }) => {
+        if (!hasPermission(context, "reconcile:ledger")) {
+          return permissionDenied("rekonsiliasi bank");
+        }
+
+        const activeAccounts = await db.query.bankAccount.findMany({
+          where: eq(bankAccount.isActive, true),
+          orderBy: [asc(bankAccount.name)],
+        });
+
+        if (activeAccounts.length === 0) {
+          return { error: "Tidak ada akun bank aktif yang dapat direkonsiliasi." };
+        }
+
+        let selectedAccount = bankAccountId
+          ? activeAccounts.find((a) => a.id === bankAccountId)
+          : activeAccounts[0];
+
+        if (!selectedAccount) {
+          selectedAccount = activeAccounts[0];
+        }
+
+        const unreconciledTx = await db.query.cashTransaction.findMany({
+          where: and(
+            eq(cashTransaction.bankAccountId, selectedAccount.id),
+            eq(cashTransaction.reconciled, false),
+          ),
+          orderBy: [desc(cashTransaction.createdAt)],
+          limit: 300,
+        });
+
+        const usedTxIds = new Set<string>();
+        type ProposalMatch = {
+          readonly cashTransactionId: string;
+          readonly cashTransactionDescription: string;
+          readonly cashTransactionDate: string;
+          readonly statementRow: {
+            readonly transactionDate: string;
+            readonly description: string;
+            readonly amount: number;
+            readonly type: "INFLOW" | "OUTFLOW";
+          };
+          readonly matchedAmount: { readonly amount: number; readonly formatted: string };
+        };
+
+        type ProposalUnmatched = {
+          readonly transactionDate: string;
+          readonly description: string;
+          readonly amount: number;
+          readonly type: "INFLOW" | "OUTFLOW";
+          readonly formattedAmount: { readonly amount: number; readonly formatted: string };
+        };
+
+        const matches: ProposalMatch[] = [];
+        const unmatchedMutations: ProposalUnmatched[] = [];
+
+        for (const mut of mutations) {
+          const mutCents = Math.round(mut.amount * 100);
+          const mutDir = normalizeCashDirection(mut.type);
+          const mutDesc = mut.description.toLowerCase();
+          const mutDate = new Date(mut.transactionDate);
+          const mutTokens = mutDesc.split(/\s+/).filter((w) => w.length >= 3);
+
+          const candidateMatches = unreconciledTx.filter((tx) => {
+            if (usedTxIds.has(tx.id)) return false;
+            const txCents = Math.round(Number(tx.amount) * 100);
+            const txDir = normalizeCashDirection(tx.type);
+            return txDir === mutDir && txCents === mutCents;
+          });
+
+          let matchedTx: (typeof unreconciledTx)[number] | null = null;
+
+          if (candidateMatches.length === 1) {
+            matchedTx = candidateMatches[0]!;
+          } else if (candidateMatches.length > 1) {
+            // Beri bobot skor berdasarkan nomor referensi, kecocokan kata deskripsi, dan kedekatan tanggal
+            let bestScore = -1;
+            let bestCandidate: (typeof unreconciledTx)[number] | null = null;
+
+            for (const candidate of candidateMatches) {
+              let score = 0;
+              const ref = candidate.bankReference?.trim().toLowerCase();
+              if (ref && mutDesc.includes(ref)) {
+                score += 100;
+              }
+
+              const txDesc = candidate.description.toLowerCase();
+              for (const token of mutTokens) {
+                if (txDesc.includes(token)) {
+                  score += 15;
+                }
+              }
+
+              if (!Number.isNaN(mutDate.getTime())) {
+                const dayDiff = Math.abs(candidate.createdAt.getTime() - mutDate.getTime()) / 86400000;
+                if (dayDiff <= 1) {
+                  score += 50;
+                } else if (dayDiff <= 3) {
+                  score += 30;
+                } else if (dayDiff <= 7) {
+                  score += 15;
+                }
+              }
+
+              if (score > bestScore) {
+                bestScore = score;
+                bestCandidate = candidate;
+              }
+            }
+
+            matchedTx = bestCandidate ?? candidateMatches[0]!;
+          }
+
+          if (matchedTx) {
+            usedTxIds.add(matchedTx.id);
+            matches.push({
+              cashTransactionId: matchedTx.id,
+              cashTransactionDescription: matchedTx.description,
+              cashTransactionDate: matchedTx.createdAt.toISOString().slice(0, 10),
+              statementRow: {
+                transactionDate: mut.transactionDate,
+                description: mut.description,
+                amount: mut.amount,
+                type: mut.type,
+              },
+              matchedAmount: money(matchedTx.amount),
+            });
+          } else {
+            unmatchedMutations.push({
+              transactionDate: mut.transactionDate,
+              description: mut.description,
+              amount: mut.amount,
+              type: mut.type,
+              formattedAmount: money(String(mut.amount)),
+            });
+          }
+        }
+
+        const availableAccounts = activeAccounts.map((a) => ({
+          id: a.id,
+          name: a.name,
+          bankName: a.bankName,
+          accountNumber: a.accountNumber,
+        }));
+
+        return {
+          proposal: {
+            kind: "BANK_RECONCILIATION" as const,
+            bankAccountId: selectedAccount.id,
+            bankAccountName: `${selectedAccount.bankName} - ${selectedAccount.name}`,
+            accountNumber: selectedAccount.accountNumber,
+            totalMutations: mutations.length,
+            matchedCount: matches.length,
+            unmatchedCount: unmatchedMutations.length,
+            matches,
+            unmatchedMutations,
+            availableBankAccounts: availableAccounts,
+          },
+          instruction:
+            "Sampaikan ringkasan hasil analisis mutasi bank kepada pengguna (jumlah mutasi yang cocok dan yang belum tercatat). Kartu usulan interaktif sudah ditampilkan agar pengguna dapat memverifikasi dan mengonfirmasi rekonsiliasi.",
         };
       },
     }),

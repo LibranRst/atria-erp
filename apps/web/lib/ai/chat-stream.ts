@@ -86,6 +86,7 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
         // percobaan yang gagal tidak meninggalkan jejak di layar pengguna.
         const buffered: UIMessageChunk[] = [];
         let modelHasResponded = false;
+        let streamError: unknown = null;
 
         try {
           const result = streamText({
@@ -97,25 +98,53 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
               input.preference,
               input.companyName,
             ),
-            messages: await convertToModelMessages(input.messages),
+            messages: await convertToModelMessages(
+              input.messages.map((msg) => ({
+                ...msg,
+                parts: msg.parts.filter((part) => {
+                  if (part.type !== "file") return true;
+                  const mime =
+                    (part as { mediaType?: string; mimeType?: string }).mediaType ||
+                    (part as { mediaType?: string; mimeType?: string }).mimeType ||
+                    "";
+                  // Provider LLM hanya mendukung inline part image dan pdf;
+                  // spreadsheet (xlsx/xls), csv, dan teks sudah diekstraksi ke bagian text prompt
+                  return mime.startsWith("image/") || mime === "application/pdf";
+                }),
+              })),
+            ),
             tools: buildAiTools(input.toolContext),
             stopWhen: [stepCountIs(MAX_STEPS), ({ steps }) => shouldStopAfterFinalFollowUps(steps)],
           });
 
           const uiStream = result.toUIMessageStream({
             originalMessages: input.messages,
+            onError: (err) => {
+              streamError = err;
+              return typeof err === "object" && err !== null && "message" in err && typeof (err as { message: unknown }).message === "string"
+                ? (err as { message: string }).message
+                : "An error occurred.";
+            },
             onEnd: async ({ responseMessage }) => {
-              const usage = await result.usage;
-              await input.onAssistantMessage({
-                message: responseMessage,
-                provider,
-                inputTokens: usage?.inputTokens,
-                outputTokens: usage?.outputTokens,
-              });
+              try {
+                const usage = await result.usage;
+                await input.onAssistantMessage({
+                  message: responseMessage,
+                  provider,
+                  inputTokens: usage?.inputTokens,
+                  outputTokens: usage?.outputTokens,
+                });
+              } catch {
+                // Abaikan jika pembacaan usage gagal saat stream terputus
+              }
             },
           });
 
           for await (const chunk of uiStream) {
+            if (chunk.type === "error" && !modelHasResponded) {
+              throw streamError ?? new Error(chunk.errorText || "Provider failed before responding");
+            }
+
             if (!modelHasResponded) {
               if (PREAMBLE_CHUNK_TYPES.has(chunk.type)) {
                 buffered.push(chunk);

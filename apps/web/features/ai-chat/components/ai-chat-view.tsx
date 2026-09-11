@@ -5,19 +5,21 @@ import { AppIcon, Button } from "@/components/ui";
 import {
   transitionEaseSmooth,
   transitionSpringBouncy,
-  transitionSpringSmooth,
 } from "@/lib/utils/motion";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { toast } from "sonner";
+import { uploadToImageKit } from "@/lib/media/upload-to-imagekit";
 
 import { TOP_BAR_INSET_PX } from "@/components/layout/app-top-bar";
 import { useProvideTopBarSlots } from "@/components/layout/top-bar-slots";
 
 import { aiChatTopBarSlots } from "./ai-chat-top-bar";
-import { ChatComposer } from "./chat-composer";
+import { ChatComposer, type ChatAttachment } from "./chat-composer";
+import { ChatDropOverlay } from "./chat-drop-overlay";
 import { ChatEmptyState } from "./chat-empty-state";
 import { ChatHistorySkeleton } from "./chat-history-skeleton";
 import { ChatTurn } from "./chat-turn";
@@ -26,6 +28,7 @@ import { MorphedInputComposer } from "./morphed-input-composer";
 import { useChatScroll } from "../hooks/use-chat-scroll";
 import { groupChatTurns } from "../utils/chat-turns";
 import { readActiveInputRequest } from "../utils/input-request-reader";
+import { isSupportedAttachment } from "../utils/attachment-validation";
 
 type ConversationData = { readonly conversationId: string };
 
@@ -51,6 +54,7 @@ export function AiChatView(): React.JSX.Element {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const [draft, setDraft] = React.useState("");
+  const [attachments, setAttachments] = React.useState<readonly ChatAttachment[]>([]);
   const [conversationId, setConversationId] = React.useState<string | null>(null);
   const [confirmedProposals, setConfirmedProposals] = React.useState<Record<string, string>>({});
   const [isLoadingHistory, setIsLoadingHistory] = React.useState(true);
@@ -60,6 +64,9 @@ export function AiChatView(): React.JSX.Element {
   const [dismissedInputToolCallIds, setDismissedInputToolCallIds] = React.useState<
     ReadonlySet<string>
   >(() => new Set());
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [isDraggingOver, setIsDraggingOver] = React.useState(false);
+  const dragDepthRef = React.useRef(0);
 
   const conversationIdRef = React.useRef<string | null>(null);
   const footerRef = React.useRef<HTMLElement | null>(null);
@@ -83,7 +90,11 @@ export function AiChatView(): React.JSX.Element {
             .join("");
 
           return {
-            body: { conversationId: body?.conversationId ?? null, text },
+            body: {
+              conversationId: (body as { conversationId?: string | null })?.conversationId ?? null,
+              text,
+              attachments: (body as { attachments?: readonly ChatAttachment[] })?.attachments ?? [],
+            },
           };
         },
       }),
@@ -236,16 +247,136 @@ export function AiChatView(): React.JSX.Element {
   const submit = React.useCallback(
     (text: string) => {
       const trimmed = text.trim();
-      if (trimmed.length === 0 || isBusy) return;
+      if ((trimmed.length === 0 && attachments.length === 0) || isBusy) return;
       setStatusSuppressed(false);
       setReplyCycle((current) => current + 1);
       clearError();
       setDraft("");
+      const currentAttachments = [...attachments];
+      setAttachments([]);
       // Mengirim pertanyaan berarti pengguna kembali mengikuti jawaban
       resumeFollowing();
-      void sendMessage({ text: trimmed }, { body: { conversationId: conversationIdRef.current } });
+      const promptText =
+        trimmed.length > 0 ? trimmed : "Tolong periksa dan analisa berkas terlampir.";
+      const fileParts = currentAttachments.map((att) => ({
+        type: "file" as const,
+        mediaType: att.mimeType,
+        filename: att.fileName,
+        url: att.url,
+      }));
+
+      void sendMessage(
+        { text: promptText, files: fileParts },
+        {
+          body: {
+            conversationId: conversationIdRef.current,
+            attachments: currentAttachments,
+          },
+        },
+      );
     },
-    [clearError, isBusy, resumeFollowing, sendMessage],
+    [attachments, clearError, isBusy, resumeFollowing, sendMessage],
+  );
+
+  const uploadFiles = React.useCallback(
+    async (files: FileList | readonly File[]): Promise<void> => {
+      if (!files || files.length === 0) return;
+
+      setIsUploading(true);
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          if (!file) continue;
+          const check = isSupportedAttachment(file);
+          if (!check.valid) {
+            toast.error(check.reason);
+            continue;
+          }
+
+          const uploaded = await uploadToImageKit({
+            file,
+            folder: "/chat-attachments",
+            fileNamePrefix: "chat",
+            subject: "lampiran chat",
+          });
+
+          setAttachments((prev) => [
+            ...prev,
+            {
+              url: uploaded.url,
+              fileName: file.name,
+              mimeType: uploaded.mimeType,
+              size: uploaded.size,
+            },
+          ]);
+        }
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Gagal mengunggah lampiran.");
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [],
+  );
+
+  const handleDragEnter = React.useCallback(
+    (event: React.DragEvent<HTMLDivElement>): void => {
+      if (showPicker || isUploading) return;
+      const hasFiles = Array.from(event.dataTransfer.types).includes("Files");
+      if (!hasFiles) return;
+
+      event.preventDefault();
+      dragDepthRef.current += 1;
+      if (dragDepthRef.current === 1) {
+        setIsDraggingOver(true);
+      }
+    },
+    [isUploading, showPicker],
+  );
+
+  const handleDragOver = React.useCallback(
+    (event: React.DragEvent<HTMLDivElement>): void => {
+      if (showPicker || isUploading) return;
+      const hasFiles = Array.from(event.dataTransfer.types).includes("Files");
+      if (!hasFiles) return;
+
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    },
+    [isUploading, showPicker],
+  );
+
+  const handleDragLeave = React.useCallback(
+    (event: React.DragEvent<HTMLDivElement>): void => {
+      if (showPicker || isUploading) return;
+      const hasFiles = Array.from(event.dataTransfer.types).includes("Files");
+      if (!hasFiles) return;
+
+      event.preventDefault();
+      dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+      if (dragDepthRef.current === 0) {
+        setIsDraggingOver(false);
+      }
+    },
+    [isUploading, showPicker],
+  );
+
+  const handleDrop = React.useCallback(
+    (event: React.DragEvent<HTMLDivElement>): void => {
+      if (showPicker || isUploading) return;
+      const hasFiles = Array.from(event.dataTransfer.types).includes("Files");
+      if (!hasFiles) return;
+
+      event.preventDefault();
+      dragDepthRef.current = 0;
+      setIsDraggingOver(false);
+
+      const files = event.dataTransfer.files;
+      if (files && files.length > 0) {
+        void uploadFiles(files);
+      }
+    },
+    [isUploading, showPicker, uploadFiles],
   );
 
   const openPicker = React.useCallback(() => {
@@ -260,6 +391,7 @@ export function AiChatView(): React.JSX.Element {
     setMessages([]);
     setConfirmedProposals({});
     setDraft("");
+    setAttachments([]);
 
     setActiveConversation(null);
   }, [clearError, isBusy, setActiveConversation, setMessages, stop]);
@@ -317,19 +449,14 @@ export function AiChatView(): React.JSX.Element {
   }, [setActiveConversation, setMessages]);
 
   return (
-    <motion.div
-      // Tanpa `scale`: menskalakan akar halaman berarti menskalakan seluruh
-      // isinya selama transisi, dan teks yang paling kelihatan menanggungnya.
-      // Opasitas dan sedikit geseran sudah memberi arah kedatangan.
-      //
-      // Prop `exit` juga dihapus: tidak ada `AnimatePresence` yang membungkus
-      // rute ini, jadi ia tidak pernah berjalan dan hanya membaca seolah-olah
-      // ada animasi keluar yang sebenarnya tidak pernah ada.
-      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={transitionSpringSmooth}
+    <div
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       className="relative flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-background"
     >
+      <ChatDropOverlay isDragging={isDraggingOver} />
       {/* Main Scrollable Content Area */}
       <div
         ref={viewportRef}
@@ -510,11 +637,18 @@ export function AiChatView(): React.JSX.Element {
                 onSubmit={() => submit(draft)}
                 onStop={handleStop}
                 isBusy={isBusy}
+                attachments={attachments}
+                isUploading={isUploading}
+                onUploadFiles={uploadFiles}
+                onAddAttachment={(att) => setAttachments((prev) => [...prev, att])}
+                onRemoveAttachment={(index) =>
+                  setAttachments((prev) => prev.filter((_, i) => i !== index))
+                }
               />
             )}
           </div>
         </footer>
       )}
-    </motion.div>
+    </div>
   );
 }

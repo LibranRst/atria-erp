@@ -1,3 +1,4 @@
+import { geminiClient, GEMINI_OCR_MODEL } from "@/lib/ai/gemini";
 import { runChatStream } from "@/lib/ai/chat-stream";
 import { getCompanyIdentity } from "@/lib/company/identity";
 import {
@@ -15,6 +16,7 @@ import { getRoleAccess } from "@/lib/auth/role-access";
 import { getServerSession } from "@/lib/server/session";
 import { createUIMessageStreamResponse, type UIMessage } from "ai";
 import { randomUUID } from "node:crypto";
+import * as XLSX from "xlsx";
 import { z } from "zod";
 
 /**
@@ -30,10 +32,100 @@ import { z } from "zod";
 
 export const maxDuration = 60;
 
-const requestSchema = z.object({
-  conversationId: z.string().uuid().nullable().optional(),
-  text: z.string().trim().min(1).max(2000),
+const attachmentSchema = z.object({
+  url: z.string().url(),
+  fileName: z.string().min(1).max(255),
+  mimeType: z.string().min(1).max(100),
+  size: z.number().nonnegative(),
 });
+
+const requestSchema = z
+  .object({
+    conversationId: z.string().uuid().nullable().optional(),
+    text: z.string().trim().max(2000),
+    attachments: z.array(attachmentSchema).optional().default([]),
+  })
+  .refine((data) => data.text.length > 0 || data.attachments.length > 0, {
+    message: "Pesan atau lampiran berkas harus diisi.",
+  });
+
+async function extractAttachmentContent(
+  attachment: z.infer<typeof attachmentSchema>,
+): Promise<string | null> {
+  const { url, fileName, mimeType } = attachment;
+  const isExcel =
+    mimeType.includes("spreadsheet") ||
+    mimeType.includes("excel") ||
+    fileName.endsWith(".xlsx") ||
+    fileName.endsWith(".xls");
+  const isCsvOrText =
+    mimeType.includes("csv") ||
+    fileName.endsWith(".csv") ||
+    mimeType.startsWith("text/") ||
+    fileName.endsWith(".txt") ||
+    fileName.endsWith(".md");
+  const isImage =
+    mimeType.startsWith("image/") ||
+    /\.(png|jpe?g|webp|gif|bmp)$/i.test(fileName);
+  const isPdf =
+    mimeType === "application/pdf" ||
+    fileName.toLowerCase().endsWith(".pdf");
+
+  if (!isExcel && !isCsvOrText && !isImage && !isPdf) return null;
+
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) return null;
+
+    if (isExcel) {
+      const buffer = await response.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "buffer" });
+      const sheets: string[] = [];
+      for (const sheetName of workbook.SheetNames.slice(0, 3)) {
+        const sheet = workbook.Sheets[sheetName];
+        if (!sheet) continue;
+        const csvContent = XLSX.utils.sheet_to_csv(sheet);
+        const previewLines = csvContent.split("\n").slice(0, 100).join("\n");
+        sheets.push(`--- Sheet: ${sheetName} ---\n${previewLines}`);
+      }
+      return `[Data Berkas Spreadsheet: ${fileName}]\n${sheets.join("\n\n")}`;
+    }
+
+    if (isCsvOrText) {
+      const textContent = await response.text();
+      const previewLines = textContent.split("\n").slice(0, 100).join("\n");
+      return `[Data Berkas Teks: ${fileName}]\n${previewLines}`;
+    }
+
+    if (isImage || isPdf) {
+      const arrayBuffer = await response.arrayBuffer();
+      const base64Data = Buffer.from(arrayBuffer).toString("base64");
+      const effectiveMime = mimeType || (isPdf ? "application/pdf" : "image/jpeg");
+
+      const ocrResponse = await geminiClient.models.generateContent({
+        model: GEMINI_OCR_MODEL,
+        contents: [
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: effectiveMime,
+            },
+          },
+          "Baca dan ekstrak seluruh teks serta tabel data dari dokumen/gambar ini (termasuk tanggal transaksi, nominal, keterangan, saldo, nama bank, atau nomor rekening jika ada). Sajikan informasi secara terstruktur dan lengkap untuk analisis mutasi atau rekonsiliasi.",
+        ],
+      });
+
+      const extractedText = ocrResponse.text;
+      if (extractedText) {
+        return `[Data Ekstraksi ${isPdf ? "Dokumen PDF" : "Gambar"}: ${fileName}]\n${extractedText.slice(0, 8000)}`;
+      }
+    }
+  } catch (error) {
+    console.error("Gagal mengekstrak lampiran berkas:", error);
+  }
+
+  return null;
+}
 
 function jsonError(status: number, message: string, extra?: Record<string, string>): Response {
   return Response.json({ error: message, ...extra }, { status });
@@ -72,7 +164,9 @@ export async function POST(request: Request): Promise<Response> {
     return jsonError(400, "Pesan tidak valid atau terlalu panjang.");
   }
 
-  const { conversationId, text } = parsed.data;
+  const { conversationId, text, attachments } = parsed.data;
+  const effectiveText =
+    text.length > 0 ? text : "Tolong periksa dan analisa berkas terlampir.";
 
   // Riwayat selalu dibaca ulang dari database, tidak pernah dari klien,
   // supaya percakapan tidak bisa dipalsukan lewat payload permintaan.
@@ -85,20 +179,33 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (!conversation) {
-    conversation = await createConversation(session.user.id, text);
+    conversation = await createConversation(session.user.id, effectiveText);
   }
 
   // Percakapan yang dibuat kosong lewat tombol "Percakapan baru" belum punya judul.
   // Tidak perlu dijaga dengan pemeriksaan riwayat: klausa `WHERE title IS NULL`
   // di dalamnya sudah membuat pemanggilan ini aman diulang.
-  await setConversationTitleIfEmpty(conversation.id, text);
+  await setConversationTitleIfEmpty(conversation.id, effectiveText);
 
   const history = await loadConversationMessages(conversation.id);
+
+  const userParts: UIMessage["parts"] = [{ type: "text", text: effectiveText }];
+
+  for (const att of attachments) {
+    userParts.push({
+      type: "file",
+      mediaType: att.mimeType,
+      mimeType: att.mimeType,
+      url: att.url,
+      fileName: att.fileName,
+      size: att.size,
+    } as unknown as UIMessage["parts"][number]);
+  }
 
   const userMessage: UIMessage = {
     id: randomUUID(),
     role: "user",
-    parts: [{ type: "text", text }],
+    parts: userParts,
   };
 
   await appendMessage({
@@ -107,7 +214,29 @@ export async function POST(request: Request): Promise<Response> {
     parts: userMessage.parts,
   });
 
-  const messages: UIMessage[] = [...history, userMessage];
+  const extractedAttachmentTexts: string[] = [];
+  for (const att of attachments) {
+    const content = await extractAttachmentContent(att);
+    if (content) {
+      extractedAttachmentTexts.push(content);
+    }
+  }
+
+  const modelUserText =
+    extractedAttachmentTexts.length > 0
+      ? `${effectiveText}\n\n${extractedAttachmentTexts.join("\n\n")}`
+      : effectiveText;
+
+  const modelUserMessage: UIMessage = {
+    id: userMessage.id,
+    role: "user",
+    parts: [
+      { type: "text", text: modelUserText },
+      ...userParts.filter((p) => p.type === "file"),
+    ],
+  };
+
+  const messages: UIMessage[] = [...history, modelUserMessage];
 
   const roleAccess = await getRoleAccess(session.user.roleId);
   const toolContext: AiToolContext = {

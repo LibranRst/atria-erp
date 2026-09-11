@@ -4,7 +4,11 @@ import type { UIMessage } from "ai";
 import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 
-import { transitionSpringSmooth } from "@/lib/utils/motion";
+import {
+  thinkingDotAnimation,
+  thinkingDotTransition,
+  transitionSpringSmooth,
+} from "@/lib/utils/motion";
 import { readAnyProposal } from "../utils/proposal-reader";
 import {
   collapseTraces,
@@ -20,12 +24,15 @@ import { ExpenseProposalCard } from "./expense-proposal-card";
 import { CreateProjectProposalCard } from "./proposal-cards/create-project-proposal-card";
 import { RoleChangeProposalCard } from "./proposal-cards/role-change-proposal-card";
 import { RoleCreateProposalCard } from "./proposal-cards/role-create-proposal-card";
+import { UserCreateProposalCard } from "./proposal-cards/user-create-proposal-card";
+import { UserBatchCreateProposalCard } from "./proposal-cards/user-batch-create-proposal-card";
 import { SetupBudgetProposalCard } from "./proposal-cards/setup-budget-proposal-card";
 import { VendorPaymentProposalCard } from "./proposal-cards/vendor-payment-proposal-card";
 import { ClientPaymentProposalCard } from "./proposal-cards/client-payment-proposal-card";
 import { GoodsReceiptProposalCard } from "./proposal-cards/goods-receipt-proposal-card";
 import { ExpenseReviewProposalCard } from "./proposal-cards/expense-review-proposal-card";
 import { DisburseExpenseProposalCard } from "./proposal-cards/disburse-expense-proposal-card";
+import { AiReconciliationProposalCard } from "./proposal-cards/ai-reconciliation-proposal-card";
 import { FollowUpChips, readFollowUps } from "./follow-up-chips";
 import { ToolTraceList } from "./tool-trace";
 import { resolveToolResultRenderer, selectVisibleCards } from "./tool-results";
@@ -104,15 +111,14 @@ export function ChatMessage({
       .map((part) => (part.type === "text" ? part.text : ""))
       .join("");
 
+    const fileParts = message.parts.filter((part) => part.type === "file");
+
     return (
-      <motion.div
-        initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={transitionSpringSmooth}
-        {...{ [USER_MESSAGE_ATTRIBUTE]: "" }}
-      >
-        <ChatBubble side="user">{text}</ChatBubble>
-      </motion.div>
+      <div {...{ [USER_MESSAGE_ATTRIBUTE]: "" }}>
+        <ChatBubble side="user" attachments={fileParts}>
+          {text}
+        </ChatBubble>
+      </div>
     );
   }
 
@@ -148,6 +154,40 @@ export function ChatMessage({
 
       if (proposal && toolCallId) {
         const isConfirmed = toolCallId in confirmedProposals;
+
+        if (proposal.kind === "CREATE_USER_BATCH") {
+          cards.push({
+            toolName,
+            node: (
+              <UserBatchCreateProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
+
+        if (proposal.kind === "CREATE_USER") {
+          cards.push({
+            toolName,
+            node: (
+              <UserCreateProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
 
         if (proposal.kind === "CREATE_ROLE") {
           cards.push({
@@ -302,6 +342,23 @@ export function ChatMessage({
           return;
         }
 
+        if (proposal.kind === "BANK_RECONCILIATION") {
+          cards.push({
+            toolName,
+            node: (
+              <AiReconciliationProposalCard
+                key={`${message.id}-proposal-${index}`}
+                proposal={proposal}
+                toolCallId={toolCallId}
+                conversationId={conversationId}
+                alreadyConfirmed={isConfirmed}
+                onNavigate={onNavigate}
+              />
+            ),
+          });
+          return;
+        }
+
         // Default: FIELD_EXPENSE
         cards.push({
           toolName,
@@ -337,6 +394,12 @@ export function ChatMessage({
   });
 
   const traces = collapseTraces(rawTraces);
+  const isComposingTextAfterTools =
+    isStreaming &&
+    traces.length > 0 &&
+    !traces.some((trace) => trace.state === "running") &&
+    assistantTextBubbles.length === 0;
+
   /**
    * Kartu baru ditahan sampai jawaban selesai mengalir. Memunculkannya di
    * tengah aliran menggeser teks yang sedang dibaca dan membuat kartu itu
@@ -348,6 +411,30 @@ export function ChatMessage({
   return (
     <div className="space-y-3.5">
       <ToolTraceList traces={traces} />
+      {isComposingTextAfterTools && (
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduceMotion ? undefined : { opacity: 0 }}
+          transition={transitionSpringSmooth}
+          className="flex items-center gap-2.5 py-1 text-on-surface"
+        >
+          <span
+            className="flex h-5 w-5 shrink-0 items-center justify-center gap-1"
+            aria-hidden="true"
+          >
+            {[0, 1, 2].map((index) => (
+              <motion.span
+                key={index}
+                className="h-1.5 w-1.5 rounded-full bg-primary"
+                animate={reduceMotion ? { opacity: 1 } : thinkingDotAnimation}
+                transition={reduceMotion ? { duration: 0 } : thinkingDotTransition(index)}
+              />
+            ))}
+          </span>
+          <span className="text-row font-semibold text-on-surface">Menyusun jawaban…</span>
+        </motion.div>
+      )}
       {assistantTextBubbles.length > 0 && (
         <div className="space-y-3.5">
           {assistantTextBubbles.map((bubble) => {
