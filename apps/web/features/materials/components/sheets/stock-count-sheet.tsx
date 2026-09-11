@@ -102,6 +102,7 @@ export function StockCountSheet({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
         title={
           reviewing
@@ -278,6 +279,7 @@ export function StockCountSheet({
                     </div>
                     <QuantityStepper
                       value={counted[row.materialId] ?? String(row.currentStock)}
+                      unit={row.unit}
                       min={0}
                       step={1}
                       onChange={(value) =>

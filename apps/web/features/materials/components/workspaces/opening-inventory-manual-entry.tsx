@@ -6,8 +6,6 @@ import {
   AppIcon,
   FormField,
   FormSection,
-  GroupedSurface,
-  InlineStateRow,
   MainSection,
   MoneyInput,
   MoneyValue,
@@ -66,35 +64,24 @@ export function OpeningInventoryManualEntry({
 
   return (
     <MainSection
-      title="Stok fisik"
+      title="Daftar item stok fisik"
       meta={`${selectedInventoryCount} dari ${eligibleInventory.length} dipilih`}
-    >
-      <GroupedSurface>
-        <InlineStateRow
-          icon="playlist_add"
-          title="Satu pengajuan dapat memuat banyak item"
-          description="Tambahkan setiap kombinasi material dan lokasi yang memiliki stok fisik sebelum Atria digunakan."
-          tone="neutral"
-        />
-        <div className="border-t border-black/5.5 p-3">
+      action={
+        canAddLine ? (
           <motion.button
             type="button"
-            whileTap={pending || !canAddLine ? undefined : { scale: 0.97 }}
+            whileTap={pending ? undefined : { scale: 0.96 }}
             transition={transitionSpringSnappy}
             onClick={onAddLine}
-            disabled={pending || !canAddLine}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-accent/8 px-5 text-xs font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:text-on-surface-variant disabled:opacity-55"
+            disabled={pending}
+            className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/8 px-3 text-meta font-bold text-primary transition-colors active:bg-primary/12 disabled:opacity-40"
           >
-            <AppIcon name="add" className="icon-md" />
-            {canAddLine
-              ? "Tambah baris item stok"
-              : allEligibleSelected
-                ? "Semua inventory sudah ditambahkan"
-                : "Lengkapi baris item di bawah"}
+            <AppIcon name="add" className="icon-xs" />
+            Tambah item
           </motion.button>
-        </div>
-      </GroupedSurface>
-
+        ) : undefined
+      }
+    >
       <div className="space-y-3">
         {lines.map((line, index) => {
           const duplicate = duplicateIds.includes(line.materialInventoryId);
@@ -118,8 +105,9 @@ export function OpeningInventoryManualEntry({
                     type="button"
                     aria-label={`Hapus item stok ${index + 1}`}
                     onClick={() => onRemoveLine(line.key)}
-                    className="min-h-12 rounded-full px-3 text-meta font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                    className="inline-flex h-7 items-center gap-1 rounded-full px-2 text-meta font-bold text-error transition-colors active:bg-error/10"
                   >
+                    <AppIcon name="delete" className="icon-xs" />
                     Hapus
                   </button>
                 ) : undefined
@@ -136,35 +124,31 @@ export function OpeningInventoryManualEntry({
                 disabled={pending}
                 required
               />
-              <FormField label="Jumlah fisik" required>
-                <NumericInput
-                  value={line.quantity}
-                  onChange={(quantity) => onPatchLine(line.key, { quantity })}
-                  min={0}
-                  placeholder="Contoh: 25"
-                  suffix={selectedInventory?.unit}
-                  disabled={pending}
-                />
-              </FormField>
-              <FormField
-                label="Harga pokok rata-rata"
-                helper="Harga per unit berdasarkan catatan terakhir."
-                required
-              >
-                <MoneyInput
-                  value={line.unitCost}
-                  onChange={(unitCost) => onPatchLine(line.key, { unitCost })}
-                  placeholder="Contoh: 125000"
-                  disabled={pending}
-                />
-              </FormField>
-              <FormField
-                label="Nilai awal item"
-                helper="Jumlah fisik × harga pokok rata-rata."
-                readOnly
-              >
-                <MoneyValue amount={subtotal} variant="compact" size="sm" align="right" />
-              </FormField>
+              <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
+                <FormField label="Jumlah fisik" required>
+                  <NumericInput
+                    value={line.quantity}
+                    onChange={(quantity) => onPatchLine(line.key, { quantity })}
+                    min={0}
+                    placeholder="0"
+                    suffix={selectedInventory?.unit}
+                    disabled={pending}
+                  />
+                </FormField>
+                <FormField label="Harga pokok unit" required>
+                  <MoneyInput
+                    value={line.unitCost}
+                    onChange={(unitCost) => onPatchLine(line.key, { unitCost })}
+                    placeholder="0"
+                    showPreview={false}
+                    disabled={pending}
+                  />
+                </FormField>
+              </div>
+              <div className="flex min-h-11 items-center justify-between gap-3 bg-surface-container-low/40 px-4 py-2.5">
+                <span className="text-meta font-medium text-on-surface-variant">Subtotal item</span>
+                <MoneyValue amount={subtotal} variant="fullDynamic" size="sm" align="right" />
+              </div>
             </FormSection>
           );
         })}
@@ -177,13 +161,14 @@ export function OpeningInventoryManualEntry({
           transition={transitionSpringSnappy}
           onClick={onAddLine}
           disabled={pending}
-          className="min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold text-on-surface ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-5 text-row font-bold text-on-surface shadow-xs ring-1 ring-ring-subtle transition-transform outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98] disabled:opacity-40"
         >
+          <AppIcon name="add" className="icon-md text-on-surface-variant" />
           Tambah item stok lainnya
         </motion.button>
       ) : allEligibleSelected ? (
         <p className="px-3 text-center text-meta text-on-surface-variant">
-          Semua inventory yang memenuhi syarat sudah tersedia di batch ini.
+          Semua {eligibleInventory.length} inventory yang memenuhi syarat sudah dimasukkan.
         </p>
       ) : (
         <p className="px-3 text-center text-meta text-on-surface-variant">

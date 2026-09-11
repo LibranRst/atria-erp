@@ -30,10 +30,12 @@ type InventoryTabProps = {
   readonly status: string;
   readonly locations: readonly MaterialLocation[];
   readonly visibleMaterials: readonly GroupedMaterial[];
+  readonly canManage?: boolean;
   readonly onSearchChange: (value: string) => void;
   readonly onLocationChange: (value: string) => void;
   readonly onStatusChange: (value: string) => void;
   readonly onOpenMaterial: (materialId: string) => void;
+  readonly onAddLocation?: () => void;
 };
 
 export function MaterialInventoryTab({
@@ -42,10 +44,12 @@ export function MaterialInventoryTab({
   status,
   locations,
   visibleMaterials,
+  canManage,
   onSearchChange,
   onLocationChange,
   onStatusChange,
   onOpenMaterial,
+  onAddLocation,
 }: InventoryTabProps): React.JSX.Element {
   const [mode, setMode] = React.useState<SearchFilterMode>("filter");
 
@@ -72,25 +76,40 @@ export function MaterialInventoryTab({
             { value: "RESERVED", label: "Terikat" },
           ]}
         />
-        {locations.length > 0 ? (
-          <SegmentedTabs
-            value={location}
-            onChange={onLocationChange}
-            ariaLabel="Filter lokasi stok"
-            layoutId="material-inventory-location"
-            density="compact"
-            scrollable
-            fillAvailableSpace={locations.length + 1 <= 3}
-            options={[
-              {
-                value: "ALL",
-                label: "Semua lokasi",
-                icon: <AppIcon name="location_on" className="icon-xs" aria-hidden="true" />,
-              },
-              ...locations.map((row) => ({ value: row.id, label: row.name })),
-            ]}
-          />
-        ) : null}
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            {locations.length > 0 ? (
+              <SegmentedTabs
+                value={location}
+                onChange={onLocationChange}
+                ariaLabel="Filter lokasi stok"
+                layoutId="material-inventory-location"
+                density="compact"
+                scrollable
+                fillAvailableSpace={locations.length + 1 <= 3}
+                options={[
+                  {
+                    value: "ALL",
+                    label: "Semua lokasi",
+                    icon: <AppIcon name="location_on" className="icon-xs" aria-hidden="true" />,
+                  },
+                  ...locations.map((row) => ({ value: row.id, label: row.name })),
+                ]}
+              />
+            ) : null}
+          </div>
+          {canManage && onAddLocation ? (
+            <button
+              type="button"
+              onClick={onAddLocation}
+              className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-full bg-surface-container-low px-3 text-meta font-bold text-on-surface hover:bg-surface-container active:bg-surface-container-high"
+              title="Tambah Lokasi Gudang"
+            >
+              <AppIcon name="add" className="icon-xs" />
+              <span>Lokasi</span>
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <MainSection title="Daftar material" count={visibleMaterials.length} countLabel="Material">

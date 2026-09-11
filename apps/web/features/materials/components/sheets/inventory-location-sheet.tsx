@@ -1,5 +1,8 @@
 "use client";
 
+import React from "react";
+import { toast } from "sonner";
+import { createInventoryLocation } from "@/app/actions/material/warehouse";
 import {
   FormField,
   FormRiskNotice,
@@ -7,41 +10,92 @@ import {
   TextInput,
   WorkflowFormSheet,
 } from "@/components/ui";
-type InventoryLocationSheetProps = {
+
+type ControlledProps = {
   readonly open: boolean;
   readonly pending: boolean;
   readonly name: string;
-  readonly activeMaterialCount: number;
+  readonly activeMaterialCount?: number;
   readonly onNameChange: (value: string) => void;
   readonly onClose: () => void;
   readonly onSubmit: () => void;
+  readonly onSuccess?: never;
 };
 
-export function InventoryLocationSheet({
-  open,
-  pending,
-  name,
-  activeMaterialCount,
-  onNameChange,
-  onClose,
-  onSubmit,
-}: InventoryLocationSheetProps): React.JSX.Element {
+type StandaloneProps = {
+  readonly open: boolean;
+  readonly onClose: () => void;
+  readonly onSuccess: (location: { readonly id: string; readonly name: string }) => void;
+  readonly activeMaterialCount?: number;
+  readonly pending?: never;
+  readonly name?: never;
+  readonly onNameChange?: never;
+  readonly onSubmit?: never;
+};
+
+export type InventoryLocationSheetProps = ControlledProps | StandaloneProps;
+
+export function InventoryLocationSheet(props: InventoryLocationSheetProps): React.JSX.Element {
+  const [internalName, setInternalName] = React.useState("");
+  const [internalPending, setInternalPending] = React.useState(false);
+
+  const isStandalone = "onSuccess" in props && typeof props.onSuccess === "function";
+  const name = isStandalone ? internalName : props.name;
+  const pending = isStandalone ? internalPending : props.pending;
+  const onNameChange = isStandalone ? setInternalName : props.onNameChange;
+  const activeMaterialCount = props.activeMaterialCount ?? 0;
+
   const trimmedName = name.trim();
   const valid = trimmedName.length >= 3;
 
+  async function handlePrimary(): Promise<void> {
+    if (isStandalone) {
+      if (!valid || internalPending) return;
+      setInternalPending(true);
+      try {
+        const result = await createInventoryLocation({
+          name: trimmedName,
+          description: null,
+        });
+        if (!result.success) {
+          toast.error(result.error.message);
+          return;
+        }
+        toast.success(`Lokasi "${trimmedName}" berhasil ditambahkan.`);
+        props.onSuccess({ id: result.data.id, name: trimmedName });
+        setInternalName("");
+        props.onClose();
+      } catch {
+        toast.error("Gagal menambahkan lokasi inventori.");
+      } finally {
+        setInternalPending(false);
+      }
+    } else {
+      props.onSubmit();
+    }
+  }
+
   return (
     <WorkflowFormSheet
-      open={open}
+      dismissal={{
+        mode: "confirm",
+        dirty: trimmedName.length > 0,
+        onDiscard: () => onNameChange(""),
+        description: "Nama lokasi yang belum ditambahkan akan hilang.",
+      }}
+      open={props.open}
       title="Lokasi inventory baru"
       primaryLabel="Tambah"
       pendingLabel="Menambahkan…"
       pending={pending}
       disabled={!valid}
       disabledReason={valid ? undefined : "Nama lokasi minimal 3 karakter."}
-      actionLayout="stacked"
-      onClose={onClose}
-      onExitComplete={() => onNameChange("")}
-      onPrimary={onSubmit}
+      onClose={props.onClose}
+      onExitComplete={() => {
+        if (isStandalone) setInternalName("");
+        else onNameChange("");
+      }}
+      onPrimary={handlePrimary}
     >
       <div className="space-y-md">
         <FormSection

@@ -7,6 +7,7 @@ import { assertPermission } from "@/lib/auth/permissions";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { createInventoryLocationSchema } from "@atria/core/validations/warehouse";
 import { getWarehouseUser, refreshWarehouse, warehouseFailure } from "./warehouse-action-utils";
+import { recordReadinessMilestonesTx } from "@/lib/onboarding/readiness-events";
 
 export async function createInventoryLocation(
   input: unknown,
@@ -45,6 +46,11 @@ export async function createInventoryLocation(
         targetTable: "inventory_location",
         targetId: row.id,
         newState: JSON.stringify({ ...row, initializedMaterials: materials.length }),
+      });
+      await recordReadinessMilestonesTx({
+        tx,
+        actorUserId: actor.id,
+        changedItem: "material_foundation",
       });
       return row;
     });

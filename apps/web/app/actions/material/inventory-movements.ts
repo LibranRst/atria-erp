@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { materialInventory, stockMovement } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
 import { fromCents, parseNumericToCents } from "@/lib/finance/balance-mutation";
+import { assertOperationalStockReadiness } from "@/lib/material/operational-readiness";
 import { ActionResponse } from "@atria/core/types/action-response";
 import {
   AdjustMaterialStockInput,
@@ -50,6 +51,7 @@ export async function recordStockIn(
 
   try {
     await assertPermission(sessionResult.data.user, "create:stock_movement");
+    await assertOperationalStockReadiness();
     await assertProjectScopeForMaterialAction(
       validation.data.projectId,
       sessionResult.data.user.id,
@@ -130,6 +132,7 @@ export async function reserveMaterialForProject(
 
   try {
     await assertPermission(sessionResult.data.user, "reserve:stock");
+    await assertOperationalStockReadiness();
     await assertProjectScopeForMaterialAction(
       validation.data.projectId,
       sessionResult.data.user.id,
@@ -220,6 +223,7 @@ export async function adjustMaterialStock(
 
   try {
     await assertPermission(sessionResult.data.user, "adjust:stock");
+    await assertOperationalStockReadiness();
 
     const result = await db.transaction(async (tx) => {
       const inventory = await findLockedInventory(

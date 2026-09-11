@@ -34,7 +34,11 @@ export function OpeningInventoryMetadataFields({
       </FormField>
       <FormField
         label="Catatan sumber data"
-        helper="Minimal 10 karakter. Jelaskan sumber hitungan fisik."
+        helper={
+          value.note.trim().length < 10
+            ? `Minimal 10 karakter (${value.note.trim().length}/10). Jelaskan sumber hitungan fisik.`
+            : `Catatan memenuhi syarat audit (${value.note.trim().length} karakter).`
+        }
         required
       >
         <Textarea

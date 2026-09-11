@@ -12,6 +12,12 @@ export async function getWarehouseUser(): Promise<WarehouseUser | null> {
 
 export function warehouseFailure<T>(error: unknown, fallback: string): ActionResponse<T> {
   const message = error instanceof Error ? error.message : fallback;
+  if (message.startsWith("SETUP_REQUIRED:")) {
+    return {
+      success: false,
+      error: { code: "CONFLICT", message: message.replace("SETUP_REQUIRED: ", "") },
+    };
+  }
   return {
     success: false,
     error: {

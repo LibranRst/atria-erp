@@ -1,4 +1,5 @@
 "use server";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { actorHasPermission } from "@atria/core/auth/permissions";
 import { and, eq } from "drizzle-orm";
@@ -59,6 +60,24 @@ export async function requestGoodsReceiptReversal(
         targetId: existing.id,
         originalState: JSON.stringify(existing),
         newState: JSON.stringify(rows[0]),
+      });
+      await recordNotificationEvent(tx, {
+        referenceType: "goods_receipt",
+        referenceId: rows[0].id,
+        projectId: rows[0].projectId,
+        stage: `${rows[0].status}:${rows[0].updatedAt.toISOString()}`,
+        title:
+          rows[0].status === "REVERSAL_REQUESTED"
+            ? "Pembatalan penerimaan menunggu persetujuan"
+            : "Pembatalan penerimaan ditolak",
+        message: "Periksa penerimaan material terkait.",
+        permission:
+          rows[0].status === "REVERSAL_REQUESTED"
+            ? "approve:goods_receipt_reversal"
+            : "view:material",
+        actionRequired: rows[0].status === "REVERSAL_REQUESTED",
+        actionUrl: "/materials",
+        actorId: actor.id,
       });
       return rows;
     });
@@ -176,6 +195,17 @@ export async function approveGoodsReceiptReversal(
           emergencyReason: selfApproval ? parsed.data.reason : null,
         }),
       });
+      await recordNotificationEvent(tx, {
+        referenceType: "goods_receipt",
+        referenceId: updated.id,
+        projectId: updated.projectId,
+        stage: "REVERSED",
+        title: "Penerimaan material dibatalkan",
+        message: "Stok telah dikoreksi sesuai pembatalan penerimaan.",
+        permission: "view:material",
+        actionUrl: "/materials",
+        actorId: actor.id,
+      });
       return updated;
     });
     refresh();
@@ -222,6 +252,24 @@ export async function rejectGoodsReceiptReversal(input: unknown): Promise<Action
         targetId: existing.id,
         originalState: JSON.stringify(existing),
         newState: JSON.stringify({ ...rows[0], rejectionReason: parsed.data.reason }),
+      });
+      await recordNotificationEvent(tx, {
+        referenceType: "goods_receipt",
+        referenceId: rows[0].id,
+        projectId: rows[0].projectId,
+        stage: `${rows[0].status}:${rows[0].updatedAt.toISOString()}`,
+        title:
+          rows[0].status === "REVERSAL_REQUESTED"
+            ? "Pembatalan penerimaan menunggu persetujuan"
+            : "Pembatalan penerimaan ditolak",
+        message: "Periksa penerimaan material terkait.",
+        permission:
+          rows[0].status === "REVERSAL_REQUESTED"
+            ? "approve:goods_receipt_reversal"
+            : "view:material",
+        actionRequired: rows[0].status === "REVERSAL_REQUESTED",
+        actionUrl: "/materials",
+        actorId: actor.id,
       });
       return rows;
     });

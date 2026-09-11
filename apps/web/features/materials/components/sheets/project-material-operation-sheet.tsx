@@ -5,7 +5,6 @@ import React from "react";
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
   ConfirmationDialog,
-  FieldContextLine,
   FormField,
   FormRiskNotice,
   FormSection,
@@ -14,6 +13,7 @@ import {
   Textarea,
   WorkflowFormSheet,
 } from "@/components/ui";
+import { InventoryStockStatusCard } from "@/features/materials/components/shared/inventory-stock-status-card";
 import { StockImpactRow } from "@/features/materials/components/shared/stock-impact-row";
 import { Error } from "@/features/materials/components/sheets/material-operation-sheets";
 import {
@@ -144,6 +144,7 @@ export function ProjectMaterialOperationSheet({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? `Tinjau ${operationLabel}` : operationLabel}
         onClose={() =>
@@ -265,11 +266,13 @@ export function ProjectMaterialOperationSheet({
               />
             </FormSection>
             {inventory ? (
-              <FieldContextLine tone={inventory.availableStock <= 0 ? "danger" : "success"}>
-                Fisik {formatMaterialQuantity(inventory.currentStock)} · reservasi{" "}
-                {formatMaterialQuantity(inventory.reservedStock)} · tersedia{" "}
-                {formatMaterialQuantity(inventory.availableStock)} {inventory.unit}
-              </FieldContextLine>
+              <InventoryStockStatusCard
+                locationName={inventory.locationName}
+                currentStock={inventory.currentStock}
+                reservedStock={inventory.reservedStock}
+                availableStock={inventory.availableStock}
+                unit={inventory.unit}
+              />
             ) : null}
             {inventory ? (
               <StockImpactRow
@@ -285,7 +288,7 @@ export function ProjectMaterialOperationSheet({
               title="Jumlah dan catatan"
               helper={operationCopy?.detailHelper ?? "Lengkapi jumlah dan catatan operasi."}
             >
-              <FormField label={inventory?.unit ? `Jumlah (${inventory.unit})` : "Jumlah"} required>
+              <FormField label="Jumlah" required>
                 <QuantityStepper
                   value={quantity}
                   unit={inventory?.unit}
@@ -320,6 +323,7 @@ export function ProjectMaterialOperationSheet({
         onClose={() => setConfirmClose(false)}
         onConfirm={() => {
           setConfirmClose(false);
+          setReviewing(false);
           onClose();
         }}
       />

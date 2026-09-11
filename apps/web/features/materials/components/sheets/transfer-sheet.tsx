@@ -125,6 +125,7 @@ export function TransferSheet({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? "Tinjau Transfer Stok" : "Transfer Antar Lokasi"}
         onClose={() => {

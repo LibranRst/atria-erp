@@ -10,7 +10,6 @@ import {
   AppIcon,
   ConfirmationDialog,
   DatePickerField,
-  FieldContextLine,
   FormField,
   FormRiskNotice,
   FormSection,
@@ -21,6 +20,7 @@ import {
   TextInput,
   WorkflowFormSheet,
 } from "@/components/ui";
+import { InventoryLocationSheet } from "@/features/materials/components/sheets/inventory-location-sheet";
 import { StockImpactRow } from "@/features/materials/components/shared/stock-impact-row";
 import { GoodsReceiptItemsSection } from "@/features/materials/components/sheets/goods-receipt-items-section";
 import {
@@ -52,7 +52,6 @@ export function GoodsReceiptSheet({
   const [confirmClose, setConfirmClose] = React.useState(false);
   const [pendingProjectId, setPendingProjectId] = React.useState<string | null>(null);
   const [pendingVendorBillId, setPendingVendorBillId] = React.useState<string | null>(null);
-  const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const [projectId, setProjectId] = React.useState("");
   const [locationId, setLocationId] = React.useState(locations[0]?.id ?? "");
   const [vendorBillId, setVendorBillId] = React.useState("");
@@ -65,11 +64,16 @@ export function GoodsReceiptSheet({
   const [message, setMessage] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
   const [pending, startTransition] = React.useTransition();
+  const [addedLocations, setAddedLocations] = React.useState<readonly { readonly id: string; readonly name: string }[]>([]);
+  const [showLocationComposer, setShowLocationComposer] = React.useState(false);
   const selectedProject = projects.find((project) => project.id === projectId);
   const selectedVendorBill = vendorBills.find((bill) => bill.id === vendorBillId);
-  const total = items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0);
+  const total = items.reduce(
+    (sum, item) => sum + Number(item.quantity || 0) * Number(item.unitCost || 0),
+    0,
+  );
   const meaningfulItem = items.some(
-    (item) => item.materialId || item.unitCost > 0 || item.note.trim(),
+    (item) => item.materialId || Number(item.unitCost || 0) > 0 || item.note.trim(),
   );
   const dirty = Boolean(projectId || vendorBillId || meaningfulItem || note.trim());
   const valid = Boolean(
@@ -77,7 +81,14 @@ export function GoodsReceiptSheet({
     locationId &&
     receiptNumber.trim().length >= 3 &&
     items.length > 0 &&
-    items.every((item) => item.materialId && item.quantity > 0 && item.unitCost >= 0),
+    items.every(
+      (item) =>
+        item.materialId &&
+        Number(item.quantity) > 0 &&
+        !Number.isNaN(Number(item.quantity)) &&
+        Number(item.unitCost) >= 0 &&
+        !Number.isNaN(Number(item.unitCost)),
+    ),
   );
   const disabledReason = !projectId
     ? "Pilih project penerima material."
@@ -85,7 +96,14 @@ export function GoodsReceiptSheet({
       ? "Pilih lokasi inventori."
       : receiptNumber.trim().length < 3
         ? "Nomor penerimaan minimal 3 karakter."
-        : items.some((item) => !item.materialId || item.quantity <= 0 || item.unitCost < 0)
+        : items.some(
+            (item) =>
+              !item.materialId ||
+              Number(item.quantity) <= 0 ||
+              Number.isNaN(Number(item.quantity)) ||
+              Number(item.unitCost) < 0 ||
+              Number.isNaN(Number(item.unitCost)),
+          )
           ? "Lengkapi material, jumlah, dan harga setiap item."
           : undefined;
   const vendorBillOptions = [
@@ -98,19 +116,23 @@ export function GoodsReceiptSheet({
         bill.status === "PAID"
           ? "Lunas"
           : bill.status === "PARTIALLY_PAID"
-            ? "Dibayar sebagian"
-            : "Belum dibayar",
+            ? "Sebagian"
+            : "Belum bayar",
       group: bill.projectName,
     })),
   ];
+  const allLocations = React.useMemo(() => {
+    const existingIds = new Set(locations.map((loc) => loc.id));
+    return [...locations, ...addedLocations.filter((loc) => !existingIds.has(loc.id))];
+  }, [locations, addedLocations]);
   const projectOptions = projects.map((project) => ({ value: project.id, label: project.name }));
-  const locationOptions = locations.map((location) => ({
+  const locationOptions = allLocations.map((location) => ({
     value: location.id,
     label: location.name,
   }));
   const isSheetOpen = open || showSheet;
 
-  function reset(): void {
+  const reset = React.useCallback((): void => {
     setProjectId("");
     setVendorBillId("");
     setLocationId(locations[0]?.id ?? "");
@@ -121,9 +143,10 @@ export function GoodsReceiptSheet({
     setMessage(null);
     setReviewing(false);
     setPendingVendorBillId(null);
-  }
+  }, [locations]);
 
   const closeImmediately = React.useCallback((): void => {
+    reset();
     setOpen(false);
     if (new URLSearchParams(window.location.search).get("action") === "RECEIVE") {
       const params = new URLSearchParams(window.location.search);
@@ -131,7 +154,7 @@ export function GoodsReceiptSheet({
       const query = params.toString();
       router.replace(`${window.location.pathname}${query ? `?${query}` : ""}`);
     }
-  }, [router]);
+  }, [reset, router]);
 
   function requestClose(): void {
     if (reviewing) {
@@ -149,7 +172,6 @@ export function GoodsReceiptSheet({
     setProjectId(nextProjectId);
     setVendorBillId("");
     setItems([newItem()]);
-    setEditingKey(null);
   }
 
   function changeProject(nextProjectId: string): void {
@@ -178,7 +200,6 @@ export function GoodsReceiptSheet({
     setProjectId(prefill.projectId);
     setItems([item]);
     setNote(prefill.receiptNote);
-    setEditingKey(item.materialId ? null : item.key);
     setMessage(null);
   }
 
@@ -215,8 +236,8 @@ export function GoodsReceiptSheet({
         items: items.map((item) => ({
           materialId: item.materialId,
           projectRapItemId: item.projectRapItemId || null,
-          quantity: item.quantity,
-          unitCost: item.unitCost,
+          quantity: Number(item.quantity),
+          unitCost: Number(item.unitCost),
           note: item.note || null,
         })),
       });
@@ -255,7 +276,7 @@ export function GoodsReceiptSheet({
       );
       const quantity = items
         .filter((item) => item.materialId === materialId)
-        .reduce((sum, item) => sum + item.quantity, 0);
+        .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
       return { materialId, row, quantity };
     },
   );
@@ -278,6 +299,7 @@ export function GoodsReceiptSheet({
         </motion.button>
       ) : null}
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={isSheetOpen}
         title={reviewing ? "Tinjau Penerimaan Barang" : "Penerimaan Barang"}
         onClose={requestClose}
@@ -365,16 +387,38 @@ export function GoodsReceiptSheet({
                 options={locationOptions}
                 onChange={setLocationId}
                 placeholder="Pilih lokasi"
+                createActionLabel="Buat lokasi baru"
+                createActionDescription="Tambahkan lokasi gudang atau workshop baru."
+                onCreateAction={() => setShowLocationComposer(true)}
                 required
               />
             </FormSection>
 
             {selectedVendorBill ? (
-              <FieldContextLine tone={selectedVendorBill.materialId ? "success" : "warning"}>
-                {selectedVendorBill.materialId
-                  ? "Project, material, tautan RAP, nominal, dan catatan sudah diprefill dari tagihan."
-                  : "Project, nominal, dan catatan sudah diprefill. Pilih material yang benar sebelum posting."}
-              </FieldContextLine>
+              <div
+                className={`flex items-start gap-3 rounded-2xl p-3.5 text-xs font-medium ring-1 ${
+                  selectedVendorBill.materialId
+                    ? "bg-primary/5 text-primary ring-primary/20"
+                    : "bg-warning/10 text-warning ring-warning/20"
+                }`}
+              >
+                <AppIcon
+                  name={selectedVendorBill.materialId ? "check-circle" : "warning"}
+                  className="icon-md shrink-0"
+                />
+                <div className="min-w-0 flex-1 leading-relaxed">
+                  <p className="font-bold">
+                    {selectedVendorBill.materialId
+                      ? "Data Tagihan Berhasil Diisi Otomatis"
+                      : "Verifikasi Pilihan Material"}
+                  </p>
+                  <p className="mt-0.5 text-meta opacity-90">
+                    {selectedVendorBill.materialId
+                      ? "Project, material, tautan RAP, nominal, dan catatan sudah diprefill dari tagihan vendor."
+                      : "Project, nominal, dan catatan sudah diprefill. Pilih material yang benar sebelum posting penerimaan."}
+                  </p>
+                </div>
+              </div>
             ) : null}
 
             <FormSection
@@ -399,8 +443,6 @@ export function GoodsReceiptSheet({
               items={items}
               materials={materials}
               selectedProject={selectedProject}
-              editingKey={editingKey}
-              onEditingKeyChange={setEditingKey}
               onItemsChange={(change) => setItems((current) => change(current))}
               onUpdateItem={updateItem}
             />
@@ -452,6 +494,15 @@ export function GoodsReceiptSheet({
         onSecondary={() => {
           setSuccess(null);
           launch();
+        }}
+      />
+      <InventoryLocationSheet
+        open={showLocationComposer}
+        onClose={() => setShowLocationComposer(false)}
+        onSuccess={(newLocation) => {
+          setAddedLocations((curr) => [...curr, newLocation]);
+          setLocationId(newLocation.id);
+          setShowLocationComposer(false);
         }}
       />
     </>

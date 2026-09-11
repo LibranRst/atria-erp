@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { materialInventory, stockMovement } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
 import { fromCents, parseNumericToCents } from "@/lib/finance/balance-mutation";
+import { assertOperationalStockReadiness } from "@/lib/material/operational-readiness";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   exceedsProjectUsage,
@@ -52,6 +53,7 @@ export async function wasteMaterialForProject(
 
   try {
     await assertPermission(sessionResult.data.user, "waste:stock");
+    await assertOperationalStockReadiness();
     await assertProjectScopeForMaterialAction(
       validation.data.projectId,
       sessionResult.data.user.id,
@@ -159,6 +161,7 @@ export async function useMaterialForProject(
 
   try {
     await assertPermission(sessionResult.data.user, "use:stock");
+    await assertOperationalStockReadiness();
     await assertProjectScopeForMaterialAction(
       validation.data.projectId,
       sessionResult.data.user.id,
@@ -278,6 +281,7 @@ export async function returnMaterialFromProject(
 
   try {
     await assertPermission(sessionResult.data.user, "use:stock");
+    await assertOperationalStockReadiness();
     await assertProjectScopeForMaterialAction(
       validation.data.projectId,
       sessionResult.data.user.id,

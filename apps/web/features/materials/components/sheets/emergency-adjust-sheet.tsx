@@ -89,6 +89,7 @@ export function EmergencyAdjustSheet({
   return (
     <>
       <WorkflowFormSheet
+        dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? "Tinjau Penyesuaian Darurat" : "Penyesuaian Stok Darurat"}
         onClose={() =>
@@ -198,10 +199,7 @@ export function EmergencyAdjustSheet({
               title="Jumlah dan audit"
               helper="Penyesuaian darurat mengubah stok fisik langsung dan selalu meninggalkan audit trail."
             >
-              <FormField
-                label={selectedInventory?.unit ? `Jumlah (${selectedInventory.unit})` : "Jumlah"}
-                required
-              >
+              <FormField label="Jumlah" required>
                 <QuantityStepper
                   value={item?.quantity ?? ""}
                   unit={selectedInventory?.unit}

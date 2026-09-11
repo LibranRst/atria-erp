@@ -1,4 +1,5 @@
 "use server";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { actorHasPermission } from "@atria/core/auth/permissions";
 import { cookies } from "next/headers";
@@ -18,6 +19,7 @@ import {
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
+import { assertOperationalStockReadiness } from "@/lib/material/operational-readiness";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { createGoodsReceiptSchema } from "@atria/core/validations/workflow-governance";
 
@@ -45,6 +47,7 @@ export async function postGoodsReceipt(input: unknown): Promise<ActionResponse<G
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
     await assertPermission(user, "create:stock_movement");
+    await assertOperationalStockReadiness();
     const roleName = await resolveRoleName(user.roleId ?? "");
     // Lihat catatan yang sama di `inventory-utils.ts`.
     if (!actorHasPermission(roleName, "create:stock_movement")) {
@@ -242,6 +245,17 @@ export async function postGoodsReceipt(input: unknown): Promise<ActionResponse<G
         targetId: receipt.id,
         newState: JSON.stringify({ ...receipt, items: validation.data.items }),
       });
+      await recordNotificationEvent(tx, {
+        referenceType: "goods_receipt",
+        referenceId: receipt.id,
+        projectId: receipt.projectId,
+        stage: "POSTED",
+        title: "Material telah diterima",
+        message: "Penerimaan material sudah dicatat di gudang.",
+        permission: "view:material",
+        actionUrl: `/projects/${receipt.projectId}?tab=materials`,
+        actorId: user.id,
+      });
       return receipt;
     });
 
@@ -250,6 +264,12 @@ export async function postGoodsReceipt(input: unknown): Promise<ActionResponse<G
     return { success: true, data: posted };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Gagal posting Goods Receipt.";
+    if (message.startsWith("SETUP_REQUIRED:")) {
+      return {
+        success: false,
+        error: { code: "CONFLICT", message: message.replace("SETUP_REQUIRED: ", "") },
+      };
+    }
     const businessMessages: Record<string, string> = {
       GOODS_RECEIPT_VENDOR_BILL_MISMATCH: "Tagihan vendor tidak sesuai dengan proyek penerimaan.",
       GOODS_RECEIPT_VENDOR_BILL_ITEM_MISMATCH:

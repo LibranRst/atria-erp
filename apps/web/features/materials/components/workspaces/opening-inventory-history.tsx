@@ -1,6 +1,13 @@
 import React from "react";
 import type { InventoryOpeningBatchView } from "@/app/actions/material/opening-inventory";
-import { AppIcon, GroupedSurface, InlineStateRow, MainSection, MoneyValue } from "@/components/ui";
+import {
+  DuotoneIconTile,
+  GroupedSurface,
+  InlineStateRow,
+  MainSection,
+  MoneyValue,
+  WorkspaceRowChevron,
+} from "@/components/ui";
 import { MaterialStatusLabel } from "@/features/materials/components/shared/material-page-primitives";
 import { statusPresentation } from "./opening-inventory-utils";
 
@@ -29,14 +36,11 @@ export function OpeningInventoryHistory({ show, batches, onSelect }: Props): Rea
                   type="button"
                   key={batch.id}
                   onClick={() => onSelect(batch)}
-                  className="flex min-h-19 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
+                  className="flex min-h-18 w-full items-center gap-3 px-4 py-3.5 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low"
                 >
-                  <AppIcon
-                    name="inventory"
-                    className="flex! icon-lg h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-primary"
-                  />
+                  <DuotoneIconTile name="inventory_2" tone="neutral" />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[12px] font-bold text-on-surface">
+                    <span className="block truncate text-row font-bold text-on-surface">
                       {batch.batchNumber}
                     </span>
                     <span className="mt-0.5 block text-meta text-on-surface-variant">
@@ -52,10 +56,7 @@ export function OpeningInventoryHistory({ show, batches, onSelect }: Props): Rea
                     />
                   </span>
                   <MoneyValue amount={batch.totalValue} variant="compact" size="sm" align="right" />
-                  <AppIcon
-                    name="chevron_right"
-                    className="icon-md shrink-0 text-on-surface-variant/60"
-                  />
+                  <WorkspaceRowChevron />
                 </button>
               );
             })}

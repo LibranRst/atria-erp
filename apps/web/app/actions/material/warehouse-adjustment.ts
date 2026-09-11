@@ -7,6 +7,7 @@ import { auditLog, materialInventory, stockMovement } from "@/db/schema";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { emergencyAdjustmentSchema } from "@atria/core/validations/warehouse";
+import { assertOperationalStockReadiness } from "@/lib/material/operational-readiness";
 import {
   getWarehouseUser as user,
   refreshWarehouse as refresh,
@@ -29,6 +30,7 @@ export async function emergencyAdjustStock(
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
     await assertPermission(actor, "adjust:stock");
+    await assertOperationalStockReadiness();
     const role = await resolveRoleName(actor.roleId ?? "");
     if (!actorHasPermission(role, "adjust:stock"))
       throw new Error("FORBIDDEN: Peran Anda tidak berhak melakukan emergency adjustment.");

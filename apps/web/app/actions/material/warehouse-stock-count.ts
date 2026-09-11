@@ -1,4 +1,5 @@
 "use server";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { actorHasPermission } from "@atria/core/auth/permissions";
 import { and, eq, inArray } from "drizzle-orm";
@@ -151,6 +152,21 @@ async function changeCountStatus(
         originalState: JSON.stringify(existing),
         newState: JSON.stringify(rows[0]),
       });
+      await recordNotificationEvent(tx, {
+        referenceType: "stock_count",
+        referenceId: rows[0].id,
+        stage: `${rows[0].status}:${rows[0].updatedAt.toISOString()}`,
+        title:
+          rows[0].status === "PENDING_APPROVAL"
+            ? "Hitung stok menunggu persetujuan"
+            : "Hitung stok ditolak",
+        message: "Periksa hasil penghitungan stok.",
+        permission:
+          rows[0].status === "PENDING_APPROVAL" ? "approve:stock_count" : "create:stock_count",
+        actionRequired: rows[0].status === "PENDING_APPROVAL",
+        actionUrl: "/materials",
+        actorId: actor.id,
+      });
       return rows;
     });
     refresh();
@@ -259,6 +275,16 @@ export async function approveStockCount(input: unknown): Promise<ActionResponse<
           emergencyReason: selfApproval ? parsed.data.reason : null,
         }),
       });
+      await recordNotificationEvent(tx, {
+        referenceType: "stock_count",
+        referenceId: updated.id,
+        stage: "POSTED",
+        title: "Hasil hitung stok disetujui",
+        message: "Hasil penghitungan telah diterapkan ke stok.",
+        permission: "create:stock_count",
+        actionUrl: "/materials",
+        actorId: actor.id,
+      });
       return updated;
     });
     refresh();
@@ -307,6 +333,21 @@ export async function rejectStockCount(input: unknown): Promise<ActionResponse<C
         targetId: existing.id,
         originalState: JSON.stringify(existing),
         newState: JSON.stringify(rows[0]),
+      });
+      await recordNotificationEvent(tx, {
+        referenceType: "stock_count",
+        referenceId: rows[0].id,
+        stage: `${rows[0].status}:${rows[0].updatedAt.toISOString()}`,
+        title:
+          rows[0].status === "PENDING_APPROVAL"
+            ? "Hitung stok menunggu persetujuan"
+            : "Hitung stok ditolak",
+        message: "Periksa hasil penghitungan stok.",
+        permission:
+          rows[0].status === "PENDING_APPROVAL" ? "approve:stock_count" : "create:stock_count",
+        actionRequired: rows[0].status === "PENDING_APPROVAL",
+        actionUrl: "/materials",
+        actorId: actor.id,
       });
       return rows;
     });

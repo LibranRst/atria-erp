@@ -167,7 +167,7 @@ export function MaterialActivityTab({
                       className="mt-1"
                     />
                   </span>
-                  <AppIcon name="chevron_right" className="shrink-0 text-[17px] text-accent" />
+                  <ActivityDetailChevron />
                 </button>
               ))}
             </div>

@@ -12,6 +12,7 @@ import {
 import { assertPermission } from "@/lib/auth/permissions";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { calculateTransferDestinationAverage } from "@atria/core/material/stock-valuation";
+import { assertOperationalStockReadiness } from "@/lib/material/operational-readiness";
 import { createStockTransferSchema } from "@atria/core/validations/warehouse";
 import {
   getWarehouseUser as user,
@@ -35,6 +36,7 @@ export async function createStockTransfer(input: unknown): Promise<ActionRespons
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
     await assertPermission(actor, "transfer:stock");
+    await assertOperationalStockReadiness();
     const result = await db.transaction(async (tx) => {
       const duplicate = await tx.query.stockTransfer.findFirst({
         where: eq(stockTransfer.transferNumber, parsed.data.transferNumber),

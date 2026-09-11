@@ -6,7 +6,12 @@ import type {
   InitialStockCandidate,
   InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
-import { AppIcon, GroupedSurface, InlineStateRow, MainSection } from "@/components/ui";
+import {
+  DuotoneIconTile,
+  GroupedSurface,
+  InlineStateRow,
+  MainSection,
+} from "@/components/ui";
 import { OpeningInventoryBatchDetailSheet } from "./opening-inventory-batch-detail-sheet";
 import { OpeningInventoryEntryForm } from "./opening-inventory-entry-form";
 import { OpeningInventoryHistory } from "./opening-inventory-history";
@@ -40,7 +45,7 @@ export function OpeningInventoryWorkspace({
           <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
             Fondasi inventory
           </p>
-          <h2 className="text-[20px] font-bold tracking-tight text-on-surface">Saldo awal stok</h2>
+          <h2 className="text-lg font-bold tracking-tight text-on-surface">Saldo awal stok</h2>
           <p className="text-support text-on-surface-variant">
             Catat stok fisik yang sudah dimiliki sebelum aktivitas gudang berjalan di Atria.
           </p>
@@ -63,15 +68,12 @@ export function OpeningInventoryWorkspace({
                     key={row.inventoryId}
                     className="flex min-h-14.5 items-center gap-3 px-4 py-3"
                   >
-                    <AppIcon
-                      name="lock"
-                      className="flex! icon-sm h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant"
-                    />
+                    <DuotoneIconTile name="lock" tone="neutral" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[11px] leading-5 font-bold text-on-surface">
+                      <span className="block truncate text-row font-bold text-on-surface">
                         {row.materialName} · {row.locationName}
                       </span>
-                      <span className="block text-eyebrow text-on-surface-variant">
+                      <span className="mt-0.5 block text-meta text-on-surface-variant">
                         {row.ineligibleReason}
                       </span>
                     </span>
@@ -98,13 +100,13 @@ export function OpeningInventoryWorkspace({
             <div className="grid grid-cols-2 gap-2 border-t border-black/5.5 p-3">
               <Link
                 href="/materials?action=LOCATION"
-                className="flex min-h-12 items-center justify-center rounded-full bg-white px-3 text-meta font-bold text-on-surface ring-1 ring-ring-subtle"
+                className="flex min-h-12 items-center justify-center rounded-full bg-white px-3 text-row font-bold text-on-surface ring-1 ring-ring-subtle active:scale-[0.98] transition-transform"
               >
                 Buat lokasi
               </Link>
               <Link
                 href="/settings?tab=materials"
-                className="flex min-h-12 items-center justify-center rounded-full bg-primary px-3 text-meta font-bold text-on-primary"
+                className="flex min-h-12 items-center justify-center rounded-full bg-primary px-3 text-row font-bold text-on-primary active:scale-[0.98] transition-transform"
               >
                 Material Master
               </Link>

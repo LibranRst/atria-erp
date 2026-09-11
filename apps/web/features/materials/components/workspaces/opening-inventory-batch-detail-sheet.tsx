@@ -9,7 +9,7 @@ import {
   type InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
 import {
-  AppIcon,
+  DuotoneIconTile,
   FormField,
   FormRiskNotice,
   FormSection,
@@ -81,6 +81,12 @@ export function OpeningInventoryBatchDetailSheet({
 
   return (
     <OperationalFormSheet
+      dismissal={{
+        mode: "confirm",
+        dirty: reversalMode && reversalReason.trim().length > 0,
+        onDiscard: () => undefined,
+        description: "Alasan pembalikan yang belum dikirim akan hilang.",
+      }}
       open={open}
       title={
         reversalMode
@@ -105,12 +111,9 @@ export function OpeningInventoryBatchDetailSheet({
       {presentedBatch ? (
         <div className="space-y-4 pb-1">
           <div className="flex items-center gap-3 px-1">
-            <AppIcon
-              name="inventory"
-              className="flex! icon-lg h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-primary"
-            />
+            <DuotoneIconTile name="inventory_2" tone="primary" />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[14px] leading-5 font-bold text-on-surface">
+              <span className="block truncate text-row font-bold text-on-surface">
                 Saldo awal stok
               </span>
               <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
@@ -179,8 +182,8 @@ export function OpeningInventoryBatchDetailSheet({
                 <OpeningDetailRow label="Dibalik oleh" value={presentedBatch.reversedByName} />
               ) : null}
               <div className="py-3.5">
-                <p className="text-[10px] font-medium text-on-surface-variant">Catatan sumber</p>
-                <p className="mt-1.5 text-[12px] leading-5 font-semibold whitespace-pre-wrap text-on-surface">
+                <p className="text-eyebrow font-medium text-on-surface-variant">Catatan sumber</p>
+                <p className="mt-1 text-meta leading-5 font-semibold whitespace-pre-wrap text-on-surface">
                   {presentedBatch.note}
                 </p>
               </div>
@@ -221,7 +224,7 @@ export function OpeningInventoryBatchDetailSheet({
               whileTap={{ scale: 0.97 }}
               transition={transitionSpringSnappy}
               onClick={() => setReversalMode(true)}
-              className="min-h-12 w-full rounded-full bg-error/10 px-5 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+              className="min-h-12 w-full rounded-full bg-error/10 px-5 text-row font-bold text-error transition-transform outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98]"
             >
               Balik saldo awal
             </motion.button>

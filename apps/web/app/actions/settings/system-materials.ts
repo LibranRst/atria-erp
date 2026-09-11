@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { auditLog, materialCategory, materialInventory, materialMaster } from "@/db/schema";
+import { recordReadinessMilestonesTx } from "@/lib/onboarding/readiness-events";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   archiveMaterialSchema,
@@ -254,6 +255,11 @@ export async function createMaterialWithInventoryDefaults(
         material: created,
         inventoryDefaults: validation.data.inventoryDefaults,
       }),
+    });
+    await recordReadinessMilestonesTx({
+      tx,
+      actorUserId: user.id,
+      changedItem: "material_foundation",
     });
     return created.id;
   });

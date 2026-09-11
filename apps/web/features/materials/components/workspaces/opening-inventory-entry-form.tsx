@@ -12,10 +12,13 @@ import {
 } from "@/app/actions/material/opening-inventory";
 import {
   AppIcon,
-  FormRiskNotice,
+  ConfirmationDialog,
+  DuotoneIconTile,
   GroupedSurface,
   MoneyValue,
+  OperationalFormSheet,
   SegmentedTabs,
+  SheetFooterActions,
 } from "@/components/ui";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { OpeningInventoryCsvEntry } from "./opening-inventory-csv-entry";
@@ -33,11 +36,17 @@ import {
 interface OpeningInventoryEntryFormProps {
   readonly eligibleInventory: readonly InitialStockCandidate[];
   readonly onMutationComplete?: () => void;
+  readonly presentation?: "page" | "sheet";
+  readonly open?: boolean;
+  readonly onClose?: () => void;
 }
 
 export function OpeningInventoryEntryForm({
   eligibleInventory,
   onMutationComplete,
+  presentation = "page",
+  open = false,
+  onClose,
 }: OpeningInventoryEntryFormProps): React.JSX.Element {
   const router = useRouter();
   const [mode, setMode] = React.useState<EntryMode>("MANUAL");
@@ -46,6 +55,7 @@ export function OpeningInventoryEntryForm({
   const [preview, setPreview] = React.useState<InitialStockImportPreview | null>(null);
   const [fileName, setFileName] = React.useState("");
   const [pending, setPending] = React.useState(false);
+  const [confirmDiscard, setConfirmDiscard] = React.useState(false);
 
   const duplicateIds = lines
     .map((line) => line.materialInventoryId)
@@ -92,6 +102,35 @@ export function OpeningInventoryEntryForm({
                 : mode === "CSV" && (preview?.errors.length ?? 0) > 0
                   ? "Perbaiki seluruh baris CSV yang masih bermasalah."
                   : undefined;
+  const dirty =
+    mode !== "MANUAL" ||
+    metadata.balanceDate !== EMPTY_METADATA.balanceDate ||
+    metadata.referenceNumber !== EMPTY_METADATA.referenceNumber ||
+    metadata.note !== EMPTY_METADATA.note ||
+    fileName.length > 0 ||
+    preview !== null ||
+    lines.length > 1 ||
+    lines.some(
+      (line) =>
+        line.materialInventoryId.length > 0 || line.quantity.length > 0 || line.unitCost.length > 0,
+    );
+
+  function resetForm(): void {
+    setMode("MANUAL");
+    setMetadata(EMPTY_METADATA);
+    setLines([newLine()]);
+    setPreview(null);
+    setFileName("");
+  }
+
+  function requestClose(): void {
+    if (pending || !onClose) return;
+    if (dirty) {
+      setConfirmDiscard(true);
+      return;
+    }
+    onClose();
+  }
 
   function patchLine(key: string, patch: Partial<DraftLine>): void {
     setLines((current) => current.map((line) => (line.key === key ? { ...line, ...patch } : line)));
@@ -141,16 +180,13 @@ export function OpeningInventoryEntryForm({
     }
 
     toast.success("Saldo awal stok diajukan. Stok belum berubah sampai disetujui.");
-    setMetadata(EMPTY_METADATA);
-    setLines([newLine()]);
-    setPreview(null);
-    setFileName("");
+    resetForm();
     onMutationComplete?.();
     router.refresh();
   }
 
-  return (
-    <form onSubmit={submit} className="space-y-4">
+  const content = (
+    <>
       <SegmentedTabs<EntryMode>
         value={mode}
         onChange={(next) => {
@@ -184,63 +220,108 @@ export function OpeningInventoryEntryForm({
       )}
 
       <GroupedSurface>
-        <div className="divide-y divide-black/5.5">
-          <div className="flex min-h-19 items-center gap-3 px-4 py-3.5">
-            <span
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[15px] bg-primary/8 text-primary ring-1 ring-primary/6"
-              aria-hidden="true"
-            >
-              <AppIcon name="inventory_2" className="h-5 w-5" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[12px] leading-4 font-bold text-on-surface">
-                Total saldo awal
-              </span>
-              <span className="mt-0.5 block text-meta text-on-surface-variant">
+        <div className="divide-y divide-outline-variant/20">
+          <div className="flex min-h-16 items-center gap-3.5 px-4 py-3.5">
+            <DuotoneIconTile name="inventory_2" tone="accent" />
+            <div className="min-w-0 flex-1">
+              <p className="text-row font-bold text-on-surface">Total saldo awal</p>
+              <p className="mt-0.5 text-meta text-on-surface-variant">
                 {submittedItems.length} item siap diajukan
-              </span>
-            </span>
+              </p>
+            </div>
             <MoneyValue
               amount={total}
-              variant="compact"
+              variant="fullDynamic"
               size="md"
               align="right"
-              className="shrink-0"
+              className="shrink-0 font-bold"
             />
           </div>
-          <div className="flex min-h-16 items-start gap-3 px-4 py-3.5">
-            <AppIcon name="info" className="mt-0.5 icon-md shrink-0 text-on-surface-variant/65" />
-            <span className="min-w-0">
-              <span className="block text-support font-semibold text-on-surface">
-                Belum ada mutasi yang diposting
-              </span>
-              <span className="mt-0.5 block text-meta text-on-surface-variant">
-                Stok, kas, utang vendor, dan biaya aktual proyek tetap sama sampai pengajuan
-                disetujui.
-              </span>
-            </span>
+          <div className="flex items-center gap-2.5 bg-surface-container-low/40 px-4 py-3 text-meta text-on-surface-variant">
+            <AppIcon name="shield" className="icon-sm shrink-0 text-on-surface-variant/70" />
+            <p className="min-w-0 flex-1">
+              Perlu persetujuan Finance Admin · Kas & stok fisik belum aktif sampai disetujui.
+            </p>
           </div>
         </div>
       </GroupedSurface>
+    </>
+  );
 
-      <FormRiskNotice title="Memerlukan pemeriksa terpisah">
-        Finance Admin atau pemeriksa lain yang berwenang perlu memutus batch ini. Pembuat batch
-        tidak dapat menyetujui pengajuannya sendiri.
-      </FormRiskNotice>
+  if (presentation === "sheet") {
+    return (
+      <>
+        <OperationalFormSheet
+          dismissal={{ mode: "managed" }}
+          open={open}
+          title="Catat saldo awal stok"
+          formId="onboarding-opening-inventory-form"
+          submitLabel="Ajukan saldo awal"
+          submittingLabel="Mengajukan…"
+          pending={pending}
+          disabled={!formComplete}
+          disabledReason={submitDisabledReason}
+          statusText={`${submittedItems.length} item · Rp ${total.toLocaleString("id-ID")} · Perlu persetujuan`}
+          statusTone={formComplete ? "success" : "default"}
+          onClose={requestClose}
+        >
+          <form id="onboarding-opening-inventory-form" onSubmit={submit} className="space-y-4">
+            {content}
+          </form>
+        </OperationalFormSheet>
+
+        <ConfirmationDialog
+          open={confirmDiscard}
+          title="Buang isian saldo awal?"
+          description="Item, tanggal, dan catatan yang belum diajukan akan hilang."
+          tone="warning"
+          pending={pending}
+          onClose={() => setConfirmDiscard(false)}
+          actions={
+            <SheetFooterActions
+              secondary={{ label: "Lanjut isi", onClick: () => setConfirmDiscard(false) }}
+              primary={{
+                label: "Buang isian",
+                variant: "critical",
+                onClick: () => {
+                  setConfirmDiscard(false);
+                  resetForm();
+                  onClose?.();
+                },
+              }}
+            />
+          }
+        />
+      </>
+    );
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      {content}
+
       {!formComplete && submitDisabledReason ? (
-        <p className="flex min-h-12 items-center gap-2 rounded-[18px] bg-warning/8 px-3.5 py-2.5 text-meta text-on-surface-variant ring-1 ring-warning/8">
-          <AppIcon name="info" className="shrink-0 text-[17px] text-warning" />
-          {submitDisabledReason}
-        </p>
+        <div className="flex items-center gap-2 rounded-2xl bg-warning/8 px-3.5 py-2.5 text-meta text-on-surface-variant ring-1 ring-warning/12">
+          <AppIcon name="info" className="icon-sm shrink-0 text-warning" />
+          <span className="min-w-0 flex-1">{submitDisabledReason}</span>
+        </div>
       ) : null}
+
       <motion.button
         type="submit"
-        whileTap={pending || !formComplete ? undefined : { scale: 0.97 }}
+        whileTap={pending || !formComplete ? undefined : { scale: 0.98 }}
         transition={transitionSpringSnappy}
         disabled={pending || !formComplete}
-        className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary disabled:opacity-40"
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-row font-bold text-on-primary shadow-primary transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {pending ? "Mengajukan…" : "Ajukan saldo awal"}
+        {pending ? (
+          <>
+            <AppIcon name="progress_activity" className="icon-sm animate-spin" />
+            <span>Mengajukan saldo awal…</span>
+          </>
+        ) : (
+          <span>Ajukan saldo awal</span>
+        )}
       </motion.button>
     </form>
   );

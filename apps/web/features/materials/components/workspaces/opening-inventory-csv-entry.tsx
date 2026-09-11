@@ -28,7 +28,7 @@ export function OpeningInventoryCsvEntry({
 }: OpeningInventoryCsvEntryProps): React.JSX.Element {
   return (
     <section className="space-y-3">
-      <div className="rounded-[26px] bg-white p-4 shadow-control ring-1 ring-ring-subtle">
+      <div className="rounded-3xl bg-surface-container-lowest p-4 shadow-surface ring-1 ring-ring-subtle">
         <p className="text-row font-bold text-on-surface">Upload CSV saldo stok</p>
         <p className="mt-1 text-meta text-on-surface-variant">
           Header: material_name atau material_code, location_name, quantity, unit_cost.
@@ -42,7 +42,7 @@ export function OpeningInventoryCsvEntry({
         >
           Unduh template CSV
         </Button>
-        <label className="mt-4 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-surface-container-low px-5 text-xs font-bold text-on-surface ring-1 ring-ring-subtle">
+        <label className="mt-3 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-surface-container px-5 text-row font-bold text-on-surface ring-1 ring-ring-subtle active:scale-[0.98] transition-transform">
           <AppIcon name="upload_file" className="icon-md" />
           {fileName || "Pilih file CSV"}
           <input
@@ -60,7 +60,7 @@ export function OpeningInventoryCsvEntry({
 
       {preview ? (
         <GroupedSurface>
-          <div className="divide-y divide-black/5.5">
+          <div className="divide-y divide-outline-variant/20">
             {preview.items.map((item) => (
               <div
                 key={`${item.rowNumber}-${item.materialInventoryId}`}

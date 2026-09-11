@@ -217,10 +217,17 @@ export function MaterialsControlCenter({
           status={status}
           locations={locations}
           visibleMaterials={visibleMaterials}
+          canManage={data.capabilities.canOperate}
           onSearchChange={setSearch}
           onLocationChange={setLocation}
           onStatusChange={setStatus}
           onOpenMaterial={setDetailMaterialId}
+          onAddLocation={() => {
+            const params = new URLSearchParams(window.location.search);
+            params.set("action", "LOCATION");
+            const query = params.toString();
+            updateBrowserUrl(`${window.location.pathname}${query ? `?${query}` : ""}`, "replace");
+          }}
         />
       )}
 
@@ -420,14 +427,12 @@ export function MaterialsControlCenter({
             {can("override:self_approval") &&
             !decision.type.includes("REJECT") &&
             !decision.type.includes("REQUEST") ? (
-              <div className="mb-2">
-                <SwitchRow
-                  checked={emergencyOverride}
-                  onChange={setEmergencyOverride}
-                  title="Gunakan emergency override"
-                  description="Khusus Owner saat pembuat keputusan harus melakukan self-approval."
-                />
-              </div>
+              <SwitchRow
+                checked={emergencyOverride}
+                onChange={setEmergencyOverride}
+                title="Gunakan emergency override"
+                description="Khusus Owner saat pembuat keputusan harus melakukan self-approval."
+              />
             ) : null}
             <AnimatePresence initial={false}>
               {(decision.type.includes("REJECT") ||

@@ -11,6 +11,8 @@ import {
   stockMovement,
 } from "@/db/schema";
 import { assertPermission } from "@/lib/auth/permissions";
+import { recordReadinessMilestonesTx } from "@/lib/onboarding/readiness-events";
+import { recordNotificationEvent } from "@/server/services/notification-events";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createInventoryOpeningSchema,
@@ -115,6 +117,17 @@ export async function createInventoryOpening(
         targetId: batch.id,
         newState: JSON.stringify({ ...batch, items: validation.data.items }),
       });
+      await recordNotificationEvent(tx, {
+        referenceType: "inventory_opening",
+        referenceId: batch.id,
+        stage: "PENDING_APPROVAL",
+        title: "Saldo awal stok menunggu persetujuan",
+        message: `${batch.batchNumber} siap ditinjau.`,
+        permission: "approve:opening_inventory",
+        actionRequired: true,
+        actionUrl: "/approvals",
+        actorId: session.data.user.id,
+      });
       return batch;
     });
     refresh();
@@ -171,6 +184,17 @@ export async function decideInventoryOpening(
           targetId: locked.id,
           originalState: JSON.stringify(locked),
           newState: JSON.stringify(rejected),
+        });
+        await recordNotificationEvent(tx, {
+          referenceType: "inventory_opening",
+          referenceId: rejected.id,
+          stage: "REJECTED",
+          title: "Saldo awal stok perlu diperbaiki",
+          message: validation.data.reason,
+          permission: "view:inventory",
+          recipients: [locked.requestedById],
+          actionUrl: "/materials/opening",
+          actorId: session.data.user.id,
         });
         return rejected;
       }
@@ -261,6 +285,22 @@ export async function decideInventoryOpening(
         targetId: locked.id,
         originalState: JSON.stringify(locked),
         newState: JSON.stringify({ ...posted, decisionReason: validation.data.reason }),
+      });
+      await recordReadinessMilestonesTx({
+        tx,
+        actorUserId: session.data.user.id,
+        changedItem: "initial_stock",
+      });
+      await recordNotificationEvent(tx, {
+        referenceType: "inventory_opening",
+        referenceId: posted.id,
+        stage: "POSTED",
+        title: "Saldo awal stok disetujui",
+        message: `${posted.batchNumber} sudah diposting ke inventory.`,
+        permission: "view:inventory",
+        recipients: [locked.requestedById],
+        actionUrl: "/materials/opening",
+        actorId: session.data.user.id,
       });
       return posted;
     });
@@ -383,6 +423,17 @@ export async function reverseInventoryOpening(
         targetId: locked.id,
         originalState: JSON.stringify(locked),
         newState: JSON.stringify(updated),
+      });
+      await recordNotificationEvent(tx, {
+        referenceType: "inventory_opening",
+        referenceId: updated.id,
+        stage: "REVERSED",
+        title: "Saldo awal stok dibalik",
+        message: validation.data.reason,
+        permission: "view:inventory",
+        recipients: [locked.requestedById],
+        actionUrl: "/materials/opening",
+        actorId: session.data.user.id,
       });
       return updated;
     });

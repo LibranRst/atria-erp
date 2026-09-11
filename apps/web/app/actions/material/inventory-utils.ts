@@ -231,6 +231,12 @@ export async function recordStandaloneStockProjectCostTx(
 
 export function mapStockError<T>(error: unknown, fallbackMessage: string): ActionResponse<T> {
   const message = error instanceof Error ? error.message : fallbackMessage;
+  if (message.startsWith("SETUP_REQUIRED:")) {
+    return {
+      success: false,
+      error: { code: "CONFLICT", message: message.replace("SETUP_REQUIRED: ", "") },
+    };
+  }
   if (message === "INVENTORY_NOT_FOUND") {
     return {
       success: false,

@@ -1,6 +1,12 @@
 "use client";
 
-import { useMemo, useState, useTransition, type Dispatch, type SetStateAction } from "react";
+import {
+  useMemo,
+  useState,
+  useTransition,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -114,9 +120,13 @@ export function useMaterialControlOperations({
   const [note, setNote] = useState("");
   const [fromLocationId, setFromLocationId] = useState("");
   const [toLocationId, setToLocationId] = useState("");
-  const [documentNumber, setDocumentNumber] = useState(() =>
-    action ? `${action}/${new Date().getFullYear()}/${documentToken}` : "",
-  );
+  const [customDocumentNumber, setCustomDocumentNumber] = useState<string | null>(null);
+  const documentNumber =
+    customDocumentNumber ??
+    (action ? `${action}/${new Date().getFullYear()}/${documentToken}` : "");
+  function setDocumentNumber(value: string): void {
+    setCustomDocumentNumber(value);
+  }
   const [items, setItems] = useState<readonly SimpleItem[]>([createSimpleItem()]);
   const [counted, setCounted] = useState<Record<string, string>>({});
   const [stockCountId, setStockCountId] = useState<string | null>(null);
@@ -140,6 +150,44 @@ export function useMaterialControlOperations({
   const [newLocationName, setNewLocationName] = useState("");
   const [adjustDirection, setAdjustDirection] = useState<"INCREASE" | "DECREASE">("INCREASE");
 
+  function resetForm(): void {
+    setMessage(null);
+    setProjectId("");
+    setRapItemId("");
+    setLocationId("");
+    setQuantity("");
+    setNote("");
+    setFromLocationId("");
+    setToLocationId("");
+    setCustomDocumentNumber(null);
+    setItems([createSimpleItem()]);
+    setCounted({});
+    setStockCountId(null);
+    setNewLocationName("");
+    setEmergencyOverride(false);
+    setDecisionReason("");
+  }
+
+  const [prevAction, setPrevAction] = useState(action);
+  if (action !== prevAction) {
+    setPrevAction(action);
+    setMessage(null);
+    setProjectId("");
+    setRapItemId("");
+    setLocationId("");
+    setQuantity("");
+    setNote("");
+    setFromLocationId("");
+    setToLocationId("");
+    setCustomDocumentNumber(null);
+    setItems([createSimpleItem()]);
+    setCounted({});
+    setStockCountId(null);
+    setNewLocationName("");
+    setEmergencyOverride(false);
+    setDecisionReason("");
+  }
+
   function updateActionInUrl(actionId: string | null): void {
     const params = new URLSearchParams(window.location.search);
     if (actionId === null) {
@@ -153,22 +201,13 @@ export function useMaterialControlOperations({
   }
 
   function closeAction(): void {
+    resetForm();
     updateActionInUrl(null);
   }
 
   function handleQuickOperation(actionId: string): void {
-    setMessage(null);
-    setProjectId("");
-    setRapItemId("");
-    setLocationId("");
-    setQuantity("");
-    setNote("");
-    setFromLocationId("");
-    setToLocationId("");
+    resetForm();
     setDocumentNumber(`${actionId}/${new Date().getFullYear()}/${documentToken}`);
-    setItems([createSimpleItem()]);
-    setCounted({});
-    setStockCountId(null);
     setSuccess(null);
     updateActionInUrl(actionId);
   }
@@ -177,6 +216,7 @@ export function useMaterialControlOperations({
     setMessage(text);
     setSuccess(nextSuccess);
     toast.success(text);
+    resetForm();
     closeAction();
     router.refresh();
   }

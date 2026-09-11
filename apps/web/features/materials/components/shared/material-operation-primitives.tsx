@@ -90,26 +90,31 @@ export function MovementRow({ row }: { readonly row: MaterialMovementView }): Re
   );
 }
 
-function movementIcon(row: MaterialMovementView): string {
+export function movementIcon(row: MaterialMovementView): string {
+  if (row.movementType === "GOODS_RECEIPT_REVERSAL") return "undo";
   if (row.movementType.includes("TRANSFER")) return "swap_horiz";
   if (row.movementType === "RESERVE") return "inventory";
   if (row.movementType === "USE") return "outbox";
   if (row.movementType === "RETURN") return "assignment_return";
   if (row.movementType === "WASTE") return "delete_sweep";
   if (row.movementType.includes("RECEIPT") || row.movementType === "STOCK_IN") {
-    return "south_west";
+    return "move_to_inbox";
   }
-  if (row.movementDirection === "OUT") return "north_east";
-  if (row.movementDirection === "IN") return "south_west";
+  if (row.movementType.includes("ADJUSTMENT") || row.movementType.includes("COUNT")) {
+    return "tune";
+  }
+  if (row.movementDirection === "OUT") return "outbox";
+  if (row.movementDirection === "IN") return "move_to_inbox";
   return "sync_alt";
 }
 
-function movementIconTone(row: MaterialMovementView): string {
-  if (row.movementType === "RESERVE") return "bg-warning-light text-warning";
-  if (row.movementType === "WASTE") return "bg-error-container/25 text-error";
-  if (row.movementDirection === "OUT") return "bg-error/10 text-error";
-  if (row.movementDirection === "IN") return "bg-primary/10 text-primary";
-  return "bg-surface-container text-on-surface-variant";
+export function movementIconTone(row: MaterialMovementView): string {
+  if (row.movementType === "RESERVE") return "bg-warning-light text-warning ring-1 ring-warning/6";
+  if (row.movementType === "WASTE") return "bg-error-container/25 text-error ring-1 ring-error/6";
+  if (row.movementType.includes("TRANSFER")) return "bg-primary/8 text-primary ring-1 ring-primary/6";
+  if (row.movementDirection === "OUT") return "bg-error/10 text-error ring-1 ring-error/6";
+  if (row.movementDirection === "IN") return "bg-primary/10 text-primary ring-1 ring-primary/6";
+  return "bg-surface-container text-on-surface-variant ring-1 ring-outline-variant/10";
 }
 
 export function ApprovalRow({

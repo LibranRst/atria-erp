@@ -32,8 +32,8 @@ export type GoodsReceiptItemDraft = {
   readonly key: string;
   readonly materialId: string;
   readonly projectRapItemId: string;
-  readonly quantity: number;
-  readonly unitCost: number;
+  readonly quantity: number | string;
+  readonly unitCost: number | string;
   readonly note: string;
 };
 

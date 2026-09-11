@@ -66,6 +66,7 @@ export function ItemRows({
           <FormField label="Jumlah" required>
             <QuantityStepper
               value={item.quantity}
+              unit={materials.find((m) => m.id === item.materialId)?.unit}
               min={0}
               step={1}
               onChange={(quantity) => updateItem(item.key, { quantity })}
