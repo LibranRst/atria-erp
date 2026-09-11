@@ -3,7 +3,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import ApprovalsLoading from "@/app/approvals/loading";
 import { ApprovalDecisionReasonFields } from "@/features/approvals/components/shared/approval-decision-reason-fields";
-import { ApprovalDetailContent } from "@/features/approvals/components/views/approval-list";
+import {
+  ApprovalDecisionSubject,
+  ApprovalDetailContent,
+} from "@/features/approvals/components/views/approval-list-presentation";
 import {
   APPROVAL_PAGE_SIZE,
   approvalIsCritical,
@@ -236,14 +239,17 @@ describe("Approval decision queue presentation", () => {
     expect(html).toContain("Nilai pengajuan");
     expect(html).toContain("Konteks pengajuan");
     expect(html).toContain("Dampak ke budget");
-    expect(html).toContain("Saat ini");
-    expect(html).toContain("Jika disetujui");
+    expect(html).toContain("Kategori · Material");
+    expect(html).toContain("Plafon alokasi");
+    expect(html).toContain("Sebelum");
+    expect(html).toContain("Sesudah");
+    expect(html).toContain("Tetap dalam batas budget");
+    expect(html).toContain("50% terpakai → 70% terpakai");
     expect(html).toContain("Dokumen pendukung");
     expect(html).toContain('alt="Bukti pengajuan"');
     expect(html).not.toContain("Tidak ada bukti terlampir");
     expect(html).not.toContain("progressbar");
-    // Impact verdict leads its card, before the budget-category figure.
-    expect(html.indexOf("Tetap dalam batas budget")).toBeLessThan(html.indexOf("Budget kategori"));
+    expect(html).not.toContain('role="img"');
   });
 
   test("does not project a budget impact for an inventory purchase", () => {
@@ -298,6 +304,20 @@ describe("Approval decision queue presentation", () => {
     expect(html).toContain("Tidak ada bukti terlampir");
     expect(html).not.toContain('alt="Bukti pengajuan"');
   });
+  test("strips raw system category prefix from approval notes", () => {
+    const html = renderToStaticMarkup(
+      <ApprovalDetailContent
+        item={approvalItem({
+          notes: "[Kategori: Tukang] Pengeluaran lapangan melebihi plafon anggaran.",
+        })}
+        onOpenReceipt={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("Pengeluaran lapangan melebihi plafon anggaran.");
+    expect(html).not.toContain("[Kategori: Tukang]");
+  });
+
 
   test("shows quantity and unit cost for every opening inventory item", () => {
     const openingApproval = openingApprovalItem();
@@ -354,5 +374,40 @@ describe("Approval decision queue presentation", () => {
 
     expect(html).not.toContain("Gunakan emergency override");
     expect(html).toContain("Alasan persetujuan");
+  });
+  test("uses SheetFooterActions with Tolak and Setujui in ApprovalDetailSheet", async () => {
+    const presentationPath = new URL("./approval-list-presentation.tsx", import.meta.url);
+    const source = await Bun.file(presentationPath).text();
+
+    expect(source).toContain("<SheetFooterActions");
+    expect(source).toContain('label: "Tolak"');
+    expect(source).toContain('variant: "criticalQuiet"');
+    expect(source).toContain('label: "Setujui"');
+    expect(source).toContain('variant: "primary"');
+  });
+
+  test("wires MediaPreviewDialog for evidence preview in ApprovalList", async () => {
+    const source = await Bun.file(approvalListPath).text();
+
+    expect(source).toContain("<MediaPreviewDialog");
+    expect(source).toContain('title="Bukti pengajuan"');
+    expect(source).toContain("imageUrl={activeImage}");
+  });
+
+  test("renders ApprovalDecisionSubject as a clean borderless row without nested pill styling", () => {
+    const html = renderToStaticMarkup(<ApprovalDecisionSubject item={approvalItem()} />);
+
+    expect(html).toContain("Pembelian material lapangan");
+    expect(html).toContain("Menteng Villa");
+    expect(html).not.toContain("bg-surface-container-low");
+    expect(html).not.toContain("rounded-inset");
+  });
+
+  test("uses warning tone on ConfirmationDialog when emergency override is required", async () => {
+    const source = await Bun.file(approvalListPath).text();
+
+    expect(source).toContain("tone={");
+    expect(source).toContain('? "warning"');
+    expect(source).toContain(': "default"');
   });
 });

@@ -8,11 +8,12 @@ import { toast } from "sonner";
 import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
 import { decideInventoryOpening } from "@/app/actions/material/opening-inventory";
 import {
-  DetailSheet,
   CompactFormDialog,
   ConfirmationDialog,
   DetailSection,
   ExclusiveSearchFilterBar,
+  FormField,
+  MediaPreviewDialog,
   MoneyValue,
   PageState,
   RowGroup,
@@ -468,6 +469,11 @@ export function ApprovalList({
       <ConfirmationDialog
         open={decision?.status === "APPROVED"}
         title="Setujui pengajuan?"
+        tone={
+          decision?.item && approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride)
+            ? "warning"
+            : "default"
+        }
         description={
           decision?.item.type === "inventory_opening"
             ? "Pastikan jumlah fisik, harga per unit, dan subtotal sudah sesuai. Keputusan dicatat dalam audit log."
@@ -493,18 +499,20 @@ export function ApprovalList({
             <ApprovalDecisionSubject item={decision.item} />
             {approvalRequiresEmergencyOverride(decision.item, canEmergencyOverride) ||
             approvalRequiresOpeningReason(decision.item, canEmergencyOverride) ? (
-              <ApprovalDecisionReasonFields
-                item={decision.item}
-                canEmergencyOverride={canEmergencyOverride}
-                approvalReason={approvalReason}
-                emergencyOverride={emergencyOverride}
-                emergencyReason={emergencyReason}
-                pending={pending}
-                idPrefix="approval"
-                onApprovalReasonChange={setApprovalReason}
-                onEmergencyOverrideChange={setEmergencyOverride}
-                onEmergencyReasonChange={setEmergencyReason}
-              />
+              <div className="border-t border-black/5.5 pt-3">
+                <ApprovalDecisionReasonFields
+                  item={decision.item}
+                  canEmergencyOverride={canEmergencyOverride}
+                  approvalReason={approvalReason}
+                  emergencyOverride={emergencyOverride}
+                  emergencyReason={emergencyReason}
+                  pending={pending}
+                  idPrefix="approval"
+                  onApprovalReasonChange={setApprovalReason}
+                  onEmergencyOverrideChange={setEmergencyOverride}
+                  onEmergencyReasonChange={setEmergencyReason}
+                />
+              </div>
             ) : null}
           </div>
         ) : null}
@@ -527,18 +535,20 @@ export function ApprovalList({
         }
       >
         <div className="space-y-md">
-          {decision?.item ? <ApprovalDecisionSubject item={decision.item} /> : null}
+          {decision?.item ? (
+            <div className="rounded-inset bg-white p-4 ring-1 ring-ring-subtle">
+              <ApprovalDecisionSubject item={decision.item} />
+            </div>
+          ) : null}
           <div className="rounded-inset bg-error-container/25 p-4 text-xs leading-5 text-error">
             Pengajuan tidak akan dilanjutkan. Jelaskan alasan yang dapat ditindaklanjuti oleh
             pengaju.
           </div>
-          <div>
-            <label
-              htmlFor="approval-rejection-reason"
-              className="px-1 text-xs font-bold text-on-surface"
-            >
-              Alasan penolakan
-            </label>
+          <FormField
+            label="Alasan penolakan"
+            helper={`Minimal ${rejectionMinimum} karakter.`}
+            required
+          >
             <Textarea
               id="approval-rejection-reason"
               autoFocus
@@ -547,32 +557,21 @@ export function ApprovalList({
               onChange={setRejectionReason}
               disabled={pending}
               placeholder={decision?.item ? approvalRejectionPlaceholder(decision.item) : ""}
-              className="mt-2"
               aria-invalid={
                 rejectionReason.length > 0 && rejectionReason.trim().length < rejectionMinimum
               }
             />
-            <p className="mt-1 px-1 text-meta text-on-surface-variant">
-              Minimal {rejectionMinimum} karakter.
-            </p>
-          </div>
+          </FormField>
         </div>
       </CompactFormDialog>
 
-      <DetailSheet
+      <MediaPreviewDialog
         open={activeImage !== null}
         title="Bukti pengajuan"
+        imageUrl={activeImage}
+        alt="Bukti pengajuan"
         onClose={() => setActiveImage(null)}
-      >
-        {activeImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={activeImage}
-            alt="Bukti pengajuan"
-            className="max-h-[68dvh] w-full rounded-owner bg-surface-container object-contain"
-          />
-        ) : null}
-      </DetailSheet>
+      />
     </div>
   );
 }

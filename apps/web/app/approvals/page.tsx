@@ -6,6 +6,7 @@ import { resolveActor } from "@/server/actor";
 
 import { PageHeader, PageState } from "@/components/ui";
 import { ApprovalList } from "@/features/approvals/components/views/approval-list";
+import { PendingChangeOrdersBanner } from "@/features/approvals/components/views/pending-change-orders-banner";
 import { getApprovalsPageData } from "@/features/approvals/server/get-approvals-page-data";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,9 @@ export default async function ApprovalsPage(): Promise<React.JSX.Element> {
         title="Persetujuan"
         subtitle="Tinjau dampak budget, kas, atau stok sebelum memberi keputusan."
       />
+      {data.pendingChangeOrders.length > 0 ? (
+        <PendingChangeOrdersBanner orders={data.pendingChangeOrders} />
+      ) : null}
       <ApprovalList
         key={data.referenceDateIso}
         initialApprovals={data.approvals}

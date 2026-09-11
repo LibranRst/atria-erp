@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { JSX } from "react";
 
-import { AppIcon, SwitchRow, Textarea } from "@/components/ui";
+import { AppIcon, FormField, SwitchRow, Textarea } from "@/components/ui";
 import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import { transitionSpringSmooth } from "@/lib/utils/motion";
 
@@ -59,13 +59,11 @@ export function ApprovalDecisionReasonFields({
   return (
     <div className="space-y-3 text-left">
       {needsOpeningReason ? (
-        <div>
-          <label
-            htmlFor={`${idPrefix}-approval-reason`}
-            className="px-1 text-xs font-bold text-on-surface"
-          >
-            Alasan persetujuan
-          </label>
+        <FormField
+          label="Alasan persetujuan"
+          helper="Wajib diisi minimal 10 karakter. Alasan dicatat di audit log."
+          required
+        >
           <Textarea
             id={`${idPrefix}-approval-reason`}
             autoFocus
@@ -74,17 +72,13 @@ export function ApprovalDecisionReasonFields({
             onChange={onApprovalReasonChange}
             disabled={pending}
             placeholder="Contoh: saldo fisik dan harga pokok sesuai dokumen stock opname"
-            className="mt-2"
             aria-invalid={approvalReason.length > 0 && approvalReason.trim().length < 10}
           />
-          <p className="mt-1 px-1 text-meta text-on-surface-variant">
-            Wajib diisi minimal 10 karakter. Alasan dicatat di audit log.
-          </p>
-        </div>
+        </FormField>
       ) : null}
 
       {requiresEmergencyOverride ? (
-        <div className="space-y-2 rounded-inset bg-white p-3 ring-2 ring-critical/30">
+        <div className="space-y-2 rounded-xl bg-critical-container/15 p-3 ring-1 ring-critical/20">
           <p className="flex items-center gap-1.5 text-eyebrow font-bold text-critical uppercase">
             <AppIcon name="warning" className="icon-xs" />
             Melewati batas persetujuan mandiri
@@ -94,6 +88,7 @@ export function ApprovalDecisionReasonFields({
             onChange={onEmergencyOverrideChange}
             title="Gunakan emergency override"
             description="Menyetujui pengajuan milik sendiri di luar alur normal. Wajib diaktifkan dengan alasan tertulis, dan tercatat permanen di audit log."
+            className="bg-transparent"
           />
           <AnimatePresence initial={false}>
             {emergencyOverride ? (

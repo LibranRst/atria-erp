@@ -6,8 +6,11 @@ import {
   AppIcon,
   DetailSheet,
   DuotoneIconTile,
+  FactRow,
   GroupedSurface,
+  MoneyImpactRow,
   MoneyValue,
+  SheetFooterActions,
   StatusBadge,
   useSheetPresenceValue,
 } from "@/components/ui";
@@ -19,6 +22,7 @@ import {
   RISK_WARNING_THRESHOLD,
 } from "@atria/core/finance/budget-indicator";
 import { formatShortDate } from "@atria/core/utils/date";
+import { formatIdr } from "@atria/core/utils/money";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 export type ApprovalItem = ApprovalDetail;
@@ -27,6 +31,15 @@ export interface ApprovalDecision {
   readonly item: ApprovalItem;
   readonly status: "APPROVED" | "REJECTED";
 }
+/**
+ * Cleans system-generated raw prefixes like `[Kategori: Tukang] ` from user-facing notes.
+ */
+export function cleanApprovalNotes(notes: string): string {
+  return notes.replace(/^\[Kategori:\s*[^\]]+\]\s*/i, "").trim();
+}
+
+
+import { cn } from "@/lib/utils/cn";
 
 const rowPressScale = { scale: 0.985 } as const;
 
@@ -37,11 +50,13 @@ const rowPressScale = { scale: 0.985 } as const;
  */
 export function ApprovalDecisionSubject({
   item,
+  className = "",
 }: {
   readonly item: ApprovalItem;
+  readonly className?: string;
 }): React.JSX.Element {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-inset bg-surface-container-low px-3.5 py-3">
+    <div className={cn("flex items-center justify-between gap-3 text-left", className)}>
       <div className="min-w-0 flex-1">
         <p className="truncate text-support font-semibold text-on-surface">{item.description}</p>
         <p className="mt-0.5 truncate text-eyebrow font-semibold text-on-surface-variant/70">
@@ -170,7 +185,20 @@ export function ApprovalDetailSheet({
       onExitComplete={handleExitComplete}
       footer={
         presentedItem ? (
-          <ApprovalDecisionFooter item={presentedItem} pending={pending} onDecision={onDecision} />
+          <SheetFooterActions
+            secondary={{
+              label: "Tolak",
+              disabled: pending,
+              variant: "criticalQuiet",
+              onClick: () => onDecision(presentedItem, "REJECTED"),
+            }}
+            primary={{
+              label: "Setujui",
+              disabled: pending,
+              variant: "primary",
+              onClick: () => onDecision(presentedItem, "APPROVED"),
+            }}
+          />
         ) : undefined
       }
     >
@@ -200,10 +228,10 @@ export function ApprovalDetailContent({
 
   return (
     <div className="space-y-4 pb-1">
-      <section className="overflow-hidden rounded-owner bg-white shadow-surface ring-1 ring-ring-subtle">
+      <section className="overflow-hidden rounded-owner bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
         <div className="px-4 pt-3.5 pb-3">
           <div className="flex items-center justify-between gap-3">
-            <p className="min-w-0 truncate text-eyebrow font-bold tracking-wide text-on-surface-variant/60 uppercase">
+            <p className="min-w-0 truncate text-meta font-bold tracking-[0.12em] text-on-surface-variant/70 uppercase">
               {typeLabel}
             </p>
             <StatusBadge
@@ -220,7 +248,7 @@ export function ApprovalDetailContent({
           </p>
         </div>
         <div className="border-t border-outline-variant/15 px-4 pt-3 pb-3.5">
-          <p className="text-eyebrow font-semibold text-on-surface-variant/60">Nilai pengajuan</p>
+          <p className="text-eyebrow font-semibold text-on-surface-variant/70">Nilai pengajuan</p>
           <MoneyValue
             amount={item.amount}
             variant="fullDynamic"
@@ -236,35 +264,44 @@ export function ApprovalDetailContent({
           </p>
         </div>
       </section>
-
-      <section aria-labelledby="approval-context-title">
-        <h3 id="approval-context-title" className="mb-2 px-1 text-row font-bold text-on-surface">
+      <section aria-labelledby="approval-context-title" className="space-y-2">
+        <h3 id="approval-context-title" className="px-1 text-row font-bold text-on-surface">
           Konteks pengajuan
         </h3>
-        <div className="space-y-2 bg-surface-container-low">
-          <ApprovalContextRow
-            icon={item.type === "inventory_opening" ? "warehouse" : "folder_open"}
-            label={item.type === "inventory_opening" ? "Ruang kerja" : "Project"}
-            value={item.projectName}
-          />
-          <ApprovalRequesterRow name={item.requestedBy} />
-          <div className="grid grid-cols-2 gap-2">
-            <ApprovalContextTile
-              icon={item.type === "inventory_opening" ? "inventory" : "category"}
+        <GroupedSurface>
+          <div className="divide-y divide-outline-variant/15">
+            <FactRow
+              label={item.type === "inventory_opening" ? "Ruang kerja" : "Proyek"}
+              value={item.projectName}
+            />
+            <FactRow label="Pengaju" value={item.requestedBy} />
+            <FactRow
               label={item.type === "inventory_opening" ? "Cakupan" : "Kategori"}
               value={item.budgetItemName}
             />
-            <ApprovalContextTile
-              icon="event"
+            <FactRow
               label="Jatuh tempo"
               value={item.dueDate ? formatShortDate(item.dueDate) : "Tidak ditentukan"}
             />
+            {item.notes ? (
+              <FactRow
+                label="Catatan"
+                value={
+                  <span className="font-medium text-on-surface whitespace-pre-wrap">
+                    {cleanApprovalNotes(item.notes)}
+                  </span>
+                }
+              />
+            ) : null}
           </div>
-          {item.notes ? (
-            <ApprovalContextRow icon="notes" label="Catatan" value={item.notes} multiline />
-          ) : null}
-          <ApprovalEvidenceRow item={item} onOpenReceipt={onOpenReceipt} />
-        </div>
+        </GroupedSurface>
+      </section>
+
+      <section aria-labelledby="approval-evidence-title" className="space-y-2">
+        <h3 id="approval-evidence-title" className="px-1 text-row font-bold text-on-surface">
+          Dokumen pendukung
+        </h3>
+        <ApprovalEvidenceRow item={item} onOpenReceipt={onOpenReceipt} />
       </section>
 
       {item.type === "inventory_opening" ? <InventoryOpeningApprovalItems item={item} /> : null}
@@ -274,43 +311,6 @@ export function ApprovalDetailContent({
   );
 }
 
-function ApprovalRequesterRow({ name }: { readonly name: string }): React.JSX.Element {
-  const initial = name.trim().charAt(0).toUpperCase() || "?";
-  return (
-    <div className="flex items-center gap-3 rounded-inset bg-white p-3.5">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-icon bg-primary/7.5 text-support font-bold text-primary">
-        {initial}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-eyebrow font-semibold text-on-surface-variant/60">Pengaju</p>
-        <p className="mt-0.5 truncate text-support font-semibold text-on-surface">{name}</p>
-      </div>
-    </div>
-  );
-}
-
-/** A square bento tile — used in pairs for two related-but-distinct facts. */
-function ApprovalContextTile({
-  icon,
-  label,
-  value,
-}: {
-  readonly icon: string;
-  readonly label: string;
-  readonly value: string;
-}): React.JSX.Element {
-  return (
-    <div className="flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-inset bg-white p-3 text-center">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-icon bg-surface-container-low text-on-surface-variant">
-        <AppIcon name={icon} className="icon-md" />
-      </span>
-      <div className="min-w-0">
-        <p className="truncate text-eyebrow font-semibold text-on-surface-variant/60">{label}</p>
-        <p className="mt-0.5 line-clamp-2 text-support font-semibold text-on-surface">{value}</p>
-      </div>
-    </div>
-  );
-}
 
 /**
  * The receipt as its own attached exhibit — a photo chip in the same gray
@@ -325,33 +325,49 @@ function ApprovalEvidenceRow({
 }): React.JSX.Element {
   if (!item.receiptImageUrl) {
     return (
-      <ApprovalContextRow
-        icon="image"
-        label="Dokumen pendukung"
-        value="Tidak ada bukti terlampir"
-      />
+      <GroupedSurface>
+        <div className="flex items-center gap-3 p-3.5 text-on-surface-variant">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-icon bg-surface-container-low text-on-surface-variant">
+            <AppIcon name="image" className="icon-md" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-eyebrow font-semibold text-on-surface-variant/70">
+              Bukti tidak terlampir
+            </p>
+            <p className="mt-0.5 text-support font-semibold text-on-surface">
+              Tidak ada bukti terlampir
+            </p>
+          </div>
+        </div>
+      </GroupedSurface>
     );
   }
   const receiptUrl = item.receiptImageUrl;
   return (
-    <motion.button
-      type="button"
-      onClick={() => onOpenReceipt(receiptUrl)}
-      whileTap={{ scale: 0.99 }}
-      transition={transitionSpringSnappy}
-      className="relative block h-44 w-full overflow-hidden rounded-inset bg-surface-container text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={receiptUrl} alt="Bukti pengajuan" className="h-full w-full object-cover" />
-      <span className="absolute inset-x-3.5 bottom-3 flex items-center justify-between gap-2">
-        <span className="rounded-full bg-black/55 px-2.5 py-1 text-eyebrow font-bold text-white">
-          Dokumen pendukung
+    <GroupedSurface className="p-3">
+      <motion.button
+        type="button"
+        onClick={() => onOpenReceipt(receiptUrl)}
+        whileTap={{ scale: 0.99 }}
+        transition={transitionSpringSnappy}
+        className="group relative block h-48 w-full overflow-hidden rounded-inset bg-surface-container text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={receiptUrl}
+          alt="Bukti pengajuan"
+          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+        />
+        <span className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2">
+          <span className="rounded-full bg-black/60 px-2.5 py-1 text-eyebrow font-bold text-white shadow-sm backdrop-blur-sm">
+            Pratinjau bukti
+          </span>
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/60 text-white shadow-sm backdrop-blur-sm transition-transform group-hover:scale-105">
+            <AppIcon name="north_east" className="icon-sm" />
+          </span>
         </span>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/55 text-white">
-          <AppIcon name="north_east" className="icon-sm" />
-        </span>
-      </span>
-    </motion.button>
+      </motion.button>
+    </GroupedSurface>
   );
 }
 
@@ -435,11 +451,7 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
   const nextSpent = consumesActual ? item.actualSpent + item.amount : item.actualSpent;
   const critical = item.budgetOverrun || impact.afterPercentage >= RISK_LIMIT_THRESHOLD;
   const warning = !critical && impact.afterPercentage >= RISK_WARNING_THRESHOLD;
-  const toneClass = critical
-    ? "bg-error-container text-error"
-    : warning
-      ? "bg-warning-light text-warning-on-container"
-      : "bg-primary-light text-primary";
+  const badgeTone = critical ? "critical" : warning ? "warning" : "neutral";
   const impactLabel = !consumesActual
     ? "Menjadi nilai persediaan, bukan realisasi"
     : critical
@@ -449,105 +461,37 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
       : warning
         ? `Tersisa ${(RISK_LIMIT_THRESHOLD - impact.afterPercentage).toFixed(0)}% sebelum batas`
         : "Tetap dalam batas budget";
-
   return (
-    <section aria-labelledby="approval-impact-title">
-      <h3 id="approval-impact-title" className="mb-2 px-1 text-row font-bold text-on-surface">
+    <section aria-labelledby="approval-impact-title" className="space-y-2">
+      <h3 id="approval-impact-title" className="px-1 text-row font-bold text-on-surface">
         Dampak ke budget
       </h3>
 
-      <div className="overflow-hidden rounded-owner bg-white p-3.5 shadow-surface ring-1 ring-ring-subtle">
-        <div className={`flex items-center gap-3 rounded-inset px-3.5 py-3 ${toneClass}`}>
-          <AppIcon
-            name={critical ? "report" : warning ? "warning" : "check_circle"}
-            className="icon-xl shrink-0"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-support font-bold">{impactLabel}</p>
-            <p className="mt-0.5 truncate text-eyebrow font-semibold opacity-60">
-              {item.budgetItemName}
-            </p>
-          </div>
-          <span className="shrink-0 font-mono text-title font-black tabular-nums">
-            {impact.afterPercentage.toFixed(0)}%
-          </span>
-        </div>
-        <div className="pt-4">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-eyebrow font-semibold text-on-surface-variant/60">
-              Budget kategori
+      <MoneyImpactRow
+        label={`Kategori · ${item.budgetItemName}`}
+        sublabel={
+          item.allocatedAmount > 0
+            ? `Plafon alokasi ${formatIdr(item.allocatedAmount)}`
+            : "Tanpa plafon alokasi"
+        }
+        before={item.actualSpent}
+        delta={consumesActual ? item.amount : 0}
+        after={nextSpent}
+        note={
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate">
+              {!consumesActual
+                ? "Menjadi nilai persediaan, bukan realisasi"
+                : `${impact.beforePercentage.toFixed(0)}% terpakai → ${impact.afterPercentage.toFixed(0)}% terpakai`}
             </span>
-            <MoneyValue amount={item.allocatedAmount} variant="compact" size="sm" align="right" />
+            <StatusBadge tone={badgeTone} label={impactLabel} className="shrink-0" />
           </div>
-          <div className="mt-3 grid grid-cols-[minmax(0,1fr)_28px_minmax(0,1fr)] items-center gap-2">
-            <div className="min-w-0">
-              <p className="text-eyebrow font-semibold text-on-surface-variant/60">Saat ini</p>
-              <MoneyValue amount={item.actualSpent} variant="compact" size="lg" className="mt-1" />
-              <p className="mt-1 font-mono text-eyebrow font-bold text-on-surface-variant">
-                {impact.beforePercentage.toFixed(0)}% terpakai
-              </p>
-            </div>
-            <span
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant"
-              aria-hidden="true"
-            >
-              <AppIcon name="arrow_forward" className="icon-sm" />
-            </span>
-            <div className="min-w-0 text-right">
-              <p className="text-eyebrow font-semibold text-on-surface-variant/60">
-                Jika disetujui
-              </p>
-              <MoneyValue
-                amount={nextSpent}
-                variant="compact"
-                size="lg"
-                align="right"
-                tone={critical ? "danger" : warning ? "warning" : "default"}
-                className="mt-1"
-              />
-              <p
-                className={`mt-1 font-mono text-eyebrow font-bold ${critical ? "text-error" : warning ? "text-warning" : "text-on-surface-variant"}`}
-              >
-                {impact.afterPercentage.toFixed(0)}% terpakai
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+        }
+      />
     </section>
   );
 }
 
-function ApprovalDecisionFooter({
-  item,
-  pending,
-  onDecision,
-}: {
-  readonly item: ApprovalItem;
-  readonly pending: boolean;
-  readonly onDecision: (item: ApprovalItem, status: ApprovalDecision["status"]) => void;
-}): React.JSX.Element {
-  return (
-    <div className="grid grid-cols-[0.9fr_1.1fr] gap-2">
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => onDecision(item, "REJECTED")}
-        className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-45"
-      >
-        Tolak
-      </button>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => onDecision(item, "APPROVED")}
-        className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-on-primary shadow-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-45"
-      >
-        Setujui pengajuan
-      </button>
-    </div>
-  );
-}
 
 function formatQueueTime(value: Date): string {
   return new Date(value).toLocaleDateString("id-ID", {
