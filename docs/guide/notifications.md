@@ -32,6 +32,15 @@ curl -X POST "https://atria-notification-scheduler.<subdomain>.workers.dev?task=
 
 Jadwal `*/5 * * * *` ada di `wrangler.jsonc`. Scheduler eksternal lain (mis. cron-job.org) juga sah selama ia mengirim POST ke `/api/internal/notifications?task=deliveries` dengan bearer secret yang sama.
 
+**Sudah terpasang (2026-09-11):** worker bernama `atria-notification-scheduler` di akun Cloudflare `hyuzin`, subdomain `hyuzin-atria.workers.dev`. Endpoint:
+
+```
+POST https://atria-notification-scheduler.hyuzin-atria.workers.dev?task=deliveries
+POST https://atria-notification-scheduler.hyuzin-atria.workers.dev?task=reconcile
+```
+
+Respons yang benar adalah `{"ok":true,"task":"deliveries","upstream":200}`; `task` di luar dua nilai itu dijawab `400`. Bila `curl` lokal melaporkan `SSL alert number 40` atau `status=000`, itu handshake LibreSSL versi lama di mesin pengembang, bukan worker-nya — ulangi, atau verifikasi lewat peramban sebelum menyimpulkan worker mati.
+
 Tanggal jatuh tempo menggunakan **Asia/Jakarta**: H-3, hari jatuh tempo, terlambat. Pembayaran parsial mempertahankan pengingat selama saldo masih terutang. Perubahan tingkat kondisi menghasilkan notifikasi belum dibaca; kondisi pulih menutup peringatan. Tidak ada pengingat berulang harian untuk kondisi yang sama.
 
 Event mutasi yang sudah tersambung, termasuk request/approve/reject/reversal opening inventory, dicatat dalam transaksi bisnis yang sama. Job melakukan pemulihan aksi dan evaluasi periodik jatuh tempo, kesehatan keuangan proyek, budget kategori, stok minimum, dan kekurangan material RAP. Perubahan kondisi yang tidak melalui sinkronisasi budget akan terdeteksi pada job berikutnya, maksimal satu interval scheduler setelah perubahan.
