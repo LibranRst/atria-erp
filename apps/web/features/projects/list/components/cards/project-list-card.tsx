@@ -11,7 +11,6 @@ import {
 } from "@/features/projects/shared/components/project-cover-hero";
 import { projectHealthReasonLabel } from "@atria/core/project/effective-health";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
-import { formatShortIdr } from "@atria/core/utils/money";
 import type { ProjectItem } from "../../types/project-list-types";
 import { getUsedPercentage } from "../../utils/project-list-utils";
 
@@ -98,9 +97,17 @@ export function ProjectListCard({
               label="Aktual"
               amount={project.actualCost}
               detail={
-                project.actualCost <= 0 && project.internalBudget > 0
-                  ? `dari ${formatShortIdr(project.internalBudget)}`
-                  : undefined
+                project.actualCost <= 0 && project.internalBudget > 0 ? (
+                  <span className="flex items-baseline gap-1">
+                    <span>dari</span>
+                    <MoneyValue
+                      amount={project.internalBudget}
+                      variant="fullDynamic"
+                      size="sm"
+                      className="inline-block"
+                    />
+                  </span>
+                ) : undefined
               }
             />
             <ProjectMoneyFact
@@ -134,9 +141,15 @@ export function ProjectListCard({
           ) : null}
 
           <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/30 pt-2.5">
-            <span className="truncate text-meta font-semibold text-on-surface-variant/70">
-              Kontrak {formatShortIdr(project.totalContractValue)}
-            </span>
+            <div className="flex min-w-0 items-baseline gap-1 text-meta font-semibold text-on-surface-variant/70">
+              <span className="shrink-0">Kontrak</span>
+              <MoneyValue
+                amount={project.totalContractValue}
+                variant="fullDynamic"
+                size="sm"
+                className="inline-block truncate"
+              />
+            </div>
             <span className="shrink-0 text-meta font-bold text-on-surface-variant">
               {budgetStatusLabel(project.budgetStatus)}
             </span>
@@ -167,12 +180,12 @@ function ProjectMoneyFact({
   readonly label: string;
   readonly amount: number;
   readonly tone?: "default" | "success" | "danger";
-  readonly detail?: string;
+  readonly detail?: React.ReactNode;
 }): React.JSX.Element {
   return (
     <div className="min-w-0">
       <p className="truncate text-meta font-semibold text-on-surface-variant/60">{label}</p>
-      <MoneyValue amount={amount} variant="compact" size="xl" tone={tone} className="mt-0.5" />
+      <MoneyValue amount={amount} variant="fullDynamic" size="xl" tone={tone} className="mt-0.5" />
       {detail ? (
         <p className="mt-0.5 truncate text-eyebrow font-bold text-on-surface-variant/75">
           {detail}

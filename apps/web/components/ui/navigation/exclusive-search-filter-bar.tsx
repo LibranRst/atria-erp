@@ -195,7 +195,7 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
           opacity: geometry === null ? 0 : 1,
         }}
         transition={layoutTransition}
-        className="absolute inset-y-0 left-0 z-10 overflow-hidden rounded-full bg-white/96 shadow-surface ring-1 ring-ring-subtle focus-within:ring-2 focus-within:ring-focus-ring"
+        className="absolute inset-y-0 left-0 z-10 overflow-hidden rounded-full bg-white/96 shadow-surface ring-1 ring-ring-subtle"
       >
         <motion.button
           ref={triggerRef}
@@ -207,7 +207,7 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
           transition={transitionSpringSnappy}
           tabIndex={mode === "filter" ? 0 : -1}
           aria-hidden={mode === "search"}
-          className={`absolute inset-y-0 left-0 flex w-12 items-center justify-center rounded-full text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${mode === "search" ? "pointer-events-none" : ""}`}
+          className={`absolute inset-y-0 left-0 flex w-12 items-center justify-center rounded-full text-on-surface outline-none ${mode === "search" ? "pointer-events-none" : ""}`}
           aria-label={`Buka ${searchAriaLabel.toLowerCase()}`}
         >
           <AppIcon name="search" className="icon-md" aria-hidden="true" />
@@ -246,7 +246,7 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
             whileTap={reduceMotion ? undefined : { scale: 0.94 }}
             transition={transitionSpringSnappy}
             tabIndex={mode === "search" ? 0 : -1}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant outline-none focus-visible:bg-surface-container focus-visible:ring-2 focus-visible:ring-focus-ring"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant outline-none focus-visible:bg-surface-container"
             aria-label="Tutup pencarian"
           >
             <AppIcon name="close" className="icon-sm" aria-hidden="true" />
