@@ -42,5 +42,16 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|login|setup).*)"],
+  /*
+   * Berkas PWA statis ikut dikecualikan karena permintaannya tidak selalu
+   * membawa cookie sesi: peramban memuat ulang skrip service worker untuk
+   * memeriksa pembaruan, memasang ikon manifest, dan menyajikan halaman offline
+   * dari cache. Pengalihan ke `/login` di jalur-jalur itu membuat pemeriksaan
+   * pembaruan worker gagal dan halaman offline tersimpan sebagai halaman login.
+   * Isinya tidak memuat data perusahaan: manifest, ikon, skrip worker, dan satu
+   * halaman pemberitahuan tanpa sesi.
+   */
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|manifest.webmanifest|notification-sw.js|icons/|offline|login|setup).*)",
+  ],
 };

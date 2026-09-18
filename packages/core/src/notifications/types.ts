@@ -23,7 +23,8 @@ export type NotificationReferenceType =
   | "material"
   | "change_order";
 
-const NOTIFICATION_REFERENCE_TYPES: readonly NotificationReferenceType[] = [
+/** Daftar runtime yang sepadan dengan union `NotificationReferenceType`. */
+export const NOTIFICATION_REFERENCE_TYPES: readonly NotificationReferenceType[] = [
   "project_cost",
   "project_budget",
   "vendor_bill",
@@ -50,6 +51,17 @@ export function normalizeNotificationReferenceType(
 }
 
 export type PushPlatform = "WEB" | "EXPO_IOS" | "EXPO_ANDROID";
+
+/**
+ * ID kanal notifikasi Android.
+ *
+ * Android 8+ hanya menampilkan heads-up banner lewat kanal ber-importance
+ * tinggi, dan kanal dibuat oleh aplikasi native (`expo-notifications`). Server
+ * mengirim `channelId` ini pada tiap push Expo Android; kalau berbeda dengan
+ * yang didaftarkan klien, Android diam-diam memakai kanal cadangan bawaan
+ * library sehingga nama dan prioritas yang kita atur hilang.
+ */
+export const ANDROID_NOTIFICATION_CHANNEL_ID = "operasional";
 
 export type NotificationItem = {
   id: string;

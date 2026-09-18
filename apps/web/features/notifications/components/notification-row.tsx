@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { toast } from "sonner";
-import { useNotifications } from "../hooks/notification-context";
 import { useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
+import { toast } from "sonner";
 import { AppIcon, Badge } from "@/components/ui";
 import { safeNotificationUrl, type NotificationItem } from "@atria/core/notifications/types";
+import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { useNotifications } from "../hooks/notification-context";
 import { formatRelativeTime, getSeverityVisualConfig } from "../utils/notification-formatting";
 
 interface NotificationRowProps {
@@ -15,10 +17,13 @@ interface NotificationRowProps {
 
 export function NotificationRow({ item, onItemClick }: NotificationRowProps): React.JSX.Element {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
   const { openNotification } = useNotifications();
   const visual = getSeverityVisualConfig(item.severity, item.isResolved);
-
   const [pending, setPending] = useState(false);
+
+  const hasFooterBadge = Boolean(item.isResolved || item.category === "ACTION_REQUIRED");
+
   async function handleClick(): Promise<void> {
     if (pending) return;
     if (item.actionUrl) {
@@ -48,64 +53,67 @@ export function NotificationRow({ item, onItemClick }: NotificationRowProps): Re
   }
 
   return (
-    <button
+    <motion.button
       type="button"
       onClick={() => void handleClick()}
       aria-busy={pending}
-      className={`flex min-h-12 w-full cursor-pointer items-start gap-3 px-4 py-3.5 text-left transition-colors duration-150 outline-none hover:bg-surface-container-high/30 focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-high/50 ${
-        item.read ? "text-on-surface-variant" : "bg-primary/[0.02] text-on-surface"
+      whileTap={reduceMotion ? undefined : { scale: 0.985 }}
+      transition={transitionSpringSnappy}
+      className={`group flex min-h-12 w-full cursor-pointer items-start gap-3 px-4 py-3 text-left transition-colors duration-150 outline-none hover:bg-surface-container-high/30 focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-high/50 ${
+        item.read ? "text-on-surface-variant" : "bg-primary/[0.025] text-on-surface"
       }`}
     >
-      {/* Icon Badge */}
+      {/* Icon Avatar */}
       <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${visual.bgClass} ${visual.iconClass}`}
+        className={`mt-0.5 flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full ${visual.bgClass} ${visual.iconClass}`}
       >
         <AppIcon name={visual.iconName} className="icon-md" />
       </div>
 
       {/* Content */}
       <div className="min-w-0 flex-1">
-        <div className="mb-0.5 flex items-center justify-between gap-2">
-          <p
-            className={`text-[14px] leading-tight ${
-              item.read ? "font-medium text-on-surface-variant" : "font-semibold text-on-surface"
-            }`}
+        {/* Header: Title + Unread Indicator & Timestamp */}
+        <div className="flex items-baseline justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p
+              className={`truncate text-[13.5px] leading-snug ${
+                item.read ? "font-medium text-on-surface-variant" : "font-semibold text-on-surface"
+              }`}
+            >
+              {item.title}
+            </p>
+            {!item.read && (
+              <span
+                className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
+                aria-label="Belum dibaca"
+              />
+            )}
+          </div>
+
+          <time
+            dateTime={item.createdAt}
+            className="shrink-0 text-meta tabular-nums text-on-surface-variant/75"
           >
-            {item.title}
-          </p>
+            {formatRelativeTime(item.createdAt)}
+          </time>
         </div>
 
-        <p className="mb-1.5 text-[13px] leading-relaxed text-on-surface-variant">{item.message}</p>
+        {/* Message Body */}
+        <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-on-surface-variant/90">
+          {item.message}
+        </p>
 
-        <time
-          dateTime={item.createdAt}
-          className="mb-2 block text-meta text-on-surface-variant tabular-nums"
-        >
-          {formatRelativeTime(item.createdAt)}
-        </time>
-        {/* Footer badges */}
-        <div className="flex items-center gap-2">
-          {item.isResolved ? (
-            <Badge status="COMPLETED">Sudah Selesai</Badge>
-          ) : item.category === "ACTION_REQUIRED" ? (
-            <Badge status="WARNING">Perlu Tindakan</Badge>
-          ) : null}
-
-          {!item.read && (
-            <span
-              className="inline-block h-2 w-2 shrink-0 rounded-full bg-primary"
-              aria-label="Belum dibaca"
-            />
-          )}
-        </div>
+        {/* Status Badge (Only rendered if applicable) */}
+        {hasFooterBadge && (
+          <div className="mt-2 flex items-center gap-2">
+            {item.isResolved ? (
+              <Badge status="COMPLETED">Sudah Selesai</Badge>
+            ) : item.category === "ACTION_REQUIRED" ? (
+              <Badge status="WARNING">Perlu Tindakan</Badge>
+            ) : null}
+          </div>
+        )}
       </div>
-
-      {/* Chevron indicator if actionable */}
-      {item.actionUrl && (
-        <div className="shrink-0 self-center text-on-surface-variant">
-          <AppIcon name="chevron_right" className="icon-sm" />
-        </div>
-      )}
-    </button>
+    </motion.button>
   );
 }

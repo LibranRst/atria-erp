@@ -1,9 +1,8 @@
 import React from "react";
 import { redirect } from "next/navigation";
 import { resolveActor } from "@/server/actor";
-import { PageHeader } from "@/components/ui";
+import { AppIcon, IconButtonLink, PageHeader } from "@/components/ui";
 import { NotificationCenterView } from "@/features/notifications/components/notification-center-view";
-import { WebPushControl } from "@/features/notifications/components/web-push-control";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +15,17 @@ export default async function NotificationsPage(): Promise<React.JSX.Element> {
       <PageHeader
         title="Notifikasi"
         subtitle="Pusat pemberitahuan tindakan, approval, dan pembaruan operasional."
+        action={
+          <IconButtonLink
+            href="/profile#notifications"
+            label="Pengaturan perangkat & notifikasi"
+            variant="secondary"
+            size="compact"
+          >
+            <AppIcon name="tune" className="icon-sm" />
+          </IconButtonLink>
+        }
       />
-      <WebPushControl publicKey={process.env.WEB_PUSH_VAPID_PUBLIC_KEY ?? ""} />
       <NotificationCenterView />
     </section>
   );

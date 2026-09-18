@@ -14,7 +14,10 @@ import {
 } from "@/db/schema";
 import { INSTANCE_TENANT_ID } from "@/db/schema/tenant-constants";
 import { getRoleAccess } from "@/lib/auth/role-access";
-import { notificationDestination } from "@atria/core/notifications/types";
+import {
+  ANDROID_NOTIFICATION_CHANNEL_ID,
+  notificationDestination,
+} from "@atria/core/notifications/types";
 
 export type NotificationDeliveryTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -328,6 +331,10 @@ async function sendExpo(deliveries: readonly ClaimedDelivery[], now: Date): Prom
         url: notificationDestination(delivery.notification),
       },
       sound: "default" as const,
+      // iOS tidak mengenal `channelId`; hanya kirim untuk perangkat Android.
+      ...(delivery.pushSubscription.platform === "EXPO_ANDROID"
+        ? { channelId: ANDROID_NOTIFICATION_CHANNEL_ID }
+        : {}),
     }));
     try {
       const response = await fetch("https://exp.host/--/api/v2/push/send", {

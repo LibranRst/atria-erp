@@ -8,7 +8,9 @@ import { ProfileIdentitySurface } from "@/features/profile/components/views/prof
 import { LogoutButton } from "@/features/profile/components/views/logout-button";
 import { DeveloperAccountSwitcher } from "@/features/profile/components/developer/developer-account-switcher";
 import { getProfilePageData } from "@/features/profile/server/get-profile-page-data";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, RowGroup } from "@/components/ui";
+import { WebPushControl } from "@/features/notifications/components/web-push-control";
+import { InstallAppControl } from "@/features/pwa";
 function SectionHeader({
   title,
   meta,
@@ -151,6 +153,16 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
         {data.developerSimulation ? (
           <DeveloperAccountSwitcher state={data.developerSimulation} />
         ) : null}
+
+        <section id="notifications" className="space-y-2">
+          <SectionHeader title="Perangkat & notifikasi" />
+          <div className="relative isolate overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl">
+            <RowGroup>
+              <WebPushControl publicKey={process.env.WEB_PUSH_VAPID_PUBLIC_KEY ?? ""} embedded />
+              <InstallAppControl embedded />
+            </RowGroup>
+          </div>
+        </section>
 
         <section className="space-y-2">
           <SectionHeader title="Sesi" />

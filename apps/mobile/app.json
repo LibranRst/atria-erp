@@ -25,7 +25,11 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"]
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "output": "static",
@@ -53,7 +57,13 @@
           "imageWidth": 76
         }
       ],
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "color": "#b84b2c",
+          "defaultChannel": "operasional"
+        }
+      ],
       "@react-native-community/datetimepicker"
     ],
     "experiments": {

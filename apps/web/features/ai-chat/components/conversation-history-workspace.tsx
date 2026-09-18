@@ -7,17 +7,18 @@ import {
   type ConversationPagePayload,
 } from "@/app/actions/ai/chat-history";
 import { getAiPreference, resetAiPreference, saveAiPreference } from "@/app/actions/ai/preferences";
+import { useCan } from "@/components/auth/permissions-provider";
 import {
   ActionMenu,
   AppIcon,
   Button,
+  ChoiceRow,
   CompactFormDialog,
   ConfirmationDialog,
   FormField,
   FormSection,
   IconButton,
   OperationalFormSheet,
-  OptionChoiceGroup,
   SearchInput,
   SegmentedTabs,
   SheetFooterActions,
@@ -25,9 +26,11 @@ import {
   Textarea,
 } from "@/components/ui";
 import {
+  AI_PRIMARY_FOCUS_CONFIG,
   DEFAULT_AI_PREFERENCE,
+  getAvailableFocusOptions,
+  sanitizePrimaryFocus,
   type AiPreferenceInput,
-  type AiPrimaryFocus,
   type AiResponseStyle,
 } from "@atria/core/validations/ai-preference";
 import * as React from "react";
@@ -48,36 +51,39 @@ export function groupConversations(
   yesterday.setDate(yesterday.getDate() - 1);
   const week = new Date(today);
   week.setDate(week.getDate() - 7);
-  const groups = [
-    { label: "Hari ini", items: items.filter((item) => new Date(item.updatedAt) >= today) },
-    {
-      label: "Kemarin",
-      items: items.filter(
-        (item) => new Date(item.updatedAt) >= yesterday && new Date(item.updatedAt) < today,
-      ),
-    },
-    {
-      label: "7 hari terakhir",
-      items: items.filter(
-        (item) => new Date(item.updatedAt) >= week && new Date(item.updatedAt) < yesterday,
-      ),
-    },
-    { label: "Lebih lama", items: items.filter((item) => new Date(item.updatedAt) < week) },
-  ];
-  return groups.filter((group) => group.items.length > 0);
+
+  const groups: Record<"today" | "yesterday" | "week" | "older", Conversation[]> = {
+    today: [],
+    yesterday: [],
+    week: [],
+    older: [],
+  };
+
+  for (const item of items) {
+    const time = new Date(item.updatedAt);
+    if (time >= today) {
+      groups.today.push(item);
+    } else if (time >= yesterday) {
+      groups.yesterday.push(item);
+    } else if (time >= week) {
+      groups.week.push(item);
+    } else {
+      groups.older.push(item);
+    }
+  }
+
+  const result: Group[] = [];
+  if (groups.today.length) result.push({ label: "Hari ini", items: groups.today });
+  if (groups.yesterday.length) result.push({ label: "Kemarin", items: groups.yesterday });
+  if (groups.week.length) result.push({ label: "7 hari terakhir", items: groups.week });
+  if (groups.older.length) result.push({ label: "Lebih lama", items: groups.older });
+  return result;
 }
 
 const STYLE_OPTIONS: readonly { value: AiResponseStyle; label: string }[] = [
   { value: "STANDARD", label: "Standard Atria" },
   { value: "VERY_CONCISE", label: "Sangat ringkas" },
   { value: "DETAILED", label: "Lebih rinci" },
-];
-const FOCUS_OPTIONS: readonly { value: AiPrimaryFocus; label: string }[] = [
-  { value: "AUTO", label: "Otomatis" },
-  { value: "BUDGET_MARGIN", label: "Budget & margin" },
-  { value: "CASH_BILLS", label: "Kas & tagihan" },
-  { value: "MATERIAL_STOCK", label: "Material & stok" },
-  { value: "ACTIONS_APPROVALS", label: "Tindakan & approval" },
 ];
 
 export function ConversationHistoryWorkspace({
@@ -91,6 +97,7 @@ export function ConversationHistoryWorkspace({
   readonly onNewConversation: () => void;
   readonly onActiveDeleted: () => void;
 }): React.JSX.Element {
+  const can = useCan();
   const [items, setItems] = React.useState<readonly Conversation[]>([]);
   const [query, setQuery] = React.useState("");
   const [nextCursor, setNextCursor] = React.useState<string | null>(null);
@@ -105,6 +112,8 @@ export function ConversationHistoryWorkspace({
     React.useState<AiPreferenceInput>(DEFAULT_AI_PREFERENCE);
   const [preferenceOpen, setPreferenceOpen] = React.useState(false);
   const requestId = React.useRef(0);
+
+  const availableFocusOptions = React.useMemo(() => getAvailableFocusOptions(can), [can]);
 
   const load = React.useCallback(async (search: string, cursor?: string): Promise<void> => {
     const id = ++requestId.current;
@@ -138,13 +147,18 @@ export function ConversationHistoryWorkspace({
 
   async function savePreference(): Promise<void> {
     setPending(true);
-    const response = await saveAiPreference(preferenceDraft);
+    const sanitizedDraft: AiPreferenceInput = {
+      ...preferenceDraft,
+      primaryFocus: sanitizePrimaryFocus(preferenceDraft.primaryFocus, can),
+    };
+    const response = await saveAiPreference(sanitizedDraft);
     setPending(false);
     if (!response.success) {
       toast.error(response.error.message);
       return;
     }
     setPreference(response.data);
+    setPreferenceDraft(response.data);
     setPreferenceOpen(false);
     toast.success("Preferensi asisten disimpan.");
   }
@@ -199,12 +213,14 @@ export function ConversationHistoryWorkspace({
   }
 
   const groups = groupConversations(items);
+  const effectiveFocus = sanitizePrimaryFocus(preference.primaryFocus, can);
   const styleLabel = STYLE_OPTIONS.find(
     (option) => option.value === preference.responseStyle,
   )?.label;
-  const focusLabel = FOCUS_OPTIONS.find(
-    (option) => option.value === preference.primaryFocus,
-  )?.label;
+  const focusLabel = AI_PRIMARY_FOCUS_CONFIG[effectiveFocus]?.label ?? "Otomatis";
+
+  const activeDraftFocus = sanitizePrimaryFocus(preferenceDraft.primaryFocus, can);
+  const customNoteLength = preferenceDraft.customNote?.length ?? 0;
 
   return (
     <div className="space-y-md pt-2 pb-6">
@@ -214,10 +230,14 @@ export function ConversationHistoryWorkspace({
       <button
         type="button"
         onClick={() => {
-          setPreferenceDraft(preference);
+          const synchronized: AiPreferenceInput = {
+            ...preference,
+            primaryFocus: effectiveFocus,
+          };
+          setPreferenceDraft(synchronized);
           setPreferenceOpen(true);
         }}
-        className="flex min-h-16 w-full items-center gap-3 rounded-owner bg-white px-4 text-left shadow-surface ring-1 ring-ring-subtle focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none"
+        className="flex min-h-16 w-full items-center gap-3 rounded-owner bg-white px-4 text-left shadow-surface ring-1 ring-ring-subtle transition-colors hover:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none active:bg-surface-container"
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-icon bg-surface-container text-on-surface">
           <AppIcon name="tune" className="icon-md" />
@@ -239,77 +259,87 @@ export function ConversationHistoryWorkspace({
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-owner bg-white p-5 text-center shadow-surface ring-1 ring-ring-subtle">
-          <p className="text-row font-bold text-on-surface">
-            {query ? `Tidak ada hasil untuk “${query}”` : "Belum ada percakapan"}
-          </p>
-          <p className="mt-1 text-support text-on-surface-variant">
-            {query
-              ? "Coba kata kunci lain atau bersihkan pencarian."
-              : "Mulai percakapan untuk menyimpan riwayat pertama."}
-          </p>
+        <div className="py-12 text-center text-on-surface-variant">
+          <p className="text-body font-semibold">Belum ada percakapan</p>
+          <p className="text-meta">Mulai percakapan baru untuk bertanya seputar proyek.</p>
         </div>
       ) : (
         groups.map((group) => (
           <section key={group.label} className="space-y-2">
-            <h2 className="px-1 text-meta font-bold tracking-wider text-on-surface-variant uppercase">
+            <h3 className="px-1 text-meta font-bold text-on-surface-variant">
               {group.label}
-            </h2>
+            </h3>
             <ul className="divide-y divide-black/5.5 overflow-hidden rounded-owner bg-white shadow-surface ring-1 ring-ring-subtle">
-              {group.items.map((conversation) => (
-                <li key={conversation.id} className="flex min-h-16 items-center gap-1 pr-2">
-                  <button
-                    type="button"
-                    onClick={() => onSelect(conversation.id)}
-                    aria-current={conversation.id === activeId ? "true" : undefined}
-                    className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-3 text-left focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none"
+              {group.items.map((conversation) => {
+                const isActive = conversation.id === activeId;
+                return (
+                  <li
+                    key={conversation.id}
+                    className={`group flex min-h-16 items-center gap-1 pr-2 transition-colors hover:bg-surface-container-low ${
+                      isActive ? "bg-accent/[0.04]" : "bg-white"
+                    }`}
                   >
-                    <AppIcon
-                      name={conversation.id === activeId ? "check_circle" : "sparkle"}
-                      className="icon-sm shrink-0 text-on-surface-variant"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-row font-semibold text-on-surface">
-                        {conversation.title ?? "Percakapan baru"}
-                      </span>
-                      <span className="block text-meta font-semibold text-on-surface-variant">
-                        {conversation.messageCount} pesan ·{" "}
-                        {formatUpdatedAt(conversation.updatedAt)}
-                      </span>
-                    </span>
-                  </button>
-                  <ActionMenu
-                    label={`Aksi percakapan ${conversation.title ?? "baru"}`}
-                    trigger={
-                      <IconButton
-                        label={`Aksi percakapan ${conversation.title ?? "baru"}`}
-                        size="compact"
-                        variant="tertiary"
-                        icon={<AppIcon name="more_horiz" className="icon-md" />}
-                        className="text-on-surface-variant"
+                    <button
+                      type="button"
+                      onClick={() => onSelect(conversation.id)}
+                      className="flex min-h-16 min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
+                    >
+                      <AppIcon
+                        name={isActive ? "check_circle" : "sparkle"}
+                        className={`icon-sm shrink-0 ${
+                          isActive ? "text-accent" : "text-on-surface-variant"
+                        }`}
                       />
-                    }
-                    items={[
-                      {
-                        id: "rename",
-                        label: "Ganti judul…",
-                        icon: "edit",
-                        onSelect: () => {
-                          setActionTarget(conversation);
-                          setRenameTitle(conversation.title ?? "");
-                        },
-                      },
-                      {
-                        id: "delete",
-                        label: "Hapus percakapan…",
-                        icon: "delete",
-                        tone: "critical",
-                        onSelect: () => setDeleteTarget(conversation),
-                      },
-                    ]}
-                  />
-                </li>
-              ))}
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={`truncate text-row font-semibold ${
+                            isActive ? "font-bold text-accent" : "text-on-surface"
+                          }`}
+                        >
+                          {conversation.title ?? "Percakapan baru"}
+                        </p>
+                        <p className="truncate text-meta font-semibold text-on-surface-variant">
+                          {conversation.messageCount} pesan ·{" "}
+                          {formatUpdatedAt(conversation.updatedAt)}
+                          {isActive ? " · sedang dibuka" : ""}
+                        </p>
+                      </div>
+                    </button>
+                    <div className="shrink-0">
+                      <ActionMenu
+                        label={`Aksi percakapan ${conversation.title ?? "baru"}`}
+                        trigger={
+                          <IconButton
+                            label={`Aksi percakapan ${conversation.title ?? "baru"}`}
+                            size="compact"
+                            variant="tertiary"
+                            icon={<AppIcon name="more_horiz" className="icon-md" />}
+                            className="text-on-surface-variant group-hover:text-on-surface"
+                          />
+                        }
+                        items={[
+                          {
+                            id: "rename",
+                            label: "Ganti judul…",
+                            icon: "edit",
+                            onSelect: () => {
+                              setActionTarget(conversation);
+                              setRenameTitle(conversation.title ?? "");
+                            },
+                          },
+                          {
+                            id: "delete",
+                            label: "Hapus percakapan…",
+                            icon: "delete",
+                            tone: "critical",
+                            onSelect: () => setDeleteTarget(conversation),
+                          },
+                        ]}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         ))
@@ -388,20 +418,25 @@ export function ConversationHistoryWorkspace({
             />
           </FormSection>
 
-          <OptionChoiceGroup
-            label="Fokus utama"
-            value={preferenceDraft.primaryFocus}
-            onChange={(value) =>
-              setPreferenceDraft((current) => ({ ...current, primaryFocus: value }))
-            }
-            options={FOCUS_OPTIONS}
-          />
+          <FormSection title="Fokus utama" presentation="grouped">
+            <div role="radiogroup" aria-label="Fokus utama" className="divide-y divide-outline-variant/20">
+              {availableFocusOptions.map((option) => (
+                <ChoiceRow
+                  key={option.value}
+                  selectionMode="radio"
+                  checked={activeDraftFocus === option.value}
+                  onChange={() =>
+                    setPreferenceDraft((curr) => ({ ...curr, primaryFocus: option.value }))
+                  }
+                  title={option.label}
+                  description={option.description}
+                />
+              ))}
+            </div>
+          </FormSection>
 
-          <FormSection>
-            <FormField
-              label="Catatan personal"
-              helper="Maksimal 300 karakter. Catatan hanya memengaruhi gaya, istilah, dan prioritas—bukan izin atau fakta."
-            >
+          <FormSection title="Catatan personal" presentation="grouped">
+            <div className="p-4 space-y-2">
               <Textarea
                 id="ai-custom-note"
                 value={preferenceDraft.customNote ?? ""}
@@ -414,7 +449,11 @@ export function ConversationHistoryWorkspace({
                 rows={4}
                 placeholder="Contoh: gunakan istilah yang mudah dipahami tim lapangan"
               />
-            </FormField>
+              <div className="flex items-center justify-between text-meta text-on-surface-variant">
+                <span>Hanya memengaruhi gaya dan peristilahan, bukan izin atau fakta.</span>
+                <span className="font-mono text-xs tabular-nums">{customNoteLength}/300</span>
+              </div>
+            </div>
           </FormSection>
         </div>
       </OperationalFormSheet>

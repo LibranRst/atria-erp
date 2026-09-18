@@ -2,22 +2,52 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { type Href, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Alert, Platform } from "react-native";
 
 import { trpcClient } from "@/lib/trpc-client";
+import { resolveMobileNotificationRoute } from "@/lib/notification-route";
 import { writeStoredPushToken } from "@/lib/push-token-storage";
 import { useAuth } from "@/providers/auth-provider";
-import { safeNotificationUrl } from "@atria/core/notifications/types";
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
+import { getRoleNavItems } from "@atria/core/navigation/role-navigation";
+import {
+  ANDROID_NOTIFICATION_CHANNEL_ID,
+  safeNotificationUrl,
+} from "@atria/core/notifications/types";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldPlaySound: false,
+    // Server mengirim `sound: "default"`; handler ini hanya berlaku saat aplikasi
+    // sedang terbuka, dan menyenyapkan bunyi di sana membuat pratinjau berbeda
+    // dari notifikasi yang benar-benar diterima.
+    shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
+
+let channelReady: Promise<void> | null = null;
+
+/**
+ * Kanal dibuat sekali per proses dan tidak butuh izin runtime, jadi dipanggil
+ * sebelum permintaan izin agar kanal sudah ada saat notifikasi pertama datang.
+ */
+function ensureNotificationChannel(): Promise<void> {
+  if (Platform.OS !== "android") return Promise.resolve();
+  channelReady ??= Notifications.setNotificationChannelAsync(ANDROID_NOTIFICATION_CHANNEL_ID, {
+    name: "Pembaruan operasional",
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: "default",
+  }).then(() => undefined);
+  return channelReady;
+}
+
+function warnPushFailure(context: string, error: unknown): void {
+  if (!__DEV__) return;
+  console.warn(`[push] ${context}`, error instanceof Error ? error.message : String(error));
+}
 
 function easProjectId(): string | null {
   const configured = Constants.easConfig?.projectId;
@@ -34,12 +64,7 @@ function easProjectId(): string | null {
 }
 
 async function registerDevice(projectId: string): Promise<void> {
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("operasional", {
-      name: "Pembaruan operasional",
-      importance: Notifications.AndroidImportance.HIGH,
-    });
-  }
+  await ensureNotificationChannel();
   const token = await Notifications.getExpoPushTokenAsync({ projectId });
   const platform = Platform.OS === "ios" ? "EXPO_IOS" : "EXPO_ANDROID";
   await trpcClient.notifications.registerPush.mutate({
@@ -59,25 +84,41 @@ export function PushNotificationsProvider({
 }: {
   readonly children: React.ReactNode;
 }): React.JSX.Element {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, roleName, user } = useAuth();
   const router = useRouter();
   const userId = user?.id ?? null;
+  /** Rute cadangan mengikuti tab navigasi peran, bukan peta rute terpisah. */
+  const fallbackRoute = useMemo<"/ledger" | "/projects" | "/materials" | "/expenses">(
+    () =>
+      getRoleNavItems(roleName ? (ROLE_PERMISSIONS[roleName] ?? []) : [])[0]?.href ?? "/projects",
+    [roleName],
+  );
 
   useEffect(() => {
     if (!isAuthenticated || !userId || Platform.OS === "web") return undefined;
     const projectId = easProjectId();
-    if (!projectId) return undefined;
+    if (!projectId) {
+      // Tanpa projectId EAS, `getExpoPushTokenAsync` tidak bisa dipanggil. Ini
+      // yang terjadi pada build tanpa konfigurasi EAS; jangan menawarkan izin
+      // yang hasilnya tidak akan pernah terpakai.
+      if (__DEV__)
+        console.warn("[push] projectId EAS belum dikonfigurasi; registrasi token dilewati.");
+      return undefined;
+    }
     const pushProjectId = projectId;
     let active = true;
 
     function openNotification(response: Notifications.NotificationResponse): void {
       const destination = notificationUrl(response);
       if (!destination) return;
-      router.push(destination as Href);
+      const route = resolveMobileNotificationRoute(destination, fallbackRoute);
+      router.push(route as Href);
       void Notifications.clearLastNotificationResponseAsync().catch(() => undefined);
     }
 
     async function prepare(): Promise<void> {
+      await ensureNotificationChannel();
+      if (!active) return;
       const permissions = await Notifications.getPermissionsAsync();
       if (!active) return;
       if (permissions.status === "granted") {
@@ -97,18 +138,22 @@ export function PushNotificationsProvider({
           {
             text: "Aktifkan",
             onPress: () => {
-              void Notifications.requestPermissionsAsync().then((result) => {
-                if (result.status === "granted") return registerDevice(pushProjectId);
-              });
+              void Notifications.requestPermissionsAsync()
+                .then((result) => {
+                  if (result.status === "granted") return registerDevice(pushProjectId);
+                })
+                .catch((error: unknown) => warnPushFailure("permintaan izin gagal", error));
             },
           },
         ],
       );
     }
 
-    void prepare().catch(() => undefined);
+    void prepare().catch((error: unknown) => warnPushFailure("penyiapan push gagal", error));
     const tokenListener = Notifications.addPushTokenListener(() => {
-      void registerDevice(pushProjectId).catch(() => undefined);
+      void registerDevice(pushProjectId).catch((error: unknown) =>
+        warnPushFailure("penyegaran token gagal", error),
+      );
     });
     const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
       openNotification(response);
@@ -123,7 +168,7 @@ export function PushNotificationsProvider({
       tokenListener.remove();
       responseListener.remove();
     };
-  }, [isAuthenticated, router, userId]);
+  }, [fallbackRoute, isAuthenticated, router, userId]);
 
   return <>{children}</>;
 }

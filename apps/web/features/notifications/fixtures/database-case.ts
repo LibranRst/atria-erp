@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { generateDrizzleJson, generateMigration, type DrizzleSnapshotJSON } from "drizzle-kit/api";
 import { mock, expect } from "bun:test";
 import * as schema from "@/db/schema";
+import { ANDROID_NOTIFICATION_CHANNEL_ID } from "@atria/core/notifications/types";
 import { eq } from "drizzle-orm";
 const client = new PGlite();
 const statements = await generateMigration(generateDrizzleJson({}), generateDrizzleJson(schema));
@@ -392,6 +393,33 @@ const subscriptions = await database
   .where(eq(schema.userPushSubscription.token, "ExpoPushToken[testdevice]"));
 expect(subscriptions.length).toBe(1);
 expect(subscriptions[0].userId).toBe(otherId);
+// Klien web mendaftarkan ulang langganan yang sudah ada setiap kali halaman
+// notifikasi dibuka (rekonsiliasi). Pendaftaran harus tetap satu baris dan
+// memperbarui kredensial yang berubah, bukan menumpuk baris baru.
+const reconciledEndpoint = "https://push.example.test/reconciled";
+await registerPushSubscription(
+  { platform: "WEB", endpoint: reconciledEndpoint, p256dh: "old-key", auth: "old-auth" },
+  ownerId,
+  ownerPushSessionId,
+);
+await registerPushSubscription(
+  { platform: "WEB", endpoint: reconciledEndpoint, p256dh: "new-key", auth: "new-auth" },
+  ownerId,
+  ownerPushSessionId,
+);
+const reconciledRows = await database
+  .select()
+  .from(schema.userPushSubscription)
+  .where(eq(schema.userPushSubscription.endpoint, reconciledEndpoint));
+expect(reconciledRows.length).toBe(1);
+expect(reconciledRows[0].p256dh).toBe("new-key");
+expect(reconciledRows[0].userId).toBe(ownerId);
+// Baris uji di atas dipensiunkan lagi supaya jumlah pengiriman pada skenario
+// berikutnya tetap sama seperti sebelumnya.
+await database
+  .update(schema.userPushSubscription)
+  .set({ token: null, endpoint: null, p256dh: null, auth: null })
+  .where(eq(schema.userPushSubscription.id, reconciledRows[0].id));
 const pushReferenceId = crypto.randomUUID();
 await database.transaction(async (tx) => {
   await recordNotificationEvent(tx as unknown as Tx, {
@@ -409,16 +437,37 @@ let deliveries = await database.select().from(schema.notificationDelivery);
 expect(deliveries).toHaveLength(1);
 expect(deliveries[0].status).toBe("PENDING");
 const originalFetch = globalThis.fetch;
+let expoPushBody: unknown = null;
+type ExpoPushMessage = {
+  readonly to: string;
+  readonly title: string;
+  readonly body: string;
+  readonly data: { readonly notificationId: string; readonly url: string | null };
+  readonly sound: string;
+  readonly channelId?: string;
+};
+let expoPushMessages: readonly ExpoPushMessage[] = [];
 globalThis.fetch = (async (
   input: string | URL | Request,
   init?: RequestInit,
 ): Promise<Response> => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   if (url.endsWith("/push/send")) {
-    return Response.json({ data: [{ status: "ok", id: "expo-ticket-1" }] });
+    const body: unknown = typeof init?.body === "string" ? JSON.parse(init.body) : [];
+    expoPushMessages = Array.isArray(body) ? (body as ExpoPushMessage[]) : [];
+    expoPushBody = body;
+    // Expo mengembalikan satu tiket per pesan; jumlah yang berbeda membuat
+    // pengiriman dianggap gagal, jadi balasannya mengikuti panjang batch.
+    return Response.json({
+      data: expoPushMessages.map((_, index) => ({ status: "ok", id: `expo-ticket-${index}` })),
+    });
   }
   if (url.endsWith("/push/getReceipts")) {
-    return Response.json({ data: { "expo-ticket-1": { status: "ok" } } });
+    const body: unknown = typeof init?.body === "string" ? JSON.parse(init.body) : {};
+    const ids = typeof body === "object" && body !== null && "ids" in body ? body.ids : [];
+    const data: Record<string, { status: string }> = {};
+    if (Array.isArray(ids)) for (const id of ids) data[String(id)] = { status: "ok" };
+    return Response.json({ data });
   }
   return originalFetch(input, init);
 }) as typeof fetch;
@@ -427,11 +476,54 @@ const pushSentAt = new Date(deliveries[0].nextAttemptAt.getTime() + 60_000);
 await processNotificationDeliveries(pushSentAt);
 deliveries = await database.select().from(schema.notificationDelivery);
 expect(deliveries[0].status).toBe("SENT");
-expect(deliveries[0].providerTicketId).toBe("expo-ticket-1");
+expect(deliveries[0].providerTicketId).toBe("expo-ticket-0");
+// iOS tidak mengenal `channelId`; payload-nya harus tetap seperti semula.
+expect(expoPushBody).toEqual([
+  {
+    to: "ExpoPushToken[testdevice]",
+    title: "Push test",
+    body: "Delivery outbox",
+    data: { notificationId: deliveries[0].notificationId, url: "/notifications" },
+    sound: "default",
+  },
+]);
 await processNotificationDeliveries(new Date(pushSentAt.getTime() + 15 * 60_000));
 deliveries = await database.select().from(schema.notificationDelivery);
 expect(deliveries[0].status).toBe("DELIVERED");
 expect(deliveries[0].deliveredAt).toBeInstanceOf(Date);
+// Perangkat Android harus menerima `channelId`; tanpa itu Android 8+ memakai
+// kanal cadangan library dan banner kehilangan nama serta prioritasnya.
+await registerPushSubscription(
+  { platform: "EXPO_ANDROID", token: "ExpoPushToken[androiddevice]" },
+  otherId,
+  otherPushSessionId,
+);
+const androidNotificationId = crypto.randomUUID();
+await database.transaction(async (tx) => {
+  await recordNotificationEvent(tx as unknown as Tx, {
+    referenceType: "system",
+    referenceId: androidNotificationId,
+    stage: "ANDROID_CHANNEL_TEST",
+    title: "Push android",
+    message: "Kanal operasional",
+    recipients: [otherId],
+    actionRequired: true,
+    actionUrl: "/approvals",
+  });
+});
+expoPushBody = null;
+await processNotificationDeliveries(new Date(pushSentAt.getTime() + 16 * 60_000));
+const androidMessage = expoPushMessages.find(
+  (message) => message.to === "ExpoPushToken[androiddevice]",
+);
+expect(androidMessage).toEqual({
+  to: "ExpoPushToken[androiddevice]",
+  title: "Push android",
+  body: "Kanal operasional",
+  data: { notificationId: expect.any(String), url: "/approvals" },
+  sound: "default",
+  channelId: ANDROID_NOTIFICATION_CHANNEL_ID,
+});
 globalThis.fetch = originalFetch;
 const previousWebPushPublicKey = process.env.WEB_PUSH_VAPID_PUBLIC_KEY;
 const previousWebPushPrivateKey = process.env.WEB_PUSH_VAPID_PRIVATE_KEY;

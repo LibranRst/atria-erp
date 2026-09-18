@@ -1,6 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import { Button, ButtonLink, EmptyState, GroupedSurface, SegmentedTabs } from "@/components/ui";
+import {
+  Button,
+  ButtonLink,
+  EmptyState,
+  GroupedSurface,
+  RowGroup,
+  SegmentedTabs,
+} from "@/components/ui";
 import type { NotificationCategory, NotificationItem } from "@atria/core/notifications/types";
 import { NotificationRow } from "./notification-row";
 import { useNotifications } from "../hooks/notification-context";
@@ -41,18 +48,21 @@ export function NotificationCategoryTabs({
 export function NotificationSkeleton(): React.JSX.Element {
   return (
     <GroupedSurface aria-label="Memuat notifikasi" aria-busy="true">
-      <div className="divide-y divide-outline-variant">
+      <RowGroup>
         {[0, 1, 2].map((key) => (
-          <div key={key} className="flex gap-3 p-4" aria-hidden="true">
-            <div className="h-9 w-9 shrink-0 rounded-full bg-surface-container" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 w-3/4 rounded-full bg-surface-container" />
-              <div className="h-3 w-full rounded-full bg-surface-container" />
+          <div key={key} className="flex items-start gap-3 px-4 py-3" aria-hidden="true">
+            <div className="mt-0.5 h-8.5 w-8.5 shrink-0 rounded-full bg-surface-container" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="h-3.5 w-2/5 rounded-full bg-surface-container" />
+                <div className="h-3 w-14 rounded-full bg-surface-container" />
+              </div>
+              <div className="h-3 w-4/5 rounded-full bg-surface-container" />
               <div className="h-3 w-1/2 rounded-full bg-surface-container" />
             </div>
           </div>
         ))}
-      </div>
+      </RowGroup>
     </GroupedSurface>
   );
 }
@@ -99,11 +109,11 @@ export function NotificationCenterView({
   function rows(items: NotificationItem[]): React.JSX.Element {
     return (
       <GroupedSurface>
-        <div className="divide-y divide-outline-variant">
+        <RowGroup>
           {items.map((item) => (
             <NotificationRow key={item.id} item={item} onItemClick={click} />
           ))}
-        </div>
+        </RowGroup>
       </GroupedSurface>
     );
   }

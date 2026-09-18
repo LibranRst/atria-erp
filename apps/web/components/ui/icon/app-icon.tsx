@@ -40,6 +40,7 @@ import { CloudSlashIcon } from "@phosphor-icons/react/dist/ssr/CloudSlash";
 import { CodeIcon } from "@phosphor-icons/react/dist/ssr/Code";
 import { CopyIcon } from "@phosphor-icons/react/dist/ssr/Copy";
 import { DatabaseIcon } from "@phosphor-icons/react/dist/ssr/Database";
+import { DeviceMobileIcon } from "@phosphor-icons/react/dist/ssr/DeviceMobile";
 import { DotsThreeIcon } from "@phosphor-icons/react/dist/ssr/DotsThree";
 import { DownloadSimpleIcon } from "@phosphor-icons/react/dist/ssr/DownloadSimple";
 import { EnvelopeIcon } from "@phosphor-icons/react/dist/ssr/Envelope";
@@ -169,6 +170,7 @@ const iconByLegacyName = {
   description: FileTextIcon,
   design_services: PencilRulerIcon,
   developer_mode: CodeIcon,
+  device_mobile: DeviceMobileIcon,
   domain: BuildingsIcon,
   done: CheckIcon,
   edit: PencilSimpleIcon,
@@ -247,6 +249,7 @@ const iconByLegacyName = {
   shield: ShieldIcon,
   shopping_cart_checkout: ShoppingCartIcon,
   smart_toy: RobotIcon,
+  smartphone: DeviceMobileIcon,
   south_west: ArrowDownLeftIcon,
   space_dashboard: SquaresFourIcon,
   sparkle: SparkleIcon,

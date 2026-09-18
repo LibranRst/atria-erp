@@ -38,17 +38,17 @@ Storybook, `docs/`, dan `apps/mobile` tidak.
 
 Wajib diisi pada environment **Production**:
 
-| Variabel | Catatan |
-| --- | --- |
-| `DATABASE_URL` | Hanya Production. Preview sengaja tanpa nilai agar deployment pratinjau tidak pernah menulis ke database perusahaan yang sedang berjalan. |
-| `BETTER_AUTH_SECRET` | Baru per instance. Menyalinnya antar instance membuat sesi satu perusahaan sah di perusahaan lain. |
-| `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL` | Harus origin produksi (`https://atria-erp.vercel.app`). `lib/auth.ts` memakai keduanya sebagai trusted origin; nilai `localhost` membuat login ditolak `403`. |
-| `ATRIA_BOOTSTRAP_SECRET` | Minimal 16 karakter; tanpa ini `/setup` selalu `FORBIDDEN`. |
-| `CRON_SECRET`, `NOTIFICATION_JOB_SECRET` | Bearer secret worker notifikasi. |
-| `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, `WEB_PUSH_SUBJECT` | Satu pasangan VAPID stabil per environment. |
-| `DEEPSEEK_API_KEY`, `GEMINI_API_KEY` | Rantai cadangan model AI. |
-| `NINEROUTER_API_KEY`, `NINEROUTER_BASE_URL`, `NINEROUTER_MODEL_ID`, `NINEROUTER_REASONING_EFFORT` | Hanya bila gateway 9Router dapat dijangkau dari internet. Nilai bawaan `http://localhost:20128/v1` tidak bisa dipakai dari fungsi serverless; tanpa key/URL yang sah rantai otomatis jatuh ke DeepSeek lalu Gemini. |
-| `IMAGEKIT_PRIVATE_KEY`, `NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY`, `NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT`, `IMAGEKIT_FOLDER_BASE` | Unggahan nota, cover proyek, foto profil. |
+| Variabel                                                                                                               | Catatan                                                                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                                                                         | Hanya Production. Preview sengaja tanpa nilai agar deployment pratinjau tidak pernah menulis ke database perusahaan yang sedang berjalan.                                                                           |
+| `BETTER_AUTH_SECRET`                                                                                                   | Baru per instance. Menyalinnya antar instance membuat sesi satu perusahaan sah di perusahaan lain.                                                                                                                  |
+| `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL`                                                                               | Harus origin produksi (`https://atria-erp.vercel.app`). `lib/auth.ts` memakai keduanya sebagai trusted origin; nilai `localhost` membuat login ditolak `403`.                                                       |
+| `ATRIA_BOOTSTRAP_SECRET`                                                                                               | Minimal 16 karakter; tanpa ini `/setup` selalu `FORBIDDEN`.                                                                                                                                                         |
+| `CRON_SECRET`, `NOTIFICATION_JOB_SECRET`                                                                               | Bearer secret worker notifikasi.                                                                                                                                                                                    |
+| `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, `WEB_PUSH_SUBJECT`                                          | Satu pasangan VAPID stabil per environment.                                                                                                                                                                         |
+| `DEEPSEEK_API_KEY`, `GEMINI_API_KEY`                                                                                   | Rantai cadangan model AI.                                                                                                                                                                                           |
+| `NINEROUTER_API_KEY`, `NINEROUTER_BASE_URL`, `NINEROUTER_MODEL_ID`, `NINEROUTER_REASONING_EFFORT`                      | Hanya bila gateway 9Router dapat dijangkau dari internet. Nilai bawaan `http://localhost:20128/v1` tidak bisa dipakai dari fungsi serverless; tanpa key/URL yang sah rantai otomatis jatuh ke DeepSeek lalu Gemini. |
+| `IMAGEKIT_PRIVATE_KEY`, `NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY`, `NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT`, `IMAGEKIT_FOLDER_BASE` | Unggahan nota, cover proyek, foto profil.                                                                                                                                                                           |
 
 `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED` harus `false` di produksi.
 
@@ -77,7 +77,7 @@ npx vercel deploy --prod --yes
 Repo sudah terhubung ke GitHub (`vercel git connect`), tapi integrasi itu belum
 menggantikan perintah di atas: **production branch proyek ini masih `main`**,
 sedangkan seluruh pekerjaan berjalan di `development` (branch default repo).
-Akibatnya push ke `development` hanya menghasilkan *preview deployment*, bukan
+Akibatnya push ke `development` hanya menghasilkan _preview deployment_, bukan
 rilis produksi, sampai salah satu dari dua hal dilakukan:
 
 1. Ubah production branch ke `development` — **Dashboard → Project → Settings →
@@ -101,6 +101,42 @@ yang memuat jadwal lebih sering. Karena itu:
 
 Setelah pindah ke paket Pro, kembalikan `crons` di `apps/web/vercel.json` ke jadwal
 per jam dan per 5 menit, lalu penjadwal eksternal tidak lagi diperlukan.
+
+## Prasyarat PWA dan push
+
+Manifest, ikon, halaman offline, dan service worker dilayani sebagai berkas biasa
+dari `apps/web/public/**` dan `app/manifest.ts`, jadi tidak ada variabel
+lingkungan tambahan yang perlu dipasang. Yang perlu dipastikan hanyalah:
+
+1. **Origin produksi harus HTTPS.** Service worker dan Push API hanya hidup di
+   _secure context_. `https://atria-erp.vercel.app` sudah memenuhi syarat;
+   sebaliknya alamat LAN pengembangan (`http://192.168.x.x:3000`) tidak akan
+   pernah mendaftarkan service worker, sehingga halaman `/offline` dan tombol
+   **Aktifkan** di `/notifications` sama-sama tidak berfungsi di sana. Untuk uji
+   push terhadap server pengembangan, pakai `localhost` atau tunnel HTTPS.
+2. **`apps/web/next.config.ts` mengirim header untuk `/notification-sw.js`**
+   (`Cache-Control: public, max-age=0, must-revalidate` dan
+   `Service-Worker-Allowed: /`). Ini yang mencegah CDN menyematkan worker lama,
+   sehingga perbaikan penangan push tidak tertahan di tepi jaringan. Setelah
+   deploy, pastikan header itu masih ada pada respons sungguhan:
+
+   ```bash
+   curl -sI https://atria-erp.vercel.app/notification-sw.js | grep -i "cache-control\|service-worker-allowed"
+   curl -s https://atria-erp.vercel.app/manifest.webmanifest | head -c 200
+   ```
+
+3. **`proxy.ts` mengecualikan berkas PWA dari gerbang login.** Worker, manifest,
+   ikon, dan `/offline` memang harus dapat diambil tanpa cookie sesi; kalau tidak,
+   pemeriksaan pembaruan worker gagal dan halaman offline tersimpan sebagai
+   halaman login.
+4. **iOS memerlukan pemasangan ke Layar Utama.** Safari iOS tidak mengekspos
+   `PushManager` sebelum aplikasi dipasang (Bagikan → Tambahkan ke Layar Utama).
+   Halaman `/notifications` menampilkan kontrol **Pasang aplikasi** justru karena
+   itu; jangan menghapusnya tanpa mengganti jalur pemasangannya.
+5. **VAPID tetap wajib.** `WEB_PUSH_VAPID_PUBLIC_KEY`,
+   `WEB_PUSH_VAPID_PRIVATE_KEY`, dan `WEB_PUSH_SUBJECT` harus terpasang di
+   environment Production; tanpa ketiganya tombol **Aktifkan** melaporkan
+   VAPID key belum tersedia.
 
 ## Verifikasi setelah deploy
 

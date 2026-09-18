@@ -9,6 +9,8 @@
 !.agents/skills/**
 
 .claude/*
+.omp/
+**/.obsidian/workspace*.json
 node_modules/
 .env
 .env.local
@@ -82,3 +84,6 @@ ds-bundle/
 # build output paket & aplikasi di monorepo
 apps/web/dist/
 .expo/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
