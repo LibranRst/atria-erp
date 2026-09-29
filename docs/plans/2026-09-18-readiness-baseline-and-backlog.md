@@ -28,6 +28,8 @@ Arah produk/bisnis: [strategi Atria](2026-09-18-product-business-and-readiness-s
 
 **Tindak lanjut 30 September 2026:** [integrasi source release](2026-09-29-release-candidate-and-pooled-smoke.md#integrasi-source-ke-development--30-september-2026) dilakukan dengan memilih file backend yang identik, mempertahankan edit UI pengguna, dan menjaga linker hoisted yang dibutuhkan Metro mobile. Recovery P0-03 tetap terbuka.
 
+**Drill recovery 30 September 2026:** [snapshot production pada titik sebelum migrasi 0041 dipulihkan ke branch Neon terpisah](2026-09-20-postgres-integration-and-recovery.md#drill-pemulihan-historis-production--30-september-2026). Branch hasil restore memiliki 41 migrasi/tanpa kolom baru, sedangkan `main` tetap 42 migrasi/dengan kolom baru. Lima alokasi kategori valid. Retensi enam jam, data transaksi nonkosong, RPO/RTO, cutover aplikasi, dan lampiran eksternal masih gap P0-03.
+
 Baseline otomatis lulus untuk test tanpa database, lint, dan production build web. Audit menemukan **dua cacat otorisasi P0 yang direproduksi secara lokal**. Keduanya harus ditutup sebelum otorisasi dari Settings dapat dipercaya. Bukti integration/recovery terkini belum lengkap. Tenant kedua belum boleh diaktifkan berdasarkan kesiapan yang terbukti pada audit ini.
 
 Tidak ada perubahan runtime, migrasi, reset/seed database, deploy, atau transaksi bisnis dalam audit ini. Tiga perubahan UI milik workspace yang sudah ada sebelum audit tetap dipertahankan. Hasil di bawah berlaku pada working tree saat pemeriksaan, bukan klaim terhadap deployment tertentu.
@@ -118,13 +120,13 @@ Acceptance criteria:
 
 ## P0-03 — Bukti recovery produksi perlu diperbarui
 
-**Status:** target dan retensi cloud terverifikasi 21 September 2026; drill recovery masih terbuka.
+**Status:** target/retensi cloud terverifikasi; pemulihan historis ke branch terpisah lulus 30 September 2026. Bukti recovery operasional masih terbuka.
 
 **Gerbang:** sebelum menyatakan data proyek nyata terlindungi.
 
 **Penanggung jawab yang diusulkan:** operator infra bersama Owner/Finance.
 
-[Restore drill 28 Agustus](../guide/restore-drill.md) lulus mekanis dengan retensi enam jam dan 82 baris diperiksa. Inspeksi terbaru memastikan target live adalah `atria-erp-prod/main/neondb` dan retensinya tetap enam jam. Target minimal satu siklus rekonsiliasi penuh (tujuh hari) belum terpenuhi; PITR production juga belum diuji ke branch terisolasi.
+[Restore drill 28 Agustus](../guide/restore-drill.md) lulus mekanis dengan retensi enam jam dan 82 baris diperiksa pada database lama. [Drill production 30 September](2026-09-20-postgres-integration-and-recovery.md#drill-pemulihan-historis-production--30-september-2026) membuktikan pemulihan historis `atria-erp-prod/main/neondb` ke branch terisolasi tanpa mengubah `main`, tetapi data transaksi production masih kosong. Target minimal satu siklus rekonsiliasi penuh (tujuh hari), RPO/RTO dan cutover aplikasi belum terpenuhi.
 
 Acceptance criteria:
 

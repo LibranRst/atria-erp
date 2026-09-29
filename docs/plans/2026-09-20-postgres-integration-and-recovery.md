@@ -1,6 +1,6 @@
 # Verifikasi PostgreSQL dan recovery
 
-Dimulai: 20 September 2026. Diperbarui: 29 September 2026. Status: validasi PostgreSQL, migration production, test pooled, smoke preview dan cutover runtime production selesai; drill PITR cloud masih terbuka.
+Dimulai: 20 September 2026. Diperbarui: 30 September 2026. Status: validasi PostgreSQL, migration production, test pooled, smoke preview, cutover runtime production, dan drill pemulihan historis ke branch terpisah selesai; retensi serta simulasi cutover recovery masih terbuka.
 
 Melanjutkan [hardening izin efektif](2026-09-18-effective-permission-hardening.md) untuk P0-03/P0-04.
 
@@ -153,8 +153,20 @@ Hentikan urutan bila perintah gagal. Runner menolak container tanpa label audit 
 
 Runner menghasilkan `results.json` dan log per suite. Bukti sesi ini berada sementara di `/tmp/atria-postgres-audit-http-final`, `/tmp/atria-pg-provision42.log`, `/tmp/atria-pg-verify-fixed.log`, dan `/tmp/atria-pg-restore-invariants.log`; ringkasan permanen ada di dokumen ini.
 
+## Drill pemulihan historis production — 30 September 2026
+
+Target yang diverifikasi ulang: project Neon `atria-erp-prod` (`little-river-44246623`), branch `main` (`br-super-tree-azh1p78r`), database `neondb`. History retention saat drill masih **21.600 detik / 6 jam**; tidak ada snapshot terjadwal. Sebagai penanda waktu tanpa menulis ke database bisnis, dipakai migrasi 0041 yang sudah diterapkan beberapa jam sebelumnya.
+
+- Snapshot manual `prod-pre-0041-recovery-drill-20260930` (`snap-wild-silence-az8k410t`) dibuat dari `main` pada target **2026-09-29 14:30:00 UTC**. Neon menyelesaikan parent pada **14:29:49 UTC**, LSN `0/B455C30`. Snapshot dibuat **17:48:25 UTC**.
+- Snapshot dipulihkan dengan `finalize: false` ke branch baru `recovery-drill-pre-0041-20260930` (`br-green-smoke-azl7gnni`), siap sekitar **17:48:34 UTC**. Tidak ada restore ke branch `main`, pemindahan compute production, atau perubahan URL aplikasi.
+- Query read-only pada branch hasil restore menunjukkan **41 migration** dan kolom `rab_estimate_item.item_nature` **tidak ada**. Query yang sama pada `main` menunjukkan **42 migration** dan kolom **ada**. Ini membuktikan branch benar-benar berisi keadaan sebelum migrasi, bukan salinan kondisi terkini.
+- Keduanya memiliki **5** baris `project_budget_category` dan **0** pelanggaran alokasi kategori. Tabel bank, cash transaction, inventory, stock movement, dan vendor payment masing-masing masih **0** baris pada kedua branch. Jadi drill ini membuktikan pemulihan schema serta kelima alokasi, tetapi belum membuktikan pemulihan transaksi bisnis nonkosong; enam invariant aplikasi tidak dijalankan langsung pada branch hasil restore.
+- Compute khusus branch drill `ep-ancient-cherry-azrptstd` dinonaktifkan setelah verifikasi; statusnya `disabled=true`, `idle`. Snapshot dan branch disimpan sebagai bukti, belum dihapus. Endpoint production `ep-wispy-unit-az0r7nao` tetap terikat ke `main`.
+
+Waktu dari permintaan restore hingga branch siap teramati sekitar **5–10 detik** lewat connector; ini bukan RTO aplikasi, karena perubahan routing/deployment, login, dan lampiran eksternal tidak disimulasikan. Enam jam hanya membuktikan perjalanan waktu dalam jendela pendek. Target operasional tetap minimal **7 hari** untuk satu siklus rekonsiliasi; pilihan paket/retensi, snapshot terjadwal atau backup independen, RPO/RTO, dan prosedur recovery lampiran perlu diputuskan dan diuji tersendiri. Lihat [runbook serta catatan hasil](../guide/restore-drill.md#drill-production-30-september-2026).
+
 ## Yang belum ditutup
 
-- **P0-03 produksi:** target environment dan retensi aktual sudah terverifikasi. Retensi masih enam jam; RPO/RTO, drill PITR ke branch terisolasi, simulasi cutover, dan recovery lampiran eksternal belum terbukti. Jangan menganggap restore lokal sebagai kelulusan recovery produksi.
+- **P0-03 produksi:** pemulihan historis dari `main` ke branch terisolasi telah terbukti pada titik sebelum migrasi 0041. Retensi masih enam jam; RPO/RTO, pemulihan data transaksi nonkosong, simulasi cutover aplikasi, dan recovery lampiran eksternal belum terbukti. Jangan menganggap keberhasilan mekanis ini sebagai kelulusan recovery operasional.
 - **P0-04 cloud:** suite lokal serta 7 suite/62 test finance/material/auth pada pooled Neon lulus; migration 0041 sudah diterapkan pada `main`. [Cutover source/runtime production](2026-09-29-release-candidate-and-pooled-smoke.md#hasil-cutover-production) selesai: hardening live, URL runtime pooled, dan region Singapore. Pemeriksaan publik serta invariant sesudah cutover lulus. Browser/mobile acceptance dan load/p95 tetap bukti terpisah; production tidak dipakai untuk test posting finansial.
 - Sinkronisasi izin presentasi UI/mobile masih backlog terpisah; tidak ada perubahan UI oleh pekerjaan integrasi ini.

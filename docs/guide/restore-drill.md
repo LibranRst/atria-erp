@@ -4,6 +4,8 @@
 **Prasyarat #3** dari `docs/plans/2026-08-27-tenant-foundation.md`
 **Status:** dijalankan 2026-08-28 — **LULUS**, dengan satu peringatan (lihat Catatan hasil)
 
+> Catatan historis: prosedur `neonctl` di bawah mencatat latihan Agustus pada project/database lama. Untuk target production sekarang `atria-erp-prod/main/neondb`, lihat [drill 30 September 2026](#drill-production-30-september-2026). Jangan jalankan perintah lama dengan ID project tersebut sebagai asumsi target live.
+
 ## Kenapa ini ada
 
 Backup yang belum pernah diuji restore bukan backup — ia perasaan. Yang perlu
@@ -24,7 +26,7 @@ tidak ikut disentuh sedikit pun.
 ## Sebelum mulai
 
 Jalankan latihan ini terhadap database yang **akan benar-benar menyimpan data
-Polda** — bukan database lain yang kebetulan lebih aman. Yang diuji adalah
+bisnis Dekoria** — bukan database lain yang kebetulan lebih aman. Yang diuji adalah
 pengaturan retensi database itu sendiri, dan pengaturan itu tidak ikut berpindah.
 
 ## Langkah 1 — Nyalakan retensi riwayat (di console Neon)
@@ -34,7 +36,7 @@ akun.
 
 1. Buka project Atria di console Neon.
 2. Cari pengaturan **retensi riwayat** untuk project itu (Neon pernah menamainya
-   *history retention*, *restore window*, atau *PITR window* — labelnya berubah
+   _history retention_, _restore window_, atau _PITR window_ — labelnya berubah
    antar versi console, tetapi fungsinya satu: berapa jauh ke belakang restore
    masih bisa menjangkau).
 3. Naikkan ke jangkauan terpanjang yang diizinkan paket langganan kalian.
@@ -87,10 +89,10 @@ bunx neonctl@latest branches delete $B --project-id $P
 
 Perintah verifikasi menjalankan dua uji:
 
-| Uji | Lulus bila |
-| --- | --- |
-| **Perjalanan waktu** | Tabel `restore_drill_marker` **tidak ada**. Ketiadaannya membuktikan pemulihan benar-benar mundur, bukan menyalin keadaan sekarang. |
-| **Keutuhan data** | Keenam invarian di `lib/finance/ledger-invariants.ts` terpenuhi atas data hasil pemulihan, dan jumlah baris yang diperiksa lebih dari nol. |
+| Uji                  | Lulus bila                                                                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Perjalanan waktu** | Tabel `restore_drill_marker` **tidak ada**. Ketiadaannya membuktikan pemulihan benar-benar mundur, bukan menyalin keadaan sekarang.        |
+| **Keutuhan data**    | Keenam invarian di `lib/finance/ledger-invariants.ts` terpenuhi atas data hasil pemulihan, dan jumlah baris yang diperiksa lebih dari nol. |
 
 Keluar dengan kode 1 bila salah satu gagal.
 
@@ -114,19 +116,19 @@ pelaksanaan. Latihan yang tidak tercatat akan diperdebatkan enam bulan lagi.
 
 ## Catatan hasil
 
-| Butir | Isi |
-| --- | --- |
-| Tanggal latihan | 2026-08-28 |
-| Project | `atria-erp` (`rapid-mountain-50889409`), org `Dekoria` |
-| Database yang diuji | `atria_uat_guard` di branch `production` (`br-holy-frost-ao2muwah`) |
-| Retensi riwayat | **6 jam** (21600 detik) — maksimum paket Free, sudah mentok |
-| Jarak mundur restore | 6 menit |
-| Branch latihan | `restore-drill-2026-08-28` (`br-icy-flower-ao169ha0`), sudah dihapus |
-| Uji perjalanan waktu | ✅ Lulus — tabel penanda tidak ada di branch hasil restore |
-| Uji keutuhan data | ✅ Lulus — keenam invarian terpenuhi |
-| Baris diperiksa | 82 |
-| Lama seluruh proses | ± 2 menit, seluruhnya lewat `neonctl` |
-| Catatan | Penanda ditulis ke `neondb`, bukan ke `atria_uat_guard`, sehingga database yang menyimpan data tidak menerima satu pun tulisan selama latihan. Branch Neon mencakup seluruh database, jadi uji perjalanan waktu tetap sah. |
+| Butir                | Isi                                                                                                                                                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tanggal latihan      | 2026-08-28                                                                                                                                                                                                                 |
+| Project              | `atria-erp` (`rapid-mountain-50889409`), org `Dekoria`                                                                                                                                                                     |
+| Database yang diuji  | `atria_uat_guard` di branch `production` (`br-holy-frost-ao2muwah`)                                                                                                                                                        |
+| Retensi riwayat      | **6 jam** (21600 detik) — maksimum paket Free, sudah mentok                                                                                                                                                                |
+| Jarak mundur restore | 6 menit                                                                                                                                                                                                                    |
+| Branch latihan       | `restore-drill-2026-08-28` (`br-icy-flower-ao169ha0`), sudah dihapus                                                                                                                                                       |
+| Uji perjalanan waktu | ✅ Lulus — tabel penanda tidak ada di branch hasil restore                                                                                                                                                                 |
+| Uji keutuhan data    | ✅ Lulus — keenam invarian terpenuhi                                                                                                                                                                                       |
+| Baris diperiksa      | 82                                                                                                                                                                                                                         |
+| Lama seluruh proses  | ± 2 menit, seluruhnya lewat `neonctl`                                                                                                                                                                                      |
+| Catatan              | Penanda ditulis ke `neondb`, bukan ke `atria_uat_guard`, sehingga database yang menyimpan data tidak menerima satu pun tulisan selama latihan. Branch Neon mencakup seluruh database, jadi uji perjalanan waktu tetap sah. |
 
 ### Peringatan yang menyertai kelulusan ini
 
@@ -143,7 +145,7 @@ kemudian. Pada saat itu, titik pemulihannya sudah lama lewat.
 Retensi yang dibutuhkan minimal **satu siklus rekonsiliasi penuh: 7 hari**.
 Paket berbayar Neon menyediakan hingga 30 hari. Sampai itu dibeli, prasyarat #3
 berstatus **lulus secara mekanis, belum memadai secara operasional**, dan
-kelulusan ini tidak boleh dibaca sebagai "backup sudah aman untuk Polda".
+kelulusan ini tidak boleh dibaca sebagai "backup production sudah aman".
 
 ### Temuan sampingan yang perlu ditindaklanjuti
 
@@ -162,7 +164,7 @@ kelulusan ini tidak boleh dibaca sebagai "backup sudah aman untuk Polda".
 
 ## Kapan diulang
 
-- **Sebelum Polda go-live** — wajib, ini prasyarat #3.
+- **Sebelum penggunaan bisnis production** — wajib, ini prasyarat #3.
 - **Setelah setiap migrasi besar.** Migrasi 0035 menyentuh 61 tabel; migrasi RLS
   di Fase 3 akan menyentuh jumlah yang sama.
 - **Setiap kuartal**, atau setiap kali paket Neon berubah — retensi bisa ikut
@@ -170,3 +172,14 @@ kelulusan ini tidak boleh dibaca sebagai "backup sudah aman untuk Polda".
 - **Sebelum tenant kedua hidup.** Mulai saat itu, pemulihan yang gagal bukan lagi
   masalah internal Dekoria, melainkan kegagalan memenuhi janji ke pelanggan yang
   membayar.
+
+## Drill production 30 September 2026
+
+Target live saat ini adalah Neon `atria-erp-prod` (`little-river-44246623`) / `main` (`br-super-tree-azh1p78r`) / `neondb`, yang dilayani Vercel Production. Retensi historis terukur **6 jam** dan jadwal snapshot production kosong. Drill ini memakai perubahan schema migrasi 0041 sebagai penanda yang sudah ada; tidak membuat tabel penanda ataupun mengubah data bisnis.
+
+1. Buat snapshot manual dari `main` untuk **2026-09-29 14:30 UTC**, sebelum migrasi 0041, ketika timestamp masih berada di jendela enam jam. Snapshot `snap-wild-silence-az8k410t` bernama `prod-pre-0041-recovery-drill-20260930`; parent timestamp aktualnya 14:29:49 UTC (`0/B455C30`).
+2. Pulihkan snapshot ke **branch baru** dengan `finalize: false`: `recovery-drill-pre-0041-20260930` (`br-green-smoke-azl7gnni`). Branch siap sekitar sembilan detik setelah snapshot dibuat. Jangan gunakan finalisasi restore pada drill karena itu dapat memindahkan compute aplikasi ke data lama.
+3. Baca migration count dan metadata kolom pada kedua branch. Hasil: branch pemulihan **41** migrasi dan `item_nature` tidak ada; `main` **42** migrasi dan `item_nature` ada. Kedua branch memiliki lima alokasi budget tanpa pelanggaran rasio. Ledger, stock, dan pembayaran vendor masing-masing masih kosong.
+4. Nonaktifkan compute branch drill (`ep-ancient-cherry-azrptstd`) setelah pemeriksaan. Branch dan snapshot tetap disimpan untuk audit; keduanya belum dijadikan target deployment. Compute `main` dan domain aplikasi tetap pada branch production saat ini.
+
+**Status:** perjalanan waktu dan pemulihan schema pada target production **lulus secara mekanis**. Keutuhan transaksi nonkosong, waktu pemulihan aplikasi end-to-end, lampiran eksternal, dan kemampuan kembali tujuh hari **belum terbukti**. Sebelum go-live dengan transaksi nyata, tetapkan RPO/RTO, perluas jendela pemulihan minimal sepanjang satu siklus rekonsiliasi atau sediakan cadangan independen yang setara, lalu ulangi drill dengan fixture transaksi di branch terpisah. Snapshot manual ini adalah satu titik historis, bukan pengganti jadwal backup berkelanjutan.
