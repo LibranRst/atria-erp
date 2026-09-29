@@ -1,3 +1,4 @@
+import { actorCan } from "@/lib/auth/permissions";
 import "server-only";
 
 import { eq } from "drizzle-orm";
@@ -7,7 +8,7 @@ import { db } from "@/db";
 import { clientInvoice, project, projectRapItem, vendorBill } from "@/db/schema";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import type { Actor } from "@/server/actor";
-import { actorHasPermission } from "@atria/core/auth/permissions";
+
 import { resolveEffectiveProjectHealth } from "@atria/core/project/effective-health";
 import { buildProjectOverviewActions } from "@atria/core/project/project-overview";
 import {
@@ -46,7 +47,7 @@ export async function getProjectOverviewData(
   actor: Actor,
   projectId: string,
 ): Promise<ProjectOverviewPageData> {
-  if (!actorHasPermission(actor.roleName, "view:budget")) {
+  if (!actorCan(actor, "view:budget")) {
     return { status: "restricted" };
   }
 

@@ -1,7 +1,8 @@
 "use server";
+
+import { roleHasPermission } from "@/lib/auth/role-access";
 import { recordNotificationEvent } from "@/server/services/notification-events";
 
-import { actorHasPermission } from "@/lib/auth/permissions";
 import { revalidatePath } from "next/cache";
 import { eq, inArray } from "drizzle-orm";
 
@@ -44,6 +45,10 @@ export async function approveProjectChangeOrder(
   if (!user)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
+    const canEmergencyOverride = await roleHasPermission(
+      user.roleId ?? "",
+      "override:self_approval",
+    );
     const result = await db.transaction(async (tx) => {
       const changeOrder = await tx.query.projectChangeOrder.findFirst({
         where: eq(projectChangeOrder.id, validation.data.changeOrderId),
@@ -58,15 +63,11 @@ export async function approveProjectChangeOrder(
       }
       // `approve:rab` sudah menjadi gerbangnya; pemeriksaan nama peran di
       // bawahnya menyaring himpunan yang sama dan tidak pernah menolak apa pun.
-      const roleName = await assertRevisionProjectScope(user, changeOrder.projectId, "approve:rab");
+      await assertRevisionProjectScope(user, changeOrder.projectId, "approve:rab");
       const selfApproval = changeOrder.createdById === user.id;
       if (
         selfApproval &&
-        !(
-          actorHasPermission(roleName, "override:self_approval") &&
-          validation.data.emergencyOverride &&
-          validation.data.reason
-        )
+        !(canEmergencyOverride && validation.data.emergencyOverride && validation.data.reason)
       ) {
         throw new Error(
           "MAKER_CHECKER_REQUIRED: Change Order harus disetujui user lain. Owner dapat memakai emergency override dengan alasan.",

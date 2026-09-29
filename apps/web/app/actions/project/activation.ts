@@ -1,4 +1,6 @@
 "use server";
+
+import { roleNameHasPermission } from "@/lib/auth/role-access";
 import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { cookies } from "next/headers";
@@ -16,9 +18,8 @@ import {
   user as userTable,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { actorHasPermission, resolveRoleName } from "@/lib/auth/permissions";
+import { resolveRoleName } from "@/lib/auth/permissions";
 import { getProjectActivationReadiness } from "@atria/core/project/activation-readiness";
-import { getRoleDataScope } from "@atria/core/auth/permissions";
 import type { ActionResponse } from "@atria/core/types/action-response";
 
 const activateProjectSchema = z.object({
@@ -62,7 +63,7 @@ export async function activateProjectAction(
   }
 
   const roleName = await resolveRoleName(user.roleId ?? "");
-  if (!actorHasPermission(roleName, "activate:project")) {
+  if (!(await roleNameHasPermission(roleName, "activate:project"))) {
     return {
       success: false,
       error: {
@@ -86,7 +87,7 @@ export async function activateProjectAction(
         ? await tx.query.user.findFirst({
             where: eq(userTable.id, projectRecord.projectManagerId),
             columns: { id: true, isActive: true },
-            with: { role: { columns: { name: true } } },
+            with: { role: { columns: { name: true, dataScope: true } } },
           })
         : null;
 
@@ -111,7 +112,7 @@ export async function activateProjectAction(
       const readiness = getProjectActivationReadiness({
         projectStatus: projectRecord.status,
         projectManagerReady: Boolean(
-          projectManager?.isActive && getRoleDataScope(projectManager.role.name) === "ASSIGNED",
+          projectManager?.isActive && projectManager.role.dataScope === "ASSIGNED",
         ),
         budgetStatus: budgets.find((budget) => budget.status === "APPROVED")?.status,
         raps,

@@ -1,4 +1,4 @@
-import { actorHasPermission, getRoleDataScope } from "@atria/core/auth/permissions";
+import { roleNameHasPermission, getRoleDataScopeByName } from "@/lib/auth/role-access";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { auditLog } from "@/db/schema";
@@ -53,11 +53,11 @@ export async function enforceAssignedProject(
   user: ActivityUser,
   roleName: string,
 ): Promise<void> {
-  if (getRoleDataScope(roleName) === "ASSIGNED") {
+  if ((await getRoleDataScopeByName(roleName)) === "ASSIGNED") {
     await requireProject(projectId, user, roleName);
   }
 }
 
-export function canLinkProject(roleName: string): boolean {
-  return actorHasPermission(roleName, "view:project");
+export async function canLinkProject(roleName: string): Promise<boolean> {
+  return await roleNameHasPermission(roleName, "view:project");
 }

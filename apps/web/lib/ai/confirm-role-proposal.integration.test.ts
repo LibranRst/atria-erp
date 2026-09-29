@@ -25,7 +25,7 @@ const OWNER_ROLE = "00000000-0000-0000-0000-000000000001";
 const PROJECT_MANAGER_ROLE = "00000000-0000-0000-0000-000000000003";
 
 const RONALD = {
-  id: "33333333-3333-3333-3333-333333333330",
+  id: "11111111-1111-1111-1111-111111111111",
   roleId: OWNER_ROLE,
   email: "ronald@dekoria.com",
   name: "Ronald Wijaya",
@@ -128,7 +128,7 @@ describeIntegration("pagar konfirmasi usulan izin AI", () => {
     });
 
     // Tidak ada perubahan berarti: use-case mengembalikan `updated: false`.
-    expect(result.success).toBe(true);
+    expect(result).toMatchObject({ success: true });
     if (result.success) expect(result.data.alreadyConfirmed).toBe(false);
     expect(await holdsPermission(PROJECT_MANAGER_ROLE, "approve:cost")).toBe(false);
   });
@@ -145,7 +145,7 @@ describeIntegration("pagar konfirmasi usulan izin AI", () => {
       grant: ["view:profitability"],
       revoke: [],
     });
-    expect(result.success).toBe(true);
+    expect(result).toMatchObject({ success: true });
 
     const rows = await db.query.auditLog.findMany({
       where: eq(auditLog.targetId, PROJECT_MANAGER_ROLE),

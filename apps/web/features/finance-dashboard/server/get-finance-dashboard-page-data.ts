@@ -1,4 +1,5 @@
-import { actorHasPermission } from "@atria/core/auth/permissions";
+import { actorCan } from "@/lib/auth/permissions";
+
 import "server-only";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
@@ -23,14 +24,13 @@ export type FinanceDashboardPageData =
     };
 
 export async function getFinanceDashboardPageData(actor: Actor): Promise<FinanceDashboardPageData> {
-  const roleName = actor.roleName;
-  if (!actorHasPermission(roleName, "view:ledger")) {
+  if (!actorCan(actor, "view:ledger")) {
     return { status: "restricted" };
   }
 
   const [overview, setup] = await Promise.all([
     getFinanceDashboardOverviewUseCase(actor),
-    actorHasPermission(roleName, "manage:onboarding")
+    actorCan(actor, "manage:onboarding")
       ? getOrganizationSetupOverviewUseCase(actor)
       : Promise.resolve(null),
   ]);

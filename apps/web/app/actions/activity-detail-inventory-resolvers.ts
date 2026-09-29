@@ -87,7 +87,7 @@ export async function resolveStockMovement(
         : []),
     ],
     source:
-      row.project && canLinkProject(roleName)
+      row.project && (await canLinkProject(roleName))
         ? { label: "Lihat proyek", href: `/projects/${row.project.id}?tab=stok` }
         : row.vendorBill
           ? { label: "Buka tagihan", href: "/expenses?tab=vendor-bills" }
@@ -209,7 +209,7 @@ export async function resolveGoodsReceipt(
       fact("Catatan", textValue(row.note?.trim() || "Tidak ada catatan")),
       ...(row.reversalReason ? [fact("Alasan pembatalan", textValue(row.reversalReason))] : []),
     ],
-    source: canLinkProject(roleName)
+    source: (await canLinkProject(roleName))
       ? { label: "Lihat proyek", href: `/projects/${row.projectId}?tab=stok` }
       : { label: "Buka material", href: "/materials?tab=activity" },
     evidenceIncomplete: false,

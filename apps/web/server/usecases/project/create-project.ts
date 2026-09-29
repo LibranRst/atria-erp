@@ -1,4 +1,5 @@
-import { actorHasPermission } from "@atria/core/auth/permissions";
+import { actorCan } from "@/lib/auth/permissions";
+
 import "server-only";
 import { recordNotificationEvent } from "@/server/services/notification-events";
 
@@ -30,7 +31,7 @@ export async function createProjectUseCase(
     };
   }
 
-  if (!actorHasPermission(actor.roleName, "create:project")) {
+  if (!actorCan(actor, "create:project")) {
     return {
       success: false,
       error: {

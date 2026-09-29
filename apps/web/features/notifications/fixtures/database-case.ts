@@ -43,6 +43,12 @@ const otherId = crypto.randomUUID();
 const roleId = crypto.randomUUID();
 await database.insert(schema.tenant).values({ id: tenantId, name: "Test", slug: "test" });
 await database.insert(schema.role).values({ id: roleId, name: "OWNER", dataScope: "GLOBAL" });
+await database.insert(schema.rolePermission).values(
+  ["verify:cost", "decide:all_approvals", "approve:opening_inventory"].map((permissionKey) => ({
+    roleId,
+    permissionKey,
+  })),
+);
 await database.insert(schema.user).values([
   { id: ownerId, name: "Owner test", email: "owner@test.local", roleId },
   { id: otherId, name: "Other test", email: "other@test.local", roleId },
@@ -194,6 +200,24 @@ rows = await database
   .from(schema.notification)
   .where(eq(schema.notification.referenceId, referenceId));
 expect(rows.filter((row) => !row.isResolved).length).toBe(2);
+// Revoke-all harus menghentikan audience berbasis izin, termasuk role bawaan.
+await database.delete(schema.rolePermission).where(eq(schema.rolePermission.roleId, roleId));
+const revokedReferenceId = crypto.randomUUID();
+await database.transaction(async (tx) => {
+  await recordNotificationEvent(tx as unknown as Tx, { ...event, referenceId: revokedReferenceId });
+});
+expect(
+  await database
+    .select()
+    .from(schema.notification)
+    .where(eq(schema.notification.referenceId, revokedReferenceId)),
+).toEqual([]);
+await database.insert(schema.rolePermission).values(
+  ["verify:cost", "decide:all_approvals", "approve:opening_inventory"].map((permissionKey) => ({
+    roleId,
+    permissionKey,
+  })),
+);
 const rollbackId = crypto.randomUUID();
 try {
   await database.transaction(async (tx) => {

@@ -3,11 +3,11 @@ import { describe, expect, test } from "bun:test";
 import { canExposeExpenseBankAccounts, redactExpensePaymentBankData } from "./expenses-access";
 
 describe("Expenses bank-data boundary", () => {
-  test("only exposes bank accounts to Owner and Finance Admin", () => {
-    expect(canExposeExpenseBankAccounts("OWNER")).toBe(true);
-    expect(canExposeExpenseBankAccounts("FINANCE_ADMIN")).toBe(true);
-    expect(canExposeExpenseBankAccounts("PURCHASING")).toBe(false);
-    expect(canExposeExpenseBankAccounts("PROJECT_MANAGER")).toBe(false);
+  test("only exposes bank accounts with the effective permission", () => {
+    expect(canExposeExpenseBankAccounts(["view:bank_account"])).toBe(true);
+    expect(canExposeExpenseBankAccounts(["pay:cost", "view:bank_account"])).toBe(true);
+    expect(canExposeExpenseBankAccounts([])).toBe(false);
+    expect(canExposeExpenseBankAccounts(["pay:cost"])).toBe(false);
   });
 
   test("removes bank identity from non-finance payment payloads", () => {

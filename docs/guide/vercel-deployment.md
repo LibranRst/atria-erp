@@ -1,11 +1,17 @@
 # Deploy ke Vercel
 
-**Tanggal:** 2026-09-11
+**Diperbarui:** 2026-09-29
 **Terkait:** `docs/guide/notifications.md`, `docs/guide/provision-instance.md`
 
 Instance produksi: **https://atria-erp.vercel.app**
 Proyek Vercel: `atria-erp` (team `hyuzins-projects`), Root Directory `apps/web`, region fungsi `sin1`.
 Database: Neon project `atria-erp-prod` (branch `main`, `aws-ap-southeast-1`).
+
+Cutover 29 September: deployment live `dpl_HVGdmeHfuYWBa46c7QHNSvjneGZn`, pooled
+runtime `DATABASE_URL`, direct `DATABASE_URL_UNPOOLED`, dan fungsi `sin1` sudah
+diverifikasi. Secret production existing dipertahankan. Source release berada di
+managed checkout/branch lokal `codex/readiness-pooled-release`; integrasi ke working
+branch dikerjakan 30 September dengan mempertahankan kebutuhan linker Metro mobile.
 
 ## Bentuk deployment
 
@@ -52,6 +58,15 @@ Wajib diisi pada environment **Production**:
 
 `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED` harus `false` di produksi.
 
+Cutover 29 September 2026 mengalihkan `DATABASE_URL` Production ke endpoint
+pooled dan menyimpan koneksi direct sebagai `DATABASE_URL_UNPOOLED`. Sebanyak 62 test finance/material/auth sudah lulus melalui endpoint pooled
+pada database fixture branch audit. Probe read-only ke endpoint pooled production
+juga berhasil meski metadata `pooler_enabled=false`; flag itu sendiri bukan bukti
+endpoint tidak tersedia. Kandidat dan guard HTTP production sesudah cutover sudah
+diverifikasi; koneksi direct tetap untuk migration/backup. Preview umum tetap tanpa
+`DATABASE_URL` sampai tersedia database preview terisolasi dan aturan data/akses
+yang jelas. Beban representatif/p95 belum diukur.
+
 ## Database instance baru
 
 ```bash
@@ -69,9 +84,15 @@ di `/setup`, lalu jalankan `bun run db:check-invariants` terhadap database itu.
 
 ## Deploy
 
+Migration `0041_rab_item_nature` telah diterapkan ke `atria-erp-prod/main/neondb`
+pada 29 September 2026. Production memiliki 42 migration; kolom/default/index dan
+invariant sesudah commit sudah diverifikasi. Ini rollout schema saja; release code
+tetap harus membawa file migration dan journal yang sama. Bukti lengkap ada di
+[catatan rollout](../plans/2026-09-20-postgres-integration-and-recovery.md#rollout-migration-production--29-september-2026).
+
 ```bash
 # dari root repo
-npx vercel deploy --prod --yes
+npx vercel deploy --prod --yes --local-config apps/web/vercel.json --regions sin1
 ```
 
 Repo sudah terhubung ke GitHub (`vercel git connect`), tapi integrasi itu belum
@@ -89,6 +110,13 @@ Sampai salah satunya dipilih, `https://atria-erp.vercel.app` adalah hasil deploy
 CLI terakhir, dan hostname preview `atria-*.vercel.app` memuat commit terbaru.
 Jangan menunjuk production branch ke `main`: `main` tertinggal jauh di belakang
 `development`, sehingga rilis dari sana akan meregresi fitur yang sudah berjalan.
+
+Validasi CLI 61 pada 29 September: preview yang dijalankan dari root tanpa
+`--local-config`/`--regions` memakai `iad1`, meskipun file aplikasi menyebut `sin1`.
+Sebutkan konfigurasi aplikasi dan region secara eksplisit pada CLI deployment.
+Verifikasi metadata deployment serta header respons API setelah deploy; lokasi
+build remote sendiri bukan bukti region eksekusi fungsi. Preview audit memakai
+database fixture, sehingga jangan langsung mempromosikannya ke production.
 
 ## Penjadwalan worker notifikasi
 

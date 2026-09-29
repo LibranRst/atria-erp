@@ -1,6 +1,5 @@
 import "server-only";
 
-import { resolveRoleName } from "@/lib/auth/permissions";
 import { getRoleAccess } from "@/lib/auth/role-access";
 import type { PermissionKey, RoleDataScope } from "@atria/core/auth/permissions";
 import { getServerSession, getSessionFromHeaders } from "@/lib/server/session";
@@ -69,13 +68,14 @@ async function toActor(
   if (user.isActive === false) return null;
 
   const access = await getRoleAccess(user.roleId);
+  if (!access) return null;
 
   return {
     userId: user.id,
     roleId: user.roleId,
-    roleName: access?.roleName ?? (await resolveRoleName(user.roleId)),
-    permissions: access?.permissions ?? [],
-    dataScope: access?.dataScope ?? "NONE",
+    roleName: access.roleName,
+    permissions: access.permissions,
+    dataScope: access.dataScope,
     name: user.name ?? "",
     email: user.email ?? "",
     image: user.image ?? null,

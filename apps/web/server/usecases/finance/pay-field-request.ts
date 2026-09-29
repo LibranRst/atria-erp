@@ -1,10 +1,11 @@
+import { actorCan } from "@/lib/auth/permissions";
 import { recordNotificationEvent } from "@/server/services/notification-events";
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { approval, bankAccount, cashTransaction, projectCost } from "@/db/schema";
+import { approval, bankAccount, cashTransaction, project, projectCost } from "@/db/schema";
 import {
   ensureCanonicalExpenseForProjectCost,
   syncProjectBudgetCategory,
@@ -15,7 +16,7 @@ import {
   mapPayFieldRequestError,
   writeFieldRequestAuditTx,
 } from "@/app/actions/finance/field-request-utils";
-import { actorHasPermission } from "@atria/core/auth/permissions";
+
 import type { ActionResponse } from "@atria/core/types/action-response";
 import type { PayFieldRequestInput } from "@atria/core/validations/finance";
 
@@ -34,7 +35,7 @@ export async function payFieldRequestUseCase(
 ): Promise<ActionResponse<{ costId: string; nextBalance: number }>> {
   const { projectCostId, bankAccountId, referenceNumber } = input;
 
-  if (!actorHasPermission(actor.roleName, "pay:cost")) {
+  if (!actorCan(actor, "pay:cost") || actor.dataScope === "NONE") {
     return {
       success: false,
       error: {
@@ -54,6 +55,14 @@ export async function payFieldRequestUseCase(
 
       if (!cost) {
         throw new Error("PROJECT_COST_NOT_FOUND");
+      }
+
+      if (actor.dataScope === "ASSIGNED") {
+        const assignedProject = await tx.query.project.findFirst({
+          columns: { id: true },
+          where: and(eq(project.id, cost.projectId), eq(project.projectManagerId, actor.userId)),
+        });
+        if (!assignedProject) throw new Error("UNAUTHORIZED: Proyek di luar penugasan.");
       }
 
       if (cost.status === "PAID") {
@@ -172,6 +181,9 @@ export async function payFieldRequestUseCase(
       data: { costId: result.costId, nextBalance: result.nextBalance },
     };
   } catch (error: unknown) {
+    if (error instanceof Error && error.message.startsWith("UNAUTHORIZED:")) {
+      return { success: false, error: { code: "FORBIDDEN", message: "Akses proyek ditolak." } };
+    }
     return mapPayFieldRequestError(error);
   }
 }

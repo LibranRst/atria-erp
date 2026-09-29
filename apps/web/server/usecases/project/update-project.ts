@@ -1,10 +1,11 @@
+import { actorCan } from "@/lib/auth/permissions";
 import "server-only";
 
 import { db } from "@/db";
 import { auditLog, project, projectBudgets } from "@/db/schema";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import type { Actor } from "@/server/actor";
-import { actorHasPermission } from "@atria/core/auth/permissions";
+
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { updateProjectSchema, type UpdateProjectInput } from "@atria/core/validations/project";
 import { eq } from "drizzle-orm";
@@ -29,7 +30,7 @@ export async function updateProjectUseCase(
     };
   }
 
-  if (!actorHasPermission(actor.roleName, "update:budget")) {
+  if (!actorCan(actor, "update:budget")) {
     return {
       success: false,
       error: {

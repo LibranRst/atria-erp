@@ -1,4 +1,4 @@
-import { actorHasPermission } from "@atria/core/auth/permissions";
+import { roleNameHasPermission, getRoleDataScopeByName } from "@/lib/auth/role-access";
 import { db } from "@/db";
 import {
   auditLog,
@@ -86,12 +86,12 @@ export async function assertProjectScopeForMaterialAction(
   roleName: string,
 ): Promise<void> {
   if (!projectId) return;
-  /*
-   * Peran yang memindahkan stok bekerja lintas proyek — gudang bukan milik satu
-   * proyek — sehingga pemeriksaan akses proyek memang dilewati untuk mereka.
-   * Itu properti pekerjaannya, dinyatakan sebagai izin, bukan daftar nama peran.
-   */
-  if (!actorHasPermission(roleName, "create:stock_movement")) {
+  // Purchasing mengoperasikan gudang lintas proyek melalui izin domain,
+  // tanpa memperoleh akses umum proyek. Scope ASSIGNED tetap membatasi PM.
+  if (
+    (await getRoleDataScopeByName(roleName)) === "ASSIGNED" ||
+    !(await roleNameHasPermission(roleName, "create:stock_movement"))
+  ) {
     await assertProjectAccess(projectId, userId, roleName);
   }
   await assertProjectIsOperational(projectId);

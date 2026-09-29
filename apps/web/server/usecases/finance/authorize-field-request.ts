@@ -1,6 +1,7 @@
+import { actorCan } from "@/lib/auth/permissions";
 import "server-only";
 
-import { actorHasPermission, type PermissionKey } from "@atria/core/auth/permissions";
+import { type PermissionKey } from "@atria/core/auth/permissions";
 import type { ActionResponse } from "@atria/core/types/action-response";
 
 import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
@@ -23,7 +24,7 @@ export async function authorizeFieldRequestActor({
   readonly permission: PermissionKey;
   readonly projectId?: string;
 }): Promise<AuthorizationResult> {
-  if (!actorHasPermission(actor.roleName, permission)) {
+  if (!actorCan(actor, permission)) {
     return {
       success: false,
       error: { code: "FORBIDDEN", message: "Akses ditolak." },

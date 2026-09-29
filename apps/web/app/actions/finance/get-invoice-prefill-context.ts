@@ -1,4 +1,5 @@
 "use server";
+import { getRoleDataScopeByName } from "@/lib/auth/role-access";
 
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
@@ -8,7 +9,6 @@ import { db } from "@/db";
 import { project } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { getRoleDataScope } from "@atria/core/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
@@ -24,9 +24,9 @@ const getInvoicePrefillSchema = z.object({
  * Mengambil konteks finansial proyek dan menghasilkan saran isian otomatis (prefill)
  * untuk pembuatan invoice klien baru (Opsi 1: Smart Auto-Fill).
  */
-export async function getInvoicePrefillContext(
-  input: { projectId: string },
-): Promise<ActionResponse<InvoicePrefillResult>> {
+export async function getInvoicePrefillContext(input: {
+  projectId: string;
+}): Promise<ActionResponse<InvoicePrefillResult>> {
   const validation = getInvoicePrefillSchema.safeParse(input);
   if (!validation.success) {
     return {
@@ -65,7 +65,7 @@ export async function getInvoicePrefillContext(
     }
 
     const userRoleName = await resolveRoleName(session.user.roleId);
-    if (getRoleDataScope(userRoleName) === "ASSIGNED") {
+    if ((await getRoleDataScopeByName(userRoleName)) === "ASSIGNED") {
       await assertProjectAccess(projectId, session.user.id, userRoleName);
     }
 

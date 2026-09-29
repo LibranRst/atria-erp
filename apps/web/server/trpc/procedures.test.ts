@@ -67,7 +67,7 @@ describe("tRPC procedure guards", () => {
 
   test("menolak peran tanpa izin yang diminta", async () => {
     const error = await expectTRPCError(
-      callerFor({ ...baseActor, roleName: "PROJECT_MANAGER" }).permissioned(),
+      callerFor({ ...baseActor, roleName: "PROJECT_MANAGER", permissions: [] }).permissioned(),
     );
 
     expect(error.code).toBe("FORBIDDEN");
@@ -76,5 +76,28 @@ describe("tRPC procedure guards", () => {
 
   test("meloloskan peran yang memiliki izin", async () => {
     await expect(callerFor(baseActor).permissioned()).resolves.toBe("ok");
+  });
+
+  test("pencabutan izin role bawaan berlaku pada request berikutnya", async () => {
+    await expect(callerFor(baseActor).permissioned()).resolves.toBe("ok");
+    await expect(
+      callerFor({ ...baseActor, permissions: ["view:cost"] }).permissioned(),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  test("izin role kustom berasal dari permissions, bukan nama", async () => {
+    await expect(
+      callerFor({
+        ...baseActor,
+        roleName: "CUSTOM_FINANCE",
+        permissions: ["pay:cost"],
+      }).permissioned(),
+    ).resolves.toBe("ok");
+  });
+
+  test("aktor nonaktif tidak boleh melewati guard", async () => {
+    await expect(callerFor({ ...baseActor, isActive: false }).guarded()).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+    });
   });
 });

@@ -1,10 +1,10 @@
+import { actorCan } from "@/lib/auth/permissions";
 import "server-only";
 
 import { db } from "@/db";
 import { project } from "@/db/schema";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import type { Actor } from "@/server/actor";
-import { getRoleDataScope, actorHasPermission } from "@atria/core/auth/permissions";
 import type { ProjectItem } from "@atria/core/types/projects";
 import type { ProjectFormBootstrapInput } from "@atria/core/validations/project";
 import { eq } from "drizzle-orm";
@@ -60,10 +60,10 @@ export async function getProjectFormBootstrap(
   actor: Actor,
   input: ProjectFormBootstrapInput,
 ): Promise<ProjectFormBootstrapData> {
-  const canCreate = actorHasPermission(actor.roleName, "create:project");
-  const canUpdate = actorHasPermission(actor.roleName, "update:budget");
+  const canCreate = actorCan(actor, "create:project");
+  const canUpdate = actorCan(actor, "update:budget");
 
-  if (!actorHasPermission(actor.roleName, "view:budget")) return { status: "restricted" };
+  if (!actorCan(actor, "view:budget")) return { status: "restricted" };
   if (input.projectId && !canUpdate) return { status: "restricted" };
 
   if (input.projectId) {
@@ -81,7 +81,7 @@ export async function getProjectFormBootstrap(
     }),
     db.query.user.findMany({
       columns: { id: true, isActive: true, name: true },
-      with: { role: { columns: { name: true } } },
+      with: { role: { columns: { name: true, dataScope: true } } },
       orderBy: (table, { asc }) => [asc(table.name)],
     }),
     input.projectId
@@ -118,7 +118,7 @@ export async function getProjectFormBootstrap(
         (candidate) =>
           // Kandidat PM adalah pemegang peran bercakupan tertugas — properti
           // peran, bukan namanya, sehingga peran kustom ikut memenuhi syarat.
-          (candidate.isActive && getRoleDataScope(candidate.role.name) === "ASSIGNED") ||
+          (candidate.isActive && candidate.role.dataScope === "ASSIGNED") ||
           candidate.id === projectRecord?.projectManagerId,
       )
       .map(({ id, name }) => ({ id, name })),

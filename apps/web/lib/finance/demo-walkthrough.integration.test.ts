@@ -222,7 +222,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
 
     const result = await payFieldRequest(COST_1050, KAS_BUDI, "DEMO-EXP-1050");
 
-    expect(result.success).toBe(true);
+    expect(result).toMatchObject({ success: true });
     expect(await balance(KAS_BUDI)).toBe("13100000.00");
   });
 
@@ -238,12 +238,12 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       notes: "Disetujui untuk walkthrough demo.",
       emergencyOverride: false,
     });
-    expect(approved.success).toBe(true);
+    expect(approved).toMatchObject({ success: true });
 
     actAs(LISA);
     const paid = await payFieldRequest(COST_5000, KAS_BUDI, "DEMO-EXP-5000");
 
-    expect(paid.success).toBe(true);
+    expect(paid).toMatchObject({ success: true });
     expect(await balance(KAS_BUDI)).toBe("8100000.00");
   });
 
@@ -261,12 +261,12 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       notes: "Perbaikan waterproofing disetujui.",
       emergencyOverride: false,
     });
-    expect(approved.success).toBe(true);
+    expect(approved).toMatchObject({ success: true });
 
     actAs(LISA);
     const paid = await payFieldRequest(COST_6200, MANDIRI, "DEMO-EXP-6200");
 
-    expect(paid.success).toBe(true);
+    expect(paid).toMatchObject({ success: true });
     expect(await balance(MANDIRI)).toBe("493800000.00");
   });
 
@@ -281,7 +281,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       bankAccountId: BCA,
     });
 
-    expect(result.success).toBe(true);
+    expect(result).toMatchObject({ success: true });
     expect(await balance(BCA)).toBe("651000000.00");
 
     const bill = await db.query.vendorBill.findFirst({
@@ -304,7 +304,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
 
     actAs(RONALD);
     const approval = await approveVendorPayment(PAY_10JT, "Disetujui Owner.", "APPROVED", false);
-    expect(approval.success).toBe(true);
+    expect(approval).toMatchObject({ success: true });
 
     actAs(LISA);
     const paid = await payVendorBill({
@@ -313,7 +313,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       bankAccountId: BCA,
     });
 
-    expect(paid.success).toBe(true);
+    expect(paid).toMatchObject({ success: true });
     expect(await balance(BCA)).toBe("641000000.00");
   });
 
@@ -329,7 +329,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       referenceNumber: "DEMO-CLIENT-200M",
     });
 
-    expect(result.success).toBe(true);
+    expect(result).toMatchObject({ success: true });
     expect(await balance(BCA)).toBe("841000000.00");
 
     const invoice = await db.query.clientInvoice.findFirst({
@@ -366,7 +366,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       referenceNumber: "DEMO-TRANSFER-5M",
     });
 
-    expect(result.success).toBe(true);
+    expect(result).toMatchObject({ success: true });
     expect(await balance(BCA)).toBe("836000000.00");
     expect(await balance(KAS_BUDI)).toBe("13100000.00");
   });
@@ -380,7 +380,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       cashTransactionId: TX_850,
       reason: "Menunggu konfirmasi tanggal dari kasir proyek.",
     });
-    expect(marked.success).toBe(true);
+    expect(marked).toMatchObject({ success: true });
 
     const flagged = await db.query.cashTransaction.findFirst({
       where: eq(cashTransaction.id, TX_850),
@@ -389,7 +389,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
     expect(await balance(KAS_BUDI)).toBe(before);
 
     const cleared = await clearReconciliationException({ cashTransactionId: TX_850 });
-    expect(cleared.success).toBe(true);
+    expect(cleared).toMatchObject({ success: true });
   });
 
   it("10.1 refuses an exception reason shorter than ten characters", async () => {
@@ -521,7 +521,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       emergencyOverride: false,
     });
 
-    expect(result.success).toBe(true);
+    expect(result).toMatchObject({ success: true });
     const batch = await db.query.inventoryOpeningBatch.findFirst({
       where: eq(inventoryOpeningBatch.id, OPB_PENDING),
     });
@@ -541,7 +541,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       quantity: 2,
       note: "Reservasi tambahan walkthrough demo.",
     });
-    expect(reserved.success).toBe(true);
+    expect(reserved).toMatchObject({ success: true });
     // Reserve hanya mengunci: stok fisik tidak bergerak.
     expect((await stock()).current).toBe(opening.current);
     expect(Number((await stock()).reserved)).toBe(Number(opening.reserved) + 2);
@@ -553,7 +553,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       quantity: 2,
       note: "Pemakaian walkthrough demo.",
     });
-    expect(used.success).toBe(true);
+    expect(used).toMatchObject({ success: true });
     expect(Number((await stock()).current)).toBe(Number(opening.current) - 2);
     expect(Number((await stock()).reserved)).toBe(Number(opening.reserved));
 
@@ -564,7 +564,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       quantity: 1,
       note: "Pengembalian sisa walkthrough demo.",
     });
-    expect(returned.success).toBe(true);
+    expect(returned).toMatchObject({ success: true });
     expect(Number((await stock()).current)).toBe(Number(opening.current) - 1);
 
     const wasted = await wasteMaterialForProject({
@@ -574,7 +574,7 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
       quantity: 1,
       note: "Material rusak saat pemotongan walkthrough demo.",
     });
-    expect(wasted.success).toBe(true);
+    expect(wasted).toMatchObject({ success: true });
     expect(Number((await stock()).current)).toBe(Number(opening.current) - 2);
 
     expect(await cashTransactionCount()).toBe(cashBefore);
@@ -613,13 +613,13 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
     actAs(RONALD);
 
     const senopati = await getProjectClosingChecklist(SENOPATI);
-    expect(senopati.success).toBe(true);
+    expect(senopati).toMatchObject({ success: true });
     if (!senopati.success) throw new Error("unreachable");
     expect(senopati.data.blockers).toEqual([]);
     expect(senopati.data.canComplete).toBe(true);
 
     const menteng = await getProjectClosingChecklist(MENTENG);
-    expect(menteng.success).toBe(true);
+    expect(menteng).toMatchObject({ success: true });
     if (!menteng.success) throw new Error("unreachable");
     expect(menteng.data.canComplete).toBe(false);
     expect(menteng.data.blockers.length).toBeGreaterThan(0);

@@ -1,17 +1,12 @@
 import "server-only";
 
 import { cache } from "react";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import { role } from "@/db/schema";
 import { getAllCatalogPermissionKeys } from "@atria/core/auth/permission-catalog";
-import {
-  getRoleDataScope as getSeedRoleDataScope,
-  ROLE_PERMISSIONS,
-  type PermissionKey,
-  type RoleDataScope,
-} from "@atria/core/auth/permissions";
+import { type PermissionKey, type RoleDataScope } from "@atria/core/auth/permissions";
 
 export type RoleAccess = {
   readonly roleId: string;
@@ -32,12 +27,8 @@ function isDataScope(value: string): value is RoleDataScope {
  * basi tepat ketika ketepatannya paling penting, yaitu sesaat setelah Owner
  * mencabutnya.
  *
- * **Cadangan ke matriks kode** dipakai ketika peran belum punya satu pun baris
- * izin — keadaan database yang belum menjalankan migrasi seed. Tanpa cadangan
- * itu, menjalankan aplikasi terhadap database lama akan menampilkan setiap
- * pengguna sebagai "peran tanpa izin", yang tampak seperti kerusakan data alih-alih
- * migrasi yang tertinggal. Peran yang memang sengaja dikosongkan izinnya oleh
- * Owner bukan kasus ini: ia tetap punya baris di tabel, hanya nol.
+ * Daftar kosong adalah pencabutan semua izin, bukan permintaan fallback seed.
+ * Instalasi lama harus menjalankan migrasi permission sebelum menerima request.
  */
 export const getRoleAccess = cache(async (roleId: string): Promise<RoleAccess | null> => {
   try {
@@ -48,16 +39,13 @@ export const getRoleAccess = cache(async (roleId: string): Promise<RoleAccess | 
     if (!record) return null;
 
     const roleName = record.name.toUpperCase();
-    const seeded = ROLE_PERMISSIONS[roleName] ?? [];
     const storedKeys = record.permissions.map((row) => row.permissionKey as PermissionKey);
 
     return {
       roleId: record.id,
       roleName,
-      permissions: record.permissions.length > 0 ? storedKeys : seeded,
-      dataScope: isDataScope(record.dataScope)
-        ? record.dataScope
-        : getSeedRoleDataScope(roleName),
+      permissions: storedKeys,
+      dataScope: isDataScope(record.dataScope) ? record.dataScope : "NONE",
     };
   } catch (error) {
     console.error("Gagal membaca akses peran dari database:", error);
@@ -96,25 +84,36 @@ export async function getRoleDataScopeFromDb(roleId: string): Promise<RoleDataSc
  * akan menjawab "NONE" untuk setiap peran yang tidak dikenal kode, dan peran
  * buatan Owner akan selalu melihat nol proyek.
  */
-export const getRoleDataScopeByName = cache(async (roleName: string): Promise<RoleDataScope> => {
-  const normalized = roleName.toUpperCase();
+export const getRoleAccessByName = cache(async (roleName: string): Promise<RoleAccess | null> => {
+  const normalized = roleName.trim().toUpperCase();
+  if (!normalized) return null;
   try {
-    const record = await db.query.role.findFirst({
-      where: eq(role.name, normalized.toLowerCase()),
-      columns: { dataScope: true },
+    const records = await db.query.role.findMany({
+      where: inArray(role.name, [normalized, normalized.toLowerCase()]),
+      columns: { id: true },
     });
-    if (record && isDataScope(record.dataScope)) return record.dataScope;
-
-    const byUpper = await db.query.role.findFirst({
-      where: eq(role.name, normalized),
-      columns: { dataScope: true },
-    });
-    if (byUpper && isDataScope(byUpper.dataScope)) return byUpper.dataScope;
+    // Nama ambigu tidak boleh memilih role dengan hak yang lebih tinggi.
+    if (records.length !== 1) return null;
+    return getRoleAccess(records[0].id);
   } catch (error) {
-    console.error("Gagal membaca cakupan peran dari database:", error);
+    console.error("Gagal membaca akses peran dari database:", error);
+    return null;
   }
-  return getSeedRoleDataScope(normalized);
 });
+
+export async function roleNameHasPermission(
+  roleName: string | null | undefined,
+  permission: PermissionKey,
+): Promise<boolean> {
+  if (!roleName) return false;
+  const access = await getRoleAccessByName(roleName);
+  return access?.permissions.includes(permission) ?? false;
+}
+
+export async function getRoleDataScopeByName(roleName: string): Promise<RoleDataScope> {
+  const access = await getRoleAccessByName(roleName);
+  return access?.dataScope ?? "NONE";
+}
 
 /**
  * Daftar seluruh kunci izin yang dikenal kode.

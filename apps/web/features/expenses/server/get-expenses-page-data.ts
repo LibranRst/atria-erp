@@ -1,3 +1,4 @@
+import { actorCan } from "@/lib/auth/permissions";
 import { getApprovalThresholds } from "@/lib/finance/approval-thresholds";
 import { thresholdCentsToRupiah } from "@atria/core/finance/approval-thresholds";
 import "server-only";
@@ -24,7 +25,7 @@ import type {
   VendorListVendor,
 } from "@atria/core/types/expenses";
 import { getPendingApprovalDetails } from "@/lib/finance/approval-details";
-import { actorHasPermission, getRoleDataScope } from "@atria/core/auth/permissions";
+
 import type { Actor } from "@/server/actor";
 import {
   canExposeExpenseBankAccounts,
@@ -80,18 +81,18 @@ export async function getExpensesPageData(actor: Actor): Promise<ExpensesPageDat
    * lapangan — itulah kenapa daftar biayanya kosong, dan sekarang alasannya
    * tertulis alih-alih tersembunyi di balik satu nama peran.
    */
-  const isScopedToOwnWork = getRoleDataScope(roleName) === "ASSIGNED";
-  const isFinanceOperator = canExposeExpenseBankAccounts(roleName);
-  const canViewCosts = actorHasPermission(roleName, "view:cost");
-  const canViewVendorBills = actorHasPermission(roleName, "view:vendor_bill");
+  const isScopedToOwnWork = actor.dataScope === "ASSIGNED";
+  const isFinanceOperator = canExposeExpenseBankAccounts(actor.permissions);
+  const canViewCosts = actor.dataScope !== "NONE" && actorCan(actor, "view:cost");
+  const canViewVendorBills = actorCan(actor, "view:vendor_bill");
   if (!canViewCosts && !canViewVendorBills) return { status: "restricted" };
 
   const isPM = isScopedToOwnWork;
-  const costFilter = isScopedToOwnWork
-    ? eq(projectCost.requestedById, actor.userId)
-    : canViewCosts
-      ? undefined
-      : eq(projectCost.id, "00000000-0000-0000-0000-000000000000");
+  const costFilter = !canViewCosts
+    ? eq(projectCost.id, "00000000-0000-0000-0000-000000000000")
+    : isScopedToOwnWork
+      ? eq(projectCost.requestedById, actor.userId)
+      : undefined;
 
   const costsData = await db.query.projectCost.findMany({
     where: costFilter,
@@ -112,10 +113,14 @@ export async function getExpensesPageData(actor: Actor): Promise<ExpensesPageDat
     orderBy: [desc(projectCost.createdAt)],
   });
 
-  let vendorBillFilter: SQL | undefined;
-  let vendorPaymentFilter: SQL | undefined;
+  let vendorBillFilter: SQL | undefined = canViewVendorBills
+    ? undefined
+    : eq(vendorBill.id, "00000000-0000-0000-0000-000000000000");
+  let vendorPaymentFilter: SQL | undefined = canViewVendorBills
+    ? undefined
+    : eq(vendorPayment.id, "00000000-0000-0000-0000-000000000000");
 
-  if (isPM) {
+  if (isPM && canViewVendorBills) {
     const pmProjects = await db.query.project.findMany({
       where: eq(project.projectManagerId, actor.userId),
       columns: { id: true },
@@ -312,7 +317,7 @@ export async function getExpensesPageData(actor: Actor): Promise<ExpensesPageDat
 
   // Hitungan ini adalah "berapa yang menunggu keputusan Anda", jadi ia
   // mengikuti hak memutuskan seluruh antrean, bukan sekadar melihatnya.
-  const pendingApprovalsCount = actorHasPermission(roleName, "decide:all_approvals")
+  const pendingApprovalsCount = actorCan(actor, "decide:all_approvals")
     ? (await getPendingApprovalDetails()).length
     : 0;
 

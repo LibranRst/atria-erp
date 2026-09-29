@@ -1,7 +1,7 @@
 "use server";
+
 import { recordNotificationEvent } from "@/server/services/notification-events";
 
-import { actorHasPermission } from "@atria/core/auth/permissions";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { and, eq, inArray } from "drizzle-orm";
@@ -18,7 +18,7 @@ import {
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
+import { assertProjectScopeForMaterialAction } from "./inventory-utils";
 import { assertOperationalStockReadiness } from "@/lib/material/operational-readiness";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { createGoodsReceiptSchema } from "@atria/core/validations/workflow-governance";
@@ -49,11 +49,7 @@ export async function postGoodsReceipt(input: unknown): Promise<ActionResponse<G
     await assertPermission(user, "create:stock_movement");
     await assertOperationalStockReadiness();
     const roleName = await resolveRoleName(user.roleId ?? "");
-    // Lihat catatan yang sama di `inventory-utils.ts`.
-    if (!actorHasPermission(roleName, "create:stock_movement")) {
-      await assertProjectAccess(validation.data.projectId, user.id, roleName);
-    }
-    await assertProjectIsOperational(validation.data.projectId);
+    await assertProjectScopeForMaterialAction(validation.data.projectId, user.id, roleName);
     const posted = await db.transaction(async (tx) => {
       const lockedBill = validation.data.vendorBillId
         ? (

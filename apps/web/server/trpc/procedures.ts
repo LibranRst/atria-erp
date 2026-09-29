@@ -1,7 +1,7 @@
 import "server-only";
 
 import { publicProcedure, TRPCError } from "@/server/trpc/init";
-import { actorHasPermission } from "@atria/core/auth/permissions";
+import { actorCan } from "@/lib/auth/permissions";
 import {
   canUseTemporaryPasswordDuringDeveloperSimulation,
   isDeveloperAccountSimulationEnabled,
@@ -20,13 +20,13 @@ import {
  */
 export const protectedProcedure = publicProcedure
   .use(({ ctx, next }) => {
-    if (!ctx.actor) {
+    if (!ctx.actor || !ctx.actor.isActive) {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "Sesi tidak valid." });
     }
     return next({ ctx: { ...ctx, actor: ctx.actor } });
   })
   .use(({ ctx, meta, next }) => {
-    if (meta?.permission && !actorHasPermission(ctx.actor!.roleName, meta.permission)) {
+    if (meta?.permission && !actorCan(ctx.actor!, meta.permission)) {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: `Peran ${ctx.actor!.roleName} tidak memiliki izin ${meta.permission}`,

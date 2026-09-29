@@ -1,3 +1,4 @@
+import { actorCan } from "@/lib/auth/permissions";
 import { recordNotificationEvent } from "@/server/services/notification-events";
 import "server-only";
 
@@ -5,7 +6,7 @@ import { db } from "@/db";
 import { auditLog, project, user } from "@/db/schema";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import type { Actor } from "@/server/actor";
-import { actorHasPermission } from "@atria/core/auth/permissions";
+
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   assignProjectManagerSchema,
@@ -35,7 +36,7 @@ export async function assignProjectManagerUseCase(
     };
   }
 
-  if (!actorHasPermission(actor.roleName, "create:project")) {
+  if (!actorCan(actor, "create:project")) {
     return {
       success: false,
       error: {

@@ -4,7 +4,6 @@ import { enqueueNotificationDeliveries } from "./notification-delivery";
 import { db } from "@/db";
 import { notification, project, role, rolePermission, tenantMember, user } from "@/db/schema";
 import { INSTANCE_TENANT_ID } from "@/db/schema/tenant-constants";
-import { ROLE_PERMISSIONS, getRoleDataScope } from "@atria/core/auth/permissions";
 import { and, eq, like, ne, or } from "drizzle-orm";
 import { notificationDestination } from "@atria/core/notifications/types";
 import type { NotificationEvent } from "@atria/core/notifications/events";
@@ -75,10 +74,8 @@ export async function recordNotificationEvent(
     const role = roles.find((entry) => entry.id === candidate.roleId);
     const access = role
       ? {
-          permissions: role.permissions.length
-            ? role.permissions.map((entry) => entry.permissionKey)
-            : (ROLE_PERMISSIONS[role.name.toUpperCase()] ?? []),
-          dataScope: role.dataScope ?? getRoleDataScope(role.name),
+          permissions: role.permissions.map((entry) => entry.permissionKey),
+          dataScope: role.dataScope ?? "NONE",
         }
       : null;
     if (!access || (event.permission && !access.permissions.includes(event.permission))) continue;
@@ -104,9 +101,7 @@ export async function recordNotificationEvent(
       delegatedPermission &&
       access.permissions.includes("decide:all_approvals") &&
       roles.some((entry) => {
-        const permissions = entry.permissions.length
-          ? entry.permissions.map((permission) => permission.permissionKey)
-          : (ROLE_PERMISSIONS[entry.name.toUpperCase()] ?? []);
+        const permissions = entry.permissions.map((permission) => permission.permissionKey);
         return (
           permissions.includes(event.permission ?? "") &&
           !permissions.includes("decide:all_approvals") &&

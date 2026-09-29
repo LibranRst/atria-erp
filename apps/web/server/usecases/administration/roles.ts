@@ -8,7 +8,7 @@ import { getAllPermissionKeys } from "@/lib/auth/role-access";
 import type { Actor } from "@/server/actor";
 import { actorCan } from "@/lib/auth/permissions";
 import { OWNER_ROLE_ID } from "@atria/core/auth/role-constants";
-import { ROLE_PERMISSIONS, type PermissionKey, type RoleDataScope } from "@atria/core/auth/permissions";
+import { type PermissionKey, type RoleDataScope } from "@atria/core/auth/permissions";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createRoleSchema,
@@ -121,10 +121,7 @@ export async function listManagedRolesUseCase(
       isSystem: row.isSystem,
       isOwnerRole: row.id === OWNER_ROLE_ID,
       userCount: countByRole.get(row.id) ?? 0,
-      permissions:
-        row.permissions.length > 0
-          ? row.permissions.map((item) => item.permissionKey as PermissionKey)
-          : (ROLE_PERMISSIONS[row.name.toUpperCase()] ?? []),
+      permissions: row.permissions.map((item) => item.permissionKey as PermissionKey),
     })),
   };
 }
@@ -160,7 +157,8 @@ export async function createRoleUseCase(
 
   const normalizedName = validation.data.name.trim().toUpperCase().replaceAll(" ", "_");
   const existing = await db.query.role.findFirst({ where: eq(role.name, normalizedName) });
-  if (existing) return { success: false, error: { code: "CONFLICT", message: "Nama peran sudah dipakai." } };
+  if (existing)
+    return { success: false, error: { code: "CONFLICT", message: "Nama peran sudah dipakai." } };
 
   const created = await db.transaction(async (tx) => {
     const [row] = await tx
@@ -225,7 +223,8 @@ export async function updateRolePermissionsUseCase(
     where: eq(role.id, validation.data.roleId),
     with: { permissions: { columns: { permissionKey: true } } },
   });
-  if (!target) return { success: false, error: { code: "NOT_FOUND", message: "Peran tidak ditemukan." } };
+  if (!target)
+    return { success: false, error: { code: "NOT_FOUND", message: "Peran tidak ditemukan." } };
 
   const before = new Set(target.permissions.map((row) => row.permissionKey));
   const after = new Set(validation.data.permissions);
@@ -261,10 +260,7 @@ export async function updateRolePermissionsUseCase(
         .insert(rolePermission)
         .values(granted.map((key) => ({ roleId: validation.data.roleId, permissionKey: key })));
     }
-    await tx
-      .update(role)
-      .set({ updatedAt: new Date() })
-      .where(eq(role.id, validation.data.roleId));
+    await tx.update(role).set({ updatedAt: new Date() }).where(eq(role.id, validation.data.roleId));
     await tx.insert(auditLog).values({
       userId: actor.userId,
       action: AUDIT_ACTION_BY_ORIGIN[origin],
@@ -293,7 +289,8 @@ export async function updateRoleDetailsUseCase(
   if (blocked) return blocked;
 
   const target = await db.query.role.findFirst({ where: eq(role.id, validation.data.roleId) });
-  if (!target) return { success: false, error: { code: "NOT_FOUND", message: "Peran tidak ditemukan." } };
+  if (!target)
+    return { success: false, error: { code: "NOT_FOUND", message: "Peran tidak ditemukan." } };
 
   const normalizedName = validation.data.name.trim().toUpperCase().replaceAll(" ", "_");
   if (target.isSystem && normalizedName !== target.name) {
@@ -362,7 +359,8 @@ export async function deleteRoleUseCase(
   if (blocked) return blocked;
 
   const target = await db.query.role.findFirst({ where: eq(role.id, validation.data.roleId) });
-  if (!target) return { success: false, error: { code: "NOT_FOUND", message: "Peran tidak ditemukan." } };
+  if (!target)
+    return { success: false, error: { code: "NOT_FOUND", message: "Peran tidak ditemukan." } };
   if (target.isSystem) return forbidden("Peran sistem tidak dapat dihapus.");
 
   const holders = await db

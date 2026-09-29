@@ -17,6 +17,9 @@ import { getDashboardStats } from "@/app/actions/finance/get-dashboard-stats";
 import { describe, it, expect, afterAll, mock } from "bun:test";
 import { describeIntegration } from "@/lib/testing/integration-db";
 
+// Cache Next adalah boundary request, bukan bagian pengujian posting finansial.
+mock.module("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {} }));
+
 // Mock next/headers untuk mencegah error cookies() di luar server Next.js
 mock.module("next/headers", () => {
   return {
@@ -225,7 +228,7 @@ describeIntegration("Atria ERP Server Actions - TSK-007", () => {
         referenceNumber: `TRF-TEST-PARTIAL-${Date.now()}`,
       });
 
-      expect(partialRes.success).toBe(true);
+      expect(partialRes).toMatchObject({ success: true });
       if (partialRes.success) {
         expect(partialRes.data.newBalance).toBe((balanceBefore + 20000000).toFixed(2));
       }
@@ -257,7 +260,7 @@ describeIntegration("Atria ERP Server Actions - TSK-007", () => {
         referenceNumber: `TRF-TEST-FINAL-${Date.now()}`,
       });
 
-      expect(finalRes.success).toBe(true);
+      expect(finalRes).toMatchObject({ success: true });
       if (finalRes.success) {
         expect(finalRes.data.newBalance).toBe((balanceBefore + 50000000).toFixed(2));
       }
@@ -315,7 +318,7 @@ describeIntegration("Atria ERP Server Actions - TSK-007", () => {
         notes: "Test manual Owner",
       });
 
-      expect(res.success).toBe(true);
+      expect(res).toMatchObject({ success: true });
       if (res.success) {
         expect(res.data.invoiceNumber).toBe(invoiceNum);
         expect(res.data.status).toBe("UNPAID");
@@ -388,7 +391,7 @@ describeIntegration("Atria ERP Server Actions - TSK-007", () => {
         .returning();
 
       const res = await getInvoicePrefillContext({ projectId: testProj.id });
-      expect(res.success).toBe(true);
+      expect(res).toMatchObject({ success: true });
       if (res.success) {
         expect(res.data.projectCode).toBe("BSR");
         expect(res.data.suggestedInvoiceNumber).toContain("INV/");
@@ -408,7 +411,7 @@ describeIntegration("Atria ERP Server Actions - TSK-007", () => {
       mockUserSession(FINANCE_USER);
 
       const res = await getDashboardStats();
-      expect(res.success).toBe(true);
+      expect(res).toMatchObject({ success: true });
 
       if (res.success) {
         const stats = res.data;

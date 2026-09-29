@@ -1,7 +1,8 @@
 "use server";
+
+import { roleNameHasPermission } from "@/lib/auth/role-access";
 import { recordNotificationEvent } from "@/server/services/notification-events";
 
-import { actorHasPermission } from "@atria/core/auth/permissions";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -189,6 +190,7 @@ export async function approveStockCount(input: unknown): Promise<ActionResponse<
   try {
     await assertPermission(actor, "approve:stock_count");
     const roleName = await resolveRoleName(actor.roleId ?? "");
+    const canEmergencyOverride = await roleNameHasPermission(roleName, "override:self_approval");
     const result = await db.transaction(async (tx) => {
       const count = await tx.query.stockCount.findFirst({
         where: eq(stockCount.id, parsed.data.stockCountId),
@@ -199,11 +201,7 @@ export async function approveStockCount(input: unknown): Promise<ActionResponse<
       const selfApproval = count.createdById === actor.id;
       if (
         selfApproval &&
-        !(
-          actorHasPermission(roleName, "override:self_approval") &&
-          parsed.data.emergencyOverride &&
-          parsed.data.reason
-        )
+        !(canEmergencyOverride && parsed.data.emergencyOverride && parsed.data.reason)
       )
         throw new Error(
           "MAKER_CHECKER_REQUIRED: Stock count harus disetujui user lain. Owner dapat memakai emergency override dengan alasan.",

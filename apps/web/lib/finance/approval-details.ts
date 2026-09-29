@@ -1,3 +1,4 @@
+import { roleNameHasPermission } from "@/lib/auth/role-access";
 import { OWNER_APPROVAL_AMOUNT_THRESHOLD } from "@atria/core/finance/expense-approval-rule";
 import { desc, eq } from "drizzle-orm";
 
@@ -9,7 +10,7 @@ import type {
   InventoryOpeningApprovalDetail,
 } from "@atria/core/finance/approval-types";
 import { dashboardDueDayOffset } from "@atria/core/finance/dashboard-overview";
-import { actorHasPermission, resolveRoleName } from "@/lib/auth/permissions";
+import { resolveRoleName } from "@/lib/auth/permissions";
 import { getServerSession } from "@/lib/server/session";
 
 type ApprovalRecord = typeof approval.$inferSelect;
@@ -337,7 +338,9 @@ export async function getPendingApprovalDetails(
   const roleName = session?.user?.roleId ? await resolveRoleName(session.user.roleId) : null;
   // Override darurat pada persetujuan diri sendiri — hak yang berdiri sendiri,
   // bukan konsekuensi dari kebetulan bernama Owner.
-  const isOwner = roleName ? actorHasPermission(roleName, "override:self_approval") : false;
+  const isOwner = roleName
+    ? await roleNameHasPermission(roleName, "override:self_approval")
+    : false;
 
   const records = await db.query.approval.findMany({
     where: eq(approval.status, "PENDING"),

@@ -1,3 +1,4 @@
+import { actorCan } from "@/lib/auth/permissions";
 import "server-only";
 
 import { eq } from "drizzle-orm";
@@ -5,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { appConfig, auditLog } from "@/db/schema";
 import type { Actor } from "@/server/actor";
-import { actorHasPermission } from "@atria/core/auth/permissions";
+
 import {
   APPROVAL_THRESHOLD_CONFIG_KEYS,
   DEFAULT_APPROVAL_THRESHOLDS,
@@ -39,16 +40,14 @@ const THRESHOLD_DESCRIPTIONS: Record<string, string> = {
 export async function getApprovalThresholdSettingsUseCase(
   actor: Actor,
 ): Promise<ActionResponse<ApprovalThresholdSettings>> {
-  if (!actorHasPermission(actor.roleName, "view:settings")) {
+  if (!actorCan(actor, "view:settings")) {
     return {
       success: false,
       error: { code: "FORBIDDEN", message: "Peran Anda tidak berhak membuka pengaturan." },
     };
   }
 
-  const rows = await db
-    .select({ key: appConfig.key, value: appConfig.value })
-    .from(appConfig);
+  const rows = await db.select({ key: appConfig.key, value: appConfig.value }).from(appConfig);
   const byKey = new Map(rows.map((row) => [row.key, row.value]));
 
   const fieldCost =
@@ -85,7 +84,7 @@ export async function updateApprovalThresholdsUseCase(
       },
     };
 
-  if (!actorHasPermission(actor.roleName, "manage:approval_settings")) {
+  if (!actorCan(actor, "manage:approval_settings")) {
     return {
       success: false,
       error: { code: "FORBIDDEN", message: "Peran Anda tidak berhak mengubah ambang persetujuan." },

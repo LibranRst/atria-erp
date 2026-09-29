@@ -263,7 +263,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         notes: "Tagihan semen Tiga Roda",
       });
 
-      expect(res.success).toBe(true);
+      expect(res).toMatchObject({ success: true });
       if (res.success) {
         const inventoryAsset = await db.query.projectExpenses.findFirst({
           where: eq(projectExpenses.vendorBillId, res.data.id),
@@ -294,7 +294,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         dueDate: new Date(),
       });
 
-      expect(billRes.success).toBe(true);
+      expect(billRes).toMatchObject({ success: true });
       if (!billRes.success) return;
 
       // Finance Admin menjadwalkan pembayaran
@@ -306,7 +306,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         amountPaid: 15000000,
       });
 
-      expect(scheduleRes.success).toBe(true);
+      expect(scheduleRes).toMatchObject({ success: true });
       if (!scheduleRes.success) return;
 
       expect(scheduleRes.data.status).toBe("PENDING");
@@ -321,11 +321,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
 
       expect(appRecord).toBeDefined();
       expect(appRecord!.status).toBe("PENDING");
-      expect(
-        appRecord!.notes?.includes("Rp 5.000.000") ||
-          appRecord!.notes?.includes("plafon") ||
-          appRecord!.notes?.includes("Overrun"),
-      ).toBe(true);
+      expect(scheduleRes.data.requiresOwnerApproval).toBe(true);
     });
 
     it("harus menolak total jadwal pembayaran yang melebihi outstanding vendor bill", async () => {
@@ -346,7 +342,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         amount: 4000000,
         dueDate: new Date(),
       });
-      expect(billRes.success).toBe(true);
+      expect(billRes).toMatchObject({ success: true });
       if (!billRes.success) return;
 
       mockUserSession(FINANCE_USER);
@@ -356,7 +352,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         paymentDate: new Date(),
         amountPaid: 3000000,
       });
-      expect(first.success).toBe(true);
+      expect(first).toMatchObject({ success: true });
 
       const exceeds = await scheduleVendorBillPayment({
         vendorBillId: billRes.data.id,
@@ -454,7 +450,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
       if (!approveRes.success) {
         console.log("DEBUG APPROVE VENDOR PAYMENT ERROR:", JSON.stringify(approveRes.error));
       }
-      expect(approveRes.success).toBe(true);
+      expect(approveRes).toMatchObject({ success: true });
 
       // Eksekusi pembayaran oleh Admin
       mockUserSession(FINANCE_USER);
@@ -463,7 +459,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         referenceNumber: `TRF-OK-${Date.now()}`,
       });
 
-      expect(payRes.success).toBe(true);
+      expect(payRes).toMatchObject({ success: true });
       if (payRes.success) {
         expect(payRes.data.nextBalance).toBe(balBefore - 8000000);
       }
@@ -488,7 +484,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         amount: 250000,
         description: "Biaya operasional untuk uji pemisahan tugas",
       });
-      expect(submitted.success).toBe(true);
+      expect(submitted).toMatchObject({ success: true });
       if (!submitted.success) return;
 
       const verified = await verifyFieldRequest(submitted.data.id);
@@ -512,7 +508,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         description: "Beli perlengkapan finishing tambahan",
       });
 
-      expect(costRes.success).toBe(true);
+      expect(costRes).toMatchObject({ success: true });
       if (!costRes.success) return;
       expect(costRes.data.status).toBe("SUBMITTED");
 
@@ -539,7 +535,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
       }
 
       const verifyRes = await verifyFieldRequest(costRes.data.id);
-      expect(verifyRes.success).toBe(true);
+      expect(verifyRes).toMatchObject({ success: true });
 
       const payVerifiedRes = await payFieldRequest(
         costRes.data.id,
@@ -557,7 +553,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         status: "REJECTED",
         notes: "Ditolak untuk test state machine",
       });
-      expect(rejectRes.success).toBe(true);
+      expect(rejectRes).toMatchObject({ success: true });
 
       mockUserSession(FINANCE_USER);
       const payRejectedRes = await payFieldRequest(
@@ -597,7 +593,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         description: "Beli marmer Italia premium",
       });
 
-      expect(costRes.success).toBe(true);
+      expect(costRes).toMatchObject({ success: true });
       if (!costRes.success) return;
 
       expect(costRes.data.budgetOverrun).toBe(true);
@@ -616,7 +612,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
       // 2. Admin Lisa melakukan verifikasi
       mockUserSession(FINANCE_USER);
       const verifyRes = await verifyFieldRequest(costRes.data.id);
-      expect(verifyRes.success).toBe(true);
+      expect(verifyRes).toMatchObject({ success: true });
       if (!verifyRes.success) return;
       expect(verifyRes.data.status).toBe("VERIFIED");
 
@@ -627,7 +623,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         status: "APPROVED",
         notes: "Mewah, disetujui",
       });
-      expect(approveRes.success).toBe(true);
+      expect(approveRes).toMatchObject({ success: true });
 
       // Verifikasi status approval tersinkron
       const appRecordUpdated = await db.query.approval.findFirst({
@@ -651,7 +647,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         BCA_ACC_ID,
         `TRF-CLAIM-MARMER-${Date.now()}`,
       );
-      expect(payRes.success).toBe(true);
+      expect(payRes).toMatchObject({ success: true });
       if (payRes.success) {
         expect(payRes.data.nextBalance).toBe(balBefore - 260000000);
       }
@@ -699,7 +695,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         ],
       });
 
-      expect(res.success).toBe(true);
+      expect(res).toMatchObject({ success: true });
       if (res.success) {
         expect(res.data.length).toBe(2);
         const cost1 = res.data[0];
@@ -725,7 +721,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         amount: 300000,
         description: "Bensin operasional A",
       });
-      expect(resA.success).toBe(true);
+      expect(resA).toMatchObject({ success: true });
       if (!resA.success) return;
 
       // Pada saat diajukan, resA belum butuh approval dan belum ada record di tabel approval
@@ -749,12 +745,12 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         amount: 50000000,
         description: "Operasional darurat B yang menyebabkan overrun",
       });
-      expect(resB.success).toBe(true);
+      expect(resB).toMatchObject({ success: true });
 
       // 3. Finance memverifikasi pengeluaran A
       mockUserSession(FINANCE_USER);
       const verifyRes = await verifyFieldRequest(resA.data.id);
-      expect(verifyRes.success).toBe(true);
+      expect(verifyRes).toMatchObject({ success: true });
       if (!verifyRes.success) return;
 
       // Status pengeluaran A harus VERIFIED karena overrunNow = true
@@ -797,7 +793,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         description: "Pembelian multipleks untuk stock proyek Menteng",
       });
 
-      expect(res.success).toBe(true);
+      expect(res).toMatchObject({ success: true });
       if (!res.success) return;
 
       const inventoryAfter = await db.query.materialInventory.findFirst({
@@ -833,7 +829,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
         description: "Termin tukang tambahan untuk kitchen installation crew",
       });
 
-      expect(res.success).toBe(true);
+      expect(res).toMatchObject({ success: true });
       if (!res.success) return;
 
       const canonicalExpense = await db.query.projectExpenses.findFirst({

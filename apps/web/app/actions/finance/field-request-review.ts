@@ -1,4 +1,6 @@
 "use server";
+
+import { roleNameHasPermission } from "@/lib/auth/role-access";
 import { reconcileVendorBillAction } from "@/server/services/notification-job";
 import { vendorBill } from "@/db/schema";
 import { recordNotificationEvent } from "@/server/services/notification-events";
@@ -13,7 +15,7 @@ import {
 } from "@/lib/budget/budget-sync";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { decideExpenseApproval } from "@atria/core/finance/expense-approval-rule";
-import { actorHasPermission, resolveRoleName } from "@/lib/auth/permissions";
+import { resolveRoleName } from "@/lib/auth/permissions";
 import {
   approveFieldRequestSchema,
   type ApproveFieldRequestInput,
@@ -38,7 +40,7 @@ export async function verifyFieldRequest(
     if (!authResult.success) return authResult;
     const currentUser = authResult.data.user;
     const roleName = await resolveRoleName(currentUser.roleId);
-    if (!actorHasPermission(roleName, "verify:cost")) {
+    if (!(await roleNameHasPermission(roleName, "verify:cost"))) {
       return {
         success: false,
         error: {

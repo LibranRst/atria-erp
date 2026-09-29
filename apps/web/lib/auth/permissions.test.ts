@@ -1,7 +1,17 @@
+import { ROLE_PERMISSIONS, type PermissionKey } from "@atria/core/auth/permissions";
 import { describe, it, expect } from "bun:test";
-import { assertPermission, resolveRoleName } from "./permissions";
+import { actorCan, resolveRoleName } from "./permissions";
 import { scopeProjectQuery, assertProjectAccess, assertProjectIsOperational } from "./scoping";
 import { eq } from "drizzle-orm";
+
+async function assertFixturePermission(
+  user: { readonly role: string },
+  permission: PermissionKey,
+): Promise<void> {
+  if (!actorCan({ permissions: ROLE_PERMISSIONS[user.role.toUpperCase()] ?? [] }, permission)) {
+    throw new Error("FORBIDDEN");
+  }
+}
 
 describe("Atria ERP RBAC - permissions.ts", () => {
   // Test Role Name Resolution
@@ -15,57 +25,60 @@ describe("Atria ERP RBAC - permissions.ts", () => {
     });
   });
 
-  // Test assertPermission
-  /*
-   * Fixture memakai `role` (nama), bukan `roleId`.
-   *
-   * Sejak izin pindah ke tabel `role_permission`, jalur `roleId` membaca
-   * database — dan test unit ini menguji **matriks seed**, bukan kueri. Jalur
-   * database dikunci terpisah di `lib/auth/role-access` beserta cadangannya.
-   */
-  describe("assertPermission", () => {
+  // Kontrak nilai seed; enforcement database diuji di effective-permissions.test.ts.
+  describe("seed permission contract", () => {
     it("harus mengizinkan OWNER melakukan tindakan apa pun", async () => {
       const ownerUser = { id: "user-owner-id", role: "owner" };
 
       // Harus lolos tanpa melempar error
-      await expect(assertPermission(ownerUser, "reconcile:ledger")).resolves.toBeUndefined();
-      await expect(assertPermission(ownerUser, "delete:bank_account")).resolves.toBeUndefined();
+      await expect(assertFixturePermission(ownerUser, "reconcile:ledger")).resolves.toBeUndefined();
+      await expect(
+        assertFixturePermission(ownerUser, "delete:bank_account"),
+      ).resolves.toBeUndefined();
     });
 
     it("harus memvalidasi izin FINANCE_ADMIN dengan benar", async () => {
       const financeUser = { id: "user-fin-id", role: "finance_admin" };
 
       // Diizinkan rekonsiliasi ledger
-      await expect(assertPermission(financeUser, "reconcile:ledger")).resolves.toBeUndefined();
+      await expect(
+        assertFixturePermission(financeUser, "reconcile:ledger"),
+      ).resolves.toBeUndefined();
 
       // Ditolak menghapus bank account
-      await expect(assertPermission(financeUser, "delete:bank_account")).rejects.toThrow(
+      await expect(assertFixturePermission(financeUser, "delete:bank_account")).rejects.toThrow(
         "FORBIDDEN",
       );
 
       // Diizinkan mengelola budget setup dan Settings defaults
-      await expect(assertPermission(financeUser, "create:budget")).resolves.toBeUndefined();
-      await expect(assertPermission(financeUser, "update:budget")).resolves.toBeUndefined();
-      await expect(assertPermission(financeUser, "approve:budget")).resolves.toBeUndefined();
-      await expect(assertPermission(financeUser, "view:settings")).resolves.toBeUndefined();
+      await expect(assertFixturePermission(financeUser, "create:budget")).resolves.toBeUndefined();
+      await expect(assertFixturePermission(financeUser, "update:budget")).resolves.toBeUndefined();
+      await expect(assertFixturePermission(financeUser, "approve:budget")).resolves.toBeUndefined();
+      await expect(assertFixturePermission(financeUser, "view:settings")).resolves.toBeUndefined();
       await expect(
-        assertPermission(financeUser, "manage:budget_settings"),
+        assertFixturePermission(financeUser, "manage:budget_settings"),
       ).resolves.toBeUndefined();
-      await expect(assertPermission(financeUser, "manage:item_library")).resolves.toBeUndefined();
-      await expect(assertPermission(financeUser, "manage:vendors")).resolves.toBeUndefined();
-      await expect(assertPermission(financeUser, "manage:users")).rejects.toThrow("FORBIDDEN");
+      await expect(
+        assertFixturePermission(financeUser, "manage:item_library"),
+      ).resolves.toBeUndefined();
+      await expect(assertFixturePermission(financeUser, "manage:vendors")).resolves.toBeUndefined();
+      await expect(assertFixturePermission(financeUser, "manage:users")).rejects.toThrow(
+        "FORBIDDEN",
+      );
     });
 
     it("harus membatasi izin PROJECT_MANAGER hanya pada pengajuan biaya dan draf anggaran", async () => {
       const pmUser = { id: "user-pm-id", role: "project_manager" };
 
       // Diizinkan membuat draf anggaran
-      await expect(assertPermission(pmUser, "create:budget")).resolves.toBeUndefined();
-      await expect(assertPermission(pmUser, "create:cost")).resolves.toBeUndefined();
+      await expect(assertFixturePermission(pmUser, "create:budget")).resolves.toBeUndefined();
+      await expect(assertFixturePermission(pmUser, "create:cost")).resolves.toBeUndefined();
 
       // Ditolak melakukan rekonsiliasi kas
-      await expect(assertPermission(pmUser, "reconcile:ledger")).rejects.toThrow("FORBIDDEN");
-      await expect(assertPermission(pmUser, "view:settings")).rejects.toThrow("FORBIDDEN");
+      await expect(assertFixturePermission(pmUser, "reconcile:ledger")).rejects.toThrow(
+        "FORBIDDEN",
+      );
+      await expect(assertFixturePermission(pmUser, "view:settings")).rejects.toThrow("FORBIDDEN");
     });
 
     it("harus memberi Purchasing akses material dan membatasi akses ledger", async () => {
@@ -74,20 +87,32 @@ describe("Atria ERP RBAC - permissions.ts", () => {
         role: "purchasing",
       };
 
-      await expect(assertPermission(purchasingUser, "view:inventory")).resolves.toBeUndefined();
-      await expect(assertPermission(purchasingUser, "reserve:stock")).resolves.toBeUndefined();
-      await expect(assertPermission(purchasingUser, "waste:stock")).resolves.toBeUndefined();
-      await expect(assertPermission(purchasingUser, "transfer:stock")).resolves.toBeUndefined();
-      await expect(assertPermission(purchasingUser, "create:stock_count")).resolves.toBeUndefined();
-      await expect(assertPermission(purchasingUser, "adjust:stock")).rejects.toThrow("FORBIDDEN");
-      await expect(assertPermission(purchasingUser, "view:settings")).resolves.toBeUndefined();
       await expect(
-        assertPermission(purchasingUser, "manage:material_settings"),
+        assertFixturePermission(purchasingUser, "view:inventory"),
       ).resolves.toBeUndefined();
-      await expect(assertPermission(purchasingUser, "manage:budget_settings")).rejects.toThrow(
+      await expect(
+        assertFixturePermission(purchasingUser, "reserve:stock"),
+      ).resolves.toBeUndefined();
+      await expect(assertFixturePermission(purchasingUser, "waste:stock")).resolves.toBeUndefined();
+      await expect(
+        assertFixturePermission(purchasingUser, "transfer:stock"),
+      ).resolves.toBeUndefined();
+      await expect(
+        assertFixturePermission(purchasingUser, "create:stock_count"),
+      ).resolves.toBeUndefined();
+      await expect(assertFixturePermission(purchasingUser, "adjust:stock")).rejects.toThrow(
         "FORBIDDEN",
       );
-      await expect(assertPermission(purchasingUser, "reconcile:ledger")).rejects.toThrow(
+      await expect(
+        assertFixturePermission(purchasingUser, "view:settings"),
+      ).resolves.toBeUndefined();
+      await expect(
+        assertFixturePermission(purchasingUser, "manage:material_settings"),
+      ).resolves.toBeUndefined();
+      await expect(
+        assertFixturePermission(purchasingUser, "manage:budget_settings"),
+      ).rejects.toThrow("FORBIDDEN");
+      await expect(assertFixturePermission(purchasingUser, "reconcile:ledger")).rejects.toThrow(
         "FORBIDDEN",
       );
     });
@@ -95,9 +120,9 @@ describe("Atria ERP RBAC - permissions.ts", () => {
     it("harus membatasi PM agar hanya membaca inventory dan RAP tanpa mutasi stock global", async () => {
       const pmUser = { id: "user-pm-id", role: "project_manager" };
 
-      await expect(assertPermission(pmUser, "view:inventory")).resolves.toBeUndefined();
-      await expect(assertPermission(pmUser, "view:rap")).resolves.toBeUndefined();
-      await expect(assertPermission(pmUser, "reserve:stock")).rejects.toThrow("FORBIDDEN");
+      await expect(assertFixturePermission(pmUser, "view:inventory")).resolves.toBeUndefined();
+      await expect(assertFixturePermission(pmUser, "view:rap")).resolves.toBeUndefined();
+      await expect(assertFixturePermission(pmUser, "reserve:stock")).rejects.toThrow("FORBIDDEN");
     });
   });
 });

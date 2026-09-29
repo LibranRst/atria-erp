@@ -1,4 +1,6 @@
 "use server";
+
+import { roleNameHasPermission } from "@/lib/auth/role-access";
 import { recordNotificationEvent } from "@/server/services/notification-events";
 
 import { cookies } from "next/headers";
@@ -15,7 +17,7 @@ import {
   projectProfitabilitySnapshot,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { actorHasPermission, assertPermission, resolveRoleName } from "@/lib/auth/permissions";
+import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { syncProjectBudgetCategory } from "@/lib/budget/budget-sync";
 import { calculateOutstandingProjectReservations } from "@/app/actions/material/inventory-utils";
@@ -48,7 +50,7 @@ async function assertClosingAccess(user: SessionUser, projectId: string): Promis
   await assertPermission(user, "update:budget");
   await assertPermission(user, "view:profitability");
   const roleName = await resolveRoleName(user.roleId ?? "");
-  if (!actorHasPermission(roleName, "close:project"))
+  if (!(await roleNameHasPermission(roleName, "close:project")))
     throw new Error("FORBIDDEN: Peran Anda tidak berhak menutup proyek.");
   await assertProjectAccess(projectId, user.id, roleName);
 }

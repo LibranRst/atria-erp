@@ -1,5 +1,7 @@
 "use server";
 
+import { roleNameHasPermission } from "@/lib/auth/role-access";
+
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { eq, inArray } from "drizzle-orm";
@@ -15,7 +17,7 @@ import {
   projectRapItem,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { actorHasPermission, assertPermission, resolveRoleName } from "@/lib/auth/permissions";
+import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { getBudgetCategoryStatus } from "@atria/core/budget/excel-budget";
 import { getRapItemAvailabilityStatus } from "@atria/core/project/rap-rab";
@@ -260,7 +262,7 @@ export async function reallocateProjectBudget(input: unknown): Promise<
     if (budget.status === "APPROVED") {
       // Mengubah budget yang sudah disetujui menuntut wewenang yang sama dengan
       // menyetujuinya — `update:budget` saja tidak cukup.
-      if (!actorHasPermission(roleName, "approve:budget"))
+      if (!(await roleNameHasPermission(roleName, "approve:budget")))
         throw new Error(
           "FORBIDDEN: Budget approved hanya dapat direalokasi oleh penyetuju budget.",
         );

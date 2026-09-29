@@ -1,4 +1,5 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { db } from "@/db";
+import { afterAll, beforeEach, afterEach, spyOn, describe, expect, it, mock } from "bun:test";
 import { confirmAiBankReconciliationProposal } from "@/app/actions/ai/confirm-bank-reconciliation-proposal";
 import { auth } from "@/lib/auth";
 
@@ -21,7 +22,20 @@ const PM_USER = {
   name: "Siti Aminah",
 };
 
+const roleRecord = {
+  id: "fixture-role",
+  name: "OWNER",
+  dataScope: "GLOBAL",
+  description: null,
+  isSystem: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  permissions: [{ permissionKey: "reconcile:ledger" }],
+};
+
 function actAs(user: typeof OWNER | typeof PM_USER | null): void {
+  roleRecord.name = user?.role ?? "UNKNOWN";
+  roleRecord.permissions = user?.role === "OWNER" ? [{ permissionKey: "reconcile:ledger" }] : [];
   (auth.api as unknown as { getSession: unknown }).getSession = async (): Promise<unknown> => {
     if (!user) return null;
     return {
@@ -39,6 +53,17 @@ function actAs(user: typeof OWNER | typeof PM_USER | null): void {
 }
 
 describe("confirmAiBankReconciliationProposal unit tests", () => {
+  let roleLookup: ReturnType<typeof spyOn<typeof db.query.role, "findFirst">>;
+  let roleNames: ReturnType<typeof spyOn<typeof db.query.role, "findMany">>;
+  beforeEach(() => {
+    roleNames = spyOn(db.query.role, "findMany").mockResolvedValue([roleRecord]);
+    roleLookup = spyOn(db.query.role, "findFirst").mockResolvedValue(roleRecord);
+  });
+  afterEach(() => {
+    roleLookup.mockRestore();
+    roleNames.mockRestore();
+  });
+
   afterAll(() => {
     (auth.api as unknown as { getSession: unknown }).getSession = originalGetSession;
   });

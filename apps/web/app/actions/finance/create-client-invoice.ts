@@ -1,4 +1,5 @@
 "use server";
+import { getRoleDataScopeByName } from "@/lib/auth/role-access";
 
 import { revalidatePath } from "next/cache";
 import { recordNotificationEvent } from "@/server/services/notification-events";
@@ -8,7 +9,6 @@ import { clientInvoice, auditLog, project } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { getRoleDataScope } from "@atria/core/auth/permissions";
 import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
 import { ActionResponse } from "@atria/core/types/action-response";
 import {
@@ -64,7 +64,7 @@ export async function createClientInvoice(
       const userRoleName = await resolveRoleName(session.user.roleId);
       // Peran bercakupan tertugas dibatasi pada proyek yang dipegangnya;
       // cakupan global tidak perlu diperiksa lagi di sini.
-      if (getRoleDataScope(userRoleName) === "ASSIGNED") {
+      if ((await getRoleDataScopeByName(userRoleName)) === "ASSIGNED") {
         await assertProjectAccess(projectId, session.user.id, userRoleName);
       }
       await assertProjectIsOperational(projectId);

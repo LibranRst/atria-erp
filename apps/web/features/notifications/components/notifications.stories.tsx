@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/nextjs";
 import { NotificationBellButton } from "./notification-bell-button";
 import { NotificationCenterView } from "./notification-center-view";
 import { NotificationStoreProvider } from "../hooks/notification-context";

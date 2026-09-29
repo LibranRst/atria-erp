@@ -7,7 +7,15 @@ import { z } from "zod";
  * memeriksanya terhadap kunci yang benar-benar ditegakkan kode, karena hanya
  * server yang tahu daftar itu lengkap.
  */
-const uuid = z.string().uuid("ID peran tidak valid.");
+// ID sistem menggunakan UUID PostgreSQL tetap tanpa bit versi RFC 4122.
+// Sama dengan validasi roleId pada administrasi pengguna; existence/RBAC tetap
+// diperiksa server setelah validasi bentuk identifier.
+const uuid = z
+  .string()
+  .regex(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    "ID peran tidak valid.",
+  );
 
 const roleName = z
   .string()

@@ -1,6 +1,7 @@
+import { db } from "@/db";
 import { auth } from "@/lib/auth";
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
-import { describe, it, expect, afterAll, mock } from "bun:test";
+import { describe, it, expect, afterAll, beforeEach, afterEach, spyOn, mock } from "bun:test";
 import crypto from "crypto";
 
 // Mock next/headers untuk mencegah error cookies() di luar server Next.js
@@ -57,6 +58,28 @@ const PM_BUDI_USER = {
 };
 
 describe("Atria ERP Media Actions - TSK-011 signImagekit", () => {
+  const originalImagekitPrivateKey = process.env.IMAGEKIT_PRIVATE_KEY;
+  let roleLookup: ReturnType<typeof spyOn<typeof db.query.role, "findFirst">>;
+  beforeEach(() => {
+    process.env.IMAGEKIT_PRIVATE_KEY = "imagekit-signature-test-only-key";
+    const roleRecord = {
+      id: PM_BUDI_USER.roleId,
+      name: "project_manager",
+      dataScope: "ASSIGNED",
+      description: null,
+      isSystem: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      permissions: [],
+    };
+    roleLookup = spyOn(db.query.role, "findFirst").mockResolvedValue(roleRecord);
+  });
+  afterEach(() => {
+    roleLookup.mockRestore();
+    if (originalImagekitPrivateKey === undefined) delete process.env.IMAGEKIT_PRIVATE_KEY;
+    else process.env.IMAGEKIT_PRIVATE_KEY = originalImagekitPrivateKey;
+  });
+
   afterAll(() => {
     restoreUserSession();
   });

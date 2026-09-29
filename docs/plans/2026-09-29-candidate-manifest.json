@@ -1,0 +1,728 @@
+{
+  "base": "031112a1a82fc60b14936ff94b66c41998e32190",
+  "source": "/Volumes/DekoriaSSD/App Projects/Websites/atria-erp",
+  "checkout": "/Users/librandev/.codex/worktrees/readiness-release/atria-erp",
+  "files": [
+    {
+      "path": "apps/web/app/actions/activity-detail-inventory-resolvers.ts",
+      "sha256": "efe815567c695c3d865b2672c999eb4260d91f7fc4231a5f1eb93020df2409a1"
+    },
+    {
+      "path": "apps/web/app/actions/activity-detail-resolver-utils.ts",
+      "sha256": "f75caeba8bd0f3083acbf4d0d52f5b1de1e32b8e7bd5eee2419b8b140676f6a6"
+    },
+    {
+      "path": "apps/web/app/actions/ai/confirm-bank-reconciliation-proposal.test.ts",
+      "sha256": "177524e97251816a6124a836f8920995ea0b8fc89468b0065cc710e118d6b0cb"
+    },
+    {
+      "path": "apps/web/app/actions/finance/create-client-invoice.ts",
+      "sha256": "1eeddcc401063bb437b81c51a7c1cf91270763638ee4b17b9a3e165a85b3253c"
+    },
+    {
+      "path": "apps/web/app/actions/finance/field-request-auth.ts",
+      "sha256": "78870a767300d04715d98aff90063869bc4fa335629e43a2eac63e2f92e12c56"
+    },
+    {
+      "path": "apps/web/app/actions/finance/field-request-review.ts",
+      "sha256": "1ce75a6db61be600d92a058ca610e69609058beea6719b909513f6e3fd848621"
+    },
+    {
+      "path": "apps/web/app/actions/finance/get-invoice-prefill-context.ts",
+      "sha256": "3d6ea23c12a8bd23fe676f52d2dc3aa266e703e596a28573f02fcf71c3af39a6"
+    },
+    {
+      "path": "apps/web/app/actions/finance/submit-vendor-bill.ts",
+      "sha256": "12b468e762373a1049ccb618d549d24fa6cd7800f45e61dbee57e1cfb74946a6"
+    },
+    {
+      "path": "apps/web/app/actions/finance/vendor-bill-drafts.ts",
+      "sha256": "0002f8ee2194900fba6a14b5e7e7057a727bd8f09881f6ac83b21023c232e8dc"
+    },
+    {
+      "path": "apps/web/app/actions/material/goods-receipt.ts",
+      "sha256": "3e718eb53232dceb63f3d10fb6512e4c513fd6c9aad9850135b6e9853cc59d4b"
+    },
+    {
+      "path": "apps/web/app/actions/material/inventory-utils.ts",
+      "sha256": "bf244995e5d10532135d796b644a4aa36f6ba6e82e7ebf3d25abd414db52799e"
+    },
+    {
+      "path": "apps/web/app/actions/material/opening-inventory-queries.ts",
+      "sha256": "1abceebca3500e80f883c90acb3fa6726b3b48d4ebab5ca4596ebedb463f770b"
+    },
+    {
+      "path": "apps/web/app/actions/material/operations-dashboard.ts",
+      "sha256": "6731dedcba6abbf03c5bf1309e552313ffc207be1794af43ead3c77f352f980b"
+    },
+    {
+      "path": "apps/web/app/actions/material/warehouse-adjustment.ts",
+      "sha256": "e26ea32541535a5d4d9f06a0bff04f2678ff3dc9d749f81c63ae1f8520b6b64a"
+    },
+    {
+      "path": "apps/web/app/actions/material/warehouse-receipt-reversal.ts",
+      "sha256": "902059e19a5108e801a96d8079ee415e8161a086f91d7b6db90621a87854f61f"
+    },
+    {
+      "path": "apps/web/app/actions/material/warehouse-stock-count.ts",
+      "sha256": "af54d9281fc1bb38be5a01252f9f48059084cde7c7a5cbb9a62f64d8a72ad3e9"
+    },
+    {
+      "path": "apps/web/app/actions/onboarding-action-utils.ts",
+      "sha256": "655db306a9b18aaa8d4a164e87c42c10c7d8c6d281276b2e0b0abad9124ad16f"
+    },
+    {
+      "path": "apps/web/app/actions/onboarding-review.ts",
+      "sha256": "052f043310abbefb37246ed490f62f57a4f91fd93be3324458783211c9abfa51"
+    },
+    {
+      "path": "apps/web/app/actions/project/activation.ts",
+      "sha256": "58f6044f2a8230e527d6736a334a96805be3234fcc2ddca632a42875a774e327"
+    },
+    {
+      "path": "apps/web/app/actions/project/closing.ts",
+      "sha256": "a274989332763e455acf612f21865a9f5d9587153f91e83f819f09b96c36df4a"
+    },
+    {
+      "path": "apps/web/app/actions/project/revision-change-order-approval.ts",
+      "sha256": "385e77c3d335eb53d8b23a31b75d8bf0785636a693affc64d85c84deb9173d7d"
+    },
+    {
+      "path": "apps/web/app/actions/project/workflow-governance.ts",
+      "sha256": "40301437d7752a12c1f627677b12e8017d4a8be07eb8cf4e5a30bd4810e9d977"
+    },
+    {
+      "path": "apps/web/db/seed.ts",
+      "sha256": "d96f2e8f6f9a04ed1cb5114daf1ac881ec30c87e8791679cdb4963cc9236e687"
+    },
+    {
+      "path": "apps/web/drizzle/0041_rab_item_nature.sql",
+      "sha256": "4cbc84b0b46f523dd794b744d2222f2ac4ecb9f2aaa54f73ae0256d34f21c3c5"
+    },
+    {
+      "path": "apps/web/drizzle/meta/0041_snapshot.json",
+      "sha256": "50a2ab4794f10596afb5725b81b1698ea021a27eb0e2e08be46175d2b1764184"
+    },
+    {
+      "path": "apps/web/drizzle/meta/_journal.json",
+      "sha256": "3f58637a72a1903c852ac73904777cf6e4a2187d6bc5a30377519a320849f3e0"
+    },
+    {
+      "path": "apps/web/features/approvals/server/get-approvals-page-data.ts",
+      "sha256": "9010f6bef387bfc1161c254c98bbbc1e54b94b6bae9bef2b5d5d50f9e15d806f"
+    },
+    {
+      "path": "apps/web/features/expenses/server/get-expenses-page-data.ts",
+      "sha256": "2b2d16ee38ab0fcf5fd4a1638bb034712c90317a08cdc056c160c28f54ba1ef9"
+    },
+    {
+      "path": "apps/web/features/expenses/utils/expenses-access.test.ts",
+      "sha256": "d1fd2c024084ab6c391bbc805726fa35e766d9471b2b8c790f128c110ad7a44f"
+    },
+    {
+      "path": "apps/web/features/expenses/utils/expenses-access.ts",
+      "sha256": "e21ef1d80621bb1bf0071911308e1593e661160821c2663ec1f214a96d7be216"
+    },
+    {
+      "path": "apps/web/features/finance-dashboard/server/get-finance-dashboard-page-data.ts",
+      "sha256": "30692ec838b8eb0633379e479c47f081b6960c15cc5298a04b64bd4b84ba0ad1"
+    },
+    {
+      "path": "apps/web/features/navigation/server/home-destination.test.ts",
+      "sha256": "b203bacad247995d6b2e23816413db2f4dd97323f7354cf46d1205750aafa8d9"
+    },
+    {
+      "path": "apps/web/features/navigation/server/home-destination.ts",
+      "sha256": "77023402988f9d33549ed66863565220673270f716906e5c53e03c11cf34f064"
+    },
+    {
+      "path": "apps/web/features/notifications/fixtures/database-case.ts",
+      "sha256": "7d79454669a217723c33b7c921f6a916a473d520650745af50037bc044487ba4"
+    },
+    {
+      "path": "apps/web/features/projects/detail/server/get-project-detail-data.ts",
+      "sha256": "d434d4e0af669174369bae9c286031175e6ac021e7db566480dd47e7501f413f"
+    },
+    {
+      "path": "apps/web/features/projects/list/server/get-project-list-page-data.ts",
+      "sha256": "8589eb020924ed3add4d22a8db224dd3a0c7bd4aa50162d29c9aaf4508dcaeb7"
+    },
+    {
+      "path": "apps/web/lib/ai/confirm-role-proposal.integration.test.ts",
+      "sha256": "78aeb15f360dee027dde611f791c2797bf314eb938cc06925ce78b7b37c2c0a6"
+    },
+    {
+      "path": "apps/web/lib/architecture/role-authority.test.ts",
+      "sha256": "b38b6143f72de4e1e7e518178afb691ee1d635322462802b4d855e5dad8fa418"
+    },
+    {
+      "path": "apps/web/lib/auth/bearer-http.integration.test.ts",
+      "sha256": "124318ba912642c1ba61ec9cd66d620885811fd7436c67dfff83d0ce0a019192"
+    },
+    {
+      "path": "apps/web/lib/auth/effective-permissions.test.ts",
+      "sha256": "a43b1d5a7dec5cadb6f8743623c9577e0cf08c10834867bfd685a991ff53fdb0"
+    },
+    {
+      "path": "apps/web/lib/auth/fixtures/bearer-http-case.ts",
+      "sha256": "3cde4d4f5908ce76b8b52f642d2812170035fd75c3dd7fc99c9931b086d1dacb"
+    },
+    {
+      "path": "apps/web/lib/auth/fixtures/effective-permissions-case.ts",
+      "sha256": "f002460b21ee7a1e44878a5360e84fc933bb0ce8a40c2dc66cbb6fd2dc5aba1f"
+    },
+    {
+      "path": "apps/web/lib/auth/permissions.test.ts",
+      "sha256": "cba703849d7153d58323d3f2b4846eab5312acc93405470d1c8b2d3eafedc989"
+    },
+    {
+      "path": "apps/web/lib/auth/permissions.ts",
+      "sha256": "2c4822ebe7e0257869b76514c2cea09fbc119b8c0c67fb4e57bc8abb1b78df55"
+    },
+    {
+      "path": "apps/web/lib/auth/role-access.ts",
+      "sha256": "fd6935d517d651043b0c7815680301b53c6e754817ff99e7e5b1110bff711e89"
+    },
+    {
+      "path": "apps/web/lib/finance/actions-field.test.ts",
+      "sha256": "94e2432ed77b5201343295f136c575c00bda2e3483338536bbffa6fb1131086a"
+    },
+    {
+      "path": "apps/web/lib/finance/actions.test.ts",
+      "sha256": "3e12cccaba998bc22a8bbad52551d187cb3ce50068e0991a49f57eff02385ae1"
+    },
+    {
+      "path": "apps/web/lib/finance/approval-details.ts",
+      "sha256": "3895e483ce8d6cdbafc21fd5d592c63665159b16994f62ac7da37fb2c02ec81b"
+    },
+    {
+      "path": "apps/web/lib/finance/balance-concurrency.integration.test.ts",
+      "sha256": "6cc3d4e7430c5ff69f81182d2215f300f50bfc75506b726a60fec3a60c69e7ba"
+    },
+    {
+      "path": "apps/web/lib/finance/demo-walkthrough.integration.test.ts",
+      "sha256": "2dc4e8b43ca6ca1761db24255173b5a906834328beb2babd1efc5a300d9c54cf"
+    },
+    {
+      "path": "apps/web/lib/finance/ocr-form.test.ts",
+      "sha256": "652c312c23ef69344bf2e4cb380d3eb64196f7f6294837b5ee73d1505eef1347"
+    },
+    {
+      "path": "apps/web/scripts/local-postgres-preload.test.ts",
+      "sha256": "ced78eb560ee3d546bd790f94067387faef85ada6e98e7711dd609e217ba48ef"
+    },
+    {
+      "path": "apps/web/scripts/local-postgres-preload.ts",
+      "sha256": "8d99a6a155c7479d3504ee73d351b5a2581111faa472a575ac6319c10a3ac57e"
+    },
+    {
+      "path": "apps/web/scripts/run-local-postgres-audit.py",
+      "sha256": "92967fc68b28076697698d337559033966a363ac280dea1a701ab30045bcd9f8"
+    },
+    {
+      "path": "apps/web/scripts/run-neon-pooled-audit.ts",
+      "sha256": "a812c616454987f3703054b65bf2817b867e09ee379a93100a49b6d2ec8845ab"
+    },
+    {
+      "path": "apps/web/server/actor.ts",
+      "sha256": "dca74252dc8dfcd996dd46e582f52b3757bf6f2e078e2681d69372145366ca7c"
+    },
+    {
+      "path": "apps/web/server/services/notification-events.ts",
+      "sha256": "80d8d704fb509fb1f20ad32a8c4f1979b8b35f1f06d8a4fbdb8df3150ec009e7"
+    },
+    {
+      "path": "apps/web/server/trpc/procedures.test.ts",
+      "sha256": "9ea90dc330af236a7ad1067d0cdadcfe3008ba180c9c4992776be50fefcb5c24"
+    },
+    {
+      "path": "apps/web/server/trpc/procedures.ts",
+      "sha256": "07de49b1d4813bb91567e08075ee90f8227b258a7c8d00c0692b1c30d7222aea"
+    },
+    {
+      "path": "apps/web/server/usecases/administration/roles.ts",
+      "sha256": "ed106b7c231142c4dc42447c0664b4ceda4ebba8bc288d4cf07103ea222e1ee7"
+    },
+    {
+      "path": "apps/web/server/usecases/finance/authorize-field-request.ts",
+      "sha256": "01965bb71050affc9c5becdc914ca2afdcb85a991a08c105f7e92569c52497e1"
+    },
+    {
+      "path": "apps/web/server/usecases/finance/dashboard-overview.ts",
+      "sha256": "b108da430da6ce8af6e3de7134ed25a651e082965409e67407f206a375214eee"
+    },
+    {
+      "path": "apps/web/server/usecases/finance/pay-field-request.ts",
+      "sha256": "35b8ec8e81fc1ddc3b51729c58cd5357a4ade543222d26da8cdd80aae2e82a62"
+    },
+    {
+      "path": "apps/web/server/usecases/onboarding/owner-onboarding-overview.ts",
+      "sha256": "cac4cf721a60b88b97bcc28f3187fe6e03be426b1845e91cde2522fa8a20dcc0"
+    },
+    {
+      "path": "apps/web/server/usecases/onboarding/quick-start-mutations.ts",
+      "sha256": "0694daaf8c265d84d47164eb248232978bf066e33ef957e88fd6c2ece8a32155"
+    },
+    {
+      "path": "apps/web/server/usecases/project/assign-project-manager.ts",
+      "sha256": "9fd1280e8e21dd33bc9d12223ee6206021fd29a0440d801fc3515edb29d68358"
+    },
+    {
+      "path": "apps/web/server/usecases/project/create-project.ts",
+      "sha256": "ce02fbf3a9b85698bdc305e687a06d660eea79573c96e3514cfbe3570fc65bc7"
+    },
+    {
+      "path": "apps/web/server/usecases/project/get-project-overview.ts",
+      "sha256": "316fa78917b74596605686418b75ce97c0675e5ef834a39301209b06a9662179"
+    },
+    {
+      "path": "apps/web/server/usecases/project/project-form-bootstrap.ts",
+      "sha256": "a6b947bc452f793b93f73d29ea349bd8812fd49a9ab9243a35a90703bc9c1260"
+    },
+    {
+      "path": "apps/web/server/usecases/project/project-identity.test.ts",
+      "sha256": "8fe8351d5f7d22c96d8b9c06f525d996b43b4b4ccfd936d07d02ce755c84c230"
+    },
+    {
+      "path": "apps/web/server/usecases/project/update-project.ts",
+      "sha256": "f8165bb21a4ecca177c443987fa08dd763014bca3d74bc6e358f7853d2569a1d"
+    },
+    {
+      "path": "apps/web/server/usecases/settings/approval-thresholds.ts",
+      "sha256": "fc1db338f06f9fd5c9d1ab6fbdfa4dd60bba6b7869c283c13628ed3cdcd685d4"
+    },
+    {
+      "path": "docs/guide/vercel-deployment.md",
+      "sha256": "5a4a7f4906b51820ef73b8c136d4be0381d933d0e9af7ba05bbf18f2ad57777f"
+    },
+    {
+      "path": "docs/plans/2026-09-18-effective-permission-hardening.md",
+      "sha256": "f2aeb619940aa31dfcdfae748f6fa83b0366667c91ac39e3fd931aa1996a1678"
+    },
+    {
+      "path": "docs/plans/2026-09-18-product-business-and-readiness-strategy.md",
+      "sha256": "42db87827ef0d5e7196fd884b12efd6a865ecc77cfd05f6f32d4cdc862963815"
+    },
+    {
+      "path": "docs/plans/2026-09-18-readiness-baseline-and-backlog.md",
+      "sha256": "c9b307f861e3f8ec2b5ed19543f851398aff4d7f258a1682bc37a11799c618d3"
+    },
+    {
+      "path": "docs/plans/2026-09-20-postgres-integration-and-recovery.md",
+      "sha256": "c1debf6df3e037a16d39b439dff760902a962675b69b15ec6238fa457fd54b42"
+    },
+    {
+      "path": "docs/plans/2026-09-29-release-candidate-and-pooled-smoke.md",
+      "sha256": "05aaa66ed6187192921623534aa1b40851ba3be1ecc266b51a4744026a313df6"
+    },
+    {
+      "path": "packages/core/src/validations/roles.test.ts",
+      "sha256": "c476f2850e367b4c0fbb453211635191559ede4ad8be4eede62c039676529052"
+    },
+    {
+      "path": "packages/core/src/validations/roles.ts",
+      "sha256": "a79fb27e4270f959ad388ce02f78db053672a1e72bee4276c1bd2dfba1015598"
+    }
+  ],
+  "excludedWorkingTreeChanges": [
+    "apps/web/components/layout/bottom-nav-parts.test.tsx",
+    "apps/web/components/ui/button/button-motion.test.tsx",
+    "apps/web/features/finance-dashboard/components/bank-accounts/account-detail-sheet.test.tsx",
+    "apps/web/features/finance-dashboard/components/bank-accounts/movement-and-transfer-sheets.test.tsx",
+    "apps/web/app/globals.css",
+    "apps/web/components/layout/bottom-nav-parts.tsx",
+    "apps/web/components/layout/header-morph-menu.test.tsx",
+    "apps/web/components/layout/header-morph-menu.tsx",
+    "apps/web/components/ui/button/button.tsx",
+    "apps/web/components/ui/feedback/page-primitives.tsx",
+    "apps/web/components/ui/feedback/page-state.tsx",
+    "apps/web/components/ui/feedback/workspace-primitives.tsx",
+    "apps/web/components/ui/form/guided-form.tsx",
+    "apps/web/components/ui/navigation/exclusive-search-filter-bar.tsx",
+    "apps/web/components/ui/navigation/filter-pills.tsx",
+    "apps/web/components/ui/navigation/segmented-tabs.test.tsx",
+    "apps/web/components/ui/navigation/segmented-tabs.tsx",
+    "apps/web/components/ui/overlay/calendar-dialog.tsx",
+    "apps/web/components/ui/overlay/dialog-frame.tsx",
+    "apps/web/components/ui/overlay/unsaved-changes-modal.tsx",
+    "apps/web/features/finance-dashboard/components/bank-accounts/account-detail-sheet.tsx",
+    "apps/web/features/finance-dashboard/components/bank-accounts/account-transaction-rows.tsx",
+    "apps/web/features/finance-dashboard/components/bank-accounts/bank-accounts-control.tsx",
+    "apps/web/features/finance-dashboard/components/bank-accounts/color-editor.tsx",
+    "apps/web/features/finance-dashboard/components/bank-accounts/movement-sheet.tsx",
+    "apps/web/features/finance-dashboard/components/bank-accounts/transfer-sheet.tsx",
+    "apps/web/features/finance-dashboard/hooks/use-bank-accounts-control.ts",
+    "apps/web/features/materials/components/sheets/goods-receipt-sheet.tsx",
+    "apps/web/features/notifications/components/notification-bell-button.tsx",
+    "apps/web/features/notifications/components/notification-morph-dialog.tsx",
+    "apps/web/features/notifications/notification-bell-button.test.tsx",
+    "apps/web/features/projects/detail/components/budget/budget-approval-panel.tsx",
+    "apps/web/features/projects/detail/components/budget/budget-empty-state.tsx",
+    "apps/web/features/projects/detail/components/overview/project-identity-header.tsx",
+    "apps/web/features/projects/detail/components/rab/rab-bundle-drawer.tsx",
+    "apps/web/features/projects/detail/components/rab/rab-client-sections.tsx",
+    "apps/web/features/projects/detail/components/rab/rab-export-canvas.tsx",
+    "apps/web/features/projects/detail/components/rab/rab-export-drawer.tsx",
+    "apps/web/features/projects/detail/components/rab/rab-export-redesign.test.tsx",
+    "apps/web/features/projects/detail/components/shared/project-tab-states.tsx",
+    "apps/web/lib/utils/motion.ts",
+    "packages/tokens/src/motion.ts"
+  ],
+  "candidateFiles": [
+    {
+      "path": "apps/web/app/actions/activity-detail-inventory-resolvers.ts",
+      "sha256": "efe815567c695c3d865b2672c999eb4260d91f7fc4231a5f1eb93020df2409a1"
+    },
+    {
+      "path": "apps/web/app/actions/activity-detail-resolver-utils.ts",
+      "sha256": "f75caeba8bd0f3083acbf4d0d52f5b1de1e32b8e7bd5eee2419b8b140676f6a6"
+    },
+    {
+      "path": "apps/web/app/actions/ai/confirm-bank-reconciliation-proposal.test.ts",
+      "sha256": "177524e97251816a6124a836f8920995ea0b8fc89468b0065cc710e118d6b0cb"
+    },
+    {
+      "path": "apps/web/app/actions/finance/create-client-invoice.ts",
+      "sha256": "1eeddcc401063bb437b81c51a7c1cf91270763638ee4b17b9a3e165a85b3253c"
+    },
+    {
+      "path": "apps/web/app/actions/finance/field-request-auth.ts",
+      "sha256": "78870a767300d04715d98aff90063869bc4fa335629e43a2eac63e2f92e12c56"
+    },
+    {
+      "path": "apps/web/app/actions/finance/field-request-review.ts",
+      "sha256": "1ce75a6db61be600d92a058ca610e69609058beea6719b909513f6e3fd848621"
+    },
+    {
+      "path": "apps/web/app/actions/finance/get-invoice-prefill-context.ts",
+      "sha256": "3d6ea23c12a8bd23fe676f52d2dc3aa266e703e596a28573f02fcf71c3af39a6"
+    },
+    {
+      "path": "apps/web/app/actions/finance/submit-vendor-bill.ts",
+      "sha256": "12b468e762373a1049ccb618d549d24fa6cd7800f45e61dbee57e1cfb74946a6"
+    },
+    {
+      "path": "apps/web/app/actions/finance/vendor-bill-drafts.ts",
+      "sha256": "0002f8ee2194900fba6a14b5e7e7057a727bd8f09881f6ac83b21023c232e8dc"
+    },
+    {
+      "path": "apps/web/app/actions/material/goods-receipt.ts",
+      "sha256": "3e718eb53232dceb63f3d10fb6512e4c513fd6c9aad9850135b6e9853cc59d4b"
+    },
+    {
+      "path": "apps/web/app/actions/material/inventory-utils.ts",
+      "sha256": "bf244995e5d10532135d796b644a4aa36f6ba6e82e7ebf3d25abd414db52799e"
+    },
+    {
+      "path": "apps/web/app/actions/material/opening-inventory-queries.ts",
+      "sha256": "1abceebca3500e80f883c90acb3fa6726b3b48d4ebab5ca4596ebedb463f770b"
+    },
+    {
+      "path": "apps/web/app/actions/material/operations-dashboard.ts",
+      "sha256": "6731dedcba6abbf03c5bf1309e552313ffc207be1794af43ead3c77f352f980b"
+    },
+    {
+      "path": "apps/web/app/actions/material/warehouse-adjustment.ts",
+      "sha256": "e26ea32541535a5d4d9f06a0bff04f2678ff3dc9d749f81c63ae1f8520b6b64a"
+    },
+    {
+      "path": "apps/web/app/actions/material/warehouse-receipt-reversal.ts",
+      "sha256": "902059e19a5108e801a96d8079ee415e8161a086f91d7b6db90621a87854f61f"
+    },
+    {
+      "path": "apps/web/app/actions/material/warehouse-stock-count.ts",
+      "sha256": "af54d9281fc1bb38be5a01252f9f48059084cde7c7a5cbb9a62f64d8a72ad3e9"
+    },
+    {
+      "path": "apps/web/app/actions/onboarding-action-utils.ts",
+      "sha256": "655db306a9b18aaa8d4a164e87c42c10c7d8c6d281276b2e0b0abad9124ad16f"
+    },
+    {
+      "path": "apps/web/app/actions/onboarding-review.ts",
+      "sha256": "052f043310abbefb37246ed490f62f57a4f91fd93be3324458783211c9abfa51"
+    },
+    {
+      "path": "apps/web/app/actions/project/activation.ts",
+      "sha256": "58f6044f2a8230e527d6736a334a96805be3234fcc2ddca632a42875a774e327"
+    },
+    {
+      "path": "apps/web/app/actions/project/closing.ts",
+      "sha256": "a274989332763e455acf612f21865a9f5d9587153f91e83f819f09b96c36df4a"
+    },
+    {
+      "path": "apps/web/app/actions/project/revision-change-order-approval.ts",
+      "sha256": "385e77c3d335eb53d8b23a31b75d8bf0785636a693affc64d85c84deb9173d7d"
+    },
+    {
+      "path": "apps/web/app/actions/project/workflow-governance.ts",
+      "sha256": "40301437d7752a12c1f627677b12e8017d4a8be07eb8cf4e5a30bd4810e9d977"
+    },
+    {
+      "path": "apps/web/db/seed.ts",
+      "sha256": "d96f2e8f6f9a04ed1cb5114daf1ac881ec30c87e8791679cdb4963cc9236e687"
+    },
+    {
+      "path": "apps/web/drizzle/0041_rab_item_nature.sql",
+      "sha256": "4cbc84b0b46f523dd794b744d2222f2ac4ecb9f2aaa54f73ae0256d34f21c3c5"
+    },
+    {
+      "path": "apps/web/drizzle/meta/0041_snapshot.json",
+      "sha256": "50a2ab4794f10596afb5725b81b1698ea021a27eb0e2e08be46175d2b1764184"
+    },
+    {
+      "path": "apps/web/drizzle/meta/_journal.json",
+      "sha256": "3f58637a72a1903c852ac73904777cf6e4a2187d6bc5a30377519a320849f3e0"
+    },
+    {
+      "path": "apps/web/features/approvals/server/get-approvals-page-data.ts",
+      "sha256": "9010f6bef387bfc1161c254c98bbbc1e54b94b6bae9bef2b5d5d50f9e15d806f"
+    },
+    {
+      "path": "apps/web/features/expenses/server/get-expenses-page-data.ts",
+      "sha256": "2b2d16ee38ab0fcf5fd4a1638bb034712c90317a08cdc056c160c28f54ba1ef9"
+    },
+    {
+      "path": "apps/web/features/expenses/utils/expenses-access.test.ts",
+      "sha256": "d1fd2c024084ab6c391bbc805726fa35e766d9471b2b8c790f128c110ad7a44f"
+    },
+    {
+      "path": "apps/web/features/expenses/utils/expenses-access.ts",
+      "sha256": "e21ef1d80621bb1bf0071911308e1593e661160821c2663ec1f214a96d7be216"
+    },
+    {
+      "path": "apps/web/features/finance-dashboard/server/get-finance-dashboard-page-data.ts",
+      "sha256": "30692ec838b8eb0633379e479c47f081b6960c15cc5298a04b64bd4b84ba0ad1"
+    },
+    {
+      "path": "apps/web/features/navigation/server/home-destination.test.ts",
+      "sha256": "b203bacad247995d6b2e23816413db2f4dd97323f7354cf46d1205750aafa8d9"
+    },
+    {
+      "path": "apps/web/features/navigation/server/home-destination.ts",
+      "sha256": "77023402988f9d33549ed66863565220673270f716906e5c53e03c11cf34f064"
+    },
+    {
+      "path": "apps/web/features/notifications/components/notifications.stories.tsx",
+      "sha256": "12eaa2058120c2fcedfd29c84c0d2a535a5f65a1df030533846f6caeb2a7b11b"
+    },
+    {
+      "path": "apps/web/features/notifications/fixtures/database-case.ts",
+      "sha256": "7d79454669a217723c33b7c921f6a916a473d520650745af50037bc044487ba4"
+    },
+    {
+      "path": "apps/web/features/projects/detail/components/rab/rab-export-redesign.test.tsx",
+      "sha256": "58135c8ff3a6a4df4c620e0f6f78238909afe181bb63345781787a5dc72d138f"
+    },
+    {
+      "path": "apps/web/features/projects/detail/server/get-project-detail-data.ts",
+      "sha256": "d434d4e0af669174369bae9c286031175e6ac021e7db566480dd47e7501f413f"
+    },
+    {
+      "path": "apps/web/features/projects/list/server/get-project-list-page-data.ts",
+      "sha256": "8589eb020924ed3add4d22a8db224dd3a0c7bd4aa50162d29c9aaf4508dcaeb7"
+    },
+    {
+      "path": "apps/web/lib/ai/confirm-role-proposal.integration.test.ts",
+      "sha256": "78aeb15f360dee027dde611f791c2797bf314eb938cc06925ce78b7b37c2c0a6"
+    },
+    {
+      "path": "apps/web/lib/architecture/role-authority.test.ts",
+      "sha256": "b38b6143f72de4e1e7e518178afb691ee1d635322462802b4d855e5dad8fa418"
+    },
+    {
+      "path": "apps/web/lib/auth/bearer-http.integration.test.ts",
+      "sha256": "124318ba912642c1ba61ec9cd66d620885811fd7436c67dfff83d0ce0a019192"
+    },
+    {
+      "path": "apps/web/lib/auth/effective-permissions.test.ts",
+      "sha256": "0222a0e35a67bff33964638244bcd682390460fe33905592a61664aab2f07c78"
+    },
+    {
+      "path": "apps/web/lib/auth/fixtures/bearer-http-case.ts",
+      "sha256": "3cde4d4f5908ce76b8b52f642d2812170035fd75c3dd7fc99c9931b086d1dacb"
+    },
+    {
+      "path": "apps/web/lib/auth/fixtures/effective-permissions-case.ts",
+      "sha256": "f002460b21ee7a1e44878a5360e84fc933bb0ce8a40c2dc66cbb6fd2dc5aba1f"
+    },
+    {
+      "path": "apps/web/lib/auth/permissions.test.ts",
+      "sha256": "cba703849d7153d58323d3f2b4846eab5312acc93405470d1c8b2d3eafedc989"
+    },
+    {
+      "path": "apps/web/lib/auth/permissions.ts",
+      "sha256": "2c4822ebe7e0257869b76514c2cea09fbc119b8c0c67fb4e57bc8abb1b78df55"
+    },
+    {
+      "path": "apps/web/lib/auth/role-access.ts",
+      "sha256": "fd6935d517d651043b0c7815680301b53c6e754817ff99e7e5b1110bff711e89"
+    },
+    {
+      "path": "apps/web/lib/finance/actions-field.test.ts",
+      "sha256": "94e2432ed77b5201343295f136c575c00bda2e3483338536bbffa6fb1131086a"
+    },
+    {
+      "path": "apps/web/lib/finance/actions.test.ts",
+      "sha256": "3e12cccaba998bc22a8bbad52551d187cb3ce50068e0991a49f57eff02385ae1"
+    },
+    {
+      "path": "apps/web/lib/finance/approval-details.ts",
+      "sha256": "3895e483ce8d6cdbafc21fd5d592c63665159b16994f62ac7da37fb2c02ec81b"
+    },
+    {
+      "path": "apps/web/lib/finance/balance-concurrency.integration.test.ts",
+      "sha256": "6cc3d4e7430c5ff69f81182d2215f300f50bfc75506b726a60fec3a60c69e7ba"
+    },
+    {
+      "path": "apps/web/lib/finance/demo-walkthrough.integration.test.ts",
+      "sha256": "2dc4e8b43ca6ca1761db24255173b5a906834328beb2babd1efc5a300d9c54cf"
+    },
+    {
+      "path": "apps/web/lib/finance/ocr-form.test.ts",
+      "sha256": "328f9fe38ebc054a44ac6265ae597f3f86f6b36ff386858394e66672bc91d6c8"
+    },
+    {
+      "path": "apps/web/scripts/local-postgres-preload.test.ts",
+      "sha256": "ced78eb560ee3d546bd790f94067387faef85ada6e98e7711dd609e217ba48ef"
+    },
+    {
+      "path": "apps/web/scripts/local-postgres-preload.ts",
+      "sha256": "8d99a6a155c7479d3504ee73d351b5a2581111faa472a575ac6319c10a3ac57e"
+    },
+    {
+      "path": "apps/web/scripts/run-local-postgres-audit.py",
+      "sha256": "92967fc68b28076697698d337559033966a363ac280dea1a701ab30045bcd9f8"
+    },
+    {
+      "path": "apps/web/scripts/run-neon-pooled-audit.ts",
+      "sha256": "a812c616454987f3703054b65bf2817b867e09ee379a93100a49b6d2ec8845ab"
+    },
+    {
+      "path": "apps/web/server/actor.ts",
+      "sha256": "dca74252dc8dfcd996dd46e582f52b3757bf6f2e078e2681d69372145366ca7c"
+    },
+    {
+      "path": "apps/web/server/services/notification-events.ts",
+      "sha256": "80d8d704fb509fb1f20ad32a8c4f1979b8b35f1f06d8a4fbdb8df3150ec009e7"
+    },
+    {
+      "path": "apps/web/server/trpc/procedures.test.ts",
+      "sha256": "9ea90dc330af236a7ad1067d0cdadcfe3008ba180c9c4992776be50fefcb5c24"
+    },
+    {
+      "path": "apps/web/server/trpc/procedures.ts",
+      "sha256": "07de49b1d4813bb91567e08075ee90f8227b258a7c8d00c0692b1c30d7222aea"
+    },
+    {
+      "path": "apps/web/server/usecases/administration/roles.ts",
+      "sha256": "ed106b7c231142c4dc42447c0664b4ceda4ebba8bc288d4cf07103ea222e1ee7"
+    },
+    {
+      "path": "apps/web/server/usecases/finance/authorize-field-request.ts",
+      "sha256": "01965bb71050affc9c5becdc914ca2afdcb85a991a08c105f7e92569c52497e1"
+    },
+    {
+      "path": "apps/web/server/usecases/finance/dashboard-overview.ts",
+      "sha256": "b108da430da6ce8af6e3de7134ed25a651e082965409e67407f206a375214eee"
+    },
+    {
+      "path": "apps/web/server/usecases/finance/pay-field-request.ts",
+      "sha256": "35b8ec8e81fc1ddc3b51729c58cd5357a4ade543222d26da8cdd80aae2e82a62"
+    },
+    {
+      "path": "apps/web/server/usecases/onboarding/owner-onboarding-overview.ts",
+      "sha256": "cac4cf721a60b88b97bcc28f3187fe6e03be426b1845e91cde2522fa8a20dcc0"
+    },
+    {
+      "path": "apps/web/server/usecases/onboarding/quick-start-mutations.ts",
+      "sha256": "0694daaf8c265d84d47164eb248232978bf066e33ef957e88fd6c2ece8a32155"
+    },
+    {
+      "path": "apps/web/server/usecases/project/assign-project-manager.ts",
+      "sha256": "9fd1280e8e21dd33bc9d12223ee6206021fd29a0440d801fc3515edb29d68358"
+    },
+    {
+      "path": "apps/web/server/usecases/project/create-project.ts",
+      "sha256": "ce02fbf3a9b85698bdc305e687a06d660eea79573c96e3514cfbe3570fc65bc7"
+    },
+    {
+      "path": "apps/web/server/usecases/project/get-project-overview.ts",
+      "sha256": "316fa78917b74596605686418b75ce97c0675e5ef834a39301209b06a9662179"
+    },
+    {
+      "path": "apps/web/server/usecases/project/project-form-bootstrap.ts",
+      "sha256": "a6b947bc452f793b93f73d29ea349bd8812fd49a9ab9243a35a90703bc9c1260"
+    },
+    {
+      "path": "apps/web/server/usecases/project/project-identity.test.ts",
+      "sha256": "8fe8351d5f7d22c96d8b9c06f525d996b43b4b4ccfd936d07d02ce755c84c230"
+    },
+    {
+      "path": "apps/web/server/usecases/project/update-project.ts",
+      "sha256": "f8165bb21a4ecca177c443987fa08dd763014bca3d74bc6e358f7853d2569a1d"
+    },
+    {
+      "path": "apps/web/server/usecases/settings/approval-thresholds.ts",
+      "sha256": "fc1db338f06f9fd5c9d1ab6fbdfa4dd60bba6b7869c283c13628ed3cdcd685d4"
+    },
+    {
+      "path": "bunfig.toml",
+      "sha256": "6439688c7c9c34b19fb5d5fe4c196f45d252171bbac090c9be39f9c036d40049"
+    },
+    {
+      "path": "docs/guide/vercel-deployment.md",
+      "sha256": "5a4a7f4906b51820ef73b8c136d4be0381d933d0e9af7ba05bbf18f2ad57777f"
+    },
+    {
+      "path": "docs/plans/2026-09-18-effective-permission-hardening.md",
+      "sha256": "f2aeb619940aa31dfcdfae748f6fa83b0366667c91ac39e3fd931aa1996a1678"
+    },
+    {
+      "path": "docs/plans/2026-09-18-product-business-and-readiness-strategy.md",
+      "sha256": "42db87827ef0d5e7196fd884b12efd6a865ecc77cfd05f6f32d4cdc862963815"
+    },
+    {
+      "path": "docs/plans/2026-09-18-readiness-baseline-and-backlog.md",
+      "sha256": "c9b307f861e3f8ec2b5ed19543f851398aff4d7f258a1682bc37a11799c618d3"
+    },
+    {
+      "path": "docs/plans/2026-09-20-postgres-integration-and-recovery.md",
+      "sha256": "c1debf6df3e037a16d39b439dff760902a962675b69b15ec6238fa457fd54b42"
+    },
+    {
+      "path": "docs/plans/2026-09-29-release-candidate-and-pooled-smoke.md",
+      "sha256": "266a70cac234dfb3fa85f8f392e38c7add542e23e894d1980575627b981cff8e"
+    },
+    {
+      "path": "packages/core/src/validations/roles.test.ts",
+      "sha256": "c476f2850e367b4c0fbb453211635191559ede4ad8be4eede62c039676529052"
+    },
+    {
+      "path": "packages/core/src/validations/roles.ts",
+      "sha256": "a79fb27e4270f959ad388ce02f78db053672a1e72bee4276c1bd2dfba1015598"
+    }
+  ],
+  "candidateSourceDigest": "d5df22851cf72320a8de961cbf810bd2315f32e5f20ab6c5cfbfa6e2e96c2353",
+  "candidateAdjustments": [
+    "bunfig.toml: isolated linker",
+    "auth test: explicit child environment",
+    "signature test: temporary test key",
+    "RAB test: type fixture only",
+    "Storybook type import: directly declared dependency"
+  ],
+  "deployedRuntimeSourceCommit": "ef20abf66bdabb162362c02e37974d32299ecf2e",
+  "previewDeploymentId": "dpl_Hu6fr6H7Tmy5xuv7Qq5swPuojULx",
+  "previewAlias": "atria-readiness-001d0681.vercel.app",
+  "previewRegion": "sin1",
+  "runtimeSourceDigest": "ef580552f1c947c297b6dcd7a3ede6a674dc6e639a4454937ffae6c186e7e874",
+  "productionDeploymentId": "dpl_HVGdmeHfuYWBa46c7QHNSvjneGZn",
+  "productionSourceHead": "307a85478e0e3ea9e5898d604b2539dd21ffa05c",
+  "productionDomain": "atria-erp.vercel.app",
+  "productionRegion": "sin1",
+  "rollbackDeploymentId": "dpl_77LwXaSgbJ7FxMQxzCXBK95zDgok",
+  "installContext": {
+    "webRelease": "isolated",
+    "primaryMobileWorkspace": "hoisted",
+    "mergeRootInstallOverrideWithoutNativeVerification": false
+  }
+}

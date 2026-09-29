@@ -1,6 +1,6 @@
+import { actorCan } from "@/lib/auth/permissions";
 import "server-only";
 
-import { actorHasPermission } from "@atria/core/auth/permissions";
 import { eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -29,12 +29,9 @@ export type HomeDestination = {
  * pemeriksaan terindeks ke `app_config` dan tabel `project` bila belum ada konfigurasi.
  */
 export async function resolveHomeDestinationInfo(actor: Actor): Promise<HomeDestination> {
-  if (actorHasPermission(actor.roleName, "manage:onboarding")) {
+  if (actorCan(actor, "manage:onboarding")) {
     const configRows = await db.query.appConfig.findMany({
-      where: inArray(appConfig.key, [
-        OWNER_ONBOARDING_V2_CONFIG_KEY,
-        OWNER_ONBOARDING_CONFIG_KEY,
-      ]),
+      where: inArray(appConfig.key, [OWNER_ONBOARDING_V2_CONFIG_KEY, OWNER_ONBOARDING_CONFIG_KEY]),
       columns: { key: true, value: true },
     });
 
@@ -76,7 +73,7 @@ export async function resolveHomeDestinationInfo(actor: Actor): Promise<HomeDest
     };
   }
 
-  if (actorHasPermission(actor.roleName, "review:onboarding")) {
+  if (actorCan(actor, "review:onboarding")) {
     const pending = await db.query.inventoryOpeningBatch.findFirst({
       where: eq(inventoryOpeningBatch.status, "PENDING_APPROVAL"),
       columns: { id: true },
@@ -92,13 +89,13 @@ export async function resolveHomeDestinationInfo(actor: Actor): Promise<HomeDest
    * Tangga tujuan: buku kas dulu, lalu proyek, lalu gudang. Peran tanpa
    * ketiganya mendarat di daftar proyek — halaman paling tidak berbahaya.
    */
-  if (actorHasPermission(actor.roleName, "view:ledger")) {
+  if (actorCan(actor, "view:ledger")) {
     return { route: "/ledger", onboardingStep: null, path: "/ledger" };
   }
-  if (actorHasPermission(actor.roleName, "view:project")) {
+  if (actorCan(actor, "view:project")) {
     return { route: "/projects", onboardingStep: null, path: "/projects" };
   }
-  if (actorHasPermission(actor.roleName, "view:inventory")) {
+  if (actorCan(actor, "view:inventory")) {
     return { route: "/materials", onboardingStep: null, path: "/materials" };
   }
   return { route: "/projects", onboardingStep: null, path: "/projects" };

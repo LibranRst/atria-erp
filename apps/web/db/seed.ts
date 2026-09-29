@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { eq } from "drizzle-orm";
+import { DEFAULT_OWNER_APPROVAL_THRESHOLD_CENTS } from "@atria/core/finance/approval-thresholds";
 
 import { auth } from "@/lib/auth";
 import { db } from "./index";
@@ -4504,6 +4506,35 @@ export async function seedDemoDatabase(): Promise<void> {
         userAgent: "Atria ERP database seed",
       })),
     );
+
+    // Seed ditanam sesudah migrasi backfill 0032. Bekukan keputusan approval
+    // pada fixture juga, sesuai nominal/overrun dan riwayat persetujuannya.
+    const seededApprovals = await tx.select().from(approval);
+    for (const cost of await tx.select().from(projectCost)) {
+      await tx
+        .update(projectCost)
+        .set({
+          requiresOwnerApproval:
+            parseMoneyToMinor(cost.amount) >= DEFAULT_OWNER_APPROVAL_THRESHOLD_CENTS ||
+            cost.budgetOverrun ||
+            seededApprovals.some(
+              (row) => row.referenceType === "project_cost" && row.referenceId === cost.id,
+            ),
+        })
+        .where(eq(projectCost.id, cost.id));
+    }
+    for (const payment of await tx.select().from(vendorPayment)) {
+      await tx
+        .update(vendorPayment)
+        .set({
+          requiresOwnerApproval:
+            parseMoneyToMinor(payment.amountPaid) >= DEFAULT_OWNER_APPROVAL_THRESHOLD_CENTS ||
+            seededApprovals.some(
+              (row) => row.referenceType === "vendor_payment" && row.referenceId === payment.id,
+            ),
+        })
+        .where(eq(vendorPayment.id, payment.id));
+    }
 
     console.log("Validating financial, stock, workflow, and project-scope invariants...");
     const accountsForValidation = await tx.select().from(bankAccount);

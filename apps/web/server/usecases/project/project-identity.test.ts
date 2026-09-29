@@ -232,7 +232,7 @@ describe("project identity use-case contract", () => {
   test("kedua use-case menerima Actor eksplisit dan update menegakkan scope", () => {
     expect(createSource).toMatch(/createProjectUseCase\(\s*actor: Actor,/);
     expect(updateSource).toMatch(/updateProjectUseCase\(\s*actor: Actor,/);
-    expect(updateSource).toContain('actorHasPermission(actor.roleName, "update:budget")');
+    expect(updateSource).toContain('actorCan(actor, "update:budget")');
     expect(updateSource).toContain("assertProjectAccess(data.id, actor.userId, actor.roleName)");
   });
 

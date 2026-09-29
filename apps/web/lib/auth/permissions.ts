@@ -1,13 +1,9 @@
 import { db } from "@/db";
 import { role } from "@/db/schema";
-import {
-  actorHasPermission,
-  type PermissionKey,
-  resolveStaticRoleName,
-} from "@atria/core/auth/permissions";
+import { type PermissionKey, resolveStaticRoleName } from "@atria/core/auth/permissions";
 import { eq } from "drizzle-orm";
 
-import { roleHasPermission } from "./role-access";
+import { roleHasPermission, roleNameHasPermission } from "./role-access";
 
 /**
  * Sisi server dari perizinan: resolusi peran lewat database dan assertion yang
@@ -20,7 +16,6 @@ import { roleHasPermission } from "./role-access";
  * langsung dari `@atria/core/auth/permissions` di sana.
  */
 export {
-  actorHasPermission,
   ROLE_ID_TO_NAME,
   ROLE_PERMISSIONS,
   resolveStaticRoleName,
@@ -87,7 +82,7 @@ export async function assertPermission(
     throw new Error("FORBIDDEN: Pengguna tidak memiliki peran yang valid.");
   }
 
-  if (!actorHasPermission(roleName, permission)) {
+  if (!(await roleNameHasPermission(roleName, permission))) {
     throw new Error(`FORBIDDEN: Peran ${roleName} tidak memiliki izin ${permission}`);
   }
 }
@@ -100,8 +95,8 @@ export async function assertPermission(
  * dua jawaban berbeda untuk pengguna yang sama.
  */
 export function actorCan(
-  actor: { readonly permissions: readonly PermissionKey[] },
+  actor: { readonly permissions: readonly PermissionKey[]; readonly isActive?: boolean },
   permission: PermissionKey,
 ): boolean {
-  return actor.permissions.includes(permission);
+  return actor.isActive !== false && actor.permissions.includes(permission);
 }

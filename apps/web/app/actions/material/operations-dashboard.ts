@@ -1,6 +1,7 @@
 "use server";
 
-import { actorHasPermission } from "@atria/core/auth/permissions";
+import { getRoleAccessByName } from "@/lib/auth/role-access";
+
 import { cookies } from "next/headers";
 import { and, desc, eq, lt, ne, or } from "drizzle-orm";
 
@@ -279,7 +280,8 @@ export async function getMaterialOperationsDashboard(): Promise<
     ]);
     if (!inventoryResult.success) return inventoryResult;
     const shortages = shortageResult.success ? shortageResult.data : [];
-    const operational = actorHasPermission(roleName, "create:stock_movement");
+    const permissions = (await getRoleAccessByName(roleName))?.permissions ?? [];
+    const operational = permissions.includes("create:stock_movement");
     const billOptions = bills
       .filter((row) => row.budgetCategory.expenseCategory.code === "MATERIAL")
       .map((row) => {
@@ -332,12 +334,12 @@ export async function getMaterialOperationsDashboard(): Promise<
         capabilities: {
           canReceive: operational,
           canOperate: operational,
-          canTransfer: actorHasPermission(roleName, "transfer:stock"),
-          canCount: actorHasPermission(roleName, "create:stock_count"),
-          canApproveCount: actorHasPermission(roleName, "approve:stock_count"),
-          canRequestReversal: actorHasPermission(roleName, "request:goods_receipt_reversal"),
-          canApproveReversal: actorHasPermission(roleName, "approve:goods_receipt_reversal"),
-          canEmergencyAdjust: actorHasPermission(roleName, "adjust:stock"),
+          canTransfer: permissions.includes("transfer:stock"),
+          canCount: permissions.includes("create:stock_count"),
+          canApproveCount: permissions.includes("approve:stock_count"),
+          canRequestReversal: permissions.includes("request:goods_receipt_reversal"),
+          canApproveReversal: permissions.includes("approve:goods_receipt_reversal"),
+          canEmergencyAdjust: permissions.includes("adjust:stock"),
         },
         inventory: inventoryResult.data,
         shortages,

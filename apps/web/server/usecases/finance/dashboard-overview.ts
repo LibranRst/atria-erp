@@ -1,5 +1,6 @@
+import { actorCan } from "@/lib/auth/permissions";
 import { getFieldCostApprovalThresholdRupiah } from "@/lib/finance/approval-thresholds";
-import { actorHasPermission } from "@atria/core/auth/permissions";
+
 import "server-only";
 
 import { desc, eq, inArray } from "drizzle-orm";
@@ -79,7 +80,7 @@ export async function getFinanceDashboardOverviewUseCase(
   actor: Actor,
 ): Promise<ActionResponse<FinanceDashboardOverview>> {
   const resolvedRole = actor.roleName;
-  if (!actorHasPermission(resolvedRole, "view:ledger")) {
+  if (!actorCan(actor, "view:ledger") || actor.dataScope !== "GLOBAL") {
     return {
       success: false,
       error: {
@@ -122,9 +123,7 @@ export async function getFinanceDashboardOverviewUseCase(
     ]);
 
     const optionalResults = await Promise.allSettled([
-      actorHasPermission(role, "view:approval_queue")
-        ? getPendingApprovalDetails()
-        : Promise.resolve([]),
+      actorCan(actor, "view:approval_queue") ? getPendingApprovalDetails() : Promise.resolve([]),
       db.query.materialInventory.findMany({ with: { material: true, location: true } }),
       db.query.projectRapItem.findMany({
         with: {
@@ -160,7 +159,7 @@ export async function getFinanceDashboardOverviewUseCase(
     );
     // Penyempitan yang sama dengan halaman Persetujuan; satu aturan, dua tempat
     // yang membacanya lewat izin yang sama.
-    const approvalDetails = actorHasPermission(role, "decide:all_approvals")
+    const approvalDetails = actorCan(actor, "decide:all_approvals")
       ? rawApprovalDetails
       : rawApprovalDetails.filter((item) => item.type === "inventory_opening");
     const inventoryRows = optionalData(optionalResults[1], "inventori", [], unavailableSources);
@@ -379,7 +378,7 @@ export async function getFinanceDashboardOverviewUseCase(
     }));
 
     const core = buildFinanceDashboardCore({
-      decidesCostApprovals: actorHasPermission(role, "approve:cost"),
+      decidesCostApprovals: actorCan(actor, "approve:cost"),
       cashAvailable: accounts.reduce((sum, account) => sum + Number(account.balance), 0),
       receivables: invoices.map((invoice) => ({
         amount: Number(invoice.amount),

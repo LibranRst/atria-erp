@@ -1,6 +1,6 @@
+import { getRoleDataScopeByName, roleNameHasPermission } from "@/lib/auth/role-access";
 import { getApprovalThresholds } from "@/lib/finance/approval-thresholds";
 import { thresholdCentsToRupiah } from "@atria/core/finance/approval-thresholds";
-import { actorHasPermission, getRoleDataScope } from "@atria/core/auth/permissions";
 import "server-only";
 
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -34,7 +34,7 @@ import {
 export async function getProjectDetailData(projectId: string): Promise<ProjectTabsProps> {
   const session = await requireServerSession();
   const roleName = (await resolveRoleName(session.user.roleId)) ?? "UNKNOWN";
-  const isFinanceOperator = actorHasPermission(roleName, "view:bank_account");
+  const isFinanceOperator = await roleNameHasPermission(roleName, "view:bank_account");
 
   try {
     await assertProjectAccess(projectId, session.user.id, roleName);
@@ -184,7 +184,7 @@ export async function getProjectDetailData(projectId: string): Promise<ProjectTa
     orderBy: [desc(stockMovement.createdAt)],
   });
 
-  const isPM = getRoleDataScope(roleName) === "ASSIGNED";
+  const isPM = (await getRoleDataScopeByName(roleName)) === "ASSIGNED";
   const pmProjectFilter = isPM ? eq(project.projectManagerId, session.user.id) : undefined;
   const projectsData = await db.query.project.findMany({
     where: pmProjectFilter
@@ -251,7 +251,7 @@ export async function getProjectDetailData(projectId: string): Promise<ProjectTa
     }),
     db.query.user.findMany({
       columns: { id: true, isActive: true, name: true, email: true },
-      with: { role: { columns: { name: true } } },
+      with: { role: { columns: { name: true, dataScope: true } } },
       orderBy: (table, { asc }) => [asc(table.name)],
     }),
   ]);
@@ -259,7 +259,7 @@ export async function getProjectDetailData(projectId: string): Promise<ProjectTa
   const projectManagers = usersData
     .filter(
       (candidate) =>
-        (candidate.isActive && getRoleDataScope(candidate.role.name) === "ASSIGNED") ||
+        (candidate.isActive && candidate.role.dataScope === "ASSIGNED") ||
         candidate.id === projectData.projectManagerId,
     )
     .map(({ id, name, email }) => ({ id, name, email }));

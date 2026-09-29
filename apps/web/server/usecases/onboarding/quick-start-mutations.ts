@@ -15,7 +15,6 @@ import { insertProjectWithCanonicalBudgetTx } from "@/server/usecases/project/pr
 import { recordReadinessMilestonesTx } from "@/lib/onboarding/readiness-events";
 import type { Actor } from "@/server/actor";
 import { DEFAULT_EXPENSE_CATEGORIES } from "@atria/core/budget/excel-budget";
-import { getRoleDataScope } from "@atria/core/auth/permissions";
 import {
   advanceQuickStartSchema,
   createDefaultOwnerQuickStartState,
@@ -347,9 +346,9 @@ export async function createFirstProjectQuickStartUseCase(
           where: (table, { and, eq }) =>
             and(eq(table.id, parsed.data.projectManagerId!), eq(table.isActive, true)),
           columns: { id: true },
-          with: { role: { columns: { name: true } } },
+          with: { role: { columns: { name: true, dataScope: true } } },
         });
-        if (!manager || getRoleDataScope(manager.role.name) !== "ASSIGNED") {
+        if (!manager || manager.role.dataScope !== "ASSIGNED") {
           throw new Error("PROJECT_MANAGER_INVALID");
         }
       }

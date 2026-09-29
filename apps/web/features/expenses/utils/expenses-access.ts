@@ -1,4 +1,4 @@
-import { actorHasPermission } from "@atria/core/auth/permissions";
+import type { PermissionKey } from "@atria/core/auth/permissions";
 
 /**
  * Rekening bank hanya terbuka bagi peran yang memang berhak melihatnya.
@@ -7,8 +7,8 @@ import { actorHasPermission } from "@atria/core/auth/permissions";
  * yang menjaga halaman rekening itu sendiri, sehingga mencabut
  * `view:bank_account` benar-benar menutup datanya di sini juga.
  */
-export function canExposeExpenseBankAccounts(roleName: string): boolean {
-  return actorHasPermission(roleName, "view:bank_account");
+export function canExposeExpenseBankAccounts(permissions: readonly PermissionKey[]): boolean {
+  return permissions.includes("view:bank_account");
 }
 
 export function redactExpensePaymentBankData<

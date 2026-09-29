@@ -1,4 +1,5 @@
 "use server";
+import { getRoleDataScopeByName } from "@/lib/auth/role-access";
 
 import { and, desc, eq, lte } from "drizzle-orm";
 import { cookies } from "next/headers";
@@ -8,7 +9,6 @@ import { db } from "@/db";
 import { formDraft, vendorBill } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { assertPermission, resolveRoleName } from "@/lib/auth/permissions";
-import { getRoleDataScope } from "@atria/core/auth/permissions";
 import { assertProjectAccess } from "@/lib/auth/scoping";
 import { createVendorBillTx } from "@/lib/finance/vendor-bill-write";
 import type { ActionResponse } from "@atria/core/types/action-response";
@@ -62,7 +62,7 @@ async function authorize(
   try {
     await assertPermission(session.user, "create:vendor_bill");
     const roleName = await resolveRoleName(session.user.roleId);
-    if (projectId && getRoleDataScope(roleName) === "ASSIGNED") {
+    if (projectId && (await getRoleDataScopeByName(roleName)) === "ASSIGNED") {
       await assertProjectAccess(projectId, session.user.id, roleName);
     }
     return { success: true, data: { user: { id: session.user.id, roleId: session.user.roleId } } };

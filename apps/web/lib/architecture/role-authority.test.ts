@@ -37,9 +37,7 @@ const ROLE_LITERAL_PATTERNS: readonly RegExp[] = [
  * Daftar ini tidak dimaksudkan bertambah. Sebuah fitur yang merasa
  * membutuhkannya hampir selalu kekurangan permission key, bukan pengecualian.
  */
-const PERMANENT_ROLE_NAME_USES: readonly string[] = [
-  "app/actions/developer-account-simulation.ts",
-];
+const PERMANENT_ROLE_NAME_USES: readonly string[] = ["app/actions/developer-account-simulation.ts"];
 
 /**
  * Utang migrasi. Daftar ini HANYA boleh menyusut, dan entri yang sudah bersih
@@ -104,6 +102,25 @@ const coreFiles = collectSourceFiles(".", CORE_ROOT);
 const coreOffenders = coreFiles.filter((file) => usesRoleLiteral(file, CORE_ROOT));
 
 describe("otoritas peran tunggal", () => {
+  test("server tidak memakai matriks seed sebagai otoritas runtime", () => {
+    const runtime = sourceFiles.filter(
+      (file) =>
+        !file.includes("/fixtures/") &&
+        !file.startsWith("lib/testing/") &&
+        (file.startsWith("app/actions/") ||
+          file.startsWith("app/api/") ||
+          file.startsWith("server/") ||
+          file.startsWith("lib/") ||
+          file.includes("/server/")),
+    );
+    const seedAuthority =
+      /\bactorHasPermission\s*\(|\bROLE_PERMISSIONS\s*\[|\bgetRoleDataScope\s*\(/;
+    const remaining = runtime.filter((file) =>
+      seedAuthority.test(stripComments(readFileSync(path.join(APP_ROOT, file), "utf8"))),
+    );
+    expect(remaining).toEqual([]);
+  });
+
   test("tidak ada berkas baru yang memutuskan akses dari literal nama peran", () => {
     const allowed = [...MIGRATION_DEBT, ...PERMANENT_ROLE_NAME_USES];
     const unexpected = offenders.filter((file) => !allowed.includes(file));
@@ -133,10 +150,7 @@ describe("otoritas peran tunggal", () => {
   });
 
   test("kemampuan administrasi diturunkan dari izin", () => {
-    const source = readFileSync(
-      path.join(CORE_ROOT, "auth", "administration-access.ts"),
-      "utf8",
-    );
+    const source = readFileSync(path.join(CORE_ROOT, "auth", "administration-access.ts"), "utf8");
 
     expect(source).toContain('can("manage:users")');
     expect(source).toContain('can("manage:vendors")');

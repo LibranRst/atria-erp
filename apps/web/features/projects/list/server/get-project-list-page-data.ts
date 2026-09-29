@@ -1,3 +1,4 @@
+import { actorCan } from "@/lib/auth/permissions";
 import "server-only";
 
 import { db } from "@/db";
@@ -9,7 +10,7 @@ import type {
   UserData,
 } from "@/features/projects/list/types/project-list-types";
 import { scopeProjectQuery } from "@/lib/auth/scoping";
-import { actorHasPermission } from "@atria/core/auth/permissions";
+
 import { resolveEffectiveProjectHealth } from "@atria/core/project/effective-health";
 import type { Actor } from "@/server/actor";
 
@@ -49,7 +50,7 @@ function toFinancialHealth(status: string): FinancialHealth {
 
 export async function getProjectListPageData(actor: Actor): Promise<ProjectListPageData> {
   const roleName = actor.roleName;
-  if (!actorHasPermission(roleName, "view:budget")) {
+  if (!actorCan(actor, "view:budget")) {
     return { status: "restricted" };
   }
 
@@ -139,6 +140,6 @@ export async function getProjectListPageData(actor: Actor): Promise<ProjectListP
     }),
     clients: clients.map((client) => ({ id: client.id, name: client.name })),
     users: users.map((user) => ({ id: user.id, name: user.name })),
-    isAllowedToCreate: actorHasPermission(roleName, "create:project"),
+    isAllowedToCreate: actorCan(actor, "create:project"),
   };
 }

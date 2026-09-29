@@ -1,3 +1,4 @@
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
 import { beforeEach, describe, expect, it } from "bun:test";
 import { db } from "@/db";
 import type { Actor } from "@/server/actor";
@@ -13,7 +14,7 @@ function createMockActor(roleName: string): Actor {
     userId: "user-1",
     roleId: `role-${roleName}`,
     roleName,
-    permissions: [],
+    permissions: ROLE_PERMISSIONS[roleName] ?? [],
     name: "Test User",
     email: "test@dekoria.id",
     image: null,
