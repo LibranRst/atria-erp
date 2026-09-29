@@ -32,6 +32,8 @@ Arah produk/bisnis: [strategi Atria](2026-09-18-product-business-and-readiness-s
 
 **Keputusan recovery 30 September 2026:** [usulan RPO/RTO, pilihan biaya, dan urutan penerapan](2026-09-30-production-recovery-decision.md) disiapkan. Rekomendasi untuk pilot transaksi nyata adalah Launch dengan history tujuh hari dan snapshot terjadwal; upgrade organisasi memerlukan keputusan biaya Owner/Finance. Slot satu snapshot manual paket Free saat ini terpakai bukti drill.
 
+**Pilihan pengguna 30 September 2026:** Neon tetap Free. [Workflow dump harian ke S3](2026-09-30-free-tier-nightly-backup.md) dan [runbook aktivasi/restore](../guide/free-tier-s3-backup.md) telah disiapkan dengan guard production, IAM OIDC, validasi archive, dan retensi bucket 30 hari. Backup terjadwal **belum aktif** sampai bucket/role AWS, role baca Neon, secret GitHub, dan uji run manual tersedia. RPO efektif dump harian dapat mendekati 24 jam; usulan satu jam belum tercapai.
+
 Baseline otomatis lulus untuk test tanpa database, lint, dan production build web. Audit menemukan **dua cacat otorisasi P0 yang direproduksi secara lokal**. Keduanya harus ditutup sebelum otorisasi dari Settings dapat dipercaya. Bukti integration/recovery terkini belum lengkap. Tenant kedua belum boleh diaktifkan berdasarkan kesiapan yang terbukti pada audit ini.
 
 Tidak ada perubahan runtime, migrasi, reset/seed database, deploy, atau transaksi bisnis dalam audit ini. Tiga perubahan UI milik workspace yang sudah ada sebelum audit tetap dipertahankan. Hasil di bawah berlaku pada working tree saat pemeriksaan, bukan klaim terhadap deployment tertentu.

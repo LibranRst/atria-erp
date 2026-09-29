@@ -1,0 +1,39 @@
+name: Production database backup
+
+on:
+  schedule:
+    # 02:17 WIB; GitHub schedules use UTC and may start late under load.
+    - cron: "17 19 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: production-db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    if: github.ref == 'refs/heads/development' && vars.ATRIA_BACKUP_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out backup script
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Obtain temporary AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ vars.ATRIA_BACKUP_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.ATRIA_BACKUP_AWS_REGION }}
+
+      - name: Dump, validate, and upload production database
+        env:
+          NEON_BACKUP_DATABASE_URL: ${{ secrets.ATRIA_BACKUP_DATABASE_URL }}
+          BACKUP_S3_BUCKET: ${{ vars.ATRIA_BACKUP_S3_BUCKET }}
+          AWS_REGION: ${{ vars.ATRIA_BACKUP_AWS_REGION }}
+          EXPECTED_NEON_HOST: ep-wispy-unit-az0r7nao.c-3.ap-southeast-1.aws.neon.tech
+          EXPECTED_BACKUP_USER: atria_backup
+        run: bash scripts/backup-production-db.sh

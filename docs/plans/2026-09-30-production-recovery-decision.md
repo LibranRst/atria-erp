@@ -1,6 +1,6 @@
 # Keputusan recovery production Atria
 
-Disusun 30 September 2026. Status: **usulan untuk keputusan Owner/Finance; belum diterapkan**. Dokumen ini melanjutkan [drill pemulihan historis](2026-09-20-postgres-integration-and-recovery.md#drill-pemulihan-historis-production--30-september-2026) dan gerbang [P0-03](2026-09-18-readiness-baseline-and-backlog.md#p0-03--bukti-recovery-produksi-perlu-diperbarui).
+Disusun 30 September 2026. Keputusan pengguna: **tetap pada Neon Free**; jalur B sedang disiapkan melalui [rencana backup terjadwal](2026-09-30-free-tier-nightly-backup.md). Dokumen ini melanjutkan [drill pemulihan historis](2026-09-20-postgres-integration-and-recovery.md#drill-pemulihan-historis-production--30-september-2026) dan gerbang [P0-03](2026-09-18-readiness-baseline-and-backlog.md#p0-03--bukti-recovery-produksi-perlu-diperbarui).
 
 ## Kondisi yang terukur
 
@@ -27,7 +27,7 @@ Angka RPO/RTO ini **target usulan**, bukan SLA atau hasil pengujian. Owner/Finan
 | **A — Launch + history 7 hari + snapshot harian** (direkomendasikan) | PITR ke waktu spesifik sepanjang satu siklus rekonsiliasi; snapshot terjadwal memberi titik pemulihan tambahan. Uji ulang pada branch terisolasi. | Paket berbayar berlaku pada **organisasi**, bukan hanya project ini. Biaya compute, storage, history, dan snapshot mengikuti pemakaian. Tidak mem-backup ImageKit.                                                                                                    |
 | **B — Tetap Free + ekspor `pg_dump` terjadwal ke storage terpisah**  | Salinan database independen bisa membantu pemulihan saat masalah terdeteksi setelah enam jam.                                                     | Tidak memberi PITR kontinu tujuh hari. Dengan dump harian, kehilangan data dapat mendekati 24 jam dan restore memerlukan langkah lebih panjang. Butuh bucket, kredensial terbatas, enkripsi, retensi, monitoring, dan uji restore berkala. Tidak mem-backup ImageKit. |
 
-**Rekomendasi:** pilih A untuk pilot yang akan memproses uang dan stok nyata, lalu tambahkan backup logis di lokasi terpisah sebagai lapisan pemulihan bencana setelah alur PITR dan snapshot teruji. B hanya layak sebagai penahan sementara bila pilot tetap tanpa transaksi kritis atau Owner/Finance secara eksplisit menerima RPO yang lebih longgar. Snapshot manual satu kali tidak memenuhi kebijakan backup berkala.
+**Keputusan saat ini:** pengguna memilih B agar Neon tetap Free. `pg_dump` harian adalah penahan sementara dengan potensi kehilangan data hingga sekitar 24 jam; ini tidak mencapai usulan RPO satu jam atau PITR kontinu tujuh hari. Untuk pilot yang akan memproses uang dan stok nyata, Owner/Finance perlu menerima batas itu secara sadar atau menambah proteksi sebelum go-live. Snapshot manual satu kali tidak memenuhi kebijakan backup berkala.
 
 Menurut [harga Neon saat dokumen dibuat](https://neon.com/pricing.md), Launch tidak memiliki biaya minimum bulanan: compute **US$0,106/CU-jam**, storage **US$0,35/GB-bulan**, history **US$0,20/GB-bulan**, dan snapshot **US$0,09/GB-bulan**. Pada ukuran compute production sekarang **0,25 CU**, biaya compute ilustratif untuk satu compute adalah sekitar **US$6,36/bulan** bila aktif 8 jam/hari atau **US$19,08/bulan** bila aktif 24 jam/hari selama 30 hari. Ini **bukan estimasi tagihan organisasi**: jam aktif sebenarnya, project lain, branch uji, volume WAL tujuh hari, penyimpanan snapshot, transfer, dan pajak belum dihitung. Neon menyatakan history Free maksimal 6 jam, Launch maksimal 7 hari, serta snapshot terjadwal hanya tersedia pada paket berbayar di [dokumentasi history](https://neon.com/docs/postgres/backup-restore/history-window.md) dan [backup/restore](https://neon.com/docs/guides/backup-restore.md).
 
@@ -41,4 +41,4 @@ Menurut [harga Neon saat dokumen dibuat](https://neon.com/pricing.md), Launch ti
 
 ## Gerbang keputusan
 
-Belum boleh menandai P0-03 selesai atau menganggap data tenant berbayar terlindungi. Tindakan berbayar berikutnya adalah upgrade organisasi Neon dan pengaturan retensi/jadwal; keduanya menunggu persetujuan biaya dan target RPO/RTO. Penghapusan snapshot/branch drill juga keputusan terpisah karena snapshot itu bukti pemulihan dan penghapusannya tidak dapat dibatalkan.
+Belum boleh menandai P0-03 selesai atau menganggap data tenant berbayar terlindungi. Keputusan saat ini mempertahankan Neon Free; storage backup independen bisa tetap memiliki biaya menurut penyedianya. Penghapusan snapshot/branch drill juga keputusan terpisah karena snapshot itu bukti pemulihan dan penghapusannya tidak dapat dibatalkan.
