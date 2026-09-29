@@ -30,6 +30,8 @@ Arah produk/bisnis: [strategi Atria](2026-09-18-product-business-and-readiness-s
 
 **Drill recovery 30 September 2026:** [snapshot production pada titik sebelum migrasi 0041 dipulihkan ke branch Neon terpisah](2026-09-20-postgres-integration-and-recovery.md#drill-pemulihan-historis-production--30-september-2026). Branch hasil restore memiliki 41 migrasi/tanpa kolom baru, sedangkan `main` tetap 42 migrasi/dengan kolom baru. Lima alokasi kategori valid. Retensi enam jam, data transaksi nonkosong, RPO/RTO, cutover aplikasi, dan lampiran eksternal masih gap P0-03.
 
+**Keputusan recovery 30 September 2026:** [usulan RPO/RTO, pilihan biaya, dan urutan penerapan](2026-09-30-production-recovery-decision.md) disiapkan. Rekomendasi untuk pilot transaksi nyata adalah Launch dengan history tujuh hari dan snapshot terjadwal; upgrade organisasi memerlukan keputusan biaya Owner/Finance. Slot satu snapshot manual paket Free saat ini terpakai bukti drill.
+
 Baseline otomatis lulus untuk test tanpa database, lint, dan production build web. Audit menemukan **dua cacat otorisasi P0 yang direproduksi secara lokal**. Keduanya harus ditutup sebelum otorisasi dari Settings dapat dipercaya. Bukti integration/recovery terkini belum lengkap. Tenant kedua belum boleh diaktifkan berdasarkan kesiapan yang terbukti pada audit ini.
 
 Tidak ada perubahan runtime, migrasi, reset/seed database, deploy, atau transaksi bisnis dalam audit ini. Tiga perubahan UI milik workspace yang sudah ada sebelum audit tetap dipertahankan. Hasil di bawah berlaku pada working tree saat pemeriksaan, bukan klaim terhadap deployment tertentu.
