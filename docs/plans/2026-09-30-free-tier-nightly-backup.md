@@ -1,6 +1,6 @@
 # Backup database terjadwal pada Neon Free
 
-Dimulai 30 September 2026. Keputusan pengguna: **tetap pada Neon Free**. Target pekerjaan ini adalah cadangan logis `atria-erp-prod/main/neondb` ke storage independen, dengan restore yang dapat diuji. Ini melanjutkan [keputusan recovery](2026-09-30-production-recovery-decision.md); retensi PITR Neon tetap enam jam. **Status: pengguna memilih Cloudflare R2 sebagai storage; workflow sedang diadaptasi dan belum aktif sampai langganan R2, bucket, dan credential backup siap.**
+Dimulai 30 September 2026. Keputusan pengguna: **tetap pada Neon Free**. Target pekerjaan ini adalah cadangan logis `atria-erp-prod/main/neondb` ke storage independen, dengan restore yang dapat diuji. Ini melanjutkan [keputusan recovery](2026-09-30-production-recovery-decision.md); retensi PITR Neon tetap enam jam. **Status: pengguna memilih Cloudflare R2 sebagai storage; workflow R2 siap dan belum aktif sampai langganan R2, bucket, dan credential backup siap.**
 
 ## Rencana implementasi
 
@@ -45,3 +45,7 @@ Pengguna memilih R2 setelah meninjau biaya AWS. Akun Cloudflare sudah login dan 
 ### Status remote dan handoff aktivasi
 
 Adaptasi R2 di-push ke `development` pada commit `5a6a8b3`; YAML remote GitHub telah diverifikasi memakai credential R2 tanpa AWS IAM/OIDC. Variable nonsecret `ATRIA_BACKUP_R2_ACCOUNT_ID` telah diset ke akun yang terlihat di browser. Gate enable, bucket, dan secret belum diset. Pengguna memilih mengaktifkan subscription R2 sendiri di browser; agen belum mengklik penerimaan Terms/langganan. Setup bucket/token dan test live menunggu aktivasi selesai.
+
+### Checkout setelah otorisasi pengguna
+
+Pengguna memberi otorisasi lanjutan pada 30 September 2026. Pemeriksaan subscription akun hanya menunjukkan Workers Free, tanpa metode pembayaran; R2 belum aktif. Agen melanjutkan tombol Add R2 subscription ke checkout yang meminta kartu/wallet, alamat billing, dan persetujuan charge atas overage. Pengisian serta penyelesaian checkout diserahkan kepada pengguna langsung di browser. Tidak ada bucket atau token yang dibuat, tidak ada charge yang dijalankan agen, dan gate backup tetap nonaktif.

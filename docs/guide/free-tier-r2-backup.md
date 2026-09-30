@@ -4,7 +4,7 @@ Diperbarui 30 September 2026. Pengguna memilih **Neon Free + Cloudflare R2 Stand
 
 ## Aktivasi akun dan biaya
 
-Cloudflare Account ID yang terlihat setelah login adalah `222cd96d186c2a56d6d502ec4f96f94f`. Halaman R2 masih meminta aktivasi langganan: US$0 saat ini dan US$0 bulanan dalam kuota, dengan biaya atas kelebihan pemakaian. Tombol aktivasi menerima Terms dan langganan otomatis; persetujuan harus diberikan pada langkah itu. Bila checkout meminta metode pembayaran, pemilik akun mengisinya langsung di browser.
+Cloudflare Account ID yang terlihat setelah login adalah `222cd96d186c2a56d6d502ec4f96f94f`. Halaman R2 masih meminta aktivasi langganan: US$0 saat ini dan US$0 bulanan dalam kuota, dengan biaya atas kelebihan pemakaian. Tombol aktivasi menerima Terms dan langganan otomatis; persetujuan harus diberikan pada langkah itu. Checkout telah terverifikasi meminta metode pembayaran dan alamat billing; pemilik akun harus melengkapinya langsung di browser. Otorisasi pengguna telah diterima, tetapi R2 belum aktif sampai checkout selesai.
 
 [Kuota gratis R2 Standard](https://developers.cloudflare.com/r2/pricing/) per bulan: **10 GB-month storage, 1 juta Class A, 10 juta Class B**, dan egress gratis. Pemakaian di atas kuota tetap ditagih; Infrequent Access tidak termasuk kuota gratis. Ukuran database yang terlihat sebelumnya sekitar 37,5 MB. Ukuran itu bukan ukuran dump atau jaminan total penggunaan storage; ukur archive dan pemakaian akun setelah run pertama.
 
