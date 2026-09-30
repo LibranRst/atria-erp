@@ -301,3 +301,7 @@ Pengguna memilih **Cloudflare R2 Standard**. Workflow transport dan [runbook R2]
 ### Verifikasi R2 dan blocker Neon — 30 September 2026
 
 Bucket/secrets manual telah terbukti bekerja melalui [run check-storage 36672683964](https://github.com/LibranRst/atria-erp/actions/runs/36672683964), dengan upload/download dan SHA-256 sama. Ini belum backup DB. Neon menolak SQL main/neondb dengan HTTP 402 quota exceeded; jenis kuota belum diketahui. Periode pemakaian berakhir 1 Oktober 2026 07.00 WIB, tetapi waktu pulih belum dijamin. Gate backup tetap nonaktif, role baca/secret DB belum dibuat, dan P0-03 tetap terbuka.
+
+### Jenis quota terkonfirmasi lewat Browser
+
+Console Neon mengonfirmasi kuota **compute bulanan** untuk `atria-erp-prod`: **111,49 CU-hours** terpakai, dengan batas **100 compute hours/project** pada Free. Compute 0,25 CU dan autosuspend lima menit sudah aktif; tidak ada perubahan setting. Langkah berikutnya adalah verifikasi SQL setelah periode baru 1 Oktober 2026 07.00 WIB dan audit aktivitas yang membuat compute aktif, kemudian menyelesaikan role baca serta backup/restore R2.
