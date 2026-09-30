@@ -1,6 +1,6 @@
 # Backup database terjadwal pada Neon Free
 
-Dimulai 30 September 2026. Keputusan pengguna: **tetap pada Neon Free**. Target pekerjaan ini adalah cadangan logis `atria-erp-prod/main/neondb` ke storage independen, dengan restore yang dapat diuji. Ini melanjutkan [keputusan recovery](2026-09-30-production-recovery-decision.md); retensi PITR Neon tetap enam jam. **Status: pengguna memilih Cloudflare R2 sebagai storage; workflow R2 siap dan belum aktif sampai langganan R2, bucket, dan credential backup siap.**
+Dimulai 30 September 2026. Keputusan pengguna: **tetap pada Neon Free**. Target pekerjaan ini adalah cadangan logis `atria-erp-prod/main/neondb` ke storage independen, dengan restore yang dapat diuji. Ini melanjutkan [keputusan recovery](2026-09-30-production-recovery-decision.md); retensi PITR Neon tetap enam jam. **Status: pengguna memilih Cloudflare R2 sebagai storage; transport R2 sudah teruji; backup database belum aktif karena Neon menolak SQL production akibat kuota HTTP 402.**
 
 ## Rencana implementasi
 
@@ -55,3 +55,10 @@ Pengguna memberi otorisasi lanjutan pada 30 September 2026. Pemeriksaan subscrip
 Pada 30 September 2026, nama secrets R2 dan variable bucket `atria-erp-backups` telah diverifikasi di GitHub. Query read-only production melalui connector Neon ditolak HTTP 402: account/project quota exceeded. Metadata project masih `free_v3`, retention enam jam, compute main idle/tidak disabled; jenis kuota penyebab belum dapat ditentukan dari metadata ini. Jangan membuat role/secret backup atau mengaktifkan jadwal sebelum SQL production kembali tersedia.
 
 Rencana pekerjaan yang tidak bergantung pada Neon: tambahkan mode manual `check-storage` pada workflow. Mode ini mengunggah file diagnostik nonsecret kecil pada prefix `atria-erp/prod/_checks/`, lalu download ulang dan cocokkan digest. Objek `.probe` disimpan sebagai bukti, tanpa penghapusan otomatis oleh script; ini bukan backup database. Mode backup biasa tetap membutuhkan gate enable dan semua guard source.
+
+### Hasil preflight live
+
+- [Run 36672683964](https://github.com/LibranRst/atria-erp/actions/runs/36672683964) sukses. Job `check-storage` berlangsung 12.16.58–12.17.22 WIB dan berhasil upload/download ke bucket `atria-erp-backups`; SHA-256 byte hasil download cocok. Objek diagnostik `.probe` tidak berisi data bisnis dan disimpan sebagai bukti. Checkout repository sempat retry setelah error lalu berhasil; keseluruhan job sukses.
+- Job `backup` pada run yang sama skipped; gate enable tetap belum diset. Metadata role main hanya berisi `neondb_owner`, sehingga `atria_backup` serta secret `ATRIA_BACKUP_DATABASE_URL` belum disiapkan.
+- Periode pemakaian Neon yang tersedia berakhir 1 Oktober 2026 pukul 07.00 WIB. Error HTTP 402 tidak menyebut jenis kuota; jangan menjanjikan pemulihan setelah reset sebelum mengonfirmasi pemicunya. Tidak ada perubahan paket, reset database, atau transaksi production.
+- P0-03 tetap terbuka. Selanjutnya: konfirmasi jenis kuota di Neon Usage, pulihkan ketersediaan dalam batas Free, buat role baca, jalankan dump/restore terpisah, dan verifikasi bucket private serta lock/lifecycle manual sebelum mengaktifkan jadwal.

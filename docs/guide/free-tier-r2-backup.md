@@ -1,10 +1,10 @@
 # Backup database production ke Cloudflare R2
 
-Diperbarui 30 September 2026. Pengguna memilih **Neon Free + Cloudflare R2 Standard**. [Workflow](../../.github/workflows/production-db-backup.yml) dijadwalkan **02.17 WIB** pada branch `development`; gate `ATRIA_BACKUP_ENABLED=true` tetap belum diaktifkan. Backup live belum berjalan.
+Diperbarui 30 September 2026. Pengguna memilih **Neon Free + Cloudflare R2 Standard**. [Workflow](../../.github/workflows/production-db-backup.yml) dijadwalkan **02.17 WIB** pada branch `development`; gate `ATRIA_BACKUP_ENABLED=true` tetap belum diaktifkan. Transport R2 sudah lulus uji upload/download; backup database live belum berjalan karena query Neon ditolak kuota HTTP 402.
 
 ## Aktivasi akun dan biaya
 
-Cloudflare Account ID yang terlihat setelah login adalah `222cd96d186c2a56d6d502ec4f96f94f`. Halaman R2 masih meminta aktivasi langganan: US$0 saat ini dan US$0 bulanan dalam kuota, dengan biaya atas kelebihan pemakaian. Tombol aktivasi menerima Terms dan langganan otomatis; persetujuan harus diberikan pada langkah itu. Checkout telah terverifikasi meminta metode pembayaran dan alamat billing; pemilik akun harus melengkapinya langsung di browser. Otorisasi pengguna telah diterima, tetapi R2 belum aktif sampai checkout selesai.
+Cloudflare Account ID adalah `222cd96d186c2a56d6d502ec4f96f94f`. Pengguna menyelesaikan aktivasi dan membuat bucket serta secrets secara manual. Token GitHub telah terbukti dapat mengunggah/mengunduh objek pada `atria-erp-backups` melalui [run 36672683964](https://github.com/LibranRst/atria-erp/actions/runs/36672683964). Tahap checkout sebelumnya meminta metode pembayaran dan persetujuan langganan; pengisian dilakukan oleh pemilik akun langsung di browser. Pemakaian R2 di atas kuota tetap berbayar.
 
 [Kuota gratis R2 Standard](https://developers.cloudflare.com/r2/pricing/) per bulan: **10 GB-month storage, 1 juta Class A, 10 juta Class B**, dan egress gratis. Pemakaian di atas kuota tetap ditagih; Infrequent Access tidak termasuk kuota gratis. Ukuran database yang terlihat sebelumnya sekitar 37,5 MB. Ukuran itu bukan ukuran dump atau jaminan total penggunaan storage; ukur archive dan pemakaian akun setelah run pertama.
 
@@ -55,3 +55,9 @@ pg_restore --exit-on-error --no-owner --no-acl --dbname "$RESTORE_TEST_DATABASE_
 Target restore harus **database kosong disposable** yang identitasnya diperiksa sebelum eksekusi. Jalankan enam invariant aplikasi pada hasil restore, cocokkan migration/schema/data, lalu uji login dan alur penting lewat aplikasi preview. Hasil penuh ini belum terbukti.
 
 Neon PITR tetap **6 jam**. Dump harian memberikan titik pemulihan lebih lama tetapi kehilangan data dapat mendekati 24 jam saat run sehat, dan lebih lama bila run gagal/terlambat. File ImageKit belum dicadangkan oleh dump Postgres. P0-03 tetap terbuka sampai run pertama, restore transaksi terisi, RPO/RTO, dan recovery lampiran terbukti.
+
+## Status live 30 September 2026
+
+Mode manual `check-storage` telah lulus uji R2 nyata: objek diagnostik nonsecret `atria-erp/prod/_checks/20260930T051717Z-36672683964-1.probe` terunggah dengan Content-MD5, kemudian diunduh ulang dan SHA-256 cocok (`71e96616d55aa2deb9def6a5d88e490e0ed387b5ca6a82f7d23b5dbe167f6444`). Ini bukan dump database. Job backup pada run itu skipped karena gate belum aktif; secret koneksi Neon belum dibuat dan role `atria_backup` belum ada menurut metadata API.
+
+Query read-only `main/neondb` ditolak Neon HTTP 402 karena kuota akun/project terlampaui. Jenis kuota belum teridentifikasi. Akhir periode penggunaan pada metadata adalah **1 Oktober 2026 07.00 WIB** (00.00 UTC); bila pemicu adalah compute/egress bulanan, pemulihan menunggu periode baru sesuai aturan Free, bukan jaminan semua jenis kuota pulih. Gate backup tetap nonaktif sampai koneksi, role baca, dump pertama, dan restore berhasil. Lock/lifecycle 30 hari serta status private bucket belum diverifikasi oleh agen karena akses Browser Cloudflare diblokir; pengguna perlu memeriksa Settings bucket secara manual.

@@ -297,3 +297,7 @@ test("diagnostic: real activeProcedure rejects custom role with granted pay perm
 ## Update destination backup — 30 September 2026
 
 Pengguna memilih **Cloudflare R2 Standard**. Workflow transport dan [runbook R2](../guide/free-tier-r2-backup.md) menggantikan setup AWS S3 awal. Backup masih nonaktif sampai aktivasi langganan, bucket private, lock/lifecycle, token bucket, role baca Neon, secret GitHub, dan run manual/restore diverifikasi. AWS IAM/OIDC tidak dipakai pada workflow aktif.
+
+### Verifikasi R2 dan blocker Neon — 30 September 2026
+
+Bucket/secrets manual telah terbukti bekerja melalui [run check-storage 36672683964](https://github.com/LibranRst/atria-erp/actions/runs/36672683964), dengan upload/download dan SHA-256 sama. Ini belum backup DB. Neon menolak SQL main/neondb dengan HTTP 402 quota exceeded; jenis kuota belum diketahui. Periode pemakaian berakhir 1 Oktober 2026 07.00 WIB, tetapi waktu pulih belum dijamin. Gate backup tetap nonaktif, role baca/secret DB belum dibuat, dan P0-03 tetap terbuka.

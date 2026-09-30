@@ -45,4 +45,4 @@ Belum boleh menandai P0-03 selesai atau menganggap data tenant berbayar terlindu
 
 ## Destination dipilih — Cloudflare R2
 
-Pengguna menyetujui R2 pada 30 September 2026. Referensi aktif adalah [runbook R2](../guide/free-tier-r2-backup.md). Kuota gratis bulanan bukan batas tagihan keras; kelebihan tetap berbayar. Langganan R2 belum diaktifkan pada saat inspeksi browser. Opsi A/Launch di atas disimpan sebagai alternatif historis, bukan tindakan yang akan dijalankan.
+Pengguna menyetujui R2 pada 30 September 2026. Referensi aktif adalah [runbook R2](../guide/free-tier-r2-backup.md). Kuota gratis bulanan bukan batas tagihan keras; kelebihan tetap berbayar. Langganan dan bucket R2 kemudian disiapkan pengguna secara manual; uji transport R2 sukses pada run `36672683964`. Backup database masih tertahan HTTP 402 dari Neon karena kuota akun/project. Opsi A/Launch di atas disimpan sebagai alternatif historis, bukan tindakan yang akan dijalankan.
