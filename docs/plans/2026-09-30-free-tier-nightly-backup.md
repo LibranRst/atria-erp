@@ -41,3 +41,7 @@ Pengguna memilih R2 setelah meninjau biaya AWS. Akun Cloudflare sudah login dan 
 - Header SSE-S3 dan checksum AWS diganti Content-MD5 yang didukung R2; SHA-256 diverifikasi terhadap byte hasil download ulang. Enkripsi R2 otomatis. Object Read & Write dibatasi satu bucket, dengan lock/lifecycle 30 hari sebagai rencana proteksi/retensi.
 - `python3 scripts/test-backup-production-db.py`: **6 test lulus**, dengan subcases gagal dump/archive/upload, source owner/pooler/database/SSL salah, R2 account tidak valid, credential hilang, serta korupsi remote walaupun metadata cocok. Semua memakai fake Docker/R2, tidak menghubungi cloud; credential dummy tidak tampil di output dan file temporary dibersihkan.
 - Runbook aktif [R2](../guide/free-tier-r2-backup.md) memisahkan aktivasi subscription, pembuatan token, dan penyimpanan secret dari verifikasi live. Account login sudah terbukti; subscription dan bucket belum dibuat.
+
+### Status remote dan handoff aktivasi
+
+Adaptasi R2 di-push ke `development` pada commit `5a6a8b3`; YAML remote GitHub telah diverifikasi memakai credential R2 tanpa AWS IAM/OIDC. Variable nonsecret `ATRIA_BACKUP_R2_ACCOUNT_ID` telah diset ke akun yang terlihat di browser. Gate enable, bucket, dan secret belum diset. Pengguna memilih mengaktifkan subscription R2 sendiri di browser; agen belum mengklik penerimaan Terms/langganan. Setup bucket/token dan test live menunggu aktivasi selesai.
