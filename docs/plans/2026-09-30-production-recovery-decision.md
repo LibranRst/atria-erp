@@ -1,6 +1,6 @@
 # Keputusan recovery production Atria
 
-Disusun 30 September 2026. Keputusan pengguna: **tetap pada Neon Free**; jalur B sedang disiapkan melalui [rencana backup terjadwal](2026-09-30-free-tier-nightly-backup.md). Dokumen ini melanjutkan [drill pemulihan historis](2026-09-20-postgres-integration-and-recovery.md#drill-pemulihan-historis-production--30-september-2026) dan gerbang [P0-03](2026-09-18-readiness-baseline-and-backlog.md#p0-03--bukti-recovery-produksi-perlu-diperbarui).
+Disusun 30 September 2026. Keputusan pengguna: **tetap pada Neon Free**; jalur B memakai Cloudflare R2 Standard dan sedang disiapkan melalui [rencana backup terjadwal](2026-09-30-free-tier-nightly-backup.md). Dokumen ini melanjutkan [drill pemulihan historis](2026-09-20-postgres-integration-and-recovery.md#drill-pemulihan-historis-production--30-september-2026) dan gerbang [P0-03](2026-09-18-readiness-baseline-and-backlog.md#p0-03--bukti-recovery-produksi-perlu-diperbarui).
 
 ## Kondisi yang terukur
 
@@ -42,3 +42,7 @@ Menurut [harga Neon saat dokumen dibuat](https://neon.com/pricing.md), Launch ti
 ## Gerbang keputusan
 
 Belum boleh menandai P0-03 selesai atau menganggap data tenant berbayar terlindungi. Keputusan saat ini mempertahankan Neon Free; storage backup independen bisa tetap memiliki biaya menurut penyedianya. Penghapusan snapshot/branch drill juga keputusan terpisah karena snapshot itu bukti pemulihan dan penghapusannya tidak dapat dibatalkan.
+
+## Destination dipilih — Cloudflare R2
+
+Pengguna menyetujui R2 pada 30 September 2026. Referensi aktif adalah [runbook R2](../guide/free-tier-r2-backup.md). Kuota gratis bulanan bukan batas tagihan keras; kelebihan tetap berbayar. Langganan R2 belum diaktifkan pada saat inspeksi browser. Opsi A/Launch di atas disimpan sebagai alternatif historis, bukan tindakan yang akan dijalankan.

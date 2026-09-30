@@ -1,5 +1,7 @@
 # Backup database production saat Neon Free
 
+> Runbook AWS S3 awal disimpan sebagai referensi historis. Pengguna memilih Cloudflare R2 pada 30 September 2026; setup aktif mengikuti [runbook R2](free-tier-r2-backup.md). Workflow sekarang tidak memakai AWS IAM/OIDC atau bucket S3 AWS.
+
 Disusun 30 September 2026 untuk `atria-erp-prod/main/neondb`. Pengguna memilih mempertahankan Neon Free. Workflow [production-db-backup.yml](../../.github/workflows/production-db-backup.yml) dan [backup-production-db.sh](../../scripts/backup-production-db.sh) menyiapkan dump harian ke AWS S3; **backup belum aktif** sampai konfigurasi di bawah lengkap dan run manual berhasil.
 
 Neon Free tetap menyimpan riwayat PITR hanya enam jam. Backup harian memberi titik pemulihan di luar jendela itu, dengan potensi kehilangan data mendekati **24 jam** bila insiden terjadi tepat sebelum dump berikutnya. File ImageKit, termasuk nota dan cover, berada di luar archive Postgres. Jalur ini tidak memenuhi usulan RPO database satu jam pada [keputusan recovery](../plans/2026-09-30-production-recovery-decision.md).

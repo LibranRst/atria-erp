@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: production-db-backup
@@ -23,17 +22,14 @@ jobs:
       - name: Check out backup script
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Obtain temporary AWS credentials
-        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
-        with:
-          role-to-assume: ${{ vars.ATRIA_BACKUP_AWS_ROLE_ARN }}
-          aws-region: ${{ vars.ATRIA_BACKUP_AWS_REGION }}
-
       - name: Dump, validate, and upload production database
         env:
           NEON_BACKUP_DATABASE_URL: ${{ secrets.ATRIA_BACKUP_DATABASE_URL }}
-          BACKUP_S3_BUCKET: ${{ vars.ATRIA_BACKUP_S3_BUCKET }}
-          AWS_REGION: ${{ vars.ATRIA_BACKUP_AWS_REGION }}
+          BACKUP_R2_BUCKET: ${{ vars.ATRIA_BACKUP_R2_BUCKET }}
+          R2_ACCOUNT_ID: ${{ vars.ATRIA_BACKUP_R2_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ATRIA_BACKUP_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ATRIA_BACKUP_R2_SECRET_ACCESS_KEY }}
+          AWS_EC2_METADATA_DISABLED: "true"
           EXPECTED_NEON_HOST: ep-wispy-unit-az0r7nao.c-3.ap-southeast-1.aws.neon.tech
           EXPECTED_BACKUP_USER: atria_backup
         run: bash scripts/backup-production-db.sh

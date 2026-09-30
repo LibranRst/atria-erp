@@ -293,3 +293,7 @@ test("diagnostic: real activeProcedure rejects custom role with granted pay perm
   await expect(caller.probe()).rejects.toMatchObject({ code: "FORBIDDEN" });
 });
 ```
+
+## Update destination backup — 30 September 2026
+
+Pengguna memilih **Cloudflare R2 Standard**. Workflow transport dan [runbook R2](../guide/free-tier-r2-backup.md) menggantikan setup AWS S3 awal. Backup masih nonaktif sampai aktivasi langganan, bucket private, lock/lifecycle, token bucket, role baca Neon, secret GitHub, dan run manual/restore diverifikasi. AWS IAM/OIDC tidak dipakai pada workflow aktif.
