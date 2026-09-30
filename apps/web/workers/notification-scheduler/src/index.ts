@@ -2,8 +2,8 @@
  * Pemicu eksternal untuk worker notifikasi Atria.
  *
  * Vercel Cron pada paket Hobby hanya boleh berjalan sekali sehari, sedangkan
- * delivery worker perlu dipanggil setiap 5 menit. Worker ini menggantikan
- * jadwal tersebut dengan memanggil endpoint yang sudah ada memakai
+ * fallback delivery worker dipanggil setiap 30 menit. Pengiriman setelah event
+ * tetap ditangani aplikasi. Worker memanggil endpoint pemulihan memakai
  * `NOTIFICATION_JOB_SECRET`; tidak ada logika notifikasi yang diduplikasi di
  * sini, jadi perilakunya identik dengan pemicu Vercel Cron.
  *
@@ -20,6 +20,22 @@ export interface Env {
 }
 
 const DEFAULT_APP_URL = "https://atria-erp.vercel.app";
+
+async function authorized(request: Request, env: Env): Promise<boolean> {
+  if (!env.NOTIFICATION_JOB_SECRET) return false;
+  const encoder = new TextEncoder();
+  const [actual, expected] = await Promise.all([
+    crypto.subtle.digest("SHA-256", encoder.encode(request.headers.get("authorization") ?? "")),
+    crypto.subtle.digest("SHA-256", encoder.encode(`Bearer ${env.NOTIFICATION_JOB_SECRET}`)),
+  ]);
+  const actualBytes = new Uint8Array(actual);
+  const expectedBytes = new Uint8Array(expected);
+  let difference = 0;
+  for (let index = 0; index < expectedBytes.length; index += 1) {
+    difference |= actualBytes[index] ^ expectedBytes[index];
+  }
+  return difference === 0;
+}
 
 /** Delivery worker dan rekonsiliasi kondisi berbagi endpoint yang sama. */
 async function trigger(env: Env, task: "deliveries" | "reconcile"): Promise<Response> {
@@ -42,14 +58,23 @@ async function trigger(env: Env, task: "deliveries" | "reconcile"): Promise<Resp
   return response;
 }
 
-export default {
-  /** Setiap 5 menit: klaim outbox dan kirim push yang menunggu. */
+const scheduler = {
+  /** Setiap 30 menit: pulihkan outbox/retry dan cek receipt yang menunggu. */
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(trigger(env, "deliveries"));
   },
 
   /** Jalur manual untuk memicu rekonsiliasi atau memverifikasi konfigurasi. */
   async fetch(request: Request, env: Env): Promise<Response> {
+    if (request.method !== "POST") {
+      return Response.json(
+        { error: "Method not allowed" },
+        { status: 405, headers: { Allow: "POST" } },
+      );
+    }
+    if (!(await authorized(request, env))) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const task = new URL(request.url).searchParams.get("task");
     if (task !== "deliveries" && task !== "reconcile") {
       return Response.json({ error: "task harus deliveries atau reconcile" }, { status: 400 });
@@ -58,3 +83,5 @@ export default {
     return Response.json({ ok: true, task, upstream: response.status });
   },
 };
+
+export default scheduler;

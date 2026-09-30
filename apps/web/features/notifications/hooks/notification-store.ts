@@ -16,6 +16,8 @@ export type NotificationTransport = {
 };
 export type NotificationEnvironment = {
   available: () => boolean;
+  streamHealthy?: () => boolean;
+  scheduleRefresh?: (callback: () => void, delay: number) => () => void;
   subscribe: (resume: () => void) => () => void;
   reportError: (message: string) => void;
 };
@@ -59,7 +61,13 @@ export function createNotificationStore(
   let fetchingGeneration: number | null = null;
   let failures = 0;
   let active = false;
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  let cancelRefresh: (() => void) | undefined;
+  const scheduleRefresh =
+    environment.scheduleRefresh ??
+    ((callback: () => void, delay: number): (() => void) => {
+      const timer = setTimeout(callback, delay);
+      return () => clearTimeout(timer);
+    });
   const emit = (next: NotificationStoreState): void => {
     state = next;
     listeners.forEach((listener) => listener());
@@ -242,11 +250,13 @@ export function createNotificationStore(
     markAllAsRead: (category) => mark(undefined, category),
     start: () => {
       active = true;
-      const tick = async (): Promise<void> => {
-        await refresh();
+      const tick = async (force = false): Promise<void> => {
+        if (force || failures > 0 || state.isLoading || !environment.streamHealthy?.()) {
+          await refresh();
+        }
         if (active) {
-          clearTimeout(timer);
-          timer = setTimeout(
+          cancelRefresh?.();
+          cancelRefresh = scheduleRefresh(
             () => {
               void tick();
             },
@@ -259,16 +269,16 @@ export function createNotificationStore(
       };
       const resume = (): void => {
         if (available()) {
-          clearTimeout(timer);
-          void tick();
+          cancelRefresh?.();
+          void tick(true);
         }
       };
-      void tick();
+      void tick(true);
       const unsubscribe = environment.subscribe(resume);
       return () => {
         active = false;
         generation += 1;
-        clearTimeout(timer);
+        cancelRefresh?.();
         unsubscribe();
       };
     },

@@ -1,6 +1,6 @@
 # Audit pemakaian compute Neon Atria
 
-Tanggal: 30 September 2026. Status: **audit selesai; belum mengubah runtime atau jadwal live**. Mengikuti blocker [backup R2](2026-09-30-free-tier-nightly-backup.md). Project production `atria-erp-prod` (`little-river-44246623`), main `br-super-tree-azh1p78r`; Vercel production masih `dpl_HVGdmeHfuYWBa46c7QHNSvjneGZn` di `sin1`.
+Tanggal: 30 September 2026. Status: **audit selesai; source perbaikan telah diimplementasikan terpisah, runtime/jadwal live belum diubah**. Mengikuti blocker [backup R2](2026-09-30-free-tier-nightly-backup.md). Project production `atria-erp-prod` (`little-river-44246623`), main `br-super-tree-azh1p78r`; Vercel production masih `dpl_HVGdmeHfuYWBa46c7QHNSvjneGZn` di `sin1`.
 
 ## Kesimpulan dan batas bukti
 
@@ -85,3 +85,11 @@ Free 100 CU-hours setara **400 jam aktif** pada 0,25 CU. Satu compute aktif 24/7
 4. Selesaikan role baca dan backup R2 setelah koneksi kembali tersedia. Periksa pemakaian per project/branch dan simpan ringkasan harian agar audit bulan berikutnya tidak bergantung hanya pada retensi log satu jam.
 
 Tidak ada setting Neon, jadwal Cloudflare, kode aplikasi, secret, pembayaran, maupun transaksi production yang diubah dalam audit ini. Hasil disimpan di Markdown; perbaikan serta verifikasi sebelum/sesudah belum dilakukan.
+
+## Tindak lanjut setelah audit — 30 September
+
+[Rencana hardening dan hasil validasi](2026-09-30-notification-free-tier-hardening.md) mencatat implementasi source setelah pengguna menyetujui keputusan Free. Spans/cadence di atas adalah snapshot runtime/source pada saat audit, bukan konfigurasi baru. Jadwal live belum berubah.
+
+Pemeriksaan lanjutan menemukan bahwa `scheduleNotificationPush` sudah memakai Next.js `after()` sebagai jalur cepat. Masalah boundary-nya: pemicu didaftarkan dari dalam callback transaksi, sebelum hasil native COMMIT diketahui. Perbaikan memindahkan pendaftaran ke setelah native COMMIT dan mendeduplikasi kick per transaksi; outbox/lease/retry existing tetap dipakai. Audit ini tidak menyatakan jalur cepat sebelumnya tidak ada.
+
+Jalur HTTP manual Cloudflare Worker sebelumnya tidak memvalidasi pemanggil sebelum meneruskan private bearer ke backend. Source baru mewajibkan POST dan bearer yang benar; belum diuji terhadap endpoint live dan belum deployed. Tidak melakukan probe tanpa izin yang dapat mengirim notifikasi atau membangunkan database.

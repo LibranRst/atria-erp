@@ -1,6 +1,7 @@
 import "server-only";
 import { scheduleNotificationPush } from "./notification-service";
 import { enqueueNotificationDeliveries } from "./notification-delivery";
+import { registerCommitEffect } from "@/lib/db/commit-effects";
 import { db } from "@/db";
 import { notification, project, role, rolePermission, tenantMember, user } from "@/db/schema";
 import { INSTANCE_TENANT_ID } from "@/db/schema/tenant-constants";
@@ -169,5 +170,9 @@ export async function recordNotificationEvent(
     })
     .returning({ id: notification.id, userId: notification.userId });
   await enqueueNotificationDeliveries(tx, inserted);
-  scheduleNotificationPush(inserted.map((row) => row.id));
+  if (inserted.length) {
+    registerCommitEffect(tx, "notification-push", () => {
+      scheduleNotificationPush(inserted.map((row) => row.id));
+    });
+  }
 }

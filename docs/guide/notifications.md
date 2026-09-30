@@ -5,17 +5,17 @@ Notifikasi web memisahkan **belum dibaca** dari **aksi belum selesai**. Membaca 
 ## Pengoperasian
 
 1. Terapkan migrasi `0038_notification_hardening.sql`, `0039_notification_sse_cursor.sql`, dan `0040_notification_delivery_outbox.sql` melalui prosedur migrasi instance. Migrasi ini mengisi waktu baca data lama, menambahkan cursor SSE, mengikat subscription baru ke sesi, dan membuat outbox push.
-2. Penjadwalan worker bergantung pada paket Vercel yang dipakai:
-   - **Pro/Enterprise:** `apps/web/vercel.json` dapat menjadwalkan rekonsiliasi tiap jam dan delivery worker tiap 5 menit. Kembalikan entri `crons` ke dua jadwal tersebut dan isi `CRON_SECRET` pada environment Production.
-   - **Hobby:** cron Vercel hanya boleh berjalan sekali sehari, dan Vercel menolak deploy yang memuat jadwal lebih sering. Berkas yang ada sekarang menjalankan `task=all` sekali sehari (00:00 WIB) sebagai jaring pengaman; jadwal 5 menit ditangani penjadwal eksternal di bawah.
+2. Pengiriman awal dipicu dari outbox setelah transaksi bisnis berhasil commit. Scheduler merupakan pemulihan untuk retry/receipt; frekuensinya harus mengikuti anggaran compute Neon, selain batas paket Vercel:
+   - **Pro/Enterprise:** Vercel mendukung jadwal lebih sering, tetapi untuk Neon Free gunakan fallback 30 menit agar database sempat suspend. Isi `CRON_SECRET` pada environment Production; interval lebih rapat perlu anggaran compute dan kebutuhan latency yang sesuai.
+   - **Hobby:** cron Vercel hanya boleh berjalan sekali sehari, dan Vercel menolak deploy yang memuat jadwal lebih sering. Berkas yang ada sekarang menjalankan `task=all` sekali sehari (00:00 WIB) sebagai jaring pengaman; fallback 30 menit ditangani penjadwal eksternal di bawah.
      Root Directory proyek Vercel harus `apps/web` agar `vercel.json` terbaca.
 3. Scheduler selain Vercel dapat memakai `NOTIFICATION_JOB_SECRET` dan HTTP **POST**. Semua panggilan memakai header `Authorization: Bearer <secret>`; jangan menaruh secret di URL, frontend, atau repository.
 4. Endpoint menerima `task=reconcile`, `task=deliveries`, atau `task=all`. Jalankan `reconcile` sekali setelah migrasi untuk membentuk aksi/kondisi yang masih aktif tanpa memutar ulang seluruh event historis.
-5. Monitor status HTTP serta ringkasan `reconciliation` dan `deliveries`. HTTP 401 berarti secret salah/tidak terpasang, 400 berarti task tidak dikenal, dan 500 berarti worker gagal serta aman dicoba lagi. Row lock, lease kedaluwarsa, dan unique index mencegah delivery ganda saat proses paralel atau restart.
+5. Monitor status HTTP serta ringkasan `reconciliation` dan `deliveries`. HTTP 401 berarti secret salah/tidak terpasang, 400 berarti task tidak dikenal, dan 500 berarti worker gagal serta aman dicoba lagi. Row lock, lease kedaluwarsa, dan unique index mencegah klaim paralel/event duplikat. Pengiriman bersifat at-least-once: crash setelah provider menerima pesan tetapi sebelum status tersimpan dapat mengulang pengiriman.
 
-### Penjadwal eksternal 5 menit (paket Hobby)
+### Penjadwal eksternal 30 menit (profil Neon Free)
 
-`apps/web/workers/notification-scheduler` adalah Cloudflare Worker yang memanggil endpoint worker Atria setiap 5 menit. Ia tidak menduplikasi logika notifikasi, jadi perilakunya sama dengan pemicu Vercel Cron.
+`apps/web/workers/notification-scheduler` adalah Cloudflare Worker yang memanggil endpoint worker Atria setiap 30 menit untuk retry dan receipt. Percobaan kirim awal tetap memakai pemicu setelah commit. Ia tidak menduplikasi logika notifikasi, jadi perilakunya sama dengan pemicu Vercel Cron.
 
 ```bash
 cd apps/web/workers/notification-scheduler
@@ -27,23 +27,24 @@ npx wrangler secret put NOTIFICATION_JOB_SECRET   # nilai sama dengan environmen
 Opsional: set `ATRIA_APP_URL` (default `https://atria-erp.vercel.app`) bila domain produksinya berbeda. Verifikasi manual:
 
 ```bash
-curl -X POST "https://atria-notification-scheduler.<subdomain>.workers.dev?task=deliveries"
+curl -X POST "https://atria-notification-scheduler.<subdomain>.workers.dev?task=deliveries" \
+  -H "Authorization: Bearer $NOTIFICATION_JOB_SECRET"
 ```
 
-Jadwal `*/5 * * * *` ada di `wrangler.jsonc`. Scheduler eksternal lain (mis. cron-job.org) juga sah selama ia mengirim POST ke `/api/internal/notifications?task=deliveries` dengan bearer secret yang sama.
+Jadwal source `*/30 * * * *` ada di `wrangler.jsonc`. Deploy Worker diperlukan untuk menerapkan source/config ini pada runtime yang sudah ada. Scheduler eksternal lain (mis. cron-job.org) juga sah selama ia mengirim POST ke `/api/internal/notifications?task=deliveries` dengan bearer secret yang sama.
 
-**Sudah terpasang (2026-09-11):** worker bernama `atria-notification-scheduler` di akun Cloudflare `hyuzin`, subdomain `hyuzin-atria.workers.dev`. Endpoint:
+**Pemasangan awal (2026-09-11, jadwal lima menit):** worker bernama `atria-notification-scheduler` di akun Cloudflare `hyuzin`, subdomain `hyuzin-atria.workers.dev`. Endpoint:
 
 ```
 POST https://atria-notification-scheduler.hyuzin-atria.workers.dev?task=deliveries
 POST https://atria-notification-scheduler.hyuzin-atria.workers.dev?task=reconcile
 ```
 
-Respons yang benar adalah `{"ok":true,"task":"deliveries","upstream":200}`; `task` di luar dua nilai itu dijawab `400`. Bila `curl` lokal melaporkan `SSL alert number 40` atau `status=000`, itu handshake LibreSSL versi lama di mesin pengembang, bukan worker-nya — ulangi, atau verifikasi lewat peramban sebelum menyimpulkan worker mati.
+Source hardening 30 September mewajibkan POST dan bearer secret pada endpoint manual sebelum request diteruskan; GET menghasilkan 405, bearer hilang/salah 401. Status deploy source baru dicatat di [rencana hardening](../plans/2026-09-30-notification-free-tier-hardening.md). Respons yang benar adalah `{"ok":true,"task":"deliveries","upstream":200}`; `task` di luar dua nilai itu dijawab `400`. Bila `curl` lokal melaporkan `SSL alert number 40` atau `status=000`, itu handshake LibreSSL versi lama di mesin pengembang, bukan worker-nya — ulangi, atau verifikasi lewat peramban sebelum menyimpulkan worker mati.
 
 Tanggal jatuh tempo menggunakan **Asia/Jakarta**: H-3, hari jatuh tempo, terlambat. Pembayaran parsial mempertahankan pengingat selama saldo masih terutang. Perubahan tingkat kondisi menghasilkan notifikasi belum dibaca; kondisi pulih menutup peringatan. Tidak ada pengingat berulang harian untuk kondisi yang sama.
 
-Event mutasi yang sudah tersambung, termasuk request/approve/reject/reversal opening inventory, dicatat dalam transaksi bisnis yang sama. Job melakukan pemulihan aksi dan evaluasi periodik jatuh tempo, kesehatan keuangan proyek, budget kategori, stok minimum, dan kekurangan material RAP. Perubahan kondisi yang tidak melalui sinkronisasi budget akan terdeteksi pada job berikutnya, maksimal satu interval scheduler setelah perubahan.
+Event mutasi yang sudah tersambung, termasuk request/approve/reject/reversal opening inventory, dicatat dalam transaksi bisnis yang sama. Job melakukan pemulihan aksi dan evaluasi periodik jatuh tempo, kesehatan keuangan proyek, budget kategori, stok minimum, dan kekurangan material RAP. Perubahan kondisi yang tidak melalui event bisnis perlu job rekonsiliasi, yang pada konfigurasi Hobby saat ini berjalan harian. Scheduler eksternal default hanya delivery/receipt; jangan menjanjikan semua kondisi budget/material berubah terdeteksi setiap 30 menit.
 
 ## Sinkronisasi web
 
@@ -60,16 +61,15 @@ perubahan dari server; tidak ada pesan dua arah yang membutuhkan WebSocket.
   scope terbaru tanpa mengambil ulang daftar bila cursor tetap sama. Event
   `rotate` membedakan reconnect terjadwal dari gangguan jaringan agar rotasi
   normal tidak memicu refresh penuh.
-- Client menutup stream saat tab tersembunyi atau offline, lalu langsung
-  menyambung dan refresh ketika kembali aktif.
+- Client menutup stream saat tab tersembunyi/offline atau tidak ada interaksi selama lima menit. Interaksi, focus, atau kembali visible menyambung dan refresh segera. Rotasi stream tetap memvalidasi sesi/izin.
 - Invalidation memanggil store refresh yang sudah mendeduplikasi request dan
   mempertahankan pagination yang sedang dibuka.
-- Fallback refresh berjalan setiap 2 menit. Kegagalan memakai backoff hingga 5
+- Fallback refresh penuh berjalan setiap 2 menit ketika stream tidak sehat atau state sedang gagal; stream sehat melewatinya. Timer pada sesi idle tidak memuat data. Kegagalan memakai backoff hingga 5
   menit, sehingga notification center tetap dapat dipakai ketika SSE diputus
   browser, proxy, atau hosting.
 
 Event transaksi biasanya terlihat dalam sekitar 0–5 detik. Event jatuh tempo
-tetap bergantung pada job per jam, kemudian dikirim melalui SSE setelah job
+bergantung pada job rekonsiliasi (harian pada konfigurasi Hobby saat ini), kemudian dikirim melalui SSE setelah job
 commit. Dibanding polling lama, client tidak lagi menjalankan tiga Server Action
 setiap 20 detik; fetch summary dan dua daftar hanya terjadi pada initial load,
 invalidation, focus/online recovery, atau fallback.
