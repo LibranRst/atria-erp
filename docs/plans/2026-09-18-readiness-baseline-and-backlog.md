@@ -305,3 +305,7 @@ Bucket/secrets manual telah terbukti bekerja melalui [run check-storage 36672683
 ### Jenis quota terkonfirmasi lewat Browser
 
 Console Neon mengonfirmasi kuota **compute bulanan** untuk `atria-erp-prod`: **111,49 CU-hours** terpakai, dengan batas **100 compute hours/project** pada Free. Compute 0,25 CU dan autosuspend lima menit sudah aktif; tidak ada perubahan setting. Langkah berikutnya adalah verifikasi SQL setelah periode baru 1 Oktober 2026 07.00 WIB dan audit aktivitas yang membuat compute aktif, kemudian menyelesaikan role baca serta backup/restore R2.
+
+### Audit aktivitas yang menghabiskan compute
+
+[Audit sumber compute](2026-09-30-neon-compute-consumption-audit.md) selesai: kandidat utama adalah scheduler notification delivery setiap lima menit yang tetap query saat outbox kosong; cadence live terbukti 12 POST per sampel sekitar satu jam. SSE lima detik dan fallback refresh dua menit menambah aktivitas foreground. Pool idle timeout default sepuluh detik menolak hipotesis koneksi idle tanpa batas. Rekomendasi awal adalah fallback scheduler 30 menit dan delivery berdasarkan event; dampak latency push serta penghematan runtime perlu diverifikasi setelah perubahan, belum diterapkan.
