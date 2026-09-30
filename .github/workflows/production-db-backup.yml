@@ -5,6 +5,14 @@ on:
     # 02:17 WIB; GitHub schedules use UTC and may start late under load.
     - cron: "17 19 * * *"
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Backup database or check R2 credentials without Neon
+        type: choice
+        default: backup
+        options:
+          - backup
+          - check-storage
 
 permissions:
   contents: read
@@ -15,7 +23,7 @@ concurrency:
 
 jobs:
   backup:
-    if: github.ref == 'refs/heads/development' && vars.ATRIA_BACKUP_ENABLED == 'true'
+    if: github.ref == 'refs/heads/development' && vars.ATRIA_BACKUP_ENABLED == 'true' && inputs.operation != 'check-storage'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -33,3 +41,19 @@ jobs:
           EXPECTED_NEON_HOST: ep-wispy-unit-az0r7nao.c-3.ap-southeast-1.aws.neon.tech
           EXPECTED_BACKUP_USER: atria_backup
         run: bash scripts/backup-production-db.sh
+
+  check-storage:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/development' && inputs.operation == 'check-storage'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out storage probe
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Verify R2 upload and download
+        env:
+          BACKUP_R2_BUCKET: ${{ vars.ATRIA_BACKUP_R2_BUCKET }}
+          R2_ACCOUNT_ID: ${{ vars.ATRIA_BACKUP_R2_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ATRIA_BACKUP_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ATRIA_BACKUP_R2_SECRET_ACCESS_KEY }}
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: bash scripts/check-r2-backup-storage.sh

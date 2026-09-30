@@ -49,3 +49,9 @@ Adaptasi R2 di-push ke `development` pada commit `5a6a8b3`; YAML remote GitHub t
 ### Checkout setelah otorisasi pengguna
 
 Pengguna memberi otorisasi lanjutan pada 30 September 2026. Pemeriksaan subscription akun hanya menunjukkan Workers Free, tanpa metode pembayaran; R2 belum aktif. Agen melanjutkan tombol Add R2 subscription ke checkout yang meminta kartu/wallet, alamat billing, dan persetujuan charge atas overage. Pengisian serta penyelesaian checkout diserahkan kepada pengguna langsung di browser. Tidak ada bucket atau token yang dibuat, tidak ada charge yang dijalankan agen, dan gate backup tetap nonaktif.
+
+### Preflight setelah bucket dan secrets dibuat manual
+
+Pada 30 September 2026, nama secrets R2 dan variable bucket `atria-erp-backups` telah diverifikasi di GitHub. Query read-only production melalui connector Neon ditolak HTTP 402: account/project quota exceeded. Metadata project masih `free_v3`, retention enam jam, compute main idle/tidak disabled; jenis kuota penyebab belum dapat ditentukan dari metadata ini. Jangan membuat role/secret backup atau mengaktifkan jadwal sebelum SQL production kembali tersedia.
+
+Rencana pekerjaan yang tidak bergantung pada Neon: tambahkan mode manual `check-storage` pada workflow. Mode ini mengunggah file diagnostik nonsecret kecil pada prefix `atria-erp/prod/_checks/`, lalu download ulang dan cocokkan digest. Objek `.probe` disimpan sebagai bukti, tanpa penghapusan otomatis oleh script; ini bukan backup database. Mode backup biasa tetap membutuhkan gate enable dan semua guard source.
