@@ -49,3 +49,9 @@ Root test pada workspace utama menghasilkan satu kegagalan kontrak `administrati
 5. Lanjutkan pembuatan role backup baca dan backup R2 setelah database tersedia. Penghematan notifikasi tidak menggantikan validasi backup/restore.
 
 Akses Browser Cloudflare masih ditolak oleh permission yang tersimpan. Deployment Worker tidak dicoba lewat CLI/API sebagai pengganti akses yang ditolak. Tidak ada perubahan plan berbayar atau biaya baru dalam task ini.
+
+### Status setelah push
+
+Commit implementasi `d14c8fc768942a13e3d384de11bdc850ac03aa6c` sudah dipush ke `development`. Git integration Vercel otomatis membuat deployment **preview**, `dpl_3f7b7YMQgvfrvRA5amjwqSEGJtUF`, dan API menunjukkan **READY** di `sin1` untuk SHA tersebut. [Halaman preview](https://atria-88cju4lf4-hyuzins-projects.vercel.app/login) berhasil menampilkan form login lewat Browser tanpa warning/error console. Tidak melakukan login atau query bisnis untuk menghindari kuota Neon yang sedang habis.
+
+Target deployment adalah preview (`target: null`), bukan production; alias yang terpasang `atria-erp-git-development-hyuzins-projects.vercel.app`. Rollout production dan Worker tetap belum dilakukan. Source sudah tersedia untuk rilis dengan environment production yang benar, tanpa artifact fixture. Checkout validasi sementara sudah diarsipkan melalui managed-worktree tool; pekerjaan UI/mobile pengguna di workspace utama tetap dipertahankan.
