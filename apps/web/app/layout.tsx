@@ -22,7 +22,7 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Atria",
-  description: "Kontrol keuangan proyek dan material Dekoria.",
+  description: "Kontrol keuangan proyek dan material.",
   applicationName: "Atria",
   manifest: "/manifest.webmanifest",
   /*

@@ -67,6 +67,9 @@ globalThis.fetch = Object.assign(async (input: Parameters<typeof fetch>[0], init
   }
   if (!url.startsWith("https://ik.imagekit.io/disposable/")) throw new Error("Unexpected network destination in fixture");
   expect(new URL(url).searchParams.has("ik-s")).toBe(true);
+  // Financial evidence must keep its uploaded format and bytes, even when
+  // ImageKit's account-wide automatic optimization is enabled.
+  expect(new URL(url).searchParams.get("tr")).toBe("orig-true");
   if (readMode === "redirect") return new Response(null, { status: 302, headers: { location: "https://foreign.invalid/proof.jpg" } });
   if (readMode === "oversize") return new Response(jpeg, { headers: { "content-length": String(PRIVATE_ATTACHMENT_MAX_BYTES + 1) } });
   if (readMode === "invalid") return new Response(new Uint8Array([0, 1, 2]), { headers: { "content-type": "image/jpeg" } });

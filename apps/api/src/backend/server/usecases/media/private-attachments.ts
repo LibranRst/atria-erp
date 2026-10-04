@@ -220,6 +220,7 @@ export async function readPrivateAttachment(
     src: imagekitSource(row.fileUrl, endpoint),
     signed: true,
     expiresIn: 60,
+    transformation: [{ original: true }],
   });
   const response = await fetch(signed, { redirect: "error", signal: AbortSignal.timeout(15_000) });
   const bytes = await boundedAttachmentBody(response);
