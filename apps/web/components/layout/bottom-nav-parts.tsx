@@ -53,6 +53,7 @@ export function BottomTabBar({
           <Link
             key={item.href}
             href={item.href}
+            aria-label={item.label}
             aria-current={isActive ? "page" : undefined}
             onClick={() => onTabClick(item.href)}
             onTouchStart={() => {}}
