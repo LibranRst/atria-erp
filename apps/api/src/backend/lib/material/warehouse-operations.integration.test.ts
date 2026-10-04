@@ -1,9 +1,18 @@
 import { withTestRequest } from "@backend/lib/testing/request";
 import { afterAll, beforeAll, expect, it } from "bun:test";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq, like, or, sql } from "drizzle-orm";
+import { pgSchema, text } from "drizzle-orm/pg-core";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
 import { db } from "@backend/db";
-import { materialInventory, stockCount, stockMovement } from "@backend/db/schema";
+import {
+  auditLog,
+  materialInventory,
+  materialMaster,
+  stockCount,
+  stockMovement,
+} from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
 import { postGoodsReceipt } from "@backend/app/actions/material/goods-receipt";
 import { createStockTransfer } from "@backend/app/actions/material/warehouse-transfer";
@@ -13,6 +22,13 @@ import {
   submitStockCount,
 } from "@backend/app/actions/material/warehouse-stock-count";
 import { emergencyAdjustStock } from "@backend/app/actions/material/warehouse-adjustment";
+import { createMaterialWithInventoryDefaults } from "@backend/app/actions/settings/system-materials";
+import {
+  createInventoryOpening,
+  decideInventoryOpening,
+  reverseInventoryOpening,
+} from "@backend/app/actions/material/opening-inventory-mutations";
+import type { ActionResponse } from "@atria/core/types/action-response";
 import { describeIntegration } from "@backend/lib/testing/integration-db";
 
 /**
@@ -65,6 +81,42 @@ const MENTENG = "77777777-7777-7777-7777-777777777771";
 const GRN_NUMBER = "GRN-DEMO-WALK-001";
 const TRANSFER_NUMBER = "TRF-DEMO-WALK-001";
 const COUNT_NUMBER = "SC-DEMO-WALK-001";
+
+const databaseActivity = pgSchema("pg_catalog")
+  .view("pg_stat_activity", {
+    databaseName: text("datname"),
+    waitEventType: text("wait_event_type"),
+    query: text("query"),
+  })
+  .existing();
+
+function requireSuccess<T>(response: ActionResponse<T>): T {
+  if (!response.success) throw new Error(response.error.message);
+  return response.data;
+}
+
+async function createIsolatedInventory(): Promise<{ materialId: string; inventoryId: string }> {
+  const source = await db.query.materialMaster.findFirst({
+    where: eq(materialMaster.id, LED),
+    columns: { categoryId: true },
+  });
+  if (!source) throw new Error("Seed category missing");
+  const created = requireSuccess(
+    await withTestRequest(createMaterialWithInventoryDefaults)({
+      categoryId: source.categoryId,
+      name: `Warehouse regression ${crypto.randomUUID()}`,
+      unit: "unit",
+      inventoryDefaults: [
+        { inventoryLocationId: GUDANG_UTAMA, minimumStock: 0, lastPurchasePrice: 10000 },
+      ],
+    }),
+  );
+  const inventory = await db.query.materialInventory.findFirst({
+    where: eq(materialInventory.materialId, created.id),
+  });
+  if (!inventory) throw new Error("Fixture inventory missing");
+  return { materialId: created.id, inventoryId: inventory.id };
+}
 
 async function currentStock(materialId: string, locationId: string): Promise<number> {
   const row = await db.query.materialInventory.findFirst({
@@ -293,5 +345,151 @@ describeIntegration("gudang — goods receipt, transfer, stock count, adjustment
       expect(result.success).toBe(true);
       expect(await currentStock(LED, GUDANG_UTAMA)).toBe(before - 1);
     }),
+  );
+  it(
+    "reverses a microsecond-precision opening but refuses a genuine later movement",
+    withTestRequest(async () => {
+      actAs(RONALD);
+      for (const hasLaterMovement of [false, true]) {
+        const fixture = await createIsolatedInventory();
+        const batch = requireSuccess(
+          await withTestRequest(createInventoryOpening)({
+            cutoverDate: new Date(),
+            note: "Disposable opening precision regression",
+            items: [{ materialInventoryId: fixture.inventoryId, quantity: 5, unitCost: 10000 }],
+          }),
+        );
+        requireSuccess(
+          await withTestRequest(decideInventoryOpening)({
+            batchId: batch.id,
+            decision: "APPROVE",
+            emergencyOverride: true,
+            reason: "Explicit disposable Owner approval fixture",
+          }),
+        );
+        // A Date cannot represent these PostgreSQL fractional digits. This fixed
+        // test-only timestamp reproduces the real driver precision boundary.
+        await db
+          .update(stockMovement)
+          .set({
+            createdAt: sql<Date>`timestamp '2020-01-01 00:00:00.123456'`,
+          })
+          .where(
+            and(
+              eq(stockMovement.materialId, fixture.materialId),
+              eq(stockMovement.movementType, "OPENING_BALANCE"),
+            ),
+          );
+        if (hasLaterMovement) {
+          const { recordStockIn } = await import("@backend/app/actions/material/inventory");
+          requireSuccess(
+            await withTestRequest(recordStockIn)({
+              materialId: fixture.materialId,
+              inventoryLocationId: GUDANG_UTAMA,
+              quantity: 1,
+              unitCost: 10000,
+              note: "Genuine later stock receipt",
+            }),
+          );
+        }
+        const result = await withTestRequest(reverseInventoryOpening)({
+          batchId: batch.id,
+          reason: "Disposable opening reversal verification",
+        });
+        expect(result.success).toBe(!hasLaterMovement);
+        expect(await currentStock(fixture.materialId, GUDANG_UTAMA)).toBe(hasLaterMovement ? 6 : 0);
+        if (!result.success) expect(result.error.code).toBe("CONFLICT");
+      }
+    }),
+  );
+
+  it(
+    "records one decision for simultaneous zero-variance stock approvals",
+    withTestRequest(async () => {
+      actAs(RONALD);
+      const fixture = await createIsolatedInventory();
+      actAs(AGUS);
+      const document = requireSuccess(
+        await withTestRequest(saveStockCount)({
+          countNumber: `ZERO-${crypto.randomUUID()}`,
+          inventoryLocationId: GUDANG_UTAMA,
+          countedAt: new Date(),
+          note: "Unchanged stock concurrency regression",
+          items: [{ materialId: fixture.materialId, countedQuantity: 0 }],
+        }),
+      );
+      requireSuccess(await withTestRequest(submitStockCount)({ stockCountId: document.id }));
+      actAs(RONALD);
+      const configured = process.env.ATRIA_TEST_DATABASE_URL;
+      if (!configured) throw new Error("Disposable database required");
+      const databaseName = new URL(configured).pathname.slice(1);
+      const observerPool = new Pool({ connectionString: configured, max: 1 });
+      const observer = drizzle(observerPool);
+      let markReady = (): void => {
+        throw new Error("Gate not initialized");
+      };
+      let releaseGate = (): void => {
+        throw new Error("Gate not initialized");
+      };
+      const ready = new Promise<void>((resolve) => {
+        markReady = resolve;
+      });
+      const release = new Promise<void>((resolve) => {
+        releaseGate = resolve;
+      });
+      const gate = db.transaction(async (tx): Promise<void> => {
+        await tx
+          .select()
+          .from(materialInventory)
+          .where(eq(materialInventory.id, fixture.inventoryId))
+          .for("update");
+        markReady();
+        await release;
+      });
+      await ready;
+      const requests = Promise.all([
+        withTestRequest(approveStockCount)({ stockCountId: document.id }),
+        withTestRequest(approveStockCount)({ stockCountId: document.id }),
+      ]);
+      let blocked = 0;
+      try {
+        for (let attempt = 0; attempt < 100; attempt += 1) {
+          const rows = await observer
+            .select({ total: count() })
+            .from(databaseActivity)
+            .where(
+              and(
+                eq(databaseActivity.databaseName, databaseName),
+                eq(databaseActivity.waitEventType, "Lock"),
+                or(
+                  like(databaseActivity.query, "%material_inventory%"),
+                  like(databaseActivity.query, "%stock_count%"),
+                ),
+              ),
+            );
+          blocked = rows[0]?.total ?? 0;
+          if (blocked >= 2) break;
+          await Bun.sleep(20);
+        }
+      } finally {
+        releaseGate();
+        await Promise.allSettled([requests, gate]);
+        await observerPool.end();
+      }
+      const results = await requests;
+      await gate;
+      expect(blocked).toBeGreaterThanOrEqual(2);
+      expect(results.filter((result) => result.success)).toHaveLength(1);
+      const audits = await db
+        .select()
+        .from(auditLog)
+        .where(and(eq(auditLog.targetId, document.id), eq(auditLog.action, "APPROVE_STOCK_COUNT")));
+      expect(audits).toHaveLength(1);
+      expect(await currentStock(fixture.materialId, GUDANG_UTAMA)).toBe(0);
+      expect(
+        await db.select().from(stockMovement).where(eq(stockMovement.referenceId, document.id)),
+      ).toHaveLength(0);
+    }),
+    10000,
   );
 });

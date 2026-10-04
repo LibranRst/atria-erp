@@ -1,4 +1,4 @@
-import { and, asc, eq, gt } from "drizzle-orm";
+import { and, asc, eq, gt, ne } from "drizzle-orm";
 
 import { db } from "@backend/db";
 import {
@@ -342,19 +342,23 @@ export async function reverseInventoryOpening(
       });
       for (const item of items) {
         if (!item.stockMovement) throw new Error("Pergerakan saldo awal tidak ditemukan.");
-        const later = await tx.query.stockMovement.findFirst({
-          where: and(
-            eq(stockMovement.materialId, item.stockMovement.materialId),
-            eq(stockMovement.inventoryLocationId, item.stockMovement.inventoryLocationId),
-            gt(stockMovement.createdAt, item.stockMovement.createdAt),
-          ),
-        });
-        if (later) throw new Error("REVERSAL_HAS_LATER_MOVEMENT");
         const [inventory] = await tx
           .select()
           .from(materialInventory)
           .where(eq(materialInventory.id, item.materialInventoryId))
           .for("update");
+        // Serialize history checks with all stock writers. Date values retain
+        // milliseconds while PostgreSQL may retain microseconds, so explicitly
+        // exclude this opening rather than comparing it to its rounded date.
+        const later = await tx.query.stockMovement.findFirst({
+          where: and(
+            eq(stockMovement.materialId, item.stockMovement.materialId),
+            eq(stockMovement.inventoryLocationId, item.stockMovement.inventoryLocationId),
+            ne(stockMovement.id, item.stockMovement.id),
+            gt(stockMovement.createdAt, item.stockMovement.createdAt),
+          ),
+        });
+        if (later) throw new Error("REVERSAL_HAS_LATER_MOVEMENT");
         if (
           !inventory ||
           Number(inventory.currentStock) !== Number(item.quantity) ||

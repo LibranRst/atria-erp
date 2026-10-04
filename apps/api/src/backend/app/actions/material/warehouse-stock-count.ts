@@ -1,7 +1,7 @@
 import { roleNameHasPermission } from "@backend/lib/auth/role-access";
 import { recordNotificationEvent } from "@backend/server/services/notification-events";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@backend/db";
 import {
   auditLog,
@@ -190,12 +190,20 @@ export async function approveStockCount(input: unknown): Promise<ActionResponse<
     const roleName = await resolveRoleName(actor.roleId ?? "");
     const canEmergencyOverride = await roleNameHasPermission(roleName, "override:self_approval");
     const result = await db.transaction(async (tx) => {
-      const count = await tx.query.stockCount.findFirst({
-        where: eq(stockCount.id, parsed.data.stockCountId),
-        with: { items: true },
-      });
-      if (!count || count.status !== "PENDING_APPROVAL")
+      // An unchanged count does not update inventory, so inventory locks alone
+      // cannot stop two approvals from writing two decisions and audits.
+      const [header] = await tx
+        .select()
+        .from(stockCount)
+        .where(eq(stockCount.id, parsed.data.stockCountId))
+        .for("update");
+      if (!header || header.status !== "PENDING_APPROVAL")
         throw new Error("Stock count belum siap approval.");
+      const items = await tx.query.stockCountItem.findMany({
+        where: eq(stockCountItem.stockCountId, header.id),
+        orderBy: [asc(stockCountItem.materialId), asc(stockCountItem.id)],
+      });
+      const count = { ...header, items };
       const selfApproval = count.createdById === actor.id;
       if (
         selfApproval &&
