@@ -28,6 +28,11 @@ const cases = [
     name: "keeps explicit header session reads fresh after a session mutation",
   },
   { mode: "parallel-contexts", reads: 2, name: "keeps concurrent request identities isolated" },
+  {
+    mode: "workflow-public-actions",
+    reads: 2,
+    name: "isolates public action callers when a test workflow changes users",
+  },
 ] as const;
 
 for (const scenario of cases) {

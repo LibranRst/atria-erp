@@ -16,18 +16,30 @@ import {
 import { eq, and, inArray } from "drizzle-orm";
 import { auth } from "@backend/lib/auth";
 import { submitVendorBill as submitVendorBillAction } from "@backend/app/actions/finance/submit-vendor-bill";
-import { scheduleVendorBillPayment } from "@backend/app/actions/finance/schedule-vendor-bill";
-import { payVendorBill } from "@backend/app/actions/finance/pay-vendor-bill";
+import { scheduleVendorBillPayment as scheduleVendorBillPaymentAction } from "@backend/app/actions/finance/schedule-vendor-bill";
+import { payVendorBill as payVendorBillAction } from "@backend/app/actions/finance/pay-vendor-bill";
 import {
   submitFieldRequest as submitFieldRequestAction,
   submitFieldRequests as submitFieldRequestsAction,
-  verifyFieldRequest,
-  approveFieldRequest,
-  payFieldRequest,
-  approveVendorPayment,
+  verifyFieldRequest as verifyFieldRequestAction,
+  approveFieldRequest as approveFieldRequestAction,
+  payFieldRequest as payFieldRequestAction,
+  approveVendorPayment as approveVendorPaymentAction,
 } from "@backend/app/actions/finance/field-requests";
 import { describe, it, expect, afterAll } from "bun:test";
 import { describeIntegration } from "@backend/lib/testing/integration-db";
+
+// A workflow can switch mocked users between calls. Each public action must
+// receive its own HTTP request context; internal domain calls keep theirs.
+const submitVendorBillRequest = withTestRequest(submitVendorBillAction);
+const submitFieldRequestRequest = withTestRequest(submitFieldRequestAction);
+const submitFieldRequestsRequest = withTestRequest(submitFieldRequestsAction);
+const scheduleVendorBillPayment = withTestRequest(scheduleVendorBillPaymentAction);
+const payVendorBill = withTestRequest(payVendorBillAction);
+const verifyFieldRequest = withTestRequest(verifyFieldRequestAction);
+const approveFieldRequest = withTestRequest(approveFieldRequestAction);
+const payFieldRequest = withTestRequest(payFieldRequestAction);
+const approveVendorPayment = withTestRequest(approveVendorPaymentAction);
 
 /**
  * `submitVendorBill` and `submitFieldRequest(s)` post against real seeded
@@ -49,7 +61,7 @@ const createdAttachmentIds: string[] = [];
 async function submitVendorBill(
   ...args: Parameters<typeof submitVendorBillAction>
 ): ReturnType<typeof submitVendorBillAction> {
-  const result = await submitVendorBillAction(...args);
+  const result = await submitVendorBillRequest(...args);
   if (result.success) createdVendorBillIds.push(result.data.id);
   return result;
 }
@@ -57,7 +69,7 @@ async function submitVendorBill(
 async function submitFieldRequest(
   ...args: Parameters<typeof submitFieldRequestAction>
 ): ReturnType<typeof submitFieldRequestAction> {
-  const result = await submitFieldRequestAction(...args);
+  const result = await submitFieldRequestRequest(...args);
   if (result.success) createdProjectCostIds.push(result.data.id);
   return result;
 }
@@ -65,7 +77,7 @@ async function submitFieldRequest(
 async function submitFieldRequests(
   ...args: Parameters<typeof submitFieldRequestsAction>
 ): ReturnType<typeof submitFieldRequestsAction> {
-  const result = await submitFieldRequestsAction(...args);
+  const result = await submitFieldRequestsRequest(...args);
   if (result.success) createdProjectCostIds.push(...result.data.map((cost) => cost.id));
   return result;
 }
@@ -143,7 +155,8 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
     withTestRequest(async () => {
       restoreUserSession();
 
-      if (createdAttachmentIds.length) await db.delete(attachment).where(inArray(attachment.id, createdAttachmentIds));
+      if (createdAttachmentIds.length)
+        await db.delete(attachment).where(inArray(attachment.id, createdAttachmentIds));
       const vendorBillIds = createdVendorBillIds;
       const projectCostIds = createdProjectCostIds;
       if (vendorBillIds.length === 0 && projectCostIds.length === 0) return;
@@ -711,7 +724,10 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
           fileSize: 100,
         });
         createdAttachmentIds.push(proofId);
-        const protectedReceiptUrl = new URL(`/api/media/attachments/${proofId}`, process.env.WEB_ORIGIN ?? "http://localhost:3000").href;
+        const protectedReceiptUrl = new URL(
+          `/api/media/attachments/${proofId}`,
+          process.env.WEB_ORIGIN ?? "http://localhost:3000",
+        ).href;
         const res = await submitFieldRequests({
           projectId: MENTENG_PROJECT_ID,
           receiptImageUrl: protectedReceiptUrl,

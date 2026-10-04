@@ -19,29 +19,53 @@ import {
 } from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
 import {
-  approveFieldRequest,
-  approveVendorPayment,
-  payFieldRequest,
-  verifyFieldRequest,
+  approveFieldRequest as approveFieldRequestAction,
+  approveVendorPayment as approveVendorPaymentAction,
+  payFieldRequest as payFieldRequestAction,
+  verifyFieldRequest as verifyFieldRequestAction,
 } from "@backend/app/actions/finance/field-requests";
-import { payVendorBill } from "@backend/app/actions/finance/pay-vendor-bill";
-import { recordClientPayment } from "@backend/app/actions/finance/record-client-payment";
-import { transferBetweenBankAccounts } from "@backend/app/actions/finance/bank-account-movements";
+import { payVendorBill as payVendorBillAction } from "@backend/app/actions/finance/pay-vendor-bill";
+import { recordClientPayment as recordClientPaymentAction } from "@backend/app/actions/finance/record-client-payment";
+import { transferBetweenBankAccounts as transferBetweenBankAccountsAction } from "@backend/app/actions/finance/bank-account-movements";
 import {
-  clearReconciliationException,
-  markReconciliationException,
-  reconcileCashTransaction,
+  clearReconciliationException as clearReconciliationExceptionAction,
+  markReconciliationException as markReconciliationExceptionAction,
+  reconcileCashTransaction as reconcileCashTransactionAction,
 } from "@backend/app/actions/finance/reconcile-cash-transaction";
-import { importBankStatementCsv } from "@backend/app/actions/finance/reconciliation-statement-actions";
-import { decideInventoryOpening } from "@backend/app/actions/material/opening-inventory-mutations";
+import { importBankStatementCsv as importBankStatementCsvAction } from "@backend/app/actions/finance/reconciliation-statement-actions";
+import { decideInventoryOpening as decideInventoryOpeningAction } from "@backend/app/actions/material/opening-inventory-mutations";
 import {
-  reserveMaterialForProject,
-  returnMaterialFromProject,
-  useMaterialForProject,
-  wasteMaterialForProject,
+  reserveMaterialForProject as reserveMaterialForProjectAction,
+  returnMaterialFromProject as returnMaterialFromProjectAction,
+  useMaterialForProject as useMaterialForProjectAction,
+  wasteMaterialForProject as wasteMaterialForProjectAction,
 } from "@backend/app/actions/material/inventory-movements";
-import { completeProject, getProjectClosingChecklist } from "@backend/app/actions/project/closing";
+import {
+  completeProject as completeProjectAction,
+  getProjectClosingChecklist as getProjectClosingChecklistAction,
+} from "@backend/app/actions/project/closing";
 import { describeIntegration } from "@backend/lib/testing/integration-db";
+
+// Each public action is one HTTP request, even when the walkthrough switches
+// users inside a single workflow test. Domain transaction calls stay intact.
+const approveFieldRequest = withTestRequest(approveFieldRequestAction);
+const approveVendorPayment = withTestRequest(approveVendorPaymentAction);
+const payFieldRequest = withTestRequest(payFieldRequestAction);
+const verifyFieldRequest = withTestRequest(verifyFieldRequestAction);
+const payVendorBill = withTestRequest(payVendorBillAction);
+const recordClientPayment = withTestRequest(recordClientPaymentAction);
+const transferBetweenBankAccounts = withTestRequest(transferBetweenBankAccountsAction);
+const clearReconciliationException = withTestRequest(clearReconciliationExceptionAction);
+const markReconciliationException = withTestRequest(markReconciliationExceptionAction);
+const reconcileCashTransaction = withTestRequest(reconcileCashTransactionAction);
+const importBankStatementCsv = withTestRequest(importBankStatementCsvAction);
+const decideInventoryOpening = withTestRequest(decideInventoryOpeningAction);
+const reserveMaterialForProject = withTestRequest(reserveMaterialForProjectAction);
+const returnMaterialFromProject = withTestRequest(returnMaterialFromProjectAction);
+const useMaterialForProject = withTestRequest(useMaterialForProjectAction);
+const wasteMaterialForProject = withTestRequest(wasteMaterialForProjectAction);
+const completeProject = withTestRequest(completeProjectAction);
+const getProjectClosingChecklist = withTestRequest(getProjectClosingChecklistAction);
 
 /**
  * Tulang punggung kas `docs/guide/seeded_demo_walkthrough.md` bagian 6 sampai 9,

@@ -36,6 +36,7 @@ jobs:
           bun run --filter @atria/api test
           bun run --filter @atria/web test
           python3 scripts/test-backup-pilot-db.py
+          python3 apps/api/scripts/test-local-postgres-audit.py
       - name: Classify dependency security
         run: |
           bun run test:security-scripts

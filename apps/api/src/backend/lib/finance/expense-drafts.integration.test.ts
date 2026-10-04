@@ -4,11 +4,11 @@ import { describeIntegration } from "@backend/lib/testing/integration-db";
 import { inArray } from "drizzle-orm";
 
 import {
-  discardExpenseDraft,
-  getExpenseDraft,
-  listExpenseDrafts,
-  saveExpenseDraft,
-  submitExpenseDraft,
+  discardExpenseDraft as discardExpenseDraftAction,
+  getExpenseDraft as getExpenseDraftAction,
+  listExpenseDrafts as listExpenseDraftsAction,
+  saveExpenseDraft as saveExpenseDraftAction,
+  submitExpenseDraft as submitExpenseDraftAction,
 } from "@backend/app/actions/finance/expense-drafts";
 import { db } from "@backend/db";
 import { approval, auditLog, formDraft, projectCost, projectExpenses } from "@backend/db/schema";
@@ -19,6 +19,13 @@ import {
 import type { ExpenseDraftPayload } from "@backend/features/expenses/types/expense-form-types";
 import { auth } from "@backend/lib/auth";
 import { syncProjectBudgetCategory } from "@backend/lib/budget/budget-sync";
+
+// Persona changes represent separate browser/native action requests.
+const discardExpenseDraft = withTestRequest(discardExpenseDraftAction);
+const getExpenseDraft = withTestRequest(getExpenseDraftAction);
+const listExpenseDrafts = withTestRequest(listExpenseDraftsAction);
+const saveExpenseDraft = withTestRequest(saveExpenseDraftAction);
+const submitExpenseDraft = withTestRequest(submitExpenseDraftAction);
 
 const OWNER = {
   id: "11111111-1111-1111-1111-111111111111",

@@ -15,6 +15,24 @@ import uuid
 from urllib.parse import urlparse
 
 
+def failure_summary(content: str, protected_values: list[str]) -> list[str]:
+    """Return bounded assertion locations, never raw request/DB/provider payloads."""
+    clean = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", content)
+    for value in protected_values:
+        if value:
+            clean = clean.replace(value, "<REDACTED>")
+    details = []
+    for line in clean.splitlines():
+        stripped = line.strip()
+        if (stripped.startswith("(fail)")
+                or re.fullmatch(r"(?:Expected|Received): (?:true|false|null|undefined|-?[0-9]+(?:\.[0-9]+)?)", stripped)
+                or re.fullmatch(r"at .{1,240}\.test\.ts:[0-9]+:[0-9]+\)?", stripped)):
+            details.append(stripped[:320])
+            if len(details) >= 40:
+                break
+    return details
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--container", required=True)
@@ -81,6 +99,12 @@ def main() -> int:
             content = log.read_text()
             counts = {key: int(value) for value, key in re.findall(r"^ (\d+) (pass|fail|skip)$", content, re.M)}
             row = {"file": file, "exit": code, "seconds": round(time.monotonic() - started, 1), "counts": counts, "log": log.name}
+            if code != 0:
+                protected = [configured, target.password]
+                protected.extend(value for key, value in env.items()
+                                 if re.search(r"(?:SECRET|TOKEN|PASSWORD|PRIVATE_KEY|ACCESS_KEY|API_KEY)$", key)
+                                 and value)
+                row["failures"] = failure_summary(content, protected)
             results.append(row)
             (args.logs / "results.json").write_text(json.dumps(results, indent=2) + "\n")
             print(json.dumps(row), flush=True)

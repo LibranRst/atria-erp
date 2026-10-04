@@ -1,6 +1,9 @@
 import { expect, mock } from "bun:test";
 import type { RoleAccess } from "@backend/lib/auth/role-access";
 import type { RequiredServerSession, ServerSession } from "@backend/lib/server/session";
+import type { Actor } from "@backend/server/actor";
+import type { ParsedReceipt } from "@backend/server/usecases/ai/process-receipt";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
 const ownerId = "12345678-1234-4234-8234-123456789012";
 const changedUserId = "87654321-4321-4321-8321-210987654321";
@@ -43,6 +46,7 @@ function sessionFor(
 let currentSession: ServerSession = sessionFor(ownerId);
 let reads = 0;
 const receivedHeaders: Headers[] = [];
+const actionActors: string[] = [];
 mock.module("@backend/lib/auth", () => ({
   auth: {
     api: {
@@ -68,6 +72,23 @@ mock.module("@backend/lib/auth/role-access", () => ({
     permissions: ["view:cost"],
     dataScope: roleId === ownerRole ? "GLOBAL" : "ASSIGNED",
   }),
+}));
+
+mock.module("@backend/server/usecases/ai/process-receipt", () => ({
+  processReceiptUseCase: async (actor: Actor): Promise<ActionResponse<ParsedReceipt>> => {
+    actionActors.push(actor.userId);
+    return {
+      success: true,
+      data: {
+        vendorName: "Synthetic fixture",
+        transactionDate: "2026-10-04T00:00:00.000Z",
+        subtotal: 1,
+        tax: 0,
+        totalAmount: 1,
+        items: [],
+      },
+    };
+  },
 }));
 
 const { getServerSession, getSessionFromHeaders, requireServerSession } =
@@ -170,6 +191,17 @@ switch (mode) {
       ),
     ]);
     expect(results.map((result) => result.value)).toEqual([ownerId, changedUserId]);
+    break;
+  }
+  case "workflow-public-actions": {
+    const { processReceipt } = await import("@backend/app/actions/ai/process-receipt");
+    const { withTestRequest } = await import("@backend/lib/testing/request");
+    await withTestRequest(async (): Promise<void> => {
+      await withTestRequest(processReceipt)("synthetic-receipt-a");
+      currentSession = sessionFor(changedUserId, changedRole);
+      await withTestRequest(processReceipt)("synthetic-receipt-b");
+      expect(actionActors).toEqual([ownerId, changedUserId]);
+    })();
     break;
   }
   default:
