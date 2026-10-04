@@ -86,3 +86,11 @@ Technical workflow checks use the isolated QA database and synthetic identities;
 | Layout | Required mobile widths and desktop 1024/1280/1440 dashboard/material/finance show no document overflow; latest balance visible after refresh | Hosted Chromium DOM/screenshot evidence; mobile shell stays one column |
 
 Operational scope remains explicit: browser push is inactive until VAPID/device opt-in; GitHub/R2 main-database backup has no database credential yet and requires the user's new-access approval. Company cutoff/baseline and actual boss acceptance are human business checks, not replaced by synthetic QA. Scheduler automatic invocation is being inspected separately from manual worker success. No all-provider delivery or physical-device claim is made.
+
+## Approved main database backup activation
+
+The user approved a dedicated read-only Neon credential for GitHub and backup to existing private R2. Source role `atria_pilot_backup` was verified unable to write application/drizzle tables, with 44 migrations and strict TLS in the operator preflight. Only the backup workflow and standalone guarded script were activated on default branch development at `99e3bbf718e092c8e9dc9e250082fbc3a0fb698f`; the application PR was not merged. Existing GitHub R2 credentials are reused. [Manual backup run 37238597044](https://github.com/LibranRst/atria-erp/actions/runs/37238597044) completed the actual dump, archive readback, R2 upload/download SHA-256 and manifest checks. The archived source is the main database; no reset was performed.
+
+Pilot backup and manifest verified in private R2: atria-erp-backups/atria-erp/pilot/2026/10/04/atria_pilot-20261004T220518Z-37238597044-1.dump (307419 bytes, SHA-256 612947f9db7d76984e366732a4e33118c7e43535cb39ee1c10f804282d0ea865)
+
+Daily backup is enabled at 02:47 WIB on the default branch. Its next automatic invocation is still a future event. The configured cutoff is a technical bootstrap capture timestamp, not Finance's business baseline. Attachment bytes are explicitly excluded from this database archive; private file readback and QA full database restore have separate evidence.

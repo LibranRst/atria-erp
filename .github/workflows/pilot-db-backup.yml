@@ -32,7 +32,7 @@ jobs:
           PILOT_WEB_RELEASE_COMMIT: ${{ vars.ATRIA_PILOT_WEB_RELEASE_COMMIT }}
           BACKUP_R2_BUCKET: ${{ vars.ATRIA_PILOT_BACKUP_R2_BUCKET }}
           R2_ACCOUNT_ID: ${{ vars.ATRIA_PILOT_BACKUP_R2_ACCOUNT_ID }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.ATRIA_PILOT_BACKUP_R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.ATRIA_PILOT_BACKUP_R2_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ATRIA_BACKUP_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ATRIA_BACKUP_R2_SECRET_ACCESS_KEY }}
           AWS_EC2_METADATA_DISABLED: "true"
         run: bash scripts/backup-pilot-db.sh
