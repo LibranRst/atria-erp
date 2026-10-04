@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import Link from "@/lib/navigation/workspace-link";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import {
+  buttonTapActiveScale,
   transitionEaseSmooth,
   transitionSpringBouncy,
   transitionSpringSmooth,
+  transitionSpringSnappy,
 } from "@/lib/utils/motion";
 import type { FabAction, NavItem } from "./bottom-nav-config";
 import { AppIcon, DuotoneIconTile } from "@/components/ui";
@@ -53,7 +55,8 @@ export function BottomTabBar({
             href={item.href}
             aria-current={isActive ? "page" : undefined}
             onClick={() => onTabClick(item.href)}
-            className={`relative flex h-10 w-15 flex-1 flex-col items-center justify-center rounded-full px-2 transition-all duration-200 after:absolute after:-inset-y-1 after:content-[''] active:scale-90 ${
+            onTouchStart={() => {}}
+            className={`relative flex h-10 w-15 flex-1 flex-col items-center justify-center rounded-full px-2 transition-all duration-150 after:absolute after:-inset-y-1 after:content-[''] active:z-10 active:scale-[1.05] active:shadow-raised ${
               isActive ? "text-on-primary" : "text-on-surface-variant"
             }`}
           >
@@ -84,6 +87,7 @@ export function QuickActionFab({
   readonly onAction: (action: FabAction) => void;
   readonly onOpen: () => void;
 }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
   return (
     <div className="relative z-30 h-14 w-14 shrink-0">
       <motion.div
@@ -91,19 +95,26 @@ export function QuickActionFab({
         onClick={() => {
           if (!isOpen) onOpen();
         }}
-        whileHover={!isOpen ? { scale: 1.02 } : undefined}
-        whileTap={!isOpen ? { scale: 0.95 } : undefined}
+        whileTap={
+          !isOpen
+            ? {
+                scale: reduceMotion ? 1 : buttonTapActiveScale,
+                transition: transitionSpringSnappy,
+              }
+            : undefined
+        }
         animate={{
+          scale: 1,
           height: isOpen && menuHeight ? menuHeight : 56,
           width: isOpen ? 238 : 56,
           right: isOpen ? -40 : 0,
           bottom: isOpen ? 68 : 0,
         }}
         transition={isOpen ? transitionSpringBouncy : transitionSpringSmooth}
-        className={`pointer-events-auto absolute right-0 z-50 origin-bottom-right cursor-pointer overflow-hidden rounded-[28px] border transition-colors duration-300 select-none ${
+        className={`pointer-events-auto absolute right-0 z-50 origin-bottom-right cursor-pointer overflow-hidden rounded-[28px] border transition-colors duration-300 select-none active:z-10 ${
           isOpen
             ? "border-outline-variant/20 bg-white shadow-raised"
-            : "border-primary bg-primary shadow-floating"
+            : "border-primary bg-primary shadow-floating active:shadow-raised"
         }`}
       >
         <motion.div

@@ -1,6 +1,6 @@
 "use client";
 import { AppIcon } from "@/components/ui";
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 

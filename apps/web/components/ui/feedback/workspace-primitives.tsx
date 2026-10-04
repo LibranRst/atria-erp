@@ -15,7 +15,7 @@ import React from "react";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import { StatusBadge, type StatusBadgeTone } from "@/components/ui/badge/badge";
 import { cn } from "@/lib/utils/cn";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { buttonTapActiveScale, transitionSpringSnappy } from "@/lib/utils/motion";
 
 export function WorkspaceModuleHeader({
   eyebrow,
@@ -55,9 +55,9 @@ export function WorkspaceModuleHeader({
           type="button"
           disabled={actionDisabled}
           onClick={onAction}
-          whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+          whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
           transition={transitionSpringSnappy}
-          className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-35"
+          className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] active:shadow-raised active:z-10 disabled:opacity-35"
         >
           <AppIcon name="add" className="icon-xs" aria-hidden="true" />
           {actionLabel}

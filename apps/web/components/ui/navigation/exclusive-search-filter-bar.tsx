@@ -6,6 +6,7 @@ import React from "react";
 
 import { SegmentedTabs, type SegmentedTabOption } from "@/components/ui/navigation/segmented-tabs";
 import {
+  buttonTapActiveScale,
   transitionEaseSmooth,
   transitionSpringSmooth,
   transitionSpringSnappy,
@@ -203,11 +204,11 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
           initial={false}
           animate={{ opacity: mode === "filter" ? 1 : 0 }}
           onClick={() => onModeChange("search")}
-          whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+          whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
           transition={transitionSpringSnappy}
           tabIndex={mode === "filter" ? 0 : -1}
           aria-hidden={mode === "search"}
-          className={`absolute inset-y-0 left-0 flex w-12 items-center justify-center rounded-full text-on-surface outline-none ${mode === "search" ? "pointer-events-none" : ""}`}
+          className={`absolute inset-y-0 left-0 flex w-12 items-center justify-center rounded-full text-on-surface outline-none active:z-10 ${mode === "search" ? "pointer-events-none" : ""}`}
           aria-label={`Buka ${searchAriaLabel.toLowerCase()}`}
         >
           <AppIcon name="search" className="icon-md" aria-hidden="true" />
@@ -243,10 +244,10 @@ export function ExclusiveSearchFilterBar<TValue extends string>({
           <motion.button
             type="button"
             onClick={closeSearch}
-            whileTap={reduceMotion ? undefined : { scale: 0.94 }}
+            whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
             transition={transitionSpringSnappy}
             tabIndex={mode === "search" ? 0 : -1}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant outline-none focus-visible:bg-surface-container"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant outline-none focus-visible:bg-surface-container active:z-10"
             aria-label="Tutup pencarian"
           >
             <AppIcon name="close" className="icon-sm" aria-hidden="true" />

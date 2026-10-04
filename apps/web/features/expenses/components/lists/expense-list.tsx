@@ -1,7 +1,8 @@
 "use client";
 
 import { useCan } from "@/components/auth/permissions-provider";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import React, { useState, useTransition } from "react";
 import { z } from "zod";
 import { toast } from "sonner";

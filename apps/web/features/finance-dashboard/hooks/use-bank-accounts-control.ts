@@ -1,6 +1,5 @@
 "use client";
 
-import { actorHasPermission } from "@atria/core/auth/permissions";
 import React from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -14,7 +13,11 @@ import {
 } from "@/app/actions/finance/bank-accounts";
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
 import type { OperationSuccess, SelectOption } from "@/components/ui";
+import { useCan } from "@/components/auth/permissions-provider";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+import { useBankAccountSnapshot } from "./use-bank-account-snapshot";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
+import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import type {
   AccountDraft,
   BankAccount,
@@ -32,6 +35,10 @@ import {
   newTransferDraft,
 } from "@/features/finance-dashboard/utils/bank-account-utils";
 import { fullMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
+import {
+  consumeBankAccountIntentHref,
+  resolveBankAccountIntent,
+} from "@/features/finance-dashboard/utils/bank-account-intent";
 const movementRecoverySchema = z.object({
   accountId: z.string(),
   draft: z.object({
@@ -101,6 +108,8 @@ export type BankAccountsControlState = {
   readonly transferIsDirty: boolean;
   readonly canCreate: boolean;
   readonly canArchive: boolean;
+  readonly canEdit: boolean;
+  readonly canMove: boolean;
   readonly transferOptions: readonly SelectOption[];
   readonly totalCash: number;
   readonly activeAccounts: number;
@@ -143,11 +152,14 @@ function accountFromActionData(data: BankAccountActionData): BankAccount {
 
 export function useBankAccountsControl({
   accounts,
-  role,
   payablesDueSoon,
 }: UseBankAccountsControlArgs): BankAccountsControlState {
-  const [items, setItems] = React.useState<readonly BankAccount[]>(accounts);
-  const [selected, setSelected] = React.useState<BankAccount | null>(null);
+  const can = useCan();
+  const router = useRouter();
+  const accountIntentId = useUrlSearchParam("account");
+  const bankActionIntent = useUrlSearchParam("bank-action");
+  const consumedIntent = React.useRef<string | null>(null);
+  const { items, setItems, selected, selectAccount } = useBankAccountSnapshot(accounts);
   const [sheet, setSheet] = React.useState<SheetMode | null>(null);
   const [pending, startTransition] = React.useTransition();
   const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
@@ -180,8 +192,10 @@ export function useBankAccountsControl({
   const accountDraft = accountRecovery.payload;
   const movementDraft = movementRecovery.payload.draft;
   const transferDraft = transferRecovery.payload.draft;
-  const canCreate = actorHasPermission(role, "create:bank_account");
-  const canArchive = actorHasPermission(role, "delete:bank_account");
+  const canCreate = can("create:bank_account");
+  const canArchive = can("delete:bank_account");
+  const canEdit = can("update:bank_account");
+  const canMove = can("create:ledger");
   const transferOptions = accountOptions(items, selected?.id);
   const totalCash = items.reduce((sum, account) => sum + account.balance, 0);
   const activeAccounts = items.filter((account) => account.isActive).length;
@@ -193,7 +207,7 @@ export function useBankAccountsControl({
   const coverage = payablesDueSoon > 0 ? totalCash / payablesDueSoon : null;
 
   function openDetail(account: BankAccount): void {
-    setSelected(account);
+    selectAccount(account.id);
     setSheet("detail");
   }
 
@@ -205,7 +219,7 @@ export function useBankAccountsControl({
   }
 
   function openEdit(account: BankAccount): void {
-    setSelected(account);
+    selectAccount(account.id);
     if (!accountRecovery.isDirty || accountRecovery.payload.id !== account.id) {
       accountRecovery.reset(accountToDraft(account));
     }
@@ -213,7 +227,8 @@ export function useBankAccountsControl({
   }
 
   function openMovement(account: BankAccount, type: MovementType): void {
-    setSelected(account);
+    if (!canMove) return;
+    selectAccount(account.id);
     if (!movementRecovery.isDirty || movementRecovery.payload.accountId !== account.id) {
       movementRecovery.reset({ accountId: account.id, draft: newMovementDraft(type) });
     }
@@ -221,7 +236,8 @@ export function useBankAccountsControl({
   }
 
   function openTransfer(account: BankAccount): void {
-    setSelected(account);
+    if (!canMove) return;
+    selectAccount(account.id);
     if (!transferRecovery.isDirty || transferRecovery.payload.accountId !== account.id) {
       transferRecovery.reset({
         accountId: account.id,
@@ -230,6 +246,44 @@ export function useBankAccountsControl({
     }
     setSheet("transfer");
   }
+
+  const restoreBankIntent = React.useEffectEvent((): void => {
+    const intent = resolveBankAccountIntent({
+      accountId: accountIntentId,
+      action: bankActionIntent,
+      accounts: items,
+      access: {
+        canView: can("view:bank_account"),
+        canCreate,
+        canEdit,
+        canMove,
+      },
+    });
+    updateBrowserUrl(consumeBankAccountIntentHref(window.location.href), "replace");
+    if (!intent) return;
+    if (intent.action === "create") {
+      openCreate();
+      return;
+    }
+    const account = items.find((item) => item.id === intent.accountId);
+    if (!account) return;
+    if (intent.action === "detail") openDetail(account);
+    else if (intent.action === "edit") openEdit(account);
+    else if (intent.action === "movement") openMovement(account, "INFLOW");
+    else openTransfer(account);
+  });
+
+  React.useEffect(() => {
+    if (accountIntentId === null && bankActionIntent === null) {
+      consumedIntent.current = null;
+      return;
+    }
+    const signature = JSON.stringify([accountIntentId, bankActionIntent]);
+    // Wait for the existing sheet's own dirty/dismiss flow; a URL cannot replace a draft.
+    if (sheet !== null || pending || consumedIntent.current === signature) return;
+    consumedIntent.current = signature;
+    restoreBankIntent();
+  }, [accountIntentId, bankActionIntent, sheet, pending]);
 
   function closeSheet(): void {
     setSheet(null);
@@ -303,8 +357,11 @@ export function useBankAccountsControl({
       }
 
       const updatedAccount = accountFromActionData(result.data);
-      setItems((current) => applyAccountUpdate(current, updatedAccount));
-      setSelected(updatedAccount);
+      React.startTransition(() => {
+        setItems((current) => applyAccountUpdate(current, updatedAccount));
+        router.refresh();
+      });
+      selectAccount(updatedAccount.id);
       accountRecovery.clear();
       setSheet("detail");
       toast.success(
@@ -334,10 +391,14 @@ export function useBankAccountsControl({
       const amount = Number(movementDraft.amount || 0);
       const nextBalance =
         movementDraft.type === "INFLOW" ? selected.balance + amount : selected.balance - amount;
-      setItems((current) =>
-        current.map((item) => (item.id === selected.id ? { ...item, balance: nextBalance } : item)),
-      );
-      setSelected((current) => (current ? { ...current, balance: nextBalance } : current));
+      React.startTransition(() => {
+        setItems((current) =>
+          current.map((item) =>
+            item.id === selected.id ? { ...item, balance: nextBalance } : item,
+          ),
+        );
+        router.refresh();
+      });
       movementRecovery.clear();
       setSheet(null);
       setSuccess({
@@ -349,7 +410,6 @@ export function useBankAccountsControl({
             label: "Mutasi",
             value: `${movementDraft.type === "INFLOW" ? "+" : "−"}${fullMoney.format(amount)}`,
           },
-          { label: "Saldo sekarang", value: fullMoney.format(nextBalance) },
         ],
       });
     });
@@ -374,15 +434,17 @@ export function useBankAccountsControl({
 
       const amount = Number(transferDraft.amount || 0);
       const target = items.find((item) => item.id === transferDraft.toBankAccountId);
-      setItems((current) =>
-        current.map((item) => {
-          if (item.id === selected.id) return { ...item, balance: item.balance - amount };
-          if (item.id === transferDraft.toBankAccountId) {
-            return { ...item, balance: item.balance + amount };
-          }
-          return item;
-        }),
-      );
+      React.startTransition(() => {
+        setItems((current) =>
+          current.map((item) => {
+            if (item.id === selected.id) return { ...item, balance: selected.balance - amount };
+            if (target && item.id === target.id)
+              return { ...item, balance: target.balance + amount };
+            return item;
+          }),
+        );
+        router.refresh();
+      });
       transferRecovery.clear();
       setSheet(null);
       setSuccess({
@@ -409,16 +471,14 @@ export function useBankAccountsControl({
         return;
       }
 
-      setItems((current) =>
-        current.map((item) =>
-          item.id === account.id ? { ...item, isActive: result.data.isActive } : item,
-        ),
-      );
-      setSelected((current) =>
-        current && current.id === account.id
-          ? { ...current, isActive: result.data.isActive }
-          : current,
-      );
+      React.startTransition(() => {
+        setItems((current) =>
+          current.map((item) =>
+            item.id === account.id ? { ...item, isActive: result.data.isActive } : item,
+          ),
+        );
+        router.refresh();
+      });
       toast.success(result.data.isActive ? "Rekening diaktifkan kembali." : "Rekening diarsipkan.");
     });
   }
@@ -437,6 +497,8 @@ export function useBankAccountsControl({
     transferIsDirty: transferRecovery.isDirty,
     canCreate,
     canArchive,
+    canEdit,
+    canMove,
     transferOptions,
     totalCash,
     activeAccounts,

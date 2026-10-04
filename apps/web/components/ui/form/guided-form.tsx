@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { FormSheet, type FormSheetDismissal } from "../overlay/semantic-sheets";
 import { cx } from "./form-control-utils";
@@ -15,7 +15,7 @@ import type { SheetFooterAction } from "../overlay/sheet-footer-actions";
 import { Button } from "../button/button";
 import type { FormRiskTone } from "./form-support";
 import { formatShortIdr } from "@atria/core/utils/money";
-import { transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
+import { buttonTapActiveScale, transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
 export type MicroStatusItem = {
@@ -610,6 +610,7 @@ export function OptionChoiceGroup<TValue extends string>({
   }[];
   readonly onChange: (value: TValue) => void;
 }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
   return (
     /*
      * `min-w-0` wajib di sini, bukan kosmetik.
@@ -629,11 +630,11 @@ export function OptionChoiceGroup<TValue extends string>({
             <motion.button
               key={option.value}
               type="button"
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
               transition={transitionSpringSnappy}
               onClick={() => onChange(option.value)}
               className={cx(
-                "flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-container-lowest px-5 text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
+                "flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-container-lowest px-5 text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:shadow-raised active:z-10",
                 selected
                   ? "bg-primary/10 text-primary ring-primary/10"
                   : "bg-surface-container-low text-on-surface ring-ring-control",

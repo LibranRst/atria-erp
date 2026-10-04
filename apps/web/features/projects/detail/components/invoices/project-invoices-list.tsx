@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
-import { AppIcon, Badge, MoneyValue } from "@/components/ui";
+import { AppIcon, Badge, MoneyValue, DesktopTable, GroupedSurface } from "@/components/ui";
 import type { ClientInvoiceItem } from "../../types/project-invoices-types";
 import {
   calculateInvoicePaidAmount,
@@ -15,16 +17,20 @@ import {
 
 export function ProjectInvoicesList({
   invoices,
-  isOwnerOrFinance,
+  canRecordPayment,
   onRecordPayment,
 }: {
   readonly invoices: readonly ClientInvoiceItem[];
-  readonly isOwnerOrFinance: boolean;
+  readonly canRecordPayment: boolean;
   readonly onRecordPayment: (invoice: ClientInvoiceItem) => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const orderedInvoices = [...invoices].sort(
     (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
   );
+  const selected =
+    orderedInvoices.find((invoice) => invoice.id === selectedId) ?? orderedInvoices[0];
   return (
     <section className="space-y-2.5">
       <header className="px-1">
@@ -38,13 +44,83 @@ export function ProjectInvoicesList({
           <span className="font-bold text-on-surface">Belum ada invoice.</span> Buat termin saat
           jadwal penagihan klien sudah siap.
         </div>
+      ) : desktop ? (
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.65fr)]">
+          <DesktopTable
+            ariaLabel="Termin penagihan klien"
+            rows={orderedInvoices}
+            rowKey={(invoice) => invoice.id}
+            selectedRowKey={selected?.id}
+            onRowAction={(invoice) => setSelectedId(invoice.id)}
+            columns={[
+              { key: "invoice", label: "Invoice", render: (invoice) => invoice.invoiceNumber },
+              {
+                key: "due",
+                label: "Jatuh tempo",
+                render: (invoice) =>
+                  new Date(invoice.dueDate).toLocaleDateString("id-ID", {
+                    timeZone: "Asia/Jakarta",
+                  }),
+              },
+              {
+                key: "amount",
+                label: "Tagihan",
+                align: "end",
+                render: (invoice) => (
+                  <MoneyValue amount={Number(invoice.amount)} variant="compact" size="sm" />
+                ),
+              },
+              {
+                key: "paid",
+                label: "Diterima",
+                align: "end",
+                render: (invoice) => (
+                  <MoneyValue
+                    amount={calculateInvoicePaidAmount(invoice)}
+                    variant="compact"
+                    size="sm"
+                  />
+                ),
+              },
+              {
+                key: "remaining",
+                label: "Sisa",
+                align: "end",
+                render: (invoice) => (
+                  <MoneyValue
+                    amount={calculateInvoiceRemaining(invoice)}
+                    variant="compact"
+                    size="sm"
+                  />
+                ),
+              },
+              {
+                key: "status",
+                label: "Status",
+                render: (invoice) => formatBusinessLabel(invoice.status),
+              },
+            ]}
+          />
+          {selected ? (
+            <section aria-label="Detail invoice" className="min-w-0 xl:sticky xl:top-24">
+              <GroupedSurface>
+                <ProjectInvoiceTimelineRow
+                  invoice={selected}
+                  canRecordPayment={canRecordPayment}
+                  onRecordPayment={onRecordPayment}
+                  connected={false}
+                />
+              </GroupedSurface>
+            </section>
+          ) : null}
+        </div>
       ) : (
         <div className="flex flex-col gap-3 rounded-3xl bg-white p-2 shadow-surface ring-1 ring-ring-subtle">
           {orderedInvoices.map((invoice, index) => (
             <ProjectInvoiceTimelineRow
               key={invoice.id}
               invoice={invoice}
-              isOwnerOrFinance={isOwnerOrFinance}
+              canRecordPayment={canRecordPayment}
               onRecordPayment={onRecordPayment}
               connected={index < orderedInvoices.length - 1}
             />
@@ -57,12 +133,12 @@ export function ProjectInvoicesList({
 
 function ProjectInvoiceTimelineRow({
   invoice,
-  isOwnerOrFinance,
+  canRecordPayment,
   onRecordPayment,
   connected,
 }: {
   readonly invoice: ClientInvoiceItem;
-  readonly isOwnerOrFinance: boolean;
+  readonly canRecordPayment: boolean;
   readonly onRecordPayment: (invoice: ClientInvoiceItem) => void;
   readonly connected: boolean;
 }): React.JSX.Element {
@@ -75,7 +151,7 @@ function ProjectInvoiceTimelineRow({
   const handleOpenDetail = React.useCallback(() => {
     openActivityDetail(
       { kind: "CLIENT_INVOICE", id: invoice.id },
-      remaining > 0 && isOwnerOrFinance
+      remaining > 0 && canRecordPayment
         ? {
             actions: {
               primary: {
@@ -93,7 +169,7 @@ function ProjectInvoiceTimelineRow({
             }
           : undefined,
     );
-  }, [openActivityDetail, invoice, remaining, isOwnerOrFinance, onRecordPayment]);
+  }, [openActivityDetail, invoice, remaining, canRecordPayment, onRecordPayment]);
 
   return (
     <div
@@ -155,12 +231,7 @@ function ProjectInvoiceTimelineRow({
                 </p>
                 <div className="flex items-center gap-1">
                   <AppIcon name="check_circle" className="text-[13px] text-success" />
-                  <MoneyValue
-                    amount={totalPaid}
-                    variant="compact"
-                    tone="default"
-                    size="sm"
-                  />
+                  <MoneyValue amount={totalPaid} variant="compact" tone="default" size="sm" />
                 </div>
               </>
             ) : (
@@ -177,7 +248,7 @@ function ProjectInvoiceTimelineRow({
               </>
             )}
           </div>
-          {remaining > 0 && isOwnerOrFinance ? (
+          {remaining > 0 && canRecordPayment ? (
             <button
               type="button"
               onClick={(event) => {

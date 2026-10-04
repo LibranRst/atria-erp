@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": false,
+    "emitDeclarationOnly": true,
+    "incremental": false,
+    "noEmit": false,
+    "outDir": "./dist/api-types",
+    "rootDir": "../.."
+  },
+  "include": ["src/contracts.ts", "src/backend/**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/fixtures/**", "node_modules"]
+}

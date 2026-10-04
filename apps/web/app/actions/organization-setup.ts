@@ -1,16 +1,13 @@
 "use server";
 
-import { getOrganizationSetupOverviewUseCase } from "@/server/usecases/onboarding/organization-setup-overview";
-import { resolveActor } from "@/server/actor";
-import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
-import type { ActionResponse } from "@atria/core/types/action-response";
+import { callBackendAction } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/organization-setup";
 
-export async function getOrganizationSetupOverview(): Promise<
-  ActionResponse<OrganizationSetupOverview>
-> {
-  const actor = await resolveActor();
-  if (!actor) {
-    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  }
-  return getOrganizationSetupOverviewUseCase(actor);
+export async function getOrganizationSetupOverview(
+  ...args: WebRpcArgs<"app/actions/organization-setup.getOrganizationSetupOverview">
+): Promise<WebRpcResult<"app/actions/organization-setup.getOrganizationSetupOverview">> {
+  return callBackendAction("app/actions/organization-setup.getOrganizationSetupOverview", args, {
+    allowCookieWrites: true,
+  });
 }

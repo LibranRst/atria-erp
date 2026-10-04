@@ -1,5 +1,4 @@
-import * as XLSX from "xlsx";
-import ExcelJS from "exceljs";
+import type ExcelJS from "exceljs";
 import type { RabEstimateView } from "../types/rap-rab-types";
 
 export interface RabExportMetadata {
@@ -140,11 +139,13 @@ export function buildRabExcelRows(
   rabEstimate: RabEstimateView,
   meta: RabExportMetadata,
 ): (string | number)[][] {
-  const issueDate = meta.date || new Date().toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const issueDate =
+    meta.date ||
+    new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   const docNumber = meta.projectNumber
     ? `RAB/${meta.projectNumber}/R${rabEstimate.revision}`
     : `RAB/R${rabEstimate.revision}`;
@@ -159,7 +160,15 @@ export function buildRabExcelRows(
     ["Status", rabEstimate.status === "APPROVED" ? "DISETUJUI / FINAL" : "DRAF PENAWARAN"],
     [],
     // Table Header
-    ["No.", "Kategori / Paket", "Uraian Pekerjaan & Spesifikasi", "Volume", "Satuan", "Harga Satuan (Rp)", "Jumlah Harga (Rp)"],
+    [
+      "No.",
+      "Kategori / Paket",
+      "Uraian Pekerjaan & Spesifikasi",
+      "Volume",
+      "Satuan",
+      "Harga Satuan (Rp)",
+      "Jumlah Harga (Rp)",
+    ],
   ];
 
   let itemCounter = 1;
@@ -183,9 +192,7 @@ export function buildRabExcelRows(
     ]);
 
     // Sub-items di dalam bundle jika ada
-    const childItems = rabEstimate.items.filter(
-      (it) => it.bundleId === bundle.id && !it.isHidden,
-    );
+    const childItems = rabEstimate.items.filter((it) => it.bundleId === bundle.id && !it.isHidden);
     for (const child of childItems) {
       rows.push([
         "",
@@ -263,10 +270,11 @@ export function buildRabExcelRows(
   return rows;
 }
 
-export function exportRabToExcel(
+export async function exportRabToExcel(
   rabEstimate: RabEstimateView,
   meta: RabExportMetadata,
-): void {
+): Promise<void> {
+  const XLSX = await import("xlsx");
   const rows = buildRabExcelRows(rabEstimate, meta);
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -336,6 +344,7 @@ export async function buildRabStyledWorkbook(
   meta: RabExportMetadata,
   config?: RabDocumentConfig,
 ): Promise<ExcelJS.Workbook> {
+  const { default: ExcelJS } = await import("exceljs");
   const cfg = config ?? {
     ...DEFAULT_RAB_CONFIG,
     companyName: meta.companyName || DEFAULT_RAB_CONFIG.companyName,
@@ -430,7 +439,13 @@ export async function buildRabStyledWorkbook(
   metaRow2.getCell(4).font = { name: "Segoe UI", size: 9, bold: true, color: { argb: "FF444444" } };
   metaRow2.getCell(5).font = { name: "Segoe UI", size: 9 };
 
-  const metaRow3 = ws.addRow(["Proyek", meta.projectName, "", "Lokasi Proyek", meta.projectAddress || "-"]);
+  const metaRow3 = ws.addRow([
+    "Proyek",
+    meta.projectName,
+    "",
+    "Lokasi Proyek",
+    meta.projectAddress || "-",
+  ]);
   metaRow3.getCell(1).font = { name: "Segoe UI", size: 9, bold: true, color: { argb: "FF444444" } };
   metaRow3.getCell(2).font = { name: "Segoe UI", size: 9 };
   metaRow3.getCell(4).font = { name: "Segoe UI", size: 9, bold: true, color: { argb: "FF444444" } };
@@ -514,9 +529,7 @@ export async function buildRabStyledWorkbook(
     }
 
     // Sub-items di dalam bundle
-    const childItems = rabEstimate.items.filter(
-      (it) => it.bundleId === bundle.id && !it.isHidden,
-    );
+    const childItems = rabEstimate.items.filter((it) => it.bundleId === bundle.id && !it.isHidden);
     for (const child of childItems) {
       const cRow = ws.addRow([
         "",
@@ -647,7 +660,12 @@ export async function buildRabStyledWorkbook(
   for (let c = 1; c <= 7; c++) {
     const cell = totalRow.getCell(c);
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: themeArgb } };
-    cell.font = { name: "Segoe UI", size: c === 7 ? 12 : 10, bold: true, color: { argb: "FFFFFFFF" } };
+    cell.font = {
+      name: "Segoe UI",
+      size: c === 7 ? 12 : 10,
+      bold: true,
+      color: { argb: "FFFFFFFF" },
+    };
     cell.border = {
       top: { style: "thin", color: { argb: "FFFFFFFF" } },
       bottom: { style: "double", color: { argb: "FFFFFFFF" } },
@@ -667,11 +685,21 @@ export async function buildRabStyledWorkbook(
 
   // 9. Ketentuan Pembayaran
   const termsTitleRow = ws.addRow(["KETENTUAN PEMBAYARAN & CATATAN TEKNIS:"]);
-  termsTitleRow.getCell(1).font = { name: "Segoe UI", size: 10, bold: true, color: { argb: themeArgb } };
+  termsTitleRow.getCell(1).font = {
+    name: "Segoe UI",
+    size: 10,
+    bold: true,
+    color: { argb: themeArgb },
+  };
 
   if (rabEstimate.clientNotes) {
     const noteRow = ws.addRow([`• ${rabEstimate.clientNotes}`]);
-    noteRow.getCell(1).font = { name: "Segoe UI", size: 9, italic: true, color: { argb: "FF333333" } };
+    noteRow.getCell(1).font = {
+      name: "Segoe UI",
+      size: 9,
+      italic: true,
+      color: { argb: "FF333333" },
+    };
   }
 
   const termsLines = cfg.paymentTermsNotes
@@ -706,9 +734,19 @@ export async function buildRabStyledWorkbook(
     "",
     "KLIEN / PEMBERI TUGAS",
   ]);
-  sigNameRow.getCell(2).font = { name: "Segoe UI", size: 10, bold: true, color: { argb: themeArgb } };
+  sigNameRow.getCell(2).font = {
+    name: "Segoe UI",
+    size: 10,
+    bold: true,
+    color: { argb: themeArgb },
+  };
   sigNameRow.getCell(2).alignment = { horizontal: "center" };
-  sigNameRow.getCell(6).font = { name: "Segoe UI", size: 10, bold: true, color: { argb: "FF181817" } };
+  sigNameRow.getCell(6).font = {
+    name: "Segoe UI",
+    size: 10,
+    bold: true,
+    color: { argb: "FF181817" },
+  };
   sigNameRow.getCell(6).alignment = { horizontal: "center" };
 
   const sigPicRow = ws.addRow([

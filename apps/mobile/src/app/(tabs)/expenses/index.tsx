@@ -1,51 +1,68 @@
-import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
-import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
-import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-
+import { useScreenQuery } from "@/lib/use-screen-query";
+import { useScreenScroll } from "@/lib/use-screen-memory";
+import { isAccessRevoked } from "@/lib/access-error";
 import {
+  ScreenQueryState,
+  ScreenRefreshNotice,
   AppIcon,
   Button,
   FactRow,
   GroupedSurface,
   MoneyValue,
+  RowAction,
   ScreenMessage,
-  ScreenSkeleton,
+  ExpenseListSkeleton,
   StatusBadge,
   SummarySurface,
 } from "@/components/ui";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+
 import { readLocalExpenseDraft } from "@/lib/draft-storage";
 import { trpcClient } from "@/lib/trpc-client";
 import { useAuth } from "@/providers/auth-provider";
-import { TAB_SCREEN_BOTTOM_SPACE } from "@/constants/scroll-insets";
+import { TAB_BAR_CLEARANCE, TAB_SCREEN_BOTTOM_SPACE } from "@/constants/scroll-insets";
 import { theme } from "@/theme";
 
 export default function ExpensesScreen(): React.JSX.Element {
   const router = useRouter();
-  const { roleName, user } = useAuth();
-  const permissions = roleName ? (ROLE_PERMISSIONS[roleName] ?? []) : [];
+  const { permissions, user } = useAuth();
   const localDraftQuery = useQuery({
+    networkMode: "always",
     enabled: Boolean(user),
     queryKey: ["local-expense-draft", user?.id],
     queryFn: () => (user ? readLocalExpenseDraft(user.id) : Promise.resolve(null)),
   });
   const localDraft = localDraftQuery.data ?? null;
-  const query = useQuery({
-    queryKey: ["screen", "expenses"],
-    queryFn: () => trpcClient.screen.expenses.query(),
-  });
+  const query = useScreenQuery("expenses", (signal) =>
+    trpcClient.screen.expenses.query(undefined, { signal }),
+  );
+  const scroll = useScreenScroll("expenses");
 
-  if (query.isPending) return <ScreenSkeleton rows={5} />;
-  if (query.isError) {
+  if (query.data === undefined || isAccessRevoked(query.error))
     return (
-      <ScreenMessage
-        description="Daftar biaya belum dapat dimuat. Periksa koneksi lalu coba lagi."
-        onAction={() => void query.refetch()}
-        title="Data belum tersedia"
+      <ScreenQueryState
+        query={query}
+        skeleton={
+          <ScrollView
+            {...scroll}
+            contentInsetAdjustmentBehavior="automatic"
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: TAB_SCREEN_BOTTOM_SPACE + TAB_BAR_CLEARANCE },
+            ]}
+          >
+            <ExpenseListSkeleton
+              canCreate={permissions.includes("create:cost")}
+              hasDraft={Boolean(localDraft)}
+            />
+          </ScrollView>
+        }
+        onRetry={() => void query.refetch()}
       />
     );
-  }
   if (!query.data || query.data.status === "restricted") {
     return (
       <ScreenMessage
@@ -63,74 +80,85 @@ export default function ExpensesScreen(): React.JSX.Element {
   ).length;
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={[styles.content, { paddingBottom: TAB_SCREEN_BOTTOM_SPACE }]}
-      refreshControl={
-        <RefreshControl refreshing={query.isFetching} onRefresh={() => void query.refetch()} />
-      }
-    >
-      <SummarySurface amount={total} label="Total biaya tercatat">
-        <View style={styles.summaryRow}>
-          <FactRow label="Jumlah pengajuan" value={String(costs.length)} />
-          <FactRow label="Masih diproses" value={String(pending)} />
+    <>
+      <ScrollView
+        {...scroll}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: TAB_SCREEN_BOTTOM_SPACE + TAB_BAR_CLEARANCE },
+        ]}
+        refreshControl={
+          <RefreshControl refreshing={query.isRefreshing} onRefresh={() => void query.refresh()} />
+        }
+      >
+        <ScreenRefreshNotice query={query} />
+        <SummarySurface amount={total} label="Total biaya tercatat">
+          <View style={styles.summaryRow}>
+            <FactRow label="Jumlah pengajuan" value={String(costs.length)} />
+            <FactRow label="Masih diproses" value={String(pending)} />
+          </View>
+        </SummarySurface>
+
+        {localDraft ? (
+          <RowAction
+            accessibilityLabel={`Lanjutkan draft biaya, ${localDraft.payload.lines.length} item tersimpan`}
+            onPress={() => router.push("/expenses/new")}
+            style={styles.draftSurface}
+          >
+            <View style={styles.draftIcon}>
+              <AppIcon color={theme.colors.accent} name="edit_note" size={20} weight="bold" />
+            </View>
+            <View style={styles.rowCopy}>
+              <Text style={styles.rowTitle}>Lanjutkan draft biaya</Text>
+              <Text style={styles.rowDescription}>
+                {localDraft.payload.lines.length} item tersimpan di perangkat ini
+              </Text>
+            </View>
+            <AppIcon color={theme.colors.onSurfaceVariant} name="chevron_right" size={18} />
+          </RowAction>
+        ) : null}
+
+        {permissions.includes("create:cost") ? (
+          <Button
+            leading={<AppIcon color={theme.colors.onPrimary} name="add" size={18} weight="bold" />}
+            onPress={() => router.push("/expenses/new")}
+          >
+            Catat biaya proyek
+          </Button>
+        ) : null}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Biaya terbaru</Text>
+          <GroupedSurface>
+            {costs.length === 0 ? (
+              <FactRow label="Biaya" value="Belum ada pengajuan" />
+            ) : (
+              costs.map((item) => (
+                <View key={item.id} style={styles.listRow}>
+                  <View style={styles.rowCopy}>
+                    <Text style={styles.rowTitle}>{item.description}</Text>
+                    <Text style={styles.rowDescription}>
+                      {item.project?.name ?? "Proyek tidak tersedia"} ·{" "}
+                      {formatBusinessLabel(item.status)}
+                    </Text>
+                  </View>
+                  <View style={styles.rowEnd}>
+                    <MoneyValue
+                      align="right"
+                      amount={Number(item.amount)}
+                      size="sm"
+                      variant="compactWithFull"
+                    />
+                    <StatusBadge status={item.status} />
+                  </View>
+                </View>
+              ))
+            )}
+          </GroupedSurface>
         </View>
-      </SummarySurface>
-
-      {localDraft ? (
-        <Pressable onPress={() => router.push("/expenses/new")} style={styles.draftSurface}>
-          <View style={styles.draftIcon}>
-            <AppIcon color={theme.colors.accent} name="edit_note" size={20} weight="bold" />
-          </View>
-          <View style={styles.rowCopy}>
-            <Text style={styles.rowTitle}>Lanjutkan draft biaya</Text>
-            <Text style={styles.rowDescription}>
-              {localDraft.payload.lines.length} item tersimpan di perangkat ini
-            </Text>
-          </View>
-          <AppIcon color={theme.colors.onSurfaceVariant} name="chevron_right" size={18} />
-        </Pressable>
-      ) : null}
-
-      {permissions.includes("create:cost") ? (
-        <Button
-          leading={<AppIcon color={theme.colors.onPrimary} name="add" size={18} weight="bold" />}
-          onPress={() => router.push("/expenses/new")}
-        >
-          Catat biaya proyek
-        </Button>
-      ) : null}
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Biaya terbaru</Text>
-        <GroupedSurface>
-          {costs.length === 0 ? (
-            <FactRow label="Biaya" value="Belum ada pengajuan" />
-          ) : (
-            costs.map((item) => (
-              <View key={item.id} style={styles.listRow}>
-                <View style={styles.rowCopy}>
-                  <Text style={styles.rowTitle}>{item.description}</Text>
-                  <Text style={styles.rowDescription}>
-                    {item.project?.name ?? "Proyek tidak tersedia"} ·{" "}
-                    {formatBusinessLabel(item.status)}
-                  </Text>
-                </View>
-                <View style={styles.rowEnd}>
-                  <MoneyValue
-                    align="right"
-                    amount={Number(item.amount)}
-                    size="sm"
-                    variant="compactWithFull"
-                  />
-                  <StatusBadge status={item.status} />
-                </View>
-              </View>
-            ))
-          )}
-        </GroupedSurface>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 

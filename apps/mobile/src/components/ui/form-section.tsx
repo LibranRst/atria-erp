@@ -1,4 +1,4 @@
-import { Children } from "react";
+import { Children, Fragment, isValidElement } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 
@@ -21,7 +21,21 @@ export function FormSection({
   readonly title?: string;
 }): React.JSX.Element {
   const grouped = presentation === "grouped";
-  const childItems = Children.toArray(children);
+  function flatten(
+    items: React.ReactNode,
+    path: readonly string[] = [],
+  ): { readonly key: string; readonly node: React.ReactNode }[] {
+    return Children.toArray(items).flatMap((child, index) => {
+      const childPath = [
+        ...path,
+        isValidElement(child) ? (child.key ?? String(index)) : String(index),
+      ];
+      if (isValidElement<{ children?: React.ReactNode }>(child) && child.type === Fragment)
+        return flatten(child.props.children, childPath);
+      return [{ key: JSON.stringify(childPath), node: child }];
+    });
+  }
+  const childItems = flatten(children);
 
   return (
     <View style={[styles.section, style]}>
@@ -37,8 +51,8 @@ export function FormSection({
       <FormPresentationProvider presentation={grouped ? "grouped" : "standalone"}>
         <View style={grouped ? styles.group : styles.plain}>
           {childItems.map((child, index) => (
-            <View key={index} style={grouped && index > 0 ? styles.dividedChild : undefined}>
-              {child}
+            <View key={child.key} style={grouped && index > 0 ? styles.dividedChild : undefined}>
+              {child.node}
             </View>
           ))}
         </View>
@@ -48,7 +62,7 @@ export function FormSection({
 }
 
 const styles = StyleSheet.create({
-  section: { gap: 10 },
+  section: { gap: theme.spacing.sm },
   header: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -60,9 +74,7 @@ const styles = StyleSheet.create({
   title: {
     color: theme.colors.onSurface,
     fontFamily: theme.fonts.bold,
-    letterSpacing: 1.1,
-    textTransform: "uppercase",
-    ...theme.typography.meta,
+    ...theme.typography.row,
   },
   helper: {
     color: theme.colors.onSurfaceVariant,
@@ -74,9 +86,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: theme.radii.owner,
     backgroundColor: theme.colors.surfaceContainerLowest,
-    boxShadow: theme.shadows.surface,
   },
-  plain: { gap: 10 },
+  plain: { gap: theme.spacing.xs },
   dividedChild: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: theme.opacityColors.outlineVariant20,

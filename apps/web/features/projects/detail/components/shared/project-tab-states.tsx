@@ -35,7 +35,7 @@ export function LockedTabState({
       <button
         type="button"
         onClick={onAction}
-        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.98]"
+        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary transition active:scale-[1.05] active:shadow-raised active:z-10"
       >
         <AppIcon name={actionIcon} className="icon-sm" />
         <span>{actionLabel}</span>
@@ -71,7 +71,7 @@ export function RabPrerequisiteState({ onGoToRap }: RabPrerequisiteStateProps): 
       <button
         type="button"
         onClick={onGoToRap}
-        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.98]"
+        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary transition active:scale-[1.05] active:shadow-raised active:z-10"
       >
         Buka RAP
         <AppIcon name="arrow_forward" className="icon-sm" />

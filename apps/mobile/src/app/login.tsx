@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRef, useState } from "react";
+import type { TextInput as NativeTextInput } from "react-native";
+import { Keyboard, KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button, FormField, FormSection, TextInput } from "@/components/ui";
@@ -14,6 +15,7 @@ export default function LoginScreen(): React.JSX.Element {
   const [password, setPassword] = useState(process.env.EXPO_PUBLIC_DEMO_PASSWORD ?? "");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const passwordInput = useRef<NativeTextInput>(null);
 
   async function handleSignIn(): Promise<void> {
     if (!email.trim() || !password) {
@@ -21,6 +23,7 @@ export default function LoginScreen(): React.JSX.Element {
       return;
     }
 
+    Keyboard.dismiss();
     setIsSubmitting(true);
     setErrorMessage(null);
     try {
@@ -71,18 +74,24 @@ export default function LoginScreen(): React.JSX.Element {
           <FormField label="Email" required>
             <TextInput
               accessibilityLabel="Email"
+              autoFocus
+              autoCorrect={false}
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
               onChangeText={setEmail}
               placeholder="nama@dekoria.id"
               returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => passwordInput.current?.focus()}
               value={email}
             />
           </FormField>
           <FormField label="Kata sandi" required>
             <TextInput
               accessibilityLabel="Kata sandi"
+              ref={passwordInput}
+              autoCorrect={false}
               autoCapitalize="none"
               autoComplete="current-password"
               onChangeText={setPassword}

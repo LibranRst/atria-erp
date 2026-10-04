@@ -17,9 +17,9 @@ import {
   SegmentedTabs,
 } from "@/components/ui";
 import { useDashboardRefresh } from "@/features/finance-dashboard/hooks/use-dashboard-refresh";
+import { useDashboardApprovalQueue } from "@/features/finance-dashboard/hooks/use-dashboard-approval-queue";
 import type { DashboardPageTab } from "@/features/finance-dashboard/types/dashboard-types";
 import { resolveDashboardDataStatus } from "@/features/finance-dashboard/utils/dashboard-data-status";
-import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
 import { ApprovalsTab } from "../tabs/dashboard-approvals-tab";
@@ -28,6 +28,7 @@ import { BudgetRiskTab } from "../tabs/tab-budget-risk";
 import { CashDueTab } from "../tabs/tab-cash-due";
 import { DashboardOverviewTab } from "../tabs/tab-overview";
 import { MaterialsTab } from "../tabs/tab-materials";
+import { PilotBalanceNotice } from "../shared/pilot-balance-notice";
 
 function parseDashboardTab(value: string | null, canSeeApprovalQueue: boolean): DashboardPageTab {
   if (value === "approvals" && canSeeApprovalQueue) return "approvals";
@@ -57,7 +58,7 @@ function DashboardTabsNav({
     {
       value: "overview",
       label: "Ringkasan",
-      icon: <AppIcon name="space_dashboard" className="text-[15px]" />,
+      icon: <AppIcon name="space_dashboard" className="icon-sm" />,
     },
   ];
   if (can("view:approval_queue")) {
@@ -65,7 +66,7 @@ function DashboardTabsNav({
       value: "approvals",
       label: "Persetujuan",
       count: approvalCount > 0 ? approvalCount : undefined,
-      icon: <AppIcon name="approval" className="text-[15px]" />,
+      icon: <AppIcon name="approval" className="icon-sm" />,
     });
   }
   options.push(
@@ -73,18 +74,18 @@ function DashboardTabsNav({
       value: "budget",
       label: "Budget",
       count: data.dashboardTabs.counts.budget > 0 ? data.dashboardTabs.counts.budget : undefined,
-      icon: <AppIcon name="monitoring" className="text-[15px]" />,
+      icon: <AppIcon name="monitoring" className="icon-sm" />,
     },
     {
       value: "cash",
       label: "Jatuh Tempo",
       count: data.dashboardTabs.counts.cash > 0 ? data.dashboardTabs.counts.cash : undefined,
-      icon: <AppIcon name="event_busy" className="text-[15px]" />,
+      icon: <AppIcon name="event_busy" className="icon-sm" />,
     },
     {
       value: "accounts",
       label: "Rekening",
-      icon: <AppIcon name="account_balance" className="text-[15px]" />,
+      icon: <AppIcon name="account_balance" className="icon-sm" />,
     },
     {
       value: "materials",
@@ -158,6 +159,12 @@ export function FinancialPosition({
           className="mt-1.5"
         />
       </div>
+
+      {process.env.NEXT_PUBLIC_ATRIA_PILOT_MODE === "true" ? (
+        <div className="mt-3">
+          <PilotBalanceNotice inverse />
+        </div>
+      ) : null}
 
       <div className="mt-4 flex flex-row gap-3">
         <PositionMetric label="Piutang" amount={summary.receivablesOutstanding} />
@@ -276,10 +283,8 @@ export function FinanceDashboard({
   const tabParam = useUrlSearchParam("tab");
   const { online, refreshFailed, refreshing, refresh } = useDashboardRefresh(data.generatedAt);
   const [referenceDate] = React.useState(() => new Date());
-  const [approvals, setApprovals] = React.useState<readonly ApprovalDetail[]>(
+  const [approvalQueue, recordDecision] = useDashboardApprovalQueue(
     data.dashboardDetails.approvals,
-  );
-  const [approvalSummary, setApprovalSummary] = React.useState(
     data.dashboardDetails.approvalSummary,
   );
   const activeTab = parseDashboardTab(tabParam, can("view:approval_queue"));
@@ -292,7 +297,10 @@ export function FinanceDashboard({
   });
 
   function changeTab(value: DashboardPageTab): void {
-    updateBrowserUrl(value === "overview" ? "/ledger" : `/ledger?tab=${value}`, "replace");
+    const url = new URL(window.location.href);
+    if (value === "overview") url.searchParams.delete("tab");
+    else url.searchParams.set("tab", value);
+    updateBrowserUrl(`${url.pathname}${url.search}${url.hash}`, "replace");
   }
 
   const tabContent =
@@ -304,10 +312,11 @@ export function FinanceDashboard({
       />
     ) : activeTab === "approvals" && can("view:approval_queue") ? (
       <ApprovalsTab
-        approvals={approvals}
-        approvalSummary={approvalSummary}
-        setApprovals={setApprovals}
-        setApprovalSummary={setApprovalSummary}
+        approvals={approvalQueue.approvals}
+        approvalSummary={approvalQueue.summary}
+        onDecisionRecorded={(item) =>
+          recordDecision({ approvalId: item.id, decidedAt: new Date() })
+        }
         canEmergencyOverride={can("override:self_approval")}
       />
     ) : activeTab === "budget" ? (
@@ -329,7 +338,7 @@ export function FinanceDashboard({
       />
       <DashboardTabsNav
         activeTab={activeTab}
-        approvalCount={approvalSummary.totalCount}
+        approvalCount={approvalQueue.summary.totalCount}
         data={data}
         onChange={changeTab}
       />

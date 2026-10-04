@@ -12,6 +12,7 @@ import {
   SegmentedTabs,
   Textarea,
   TextInput,
+  useSheetPresenceValue,
   WorkflowFormSheet,
 } from "@/components/ui";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
@@ -50,18 +51,40 @@ export function MovementSheet({
   readonly onDiscard: () => void;
   readonly onSave: () => void;
 }): React.JSX.Element {
+  const { presentedValue: presentedAccount, handleExitComplete } = useSheetPresenceValue(
+    open ? account : null,
+    open ? account?.id : null,
+  );
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  const [prevAccountId, setPrevAccountId] = React.useState(account?.id);
+
+  if (open !== prevOpen || account?.id !== prevAccountId) {
+    setPrevOpen(open);
+    setPrevAccountId(account?.id);
+    if (open && (!prevOpen || account?.id !== prevAccountId)) {
+      setReviewing(false);
+      setConfirmClose(false);
+    }
+  }
+
+  const handleExitAnimationComplete = React.useCallback((): void => {
+    handleExitComplete();
+    setReviewing(false);
+    setConfirmClose(false);
+  }, [handleExitComplete]);
+
   function patch(next: Partial<MovementDraft>): void {
     setDraft((current) => ({ ...current, ...next }));
   }
 
   const canSave = Number(draft.amount || 0) > 0 && draft.description.trim().length >= 5;
   const amount = Number(draft.amount || 0);
-  const projectedBalance = account
+  const projectedBalance = presentedAccount
     ? draft.type === "INFLOW"
-      ? account.balance + amount
-      : account.balance - amount
+      ? presentedAccount.balance + amount
+      : presentedAccount.balance - amount
     : 0;
   const disabledReason =
     Number(draft.amount || 0) <= 0
@@ -90,6 +113,7 @@ export function MovementSheet({
           reviewing ? "Tinjau mutasi kas" : draft.type === "INFLOW" ? "Kas masuk" : "Kas keluar"
         }
         onClose={requestClose}
+        onExitComplete={handleExitAnimationComplete}
         pending={pending}
         disabled={!canSave}
         disabledReason={disabledReason}
@@ -103,14 +127,14 @@ export function MovementSheet({
         onSecondary={() => setReviewing(false)}
       >
         <div className="space-y-md">
-          {account ? (
-            <BankAccountContextCard account={account} eyebrow="Rekening" />
+          {presentedAccount ? (
+            <BankAccountContextCard account={presentedAccount} eyebrow="Rekening" />
           ) : null}
           {reviewing ? (
             <>
               <MoneyImpactRow
-                label={account?.name ?? "Rekening"}
-                before={account?.balance ?? 0}
+                label={presentedAccount?.name ?? "Rekening"}
+                before={presentedAccount?.balance ?? 0}
                 delta={draft.type === "INFLOW" ? amount : -amount}
                 after={projectedBalance}
               />
@@ -183,7 +207,7 @@ export function MovementSheet({
                 helper={
                   projectedBalance < 0
                     ? `Peringatan: Saldo menjadi minus (${shortMoney(projectedBalance)})`
-                    : `Estimasi saldo: ${shortMoney(account?.balance ?? 0)} → ${shortMoney(projectedBalance)}`
+                    : `Estimasi saldo: ${shortMoney(presentedAccount?.balance ?? 0)} → ${shortMoney(projectedBalance)}`
                 }
               >
                 <FormField label="Nominal" required>

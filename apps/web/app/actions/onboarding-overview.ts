@@ -1,20 +1,13 @@
 "use server";
 
-import { getOnboardingActor } from "@/app/actions/onboarding-action-utils";
-import { getOwnerOnboardingOverviewUseCase } from "@/server/usecases/onboarding/owner-onboarding-overview";
-import type { OwnerOnboardingOverview } from "@atria/core/onboarding/owner-onboarding";
-import type { ActionResponse } from "@atria/core/types/action-response";
+import { callBackendAction } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/onboarding-overview";
 
-/**
- * Pembungkus tipis di atas `getOwnerOnboardingOverviewUseCase`.
- *
- * Identitas SELALU diselesaikan di sini dari sesi, tidak pernah diterima
- * sebagai argumen — modul `"use server"` adalah endpoint HTTP, jadi parameter
- * aktor akan bisa dipalsukan klien.
- */
-export async function getOwnerOnboardingOverview(): Promise<
-  ActionResponse<OwnerOnboardingOverview>
-> {
-  const actor = await getOnboardingActor();
-  return getOwnerOnboardingOverviewUseCase(actor);
+export async function getOwnerOnboardingOverview(
+  ...args: WebRpcArgs<"app/actions/onboarding-overview.getOwnerOnboardingOverview">
+): Promise<WebRpcResult<"app/actions/onboarding-overview.getOwnerOnboardingOverview">> {
+  return callBackendAction("app/actions/onboarding-overview.getOwnerOnboardingOverview", args, {
+    allowCookieWrites: true,
+  });
 }

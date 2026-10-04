@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { z } from "zod";
 import { toast } from "sonner";
 
@@ -483,8 +484,8 @@ function ReviewFact({
   if (stacked) {
     return (
       <div className="px-4 py-3 text-xs">
-        <span className="text-on-surface-variant font-medium">{label}</span>
-        <p className="mt-1 font-medium text-on-surface leading-relaxed whitespace-pre-wrap">
+        <span className="font-medium text-on-surface-variant">{label}</span>
+        <p className="mt-1 leading-relaxed font-medium whitespace-pre-wrap text-on-surface">
           {value}
         </p>
       </div>

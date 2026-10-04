@@ -1,10 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { DesktopButton } from "../desktop/desktop-controls";
+import { buttonVariants } from "@heroui/styles";
+import Link from "@/lib/navigation/workspace-link";
 import React, { type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
 
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { buttonTapActiveScale, transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon } from "../icon/app-icon";
 import { Tooltip } from "../overlay/anchored-surfaces";
 import { cn } from "@/lib/utils/cn";
@@ -13,12 +16,16 @@ export type ButtonVariant = "primary" | "secondary" | "tertiary" | "criticalQuie
 export type ButtonSize = "default" | "compact" | "mini";
 
 const variantClass: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-on-primary shadow-primary focus-visible:ring-focus-ring",
+  primary:
+    "bg-primary text-on-primary shadow-primary focus-visible:ring-focus-ring active:shadow-raised",
   secondary:
-    "bg-surface-container-lowest text-on-surface shadow-control ring-1 ring-ring-control focus-visible:ring-focus-ring",
-  tertiary: "text-on-surface focus-visible:ring-focus-ring active:bg-surface-container-low",
-  criticalQuiet: "bg-critical-container text-critical focus-visible:ring-focus-ring",
-  critical: "bg-critical text-on-critical shadow-primary focus-visible:ring-focus-ring",
+    "bg-surface-container-lowest text-on-surface shadow-control ring-1 ring-ring-control focus-visible:ring-focus-ring active:shadow-raised",
+  tertiary:
+    "text-on-surface focus-visible:ring-focus-ring active:bg-surface-container-low active:shadow-control",
+  criticalQuiet:
+    "bg-critical-container text-critical focus-visible:ring-focus-ring active:shadow-raised",
+  critical:
+    "bg-critical text-on-critical shadow-primary focus-visible:ring-focus-ring active:shadow-raised",
 };
 
 const sizeClass: Record<ButtonSize, string> = {
@@ -67,15 +74,54 @@ export function Button({
 }: ButtonProps): React.JSX.Element {
   const reduceMotion = useReducedMotion();
   const accessibleChildren = pending ? pendingLabel : children;
+  const desktop = useWorkspacePresentation() === "desktop";
+  if (desktop) {
+    const accessibility = Object.fromEntries(
+      Object.entries(props).filter(([key]) => key.startsWith("aria-") || key.startsWith("data-")),
+    );
+    return (
+      <DesktopButton
+        {...accessibility}
+        id={props.id}
+        type={props.type ?? "submit"}
+        name={props.name}
+        value={props.value === undefined ? undefined : String(props.value)}
+        form={props.form}
+        formAction={props.formAction}
+        formMethod={props.formMethod}
+        formNoValidate={props.formNoValidate}
+        formTarget={props.formTarget}
+        autoFocus={props.autoFocus}
+        title={props.title}
+        role={props.role}
+        tabIndex={props.tabIndex}
+        onClick={props.onClick}
+        onFocus={props.onFocus}
+        onBlur={props.onBlur}
+        onKeyDown={props.onKeyDown}
+        variant={variant}
+        size={size}
+        disabled={disabled}
+        pending={pending}
+        pendingLabel={pendingLabel}
+        fullWidth={fullWidth}
+        className={className}
+      >
+        {!pending && leadingIcon ? <span aria-hidden="true">{leadingIcon}</span> : null}
+        <span>{accessibleChildren}</span>
+        {!pending && trailingIcon ? <span aria-hidden="true">{trailingIcon}</span> : null}
+      </DesktopButton>
+    );
+  }
 
   return (
     <motion.button
       {...props}
       disabled={disabled || pending}
-      whileTap={{ scale: reduceMotion ? 1 : 0.97 }}
+      whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
       transition={transitionSpringSnappy}
       className={cn(
-        `inline-flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 aria-disabled:cursor-not-allowed aria-disabled:opacity-45`,
+        `inline-flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap outline-none focus-visible:ring-2 active:z-10 disabled:cursor-not-allowed disabled:opacity-45 aria-disabled:cursor-not-allowed aria-disabled:opacity-45`,
         variantClass[variant],
         sizeClass[size],
         fullWidth ? "w-full" : "",
@@ -104,14 +150,19 @@ export function ButtonLink({
   ...props
 }: ButtonLinkProps): React.JSX.Element {
   const label = pending ? pendingLabel : children;
+  const desktop = useWorkspacePresentation() === "desktop";
+  const heroClasses = desktop
+    ? buttonVariants({ variant: "primary", className: "atria-desktop-button" })
+    : "";
   return (
     <Link
       {...props}
+      data-atria-variant={desktop ? variant : undefined}
       aria-disabled={pending || props["aria-disabled"]}
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap outline-none focus-visible:ring-2 ${variantClass[variant]} ${sizeClass[size]} ${fullWidth ? "w-full" : ""} ${pending ? "pointer-events-none opacity-45" : ""} ${className}`}
+      className={`${heroClasses} inline-flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap transition duration-150 outline-none focus-visible:ring-2 active:z-10 active:scale-[1.05] active:shadow-raised ${variantClass[variant]} ${sizeClass[size]} ${fullWidth ? "w-full" : ""} ${pending ? "pointer-events-none opacity-45" : ""} ${className}`}
     >
       {!pending && leadingIcon ? <span aria-hidden="true">{leadingIcon}</span> : null}
-      <span>{label}</span>
+      <span className="inline-flex items-center gap-2 whitespace-nowrap">{label}</span>
       {!pending && trailingIcon ? <span aria-hidden="true">{trailingIcon}</span> : null}
     </Link>
   );
@@ -146,16 +197,38 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
   ref,
 ): React.JSX.Element {
   const reduceMotion = useReducedMotion();
-  const control = (
+  const desktop = useWorkspacePresentation() === "desktop";
+  const accessibility = Object.fromEntries(
+    Object.entries(props).filter(([key]) => key.startsWith("aria-") || key.startsWith("data-")),
+  );
+  const control = desktop ? (
+    <DesktopButton
+      {...accessibility}
+      ref={ref}
+      id={props.id}
+      type={props.type ?? "button"}
+      aria-label={label}
+      variant={variant}
+      size={size}
+      disabled={props.disabled}
+      onClick={props.onClick}
+      onFocus={props.onFocus}
+      onBlur={props.onBlur}
+      onKeyDown={props.onKeyDown}
+      className={cn("min-h-0 px-0", iconSizeClass[size], className)}
+    >
+      <span aria-hidden="true">{icon}</span>
+    </DesktopButton>
+  ) : (
     <motion.button
       ref={ref}
       {...props}
       type={props.type ?? "button"}
       aria-label={label}
-      whileTap={{ scale: reduceMotion ? 1 : 0.97 }}
+      whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
       transition={transitionSpringSnappy}
       className={cn(
-        `inline-flex shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 ${iconSizeClass[size]} ${variantClass[variant]}`,
+        `inline-flex shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 active:z-10 active:shadow-raised disabled:cursor-not-allowed disabled:opacity-45 ${iconSizeClass[size]} ${variantClass[variant]}`,
         className,
       )}
     >
@@ -202,7 +275,7 @@ export function IconButtonLink({
     <Link
       {...props}
       aria-label={label}
-      className={`inline-flex shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 active:scale-95 ${iconSizeClass[size]} ${variantClass[variant]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full transition duration-150 outline-none focus-visible:ring-2 active:z-10 active:scale-[1.05] active:shadow-raised ${iconSizeClass[size]} ${variantClass[variant]} ${className}`}
     >
       {children}
     </Link>
@@ -232,7 +305,7 @@ type SectionActionProps = {
 };
 
 const defaultSectionActionClass =
-  "relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-surface-container-low pl-3 pr-2.5 text-meta font-semibold text-on-surface-variant outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container";
+  "relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-surface-container-low pl-3 pr-2.5 text-meta font-semibold text-on-surface-variant outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container transition duration-150 active:scale-[1.05] active:shadow-raised active:z-10";
 
 export function SectionAction({
   label,
@@ -248,7 +321,7 @@ export function SectionAction({
 
   const content = (
     <>
-      <span>{label}</span>
+      <span className="inline-flex items-center gap-2 whitespace-nowrap">{label}</span>
       {mode === "default" && <AppIcon name="chevron_right" className="h-3.5 w-3.5 shrink-0" />}
     </>
   );

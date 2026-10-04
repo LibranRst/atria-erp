@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -118,8 +118,7 @@ export function useVendorPaymentOperations({
     setSelectedPayment(payment);
     setError(null);
     if (disburseRecovery.isDirty && disburseRecovery.payload.paymentId === payment.id) return;
-    const initialBank =
-      bankAccounts.find((b) => b.id === payment.bankAccountId) ?? bankAccounts[0];
+    const initialBank = bankAccounts.find((b) => b.id === payment.bankAccountId) ?? bankAccounts[0];
     const initialSuggestedRef = deriveVendorPaymentReference({
       bankName: initialBank?.bankName || initialBank?.name,
       vendorName: payment.vendorBill?.vendor?.name,

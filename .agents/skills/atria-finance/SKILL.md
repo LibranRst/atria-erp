@@ -7,6 +7,8 @@ description: Guides the implementation, auditing, and debugging of financial wor
 
 This skill provides step-by-step guidance for building and auditing financial mutations, budget tracking, and reconciliation flows following the **Option A Ledger Model**.
 
+Backend implementations and transactions now live in `apps/api/src/backend/` and use `@backend/*`. Web actions are typed HTTP facades. Read `docs/06-technical/ARCHITECTURE.md` before changing transport boundaries.
+
 ---
 
 ## 1. Golden Invariants for Balance Changes
@@ -15,8 +17,8 @@ Whenever an operation modifies account balances, records an expense, settles a b
 
 1. **Wrap in `db.transaction`**:
    ```typescript
-   import { db } from "@/db";
-   import { cashTransaction, bankAccount, auditLog } from "@/db/schema";
+   import { db } from "@backend/db";
+   import { cashTransaction, bankAccount, auditLog } from "@backend/db/schema";
    import { eq, sql } from "drizzle-orm";
 
    await db.transaction(async (tx) => {
@@ -101,4 +103,4 @@ Whenever an operation modifies account balances, records an expense, settles a b
 - [ ] Account row locked with `.for("update")` before modifying balance.
 - [ ] Invariant check: `audit_log` row is written for every state or money change.
 - [ ] No direct raw SQL used.
-- [ ] Session verified via `getSession()` before executing server action.
+- [ ] API verifies Better Auth session/Actor before executing business operations; web forwards current session credentials.

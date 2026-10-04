@@ -412,5 +412,18 @@
       "Don't add another owner card inside the shared option group or tint the full selected row.",
       "Don't leave a hidden action or an ambiguous icon-only control without an accessible label, or build UI from placeholder/dummy data when real domain data exists."
     ]
+  },
+  "desktopWorkspace": {
+    "mode": "operate",
+    "routes": "/admin/**",
+    "identity": "inherit Atria Quiet Command Center",
+    "entryPermission": "use:desktop_admin",
+    "desktopEntryMinWidth": 1024,
+    "splitDetailMinWidth": 1280,
+    "sidebarWidth": 240,
+    "sharedUI": "public DesktopTable/control adapters, MoneyValue, AppIcon, statuses, tabs, forms and outer overlays",
+    "styleScope": "[data-atria-admin]",
+    "mobileShell": "max-w-md unchanged",
+    "motion": "existing Framer Motion presets; no Hero CSS animations"
   }
 }

@@ -1,13 +1,16 @@
-import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
+import { useScreenQuery, useOnline } from "@/lib/use-screen-query";
+import { isAccessRevoked } from "@/lib/access-error";
+import { screenLoadState } from "@/lib/screen-query-state";
+import { ScreenQueryState, ScreenRefreshNotice } from "@/components/ui";
 import type { ExpenseDraftPayloadInput } from "@atria/core/validations/expense-draft";
+import { validateExpenseForm } from "@/features/expenses/expense-form-validation";
 import type { ExpenseLine } from "@atria/core/types/expenses";
 import { createClientId } from "@atria/core/utils/client-id";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Image } from "expo-image";
+import { useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
-import { Redirect, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Redirect } from "expo-router";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { toast } from "sonner-native";
 
 import {
@@ -16,32 +19,32 @@ import {
   FormField,
   FormSection,
   MoneyInput,
-  QuantityStepper,
-  ScreenMessage,
-  ScreenSkeleton,
-  SelectionSheet,
-  SheetSelect,
+  NumericInput,
+  AdaptiveSelect,
+  OptionChoiceGroup,
+  ExpenseFormSkeleton,
+  SkeletonFooter,
+  LoadingImage,
+  MediaPreviewDialog,
+  SuccessDialog,
+  RowAction,
   TextInput,
   WorkflowFormSheet,
+  BottomSheet,
+  useSheetDismissal,
+  useSheetFormFields,
   type SelectOption,
 } from "@/components/ui";
 import {
+  type LocalExpenseDraft,
   clearLocalExpenseDraft,
   readLocalExpenseDraft,
   writeLocalExpenseDraft,
 } from "@/lib/draft-storage";
-import { uploadAndParseReceipt } from "@/lib/receipt-ocr";
+import { uploadAndParseReceipt, receiptImageSource } from "@/lib/receipt-ocr";
 import { trpcClient } from "@/lib/trpc-client";
 import { useAuth } from "@/providers/auth-provider";
 import { theme } from "@/theme";
-
-type SelectionTarget =
-  | { readonly kind: "project" }
-  | { readonly kind: "category"; readonly lineKey: string }
-  | { readonly kind: "material"; readonly lineKey: string }
-  | { readonly kind: "stock"; readonly lineKey: string }
-  | { readonly kind: "location"; readonly lineKey: string }
-  | null;
 
 function blankLine(): ExpenseLine {
   return {
@@ -78,28 +81,51 @@ const stockOptions: readonly SelectOption[] = [
 ];
 
 export default function NewExpenseScreen(): React.JSX.Element {
-  const router = useRouter();
   const queryClient = useQueryClient();
-  const { roleName, user } = useAuth();
-  const permissions = roleName ? (ROLE_PERMISSIONS[roleName] ?? []) : [];
+  const { permissions, user } = useAuth();
+  const userId = user?.id;
   const [payload, setPayload] = useState<ExpenseDraftPayloadInput>(blankPayload);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [revision, setRevision] = useState<number | null>(null);
+  const initialPayload = useRef(payload);
+  const loadedDraft = useRef<LocalExpenseDraft | null>(null);
+  const autosaveStopped = useRef(false);
+  const writeQueue = useRef(Promise.resolve());
+  const [baseline, setBaseline] = useState(JSON.stringify(payload));
+  const fields = useSheetFormFields();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
   const [draftHydrated, setDraftHydrated] = useState(false);
-  const [selection, setSelection] = useState<SelectionTarget>(null);
+  const [previewReceipt, setPreviewReceipt] = useState(false);
+  const [submittedCount, setSubmittedCount] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const query = useQuery({
-    queryKey: ["screen", "new-expense"],
-    queryFn: () => trpcClient.screen.newExpense.query(),
+  const pending = isSaving || isSubmitting || isScanning || submittedCount !== null;
+  const dismissal = useSheetDismissal({
+    dirty: draftHydrated && JSON.stringify(payload) !== baseline,
+    pending,
+    fields,
+    onDiscard: async (): Promise<void> => {
+      if (!userId) return;
+      autosaveStopped.current = true;
+      await writeQueue.current;
+      if (loadedDraft.current) await writeLocalExpenseDraft(userId, loadedDraft.current);
+      else await clearLocalExpenseDraft(userId);
+    },
   });
+  const online = useOnline();
+  const query = useScreenQuery("new-expense", (signal) =>
+    trpcClient.screen.newExpense.query(undefined, { signal }),
+  );
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     let active = true;
-    void readLocalExpenseDraft(user.id).then((draft) => {
+    void readLocalExpenseDraft(userId).then((draft) => {
       if (!active) return;
+      loadedDraft.current = draft;
+      setBaseline(JSON.stringify(draft?.payload ?? initialPayload.current));
       if (draft) {
         setPayload(draft.payload);
         setDraftId(draft.draftId);
@@ -110,17 +136,20 @@ export default function NewExpenseScreen(): React.JSX.Element {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
-    if (!user || !draftHydrated) return;
-    void writeLocalExpenseDraft(user.id, {
+    if (!userId || !draftHydrated || autosaveStopped.current) return;
+    const snapshot: LocalExpenseDraft = {
       draftId,
       revision,
       payload,
       savedAt: new Date().toISOString(),
-    });
-  }, [draftHydrated, draftId, payload, revision, user]);
+    };
+    writeQueue.current = writeQueue.current
+      .catch(() => undefined)
+      .then(() => writeLocalExpenseDraft(userId, snapshot));
+  }, [draftHydrated, draftId, payload, revision, userId]);
 
   const selectedProject = query.data?.projects.find((project) => project.id === payload.projectId);
   const categories = useMemo(
@@ -151,6 +180,21 @@ export default function NewExpenseScreen(): React.JSX.Element {
     })) ?? [];
 
   function updateLine(lineKey: string, patch: Partial<ExpenseLine>): void {
+    setFieldErrors((current) =>
+      Object.fromEntries(
+        Object.entries(current).filter(([field]) => {
+          const property = field.startsWith(`${lineKey}.`)
+            ? field.slice(lineKey.length + 1)
+            : undefined;
+          return (
+            !property ||
+            (!(property in patch) &&
+              !(property === "amount" && ("quantity" in patch || "unitPrice" in patch)))
+          );
+        }),
+      ),
+    );
+    setServerError(null);
     setPayload((current) => ({
       ...current,
       lines: current.lines.map((line) =>
@@ -171,6 +215,20 @@ export default function NewExpenseScreen(): React.JSX.Element {
 
   async function saveDraft(): Promise<{ readonly id: string; readonly revision: number } | null> {
     if (!user) return null;
+    if (!online) {
+      toast.error(
+        "Draft tetap tersimpan di perangkat. Hubungkan ke internet untuk menyimpan ke server.",
+      );
+      return null;
+    }
+    const controlErrors = fields.validateControls();
+    if (Object.keys(controlErrors).length) {
+      setFieldErrors({ ...controlErrors });
+      const first = Object.keys(controlErrors)[0];
+      if (first) fields.focus(first);
+      return null;
+    }
+    setServerError(null);
     setIsSaving(true);
     try {
       const result = await trpcClient.finance.saveExpenseDraft.mutate({
@@ -179,20 +237,26 @@ export default function NewExpenseScreen(): React.JSX.Element {
         payload,
       });
       if (!result.success) {
+        setServerError(result.error.message);
         toast.error(result.error.message);
         return null;
       }
       setDraftId(result.data.id);
       setRevision(result.data.revision);
-      await writeLocalExpenseDraft(user.id, {
+      await writeQueue.current;
+      const savedLocal: LocalExpenseDraft = {
         draftId: result.data.id,
         revision: result.data.revision,
         payload: result.data.payload,
         savedAt: result.data.lastSavedAt.toISOString(),
-      });
+      };
+      await writeLocalExpenseDraft(user.id, savedLocal);
+      loadedDraft.current = savedLocal;
+      setBaseline(JSON.stringify(payload));
       toast.success("Draft tersimpan di perangkat dan server.");
       return { id: result.data.id, revision: result.data.revision };
     } catch {
+      setServerError("Server belum dapat dijangkau. Draft tetap tersimpan di perangkat.");
       toast.error("Draft tetap tersimpan di perangkat. Server belum dapat dijangkau.");
       return null;
     } finally {
@@ -201,11 +265,27 @@ export default function NewExpenseScreen(): React.JSX.Element {
   }
 
   async function submitDraft(): Promise<void> {
-    if (!user) return;
-    if (!payload.projectId) {
-      toast.error("Pilih proyek sebelum mengajukan biaya.");
+    if (!online) {
+      toast.error("Hubungkan ke internet untuk mengajukan biaya.");
       return;
     }
+    if (!user) return;
+    const controlErrors = fields.validateControls();
+    if (Object.keys(controlErrors).length) {
+      setFieldErrors({ ...controlErrors });
+      const first = Object.keys(controlErrors)[0];
+      if (first) fields.focus(first);
+      return;
+    }
+    const validation = validateExpenseForm(payload);
+    if (validation.firstField) {
+      setFieldErrors(validation.errors);
+      const first = validation.firstField;
+      requestAnimationFrame(() => fields.focus(first));
+      return;
+    }
+    setFieldErrors({});
+    setServerError(null);
     setIsSubmitting(true);
     try {
       const saved = await saveDraft();
@@ -215,14 +295,18 @@ export default function NewExpenseScreen(): React.JSX.Element {
         expectedRevision: saved.revision,
       });
       if (!result.success) {
+        setServerError(result.error.message);
         toast.error(result.error.message);
         return;
       }
+      autosaveStopped.current = true;
+      await writeQueue.current;
       await clearLocalExpenseDraft(user.id);
       await queryClient.invalidateQueries({ queryKey: ["screen", "expenses"] });
       toast.success(`${result.data.itemCount} biaya berhasil diajukan.`);
-      router.back();
+      setSubmittedCount(result.data.itemCount);
     } catch {
+      setServerError("Pengajuan belum terkirim. Draft tetap aman untuk dicoba kembali.");
       toast.error("Pengajuan belum terkirim. Draft tetap aman untuk dicoba kembali.");
     } finally {
       setIsSubmitting(false);
@@ -230,6 +314,10 @@ export default function NewExpenseScreen(): React.JSX.Element {
   }
 
   async function scanAsset(source: "camera" | "library"): Promise<void> {
+    if (!online) {
+      toast.error("Hubungkan ke internet untuk mengunggah dan membaca bukti.");
+      return;
+    }
     if (!selectedProject) {
       toast.error("Pilih proyek sebelum memindai bukti transaksi.");
       return;
@@ -249,7 +337,7 @@ export default function NewExpenseScreen(): React.JSX.Element {
 
     setIsScanning(true);
     try {
-      const parsed = await uploadAndParseReceipt(result.assets[0], categories);
+      const parsed = await uploadAndParseReceipt(result.assets[0], categories, selectedProject.id);
       setPayload((current) => ({
         ...current,
         inputMode: "RECEIPT",
@@ -273,108 +361,104 @@ export default function NewExpenseScreen(): React.JSX.Element {
     ]);
   }
 
-  function selectionProps(): {
-    readonly title: string;
-    readonly value: string;
-    readonly options: readonly SelectOption[];
-  } {
-    if (!selection) return { title: "Pilih", value: "", options: [] };
-    if (selection.kind === "project") {
-      return { title: "Pilih proyek", value: payload.projectId, options: projectOptions };
-    }
-    const line = payload.lines.find((item) => item.key === selection.lineKey);
-    if (selection.kind === "category") {
-      return {
-        title: "Pilih kategori budget",
-        value: line?.projectBudgetCategoryId ?? "",
-        options: categoryOptions,
-      };
-    }
-    if (selection.kind === "material") {
-      return { title: "Pilih material", value: line?.materialId ?? "", options: materialOptions };
-    }
-    if (selection.kind === "location") {
-      return {
-        title: "Pilih lokasi stok",
-        value: line?.inventoryLocationId ?? "",
-        options: locationOptions,
-      };
-    }
-    return {
-      title: "Pilih perlakuan stok",
-      value: line?.stockHandling ?? "EXPENSE_ONLY",
-      options: stockOptions,
-    };
+  function selectProject(value: string): void {
+    setFieldErrors({});
+    setServerError(null);
+    setPayload((current) => ({
+      ...current,
+      projectId: value,
+      lines: current.lines.map((line) => ({
+        ...line,
+        projectBudgetCategoryId: "",
+        materialId: "",
+        inventoryLocationId: "",
+        stockHandling: "EXPENSE_ONLY",
+      })),
+    }));
+  }
+  function selectStock(lineKey: string, value: string): void {
+    if (
+      value === "EXPENSE_ONLY" ||
+      value === "STOCK_IN" ||
+      value === "DIRECT_USE" ||
+      value === "RESERVE_FOR_PROJECT"
+    )
+      updateLine(lineKey, { stockHandling: value });
   }
 
-  function applySelection(value: string): void {
-    if (!selection) return;
-    if (selection.kind === "project") {
-      setPayload((current) => ({
-        ...current,
-        projectId: value,
-        lines: current.lines.map((line) => ({
-          ...line,
-          projectBudgetCategoryId: "",
-          materialId: "",
-          inventoryLocationId: "",
-          stockHandling: "EXPENSE_ONLY",
-        })),
-      }));
-      return;
-    }
-    if (selection.kind === "category")
-      updateLine(selection.lineKey, { projectBudgetCategoryId: value });
-    if (selection.kind === "material") updateLine(selection.lineKey, { materialId: value });
-    if (selection.kind === "location")
-      updateLine(selection.lineKey, { inventoryLocationId: value });
-    if (selection.kind === "stock") {
-      updateLine(selection.lineKey, { stockHandling: value as ExpenseLine["stockHandling"] });
-    }
-  }
-
+  const loading = screenLoadState(query, online) === "loading";
   if (!permissions.includes("create:cost")) return <Redirect href="/" />;
-  if (query.isPending) return <ScreenSkeleton rows={5} />;
-  if (query.isError || !query.data) {
+  if (!draftHydrated || query.data === undefined || isAccessRevoked(query.error))
     return (
-      <ScreenMessage
-        description="Pilihan proyek dan budget belum dapat dimuat."
-        onAction={() => void query.refetch()}
-        title="Form belum siap"
-      />
+      <BottomSheet
+        title="Catat biaya proyek"
+        sizing="maximum"
+        dismissal={dismissal}
+        description="Pilih budget kategori yang benar. Draft tersimpan otomatis di perangkat."
+        contentPhase={loading ? "loading" : "ready"}
+        footer={loading ? <SkeletonFooter /> : undefined}
+      >
+        <ScreenQueryState
+          query={query}
+          skeleton={<ExpenseFormSkeleton lineCount={draftHydrated ? payload.lines.length : 1} />}
+          onRetry={() => void query.refetch()}
+        />
+      </BottomSheet>
     );
-  }
-
-  const picker = selectionProps();
   return (
     <>
       <WorkflowFormSheet
         description="Pilih budget kategori yang benar. Draft tersimpan otomatis di perangkat."
-        footer={
+        loadingContent={<ExpenseFormSkeleton lineCount={payload.lines.length} />}
+        bodyOverlay={
           <>
-            <Button
-              loading={isSaving}
-              onPress={() => void saveDraft()}
-              style={styles.footerButton}
-              variant="secondary"
-            >
-              Simpan draft
-            </Button>
-            <Button
-              loading={isSubmitting}
-              onPress={() => void submitDraft()}
-              style={styles.footerButton}
-            >
-              Ajukan biaya
-            </Button>
+            <MediaPreviewDialog
+              visible={previewReceipt && Boolean(payload.receipt)}
+              source={receiptImageSource(payload.receipt?.url ?? "")}
+              title="Bukti transaksi"
+              onClose={() => setPreviewReceipt(false)}
+            />
+            <SuccessDialog
+              visible={submittedCount !== null}
+              title="Biaya berhasil diajukan"
+              description="Pengajuan sudah masuk ke alur pemeriksaan."
+              facts={[{ label: "Jumlah item", value: String(submittedCount ?? 0) }]}
+              onClose={dismissal.complete}
+            />
           </>
+        }
+        dismissal={dismissal}
+        fields={fields}
+        footerStatus={serverError}
+        headerActions={[
+          {
+            id: "save-draft",
+            label: "Simpan draft",
+            icon: "save",
+            systemImage: "square.and.arrow.down",
+            disabled: !online || pending,
+            onPress: () => void saveDraft(),
+          },
+        ]}
+        footer={
+          <Button
+            disabled={!online || isSaving || isScanning || submittedCount !== null}
+            loading={isSubmitting}
+            onPress={() => void submitDraft()}
+          >
+            Ajukan biaya
+          </Button>
         }
         title="Catat biaya proyek"
       >
+        <ScreenRefreshNotice query={query} />
         <FormSection title="Konteks proyek">
-          <SheetSelect
+          <AdaptiveSelect
+            disabled={pending}
+            fieldId="project"
+            error={fieldErrors.project}
             label="Proyek"
-            onPress={() => setSelection({ kind: "project" })}
+            onChange={selectProject}
             options={projectOptions}
             required
             value={payload.projectId}
@@ -383,7 +467,18 @@ export default function NewExpenseScreen(): React.JSX.Element {
 
         <View style={styles.receiptSection}>
           {payload.receipt ? (
-            <Image contentFit="cover" source={payload.receipt.url} style={styles.receiptImage} />
+            <RowAction
+              accessibilityLabel="Lihat bukti transaksi"
+              onPress={() => setPreviewReceipt(true)}
+              style={styles.receiptImage}
+            >
+              <LoadingImage
+                retryable={false}
+                contentFit="cover"
+                source={receiptImageSource(payload.receipt.url)}
+                style={styles.receiptImage}
+              />
+            </RowAction>
           ) : (
             <View style={styles.receiptIcon}>
               <AppIcon color={theme.colors.onSurfaceVariant} name="receipt_long" size={24} />
@@ -397,8 +492,10 @@ export default function NewExpenseScreen(): React.JSX.Element {
               Kamera atau galeri dapat mengisi rincian item dengan OCR.
             </Text>
           </View>
-          <Pressable
-            accessibilityRole="button"
+          <RowAction
+            accessibilityLabel={
+              payload.receipt ? "Scan ulang bukti transaksi" : "Scan bukti transaksi"
+            }
             disabled={isScanning}
             onPress={openScanner}
             style={styles.scanButton}
@@ -409,7 +506,7 @@ export default function NewExpenseScreen(): React.JSX.Element {
               size={19}
               weight="bold"
             />
-          </Pressable>
+          </RowAction>
         </View>
         {payload.ocrWarning ? <Text style={styles.warning}>{payload.ocrWarning}</Text> : null}
 
@@ -421,8 +518,9 @@ export default function NewExpenseScreen(): React.JSX.Element {
               key={line.key}
               action={
                 payload.lines.length > 1 ? (
-                  <Pressable
+                  <RowAction
                     accessibilityLabel={`Hapus item ${index + 1}`}
+                    disabled={pending}
                     onPress={() =>
                       setPayload((current) => ({
                         ...current,
@@ -432,41 +530,74 @@ export default function NewExpenseScreen(): React.JSX.Element {
                     style={styles.removeButton}
                   >
                     <AppIcon color={theme.colors.critical} name="delete" size={16} />
-                  </Pressable>
+                  </RowAction>
                 ) : null
               }
               title={`Item ${index + 1}`}
             >
-              <SheetSelect
+              <AdaptiveSelect
+                disabled={pending}
+                fieldId={`${line.key}.projectBudgetCategoryId`}
+                error={fieldErrors[`${line.key}.projectBudgetCategoryId`]}
                 label="Kategori budget"
-                onPress={() => setSelection({ kind: "category", lineKey: line.key })}
+                onChange={(projectBudgetCategoryId) =>
+                  updateLine(line.key, { projectBudgetCategoryId })
+                }
                 options={categoryOptions}
                 required
                 value={line.projectBudgetCategoryId}
               />
-              <FormField label="Deskripsi" required>
+              <FormField
+                fieldId={`${line.key}.description`}
+                error={fieldErrors[`${line.key}.description`]}
+                label="Deskripsi"
+                required
+              >
                 <TextInput
+                  editable={!pending}
                   accessibilityLabel={`Deskripsi item ${index + 1}`}
                   onChangeText={(description) => updateLine(line.key, { description })}
                   placeholder="Contoh: pembelian cat interior"
                   value={line.description}
                 />
               </FormField>
-              <FormField label="Kuantitas" required>
-                <QuantityStepper
+              <FormField
+                fieldId={`${line.key}.quantity`}
+                error={fieldErrors[`${line.key}.quantity`]}
+                label="Kuantitas"
+                required
+              >
+                <NumericInput
+                  disabled={pending}
+                  accessibilityLabel={`Kuantitas item ${index + 1}`}
+                  fieldId={`${line.key}.quantity`}
+                  error={fieldErrors[`${line.key}.quantity`]}
+                  strictlyPositive
                   onChange={(quantity) => updateLine(line.key, { quantity })}
-                  value={Number(line.quantity) || 1}
+                  value={Number(line.quantity)}
                 />
               </FormField>
-              <FormField label="Harga satuan" required>
+              <FormField
+                fieldId={`${line.key}.unitPrice`}
+                error={fieldErrors[`${line.key}.unitPrice`]}
+                label="Harga satuan"
+                required
+              >
                 <MoneyInput
                   accessibilityLabel={`Harga satuan item ${index + 1}`}
+                  editable={!pending}
                   onChange={(unitPrice) => updateLine(line.key, { unitPrice })}
                   value={line.unitPrice}
                 />
               </FormField>
-              <FormField label="Total" readOnly>
+              <FormField
+                fieldId={`${line.key}.amount`}
+                error={fieldErrors[`${line.key}.amount`]}
+                label="Total"
+                readOnly
+              >
                 <MoneyInput
+                  editable={false}
                   accessibilityLabel={`Total item ${index + 1}`}
                   onChange={() => undefined}
                   value={line.amount}
@@ -474,24 +605,33 @@ export default function NewExpenseScreen(): React.JSX.Element {
               </FormField>
               {isMaterial ? (
                 <>
-                  <SheetSelect
+                  <OptionChoiceGroup
                     label="Perlakuan stok"
-                    onPress={() => setSelection({ kind: "stock", lineKey: line.key })}
+                    onChange={(value) => selectStock(line.key, value)}
                     options={stockOptions}
+                    disabled={pending}
                     value={line.stockHandling}
                   />
                   {line.stockHandling !== "EXPENSE_ONLY" ? (
                     <>
-                      <SheetSelect
+                      <AdaptiveSelect
+                        disabled={pending}
+                        fieldId={`${line.key}.materialId`}
+                        error={fieldErrors[`${line.key}.materialId`]}
                         label="Material"
-                        onPress={() => setSelection({ kind: "material", lineKey: line.key })}
+                        onChange={(materialId) => updateLine(line.key, { materialId })}
                         options={materialOptions}
                         required
                         value={line.materialId}
                       />
-                      <SheetSelect
+                      <AdaptiveSelect
+                        disabled={pending}
+                        fieldId={`${line.key}.inventoryLocationId`}
+                        error={fieldErrors[`${line.key}.inventoryLocationId`]}
                         label="Lokasi stok"
-                        onPress={() => setSelection({ kind: "location", lineKey: line.key })}
+                        onChange={(inventoryLocationId) =>
+                          updateLine(line.key, { inventoryLocationId })
+                        }
                         options={locationOptions}
                         required
                         value={line.inventoryLocationId}
@@ -505,6 +645,8 @@ export default function NewExpenseScreen(): React.JSX.Element {
         })}
 
         <Button
+          size="regular"
+          disabled={pending}
           leading={<AppIcon color={theme.colors.onSurface} name="add" size={18} weight="bold" />}
           onPress={() =>
             setPayload((current) => ({ ...current, lines: [...current.lines, blankLine()] }))
@@ -514,21 +656,11 @@ export default function NewExpenseScreen(): React.JSX.Element {
           Tambah item
         </Button>
       </WorkflowFormSheet>
-
-      <SelectionSheet
-        onClose={() => setSelection(null)}
-        onSelect={applySelection}
-        options={picker.options}
-        title={picker.title}
-        value={picker.value}
-        visible={selection !== null}
-      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  footerButton: { flex: 1 },
   receiptSection: {
     minHeight: 76,
     flexDirection: "row",

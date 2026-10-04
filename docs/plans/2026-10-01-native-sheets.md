@@ -1,0 +1,20 @@
+# Native sheets and underlying workspace chrome
+
+Keep route forms owned by Expo Router's native formSheet presentation; no second sheet presenter or web-style overlay. Start long forms at a medium native detent, permit expansion for scrolling/keyboard, and retain native grabber/corners/dismissal. Short handoff sheets should use a compact/medium detent. Preserve direct-root ScrollView structure used by react-native-screens.
+
+Preserve the source workspace's title, active menu item, Back/AI state and geometry while a form sheet route is active. Derive this from underlying navigation state rather than caching a stale pathname. Underlying chrome stays visible behind the native modal, with background interaction/accessibility blocked. A full-height sheet can naturally cover it; do not draw app navigation over the presented form.
+
+Replace the shared iOS selection-sheet presenter and handmade pull bar with installed @expo/ui native BottomSheet, using native detents/drag indicator. Keep selection options, disabled rows, callbacks and all form validation/mutations intact. Android retains its working fallback unless the installed native API provides an equivalent safely.
+
+Verify opening/dragging/dismissing a route sheet, topbar identity at medium height and after dismissal, one nested picker, and keyboard/footer visibility without submitting any finance/project changes. Run mobile typecheck and scoped lint; use a native build only if native code/dependencies change.
+
+## Implemented and verified
+
+- Native route forms now start at half height and can expand for long project/expense forms; short vendor/invoice handoff sheets use half height. Native corners/grabber/dismissal remain owned by the stack. Shared content spacing/title are compact, with the direct-root ScrollView preserved.
+- workspaceChromeLocation derives the underlying navigation identity through stacked sheets and nested tabs/details. Title, active item, Back/AI and geometry stay with the source page; background chrome is visible but inert. Eight tests cover normal/auth paths, detail/approvals Back, nested/multiple sheets, missing source and restored tabs.
+- SelectionSheet uses the installed iOS SwiftUI BottomSheet with native medium/large detents and drag indicator. Existing RN rows preserve selection/disabled semantics and callbacks; static styles fix the prior dropped Pressable callback layout in both rows and the field trigger. Native picker selection updates the parent field and dismisses; Close also works. Android keeps its existing fallback.
+- Native keyboard expansion is verified. Only the footer uses KeyboardAvoidingView with native keyboard timing, and its buttons remain above the keyboard. Focused-field clearance measures the native input, scroll origin and footer before using RN's public keyboard-scrolling API; it handles keyboard/frame changes and switching fields while editing. Final Notes QA confirms the full textarea above both footer and keyboard. Cancellation restores the source topbar.
+
+Native layout cleanup: the footer's native containers are non-collapsible, and project/expense picker anchors live inside the existing ScrollView rather than adding root siblings. This removes the structure that produced the native more-than-two-subviews warning. A fresh project → picker → Close → Cancel cycle passed with the source topbar preserved and no new visible structure warning; the externally restarted Metro terminal was not altered.
+
+Evidence: `.atria-demo/verification/2026-10-01-native-sheets/medium-structure-final.jpg`, `picker-structure-final.jpg`, `project-notes-keyboard-clear.jpg`, `source-structure-final.jpg`. Mobile typecheck, scoped lint/formatting,8 navigation tests and diff checks pass. No text was submitted and no project/finance data was mutated. iOS26.5 runtime only; Android/iOS27 visual behavior remains unverified. This change needs no native rebuild or new dependency. Shared BottomSheet/WorkflowFormSheet/SelectionSheet/SheetSelect and existing workspace chrome were extended; native sheet presenters retain their own gesture/focus/dismissal ownership.

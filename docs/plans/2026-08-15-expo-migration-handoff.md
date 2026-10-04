@@ -1,5 +1,7 @@
 # Handoff — Migrasi Cross-Platform Expo
 
+> Backend paths in this historical handoff were superseded on 1 October 2026. Hono/Bun now owns backend execution in `apps/api`; web files are HTTP facades. Use [independent backend implementation](2026-10-01-independent-backend.md) and [current local development](../guide/mobile-api-development.md).
+
 **Untuk:** agent mana pun (Claude Code, Codex, Antigravity/Gemini, Cursor) yang melanjutkan migrasi ini.
 **Cara pakai:** salin blok **Prompt** di bawah apa adanya ke agent baru. Sisanya adalah konteks untuk manusia.
 
@@ -9,7 +11,13 @@ Dokumen ini diperbarui **setiap kali satu Step selesai**. Yang melanjutkan wajib
 
 ## Posisi sekarang
 
-**Terakhir diperbarui:** 2026-08-17 · Root cause bug form sheet full-height ditemukan & diperbaiki (bukan `automaticallyAdjustKeyboardInsets`); unit berikutnya P2.5 setup/approval budget dan aktivasi Proyek
+**Terakhir diperbarui:** 2026-09-30 · Capabilities efektif, shared shell/native-menu adapters, bridge registry dan Dashboard tersedia. Core 296 + mobile 10 + web 1.040 test pass (web 151 skip), workspace lint, typecheck, web build dan export iOS/Android lolos. Owner UAT berhasil login melalui @Browser dan client Atria di simulator iOS 26.5. Header/FAB tanpa keyboard, floating topbar, dock sejajar yang tetap expanded, detail/back dan form dismissal telah diperiksa pada 402 pt; Android/runtime accessibility/full-state parity masih terbuka. M0/M1 belum siap UAT. Lihat [handoff implementasi](2026-09-30-expo-m0-m1-implementation.md) dan [bukti perbaikan chrome](2026-09-30-expo-floating-chrome-fix.md).
+
+**Acuan aktif:** [rencana parity dan native controls](2026-09-30-expo-web-parity-native-controls.md) dan [audit kode September](../guide/expo-web-parity-audit-2026-09-30.md). Pengguna memilih struktur halaman mengikuti website, glass pada chrome/control, Android bergaya iOS, serta bridge **Buka di web** selama port belum selesai. NativeWind **sudah aktif (4.2.6)**. Mulai dari capabilities/shell dan Dashboard sesuai rencana aktif; bukan otomatis P2.5.
+
+**Dock iOS terbaru:** [UITabBarController + UIButton/UIMenu](2026-09-30-expo-uikit-native-dock.md) menggantikan custom tab pill. Native hold/drag dan active state sistem sudah diverifikasi; bar tidak compact; FAB dismissal visual lolos 5 loop. Memerlukan build/client native Atria karena memakai local Expo module. Android masih shared fallback. Header floating/menu judul dan native AI/notifikasi/profil tetap mengikuti pilihan pengguna terakhir.
+
+Tabel dan bukti simulator di bawah adalah **progres historis sampai Agustus**, bukan full parity atau kelulusan UAT aplikasi saat ini. Blok Prompt P2.5 di dokumen ini disimpan sebagai arsip scope domain; jangan menjalankannya sebagai instruksi aktif untuk brief September. Unit server Wave 2–3 tetap dipakai sebagai worklist domain sesuai rencana baru.
 
 | Step                                            | Status | Bukti                                                                                                                      |
 | ----------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------- |
@@ -303,10 +311,16 @@ bun run format
 
 ## Yang sengaja BUKAN bagian dari rencana ini
 
+### Pembaruan 1 Oktober 2026 — lifecycle mobile
+
+Navigasi menu/dock sekarang berbagi tab navigator yang sama dan mengembalikan stack workspace di dalam wrapper Expo `__root`. Dashboard tanpa parameter eksplisit mempertahankan subtab. Shared screen queries mengisolasi cache per akun/sesi/izin, refresh saat fokus/resume, menjaga cached content saat gagal, menangani first-load offline, dan memakai abort signal. Filter/subtab/scroll memakai memori sesi; tidak ada cache finance baru di disk atau antrean mutation offline. Native chrome yang sudah disepakati tetap dipertahankan.
+
+Rincian implementasi, acceptance dan batas verifikasi: [mobile navigation/loading](./2026-10-01-mobile-navigation-loading.md). Typecheck, lint workspace, 17 mobile tests dan export iOS/Android lolos. Root format check masih menandai 239 file di luar perubahan task ini; format file yang diubah lolos.
+
 Supaya penerus tidak "membetulkan" hal yang sengaja ditinggalkan:
 
 - **Tidak ada `packages/db`.** `@/db` diimpor 111 file, dan `db/seed.ts` → `@/lib/auth` → `@/db` bikin siklus. Mobile tidak pernah menyentuh DB.
 - **Tidak ada `packages/api`.** Screen loader mengimpor tipe UI dari komponen feature, jadi paket API bersama akan bergantung pada `apps/web/features/**`. Use-case tinggal di `apps/web/server/`.
-- **Tidak ada NativeWind.** Mobile memakai typed theme + StyleSheet. NativeWind v5 masih preview dan `react-native-css` masih nightly.
+- **NativeWind 4.2.6 sudah aktif.** Mobile memakai NativeWind untuk komposisi RN, generated Tailwind config dari token web, dan typed theme/StyleSheet untuk kebutuhan lainnya. Pertahankan Metro css-interop dedupe. Brief September tidak meminta upgrade NativeWind v5; native SwiftUI controls memakai props/modifiers, bukan className.
 - **Tidak ada dark mode.** Sistem ini light-only secara desain. Kunci `userInterfaceStyle: "light"` di `app.json`.
 - **`success` sengaja ink netral, bukan hijau** (One Accent Rule di DESIGN.md). Jangan "perbaiki".

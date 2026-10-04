@@ -251,7 +251,7 @@ export function RabExportCanvas({
           onClick={handleZoomOut}
           aria-label="Perkecil pratinjau"
           title="Perkecil (-)"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface hover:bg-surface-container active:scale-95 transition"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface hover:bg-surface-container active:scale-[1.05] active:shadow-raised active:z-10 transition duration-150"
         >
           <AppIcon name="remove" className="text-xs" />
         </button>
@@ -260,7 +260,7 @@ export function RabExportCanvas({
           type="button"
           onClick={handleFitWidth}
           title="Sesuaikan lebar dokumen ke layar"
-          className="flex h-8 items-center justify-center rounded-full px-2.5 text-[11px] font-bold text-on-surface hover:bg-surface-container active:scale-95 transition"
+          className="flex h-8 items-center justify-center rounded-full px-2.5 text-[11px] font-bold text-on-surface hover:bg-surface-container active:scale-[1.05] active:shadow-raised active:z-10 transition duration-150"
         >
           Fit Lebar
         </button>
@@ -269,7 +269,7 @@ export function RabExportCanvas({
           type="button"
           onClick={handleFitPage}
           title="Lihat 1 halaman utuh"
-          className="flex h-8 items-center justify-center rounded-full px-2.5 text-[11px] font-bold text-on-surface hover:bg-surface-container active:scale-95 transition"
+          className="flex h-8 items-center justify-center rounded-full px-2.5 text-[11px] font-bold text-on-surface hover:bg-surface-container active:scale-[1.05] active:shadow-raised active:z-10 transition duration-150"
         >
           Fit Halaman
         </button>
@@ -283,7 +283,7 @@ export function RabExportCanvas({
           onClick={handleZoomIn}
           aria-label="Perbesar pratinjau"
           title="Perbesar (+)"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface hover:bg-surface-container active:scale-95 transition"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface hover:bg-surface-container active:scale-[1.05] active:shadow-raised active:z-10 transition duration-150"
         >
           <AppIcon name="add" className="text-xs" />
         </button>

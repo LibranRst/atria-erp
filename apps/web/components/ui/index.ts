@@ -183,3 +183,19 @@ export { useFormDirtySnapshot } from "./form/use-form-dirty-snapshot";
 export { DialogOptionList } from "./form/dialog-option-list";
 export type { DialogOptionListHandle } from "./form/dialog-option-list";
 export { cx } from "./form/form-control-utils";
+
+// Desktop admin: HeroUI adapters inherit Atria tokens and shared overlay ownership.
+export { DesktopUIProvider } from "./desktop/desktop-ui-provider";
+export type { DesktopUIProviderProps } from "./desktop/desktop-ui-provider";
+export { DesktopButton, DesktopInput, DesktopSelect } from "./desktop/desktop-controls";
+export type {
+  DesktopButtonProps,
+  DesktopInputProps,
+  DesktopSelectOption,
+  DesktopSelectProps,
+} from "./desktop/desktop-controls";
+export { DesktopTable } from "./desktop/desktop-table";
+export type { DesktopTableColumn, DesktopTableProps } from "./desktop/desktop-table";
+
+export { DesktopButtonLink } from "./desktop/desktop-button-link";
+export type { DesktopButtonLinkProps } from "./desktop/desktop-button-link";

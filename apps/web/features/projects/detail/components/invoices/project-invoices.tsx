@@ -5,7 +5,8 @@ import React, { useState, useTransition } from "react";
 import { z } from "zod";
 import { recordClientPayment } from "@/app/actions/finance/record-client-payment";
 import { generateClientInvoiceSchedule } from "@/app/actions/finance/generate-invoice-schedule";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { getErrorMessage } from "@atria/core/utils/error-message";
 import { updateUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { toast } from "sonner";
@@ -106,7 +107,8 @@ export function ProjectInvoices({
   const [success, setSuccess] = useState<string | null>(null);
   const [operationSuccess, setOperationSuccess] = useState<OperationSuccess | null>(null);
 
-  const isOwnerOrFinance = can("create:client_invoice");
+  const canCreateInvoice = can("create:client_invoice");
+  const canRecordPayment = can("reconcile:client_invoice");
   const { totalInvoiceAmount, totalPaidAmount, unpaidAmount } = calculateInvoiceTotals(invoices);
 
   function handleGenerateSchedule(): void {
@@ -162,10 +164,19 @@ export function ProjectInvoices({
       }
       patchPayment({ selectedBankId: newBankId });
     },
-    [bankAccounts, selectedBankId, selectedInvoice, projectName, clientName, refNumber, patchPayment],
+    [
+      bankAccounts,
+      selectedBankId,
+      selectedInvoice,
+      projectName,
+      clientName,
+      refNumber,
+      patchPayment,
+    ],
   );
 
-  const handleRecordPaymentClick = (invoice: ClientInvoiceItem) => {
+  const handleRecordPaymentClick = (invoice: ClientInvoiceItem): void => {
+    if (!canRecordPayment) return;
     const remaining = calculateInvoiceRemaining(invoice);
     const initialBank = bankAccounts[0];
     const initialBankName = initialBank?.bankName || initialBank?.name;
@@ -191,7 +202,7 @@ export function ProjectInvoices({
   };
 
   const handleSubmit = async (): Promise<void> => {
-    if (!selectedInvoice) return;
+    if (!selectedInvoice || !canRecordPayment) return;
     if (!selectedBankId) {
       const message = "Silakan pilih rekening bank tujuan.";
       setError(message);
@@ -260,7 +271,7 @@ export function ProjectInvoices({
   return (
     <div className="space-y-sm">
       <ProjectInvoicesSummary
-        isOwnerOrFinance={isOwnerOrFinance}
+        canCreateInvoice={canCreateInvoice}
         invoicesCount={invoices.length}
         contractValue={contractValue}
         schedulePending={schedulePending}
@@ -276,7 +287,7 @@ export function ProjectInvoices({
 
       <ProjectInvoicesList
         invoices={invoices}
-        isOwnerOrFinance={isOwnerOrFinance}
+        canRecordPayment={canRecordPayment}
         onRecordPayment={handleRecordPaymentClick}
       />
 

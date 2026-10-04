@@ -2,7 +2,8 @@
 
 import { confirmAiSetupBudgetProposal } from "@/app/actions/ai/confirm-project-proposal";
 import { MoneyValue } from "@/components/ui";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import * as React from "react";
 import { ProposalCardShell } from "./proposal-card-shell";
 

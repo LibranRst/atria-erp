@@ -260,6 +260,16 @@
   height: 28px;
 }
 
+@utility button-press-scale {
+  transition-property: transform, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  &:active {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-raised);
+  }
+}
+
 body {
   background-color: var(--background);
   color: var(--color-on-surface);
@@ -461,7 +471,8 @@ body {
 }
 
 [data-sonner-toast] [data-button]:active {
-  transform: scale(0.96) !important;
+  transform: scale(1.05) !important;
+  box-shadow: var(--shadow-raised) !important;
 }
 
 /* Style close button */
@@ -473,6 +484,10 @@ body {
   transition:
     transform 150ms ease,
     opacity 150ms ease !important;
+}
+
+[data-sonner-toast] [data-close-button]:active {
+  transform: scale(1.05) !important;
 }
 
 /* Hide native browser search cancel and decoration buttons across WebKit, Blink, and Edge */

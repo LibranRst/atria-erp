@@ -82,8 +82,18 @@ storybook-static/
 ds-bundle/
 
 # build output paket & aplikasi di monorepo
+apps/api/dist/
 apps/web/dist/
 .expo/
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
+
+# Isolated Next.js verification output
+apps/web/.next-admin-verify/
+apps/web/.next-admin-dev/
+# Isolated verification build/browser output (also excluded from Tailwind scans).
+**/.next-*/
+**/test-results/
+**/playwright-report/
+.netlify

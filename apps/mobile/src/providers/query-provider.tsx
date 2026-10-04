@@ -25,6 +25,7 @@ export function QueryProvider({
         },
       }),
   );
+  queryClient.setQueryDefaults(["ui"], { gcTime: Infinity, networkMode: "always" });
 
   useEffect(() => {
     return onlineManager.setEventListener((setOnline) => {

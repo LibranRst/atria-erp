@@ -146,7 +146,7 @@ export function ColorEditor({
               cardColorTo: draft.cardColorFrom,
             })
           }
-          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface active:scale-[0.97]"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface transition active:scale-[1.05] active:shadow-raised active:z-10"
         >
           <AppIcon name="swap_horiz" className="icon-sm" />
           Balik warna
@@ -160,7 +160,7 @@ export function ColorEditor({
               cardTextColor: CARD_PRESETS[0].text,
             })
           }
-          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface active:scale-[0.97]"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface transition active:scale-[1.05] active:shadow-raised active:z-10"
         >
           <AppIcon name="restore" className="icon-sm" />
           Atur ulang
@@ -172,7 +172,7 @@ export function ColorEditor({
               cardTextColor: draft.cardTextColor === "light" ? "dark" : "light",
             })
           }
-          className="min-h-12 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface active:scale-[0.97]"
+          className="min-h-12 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface transition active:scale-[1.05] active:shadow-raised active:z-10"
         >
           Teks {draft.cardTextColor === "light" ? "Terang" : "Gelap"}
         </button>

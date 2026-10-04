@@ -6,31 +6,24 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import {
   transitionEaseSmooth,
-  transitionSpringBouncy,
   transitionSpringSmooth,
 } from "@/lib/utils/motion";
 import { IconButton } from "../button/button";
 import { AppIcon } from "../icon/app-icon";
 import { OverlayLayerProvider } from "./overlay-layer-context";
 import { deactivateOverlay, isTopOverlay, lockBodyScroll, promoteOverlay } from "./overlay-stack";
-
-function subscribeToDocumentBody(): () => void {
-  return () => undefined;
-}
-
-function getDocumentBody(): HTMLElement {
-  return document.body;
-}
-
-function getServerDocumentBody(): null {
-  return null;
-}
+import { usePortalContainer } from "./portal-container-context";
 
 export type DialogMorphOrigin = {
   readonly top: number;
   readonly left: number;
   readonly width: number;
   readonly height: number;
+};
+
+const morphContentVariants = {
+  closed: { opacity: 0 },
+  open: { opacity: 1 },
 };
 
 type DialogFrameProps = {
@@ -98,11 +91,7 @@ export function DialogFrame({
   const [zIndex, setZIndex] = React.useState(220);
   const reduceMotion = useReducedMotion();
   const shouldRender = morphOrigin ? (morphPresent ?? open) : open;
-  const portalNode = React.useSyncExternalStore(
-    subscribeToDocumentBody,
-    getDocumentBody,
-    getServerDocumentBody,
-  );
+  const portalNode = usePortalContainer();
 
   React.useEffect(() => {
     onCloseRef.current = onClose;
@@ -290,11 +279,7 @@ export function DialogFrame({
               transition={
                 reduceMotion
                   ? { duration: 0 }
-                  : morphOrigin
-                    ? open
-                      ? transitionSpringBouncy
-                      : transitionSpringSmooth
-                    : transitionSpringSmooth
+                  : transitionSpringSmooth
               }
               onAnimationComplete={morphOrigin && !open ? () => onExitComplete?.() : undefined}
               className={`pointer-events-none flex max-h-[min(78dvh,560px)] flex-col outline-none ${morphOrigin ? `absolute overflow-hidden rounded-owner ring-1 ring-ring-control ${open ? "bg-surface-container-low shadow-raised" : "bg-surface-container-lowest shadow-control"}` : `w-full ${calendarPresentation ? "max-w-85" : "max-w-90"}`} ${utility || detachedCloseButton ? "gap-2" : ""}`}
@@ -302,24 +287,31 @@ export function DialogFrame({
               {morphOrigin && morphClosedContent ? (
                 <motion.div
                   initial={{ opacity: 1, scale: 1 }}
-                  animate={{ opacity: open ? 0 : 1, scale: open ? 0.75 : 1 }}
-                  transition={reduceMotion ? { duration: 0 } : transitionEaseSmooth}
+                  animate={{ opacity: open ? 0 : 1, scale: open ? 0.8 : 1 }}
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : open
+                        ? { ...transitionEaseSmooth, duration: 0.15 }
+                        : { ...transitionEaseSmooth, duration: 0.2, delay: 0.08 }
+                  }
                   className="pointer-events-none absolute inset-0 flex items-center justify-center"
                 >
                   {morphClosedContent}
                 </motion.div>
               ) : null}
               <motion.div
-                initial={morphOrigin ? { opacity: 0 } : false}
-                animate={{ opacity: morphOrigin && !open ? 0 : 1 }}
-                exit={morphOrigin ? { opacity: 0 } : undefined}
+                variants={morphOrigin ? morphContentVariants : undefined}
+                initial={morphOrigin ? "closed" : false}
+                animate={morphOrigin ? (open ? "open" : "closed") : undefined}
+                exit={morphOrigin ? "closed" : undefined}
                 transition={
                   reduceMotion
                     ? { duration: 0 }
                     : morphOrigin
                       ? open
-                        ? { ...transitionEaseSmooth, delay: 0.08, duration: 0.22 }
-                        : { ...transitionEaseSmooth, duration: 0.1 }
+                        ? { ...transitionEaseSmooth, delay: 0.1, duration: 0.26 }
+                        : { ...transitionEaseSmooth, duration: 0.18 }
                       : transitionEaseSmooth
                 }
                 className={morphOrigin ? "h-full min-h-0 overflow-hidden" : "contents"}

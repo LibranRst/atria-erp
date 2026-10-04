@@ -1,85 +1,46 @@
 import { getRoleNavItems } from "@atria/core/navigation/role-navigation";
-import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
-import { NativeTabs } from "expo-router/unstable-native-tabs";
-import { useMemo } from "react";
-
+import { Tabs } from "expo-router";
+import { ScreenMessage } from "@/components/ui";
+import { WorkspaceBottomBar } from "@/components/shell/workspace-bottom-bar";
 import { useAuth } from "@/providers/auth-provider";
-import { theme } from "@/theme";
 
 export default function TabsLayout(): React.JSX.Element {
-  const { roleName } = useAuth();
-  const allowedRoutes = useMemo(
-    () =>
-      new Set(
-        getRoleNavItems(roleName ? (ROLE_PERMISSIONS[roleName] ?? []) : []).map(
-          (item) => item.href,
-        ),
-      ),
-    [roleName],
-  );
-
+  const { permissions, signOut } = useAuth();
+  const routes = new Set(getRoleNavItems(permissions).map((item) => item.href));
+  if (routes.size === 0)
+    return (
+      <ScreenMessage
+        icon="lock"
+        title="Akses belum diberikan"
+        description="Minta pengelola memberikan akses proyek, keuangan, atau material untuk akun ini."
+        actionLabel="Keluar"
+        onAction={() => void signOut()}
+      />
+    );
   return (
-    <NativeTabs
+    <Tabs
       backBehavior="history"
-      backgroundColor={theme.colors.surfaceContainerLowest}
-      disableIndicator
-      disableTransparentOnScrollEdge
-      iconColor={{ default: theme.colors.muted, selected: theme.colors.primary }}
-      labelStyle={{ fontFamily: theme.fonts.semibold, fontSize: 10 }}
-      labelVisibilityMode="labeled"
-      minimizeBehavior="onScrollDown"
-      shadowColor={theme.colors.outlineVariant}
-      tabBarRespectsIMEInsets
-      tintColor={theme.colors.primary}
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { position: "absolute" },
+        animation: "none",
+      }}
+      tabBar={(props) => <WorkspaceBottomBar {...props} />}
     >
-      <NativeTabs.Trigger
-        accessibilityLabel="Dashboard"
-        hidden={!allowedRoutes.has("/ledger")}
-        name="ledger"
-        testID="tab-ledger"
-      >
-        <NativeTabs.Trigger.Icon
-          md="dashboard"
-          sf={{ default: "chart.bar.xaxis", selected: "chart.bar.xaxis" }}
-        />
-        <NativeTabs.Trigger.Label>Dashboard</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger
-        accessibilityLabel="Proyek"
-        hidden={!allowedRoutes.has("/projects")}
+      <Tabs.Screen name="approvals" options={{ href: null }} />
+      <Tabs.Screen name="ledger" options={{ href: routes.has("/ledger") ? "/ledger" : null }} />
+      <Tabs.Screen
         name="projects"
-        testID="tab-projects"
-      >
-        <NativeTabs.Trigger.Icon
-          md={{ default: "folder", selected: "folder" }}
-          sf={{ default: "folder", selected: "folder.fill" }}
-        />
-        <NativeTabs.Trigger.Label>Proyek</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger
-        accessibilityLabel="Material"
-        hidden={!allowedRoutes.has("/materials")}
+        options={{ href: routes.has("/projects") ? "/projects" : null }}
+      />
+      <Tabs.Screen
         name="materials"
-        testID="tab-materials"
-      >
-        <NativeTabs.Trigger.Icon
-          md={{ default: "inventory_2", selected: "inventory_2" }}
-          sf={{ default: "shippingbox", selected: "shippingbox.fill" }}
-        />
-        <NativeTabs.Trigger.Label>Material</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger
-        accessibilityLabel="Biaya"
-        hidden={!allowedRoutes.has("/expenses")}
+        options={{ href: routes.has("/materials") ? "/materials" : null }}
+      />
+      <Tabs.Screen
         name="expenses"
-        testID="tab-expenses"
-      >
-        <NativeTabs.Trigger.Icon
-          md={{ default: "receipt_long", selected: "receipt_long" }}
-          sf={{ default: "doc.text", selected: "doc.text.fill" }}
-        />
-        <NativeTabs.Trigger.Label>Biaya</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
+        options={{ href: routes.has("/expenses") ? "/expenses" : null }}
+      />
+    </Tabs>
   );
 }

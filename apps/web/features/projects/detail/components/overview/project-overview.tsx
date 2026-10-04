@@ -1,8 +1,10 @@
 "use client";
 
 import { useCan } from "@/components/auth/permissions-provider";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { toast } from "sonner";
 
 import type { ProjectBudgetDashboard } from "@/app/actions/project/excel-budget";
@@ -14,6 +16,7 @@ import {
 import { reallocateProjectBudget } from "@/app/actions/project/workflow-governance";
 import {
   AppIcon,
+  DesktopTable,
   Badge,
   BudgetSplitIndicator,
   Button,
@@ -99,6 +102,7 @@ export function ProjectOverview({
   onNavigate,
   onAssignPm,
 }: ProjectOverviewProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const can = useCan();
   const router = useRouter();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -528,64 +532,122 @@ export function ProjectOverview({
             supporting="Bandingkan realisasi dan sisa pada setiap pos."
             action={
               canReallocate ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="compact"
-                  onClick={openReallocation}
-                >
+                <Button type="button" variant="secondary" size="compact" onClick={openReallocation}>
                   Atur alokasi
                 </Button>
               ) : undefined
             }
           />
-          <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
-            {budget.categories.map((category, index) => (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => setSelectedCategoryId(category.id)}
-                className={`block w-full px-4 py-3.5 text-left outline-none transition-colors focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
-              >
-                <span className="flex items-center justify-between gap-3">
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="truncate text-xs font-bold text-on-surface">
-                      {category.name}
+          {desktop ? (
+            <DesktopTable
+              ariaLabel="Budget proyek per kategori"
+              rows={budget.categories}
+              rowKey={(category) => category.id}
+              onRowAction={(category) => setSelectedCategoryId(category.id)}
+              columns={[
+                { key: "category", label: "Kategori", render: (category) => category.name },
+                {
+                  key: "allocated",
+                  label: "Alokasi",
+                  align: "end",
+                  render: (category) => (
+                    <MoneyValue amount={category.allocatedAmount} variant="compact" size="sm" />
+                  ),
+                },
+                {
+                  key: "pending",
+                  label: "Menunggu review",
+                  align: "end",
+                  render: (category) => (
+                    <MoneyValue amount={category.pendingAmount} variant="compact" size="sm" />
+                  ),
+                },
+                {
+                  key: "actual",
+                  label: "Terpakai",
+                  align: "end",
+                  render: (category) => (
+                    <MoneyValue amount={category.actualAmount} variant="compact" size="sm" />
+                  ),
+                },
+                {
+                  key: "paid",
+                  label: "Dibayar",
+                  align: "end",
+                  render: (category) => (
+                    <MoneyValue amount={category.paidAmount} variant="compact" size="sm" />
+                  ),
+                },
+                {
+                  key: "remaining",
+                  label: "Sisa",
+                  align: "end",
+                  render: (category) => (
+                    <MoneyValue
+                      amount={category.remainingAmount}
+                      variant="compact"
+                      size="sm"
+                      tone={category.remainingAmount < 0 ? "danger" : "default"}
+                    />
+                  ),
+                },
+                {
+                  key: "status",
+                  label: "Kondisi",
+                  render: (category) =>
+                    `${formatBusinessLabel(category.status)} · ${category.usedPercentage.toFixed(1)}%`,
+                },
+              ]}
+            />
+          ) : (
+            <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
+              {budget.categories.map((category, index) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setSelectedCategoryId(category.id)}
+                  className={`block w-full px-4 py-3.5 text-left transition-colors outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
+                >
+                  <span className="flex items-center justify-between gap-3">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="truncate text-xs font-bold text-on-surface">
+                        {category.name}
+                      </span>
+                      <Badge status={statusTone(category.status)}>
+                        {category.status === "SAFE"
+                          ? "Aman"
+                          : category.status === "WATCH"
+                            ? "Dipantau"
+                            : category.status === "OVER_BUDGET"
+                              ? "Terlampaui"
+                              : formatBusinessLabel(category.status)}
+                      </Badge>
                     </span>
-                    <Badge status={statusTone(category.status)}>
-                      {category.status === "SAFE"
-                        ? "Aman"
-                        : category.status === "WATCH"
-                          ? "Dipantau"
-                          : category.status === "OVER_BUDGET"
-                            ? "Terlampaui"
-                            : formatBusinessLabel(category.status)}
-                    </Badge>
-                  </span>
-                  <MoneyValue
-                    amount={category.remainingAmount}
-                    variant="fullDynamic"
-                    tone={category.remainingAmount < 0 ? "danger" : "default"}
-                    align="right"
-                    size="sm"
-                    className="shrink-0"
-                  />
-                </span>
-                <span className="mt-2.5 flex items-center justify-between gap-3">
-                  <span className="min-w-0 flex-1">
-                    <UsageBlockMeter
-                      value={category.usedPercentage}
-                      tone={categoryTone(category.status)}
-                      className="mt-0"
+                    <MoneyValue
+                      amount={category.remainingAmount}
+                      variant="fullDynamic"
+                      tone={category.remainingAmount < 0 ? "danger" : "default"}
+                      align="right"
+                      size="sm"
+                      className="shrink-0"
                     />
                   </span>
-                  <span className="w-12 shrink-0 text-right font-mono text-eyebrow font-bold tabular-nums text-on-surface-variant">
-                    {category.usedPercentage.toFixed(1)}%
+                  <span className="mt-2.5 flex items-center justify-between gap-3">
+                    <span className="min-w-0 flex-1">
+                      <UsageBlockMeter
+                        value={category.usedPercentage}
+                        tone={categoryTone(category.status)}
+                        className="mt-0"
+                      />
+                    </span>
+                    <span className="w-12 shrink-0 text-right font-mono text-eyebrow font-bold text-on-surface-variant tabular-nums">
+                      {category.usedPercentage.toFixed(1)}%
+                    </span>
                   </span>
-                </span>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
       ) : null}
 

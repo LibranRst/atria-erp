@@ -1,61 +1,44 @@
 import { describe, expect, test } from "bun:test";
 import { resolveMobileNotificationRoute } from "./notification-route";
 
-describe("tujuan notifikasi native", () => {
-  test("setiap tujuan yang benar-benar dikirim server mendarat di rute native yang ada", () => {
-    // Daftar ini adalah keluaran nyata `notificationDestination` (@atria/core) —
-    // lihat docs/plans/2026-09-12-native-notification-banner-reliability.md.
-    const destinations = [
-      "/approvals",
-      "/expenses?filter=NEEDS_VERIFICATION",
-      "/ledger",
-      "/materials",
+describe("tujuan notifikasi sesuai ketersediaan native", () => {
+  test("dashboard mempertahankan tab", () => {
+    expect(resolveMobileNotificationRoute("/ledger?tab=budget", "/projects")).toEqual({
+      kind: "native",
+      href: { pathname: "/ledger", params: { tab: "budget" } },
+    });
+  });
+  test("detail Proyek yang belum native mempertahankan konteks melalui web", () => {
+    expect(resolveMobileNotificationRoute("/projects/abc?tab=stok", "/ledger")).toEqual({
+      kind: "web",
+      path: "/projects/abc?tab=stok",
+    });
+    expect(resolveMobileNotificationRoute("/projects/abc", "/ledger")).toEqual({
+      kind: "native",
+      href: { pathname: "/projects/[projectId]", params: { projectId: "abc" } },
+    });
+  });
+  test("tujuan material, filter biaya dan rekonsiliasi tidak dibuang", () => {
+    for (const path of [
       "/materials/opening",
-      "/notifications",
+      "/expenses?filter=NEEDS_VERIFICATION",
       "/reconciliation",
-      "/projects/8d1f1e6e-1111-4111-8111-111111111111",
-      "/projects/8d1f1e6e-1111-4111-8111-111111111111?tab=budget",
-    ] as const;
-    const known = new Set([
-      "/approvals",
-      "/expenses",
-      "/ledger",
-      "/materials",
-      "/projects",
-      "/projects/8d1f1e6e-1111-4111-8111-111111111111",
-    ]);
-    for (const destination of destinations) {
-      const route = resolveMobileNotificationRoute(destination, "/projects");
-      expect(known.has(route)).toBe(true);
+      "/notifications",
+    ]) {
+      expect(resolveMobileNotificationRoute(path, "/ledger")).toEqual({ kind: "web", path });
     }
   });
-
-  test("tab proyek dibuang tetapi proyeknya tetap terbuka", () => {
-    expect(resolveMobileNotificationRoute("/projects/abc?tab=stok", "/ledger")).toBe(
-      "/projects/abc",
-    );
-    expect(resolveMobileNotificationRoute("/projects/abc#top", "/ledger")).toBe("/projects/abc");
-    expect(resolveMobileNotificationRoute("/projects", "/ledger")).toBe("/projects");
-  });
-
-  test("halaman turunan material dan filter biaya tetap memakai layar induknya", () => {
-    expect(resolveMobileNotificationRoute("/materials/opening", "/ledger")).toBe("/materials");
-    expect(resolveMobileNotificationRoute("/expenses?filter=NEEDS_VERIFICATION", "/ledger")).toBe(
-      "/expenses",
-    );
-  });
-
-  test("rekonsiliasi jatuh ke dashboard finance, bukan layar tak dikenal", () => {
-    expect(resolveMobileNotificationRoute("/reconciliation", "/ledger")).toBe("/ledger");
-  });
-
-  test("tujuan asing dan URL tidak aman memakai rute cadangan peran", () => {
-    expect(resolveMobileNotificationRoute("/notifications", "/projects")).toBe("/projects");
-    expect(resolveMobileNotificationRoute("/settings/materials", "/materials")).toBe("/materials");
-    expect(resolveMobileNotificationRoute(null, "/expenses")).toBe("/expenses");
-    expect(resolveMobileNotificationRoute("//evil.test/ledger", "/projects")).toBe("/projects");
-    expect(resolveMobileNotificationRoute("https://evil.test/ledger", "/projects")).toBe(
-      "/projects",
-    );
+  test("URL tidak aman tetap memakai rute cadangan", () => {
+    for (const path of [
+      null,
+      "https://evil.invalid/ledger",
+      "//evil.invalid/projects",
+      "/api/trpc",
+    ]) {
+      expect(resolveMobileNotificationRoute(path, "/expenses")).toEqual({
+        kind: "native",
+        href: { pathname: "/expenses" },
+      });
+    }
   });
 });

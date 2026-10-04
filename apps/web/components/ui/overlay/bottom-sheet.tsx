@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useDragControls, useReducedMotion } from "fram
 import type { PanInfo } from "framer-motion";
 
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import {
   calculateBottomSheetMetrics,
   MIN_RESIZE_DISTANCE,
@@ -16,21 +17,10 @@ import { AppIcon } from "@/components/ui/icon/app-icon";
 import { IconButton } from "../button/button";
 import { OverlayLayerProvider } from "./overlay-layer-context";
 import { deactivateOverlay, isTopOverlay, lockBodyScroll, promoteOverlay } from "./overlay-stack";
+import { usePortalContainer } from "./portal-container-context";
 
 const SNAP_DISTANCE = 42;
 const SNAP_VELOCITY = 520;
-
-function subscribeToDocumentBody(): () => void {
-  return () => undefined;
-}
-
-function getDocumentBody(): HTMLElement {
-  return document.body;
-}
-
-function getServerDocumentBody(): null {
-  return null;
-}
 
 export type BottomSheetProps = {
   readonly open: boolean;
@@ -95,6 +85,7 @@ export function BottomSheet({
   onClose,
   onExitComplete,
 }: BottomSheetProps): React.JSX.Element | null {
+  const desktop = useWorkspacePresentation() === "desktop";
   const sheetRef = React.useRef<HTMLElement>(null);
   const handleRef = React.useRef<HTMLButtonElement>(null);
   const headerRef = React.useRef<HTMLElement>(null);
@@ -114,11 +105,7 @@ export function BottomSheet({
   const [footerHeight, setFooterHeight] = useState(0);
   const [contentOverflows, setContentOverflows] = useState(false);
   const [hasMeasured, setHasMeasured] = useState(false);
-  const portalNode = React.useSyncExternalStore(
-    subscribeToDocumentBody,
-    getDocumentBody,
-    getServerDocumentBody,
-  );
+  const portalNode = usePortalContainer();
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -304,7 +291,7 @@ export function BottomSheet({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.08, bottom: 0.04 }}
             onDragEnd={handleDragEnd}
-            className="fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-owner bg-surface-container-low shadow-sheet ring-1 ring-ring-control outline-none"
+            className={`fixed inset-x-0 bottom-0 mx-auto flex w-full ${desktop ? "max-w-3xl" : "max-w-md"} flex-col overflow-hidden rounded-t-owner bg-surface-container-low shadow-sheet ring-1 ring-ring-control outline-none`}
             style={{
               zIndex: zIndex + 1,
               maxHeight: `calc(100dvh - ${SHEET_TOP_GAP}px)`,

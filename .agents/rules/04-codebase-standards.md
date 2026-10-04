@@ -10,17 +10,10 @@ This rule governs coding standards, type safety, server action patterns, and err
 
 ---
 
-## 2. Next.js 16 App Router & Server Actions
-- **Server Actions**:
-  - File convention: place actions in `features/<feature>/actions/` or `lib/actions/`.
-  - Must begin with `"use server";`.
-  - Server actions MUST read and verify the Better Auth session server-side:
-    ```typescript
-    import { getSession } from "@/lib/auth/session";
-    const session = await getSession();
-    if (!session?.user) throw new Error("Unauthorized");
-    ```
-  - Never trust client-provided user IDs or role assertions.
+## 2. API Business Operations and Web Server Actions
+- **Backend operations** live in `apps/api/src/backend/`, use `@backend/*`, validate inputs with Zod and resolve Better Auth sessions/Actors from the current API request. Keep finance/stock transaction bodies entirely inside this process.
+- **Web Server Actions** live in `apps/web/app/actions/` and keep `"use server"` on declared async HTTP wrappers. Use `@/lib/api/backend` (`callBackendAction` for ActionResponse contracts); backend execution and database access remain in the API. Forward the current server-side cookie/bearer credentials, never a user ID or role assertion from client input. Register explicit allowed compatibility operations, or typed tRPC procedures, for new backend behavior.
+- **Web reads/session helpers** use authenticated `no-store` HTTP calls. Next-specific redirects/revalidation stay in web; API emits portable control/invalidation metadata.
 - **Client Components**:
   - Mark only interactive or animation-driven components with `"use client";`. Keep server-rendered shells and layouts wherever possible.
 

@@ -155,11 +155,14 @@ describe("server module architecture", () => {
      * Server Action. Scheduler notifikasi memakai bearer secret tanpa sesi browser.
      * Menambah handler lain adalah keputusan desain, bukan
      * formalitas — perbarui daftar ini hanya bersama alasannya di CLAUDE.md.
+     * Private media forwards session-bound upload tickets and authenticated bytes;
+     * domain authorization/storage stay in the independent API.
      */
     expect(handlers).toEqual([
       "ai/chat/route.ts",
       "auth/[...better-auth]/route.ts",
       "internal/notifications/route.ts",
+      "media/[...path]/route.ts",
       "notifications/stream/route.ts",
       "trpc/[trpc]/route.ts",
     ]);

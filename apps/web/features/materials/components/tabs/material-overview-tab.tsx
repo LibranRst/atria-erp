@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import type {
   MaterialMovementView,
@@ -61,6 +62,7 @@ export function MaterialOverviewTab({
   onDecision,
   onNavigate,
 }: OverviewTabProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [detailTarget, setDetailTarget] = React.useState<ActivityDetailRequest | null>(null);
   const [presentedDecision, setPresentedDecision] = React.useState<PendingDecisionDetail | null>(
     null,
@@ -191,123 +193,124 @@ export function MaterialOverviewTab({
         </div>
       </section>
 
-      <MainSection
-        title="Perlu perhatian"
-        count={attention.length > 0 ? attention.length : undefined}
-        countLabel="Prioritas"
-        meta={attention.length === 0 ? "Terkendali" : undefined}
-      >
-        <GroupedSurface>
-          {attention.length === 0 ? (
-            <InlineStateRow
-              icon="check_circle"
-              title="Tidak ada perhatian mendesak"
-              description="Kebutuhan RAP, batas minimum, dan keputusan stok saat ini terkendali."
-              tone="positive"
-            />
-          ) : (
-            <div className="divide-y divide-black/5.5 px-3">
-              {attention.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => onNavigate(item.tab)}
-                  className="flex min-h-18 w-full items-center gap-3 px-1 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
-                >
-                  <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${attentionIconClass(item.tone)}`}
-                  >
-                    <AppIcon name={item.icon} className="text-[17px]" />
-                  </span>
-                  <span className="grid min-w-0 flex-1 gap-1">
-                    <span className="truncate text-row font-bold text-on-surface">
-                      {item.title}
-                    </span>
-                    <span className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
-                      {item.detail}
-                    </span>
-                  </span>
-                  <span className="shrink-0 font-mono text-row font-black text-on-surface tabular-nums">
-                    {item.value}
-                  </span>
-                  <AppIcon name="chevron_right" className="icon-md shrink-0 text-accent" />
-                </button>
-              ))}
-            </div>
-          )}
-        </GroupedSurface>
-      </MainSection>
-
-      {pendingApprovals > 0 ? (
-        <MainSection title="Perlu keputusan" count={pendingApprovals} countLabel="Keputusan">
+      <div className={desktop ? "grid items-start gap-6 xl:grid-cols-2" : "contents"}>
+        <MainSection
+          title="Perlu perhatian"
+          count={attention.length > 0 ? attention.length : undefined}
+          countLabel="Prioritas"
+          meta={attention.length === 0 ? "Terkendali" : undefined}
+        >
           <GroupedSurface>
-            <div className="divide-y divide-black/5.5">
-              {pendingCounts.map((row) => (
-                <ApprovalRow
-                  key={row.id}
-                  title={row.countNumber}
-                  description={`${row.locationName} · ${row.items.length} material · stock opname`}
-                  detailLabel={`Lihat detail keputusan stock opname ${row.countNumber}`}
-                  onOpen={() =>
-                    openDecisionDetail({
-                      target: { kind: "STOCK_COUNT", id: row.id },
-                      approve: { type: "COUNT_APPROVE", id: row.id },
-                      reject: { type: "COUNT_REJECT", id: row.id },
-                    })
-                  }
-                  onApprove={() => onDecision({ type: "COUNT_APPROVE", id: row.id })}
-                  onReject={() => onDecision({ type: "COUNT_REJECT", id: row.id })}
-                />
-              ))}
-              {pendingReceipts.map((row) => (
-                <ApprovalRow
-                  key={row.id}
-                  title={`Pembatalan ${row.receiptNumber}`}
-                  description={`${row.projectName} · penerimaan akan dikembalikan`}
-                  amount={row.total}
-                  detailLabel={`Lihat detail keputusan pembatalan ${row.receiptNumber}`}
-                  onOpen={() =>
-                    openDecisionDetail({
-                      target: { kind: "GOODS_RECEIPT", id: row.id },
-                      approve: { type: "RECEIPT_APPROVE", id: row.id },
-                      reject: { type: "RECEIPT_REJECT", id: row.id },
-                    })
-                  }
-                  onApprove={() => onDecision({ type: "RECEIPT_APPROVE", id: row.id })}
-                  onReject={() => onDecision({ type: "RECEIPT_REJECT", id: row.id })}
-                />
-              ))}
-            </div>
+            {attention.length === 0 ? (
+              <InlineStateRow
+                icon="check_circle"
+                title="Tidak ada perhatian mendesak"
+                description="Kebutuhan RAP, batas minimum, dan keputusan stok saat ini terkendali."
+                tone="positive"
+              />
+            ) : (
+              <div className="divide-y divide-black/5.5 px-3">
+                {attention.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onNavigate(item.tab)}
+                    className="flex min-h-18 w-full items-center gap-3 px-1 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low/70"
+                  >
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${attentionIconClass(item.tone)}`}
+                    >
+                      <AppIcon name={item.icon} className="text-[17px]" />
+                    </span>
+                    <span className="grid min-w-0 flex-1 gap-1">
+                      <span className="truncate text-row font-bold text-on-surface">
+                        {item.title}
+                      </span>
+                      <span className="truncate text-[10px] leading-[1.3] text-on-surface-variant">
+                        {item.detail}
+                      </span>
+                    </span>
+                    <span className="shrink-0 font-mono text-row font-black text-on-surface tabular-nums">
+                      {item.value}
+                    </span>
+                    <AppIcon name="chevron_right" className="icon-md shrink-0 text-accent" />
+                  </button>
+                ))}
+              </div>
+            )}
           </GroupedSurface>
         </MainSection>
-      ) : null}
 
-      <MainSection
-        title="Aktivitas terbaru"
-        meta={movements.length > 0 ? `${Math.min(movements.length, 5)} terbaru` : undefined}
-        action={
-          movements.length > 0 ? (
-            <SectionAction label="Lihat semua" onClick={() => onNavigate("activity")} />
-          ) : undefined
-        }
-      >
-        <GroupedSurface>
-          {movements.length === 0 ? (
-            <InlineStateRow
-              icon="history"
-              title="Belum ada pergerakan stok"
-              description="Penerimaan, pemakaian, transfer, dan penyesuaian akan muncul di sini."
-            />
-          ) : (
-            <div className="divide-y divide-black/5.5 px-3">
-              {movements.slice(0, 5).map((row) => (
-                <MovementRow key={row.id} row={row} />
-              ))}
-            </div>
-          )}
-        </GroupedSurface>
-      </MainSection>
+        {pendingApprovals > 0 ? (
+          <MainSection title="Perlu keputusan" count={pendingApprovals} countLabel="Keputusan">
+            <GroupedSurface>
+              <div className="divide-y divide-black/5.5">
+                {pendingCounts.map((row) => (
+                  <ApprovalRow
+                    key={row.id}
+                    title={row.countNumber}
+                    description={`${row.locationName} · ${row.items.length} material · stock opname`}
+                    detailLabel={`Lihat detail keputusan stock opname ${row.countNumber}`}
+                    onOpen={() =>
+                      openDecisionDetail({
+                        target: { kind: "STOCK_COUNT", id: row.id },
+                        approve: { type: "COUNT_APPROVE", id: row.id },
+                        reject: { type: "COUNT_REJECT", id: row.id },
+                      })
+                    }
+                    onApprove={() => onDecision({ type: "COUNT_APPROVE", id: row.id })}
+                    onReject={() => onDecision({ type: "COUNT_REJECT", id: row.id })}
+                  />
+                ))}
+                {pendingReceipts.map((row) => (
+                  <ApprovalRow
+                    key={row.id}
+                    title={`Pembatalan ${row.receiptNumber}`}
+                    description={`${row.projectName} · penerimaan akan dikembalikan`}
+                    amount={row.total}
+                    detailLabel={`Lihat detail keputusan pembatalan ${row.receiptNumber}`}
+                    onOpen={() =>
+                      openDecisionDetail({
+                        target: { kind: "GOODS_RECEIPT", id: row.id },
+                        approve: { type: "RECEIPT_APPROVE", id: row.id },
+                        reject: { type: "RECEIPT_REJECT", id: row.id },
+                      })
+                    }
+                    onApprove={() => onDecision({ type: "RECEIPT_APPROVE", id: row.id })}
+                    onReject={() => onDecision({ type: "RECEIPT_REJECT", id: row.id })}
+                  />
+                ))}
+              </div>
+            </GroupedSurface>
+          </MainSection>
+        ) : null}
 
+        <MainSection
+          title="Aktivitas terbaru"
+          meta={movements.length > 0 ? `${Math.min(movements.length, 5)} terbaru` : undefined}
+          action={
+            movements.length > 0 ? (
+              <SectionAction label="Lihat semua" onClick={() => onNavigate("activity")} />
+            ) : undefined
+          }
+        >
+          <GroupedSurface>
+            {movements.length === 0 ? (
+              <InlineStateRow
+                icon="history"
+                title="Belum ada pergerakan stok"
+                description="Penerimaan, pemakaian, transfer, dan penyesuaian akan muncul di sini."
+              />
+            ) : (
+              <div className="divide-y divide-black/5.5 px-3">
+                {movements.slice(0, 5).map((row) => (
+                  <MovementRow key={row.id} row={row} />
+                ))}
+              </div>
+            )}
+          </GroupedSurface>
+        </MainSection>
+      </div>
       <ActivityDetailSheet
         target={detailTarget}
         actions={

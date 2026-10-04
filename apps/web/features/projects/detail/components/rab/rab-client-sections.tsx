@@ -1,6 +1,15 @@
 "use client";
-import { AppIcon, Badge, type BadgeStatus, ConfirmationDialog, MoneyValue } from "@/components/ui";
+import {
+  AppIcon,
+  Badge,
+  type BadgeStatus,
+  ConfirmationDialog,
+  MoneyValue,
+  DesktopTable,
+  Button,
+} from "@/components/ui";
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { motion } from "framer-motion";
 
 import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
@@ -94,7 +103,7 @@ export function RabClientSummaryPanel({
             <button
               type="button"
               onClick={onOpenExport}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-support font-bold text-white ring-1 ring-white/15 transition-transform hover:bg-white/15 active:scale-98"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-support font-bold text-white ring-1 ring-white/15 transition-transform hover:bg-white/15 active:z-10 active:scale-[1.05] active:shadow-raised"
               title="Export Dokumen RAB ke PDF, Gambar WhatsApp, atau Excel"
             >
               <AppIcon name="description" className="text-sm" />
@@ -222,6 +231,7 @@ export function RabItemsPanel({
   readonly sortedRabItems: readonly RabItemView[];
   readonly openCreateBundle: () => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const canBundle =
     canManageRab &&
     rabEstimate.status === "DRAFT" &&
@@ -244,29 +254,138 @@ export function RabItemsPanel({
         ) : undefined
       }
     >
-      <div
-        id="rab-items"
-        className="divide-y divide-outline-variant/25 overflow-hidden rounded-inset bg-surface-container-low"
-      >
-        {rabEstimate.bundles.map((bundle) => (
-          <RabBundleRow
-            key={bundle.id}
-            bundle={bundle}
-            isDraft={rabEstimate.status === "DRAFT"}
-            openEditBundle={openEditBundle}
+      {desktop ? (
+        <div id="rab-items" className="space-y-4">
+          {rabEstimate.bundles.length > 0 ? (
+            <DesktopTable
+              ariaLabel="Paket RAB klien"
+              rows={rabEstimate.bundles}
+              rowKey={(bundle) => bundle.id}
+              columns={[
+                {
+                  key: "bundle",
+                  label: "Paket",
+                  render: (bundle) => (
+                    <div>
+                      <p className="font-semibold">{bundle.clientLabel}</p>
+                      <p className="text-meta text-on-surface-variant">{bundle.description}</p>
+                    </div>
+                  ),
+                },
+                {
+                  key: "qty",
+                  label: "Jumlah",
+                  align: "end",
+                  render: (bundle) => `${bundle.quantity} ${bundle.unit}`,
+                },
+                {
+                  key: "price",
+                  label: "Harga satuan",
+                  align: "end",
+                  render: (bundle) => (
+                    <MoneyValue amount={Number(bundle.unitPrice)} variant="compact" size="sm" />
+                  ),
+                },
+                {
+                  key: "total",
+                  label: "Total",
+                  align: "end",
+                  render: (bundle) => (
+                    <MoneyValue amount={Number(bundle.lineTotal)} variant="compact" size="sm" />
+                  ),
+                },
+                {
+                  key: "display",
+                  label: "Tampilan",
+                  render: (bundle) => (bundle.isHidden ? "Disembunyikan" : "Tampil ke klien"),
+                },
+                {
+                  key: "action",
+                  label: "Tindakan",
+                  render: (bundle) =>
+                    rabEstimate.status === "DRAFT" && canManageRab ? (
+                      <Button variant="secondary" onClick={() => openEditBundle(bundle)}>
+                        Edit paket
+                      </Button>
+                    ) : null,
+                },
+              ]}
+            />
+          ) : null}
+          <DesktopTable
+            ariaLabel="Item RAB klien"
+            rows={sortedRabItems.filter((item) => !item.bundleId)}
+            rowKey={(item) => item.id}
+            onRowAction={(item) => setRabItemEditorId(item.id)}
+            columns={[
+              {
+                key: "item",
+                label: "Item",
+                render: (item) => (
+                  <div>
+                    <p className="font-semibold">{item.clientLabel}</p>
+                    <p className="text-meta text-on-surface-variant">{item.description}</p>
+                  </div>
+                ),
+              },
+              {
+                key: "qty",
+                label: "Jumlah",
+                align: "end",
+                render: (item) => `${item.quantity} ${item.unit}`,
+              },
+              {
+                key: "price",
+                label: "Harga satuan",
+                align: "end",
+                render: (item) => (
+                  <MoneyValue amount={Number(item.unitPrice)} variant="compact" size="sm" />
+                ),
+              },
+              {
+                key: "total",
+                label: "Total",
+                align: "end",
+                render: (item) => (
+                  <MoneyValue amount={Number(item.lineTotal)} variant="compact" size="sm" />
+                ),
+              },
+              {
+                key: "display",
+                label: "Tampilan",
+                render: (item) => (item.isHidden ? "Disembunyikan" : "Tampil ke klien"),
+              },
+            ]}
           />
-        ))}
-        {sortedRabItems
-          .filter((item) => !item.bundleId)
-          .map((item) => (
-            <RabItemRow key={item.id} item={item} setRabItemEditorId={setRabItemEditorId} />
-          ))}
-        {rabEstimate.items.length === 0 && (
-          <div className="rounded-2xl bg-surface-container-low p-md text-center text-xs text-on-surface-variant">
-            Belum ada item RAB.
+        </div>
+      ) : (
+        <>
+          {" "}
+          <div
+            id="rab-items"
+            className="divide-y divide-outline-variant/25 overflow-hidden rounded-inset bg-surface-container-low"
+          >
+            {rabEstimate.bundles.map((bundle) => (
+              <RabBundleRow
+                key={bundle.id}
+                bundle={bundle}
+                isDraft={rabEstimate.status === "DRAFT"}
+                openEditBundle={openEditBundle}
+              />
+            ))}
+            {sortedRabItems
+              .filter((item) => !item.bundleId)
+              .map((item) => (
+                <RabItemRow key={item.id} item={item} setRabItemEditorId={setRabItemEditorId} />
+              ))}
+            {rabEstimate.items.length === 0 && (
+              <div className="rounded-2xl bg-surface-container-low p-md text-center text-xs text-on-surface-variant">
+                Belum ada item RAB.
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
       {canBundle && (
         <button
           type="button"
@@ -349,23 +468,23 @@ export function RabDraftActionsPanel({
           <div className="grid grid-cols-2 gap-2">
             <motion.button
               type="button"
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 1.05 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmApprove(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:z-10 active:shadow-raised"
             >
               Kembali
             </motion.button>
             <motion.button
               type="button"
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 1.05 }}
               transition={transitionSpringSnappy}
               disabled={isPending}
               onClick={() => {
                 setConfirmApprove(false);
                 handleApproveRab();
               }}
-              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white disabled:opacity-40"
+              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white outline-none active:z-10 active:shadow-raised disabled:opacity-40"
             >
               Setujui RAB
             </motion.button>

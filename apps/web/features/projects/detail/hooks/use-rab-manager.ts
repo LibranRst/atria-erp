@@ -1,5 +1,6 @@
 "use client";
 
+import { usePermissions } from "@/components/auth/permissions-provider";
 import type {
   RapView,
   ChangeOrderHistoryView,
@@ -28,11 +29,11 @@ export function useRabManager({
   projectId,
   rap,
   rabEstimate,
-  userRole,
   categoryPlanItems,
   baselineApprovedRabId,
   revisionHistory,
 }: UseRabManagerProps) {
+  const permissions = usePermissions();
   const forms = useRabManagerForms({ rap, rabEstimate, categoryPlanItems });
   const {
     rabDraftEdits,
@@ -87,7 +88,7 @@ export function useRabManager({
     selectedQuotationSourceCount,
     sortedRabItems,
   } = getRabManagerDerivedValues({
-    userRole,
+    permissions,
     rabEstimate,
     revisionHistory,
     selectedRapQuotationIds,

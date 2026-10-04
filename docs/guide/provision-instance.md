@@ -121,3 +121,7 @@ Diverifikasi lebih jauh: `getCompanyIdentity()` mengembalikan nama vendor, baris
 pertama system prompt AI menyebut vendor itu dan tidak menyebut Dekoria sama
 sekali, ketujuh loader halaman berjalan, dan menjalankan ulang `db:provision`
 terhadap instance yang sudah berisi ditolak.
+
+## Independent API deployment
+
+After provisioning, configure the API's database/auth/bridge/bootstrap secrets and explicit HTTPS API/web origins. The Next frontend receives only its API origin/bridge credential and public client settings. Follow [free boss pilot](free-boss-pilot.md) for the Netlify/Render pilot, provider approval, cutoff, backup/restore and scheduler setup. The legacy Vercel guide does not describe this extracted backend topology.

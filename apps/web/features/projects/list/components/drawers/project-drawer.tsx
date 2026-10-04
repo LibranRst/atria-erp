@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { createProjectAction, updateProjectAction } from "@/app/actions/project/crud";
 import { uploadToImageKit } from "@/lib/media/upload-to-imagekit";
 import { getErrorMessage } from "@atria/core/utils/error-message";

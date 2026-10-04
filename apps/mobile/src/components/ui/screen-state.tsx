@@ -1,19 +1,22 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { AppIcon } from "./app-icon";
+import { Button } from "./button";
+import { SkeletonBlock, SkeletonBusy } from "./loading-skeletons";
 import { theme } from "@/theme";
 
 export function ScreenSkeleton({ rows = 4 }: { readonly rows?: number }): React.JSX.Element {
   return (
-    <View accessibilityLabel="Memuat data" style={styles.skeletonScreen}>
-      <View style={styles.skeletonTitle} />
-      <View style={styles.skeletonSummary} />
+    <SkeletonBusy>
       <View style={styles.skeletonSurface}>
         {Array.from({ length: rows }, (_, index) => (
-          <View key={index} style={[styles.skeletonRow, index > 0 && styles.divider]} />
+          <View key={index} style={[styles.skeletonRow, index > 0 && styles.divider]}>
+            <SkeletonBlock width="68%" height={14} />
+            <SkeletonBlock width="44%" height={11} />
+          </View>
         ))}
       </View>
-    </View>
+    </SkeletonBusy>
   );
 }
 
@@ -38,33 +41,26 @@ export function ScreenMessage({
       <Text style={styles.messageTitle}>{title}</Text>
       <Text style={styles.messageDescription}>{description}</Text>
       {onAction ? (
-        <Pressable accessibilityRole="button" onPress={onAction} style={styles.retry}>
-          <Text style={styles.retryLabel}>{actionLabel}</Text>
-        </Pressable>
+        <Button variant="ghost" onPress={onAction} style={styles.retry}>
+          {actionLabel}
+        </Button>
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  skeletonScreen: { flex: 1, gap: theme.spacing.lg, padding: theme.spacing.marginMobile },
-  skeletonTitle: {
-    width: "52%",
-    height: 28,
-    borderRadius: theme.radii.inset,
-    backgroundColor: theme.colors.surfaceContainerHigh,
-  },
-  skeletonSummary: {
-    height: 144,
-    borderRadius: theme.radii.owner,
-    backgroundColor: theme.colors.surfaceContainer,
-  },
   skeletonSurface: {
     overflow: "hidden",
     borderRadius: theme.radii.owner,
     backgroundColor: theme.colors.surfaceContainerLowest,
   },
-  skeletonRow: { height: 64 },
+  skeletonRow: {
+    minHeight: 64,
+    justifyContent: "center",
+    gap: theme.spacing.xs,
+    padding: theme.spacing.md,
+  },
   divider: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: theme.colors.outlineVariant,
@@ -96,6 +92,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     ...theme.typography.support,
   },
-  retry: { minHeight: 48, justifyContent: "center", paddingHorizontal: theme.spacing.md },
-  retryLabel: { color: theme.colors.accent, fontFamily: theme.fonts.bold, ...theme.typography.row },
+  retry: { minHeight: 48, width: "100%", maxWidth: 240 },
 });

@@ -1,5 +1,7 @@
 "use client";
 
+import { Input as HeroInput, TextArea as HeroTextArea, Switch as HeroSwitch } from "@heroui/react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import React from "react";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import { motion } from "framer-motion";
@@ -212,6 +214,7 @@ export function TextInput({
   const resolvedDescribedBy = mergeAriaIds(ariaDescribedBy, association?.describedBy);
   const resolvedInvalid = ariaInvalid ?? association?.invalid;
   const resolvedRequired = required ?? association?.required;
+  const InputControl = useWorkspacePresentation() === "desktop" ? HeroInput : "input";
   const grouped = useFormPresentation() === "grouped";
   return (
     <div
@@ -227,7 +230,7 @@ export function TextInput({
       {prefix && (
         <span className="shrink-0 text-xs font-bold text-on-surface-variant">{prefix}</span>
       )}
-      <input
+      <InputControl
         id={resolvedId}
         name={name}
         type={type}
@@ -245,7 +248,7 @@ export function TextInput({
         readOnly={readOnly}
         required={resolvedRequired}
         inputMode={inputMode}
-        className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-on-surface caret-accent outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed"
+        className="atria-embedded-field min-w-0 flex-1 bg-transparent text-sm font-semibold text-on-surface caret-accent outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed"
       />
       {suffix && (
         <span className="shrink-0 text-xs font-bold text-on-surface-variant">{suffix}</span>
@@ -290,9 +293,10 @@ export function Textarea({
   const resolvedDescribedBy = mergeAriaIds(ariaDescribedBy, association?.describedBy);
   const resolvedInvalid = ariaInvalid ?? association?.invalid;
   const resolvedRequired = required ?? association?.required;
+  const TextareaControl = useWorkspacePresentation() === "desktop" ? HeroTextArea : "textarea";
   const grouped = useFormPresentation() === "grouped";
   return (
-    <textarea
+    <TextareaControl
       id={resolvedId}
       name={name}
       rows={rows}
@@ -672,6 +676,7 @@ export function SwitchRow({
   readonly switchLabel?: string;
   readonly className?: string;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const grouped = useFormPresentation() === "grouped";
   return (
     <div
@@ -691,30 +696,46 @@ export function SwitchRow({
         )}
       </div>
       {trailing ? <span className="shrink-0">{trailing}</span> : null}
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={switchLabel ?? title}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
-        /*
-         * Sakelarnya digambar 44×24, tetapi area sentuhnya dilebarkan lewat
-         * `after:` menjadi 52×48 sesuai aturan target sentuh 48 px. Tanpa ini
-         * ia jadi kontrol tersulit disentuh di aplikasi — dan layar peran
-         * menampilkan 71 di antaranya.
-         */
-        className={cx(
-          "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 after:absolute after:-inset-x-1 after:-inset-y-3 after:content-[''] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-          checked ? "bg-success" : "bg-surface-container-high",
-        )}
-      >
-        <motion.span
-          transition={transitionSpringBouncy}
-          className="absolute top-0.5 left-0.5 block h-5 w-5 rounded-full bg-white shadow-control"
-          animate={{ x: checked ? 20 : 0 }}
-        />
-      </button>
+      {desktop ? (
+        <HeroSwitch
+          isSelected={checked}
+          onChange={onChange}
+          isDisabled={disabled}
+          aria-label={switchLabel ?? title}
+          className="atria-desktop-switch shrink-0"
+        >
+          <HeroSwitch.Content aria-label={switchLabel ?? title}>
+            <HeroSwitch.Control>
+              <HeroSwitch.Thumb />
+            </HeroSwitch.Control>
+          </HeroSwitch.Content>
+        </HeroSwitch>
+      ) : (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          aria-label={switchLabel ?? title}
+          disabled={disabled}
+          onClick={() => onChange(!checked)}
+          /*
+           * Sakelarnya digambar 44×24, tetapi area sentuhnya dilebarkan lewat
+           * `after:` menjadi 52×48 sesuai aturan target sentuh 48 px. Tanpa ini
+           * ia jadi kontrol tersulit disentuh di aplikasi — dan layar peran
+           * menampilkan 71 di antaranya.
+           */
+          className={cx(
+            "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 after:absolute after:-inset-x-1 after:-inset-y-3 after:content-[''] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+            checked ? "bg-success" : "bg-surface-container-high",
+          )}
+        >
+          <motion.span
+            transition={transitionSpringBouncy}
+            className="absolute top-0.5 left-0.5 block h-5 w-5 rounded-full bg-white shadow-control"
+            animate={{ x: checked ? 20 : 0 }}
+          />
+        </button>
+      )}
     </div>
   );
 }

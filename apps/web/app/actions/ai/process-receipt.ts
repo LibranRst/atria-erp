@@ -1,25 +1,13 @@
 "use server";
 
-import { resolveActor } from "@/server/actor";
-import { processReceiptUseCase, type ParsedReceipt } from "@/server/usecases/ai/process-receipt";
-import type { ActionResponse } from "@atria/core/types/action-response";
+import { callBackendAction } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/ai/process-receipt";
 
-/**
- * Pembungkus Server Action untuk OCR nota.
- *
- * Actor selalu dibaca dari sesi server. Klien native memakai prosedur tRPC
- * yang menyelesaikan actor dari bearer token lalu memanggil use-case yang sama.
- */
 export async function processReceipt(
-  receiptImageUrl: string,
-): Promise<ActionResponse<ParsedReceipt>> {
-  const actor = await resolveActor();
-  if (!actor) {
-    return {
-      success: false,
-      error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." },
-    };
-  }
-
-  return processReceiptUseCase(actor, receiptImageUrl);
+  ...args: WebRpcArgs<"app/actions/ai/process-receipt.processReceipt">
+): Promise<WebRpcResult<"app/actions/ai/process-receipt.processReceipt">> {
+  return callBackendAction("app/actions/ai/process-receipt.processReceipt", args, {
+    allowCookieWrites: true,
+  });
 }

@@ -29,7 +29,7 @@ export function BudgetEmptyState({
           type="button"
           onClick={onCreateBudget}
           disabled={isPending}
-          className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-6 text-xs font-bold text-white shadow-primary transition active:scale-[0.98] disabled:opacity-50"
+          className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-6 text-xs font-bold text-white shadow-primary transition active:scale-[1.05] active:shadow-raised active:z-10 disabled:opacity-50"
         >
           {isPending ? (
             <span className="animate-pulse">Membuat Draf...</span>

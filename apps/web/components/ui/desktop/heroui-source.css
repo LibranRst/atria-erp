@@ -1,0 +1,200 @@
+/* Compiled and scoped by scripts/build-heroui-styles.ts; never import directly. */
+@reference "../../../app/globals.css";
+@import "tw-animate-css";
+@import "@heroui/styles/utilities";
+@import "@heroui/styles/components/button.css" layer(components);
+@import "@heroui/styles/components/input.css" layer(components);
+@import "@heroui/styles/components/textfield.css" layer(components);
+@import "@heroui/styles/components/label.css" layer(components);
+@import "@heroui/styles/components/description.css" layer(components);
+@import "@heroui/styles/components/field-error.css" layer(components);
+@import "@heroui/styles/components/select.css" layer(components);
+@import "@heroui/styles/components/list-box.css" layer(components);
+@import "@heroui/styles/components/list-box-item.css" layer(components);
+@import "@heroui/styles/components/table.css" layer(components);
+@import "@heroui/styles/components/avatar.css" layer(components);
+@import "@heroui/styles/components/tabs.css" layer(components);
+@import "@heroui/styles/components/link.css" layer(components);
+@import "@heroui/styles/components/dropdown.css" layer(components);
+@import "@heroui/styles/components/popover.css" layer(components);
+@import "@heroui/styles/components/switch.css" layer(components);
+@import "@heroui/styles/components/textarea.css" layer(components);
+
+/* Only missing aliases: existing Atria theme names remain authoritative. */
+@theme inline {
+  --color-link: var(--primary);
+  --color-default-soft: var(--surface-container-low);
+  --color-default-soft-foreground: var(--on-surface);
+  --color-success-soft: var(--surface-container-low);
+  --color-success-soft-foreground: var(--on-surface);
+  --color-warning-soft: var(--accent-container);
+  --color-warning-soft-foreground: var(--warning-on-container);
+  --color-segment: var(--primary);
+  --color-segment-foreground: var(--on-primary);
+  --color-surface-foreground: var(--on-surface);
+  --color-surface-secondary: var(--surface-container-low);
+  --color-overlay: var(--surface-container-lowest);
+  --color-overlay-foreground: var(--on-surface);
+  --color-default: var(--surface-container-low);
+  --color-default-hover: var(--surface-container);
+  --color-default-foreground: var(--on-surface);
+  --color-accent-foreground: var(--on-accent);
+  --color-accent-soft: var(--accent-container);
+  --color-accent-soft-foreground: var(--warning-on-container);
+  --color-danger: var(--critical);
+  --color-danger-foreground: var(--on-critical);
+  --color-danger-soft: var(--critical-container);
+  --color-danger-soft-foreground: var(--critical);
+  --color-separator: var(--ring-control);
+  --color-separator-tertiary: var(--ring-control);
+  --color-focus: var(--focus-ring-strong);
+  --color-field: var(--surface-container-lowest);
+  --color-field-foreground: var(--on-surface);
+  --color-field-placeholder: var(--muted);
+  --color-field-hover: var(--surface-container-lowest);
+  --color-field-border: var(--ring-control);
+  --radius-field: 9999px;
+  --shadow-field: var(--shadow-control);
+  --ease-smooth: var(--ease-out);
+}
+
+[data-atria-admin] {
+  --accent-foreground: var(--on-accent);
+  --accent-hover: var(--accent);
+  --accent-soft-foreground: var(--warning-on-container);
+  --default: var(--surface-container-low);
+  --default-hover: var(--surface-container);
+  --default-foreground: var(--on-surface);
+  --danger: var(--critical);
+  --danger-hover: var(--critical);
+  --danger-foreground: var(--on-critical);
+  --danger-soft: var(--critical-container);
+  --danger-soft-hover: var(--critical-container);
+  --danger-soft-foreground: var(--critical);
+  --overlay: var(--surface-container-lowest);
+  --overlay-shadow: var(--shadow-floating);
+  --focus: var(--focus-ring-strong);
+  --field-background: var(--surface-container-lowest);
+  --field-focus: var(--surface-container-lowest);
+  --field-border: var(--ring-control);
+  --field-border-hover: var(--ring-control);
+  --field-border-focus: var(--focus-ring-strong);
+  --border-width-field: 0px;
+  --disabled-opacity: 0.5;
+  --cursor-interactive: pointer;
+  --cursor-disabled: not-allowed;
+  --ring-offset-width: 2px;
+  --radius: 8px;
+  --scrollbar-width: auto;
+  --scrollbar-color: auto;
+  --scrollbar-gutter: auto;
+}
+
+@layer components {
+  .atria-desktop-button {
+    @apply min-h-12 px-5 font-semibold;
+    border-radius: 9999px;
+    --button-bg: var(--primary);
+    --button-bg-hover: var(--primary-container);
+    --button-fg: var(--on-primary);
+  }
+  .atria-desktop-button[data-atria-variant="secondary"] {
+    --button-bg: var(--surface-container-lowest);
+    --button-bg-hover: var(--surface-container-low);
+    --button-fg: var(--on-surface);
+    @apply shadow-control;
+  }
+  .atria-desktop-button[data-atria-variant="tertiary"] {
+    --button-bg: var(--surface-container-low);
+    --button-bg-hover: var(--surface-container);
+    --button-fg: var(--on-surface);
+  }
+  .atria-desktop-button[data-atria-variant="critical"] {
+    --button-bg: var(--critical);
+    --button-bg-hover: var(--critical);
+    --button-fg: var(--on-critical);
+  }
+  .atria-desktop-button[data-atria-variant="criticalQuiet"] {
+    --button-bg: var(--critical-container);
+    --button-bg-hover: var(--critical-container);
+    --button-fg: var(--critical);
+  }
+  .atria-desktop-input,
+  .atria-desktop-select-trigger {
+    @apply min-h-12 px-5;
+    border-radius: 9999px;
+  }
+  .list-box-item {
+    @apply min-h-12;
+    border-radius: 9999px;
+  }
+  .list-box-item[data-selected="true"] {
+    @apply text-accent;
+  }
+  .atria-desktop-table .table__column {
+    @apply min-h-12 py-4 font-semibold;
+  }
+}
+
+@layer components {
+  .atria-desktop-avatar,
+  .atria-desktop-avatar .avatar__fallback,
+  .atria-desktop-avatar .avatar__image {
+    border-radius: 9999px;
+  }
+  .atria-desktop-avatar .avatar__fallback {
+    background-color: var(--primary);
+    color: var(--on-primary);
+  }
+  .atria-desktop-tabs {
+    width: fit-content;
+    max-width: 100%;
+    --segment: var(--primary);
+    --segment-foreground: var(--on-primary);
+  }
+  .atria-desktop-tabs .tabs__list {
+    min-width: 0;
+    max-width: 100%;
+    background-color: var(--surface-container);
+    border-radius: 9999px;
+  }
+  .atria-desktop-tabs .tabs__tab {
+    @apply h-12 min-h-12 w-auto shrink-0 gap-2;
+    border-radius: 9999px;
+  }
+  .atria-desktop-tabs .tabs__tab-indicator {
+    border-radius: 9999px;
+  }
+  .atria-desktop-switch .switch__control {
+    @apply min-w-11;
+  }
+  .atria-desktop-switch .switch__content {
+    @apply min-h-12 min-w-12;
+  }
+  .atria-desktop-table {
+    --radius: calc(var(--radius-owner) / 2.5);
+  }
+}
+
+@layer components {
+  .atria-embedded-field {
+    @apply border-0 bg-transparent p-0 shadow-none focus-visible:shadow-none focus-visible:ring-0;
+  }
+}
+
+@layer components {
+  .atria-desktop-menu {
+    @apply rounded-owner shadow-raised;
+  }
+  .atria-desktop-menu .dropdown__item {
+    @apply min-h-12;
+    border-radius: 9999px;
+  }
+}
+
+@layer components {
+  .atria-grouped-select .atria-desktop-select-trigger {
+    @apply border-0 bg-transparent px-0 shadow-none focus-visible:ring-0;
+    border-radius: 0;
+  }
+}

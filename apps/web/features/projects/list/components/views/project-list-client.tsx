@@ -2,7 +2,19 @@
 
 import React, { useMemo, useState } from "react";
 import { ProjectDrawer } from "../drawers/project-drawer";
-import type { SearchFilterMode } from "@/components/ui";
+import {
+  DesktopTable,
+  MoneyValue,
+  StatusBadge,
+  Button,
+  ButtonLink,
+  type SearchFilterMode,
+} from "@/components/ui";
+import {
+  useWorkspacePresentation,
+  useWorkspaceHref,
+} from "@/lib/navigation/workspace-presentation";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { updateUrlSearchParam, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { usePreservedScrollHeight } from "@/lib/hooks/use-preserved-scroll-height";
 import { ProjectListCard } from "../cards/project-list-card";
@@ -33,6 +45,8 @@ export function ProjectListClient({
   users,
   isAllowedToCreate,
 }: ProjectListClientProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const workspaceHref = useWorkspaceHref();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -128,19 +142,137 @@ export function ProjectListClient({
         ) : (
           <section aria-labelledby="project-list-title">
             <ProjectListSectionHeader count={filteredProjects.length} />
-            <div className="mt-2.5 space-y-3">
-              {filteredProjects.map((project) => (
-                <ProjectListCard
-                  key={project.id}
-                  project={project}
-                  isAllowedToCreate={isAllowedToCreate}
-                  onEdit={(selectedProject) => {
-                    setEditingProject(selectedProject);
-                    setIsDrawerOpen(true);
-                  }}
-                />
-              ))}
-            </div>
+            {desktop ? (
+              <DesktopTable
+                ariaLabel="Perbandingan budget proyek"
+                rows={filteredProjects}
+                rowKey={(project) => project.id}
+                rowHref={(project) => workspaceHref(`/projects/${project.id}`)}
+                columns={[
+                  {
+                    key: "project",
+                    sortValue: (project) => project.name,
+                    label: "Proyek",
+                    render: (project) => (
+                      <div>
+                        <p className="font-semibold">{project.name}</p>
+                        <p className="text-meta text-on-surface-variant">
+                          {project.clientName} · {project.pmName}
+                        </p>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: "value",
+                    sortValue: (project) => project.totalContractValue,
+                    label: "Nilai proyek",
+                    align: "end",
+                    render: (project) => (
+                      <MoneyValue amount={project.totalContractValue} variant="compact" size="sm" />
+                    ),
+                  },
+                  {
+                    key: "budget",
+                    sortValue: (project) => project.internalBudget,
+                    label: "Budget",
+                    align: "end",
+                    render: (project) => (
+                      <MoneyValue amount={project.internalBudget} variant="compact" size="sm" />
+                    ),
+                  },
+                  {
+                    key: "actual",
+                    sortValue: (project) => project.actualCost,
+                    label: "Terpakai",
+                    align: "end",
+                    render: (project) => (
+                      <MoneyValue amount={project.actualCost} variant="compact" size="sm" />
+                    ),
+                  },
+                  {
+                    key: "remaining",
+                    sortValue: (project) => project.remainingBudget,
+                    label: "Sisa budget",
+                    align: "end",
+                    render: (project) => (
+                      <MoneyValue
+                        amount={project.remainingBudget}
+                        variant="compact"
+                        size="sm"
+                        tone={project.remainingBudget < 0 ? "danger" : "default"}
+                      />
+                    ),
+                  },
+                  {
+                    key: "health",
+                    label: "Kondisi",
+                    render: (project) => (
+                      <div className="space-y-1">
+                        <StatusBadge
+                          tone={
+                            project.effectiveHealth === "CRITICAL"
+                              ? "critical"
+                              : project.effectiveHealth === "WARNING"
+                                ? "warning"
+                                : "healthy"
+                          }
+                          label={
+                            project.effectiveHealth === "CRITICAL"
+                              ? "Kritis"
+                              : project.effectiveHealth === "WARNING"
+                                ? "Perhatian"
+                                : "Terkendali"
+                          }
+                        />
+                        <p className="text-meta text-on-surface-variant">
+                          {formatBusinessLabel(project.status)} ·{" "}
+                          {project.usedPercentage.toFixed(1)}%
+                        </p>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: "action",
+                    label: "Tindakan",
+                    render: (project) => (
+                      <div className="flex gap-2">
+                        <ButtonLink
+                          href={workspaceHref(`/projects/${project.id}`)}
+                          variant="secondary"
+                        >
+                          Buka
+                        </ButtonLink>
+                        {isAllowedToCreate ? (
+                          <Button
+                            variant="tertiary"
+                            onClick={() => {
+                              setEditingProject(project);
+                              setIsDrawerOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        ) : null}
+                      </div>
+                    ),
+                  },
+                ]}
+              />
+            ) : (
+              <div className="mt-2.5 space-y-3">
+                {filteredProjects.map((project) => (
+                  <ProjectListCard
+                    key={project.id}
+                    project={project}
+                    isAllowedToCreate={isAllowedToCreate}
+                    onEdit={(selectedProject) => {
+                      setEditingProject(selectedProject);
+                      setIsDrawerOpen(true);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
       </div>

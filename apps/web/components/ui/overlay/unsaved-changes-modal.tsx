@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { ConfirmationDialog } from "@/components/ui/overlay/dialogs";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { buttonTapActiveScale, transitionSpringSnappy } from "@/lib/utils/motion";
 
 /**
  * Konfirmasi tiga pilihan saat pengguna menutup form yang belum selesai:
@@ -39,6 +39,7 @@ export function UnsavedChangesModal({
   readonly onDiscard: () => void;
   readonly onContinue: () => void;
 }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
   return (
     <ConfirmationDialog
       open={open}
@@ -50,32 +51,32 @@ export function UnsavedChangesModal({
         <div className="space-y-2">
           <motion.button
             type="button"
-            whileTap={{ scale: 0.97 }}
+            whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
             transition={transitionSpringSnappy}
             disabled={pending}
             onClick={onKeep}
-            className="min-h-12 w-full rounded-full bg-primary px-5 text-sm font-bold text-white disabled:opacity-45"
+            className="min-h-12 w-full rounded-full bg-primary px-5 text-sm font-bold text-white outline-none active:shadow-raised active:z-10 disabled:opacity-45"
           >
             {pending ? keepPendingLabel : keepLabel}
           </motion.button>
           <div className="grid grid-cols-2 gap-2">
             <motion.button
               type="button"
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
               transition={transitionSpringSnappy}
               disabled={pending}
               onClick={onDiscard}
-              className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error disabled:opacity-45"
+              className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error outline-none active:shadow-raised active:z-10 disabled:opacity-45"
             >
               Buang Perubahan
             </motion.button>
             <motion.button
               type="button"
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
               transition={transitionSpringSnappy}
               disabled={pending}
               onClick={onContinue}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface disabled:opacity-45"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface outline-none active:shadow-raised active:z-10 disabled:opacity-45"
             >
               Lanjut Mengisi
             </motion.button>

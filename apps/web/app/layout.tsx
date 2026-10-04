@@ -1,7 +1,7 @@
 import { NotificationsProvider } from "@/features/notifications";
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
-import { MobileShell } from "@/components/layout/mobile-shell";
+import { WorkspaceShell } from "@/components/layout/workspace-shell";
 import { PwaRegistrar } from "@/components/layout/pwa-registrar";
 import { PermissionsProvider } from "@/components/auth/permissions-provider";
 import { resolveActor } from "@/server/actor";
@@ -83,14 +83,16 @@ export default async function RootLayout({
    * dan daftar kosong di sana memang jawaban yang benar.
    */
   const actor = await resolveActor();
-  const initialUser = actor ? { name: actor.name, image: actor.image ?? null } : null;
+  const initialUser = actor
+    ? { id: actor.userId, name: actor.name, image: actor.image ?? null }
+    : null;
 
   return (
     <html lang="id" className={`${manrope.variable} ${jetbrains.variable} h-full antialiased`}>
       <body className="min-h-full bg-background font-sans text-[16px] font-normal text-on-surface">
         <PermissionsProvider permissions={actor?.permissions ?? []} user={initialUser}>
           <NotificationsProvider>
-            <MobileShell>{children}</MobileShell>
+            <WorkspaceShell>{children}</WorkspaceShell>
           </NotificationsProvider>
         </PermissionsProvider>
         <PwaRegistrar />

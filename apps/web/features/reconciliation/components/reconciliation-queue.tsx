@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+
 import type {
   ReconciliationCashTransaction,
   ReconciliationStatementRow,
@@ -7,6 +9,7 @@ import type {
 } from "@/app/actions/finance/reconciliation-workspace";
 import {
   AppIcon,
+  SectionHeader,
   GroupedSurface,
   SegmentedTabs,
   SummaryFact,
@@ -50,6 +53,7 @@ export function ReconciliationQueue({
   onOpenSuggestedMatch,
   onSelectHistory,
 }: ReconciliationQueueProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const actionableCashTransactions = data.cashTransactions.filter(cashTransactionNeedsAction);
   const passiveCashTransactions = data.cashTransactions.filter(
     (item) => !cashTransactionNeedsAction(item),
@@ -188,7 +192,7 @@ export function ReconciliationQueue({
                   : "Mutasi yang memiliki kandidat ditampilkan lebih dahulu."}
             </p>
           </div>
-          {activeView === "statement" ? (
+          {activeView === "statement" || (desktop && activeView !== "history") ? (
             <button
               type="button"
               onClick={onOpenImport}
@@ -215,6 +219,41 @@ export function ReconciliationQueue({
                 ))
               )}
             </GroupedSurface>
+          ) : desktop ? (
+            <div className="grid items-start gap-6 xl:grid-cols-2">
+              <section aria-label="Mutasi bank" className="min-w-0 space-y-3">
+                <SectionHeader
+                  title="Mutasi bank"
+                  count={data.statementRows.length}
+                  countLabel="Mutasi"
+                />
+                <GroupedSurface className="divide-y divide-outline-variant/35">
+                  {data.statementRows.length === 0 ? (
+                    <ReconciliationEmptyState kind="statement" />
+                  ) : (
+                    [...actionableStatementRows, ...passiveStatementRows].map((item) =>
+                      renderStatementRow(item),
+                    )
+                  )}
+                </GroupedSurface>
+              </section>
+              <section aria-label="Catatan Atria" className="min-w-0 space-y-3">
+                <SectionHeader
+                  title="Catatan Atria"
+                  count={data.cashTransactions.length}
+                  countLabel="Catatan"
+                />
+                <GroupedSurface className="divide-y divide-outline-variant/35">
+                  {data.cashTransactions.length === 0 ? (
+                    <ReconciliationEmptyState kind="cash" />
+                  ) : (
+                    [...actionableCashTransactions, ...passiveCashTransactions].map((item) =>
+                      renderCashRow(item),
+                    )
+                  )}
+                </GroupedSurface>
+              </section>
+            </div>
           ) : activeView === "cash" ? (
             data.cashTransactions.length === 0 ? (
               <GroupedSurface className="divide-y divide-black/5.5">

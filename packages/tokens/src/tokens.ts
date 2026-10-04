@@ -100,6 +100,65 @@ export const shadows = {
   overlay: "0 28px 90px rgb(0 0 0 / 0.32)",
 } as const;
 
+export const nativeShadows = {
+  surface: {
+    shadowColor: "#181817",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  control: {
+    shadowColor: "#181817",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  primary: {
+    shadowColor: "#181817",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.14,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  inverse: {
+    shadowColor: "#181817",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.14,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  raised: {
+    shadowColor: "#181817",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.09,
+    shadowRadius: 14,
+    elevation: 14,
+  },
+  floating: {
+    shadowColor: "#181817",
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.18,
+    shadowRadius: 17,
+    elevation: 17,
+  },
+  sheet: {
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: -24 },
+    shadowOpacity: 0.28,
+    shadowRadius: 40,
+    elevation: 40,
+  },
+  overlay: {
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 28 },
+    shadowOpacity: 0.32,
+    shadowRadius: 45,
+    elevation: 45,
+  },
+} as const;
+
 export const typography = {
   eyebrow: { fontSize: 9, lineHeight: 12 },
   meta: { fontSize: 10, lineHeight: 15 },

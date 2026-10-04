@@ -2,7 +2,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { toast } from "sonner";
 
 import { postGoodsReceipt } from "@/app/actions/material/goods-receipt";
@@ -13,8 +14,8 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
-  type OperationSuccess,
   OperationSuccessDialog,
+  type OperationSuccess,
   AdaptiveSelect,
   Textarea,
   TextInput,
@@ -55,16 +56,19 @@ export function GoodsReceiptSheet({
   const [projectId, setProjectId] = React.useState("");
   const [locationId, setLocationId] = React.useState(locations[0]?.id ?? "");
   const [vendorBillId, setVendorBillId] = React.useState("");
-  const [receiptNumber, setReceiptNumber] = React.useState(
-    () => `GR/${new Date().getFullYear()}/${Date.now().toString().slice(-6)}`,
-  );
+  const defaultReceiptNumber = React.useId().replaceAll(":", "").slice(0, 6).toUpperCase();
+  const [customReceiptNumber, setCustomReceiptNumber] = React.useState<string | null>(null);
+  const receiptNumber = customReceiptNumber ?? `GR-${defaultReceiptNumber}`;
+  const setReceiptNumber = (value: string) => setCustomReceiptNumber(value);
   const [receivedAt, setReceivedAt] = React.useState(new Date().toISOString().slice(0, 10));
   const [note, setNote] = React.useState("");
   const [items, setItems] = React.useState<readonly ItemDraft[]>([newItem()]);
   const [message, setMessage] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
   const [pending, startTransition] = React.useTransition();
-  const [addedLocations, setAddedLocations] = React.useState<readonly { readonly id: string; readonly name: string }[]>([]);
+  const [addedLocations, setAddedLocations] = React.useState<
+    readonly { readonly id: string; readonly name: string }[]
+  >([]);
   const [showLocationComposer, setShowLocationComposer] = React.useState(false);
   const selectedProject = projects.find((project) => project.id === projectId);
   const selectedVendorBill = vendorBills.find((bill) => bill.id === vendorBillId);
@@ -97,13 +101,13 @@ export function GoodsReceiptSheet({
       : receiptNumber.trim().length < 3
         ? "Nomor penerimaan minimal 3 karakter."
         : items.some(
-            (item) =>
-              !item.materialId ||
-              Number(item.quantity) <= 0 ||
-              Number.isNaN(Number(item.quantity)) ||
-              Number(item.unitCost) < 0 ||
-              Number.isNaN(Number(item.unitCost)),
-          )
+              (item) =>
+                !item.materialId ||
+                Number(item.quantity) <= 0 ||
+                Number.isNaN(Number(item.quantity)) ||
+                Number(item.unitCost) < 0 ||
+                Number.isNaN(Number(item.unitCost)),
+            )
           ? "Lengkapi material, jumlah, dan harga setiap item."
           : undefined;
   const vendorBillOptions = [

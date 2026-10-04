@@ -256,10 +256,10 @@ export function RabBundleDrawer({
             >
               <motion.button
                 type="button"
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 1.05 }}
                 transition={transitionSpringSnappy}
                 onClick={() => setConfirmDelete(true)}
-                className="min-h-12 w-full rounded-full bg-error-container/25 px-5 text-xs font-bold text-error"
+                className="min-h-12 w-full rounded-full bg-error-container/25 px-5 text-xs font-bold text-error outline-none active:shadow-raised active:z-10"
               >
                 Bongkar Paket
               </motion.button>
@@ -277,16 +277,16 @@ export function RabBundleDrawer({
           <div className="grid grid-cols-2 gap-2">
             <motion.button
               type="button"
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 1.05 }}
               transition={transitionSpringSnappy}
               onClick={() => setConfirmDelete(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:shadow-raised active:z-10"
             >
               Batal
             </motion.button>
             <motion.button
               type="button"
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 1.05 }}
               transition={transitionSpringSnappy}
               disabled={isPending}
               onClick={() => {
@@ -294,7 +294,7 @@ export function RabBundleDrawer({
                 setConfirmDelete(false);
                 setBundleEditorOpen(false);
               }}
-              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white disabled:opacity-40"
+              className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white outline-none active:shadow-raised active:z-10 disabled:opacity-40"
             >
               Bongkar Paket
             </motion.button>

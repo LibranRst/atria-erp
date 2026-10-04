@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { DesktopSelect } from "../desktop/desktop-controls";
 import React from "react";
 
 import { AnchoredListbox } from "../overlay/anchored-listbox";
@@ -88,6 +90,7 @@ export function AdaptiveSelect({
   readonly onCreateAction?: () => void;
   readonly presentation?: SelectPresentation;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const generatedId = React.useId();
   const controlId = id ?? `${generatedId}-control`;
   const messageId = helper || error ? `${generatedId}-message` : undefined;
@@ -116,6 +119,30 @@ export function AdaptiveSelect({
     setOpen(false);
     setQuery("");
     onChange(option.value);
+  }
+
+  if (
+    desktop &&
+    resolvedPresentation === "menu" &&
+    !hasCreateAction &&
+    !options.some((option) => option.group)
+  ) {
+    return (
+      <DesktopSelect
+        id={controlId}
+        label={label}
+        value={value || null}
+        options={options}
+        onChange={(next): void => onChange(next ?? "")}
+        placeholder={placeholder}
+        description={helper}
+        error={error}
+        disabled={disabled || readOnly}
+        required={required}
+        emptyText={emptyText}
+        className={grouped ? "atria-grouped-select px-4 py-3" : undefined}
+      />
+    );
   }
 
   const dialogContent = (
@@ -320,7 +347,7 @@ export function ComboboxField({
           }}
           className={cx(
             grouped
-              ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
+              ? "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
               : "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left shadow-control transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
           )}
         >

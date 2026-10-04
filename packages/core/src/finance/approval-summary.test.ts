@@ -24,6 +24,7 @@ function approval(
     actualSpent: 5_000_000,
     requestedBy: "PM Budi",
     budgetOverrun: false,
+    consumesBudgetActual: true,
     priority: "NORMAL",
     priorityReason: "Perlu keputusan Owner",
     ...overrides,

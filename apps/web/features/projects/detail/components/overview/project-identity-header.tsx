@@ -73,7 +73,7 @@ export function ProjectIdentityHeader({
               <button
                 type="button"
                 onClick={onEdit}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-on-surface shadow-control backdrop-blur-2xl transition active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-on-surface shadow-control backdrop-blur-2xl transition active:scale-[1.05] active:shadow-raised active:z-10"
                 aria-label="Edit proyek"
               >
                 <AppIcon name="edit" className="icon-md" />
@@ -82,7 +82,7 @@ export function ProjectIdentityHeader({
             <button
               type="button"
               onClick={() => setDetailOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-on-surface shadow-control backdrop-blur-2xl transition active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-on-surface shadow-control backdrop-blur-2xl transition active:scale-[1.05] active:shadow-raised active:z-10"
               aria-label="Lihat detail proyek"
             >
               <AppIcon name="info" className="icon-lg" />
@@ -125,7 +125,7 @@ export function ProjectIdentityHeader({
                     e.stopPropagation();
                     onAssignPm();
                   }}
-                  className="inline-flex min-h-6 shrink-0 items-center gap-1 rounded-full bg-white/20 px-2.5 text-eyebrow font-bold tracking-wide text-white uppercase shadow-control ring-1 ring-white/30 backdrop-blur-md transition hover:bg-white/25 active:scale-95"
+                  className="inline-flex min-h-6 shrink-0 items-center gap-1 rounded-full bg-white/20 px-2.5 text-eyebrow font-bold tracking-wide text-white uppercase shadow-control ring-1 ring-white/30 backdrop-blur-md transition hover:bg-white/25 active:scale-[1.05] active:shadow-raised active:z-10"
                 >
                   <AppIcon name="person_add" className="text-[12px]" />
                   <span>Tugaskan PM</span>
@@ -187,7 +187,7 @@ export function ProjectIdentityHeader({
                 setDetailOpen(false);
                 onEdit();
               }}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-control transition active:scale-[0.98]"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-control transition active:scale-[1.05] active:shadow-raised active:z-10"
             >
               <AppIcon name="edit" className="icon-md" />
               <span>Edit Proyek</span>

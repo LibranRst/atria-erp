@@ -1,8 +1,12 @@
+"use client";
+
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
 import {
   GroupedSurface,
+  DesktopTable,
   MoneyValue,
   WorkspaceRowChevron,
   WorkspaceStatusLabel,
@@ -28,6 +32,64 @@ export function LibraryTemplateList({
   items,
   onOpen,
 }: LibraryTemplateListProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  if (desktop)
+    return (
+      <DesktopTable
+        ariaLabel="Library item dan harga"
+        rows={items}
+        rowKey={(item) => item.id}
+        onRowAction={onOpen}
+        columns={[
+          {
+            key: "item",
+            label: "Item",
+            render: (item) => (
+              <div>
+                <p className="font-semibold">{item.name}</p>
+                <p className="text-meta text-on-surface-variant">
+                  {item.itemCategory} · {item.unit}
+                </p>
+              </div>
+            ),
+          },
+          { key: "type", label: "Tipe", render: (item) => itemTypeLabel(item.itemType) },
+          {
+            key: "internal",
+            label: "Biaya internal",
+            align: "end",
+            render: (item) => (
+              <MoneyValue amount={item.defaultInternalCost} variant="compact" size="sm" />
+            ),
+          },
+          {
+            key: "client",
+            label: "Harga klien",
+            align: "end",
+            render: (item) => (
+              <MoneyValue amount={item.defaultClientPrice} variant="compact" size="sm" />
+            ),
+          },
+          {
+            key: "margin",
+            label: "Margin",
+            align: "end",
+            render: (item) =>
+              `${(item.defaultClientPrice > 0 ? ((item.defaultClientPrice - item.defaultInternalCost) / item.defaultClientPrice) * 100 : 0).toFixed(1)}%`,
+          },
+          {
+            key: "status",
+            label: "Status",
+            render: (item) => (
+              <WorkspaceStatusLabel
+                label={item.isActive ? "Aktif" : "Arsip"}
+                tone={item.isActive ? "neutral" : "inactive"}
+              />
+            ),
+          },
+        ]}
+      />
+    );
   return (
     <GroupedSurface>
       <div className="divide-y divide-black/5.5">

@@ -391,14 +391,14 @@ export function RabExportDrawer({
                         <div className="flex items-center gap-2">
                           <label
                             htmlFor="logo-image-upload"
-                            className="cursor-pointer rounded-full bg-white px-3.5 py-1.5 text-meta font-bold text-on-surface shadow-control ring-1 ring-ring-control transition hover:bg-surface-container-lowest active:scale-95"
+                            className="cursor-pointer rounded-full bg-white px-3.5 py-1.5 text-meta font-bold text-on-surface shadow-control ring-1 ring-ring-control transition hover:bg-surface-container-lowest active:scale-[1.05] active:shadow-raised active:z-10"
                           >
                             Ganti
                           </label>
                           <button
                             type="button"
                             onClick={handleRemoveLogo}
-                            className="rounded-full bg-critical-container px-3.5 py-1.5 text-meta font-bold text-critical transition hover:opacity-90 active:scale-95"
+                            className="rounded-full bg-critical-container px-3.5 py-1.5 text-meta font-bold text-critical transition hover:opacity-90 active:scale-[1.05] active:shadow-raised active:z-10"
                           >
                             Hapus
                           </button>
@@ -407,7 +407,7 @@ export function RabExportDrawer({
                     ) : (
                       <label
                         htmlFor="logo-image-upload"
-                        className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-4 py-2.5 text-meta font-bold text-on-surface shadow-control ring-1 ring-ring-control transition hover:bg-surface-container-low active:scale-95"
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-4 py-2.5 text-meta font-bold text-on-surface shadow-control ring-1 ring-ring-control transition hover:bg-surface-container-low active:scale-[1.05] active:shadow-raised active:z-10"
                       >
                         <AppIcon name="image" className="icon-sm" />
                         <span>Pilih File Logo</span>

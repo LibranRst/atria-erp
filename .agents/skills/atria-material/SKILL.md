@@ -7,6 +7,8 @@ description: Guides the implementation, auditing, and debugging of Material Mast
 
 This skill provides step-by-step guidance for managing materials, inventory projections, RAP execution planning, client-safe RAB proposals, and warehouse stock movements.
 
+Backend implementations and transactions now live in `apps/api/src/backend/` and use `@backend/*`. Web actions are typed HTTP facades. Read `docs/06-technical/ARCHITECTURE.md` before changing transport boundaries.
+
 ---
 
 ## 1. Material Architecture & Inventory Projections
@@ -23,8 +25,8 @@ Each entry in `material_master` maintains three synchronized stock values:
 All stock mutations must run in `db.transaction` and create a `stock_movement` entry:
 
 ```typescript
-import { db } from "@/db";
-import { materialMaster, stockMovement, auditLog } from "@/db/schema";
+import { db } from "@backend/db";
+import { materialMaster, stockMovement, auditLog } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 
 await db.transaction(async (tx) => {

@@ -3,7 +3,7 @@
 import { AppIcon, MoneyValue, StatusBadge } from "@/components/ui";
 import type { StatusBadgeTone } from "@/components/ui";
 import { getProjectHealthOutputSchema, listProjectsOutputSchema } from "@/lib/ai/tool-output";
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import * as React from "react";
 
 import { projectOverviewHref } from "../../utils/deep-links";

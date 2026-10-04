@@ -1,14 +1,16 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import React from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { AppIcon } from "@/components/ui";
 import {
+  buttonTapActiveScale,
   transitionEaseSmooth,
   transitionSpringBouncy,
   transitionSpringSmooth,
+  transitionSpringSnappy,
 } from "@/lib/utils/motion";
 import type { HeaderMenuItem } from "./header-menu-config";
 
@@ -236,7 +238,16 @@ export function HeaderMorphMenu({
 
         <motion.div
           initial={false}
+          whileTap={
+            !isOpen
+              ? {
+                  scale: reduceMotion ? 1 : buttonTapActiveScale,
+                  transition: transitionSpringSnappy,
+                }
+              : undefined
+          }
           animate={{
+            scale: 1,
             // `100%` dan bukan `max-content` sebagai cadangan: panel ini
             // `absolute`, dan satu-satunya isi mengalirnya adalah daftar menu —
             // `max-content` di sini berarti selebar baris menu terpanjang, bukan
@@ -247,7 +258,7 @@ export function HeaderMorphMenu({
             borderRadius: isOpen ? 28 : 20,
           }}
           transition={morphTransition}
-          className={`pointer-events-auto absolute top-0 left-1/2 max-h-[calc(100dvh-5.5rem)] overflow-hidden bg-white ring-1 ring-ring-subtle ${isOpen ? "shadow-raised" : "shadow-control"}`}
+          className={`pointer-events-auto absolute top-0 left-1/2 max-h-[calc(100dvh-5.5rem)] overflow-hidden bg-white ring-1 ring-ring-subtle active:z-10 ${isOpen ? "shadow-raised" : "shadow-control active:shadow-raised"}`}
           /*
            * `maxWidth` tetap, tidak berganti mengikuti keadaan.
            *
@@ -265,7 +276,6 @@ export function HeaderMorphMenu({
             aria-expanded={isOpen}
             tabIndex={isOpen ? -1 : 0}
             onClick={onToggle}
-            whileTap={{ scale: reduceMotion ? 1 : 0.97 }}
             initial={false}
             animate={{
               opacity: isOpen ? 0 : 1,
@@ -339,7 +349,7 @@ export function HeaderMorphMenu({
                     aria-current={isActive ? "page" : undefined}
                     tabIndex={isOpen ? 0 : -1}
                     onClick={onClose}
-                    className={`flex min-h-12 items-center justify-between gap-4 rounded-full px-5 text-left transition-colors duration-150 active:scale-[0.98] ${
+                    className={`flex min-h-12 items-center justify-between gap-4 rounded-full px-5 text-left transition duration-150 active:z-10 active:scale-[1.05] active:shadow-raised ${
                       isActive
                         ? "bg-primary text-on-primary"
                         : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"

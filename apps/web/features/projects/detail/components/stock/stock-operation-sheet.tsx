@@ -4,7 +4,7 @@ import { useCan } from "@/components/auth/permissions-provider";
 import { toast } from "sonner";
 
 import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
 
 import {
   reserveMaterialForProject,

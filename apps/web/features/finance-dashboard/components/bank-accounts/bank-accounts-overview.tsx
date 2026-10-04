@@ -7,6 +7,7 @@ import { AppIcon, DuotoneIconTile, MoneyValue, SummaryFact, SummarySurface } fro
 import { BankAccountCard } from "@/features/finance-dashboard/components/cards/dashboard-cards";
 import type { BankAccount } from "@/features/finance-dashboard/types/bank-account-types";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { PilotBalanceNotice } from "../shared/pilot-balance-notice";
 
 const accountCardPressScale = { scale: 0.985 } as const;
 
@@ -64,6 +65,7 @@ function AccountPositionCard({
 
   return (
     <motion.button
+      tabIndex={0}
       type="button"
       onClick={() => onSelect(account)}
       aria-label={`Buka rekening ${account.name}`}
@@ -176,6 +178,11 @@ export function BankAccountsOverview({
         }
         statusTone={unreconciledCount > 0 ? "warning" : "positive"}
       >
+        {process.env.NEXT_PUBLIC_ATRIA_PILOT_MODE === "true" ? (
+          <div className="px-3.5 pt-3">
+            <PilotBalanceNotice />
+          </div>
+        ) : null}
         <div className="px-3.5 pt-3 pb-1">
           <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total saldo kas</p>
           <MoneyValue

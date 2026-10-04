@@ -1,7 +1,7 @@
 # Evaluasi Kontrak Jawaban AI
 
 **Tanggal:** 20 Agustus 2026  
-**Harness:** `apps/web/scripts/eval-ai-response-contract.ts`
+**Harness:** `apps/api/scripts/eval-ai-response-contract.ts`
 
 Evaluasi memakai enam fixture sintetis Atria — fakta sederhana, perbandingan,
 risiko kritis, card-backed answer, permintaan detail, dan jawaban tool-heavy.

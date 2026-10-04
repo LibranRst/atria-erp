@@ -1,0 +1,38 @@
+name: Pilot database backup
+
+on:
+  schedule:
+    # 02:47 WIB; GitHub's scheduler can be delayed. Keep Finance's daily check.
+    - cron: "47 19 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pilot-db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    if: github.ref == 'refs/heads/development' && vars.ATRIA_PILOT_BACKUP_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Dump, validate and verify private pilot backup
+        env:
+          ATRIA_PILOT_BACKUP_ENABLED: ${{ vars.ATRIA_PILOT_BACKUP_ENABLED }}
+          PILOT_BACKUP_DATABASE_URL: ${{ secrets.ATRIA_PILOT_BACKUP_DATABASE_URL }}
+          EXPECTED_PILOT_NEON_HOST: ${{ vars.ATRIA_PILOT_BACKUP_EXPECTED_HOST }}
+          EXPECTED_PILOT_DATABASE: ${{ vars.ATRIA_PILOT_BACKUP_EXPECTED_DATABASE }}
+          EXPECTED_PILOT_BACKUP_USER: atria_pilot_backup
+          PILOT_CUTOFF_ISO: ${{ vars.ATRIA_PILOT_CUTOFF_ISO }}
+          PILOT_API_RELEASE_COMMIT: ${{ vars.ATRIA_PILOT_API_RELEASE_COMMIT }}
+          PILOT_WEB_RELEASE_COMMIT: ${{ vars.ATRIA_PILOT_WEB_RELEASE_COMMIT }}
+          BACKUP_R2_BUCKET: ${{ vars.ATRIA_PILOT_BACKUP_R2_BUCKET }}
+          R2_ACCOUNT_ID: ${{ vars.ATRIA_PILOT_BACKUP_R2_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ATRIA_PILOT_BACKUP_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ATRIA_PILOT_BACKUP_R2_SECRET_ACCESS_KEY }}
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: bash scripts/backup-pilot-db.sh

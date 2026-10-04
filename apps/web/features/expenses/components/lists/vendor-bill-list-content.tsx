@@ -1,9 +1,12 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
 import {
   AppIcon,
+  DesktopTable,
   EmptyState,
   GroupedSurface,
   MoneyValue,
@@ -56,6 +59,9 @@ export function VendorBillListContent({
   readonly onSchedule: (bill: VendorListBill) => void;
   readonly onDisburse: (payment: VendorListPayment) => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const [selectedBillId, setSelectedBillId] = React.useState<string | null>(null);
+  const [selectedPaymentId, setSelectedPaymentId] = React.useState<string | null>(null);
   const [subTab, setSubTab] = React.useState<VendorBillSubTab>("BILLS");
   const [billFilter, setBillFilter] = React.useState<BillFilter>("ACTIVE");
   const [paymentFilter, setPaymentFilter] = React.useState<PaymentFilter>("ACTIVE");
@@ -86,6 +92,10 @@ export function VendorBillListContent({
     if (paymentFilter === "COMPLETED") return payment.status === "COMPLETED";
     return true;
   });
+
+  const selectedBill = filteredBills.find((bill) => bill.id === selectedBillId) ?? filteredBills[0];
+  const selectedPayment =
+    filteredPayments.find((payment) => payment.id === selectedPaymentId) ?? filteredPayments[0];
 
   return (
     <>
@@ -212,26 +222,84 @@ export function VendorBillListContent({
               count={filteredBills.length}
               countLabel="Tagihan"
             />
-            <GroupedSurface>
-              {filteredBills.length === 0 ? (
-                <EmptyState
-                  icon="payments"
-                  title="Tidak Ada Tagihan"
-                  description="Belum ada tagihan pembelian material/vendor yang tercatat."
+            {desktop ? (
+              <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.65fr)]">
+                <DesktopTable
+                  ariaLabel="Tagihan vendor"
+                  rows={filteredBills.slice(0, visibleLimit)}
+                  rowKey={(bill) => bill.id}
+                  selectedRowKey={selectedBill?.id}
+                  onRowAction={(bill) => setSelectedBillId(bill.id)}
+                  columns={[
+                    {
+                      key: "bill",
+                      label: "Tagihan",
+                      render: (bill) => (
+                        <div>
+                          <p className="font-semibold">{bill.billNumber}</p>
+                          <p className="text-meta text-on-surface-variant">
+                            {bill.vendor?.name} · {bill.project?.name}
+                          </p>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: "amount",
+                      label: "Nilai",
+                      align: "end",
+                      render: (bill) => (
+                        <MoneyValue amount={Number(bill.amount)} variant="compact" size="sm" />
+                      ),
+                    },
+                    {
+                      key: "due",
+                      label: "Jatuh tempo",
+                      render: (bill) =>
+                        new Date(bill.dueDate).toLocaleDateString("id-ID", {
+                          timeZone: "Asia/Jakarta",
+                        }),
+                    },
+                    {
+                      key: "status",
+                      label: "Status",
+                      render: (bill) => formatBusinessLabel(bill.status),
+                    },
+                  ]}
                 />
-              ) : (
-                <div className="divide-y divide-black/5.5">
-                  {filteredBills.slice(0, visibleLimit).map((bill) => (
-                    <VendorBillCard
-                      key={bill.id}
-                      bill={bill}
-                      isOwnerOrFinance={isOwnerOrFinance}
-                      onScheduleClick={onSchedule}
-                    />
-                  ))}
-                </div>
-              )}
-            </GroupedSurface>
+                {selectedBill ? (
+                  <section aria-label="Detail tagihan" className="min-w-0 xl:sticky xl:top-24">
+                    <GroupedSurface>
+                      <VendorBillCard
+                        bill={selectedBill}
+                        isOwnerOrFinance={isOwnerOrFinance}
+                        onScheduleClick={onSchedule}
+                      />
+                    </GroupedSurface>
+                  </section>
+                ) : null}
+              </div>
+            ) : (
+              <GroupedSurface>
+                {filteredBills.length === 0 ? (
+                  <EmptyState
+                    icon="payments"
+                    title="Tidak Ada Tagihan"
+                    description="Belum ada tagihan pembelian material/vendor yang tercatat."
+                  />
+                ) : (
+                  <div className="divide-y divide-black/5.5">
+                    {filteredBills.slice(0, visibleLimit).map((bill) => (
+                      <VendorBillCard
+                        key={bill.id}
+                        bill={bill}
+                        isOwnerOrFinance={isOwnerOrFinance}
+                        onScheduleClick={onSchedule}
+                      />
+                    ))}
+                  </div>
+                )}
+              </GroupedSurface>
+            )}
             {filteredBills.length > visibleLimit ? (
               <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
             ) : null}
@@ -243,26 +311,88 @@ export function VendorBillListContent({
               count={filteredPayments.length}
               countLabel="Pembayaran"
             />
-            <GroupedSurface>
-              {filteredPayments.length === 0 ? (
-                <EmptyState
-                  icon="schedule"
-                  title="Tidak Ada Rencana Pembayaran"
-                  description="Belum ada rencana atau mutasi pembayaran vendor yang terdaftar."
+            {desktop ? (
+              <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.65fr)]">
+                <DesktopTable
+                  ariaLabel="Rencana pembayaran vendor"
+                  rows={filteredPayments.slice(0, visibleLimit)}
+                  rowKey={(payment) => payment.id}
+                  selectedRowKey={selectedPayment?.id}
+                  onRowAction={(payment) => setSelectedPaymentId(payment.id)}
+                  columns={[
+                    {
+                      key: "bill",
+                      label: "Pembayaran",
+                      render: (payment) => (
+                        <div>
+                          <p className="font-semibold">{payment.vendorBill?.billNumber}</p>
+                          <p className="text-meta text-on-surface-variant">
+                            {payment.vendorBill?.vendor?.name} · {payment.bankAccount?.name}
+                          </p>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: "amount",
+                      label: "Nilai",
+                      align: "end",
+                      render: (payment) => (
+                        <MoneyValue
+                          amount={Number(payment.amountPaid)}
+                          variant="compact"
+                          size="sm"
+                        />
+                      ),
+                    },
+                    {
+                      key: "date",
+                      label: "Tanggal",
+                      render: (payment) =>
+                        new Date(payment.paymentDate).toLocaleDateString("id-ID", {
+                          timeZone: "Asia/Jakarta",
+                        }),
+                    },
+                    {
+                      key: "status",
+                      label: "Status",
+                      render: (payment) => formatBusinessLabel(payment.status),
+                    },
+                  ]}
                 />
-              ) : (
-                <div className="divide-y divide-black/5.5">
-                  {filteredPayments.slice(0, visibleLimit).map((payment) => (
-                    <VendorPaymentCard
-                      key={payment.id}
-                      payment={payment}
-                      isOwnerOrFinance={isOwnerOrFinance}
-                      onDisburseClick={onDisburse}
-                    />
-                  ))}
-                </div>
-              )}
-            </GroupedSurface>
+                {selectedPayment ? (
+                  <section aria-label="Detail pembayaran" className="min-w-0 xl:sticky xl:top-24">
+                    <GroupedSurface>
+                      <VendorPaymentCard
+                        payment={selectedPayment}
+                        isOwnerOrFinance={isOwnerOrFinance}
+                        onDisburseClick={onDisburse}
+                      />
+                    </GroupedSurface>
+                  </section>
+                ) : null}
+              </div>
+            ) : (
+              <GroupedSurface>
+                {filteredPayments.length === 0 ? (
+                  <EmptyState
+                    icon="schedule"
+                    title="Tidak Ada Rencana Pembayaran"
+                    description="Belum ada rencana atau mutasi pembayaran vendor yang terdaftar."
+                  />
+                ) : (
+                  <div className="divide-y divide-black/5.5">
+                    {filteredPayments.slice(0, visibleLimit).map((payment) => (
+                      <VendorPaymentCard
+                        key={payment.id}
+                        payment={payment}
+                        isOwnerOrFinance={isOwnerOrFinance}
+                        onDisburseClick={onDisburse}
+                      />
+                    ))}
+                  </div>
+                )}
+              </GroupedSurface>
+            )}
             {filteredPayments.length > visibleLimit ? (
               <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
             ) : null}

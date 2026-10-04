@@ -1,0 +1,12 @@
+diff --git a/scripts/get-app-config-ios.sh b/scripts/get-app-config-ios.sh
+--- a/scripts/get-app-config-ios.sh
++++ b/scripts/get-app-config-ios.sh
+@@ -14 +14 @@
+-PROJECT_DIR_BASENAME=$(basename $PROJECT_DIR)
++PROJECT_DIR_BASENAME=$(basename "$PROJECT_DIR")
+diff --git a/ios/EXConstants.podspec b/ios/EXConstants.podspec
+--- a/ios/EXConstants.podspec
++++ b/ios/EXConstants.podspec
+@@ -40 +40 @@
+-    :script => "bash -l -c \"#{env_vars}$PODS_TARGET_SRCROOT/../scripts/get-app-config-ios.sh\"",
++    :script => "bash -l -c \"#{env_vars}\\\"$PODS_TARGET_SRCROOT/../scripts/get-app-config-ios.sh\\\"\"",

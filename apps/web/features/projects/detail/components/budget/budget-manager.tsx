@@ -2,7 +2,8 @@
 
 import { useCan } from "@/components/auth/permissions-provider";
 import React, { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { getErrorMessage } from "@atria/core/utils/error-message";
 import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/ui";

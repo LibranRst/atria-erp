@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "@/lib/navigation/workspace-navigation";
+
 import React from "react";
 
 import { usePermissions } from "@/components/auth/permissions-provider";

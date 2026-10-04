@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 
 import { MoneyValue, StatusBadge, type StatusBadgeTone } from "@/components/ui";
 import type { DashboardRiskyProject } from "@/features/finance-dashboard/types/dashboard-types";

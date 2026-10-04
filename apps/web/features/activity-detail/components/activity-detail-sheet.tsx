@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "@/lib/navigation/workspace-navigation";
 
 import { getActivityDetail } from "@/app/actions/activity-detail";
 import {

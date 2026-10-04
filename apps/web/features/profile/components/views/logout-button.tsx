@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";

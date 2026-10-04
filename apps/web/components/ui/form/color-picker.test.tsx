@@ -68,14 +68,14 @@ describe("CustomColorPicker unit & math tests", () => {
           { id: "obsidian", name: "Obsidian Black", hex: "#181817" },
           { id: "terracotta", name: "Terracotta", hex: "#97371F" },
         ]}
-      />
+      />,
     );
 
     expect(html).toContain("#97371F");
     expect(html).toContain("Obsidian Black");
     expect(html).toContain("Terracotta");
     expect(html).toContain('placeholder="#181817"');
-    expect(html).toContain('aria-label="Input kode warna HEX"');
+    expect(html).toContain('aria-label="Pemilih warna kustom: kode HEX"');
   });
 
   it("renders ColorPickerField with label and helper text", () => {
@@ -85,7 +85,7 @@ describe("CustomColorPicker unit & math tests", () => {
         helper="Tentukan warna aksen"
         value="#181817"
         onChange={() => {}}
-      />
+      />,
     );
 
     expect(html).toContain("Warna Dokumen");

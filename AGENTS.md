@@ -6,11 +6,13 @@ The product promise is: **Project Budget Control upgraded into a real ERP with m
 
 ## Workspace Layout
 
-This repo is a **Bun workspace monorepo**. The Next.js app lives in `apps/web/`; the root holds only workspace config, `docs/`, and the top-level `*.md` files. Unqualified paths in this document (`app/`, `lib/`, `features/`, `components/`, `db/`) are relative to `apps/web/`, and the `@/*` alias resolves there.
+This repo is a **Bun workspace monorepo**. `apps/api/` is the Hono + Bun backend; `apps/web/` is the Next.js presentation/HTTP adapter client; `apps/mobile/` is the Expo client. Pure shared calculations, DTOs and Zod schemas belong in `packages/core/`.
 
-Run scripts from the repo root (`bun run test`, `bun run build`, `bun run lint`). **Never run a bare `bun test` from the root** — `bunfig.toml` lives in `apps/web/` and is loaded from the current directory; without it the `server-only` preload is missing and feature server tests fail. Use `cd apps/web && bun test <file>` for single files.
+Backend business code, Better Auth, Drizzle, schema and operator tooling belong to `apps/api/src/backend/` (`@backend/*`). Presentation paths (`app/`, `features/`, `components/`, `lib/`) and `@/*` still refer to `apps/web/` unless an API path is explicitly specified. Web actions/loaders preserve their public signatures as typed HTTP facades; add backend behavior in the API and register an explicit compatibility operation or tRPC procedure. API clients import declaration-only contracts; backend runtime modules stay inside the API.
 
-A cross-platform Expo client (`apps/mobile/`) is being added. See `docs/plans/2026-08-15-expo-cross-platform-migration.md` for the plan and `docs/plans/2026-08-15-expo-migration-handoff.md` for current progress and the cross-agent handoff prompt.
+Run workspace scripts from the root (`bun run test`, `bun run build`, `bun run lint`). **Never run bare `bun test` from the root**: each app has its own Bun configuration and safe test preload. Use `cd apps/api && bun test <file>` for backend tests and `cd apps/web && bun test <file>` for presentation tests. Live Postgres integration suites require a disposable database through `ATRIA_TEST_DATABASE_URL`; normal tests cannot use the development database.
+
+For API startup, transport, environment ownership, mobile-only development and deployment preparation, read `docs/guide/mobile-api-development.md` and `docs/06-technical/ARCHITECTURE.md`. The implementation matrix is `docs/plans/2026-10-01-independent-backend.md`. Earlier Expo migration plans are historical context; their backend paths predate this extraction.
 
 ## Planning and Documentation
 
@@ -95,7 +97,7 @@ When replacing the budget model, introduce canonical tables additively and prese
 - Before planning, implementing, styling, redesigning, reworking, auditing, or reviewing any UI, load the `impeccable` skill and consult `PRODUCT.md`, `DESIGN.md`, and `.impeccable/design.json` at the repo root. The `impeccable` skill is the canonical UI workflow; finance, material, and QA skills remain separate domain runbooks.
 - **Shared UI first:** before creating any UI component, inspect the public `@/components/ui` inventory in `apps/web/components/ui/index.ts`, its stories/tests, and the relevant `DESIGN.md` taxonomy. Reuse first, compose or extend second, and add a new primitive only when the existing interaction contract cannot represent the behavior. Feature code must not recreate shared overlay, selection, form-control, money, motion, focus, or touch-target infrastructure. Follow `.agents/rules/05-shared-ui-first.md`, and identify the reused/extended primitive—or justify a new one—in the final handoff.
 - Treat the current Dashboard (`/ledger`, all tabs) as the reference implementation. Reuse its design grammar and shared primitives; do not copy its layout blindly into another workflow.
-- Mobile widths 320–430 px are the source of truth. The fixed `max-w-md` shell remains one column at every viewport; a desktop browser preview alone is not acceptance evidence.
+- Mobile widths 320–430 px remain the source of truth for existing/mobile routes. Their fixed `max-w-md` shell remains one column at every viewport. `/admin/**` is the explicit desktop exception: shared backend and permissions, HeroUI v3 through public shared UI adapters, sidebar and contextual tables/detail panels. Verify desktop at 1024/1280/1440px and mobile at 320/360/390/430px; desktop evidence never substitutes for mobile regression evidence.
 - Build hierarchy through one justified focal summary, concise section headers, grouped surfaces, purpose-built rows, inset metric grids, dividers, and whitespace. Do not turn every metric or repeated item into an elevated standalone card.
 - Use compact neutral inset metric cells for 2–3 values that must be compared inside one owning surface or decision-heavy item. Keep semantic tone on the value, icon, or status rather than tinting every cell. Simple operational rows still share one soft surface with dividers; preserve standalone cards for focal or independently interactive units and configured gradients for identity surfaces such as bank accounts.
 - Use shared `MoneyValue` formatting, tabular numerals, compact primary amounts, and exact secondary amounts. Primary financial values must not wrap at supported mobile widths.
@@ -132,6 +134,7 @@ All animations MUST use Framer Motion and reference the unified animation preset
 - Avoid defining custom/ad-hoc spring properties or inline CSS keyframes directly.
 
 <!-- graft:start -->
+
 ## Graft — repo context graph
 
 This repo is indexed in `graft/`: small linked markdown nodes that explain each
@@ -172,3 +175,10 @@ re-read whole files.
 After big code changes, refresh the graph with `graft build` (deterministic,
 no API key, $0).
 <!-- graft:end -->
+
+## Desktop workspace and HeroUI
+
+- Desktop access requires `use:desktop_admin`; it never grants domain permissions or changes project scope. Owner/Finance receive the initial grant via migration; custom roles use Settings.
+- Use `@/lib/navigation/workspace-navigation` and `workspace-link` for consumer navigation, and `revalidateWorkspacePath` for action cache invalidation. Keep auth/public/API routes outside presentation mapping. Native browser fallback uses `surface=mobile`.
+- HeroUI v3 official project skill: `.agents/skills/heroui-react/SKILL.md`; project MCP: `.codex/config.toml`. Impeccable and Atria domain rules stay authoritative.
+- HeroUI imports belong in shared `components/ui/desktop`; feature consumers use the public UI inventory. Never import Hero default global styles. Generate scoped component styles with `bun run heroui:styles`, check with `bun run heroui:styles:check`. Shared outer dialogs/sheets remain the only focus/dismissal owner.

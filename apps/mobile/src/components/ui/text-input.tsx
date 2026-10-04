@@ -1,8 +1,9 @@
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { StyleSheet, TextInput as NativeTextInput } from "react-native";
 import type { TextInputProps as NativeTextInputProps } from "react-native";
 
 import { useFormPresentation } from "./form-presentation-context";
+import { useFieldRegistration } from "./sheet-form-fields";
 import { theme } from "@/theme";
 
 export type TextInputProps = NativeTextInputProps & {
@@ -13,12 +14,23 @@ export const TextInput = forwardRef<NativeTextInput, TextInputProps>(function Te
   { editable = true, hitSlop, invalid = false, multiline = false, style, ...props },
   ref,
 ) {
+  const { fields, id } = useFieldRegistration();
+  const [contentHeight, setContentHeight] = useState(28);
   const grouped = useFormPresentation() === "grouped";
 
   return (
     <NativeTextInput
       {...props}
-      ref={ref}
+      ref={(input) => {
+        if (typeof ref === "function") ref(input);
+        else if (ref) ref.current = input;
+        if (id) fields?.attachInput(id, input);
+      }}
+      onContentSizeChange={(event) => {
+        props.onContentSizeChange?.(event);
+        if (multiline) setContentHeight(Math.ceil(event.nativeEvent.contentSize.height));
+      }}
+      scrollEnabled={!multiline}
       editable={editable}
       hitSlop={hitSlop ?? (grouped ? 10 : undefined)}
       multiline={multiline}
@@ -27,6 +39,9 @@ export const TextInput = forwardRef<NativeTextInput, TextInputProps>(function Te
       style={[
         styles.base,
         grouped ? styles.grouped : multiline ? styles.textarea : styles.standalone,
+        multiline && grouped
+          ? { minHeight: Math.max(80, contentHeight), textAlignVertical: "top" }
+          : undefined,
         invalid && !grouped ? styles.invalid : undefined,
         !editable ? styles.disabled : undefined,
         style,
@@ -63,7 +78,11 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     boxShadow: theme.shadows.control,
   },
-  grouped: { minHeight: 28, backgroundColor: "transparent" },
+  grouped: {
+    minHeight: 32,
+    backgroundColor: "transparent",
+    ...theme.typography.section,
+  },
   invalid: { borderColor: theme.colors.critical },
   disabled: { color: theme.colors.muted, opacity: 0.62 },
 });

@@ -1,5 +1,7 @@
 "use client";
 
+import { uploadToImageKit } from "@/lib/media/upload-to-imagekit";
+
 import React from "react";
 import { toast } from "sonner";
 
@@ -32,7 +34,8 @@ import {
 } from "@/components/ui";
 import { formatIdr } from "@atria/core/utils/money";
 import { updateUrlSearchParam, useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import {
   cashDisplayTitle,
   cashSourceCopy,
@@ -196,27 +199,17 @@ export function ReconciliationWorkspace({
 
     setIsAnalyzing(true);
     try {
-      let fileBase64: string | undefined;
-      let fileContent: string | undefined;
-
-      if (isCsv || lowerName.endsWith(".txt")) {
-        fileContent = await file.text();
-      } else {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error("Gagal membaca berkas."));
-          reader.readAsDataURL(file);
-        });
-        const commaIndex = dataUrl.indexOf(",");
-        fileBase64 = commaIndex !== -1 ? dataUrl.slice(commaIndex + 1) : dataUrl;
-      }
-
+      const uploaded = await uploadToImageKit({
+        file,
+        folder: "/chat-attachments",
+        purpose: "bank_statement",
+        fileNamePrefix: "statement",
+        subject: "rekening koran",
+      });
       const res = await analyzeBankStatement({
-        fileName: file.name,
-        fileBase64,
-        fileContent,
-        mimeType: file.type,
+        fileName: uploaded.fileName,
+        fileUrl: uploaded.url,
+        mimeType: uploaded.mimeType,
       });
 
       if (!res.success) {

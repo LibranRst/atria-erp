@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppIcon, Button, GroupedSurface, FactRow } from "@/components/ui";
-import { getApiBaseURL } from "@/lib/runtime-config";
+import { getWebBaseURL } from "@/lib/runtime-config";
 import { theme } from "@/theme";
 
 export default function OnboardingReviewBridgeScreen(): React.JSX.Element {
@@ -25,7 +25,7 @@ export default function OnboardingReviewBridgeScreen(): React.JSX.Element {
         <FactRow label="Akses" value="Admin Keuangan" />
       </GroupedSurface>
       <Button
-        onPress={() => void WebBrowser.openBrowserAsync(`${getApiBaseURL()}/onboarding/review`)}
+        onPress={() => void WebBrowser.openBrowserAsync(`${getWebBaseURL()}/onboarding/review`)}
       >
         Buka review di web
       </Button>

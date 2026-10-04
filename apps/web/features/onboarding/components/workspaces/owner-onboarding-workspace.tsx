@@ -1,6 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useWorkspaceHref } from "@/lib/navigation/workspace-presentation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import React from "react";
 import { toast } from "sonner";
 
@@ -25,6 +27,7 @@ export function OwnerOnboardingWorkspace({
   readonly initialStep: OnboardingStepId;
 }): React.JSX.Element {
   const router = useRouter();
+  const workspaceHref = useWorkspaceHref();
   const [step, setStep] = React.useState<OnboardingStepId>(initialStep);
   const [serverStep, setServerStep] = React.useState<OnboardingStepId>(initialStep);
   const [showExitConfirm, setShowExitConfirm] = React.useState(false);
@@ -94,7 +97,7 @@ export function OwnerOnboardingWorkspace({
         return;
       }
       toast.success("Setup dijeda. Data yang sudah disimpan tetap aman.");
-      window.location.replace("/ledger");
+      window.location.replace(workspaceHref("/ledger"));
     });
   }
 
@@ -106,7 +109,9 @@ export function OwnerOnboardingWorkspace({
         return;
       }
       toast.success("Fondasi Atria siap digunakan.");
-      window.location.replace(target === "project" ? "/projects?new-project=true" : "/ledger");
+      window.location.replace(
+        workspaceHref(target === "project" ? "/projects?new-project=true" : "/ledger"),
+      );
     });
   }
 

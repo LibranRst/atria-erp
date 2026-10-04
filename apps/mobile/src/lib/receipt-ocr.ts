@@ -1,18 +1,13 @@
+import { privateAttachmentResultSchema } from "@atria/core/media/private-attachment";
+import { z } from "zod";
+import { getApiBaseURL } from "@/lib/runtime-config";
+import { getSessionBearerToken } from "@/lib/auth-client";
 import { inferExpenseCategoryCode } from "@atria/core/expenses/receipt-category";
 import type { ExpenseLine, ProjectBudgetCategoryOption } from "@atria/core/types/expenses";
 import { createClientId } from "@atria/core/utils/client-id";
 import type { ImagePickerAsset } from "expo-image-picker";
 
 import { trpcClient } from "@/lib/trpc-client";
-
-type ImageKitUploadResponse = {
-  readonly fileId: string;
-  readonly name: string;
-  readonly url: string;
-  readonly size: number;
-  readonly fileType?: string;
-  readonly message?: string;
-};
 
 export type ReceiptOcrResult = {
   readonly attachment: {
@@ -29,43 +24,39 @@ export type ReceiptOcrResult = {
 export async function uploadAndParseReceipt(
   asset: ImagePickerAsset,
   categories: readonly ProjectBudgetCategoryOption[],
+  projectId: string,
 ): Promise<ReceiptOcrResult> {
-  const signature = await trpcClient.media.signImagekit.mutate();
-  if (!signature.success) throw new Error(signature.error.message);
-
   const fileName = asset.fileName ?? `receipt-${Date.now()}.jpg`;
-  const mimeType = asset.mimeType ?? "image/jpeg";
   const fileResponse = await fetch(asset.uri);
   const blob = await fileResponse.blob();
-  const formData = new FormData();
-  formData.append("file", blob, fileName);
-  formData.append("fileName", `receipt-${Date.now()}-${fileName.replaceAll(" ", "_")}`);
-  formData.append(
-    "publicKey",
-    process.env.EXPO_PUBLIC_IMAGEKIT_PUBLIC_KEY ?? "public_PRvr9hXwFetaQx4ZejdGwJ1Ue8=",
-  );
-  formData.append("signature", signature.data.signature);
-  formData.append("token", signature.data.token);
-  formData.append("expire", String(signature.data.expire));
-  formData.append("folder", "/field-receipts");
-
-  const uploadResponse = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+  const token = getSessionBearerToken();
+  if (!token) throw new Error("Silakan masuk kembali.");
+  const ticketResponse = await fetch(`${getApiBaseURL()}/api/media/upload-ticket`, {
+    signal: AbortSignal.timeout(60_000),
     method: "POST",
-    body: formData,
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: JSON.stringify({ purpose: "expense", projectId, fileName, size: blob.size }),
   });
-  const uploadData = (await uploadResponse.json()) as ImageKitUploadResponse;
-  if (!uploadResponse.ok) {
-    throw new Error(uploadData.message ?? "Gambar bukti belum berhasil diunggah.");
-  }
-
-  const attachment = {
-    fileId: uploadData.fileId,
-    url: uploadData.url,
-    fileName: uploadData.name || fileName,
-    mimeType: uploadData.fileType || mimeType,
-    size: uploadData.size || asset.fileSize || blob.size,
-  };
-  const ocr = await trpcClient.ai.processReceipt.mutate({ receiptImageUrl: uploadData.url });
+  const ticket = z
+    .object({ ticket: z.string(), uploadUrl: z.string().url() })
+    .safeParse(await ticketResponse.json());
+  if (!ticketResponse.ok || !ticket.success) throw new Error("Tiket unggah belum tersedia.");
+  const form = new FormData();
+  form.append("file", blob, fileName);
+  const response = await fetch(ticket.data.uploadUrl, {
+    method: "POST",
+    headers: { "x-atria-upload-ticket": ticket.data.ticket },
+    signal: AbortSignal.timeout(60_000),
+    body: form,
+  });
+  const data: unknown = await response.json();
+  if (!response.ok)
+    throw new Error(
+      z.object({ error: z.string() }).safeParse(data).data?.error ??
+        "Gambar bukti belum berhasil diunggah.",
+    );
+  const attachment = privateAttachmentResultSchema.parse(data);
+  const ocr = await trpcClient.ai.processReceipt.mutate({ receiptImageUrl: attachment.url });
   if (!ocr.success) {
     return {
       attachment,
@@ -118,5 +109,19 @@ export async function uploadAndParseReceipt(
       unmatchedCount > 0
         ? `${unmatchedCount} item belum cocok dengan kategori budget. Periksa sebelum mengajukan.`
         : null,
+  };
+}
+
+/** Native previews keep bearer credentials on the authenticated API origin. */
+export function receiptImageSource(
+  url: string,
+): string | { readonly uri: string; readonly headers: Readonly<Record<string, string>> } {
+  if (!url) return "";
+  const parsed = new URL(url);
+  if (!parsed.pathname.startsWith("/api/media/attachments/")) return url;
+  const token = getSessionBearerToken();
+  return {
+    uri: new URL(parsed.pathname, getApiBaseURL()).href,
+    headers: token ? { authorization: `Bearer ${token}` } : {},
   };
 }

@@ -17,7 +17,11 @@ import {
   transitionSpringDefault as sharedTransitionSpringDefault,
   transitionSpringSmooth as sharedTransitionSpringSmooth,
   transitionSpringSnappy as sharedTransitionSpringSnappy,
+  buttonTapActiveScale as sharedButtonTapActiveScale,
 } from "@atria/tokens/motion";
+
+/** Skala pembesaran tombol saat ditekan/ditahan bergaya haptic iOS. */
+export const buttonTapActiveScale: number = sharedButtonTapActiveScale;
 
 /** Adapter bertipe Framer Motion untuk preset lintas-platform Atria. */
 export const transitionSpringSnappy: Transition = sharedTransitionSpringSnappy;
