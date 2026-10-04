@@ -1,6 +1,6 @@
 # Pilot web gratis untuk Owner
 
-Disiapkan 4 Oktober 2026. Remediasi, pemeriksaan lokal, dan GitHub CI tersedia; database cloud pilot sudah diprovision. Railway Trial/Free tanpa kartu dipilih untuk API. Web/API hosted belum lolos verifikasi dan belum ada persetujuan go-live.
+Disiapkan 4 Oktober 2026. Remediasi, pemeriksaan lokal, dan GitHub CI tersedia; database cloud pilot sudah diprovision. Railway Trial/Free tanpa kartu dipilih untuk API. Web/API sudah aktif dan health/readiness/login HTTPS telah dibuktikan. Full workflow acceptance dan go-live data asli tetap belum disetujui.
 
 Pilot berlangsung dua minggu untuk satu proyek berjalan, memakai data perusahaan yang disetujui Finance, dengan akun Owner, Finance, PM, dan Purchasing. Pembukuan yang sekarang tetap menjadi sumber pembanding. Laptop dan web di HP sama-sama masuk acceptance check. AI chat dan OCR wajib berfungsi sebelum undangan diberikan.
 
@@ -204,3 +204,20 @@ Netlify production deployment `6ac1fed28e544d47da3b4274` is published from a loc
 ### Pilot notification scheduler
 
 The separate `atria-pilot-notification-scheduler` Cloudflare Worker is deployed using `apps/api/workers/notification-scheduler/wrangler.pilot.jsonc`; the existing scheduler config is preserved. It binds only the pilot API URL and a fresh notification job secret. Cron schedules are every 30 minutes plus 17:00 UTC daily. Manual HTTPS checks with the explicit Atria readiness user agent returned anonymous 401 and authorized reconcile 200/upstream 200; the default Python user agent was rejected by the edge with 1010 before reaching the Worker. No edge protection was disabled. Actual Cron firing/recovery and delivery of real pilot notifications remain acceptance checks.
+
+### Final web artifact and temporary Owner
+
+Corrected production deployment: `6ac20cc355a894774f00a5a4`. Manual `netlify build` restores raw `.next` after the Next plugin runs; a subsequent no-build deploy must publish `apps/web/.netlify/static`, retaining the internal SSR/edge cache. Normal plugin builds still use configured publish `apps/web/.next`. The earlier raw-artifact deployment `6ac1fed28e544d47da3b4274` produced JavaScript 404s and was deleted with explicit user approval; metadata now returns Not Found. A required application chunk changed from 404 to 200/JavaScript with 304,125 bytes after the corrected upload.
+
+Production visibility is Public with Deploy Previews Private, approved by the user. The private edge-access layer had intercepted the captured login request before Atria; no auth code was changed. User-authorized operator bootstrap created one temporary Owner (`dekoria.office@gmail.com`) without business transactions. HTTPS browser login succeeded, issued a Secure/HttpOnly/Lax session cookie, and reached the welcome onboarding screen. The temporary password is only in a local 0600 file; an authenticated, database-target-guarded operator transaction marked it temporary, wrote an audit and revoked its sessions. Password replacement by the user is required before real business use.
+
+### Manual Netlify artifact command and password gate proof
+
+Build from the clean release checkout with production environment variables:
+
+```sh
+bunx netlify-cli build --filter @atria/web --context production
+bunx netlify-cli deploy --filter @atria/web --dir apps/web/.netlify/static --no-build --site c316f6d9-328f-4702-b5ea-dfc8c75c4ce3 --prod
+```
+
+Do not combine `--context` with `--no-build` in the tested CLI version. Do not upload raw `.next` after a standalone build: its layout differs from the transformed static artifact and includes server artifacts. Production login is publicly reachable (200); anonymous `/ledger`, `/admin`, and `/projects` returned 307 to `/login`. A fresh temporary-Owner sign-in was redirected to `/profile/password`, proving the password-change gate. No project, balance, stock, vendor/client transaction or real attachment has been imported into the pilot.
