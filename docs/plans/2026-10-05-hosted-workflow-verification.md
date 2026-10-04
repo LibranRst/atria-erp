@@ -63,3 +63,26 @@ Hosted PDF inspection reproduced an export layout bug: visibility-hidden app chr
 A clean hosted inventory opening could not reverse even with exactly one movement. PostgreSQL stored its timestamp with microseconds (e.g. .84669), while the returned JavaScript Date retained milliseconds (.846). The later-movement query consequently matched the opening movement itself. Exclude that exact movement ID, and take the inventory lock before checking later history so intervening stock changes cannot race the check. Add a PostgreSQL regression retaining fractional precision and verify both clean reversal and genuine later-movement refusal; public action signatures and audit remain unchanged.
 
 A controlled hosted race also reproduced duplicate approvals/audits when stock opname has zero variance. Both requests passed the unlocked PENDING_APPROVAL header check; the unchanged inventory let both proceed. Lock the count header before status/items, then read items in deterministic order. Preserve maker/checker and stale-inventory guards. Add a real PostgreSQL concurrency regression and rerun the barrier against hosted QA.
+
+Netlify CLI did not discover the nested apps/web/netlify.toml and used the root build script, including API/mobile exports. Move the same canonical config to repository root, keeping Base root, Package apps/web in the UI, styles check + build:web and the existing transformed publish process. Verify resolved config and build command before release; this avoids unnecessary mobile build artifacts on the Mac.
+
+## Acceptance evidence captured
+
+Technical workflow checks use the isolated QA database and synthetic identities; company/development data is not used for mutations. Core API repairs were verified at `29b935a6db974a082d9975f59b1ceb409c19b7a2`, with [CI 37236019076](https://github.com/LibranRst/atria-erp/actions/runs/37236019076): quality green and 24 disposable PostgreSQL suites, 144 tests, zero failures. The two added warehouse regressions cover microsecond opening reversal/genuine later movement and a controlled zero-variance approval race. Hosted post-rollout checks also pass: clean opening reverses, and the controlled race produces one decision/audit.
+
+| Workflow | Observed result | Evidence method |
+| --- | --- | --- |
+| Auth/access | Owner, Finance, PM, Purchasing log in; temporary password gate, wrong-password rejection, session revocation, custom grants/revocation and foreign-project denial pass | Actual HTTPS actions + isolated DB; UI login/logout and PM listing/desktop denial |
+| Project setup | Budget submit/approval, material master/location, staged RAP/scope decisions/lock, RAB approval and explicit activation pass | Public HTTPS actions + state/audit assertions |
+| Expense | Pending/review/approval/payment and changed threshold pass; concurrent payment posts once | Exact bank/category/ledger checks |
+| Vendor/client | Bill/schedule/approval/payment; partial/final receipt; overpayment and duplicate concurrency rejection pass | Public HTTPS actions + invoices/bills/ledger |
+| Material | Stock in/reserve/use/return/waste/adjustment/transfer, receipt/reversal, initial opening and count variance pass; excessive return rejected | Exact quantities and movement/audit counts; no cash mutation |
+| AI/media | 9Router PDF/image analysis, OCR total 45000/quantity 3, persisted chat proposal and explicit confirmation pass; injected confirmation failure rolls back everything | Real provider + private exact-byte SHA-256; DB fault injection only in QA |
+| Large/negative upload | 2.7 MB image succeeds by file reference; anonymous, unauthorized role, oversize, arbitrary URL and ticket replay rejected | Actual media endpoints and scoped readers |
+| Reconciliation/closing | Statement deduplication and matching pass; incomplete closing rejected; concurrent closing creates one final snapshot | Final actual cost 771000, margin 229000, project cash position 949000 |
+| RAB export | UI Excel/PNG download succeeds; printed PDF is one page after repair, correct client total 1000000, internal cost/note absent | Actual downloaded workbook, Chromium print output, text/visual inspection |
+| Restore | Consistent exported snapshot restores all 67 table hashes, 44 migrations and bank-ledger equality | Full pg_dump/pg_restore into separate QA DB, TLS verify-full; 519 rows at captured checkpoint |
+| Notifications | In-app workflow notifications readable; authorized worker/reconciliation endpoint succeeds, anonymous worker rejected | Synthetic recipients only; no registered push device |
+| Layout | Required mobile widths and desktop 1024/1280/1440 dashboard/material/finance show no document overflow; latest balance visible after refresh | Hosted Chromium DOM/screenshot evidence; mobile shell stays one column |
+
+Operational scope remains explicit: browser push is inactive until VAPID/device opt-in; GitHub/R2 main-database backup has no database credential yet and requires the user's new-access approval. Company cutoff/baseline and actual boss acceptance are human business checks, not replaced by synthetic QA. Scheduler automatic invocation is being inspected separately from manual worker success. No all-provider delivery or physical-device claim is made.
