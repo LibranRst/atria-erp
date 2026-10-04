@@ -40,6 +40,9 @@ const eslintConfig = defineConfig([
     // gate dengan galat yang bukan milik kode sumber mana pun.
     "storybook-static/**",
 
+    // Netlify emits bundled third-party SSR/edge runtime and static artifacts.
+    ".netlify/**",
+
     // Default ignores of eslint-config-next:
     ".next/**",
     ".next-*/**",

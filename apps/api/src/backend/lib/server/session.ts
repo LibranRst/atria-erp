@@ -1,5 +1,6 @@
 import { headers } from "@runtime/request-context";
 import { redirect } from "@runtime/navigation";
+import { cache } from "@runtime/react-cache";
 
 import { auth } from "@backend/lib/auth";
 
@@ -24,12 +25,18 @@ export async function getSessionFromHeaders(requestHeaders: Headers): Promise<Se
   }
 }
 
+// Share one pending lookup (including anonymous results) only within the active
+// RequestContext. Explicit header reads remain uncached for read-after-write.
+const readRequestSession = cache(async (): Promise<ServerSession> => {
+  return getSessionFromHeaders(await headers());
+});
+
 /**
  * Compatibility entry for extracted actions/loaders. Read the complete HTTP
  * header set from API request context, preserving native bearer credentials.
  */
 export async function getServerSession(): Promise<ServerSession> {
-  return getSessionFromHeaders(await headers());
+  return readRequestSession();
 }
 
 /**
