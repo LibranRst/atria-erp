@@ -6,7 +6,7 @@ export type PrivateAttachmentPurpose = z.infer<typeof privateAttachmentPurposeSc
 export const privateAttachmentUploadSchema = z
   .object({
     purpose: privateAttachmentPurposeSchema,
-    projectId: z.string().uuid().optional(),
+    projectId: z.guid().optional(),
   })
   .refine((value) => value.purpose !== "expense" || Boolean(value.projectId), {
     message: "Pilih proyek sebelum mengunggah bukti.",

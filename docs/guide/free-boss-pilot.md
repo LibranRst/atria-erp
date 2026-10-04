@@ -1,31 +1,37 @@
 # Pilot web gratis untuk Owner
 
-Disiapkan 4 Oktober 2026. Remediasi dan pemeriksaan lokal tersedia; database cloud pilot sudah diprovision. Web/API belum selesai dideploy dan belum ada persetujuan go-live.
+Disiapkan 4 Oktober 2026. Remediasi, pemeriksaan lokal, dan GitHub CI tersedia; database cloud pilot sudah diprovision. Railway Trial/Free tanpa kartu dipilih untuk API. Web/API hosted belum lolos verifikasi dan belum ada persetujuan go-live.
 
 Pilot berlangsung dua minggu untuk satu proyek berjalan, memakai data perusahaan yang disetujui Finance, dengan akun Owner, Finance, PM, dan Purchasing. Pembukuan yang sekarang tetap menjadi sumber pembanding. Laptop dan web di HP sama-sama masuk acceptance check. AI chat dan OCR wajib berfungsi sebelum undangan diberikan.
 
 ### Status persiapan aktual
 
 - Neon project `polished-glade-93740595`, branch `br-lucky-heart-b3qmgl34`, database `atria_pilot`: PostgreSQL 17 Singapore, min/max compute 0,25 CU, quota Free 1 GiB. Provision lulus dengan 44 migrations, 67 tabel, empat role sistem, nol user. Belum ada data bisnis perusahaan; jangan menjalankan ulang provision/reset/seed terhadap database ini.
-- Netlify site <https://atria-boss-pilot.netlify.app> sudah direservasi pada team Free, dengan environment web terpisah dari DB/AI secrets. Reservasi URL tidak berarti aplikasi sudah melayani request atau login HTTPS sudah diuji.
-- Image `atria-pilot-api:local` sudah berhasil dibuild dan berjalan di port lokal 3212; `/health` dan `/ready` merespons 200 memakai database Neon pilot, tanpa mutasi bisnis. Render/web hosted dan cold-start masih harus dibuktikan sesudah deploy.
+- Netlify site <https://atria-boss-pilot.netlify.app> sudah direservasi pada team Free, dengan environment web terpisah dari DB/AI secrets. Metadata build sudah diperbaiki dan diverifikasi: field Base kosong (repository root), Package directory `apps/web`, publish `apps/web/.next`, serta builds dihentikan untuk deploy manual lewat CLI. Setup awal Base `apps/web` sekaligus Package `apps/web` menggandakan path menjadi `apps/web/apps/web`, sehingga config/script tidak ditemukan; itu sudah diperbaiki. Reservasi URL dan metadata bukan bukti aplikasi sudah melayani request atau login HTTPS sudah diuji.
+- Image `atria-pilot-api:local` sudah berhasil dibuild dan berjalan di port lokal 3212; `/health` dan `/ready` merespons 200 memakai database Neon pilot, tanpa mutasi bisnis. API/web hosted dan cold-start masih harus dibuktikan sesudah deploy.
+- Railway project `9c8944bb-9dff-43a6-816e-73dac641d371`, environment `72e54b77-9adb-4691-856c-087d112bdbea`, dan satu service API `217d3e44-824c-46d6-af53-fab21ca28407` sudah dibuat. Repository source terhubung dengan root kosong/repo root; variables diimport dengan otorisasi user, tanpa AI keys. Domain <https://atria-pilot-api-production.up.railway.app> baru dialokasikan ke port 3001. `/ready`, Wait for CI, dan Serverless masih staged sebelum deployment; status Full Trial/outbound dan runtime belum dibuktikan. UI trial menampilkan maksimum dua vCPU/1 GB RAM dengan slider nonaktif, sehingga belum ada batas 512 MB/satu vCPU yang dikonfigurasi. Render tidak dipilih karena verifikasi kartu dengan hold US$1 ditolak user. `render.yaml` tetap tersedia sebagai opsi historis, bukan instruksi deploy pilot saat ini.
+- Source candidate [`b0e78152e97717f0576c32ea8eb928153a4fde25`](https://github.com/LibranRst/atria-erp/commit/b0e78152e97717f0576c32ea8eb928153a4fde25) sudah dipush melalui snapshot terisolasi, dengan [draft PR #2](https://github.com/LibranRst/atria-erp/pull/2). [GitHub CI run 37181391341](https://github.com/LibranRst/atria-erp/actions/runs/37181391341) sukses: quality 5 menit 4 detik dan seluruh job PostgreSQL disposable 1 menit 14 detik. Ini bukti CI sintetis, belum bukti hosted/data real.
 - Gemini API user masih free. Tetap gunakan `GEMINI_PAID_DATA_POLICY_CONFIRMED=false` dan approved providers kosong sampai keputusan provider yang diizinkan untuk data real selesai. Jangan mengirim nota/mutasi bank/data perusahaan ke provider free untuk melompati gate ini. OCR/chat pada data asli belum siap untuk undangan pilot.
 
 Checklist dan evidence terperinci ada di [rencana/evidence pilot](../plans/2026-10-04-web-audit-boss-pilot.md); hasil lokal sintetis dipisahkan dari gate hosted/data real.
 
 ## Hosting dan batas Rp0
 
-| Bagian              | Pilihan                           | Pengaturan                                                                                                            |
-| ------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Web                 | Netlify Free, Next.js runtime     | Base repo root, **Package directory `apps/web` di UI**, publish `apps/web/.next`; konfigurasi `apps/web/netlify.toml` |
-| API                 | Render Free, Bun Docker           | `render.yaml`, root Docker context, `apps/api/Dockerfile`, region Singapore, deploy manual setelah gate lulus         |
-| Database            | Neon Free, project pilot terpisah | Runtime pooled; koneksi direct untuk migration dan backup                                                             |
-| Lampiran            | ImageKit                          | Nota, bukti bayar, dan mutasi bank private; URL download singkat setelah pemeriksaan akses                            |
-| Recovery notifikasi | Cloudflare Worker existing        | Upstream API langsung; 30 menit delivery recovery dan harian 00.00 WIB                                                |
+| Bagian              | Pilihan                           | Pengaturan                                                                                                                                                                                                            |
+| ------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web                 | Netlify Free, Next.js runtime     | Field Base kosong (repo root), **Package directory `apps/web` di UI**, publish `apps/web/.next`; konfigurasi `apps/web/netlify.toml`, deploy CLI manual                                                               |
+| API                 | Railway Trial/Free, Bun Docker    | Satu service/satu replica, root Docker context, `RAILWAY_DOCKERFILE_PATH=apps/api/Dockerfile`, Serverless; UI trial max dua vCPU/1 GB, batas Free sesudah trial 512 MB/satu vCPU; Singapore hanya trial jika tersedia |
+| Database            | Neon Free, project pilot terpisah | Runtime pooled; koneksi direct untuk migration dan backup                                                                                                                                                             |
+| Lampiran            | ImageKit                          | Nota, bukti bayar, dan mutasi bank private; URL download singkat setelah pemeriksaan akses                                                                                                                            |
+| Recovery notifikasi | Cloudflare Worker existing        | Upstream API langsung; 30 menit delivery recovery dan harian 00.00 WIB                                                                                                                                                |
 
 Netlify mendukung SSR, Server Actions, route handlers, dan streaming melalui runtime Next. Package directory hanya dapat ditetapkan di UI; file TOML menggunakan base root agar Bun workspace dan kontrak API ikut tersedia. [Netlify monorepos](https://docs.netlify.com/build/configure-builds/monorepos/), [Next.js runtime](https://docs.netlify.com/build/frameworks/framework-setup-guides/nextjs/overview/).
 
-Render Free tidur setelah 15 menit tidak aktif, bangun sekitar satu menit, dan filesystem bersifat sementara. Simpan database di Neon dan file di ImageKit. Jangan membuat disk, database Render, atau background worker berbayar dari blueprint ini. Free instance mempunyai batas jam, bandwidth, build, dan outbound traffic; sebagian overage dapat ditagih jika payment method terpasang. Periksa akun Free dan matikan upgrade/overage yang belum disetujui. [Render Free](https://render.com/docs/free), [Render billing FAQ](https://render.com/docs/faq).
+Railway tidak memerlukan kartu untuk Trial/Free: trial memberi US$5 selama maksimal 30 hari; sesudah waktu atau kredit habis, Free menyediakan US$1 per bulan tanpa rollover. Verifikasi GitHub otomatis menentukan Full Trial dengan outbound network penuh atau Limited Trial dengan pembatasan outbound. Login saja belum membuktikan API dapat mengakses Neon, storage, dan AI; buktikan dari service yang sebenarnya. Jangan menambahkan kartu, top-up, Hobby/Pro, atau layanan berbayar untuk melewati gate. [Railway pricing](https://railway.com/pricing), [Free Trial](https://docs.railway.com/pricing/free-trial).
+
+Gunakan hanya satu service API/satu replica; jangan membuat Railway database, volume, Redis, atau worker tambahan. UI akun trial saat setup menunjukkan maksimum dua vCPU/1 GB RAM dan slider resource nonaktif; jangan mencatat batas RAM 512 MB/satu vCPU sebagai setting yang sudah diterapkan. Batas Free sesudah trial adalah RAM 512 MB/satu vCPU, sehingga ukur peak resource dan periksa transisi sebelum melanjutkan pilot. Gunakan repository GitHub private yang diotorisasi, bukan registry Docker private yang membutuhkan Pro. Singapore (`asia-southeast1-eqsg3a`) dapat dipilih pada trial bila akun mengizinkan; pricing menandai global regions tidak tersedia sesudah berpindah ke Free, sehingga lokasi Singapore tidak dijamin berlanjut. [Plan resources](https://docs.railway.com/pricing/plans), [Private registries](https://docs.railway.com/builds/private-registries), [Regions](https://docs.railway.com/deployments/regions).
+
+Kredit adalah batas operasional: saat Free allowance habis, service dapat berhenti hingga siklus berikutnya. Usage-limit resmi mempunyai minimum hard limit US$10 dan alert US$5; jangan mengklaim ada hard cap US$1 yang dikonfigurasi. Pertahankan akun tanpa payment method/upgrade dan periksa usage setiap hari kerja. Review pada hari ke-14 serta sebelum tanggal trial/kredit berakhir; pada 80% allowance, hentikan aktivitas tambahan, export delta pilot dan backup, lalu putuskan kelanjutan bersama Owner. Neon tetap disimpan terpisah; berakhirnya runtime bukan alasan menghapus database. [Usage controls](https://docs.railway.com/cli/usage), [Free allowance exhaustion](https://station.railway.com/billing/free-plan-credits-don-t-work-25e9814f).
 
 Netlify Free mempunyai hard limit kredit bulanan dan dapat menghentikan semua proyek dalam satu team saat kuota habis. Jangan mengaktifkan paket berbayar atau auto recharge. Periksa usage pada awal pilot dan setiap hari kerja; jika kuota 80%, hentikan deploy dan aktivitas tambahan, lalu evaluasi dengan Owner. [Netlify Free limits](https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/), [paused projects](https://docs.netlify.com/manage/accounts-and-billing/billing/resume-paused-projects/).
 
@@ -33,7 +39,7 @@ Rp0 hosting tidak berarti AI otomatis gratis. Gunakan hanya layanan/credits yang
 
 ## Urutan persiapan
 
-1. Lulus workflow **Web pilot quality**, pengujian browser dan viewport, serta restore rehearsal. Workflow hanya menggunakan PostgreSQL lokal disposable dan fixture sintetis; tidak mengambil database/AI/storage secret perusahaan.
+1. Pertahankan source candidate yang lulus [workflow Web pilot quality](https://github.com/LibranRst/atria-erp/actions/runs/37181391341), pengujian browser dan viewport, serta restore rehearsal. Workflow hanya menggunakan PostgreSQL disposable dan fixture sintetis; tidak mengambil database/AI/storage secret perusahaan.
 2. Finance menyetujui cutoff bertanggal: nilai kontrak dan RAB, budget kategori, consumed/pending/paid, utang/piutang, stok/reservasi, dan saldo rekening awal. Catat asal setiap angka serta siapa yang menyetujuinya.
 3. Buat Neon project/database pilot yang terpisah dari instance berjalan. Isi secret secara lokal/di provider; jangan menaruh URL credential di chat, Git, screenshot, atau log.
 4. Untuk database **kosong** yang identitas host/database-nya sudah diverifikasi, gunakan koneksi direct dalam environment sementara lalu jalankan dari root repo:
@@ -46,28 +52,39 @@ Rp0 hosting tidak berarti AI otomatis gratis. Gunakan hanya layanan/credits yang
 
 5. Ambil backup sebelum import baseline. Finance memasukkan satu proyek melalui alur aplikasi, kemudian cocokkan angka dengan cutoff. Uji permission dan project scoping memakai akun terpisah; developer account simulation harus mati.
 6. Siapkan private ImageKit dan approved AI providers. Verifikasi actual billing/privacy account sebelum membuka AI untuk data real.
-7. Buat Render service dari blueprint dan Netlify project. Tetapkan URL final dan environment berikut; deploy API dahulu, lalu web. Tidak ada migration/reset otomatis saat build/deploy.
+7. Selesaikan approval repository private pada Railway dan periksa Full Trial. Buat hanya satu service API sesuai pengaturan di bawah. Tetapkan URL final dan environment; deploy API dahulu, lalu web secara manual. Tidak ada migration/reset otomatis saat build/deploy.
 8. Verifikasi HTTPS, cookie login/logout/password, `/health`, `/ready`, chat stream, OCR, file private, notifikasi, dan pemulihan sesudah backend tidur. Catat commit/deployment ID kedua service.
 
-### Environment API — Render
+### Environment API — Railway
 
-| Nilai                                                               | Kontrak                                                                                                              |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `NODE_ENV=production`, `HOST=0.0.0.0`                               | `PORT` diberikan Render; API membaca port itu                                                                        |
-| `API_PUBLIC_URL`, `BETTER_AUTH_URL`                                 | Origin HTTPS API final, tanpa path                                                                                   |
-| `WEB_ORIGIN`                                                        | Origin HTTPS web pilot final; jangan wildcard semua preview                                                          |
-| `DATABASE_URL`                                                      | Koneksi pooled **pilot**; direct URL cukup di operator/backup, bukan web                                             |
-| `BETTER_AUTH_SECRET`, `API_BRIDGE_SECRET`, `ATRIA_BOOTSTRAP_SECRET` | Baru per instance; bridge sama dengan web, minimal 32 karakter; jangan pakai development default                     |
-| `IMAGEKIT_PRIVATE_KEY`, `NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT`         | Private key hanya API; endpoint harus cocok dengan akun penyimpanan pilot                                            |
-| `ATRIA_PILOT_REAL_DATA=true`                                        | Aktifkan policy provider real data                                                                                   |
-| `AI_CHAT_PROVIDERS=NINEROUTER`                                      | Default pilot: satu gateway yang telah disetujui; ubah hanya ke ordered chain yang disetujui                         |
-| `AI_APPROVED_PROVIDERS`                                             | Daftar provider CSV yang benar-benar disetujui; blueprint kosong sehingga AI tertolak sampai verifikasi selesai      |
-| `GEMINI_PAID_DATA_POLICY_CONFIRMED=true`, `GEMINI_API_KEY`          | Wajib untuk OCR/direct Gemini pada real-data pilot setelah kebijakan account diverifikasi; blueprint default `false` |
-| `NINEROUTER_API_KEY`, `NINEROUTER_BASE_URL`                         | Gateway approved, tersedia dari internet HTTPS; `localhost:20128` tidak bisa dipakai Render                          |
-| `NOTIFICATION_JOB_SECRET`                                           | Sama dengan Worker; VAPID web push di API bila push dipakai                                                          |
-| `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED=false`                          | Akun asli dan permission asli dipakai selama pilot                                                                   |
+| Nilai                                                               | Kontrak                                                                                                                |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV=production`, `HOST=0.0.0.0`, `PORT=3001`                  | API dan target public domain/healthcheck memakai port yang sama; Railway membaca `PORT` untuk healthcheck              |
+| `API_PUBLIC_URL`, `BETTER_AUTH_URL`                                 | Origin HTTPS API final, tanpa path                                                                                     |
+| `WEB_ORIGIN`                                                        | Origin HTTPS web pilot final; jangan wildcard semua preview                                                            |
+| `DATABASE_URL`                                                      | Koneksi pooled **pilot**; direct URL cukup di operator/backup, bukan web                                               |
+| `BETTER_AUTH_SECRET`, `API_BRIDGE_SECRET`, `ATRIA_BOOTSTRAP_SECRET` | Baru per instance; bridge sama dengan web, minimal 32 karakter; jangan pakai development default                       |
+| `IMAGEKIT_PRIVATE_KEY`, `NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT`         | Private key hanya API; endpoint harus cocok dengan akun penyimpanan pilot                                              |
+| `ATRIA_PILOT_REAL_DATA=true`                                        | Aktifkan policy provider real data                                                                                     |
+| `AI_CHAT_PROVIDERS=NINEROUTER`                                      | Default pilot: satu gateway yang telah disetujui; ubah hanya ke ordered chain yang disetujui                           |
+| `AI_APPROVED_PROVIDERS`                                             | Daftar provider CSV yang benar-benar disetujui; tetap kosong sehingga AI tertolak sampai verifikasi selesai            |
+| `GEMINI_PAID_DATA_POLICY_CONFIRMED=false`, `GEMINI_API_KEY`         | Tetap `false` selama Gemini API free; OCR/direct Gemini real data memerlukan policy akun yang disetujui sebelum `true` |
+| `NINEROUTER_API_KEY`, `NINEROUTER_BASE_URL`                         | Gateway approved, tersedia dari internet HTTPS; `localhost:20128` tidak bisa dipakai host cloud                        |
+| `NOTIFICATION_JOB_SECRET`                                           | Sama dengan Worker; VAPID web push di API bila push dipakai                                                            |
+| `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED=false`                          | Akun asli dan permission asli dipakai selama pilot                                                                     |
 
 Menambahkan `GEMINI` ke chat chain membutuhkan approval tersendiri; OCR tidak memberi izin otomatis untuk semua fallback chat. Saat provider belum approved atau kuota habis, tampilkan kegagalan yang jelas dan lanjutkan input manual untuk pembukuan pembanding. Jangan fallback ke layanan gratis yang belum disetujui.
+
+### Pengaturan service Railway
+
+Gunakan dashboard settings untuk project baru. `railway.json`/`railway.toml` Config as Code sudah deprecated, tidak digunakan untuk project baru sejak 28 Agustus 2026, dan legacy berakhir 1 Desember 2026; jangan menambahkan file konfigurasi lama untuk pilot ini. IaC baru boleh disiapkan tersendiri setelah host terverifikasi. [Config as Code](https://docs.railway.com/config-as-code/reference), [changelog resmi](https://railway.com/changelog/2026-08-20-railway-anon).
+
+1. Hubungkan repository private dan source candidate yang lulus CI; buat hanya service API, bukan semua package monorepo. Root directory tetap repository root agar workspace/core/patches tersedia.
+2. Set `RAILWAY_DOCKERFILE_PATH=apps/api/Dockerfile`. Gunakan Docker CMD yang ada; jangan menambahkan build/start command yang menggantikannya. Secret runtime tidak menjadi Docker build ARG. [Dockerfiles](https://docs.railway.com/builds/dockerfiles), [monorepo](https://docs.railway.com/deployments/monorepo).
+3. Gunakan satu replica, tanpa database/volume/layanan tambahan. Catat batas resource aktual: slider trial nonaktif pada max dua vCPU/1 GB, sedangkan batas Free sesudah trial 512 MB/satu vCPU. Jangan mengklaim cap yang tidak bisa diterapkan. Set healthcheck deployment ke `/ready`, dengan timeout startup 300 detik. `/health` adalah liveness; `/ready` membuktikan akses database. Healthcheck Railway hanya menghalangi routing deployment yang belum siap, bukan continuous monitor. [Healthchecks](https://docs.railway.com/deployments/healthchecks).
+4. Enable Serverless sebelum deploy/redeploy. Referensi saat ini menyatakan service tidur sekitar 5–10 menit sesudah outbound packet terakhir, bukan semata-mata tiadanya request masuk. Mengubah setting pada container yang sudah berjalan baru berlaku setelah deployment berikutnya. Buktikan tidur aktual setelah menutup web/SSE dan menunggu koneksi idle. API memakai Neon Pool yang kompatibel pg; constructor paket terpasang diperiksa tanpa koneksi database dan menunjukkan default `idleTimeoutMillis=10000`, `min=0`. Belum ada override idle eksplisit, tetapi default sudah menutup client yang dilepas setelah idle 10 detik; ini belum membuktikan seluruh runtime berhenti mengirim outbound. `allowExitOnIdle` tidak menutup socket, dan opsi postgres-js `idle_timeout` tidak berlaku untuk driver ini. Jangan memasang polling/keep-alive tambahan untuk mengakali tidur. [Serverless](https://docs.railway.com/deployments/serverless), [Pool API](https://node-postgres.com/apis/pool).
+5. Generate domain HTTPS Railway dengan target port 3001. Simpan origin itu di `API_PUBLIC_URL`/`BETTER_AUTH_URL`, isi `WEB_ORIGIN` dengan web Netlify final, dan update Netlify `API_ORIGIN`; bridge sama di kedua service. Verifikasi readiness/outbound sebelum web dibuild. [Public networking](https://docs.railway.com/networking/public-networking).
+6. Catat deployment ID, source commit, plan/status verifikasi, credit expiry/reset, region aktual, quota dan hasil sleep/wake. Jangan menganggap URL yang dihasilkan sudah membuktikan login atau workflow aplikasi.
 
 ### Environment web — Netlify
 
@@ -77,13 +94,13 @@ Pada Netlify **Free**, site variables memakai seluruh platform scopes: Builds, F
 
 `NEXT_PUBLIC_ATRIA_PILOT_MODE=true` sudah ada pada build environment TOML pilot. Flag public ini dikompilasi saat build dan menampilkan “Saldo pilot: snapshot awal + transaksi pilot” pada Dashboard/rekening. Environment normal memakai `false`; perubahan flag membutuhkan rebuild.
 
-Gunakan build command dan publish directory dari TOML, pilih Next.js runtime otomatis, serta Bun 1.3.14. Paket runtime Next tidak perlu dipasang atau dipin manual. [Netlify Bun](https://docs.netlify.com/build/configure-builds/available-software-at-build-time/).
+Gunakan build command dan publish directory dari TOML, field Base kosong (repo root), Package directory `apps/web`, pilih Next.js runtime otomatis, serta Bun 1.3.14. Metadata site sudah diverifikasi dengan builds dihentikan; lakukan deploy manual melalui CLI setelah API siap. Paket runtime Next tidak perlu dipasang atau dipin manual. [Netlify Bun](https://docs.netlify.com/build/configure-builds/available-software-at-build-time/).
 
 Netlify Functions mempunyai batas eksekusi dan payload; nilai Next `maxDuration` tidak memperpanjang limit provider. Current streaming limit 60 detik dan buffered payload 6 MB. File dikirim langsung ke API/storage melalui ticket, bukan Base64 besar dalam Server Action. Uji response chat dan SSE reconnect pada deployment sebenarnya. [Functions configuration](https://docs.netlify.com/build/functions/configuration/), [streaming API](https://docs.netlify.com/build/functions/api/).
 
 ### Cold start dan recovery
 
-Sebelum sesi dengan Owner, buka `/health`, lalu pastikan `/ready` merespons siap. Lakukan sekali lagi setelah idle lebih dari 15 menit pada acceptance test. Jangan memasang keep-alive agresif: itu memakan quota dan dapat mencegah database idle. Jika UI gagal saat startup, tunggu kesiapan lalu reload read; jangan otomatis mengulang pembayaran, pengeluaran, atau movement setelah timeout ambigu. Periksa activity/status/audit sebelum tindakan baru.
+Sebelum sesi dengan Owner, buka `/health`, lalu pastikan `/ready` merespons siap. Pada acceptance test, enable Serverless lalu redeploy, tutup web/SSE dan tunggu lebih dari 10 menit tanpa outbound; periksa service benar-benar tidur sebelum menguji wake. Koneksi pool/telemetry/job recovery dapat mencegah tidur, jadi toggle saja belum membuktikan penghematan kredit. Cold wake dapat memberi 502 pertama; tunggu kesiapan lalu reload read. Jangan otomatis mengulang pembayaran, pengeluaran, atau movement setelah timeout ambigu. Periksa activity/status/audit sebelum tindakan baru. [Sleep/wake tradeoff](https://docs.railway.com/guides/cut-idle-costs-serverless).
 
 Worker existing harus memakai `ATRIA_API_URL` final dan secret pilot, bukan upstream instance lama. Jangan mengasumsikan ada cron web; `apps/web/vercel.json` tidak mengatur job pilot ini.
 
@@ -125,7 +142,7 @@ pg_restore --exit-on-error --no-owner --no-acl --dbname="service=$PILOT_RESTORE_
 
 Kemudian jalankan `bun run db:check-invariants` dengan URL **restore target** di environment sementara, cocokkan baseline plus pilot deltas, dan lakukan login serta satu alur finance/material di preview terisolasi. Catat durasi, hasil, dan siapa yang memeriksa. Dump PostgreSQL tidak berisi byte file ImageKit: cadangkan lampiran pilot private beserta file ID/checksum dan buktikan pemulihan satu nota. Neon history window saja tidak menggantikan backup harian. Jangan menganggap private URL yang kedaluwarsa sebagai file yang hilang.
 
-Untuk rollback aplikasi, hentikan input pilot sementara dan kembali ke deployment API/web yang sudah dicatat dan kompatibel dengan schema saat ini. Migration additive tidak dibalik dengan menghapus tabel/kolom. Cocokkan transaksi yang sudah commit dengan pembukuan pembanding; timeout bukan bukti transaksi gagal. Restore data dilakukan ke target terpisah, diperiksa, baru diputuskan cutover oleh Owner/Finance.
+Untuk rollback aplikasi, hentikan input pilot sementara dan kembali ke deployment API/web yang sudah dicatat dan kompatibel dengan schema saat ini. Railway Trial/Free menyimpan image deployment yang dihapus selama 24 jam; sesudah itu gunakan redeploy source commit yang diketahui, jangan mengandalkan image history permanen. Migration additive tidak dibalik dengan menghapus tabel/kolom. Cocokkan transaksi yang sudah commit dengan pembukuan pembanding; timeout bukan bukti transaksi gagal. Restore data dilakukan ke target terpisah, diperiksa, baru diputuskan cutover oleh Owner/Finance. [Image retention](https://docs.railway.com/pricing/plans#image-retention-policy).
 
 ## Walkthrough Owner — 15 menit
 
@@ -171,3 +188,9 @@ ATRIA_E2E_ENV_FILE="$PILOT_PRIVATE_E2E_ENV_FILE" NEXT_PUBLIC_ATRIA_PILOT_MODE=tr
 ```
 
 Controller hanya boleh mengelola proses web miliknya dan menolak server yang sudah berjalan. Ini memeriksa putus koneksi nyata, offline fallback anonymous, serta tidak adanya queue/retry POST; jangan menjalankannya terhadap instance pilot real-data. Hentikan proses controller milik test dengan Ctrl+C sesudahnya.
+
+### Private storage runtime check — release gate
+
+A live synthetic ImageKit upload and metadata request returned 200 with `isPrivateFile=true`; the exact QA files were deleted (204, followed by metadata 404). Disposable HTTP checks returned upload-ticket 200 for a legacy PostgreSQL UUID-shaped project, anonymous download 401 and foreign-project PM denial. Owner authorization reached delivery, which failed certificate validation. The CDN `ik.imagekit.io` presented a certificate valid from 6 March to 4 June 2026; Bun, system curl and OpenSSL rejected it on 4 October. No TLS checks were disabled. Unsigned denial and signed exact-byte delivery remain unverified; real-data attachment/OCR pilot stays blocked until a valid configured delivery endpoint is verified.
+
+The two project-ID upload schemas now accept PostgreSQL UUID-shaped legacy IDs with `z.guid()` while preserving permission/scope checks. Nine focused cases with 49 assertions, API TypeScript and focused ESLint passed.

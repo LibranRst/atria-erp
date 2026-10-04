@@ -6,9 +6,12 @@ import {
   imagekitSource,
   privateAttachmentId,
 } from "./private-attachment-policy";
-import { signUploadTicket, verifyUploadTicket } from "./upload-ticket";
+import { signUploadTicket, uploadTicketInputSchema, verifyUploadTicket } from "./upload-ticket";
 import { approvedChatProviders, assertApprovedAiProvider } from "../ai/provider-policy";
-import { PRIVATE_ATTACHMENT_MAX_BYTES } from "@atria/core/media/private-attachment";
+import {
+  PRIVATE_ATTACHMENT_MAX_BYTES,
+  privateAttachmentUploadSchema,
+} from "@atria/core/media/private-attachment";
 
 const id = "12345678-1234-4234-8234-123456789012";
 const origin = "https://atria.example";
@@ -88,6 +91,23 @@ describe("short-lived upload tickets", () => {
     size: 1024,
   };
   const identity = { userId: id, sessionId: "server-verified-session" };
+  test("accepts Postgres UUID-shaped seeded project IDs and rejects malformed IDs", () => {
+    const projectId = "77777777-7777-7777-7777-777777777771";
+    const input = { ...metadata, projectId };
+    expect(privateAttachmentUploadSchema.parse(input).projectId).toBe(projectId);
+    expect(uploadTicketInputSchema.parse(input).projectId).toBe(projectId);
+    const ticket = signUploadTicket(input, identity, secret, 1000);
+    expect(verifyUploadTicket(ticket, secret, 1001).projectId).toBe(projectId);
+    for (const malformed of ["", "not-an-id", `${projectId}extra`, projectId.replace(/1$/, "z")]) {
+      expect(privateAttachmentUploadSchema.safeParse({ ...input, projectId: malformed }).success).toBe(
+        false,
+      );
+      expect(uploadTicketInputSchema.safeParse({ ...input, projectId: malformed }).success).toBe(
+        false,
+      );
+    }
+    expect(privateAttachmentUploadSchema.safeParse({ purpose: "expense" }).success).toBe(false);
+  });
   test("binds session, user, project, name and size; expires after two minutes", () => {
     const value = signUploadTicket(metadata, identity, secret, 1000);
     expect(verifyUploadTicket(value, secret, 1001)).toMatchObject({

@@ -8,7 +8,7 @@ import {
 export const uploadTicketInputSchema = z
   .object({
     purpose: privateAttachmentUploadSchema.shape.purpose,
-    projectId: z.string().uuid().optional(),
+    projectId: z.guid().optional(),
     fileName: z.string().min(1).max(255),
     size: z.number().int().positive().max(PRIVATE_ATTACHMENT_MAX_BYTES),
   })
