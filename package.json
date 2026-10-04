@@ -44,6 +44,7 @@
     "heroui:styles:check": "bun scripts/build-heroui-styles.ts --check",
     "prebuild": "bun run heroui:styles",
     "test:web-e2e": "bun --filter @atria/web browser:test",
+    "verify:pilot": "bun scripts/verify-pilot-deployment.ts",
     "audit:production": "bun scripts/security/classify-dependencies.ts --output output/security/dependency-classification.json --fail-on-production high",
     "test:security-scripts": "bun run --cwd apps/api test ../../scripts/security/classify-dependencies.test.ts"
   },
