@@ -103,7 +103,7 @@ Netlify Functions mempunyai batas eksekusi dan payload; nilai Next `maxDuration`
 
 ### Cold start dan recovery
 
-Evidence aktual `2026-10-04T09:13:00Z`: kartu Railway Architecture menunjukkan Sleeping sesudah lebih dari 10 menit tanpa request API; screenshot disimpan. First anonymous GET `/ready` sukses pada percobaan pertama, 200/ready dalam 2.858 s; `/health` berikutnya 200/ok dalam 0.242 s. API bangun dan koneksi Neon siap pada satu kasus ini. Tidak ada jaminan latency dan tidak ada proof quota exhaustion, AI stream/timeout atau retry transaksi bisnis dari pemeriksaan ini.
+Evidence aktual `2026-10-04T09:13:00Z`: kartu Railway Architecture menunjukkan Sleeping sesudah lebih dari 10 menit tanpa request API; screenshot disimpan. First anonymous GET `/ready` sukses pada percobaan pertama, 200/ready dalam 2.858 s; `/health` berikutnya 200/ok dalam 0.242 s. API bangun dan koneksi Neon siap pada satu kasus ini. Read-back UI pukul 09:15 UTC mengonfirmasi Online, sisa trial 30 hari dan kredit US$5.00, tanpa tindakan upgrade atau kartu. Tidak ada jaminan latency; peak usage, quota exhaustion, perilaku Free sesudah trial, AI stream/timeout dan retry transaksi bisnis tetap belum dibuktikan.
 
 Sebelum sesi dengan Owner, buka `/health`, lalu pastikan `/ready` merespons siap. Pada acceptance test, enable Serverless lalu redeploy, tutup web/SSE dan tunggu lebih dari 10 menit tanpa outbound; periksa service benar-benar tidur sebelum menguji wake. Koneksi pool/telemetry/job recovery dapat mencegah tidur, jadi toggle saja belum membuktikan penghematan kredit. Cold wake dapat memberi 502 pertama; tunggu kesiapan lalu reload read. Jangan otomatis mengulang pembayaran, pengeluaran, atau movement setelah timeout ambigu. Periksa activity/status/audit sebelum tindakan baru. [Sleep/wake tradeoff](https://docs.railway.com/guides/cut-idle-costs-serverless).
 
@@ -242,3 +242,13 @@ bun run verify:pilot --web https://atria-boss-pilot.netlify.app --api https://at
 ```
 
 Verifier memeriksa JSON health/readiness, public login HTML beserta script/font asset terbaru, redirect anonymous pada route terproteksi, dan penolakan server artifact. Ia tidak login, mengubah password, membaca data bisnis, memverifikasi Cron scheduler, atau menjalankan workflow finance/material. Hasil lulus tidak menggantikan hosted business UAT.
+
+## AI gateway update — 4 October 2026
+
+The user selected 9Router only with Gemini 3.8 Flash and authorized the existing gateway credential in Railway. Pin `ag/gemini-3.8-flash-high` with reasoning `high`; `AI_CHAT_PROVIDERS=NINEROUTER` and `AI_APPROVED_PROVIDERS=NINEROUTER`, without direct Gemini/DeepSeek/OpenRouter fallback. The API key remains API-only. This supersedes the initial empty-provider setup, while direct unpaid Gemini stays unapproved.
+
+Chat, receipt OCR and AI bank parsing use the configured gateway. Known CSV/Excel parsing stays local. Actual synthetic text, PNG totals, PDF transaction amounts after local page rendering and a streaming tool loop passed; anonymous gateway inference returned 401. The adapter explicitly buffers document requests and preserves chat streaming. JSON/schema prompts and domain Zod validation cover the gateway's missing native schema forwarding; no real company data was used for the probes.
+
+The gateway advertises no native PDF support. Private PDF bytes are rendered locally in an isolated credential-free subprocess (five complete pages, 10 MiB source/aggregate images, 1200×2400 page bounds, one renderer, 15 s deadline plus caller abort). Page/size failures reject the draft; native PDFs are not silently forwarded. Historical PDFs among the latest four active references are rechecked and re-extracted for follow-up messages. Request/stream errors avoid raw provider prompts, headers or credentials in frontend/logs.
+
+Credential/provider changes are staged pending the tested release deployment. Current hosted chat/OCR acceptance still requires the Owner's personal-password step, valid ImageKit delivery, and the business UAT/Finance baseline. The selected `ag` upstream is Antigravity OAuth; gateway choice and synthetic inference do not establish upstream billing/privacy/retention suitability. That real-data gate remains open. Details and evidence: [9Router migration plan](../plans/2026-10-04-ninerouter-gemini-flash.md).

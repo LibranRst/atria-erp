@@ -1,6 +1,7 @@
 import { expect, mock } from "bun:test";
 import { simulateReadableStream, type UIMessageChunk } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
+import { inspect } from "node:util";
 import type { ChatStreamInput } from "../chat-stream";
 
 type ModelOptions = Parameters<MockLanguageModelV4["doStream"]>[0];
@@ -152,6 +153,131 @@ async function cancellation(kind: "request" | "deadline", partial = false): Prom
     ).toBe(true);
 }
 
+async function privateProviderError(partial: boolean): Promise<void> {
+  const fakeKey = "fixture-provider-secret-key";
+  const fakePrompt = "fixture-private-document-prompt";
+  const error = new Error(`${fakeKey}: ${fakePrompt}`, {
+    cause: { authorization: `Bearer ${fakeKey}`, requestPrompt: fakePrompt },
+  });
+  const firstTextReceived = Promise.withResolvers<void>();
+  const logs: unknown[][] = [];
+  const previousConsoleError = console.error;
+  const previousChain = chain;
+  console.error = (...values: unknown[]): void => {
+    logs.push(values);
+  };
+  chain = partial ? ["DEEPSEEK", "GEMINI"] : ["DEEPSEEK"];
+  resolved = [];
+  models = new Map([
+    [
+      "DEEPSEEK",
+      new MockLanguageModelV4({
+        doStream: async (): Promise<ModelResult> => ({
+          stream: new ReadableStream<ModelPart>({
+            start(controller: ReadableStreamDefaultController<ModelPart>): void {
+              controller.enqueue({ type: "stream-start", warnings: [] });
+              const fail = (): void => {
+                controller.enqueue({ type: "error", error });
+                controller.close();
+              };
+              if (partial) {
+                controller.enqueue({ type: "text-start", id: "private-error" });
+                controller.enqueue({
+                  type: "text-delta",
+                  id: "private-error",
+                  delta: "Jawaban parsial aman",
+                });
+                // Fail only after the UI consumer has received the first text.
+                void firstTextReceived.promise.then(fail);
+              } else fail();
+            },
+          }),
+        }),
+      }),
+    ],
+    ["GEMINI", successfulModel()],
+  ]);
+  try {
+    const chunks = await consume(
+      runChatStream(input(async (): Promise<void> => undefined)).stream,
+      (chunk: UIMessageChunk): void => {
+        if (chunk.type === "text-delta") firstTextReceived.resolve();
+      },
+    );
+    expect(resolved).toEqual(["DEEPSEEK"]);
+    expect(
+      chunks.filter((chunk) => chunk.type === "error").map((chunk) => chunk.errorText),
+    ).toContain("Maaf, asisten sedang tidak bisa menjawab. Coba lagi sebentar lagi.");
+    for (const sensitiveValue of [fakeKey, fakePrompt]) {
+      expect(JSON.stringify(chunks)).not.toContain(sensitiveValue);
+      expect(inspect(logs, { depth: 10 })).not.toContain(sensitiveValue);
+    }
+    if (partial) {
+      expect(
+        chunks.some(
+          (chunk) => chunk.type === "text-delta" && chunk.delta === "Jawaban parsial aman",
+        ),
+      ).toBe(true);
+    } else expect(logs).toEqual([["AI chat stream gagal."]]);
+  } finally {
+    console.error = previousConsoleError;
+    chain = previousChain;
+  }
+}
+
+async function pdfParts(provider: "NINEROUTER" | "GEMINI"): Promise<void> {
+  const previousChain = chain;
+  let providerPrompt: ModelOptions["prompt"] | undefined;
+  chain = [provider];
+  resolved = [];
+  models = new Map([
+    [
+      provider,
+      new MockLanguageModelV4({
+        doStream: async (options: ModelOptions): Promise<ModelResult> => {
+          providerPrompt = options.prompt;
+          return successfulModel().doStream(options);
+        },
+      }),
+    ],
+  ]);
+  try {
+    await consume(
+      runChatStream({
+        ...input(async (): Promise<void> => undefined),
+        messages: [
+          {
+            id: "pdf-context",
+            role: "user",
+            parts: [
+              { type: "text", text: "[Data Ekstraksi Dokumen PDF] Synthetic extracted PDF text" },
+              {
+                type: "file",
+                mediaType: "application/pdf",
+                filename: "synthetic.pdf",
+                url: `data:application/pdf;base64,${Buffer.from("%PDF-synthetic").toString("base64")}`,
+              },
+              {
+                type: "file",
+                mediaType: "image/png",
+                filename: "synthetic.png",
+                url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO5+q3sAAAAASUVORK5CYII=",
+              },
+            ],
+          },
+        ],
+      }).stream,
+    );
+    expect(resolved).toEqual([provider]);
+    const serialized = JSON.stringify(providerPrompt);
+    expect(serialized).toContain("Synthetic extracted PDF text");
+    expect(serialized).toContain("image/png");
+    expect(serialized.includes("application/pdf")).toBe(provider !== "NINEROUTER");
+  } finally {
+    chain = previousChain;
+  }
+}
+
 await cancellation("request");
 await cancellation("deadline");
 await cancellation("request", true);
@@ -217,4 +343,8 @@ const stopped = new AbortController();
 stopped.abort();
 await consume(runChatStream(input(async (): Promise<void> => undefined, stopped.signal)).stream);
 expect(resolved).toEqual([]);
-console.info("Chat cancellation/deadline/fallback/persistence fixture passed.");
+await privateProviderError(true);
+await privateProviderError(false);
+await pdfParts("NINEROUTER");
+await pdfParts("GEMINI");
+console.info("Chat cancellation/deadline/fallback/persistence/private-error/PDF fixture passed.");

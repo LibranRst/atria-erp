@@ -1,14 +1,61 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import * as XLSX from "xlsx";
 import { analyzeBankStatementUseCase } from "./bank-statement-analyzer";
 import type { Actor } from "@backend/server/actor";
+import {
+  documentModel,
+  type DocumentContentRequest,
+  type DocumentContentResponse,
+} from "@backend/lib/ai/document-model";
 
 describe("analyzeBankStatementUseCase", () => {
-  const dummyActor = {
+  const dummyActor: Actor = {
     userId: "00000000-0000-0000-0000-000000000001",
     roleId: "00000000-0000-0000-0000-000000000002",
     roleName: "OWNER",
-  } as unknown as Actor;
+    name: "Synthetic Owner",
+    email: "owner@example.invalid",
+    isActive: true,
+    mustChangePassword: false,
+    sessionId: "synthetic-session",
+    permissions: ["reconcile:ledger"],
+    dataScope: "GLOBAL",
+    developerActorUserId: null,
+  };
+  const originalGenerateContent = documentModel.models.generateContent;
+  const originalEnvironment: Readonly<Record<string, string | undefined>> = {
+    AI_CHAT_PROVIDERS: process.env.AI_CHAT_PROVIDERS,
+    AI_APPROVED_PROVIDERS: process.env.AI_APPROVED_PROVIDERS,
+    ATRIA_PILOT_REAL_DATA: process.env.ATRIA_PILOT_REAL_DATA,
+    NINEROUTER_API_KEY: process.env.NINEROUTER_API_KEY,
+    NINEROUTER_BASE_URL: process.env.NINEROUTER_BASE_URL,
+  };
+  let requestCount = 0;
+  let lastRequest: DocumentContentRequest | undefined;
+  let modelText = JSON.stringify({
+    bankName: null,
+    accountNumber: null,
+    rows: [{ transactionDate: "04/10/2026", description: "Synthetic bank expense", amount: 12000, type: "OUTFLOW" }],
+  });
+  beforeAll((): void => {
+    process.env.AI_CHAT_PROVIDERS = "NINEROUTER";
+    process.env.AI_APPROVED_PROVIDERS = "NINEROUTER";
+    process.env.ATRIA_PILOT_REAL_DATA = "true";
+    process.env.NINEROUTER_API_KEY = "synthetic-no-network-gateway-key";
+    process.env.NINEROUTER_BASE_URL = "https://gateway.invalid/v1";
+    documentModel.models.generateContent = async (input: DocumentContentRequest): Promise<DocumentContentResponse> => {
+      requestCount++;
+      lastRequest = input;
+      return { text: modelText, usageMetadata: { totalTokenCount: 20 } };
+    };
+  });
+  afterAll((): void => {
+    documentModel.models.generateContent = originalGenerateContent;
+    for (const [key, value] of Object.entries(originalEnvironment)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
 
   test("parses standard Atria CSV instantly with zero tokens", async () => {
     const csvContent = [
@@ -182,5 +229,86 @@ describe("analyzeBankStatementUseCase", () => {
     expect(normalizeDateToIso("22-Juli-25")).toBe("2025-07-22");
     expect(normalizeDateToIso("10 Agustus 2026")).toBe("2026-08-10");
     expect(normalizeDateToIso("7/22/26")).toBe("2026-07-22");
+  });
+
+  test("local CSV and Excel parsing succeeds while no AI provider is approved", async () => {
+    const previousCalls = requestCount;
+    process.env.AI_APPROVED_PROVIDERS = "";
+    try {
+      const data = [
+        ["tanggal", "deskripsi", "dana_masuk", "dana_keluar"],
+        ["2026-10-04", "Synthetic payment", "50000", ""],
+      ];
+      const csv = await analyzeBankStatementUseCase(dummyActor, {
+        fileName: "synthetic.csv", mimeType: "text/csv", fileContent: data.map((row) => row.join(",")).join("\n"),
+      });
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(data), "Mutasi");
+      const bytes = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
+      const excel = await analyzeBankStatementUseCase(dummyActor, {
+        fileName: "synthetic.xlsx", fileBase64: bytes.toString("base64"),
+      });
+      expect(csv.success).toBe(true);
+      expect(excel.success).toBe(true);
+      expect(requestCount).toBe(previousCalls);
+    } finally {
+      process.env.AI_APPROVED_PROVIDERS = "NINEROUTER";
+    }
+  });
+
+  for (const mimeType of ["image/png", "application/pdf"]) {
+    test(`routes ${mimeType} through the configured document model with domain validation`, async () => {
+      const bytes = Buffer.from(mimeType === "application/pdf" ? "%PDF-1.7\nSynthetic" : "synthetic-image");
+      const result = await analyzeBankStatementUseCase(dummyActor, {
+        fileName: mimeType === "application/pdf" ? "synthetic.pdf" : "synthetic.png",
+        mimeType, fileBase64: bytes.toString("base64"),
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.rows[0]?.transactionDate).toBe("2026-10-04");
+        expect(result.data.summary.totalOutflow).toBe(12000);
+        expect(result.data.detectedBankName).toBeNull();
+      }
+      expect(lastRequest?.contents[0]).toEqual({ inlineData: { data: bytes.toString("base64"), mimeType } });
+      expect(lastRequest?.config?.responseJsonSchema).toMatchObject({
+        type: "object", properties: { bankName: { type: ["string", "null"] } },
+      });
+      expect(lastRequest?.config?.abortSignal).toBeInstanceOf(AbortSignal);
+      expect(lastRequest && "model" in lastRequest).toBe(false);
+    });
+  }
+
+  test("rejects an unapproved image provider without model inference", async () => {
+    const previousCalls = requestCount;
+    process.env.AI_APPROVED_PROVIDERS = "";
+    try {
+      const result = await analyzeBankStatementUseCase(dummyActor, {
+        fileName: "synthetic.pdf", mimeType: "application/pdf", fileBase64: Buffer.from("%PDF-1.7\n").toString("base64"),
+      });
+      expect(result.success).toBe(false);
+      expect(requestCount).toBe(previousCalls);
+    } finally {
+      process.env.AI_APPROVED_PROVIDERS = "NINEROUTER";
+    }
+  });
+
+  test("rejects malformed JSON and negative amounts without exposing raw model output", async () => {
+    const originalText = modelText;
+    try {
+      for (const invalid of ["synthetic-invalid-json", JSON.stringify({ rows: [{ transactionDate: "2026-10-04", description: "Synthetic", amount: -5, type: "OUTFLOW" }] })]) {
+        modelText = invalid;
+        const result = await analyzeBankStatementUseCase(dummyActor, {
+          fileName: "synthetic.pdf", mimeType: "application/pdf", fileBase64: Buffer.from("%PDF-1.7\n").toString("base64"),
+        });
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.message).toContain("AI");
+          expect(result.error.message).not.toContain("synthetic-invalid-json");
+          expect(result.error.message).not.toContain("Gemini");
+        }
+      }
+    } finally {
+      modelText = originalText;
+    }
   });
 });

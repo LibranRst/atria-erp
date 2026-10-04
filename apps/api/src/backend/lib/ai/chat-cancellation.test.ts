@@ -1,12 +1,13 @@
 import { expect, test } from "bun:test";
 import { fileURLToPath } from "node:url";
 
-test("provider cancellation/deadline blocks fallback while normal fallback preserves history", async (): Promise<void> => {
+test("provider cancellation/private errors block fallback while normal fallback preserves history", async (): Promise<void> => {
   const fixture = fileURLToPath(new URL("./fixtures/chat-cancellation-case.ts", import.meta.url));
-  const child = Bun.spawn([process.execPath, fixture], {
-    cwd: fileURLToPath(new URL("../../../../../", import.meta.url)),
+  const child = Bun.spawn([process.execPath, "--no-env-file", "--no-install", fixture], {
+    cwd: fileURLToPath(new URL("../../../../", import.meta.url)),
     env: {
-      ...process.env,
+      PATH: process.env.PATH,
+      NODE_ENV: "test",
       DATABASE_URL: "postgresql://disabled:disabled@127.0.0.1:1/no_live_database",
     },
     stdout: "pipe",

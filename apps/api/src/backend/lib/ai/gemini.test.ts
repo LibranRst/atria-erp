@@ -3,20 +3,24 @@ import { db } from "@backend/db";
 import { aiRun, attachment, project } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@backend/lib/auth";
-import { geminiClient, GEMINI_OCR_MODEL } from "@backend/lib/ai/gemini";
+import { documentModel, type DocumentContentRequest, type DocumentContentResponse } from "@backend/lib/ai/document-model";
 import { processReceipt } from "@backend/app/actions/ai/process-receipt";
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { describeIntegration } from "@backend/lib/testing/integration-db";
 
 // Simpan method original
 const originalGetSession = (auth.api as unknown as { getSession: unknown }).getSession;
-const originalGenerateContent = geminiClient.models.generateContent;
+const originalGenerateContent = documentModel.models.generateContent;
 const originalFetch = global.fetch;
-const originalStorageEnvironment: Readonly<Record<string, string | undefined>> = {
+const originalDocumentEnvironment: Readonly<Record<string, string | undefined>> = {
   IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY,
   IMAGEKIT_URL_ENDPOINT: process.env.IMAGEKIT_URL_ENDPOINT,
   NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT,
   ATRIA_PILOT_REAL_DATA: process.env.ATRIA_PILOT_REAL_DATA,
+  AI_CHAT_PROVIDERS: process.env.AI_CHAT_PROVIDERS,
+  AI_APPROVED_PROVIDERS: process.env.AI_APPROVED_PROVIDERS,
+  NINEROUTER_API_KEY: process.env.NINEROUTER_API_KEY,
+  NINEROUTER_BASE_URL: process.env.NINEROUTER_BASE_URL,
 };
 let receiptUrl = "";
 let attachmentId = "";
@@ -62,59 +66,27 @@ const PM_BUDI_USER = {
   name: "Budi Santoso",
 };
 
-type GeminiMockArgs = {
-  model: string;
-  contents: unknown;
-};
+let lastDocumentRequest: DocumentContentRequest | undefined;
 
-async function mockGenerateContent(args: unknown): Promise<{
-  text: string;
-  usageMetadata: {
-    totalTokenCount: number;
+async function mockGenerateContent(args: DocumentContentRequest): Promise<DocumentContentResponse> {
+  lastDocumentRequest = args;
+  const hasImage = args.contents.some((part) => typeof part !== "string");
+  if (!hasImage) throw new Error("Unexpected non-image document extraction call.");
+  return {
+    text: JSON.stringify({
+      vendorName: "TB Sinar Maju",
+      transactionDate: "2026-06-10T00:00:00.000Z",
+      subtotal: 750000,
+      tax: 0,
+      totalAmount: 750000,
+      items: [
+        { itemName: "Semen Tiga Roda 50kg", quantity: 10, unitPrice: 72000, totalPrice: 720000 },
+        { itemName: "Paku Kayu 3 Inch", quantity: 2, unitPrice: 15000, totalPrice: 30000 },
+      ],
+    }),
+    usageMetadata: { totalTokenCount: 150 },
+    modelVersion: "synthetic-configured-document-model",
   };
-}> {
-  const { model, contents } = args as GeminiMockArgs;
-  if (model === GEMINI_OCR_MODEL) {
-    const isOCR =
-      Array.isArray(contents) &&
-      contents.some((contentPart: unknown) => {
-        return (
-          typeof contentPart === "object" && contentPart !== null && "inlineData" in contentPart
-        );
-      });
-    if (isOCR) {
-      return {
-        text: JSON.stringify({
-          vendorName: "TB Sinar Maju",
-          transactionDate: "2026-06-10T00:00:00.000Z",
-          subtotal: 750000.0,
-          tax: 0.0,
-          totalAmount: 750000.0,
-          items: [
-            {
-              itemName: "Semen Tiga Roda 50kg",
-              quantity: 10,
-              unitPrice: 72000.0,
-              totalPrice: 720000.0,
-            },
-            {
-              itemName: "Paku Kayu 3 Inch",
-              quantity: 2,
-              unitPrice: 15000.0,
-              totalPrice: 30000.0,
-            },
-          ],
-        }),
-        usageMetadata: {
-          totalTokenCount: 150,
-        },
-      };
-    }
-
-    throw new Error(`Unexpected non-OCR Gemini call: ${String(contents)}`);
-  }
-
-  throw new Error(`Model ${model} tidak dikenali dalam test mock.`);
 }
 
 describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
@@ -128,7 +100,11 @@ describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
       process.env.IMAGEKIT_PRIVATE_KEY = "synthetic-private-storage-key";
       process.env.IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/atria-audit";
       process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/atria-audit";
-      process.env.ATRIA_PILOT_REAL_DATA = "false";
+      process.env.ATRIA_PILOT_REAL_DATA = "true";
+      process.env.AI_CHAT_PROVIDERS = "NINEROUTER";
+      process.env.AI_APPROVED_PROVIDERS = "NINEROUTER";
+      process.env.NINEROUTER_API_KEY = "synthetic-no-network-gateway-key";
+      process.env.NINEROUTER_BASE_URL = "https://gateway.invalid/v1";
       const [stored] = await db
         .insert(attachment)
         .values({
@@ -165,26 +141,42 @@ describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
         { preconnect: originalFetch.preconnect },
       );
 
-      // Mock Gemini API generateContent
-      (geminiClient.models as unknown as { generateContent: unknown }).generateContent =
-        mockGenerateContent;
+      documentModel.models.generateContent = mockGenerateContent;
     }),
   );
 
   afterAll(
     withTestRequest(async (): Promise<void> => {
+      await db.delete(aiRun).where(eq(aiRun.payload, JSON.stringify({ receiptImageUrl: receiptUrl })));
       await db.delete(attachment).where(eq(attachment.id, attachmentId));
-      for (const [key, value] of Object.entries(originalStorageEnvironment)) {
+      for (const [key, value] of Object.entries(originalDocumentEnvironment)) {
         if (value === undefined) delete process.env[key];
         else process.env[key] = value;
       }
       restoreUserSession();
-      geminiClient.models.generateContent = originalGenerateContent;
+      documentModel.models.generateContent = originalGenerateContent;
       global.fetch = originalFetch;
     }),
   );
 
   describe("OCR Receipt Parser Action", () => {
+    it(
+      "rejects an unapproved configured provider before private bytes or AI runs",
+      withTestRequest(async (): Promise<void> => {
+        mockUserSession(PM_BUDI_USER);
+        const before = fetched;
+        const runs = await db.query.aiRun.findMany({ columns: { id: true } });
+        process.env.AI_APPROVED_PROVIDERS = "";
+        try {
+          const response = await processReceipt(receiptUrl);
+          expect(response.success).toBe(false);
+          expect(fetched).toBe(before);
+          expect((await db.query.aiRun.findMany({ columns: { id: true } })).length).toBe(runs.length);
+        } finally {
+          process.env.AI_APPROVED_PROVIDERS = "NINEROUTER";
+        }
+      }),
+    );
     it(
       "rejects arbitrary URLs before any fetch or AI run",
       withTestRequest(async (): Promise<void> => {
@@ -198,7 +190,7 @@ describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
       }),
     );
     it(
-      "harus mengekstrak struk belanja secara asinkron menggunakan Gemini 3 Flash Preview dan menyimpan log di tabel ai_run",
+      "extracts a private receipt through the configured document boundary and persists ai_run",
       withTestRequest(async () => {
         mockUserSession(PM_BUDI_USER);
 
@@ -212,6 +204,13 @@ describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
         expect(data.totalAmount).toBe(750000.0);
         expect(data.items.length).toBe(2);
         expect(data.items[0].itemName).toBe("Semen Tiga Roda 50kg");
+        expect(lastDocumentRequest).toBeDefined();
+        expect(lastDocumentRequest?.contents[0]).toMatchObject({
+          inlineData: { mimeType: "image/jpeg", data: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]).toString("base64") },
+        });
+        expect(lastDocumentRequest?.config?.responseJsonSchema).toMatchObject({ type: "object" });
+        expect(lastDocumentRequest?.config?.abortSignal).toBeInstanceOf(AbortSignal);
+        expect(lastDocumentRequest && "model" in lastDocumentRequest).toBe(false);
 
         // Verifikasi log disimpan ke database
         const runLog = await db.query.aiRun.findFirst({
@@ -245,8 +244,7 @@ describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
       withTestRequest(async () => {
         mockUserSession(PM_BUDI_USER);
 
-        (geminiClient.models as unknown as { generateContent: unknown }).generateContent =
-          async () => {
+        documentModel.models.generateContent = async (): Promise<DocumentContentResponse> => {
             return {
               text: JSON.stringify({
                 vendorName: "",
@@ -275,8 +273,32 @@ describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
           expect(runLog).toBeDefined();
           expect(runLog!.status).toBe("FAILED");
         } finally {
-          (geminiClient.models as unknown as { generateContent: unknown }).generateContent =
-            mockGenerateContent;
+          documentModel.models.generateContent = mockGenerateContent;
+        }
+      }),
+    );
+    it(
+      "rejects malformed model JSON and records FAILED without returning raw content",
+      withTestRequest(async (): Promise<void> => {
+        mockUserSession(PM_BUDI_USER);
+        documentModel.models.generateContent = async (): Promise<DocumentContentResponse> => ({
+          text: "{synthetic-invalid-json",
+        });
+        try {
+          const result = await processReceipt(receiptUrl);
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            expect(result.error.code).toBe("VALIDATION_ERROR");
+            expect(result.error.message).not.toContain("synthetic-invalid-json");
+            expect(result.error.message).not.toContain("Gemini");
+          }
+          const run = await db.query.aiRun.findFirst({
+            where: eq(aiRun.runType, "OCR_RECEIPT"),
+            orderBy: (row, { desc }) => [desc(row.createdAt)],
+          });
+          expect(run?.status).toBe("FAILED");
+        } finally {
+          documentModel.models.generateContent = mockGenerateContent;
         }
       }),
     );

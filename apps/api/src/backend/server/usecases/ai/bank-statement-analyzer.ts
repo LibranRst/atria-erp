@@ -1,14 +1,12 @@
 import { readPrivateAttachment } from "@backend/server/usecases/media/private-attachments";
-import { assertApprovedAiProvider } from "@backend/lib/ai/provider-policy";
 import { PRIVATE_ATTACHMENT_MAX_BYTES } from "@atria/core/media/private-attachment";
 import { db } from "@backend/db";
 import { aiRun } from "@backend/db/schema";
-import { geminiClient, GEMINI_OCR_MODEL } from "@backend/lib/ai/gemini";
+import { documentModel, requireDocumentProvider } from "@backend/lib/ai/document-model";
 import type { Actor } from "@backend/server/actor";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { parseBankStatementCsv } from "@atria/core/finance/bank-statement-csv";
 import { getErrorMessage } from "@atria/core/utils/error-message";
-import { Type } from "@google/genai";
 import { eq } from "drizzle-orm";
 import * as XLSX from "xlsx";
 import { z } from "zod";
@@ -40,18 +38,26 @@ export type AnalyzeBankStatementInput = {
   readonly mimeType?: string;
 };
 
-const geminiBankRowSchema = z.object({
+const aiBankRowSchema = z.object({
   transactionDate: z.string(),
   description: z.string(),
   amount: z.number().positive(),
   type: z.enum(["INFLOW", "OUTFLOW"]),
 });
 
-const geminiBankAnalysisSchema = z.object({
+const aiBankAnalysisSchema = z.object({
   bankName: z.string().nullable().optional(),
   accountNumber: z.string().nullable().optional(),
-  rows: z.array(geminiBankRowSchema),
+  rows: z.array(aiBankRowSchema),
 });
+
+function parseAiBankAnalysis(rawJson: string): z.infer<typeof aiBankAnalysisSchema> {
+  try {
+    return aiBankAnalysisSchema.parse(JSON.parse(rawJson));
+  } catch {
+    throw new Error("AI belum berhasil membaca struktur mutasi bank. Periksa dokumen atau isi manual.");
+  }
+}
 
 const INDONESIAN_MONTH_MAP: Record<string, string> = {
   jan: "01",
@@ -521,7 +527,7 @@ function extractExcelData(buffer: Buffer): {
     }
   }
 
-  // 2. Jika tidak ada sheet yang ter-parse secara langsung, kumpulkan teks untuk Gemini
+  // 2. Jika tidak ada sheet yang ter-parse secara langsung, kumpulkan teks untuk AI
   const textParts: string[] = [];
   for (const sheetName of sheetNames.slice(0, 3)) {
     const worksheet = workbook.Sheets[sheetName];
@@ -671,7 +677,7 @@ export async function analyzeBankStatementUseCase(
           }
         }
       } catch {
-        // Lanjutkan ke Gemini jika parsing lokal gagal
+        // Lanjutkan ke AI jika parsing lokal gagal
       }
     }
 
@@ -701,7 +707,7 @@ export async function analyzeBankStatementUseCase(
         return { success: true, data: directResult };
       }
 
-      // Jika format Excel tidak standar, kirim representasi teks ke Gemini
+      // Jika format Excel tidak standar, kirim representasi teks ke AI
       const prompt = `Berikut adalah data rekening koran bank yang diekstrak dari spreadsheet Excel.
 Petakan data ini menjadi daftar baris mutasi bank yang terstandarisasi:
 1. transactionDate: YYYY-MM-DD
@@ -714,27 +720,26 @@ Petakan data ini menjadi daftar baris mutasi bank yang terstandarisasi:
 Data tabular:
 ${tabularText.slice(0, 30000)}`;
 
-      assertApprovedAiProvider("GEMINI");
-      const response = await geminiClient.models.generateContent({
-        model: GEMINI_OCR_MODEL,
+      requireDocumentProvider();
+      const response = await documentModel.models.generateContent({
         contents: [prompt],
         config: {
           abortSignal: AbortSignal.timeout(40_000),
           responseMimeType: "application/json",
           responseJsonSchema: {
-            type: Type.OBJECT,
+            type: "object",
             properties: {
-              bankName: { type: Type.STRING },
-              accountNumber: { type: Type.STRING },
+              bankName: { type: ["string", "null"] },
+              accountNumber: { type: ["string", "null"] },
               rows: {
-                type: Type.ARRAY,
+                type: "array",
                 items: {
-                  type: Type.OBJECT,
+                  type: "object",
                   properties: {
-                    transactionDate: { type: Type.STRING, description: "Format YYYY-MM-DD" },
-                    description: { type: Type.STRING },
-                    amount: { type: Type.NUMBER, description: "Nominal positif" },
-                    type: { type: Type.STRING, enum: ["INFLOW", "OUTFLOW"] },
+                    transactionDate: { type: "string", description: "Format YYYY-MM-DD" },
+                    description: { type: "string" },
+                    amount: { type: "number", description: "Nominal positif" },
+                    type: { type: "string", enum: ["INFLOW", "OUTFLOW"] },
                   },
                   required: ["transactionDate", "description", "amount", "type"],
                 },
@@ -746,9 +751,9 @@ ${tabularText.slice(0, 30000)}`;
       });
 
       const rawJson = response.text;
-      if (!rawJson) throw new Error("Gemini mengembalikan respons kosong.");
+      if (!rawJson) throw new Error("AI mengembalikan respons kosong.");
 
-      const parsed = geminiBankAnalysisSchema.parse(JSON.parse(rawJson));
+      const parsed = parseAiBankAnalysis(rawJson);
       const formattedRows: AnalyzedBankStatementRow[] = parsed.rows.map((row, index) => ({
         rowNumber: index + 1,
         transactionDate: normalizeDateToIso(row.transactionDate),
@@ -766,7 +771,7 @@ ${tabularText.slice(0, 30000)}`;
 
       await safeUpdateAiRun(runLog?.id, {
         status: "COMPLETED",
-        result: JSON.stringify({ rowCount: formattedRows.length, engine: "GEMINI_EXCEL" }),
+        result: JSON.stringify({ rowCount: formattedRows.length, engine: "AI_EXCEL" }),
       });
 
       return { success: true, data: result };
@@ -786,27 +791,26 @@ Petakan data ini menjadi daftar baris mutasi bank yang terstandarisasi:
 Isi teks/CSV:
 ${data.fileContent.slice(0, 30000)}`;
 
-      assertApprovedAiProvider("GEMINI");
-      const response = await geminiClient.models.generateContent({
-        model: GEMINI_OCR_MODEL,
+      requireDocumentProvider();
+      const response = await documentModel.models.generateContent({
         contents: [prompt],
         config: {
           abortSignal: AbortSignal.timeout(40_000),
           responseMimeType: "application/json",
           responseJsonSchema: {
-            type: Type.OBJECT,
+            type: "object",
             properties: {
-              bankName: { type: Type.STRING },
-              accountNumber: { type: Type.STRING },
+              bankName: { type: ["string", "null"] },
+              accountNumber: { type: ["string", "null"] },
               rows: {
-                type: Type.ARRAY,
+                type: "array",
                 items: {
-                  type: Type.OBJECT,
+                  type: "object",
                   properties: {
-                    transactionDate: { type: Type.STRING, description: "Format YYYY-MM-DD" },
-                    description: { type: Type.STRING },
-                    amount: { type: Type.NUMBER, description: "Nominal positif" },
-                    type: { type: Type.STRING, enum: ["INFLOW", "OUTFLOW"] },
+                    transactionDate: { type: "string", description: "Format YYYY-MM-DD" },
+                    description: { type: "string" },
+                    amount: { type: "number", description: "Nominal positif" },
+                    type: { type: "string", enum: ["INFLOW", "OUTFLOW"] },
                   },
                   required: ["transactionDate", "description", "amount", "type"],
                 },
@@ -818,9 +822,9 @@ ${data.fileContent.slice(0, 30000)}`;
       });
 
       const rawJson = response.text;
-      if (!rawJson) throw new Error("Gemini mengembalikan respons kosong.");
+      if (!rawJson) throw new Error("AI mengembalikan respons kosong.");
 
-      const parsed = geminiBankAnalysisSchema.parse(JSON.parse(rawJson));
+      const parsed = parseAiBankAnalysis(rawJson);
       const formattedRows: AnalyzedBankStatementRow[] = parsed.rows.map((row, index) => ({
         rowNumber: index + 1,
         transactionDate: normalizeDateToIso(row.transactionDate),
@@ -838,7 +842,7 @@ ${data.fileContent.slice(0, 30000)}`;
 
       await safeUpdateAiRun(runLog?.id, {
         status: "COMPLETED",
-        result: JSON.stringify({ rowCount: formattedRows.length, engine: "GEMINI_CSV" }),
+        result: JSON.stringify({ rowCount: formattedRows.length, engine: "AI_CSV" }),
       });
 
       return { success: true, data: result };
@@ -869,9 +873,8 @@ Pastikan:
 4. type bernilai "INFLOW" jika dana masuk (kredit/CR) atau "OUTFLOW" jika dana keluar (debet/DB).
 5. Deteksi nama bank (contoh: BCA, Mandiri, BRI, BNI) dan nomor rekening jika terlihat pada dokumen.`;
 
-      assertApprovedAiProvider("GEMINI");
-      const response = await geminiClient.models.generateContent({
-        model: GEMINI_OCR_MODEL,
+      requireDocumentProvider();
+      const response = await documentModel.models.generateContent({
         contents: [
           {
             inlineData: {
@@ -885,19 +888,19 @@ Pastikan:
           abortSignal: AbortSignal.timeout(40_000),
           responseMimeType: "application/json",
           responseJsonSchema: {
-            type: Type.OBJECT,
+            type: "object",
             properties: {
-              bankName: { type: Type.STRING },
-              accountNumber: { type: Type.STRING },
+              bankName: { type: ["string", "null"] },
+              accountNumber: { type: ["string", "null"] },
               rows: {
-                type: Type.ARRAY,
+                type: "array",
                 items: {
-                  type: Type.OBJECT,
+                  type: "object",
                   properties: {
-                    transactionDate: { type: Type.STRING, description: "Format YYYY-MM-DD" },
-                    description: { type: Type.STRING },
-                    amount: { type: Type.NUMBER, description: "Nominal positif" },
-                    type: { type: Type.STRING, enum: ["INFLOW", "OUTFLOW"] },
+                    transactionDate: { type: "string", description: "Format YYYY-MM-DD" },
+                    description: { type: "string" },
+                    amount: { type: "number", description: "Nominal positif" },
+                    type: { type: "string", enum: ["INFLOW", "OUTFLOW"] },
                   },
                   required: ["transactionDate", "description", "amount", "type"],
                 },
@@ -909,9 +912,9 @@ Pastikan:
       });
 
       const rawJson = response.text;
-      if (!rawJson) throw new Error("Gemini mengembalikan respons kosong.");
+      if (!rawJson) throw new Error("AI mengembalikan respons kosong.");
 
-      const parsed = geminiBankAnalysisSchema.parse(JSON.parse(rawJson));
+      const parsed = parseAiBankAnalysis(rawJson);
       const formattedRows: AnalyzedBankStatementRow[] = parsed.rows.map((row, index) => ({
         rowNumber: index + 1,
         transactionDate: normalizeDateToIso(row.transactionDate),
@@ -929,7 +932,7 @@ Pastikan:
 
       await safeUpdateAiRun(runLog?.id, {
         status: "COMPLETED",
-        result: JSON.stringify({ rowCount: formattedRows.length, engine: "GEMINI_MULTIMODAL" }),
+        result: JSON.stringify({ rowCount: formattedRows.length, engine: "AI_MULTIMODAL" }),
       });
 
       return { success: true, data: result };

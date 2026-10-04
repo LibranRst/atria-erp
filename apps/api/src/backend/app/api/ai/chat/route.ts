@@ -1,9 +1,9 @@
 import { readPrivateAttachment } from "@backend/server/usecases/media/private-attachments";
 import { resolveActor, type Actor } from "@backend/server/actor";
-import { assertApprovedAiProvider } from "@backend/lib/ai/provider-policy";
 import { PRIVATE_ATTACHMENT_MAX_BYTES } from "@atria/core/media/private-attachment";
 import { sessionAccessFailure } from "@backend/lib/server/session-access";
-import { geminiClient, GEMINI_OCR_MODEL } from "@backend/lib/ai/gemini";
+import { documentModel, requireDocumentProvider } from "@backend/lib/ai/document-model";
+import { resolveProviderChain } from "@backend/lib/ai/providers";
 import { runChatStream } from "@backend/lib/ai/chat-stream";
 import { getCompanyIdentity } from "@backend/lib/company/identity";
 import {
@@ -41,6 +41,8 @@ const attachmentSchema = z.object({
   mimeType: z.string().min(1).max(100),
   size: z.number().positive().max(PRIVATE_ATTACHMENT_MAX_BYTES),
 });
+const PDF_EXTRACTION_FAILURE =
+  "PDF belum berhasil dibaca. Coba lagi atau unggah gambar dokumen yang diperlukan.";
 
 const requestSchema = z
   .object({
@@ -101,10 +103,9 @@ async function extractAttachmentContent(
       const base64Data = Buffer.from(arrayBuffer).toString("base64");
       const effectiveMime = mimeType || (isPdf ? "application/pdf" : "image/jpeg");
 
-      assertApprovedAiProvider("GEMINI");
-      const ocrResponse = await geminiClient.models.generateContent({
+      requireDocumentProvider();
+      const ocrResponse = await documentModel.models.generateContent({
         config: { abortSignal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]) },
-        model: GEMINI_OCR_MODEL,
         contents: [
           {
             inlineData: {
@@ -117,12 +118,14 @@ async function extractAttachmentContent(
       });
 
       const extractedText = ocrResponse.text;
-      if (extractedText) {
+      if (extractedText?.trim()) {
         return `[Data Ekstraksi ${isPdf ? "Dokumen PDF" : "Gambar"}: ${fileName}]\n${extractedText.slice(0, 8000)}`;
       }
+      if (isPdf) throw new Error(PDF_EXTRACTION_FAILURE);
     }
-  } catch (error) {
-    console.error("Gagal mengekstrak lampiran berkas:", error);
+  } catch {
+    console.error("Gagal mengekstrak lampiran berkas.");
+    if (isPdf) throw new Error(PDF_EXTRACTION_FAILURE);
   }
 
   return null;
@@ -178,11 +181,25 @@ export async function POST(request: Request): Promise<Response> {
   const attachmentActor: Actor = actor;
   const requestDeadline = AbortSignal.any([request.signal, AbortSignal.timeout(50_000)]);
   const fileCache = new Map<string, Promise<Awaited<ReturnType<typeof readPrivateAttachment>>>>();
+  const extractionCache = new Map<string, Promise<string | null>>();
+  let extractionTail: Promise<string | null> = Promise.resolve(null);
   function readFile(url: string): Promise<Awaited<ReturnType<typeof readPrivateAttachment>>> {
     const cached = fileCache.get(url);
     if (cached) return cached;
     const pending = readPrivateAttachment(attachmentActor, url, "ai_chat");
     fileCache.set(url, pending);
+    return pending;
+  }
+  function extractFile(url: string): Promise<string | null> {
+    const cached = extractionCache.get(url);
+    if (cached) return cached;
+    // The bounded PDF renderer admits one job at a time. Queue extraction within
+    // this request and stop later jobs if an earlier PDF fails.
+    const pending = extractionTail.then(async (): Promise<string | null> =>
+      extractAttachmentContent(await readFile(url), requestDeadline),
+    );
+    extractionCache.set(url, pending);
+    extractionTail = pending;
     return pending;
   }
   try {
@@ -201,17 +218,19 @@ export async function POST(request: Request): Promise<Response> {
   if (conversationId && !conversation) {
     return jsonError(404, "Percakapan tidak ditemukan.");
   }
+  const history = conversation ? await loadConversationMessages(conversation.id) : [];
+  const currentFileUrls = new Set(attachments.map((item) => item.url));
 
-  if (!conversation) {
-    conversation = await createConversation(session.user.id, effectiveText);
+  const extractedAttachmentTexts: string[] = [];
+  try {
+    for (const url of currentFileUrls) {
+      const content = await extractFile(url);
+      if (content) extractedAttachmentTexts.push(content);
+    }
+  } catch {
+    console.error("PDF chat belum berhasil diproses.");
+    return jsonError(422, PDF_EXTRACTION_FAILURE);
   }
-
-  // Percakapan yang dibuat kosong lewat tombol "Percakapan baru" belum punya judul.
-  // Tidak perlu dijaga dengan pemeriksaan riwayat: klausa `WHERE title IS NULL`
-  // di dalamnya sudah membuat pemanggilan ini aman diulang.
-  await setConversationTitleIfEmpty(conversation.id, effectiveText);
-
-  const history = await loadConversationMessages(conversation.id);
 
   const userParts: UIMessage["parts"] = [{ type: "text", text: effectiveText }];
 
@@ -232,20 +251,6 @@ export async function POST(request: Request): Promise<Response> {
     parts: userParts,
   };
 
-  await appendMessage({
-    conversationId: conversation.id,
-    role: "user",
-    parts: userMessage.parts,
-  });
-
-  const extractedAttachmentTexts: string[] = [];
-  for (const att of attachments) {
-    const content = await extractAttachmentContent(await readFile(att.url), requestDeadline);
-    if (content) {
-      extractedAttachmentTexts.push(content);
-    }
-  }
-
   const modelUserText =
     extractedAttachmentTexts.length > 0
       ? `${effectiveText}\n\n${extractedAttachmentTexts.join("\n\n")}`
@@ -265,30 +270,57 @@ export async function POST(request: Request): Promise<Response> {
     .slice(-4);
   let messages: UIMessage[];
   try {
+    const selectedProvider = resolveProviderChain()[0];
     messages = await Promise.all(
-      sourceMessages.map(async (message): Promise<UIMessage> => ({
-        ...message,
-        parts: await Promise.all(
-          message.parts.map(async (part): Promise<UIMessage["parts"][number]> => {
+      sourceMessages.map(async (message): Promise<UIMessage> => {
+        const parts = await Promise.all(
+          message.parts.map(async (part): Promise<UIMessage["parts"][number] | null> => {
             if (part.type !== "file") return part;
             if (!activeFileUrls.includes(part.url))
               return { type: "text", text: `[Lampiran sebelumnya: ${part.filename ?? "berkas"}]` };
             const file = await readFile(part.url);
+            const isPdf =
+              file.row.mimeType === "application/pdf" ||
+              file.row.fileName.toLowerCase().endsWith(".pdf");
+            if (selectedProvider === "NINEROUTER" && isPdf) {
+              const content = await extractFile(part.url);
+              if (!content) throw new Error(PDF_EXTRACTION_FAILURE);
+              // Current PDFs already appear once in modelUserText; historical
+              // refs are hydrated only in memory, never into stored messages.
+              return currentFileUrls.has(part.url) ? null : { type: "text", text: content };
+            }
             return {
               ...part,
               mediaType: file.row.mimeType,
               url: `data:${file.row.mimeType};base64,${file.bytes.toString("base64")}`,
             };
           }),
-        ),
-      })),
+        );
+        return {
+          ...message,
+          parts: parts.filter((part): part is UIMessage["parts"][number] => part !== null),
+        };
+      }),
     );
-  } catch {
+  } catch (error: unknown) {
+    console.error("Lampiran percakapan belum berhasil diproses.");
+    if (error instanceof Error && error.message === PDF_EXTRACTION_FAILURE)
+      return jsonError(422, PDF_EXTRACTION_FAILURE);
     return jsonError(
       403,
       "Lampiran percakapan tidak tersedia. Unggah kembali berkas yang diperlukan.",
     );
   }
+
+  if (!conversation) {
+    conversation = await createConversation(session.user.id, effectiveText);
+  }
+  await setConversationTitleIfEmpty(conversation.id, effectiveText);
+  await appendMessage({
+    conversationId: conversation.id,
+    role: "user",
+    parts: userMessage.parts,
+  });
 
   const roleAccess = await getRoleAccess(session.user.roleId);
   const toolContext: AiToolContext = {

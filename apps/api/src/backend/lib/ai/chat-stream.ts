@@ -23,6 +23,7 @@ import type { AiPreferenceInput } from "@atria/core/validations/ai-preference";
  */
 const MAX_STEPS = 10;
 const STREAM_DEADLINE_MS = 45_000;
+const CHAT_FAILURE_MESSAGE = "Maaf, asisten sedang tidak bisa menjawab. Coba lagi sebentar lagi.";
 
 /**
  * Chunk yang belum membuktikan model benar-benar merespons.
@@ -95,6 +96,9 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
         try {
           const result = streamText({
             abortSignal: signal,
+            // The SDK default logs provider exceptions, including request details.
+            // Error propagation still reaches the handlers below.
+            onError: (): void => undefined,
             model: resolveChatModel(provider),
             system: buildSystemPrompt(
               provider,
@@ -112,9 +116,12 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
                     (part as { mediaType?: string; mimeType?: string }).mediaType ||
                     (part as { mediaType?: string; mimeType?: string }).mimeType ||
                     "";
-                  // Provider LLM hanya mendukung inline part image dan pdf;
-                  // spreadsheet (xlsx/xls), csv, dan teks sudah diekstraksi ke bagian text prompt
-                  return mime.startsWith("image/") || mime === "application/pdf";
+                  // 9Router receives PDF text extracted from all rendered pages;
+                  // its selected gateway route does not support native PDF parts.
+                  return (
+                    mime.startsWith("image/") ||
+                    (mime === "application/pdf" && provider !== "NINEROUTER")
+                  );
                 }),
               })),
             ),
@@ -126,12 +133,7 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
             originalMessages: input.messages,
             onError: (err) => {
               streamError = err;
-              return typeof err === "object" &&
-                err !== null &&
-                "message" in err &&
-                typeof (err as { message: unknown }).message === "string"
-                ? (err as { message: string }).message
-                : "An error occurred.";
+              return CHAT_FAILURE_MESSAGE;
             },
             onEnd: async ({ responseMessage }) => {
               try {
@@ -185,9 +187,9 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
 
       throw lastError ?? new Error("Semua penyedia AI gagal merespons.");
     },
-    onError: (error) => {
-      console.error("AI chat stream gagal:", error);
-      return "Maaf, asisten sedang tidak bisa menjawab. Coba lagi sebentar lagi.";
+    onError: () => {
+      console.error("AI chat stream gagal.");
+      return CHAT_FAILURE_MESSAGE;
     },
   });
 

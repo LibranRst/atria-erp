@@ -6,8 +6,8 @@ import { approvedChatProviders } from "./provider-policy";
 /**
  * Penyedia model untuk AI chat agent.
  *
- * 9Router adalah model utama (kompatibel OpenAI); diarahkan ke endpoint 9Router
- * dengan model chatgpt 5.6 luna dan reasoning max.
+ * 9Router adalah model utama (kompatibel OpenAI), memakai Gemini 3.8 Flash
+ * dengan ID gateway dan reasoning yang dikonfigurasi.
  *
  * DeepSeek V4 Flash adalah cadangan pertama karena murah, mendukung tool calling
  * penuh, dan API-nya kompatibel dengan format OpenAI. Gemini 3.7 Flash dipakai
@@ -168,6 +168,9 @@ function getNineRouterClient() {
     apiKey,
     transformRequestBody: (body) => ({
       ...body,
+      // 9Router defaults an omitted stream field to SSE. Document extraction
+      // needs buffered JSON; chat explicitly supplies true and stays streaming.
+      stream: body.stream ?? false,
       reasoning_effort:
         process.env.NINEROUTER_REASONING_EFFORT || NINEROUTER_DEFAULT_REASONING_EFFORT,
     }),

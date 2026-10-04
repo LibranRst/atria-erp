@@ -3,13 +3,11 @@ import { aiRun } from "@backend/db/schema";
 import { assertPermission } from "@backend/lib/auth/permissions";
 import type { Actor } from "@backend/server/actor";
 import type { ActionResponse } from "@atria/core/types/action-response";
-import { geminiClient, GEMINI_OCR_MODEL } from "@backend/lib/ai/gemini";
+import { documentModel, requireDocumentProvider } from "@backend/lib/ai/document-model";
 import { getErrorMessage } from "@atria/core/utils/error-message";
-import { Type } from "@google/genai";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { readPrivateAttachment } from "@backend/server/usecases/media/private-attachments";
-import { assertApprovedAiProvider } from "@backend/lib/ai/provider-policy";
 import { checkRateLimit } from "@backend/lib/ai/rate-limit";
 
 export interface ParsedReceiptItem {
@@ -45,7 +43,7 @@ const parsedReceiptSchema = z.object({
 });
 
 /**
- * Memproses gambar nota PM lapangan menggunakan model Gemini 3 Flash Preview.
+ * Memproses gambar nota PM lapangan menggunakan provider dan model AI terkonfigurasi.
  * Mengekstrak total biaya, nama toko, tanggal transaksi, dan rincian item belanja.
  *
  * @param actor Identitas pengguna yang sudah diverifikasi server
@@ -83,7 +81,7 @@ export async function processReceiptUseCase(
     try {
       if (!checkRateLimit(`ocr:${actor.userId}`).allowed)
         throw new Error("Terlalu banyak scan. Coba lagi sebentar.");
-      assertApprovedAiProvider("GEMINI");
+      requireDocumentProvider();
       const privateFile = await readPrivateAttachment(actor, receiptImageUrl, "expense");
       imageBase64 = privateFile.bytes.toString("base64");
       mimeType = privateFile.row.mimeType;
@@ -92,7 +90,7 @@ export async function processReceiptUseCase(
         success: false,
         error: {
           code: "VALIDATION_ERROR",
-          message: getErrorMessage(err, "Gagal mengunduh gambar nota belanja dari storage CDN."),
+          message: getErrorMessage(err, "Gagal membaca gambar nota belanja dari storage privat."),
         },
       };
     }
@@ -109,10 +107,9 @@ export async function processReceiptUseCase(
       })
       .returning();
 
-    // 4. Panggil Gemini Flash untuk ekstraksi teks nota multimodal
+    // 4. Panggil model AI terkonfigurasi untuk ekstraksi teks nota multimodal
     try {
-      const response = await geminiClient.models.generateContent({
-        model: GEMINI_OCR_MODEL,
+      const response = await documentModel.models.generateContent({
         contents: [
           {
             inlineData: {
@@ -126,22 +123,22 @@ export async function processReceiptUseCase(
           abortSignal: AbortSignal.timeout(40_000),
           responseMimeType: "application/json",
           responseJsonSchema: {
-            type: Type.OBJECT,
+            type: "object",
             properties: {
-              vendorName: { type: Type.STRING },
-              transactionDate: { type: Type.STRING, description: "Format ISO 8601 UTC string" },
-              subtotal: { type: Type.NUMBER },
-              tax: { type: Type.NUMBER },
-              totalAmount: { type: Type.NUMBER },
+              vendorName: { type: "string" },
+              transactionDate: { type: "string", description: "Format ISO 8601 UTC string" },
+              subtotal: { type: "number" },
+              tax: { type: "number" },
+              totalAmount: { type: "number" },
               items: {
-                type: Type.ARRAY,
+                type: "array",
                 items: {
-                  type: Type.OBJECT,
+                  type: "object",
                   properties: {
-                    itemName: { type: Type.STRING },
-                    quantity: { type: Type.NUMBER },
-                    unitPrice: { type: Type.NUMBER },
-                    totalPrice: { type: Type.NUMBER },
+                    itemName: { type: "string" },
+                    quantity: { type: "number" },
+                    unitPrice: { type: "number" },
+                    totalPrice: { type: "number" },
                   },
                   required: ["itemName", "quantity", "unitPrice", "totalPrice"],
                 },
@@ -154,7 +151,7 @@ export async function processReceiptUseCase(
 
       const rawText = response.text;
       if (!rawText) {
-        throw new Error("Model Gemini mengembalikan respons kosong.");
+        throw new Error("Model AI mengembalikan respons kosong.");
       }
 
       let parsedJson: unknown;
@@ -167,7 +164,7 @@ export async function processReceiptUseCase(
             status: "FAILED",
             errorMessage: getErrorMessage(
               parseError,
-              "Gemini mengembalikan JSON nota yang tidak valid.",
+              "AI mengembalikan JSON nota yang tidak valid.",
             ),
           })
           .where(eq(aiRun.id, runLog.id));
@@ -177,7 +174,7 @@ export async function processReceiptUseCase(
           error: {
             code: "VALIDATION_ERROR",
             message:
-              "Gemini mengembalikan format JSON nota yang tidak valid. Silakan isi formulir secara manual.",
+              "AI mengembalikan format JSON nota yang tidak valid. Silakan isi formulir secara manual.",
           },
         };
       }
@@ -197,7 +194,7 @@ export async function processReceiptUseCase(
           error: {
             code: "VALIDATION_ERROR",
             message:
-              "Gemini tidak berhasil membaca struktur nota secara lengkap. Silakan isi formulir secara manual.",
+              "AI tidak berhasil membaca struktur nota secara lengkap. Silakan isi formulir secara manual.",
           },
         };
       }
@@ -217,7 +214,7 @@ export async function processReceiptUseCase(
         data: parsedReceipt.data,
       };
     } catch (genError: unknown) {
-      const genErrorMessage = getErrorMessage(genError, "Gagal memanggil API Gemini.");
+      const genErrorMessage = getErrorMessage(genError, "Gagal memanggil provider AI.");
       // Update status ai_run menjadi FAILED
       await db
         .update(aiRun)
