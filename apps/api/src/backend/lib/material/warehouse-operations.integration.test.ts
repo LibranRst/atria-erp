@@ -371,6 +371,7 @@ describeIntegration("gudang — goods receipt, transfer, stock count, adjustment
           await withTestRequest(decideInventoryOpening)({
             batchId: batch.id,
             decision: "APPROVE",
+            emergencyOverride: false,
             reason: "Separate disposable Finance checker fixture",
           }),
         );
