@@ -21,9 +21,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Finance ERP",
-  description: "Finance-first control room for interior contractors",
-  applicationName: "Atria ERP",
+  title: "Atria",
+  description: "Kontrol keuangan proyek dan material Dekoria.",
+  applicationName: "Atria",
   manifest: "/manifest.webmanifest",
   /*
    * Tiga meta iOS ini yang membuat Atria terbuka penuh layar dari Layar Utama

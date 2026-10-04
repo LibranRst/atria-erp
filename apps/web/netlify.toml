@@ -8,7 +8,7 @@
   BUN_VERSION = "1.3.14"
   BUN_FLAGS = "--frozen-lockfile"
   NODE_VERSION = "22"
-  NEXT_PUBLIC_ATRIA_PILOT_MODE = "true"
+  NEXT_PUBLIC_ATRIA_PILOT_MODE = "false"
 
 # Free site variables use all platform scopes; narrowing scopes requires Pro.
 # API_ORIGIN / API_BRIDGE_SECRET use production context only and server-only
