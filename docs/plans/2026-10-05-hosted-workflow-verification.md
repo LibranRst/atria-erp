@@ -85,7 +85,7 @@ Technical workflow checks use the isolated QA database and synthetic identities;
 | Notifications | In-app workflow notifications readable; authorized worker/reconciliation endpoint succeeds, anonymous worker rejected | Synthetic recipients only; no registered push device |
 | Layout | Required mobile widths and desktop 1024/1280/1440 dashboard/material/finance show no document overflow; latest balance visible after refresh | Hosted Chromium DOM/screenshot evidence; mobile shell stays one column |
 
-Operational scope remains explicit: browser push is inactive until VAPID/device opt-in; GitHub/R2 main-database backup has no database credential yet and requires the user's new-access approval. Company cutoff/baseline and actual boss acceptance are human business checks, not replaced by synthetic QA. Scheduler automatic invocation is being inspected separately from manual worker success. No all-provider delivery or physical-device claim is made.
+Operational scope remains explicit: browser push is inactive until VAPID/device opt-in. The approved GitHub/R2 main-database backup and periodic Cron have now passed actual cloud checks; see below. Company cutoff/baseline and actual boss acceptance are human business checks, not replaced by synthetic QA. No all-provider delivery or physical-device claim is made.
 
 ## Approved main database backup activation
 
@@ -94,3 +94,13 @@ The user approved a dedicated read-only Neon credential for GitHub and backup to
 Pilot backup and manifest verified in private R2: atria-erp-backups/atria-erp/pilot/2026/10/04/atria_pilot-20261004T220518Z-37238597044-1.dump (307419 bytes, SHA-256 612947f9db7d76984e366732a4e33118c7e43535cb39ee1c10f804282d0ea865)
 
 Daily backup is enabled at 02:47 WIB on the default branch. Its next automatic invocation is still a future event. The configured cutoff is a technical bootstrap capture timestamp, not Finance's business baseline. Attachment bytes are explicitly excluded from this database archive; private file readback and QA full database restore have separate evidence.
+
+## Automatic scheduler evidence
+
+Cloudflare tail observed an actual `*/30 * * * *` scheduled invocation at 2026-10-04 22:00 UTC, outcome `ok`, zero exceptions. The scheduled handler awaits the authenticated API delivery worker, so this is separate evidence from manual endpoint testing. Earlier tail connection interruptions were recovered without reducing edge/TLS protections or expanding the CLI token's observability permissions. The live event closed the history-access requirement; no extra Cloudflare browser login is needed for this proof. Daily reconciliation is configured and its manual path passed, while the next nightly database backup invocation remains a future event.
+
+## Final release and QA shutdown
+
+Production uses the normal Atria interface at https://atria-dekoria.netlify.app. Netlify release `6ac2caff5e2c1c99133cc295` contains executable frontend source through `837570cd`; subsequent backup/documentation commits do not change the application. The latest application CI at `837570cd` passed quality gates and 24 PostgreSQL suites (144 tests); all 22 anonymous hosted checks passed after publication. Railway display names are Atria / atria-api, with the existing technical API hostname retained. CORS trusts the new frontend origin. The owner's personal login on the new hostname is a human check; synthetic QA login/redirect passed.
+
+The temporary QA API repository source was disconnected and its active deployment removed after testing. Railway reports no active deployment, and the QA health endpoint returns 404 Application not found. Its private frontend, isolated database and recovery evidence remain available; no QA compute is left running. Main company and development databases were not reset or used for synthetic mutations.
