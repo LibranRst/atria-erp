@@ -55,6 +55,13 @@ const AGUS = {
   name: "Agus Pratama",
 };
 
+const FINANCE = {
+  id: "22222222-2222-2222-2222-222222222222",
+  roleId: "00000000-0000-0000-0000-000000000002",
+  email: "finance.fixture@example.invalid",
+  name: "Finance fixture",
+};
+
 function actAs(user: typeof RONALD): void {
   (auth.api as unknown as { getSession: unknown }).getSession = async (): Promise<unknown> => ({
     session: {
@@ -359,14 +366,15 @@ describeIntegration("gudang — goods receipt, transfer, stock count, adjustment
             items: [{ materialInventoryId: fixture.inventoryId, quantity: 5, unitCost: 10000 }],
           }),
         );
+        actAs(FINANCE);
         requireSuccess(
           await withTestRequest(decideInventoryOpening)({
             batchId: batch.id,
             decision: "APPROVE",
-            emergencyOverride: true,
-            reason: "Explicit disposable Owner approval fixture",
+            reason: "Separate disposable Finance checker fixture",
           }),
         );
+        actAs(RONALD);
         // A Date cannot represent these PostgreSQL fractional digits. This fixed
         // test-only timestamp reproduces the real driver precision boundary.
         await db
