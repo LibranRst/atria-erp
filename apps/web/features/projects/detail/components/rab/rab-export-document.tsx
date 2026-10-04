@@ -423,6 +423,26 @@ export const RabExportDocument = React.forwardRef<HTMLDivElement, RabExportDocum
               body * {
                 visibility: hidden !important;
               }
+              /* Hidden application chrome still takes space. Isolate the
+                 document's ancestor path, including transformed sheet portals. */
+              body *:not(#rab-printable-document):not(#rab-printable-document *):not(:has(#rab-printable-document)) {
+                display: none !important;
+              }
+              body *:has(#rab-printable-document) {
+                display: block !important;
+                position: static !important;
+                transform: none !important;
+                filter: none !important;
+                contain: none !important;
+                overflow: visible !important;
+                width: auto !important;
+                max-width: none !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+              }
               [data-export-canvas-container],
               [data-export-canvas-stage],
               [data-export-canvas-wrapper] {
