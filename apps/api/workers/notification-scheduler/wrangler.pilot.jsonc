@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "atria-pilot-notification-scheduler",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "vars": {
+    "ATRIA_API_URL": "https://atria-pilot-api-production.up.railway.app",
+  },
+  "triggers": {
+    "crons": ["*/30 * * * *", "0 17 * * *"],
+  },
+  "observability": {
+    "enabled": true,
+  },
+}
