@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import {
   registerPushTokenAction,
+  testWebPushAction,
   unregisterPushTokenAction,
 } from "@/app/actions/notifications/push-token";
 import { AppIcon, Button, GroupedSurface, StatusBadge } from "@/components/ui";
@@ -27,11 +28,23 @@ function readPushPermission(): PushPermission {
   return "Notification" in window ? Notification.permission : "unsupported";
 }
 
+function pushErrorMessage(error: unknown): string {
+  if (error instanceof DOMException) {
+    if (error.name === "NotAllowedError")
+      return "Izin atau layanan notifikasi perangkat belum tersedia. Periksa pengaturan notifikasi lalu coba lagi.";
+    if (error.name === "SecurityError")
+      return "Buka Atria melalui alamat HTTPS untuk mengaktifkan notifikasi.";
+    return "Layanan notifikasi perangkat belum dapat tersambung. Periksa koneksi lalu coba lagi.";
+  }
+  return error instanceof Error ? error.message : "Notifikasi perangkat belum dapat diaktifkan.";
+}
+
 /** Lingkungan yang bisa diamati tanpa menyentuh layanan push sama sekali. */
 function readPushEnvironment(serverKeyConfigured: boolean): PushEnvironment {
   const install = readInstallEnvironment(false);
   return {
     install,
+    secureContext: window.isSecureContext,
     // Service worker wajib ada untuk push; `install.pushSupported` hanya
     // memeriksa API `PushManager` dan `Notification`.
     pushApiSupported: install.pushSupported && "serviceWorker" in navigator,
@@ -141,11 +154,9 @@ export function WebPushControl({
           throw new Error("Gagal menyimpan langganan push di server.");
         }
         setState("enabled");
-        toast.success("Push browser aktif.");
+        toast.success("Notifikasi perangkat aktif.");
       } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Push browser belum dapat diaktifkan.",
-        );
+        toast.error(pushErrorMessage(error));
       }
     });
   }
@@ -168,9 +179,30 @@ export function WebPushControl({
         if (!result.success) throw new Error(result.error.message);
         await subscription.unsubscribe();
         setState("disabled");
-        toast.success("Push browser dimatikan.");
+        toast.success("Notifikasi perangkat dimatikan.");
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Push browser belum dapat dimatikan.");
+        toast.error(pushErrorMessage(error));
+      }
+    });
+  }
+
+  function testPush(): void {
+    startTransition(async () => {
+      try {
+        const subscription = await getExistingPushSubscription();
+        if (!subscription) {
+          setState("disabled");
+          throw new Error("Aktifkan notifikasi pada perangkat ini terlebih dahulu.");
+        }
+        const result = await testWebPushAction({ endpoint: subscription.endpoint });
+        if (!result.success) {
+          throw new Error(result.error.message);
+        }
+        toast.success("Percobaan dikirim. Periksa notifikasi perangkat Anda.");
+      } catch (error: unknown) {
+        toast.error(
+          error instanceof Error ? error.message : "Notifikasi percobaan belum terkirim.",
+        );
       }
     });
   }
@@ -183,11 +215,16 @@ export function WebPushControl({
         <AppIcon name="bell_ringing" className="icon-md" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="text-support font-bold text-on-surface">Push browser</p>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <p className="text-support font-bold text-on-surface">Notifikasi perangkat</p>
           <StatusBadge tone={copy.badgeTone} label={copy.badge} />
         </div>
         <p className="mt-0.5 text-meta leading-4 text-on-surface-variant">{copy.description}</p>
+        {state === "enabled" ? (
+          <Button size="compact" variant="tertiary" pending={pending} onClick={testPush}>
+            Kirim percobaan
+          </Button>
+        ) : null}
       </div>
       {copy.action === "disable" ? (
         <Button size="mini" variant="secondary" pending={pending} onClick={disable}>

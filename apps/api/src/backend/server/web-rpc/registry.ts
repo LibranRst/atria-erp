@@ -491,6 +491,7 @@ const operations = {
   "app/actions/material/warehouse.createInventoryLocation": module85.createInventoryLocation,
   "app/actions/material/goods-receipt.postGoodsReceipt": module86.postGoodsReceipt,
   "app/actions/notifications/push-token.registerPushTokenAction": module87.registerPushTokenAction,
+  "app/actions/notifications/push-token.testWebPushAction": module87.testWebPushAction,
   "app/actions/notifications/push-token.unregisterPushTokenAction":
     module87.unregisterPushTokenAction,
   "app/actions/notifications/open-notification.openNotificationAction":
@@ -1556,6 +1557,10 @@ export async function invokeWebOperation(
     case "app/actions/notifications/push-token.registerPushTokenAction": {
       const parameters = [...args] as Parameters<typeof module87.registerPushTokenAction>;
       return module87.registerPushTokenAction(...parameters);
+    }
+    case "app/actions/notifications/push-token.testWebPushAction": {
+      const parameters = [...args] as Parameters<typeof module87.testWebPushAction>;
+      return module87.testWebPushAction(...parameters);
     }
     case "app/actions/notifications/push-token.unregisterPushTokenAction": {
       const parameters = [...args] as Parameters<typeof module87.unregisterPushTokenAction>;

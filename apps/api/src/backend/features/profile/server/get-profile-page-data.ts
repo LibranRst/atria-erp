@@ -10,6 +10,7 @@ import { getProfileInitials } from "@atria/core/presentation/user-identity";
 import { resolveRoleName, type PermissionKey } from "@backend/lib/auth/permissions";
 import { getRolePermissions } from "@backend/lib/auth/role-access";
 import { requireServerSession } from "@backend/lib/server/session";
+import { getWebPushPublicKey } from "@backend/server/services/web-push";
 
 export type ProfileRoleStatus = "PRIMARY" | "APPROVED" | "PENDING" | "DRAFT";
 
@@ -25,6 +26,7 @@ export type ProfilePageData = {
   readonly accessGroups: readonly ProfileAccessGroup[];
   readonly canAccessSettings: boolean;
   readonly developerSimulation: DeveloperAccountSimulationState | null;
+  readonly webPushPublicKey: string;
 };
 
 function getProfileRoleStatus(permissions: ReadonlySet<PermissionKey>): ProfileRoleStatus {
@@ -65,5 +67,6 @@ export async function getProfilePageData(): Promise<ProfilePageData> {
     accessGroups,
     canAccessSettings: held.has("view:settings"),
     developerSimulation: simulation?.success && simulation.data.enabled ? simulation.data : null,
+    webPushPublicKey: getWebPushPublicKey(),
   };
 }

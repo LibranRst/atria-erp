@@ -8,6 +8,58 @@ import {
   unregisterPushTokenSchema,
 } from "@atria/core/notifications/types";
 import type { ActionResponse } from "@atria/core/types/action-response";
+import { z } from "zod";
+import {
+  testWebPush,
+  type WebPushTestResult,
+} from "@backend/server/usecases/notifications/test-web-push";
+
+const testWebPushSchema = z.object({
+  endpoint: z.string().trim().max(2048).url().startsWith("https://"),
+});
+
+export async function testWebPushAction(
+  rawInput: unknown,
+): Promise<ActionResponse<{ accepted: true }>> {
+  const actor = await resolveActor();
+  if (!actor)
+    return {
+      success: false,
+      error: { code: "UNAUTHORIZED", message: "Sesi telah berakhir. Masuk kembali." },
+    };
+  const parsed = testWebPushSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Langganan perangkat tidak valid." },
+    };
+  try {
+    const result = await testWebPush(actor, parsed.data.endpoint);
+    if (result === "accepted") return { success: true, data: { accepted: true } };
+    const messages: Record<Exclude<WebPushTestResult, "accepted">, string> = {
+      unconfigured: "Pengiriman notifikasi belum disiapkan. Hubungi admin Atria.",
+      "not-registered": "Perangkat belum tersambung ke akun ini. Sambungkan ulang notifikasi.",
+      expired: "Langganan perangkat telah berakhir. Matikan lalu aktifkan kembali notifikasi.",
+      "rate-limited": "Terlalu banyak percobaan. Tunggu satu menit lalu coba lagi.",
+    };
+    return {
+      success: false,
+      error: {
+        code: result === "unconfigured" ? "INTERNAL_SERVER_ERROR" : "CONFLICT",
+        message: messages[result],
+      },
+    };
+  } catch (error: unknown) {
+    console.error("Web Push test failed", error instanceof Error ? error.name : "UnknownError");
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Notifikasi percobaan belum terkirim. Periksa koneksi lalu coba lagi.",
+      },
+    };
+  }
+}
 
 export async function registerPushTokenAction(
   rawInput: unknown,

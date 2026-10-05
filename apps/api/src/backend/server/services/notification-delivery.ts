@@ -1,4 +1,3 @@
-import webPush from "web-push";
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
 
 import { db } from "@backend/db";
@@ -12,6 +11,7 @@ import {
 } from "@backend/db/schema";
 import { INSTANCE_TENANT_ID } from "@backend/db/schema/tenant-constants";
 import { getRoleAccess } from "@backend/lib/auth/role-access";
+import { getWebPushConfiguration, sendWebPushMessage } from "./web-push";
 import {
   ANDROID_NOTIFICATION_CHANNEL_ID,
   notificationDestination,
@@ -270,10 +270,7 @@ async function retryOrFail(delivery: ClaimedDelivery, error: unknown, now: Date)
 
 async function sendWeb(delivery: ClaimedDelivery, now: Date): Promise<void> {
   const subscription = delivery.pushSubscription;
-  const publicKey = process.env.WEB_PUSH_VAPID_PUBLIC_KEY;
-  const privateKey = process.env.WEB_PUSH_VAPID_PRIVATE_KEY;
-  const subject = process.env.WEB_PUSH_SUBJECT;
-  if (!publicKey || !privateKey || !subject) {
+  if (!getWebPushConfiguration()) {
     await retryOrFail(delivery, new Error("WEB_PUSH_VAPID_NOT_CONFIGURED"), now);
     return;
   }
@@ -282,24 +279,19 @@ async function sendWeb(delivery: ClaimedDelivery, now: Date): Promise<void> {
     return;
   }
   try {
-    await webPush.sendNotification(
+    await sendWebPushMessage(
       {
         endpoint: subscription.endpoint,
-        keys: { p256dh: subscription.p256dh, auth: subscription.auth },
+        p256dh: subscription.p256dh,
+        auth: subscription.auth,
       },
-      JSON.stringify({
+      {
         title: delivery.notification.title,
-        body: delivery.notification.message,
+        body: delivery.notification.message ?? "Ada pembaruan baru.",
         url: notificationDestination(delivery.notification),
         notificationId: delivery.notification.id,
-      }),
-      {
-        vapidDetails: { subject, publicKey, privateKey },
-        TTL: 60 * 60,
-        urgency: delivery.notification.category === "ACTION_REQUIRED" ? "high" : "normal",
-        topic: delivery.notification.id.replaceAll("-", "").slice(0, 32),
-        timeout: 10_000,
       },
+      delivery.notification.category === "ACTION_REQUIRED" ? "high" : "normal",
     );
     await finish(delivery.id, {
       status: "DELIVERED",

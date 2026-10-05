@@ -4,6 +4,7 @@ import type { PushEnvironment } from "./push-state";
 import { inspectWebPush, type WebPushRegistration } from "./push-sync";
 
 const ANDROID: PushEnvironment = {
+  secureContext: true,
   install: {
     platform: "android",
     browser: "chrome",

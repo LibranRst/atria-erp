@@ -15,6 +15,7 @@ export type ServerRegistration = "unknown" | "confirmed" | "failed";
  * yang bisa dipercaya untuk membacanya tanpa objek browser itu sendiri.
  */
 export type PushEnvironment = {
+  readonly secureContext: boolean;
   readonly pushApiSupported: boolean;
   readonly serverKeyConfigured: boolean;
   readonly install: InstallEnvironment;
@@ -34,6 +35,7 @@ export type PushSignals = {
  * perangkat selesai dibaca.
  */
 export type PushState =
+  | "insecure"
   | "checking"
   | "unsupported"
   | "ios-install-required"
@@ -48,7 +50,8 @@ export type PushState =
  *
  * Urutan cabang adalah bagian dari kontraknya:
  *
- * 1. VAPID belum ada di server → tidak ada tombol yang bisa berhasil, jadi
+ * 0. Alamat HTTP tidak aman → jelaskan HTTPS tanpa menawarkan izin.
+ * 1. Konfigurasi pengiriman belum lengkap → tidak ada tombol yang bisa berhasil, jadi
  *    keadaan ini menang atas panduan pemasangan iOS.
  * 2. iOS di tab biasa → `PushManager`/`Notification` memang tidak ada, dan itu
  *    bukan alasan menyebut browsernya "tidak mendukung". Instruksi pemasangan
@@ -58,6 +61,7 @@ export type PushState =
  */
 export function resolvePushState(signals: PushSignals): PushState {
   const { environment, permission, serverRegistration, subscribed } = signals;
+  if (!environment.secureContext) return "insecure";
   if (!environment.serverKeyConfigured) return "unconfigured";
   const installRequiredOnIos =
     environment.install.platform === "ios" &&
@@ -78,6 +82,12 @@ type PushCopy = {
 
 /** Satu-satunya sumber salinan untuk tiap keadaan; komponen hanya merender. */
 export const PUSH_STATE_COPY: Record<PushState, PushCopy> = {
+  insecure: {
+    badge: "Perlu HTTPS",
+    badgeTone: "warning",
+    description: "Buka Atria melalui alamat HTTPS agar perangkat dapat menerima notifikasi.",
+    action: null,
+  },
   checking: {
     badge: "Memeriksa",
     badgeTone: "neutral",
@@ -118,7 +128,7 @@ export const PUSH_STATE_COPY: Record<PushState, PushCopy> = {
   unconfigured: {
     badge: "Nonaktif",
     badgeTone: "neutral",
-    description: "VAPID key belum tersedia pada environment server.",
+    description: "Pengiriman notifikasi belum disiapkan. Hubungi admin Atria.",
     action: null,
   },
   "sync-required": {

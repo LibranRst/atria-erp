@@ -15,8 +15,15 @@ mock.module("@backend/server/services/notification-service", () => ({
 }));
 let webPushMode: "success" | "expired" = "success";
 let webPushCalls = 0;
-const sendWebPush = async (): Promise<void> => {
+let lastWebPushEndpoint = "";
+let lastWebPushPayload = "";
+const sendWebPush = async (
+  subscription: { readonly endpoint: string },
+  payload: string,
+): Promise<void> => {
   webPushCalls += 1;
+  lastWebPushEndpoint = subscription.endpoint;
+  lastWebPushPayload = payload;
   if (webPushMode === "expired") {
     throw Object.assign(new Error("expired"), { statusCode: 410 });
   }
@@ -559,7 +566,7 @@ process.env.WEB_PUSH_SUBJECT = "mailto:test@example.test";
 await registerPushSubscription(
   {
     platform: "WEB",
-    endpoint: "https://push.example.test/active",
+    endpoint: "https://web.push.apple.com/active",
     p256dh: "p256dh",
     auth: "auth",
   },
@@ -612,6 +619,47 @@ expect(
       .where(eq(schema.userPushSubscription.platform, "WEB"))
   )[0].endpoint,
 ).toBeNull();
+// The explicit browser test must never target a different user or session.
+const { testWebPush } = await import("@backend/server/usecases/notifications/test-web-push");
+const testEndpoint = "https://fcm.googleapis.com/wp/test-current-device";
+await registerPushSubscription(
+  { platform: "WEB", endpoint: testEndpoint, p256dh: "p256dh", auth: "auth" },
+  ownerId,
+  ownerPushSessionId,
+);
+const deviceActor = { ...actor, sessionId: ownerPushSessionId };
+const callsBeforeTest = webPushCalls;
+expect(await testWebPush({ ...deviceActor, userId: otherId }, testEndpoint)).toBe("not-registered");
+expect(await testWebPush({ ...deviceActor, sessionId: "different-session" }, testEndpoint)).toBe(
+  "not-registered",
+);
+expect(await testWebPush({ ...deviceActor, isActive: false }, testEndpoint)).toBe("not-registered");
+expect(webPushCalls).toBe(callsBeforeTest);
+webPushMode = "success";
+expect(await testWebPush(deviceActor, testEndpoint)).toBe("accepted");
+expect(lastWebPushEndpoint).toBe(testEndpoint);
+expect(lastWebPushPayload).toContain("Notifikasi Atria siap");
+expect(lastWebPushPayload).toContain('"url":"/notifications"');
+for (let attempt = 1; attempt < 15; attempt += 1)
+  expect(await testWebPush(deviceActor, testEndpoint)).toBe("accepted");
+expect(await testWebPush(deviceActor, testEndpoint)).toBe("rate-limited");
+expect(webPushCalls).toBe(callsBeforeTest + 15);
+const { resetRateLimits } = await import("@backend/lib/ai/rate-limit");
+resetRateLimits();
+delete process.env.WEB_PUSH_VAPID_PRIVATE_KEY;
+expect(await testWebPush(deviceActor, testEndpoint)).toBe("unconfigured");
+expect(webPushCalls).toBe(callsBeforeTest + 15);
+process.env.WEB_PUSH_VAPID_PRIVATE_KEY = "test-private";
+webPushMode = "expired";
+expect(await testWebPush(deviceActor, testEndpoint)).toBe("expired");
+expect(
+  (
+    await database
+      .select()
+      .from(schema.userPushSubscription)
+      .where(eq(schema.userPushSubscription.endpoint, testEndpoint))
+  ).length,
+).toBe(0);
 await database.delete(schema.session).where(eq(schema.session.id, ownerPushSessionId));
 expect(
   await database

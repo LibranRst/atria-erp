@@ -4,6 +4,12 @@ import { callBackendAction } from "@/lib/api/backend";
 import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
 export type * from "@atria/api/types/app/actions/notifications/push-token";
 
+export async function testWebPushAction(
+  ...args: WebRpcArgs<"app/actions/notifications/push-token.testWebPushAction">
+): Promise<WebRpcResult<"app/actions/notifications/push-token.testWebPushAction">> {
+  return callBackendAction("app/actions/notifications/push-token.testWebPushAction", args);
+}
+
 export async function registerPushTokenAction(
   ...args: WebRpcArgs<"app/actions/notifications/push-token.registerPushTokenAction">
 ): Promise<WebRpcResult<"app/actions/notifications/push-token.registerPushTokenAction">> {

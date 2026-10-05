@@ -161,7 +161,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
           <SectionHeader title="Perangkat & notifikasi" />
           <div className="relative isolate overflow-hidden rounded-[26px] bg-white/90 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl">
             <RowGroup>
-              <WebPushControl publicKey={process.env.WEB_PUSH_VAPID_PUBLIC_KEY ?? ""} embedded />
+              <WebPushControl publicKey={data.webPushPublicKey} embedded />
               <InstallAppControl embedded />
             </RowGroup>
           </div>
