@@ -25,6 +25,7 @@ const dashboard: MaterialOperationsDashboard = {
     canApproveReversal: true,
     canEmergencyAdjust: true,
   },
+  locations: [],
   inventory: [],
   shortages: [
     {

@@ -55,6 +55,7 @@ export function MaterialInventoryTab({
 }: InventoryTabProps): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
   const [mode, setMode] = React.useState<SearchFilterMode>("filter");
+  const filtered = search.trim().length > 0 || status !== "ALL";
 
   return (
     <div className="space-y-sm">
@@ -119,9 +120,19 @@ export function MaterialInventoryTab({
         <GroupedSurface>
           {visibleMaterials.length === 0 ? (
             <InlineStateRow
-              icon="search_off"
-              title="Material tidak ditemukan"
-              description="Ubah kata pencarian, lokasi, atau status stok untuk melihat hasil lain."
+              icon={filtered ? "search_off" : "warehouse"}
+              title={
+                filtered
+                  ? "Material tidak ditemukan"
+                  : location === "ALL"
+                    ? "Belum ada inventori"
+                    : "Belum ada inventori di lokasi ini"
+              }
+              description={
+                filtered
+                  ? "Ubah kata pencarian, lokasi, atau status stok untuk melihat hasil lain."
+                  : "Tambahkan Material Master dan tentukan lokasi inventori melalui Pengaturan ERP → Katalog → Material."
+              }
             />
           ) : desktop ? (
             <DesktopTable

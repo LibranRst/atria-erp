@@ -1,10 +1,16 @@
 import { getRoleAccessByName } from "@backend/lib/auth/role-access";
 
 import { cookies } from "@runtime/request-context";
-import { and, desc, eq, lt, ne, or } from "drizzle-orm";
+import { and, asc, desc, eq, lt, ne, or } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { goodsReceipt, project, stockMovement, vendorBill } from "@backend/db/schema";
+import {
+  goodsReceipt,
+  inventoryLocation,
+  project,
+  stockMovement,
+  vendorBill,
+} from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
 import { assertPermission, resolveRoleName } from "@backend/lib/auth/permissions";
 import type { ActionResponse } from "@atria/core/types/action-response";
@@ -114,6 +120,10 @@ export interface MaterialOperationsDashboard {
     readonly canEmergencyAdjust: boolean;
   };
   readonly inventory: MaterialInventoryRow[];
+  readonly locations: readonly {
+    readonly id: string;
+    readonly name: string;
+  }[];
   readonly shortages: MaterialShortageRow[];
   readonly movements: MaterialMovementView[];
   readonly movementsHasMore: boolean;
@@ -218,6 +228,7 @@ export async function getMaterialOperationsDashboard(): Promise<
       transfers,
       projects,
       bills,
+      locations,
     ] = await Promise.all([
       getMaterialInventory(),
       getMaterialShortages(),
@@ -274,6 +285,11 @@ export async function getMaterialOperationsDashboard(): Promise<
           budgetCategory: { with: { expenseCategory: { columns: { code: true } } } },
         },
         orderBy: (table, { desc: descending }) => [descending(table.createdAt)],
+      }),
+      db.query.inventoryLocation.findMany({
+        where: eq(inventoryLocation.isActive, true),
+        columns: { id: true, name: true },
+        orderBy: [asc(inventoryLocation.name), asc(inventoryLocation.id)],
       }),
     ]);
     if (!inventoryResult.success) return inventoryResult;
@@ -340,6 +356,7 @@ export async function getMaterialOperationsDashboard(): Promise<
           canEmergencyAdjust: permissions.includes("adjust:stock"),
         },
         inventory: inventoryResult.data,
+        locations,
         shortages,
         movements: movementPage.items,
         movementsHasMore: movementPage.hasMore,
