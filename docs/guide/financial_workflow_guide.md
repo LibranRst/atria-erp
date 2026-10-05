@@ -10,6 +10,8 @@ Kerjakan latihan utama berurutan. Setelah setiap tahap, berhenti dan cocokkan an
 
 Gunakan database latihan lokal untuk percobaan pertama. Production di [atria-dekoria.netlify.app](https://atria-dekoria.netlify.app) disiapkan kosong untuk setup akun bersama boss. Jika nanti mengisi angka latihan di production, angka itu menjadi data sungguhan dalam instance tersebut; jangan mencampurnya dengan baseline proyek perusahaan.
 
+Penjelasan role dan serah-terima kerja ada di [bagian 3.4](#34-role-hak-akses-dan-cara-tim-bekerja-bersama).
+
 Urutan baca:
 
 1. [Menjalankan app dan memilih environment](#1-menjalankan-app-dan-memilih-environment).
@@ -231,26 +233,227 @@ Hasil angka awal:
 
 Actual dan paid masih Rp0; sisa cap Rp90 juta. Lihat angka di detail proyek. Dashboard agregat proyek berjalan baru memasukkan proyek sesudah status Aktif.
 
-### 3.4 Akun tim dan cara berganti role
+### 3.4 Role, hak akses, dan cara tim bekerja bersama
 
-Buka **Pengaturan → Kesiapan** untuk menyelesaikan akun tim dan kebutuhan operasional. Buat akun individual dengan role berikut:
+Buka **Pengaturan → Kesiapan** untuk membuat akun tim. **Owner** mengelola akun dan role. Gunakan satu akun per orang agar pengajuan, approval, pembayaran dan perubahan stok mempunyai pelaku yang dapat ditelusuri.
 
-| Role bawaan   | Dipakai dalam latihan                                                            | Batas penting                                                   |
-| ------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Owner         | Defaults, approval berisiko, persetujuan RAB, aktivasi/closing, pengaturan akses | Approval dokumen belum berarti pembayaran                       |
-| Finance Admin | Rekening, invoice/receipt, verifikasi, jadwal/bayar vendor, rekonsiliasi         | Tidak boleh melompati maker/checker yang diwajibkan             |
-| PM            | RAP/scope dan pengajuan pengeluaran proyek yang ditugaskan                       | Tidak memperoleh akses semua proyek atau seluruh kas perusahaan |
-| Purchasing    | Master material, lokasi, receipt, reserve/use/return/waste, pengajuan opname     | Tidak mendapat izin mengubah formula budget/margin              |
+Penjelasan berikut adalah **hak bawaan empat role sistem saat setup baru**, bukan kewajiban bahwa satu orang harus mengerjakan semuanya. Permission yang tersimpan, scope data, status dokumen dan guard bisnis tetap diperiksa pada setiap aksi. Owner dapat menyesuaikan role selain role Owner yang dilindungi, atau membuat custom role. Karena itu, nama jabatan saja tidak menjamin tombol tertentu tersedia.
 
-Role bawaan membantu memulai. **Permission yang tersimpan dan scope proyek tetap menjadi otoritas**, termasuk untuk custom role. Akses desktop adalah permission tersendiri; membuka desktop tidak menambah hak finance/material.
+#### 3.4.1 Cara membaca batas akses
 
-Login dengan empat akun bergantian melalui logout/login atau profil browser terpisah. Akun staf yang memakai password sementara harus menggantinya pada halaman perubahan password. Developer Account Switcher adalah bantuan development opsional dan tidak tersedia di production; panduan ini tidak bergantung padanya.
+Ada tiga pertanyaan sebelum seseorang melakukan tindakan:
 
-Pemisahan pelaku latihan: PM mengajukan → Finance memverifikasi → Owner menyetujui bila diperlukan → Finance mencatat pembayaran. Untuk jadwal vendor: Finance menjadwalkan → Owner menyetujui → Finance membayar. Ini menghindari self-approval. Opening stock membutuhkan pembuat dan approver yang berbeda, termasuk bila pembuat adalah Owner.
+1. **Punya izin tindakan?** Misalnya boleh melihat invoice belum tentu boleh mencatat penerimaan pembayaran.
+2. **Punya akses ke data yang dimaksud?** PM dapat bekerja pada proyek yang ditugaskan kepadanya. Izin membuat budget tidak membukakan proyek lain.
+3. **Dokumen sudah boleh diproses?** Rencana terkunci, pembayaran belum disetujui, stok tidak cukup, atau proyek sudah selesai tetap dapat membuat tindakan ditolak walaupun permission ada.
+
+| Role                 | Cakupan utama                                                                       | Pertanyaan yang harus bisa dijawab                                                            |
+| -------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Owner                | Finance dan proyek perusahaan secara keseluruhan; pengaturan akses/risiko           | Apakah harga, biaya, kas dan margin proyek masih terkendali?                                  |
+| Finance Admin        | Finance dan proyek perusahaan secara keseluruhan; administrasi/verifikasi/realisasi | Apakah setiap biaya, pembayaran, invoice dan mutasi mempunyai catatan serta bukti yang benar? |
+| Project Manager / PM | Pekerjaan finance/perencanaan pada proyek yang ditugaskan                           | Apa yang dibutuhkan lapangan, berapa biaya yang diajukan, dan apakah sesuai scope/budget?     |
+| Purchasing           | Gudang, material dan konteks pengadaan lintas proyek                                | Barang yang dibutuhkan sudah tersedia, dijatah, diterima dan dipakai dengan benar atau belum? |
+
+Gudang adalah persediaan bersama. PM juga dapat membaca stock/material dan kebutuhan gudang yang disediakan modul material; jangan menganggap setiap angka inventory merupakan data proyek PM saja. Sebaliknya, akses material lintas proyek milik Purchasing tidak berarti boleh masuk seluruh detail finance proyek.
+
+#### 3.4.2 Owner: menetapkan kebijakan dan mengambil keputusan risiko
+
+**Tujuan kerja:** menjaga kontrol bisnis serta memastikan tim mempunyai akses yang tepat. Owner biasanya membaca ringkasan dan membuat keputusan, sementara pencatatan rutin dibagi ke tim.
+
+Hak bawaan Owner mencakup:
+
+- Membuat akun tim, mengelola role/custom role, dan mengatur siapa dapat melakukan apa.
+- Menetapkan threshold approval, default budget/alokasi kategori, kategori pengeluaran, library harga, vendor, dan material settings.
+- Membuat rekening, mengubah metadata, serta menonaktifkan/mengaktifkan rekening sesuai guard yang tersedia.
+- Membuat proyek, menugaskan PM, menyusun/mengubah/menyetujui budget, menyiapkan/mengunci RAP, membuat/mengubah/menyetujui RAB dan CO.
+- Membuat/verifikasi pengeluaran, mengambil keputusan approval biaya/jadwal vendor yang memerlukan Owner, mencatat pembayaran, invoice/penerimaan klien, kas umum/transfer dan rekonsiliasi.
+- Mengelola dan menjalankan operasi material; mengajukan/menyetujui opening, opname dan reversal sesuai syarat. Penyesuaian stok darurat dan reversal opening merupakan hak bawaan Owner.
+- Mengaktifkan serta closing proyek setelah checklist terpenuhi; membaca dashboard, margin dan riwayat dalam cakupan perusahaan.
+- Menggunakan chat AI sesuai permission dan kebijakan provider.
+
+**Yang dilihat setiap hari:** kontrak, cap, actual, sisa per kategori, pengeluaran menunggu keputusan, paid/receipt, saldo rekening, utang/piutang jatuh tempo, shortage/reservasi dan risiko margin. Approval bukan tanda uang sudah berpindah: cek paid dan bukti realisasi sesudah Finance membayar.
+
+**Batas yang tetap berlaku:** Owner tidak boleh mengedit catatan kas yang sudah direkonsiliasi secara langsung, melompati stok/balance guard, atau menganggap AI sebagai approver. Self-approval tertentu membutuhkan override darurat yang eksplisit dan alasan; opening stock sendiri tetap harus disetujui orang lain tanpa pengecualian Owner.
+
+**Hasil kerja yang diserahkan:** keputusan approve/reject beserta alasan, baseline budget/RAB yang jelas, penugasan PM, dan keputusan closing. Walaupun Owner boleh membayar sendiri, pembagian normal yang dianjurkan adalah Owner mengambil keputusan dan Finance mencatat realisasi.
+
+#### 3.4.3 Finance Admin: menjaga catatan dan realisasi uang
+
+**Tujuan kerja:** memastikan catatan proyek dapat dipertanggungjawabkan dan kas cocok dengan bukti nyata.
+
+Hak bawaan Finance mencakup:
+
+- Membaca finance/proyek perusahaan, membuat proyek dan menugaskan PM, membuat/mengubah/menyetujui budget.
+- Menyiapkan/mengubah/mengunci RAP; membuat/mengubah/menyetujui RAB; memproses revisi/CO dan konfirmasi klien sesuai tahap dokumen.
+- Memeriksa bukti/kategori dan memverifikasi pengeluaran yang diajukan, lalu mencatat pembayaran setelah syarat terpenuhi. Hak verifikasi tidak sama dengan hak mengedit draft milik pengaju.
+- Membuat/mengubah vendor bill, menjadwalkan pembayaran, dan mencatat realisasinya.
+- Membuat/mengubah invoice, mencatat receipt klien, dana masuk/keluar umum dan transfer internal.
+- Melihat rekening serta mengubah metadata rekening; import/matching mutasi dan mencatat pengecualian rekonsiliasi yang dapat dibuktikan.
+- Mengelola default budget, kategori pengeluaran, item/price library, vendor dan material settings; meninjau kesiapan operasional.
+- Mencatat receipt/reserve/use/return material, mengajukan opening, serta menyetujui opening/opname/reversal receipt jika pelaku dan dokumennya memenuhi syarat.
+- Mengaktifkan/closing proyek dengan checklist yang bersih; membaca margin dan menggunakan chat AI sesuai akses.
+
+**Yang tidak diberikan secara bawaan:** membuat akun/role, mengubah threshold approval, membuat atau menonaktifkan/mengaktifkan rekening, membuat pengeluaran lapangan baru, mengambil keputusan Owner pada approval biaya/jadwal vendor berisiko, waste/transfer/opname baru, penyesuaian darurat, atau meminta reversal receipt. Hak mengajukan dan hak menyetujui opname memang berbeda: Finance dapat menjadi checker meskipun bukan pembuatnya.
+
+**Yang dilihat setiap hari:** biaya pending vs approved vs paid, sisa tagihan vendor, invoice belum tertagih, rekening sumber pembayaran, kelengkapan nota/bukti bayar, mutasi belum cocok dan pengecualian. Bedakan uang pembelian stok dengan biaya material yang sudah terpakai.
+
+**Hasil kerja yang diserahkan:** hasil verifikasi untuk Owner bila perlu, jadwal pembayaran yang jelas, payment/receipt yang tercatat satu kali, serta rekonsiliasi dan checklist closing yang dapat diperiksa. Finance bisa menyetujui budget/RAB, tetapi tidak otomatis bisa menyetujui semua jenis approval.
+
+#### 3.4.4 Project Manager: menjelaskan kebutuhan dan kejadian lapangan
+
+**Tujuan kerja:** menjaga pekerjaan proyek sesuai scope serta menyampaikan kebutuhan dan biaya lapangan dengan bukti.
+
+Hak bawaan PM pada proyek yang ditugaskan mencakup:
+
+- Membaca/memperbarui data proyek yang dibolehkan, menyusun/mengubah budget dan RAP, menyiapkan paket Tukang/Subcon, menandai paket siap dan menyusun revisi rencana sesuai tahap.
+- Membuat dan memperbaiki draft pengeluaran sendiri sebelum dikirim, beserta kategori, deskripsi, nota dan tautan paket/material yang sesuai. Setelah dikirim, ikuti status/aksi yang tersedia; hak update tidak berarti boleh mengedit pengeluaran yang sudah disetujui/dibayar.
+- Membuat vendor bill pada proyeknya; Finance kemudian memeriksa dan memproses pembayaran. PM tidak memiliki hak bawaan memperbarui bill yang sudah dibuat.
+- Membaca RAB dan invoice proyek; membaca material/inventory serta konteks kebutuhan gudang yang tersedia.
+- Menggunakan chat AI dalam cakupan aksesnya. Jawaban/proposal AI tidak memperluas scope PM.
+
+**Yang tidak diberikan secara bawaan:** membuat proyek baru, approve budget, finalisasi/kunci RAP, membuat/mengedit/approve RAB atau CO, verifikasi/approve/pay expense, pembayaran vendor/penerimaan klien, mutasi rekening/rekonsiliasi, stock movement, Settings, aktivasi atau closing.
+
+**Yang dilihat setiap hari:** alokasi/actual/sisa kategori proyek, pengajuan yang masih pending/revisi, kebutuhan material, stok tersedia/reserved, RAP/paket kerja dan status pekerjaan. PM berkomunikasi dengan Purchasing untuk pemakaian fisik; membaca stok tidak berarti boleh menekan tombol Pakai/Return.
+
+**Hasil kerja yang diserahkan:** kebutuhan material yang jelas, RAP/paket siap ditinjau, pengeluaran dengan bukti, dan laporan pemakaian/sisa/rusak yang dapat dicatat Purchasing. Saat ada perubahan scope, PM memperbarui rencana yang boleh diedit lalu menyerahkan kebutuhan revisi RAB/CO ke Finance/Owner.
+
+Penugasan awal ditangani Owner/Finance. Form edit proyek yang sudah menjadi scope PM saat ini juga dapat memuat pilihan PM; koordinasikan perubahan pengelola karena PM lama dapat kehilangan akses setelah penugasan berpindah.
+
+Scope penugasan saat ini mengikuti user yang dipilih sebagai PM/pengelola proyek. Memiliki role bercakupan ditugaskan tanpa dipilih pada proyek belum memberi akses finance proyek tersebut.
+
+#### 3.4.5 Purchasing: menjaga barang dan jejak stok
+
+**Tujuan kerja:** mengetahui material tersedia, kekurangan yang perlu dibeli, dan perpindahan fisik barang. Biaya/kas dan stok harus dapat dibandingkan tanpa dianggap peristiwa yang sama.
+
+Hak operasional bawaan Purchasing mencakup:
+
+- Membaca material, inventory, shortage/kebutuhan RAP dalam konteks gudang, dan konteks bill/status pengadaan yang diberikan app.
+- Membuat/mengubah Material Master, kategori material, lokasi dan material settings.
+- Mengajukan opening stock; mencatat penerimaan barang, reservasi, pemakaian, return, waste dan transfer stok dengan alasan/bukti yang sesuai.
+- Membuat/mengirim stock opname dan meminta reversal receipt. Persetujuannya dilakukan checker yang berhak.
+
+**Batas penting:** Purchasing tidak memperoleh akses umum daftar/detail finance proyek, saldo rekening, receipt klien, pembayaran, rekonsiliasi, margin perusahaan, user/role, threshold approval, formula budget atau library harga umum. Purchasing juga tidak memiliki chat AI bawaan, membuat/kunci RAP, RAB/CO, aktivasi/closing, approval opening/opname/reversal, atau penyesuaian darurat.
+
+Pada permission bawaan ada akses budget/vendor bill/RAP untuk konteks pengadaan. Namun **scope proyek umum tetap tidak tersedia**: melihat bill/kebutuhan pada inbox/modul material tidak berarti jalur finance untuk submit/update bill atau edit RAP proyek akan lolos. Pada workflow latihan, Purchasing menyiapkan data barang/vendor/nota dan menyerahkan ke Finance atau PM yang berhak untuk membuat bill; jangan mengandalkan nama permission saja sebagai bukti boleh memproses seluruh dokumen.
+
+**Yang dilihat setiap hari:** fisik, reserved, available, average cost, receipt yang belum/baru diposting, kebutuhan proyek, sisa dan barang rusak. Reserve tidak menambah biaya/kas; use/return/waste dapat mengubah actual Material tanpa pembayaran baru. Return juga bukan tombol melepas reservasi yang belum dipakai.
+
+**Hasil kerja yang diserahkan:** data pengadaan lengkap untuk bill, receipt yang sesuai barang datang, catatan reserve/use/return/waste yang sesuai laporan lapangan, serta opening/opname/reversal yang siap diperiksa checker.
+
+#### 3.4.6 Peta hak penting untuk latihan
+
+“Bisa” berarti ada hak bawaan, **tetap mengikuti scope dan status dokumen**. Pembagian kerja yang dianjurkan dijelaskan pada alur berikutnya.
+
+| Tindakan                                                    | Owner              | Finance            | PM                              | Purchasing                               |
+| ----------------------------------------------------------- | ------------------ | ------------------ | ------------------------------- | ---------------------------------------- |
+| Buat proyek / aktifkan / closing                            | Bisa               | Bisa               | Tidak                           | Tidak                                    |
+| Susun atau ubah budget/RAP/paket                            | Bisa               | Bisa               | Proyek ditugaskan               | Konteks material; bukan edit proyek umum |
+| Approve budget / kunci RAP / buat-edit-approve RAB          | Bisa               | Bisa               | RAB dibaca; tanpa approve/kunci | Tidak                                    |
+| Ajukan pengeluaran lapangan baru                            | Bisa               | Tidak bawaan       | Proyek ditugaskan               | Tidak                                    |
+| Verifikasi pengeluaran lapangan                             | Bisa               | Bisa               | Tidak                           | Tidak                                    |
+| Keputusan biaya/jadwal vendor yang perlu Owner              | Bisa               | Tidak              | Tidak                           | Tidak                                    |
+| Bayar expense/bill / invoice / receipt klien / rekonsiliasi | Bisa               | Bisa               | Invoice dibaca; tanpa realisasi | Konteks pengadaan; tanpa realisasi       |
+| Buat rekening / kelola akun dan role / threshold approval   | Bisa               | Tidak              | Tidak                           | Tidak                                    |
+| Default budget, kategori biaya, library umum, vendor        | Bisa               | Bisa               | Tidak                           | Material settings saja                   |
+| Material Master, receipt, reserve, use, return              | Bisa               | Bisa               | Baca stok                       | Bisa                                     |
+| Waste / transfer / membuat opname / minta reversal receipt  | Bisa               | Tidak bawaan       | Tidak                           | Bisa                                     |
+| Approve opening / opname / reversal receipt                 | Bisa, dengan guard | Bisa, dengan guard | Tidak                           | Tidak                                    |
+| Penyesuaian darurat / reversal opening                      | Bisa, dengan guard | Tidak              | Tidak                           | Tidak                                    |
+| Chat AI                                                     | Bisa               | Bisa               | Scope aksesnya                  | Tidak bawaan                             |
+| Workspace desktop admin                                     | Bawaan             | Bawaan             | Perlu grant tambahan            | Perlu grant tambahan                     |
+
+Desktop adalah cara menyajikan pekerjaan, bukan kenaikan jabatan. Memberi akses desktop kepada PM/Purchasing/custom role tidak otomatis menambah hak bayar, approval atau scope proyek.
+
+#### 3.4.7 Workflow serah-terima antarrole
+
+**A. Setup dan perencanaan**
+
+1. Owner membuat akun, role/threshold dan rekening. Owner/Finance menyiapkan default budget serta vendor.
+2. Owner/Finance membuat proyek dan memilih PM. Purchasing menyiapkan master/lokasi serta informasi stok/harga material.
+3. PM menyusun RAP dan paket Tukang/Subcon pada proyeknya. Purchasing memberi informasi ketersediaan/shortage, bukan otomatis mengedit RAP umum.
+4. Owner/Finance memeriksa dan mengunci RAP, membuat RAB client-safe, lalu menyetujui budget/RAB. Untuk pembagian bisnis, Owner sebaiknya meninjau harga/scope yang akan dijanjikan ke klien; Finance juga mempunyai hak approval budget/RAB.
+5. Owner/Finance mengaktifkan proyek secara terpisah setelah PM dan dokumen siap.
+
+Serah-terima yang diperiksa: rencana/scope → RAP terkunci → RAB disetujui → proyek aktif. Tidak ada saldo bank berubah hanya karena tahap ini.
+
+**B. Pengeluaran lapangan**
+
+```text
+PM mengajukan + nota/kategori
+        ↓
+Finance memverifikasi
+        ├─ Normal: menjadi disetujui → Finance mencatat pembayaran
+        └─ Perlu Owner: menunggu keputusan Owner → Finance membayar jika disetujui
+```
+
+Normal berarti nominal di bawah threshold dan total actual + pending lain + pengajuan tidak melampaui alokasi; latihan memakai threshold Rp5 juta. Pengeluaran ≥ threshold atau kondisi actual + pending lain + pengajuan baru melampaui alokasi memerlukan Owner. Pengaju memperbaiki draft/bukti sebelum mengirim bila belum lengkap; untuk keputusan yang memerlukan Owner dan sudah masuk antrean, Owner approve atau reject dengan alasan sesuai aksi yang tersedia. Finance memverifikasi, bukan otomatis memiliki tombol penolakan atau revisi semua pengajuan. Sesudah pembayaran, PM dapat melihat statusnya tanpa mencatat dana keluar lagi.
+
+Serah-terima yang diperiksa: bukti/pengajuan → hasil verifikasi → keputusan jika perlu → paid/bukti bayar. Actual naik ketika disetujui; saldo turun ketika pembayaran dicatat.
+
+**C. Pembelian vendor dan kedatangan barang**
+
+```text
+PM/Purchasing menyiapkan kebutuhan dan dokumen pengadaan
+        ↓
+Finance atau PM berhak membuat bill pada scope yang diizinkan
+        ↓
+Finance menjadwalkan → Owner memutuskan bila jadwal membutuhkan approval
+        ↓
+Finance mencatat pembayaran dan bukti realisasi
+
+Barang datang → Purchasing meninjau dan posting receipt
+```
+
+Pembayaran dan penerimaan barang dapat terjadi dalam urutan berbeda. Finance menelusuri utang/paid, Purchasing menelusuri jumlah/biaya receipt, dan keduanya memastikan link proyek/bill/material sesuai. Bill Material untuk persediaan belum sama dengan actual pemakaian; jangan membuat biaya pembelian yang sama lagi sebagai expense.
+
+**D. Material dipakai di lapangan**
+
+PM menyampaikan kebutuhan/pemakaian/sisa/rusak → Purchasing mencatat reserve/use/return/waste sesuai kejadian → Finance memeriksa dampak actual kategori dan paid → Owner meninjau shortage/margin risk. PM tidak mencatat stock movement sendiri dengan hak bawaan. Perubahan stok tidak otomatis menjadi pembayaran.
+
+**E. Opening, opname, dan pembatalan receipt**
+
+Purchasing mengajukan data/hitungan/alasan → Finance atau Owner yang berhak memeriksa → checker menyetujui/posting sesuai guard. Persetujuan harus melihat dokumen sumber dan kondisi stok saat itu. Transfer/waste biasa langsung dicatat oleh pelaku berhak; tidak ada tahap approval kedua yang boleh diasumsikan untuk semua stock movement.
+
+**F. Penagihan klien dan closing**
+
+Finance membuat invoice sesuai kontrak → klien membayar di luar Atria → Finance mencatat receipt serta bukti → Finance mencocokkan mutasi/pengecualian → PM/Purchasing memastikan biaya/material/reservasi selesai → Owner/Finance memeriksa checklist dan closing. Invoice belum berarti kas masuk, dan closing belum boleh dilakukan hanya karena pekerjaan fisik kelihatan selesai.
+
+**G. Perubahan scope**
+
+PM melaporkan perubahan dan menyiapkan revisi rencana → Finance/Owner membuat revisi RAB/CO serta mencatat tanggal/referensi konfirmasi klien → approver berhak yang berbeda menyetujui CO → tim melihat kontrak/budget/penagihan yang baru. PM bawaan tidak membuat/approve RAB atau CO. Jangan melewati konfirmasi klien sebelum approval CO.
+
+#### 3.4.8 Kapan wajib orang kedua?
+
+Guard maker/checker membandingkan **akun/user ID**, bukan sekadar nama role. Dua akun dengan role yang sama dapat menjadi pembuat dan checker bila masing-masing mempunyai izin. Mengganti tampilan/role pada akun yang sama tetap tidak mengubah user ID. Pada operasional nyata gunakan akun individual milik orang yang berbeda; pada latihan pribadi kamu dapat mensimulasikan empat pelaku dengan empat akun terpisah.
+
+| Keputusan                                                     | Aturan app                                                                                                       |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Approve biaya/jadwal vendor yang diajukan/dijadwalkan sendiri | Biasanya ditolak; Owner dapat memakai override darurat yang berizin, eksplisit dan beralasan minimal 10 karakter |
+| Approve opening stock sendiri                                 | Selalu ditolak, termasuk Owner; tidak ada emergency override                                                     |
+| Approve opname atau reversal receipt sendiri                  | Perlu user berbeda; Owner mempunyai jalur override darurat eksplisit dengan alasan                               |
+| Approve CO sendiri                                            | Perlu user berbeda; Owner mempunyai jalur override darurat eksplisit dengan alasan                               |
+| Approve budget atau RAB awal                                  | Tidak mempunyai guard maker/checker yang sama; Owner/Finance tetap sebaiknya saling review sesuai kebijakan tim  |
+
+Hak darurat bukan jalan normal agar latihan cepat selesai. Untuk latihan, gunakan PM/Purchasing sebagai pengaju, Finance sebagai verifier/checker/realisasi, dan Owner sebagai pengambil keputusan berisiko. App tidak mempunyai satu aturan bahwa semua approval pasti harus beda orang, atau bahwa hanya Owner yang boleh menekan semua tombol Setujui.
+
+#### 3.4.9 Custom role, Designer, dan cara mencoba sendiri
+
+Setup baru mempunyai **empat role sistem** di atas. Nama **Designer** dapat muncul pada data/label lama, tetapi bukan role kelima dengan paket izin bawaan pada setup sekarang. Bila dibutuhkan, Owner membuat custom role dan memilih izin serta scope sesuai pekerjaan. Scope ditugaskan tetap harus mengikuti penugasan user di proyek; memberi nama Designer saja tidak menjadikannya anggota semua proyek.
+
+Cara latihan tanpa berbagi akun:
+
+1. Buat empat akun individual, lalu logout/login atau gunakan profil browser terpisah untuk berpindah pelaku. Password sementara staf diganti oleh pemilik akun.
+2. Sebagai PM, buat satu pengeluaran proyek; catat bahwa saldo belum berkurang.
+3. Sebagai Finance, verifikasi; pastikan normal/high-risk menghasilkan jalur yang benar dan tombol buat pengeluaran lapangan tidak diasumsikan tersedia.
+4. Sebagai Owner, selesaikan keputusan yang memang membutuhkan Owner. Sebagai Finance, bayar satu kali dan cocokkan saldo/paid.
+5. Sebagai Purchasing, catat aksi stok yang nyata; bandingkan dengan tampilan PM yang membaca stok tanpa memindahkannya.
+6. Coba scope proyek lain dan perubahan grant custom role; request berikutnya harus mengikuti hak yang tersimpan. Jangan mengubah role agar bisa melewati penolakan transaksi tanpa memahami sebabnya.
+
+Developer Account Switcher adalah bantuan development opsional, tidak tersedia di production dan bukan pengganti pembagian akun nyata. Semua role tetap login sebagai manusia; AI membantu analisis/prefill dan konfirmasi tetap memerlukan permission pengguna serta keputusan manusia.
 
 ### 3.5 Rekening
 
-Sebagai Finance/Owner, buat dua rekening pada area rekening Dashboard:
+Sebagai Owner, buat dua rekening pada area rekening Dashboard. Finance dapat melihat rekening, mengubah metadata dan mencatat transaksi, tetapi tidak mempunyai hak bawaan membuat rekening baru:
 
 | Nama rekening     | Nama bank | Nomor rekening | Pemegang        |    Saldo awal |
 | ----------------- | --------- | -------------- | --------------- | ------------: |
@@ -263,7 +466,7 @@ Hasil: total kas perusahaan **Rp110 juta**. Saldo awal membuat catatan pembukaan
 
 ### 3.6 Vendor, lokasi, dan material
 
-Siapkan vendor **Vendor Material Latihan** dan **Vendor Subcon Latihan**. Pada **Pengaturan → Katalog**, gunakan subtab Material/Library/Lokasi untuk master yang diperlukan.
+Sebagai Owner/Finance, siapkan vendor **Vendor Material Latihan** dan **Vendor Subcon Latihan**. Purchasing menyiapkan Material Master/lokasi setelah vendor tersedia. Pada **Pengaturan → Katalog**, gunakan subtab Material/Library/Lokasi untuk master yang diperlukan.
 
 Buat lokasi **Gudang A Latihan**, lalu Material Master:
 
@@ -415,7 +618,7 @@ Hasil: actual total Rp25 juta, paid Rp33 juta, sisa cap Rp65 juta, BCA Rp100 jut
 
 ### 5.7 Bill Subcon
 
-Sebagai Finance, buat `SUB-LATIHAN-01`, vendor Subcon, kategori Subcon, jumlah Rp5 juta dan tautkan paket Subcon. Jangan mengulangnya sebagai field expense.
+Sebagai Finance, buat `SUB-LATIHAN-01`, vendor Subcon, kategori Subcon, jumlah Rp5 juta dan tautkan paket Subcon. Jangan mengulangnya sebagai pengeluaran lapangan.
 
 Bill non-material masuk actual ketika dibuat: actual menjadi Rp30 juta, paid masih Rp33 juta, utang vendor Rp5 juta. Jadwalkan pembayaran BCA → Owner approve karena tepat threshold Rp5 juta → Finance bayar.
 
@@ -653,6 +856,8 @@ Jika angka berbeda, telusuri **sumber dan tahap**: invoice belum diterima, appro
 
 ## Referensi untuk pemeriksa teknis
 
-Aturan walkthrough dicocokkan dengan implementasi: `budget-sync.ts` (actual/pending/paid), `excel-budget.ts` (derivasi cap), `vendor-bill-write.ts`, `inventory-project-movements.ts`, `project-material-projection.ts`, `rap-rab-approval.ts`, `activation-readiness.ts`, `reconcile-cash-transaction.ts`, dan `project/closing.ts`. Semua backend business code berada di `apps/api/src/backend/`; shared calculation berada di `packages/core/`.
+Aturan walkthrough dicocokkan dengan implementasi: `budget-sync.ts` (actual/pending/paid), `excel-budget.ts` (derivasi cap), `vendor-bill-write.ts`, `inventory-project-movements.ts`, `project-material-projection.ts`, `rap-rab-approval.ts`, `activation-readiness.ts`, `reconcile-cash-transaction.ts`, dan `project/closing.ts`. Hak role dicocokkan dengan default `packages/core/src/auth/permissions.ts` / `role-constants.ts`, otoritas runtime pada `lib/auth/permissions.ts` / `scoping.ts`, serta guard tindakan finance/material. Pembagian kerja pada panduan tidak menambah atau mencabut izin app.
+
+Semua backend business code berada di `apps/api/src/backend/`; shared calculation berada di `packages/core/`.
 
 Lihat juga [arsitektur](../06-technical/ARCHITECTURE.md), [mobile/API development](./mobile-api-development.md), [evidence hosted](../plans/2026-10-05-hosted-workflow-verification.md), [rencana setup bersih](../plans/2026-10-05-self-guided-workflow-and-clean-setup.md), dan [demo yang sudah terisi](./seeded_demo_walkthrough.md). Demo terisi bukan dataset latihan kosong pada panduan ini.
