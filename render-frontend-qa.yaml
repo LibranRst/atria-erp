@@ -1,7 +1,7 @@
 # QA frontend only. No database, API, worker or paid instance is provisioned.
 services:
   - type: web
-    name: atria-verification-web
+    name: atria-dekoria
     runtime: node
     plan: free
     region: singapore

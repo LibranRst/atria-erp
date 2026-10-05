@@ -14,7 +14,8 @@ Do not push this configuration to the Netlify-linked notification branch.
 
 - Reproducible frontend-only configuration lives in `render-frontend-qa.yaml`.
   Preserve the existing root `render.yaml` API blueprint exactly.
-- Render workspace: Dekoria's workspace; service: `atria-verification-web`.
+- Render workspace: Dekoria's workspace; service: `atria-dekoria` (user-requested
+  product name). It still points to the isolated synthetic QA API/database.
 - Free web service, native Node runtime, Singapore region, one instance.
 - Repository root remains the build root because web imports workspace packages
   and generates declaration-only API contracts.
@@ -90,3 +91,11 @@ to roll back. No pilot state participates in rollback.
   production process started in 108 ms locally. With the intentionally invalid
   API, login correctly cannot render its API-backed shell; use real QA transport
   for the later hosted login check, not a fabricated backend response.
+- Local production manifest and notification worker both returned 200, `nosniff`
+  and revalidation headers. Worker scope `/` and tray-read marker were verified.
+- Preparation commit `6a72ceb46a7a17edd995550043ec290af26fb88e` is pushed only to
+  `codex/render-qa-frontend`. The API blueprint and all application code are
+  unchanged by this preparation commit. Local smoke-test server was stopped.
+- User approved storing the QA bridge secret at Render, updating the QA frontend
+  origin and deploying. They requested the frontend service name `atria-dekoria`.
+  The product-name change does not authorize connecting or modifying pilot data.
