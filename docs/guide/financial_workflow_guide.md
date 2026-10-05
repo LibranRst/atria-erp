@@ -64,6 +64,8 @@ Konfigurasi privat yang dipakai:
 
 Pemeriksaan dasar: [API /health](http://localhost:3011/health) harus menunjukkan `ok`; [API /ready](http://localhost:3011/ready) harus menunjukkan `ready`. `ready` membuktikan API dapat mengakses database, belum membuktikan semua workflow.
 
+**Catatan jaringan Mac saat panduan ini disiapkan:** akses lokal ke CDN ImageKit masih gagal validasi TLS karena jalur DNS jaringan pernah mengarahkannya ke halaman blokir ISP. Delivery private melalui API cloud sudah terbukti valid pada pengujian hosted, tetapi download/preview lampiran dan OCR dari API lokal dapat tertahan. Coba jaringan lain yang mengakses ImageKit dengan TLS valid, atau selesaikan konfigurasi DNS jaringan sebelum menguji bagian media. Jangan menonaktifkan validasi certificate. Finance/material manual dan CSV deterministik dapat dipelajari dahulu. Jangan mengganti `API_ORIGIN` ke production untuk mengatasi media: seluruh aksi web akan berpindah ke database production.
+
 Jangan menyalin connection string production ke environment latihan. Jangan memakai database development sebagai target integration test otomatis; test Postgres mempunyai database disposable sendiri.
 
 ### Mengulang latihan dari nol
@@ -177,6 +179,8 @@ Margin dan markup juga berbeda. Biaya Rp100, harga jual Rp110 berarti markup 10%
 3. Isi nama Owner, email, dan password sendiri. Gunakan password sesuai validasi form, minimal 12 karakter dengan huruf besar/kecil dan angka. Tidak ada password bersama yang perlu disalin dari panduan.
 4. Selesaikan setup lalu login. Ikuti layar pengenalan/Quick Start.
 
+Judul form “Setup Production” juga dapat muncul di development; environment ditentukan oleh URL web/API dan database, bukan judul form.
+
 Hasil: satu akun Owner, role sistem dan izinnya, lima kategori, serta default budget tersedia. Belum ada uang klien, pembayaran vendor, ataupun stock movement. `/setup` kemudian tidak lagi menerima bootstrap pertama.
 
 Untuk production, buat akun boss sebagai akun individual. Akun pribadi staf dibuat terpisah; tidak perlu berbagi akun Owner.
@@ -205,12 +209,12 @@ Atur/periksa threshold approval Rp5.000.000 untuk latihan. Nominal **≥ thresho
 
 Isi form Quick Start:
 
-| Field          | Nilai latihan          |
-| -------------- | ---------------------- |
-| Nama proyek    | Latihan Interior Atria |
-| Klien baru     | Klien Latihan          |
-| Nilai proyek   | Rp100.000.000          |
-| Nilai RAB awal | Rp100.000.000          |
+| Field         | Nilai latihan          |
+| ------------- | ---------------------- |
+| Nama proyek   | Latihan Interior Atria |
+| Klien baru    | Klien Latihan          |
+| Nilai proyek  | Rp100.000.000          |
+| RAB disetujui | Rp100.000.000          |
 
 Jika belum ada PM, buat akun tim pada tahap kesiapan lalu assign PM pada proyek sebelum aktivasi. Nilai RAB awal pada form budget **belum sama dengan persetujuan dokumen RAB resmi**. Proyek tetap Draft sampai perencanaan dan aktivasi selesai.
 
@@ -248,12 +252,12 @@ Pemisahan pelaku latihan: PM mengajukan → Finance memverifikasi → Owner meny
 
 Sebagai Finance/Owner, buat dua rekening pada area rekening Dashboard:
 
-| Rekening          | Tipe      |    Saldo awal |
-| ----------------- | --------- | ------------: |
-| BCA Latihan       | Bank      | Rp100.000.000 |
-| Kas Kecil Latihan | Kas tunai |  Rp10.000.000 |
+| Nama rekening     | Nama bank | Nomor rekening | Pemegang        |    Saldo awal |
+| ----------------- | --------- | -------------- | --------------- | ------------: |
+| BCA Latihan       | BCA       | 100000001      | Dekoria Latihan | Rp100.000.000 |
+| Kas Kecil Latihan | Kas Tunai | KAS001         | Dekoria Latihan |  Rp10.000.000 |
 
-Catatan saldo awal: `Saldo awal sebelum transaksi latihan`. Pakai rekening ini untuk semua langkah berikut.
+Isian di atas adalah identitas sintetis. “Kas Tunai” menjelaskan penggunaan rekening Kas Kecil; tidak ada selector tipe bank/kas yang perlu dicari pada form ini. Catat tanggal cutoff saldo awal pada catatan latihanmu.
 
 Hasil: total kas perusahaan **Rp110 juta**. Saldo awal membuat catatan pembukaan ledger, tetapi **bukan pembayaran klien, omzet, ataupun actual proyek**. Opening rekening tidak dihitung sebagai cash-in proyek.
 
@@ -263,14 +267,16 @@ Siapkan vendor **Vendor Material Latihan** dan **Vendor Subcon Latihan**. Pada *
 
 Buat lokasi **Gudang A Latihan**, lalu Material Master:
 
-| Field                 | Nilai                   |
-| --------------------- | ----------------------- |
-| Nama                  | Panel Latihan           |
-| Satuan                | unit                    |
-| Vendor default        | Vendor Material Latihan |
-| Lokasi                | Gudang A Latihan        |
-| Harga acuan           | Rp2.000.000             |
-| Kategori biaya proyek | Material                |
+| Field             | Nilai                                         |
+| ----------------- | --------------------------------------------- |
+| Nama              | Panel Latihan                                 |
+| Satuan            | unit                                          |
+| Vendor default    | Vendor Material Latihan                       |
+| Lokasi            | Gudang A Latihan                              |
+| Harga acuan       | Rp2.000.000                                   |
+| Kategori material | Panel (buat kategori material bila belum ada) |
+
+Kategori material adalah pengelompokan barang di master, berbeda dari kategori biaya **Material** pada budget.
 
 Hasil inventory master baru: fisik 0, reserved 0, available 0, average cost 0. **Harga acuan bukan bukti barang sudah ada** dan tidak langsung menjadi average cost inventory.
 
@@ -288,13 +294,13 @@ Sebagai PM proyek yang ditugaskan, buat RAP. Setup berjalan berurutan **Material
 2. Isi jumlah 10 unit, buffer/cadangan 0, biaya per satuan Rp2 juta. Biaya rencana material Rp20 juta.
 3. **Lanjut ke Tukang**; buat paket **Pemasangan Latihan**, jumlah 1 paket, biaya internal Rp10 juta. Buka detail lalu **Tandai Siap**.
 4. **Lanjut ke Subcon**; buat paket **Subcon Latihan**, jumlah 1 paket, biaya internal Rp5 juta, vendor Subcon Latihan. **Tandai Siap**.
-5. **Lanjut ke Review**; periksa total rencana internal Rp35 juta. **Finalisasi Internal Plan** mengunci RAP.
+5. **Lanjut ke Review**; periksa total rencana internal Rp35 juta. Login **Owner/Finance** untuk **Finalisasi Internal Plan**, yang mengunci RAP. PM bawaan menyiapkan rencana, tetapi tidak mempunyai izin finalisasi atau membuat/mengedit RAB.
 
 Untuk scope yang sungguh tidak ada, tersedia keputusan **Tidak Digunakan**. Pada latihan ini kedua paket digunakan. RAP yang dikunci adalah baseline rencana; actual masih 0 dan tidak ada uang keluar.
 
 ### 4.2 RAB: harga jual yang aman untuk klien
 
-Pada RAB, generate dari **satu material RAP + dua paket** di atas. Jangan menambah manual line atau bundle pada latihan utama. Harga usulan otomatis belum tentu tepat Rp100 juta, jadi edit dan **Simpan** tiga item:
+Sebagai **Owner/Finance**, pada RAB generate dari **satu material RAP + dua paket** di atas. Jangan menambah manual line atau bundle pada latihan utama. Harga usulan otomatis belum tentu tepat Rp100 juta, jadi edit dan **Simpan** tiga item:
 
 | Item RAB           |  Jumlah | Harga satuan klien | Total untuk klien |
 | ------------------ | ------: | -----------------: | ----------------: |
@@ -337,7 +343,7 @@ Catat penerimaan DP Rp30 juta ke BCA Latihan dengan referensi `DP-LATIHAN`. Sete
 
 ### 5.2 Bill Material dan pembayaran parsial
 
-Sebagai Finance, buat bill `MAT-LATIHAN-01`, proyek Latihan Interior Atria, vendor Material, kategori Material, material Panel Latihan/RAP terkait, jumlah Rp20 juta. Ini pembelian **persediaan** 10 unit × Rp2 juta. Jangan membuat pengeluaran Material tambahan untuk pembelian yang sama.
+Sebagai Finance, buat bill `MAT-LATIHAN-01`, proyek Latihan Interior Atria, vendor Material, kategori Material, jumlah Rp20 juta. Catat bahwa bill membeli 10 unit Panel Latihan @Rp2 juta; form bill tidak memilih material/RAP. Link material/RAP dibuat pada penerimaan barang di 5.3. Ini pembelian **persediaan** 10 unit × Rp2 juta. Jangan membuat pengeluaran Material tambahan untuk pembelian yang sama.
 
 Jadwalkan Rp8 juta dari BCA; karena nominal melewati threshold, login Owner untuk approval jadwal, lalu Finance mencatat pembayaran. Ulangi sisa Rp12 juta dengan jadwal/approval baru. Scheduling dan approval tidak mengubah bank; pembayaran selesai yang mengubahnya.
 
@@ -429,7 +435,7 @@ Actual dan paid tetap Rp30 juta/Rp38 juta. Total kas perusahaan menjadi Rp165 ju
 
 ## 6. Memeriksa angka akhir
 
-Sebelum closing, periksa detail proyek dan Dashboard. Refresh/reload dan pastikan angka tetap sama; angka tidak boleh hanya benar pada toast atau state optimistis.
+Sebelum closing, periksa detail proyek dan Dashboard. Persentase pada app dapat dibulatkan; tabel berikut memakai dua desimal, sedangkan nominal rupiah harus cocok. Refresh/reload dan pastikan angka tetap sama; angka tidak boleh hanya benar pada toast atau state optimistis.
 
 | Nilai yang diperiksa                   |                 Hasil latihan inti | Tujuannya                                                   |
 | -------------------------------------- | ---------------------------------: | ----------------------------------------------------------- |
@@ -556,9 +562,9 @@ Transaksi umum ini berada di luar proyek. Sesuaikan rekonsiliasi perusahaan untu
 
 ### 8.3 Opening, transfer stok, opname, adjustment, dan receipt reversal
 
-Gunakan Material Master lain **Material Gudang Tambahan**, satuan unit, cost Rp100 ribu, dengan Gudang A dan lokasi baru **Gudang B Latihan**. Ini tidak mengubah actual/paid proyek utama, tetapi menambah nilai persediaan perusahaan.
+Buat Material Master lain **Material Gudang Tambahan**, satuan unit, cost Rp100 ribu, di Gudang A **terlebih dahulu**. Setelah itu buat lokasi baru **Gudang B Latihan**; pembuatan lokasi menyiapkan inventory kosong bagi material aktif sehingga transfer dummy mempunyai baris tujuan. Ini tidak mengubah actual/paid proyek utama, tetapi menambah nilai persediaan perusahaan.
 
-Siapkan opening pada inventory dummy yang belum pernah mempunyai saldo/reservasi/movement, sebaiknya pada fase setup awal. Purchasing membuat batch 5 unit @Rp100 ribu di Gudang A, lalu **Finance/Owner yang berbeda** menyetujuinya. Pengajuan belum mengubah stok; approval menghasilkan A=5, nilai Rp500 ribu. Tidak ada emergency self-approval untuk opening. Jika keputusan stock awal sudah ditetapkan, gunakan pengelolaan/history opening yang tersedia; jangan mengubah saldo barang yang sudah berjalan seolah masih opening.
+Siapkan opening pada inventory dummy yang belum pernah mempunyai saldo/reservasi/movement, sebaiknya pada fase setup awal. Purchasing membuat batch 5 unit @Rp100 ribu di Gudang A, lalu **Finance/Owner yang berbeda** menyetujuinya. Pengajuan belum mengubah stok; approval menghasilkan A=5, nilai Rp500 ribu. Tidak ada emergency self-approval untuk opening. Buka `/settings?tab=readiness&flow=initial-stock` lalu **Ada stok lama**. Bila sudah ada opening yang diposting, gunakan **Catat saldo awal lainnya**. Composer masih dapat dipakai setelah keputusan tanpa stok lama untuk inventory dummy yang memenuhi syarat; jangan mengubah saldo barang yang sudah berjalan seolah masih opening.
 
 Lanjutkan ketika proyek utama aktif:
 
@@ -583,7 +589,7 @@ Sesudah appendix ini, Panel Latihan utama tetap 4 unit/Rp8 juta dan actual/paid 
 
 ### 8.4 Revisi RAB dan Change Order
 
-CO adalah perubahan scope/harga yang disetujui setelah baseline; bukan cara mengedit invoice lama diam-diam. Uji sebelum closing atau pada proyek tambahan. Buat revisi/CO produksi tambahan Rp10 juta, review delta dan dokumen klien, lalu Owner approve. Hindari draft/CO yang menggantung ketika ingin closing.
+CO adalah perubahan scope/harga yang disetujui setelah baseline; bukan cara mengedit invoice lama diam-diam. Uji sebelum closing atau pada proyek tambahan. Sebagai Finance, buat revisi RAB/CO produksi tambahan Rp10 juta sehingga harga kontrak usulan Rp110 juta. Review delta/dokumen klien lalu catat konfirmasi klien beserta tanggal dan referensi bukti sampai status **Menunggu Persetujuan**. Owner yang berbeda dari pembuat CO kemudian review dan approve. Hindari draft/CO yang menggantung ketika ingin closing.
 
 Bila dilakukan pada fixture utama sebelum closing, kontrak menjadi Rp110 juta dan cap Rp99 juta. Kategori yang bukan override manual mengikuti rasio otomatis: Rp49,5 juta / Rp24,75 juta / Rp9,9 juta / Rp4,95 juta / Rp9,9 juta. Actual tetap Rp30 juta selama belum ada biaya baru, sisa cap Rp69 juta, proyeksi Rp11 juta/10%.
 
