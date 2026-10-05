@@ -19,3 +19,17 @@ Build a red/green computed-font and real form-sheet loop using existing no-auth 
 3. Separate manual zoom/pan from keyboard compensation; keep current Android viewport metadata, focus traps, dismissal, motion presets and accessibility.
 4. Write meaningful regressions for actual resize/focus paths and geometry boundaries, verify320/360/390/430 and desktop1024/1280/1440, then build/deploy the reviewed web candidate to the existing Netlify site. Do not reset, seed, create company users or change hosting plans.
 5. Record tested source/deploy identity and browser evidence, preserve Netlify badge off, and leave actual boss-phone confirmation explicit if unavailable.
+
+## Native Safari follow-up
+
+The first patch passed computed CSS and DOM resize tests, but repeating the software keyboard on iPhone 17 Pro Simulator (iOS 26.5) exposed a remaining footer bug. Safari reported `innerHeight=518`, document height `714`, document scroll `196`, visual height `377`, visual offset `196`, and scale `1`. The bottom-fixed sheet ended at client coordinate `518`; its footer remained behind Safari's accessory bar. Deriving a bottom inset from `innerHeight` produced zero and mixed coordinate spaces.
+
+Use a top-positioned fixed visual-viewport host with the sheet anchored inside it, matching the existing dialog host. Focus reveal must compare field/body bounds with the actual host's client bounds. Preserve the last unzoomed host geometry during manual zoom and preserve top-overlay ownership. The local Storybook diagnostic variant uses synthetic values only and does not call the API.
+
+## Final verification
+
+- The same native Safari keyboard geometry now places the sheet/its footer at client bottom `377`, with the whole input and Save button above Safari's accessory bar. Visual scale remains `1`. Repeated focus/software-keyboard presentation passed on the clean default Storybook fixture after the diagnostic panel was removed from that default story.
+- Computed-style checks cover mobile 320/360/390/430, fine-pointer desktop 1024/1280/1440 and large coarse-pointer screens. Editable mobile text computes to 16px; 17px inputs, compact supporting copy and fine-pointer desktop control sizes remain intact.
+- Final focused suites: 37 tests, 223 Bun expectations, plus real rendered-overlay DOM assertions. Coverage includes Safari's document/client pan mismatch, minimal field reveal, header/footer occlusion, scroll extent, stacked overlay ownership, short landscape viewports, zoom preservation and Android layout resize.
+- Web typecheck and full web lint pass. Independent React review found no concrete regression in event/observer cleanup, hooks, overlay focus ownership, pointer events or motion.
+- Reused/extended primitives: existing TextInput/textarea/control typography tokens, OperationalFormSheet, BottomSheet and DialogFrame. Public action signatures and company data are untouched. Physical boss-iPhone acceptance remains a follow-up; this evidence is an installed iOS 26.5 Simulator and automated browser/DOM checks.

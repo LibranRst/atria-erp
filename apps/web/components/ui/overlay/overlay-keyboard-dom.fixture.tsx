@@ -108,6 +108,9 @@ try {
   const input = body?.querySelector<HTMLInputElement>("input");
   const textarea = body?.querySelector<HTMLTextAreaElement>("textarea");
   assert.ok(sheet && body && input && textarea);
+  const initialHost = sheet.parentElement;
+  assert.ok(initialHost);
+  initialHost.getBoundingClientRect = (): DOMRect => rect(visualTop - window.scrollY, visualHeight);
   const header = sheet.querySelector<HTMLElement>("header");
   const footer = sheet.querySelector<HTMLElement>(".bottom-0.z-20");
   const handle = sheet.querySelector<HTMLElement>('[aria-label="Perbesar drawer"]');
@@ -127,7 +130,12 @@ try {
     input.focus();
   });
   await resize(470, 80);
-  assert.equal(sheet.style.bottom, "294px", "Sheet follows visual bottom including offsetTop");
+  assert.equal(initialHost.style.top, "80px", "Sheet host follows visual top including offsetTop");
+  assert.equal(initialHost.style.height, "470px", "Sheet host follows visual height");
+  assert.ok(
+    sheet.classList.contains("absolute"),
+    "Sheet bottom is anchored within the measured host",
+  );
   assert.equal(sheet.style.maxHeight, "462px", "Keyboard height cap uses the visual viewport");
   assert.equal(
     body.scrollTop,
@@ -174,6 +182,53 @@ try {
   await settle();
   assert.equal(body.scrollTop, 0, "Focus preserves reading position when field is already visible");
 
+  // Observed on Safari 26.5: innerHeight518, root714, scrollY196, visual377/top196.
+  // Client rects are already panned; a bottom inset derived from innerHeight is zero.
+  browserWindow.innerHeight = 518;
+  setDimension(document.documentElement, "clientHeight", 714);
+  Object.defineProperty(browserWindow, "scrollY", { configurable: true, value: 196 });
+  const sheetHost = sheet.parentElement;
+  assert.ok(sheetHost);
+  sheetHost.getBoundingClientRect = (): DOMRect => rect(visualTop - window.scrollY, visualHeight);
+  body.getBoundingClientRect = (): DOMRect => rect(87, 290);
+  body.scrollTop = 40;
+  input.getBoundingClientRect = (): DOMRect => rect(230 - body.scrollTop, 48);
+  await resize(377, 196);
+  assert.equal(
+    sheetHost.style.top,
+    "196px",
+    "Safari sheet host follows the document-space visual origin",
+  );
+  assert.equal(
+    sheetHost.style.height,
+    "377px",
+    "Safari host uses visible height despite inner/root mismatch",
+  );
+  assert.equal(
+    body.scrollTop,
+    40,
+    "Already visible client-space field is not scrolled against document-space offsetTop",
+  );
+  footer.getBoundingClientRect = (): DOMRect =>
+    rect(
+      Number.parseFloat(sheetHost.style.top) +
+        Number.parseFloat(sheetHost.style.height) -
+        window.scrollY -
+        88,
+      88,
+    );
+  assert.equal(
+    footer.getBoundingClientRect().bottom,
+    377,
+    "Footer ends at the visible client-space bottom",
+  );
+  browserWindow.innerHeight = 844;
+  setDimension(document.documentElement, "clientHeight", 844);
+  Object.defineProperty(browserWindow, "scrollY", { configurable: true, value: 0 });
+  body.getBoundingClientRect = (): DOMRect => rect(88, 462);
+  body.scrollTop = 0;
+  await resize(470, 80);
+
   await act(async (): Promise<void> => {
     root.render(sheetFixture(true));
   });
@@ -213,6 +268,9 @@ try {
   const dialogInput = dialog?.querySelector<HTMLInputElement>("input");
   const dialogBody = dialogInput?.parentElement;
   assert.ok(dialog && dialogInput && dialogBody);
+  const dialogHost = dialog.parentElement;
+  assert.ok(dialogHost);
+  dialogHost.getBoundingClientRect = (): DOMRect => rect(visualTop - window.scrollY, visualHeight);
   setDimension(dialogBody, "clientHeight", 100);
   setDimension(dialogBody, "scrollHeight", 300);
   dialogBody.getBoundingClientRect = (): DOMRect => rect(180, 100);
@@ -244,7 +302,24 @@ try {
   );
   assert.equal(dialog.parentElement?.style.height, "400px");
 
+  browserWindow.innerHeight = 518;
+  setDimension(document.documentElement, "clientHeight", 714);
+  Object.defineProperty(browserWindow, "scrollY", { configurable: true, value: 196 });
+  dialogBody.getBoundingClientRect = (): DOMRect => rect(80, 150);
+  dialogBody.scrollTop = 40;
+  dialogInput.getBoundingClientRect = (): DOMRect => rect(160 - dialogBody.scrollTop, 48);
+  await resize(377, 196);
+  assert.equal(dialogHost.style.top, "196px");
+  assert.equal(dialogHost.getBoundingClientRect().top, 0);
+  assert.equal(
+    dialogBody.scrollTop,
+    40,
+    "Compact dialog also measures visible client bounds after Safari pans the document",
+  );
+
   browserWindow.innerHeight = 470;
+  setDimension(document.documentElement, "clientHeight", 470);
+  Object.defineProperty(browserWindow, "scrollY", { configurable: true, value: 0 });
   visualHeight = 470;
   visualTop = 0;
   visualScale = 1;

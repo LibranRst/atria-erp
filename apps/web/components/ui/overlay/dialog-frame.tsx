@@ -141,6 +141,7 @@ export function DialogFrame({
       ? observeOverlayViewport({
           overlay: dialogRef.current,
           getBody: (): HTMLElement | null => bodyRef.current,
+          getViewportBounds: (): DOMRect | null => hostRef.current?.getBoundingClientRect() ?? null,
           isActive: (): boolean => isTopOverlay(activeDialogId),
           onViewportChange: updateViewport,
         })

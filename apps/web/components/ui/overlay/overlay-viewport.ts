@@ -3,7 +3,6 @@ export type OverlayViewport = {
   readonly width: number;
   readonly top: number;
   readonly left: number;
-  readonly bottomInset: number;
   readonly zoomed: boolean;
 };
 
@@ -18,7 +17,6 @@ export function readOverlayViewport(): OverlayViewport {
     width: zoomed ? window.innerWidth : (visual?.width ?? window.innerWidth),
     top,
     left: zoomed ? 0 : (visual?.offsetLeft ?? 0),
-    bottomInset: zoomed ? 0 : Math.max(0, window.innerHeight - top - height),
     zoomed,
   };
 }
@@ -26,6 +24,7 @@ export function readOverlayViewport(): OverlayViewport {
 type OverlayViewportObserverOptions = {
   readonly overlay: HTMLElement;
   readonly getBody: () => HTMLElement | null;
+  readonly getViewportBounds: () => DOMRect | null;
   readonly isActive: () => boolean;
   readonly onViewportChange: (viewport: OverlayViewport) => void;
   readonly getInsets?: () => { readonly top: number; readonly bottom: number };
@@ -58,6 +57,7 @@ function isEditableField(element: Element | null): element is HTMLElement {
 function revealFocusedField({
   overlay,
   getBody,
+  getViewportBounds,
   isActive,
   getInsets,
 }: OverlayViewportObserverOptions): void {
@@ -72,8 +72,12 @@ function revealFocusedField({
   const insets = getInsets?.() ?? { top: 16, bottom: 16 };
   const bodyBounds = body.getBoundingClientRect();
   const fieldBounds = field.getBoundingClientRect();
-  const top = Math.max(bodyBounds.top + insets.top, viewport.top);
-  const bottom = Math.min(bodyBounds.bottom - insets.bottom, viewport.top + viewport.height);
+  // Safari can pan client rects while offsetTop stays in document/layout space.
+  // Measure the host so field, body and visible bounds share client coordinates.
+  const viewportBounds = getViewportBounds();
+  if (!viewportBounds) return;
+  const top = Math.max(bodyBounds.top + insets.top, viewportBounds.top);
+  const bottom = Math.min(bodyBounds.bottom - insets.bottom, viewportBounds.bottom);
   if (bottom <= top) return;
   const delta =
     fieldBounds.top < top
@@ -107,8 +111,7 @@ export function observeOverlayViewport(options: OverlayViewportObserverOptions):
       previousViewport?.height === viewport.height &&
       previousViewport.width === viewport.width &&
       previousViewport.top === viewport.top &&
-      previousViewport.left === viewport.left &&
-      previousViewport.bottomInset === viewport.bottomInset
+      previousViewport.left === viewport.left
     )
       return;
     previousViewport = viewport;

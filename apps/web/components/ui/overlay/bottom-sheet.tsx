@@ -88,6 +88,7 @@ export function BottomSheet({
 }: BottomSheetProps): React.JSX.Element | null {
   const desktop = useWorkspacePresentation() === "desktop";
   const sheetRef = React.useRef<HTMLElement>(null);
+  const viewportHostRef = React.useRef<HTMLDivElement>(null);
   const handleRef = React.useRef<HTMLButtonElement>(null);
   const headerRef = React.useRef<HTMLElement>(null);
   const bodyRef = React.useRef<HTMLDivElement>(null);
@@ -101,7 +102,7 @@ export function BottomSheet({
   const [zIndex, setZIndex] = useState(200);
   const [expanded, setExpanded] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(720);
-  const [viewportBottom, setViewportBottom] = useState(0);
+  const [viewportTop, setViewportTop] = useState(0);
   const [naturalHeight, setNaturalHeight] = useState(MIN_SHEET_HEIGHT);
   const [topChromeHeight, setTopChromeHeight] = useState(76);
   const [footerHeight, setFooterHeight] = useState(0);
@@ -136,7 +137,7 @@ export function BottomSheet({
     });
 
     setViewportHeight(nextViewportHeight);
-    setViewportBottom(viewport.bottomInset);
+    setViewportTop(viewport.top);
     setNaturalHeight(metrics.naturalHeight);
     setTopChromeHeight(handleHeight + headerHeight);
     setFooterHeight(nextFooterHeight);
@@ -174,6 +175,8 @@ export function BottomSheet({
       ? observeOverlayViewport({
           overlay: sheetRef.current,
           getBody: (): HTMLElement | null => bodyRef.current,
+          getViewportBounds: (): DOMRect | null =>
+            viewportHostRef.current?.getBoundingClientRect() ?? null,
           isActive: (): boolean => isTopOverlay(sheetId),
           onViewportChange: updateSheetMetrics,
           getInsets: (): { readonly top: number; readonly bottom: number } => ({
@@ -293,75 +296,79 @@ export function BottomSheet({
             aria-hidden="true"
           />
 
-          <motion.section
-            ref={sheetRef}
-            tabIndex={-1}
-            initial={reduceMotion ? { y: 0, opacity: 0 } : { y: "100%", opacity: 0 }}
-            animate={{
-              y: reduceMotion ? 0 : hasMeasured ? 0 : "100%",
-              height: activeHeight,
-              opacity: hasMeasured ? 1 : 0,
-            }}
-            exit={reduceMotion ? { y: 0, opacity: 0 } : { y: "100%", opacity: 0 }}
-            transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
-            drag={canResize ? "y" : false}
-            dragControls={dragControls}
-            dragListener={false}
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0.08, bottom: 0.04 }}
-            onDragEnd={handleDragEnd}
-            className={`fixed inset-x-0 bottom-0 mx-auto flex w-full ${desktop ? "max-w-3xl" : "max-w-md"} flex-col overflow-hidden rounded-t-owner bg-surface-container-low shadow-sheet ring-1 ring-ring-control outline-none`}
-            style={{
-              zIndex: zIndex + 1,
-              bottom: viewportBottom,
-              maxHeight: expandedHeight,
-            }}
-            role="dialog"
-            aria-modal="true"
-            aria-label={title}
+          <div
+            ref={viewportHostRef}
+            className="pointer-events-none fixed inset-x-0"
+            style={{ zIndex: zIndex + 1, top: viewportTop, height: viewportHeight }}
           >
-            <div className="absolute inset-x-0 top-0 z-20">
-              <div
-                className="pointer-events-none absolute inset-0 bg-linear-to-b from-surface-container-low from-0% via-surface-container-low/95 via-70% to-transparent"
-                aria-hidden="true"
-              />
-              <div className="relative z-10 flex h-5 items-center justify-center pt-2">
-                <button
-                  ref={handleRef}
-                  type="button"
-                  onClick={toggleExpanded}
-                  onPointerDown={(event) => {
-                    if (!canResize) return;
-                    dragControls.start(event);
-                  }}
-                  className="flex h-5 w-16 cursor-grab items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:cursor-grabbing disabled:cursor-default"
-                  aria-label={expanded ? "Turunkan drawer" : "Perbesar drawer"}
-                  disabled={!canResize}
-                  style={{ touchAction: "none" }}
-                >
-                  <span
-                    className={`h-1 w-10 rounded-full transition-colors ${
-                      canResize ? "bg-outline-variant/70" : "bg-outline-variant/35"
-                    }`}
-                    aria-hidden="true"
-                  />
-                </button>
-              </div>
-
-              <header
-                ref={headerRef}
-                className="relative z-10 flex h-14 items-center px-margin-mobile"
-              >
-                <IconButton
-                  ref={closeButtonRef}
-                  label="Tutup"
-                  icon={<AppIcon name="close" className="icon-xl leading-none" />}
-                  variant="secondary"
-                  onClick={() => onCloseRef.current()}
-                  className="absolute top-1/2 left-margin-mobile z-10 -translate-y-1/2 shadow-control"
+            <motion.section
+              ref={sheetRef}
+              tabIndex={-1}
+              initial={reduceMotion ? { y: 0, opacity: 0 } : { y: "100%", opacity: 0 }}
+              animate={{
+                y: reduceMotion ? 0 : hasMeasured ? 0 : "100%",
+                height: activeHeight,
+                opacity: hasMeasured ? 1 : 0,
+              }}
+              exit={reduceMotion ? { y: 0, opacity: 0 } : { y: "100%", opacity: 0 }}
+              transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
+              drag={canResize ? "y" : false}
+              dragControls={dragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0.08, bottom: 0.04 }}
+              onDragEnd={handleDragEnd}
+              className={`pointer-events-auto absolute inset-x-0 bottom-0 mx-auto flex w-full ${desktop ? "max-w-3xl" : "max-w-md"} flex-col overflow-hidden rounded-t-owner bg-surface-container-low shadow-sheet ring-1 ring-ring-control outline-none`}
+              style={{
+                zIndex: zIndex + 1,
+                maxHeight: expandedHeight,
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={title}
+            >
+              <div className="absolute inset-x-0 top-0 z-20">
+                <div
+                  className="pointer-events-none absolute inset-0 bg-linear-to-b from-surface-container-low from-0% via-surface-container-low/95 via-70% to-transparent"
+                  aria-hidden="true"
                 />
+                <div className="relative z-10 flex h-5 items-center justify-center pt-2">
+                  <button
+                    ref={handleRef}
+                    type="button"
+                    onClick={toggleExpanded}
+                    onPointerDown={(event) => {
+                      if (!canResize) return;
+                      dragControls.start(event);
+                    }}
+                    className="flex h-5 w-16 cursor-grab items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:cursor-grabbing disabled:cursor-default"
+                    aria-label={expanded ? "Turunkan drawer" : "Perbesar drawer"}
+                    disabled={!canResize}
+                    style={{ touchAction: "none" }}
+                  >
+                    <span
+                      className={`h-1 w-10 rounded-full transition-colors ${
+                        canResize ? "bg-outline-variant/70" : "bg-outline-variant/35"
+                      }`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
 
-                {/*
+                <header
+                  ref={headerRef}
+                  className="relative z-10 flex h-14 items-center px-margin-mobile"
+                >
+                  <IconButton
+                    ref={closeButtonRef}
+                    label="Tutup"
+                    icon={<AppIcon name="close" className="icon-xl leading-none" />}
+                    variant="secondary"
+                    onClick={() => onCloseRef.current()}
+                    className="absolute top-1/2 left-margin-mobile z-10 -translate-y-1/2 shadow-control"
+                  />
+
+                  {/*
                   Lebarnya diturunkan dari header, bukan dari viewport. Sisi kiri
                   dipakai tombol tutup: 20px margin + 48px tombol + 4px jeda =
                   72px, dicerminkan ke kanan supaya judulnya tetap benar-benar di
@@ -370,41 +377,41 @@ export function BottomSheet({
                   di 375px taksirannya meleset 3px dan judul sependek "Sesuaikan
                   default budget" ikut terpotong.
                 */}
-                <div className="pointer-events-none absolute top-1/2 left-1/2 w-[calc(100%-9rem)] -translate-x-1/2 -translate-y-1/2 text-center">
-                  <h2 className="truncate font-sans text-[18px] leading-tight font-semibold text-on-surface">
-                    {title}
-                  </h2>
-                </div>
+                  <div className="pointer-events-none absolute top-1/2 left-1/2 w-[calc(100%-9rem)] -translate-x-1/2 -translate-y-1/2 text-center">
+                    <h2 className="truncate font-sans text-[18px] leading-tight font-semibold text-on-surface">
+                      {title}
+                    </h2>
+                  </div>
 
-                <div className="absolute top-1/2 right-margin-mobile z-10 flex -translate-y-1/2 items-center justify-end gap-1.5">
-                  {action}
-                </div>
-              </header>
-            </div>
-
-            <div
-              ref={bodyRef}
-              data-sheet-body="true"
-              className={`no-scrollbar min-h-0 flex-1 overscroll-contain ${
-                contentOverflows ? "overflow-y-auto" : "overflow-y-hidden"
-              }`}
-              style={{
-                scrollPaddingTop: topChromeHeight + 16,
-                scrollPaddingBottom: footerHeight + 16,
-              }}
-            >
-              <div aria-hidden="true" style={{ height: topChromeHeight }} />
-              <div ref={bodyContentRef} className="px-margin-mobile py-md">
-                {children}
+                  <div className="absolute top-1/2 right-margin-mobile z-10 flex -translate-y-1/2 items-center justify-end gap-1.5">
+                    {action}
+                  </div>
+                </header>
               </div>
-              {footer ? <div aria-hidden="true" style={{ height: footerHeight }} /> : null}
-            </div>
-            {footer && (
+
               <div
-                ref={footerRef}
-                className="absolute inset-x-0 bottom-0 z-20 bg-surface-container-low px-margin-mobile pt-sm pb-[calc(1rem+env(safe-area-inset-bottom))]"
+                ref={bodyRef}
+                data-sheet-body="true"
+                className={`no-scrollbar min-h-0 flex-1 overscroll-contain ${
+                  contentOverflows ? "overflow-y-auto" : "overflow-y-hidden"
+                }`}
+                style={{
+                  scrollPaddingTop: topChromeHeight + 16,
+                  scrollPaddingBottom: footerHeight + 16,
+                }}
               >
-                {/*
+                <div aria-hidden="true" style={{ height: topChromeHeight }} />
+                <div ref={bodyContentRef} className="px-margin-mobile py-md">
+                  {children}
+                </div>
+                {footer ? <div aria-hidden="true" style={{ height: footerHeight }} /> : null}
+              </div>
+              {footer && (
+                <div
+                  ref={footerRef}
+                  className="absolute inset-x-0 bottom-0 z-20 bg-surface-container-low px-margin-mobile pt-sm pb-[calc(1rem+env(safe-area-inset-bottom))]"
+                >
+                  {/*
                   Peredupan diletakkan sebagai pita terpisah di atas footer,
                   bukan sebagai latar footer itu sendiri.
 
@@ -418,14 +425,15 @@ export function BottomSheet({
                   tidak ikut terukur oleh `offsetHeight`; perhitungan spacer dan
                   `scrollPaddingBottom` tetap sama.
                 */}
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-0 bottom-full h-6 bg-linear-to-t from-surface-container-low to-transparent"
-                />
-                {footer}
-              </div>
-            )}
-          </motion.section>
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 bottom-full h-6 bg-linear-to-t from-surface-container-low to-transparent"
+                  />
+                  {footer}
+                </div>
+              )}
+            </motion.section>
+          </div>
         </OverlayLayerProvider>
       )}
     </AnimatePresence>
