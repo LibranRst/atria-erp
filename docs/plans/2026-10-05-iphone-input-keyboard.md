@@ -33,3 +33,11 @@ Use a top-positioned fixed visual-viewport host with the sheet anchored inside i
 - Final focused suites: 37 tests, 223 Bun expectations, plus real rendered-overlay DOM assertions. Coverage includes Safari's document/client pan mismatch, minimal field reveal, header/footer occlusion, scroll extent, stacked overlay ownership, short landscape viewports, zoom preservation and Android layout resize.
 - Web typecheck and full web lint pass. Independent React review found no concrete regression in event/observer cleanup, hooks, overlay focus ownership, pointer events or motion.
 - Reused/extended primitives: existing TextInput/textarea/control typography tokens, OperationalFormSheet, BottomSheet and DialogFrame. Public action signatures and company data are untouched. Physical boss-iPhone acceptance remains a follow-up; this evidence is an installed iOS 26.5 Simulator and automated browser/DOM checks.
+
+## Published candidate
+
+- Runtime source: `84a120b2ef5f2c0071232ac209605416d1a495d4` (with the preceding typography repair `0cf0437c`). [CI 37279175273](https://github.com/LibranRst/atria-erp/actions/runs/37279175273) passed both quality and disposable PostgreSQL integration jobs.
+- Official Netlify production build completed in 40.5 seconds. Deployed the transformed `apps/web/.netlify/static` artifact, including its packaged functions/edge adapter, to existing site `c316f6d9-328f-4702-b5ea-dfc8c75c4ce3`; published deploy `6ac3550b9fa3f1330360c366` at [Atria](https://atria-dekoria.netlify.app).
+- Fresh production login at 390px has email/password inputs at 16px, no document overflow, and the existing zoom-permitting viewport metadata. No Netlify badge appears in the rendered DOM or fresh HTML. API `/health` and `/ready` both return 200. Synthetic Storybook submit still closes the shared sheet after its exit animation.
+- Proof saved privately in the original checkout's `.atria-demo/iphone-input-qa/`: `safari-footer-diagnostic-before.jpg`, `safari-footer-diagnostic-after.jpg`, `safari-sheet-final.jpg`, and `production-login-final.png`.
+- Shut down only the Simulator booted for this task and stopped the temporary Storybook server. The user's local web/API on 3010/3011 remain running. Generated release build caches can be regenerated; keep source, Netlify site linkage and verification evidence.
