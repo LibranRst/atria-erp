@@ -9,7 +9,7 @@
  */
 
 const CACHE_PREFIX = "atria-";
-const CACHE_NAME = `${CACHE_PREFIX}shell-v1`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v2`;
 const OFFLINE_URL = "/offline";
 
 const ALLOWED_DESTINATION =
@@ -38,7 +38,9 @@ self.addEventListener("install", (event) => {
          * tidak boleh menggagalkan pemasangan — tanpa halaman itu pun ada
          * jawaban 503 di bawah.
          */
-        cache.add(new Request(OFFLINE_URL, { cache: "reload" })).catch(() => undefined),
+        cache
+          .add(new Request(OFFLINE_URL, { cache: "reload", credentials: "omit" }))
+          .catch(() => undefined),
       )
       .then(() => self.skipWaiting()),
   );
@@ -82,6 +84,7 @@ async function offlineFallback() {
  */
 self.addEventListener("fetch", (event) => {
   const request = event.request;
+  if (request.method !== "GET") return;
   if (request.mode !== "navigate") return;
 
   const url = new URL(request.url);

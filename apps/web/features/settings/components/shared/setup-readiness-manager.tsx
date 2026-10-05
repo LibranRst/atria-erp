@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "@/lib/navigation/workspace-navigation";
+
+import Link from "@/lib/navigation/workspace-link";
 import React from "react";
 import { toast } from "sonner";
 
@@ -73,9 +74,7 @@ function ReadinessRow({ item }: { readonly item: OperationalReadinessItem }): Re
         <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
           {item.label}
         </span>
-        <span className="block truncate text-meta text-on-surface-variant">
-          {item.detail}
-        </span>
+        <span className="block truncate text-meta text-on-surface-variant">{item.detail}</span>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <WorkspaceStatusLabel label={statusLabel} tone={statusTone} />
@@ -87,7 +86,7 @@ function ReadinessRow({ item }: { readonly item: OperationalReadinessItem }): Re
   return item.action ? (
     <Link
       href={item.action.href}
-      className="block w-full text-left outline-none transition-colors hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/70"
+      className="block w-full text-left transition-colors outline-none hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/70"
       aria-label={`${item.action.label}: ${item.label}`}
     >
       {content}

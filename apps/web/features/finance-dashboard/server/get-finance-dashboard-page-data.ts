@@ -1,48 +1,16 @@
-import { actorCan } from "@/lib/auth/permissions";
-
 import "server-only";
 
-import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
-import { getOrganizationSetupOverviewUseCase } from "@/server/usecases/onboarding/organization-setup-overview";
-import { getFinanceDashboardOverviewUseCase } from "@/server/usecases/finance/dashboard-overview";
-import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
-import type { Actor } from "@/server/actor";
+import { callBackend } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/features/finance-dashboard/server/get-finance-dashboard-page-data";
 
-export type FinanceDashboardPageData =
-  | {
-      readonly status: "restricted";
-    }
-  | {
-      readonly status: "error";
-      readonly message: string;
-    }
-  | {
-      readonly status: "ready";
-      readonly overview: FinanceDashboardOverview;
-      readonly userName: string;
-      readonly setup: OrganizationSetupOverview | null;
-    };
-
-export async function getFinanceDashboardPageData(actor: Actor): Promise<FinanceDashboardPageData> {
-  if (!actorCan(actor, "view:ledger")) {
-    return { status: "restricted" };
-  }
-
-  const [overview, setup] = await Promise.all([
-    getFinanceDashboardOverviewUseCase(actor),
-    actorCan(actor, "manage:onboarding")
-      ? getOrganizationSetupOverviewUseCase(actor)
-      : Promise.resolve(null),
-  ]);
-
-  if (!overview.success) {
-    return { status: "error", message: overview.error.message };
-  }
-
-  return {
-    status: "ready",
-    overview: overview.data,
-    userName: actor.name,
-    setup: setup?.success ? setup.data : null,
-  };
+export async function getFinanceDashboardPageData(
+  ...args: WebRpcArgs<"features/finance-dashboard/server/get-finance-dashboard-page-data.getFinanceDashboardPageData">
+): Promise<
+  WebRpcResult<"features/finance-dashboard/server/get-finance-dashboard-page-data.getFinanceDashboardPageData">
+> {
+  return callBackend(
+    "features/finance-dashboard/server/get-finance-dashboard-page-data.getFinanceDashboardPageData",
+    args,
+  );
 }

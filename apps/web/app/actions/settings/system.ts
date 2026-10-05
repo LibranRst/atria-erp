@@ -1,203 +1,193 @@
 "use server";
 
-import type { ActionResponse } from "@atria/core/types/action-response";
-import {
-  type ArchiveItemPriceLibraryItemInput,
-  type ArchiveMaterialInput,
-  type CreateMaterialCategorySettingInput,
-  type CreateMaterialWithInventoryDefaultsInput,
-  type CreateItemPriceLibraryItemInput,
-  type SetItemPriceLibraryItemActiveInput,
-  type SetMaterialActiveInput,
-  type UpdateBudgetAllocationDefaultsInput,
-  type UpdateBudgetAllocationCategoryRatioInput,
-  type UpdateBudgetAllocationSettingInput,
-  type UpdateExpenseCategoryDetailsInput,
-  type UpdateExpenseCategorySettingInput,
-  type UpdateItemPriceLibraryItemInput,
-  type UpdateMaterialInput,
-  type UpdateMaterialInventoryDefaultsInput,
-  type UpdateMaterialSettingDefaultsInput,
-} from "@atria/core/validations/settings";
-import type {
-  BudgetAllocationCategoryRow,
-  BudgetAllocationSettingRow,
-  ExpenseCategorySettingRow,
-  ItemPriceLibraryRow,
-  MaterialInventorySettingRow,
-  MaterialSettingRow,
-} from "./system-types";
-import {
-  updateBudgetAllocationCategoryRatio as updateBudgetAllocationCategoryRatioWrite,
-  updateBudgetAllocationDefaults as updateBudgetAllocationDefaultsWrite,
-  updateBudgetAllocationSetting as updateBudgetAllocationSettingWrite,
-  updateExpenseCategoryDetails as updateExpenseCategoryDetailsWrite,
-  updateExpenseCategorySetting as updateExpenseCategorySettingWrite,
-} from "./system-budget-expense";
-import {
-  archiveItemPriceLibraryItem as archiveItemPriceLibraryItemWrite,
-  createItemPriceLibraryItem as createItemPriceLibraryItemWrite,
-  setItemPriceLibraryItemActive as setItemPriceLibraryItemActiveWrite,
-  updateItemPriceLibraryItem as updateItemPriceLibraryItemWrite,
-} from "./system-item-library";
-import {
-  archiveMaterial as archiveMaterialWrite,
-  createMaterialCategorySetting as createMaterialCategorySettingWrite,
-  createMaterialWithInventoryDefaults as createMaterialWithInventoryDefaultsWrite,
-  setMaterialActive as setMaterialActiveWrite,
-  updateMaterial as updateMaterialWrite,
-  updateMaterialInventoryDefaults as updateMaterialInventoryDefaultsWrite,
-  updateMaterialSettingDefaults as updateMaterialSettingDefaultsWrite,
-} from "./system-materials";
-import {
-  getBudgetSettings as getBudgetSettingsRead,
-  getExpenseCategorySettings as getExpenseCategorySettingsRead,
-  getItemLibrarySettings as getItemLibrarySettingsRead,
-  getItemPriceLibrary as getItemPriceLibraryRead,
-  getMaterialSettings as getMaterialSettingsRead,
-  getSettingsHubOverview as getSettingsHubOverviewRead,
-  getSettingsOverview as getSettingsOverviewRead,
-} from "./system-read";
-export type {
-  BudgetAllocationCategoryRow,
-  BudgetAllocationSettingRow,
-  BudgetSettingsData,
-  ExpenseCategorySettingRow,
-  ExpenseCategorySettingsData,
-  ItemLibrarySettingsData,
-  ItemPriceLibraryRow,
-  MaterialInventorySettingRow,
-  MaterialSettingsData,
-  MaterialSettingRow,
-  SettingsContext,
-  SettingsHubOverview,
-  SettingsOverview,
-  SettingsPermissionState,
-} from "./system-types";
+import { callBackend, callBackendAction } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/settings/system";
+
 export async function getItemPriceLibrary(
-  input?: Parameters<typeof getItemPriceLibraryRead>[0],
-): ReturnType<typeof getItemPriceLibraryRead> {
-  return getItemPriceLibraryRead(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.getItemPriceLibrary">
+): Promise<WebRpcResult<"app/actions/settings/system.getItemPriceLibrary">> {
+  return callBackend("app/actions/settings/system.getItemPriceLibrary", args, {
+    allowCookieWrites: true,
+  });
 }
 
-export async function getSettingsHubOverview(): ReturnType<typeof getSettingsHubOverviewRead> {
-  return getSettingsHubOverviewRead();
+export async function getSettingsHubOverview(
+  ...args: WebRpcArgs<"app/actions/settings/system.getSettingsHubOverview">
+): Promise<WebRpcResult<"app/actions/settings/system.getSettingsHubOverview">> {
+  return callBackend("app/actions/settings/system.getSettingsHubOverview", args, {
+    allowCookieWrites: true,
+  });
 }
 
-export async function getBudgetSettings(): ReturnType<typeof getBudgetSettingsRead> {
-  return getBudgetSettingsRead();
+export async function getBudgetSettings(
+  ...args: WebRpcArgs<"app/actions/settings/system.getBudgetSettings">
+): Promise<WebRpcResult<"app/actions/settings/system.getBudgetSettings">> {
+  return callBackend("app/actions/settings/system.getBudgetSettings", args, {
+    allowCookieWrites: true,
+  });
 }
 
-export async function getExpenseCategorySettings(): ReturnType<
-  typeof getExpenseCategorySettingsRead
-> {
-  return getExpenseCategorySettingsRead();
+export async function getExpenseCategorySettings(
+  ...args: WebRpcArgs<"app/actions/settings/system.getExpenseCategorySettings">
+): Promise<WebRpcResult<"app/actions/settings/system.getExpenseCategorySettings">> {
+  return callBackend("app/actions/settings/system.getExpenseCategorySettings", args, {
+    allowCookieWrites: true,
+  });
 }
 
-export async function getItemLibrarySettings(): ReturnType<typeof getItemLibrarySettingsRead> {
-  return getItemLibrarySettingsRead();
+export async function getItemLibrarySettings(
+  ...args: WebRpcArgs<"app/actions/settings/system.getItemLibrarySettings">
+): Promise<WebRpcResult<"app/actions/settings/system.getItemLibrarySettings">> {
+  return callBackend("app/actions/settings/system.getItemLibrarySettings", args, {
+    allowCookieWrites: true,
+  });
 }
 
-export async function getMaterialSettings(): ReturnType<typeof getMaterialSettingsRead> {
-  return getMaterialSettingsRead();
+export async function getMaterialSettings(
+  ...args: WebRpcArgs<"app/actions/settings/system.getMaterialSettings">
+): Promise<WebRpcResult<"app/actions/settings/system.getMaterialSettings">> {
+  return callBackend("app/actions/settings/system.getMaterialSettings", args, {
+    allowCookieWrites: true,
+  });
 }
 
-export async function getSettingsOverview(): ReturnType<typeof getSettingsOverviewRead> {
-  return getSettingsOverviewRead();
+export async function getSettingsOverview(
+  ...args: WebRpcArgs<"app/actions/settings/system.getSettingsOverview">
+): Promise<WebRpcResult<"app/actions/settings/system.getSettingsOverview">> {
+  return callBackend("app/actions/settings/system.getSettingsOverview", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function updateBudgetAllocationDefaults(
-  input: UpdateBudgetAllocationDefaultsInput,
-): Promise<ActionResponse<BudgetAllocationSettingRow>> {
-  return updateBudgetAllocationDefaultsWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.updateBudgetAllocationDefaults">
+): Promise<WebRpcResult<"app/actions/settings/system.updateBudgetAllocationDefaults">> {
+  return callBackendAction("app/actions/settings/system.updateBudgetAllocationDefaults", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function updateBudgetAllocationSetting(
-  input: UpdateBudgetAllocationSettingInput,
-): Promise<ActionResponse<BudgetAllocationSettingRow>> {
-  return updateBudgetAllocationSettingWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.updateBudgetAllocationSetting">
+): Promise<WebRpcResult<"app/actions/settings/system.updateBudgetAllocationSetting">> {
+  return callBackendAction("app/actions/settings/system.updateBudgetAllocationSetting", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function updateBudgetAllocationCategoryRatio(
-  input: UpdateBudgetAllocationCategoryRatioInput,
-): Promise<ActionResponse<BudgetAllocationCategoryRow>> {
-  return updateBudgetAllocationCategoryRatioWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.updateBudgetAllocationCategoryRatio">
+): Promise<WebRpcResult<"app/actions/settings/system.updateBudgetAllocationCategoryRatio">> {
+  return callBackendAction(
+    "app/actions/settings/system.updateBudgetAllocationCategoryRatio",
+    args,
+    { allowCookieWrites: true },
+  );
 }
 
 export async function updateExpenseCategorySetting(
-  input: UpdateExpenseCategorySettingInput,
-): Promise<ActionResponse<ExpenseCategorySettingRow>> {
-  return updateExpenseCategorySettingWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.updateExpenseCategorySetting">
+): Promise<WebRpcResult<"app/actions/settings/system.updateExpenseCategorySetting">> {
+  return callBackendAction("app/actions/settings/system.updateExpenseCategorySetting", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function updateExpenseCategoryDetails(
-  input: UpdateExpenseCategoryDetailsInput,
-): Promise<ActionResponse<ExpenseCategorySettingRow>> {
-  return updateExpenseCategoryDetailsWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.updateExpenseCategoryDetails">
+): Promise<WebRpcResult<"app/actions/settings/system.updateExpenseCategoryDetails">> {
+  return callBackendAction("app/actions/settings/system.updateExpenseCategoryDetails", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function createItemPriceLibraryItem(
-  input: CreateItemPriceLibraryItemInput,
-): Promise<ActionResponse<ItemPriceLibraryRow>> {
-  return createItemPriceLibraryItemWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.createItemPriceLibraryItem">
+): Promise<WebRpcResult<"app/actions/settings/system.createItemPriceLibraryItem">> {
+  return callBackendAction("app/actions/settings/system.createItemPriceLibraryItem", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function updateItemPriceLibraryItem(
-  input: UpdateItemPriceLibraryItemInput,
-): Promise<ActionResponse<ItemPriceLibraryRow>> {
-  return updateItemPriceLibraryItemWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.updateItemPriceLibraryItem">
+): Promise<WebRpcResult<"app/actions/settings/system.updateItemPriceLibraryItem">> {
+  return callBackendAction("app/actions/settings/system.updateItemPriceLibraryItem", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function archiveItemPriceLibraryItem(
-  input: ArchiveItemPriceLibraryItemInput,
-): Promise<ActionResponse<{ readonly id: string }>> {
-  return archiveItemPriceLibraryItemWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.archiveItemPriceLibraryItem">
+): Promise<WebRpcResult<"app/actions/settings/system.archiveItemPriceLibraryItem">> {
+  return callBackendAction("app/actions/settings/system.archiveItemPriceLibraryItem", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function setItemPriceLibraryItemActive(
-  input: SetItemPriceLibraryItemActiveInput,
-): Promise<ActionResponse<{ readonly id: string; readonly isActive: boolean }>> {
-  return setItemPriceLibraryItemActiveWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.setItemPriceLibraryItemActive">
+): Promise<WebRpcResult<"app/actions/settings/system.setItemPriceLibraryItemActive">> {
+  return callBackendAction("app/actions/settings/system.setItemPriceLibraryItemActive", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function updateMaterial(
-  input: UpdateMaterialInput,
-): Promise<ActionResponse<MaterialSettingRow>> {
-  return updateMaterialWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.updateMaterial">
+): Promise<WebRpcResult<"app/actions/settings/system.updateMaterial">> {
+  return callBackendAction("app/actions/settings/system.updateMaterial", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function updateMaterialInventoryDefaults(
-  input: UpdateMaterialInventoryDefaultsInput,
-): Promise<ActionResponse<MaterialInventorySettingRow>> {
-  return updateMaterialInventoryDefaultsWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.updateMaterialInventoryDefaults">
+): Promise<WebRpcResult<"app/actions/settings/system.updateMaterialInventoryDefaults">> {
+  return callBackendAction("app/actions/settings/system.updateMaterialInventoryDefaults", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function archiveMaterial(
-  input: ArchiveMaterialInput,
-): Promise<ActionResponse<{ readonly id: string }>> {
-  return archiveMaterialWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.archiveMaterial">
+): Promise<WebRpcResult<"app/actions/settings/system.archiveMaterial">> {
+  return callBackendAction("app/actions/settings/system.archiveMaterial", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function createMaterialWithInventoryDefaults(
-  input: CreateMaterialWithInventoryDefaultsInput,
-): Promise<ActionResponse<{ readonly id: string }>> {
-  return createMaterialWithInventoryDefaultsWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.createMaterialWithInventoryDefaults">
+): Promise<WebRpcResult<"app/actions/settings/system.createMaterialWithInventoryDefaults">> {
+  return callBackendAction(
+    "app/actions/settings/system.createMaterialWithInventoryDefaults",
+    args,
+    { allowCookieWrites: true },
+  );
 }
 
 export async function updateMaterialSettingDefaults(
-  input: UpdateMaterialSettingDefaultsInput,
-): Promise<ActionResponse<MaterialInventorySettingRow>> {
-  return updateMaterialSettingDefaultsWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.updateMaterialSettingDefaults">
+): Promise<WebRpcResult<"app/actions/settings/system.updateMaterialSettingDefaults">> {
+  return callBackendAction("app/actions/settings/system.updateMaterialSettingDefaults", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function setMaterialActive(
-  input: SetMaterialActiveInput,
-): Promise<ActionResponse<{ readonly id: string; readonly isActive: boolean }>> {
-  return setMaterialActiveWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.setMaterialActive">
+): Promise<WebRpcResult<"app/actions/settings/system.setMaterialActive">> {
+  return callBackendAction("app/actions/settings/system.setMaterialActive", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function createMaterialCategorySetting(
-  input: CreateMaterialCategorySettingInput,
-): Promise<ActionResponse<{ readonly id: string; readonly name: string }>> {
-  return createMaterialCategorySettingWrite(input);
+  ...args: WebRpcArgs<"app/actions/settings/system.createMaterialCategorySetting">
+): Promise<WebRpcResult<"app/actions/settings/system.createMaterialCategorySetting">> {
+  return callBackendAction("app/actions/settings/system.createMaterialCategorySetting", args, {
+    allowCookieWrites: true,
+  });
 }

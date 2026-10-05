@@ -224,7 +224,7 @@ function CalendarContent({
           type="button"
           disabled={todayDisabled}
           onClick={onSelectToday}
-          className="rounded-full bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-accent transition-colors hover:bg-surface-container active:scale-95 disabled:opacity-45"
+          className="rounded-full bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-accent transition-all hover:bg-surface-container active:scale-[1.05] active:shadow-raised active:z-10 disabled:opacity-45"
         >
           Hari Ini
         </button>
@@ -236,7 +236,7 @@ function CalendarContent({
           <button
             type="button"
             onClick={handlePrevMonth}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-on-surface transition-all outline-none hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-95"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-on-surface transition-all outline-none hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[1.05] active:shadow-raised active:z-10"
             aria-label="Bulan sebelumnya"
           >
             <AppIcon name="chevron_left" className="icon-sm" />
@@ -245,7 +245,7 @@ function CalendarContent({
           <button
             type="button"
             onClick={handleNextMonth}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-on-surface transition-all outline-none hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-95"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-on-surface transition-all outline-none hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[1.05] active:shadow-raised active:z-10"
             aria-label="Bulan berikutnya"
           >
             <AppIcon name="chevron_right" className="icon-sm" />
@@ -315,7 +315,7 @@ function CalendarContent({
                         year: "numeric",
                       }).format(date)}
                       className={cx(
-                        "flex aspect-square items-center justify-center rounded-full text-sm font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-95",
+                        "flex aspect-square items-center justify-center rounded-full text-sm font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[1.05] active:z-10",
                         isDisabled && "cursor-not-allowed opacity-30",
                         active
                           ? "bg-primary text-on-primary shadow-xs"
@@ -337,7 +337,7 @@ function CalendarContent({
           <button
             type="button"
             onClick={onClose}
-            className="flex min-h-10 w-full items-center justify-center rounded-full bg-surface-container-low text-xs font-semibold text-on-surface transition-colors hover:bg-surface-container active:scale-98"
+            className="flex min-h-10 w-full items-center justify-center rounded-full bg-surface-container-low text-xs font-semibold text-on-surface transition-all hover:bg-surface-container active:scale-[1.05] active:shadow-raised active:z-10"
           >
             Batal
           </button>

@@ -12,6 +12,7 @@ import {
   AdaptiveSelect,
   Textarea,
   TextInput,
+  useSheetPresenceValue,
   WorkflowFormSheet,
 } from "@/components/ui";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
@@ -46,8 +47,30 @@ export function TransferSheet({
   readonly onDiscard: () => void;
   readonly onSave: () => void;
 }): React.JSX.Element {
+  const { presentedValue: presentedAccount, handleExitComplete } = useSheetPresenceValue(
+    open ? account : null,
+    open ? account?.id : null,
+  );
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  const [prevAccountId, setPrevAccountId] = React.useState(account?.id);
+
+  if (open !== prevOpen || account?.id !== prevAccountId) {
+    setPrevOpen(open);
+    setPrevAccountId(account?.id);
+    if (open && (!prevOpen || account?.id !== prevAccountId)) {
+      setReviewing(false);
+      setConfirmClose(false);
+    }
+  }
+
+  const handleExitAnimationComplete = React.useCallback((): void => {
+    handleExitComplete();
+    setReviewing(false);
+    setConfirmClose(false);
+  }, [handleExitComplete]);
+
   function patch(next: Partial<TransferDraft>): void {
     setDraft((current) => ({ ...current, ...next }));
   }
@@ -57,7 +80,7 @@ export function TransferSheet({
     Number(draft.amount || 0) > 0 &&
     draft.description.trim().length >= 5;
   const amount = Number(draft.amount || 0);
-  const projectedSourceBalance = account ? account.balance - amount : 0;
+  const projectedSourceBalance = presentedAccount ? presentedAccount.balance - amount : 0;
   const selectedTarget = options.find((option) => option.value === draft.toBankAccountId);
   const targetBefore = accounts.find((item) => item.id === draft.toBankAccountId)?.balance ?? 0;
   const disabledReason = !draft.toBankAccountId
@@ -86,6 +109,7 @@ export function TransferSheet({
         open={open}
         title={reviewing ? "Tinjau transfer rekening" : "Transfer rekening"}
         onClose={requestClose}
+        onExitComplete={handleExitAnimationComplete}
         pending={pending}
         disabledReason={disabledReason}
         primaryLabel={reviewing ? "Transfer" : "Tinjau"}
@@ -100,14 +124,14 @@ export function TransferSheet({
         onSecondary={() => setReviewing(false)}
       >
         <div className="space-y-md">
-          {account ? (
-            <BankAccountContextCard account={account} eyebrow="Rekening Sumber" />
+          {presentedAccount ? (
+            <BankAccountContextCard account={presentedAccount} eyebrow="Rekening Sumber" />
           ) : null}
           {reviewing ? (
             <>
               <MoneyImpactRow
-                label={`Sumber · ${account?.name ?? "Rekening"}`}
-                before={account?.balance ?? 0}
+                label={`Sumber · ${presentedAccount?.name ?? "Rekening"}`}
+                before={presentedAccount?.balance ?? 0}
                 delta={-amount}
                 after={projectedSourceBalance}
               />
@@ -164,7 +188,7 @@ export function TransferSheet({
                   projectedSourceBalance < 0
                     ? `Peringatan: Saldo sumber minus (${shortMoney(projectedSourceBalance)})`
                     : selectedTarget
-                      ? `Tujuan: ${selectedTarget.label} · Saldo sumber: ${shortMoney(account?.balance ?? 0)} → ${shortMoney(projectedSourceBalance)}`
+                      ? `Tujuan: ${selectedTarget.label} · Saldo sumber: ${shortMoney(presentedAccount?.balance ?? 0)} → ${shortMoney(projectedSourceBalance)}`
                       : "Pilih rekening tujuan dan nominal transfer."
                 }
               >

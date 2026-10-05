@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppIcon, Button, GroupedSurface, FactRow } from "@/components/ui";
-import { getApiBaseURL } from "@/lib/runtime-config";
+import { getWebBaseURL } from "@/lib/runtime-config";
 import { theme } from "@/theme";
 
 export default function OnboardingBridgeScreen(): React.JSX.Element {
@@ -31,7 +31,7 @@ export default function OnboardingBridgeScreen(): React.JSX.Element {
       <Button
         onPress={() =>
           void WebBrowser.openBrowserAsync(
-            `${getApiBaseURL()}/onboarding?step=${encodeURIComponent(step)}`,
+            `${getWebBaseURL()}/onboarding?step=${encodeURIComponent(step)}`,
           )
         }
       >

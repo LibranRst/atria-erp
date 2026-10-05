@@ -9,28 +9,44 @@
   ],
   "scripts": {
     "dev": "bun --filter @atria/web dev",
+    "dev:api": "bun --filter @atria/api dev",
+    "dev:web": "bun --filter @atria/web dev",
+    "dev:expo": "bun --filter @atria/mobile start",
+    "dev:mobile": "bun scripts/dev-mobile.ts",
     "dev:default": "bun --filter @atria/web dev:default",
-    "build": "bun --filter @atria/web build",
+    "build": "bun run build:api && bun run build:web && bun run build:mobile",
+    "build:api": "bun --filter @atria/api typecheck && bun --filter @atria/api build",
+    "build:web": "bun --filter @atria/web build",
+    "build:mobile": "bun --filter @atria/mobile build",
     "start": "bun --filter @atria/web start",
+    "start:api": "bun --filter @atria/api start",
     "lint": "bun --filter '*' lint",
     "lint:fix": "bun --filter '*' lint:fix",
-    "test": "bun --filter '*' test",
+    "test": "bun --filter '*' test && bun run test:dev-scripts",
+    "test:dev-scripts": "bun run --cwd apps/mobile test ../../scripts/dev-mobile.test.ts ../../scripts/native-shadow-tokens.test.ts",
     "tokens:generate": "bun scripts/generate-tokens.ts",
     "tokens:check": "bun scripts/generate-tokens.ts --check",
     "mobile-tailwind:generate": "bun scripts/generate-mobile-tailwind-config.ts",
-    "db:reset": "bun --filter @atria/web db:reset",
-    "db:seed": "bun --filter @atria/web db:seed",
-    "db:seed:bassura": "bun --filter @atria/web db:seed:bassura",
-    "db:demo:reset": "bun --filter @atria/web db:demo:reset",
-    "db:demo:verify": "bun --filter @atria/web db:demo:verify",
-    "db:provision": "bun --filter @atria/web db:provision",
-    "db:check-invariants": "bun --filter @atria/web db:check-invariants",
-    "db:restore-drill": "bun --filter @atria/web db:restore-drill",
+    "db:reset": "bun --filter @atria/api db:reset",
+    "db:seed": "bun --filter @atria/api db:seed",
+    "db:seed:bassura": "bun --filter @atria/api db:seed:bassura",
+    "db:demo:reset": "bun --filter @atria/api db:demo:reset",
+    "db:demo:verify": "bun --filter @atria/api db:demo:verify",
+    "db:provision": "bun --filter @atria/api db:provision",
+    "db:check-invariants": "bun --filter @atria/api db:check-invariants",
+    "db:restore-drill": "bun --filter @atria/api db:restore-drill",
     "format": "prettier --write . --ignore-unknown",
     "format:check": "prettier --check . --ignore-unknown",
     "tailwind:format": "bun --filter @atria/web tailwind:format",
     "storybook": "bun --filter @atria/web storybook",
-    "build-storybook": "bun --filter @atria/web build-storybook"
+    "build-storybook": "bun --filter @atria/web build-storybook",
+    "heroui:styles": "bun scripts/build-heroui-styles.ts",
+    "heroui:styles:check": "bun scripts/build-heroui-styles.ts --check",
+    "prebuild": "bun run heroui:styles",
+    "test:web-e2e": "bun --filter @atria/web browser:test",
+    "verify:pilot": "bun scripts/verify-pilot-deployment.ts",
+    "audit:production": "bun scripts/security/classify-dependencies.ts --output output/security/dependency-classification.json --fail-on-production high",
+    "test:security-scripts": "bun run --cwd apps/api test ../../scripts/security/classify-dependencies.test.ts"
   },
   "devDependencies": {
     "prettier": "^3.9.5",
@@ -38,7 +54,8 @@
     "typescript": "^5"
   },
   "overrides": {
-    "react-native-css-interop": "0.2.6"
+    "react-native-css-interop": "0.2.6",
+    "undici": "7.29.1"
   },
   "ignoreScripts": [
     "sharp",
@@ -47,5 +64,8 @@
   "trustedDependencies": [
     "sharp",
     "unrs-resolver"
-  ]
+  ],
+  "patchedDependencies": {
+    "expo-constants@57.0.11": "patches/expo-constants@57.0.11.patch"
+  }
 }

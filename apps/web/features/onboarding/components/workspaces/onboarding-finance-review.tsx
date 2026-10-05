@@ -1,6 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useWorkspaceHref } from "@/lib/navigation/workspace-presentation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import React from "react";
 import { toast } from "sonner";
 
@@ -19,6 +21,7 @@ export function OnboardingFinanceReview({
   readonly simulated: boolean;
 }): React.JSX.Element {
   const router = useRouter();
+  const workspaceHref = useWorkspaceHref();
   const [remainingBatches, setRemainingBatches] =
     React.useState<readonly InventoryOpeningBatchView[]>(pendingBatches);
   const [activeId, setActiveId] = React.useState<string | null>(pendingBatches[0]?.id ?? null);
@@ -59,7 +62,9 @@ export function OnboardingFinanceReview({
           return;
         }
         window.location.replace(
-          decision === "APPROVE" ? "/onboarding?step=summary" : "/onboarding?step=initial_stock",
+          workspaceHref(
+            decision === "APPROVE" ? "/onboarding?step=summary" : "/onboarding?step=initial_stock",
+          ),
         );
       } else {
         const nextBatches = remainingBatches.filter((batch) => batch.id !== active.id);
@@ -79,7 +84,7 @@ export function OnboardingFinanceReview({
         toast.error(result.error.message);
         return;
       }
-      window.location.replace("/onboarding?step=initial_stock");
+      window.location.replace(workspaceHref("/onboarding?step=initial_stock"));
     });
   }
 

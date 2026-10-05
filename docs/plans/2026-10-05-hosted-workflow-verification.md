@@ -1,0 +1,108 @@
+# Hosted workflow verification and Atria naming — 5 October 2026
+
+Subsequent user-authorized clean setup: the main production database was backed up and reset for the user/boss to create their own accounts. It now has no users or business transactions. The workflow evidence below describes the prior isolated QA verification; earlier Owner-login state is historical. See the [clean-setup result](2026-10-05-self-guided-workflow-and-clean-setup.md) and [rewritten beginner guide](../guide/financial_workflow_guide.md).
+
+## Authorized objective
+
+Verify all web workflows through the deployed web/API stack, fix blockers, use the normal app interface, and replace the exaggerated boss/pilot naming with Atria/Dekoria names. Preserve existing user/profile/company data and free/no-card constraints. The initial target frontend name is `atria-dekoria` if available; service/project display names use `Atria` and `atria-api`.
+
+## Baseline and isolation
+
+Current reviewed source is `78076cad`; executable navigation/session source was verified at `dd666bae`. Previous CI passed 24 disposable PostgreSQL suites (142 tests) and 22 anonymous hosted checks, which do not establish full hosted business acceptance. Current authenticated dashboard is empty financially and quick start is paused; verify database counts before any write. The earlier local CDN TLS failure requires distinguishing ISP DNS routing from actual provider delivery; see the verified correction below.
+
+Use a dedicated disposable QA database and test users/accounts/projects for ledger/stock mutations. Prefer schema-only isolation or a fresh database rather than copying company rows. Keep the normal app on its current database and auth secrets. A temporary QA deployment may be used within existing free credits; avoid exposing company data and never upgrade/add a payment method. Credentials remain backend-only/private and must not appear in source, terminal output or evidence. Preserve the original checkout's unrelated uncommitted work.
+
+## Implementation order
+
+1. Inspect hosting, app state, storage and typed transport; resolve the exact account/endpoint blockers. Read-only evidence first.
+2. Change browser metadata to Atria, remove the pilot notice by using normal public build configuration, and rename the owned frontend domain. Update web URL, API trusted origins/CORS and storage reference handling together; verify TLS/login/protected paths. Changing domains may require the user to sign in on the new host.
+3. Restore private exact-byte attachment delivery with valid TLS, authorization, MIME/size/time/quota limits preserved. Do not bypass certificate validation or make financial files public. Establish upload→authorized download→OCR/chat and negative-access evidence using synthetic fixtures.
+4. Run hosted finance/material/RAB/chat workflows with per-role identities and deterministic expected ledger/stock/category values. Cover double submit, concurrent approval, timeout/retry, rollback/idempotency, permission removal/custom role and foreign-project denial. Exercise login/password/logout; use synthetic account credentials, never reset the user's personal password.
+5. Check 320/360/390/430 mobile and 1024/1280/1440 desktop, keyboard/focus, fresh server snapshots, export/download and responsive overflow. Reuse existing shared UI and HTTP facades; no new UI primitive is planned.
+6. Verify backup/readback/restore on the QA dataset and notification outbox/scheduler behavior; never send test messages to real people. Record delivered vs undelivered integration evidence distinctly.
+7. Publish the tested snapshot, repeat checks on the normal final domain and save the acceptance matrix. Clean up only created QA artifacts/resources using supported safe recovery/expiration; preserve source, credentials and backups. No blanket claim that untested provider delivery or company baseline is complete.
+
+## Acceptance matrix
+
+- Authentication and access: individual role logins, password/logout, custom grants/revocation, project scoping, desktop gate.
+- Project budget/expenses: defaults, budget allocations, five categories, expense/OCR draft, review/approval/payment, budget/cash/margin refresh.
+- Finance: vendor bill/approval/payment, client invoice/receipt, account cash in/out/transfer, bank import/reconciliation/closing and immutable reconciled entries.
+- Material: master/location, RAP, stock receipt/reserve/use/return/transfer/adjustment/waste/reversal, concurrency and category/project links.
+- RAB: client-safe selected RAP/package/manual rows, totals, PDF/Excel output, internal cost/margin/vendor-note isolation.
+- AI/media: 9Router exact model, text/tool proposal/human confirmation, image/PDF/history, private bytes/denials, oversized/malformed upload, timeout and generic errors.
+- Operations/UX: scheduler/internal notifications, backup/restore, PWA outage/recovery without mutation retry, supported widths, named domain and normal branding.
+
+Each row must record the environment, source identity, method, expected/actual result and evidence. Local/integration tests cannot substitute for hosted/browser evidence. Known external or human-input blockers stay explicit.
+
+## First implementation
+
+Normal build configuration disables the pilot-only balance notice without touching balances or domain features. Browser/application metadata and unknown-route header fallback use Atria. Existing shared UI/ledger surfaces remain unchanged. The original domain remains active until authentication/CORS and delivery migration prerequisites are ready.
+
+## Confirmed environment setup
+
+The production frontend has been renamed to `atria-dekoria.netlify.app` (same Netlify site ID), with new origin CORS verified by an HTTPS preflight. Normal Atria browser/header naming and pilot notice disabled are included in the release build.
+
+A dedicated fresh QA database `atria_verify_20261005_2202aeec` and restricted QA owner were created on the existing Neon compute, avoiding copied company/auth rows. All 44 migrations and 67 public tables were applied; a private marker guards operator calls. This database-level isolation was used because the Neon connector advertised tools but returned Unknown tool, and the CLI was unavailable. Existing production environment credentials were not overwritten.
+
+The user approved backend-only QA database/auth/bridge plus existing ImageKit/9Router credentials and the authenticated HTTPS QA endpoint. Temporary Railway service `atria-verification-api` (19bada0c-7afb-4153-b614-0109f1cb4e77) uses one Singapore replica, Serverless, `/ready`, reviewed source branch and CI gate. Its endpoint is `atria-verification-api-production.up.railway.app`; separate Netlify QA site ID is 14dc9274-321f-4605-b1b2-53fa803396cb.
+
+The earlier CDN-certificate diagnosis was incomplete: local port-53 DNS maps `ik.imagekit.io` to `internetpositif.id`/36.86.63.185. An authenticated HTTPS DNS response returned its actual CloudFront addresses; a request to the intended address retained full TLS verification and returned ImageKit HTTP 404 (missing account ID), proving the genuine CDN validates TLS. No system DNS or certificate-verification setting was changed. Cloud exact-byte/authorization/OCR checks remain the application-level test, and direct browser CDN paths may need an authorized application relay for the local network.
+
+Actual QA HTTPS authentication passed Owner and Finance/PM/Purchasing logins, mandatory temporary-password destination, incorrect-current-password rejection, password update/session revocation and fresh per-role sessions. Rate limiting correctly returned 429 during rapid logins; the harness respects Retry-After and bounded waiting rather than disabling it. No personal/company credentials were used.
+
+## Hosted findings and repair
+
+QA finance passed budget submission/approval, staged RAP review, RAB approval, explicit activation, expense verification/approval/payment, vendor and client payments, duplicate/concurrent payment rejection, category totals, AI PDF statement import deduplication and bank reconciliation. QA stock passed receipt/reserve/use/return/waste/adjustment/transfer and receipt reversal; concurrent reversal is intentionally idempotent (both responses may return the same REVERSED document), with exactly one reversal stock movement and audit. Custom assigned-scope grants still reject foreign projects, and permission revocation takes effect on an existing session. These are real HTTPS API plus disposable database invariants; browser coverage is recorded separately.
+
+A hosted PNG receipt reproduced a real blocker: ImageKit automatic optimization served JPEG bytes for a registered PNG. The private download correctly rejected the mismatch, preventing OCR. A strict-TLS probe showed original delivery preserves PNG bytes. Request `original: true` through the installed typed ImageKit SDK before signing, preserving authorization, expiry, MIME, size and redirect checks. The existing isolated storage test now asserts the signed `tr=orig-true` URL (red before the fix); hosted readback/OCR must pass after deployment. Provider documentation: https://imagekit.io/docs/core-delivery-features.
+
+Netlify CLI `link --id` does not replace an already-linked site; it exits successfully while retaining the old link. Always unlink/relink and assert the resulting site ID before a QA build, then verify the browser sign-in request uses the QA origin. A wrong QA build was caught before any company mutation and replaced. QA protection remains Private, and QA browser login/redirect now succeeds. Production metadata stays company-neutral because company identity is configured per instance; domain remains atria-dekoria.
+
+Mobile browser verification also identified unnamed icon-only bottom navigation links. Reuse the existing BottomTabBar/WorkspaceLink and NavItem label; add aria-label without changing geometry or focus ownership. This is a small accessibility repair, with existing component tests and hosted accessible-name checks.
+
+Hosted PDF inspection reproduced an export layout bug: visibility-hidden app chrome still occupied print flow, so the one-item RAB started halfway down page one and spilled onto page two. Isolate only the document ancestor path during print, hide other app nodes from layout, and reset transformed sheet ancestors. Reuse RabExportDocument and the existing DetailSheet/ExportCanvas; no new overlay or money primitive. Verify the same Chromium print output after rebuild, checking page count, first-content position, client totals and internal-note/cost exclusion.
+
+A clean hosted inventory opening could not reverse even with exactly one movement. PostgreSQL stored its timestamp with microseconds (e.g. .84669), while the returned JavaScript Date retained milliseconds (.846). The later-movement query consequently matched the opening movement itself. Exclude that exact movement ID, and take the inventory lock before checking later history so intervening stock changes cannot race the check. Add a PostgreSQL regression retaining fractional precision and verify both clean reversal and genuine later-movement refusal; public action signatures and audit remain unchanged.
+
+A controlled hosted race also reproduced duplicate approvals/audits when stock opname has zero variance. Both requests passed the unlocked PENDING_APPROVAL header check; the unchanged inventory let both proceed. Lock the count header before status/items, then read items in deterministic order. Preserve maker/checker and stale-inventory guards. Add a real PostgreSQL concurrency regression and rerun the barrier against hosted QA.
+
+Netlify CLI did not discover the nested apps/web/netlify.toml and used the root build script, including API/mobile exports. Move the same canonical config to repository root, keeping Base root, Package apps/web in the UI, styles check + build:web and the existing transformed publish process. Verify resolved config and build command before release; this avoids unnecessary mobile build artifacts on the Mac.
+
+## Acceptance evidence captured
+
+Technical workflow checks use the isolated QA database and synthetic identities; company/development data is not used for mutations. Core API repairs were verified at `29b935a6db974a082d9975f59b1ceb409c19b7a2`, with [CI 37236019076](https://github.com/LibranRst/atria-erp/actions/runs/37236019076): quality green and 24 disposable PostgreSQL suites, 144 tests, zero failures. The two added warehouse regressions cover microsecond opening reversal/genuine later movement and a controlled zero-variance approval race. Hosted post-rollout checks also pass: clean opening reverses, and the controlled race produces one decision/audit.
+
+| Workflow               | Observed result                                                                                                                                                        | Evidence method                                                                               |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Auth/access            | Owner, Finance, PM, Purchasing log in; temporary password gate, wrong-password rejection, session revocation, custom grants/revocation and foreign-project denial pass | Actual HTTPS actions + isolated DB; UI login/logout and PM listing/desktop denial             |
+| Project setup          | Budget submit/approval, material master/location, staged RAP/scope decisions/lock, RAB approval and explicit activation pass                                           | Public HTTPS actions + state/audit assertions                                                 |
+| Expense                | Pending/review/approval/payment and changed threshold pass; concurrent payment posts once                                                                              | Exact bank/category/ledger checks                                                             |
+| Vendor/client          | Bill/schedule/approval/payment; partial/final receipt; overpayment and duplicate concurrency rejection pass                                                            | Public HTTPS actions + invoices/bills/ledger                                                  |
+| Material               | Stock in/reserve/use/return/waste/adjustment/transfer, receipt/reversal, initial opening and count variance pass; excessive return rejected                            | Exact quantities and movement/audit counts; no cash mutation                                  |
+| AI/media               | 9Router PDF/image analysis, OCR total 45000/quantity 3, persisted chat proposal and explicit confirmation pass; injected confirmation failure rolls back everything    | Real provider + private exact-byte SHA-256; DB fault injection only in QA                     |
+| Large/negative upload  | 2.7 MB image succeeds by file reference; anonymous, unauthorized role, oversize, arbitrary URL and ticket replay rejected                                              | Actual media endpoints and scoped readers                                                     |
+| Reconciliation/closing | Statement deduplication and matching pass; incomplete closing rejected; concurrent closing creates one final snapshot                                                  | Final actual cost 771000, margin 229000, project cash position 949000                         |
+| RAB export             | UI Excel/PNG download succeeds; printed PDF is one page after repair, correct client total 1000000, internal cost/note absent                                          | Actual downloaded workbook, Chromium print output, text/visual inspection                     |
+| Restore                | Consistent exported snapshot restores all 67 table hashes, 44 migrations and bank-ledger equality                                                                      | Full pg_dump/pg_restore into separate QA DB, TLS verify-full; 519 rows at captured checkpoint |
+| Notifications          | In-app workflow notifications readable; authorized worker/reconciliation endpoint succeeds, anonymous worker rejected                                                  | Synthetic recipients only; no registered push device                                          |
+| Layout                 | Required mobile widths and desktop 1024/1280/1440 dashboard/material/finance show no document overflow; latest balance visible after refresh                           | Hosted Chromium DOM/screenshot evidence; mobile shell stays one column                        |
+
+Operational scope remains explicit: browser push is inactive until VAPID/device opt-in. The approved GitHub/R2 main-database backup and periodic Cron have now passed actual cloud checks; see below. Company cutoff/baseline and actual boss acceptance are human business checks, not replaced by synthetic QA. No all-provider delivery or physical-device claim is made.
+
+## Approved main database backup activation
+
+The user approved a dedicated read-only Neon credential for GitHub and backup to existing private R2. Source role `atria_pilot_backup` was verified unable to write application/drizzle tables, with 44 migrations and strict TLS in the operator preflight. Only the backup workflow and standalone guarded script were activated on default branch development at `99e3bbf718e092c8e9dc9e250082fbc3a0fb698f`; the application PR was not merged. Existing GitHub R2 credentials are reused. [Manual backup run 37238597044](https://github.com/LibranRst/atria-erp/actions/runs/37238597044) completed the actual dump, archive readback, R2 upload/download SHA-256 and manifest checks. The archived source is the main database; no reset was performed.
+
+Pilot backup and manifest verified in private R2: atria-erp-backups/atria-erp/pilot/2026/10/04/atria_pilot-20261004T220518Z-37238597044-1.dump (307419 bytes, SHA-256 612947f9db7d76984e366732a4e33118c7e43535cb39ee1c10f804282d0ea865)
+
+Daily backup is enabled at 02:47 WIB on the default branch. Its next automatic invocation is still a future event. The configured cutoff is a technical bootstrap capture timestamp, not Finance's business baseline. Attachment bytes are explicitly excluded from this database archive; private file readback and QA full database restore have separate evidence.
+
+## Automatic scheduler evidence
+
+Cloudflare tail observed an actual `*/30 * * * *` scheduled invocation at 2026-10-04 22:00 UTC, outcome `ok`, zero exceptions. The scheduled handler awaits the authenticated API delivery worker, so this is separate evidence from manual endpoint testing. Earlier tail connection interruptions were recovered without reducing edge/TLS protections or expanding the CLI token's observability permissions. The live event closed the history-access requirement; no extra Cloudflare browser login is needed for this proof. Daily reconciliation is configured and its manual path passed, while the next nightly database backup invocation remains a future event.
+
+## Final release and QA shutdown
+
+Production uses the normal Atria interface at https://atria-dekoria.netlify.app. Netlify release `6ac2caff5e2c1c99133cc295` contains executable frontend source through `837570cd`; subsequent backup/documentation commits do not change the application. The latest application CI at `837570cd` passed quality gates and 24 PostgreSQL suites (144 tests); all 22 anonymous hosted checks passed after publication. Railway display names are Atria / atria-api, with the existing technical API hostname retained. CORS trusts the new frontend origin. The owner's personal login on the new hostname is a human check; synthetic QA login/redirect passed.
+
+The temporary QA API repository source was disconnected and its active deployment removed after testing. Railway reports no active deployment, and the QA health endpoint returns 404 Application not found. Its private frontend, isolated database and recovery evidence remain available; no QA compute is left running. Main company and development databases were not reset or used for synthetic mutations.

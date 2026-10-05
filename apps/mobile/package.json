@@ -50,7 +50,7 @@
     "superjson": "^2.2.6"
   },
   "devDependencies": {
-    "@atria/web": "workspace:*",
+    "@atria/api": "workspace:*",
     "@types/react": "~19.2.2",
     "babel-preset-expo": "^57.0.7",
     "eslint": "^9.20.0",
@@ -60,14 +60,17 @@
   },
   "scripts": {
     "start": "expo start",
+    "prebuild": "bun run typecheck",
+    "build": "expo export --platform ios --output-dir dist/ios && expo export --platform android --output-dir dist/android",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "bun test",
-    "pretypecheck": "bun run --cwd ../web types:api",
-    "typecheck": "tsc --noEmit"
+    "pretypecheck": "bun run --cwd ../api types:api",
+    "typecheck": "tsc --noEmit",
+    "preios": "bun ../../scripts/patch-expo-constants-paths.ts"
   },
   "private": true
 }

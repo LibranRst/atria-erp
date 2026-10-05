@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { format } from "prettier";
+import { deriveNativeShadow } from "./native-shadow-tokens";
 
 const repoRoot = resolve(import.meta.dir, "..");
 const cssPath = resolve(repoRoot, "apps/web/app/globals.css");
@@ -100,6 +101,9 @@ const maxWidthEntries = [...themeTokens]
 const shadowEntries = [...themeTokens]
   .filter(([name]) => name.startsWith("shadow-"))
   .map(([name, value]) => [name.slice("shadow-".length), resolveValue(value)] as const);
+const nativeShadowRecord = `export const nativeShadows = {\n${shadowEntries
+  .map(([name, value]) => `  ${propertyName(name)}: ${JSON.stringify(deriveNativeShadow(value))},`)
+  .join("\n")}\n} as const;`;
 const textNames = [...themeTokens.keys()]
   .filter((name) => name.startsWith("text-") && !name.endsWith("--line-height"))
   .map((name) => name.slice("text-".length));
@@ -114,7 +118,7 @@ const typographyEntries = textNames.map(
     ] as const,
 );
 
-const output = `// File ini dibuat otomatis oleh scripts/generate-tokens.ts. Jangan edit manual.\n\n${renderRecord("colors", colorEntries)}\n\n${renderRecord("spacing", spacingEntries)}\n\n${renderRecord("radii", radiusEntries)}\n\n${renderRecord("maxWidths", maxWidthEntries)}\n\n${renderRecord("shadows", shadowEntries)}\n\nexport const typography = {\n${typographyEntries
+const output = `// File ini dibuat otomatis oleh scripts/generate-tokens.ts. Jangan edit manual.\n\n${renderRecord("colors", colorEntries)}\n\n${renderRecord("spacing", spacingEntries)}\n\n${renderRecord("radii", radiusEntries)}\n\n${renderRecord("maxWidths", maxWidthEntries)}\n\n${renderRecord("shadows", shadowEntries)}\n\n${nativeShadowRecord}\n\nexport const typography = {\n${typographyEntries
   .map(([name, value]) => `  ${propertyName(name)}: ${JSON.stringify(value)},`)
   .join(
     "\n",

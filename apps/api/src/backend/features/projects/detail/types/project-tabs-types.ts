@@ -1,0 +1,278 @@
+import type { BankAccountItem, ExpenseCostItem } from "@atria/core/types/expenses";
+
+import type {
+  VendorListBill,
+  VendorListPayment,
+  VendorListVendor,
+  VendorListProject,
+} from "@atria/core/types/expenses";
+
+import type { ClientInvoiceItem } from "@backend/features/projects/detail/types/project-invoices-types";
+
+import type { ProjectBudgetDashboard } from "@backend/app/actions/project/excel-budget";
+
+import type {
+  MaterialOption,
+  PricingTemplateOption,
+} from "@backend/features/projects/detail/types/rap-rab-types";
+
+interface ClientMetadata {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+}
+
+interface PmMetadata {
+  name: string;
+  email: string | null;
+}
+
+interface BudgetHeader {
+  id: string;
+  projectId: string;
+  status: string;
+  notes: string | null;
+  items?: BudgetItem[];
+}
+
+interface BudgetItem {
+  readonly budgetCategory: string;
+  readonly allocatedAmount: string | number;
+  readonly actualSpent: string | number;
+}
+
+interface InventoryData {
+  readonly currentStock: string | number;
+  readonly reservedStock: string | number;
+}
+
+interface MaterialData {
+  readonly id: string;
+  readonly name: string;
+  readonly inventory?: readonly InventoryData[];
+  readonly category?: {
+    readonly name: string;
+  } | null;
+}
+
+interface RapStockMovementData {
+  readonly id: string;
+  readonly movementType: string;
+  readonly quantity: string | number;
+  readonly createdAt: Date;
+}
+
+interface ProjectRapItemData {
+  readonly id: string;
+  readonly materialId: string | null;
+  readonly material?: MaterialData | null;
+  readonly stockMovements?: readonly RapStockMovementData[];
+  readonly area: string;
+  readonly name: string;
+  readonly description: string | null;
+  readonly requiredQuantity: string;
+  readonly bufferQuantity: string;
+  readonly totalQuantity: string;
+  readonly unit: string;
+  readonly estimatedUnitCost: string;
+  readonly estimatedTotalCost: string;
+  readonly source: string;
+  readonly status: string;
+  readonly internalNote: string | null;
+  readonly updatedAt: Date;
+}
+
+interface ProjectRapData {
+  readonly id: string;
+  readonly status: string;
+  readonly revision: number;
+  readonly notes: string | null;
+  readonly setupStage: string;
+  readonly tukangScopeSkipped: boolean;
+  readonly subconScopeSkipped: boolean;
+  readonly setupUpdatedById: string | null;
+  readonly items: readonly ProjectRapItemData[];
+}
+
+interface RabEstimateItemData {
+  readonly id: string;
+  readonly sourceType: string;
+  readonly itemNature?: string | null;
+  readonly sourceProjectRapItemId: string | null;
+  readonly sourceProjectCategoryPlanItemId: string | null;
+  readonly clientLabel: string;
+  readonly description: string | null;
+  readonly quantity: string;
+  readonly unit: string;
+  readonly unitPrice: string;
+  readonly lineTotal: string;
+  readonly displayOrder: number;
+  readonly isHidden: boolean;
+  readonly isBundle: boolean;
+  readonly bundleId: string | null;
+  readonly sourceRevision: number | null;
+  readonly sourceUpdatedAt: Date | null;
+}
+
+interface RabEstimateBundleData {
+  readonly id: string;
+  readonly clientLabel: string;
+  readonly description: string | null;
+  readonly quantity: string;
+  readonly unit: string;
+  readonly unitPrice: string;
+  readonly lineTotal: string;
+  readonly displayOrder: number;
+  readonly isHidden: boolean;
+  readonly items: readonly { readonly id: string }[];
+}
+
+interface RabEstimateData {
+  readonly id: string;
+  readonly sourceProjectRapId: string | null;
+  readonly supersedesRabEstimateId: string | null;
+  readonly status: string;
+  readonly revision: number;
+  readonly title: string;
+  readonly clientNotes: string | null;
+  readonly approvedValue: string;
+  readonly voidReason: string | null;
+  readonly voidedAt: Date | null;
+  readonly voidedBy?: { readonly name: string } | null;
+  readonly items: readonly RabEstimateItemData[];
+  readonly bundles: readonly RabEstimateBundleData[];
+}
+
+interface CategoryPlanItemData {
+  readonly id: string;
+  readonly projectBudgetCategoryId: string;
+  readonly expenseCategory?: {
+    readonly code: string;
+    readonly name: string;
+  } | null;
+  readonly vendorId: string | null;
+  readonly vendor?: {
+    readonly name: string;
+  } | null;
+  readonly name: string;
+  readonly scopeDescription: string | null;
+  readonly area: string;
+  readonly quantity: string;
+  readonly unit: string;
+  readonly estimatedUnitCost: string;
+  readonly estimatedTotalCost: string;
+  readonly status: string;
+  readonly internalNote: string | null;
+  readonly displayOrder: number;
+  readonly revision: number;
+  readonly updatedAt: Date;
+}
+
+interface ChangeOrderData {
+  readonly id: string;
+  readonly status: string;
+  readonly reason: string;
+  readonly scopeSummary: string;
+  readonly previousContractValue: string;
+  readonly valueDelta: string;
+  readonly revisedContractValue: string;
+  readonly clientConfirmedAt: Date | null;
+  readonly clientConfirmationReference: string | null;
+  readonly createdAt: Date;
+  readonly approvedAt: Date | null;
+  readonly createdBy: { readonly name: string };
+  readonly approvedBy: { readonly name: string } | null;
+  readonly baseRab: {
+    readonly revision: number;
+    readonly sourceRap: { readonly revision: number } | null;
+    readonly items: readonly {
+      readonly sourceType: string;
+      readonly sourceRevision: number | null;
+    }[];
+  };
+  readonly revisedRab: {
+    readonly revision: number;
+    readonly sourceRap: { readonly revision: number } | null;
+    readonly items: readonly {
+      readonly sourceType: string;
+      readonly sourceRevision: number | null;
+    }[];
+  };
+}
+
+interface ProjectCostLinkData {
+  readonly projectCategoryPlanItemId?: string | null;
+  readonly projectRapItemId?: string | null;
+}
+
+export type ProjectTabCost = ExpenseCostItem & ProjectCostLinkData;
+
+export interface ProjectData {
+  id: string;
+  name: string;
+  clientId: string;
+  projectManagerId: string | null;
+  totalContractValue: string;
+  financialHealth: string;
+  location: string | null;
+  roomArea: string | null;
+  projectType: string | null;
+  coverImageUrl: string | null;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  notes: string | null;
+  status: string;
+  createdAt: Date;
+  client: ClientMetadata | null;
+  projectManager: PmMetadata | null;
+  budget: BudgetHeader | null;
+  raps: ProjectRapData[];
+  rabEstimates: RabEstimateData[];
+  categoryPlanItems: CategoryPlanItemData[];
+  changeOrders: ChangeOrderData[];
+}
+
+export interface StockMovement {
+  id: string;
+  movementType: string;
+  quantity: string;
+  unitCost: string;
+  note: string | null;
+  createdAt: Date;
+  material: {
+    name: string;
+    unit: string;
+  };
+  location: {
+    name: string;
+  };
+  createdBy: {
+    name: string;
+  };
+}
+
+export interface ProjectTabsProps {
+  readonly project: ProjectData;
+  readonly costCategories: readonly unknown[];
+  readonly userRole: string;
+  readonly vendorPaymentApprovalThreshold: number;
+  readonly userId: string;
+  readonly bankAccounts: BankAccountItem[];
+  readonly costs: ProjectTabCost[];
+  readonly vendorBills: VendorListBill[];
+  readonly vendorPayments: VendorListPayment[];
+  readonly vendors: VendorListVendor[];
+  readonly projectsForForms: VendorListProject[];
+  readonly stockMovements: StockMovement[];
+  readonly invoices: ClientInvoiceItem[];
+  readonly projectBudgetDashboard: ProjectBudgetDashboard | null;
+  readonly materialMasterCatalog: MaterialOption[];
+  readonly pricingTemplateCatalog: PricingTemplateOption[];
+  readonly clients?: readonly { readonly id: string; readonly name: string }[];
+  readonly projectManagers?: readonly {
+    readonly id: string;
+    readonly name: string;
+    readonly email: string | null;
+  }[];
+}

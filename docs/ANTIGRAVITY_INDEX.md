@@ -20,7 +20,7 @@
 
 ## 2. Technical Stack & Architecture
 
-- **Framework**: Next.js 16 (App Router), React 19, TypeScript 5.
+- **Runtime ownership**: Hono + Bun API (`apps/api`), Next.js web (`apps/web`), Expo mobile (`apps/mobile`); pure core in `packages/core`. See `docs/06-technical/ARCHITECTURE.md` for source paths and transport boundaries.
 - **Styling**: Tailwind CSS v4, Vanilla CSS variables, Phosphor Icons (`@phosphor-icons/react`), Framer Motion.
 - **Database & ORM**: PostgreSQL (Neon Serverless), Drizzle ORM.
 - **Authentication**: Better Auth with server-side session checks (`lib/server/session.ts`).

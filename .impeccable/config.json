@@ -29,6 +29,105 @@
         ],
         "createdAt": "2026-08-30T01:46:01.140Z",
         "reason": "Dokumen bisnis mandiri, bukan antarmuka ERP; DESIGN.md mengatur aplikasinya, halaman ini sengaja punya identitas visual sendiri"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#000000",
+        "files": [
+          "apps/web/components/ui/form/color-picker.tsx"
+        ],
+        "createdAt": "2026-10-04T02:27:52.074Z",
+        "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#ff0000",
+        "files": [
+          "apps/web/components/ui/form/color-picker.tsx"
+        ],
+        "createdAt": "2026-10-04T02:27:52.313Z",
+        "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#ffff00",
+        "files": [
+          "apps/web/components/ui/form/color-picker.tsx"
+        ],
+        "createdAt": "2026-10-04T02:27:52.425Z",
+        "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#00ff00",
+        "files": [
+          "apps/web/components/ui/form/color-picker.tsx"
+        ],
+        "createdAt": "2026-10-04T02:27:52.541Z",
+        "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#00ffff",
+        "files": [
+          "apps/web/components/ui/form/color-picker.tsx"
+        ],
+        "createdAt": "2026-10-04T02:27:52.645Z",
+        "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#0000ff",
+        "files": [
+          "apps/web/components/ui/form/color-picker.tsx"
+        ],
+        "createdAt": "2026-10-04T02:27:52.753Z",
+        "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#ff00ff",
+        "files": [
+          "apps/web/components/ui/form/color-picker.tsx"
+        ],
+        "createdAt": "2026-10-04T02:27:52.861Z",
+        "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#0a3981",
+        "files": [
+          "apps/web/features/finance-dashboard/components/bank-accounts/account-detail-sheet.test.tsx"
+        ],
+        "createdAt": "2026-10-04T02:42:26.560Z",
+        "reason": "Existing synthetic fixture: tests exercise configured bank account identity gradients, the explicit DESIGN.md palette exception."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#1f509a",
+        "files": [
+          "apps/web/features/finance-dashboard/components/bank-accounts/account-detail-sheet.test.tsx"
+        ],
+        "createdAt": "2026-10-04T02:42:26.666Z",
+        "reason": "Existing synthetic fixture: tests exercise configured bank account identity gradients, the explicit DESIGN.md palette exception."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f5d7a1",
+        "files": [
+          "apps/web/features/finance-dashboard/components/bank-accounts/account-detail-sheet.test.tsx"
+        ],
+        "createdAt": "2026-10-04T02:42:26.765Z",
+        "reason": "Existing synthetic fixture: tests exercise configured bank account identity gradients, the explicit DESIGN.md palette exception."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e5c287",
+        "files": [
+          "apps/web/features/finance-dashboard/components/bank-accounts/account-detail-sheet.test.tsx"
+        ],
+        "createdAt": "2026-10-04T02:42:26.863Z",
+        "reason": "Existing synthetic fixture: tests exercise configured bank account identity gradients, the explicit DESIGN.md palette exception."
       }
     ]
   }

@@ -58,10 +58,20 @@ export function BudgetSplitIndicator({
         ) : null}
       </View>
       <View style={styles.captionRow}>
-        <Text style={[styles.caption, { color: captionColor }]}>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+          style={[styles.caption, { color: captionColor }]}
+        >
           Terpakai {usedAmount === undefined ? "" : formatShortIdr(usedAmount)}
         </Text>
-        <Text style={[styles.caption, { color: captionColor }]}>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+          style={[styles.caption, { color: captionColor, textAlign: "right", flex: 1.3 }]}
+        >
           {geometry.overflowPercentage > 0
             ? `Lebih ${geometry.overflowPercentage.toFixed(0)}%${remainingAmount === undefined ? "" : ` · ${formatShortIdr(Math.abs(remainingAmount))}`}`
             : `Tersisa ${geometry.remainingPercentage.toFixed(0)}%${remainingAmount === undefined ? "" : ` · ${formatShortIdr(remainingAmount)}`}`}
@@ -74,16 +84,18 @@ export function BudgetSplitIndicator({
 const styles = StyleSheet.create({
   captionRow: {
     flexDirection: "row",
+    gap: theme.spacing.xs,
     justifyContent: "space-between",
     marginTop: theme.spacing.base,
   },
   caption: {
     fontFamily: theme.fonts.bold,
-    fontSize: 8,
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
+    flex: 1,
+    minWidth: 0,
+    ...theme.typography.meta,
   },
-  container: { marginTop: theme.spacing.sm },
+  // The owning surface already separates the value row from this component.
+  container: { marginTop: theme.spacing.base },
   overflowMarker: {
     position: "absolute",
     top: -4,

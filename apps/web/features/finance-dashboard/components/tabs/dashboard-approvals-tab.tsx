@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import React from "react";
 import { toast } from "sonner";
 import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
@@ -27,15 +28,11 @@ import {
   ApprovalDecisionSubject,
   ApprovalDetailSheet,
 } from "@/features/approvals/components/views/approval-list-presentation";
-import { approvalIsCritical } from "@/features/approvals/utils/approval-list-utils";
 import { ApprovalWorkbenchRow } from "@/features/finance-dashboard/components/rows/approval-rows";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import type { ApprovalDetail } from "@atria/core/finance/approval-types";
-import {
-  approvalIsWaitingLong,
-  type ApprovalQueueSummary,
-} from "@atria/core/finance/approval-summary";
+import type { ApprovalQueueSummary } from "@atria/core/finance/approval-summary";
 import { getErrorMessage } from "@atria/core/utils/error-message";
 
 type ApprovalDecision = {
@@ -46,16 +43,14 @@ type ApprovalDecision = {
 type ApprovalsTabProps = {
   readonly approvals: readonly ApprovalDetail[];
   readonly approvalSummary: ApprovalQueueSummary;
-  readonly setApprovals: React.Dispatch<React.SetStateAction<readonly ApprovalDetail[]>>;
-  readonly setApprovalSummary: React.Dispatch<React.SetStateAction<ApprovalQueueSummary>>;
+  readonly onDecisionRecorded: (item: ApprovalDetail) => void;
   readonly canEmergencyOverride?: boolean;
 };
 
 export function ApprovalsTab({
   approvals,
   approvalSummary,
-  setApprovals,
-  setApprovalSummary,
+  onDecisionRecorded,
   canEmergencyOverride = false,
 }: ApprovalsTabProps): React.JSX.Element {
   const router = useRouter();
@@ -150,16 +145,10 @@ export function ApprovalsTab({
               : await approveVendorPayment(item.referenceId, notes, status, emergencyOverride);
         if (!result.success) throw new Error(result.error.message);
 
-        setApprovals((current) => current.filter((approval) => approval.id !== item.id));
-        setApprovalSummary((current) => ({
-          totalCount: Math.max(0, current.totalCount - 1),
-          criticalCount: Math.max(0, current.criticalCount - Number(approvalIsCritical(item))),
-          waitingLongCount: Math.max(
-            0,
-            current.waitingLongCount - Number(approvalIsWaitingLong(item, new Date())),
-          ),
-          totalAmount: Math.max(0, current.totalAmount - item.amount),
-        }));
+        React.startTransition(() => {
+          onDecisionRecorded(item);
+          router.refresh();
+        });
         setSelectedApproval(null);
         setDecision(null);
         setRejectionReason("");
@@ -169,7 +158,6 @@ export function ApprovalsTab({
         toast.success(
           `${status === "APPROVED" ? "Persetujuan" : "Penolakan"} ${shortMoney(item.amount)} berhasil dicatat.`,
         );
-        router.refresh();
       } catch (error: unknown) {
         toast.error(getErrorMessage(error, "Gagal memproses persetujuan."));
       }

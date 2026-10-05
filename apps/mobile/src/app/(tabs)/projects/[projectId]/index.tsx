@@ -1,21 +1,26 @@
-import { useQuery } from "@tanstack/react-query";
-import { Stack, useLocalSearchParams } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { formatShortDate } from "@atria/core/utils/date";
-
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useScreenQuery } from "@/lib/use-screen-query";
+import { useScreenScroll } from "@/lib/use-screen-memory";
+import { isAccessRevoked } from "@/lib/access-error";
 import {
+  ScreenQueryState,
+  ScreenRefreshNotice,
   AppIcon,
   FactRow,
   GroupedSurface,
   MoneyValue,
   ScreenMessage,
-  ScreenSkeleton,
+  ProjectOverviewSkeleton,
   StatusBadge,
 } from "@/components/ui";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { formatShortDate } from "@atria/core/utils/date";
+
 import { trpcClient } from "@/lib/trpc-client";
 import { theme } from "@/theme";
+import { TAB_BAR_CLEARANCE } from "@/constants/scroll-insets";
 
 const READINESS_TONE_COLOR: Record<string, string> = {
   APPROVED: theme.colors.onSurface,
@@ -51,22 +56,35 @@ export default function ProjectOverviewScreen(): React.JSX.Element {
   const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const insets = useSafeAreaInsets();
 
-  const query = useQuery({
-    enabled: Boolean(projectId),
-    queryFn: () => trpcClient.screen.projectOverview.query({ projectId: projectId as string }),
-    queryKey: ["screen", "projectOverview", projectId],
-  });
+  const query = useScreenQuery(
+    "projectOverview",
+    (signal) => {
+      if (!projectId) throw new Error("Proyek belum dipilih.");
+      return trpcClient.screen.projectOverview.query({ projectId }, { signal });
+    },
+    [projectId],
+    Boolean(projectId),
+  );
+  const scroll = useScreenScroll(`project/${projectId}`);
 
-  if (query.isPending) return <ScreenSkeleton rows={6} />;
-  if (query.isError) {
+  if (query.data === undefined || isAccessRevoked(query.error))
     return (
-      <ScreenMessage
-        description="Ringkasan proyek belum dapat dimuat. Periksa koneksi lalu coba lagi."
-        onAction={() => void query.refetch()}
-        title="Data belum tersedia"
+      <ScreenQueryState
+        query={query}
+        skeleton={
+          <ScrollView
+            contentInsetAdjustmentBehavior="automatic"
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: insets.bottom + theme.spacing.xl + TAB_BAR_CLEARANCE },
+            ]}
+          >
+            <ProjectOverviewSkeleton />
+          </ScrollView>
+        }
+        onRetry={() => void query.refetch()}
       />
     );
-  }
   if (!query.data || query.data.status !== "ready") {
     return (
       <ScreenMessage
@@ -87,12 +105,17 @@ export default function ProjectOverviewScreen(): React.JSX.Element {
     <>
       <Stack.Screen options={{ title: project.name }} />
       <ScrollView
+        {...scroll}
+        refreshControl={
+          <RefreshControl refreshing={query.isRefreshing} onRefresh={() => void query.refresh()} />
+        }
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: insets.bottom + theme.spacing.xl },
+          { paddingBottom: insets.bottom + theme.spacing.xl + TAB_BAR_CLEARANCE },
         ]}
       >
+        <ScreenRefreshNotice query={query} />
         <View style={styles.header}>
           <Text numberOfLines={2} style={styles.title}>
             {project.name}

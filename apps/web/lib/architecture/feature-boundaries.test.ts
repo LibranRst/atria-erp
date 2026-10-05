@@ -63,7 +63,7 @@ function sliceOf(filePath: string): string {
 function actualEdges(): Map<string, Set<string>> {
   const edges = new Map<string, Set<string>>();
   for (const filePath of collectSourceFiles(FEATURES_ROOT)) {
-    if (filePath.endsWith(".stories.tsx") || /\.test\.tsx?$/.test(filePath)) continue;
+    if (filePath.endsWith(".stories.tsx") || /\.(?:test|fixture)\.tsx?$/.test(filePath)) continue;
     const source = readFileSync(filePath, "utf8");
     const from = sliceOf(filePath);
     for (const match of source.matchAll(/@\/features\/([a-z0-9-]+)/g)) {
@@ -100,7 +100,7 @@ describe("feature slice boundaries", () => {
   test("only the slices that declare it may reach into components/layout", () => {
     const offenders = new Set<string>();
     for (const filePath of collectSourceFiles(FEATURES_ROOT)) {
-      if (filePath.endsWith(".stories.tsx") || /\.test\.tsx?$/.test(filePath)) continue;
+      if (filePath.endsWith(".stories.tsx") || /\.(?:test|fixture)\.tsx?$/.test(filePath)) continue;
       if (!readFileSync(filePath, "utf8").includes("@/components/layout")) continue;
 
       const slice = sliceOf(filePath);

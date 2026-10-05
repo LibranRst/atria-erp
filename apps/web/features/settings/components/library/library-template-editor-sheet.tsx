@@ -1,8 +1,13 @@
+"use client";
+
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { motion } from "framer-motion";
 import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
 import {
   AppIcon,
+  Button,
+  PageHeader,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
   DatePickerField,
@@ -100,27 +105,11 @@ export function LibraryTemplateEditorSheet({
   onSourceOpenChange,
   onRequestToggle,
 }: Props): React.JSX.Element {
-  return (
-    <OperationalFormSheet
-      dismissal={{ mode: "managed" }}
-      open={Boolean(draft)}
-      title={draft?.id ? "Edit Template Harga" : "Tambah Template Harga"}
-      onClose={onClose}
-      pending={pending}
-      disabled={!canManage || !canSave}
-      disabledReason={disabledReason}
-      submitLabel="Simpan"
-      submittingLabel="Menyimpan..."
-      onSubmit={onSubmit}
-      statusText={
-        draft
-          ? `${draft.components.length} komponen · ${money(internalCost)} · Margin ${grossMargin.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`
-          : undefined
-      }
-      statusTone={!canSave ? "warning" : grossMargin < 0 ? "danger" : "success"}
-    >
+  const desktop = useWorkspacePresentation() === "desktop";
+  const content = (
+    <>
       {draft ? (
-        <div className="space-y-md">
+        <div className={desktop ? "grid items-start gap-6 xl:grid-cols-2" : "space-y-md"}>
           <FormSection
             title="Identitas template"
             helper="Tipe menentukan konteks dan kategori budget yang digunakan."
@@ -440,6 +429,64 @@ export function LibraryTemplateEditorSheet({
           ) : null}
         </div>
       ) : null}
+    </>
+  );
+  if (desktop) {
+    if (!draft) return <></>;
+    return (
+      <section aria-label="Editor template harga" className="space-y-6">
+        <PageHeader
+          title={draft.id ? "Edit template harga" : "Tambah template harga"}
+          subtitle="Konfigurasi identitas, rincian biaya, dan harga klien."
+          action={
+            <Button variant="secondary" onClick={onClose} disabled={pending}>
+              Kembali ke library
+            </Button>
+          }
+        />
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (canManage && canSave && !pending) onSubmit();
+          }}
+        >
+          {content}
+          <div className="mt-6 flex items-center justify-between gap-4 border-t border-outline-variant/35 pt-4">
+            <div>
+              <p className="text-support text-on-surface-variant">
+                {draft.components.length} komponen · {money(internalCost)} · Margin{" "}
+                {grossMargin.toFixed(1)}%
+              </p>
+              {disabledReason ? <p className="text-meta text-warning">{disabledReason}</p> : null}
+            </div>
+            <Button type="submit" pending={pending} disabled={!canManage || !canSave}>
+              Simpan template
+            </Button>
+          </div>
+        </form>
+      </section>
+    );
+  }
+  return (
+    <OperationalFormSheet
+      dismissal={{ mode: "managed" }}
+      open={Boolean(draft)}
+      title={draft?.id ? "Edit Template Harga" : "Tambah Template Harga"}
+      onClose={onClose}
+      pending={pending}
+      disabled={!canManage || !canSave}
+      disabledReason={disabledReason}
+      submitLabel="Simpan"
+      submittingLabel="Menyimpan..."
+      onSubmit={onSubmit}
+      statusText={
+        draft
+          ? `${draft.components.length} komponen · ${money(internalCost)} · Margin ${grossMargin.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`
+          : undefined
+      }
+      statusTone={!canSave ? "warning" : grossMargin < 0 ? "danger" : "success"}
+    >
+      {content}
     </OperationalFormSheet>
   );
 }

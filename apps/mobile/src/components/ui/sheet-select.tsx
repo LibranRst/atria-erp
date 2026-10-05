@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 
 import { AppIcon } from "./app-icon";
 import { FormField } from "./form-field";
+import { RowAction } from "./row-action";
 import { useFormPresentation } from "./form-presentation-context";
 import { theme } from "@/theme";
 
@@ -18,6 +19,7 @@ export type SelectOption = {
 export function SheetSelect({
   disabled,
   error,
+  fieldId,
   helper,
   label,
   onPress,
@@ -30,6 +32,7 @@ export function SheetSelect({
 }: {
   readonly disabled?: boolean;
   readonly error?: string;
+  readonly fieldId?: string;
   readonly helper?: string;
   readonly label: string;
   readonly onPress: () => void;
@@ -44,8 +47,47 @@ export function SheetSelect({
   const selected = options.find((option) => option.value === value);
   const unavailable = disabled || readOnly;
 
+  if (grouped)
+    return (
+      <RowAction
+        accessibilityLabel={`${label}, ${selected?.label ?? placeholder}`}
+        accessibilityHint="Membuka pilihan"
+        disabled={unavailable}
+        onPress={onPress}
+        style={[styles.grouped, unavailable && styles.disabled]}
+      >
+        <FormField
+          fieldId={fieldId}
+          error={error}
+          helper={helper}
+          label={label}
+          optional={optional}
+          readOnly={readOnly}
+          required={required}
+        >
+          <View style={styles.control}>
+            <View style={styles.copy}>
+              <Text
+                numberOfLines={1}
+                style={[styles.value, styles.groupedValue, !selected && styles.placeholder]}
+              >
+                {selected?.label ?? placeholder}
+              </Text>
+              {selected?.description || selected?.meta ? (
+                <Text numberOfLines={1} style={styles.meta}>
+                  {selected.description ?? selected.meta}
+                </Text>
+              ) : null}
+            </View>
+            <AppIcon color={theme.colors.onSurfaceVariant} name="expand_more" size={16} />
+          </View>
+        </FormField>
+      </RowAction>
+    );
+
   return (
     <FormField
+      fieldId={fieldId}
       error={error}
       helper={helper}
       label={label}
@@ -53,18 +95,14 @@ export function SheetSelect({
       readOnly={readOnly}
       required={required}
     >
-      <Pressable
-        accessibilityHint="Membuka lembar pilihan"
+      <RowAction
+        accessibilityHint="Membuka pilihan"
         accessibilityLabel={`${label}, ${selected?.label ?? placeholder}`}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: unavailable }}
         disabled={unavailable}
-        hitSlop={grouped ? 8 : 4}
         onPress={onPress}
-        style={({ pressed }) => [
+        style={[
           styles.control,
           grouped ? styles.grouped : styles.standalone,
-          pressed && styles.pressed,
           unavailable && styles.disabled,
         ]}
       >
@@ -79,7 +117,7 @@ export function SheetSelect({
           ) : null}
         </View>
         <AppIcon color={theme.colors.onSurfaceVariant} name="expand_more" size={16} />
-      </Pressable>
+      </RowAction>
     </FormField>
   );
 }
@@ -94,33 +132,41 @@ export function SheetOptionRow({
   readonly option: SelectOption;
 }): React.JSX.Element {
   return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ checked: active, disabled: option.disabled }}
+    <RowAction
+      accessibilityLabel={option.label}
+      accessibilityHint={option.disabledReason ?? option.description ?? option.meta}
+      selected={active}
+      testID={`selection-option-${option.value}`}
       disabled={option.disabled}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.option,
-        active && styles.activeOption,
-        pressed && styles.pressed,
-        option.disabled && styles.disabled,
-      ]}
+      style={[styles.option, active && styles.activeOption]}
     >
       <View style={styles.copy}>
         <Text style={[styles.optionLabel, active && styles.activeText]}>{option.label}</Text>
-        {option.description || option.meta || option.disabledReason ? (
-          <Text style={styles.meta}>
-            {option.disabledReason ?? option.description ?? option.meta}
-          </Text>
+        {option.disabledReason || option.description ? (
+          <Text style={styles.optionMeta}>{option.disabledReason ?? option.description}</Text>
+        ) : null}
+        {option.meta && option.meta !== (option.disabledReason ?? option.description) ? (
+          <Text style={styles.optionMeta}>{option.meta}</Text>
         ) : null}
       </View>
-      {active ? <AppIcon color={theme.colors.accent} name="check" size={16} weight="bold" /> : null}
-    </Pressable>
+      <View style={styles.optionIndicator}>
+        {active ? (
+          <AppIcon color={theme.colors.accent} name="check" size={18} weight="bold" />
+        ) : null}
+      </View>
+    </RowAction>
   );
 }
 
 const styles = StyleSheet.create({
-  control: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  control: {
+    minHeight: 32,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   standalone: {
     minHeight: 48,
     borderWidth: StyleSheet.hairlineWidth,
@@ -130,12 +176,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     boxShadow: theme.shadows.control,
   },
-  grouped: { minHeight: 32, backgroundColor: "transparent" },
+  grouped: { backgroundColor: "transparent" },
   copy: { flex: 1, minWidth: 0 },
   value: {
     color: theme.colors.onSurface,
     fontFamily: theme.fonts.bold,
     ...theme.typography.support,
+  },
+  groupedValue: {
+    fontFamily: theme.fonts.semibold,
+    ...theme.typography.section,
   },
   placeholder: { color: theme.colors.outline },
   meta: {
@@ -152,13 +202,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
   },
-  activeOption: { backgroundColor: theme.colors.accentContainer },
+  activeOption: { backgroundColor: "transparent" },
   optionLabel: {
     color: theme.colors.onSurface,
-    fontFamily: theme.fonts.bold,
-    ...theme.typography.support,
+    fontFamily: Platform.OS === "ios" ? undefined : theme.fonts.medium,
+    ...theme.typography.section,
   },
+  optionMeta: {
+    color: theme.colors.onSurfaceVariant,
+    fontFamily: Platform.OS === "ios" ? undefined : theme.fonts.regular,
+    marginTop: theme.spacing.base,
+    ...theme.typography.row,
+  },
+  optionIndicator: { width: 20, alignItems: "center" },
   activeText: { color: theme.colors.accent },
-  pressed: { opacity: 0.76 },
   disabled: { opacity: 0.5 },
 });

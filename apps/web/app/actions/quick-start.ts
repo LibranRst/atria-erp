@@ -1,82 +1,45 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
-import {
-  advanceQuickStartUseCase,
-  createFirstProjectQuickStartUseCase,
-  pauseQuickStartUseCase,
-  recordQuickStartInteractionUseCase,
-  setInitialStockDecisionUseCase,
-} from "@/server/usecases/onboarding/quick-start-mutations";
-import { resolveActor } from "@/server/actor";
-import type {
-  CreateFirstProjectQuickStartInput,
-  OwnerQuickStartState,
-} from "@atria/core/onboarding/organization-setup";
-import type { ActionResponse } from "@atria/core/types/action-response";
-
-async function actorOrUnauthorized(): Promise<ReturnType<typeof resolveActor>> {
-  return resolveActor();
-}
-
-function revalidateSetupPaths(): void {
-  revalidatePath("/");
-  revalidatePath("/onboarding");
-  revalidatePath("/ledger");
-  revalidatePath("/projects");
-  revalidatePath("/settings");
-}
+import { callBackendAction } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/quick-start";
 
 export async function advanceQuickStart(
-  input: unknown,
-): Promise<ActionResponse<OwnerQuickStartState>> {
-  const actor = await actorOrUnauthorized();
-  if (!actor)
-    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  const result = await advanceQuickStartUseCase(actor, input);
-  if (result.success) revalidateSetupPaths();
-  return result;
+  ...args: WebRpcArgs<"app/actions/quick-start.advanceQuickStart">
+): Promise<WebRpcResult<"app/actions/quick-start.advanceQuickStart">> {
+  return callBackendAction("app/actions/quick-start.advanceQuickStart", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function pauseQuickStart(
-  input: unknown,
-): Promise<ActionResponse<OwnerQuickStartState>> {
-  const actor = await actorOrUnauthorized();
-  if (!actor)
-    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  const result = await pauseQuickStartUseCase(actor, input);
-  if (result.success) revalidateSetupPaths();
-  return result;
+  ...args: WebRpcArgs<"app/actions/quick-start.pauseQuickStart">
+): Promise<WebRpcResult<"app/actions/quick-start.pauseQuickStart">> {
+  return callBackendAction("app/actions/quick-start.pauseQuickStart", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function createFirstProjectQuickStart(
-  input: CreateFirstProjectQuickStartInput,
-): Promise<ActionResponse<{ readonly projectId: string; readonly alreadyCompleted: boolean }>> {
-  const actor = await actorOrUnauthorized();
-  if (!actor)
-    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  const result = await createFirstProjectQuickStartUseCase(actor, input);
-  if (result.success) revalidateSetupPaths();
-  return result;
+  ...args: WebRpcArgs<"app/actions/quick-start.createFirstProjectQuickStart">
+): Promise<WebRpcResult<"app/actions/quick-start.createFirstProjectQuickStart">> {
+  return callBackendAction("app/actions/quick-start.createFirstProjectQuickStart", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function setInitialStockReadinessDecision(
-  input: unknown,
-): Promise<ActionResponse<OwnerQuickStartState>> {
-  const actor = await actorOrUnauthorized();
-  if (!actor)
-    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  const result = await setInitialStockDecisionUseCase(actor, input);
-  if (result.success) revalidateSetupPaths();
-  return result;
+  ...args: WebRpcArgs<"app/actions/quick-start.setInitialStockReadinessDecision">
+): Promise<WebRpcResult<"app/actions/quick-start.setInitialStockReadinessDecision">> {
+  return callBackendAction("app/actions/quick-start.setInitialStockReadinessDecision", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function recordQuickStartRetry(
-  input: unknown,
-): Promise<ActionResponse<{ readonly recorded: true }>> {
-  const actor = await actorOrUnauthorized();
-  if (!actor)
-    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  return recordQuickStartInteractionUseCase(actor, input);
+  ...args: WebRpcArgs<"app/actions/quick-start.recordQuickStartRetry">
+): Promise<WebRpcResult<"app/actions/quick-start.recordQuickStartRetry">> {
+  return callBackendAction("app/actions/quick-start.recordQuickStartRetry", args, {
+    allowCookieWrites: true,
+  });
 }

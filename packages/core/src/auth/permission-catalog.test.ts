@@ -15,6 +15,16 @@ import { ROLE_PERMISSIONS, type PermissionKey } from "./permissions";
 const ALL_KEYS = Object.keys(PERMISSION_LABELS) as PermissionKey[];
 
 describe("Katalog izin", () => {
+  test("desktop is a presentation permission separate from domain access", () => {
+    const workspace = PERMISSION_GROUPS.find((group) => group.key === "workspace");
+    expect(workspace?.permissions).toEqual(["use:desktop_admin"]);
+    expect(PERMISSION_LABELS["use:desktop_admin"]).toBe("Menggunakan workspace desktop");
+    expect(ROLE_PERMISSIONS.OWNER).toContain("use:desktop_admin");
+    expect(ROLE_PERMISSIONS.FINANCE_ADMIN).toContain("use:desktop_admin");
+    expect(ROLE_PERMISSIONS.PROJECT_MANAGER).not.toContain("use:desktop_admin");
+    expect(ROLE_PERMISSIONS.PURCHASING).not.toContain("use:desktop_admin");
+  });
+
   test("setiap kunci izin punya tepat satu grup", () => {
     const occurrences = new Map<string, number>();
     for (const key of getAllCatalogPermissionKeys()) {

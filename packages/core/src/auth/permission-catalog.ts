@@ -17,6 +17,7 @@ import type { PermissionKey } from "./permissions";
  */
 
 export type PermissionGroupKey =
+  | "workspace"
   | "finance"
   | "budget"
   | "expenses"
@@ -35,6 +36,7 @@ export type PermissionGroup = {
 };
 
 export const PERMISSION_LABELS: Record<PermissionKey, string> = {
+  "use:desktop_admin": "Menggunakan workspace desktop",
   "view:bank_account": "Melihat rekening dan saldo bank",
   "create:bank_account": "Membuat rekening bank baru",
   "update:bank_account": "Mengubah informasi rekening bank",
@@ -109,6 +111,13 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
 };
 
 export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
+  {
+    key: "workspace",
+    title: "Workspace",
+    description: "Akses tampilan desktop; izin tindakan dan cakupan data tetap berlaku.",
+    iconName: "space_dashboard",
+    permissions: ["use:desktop_admin"],
+  },
   {
     key: "finance",
     title: "Kontrol keuangan",

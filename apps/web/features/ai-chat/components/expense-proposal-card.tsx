@@ -4,7 +4,8 @@ import { confirmAiExpenseProposal } from "@/app/actions/ai/confirm-expense-propo
 import { AppIcon, Button, MoneyValue, StatusBadge } from "@/components/ui";
 import { transitionSpringSmooth } from "@/lib/utils/motion";
 import { motion, useReducedMotion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import * as React from "react";
 
 import type { ExpenseProposal } from "../utils/expense-proposal";

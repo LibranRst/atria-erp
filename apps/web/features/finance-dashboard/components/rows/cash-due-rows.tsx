@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { AppIcon, MoneyValue } from "@/components/ui";
@@ -39,6 +39,7 @@ export function CashDueRow({
   });
   return (
     <motion.div
+      tabIndex={-1}
       whileTap={reduceMotion ? undefined : dashboardRowPressScale}
       transition={transitionSpringSnappy}
       className="p-1"

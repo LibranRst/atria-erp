@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { WorkspaceSwitch } from "@/components/layout/workspace-switch";
+import Link from "@/lib/navigation/workspace-link";
 import React from "react";
 
 import { ProfileAccessList } from "@/features/profile/components/views/profile-access-list";
@@ -55,6 +56,8 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
             </p>
           </div>
         </header>
+
+        <WorkspaceSwitch target="desktop" />
 
         <ProfileIdentitySurface
           displayName={data.displayName}

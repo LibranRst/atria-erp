@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
 
 import {
   addProjectRapItem,

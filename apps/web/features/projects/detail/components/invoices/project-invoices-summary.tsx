@@ -6,7 +6,7 @@ import { AppIcon, MoneyValue } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
 export function ProjectInvoicesSummary({
-  isOwnerOrFinance,
+  canCreateInvoice,
   invoicesCount,
   contractValue,
   schedulePending,
@@ -19,7 +19,7 @@ export function ProjectInvoicesSummary({
   onGenerateSchedule,
   onNavigateClosing,
 }: {
-  readonly isOwnerOrFinance: boolean;
+  readonly canCreateInvoice: boolean;
   readonly invoicesCount: number;
   readonly contractValue: number;
   readonly schedulePending: boolean;
@@ -35,15 +35,9 @@ export function ProjectInvoicesSummary({
   const unbilledContractAmount = Math.max(0, contractValue - totalInvoiceAmount);
   const billedCoverage = contractValue > 0 ? (totalInvoiceAmount / contractValue) * 100 : 0;
   const isFullySettled =
-    invoicesCount > 0 &&
-    contractValue > 0 &&
-    totalPaidAmount >= contractValue &&
-    unpaidAmount <= 0;
+    invoicesCount > 0 && contractValue > 0 && totalPaidAmount >= contractValue && unpaidAmount <= 0;
   const isCurrentInvoicesSettled =
-    invoicesCount > 0 &&
-    unpaidAmount <= 0 &&
-    !isFullySettled &&
-    unbilledContractAmount > 0;
+    invoicesCount > 0 && unpaidAmount <= 0 && !isFullySettled && unbilledContractAmount > 0;
 
   return (
     <section className="rounded-owner bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
@@ -68,7 +62,7 @@ export function ProjectInvoicesSummary({
               {invoicesCount} termin lunas · Rp 0 piutang tersisa
             </p>
           </div>
-          {isOwnerOrFinance ? (
+          {canCreateInvoice ? (
             <button
               type="button"
               onClick={onCreateInvoiceClick}
@@ -97,10 +91,11 @@ export function ProjectInvoicesSummary({
               className="mt-1"
             />
             <p className="mt-1 text-meta text-white/60">
-              {invoicesCount} termin selesai · {billedCoverage.toFixed(0)}% nilai kontrak sudah ditagihkan
+              {invoicesCount} termin selesai · {billedCoverage.toFixed(0)}% nilai kontrak sudah
+              ditagihkan
             </p>
           </div>
-          {isOwnerOrFinance ? (
+          {canCreateInvoice ? (
             <button
               type="button"
               onClick={onCreateInvoiceClick}
@@ -127,7 +122,7 @@ export function ProjectInvoicesSummary({
               {invoicesCount} termin · {billedCoverage.toFixed(0)}% nilai kontrak sudah ditagihkan
             </p>
           </div>
-          {isOwnerOrFinance ? (
+          {canCreateInvoice ? (
             <button
               type="button"
               onClick={onCreateInvoiceClick}
@@ -147,13 +142,13 @@ export function ProjectInvoicesSummary({
         <button
           type="button"
           onClick={onNavigateClosing}
-          className="mt-3.5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-4 text-xs font-bold text-primary shadow-sm ring-1 ring-white/20 transition-transform active:scale-98 hover:bg-white/95"
+          className="mt-3.5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-4 text-xs font-bold text-primary shadow-sm ring-1 ring-white/20 transition-transform hover:bg-white/95 active:scale-98"
         >
           <span>Cek Kesiapan Closing</span>
           <AppIcon name="arrow_forward" className="text-[15px]" />
         </button>
       ) : null}
-      {isOwnerOrFinance && invoicesCount === 0 ? (
+      {canCreateInvoice && invoicesCount === 0 ? (
         <button
           type="button"
           onClick={onGenerateSchedule}

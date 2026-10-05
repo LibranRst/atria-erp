@@ -18,6 +18,7 @@ import type { PermissionKey } from "@atria/core/auth/permissions";
  * ditanam basi persis ketika ketepatannya paling penting.
  */
 export type CurrentUserProfile = {
+  readonly id?: string;
   readonly name: string | null;
   readonly image: string | null;
 };

@@ -26,14 +26,4 @@ export const COMMON_UNIT_OPTIONS = [
   "paket",
 ] as const;
 
-export const COMMON_ROOM_OPTIONS = [
-  "Kitchen",
-  "Living Room",
-  "Bedroom",
-  "Bathroom",
-  "Wardrobe",
-  "Pantry",
-  "Dining",
-  "Foyer",
-  "Umum",
-] as const;
+export { COMMON_ROOM_OPTIONS } from "@atria/core/presentation/project-input-options";

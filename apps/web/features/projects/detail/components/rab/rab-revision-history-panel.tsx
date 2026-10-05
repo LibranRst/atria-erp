@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { toast } from "sonner";
 
 import { approveProjectChangeOrder } from "@/app/actions/project/revision-change-order";
@@ -165,9 +166,15 @@ export function RabRevisionHistoryPanel({
       >
         <div className="space-y-3">
           <p className="text-xs leading-relaxed text-on-surface-variant">
-            Change Order ini dibuat oleh akun Anda. Sesuai prinsip Maker-Checker, persetujuan memerlukan otorisasi pihak lain (Finance/Owner). Sebagai Owner, Anda dapat memakai hak persetujuan darurat dengan alasan tertulis.
+            Change Order ini dibuat oleh akun Anda. Sesuai prinsip Maker-Checker, persetujuan
+            memerlukan otorisasi pihak lain (Finance/Owner). Sebagai Owner, Anda dapat memakai hak
+            persetujuan darurat dengan alasan tertulis.
           </p>
-          <FormField label="Alasan Persetujuan Darurat" helper="Minimal 10 karakter alasan tertulis." required>
+          <FormField
+            label="Alasan Persetujuan Darurat"
+            helper="Minimal 10 karakter alasan tertulis."
+            required
+          >
             <Textarea
               id="co-emergency-override-reason"
               autoFocus

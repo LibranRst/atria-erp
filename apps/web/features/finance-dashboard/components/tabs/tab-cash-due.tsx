@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { getDashboardCashSummary } from "@atria/core/finance/dashboard-cash-summary";
 
 import type { FinanceDashboardOverview } from "@/app/actions/finance/dashboard-overview";
 import { DetailSection, MoneyValue, RowGroup, SummaryFact, SummarySurface } from "@/components/ui";
@@ -17,11 +18,11 @@ export function CashDueTab({
   const overdue = data.dashboardDetails.cashDueGroups.find((group) => group.bucket === "OVERDUE");
   const today = data.dashboardDetails.cashDueGroups.find((group) => group.bucket === "TODAY");
   const near = data.dashboardDetails.cashDueGroups.find((group) => group.bucket === "NEXT_7_DAYS");
-  const urgentTotal =
-    (overdue?.totalOutstanding ?? 0) +
-    (today?.totalOutstanding ?? 0) +
-    (near?.totalOutstanding ?? 0);
-  const coverage = urgentTotal > 0 ? data.summary.cashAvailable / urgentTotal : null;
+  const { outstandingAmount: urgentTotal, cashCoverageRatio: coverage } = getDashboardCashSummary(
+    data.dashboardDetails.cashDueGroups,
+    data.summary.cashAvailable,
+    data.summary.payablesDueSoon,
+  );
   const groupsWithItems = data.dashboardDetails.cashDueGroups.filter((group) => group.count > 0);
   return (
     <div className="space-y-sm">
@@ -43,16 +44,20 @@ export function CashDueTab({
               amount={urgentTotal}
               variant="fullDynamic"
               size="lg"
-              tone={urgentTotal > data.summary.cashAvailable ? "danger" : "default"}
+              tone={
+                data.summary.payablesDueSoon > data.summary.cashAvailable ? "danger" : "default"
+              }
               className="mt-1"
             />
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-[8px] font-semibold text-on-surface-variant/60">Cakupan kas</p>
+            <p className="text-eyebrow font-semibold text-on-surface-variant/60">Cakupan kas</p>
             <p
               className={`financial-amount mt-1 text-sm font-extrabold ${coverage !== null && coverage < 1 ? "text-error" : "text-on-surface"}`}
             >
-              {coverage === null ? "Aman" : `${coverage.toFixed(1)}×`}
+              {coverage === null
+                ? "Tidak ada hutang"
+                : `${coverage.toLocaleString("id-ID", { maximumFractionDigits: 1 })}×`}
             </p>
           </div>
         </div>
@@ -73,6 +78,10 @@ export function CashDueTab({
             tone={(near?.count ?? 0) > 0 ? "warning" : "positive"}
           />
         </div>
+        <p className="px-3.5 pb-2 text-meta text-on-surface-variant">
+          Outstanding mencakup hutang dan piutang; cakupan kas membandingkan kas dengan hutang jatuh
+          tempo.
+        </p>
       </SummarySurface>
       {groupsWithItems.length === 0 ? (
         <DetailSection title="Jadwal pembayaran">

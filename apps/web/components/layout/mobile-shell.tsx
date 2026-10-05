@@ -6,14 +6,9 @@ import { AppTopBar, TopBarControl, TOP_BAR_INSET_PX } from "@/components/layout/
 import { HeaderMorphMenu } from "@/components/layout/header-morph-menu";
 import { getPageTitle } from "@/components/layout/header-menu-config";
 import { useHeaderMenu } from "@/components/layout/use-header-menu";
-import { TopBarSlotsProvider, useTopBarSlots } from "@/components/layout/top-bar-slots";
-import { usePathname, useRouter } from "next/navigation";
+import { useTopBarSlots } from "@/components/layout/top-bar-slots";
+import { usePathname, useRouter } from "@/lib/navigation/workspace-navigation";
 
-import { GlobalExpenseDrawer } from "@/features/expenses/components/sheets/global-drawer";
-import { GlobalProjectDrawer } from "@/features/projects/list/components/drawers/global-project-drawer";
-import { GlobalVendorBillDrawer } from "@/features/expenses/components/sheets/global-vendor-bill-drawer";
-import { GlobalInvoiceDrawer } from "@/features/projects/detail/components/invoices/global-invoice-drawer";
-import { ProjectStateProvider } from "@/features/projects/detail/components/shared/project-state-context";
 import {
   AppIcon,
   ConnectivityBanner,
@@ -23,7 +18,6 @@ import {
 } from "@/components/ui";
 import { getProfileInitials } from "@atria/core/presentation/user-identity";
 import { DeveloperSimulationBanner } from "@/features/profile/components/developer/developer-simulation-banner";
-import { ActivityDetailProvider } from "@/features/activity-detail/components/activity-detail-provider";
 import { NotificationBellButton } from "@/features/notifications";
 type MobileShellProps = Readonly<{
   children: React.ReactNode;
@@ -170,84 +164,50 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
   }, [pathname]);
 
   return (
-    <ProjectStateProvider>
-      <ActivityDetailProvider>
-        <TopBarSlotsProvider>
-          <div className="min-h-screen bg-background font-sans text-on-surface">
-            {/* Top AppBar - Fixed, contents centered to match page width */}
-            {/*
-             * Fallback `null`, bukan sebuah blok setinggi bilah.
-             *
-             * `MobileHeader` merender bilah `fixed` yang tidak memakan ruang
-             * aliran sama sekali; blok pengganti setinggi 56px **dalam** aliran
-             * mendorong seluruh isi halaman turun selama boundary tertunda, lalu
-             * menyentaknya naik. Ruangnya sudah disediakan `TOP_BAR_INSET_PX` di
-             * bawah, dan blok itu juga menggambar bilah buram bergaris bawah yang
-             * tidak pernah ada dalam rancangan aslinya.
-             */}
-            {!hideTopBar && (
-              <Suspense fallback={null}>
-                <MobileHeader isRootRoute={isRootRoute} />
-              </Suspense>
-            )}
+    <div className="min-h-screen bg-background font-sans text-on-surface">
+      {/* Top AppBar - Fixed, contents centered to match page width */}
+      {/*
+       * Fallback `null`, bukan sebuah blok setinggi bilah.
+       *
+       * `MobileHeader` merender bilah `fixed` yang tidak memakan ruang
+       * aliran sama sekali; blok pengganti setinggi 56px **dalam** aliran
+       * mendorong seluruh isi halaman turun selama boundary tertunda, lalu
+       * menyentaknya naik. Ruangnya sudah disediakan `TOP_BAR_INSET_PX` di
+       * bawah, dan blok itu juga menggambar bilah buram bergaris bawah yang
+       * tidak pernah ada dalam rancangan aslinya.
+       */}
+      {!hideTopBar && (
+        <Suspense fallback={null}>
+          <MobileHeader isRootRoute={isRootRoute} />
+        </Suspense>
+      )}
 
-            {!hideStandardChrome && <ConnectivityBanner />}
+      {!hideStandardChrome && <ConnectivityBanner />}
 
-            {/* Screen Content */}
-            <main
-              // Jarak atas diturunkan dari geometri bilah, bukan ditulis sebagai
-              // `pt-20`. Nilainya tetap 80px, jadi tidak ada halaman yang bergeser.
-              style={hideStandardChrome ? undefined : { paddingTop: TOP_BAR_INSET_PX }}
-              className={
-                isAiPage
-                  ? "mx-auto h-dvh w-full max-w-md overflow-hidden p-0"
-                  : isLoginPage
-                    ? "mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-margin-mobile pt-6 pb-6"
-                    : "mx-auto w-full max-w-md space-y-lg px-margin-mobile pb-[calc(10rem+env(safe-area-inset-bottom))]"
-              }
-            >
-              {children}
-            </main>
+      {/* Screen Content */}
+      <main
+        // Jarak atas diturunkan dari geometri bilah, bukan ditulis sebagai
+        // `pt-20`. Nilainya tetap 80px, jadi tidak ada halaman yang bergeser.
+        style={hideStandardChrome ? undefined : { paddingTop: TOP_BAR_INSET_PX }}
+        className={
+          isAiPage
+            ? "mx-auto h-dvh w-full max-w-md overflow-hidden p-0"
+            : isLoginPage
+              ? "mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-margin-mobile pt-6 pb-6"
+              : "mx-auto w-full max-w-md space-y-lg px-margin-mobile pb-[calc(10rem+env(safe-area-inset-bottom))]"
+        }
+      >
+        {children}
+      </main>
 
-            {!hideStandardChrome ? <DeveloperSimulationBanner /> : null}
+      {!hideStandardChrome ? <DeveloperSimulationBanner /> : null}
 
-            {/* Bottom Navigation wrapped in Suspense */}
-            {!hideStandardChrome && (
-              <Suspense fallback={null}>
-                <BottomNav />
-              </Suspense>
-            )}
-
-            {/* Global Expense Drawer wrapped in Suspense */}
-            {!isLoginPage && (
-              <Suspense fallback={null}>
-                <GlobalExpenseDrawer />
-              </Suspense>
-            )}
-
-            {/* Global Project Drawer wrapped in Suspense */}
-            {!isLoginPage && (
-              <Suspense fallback={null}>
-                <GlobalProjectDrawer />
-              </Suspense>
-            )}
-
-            {/* Global Vendor Bill Drawer wrapped in Suspense */}
-            {!isLoginPage && (
-              <Suspense fallback={null}>
-                <GlobalVendorBillDrawer />
-              </Suspense>
-            )}
-
-            {/* Global Client Invoice Drawer wrapped in Suspense */}
-            {!isLoginPage && (
-              <Suspense fallback={null}>
-                <GlobalInvoiceDrawer />
-              </Suspense>
-            )}
-          </div>
-        </TopBarSlotsProvider>
-      </ActivityDetailProvider>
-    </ProjectStateProvider>
+      {/* Bottom Navigation wrapped in Suspense */}
+      {!hideStandardChrome && (
+        <Suspense fallback={null}>
+          <BottomNav />
+        </Suspense>
+      )}
+    </div>
   );
 }

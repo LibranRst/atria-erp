@@ -9,12 +9,13 @@ import {
   summarizeProfileAccess,
 } from "@/features/profile/utils/profile-access";
 import { getProfileInitials } from "@atria/core/presentation/user-identity";
+import { PERMISSION_GROUPS } from "@atria/core/auth/permission-catalog";
 
 describe("Profile presentation", () => {
   test("excludes deferred AI access from the active profile modules", () => {
     const groups = summarizeProfileAccess(["view:bank_account", "view:settings", "view:ai_brief"]);
 
-    expect(groups).toHaveLength(8);
+    expect(groups).toHaveLength(PERMISSION_GROUPS.length);
     expect(groups.map((group: { title: string }) => group.title)).not.toContain("AI Brief");
     expect(countAccessibleProfileModules(groups)).toBe(2);
   });

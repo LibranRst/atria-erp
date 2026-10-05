@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
 
 import { RabEmptyState } from "./rab-empty-state";
 import { RabClientSummaryPanel, RabDraftActionsPanel, RabItemsPanel } from "./rab-client-sections";
 import { RabRevisionHistoryPanel } from "./rab-revision-history-panel";
-import { RabExportDrawer } from "./rab-export-drawer";
 import type { RabExportMetadata } from "../../utils/rab-export-utils";
 import type {
   RapView,
@@ -15,6 +15,11 @@ import type {
   RabRevisionHistoryView,
   ChangeOrderHistoryView,
 } from "../shared/rap-rab-manager";
+
+const RabExportDrawer = dynamic(
+  () => import("./rab-export-drawer").then((module) => module.RabExportDrawer),
+  { ssr: false },
+);
 
 export function RabClientPanel({
   rabEstimate,
@@ -64,6 +69,7 @@ export function RabClientPanel({
   readonly exportMetadata?: RabExportMetadata;
 }): React.JSX.Element {
   const [exportDrawerOpen, setExportDrawerOpen] = React.useState(false);
+  const [exportRequested, setExportRequested] = React.useState(false);
 
   if (!rabEstimate) {
     return <RabEmptyState canManageRab={canManageRab} setSourcePickerOpen={setSourcePickerOpen} />;
@@ -82,7 +88,10 @@ export function RabClientPanel({
         canManageRab={canManageRab}
         rap={rap}
         setSourcePickerOpen={setSourcePickerOpen}
-        onOpenExport={() => setExportDrawerOpen(true)}
+        onOpenExport={() => {
+          setExportRequested(true);
+          setExportDrawerOpen(true);
+        }}
       />
 
       <RabItemsPanel
@@ -112,16 +121,18 @@ export function RabClientPanel({
         setHistoryDetailId={setHistoryDetailId}
       />
 
-      <RabExportDrawer
-        open={exportDrawerOpen}
-        onClose={() => setExportDrawerOpen(false)}
-        rabEstimate={rabEstimate}
-        meta={
-          exportMetadata || {
-            projectName: "Proyek",
+      {exportRequested ? (
+        <RabExportDrawer
+          open={exportDrawerOpen}
+          onClose={() => setExportDrawerOpen(false)}
+          rabEstimate={rabEstimate}
+          meta={
+            exportMetadata || {
+              projectName: "Proyek",
+            }
           }
-        }
-      />
+        />
+      ) : null}
     </>
   );
 }

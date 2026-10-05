@@ -18,7 +18,10 @@ export function useSheetPresenceValue<T>(
     readonly value: T | null;
   }>({ identity: normalizedIdentity, value: normalizedValue });
 
-  if (normalizedIdentity !== null && normalizedIdentity !== presence.identity) {
+  if (
+    normalizedIdentity !== null &&
+    (normalizedIdentity !== presence.identity || normalizedValue !== presence.value)
+  ) {
     setPresence({ identity: normalizedIdentity, value: normalizedValue });
   }
 

@@ -1,31 +1,13 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { callBackendAction } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/profile/update-own-profile";
 
-import { resolveActor } from "@/server/actor";
-import { updateOwnProfileUseCase } from "@/server/usecases/profile/update-own-profile";
-import type { ActionResponse } from "@atria/core/types/action-response";
-import type { UpdateOwnProfileInput } from "@atria/core/validations/profile";
-
-/**
- * Pembungkus tipis di atas `updateOwnProfileUseCase`.
- *
- * Identitas SELALU diselesaikan di sini dari sesi, tidak pernah diterima sebagai
- * argumen — modul `"use server"` adalah endpoint HTTP, jadi parameter aktor akan
- * bisa dipalsukan klien. Prosedur tRPC memanggil use-case yang sama dengan actor
- * bearer, sehingga web dan native berbagi satu badan transaksi.
- */
 export async function updateOwnProfile(
-  input: UpdateOwnProfileInput,
-): Promise<ActionResponse<{ readonly updated: boolean }>> {
-  const actor = await resolveActor();
-  if (!actor)
-    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-
-  const result = await updateOwnProfileUseCase(actor, input);
-  // Halaman profil dirender server; tanpa ini nama lama bertahan sampai
-  // navigasi berikutnya. Submit yang tidak mengubah apa pun tidak perlu
-  // membatalkan cache.
-  if (result.success && result.data.updated) revalidatePath("/profile");
-  return result;
+  ...args: WebRpcArgs<"app/actions/profile/update-own-profile.updateOwnProfile">
+): Promise<WebRpcResult<"app/actions/profile/update-own-profile.updateOwnProfile">> {
+  return callBackendAction("app/actions/profile/update-own-profile.updateOwnProfile", args, {
+    allowCookieWrites: true,
+  });
 }

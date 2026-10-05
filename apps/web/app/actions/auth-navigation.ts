@@ -1,17 +1,13 @@
 "use server";
 
-import { resolveHomeDestination } from "@/features/navigation/server/home-destination";
-import { resolveActor } from "@/server/actor";
+import { callBackend } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/auth-navigation";
 
-/**
- * Menyelesaikan rute tujuan pengalihan setelah autentikasi berhasil.
- *
- * Mengembalikan rute langsung (misal: `/onboarding?step=welcome` untuk Owner
- * pertama kali, atau `/ledger`) sehingga navigasi login bisa langsung menuju ke
- * halaman target tanpa harus singgah di `/` dan memicu transisi ganda.
- */
-export async function getPostLoginRedirectDestination(): Promise<string> {
-  const actor = await resolveActor();
-  if (!actor) return "/login";
-  return resolveHomeDestination(actor);
+export async function getPostLoginRedirectDestination(
+  ...args: WebRpcArgs<"app/actions/auth-navigation.getPostLoginRedirectDestination">
+): Promise<WebRpcResult<"app/actions/auth-navigation.getPostLoginRedirectDestination">> {
+  return callBackend("app/actions/auth-navigation.getPostLoginRedirectDestination", args, {
+    allowCookieWrites: true,
+  });
 }

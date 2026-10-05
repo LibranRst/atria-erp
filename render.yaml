@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: atria-pilot-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerContext: .
+    dockerfilePath: ./apps/api/Dockerfile
+    healthCheckPath: /health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED
+        value: "false"
+      - key: ATRIA_PILOT_REAL_DATA
+        value: "true"
+      - key: AI_CHAT_PROVIDERS
+        value: NINEROUTER
+      - key: AI_APPROVED_PROVIDERS
+        value: ""
+      - key: GEMINI_PAID_DATA_POLICY_CONFIRMED
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        sync: false
+      - key: API_BRIDGE_SECRET
+        sync: false
+      - key: ATRIA_BOOTSTRAP_SECRET
+        sync: false
+      - key: API_PUBLIC_URL
+        sync: false
+      - key: BETTER_AUTH_URL
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: NINEROUTER_API_KEY
+        sync: false
+      - key: NINEROUTER_BASE_URL
+        sync: false
+      - key: IMAGEKIT_PRIVATE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+        sync: false
+      - key: NOTIFICATION_JOB_SECRET
+        sync: false

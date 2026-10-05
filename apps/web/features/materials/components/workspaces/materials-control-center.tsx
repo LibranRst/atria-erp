@@ -125,6 +125,7 @@ export function MaterialsControlCenter({
 
   const {
     locations,
+    inventoryLocations,
     materials,
     grouped,
     visibleMaterials,
@@ -215,7 +216,7 @@ export function MaterialsControlCenter({
           search={search}
           location={location}
           status={status}
-          locations={locations}
+          locations={inventoryLocations}
           visibleMaterials={visibleMaterials}
           canManage={data.capabilities.canOperate}
           onSearchChange={setSearch}

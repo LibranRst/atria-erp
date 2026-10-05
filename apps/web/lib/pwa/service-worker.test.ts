@@ -24,6 +24,7 @@ type Scope = {
   readonly opened: readonly string[];
   readonly deletedCaches: readonly string[];
   readonly precached: readonly string[];
+  readonly precacheCredentials: readonly RequestCredentials[];
 };
 
 /**
@@ -47,10 +48,12 @@ function createScope(fetchImpl: (request: Request) => Promise<Response>): {
     notifications: [] as NotificationCall[],
     opened: [] as string[],
     deletedCaches: [] as string[],
+    precacheCredentials: [] as RequestCredentials[],
   };
 
   const cache = {
     async add(request: Request): Promise<void> {
+      calls.precacheCredentials.push(request.credentials);
       precached.set(new URL(request.url).pathname, "halaman-offline");
     },
     async match(key: string): Promise<Response | undefined> {
@@ -83,7 +86,7 @@ function createScope(fetchImpl: (request: Request) => Promise<Response>): {
 
   const cachesImpl = {
     open: async (): Promise<typeof cache> => cache,
-    keys: async (): Promise<string[]> => ["atria-shell-v0", "other-cache"],
+    keys: async (): Promise<string[]> => ["atria-shell-v0", "atria-shell-v1", "other-cache"],
     delete: async (key: string): Promise<boolean> => {
       calls.deletedCaches.push(key);
       return true;
@@ -94,6 +97,9 @@ function createScope(fetchImpl: (request: Request) => Promise<Response>): {
   class ScopedRequest extends Request {
     constructor(input: string | Request, init?: RequestInit) {
       super(typeof input === "string" ? new URL(input, ORIGIN).href : input, init);
+      // Bun's server Request always reports "include"; the worker runs in a browser.
+      // Preserve the actual constructor option at this test-only Web API boundary.
+      Object.defineProperty(this, "credentials", { value: init?.credentials ?? "same-origin" });
     }
   }
 
@@ -134,6 +140,7 @@ function createScope(fetchImpl: (request: Request) => Promise<Response>): {
       opened: [...calls.opened],
       deletedCaches: [...calls.deletedCaches],
       precached: [...precached.keys()],
+      precacheCredentials: [...calls.precacheCredentials],
     };
   }
 
@@ -156,6 +163,25 @@ async function navigate(
 }
 
 describe("kebijakan fetch service worker", () => {
+  test("offline fallback is installed without a session or authenticated layout", async () => {
+    const scope = createScope(networkUp);
+    const installed = await scope.dispatch("install", {});
+    expect(installed.precached).toEqual(["/offline"]);
+    expect(installed.precacheCredentials).toEqual(["omit"]);
+  });
+
+  test("POST navigation is never handled, cached or retried by the worker", async () => {
+    let calls = 0;
+    const scope = createScope(async (): Promise<Response> => {
+      calls += 1;
+      return new Response("unexpected");
+    });
+    const result = await scope.dispatch("fetch", {
+      request: new Request(`${ORIGIN}/ledger`, { method: "POST", mode: "navigate" }),
+    });
+    expect(result.respondWith).toEqual([]);
+    expect(calls).toBe(0);
+  });
   test("navigasi dokumen biasa diteruskan ke jaringan, bukan dijawab dari cache", async () => {
     const scope = await navigate(`${ORIGIN}/ledger`);
 
@@ -205,7 +231,7 @@ describe("kebijakan fetch service worker", () => {
     const scope = createScope(networkUp);
     const afterActivate = await scope.dispatch("activate", {});
 
-    expect(afterActivate.deletedCaches).toEqual(["atria-shell-v0"]);
+    expect(afterActivate.deletedCaches).toEqual(["atria-shell-v0", "atria-shell-v1"]);
   });
 });
 

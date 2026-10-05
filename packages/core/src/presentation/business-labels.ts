@@ -51,6 +51,7 @@ const BUSINESS_LABELS: Readonly<Record<string, string>> = {
   WATCH: "Perlu dipantau",
   AT_RISK: "Berisiko",
   OPENING_BALANCE: "Saldo awal",
+  OPENING_BALANCE_REVERSAL: "Pembalikan saldo awal",
   OWNER_CAPITAL: "Setoran modal owner",
   BANK_FEE: "Biaya administrasi bank",
   CORRECTION: "Koreksi saldo",
@@ -59,6 +60,7 @@ const BUSINESS_LABELS: Readonly<Record<string, string>> = {
   CLIENT_PAYMENT: "Pembayaran klien",
   VENDOR_PAYMENT: "Pembayaran vendor",
   PROJECT_COST: "Pengeluaran proyek",
+  FIELD_CLAIM: "Klaim lapangan",
   PETTY_CASH_REFILL: "Pengisian kas kecil",
   BANK_TRANSFER: "Transfer antar rekening",
   CASH_TRANSACTION: "Transaksi kas",
@@ -75,6 +77,8 @@ const BUSINESS_LABELS: Readonly<Record<string, string>> = {
   STOCK_OUT: "Stok keluar",
   IN: "Masuk",
   OUT: "Keluar",
+  INFLOW: "Kas masuk",
+  OUTFLOW: "Kas keluar",
   TRANSFER_IN: "Transfer masuk",
   TRANSFER_OUT: "Transfer keluar",
   EMERGENCY_ADJUSTMENT: "Penyesuaian darurat",
@@ -115,7 +119,10 @@ export type BusinessLabelDomain = "FINANCE" | "INVENTORY";
 
 const DOMAIN_LABELS: Readonly<Record<BusinessLabelDomain, Readonly<Record<string, string>>>> = {
   FINANCE: { OPENING_BALANCE: "Saldo awal rekening" },
-  INVENTORY: { OPENING_BALANCE: "Saldo awal stok" },
+  INVENTORY: {
+    OPENING_BALANCE: "Saldo awal stok",
+    OPENING_BALANCE_REVERSAL: "Pembalikan saldo awal stok",
+  },
 };
 
 function fallbackLabel(value: string): string {

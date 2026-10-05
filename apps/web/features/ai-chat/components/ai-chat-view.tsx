@@ -2,14 +2,13 @@
 
 import { getAiConversation, getLatestAiConversation } from "@/app/actions/ai/chat-history";
 import { AppIcon, Button } from "@/components/ui";
-import {
-  transitionEaseSmooth,
-  transitionSpringBouncy,
-} from "@/lib/utils/motion";
+import { transitionEaseSmooth, transitionSpringBouncy } from "@/lib/utils/motion";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import * as React from "react";
 import { toast } from "sonner";
 import { uploadToImageKit } from "@/lib/media/upload-to-imagekit";
@@ -52,6 +51,7 @@ const FALLBACK_FOOTER_HEIGHT_PX = 48;
 
 export function AiChatView(): React.JSX.Element {
   const router = useRouter();
+  const desktop = useWorkspacePresentation() === "desktop";
   const reduceMotion = useReducedMotion();
   const [draft, setDraft] = React.useState("");
   const [attachments, setAttachments] = React.useState<readonly ChatAttachment[]>([]);
@@ -454,14 +454,18 @@ export function AiChatView(): React.JSX.Element {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="relative flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-background"
+      className={
+        desktop
+          ? "relative mx-auto flex h-[calc(100dvh-12rem)] min-h-120 w-full max-w-240 flex-col overflow-hidden rounded-owner bg-surface-container-lowest shadow-surface"
+          : "relative flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-background"
+      }
     >
       <ChatDropOverlay isDragging={isDraggingOver} />
       {/* Main Scrollable Content Area */}
       <div
         ref={viewportRef}
         className="no-scrollbar flex-1 overflow-y-auto overscroll-contain px-margin-mobile"
-        style={{ paddingTop: TOP_BAR_INSET_PX, paddingBottom: bottomInset }}
+        style={{ paddingTop: desktop ? 16 : TOP_BAR_INSET_PX, paddingBottom: bottomInset }}
       >
         <div ref={contentRef} className="space-y-lg">
           <AnimatePresence mode="wait" initial={false}>
@@ -592,7 +596,11 @@ export function AiChatView(): React.JSX.Element {
         <div
           aria-hidden="true"
           style={{ height: bottomInset }}
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md bg-linear-to-t from-background via-background/90 to-transparent"
+          className={
+            desktop
+              ? "pointer-events-none absolute inset-x-0 bottom-0 z-30 mx-auto w-full bg-linear-to-t from-background via-background/90 to-transparent"
+              : "pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md bg-linear-to-t from-background via-background/90 to-transparent"
+          }
         />
       )}
 
@@ -600,7 +608,11 @@ export function AiChatView(): React.JSX.Element {
       {!showPicker && (
         <footer
           ref={footerRef}
-          className="pointer-events-none fixed inset-x-0 bottom-3 z-40 mx-auto w-full max-w-md px-margin-mobile pb-[env(safe-area-inset-bottom)]"
+          className={
+            desktop
+              ? "pointer-events-none absolute inset-x-0 bottom-3 z-40 mx-auto w-full px-margin-mobile pb-[env(safe-area-inset-bottom)]"
+              : "pointer-events-none fixed inset-x-0 bottom-3 z-40 mx-auto w-full max-w-md px-margin-mobile pb-[env(safe-area-inset-bottom)]"
+          }
         >
           <div className="pointer-events-auto w-full">
             {activeInputRequest && !isBusy ? (

@@ -1,9 +1,12 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { fieldClaimStatusLabel } from "@/features/expenses/utils/expense-list-utils";
 
 import {
   AppIcon,
+  DesktopTable,
   EmptyState,
   GroupedSurface,
   MoneyValue,
@@ -63,6 +66,8 @@ export function FieldClaimsPanel({
   onDisburse,
   onOpenReceipt,
 }: FieldClaimsPanelProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [visibleLimit, setVisibleLimit] = React.useState(20);
   const {
     containerRef: resultsRef,
@@ -71,6 +76,7 @@ export function FieldClaimsPanel({
   } = usePreservedScrollHeight(filter);
   const hasNoRows = filter === "ALL" ? initialCosts.length === 0 : filteredCosts.length === 0;
   const visibleCosts = filteredCosts.slice(0, visibleLimit);
+  const selectedCost = filteredCosts.find((cost) => cost.id === selectedId) ?? visibleCosts[0];
 
   function changeFilter(value: FilterStatus): void {
     preserveScrollPosition();
@@ -124,21 +130,89 @@ export function FieldClaimsPanel({
               count={filteredCosts.length}
               countLabel="Pengajuan"
             />
-            <GroupedSurface>
-              <div className="divide-y divide-black/5.5">
-                {visibleCosts.map((cost) => (
-                  <FieldClaimRow
-                    key={cost.id}
-                    cost={cost}
-                    isOwnerOrFinance={isOwnerOrFinance}
-                    pending={pending}
-                    onVerify={onVerify}
-                    onDisburse={onDisburse}
-                    onOpenReceipt={onOpenReceipt}
-                  />
-                ))}
+            {desktop ? (
+              <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.65fr)]">
+                <DesktopTable
+                  ariaLabel="Pengeluaran lapangan"
+                  rows={visibleCosts}
+                  rowKey={(cost) => cost.id}
+                  selectedRowKey={selectedCost?.id}
+                  onRowAction={(cost) => setSelectedId(cost.id)}
+                  columns={[
+                    {
+                      key: "description",
+                      label: "Pengeluaran",
+                      render: (cost) => (
+                        <div>
+                          <p className="font-semibold">{cost.description}</p>
+                          <p className="text-meta text-on-surface-variant">
+                            {cost.project?.name ?? "Proyek"} · {cost.requestedBy?.name ?? "—"}
+                          </p>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: "amount",
+                      label: "Nilai",
+                      align: "end",
+                      render: (cost) => (
+                        <MoneyValue amount={Number(cost.amount)} variant="compact" size="sm" />
+                      ),
+                    },
+                    {
+                      key: "status",
+                      label: "Status",
+                      render: (cost) => (
+                        <span>
+                          {fieldClaimStatusLabel(cost.status)}
+                          {cost.budgetOverrun ? (
+                            <span className="block text-meta text-error">Melebihi budget</span>
+                          ) : null}
+                        </span>
+                      ),
+                    },
+                  ]}
+                />
+                {selectedCost ? (
+                  <section
+                    aria-label="Detail pengeluaran"
+                    className="min-w-0 space-y-2 xl:sticky xl:top-24"
+                  >
+                    <SectionHeader title="Detail pengeluaran" />
+                    <GroupedSurface>
+                      <FieldClaimRow
+                        cost={selectedCost}
+                        isOwnerOrFinance={isOwnerOrFinance}
+                        pending={pending}
+                        onVerify={onVerify}
+                        onDisburse={onDisburse}
+                        onOpenReceipt={onOpenReceipt}
+                      />
+                    </GroupedSurface>
+                    <p className="px-3 text-meta text-on-surface-variant">
+                      Buka pengeluaran untuk meninjau rincian dan bukti. Verifikasi dan pencairan
+                      mengikuti otorisasi yang sama.
+                    </p>
+                  </section>
+                ) : null}
               </div>
-            </GroupedSurface>
+            ) : (
+              <GroupedSurface>
+                <div className="divide-y divide-black/5.5">
+                  {visibleCosts.map((cost) => (
+                    <FieldClaimRow
+                      key={cost.id}
+                      cost={cost}
+                      isOwnerOrFinance={isOwnerOrFinance}
+                      pending={pending}
+                      onVerify={onVerify}
+                      onDisburse={onDisburse}
+                      onOpenReceipt={onOpenReceipt}
+                    />
+                  ))}
+                </div>
+              </GroupedSurface>
+            )}
 
             {filteredCosts.length > visibleLimit ? (
               <button

@@ -1,8 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { StyleProp, TextStyle, ViewStyle } from "react-native";
 
 import { formatIdr, formatShortIdr } from "@atria/core/utils/money";
 
+import { fittedMoneyFontSize } from "./money-value-sizing";
 import { theme } from "@/theme";
 
 export type MoneyValueVariant = "compact" | "compactWithFull" | "fullDynamic";
@@ -10,7 +12,7 @@ export type MoneyValueTone =
   "default" | "primary" | "muted" | "warning" | "danger" | "success" | "inverse" | "inherit";
 export type MoneyValueSize = "fit" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "hero";
 
-const sizeStyle: Record<MoneyValueSize, TextStyle> = {
+const sizeStyle: Record<MoneyValueSize, { fontSize: number; lineHeight: number }> = {
   fit: { fontSize: 12, lineHeight: 16 },
   xs: { fontSize: 10, lineHeight: 12 },
   sm: { fontSize: 12, lineHeight: 16 },
@@ -62,19 +64,74 @@ export function MoneyValue({
   readonly tone?: MoneyValueTone;
   readonly variant: MoneyValueVariant;
 }): React.JSX.Element {
+  const { fontScale } = useWindowDimensions();
+  const [width, setWidth] = useState(0);
+  const [natural, setNatural] = useState<{ key: string; width: number } | null>(null);
   const compactValue = `${prefix}${formatShortIdr(amount)}`;
   const fullValue = `${prefix}${formatIdr(amount)}`;
   const displayedValue = variant === "fullDynamic" ? fullValue : compactValue;
   const textAlign = align;
+  const resolvedStyle = StyleSheet.flatten<TextStyle>([styles.primary, sizeStyle[size], textStyle]);
+  const baseFont = resolvedStyle.fontSize ?? sizeStyle[size].fontSize;
+  const measureKey = JSON.stringify([
+    displayedValue,
+    baseFont,
+    fontScale,
+    resolvedStyle.fontFamily,
+    resolvedStyle.fontWeight,
+    resolvedStyle.letterSpacing,
+    resolvedStyle.fontVariant,
+  ]);
+  const fittedFont = fittedMoneyFontSize({
+    fontSize: baseFont,
+    availableWidth: width,
+    naturalWidth: natural?.key === measureKey ? natural.width : undefined,
+    minimumScale: minimumScale[size],
+  });
 
   return (
-    <View style={[styles.container, style]} accessibilityLabel={fullValue}>
+    <View
+      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+      style={[styles.container, style]}
+      accessibilityLabel={fullValue}
+    >
+      {/* Measure at the requested font with natural line height. iOS auto-fit
+          can shrink to 4pt when a fixed paragraph height exceeds its bounds. */}
+      <Text
+        key={measureKey}
+        accessible={false}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        numberOfLines={1}
+        onTextLayout={(event) => {
+          const line = event.nativeEvent.lines[0];
+          if (line)
+            setNatural((current) =>
+              current?.key === measureKey && Math.abs(current.width - line.width) < 0.1
+                ? current
+                : { key: measureKey, width: line.width },
+            );
+        }}
+        style={[
+          styles.primary,
+          { position: "absolute", opacity: 0, width: 10000, fontSize: baseFont },
+          textStyle,
+          { lineHeight: undefined },
+        ]}
+      >
+        {displayedValue}
+      </Text>
       <Text
         selectable
-        adjustsFontSizeToFit
-        minimumFontScale={minimumScale[size]}
         numberOfLines={1}
-        style={[styles.primary, sizeStyle[size], { color: toneColor[tone], textAlign }, textStyle]}
+        style={[
+          styles.primary,
+          { minHeight: sizeStyle[size].lineHeight },
+          { color: toneColor[tone], textAlign },
+          textStyle,
+          { fontSize: fittedFont, lineHeight: undefined },
+        ]}
       >
         {displayedValue}
       </Text>
@@ -100,7 +157,7 @@ export function MoneyValue({
 }
 
 const styles = StyleSheet.create({
-  container: { minWidth: 0 },
+  container: { minWidth: 0, overflow: "hidden" },
   primary: {
     fontFamily: theme.fonts.extrabold,
     fontVariant: ["tabular-nums"],

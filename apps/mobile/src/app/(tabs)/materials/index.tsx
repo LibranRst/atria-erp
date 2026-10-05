@@ -1,12 +1,11 @@
-import { ProductPlaceholderScreen } from "@/components/shell/product-placeholder-screen";
+import { WebBridgeScreen } from "@/components/shell/web-bridge-screen";
 
 export default function MaterialsScreen(): React.JSX.Element {
   return (
-    <ProductPlaceholderScreen
-      description="Lihat kebutuhan material bersama stok, reservasi, lokasi, dan kaitannya dengan budget Material."
-      iconName="inventory_2"
-      rows={["Kebutuhan proyek", "Stok tersedia", "Pergerakan material"]}
-      title="Kontrol material"
+    <WebBridgeScreen
+      title="Material & Stok"
+      description="Kebutuhan, stok, reservasi, dan pergerakan material masih dibuka di web selama porting aplikasi."
+      destination="/materials"
     />
   );
 }

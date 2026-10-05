@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import React from "react";
 import {
   ActivityDetailChevron,
@@ -81,6 +81,7 @@ export function OverviewPriorityList({
         const isCritical = action.severity === "CRITICAL";
         return (
           <motion.div
+            tabIndex={-1}
             key={action.id}
             whileTap={reduceMotion ? undefined : dashboardPressScale}
             transition={transitionSpringSnappy}

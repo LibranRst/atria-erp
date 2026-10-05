@@ -134,4 +134,22 @@ describe("segmented tabs", () => {
     expect(html).toContain('title="Selesaikan perencanaan dahulu."');
     expect(html).not.toContain('disabled=""');
   });
+
+  test("uses active scale-up without shadow-raised inside sunken segmented track", () => {
+    const html = renderToStaticMarkup(
+      <SegmentedTabs
+        value="overview"
+        onChange={() => undefined}
+        ariaLabel="Track tabs"
+        options={[
+          { value: "overview", label: "Ringkasan" },
+          { value: "budget", label: "Budget" },
+        ]}
+      />,
+    );
+
+    expect(html).toContain("active:scale-[1.05]");
+    expect(html).toContain("active:z-10");
+    expect(html).not.toContain("active:shadow-raised");
+  });
 });

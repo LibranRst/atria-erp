@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { DesktopSegmentedTabs } from "../desktop/desktop-tabs";
 import type { JSX, ReactNode } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -17,7 +19,7 @@ export type SegmentedTabOption<TValue extends string> = {
   readonly unavailableReason?: string;
 };
 
-type SegmentedTabsProps<TValue extends string> = {
+export type SegmentedTabsProps<TValue extends string> = {
   readonly value: TValue;
   readonly options: readonly SegmentedTabOption<TValue>[];
   readonly onChange: (value: TValue) => void;
@@ -40,7 +42,7 @@ export function shouldContainSegmentedTabWheel(deltaY: number): boolean {
   return deltaY !== 0;
 }
 
-export function SegmentedTabs<TValue extends string>({
+function MobileSegmentedTabs<TValue extends string>({
   value,
   options,
   onChange,
@@ -152,7 +154,7 @@ export function SegmentedTabs<TValue extends string>({
           }
           onChange(option.value);
         }}
-        className={`relative flex items-center justify-center rounded-full font-bold outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40 ${option.unavailable ? "opacity-45" : ""} ${compact ? "h-10 min-h-10 gap-1 px-3 py-1.5 text-support after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']" : "min-h-12 gap-1.5 py-2 text-xs"} ${animated ? "transition-colors active:scale-[0.98]" : ""} ${
+        className={`relative flex items-center justify-center rounded-full font-bold outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40 ${option.unavailable ? "opacity-45" : ""} ${compact ? "h-10 min-h-10 gap-1 px-3 py-1.5 text-support after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']" : "min-h-12 gap-1.5 py-2 text-xs"} ${animated ? "transition active:z-10 active:scale-[1.05]" : ""} ${
           scrollable
             ? fillAvailableSpace
               ? compact
@@ -231,5 +233,15 @@ export function SegmentedTabs<TValue extends string>({
         {tabButtons}
       </div>
     </div>
+  );
+}
+
+export function SegmentedTabs<TValue extends string>(
+  props: SegmentedTabsProps<TValue>,
+): JSX.Element {
+  return useWorkspacePresentation() === "desktop" ? (
+    <DesktopSegmentedTabs {...props} />
+  ) : (
+    <MobileSegmentedTabs {...props} />
   );
 }

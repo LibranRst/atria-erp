@@ -1,4 +1,9 @@
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
+import { z } from "zod";
+import {
+  privateAttachmentResultSchema,
+  type PrivateAttachmentPurpose,
+} from "@atria/core/media/private-attachment";
 
 /**
  * Satu-satunya jalur unggah berkas dari peramban ke ImageKit.
@@ -25,10 +30,7 @@ const IMAGEKIT_UPLOAD_ENDPOINT = "https://upload.imagekit.io/api/v1/files/upload
 const IMAGEKIT_PUBLIC_KEY_FALLBACK = "public_PRvr9hXwFetaQx4ZejdGwJ1Ue8=";
 
 export type ImageKitFolder =
-  | "/field-receipts"
-  | "/project-covers"
-  | "/user-avatars"
-  | "/chat-attachments";
+  "/field-receipts" | "/project-covers" | "/user-avatars" | "/chat-attachments";
 
 export type ImageKitUploadResult = {
   readonly fileId: string;
@@ -54,6 +56,8 @@ export type UploadToImageKitOptions = {
   readonly fileNamePrefix: string;
   /** Objek yang disebut di pesan galat, mis. "nota" → "Gagal mengunggah nota…". */
   readonly subject: string;
+  readonly projectId?: string;
+  readonly purpose?: PrivateAttachmentPurpose;
 };
 
 function getPublicKey(): string {
@@ -68,7 +72,8 @@ function resolveMimeType(fileName: string, providedMime?: string): string {
   }
   const lower = fileName.toLowerCase();
   if (lower.endsWith(".csv")) return "text/csv";
-  if (lower.endsWith(".xlsx")) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  if (lower.endsWith(".xlsx"))
+    return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   if (lower.endsWith(".xls")) return "application/vnd.ms-excel";
   if (lower.endsWith(".pdf")) return "application/pdf";
   if (lower.endsWith(".json")) return "application/json";
@@ -88,7 +93,48 @@ export async function uploadToImageKit({
   folder,
   fileNamePrefix,
   subject,
+  projectId,
+  purpose,
 }: UploadToImageKitOptions): Promise<ImageKitUploadResult> {
+  const privatePurpose =
+    purpose ??
+    (folder === "/field-receipts" ? "expense" : folder === "/chat-attachments" ? "ai_chat" : null);
+  if (privatePurpose) {
+    const ticketResponse = await fetch("/api/media/upload-ticket", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        purpose: privatePurpose,
+        projectId,
+        fileName: file.name,
+        size: file.size,
+      }),
+    });
+    const ticketBody: unknown = await ticketResponse.json();
+    const ticket = z
+      .object({ ticket: z.string(), uploadUrl: z.string().url() })
+      .safeParse(ticketBody);
+    if (!ticketResponse.ok || !ticket.success)
+      throw new Error(
+        z.object({ error: z.string() }).safeParse(ticketBody).data?.error ??
+          `Gagal menyiapkan unggah ${subject}.`,
+      );
+    const body = new FormData();
+    body.set("file", file);
+    const uploaded = await fetch(ticket.data.uploadUrl, {
+      method: "POST",
+      headers: { "x-atria-upload-ticket": ticket.data.ticket },
+      body,
+      signal: AbortSignal.timeout(60_000),
+    });
+    const result: unknown = await uploaded.json();
+    if (!uploaded.ok)
+      throw new Error(
+        z.object({ error: z.string() }).safeParse(result).data?.error ??
+          `Gagal mengunggah ${subject}.`,
+      );
+    return privateAttachmentResultSchema.parse(result);
+  }
   const signature = await signImagekit();
   if (!signature.success) {
     throw new Error(signature.error.message || `Gagal melakukan otentikasi unggah ${subject}.`);

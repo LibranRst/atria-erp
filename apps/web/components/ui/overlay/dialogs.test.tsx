@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { SuccessDialog, SUCCESS_DIALOG_FACT_LIMIT } from "./dialogs";
 
 const framePath = new URL("./dialog-frame.tsx", import.meta.url);
+const viewportPath = new URL("./overlay-viewport.ts", import.meta.url);
 const dialogsPath = new URL("./dialogs.tsx", import.meta.url);
 const sheetsPath = new URL("./semantic-sheets.tsx", import.meta.url);
 const optionListPath = new URL("../form/dialog-option-list.tsx", import.meta.url);
@@ -12,9 +13,13 @@ const mediaPath = new URL("./media-preview-dialog.tsx", import.meta.url);
 
 describe("contextual dialog taxonomy", () => {
   test("centralizes focus, visual viewport, layering, and reduced-motion behavior", async () => {
-    const source = await Bun.file(framePath).text();
+    const [source, viewport] = await Promise.all([
+      Bun.file(framePath).text(),
+      Bun.file(viewportPath).text(),
+    ]);
 
-    expect(source).toContain("window.visualViewport?.height");
+    expect(source).toContain("observeOverlayViewport");
+    expect(viewport).toContain("window.visualViewport");
     expect(source).toContain('window.addEventListener("keydown"');
     expect(source).toContain("<OverlayLayerProvider anchored={zIndex + 2}>");
     expect(source).toContain('role?: "dialog" | "alertdialog"');

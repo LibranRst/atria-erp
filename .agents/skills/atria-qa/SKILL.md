@@ -16,7 +16,9 @@ Run these commands before declaring any feature or bugfix complete:
 ### A. TypeScript Type Check
 Ensure strict type safety across all files (no `any`, valid server action returns):
 ```bash
-bun x tsc --noEmit
+bun --filter @atria/api typecheck
+bun --filter @atria/web typecheck
+bun --filter @atria/mobile typecheck
 ```
 
 ### B. ESLint & Tailwind Canonical Classes Check
@@ -68,8 +70,8 @@ bun run storybook
 
 ## 4. Pre-Release Acceptance Checklist
 
-- [ ] `pnpm tsc --noEmit` passes with 0 errors.
+- [ ] workspace typechecks passes with 0 errors.
 - [ ] `bun run lint` passes with 0 errors.
 - [ ] `bun run db:demo:verify` confirms financial and inventory invariants.
-- [ ] Tested on 375px mobile viewport dimensions.
+- [ ] For UI changes, verify the mobile/desktop viewport matrix required by AGENTS.md.
 - [ ] No raw enum strings or English technical terms exposed in Indonesian user-facing views.

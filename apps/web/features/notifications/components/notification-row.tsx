@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { AppIcon, Badge } from "@/components/ui";
@@ -92,7 +93,7 @@ export function NotificationRow({ item, onItemClick }: NotificationRowProps): Re
 
           <time
             dateTime={item.createdAt}
-            className="shrink-0 text-meta tabular-nums text-on-surface-variant/75"
+            className="shrink-0 text-meta text-on-surface-variant/75 tabular-nums"
           >
             {formatRelativeTime(item.createdAt)}
           </time>

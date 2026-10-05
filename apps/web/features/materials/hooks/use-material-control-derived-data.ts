@@ -49,6 +49,7 @@ export function useMaterialControlDerivedData({
   rapItemId,
 }: UseMaterialControlDerivedDataInput): {
   readonly locations: readonly MaterialControlLocation[];
+  readonly inventoryLocations: readonly MaterialControlLocation[];
   readonly materials: readonly MaterialControlMaterial[];
   readonly grouped: readonly GroupedMaterial[];
   readonly visibleMaterials: readonly GroupedMaterial[];
@@ -78,6 +79,16 @@ export function useMaterialControlDerivedData({
         ).values(),
       ),
     [data.inventory],
+  );
+
+  // Read filters also show configured warehouses before their first material.
+  // Keep inventory-backed locations for existing stock/history and old API payloads.
+  const inventoryLocations = useMemo(
+    () =>
+      Array.from(
+        new Map([...locations, ...(data.locations ?? [])].map((row) => [row.id, row])).values(),
+      ),
+    [data.locations, locations],
   );
 
   const materials = useMemo(
@@ -230,6 +241,7 @@ export function useMaterialControlDerivedData({
 
   return {
     locations,
+    inventoryLocations,
     materials,
     grouped,
     visibleMaterials,

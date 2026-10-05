@@ -1,8 +1,10 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { toast } from "sonner";
 
 import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
@@ -11,6 +13,8 @@ import {
   CompactFormDialog,
   ConfirmationDialog,
   DetailSection,
+  DesktopTable,
+  Button,
   ExclusiveSearchFilterBar,
   FormField,
   MediaPreviewDialog,
@@ -40,6 +44,7 @@ import { getErrorMessage } from "@atria/core/utils/error-message";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import {
   ApprovalDecisionSubject,
+  ApprovalDetailContent,
   ApprovalDetailSheet,
   ApprovalQueueRow,
   type ApprovalDecision,
@@ -62,6 +67,7 @@ export function ApprovalList({
   canEmergencyOverride = true,
   referenceDateIso,
 }: ApprovalListProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const router = useRouter();
   const [approvals, setApprovals] = React.useState<ApprovalItem[]>([...initialApprovals]);
   const [query, setQuery] = React.useState("");
@@ -422,6 +428,82 @@ export function ApprovalList({
               onAction={resetFilters}
             />
           </DetailSection>
+        ) : desktop ? (
+          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.7fr)]">
+            <DesktopTable
+              ariaLabel="Antrean persetujuan"
+              rows={queuePage.groups.flatMap((group) => group.items)}
+              rowKey={(item) => item.id}
+              selectedRowKey={selected?.id}
+              onRowAction={(item) => {
+                if (!pending) setSelected(item);
+              }}
+              columns={[
+                {
+                  key: "subject",
+                  label: "Pengajuan",
+                  render: (item) => (
+                    <div>
+                      <p className="font-semibold">{item.description}</p>
+                      <p className="text-meta text-on-surface-variant">
+                        {item.projectName} · {item.requestedBy}
+                      </p>
+                    </div>
+                  ),
+                },
+                {
+                  key: "amount",
+                  label: "Nilai",
+                  align: "end",
+                  render: (item) => <MoneyValue amount={item.amount} variant="compact" size="sm" />,
+                },
+                {
+                  key: "risk",
+                  label: "Prioritas",
+                  render: (item) => (
+                    <span
+                      className={
+                        approvalIsCritical(item) ? "text-error" : "text-on-surface-variant"
+                      }
+                    >
+                      {item.priorityReason}
+                    </span>
+                  ),
+                },
+              ]}
+            />
+            <section
+              aria-label="Detail persetujuan"
+              className="min-w-0 space-y-4 xl:sticky xl:top-24"
+            >
+              {selected && filtered.some((item) => item.id === selected.id) ? (
+                <>
+                  <ApprovalDetailContent item={selected} onOpenReceipt={setActiveImage} />
+                  <div className="flex gap-3">
+                    <Button
+                      variant="criticalQuiet"
+                      disabled={pending}
+                      onClick={() => requestDecision(selected, "REJECTED")}
+                    >
+                      Tolak
+                    </Button>
+                    <Button
+                      disabled={pending}
+                      onClick={() => requestDecision(selected, "APPROVED")}
+                    >
+                      Setujui
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <PageState
+                  kind="first-use"
+                  title="Pilih pengajuan"
+                  description="Tinjau bukti dan dampak budget sebelum mengambil keputusan."
+                />
+              )}
+            </section>
+          </div>
         ) : (
           queuePage.groups.map((group) => (
             <DetailSection
@@ -457,7 +539,7 @@ export function ApprovalList({
       </div>
 
       <ApprovalDetailSheet
-        item={selected}
+        item={desktop ? null : selected}
         pending={pending}
         onClose={() => {
           if (!pending) setSelected(null);

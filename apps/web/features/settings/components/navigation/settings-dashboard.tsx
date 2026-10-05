@@ -1,6 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import {
+  useWorkspacePresentation,
+  useWorkspaceHref,
+} from "@/lib/navigation/workspace-presentation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { useCan } from "@/components/auth/permissions-provider";
 import { ApprovalControlManager } from "../budget/approval-control-manager";
 import type { ApprovalThresholdSettings } from "@/server/usecases/settings/approval-thresholds";
@@ -64,6 +69,8 @@ export function SettingsDashboard({
   openingBatches,
   approvalThresholds,
 }: SettingsDashboardProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const workspaceHref = useWorkspaceHref();
   const router = useRouter();
   const can = useCan();
   const tabParam = useBrowserUrlSearchParam("tab", initialTab === "financial" ? null : initialTab);
@@ -71,7 +78,7 @@ export function SettingsDashboard({
   const activeTab = parseSettingsTab(tabParam);
 
   function changeTab(nextTab: SettingsTab): void {
-    updateBrowserUrl(settingsTabUrl(nextTab), "replace");
+    updateBrowserUrl(workspaceHref(settingsTabUrl(nextTab)), "replace");
   }
 
   let content: React.JSX.Element;
@@ -115,7 +122,13 @@ export function SettingsDashboard({
     );
   } else {
     content = (
-      <div className="space-y-sm">
+      <div
+        className={
+          desktop
+            ? "grid items-start gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]"
+            : "space-y-sm"
+        }
+      >
         {overview.budgetAllocationSetting ? (
           <BudgetSettingsManager
             initialSetting={overview.budgetAllocationSetting}

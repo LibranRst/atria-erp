@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import * as React from "react";
 
 import { confirmAiRoleChangeProposal } from "@/app/actions/ai/confirm-role-proposal";

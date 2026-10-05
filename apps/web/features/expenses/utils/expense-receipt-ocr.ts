@@ -22,15 +22,18 @@ export type ExpenseReceiptOcrResult = {
 export async function uploadAndParseExpenseReceipt({
   file,
   budgetCategories,
+  projectId,
 }: {
   readonly file: File;
   readonly budgetCategories: readonly BudgetCategory[];
+  readonly projectId: string;
 }): Promise<ExpenseReceiptOcrResult> {
   const attachment = await uploadToImageKit({
     file,
     folder: "/field-receipts",
     fileNamePrefix: "receipt",
     subject: "nota",
+    projectId,
   });
   const imageUrl = attachment.url;
   const ocrRes = await processReceipt(imageUrl);

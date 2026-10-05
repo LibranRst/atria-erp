@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
-import { AppIcon, Badge, SegmentedTabs } from "@/components/ui";
+import { AppIcon, Badge, SegmentedTabs, DesktopTable, MoneyValue } from "@/components/ui";
 import { NativePanel } from "../shared/rap-rab-primitives";
 import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@atria/core/utils/money";
 import type {
@@ -42,6 +43,7 @@ export function InternalPlanOverview({
   readonly setRapDetailItemId: (id: string | null) => void;
   readonly setPackageDetailItemId: (id: string | null) => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   return (
     <>
       <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
@@ -106,51 +108,152 @@ export function InternalPlanOverview({
               : "Paket Subcon"
         }
       >
-        <div className="divide-y divide-outline-variant/25 overflow-hidden rounded-inset bg-surface-container-low">
-          {rapOverviewFilter === "MATERIAL"
-            ? rap.items.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setRapDetailItemId(item.id)}
-                  className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold">{item.name}</span>
-                    <span className="block text-meta text-on-surface-variant">
-                      {item.area} - {item.totalQuantity} {item.unit}
+        {desktop ? (
+          rapOverviewFilter === "MATERIAL" ? (
+            <DesktopTable
+              ariaLabel="RAP material"
+              rows={rap.items}
+              rowKey={(item) => item.id}
+              onRowAction={(item) => setRapDetailItemId(item.id)}
+              columns={[
+                {
+                  key: "material",
+                  label: "Material",
+                  render: (item) => (
+                    <div>
+                      <p className="font-semibold">{item.name}</p>
+                      <p className="text-meta text-on-surface-variant">{item.area}</p>
+                    </div>
+                  ),
+                },
+                {
+                  key: "qty",
+                  label: "Kebutuhan",
+                  align: "end",
+                  render: (item) => `${item.totalQuantity} ${item.unit}`,
+                },
+                {
+                  key: "stock",
+                  label: "Tersedia / perlu beli",
+                  align: "end",
+                  render: (item) => `${item.availableStock} / ${item.needToBuy} ${item.unit}`,
+                },
+                {
+                  key: "plan",
+                  label: "Rencana biaya",
+                  align: "end",
+                  render: (item) => (
+                    <MoneyValue
+                      amount={Number(item.estimatedTotalCost)}
+                      variant="compact"
+                      size="sm"
+                    />
+                  ),
+                },
+                {
+                  key: "actual",
+                  label: "Realisasi material",
+                  align: "end",
+                  render: (item) => (
+                    <MoneyValue amount={item.actualMaterialCost} variant="compact" size="sm" />
+                  ),
+                },
+                {
+                  key: "status",
+                  label: "Kondisi",
+                  render: (item) => formatBusinessLabel(item.status),
+                },
+              ]}
+            />
+          ) : (
+            <DesktopTable
+              ariaLabel={rapOverviewFilter === "TUKANG" ? "Paket Tukang" : "Paket Subcon"}
+              rows={rapOverviewFilter === "TUKANG" ? tukangPlanItems : subconPlanItems}
+              rowKey={(item) => item.id}
+              onRowAction={(item) => setPackageDetailItemId(item.id)}
+              columns={[
+                {
+                  key: "package",
+                  label: "Paket",
+                  render: (item) => (
+                    <div>
+                      <p className="font-semibold">{item.name}</p>
+                      <p className="text-meta text-on-surface-variant">{item.area}</p>
+                    </div>
+                  ),
+                },
+                {
+                  key: "vendor",
+                  label: "Vendor",
+                  render: (item) => item.vendorName ?? "Belum ditentukan",
+                },
+                {
+                  key: "cost",
+                  label: "Rencana biaya",
+                  align: "end",
+                  render: (item) => (
+                    <MoneyValue
+                      amount={Number(item.estimatedTotalCost)}
+                      variant="compact"
+                      size="sm"
+                    />
+                  ),
+                },
+                {
+                  key: "status",
+                  label: "Status",
+                  render: (item) => formatBusinessLabel(item.status),
+                },
+              ]}
+            />
+          )
+        ) : (
+          <div className="divide-y divide-outline-variant/25 overflow-hidden rounded-inset bg-surface-container-low">
+            {rapOverviewFilter === "MATERIAL"
+              ? rap.items.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setRapDetailItemId(item.id)}
+                    className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold">{item.name}</span>
+                      <span className="block text-meta text-on-surface-variant">
+                        {item.area} - {item.totalQuantity} {item.unit}
+                      </span>
                     </span>
-                  </span>
-                  <span className="financial-amount max-w-[38%] shrink-0 text-right font-mono text-meta font-bold wrap-anywhere wrap-break-word">
-                    {formatShortRp(Number(item.estimatedTotalCost))}
-                  </span>
-                </button>
-              ))
-            : (rapOverviewFilter === "TUKANG" ? tukangPlanItems : subconPlanItems).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setPackageDetailItemId(item.id)}
-                  className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold">{item.name}</span>
-                    <span className="block text-meta text-on-surface-variant">
-                      {item.area}
-                      {item.vendorName ? ` - ${item.vendorName}` : ""}
-                    </span>
-                  </span>
-                  <span className="max-w-[38%] shrink-0 text-right">
-                    <span className="financial-amount block font-mono text-meta font-bold wrap-anywhere wrap-break-word">
+                    <span className="financial-amount max-w-[38%] shrink-0 text-right font-mono text-meta font-bold wrap-anywhere wrap-break-word">
                       {formatShortRp(Number(item.estimatedTotalCost))}
                     </span>
-                    <span className="block text-eyebrow font-bold text-primary">
-                      {item.status === "ACTIVE" ? "Siap" : formatBusinessLabel(item.status)}
+                  </button>
+                ))
+              : (rapOverviewFilter === "TUKANG" ? tukangPlanItems : subconPlanItems).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setPackageDetailItemId(item.id)}
+                    className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold">{item.name}</span>
+                      <span className="block text-meta text-on-surface-variant">
+                        {item.area}
+                        {item.vendorName ? ` - ${item.vendorName}` : ""}
+                      </span>
                     </span>
-                  </span>
-                </button>
-              ))}
-        </div>
+                    <span className="max-w-[38%] shrink-0 text-right">
+                      <span className="financial-amount block font-mono text-meta font-bold wrap-anywhere wrap-break-word">
+                        {formatShortRp(Number(item.estimatedTotalCost))}
+                      </span>
+                      <span className="block text-eyebrow font-bold text-primary">
+                        {item.status === "ACTIVE" ? "Siap" : formatBusinessLabel(item.status)}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+          </div>
+        )}
       </NativePanel>
     </>
   );

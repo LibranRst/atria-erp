@@ -1,96 +1,21 @@
 "use server";
 
-import { roleNameHasPermission } from "@/lib/auth/role-access";
+import { callBackend } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/finance/field-request-auth";
 
-import { cookies } from "next/headers";
-
-import { auth } from "@/lib/auth";
-import { assertPermission, resolveRoleName, type PermissionKey } from "@/lib/auth/permissions";
-import { assertProjectAccess, assertProjectIsOperational } from "@/lib/auth/scoping";
-import type { ActionResponse } from "@atria/core/types/action-response";
-
-export type FieldRequestUser = {
-  readonly id: string;
-  readonly roleId: string;
-};
-
-type AuthResult = ActionResponse<{ readonly user: FieldRequestUser }>;
-
-async function getActionUser(): Promise<FieldRequestUser | null> {
-  const session = await auth.api.getSession({
-    headers: {
-      cookie: (await cookies()).toString(),
-    },
+export async function authorizeFieldRequestAction(
+  ...args: WebRpcArgs<"app/actions/finance/field-request-auth.authorizeFieldRequestAction">
+): Promise<WebRpcResult<"app/actions/finance/field-request-auth.authorizeFieldRequestAction">> {
+  return callBackend("app/actions/finance/field-request-auth.authorizeFieldRequestAction", args, {
+    allowCookieWrites: true,
   });
-
-  return session?.user ? { id: session.user.id, roleId: session.user.roleId } : null;
 }
 
-export async function authorizeFieldRequestAction({
-  permission,
-  projectId,
-}: {
-  readonly permission: PermissionKey;
-  readonly projectId?: string;
-}): Promise<AuthResult> {
-  const user = await getActionUser();
-  if (!user) {
-    return {
-      success: false,
-      error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." },
-    };
-  }
-
-  try {
-    await assertPermission(user, permission);
-  } catch (err) {
-    return {
-      success: false,
-      error: {
-        code: "FORBIDDEN",
-        message: err instanceof Error ? err.message : "Akses ditolak.",
-      },
-    };
-  }
-
-  if (projectId) {
-    try {
-      const userRoleName = await resolveRoleName(user.roleId);
-      await assertProjectAccess(projectId, user.id, userRoleName);
-      await assertProjectIsOperational(projectId);
-    } catch (err) {
-      return {
-        success: false,
-        error: {
-          code: "FORBIDDEN",
-          message: err instanceof Error ? err.message : "Akses ditolak.",
-        },
-      };
-    }
-  }
-
-  return { success: true, data: { user } };
-}
-
-export async function authorizeOwnerVendorApproval(): Promise<AuthResult> {
-  const user = await getActionUser();
-  if (!user) {
-    return {
-      success: false,
-      error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." },
-    };
-  }
-
-  const userRoleName = await resolveRoleName(user.roleId);
-  if (!(await roleNameHasPermission(userRoleName, "approve:cost"))) {
-    return {
-      success: false,
-      error: {
-        code: "FORBIDDEN",
-        message: "Hanya Owner yang dapat menyetujui/menolak pembayaran vendor.",
-      },
-    };
-  }
-
-  return { success: true, data: { user } };
+export async function authorizeOwnerVendorApproval(
+  ...args: WebRpcArgs<"app/actions/finance/field-request-auth.authorizeOwnerVendorApproval">
+): Promise<WebRpcResult<"app/actions/finance/field-request-auth.authorizeOwnerVendorApproval">> {
+  return callBackend("app/actions/finance/field-request-auth.authorizeOwnerVendorApproval", args, {
+    allowCookieWrites: true,
+  });
 }

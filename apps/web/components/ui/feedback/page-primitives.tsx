@@ -193,7 +193,7 @@ export function MoneyValue({
     <span
       className={`financial-amount block font-sans leading-5 font-extrabold tracking-[-0.025em] whitespace-nowrap tabular-nums ${hasTooltip ? "cursor-default touch-manipulation select-none" : ""} ${moneyCompactSizeClass(size)} ${valueClass}`}
       aria-label={hasTooltip ? fullValue : undefined}
-      title={typeof window === "undefined" ? fullValue : undefined}
+      title={fullValue}
     >
       {compactValue}
     </span>
@@ -411,7 +411,7 @@ export function PillTabs<TValue extends string>({
             aria-pressed={active}
             disabled={option.disabled}
             onClick={() => onChange(option.value)}
-            className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-support font-bold transition active:scale-95 disabled:opacity-50 ${
+            className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-support font-bold transition active:scale-[1.05] active:shadow-raised active:z-10 disabled:opacity-50 ${
               active
                 ? "bg-primary text-on-primary shadow-primary"
                 : "bg-surface-container text-on-surface-variant ring-1 ring-ring-control hover:text-on-surface"

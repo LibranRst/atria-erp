@@ -24,7 +24,10 @@ const budgetDefaultsSheetPath = new URL(
   "../components/panels/onboarding-budget-defaults-sheet.tsx",
   import.meta.url,
 );
-const loaderPath = new URL("../server/get-owner-onboarding-workspace-data.ts", import.meta.url);
+const loaderPath = new URL(
+  "../../../../api/src/backend/features/onboarding/server/get-owner-onboarding-workspace-data.ts",
+  import.meta.url,
+);
 const financeReviewPath = new URL(
   "../components/workspaces/onboarding-finance-review.tsx",
   import.meta.url,
@@ -156,7 +159,10 @@ describe("inline owner onboarding workspace", () => {
   test("renders only the step whose data payload was loaded by the server", async () => {
     const workspace = await Bun.file(quickStartWorkspacePath).text();
     const loader = await Bun.file(
-      new URL("../server/get-quick-start-workspace-data.ts", import.meta.url),
+      new URL(
+        "../../../../api/src/backend/features/onboarding/server/get-quick-start-workspace-data.ts",
+        import.meta.url,
+      ),
     ).text();
 
     expect(loader).toContain("readonly activeStep: QuickStartStepId");

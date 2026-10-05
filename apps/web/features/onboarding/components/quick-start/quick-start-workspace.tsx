@@ -1,6 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useWorkspaceHref } from "@/lib/navigation/workspace-presentation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import React from "react";
 import { toast } from "sonner";
 
@@ -30,6 +32,7 @@ export function QuickStartWorkspace({
   readonly initialData: QuickStartWorkspaceData;
 }): React.JSX.Element {
   const router = useRouter();
+  const workspaceHref = useWorkspaceHref();
   const [exitOpen, setExitOpen] = React.useState(false);
   const [created, setCreated] = React.useState<CreatedFirstProjectSummary | null>(null);
   const [pending, startTransition] = React.useTransition();
@@ -56,7 +59,7 @@ export function QuickStartWorkspace({
         return;
       }
       toast.success("Quick start dijeda. Data yang sudah disimpan tetap aman.");
-      window.location.replace("/ledger");
+      window.location.replace(workspaceHref("/ledger"));
     });
   }
 

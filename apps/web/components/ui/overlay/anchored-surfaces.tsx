@@ -2,6 +2,8 @@
 
 /* eslint-disable react-hooks/refs -- Floating UI exposes stable callback setters on a property named `refs`; no `.current` value is read during render. */
 
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { DesktopActionMenu } from "../desktop/desktop-action-menu";
 import React from "react";
 import {
   autoUpdate,
@@ -42,6 +44,12 @@ type TriggerElementProps = React.HTMLAttributes<HTMLElement> & {
 };
 
 export type AnchoredTrigger = React.ReactElement<TriggerElementProps>;
+
+/** Anchor identity belongs above the server/client presentation branches. */
+function useStableTrigger(trigger: AnchoredTrigger): AnchoredTrigger {
+  const generatedId = React.useId();
+  return React.cloneElement(trigger, { id: trigger.props.id ?? `anchored-trigger-${generatedId}` });
+}
 
 function triggerRef(trigger: AnchoredTrigger): React.Ref<HTMLElement> | undefined {
   return trigger.props.ref;
@@ -133,7 +141,7 @@ export type ActionMenuItem = {
   readonly onSelect: () => void;
 };
 
-type ActionMenuProps = {
+export type ActionMenuProps = {
   readonly trigger: AnchoredTrigger;
   readonly label: string;
   readonly items: readonly ActionMenuItem[];
@@ -141,17 +149,20 @@ type ActionMenuProps = {
 };
 
 export function ActionMenu(props: ActionMenuProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const trigger = useStableTrigger(props.trigger);
   if (props.items.length > MAX_ACTION_MENU_ITEMS) {
     throw new RangeError(`ActionMenu menerima maksimal ${MAX_ACTION_MENU_ITEMS} tindakan.`);
   }
+  if (desktop) return <DesktopActionMenu {...props} trigger={trigger} />;
   if (typeof window === "undefined") {
-    return React.cloneElement(props.trigger, {
+    return React.cloneElement(trigger, {
       "aria-haspopup": "menu",
       "aria-expanded": false,
     });
   }
 
-  return <ActionMenuClient {...props} />;
+  return <ActionMenuClient {...props} trigger={trigger} />;
 }
 
 function ActionMenuClient({
@@ -346,14 +357,15 @@ type ContextPopoverProps = {
 };
 
 export function ContextPopover(props: ContextPopoverProps): React.JSX.Element {
+  const trigger = useStableTrigger(props.trigger);
   if (typeof window === "undefined") {
-    return React.cloneElement(props.trigger, {
+    return React.cloneElement(trigger, {
       "aria-haspopup": "dialog",
       "aria-expanded": false,
     });
   }
 
-  return <ContextPopoverClient {...props} />;
+  return <ContextPopoverClient {...props} trigger={trigger} />;
 }
 
 function ContextPopoverClient({
@@ -437,8 +449,9 @@ export type TooltipProps = {
 };
 
 export function Tooltip(props: TooltipProps): React.JSX.Element {
-  if (typeof window === "undefined" || props.disabled) return props.children;
-  return <TooltipClient {...props} />;
+  const trigger = useStableTrigger(props.children);
+  if (typeof window === "undefined" || props.disabled) return trigger;
+  return <TooltipClient {...props}>{trigger}</TooltipClient>;
 }
 
 function TooltipClient({
@@ -488,15 +501,14 @@ function TooltipClient({
           const baseProps = getReferenceProps(userProps);
           if (!touch) return baseProps;
           const originalOnClick = baseProps.onClick as
-            | React.MouseEventHandler<HTMLElement>
-            | undefined;
+            React.MouseEventHandler<HTMLElement> | undefined;
           return {
             ...baseProps,
             onClick: (event: React.MouseEvent<HTMLElement>) => {
               const nativeEvent = event.nativeEvent;
               const isTouch =
                 ("pointerType" in nativeEvent && nativeEvent.pointerType === "touch") ||
-                ("touches" in nativeEvent);
+                "touches" in nativeEvent;
               if (isTouch) {
                 event.stopPropagation();
                 const target = event.currentTarget as HTMLElement | null;

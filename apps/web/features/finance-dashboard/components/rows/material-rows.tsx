@@ -1,8 +1,12 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import { motion, useReducedMotion } from "framer-motion";
+import {
+  formatDashboardMaterialQuantity,
+  hasDashboardMaterialStockContext,
+} from "@atria/core/presentation/dashboard-material-quantity";
 
 import type { DashboardMaterialIssue } from "@/features/finance-dashboard/types/dashboard-types";
 import { formatShortDate } from "@/features/finance-dashboard/utils/dashboard-formatters";
@@ -28,14 +32,8 @@ export function MaterialIssueRow({
           : item.type === "WASTE"
             ? "Material terbuang"
             : "Penyesuaian stok";
-  const quantityLabel =
-    item.type === "RAP_SHORTAGE"
-      ? `${Math.max(0, (item.requiredStock ?? 0) - item.availableStock).toLocaleString("id-ID")} ${item.unit}`
-      : item.type === "LOW_STOCK"
-        ? `${item.availableStock.toLocaleString("id-ID")} ${item.unit}`
-        : item.quantity !== null
-          ? `${item.quantity.toLocaleString("id-ID")} ${item.unit}`
-          : null;
+  const quantityLabel = formatDashboardMaterialQuantity(item, compact);
+  const stockContext = hasDashboardMaterialStockContext(item);
   const fulfillmentTarget =
     item.type === "RAP_SHORTAGE"
       ? item.requiredStock
@@ -46,6 +44,7 @@ export function MaterialIssueRow({
   if (compact) {
     return (
       <motion.div
+        tabIndex={-1}
         whileTap={reduceMotion ? undefined : dashboardRowPressScale}
         transition={transitionSpringSnappy}
       >
@@ -69,7 +68,7 @@ export function MaterialIssueRow({
                 </p>
                 {quantityLabel ? (
                   <span className="financial-amount shrink-0 font-mono text-meta font-bold text-on-surface">
-                    Kurang {quantityLabel}
+                    {quantityLabel}
                   </span>
                 ) : null}
               </div>
@@ -84,14 +83,20 @@ export function MaterialIssueRow({
 
           <div className="mt-3 flex min-h-9 items-center gap-3 rounded-inset bg-surface-container-low px-3 py-2 text-eyebrow font-semibold text-on-surface-variant">
             <span className="min-w-0 flex-1 truncate">
-              Tersedia{" "}
-              <strong className="font-mono text-on-surface">
-                {item.availableStock.toLocaleString("id-ID")} {item.unit}
-              </strong>
+              {stockContext ? (
+                <>
+                  Tersedia{" "}
+                  <strong className="font-mono text-on-surface">
+                    {item.availableStock.toLocaleString("id-ID")} {item.unit}
+                  </strong>
+                </>
+              ) : (
+                (item.projectName ?? item.locationName ?? "Tinjau")
+              )}
             </span>
             {fulfillmentTarget !== null ? (
               <span className="shrink-0">
-                Dibutuhkan{" "}
+                {item.type === "LOW_STOCK" ? "Minimum" : "Dibutuhkan"}{" "}
                 <strong className="font-mono text-on-surface">
                   {fulfillmentTarget.toLocaleString("id-ID")} {item.unit}
                 </strong>
@@ -113,6 +118,7 @@ export function MaterialIssueRow({
 
   return (
     <motion.div
+      tabIndex={-1}
       whileTap={reduceMotion ? undefined : dashboardRowPressScale}
       transition={transitionSpringSnappy}
       className="px-2.5 py-1.5"

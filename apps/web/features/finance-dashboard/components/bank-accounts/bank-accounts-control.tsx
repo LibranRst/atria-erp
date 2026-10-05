@@ -43,7 +43,9 @@ export function BankAccountsControl({
         open={control.sheet === "detail"}
         account={control.selected}
         canArchive={control.canArchive}
-        canTransfer={control.transferOptions.length > 0}
+        canTransfer={control.canMove && control.transferOptions.length > 0}
+        canMove={control.canMove}
+        canEdit={control.canEdit}
         pending={control.pending}
         onClose={control.closeSheet}
         onDebit={(account) => control.openMovement(account, "INFLOW")}
@@ -67,7 +69,6 @@ export function BankAccountsControl({
       />
 
       <MovementSheet
-        key={`movement-${control.sheet ?? "closed"}-${control.selected?.id ?? "none"}`}
         open={control.sheet === "movement" && control.selected !== null}
         account={control.selected}
         draft={control.movementDraft}
@@ -80,7 +81,6 @@ export function BankAccountsControl({
       />
 
       <TransferSheet
-        key={`transfer-${control.sheet ?? "closed"}-${control.selected?.id ?? "none"}`}
         open={control.sheet === "transfer" && control.selected !== null}
         account={control.selected}
         accounts={control.items}

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
 import type { PricingTemplateRow } from "@/app/actions/settings/pricing-library";
 import {
@@ -122,6 +123,7 @@ export function LibrarySettingsManager({
   presentation = "settings",
   onMutationComplete,
 }: Props): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [items, setItems] = React.useState(initialItems);
   const [draft, setDraft] = React.useState<Draft | null>(null);
   const [draftBaseline, setDraftBaseline] = React.useState("");
@@ -161,9 +163,7 @@ export function LibrarySettingsManager({
     const materialUnits = materials
       .map((m) => m.unit?.trim())
       .filter((u): u is string => Boolean(u));
-    const itemUnits = items
-      .map((i) => i.unit?.trim())
-      .filter((u): u is string => Boolean(u));
+    const itemUnits = items.map((i) => i.unit?.trim()).filter((u): u is string => Boolean(u));
     return Array.from(new Set([...COMMON_UNIT_OPTIONS, ...materialUnits, ...itemUnits]));
   }, [materials, items]);
   const filtered = items.filter(
@@ -298,110 +298,111 @@ export function LibrarySettingsManager({
           {message}
         </FormRiskNotice>
       )}
-      {presentation === "onboarding" ? (
-        <div className="flex min-w-0 items-center justify-between gap-3 px-1">
-          <span className="min-w-0">
-            <span className="block text-[13px] leading-5 font-bold text-on-surface">
-              Template tersimpan
+      <div hidden={desktop && Boolean(draft)} className="space-y-sm">
+        {presentation === "onboarding" ? (
+          <div className="flex min-w-0 items-center justify-between gap-3 px-1">
+            <span className="min-w-0">
+              <span className="block text-[13px] leading-5 font-bold text-on-surface">
+                Template tersimpan
+              </span>
+              <span className="block text-meta text-on-surface-variant">
+                {items.filter((row) => row.isActive).length} template aktif
+              </span>
             </span>
-            <span className="block text-meta text-on-surface-variant">
-              {items.filter((row) => row.isActive).length} template aktif
-            </span>
-          </span>
-          <button
-            type="button"
-            onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
-            disabled={!canManage}
-            className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
-          >
-            Tambah
-          </button>
-        </div>
-      ) : (
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="min-w-0 flex-1">
-            <SettingsFilterBar
-              status={status}
-              statusOptions={STATUS_FILTERS}
-              search={search}
-              filterCount={activeFilterCount}
-              searchPlaceholder="Cari template, kode, kategori"
-              searchAriaLabel="Cari template harga"
-              layoutPrefix="settings-library"
-              filterTitle="Filter template"
-              onStatusChange={setStatus}
-              onSearchChange={setSearch}
-              onEnterSearch={() => {
-                suspendedFiltersRef.current = { type, categoryId, status };
-                setType("ALL");
-                setCategoryId("ALL");
-                setStatus("ALL");
-              }}
-              onExitSearch={() => {
-                const suspended = suspendedFiltersRef.current;
-                if (!suspended) return;
-                setType(suspended.type);
-                setCategoryId(suspended.categoryId);
-                setStatus(suspended.status);
-                suspendedFiltersRef.current = null;
-              }}
-              onOpenFilters={() => {
-                setTypeDraft(type);
-                setCategoryIdDraft(categoryId);
-              }}
-              onApplyFilters={() => {
-                setType(typeDraft);
-                setCategoryId(categoryIdDraft);
-              }}
-              onResetFilterDraft={() => {
-                setTypeDraft("ALL");
-                setCategoryIdDraft("ALL");
-              }}
-            >
-              <FilterSelect
-                label="Tipe"
-                value={typeDraft}
-                options={TYPE_FILTERS}
-                onChange={setTypeDraft}
-              />
-              <FilterSelect
-                label="Kategori"
-                value={categoryIdDraft}
-                options={categoryFilters}
-                onChange={setCategoryIdDraft}
-              />
-            </SettingsFilterBar>
-          </div>
-          {canManage ? (
             <button
               type="button"
               onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
-              className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
-              title="Tambah Template Baru"
+              disabled={!canManage}
+              className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
             >
-              <AppIcon name="add" className="icon-sm" />
-              <span className="ml-1 max-[420px]:hidden">Tambah</span>
+              Tambah
             </button>
-          ) : null}
-        </div>
-      )}
-      {filtered.length === 0 ? (
-        <EmptyState
-          title={items.length === 0 ? "Belum ada template" : "Template tidak ditemukan"}
-          description={
-            items.length === 0
-              ? "Tambahkan template pertama untuk mempercepat setup proyek."
-              : "Ubah kata pencarian atau reset filter."
-          }
-        />
-      ) : (
-        <LibraryTemplateList
-          items={filtered}
-          presentation={presentation}
-          onOpen={(item) => openDraft(toDraft(item))}
-        />
-      )}
-
+          </div>
+        ) : (
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <SettingsFilterBar
+                status={status}
+                statusOptions={STATUS_FILTERS}
+                search={search}
+                filterCount={activeFilterCount}
+                searchPlaceholder="Cari template, kode, kategori"
+                searchAriaLabel="Cari template harga"
+                layoutPrefix="settings-library"
+                filterTitle="Filter template"
+                onStatusChange={setStatus}
+                onSearchChange={setSearch}
+                onEnterSearch={() => {
+                  suspendedFiltersRef.current = { type, categoryId, status };
+                  setType("ALL");
+                  setCategoryId("ALL");
+                  setStatus("ALL");
+                }}
+                onExitSearch={() => {
+                  const suspended = suspendedFiltersRef.current;
+                  if (!suspended) return;
+                  setType(suspended.type);
+                  setCategoryId(suspended.categoryId);
+                  setStatus(suspended.status);
+                  suspendedFiltersRef.current = null;
+                }}
+                onOpenFilters={() => {
+                  setTypeDraft(type);
+                  setCategoryIdDraft(categoryId);
+                }}
+                onApplyFilters={() => {
+                  setType(typeDraft);
+                  setCategoryId(categoryIdDraft);
+                }}
+                onResetFilterDraft={() => {
+                  setTypeDraft("ALL");
+                  setCategoryIdDraft("ALL");
+                }}
+              >
+                <FilterSelect
+                  label="Tipe"
+                  value={typeDraft}
+                  options={TYPE_FILTERS}
+                  onChange={setTypeDraft}
+                />
+                <FilterSelect
+                  label="Kategori"
+                  value={categoryIdDraft}
+                  options={categoryFilters}
+                  onChange={setCategoryIdDraft}
+                />
+              </SettingsFilterBar>
+            </div>
+            {canManage ? (
+              <button
+                type="button"
+                onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
+                className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
+                title="Tambah Template Baru"
+              >
+                <AppIcon name="add" className="icon-sm" />
+                <span className="ml-1 max-[420px]:hidden">Tambah</span>
+              </button>
+            ) : null}
+          </div>
+        )}
+        {filtered.length === 0 ? (
+          <EmptyState
+            title={items.length === 0 ? "Belum ada template" : "Template tidak ditemukan"}
+            description={
+              items.length === 0
+                ? "Tambahkan template pertama untuk mempercepat setup proyek."
+                : "Ubah kata pencarian atau reset filter."
+            }
+          />
+        ) : (
+          <LibraryTemplateList
+            items={filtered}
+            presentation={presentation}
+            onOpen={(item) => openDraft(toDraft(item))}
+          />
+        )}
+      </div>
       <LibraryTemplateEditorSheet
         draft={draft}
         categories={categories}

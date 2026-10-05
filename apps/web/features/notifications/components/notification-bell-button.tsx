@@ -17,9 +17,14 @@ export function NotificationBellButton({
   const reduced = useReducedMotion();
   const { summary } = useNotifications();
   function handleOpen(): void {
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (rect) {
-      setMorphOrigin({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+    const el = triggerRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const width = el.offsetWidth || rect.width;
+      const height = el.offsetHeight || rect.height;
+      const top = rect.top + (rect.height - height) / 2;
+      const left = rect.left + (rect.width - width) / 2;
+      setMorphOrigin({ top, left, width, height });
     }
     setDialogPresent(true);
     setOpen(true);

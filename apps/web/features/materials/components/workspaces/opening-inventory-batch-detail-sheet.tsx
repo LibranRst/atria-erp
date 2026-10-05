@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import React from "react";
 import { toast } from "sonner";
 import {

@@ -62,7 +62,11 @@ export default function LoginPage(): React.JSX.Element {
       toast.success("Berhasil masuk.");
       let destination = "/";
       try {
-        destination = await getPostLoginRedirectDestination();
+        const query = new URLSearchParams(window.location.search);
+        destination = await getPostLoginRedirectDestination({
+          returnTo: query.get("returnTo") ?? undefined,
+          surface: query.get("surface") === "mobile" ? "mobile" : undefined,
+        });
       } catch (err) {
         console.error("Gagal mendapatkan rute post-login, fallback ke root:", err);
       }

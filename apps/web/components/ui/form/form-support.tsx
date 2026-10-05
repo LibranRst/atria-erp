@@ -40,12 +40,22 @@ export function FormRiskNotice({
   title,
   children,
   tone = "default",
+  inverse = false,
 }: {
   readonly title: string;
   readonly children: React.ReactNode;
   readonly tone?: FormRiskTone;
+  readonly inverse?: boolean;
 }): React.JSX.Element {
-  const classes = toneClasses(tone);
+  const inverseText =
+    tone === "danger"
+      ? "text-critical-on-inverse"
+      : tone === "warning"
+        ? "text-warning-on-inverse"
+        : "text-on-primary";
+  const classes = inverse
+    ? { shell: `bg-on-primary/10 ${inverseText}`, icon: inverseText }
+    : toneClasses(tone);
   const iconName = tone === "success" ? "verified_user" : tone === "default" ? "info" : "warning";
 
   return (

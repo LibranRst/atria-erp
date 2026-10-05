@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { toast } from "sonner";
 
 import { activateProjectAction } from "@/app/actions/project/activation";

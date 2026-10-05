@@ -72,4 +72,17 @@ describe("calculateBottomSheetMetrics", () => {
     expect(withKeyboard.maximumHeight).toBe(462);
     expect(withKeyboard.contentOverflows).toBe(true);
   });
+
+  test("does not enforce the normal minimum over a landscape keyboard viewport", () => {
+    const metrics = calculateBottomSheetMetrics({
+      viewportHeight: 170,
+      handleHeight: 20,
+      headerHeight: 56,
+      bodyHeight: 420,
+      footerHeight: 88,
+    });
+    expect(metrics.maximumHeight).toBe(162);
+    expect(metrics.naturalHeight).toBe(162);
+    expect(metrics.contentOverflows).toBe(true);
+  });
 });

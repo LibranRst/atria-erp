@@ -1,15 +1,12 @@
 import { theme } from "@/theme";
 
 /**
- * Ruang bawah untuk layar yang berada di dalam Native Tabs.
+ * Jarak baca setelah konten; tinggi dock floating dimiliki shared shell.
  *
- * Tinggi tab bar **tidak bisa diukur programatis** di Expo Router native tabs,
- * jadi menebak angkanya (sebelumnya `+ 84`) selalu salah di sebagian perangkat.
- * Sejak SDK 55, ScrollView pertama pada tiap tab sudah menerima
- * `contentInsetAdjustmentBehavior` otomatis di iOS dan bottom inset di Android,
- * sehingga tab bar sudah diperhitungkan sistem.
- *
- * Yang tersisa untuk kita hanyalah jarak baca yang disengaja di akhir konten —
- * itulah nilai di bawah ini, dan sumbernya token, bukan tebakan.
+ * Layar menambahkan TAB_BAR_CLEARANCE pada padding ini.
+ * Safe area sistem tetap diperhitungkan ScrollView/native stack. FAB dan tab
+ * bar berada di satu owning layout, jadi tidak ada estimasi native bar lain.
  */
 export const TAB_SCREEN_BOTTOM_SPACE = theme.spacing.xl;
+export const TAB_BAR_HEIGHT = 64;
+export const TAB_BAR_CLEARANCE = TAB_BAR_HEIGHT + theme.spacing.md;

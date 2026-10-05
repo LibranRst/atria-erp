@@ -1,0 +1,28 @@
+# Mobile navigation and loading lifecycle
+
+Approved through grilling: preserve scroll/filter/subtab during the session; render same-session cached content immediately; refresh on page focus/app resume and manual pull; cached offline reading with explicit status; first offline load offers retry; form submission requires online and explicit user action. Preserve existing persistent native title/morph menu, filled active icons, native dock/FAB, Back + AI and session avatar.
+
+Implement a shared session-scoped screen query lifecycle with request cancellation, focused background refresh, separate pull refresh, and fail-closed revoked access. Reuse ScreenMessage/ScreenSkeleton for first-load states and add one shared nonblocking update notice. Retain UI state in memory scoped to the same account/session/permissions; no new disk finance cache or offline mutation queue.
+
+Register the mounted tab navigator in a root navigation context. Both menu and dock select through it; root pages unwind to the existing tabs instead of creating another tabs stack. No implicit Dashboard overview reset. Keep native detail push/form sheet behavior. Browser return invalidates affected screen domains rather than auth/unrelated active queries.
+
+Apply the policy to Dashboard, Projects, Expenses, Approvals, Project detail, home and form data. Guard native form sends offline while preserving local expense drafts. Verify state/error/cache isolation with meaningful tests, typecheck/lint, native route/focus/scroll/rapid-menu paths, and targeted offline/error inspection. No finance writes during QA.
+
+## Implemented
+
+- `useScreenQuery` centralizes focused reads, account/session/role/permission-scoped keys, abort signals, refresh on refocus/resume/reconnect, and a pull-only spinner. Recoverable server page errors become query errors so last successful content stays cached. Explicit restricted/notFound data and unauthorized/forbidden errors still block display.
+- Shared `ScreenQueryState` composes existing ScreenMessage/ScreenSkeleton. Skeletons respect automatic native header insets. `ScreenRefreshNotice` keeps one stable line for update time, background refresh, failure or offline, avoiding a moving reading position or full-screen refresh spinner.
+- Dashboard/Projects/Expenses/Approvals/detail/home/form reads use this lifecycle. Project filters and Approval subtab selections survive route unmount in scoped memory; scroll offsets are saved on blur without per-frame React/cache writes. Mounted tabs retain their native scroll views. Memory is cleared/isolation changes when account/session/permission scope changes; no new disk finance cache.
+- Header and dock share the registered tab selection handler using live navigator state. Native runtime revealed Expo's `__root` wrapper; restoring tabs targets the nested owning workspace stack, tested with the real shape. Ordinary Dashboard selection no longer supplies an implicit overview parameter; explicit deep links still select their requested tab. Detail push and native forms remain unchanged.
+- Returning from a web workflow invalidates the relevant screen domains; profile/settings return refreshes authorization/session rather than blindly invalidating every active query. The navigation provider surrounds push-notification listeners as well as the navigator.
+- Offline form submit/save/payment controls are disabled and guarded. tRPC POST requests are blocked at the transport boundary while offline and are not queued. Evidence upload/OCR requires online. Local expense draft reads still work offline and draft hydration keys off user identity to avoid overwriting edits during authorization refresh. Project FAB lock state fails closed after access rejection.
+
+## Verification
+
+- Strict mobile typecheck and mobile lint pass; root workspace lint passes for web/mobile/core/tokens. All 17 mobile tests pass, including real QueryObserver paused-offline/error-cache/cancellation behavior, scope isolation, recoverable business errors, explicit Dashboard parameters and wrapped-stack restoration.
+- Targeted Prettier check and git diff whitespace pass. Root format check reports 239 files outside this task's edited set; they were not swept into this change. Root logs: `/tmp/atria-mobile-root-format.log` and `/tmp/atria-mobile-root-lint.log`.
+- iOS and Android exports pass: `/tmp/atria-mobile-lifecycle-ios` and `/tmp/atria-mobile-lifecycle-android`. Existing native client was reused because changes are JS/TS only; no additional native build or Argent.
+- iOS 26.5 simulator, 402pt: menu → Projects → Approvals → Projects returns to the same existing tab identifiers; main tab switching and native chrome remain available. A genuine main-list scroll (not the horizontal filter strip) remains at the same visible position after Dashboard → Projects.
+- A temporary app-only onlineManager override verified cached Projects content with offline notice, first uncached Expenses recovery with Coba lagi, and cached Project form with the submit button disabled. Override and debug logs were removed; actual network state is restored. No profile, project, payment or inventory data was submitted during QA.
+- Evidence: `.atria-demo/verification/2026-10-01-mobile-lifecycle/` contains cached/uncached offline states, disabled form, preserved scroll before/return and restored existing-tab screenshots. First navigator attempt exposed the wrong target and was corrected; its early recording is not acceptance proof.
+- Limitations: Android runtime/physical devices, real network disconnection, large text/landscape, and app-process restart persistence were not verified. State/cache are in memory; cold app restart reloads data. Existing web-only workflows remain explicit bridges.

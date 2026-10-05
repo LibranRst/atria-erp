@@ -1,9 +1,12 @@
-import { cookies } from "next/headers";
+import "server-only";
+
+import type { ServerSession } from "@atria/api/contract";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
+import { readBackendSession } from "@/lib/api/session";
 
-export type ServerSession = Awaited<ReturnType<typeof auth.api.getSession>>;
+export type { ServerSession } from "@atria/api/contract";
 export type RequiredServerSession = NonNullable<ServerSession>;
 
 /**
@@ -17,7 +20,7 @@ export type RequiredServerSession = NonNullable<ServerSession>;
  */
 export async function getSessionFromHeaders(requestHeaders: Headers): Promise<ServerSession> {
   try {
-    return await auth.api.getSession({ headers: requestHeaders });
+    return await readBackendSession(requestHeaders);
   } catch (error) {
     console.error("Failed to read Better Auth session:", error);
     return null;
@@ -27,14 +30,10 @@ export async function getSessionFromHeaders(requestHeaders: Headers): Promise<Se
 /**
  * Jalur web (Server Component / Server Action): sesi selalu datang dari cookie.
  *
- * Sengaja **tidak** memakai `headers()` dari `next/headers`. Fungsi itu melempar
- * error di luar request scope, dan karena `getServerSession` dibungkus
- * try/catch, kegagalannya akan tampak sebagai "tidak ada sesi" — bukan sebagai
- * error. Klien native tidak lewat sini; ia memakai `getSessionFromHeaders`
- * dengan `Headers` asli dari request, sehingga `Authorization: Bearer` terbaca.
+ * Credential lengkap diteruskan ke API; Next tidak memeriksa database auth.
  */
 export async function getServerSession(): Promise<ServerSession> {
-  const requestHeaders = new Headers();
+  const requestHeaders = new Headers(await headers());
   requestHeaders.set("cookie", (await cookies()).toString());
   return getSessionFromHeaders(requestHeaders);
 }

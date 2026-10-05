@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  useMemo,
-  useState,
-  useTransition,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState, useTransition, type Dispatch, type SetStateAction } from "react";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
 import { toast } from "sonner";
 
 import {

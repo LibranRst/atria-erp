@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { AppIcon, DuotoneIconTile, MoneyValue, StatusBadge } from "@/components/ui";
@@ -29,6 +29,7 @@ export function ProjectRiskRow({
 
   return (
     <motion.div
+      tabIndex={-1}
       whileTap={reduceMotion ? undefined : dashboardRowPressScale}
       transition={transitionSpringSnappy}
     >

@@ -16,14 +16,7 @@ export const FINANCIAL_HEALTH_OPTIONS = [
   { value: "CRITICAL", label: "Kritis", description: "Risiko budget atau margin tinggi." },
 ] as const;
 
-export const PROJECT_TYPE_OPTIONS = [
-  "Fit-Out",
-  "Interior Build",
-  "Renovation",
-  "Custom Furniture",
-  "Design & Build",
-  "Maintenance",
-] as const;
+export { PROJECT_TYPE_OPTIONS } from "@atria/core/presentation/project-input-options";
 
 export type ProjectStatusOption = (typeof PROJECT_STATUS_OPTIONS)[number]["value"];
 export type ProjectFinancialHealthOption = (typeof FINANCIAL_HEALTH_OPTIONS)[number]["value"];

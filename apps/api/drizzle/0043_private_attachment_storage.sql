@@ -1,0 +1,1 @@
+ALTER TABLE "attachment" ADD COLUMN "storage_file_id" varchar(255);

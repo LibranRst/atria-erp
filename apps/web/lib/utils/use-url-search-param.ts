@@ -1,5 +1,6 @@
 "use client";
 
+import { workspaceHistoryHref } from "@/lib/navigation/workspace-routes";
 import { useCallback, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -98,9 +99,10 @@ export function updateUrlSearchParam(
 }
 
 export function updateBrowserUrl(nextUrl: string, mode: "push" | "replace" = "push"): void {
+  const href = workspaceHistoryHref(nextUrl, window.location.href);
   if (mode === "replace") {
-    window.history.replaceState({}, "", nextUrl);
+    window.history.replaceState({}, "", href);
   } else {
-    window.history.pushState({}, "", nextUrl);
+    window.history.pushState({}, "", href);
   }
 }

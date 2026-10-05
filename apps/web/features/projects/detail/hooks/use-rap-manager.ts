@@ -1,5 +1,6 @@
 "use client";
 
+import { usePermissions } from "@/components/auth/permissions-provider";
 import type {
   MaterialOption,
   PricingTemplateOption,
@@ -27,11 +28,11 @@ export function useRapManager({
   projectId,
   rap,
   materials,
-  userRole,
   budgetCategories,
   categoryPlanItems,
   pricingTemplates,
 }: UseRapManagerProps) {
+  const permissions = usePermissions();
   const forms = useRapManagerForms({
     rap,
     materials,
@@ -76,7 +77,7 @@ export function useRapManager({
     closeCategoryPlanForm,
   });
 
-  const { canEditRap, canEditCategoryPlan, canFinalizeRap } = getRapPermissions(userRole);
+  const { canEditRap, canEditCategoryPlan, canFinalizeRap } = getRapPermissions(permissions);
   const {
     plannedCost,
     needToBuy,

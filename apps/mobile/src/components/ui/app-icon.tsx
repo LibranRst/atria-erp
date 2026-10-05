@@ -63,7 +63,7 @@ const componentNameByLegacyName = {
   inbox: "TrayIcon",
   info: "InfoIcon",
   inventory: "PackageIcon",
-  inventory_2: "ArchiveBoxIcon",
+  inventory_2: "PackageIcon",
   keyboard_arrow_down: "CaretDownIcon",
   layers: "StackIcon",
   link: "LinkIcon",
@@ -122,7 +122,7 @@ const componentNameByLegacyName = {
   verified_user: "ShieldCheckIcon",
   warehouse: "WarehouseIcon",
   warning: "WarningIcon",
-} as const;
+} as const satisfies Readonly<Record<string, keyof typeof Phosphor>>;
 
 export type AppIconName = keyof typeof componentNameByLegacyName;
 export type AppIconProps = Omit<IconProps, "weight"> & {

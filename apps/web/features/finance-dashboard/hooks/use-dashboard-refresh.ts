@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
 import React from "react";
 
 export const DASHBOARD_AUTO_REFRESH_AFTER_MS = 5 * 60_000;
