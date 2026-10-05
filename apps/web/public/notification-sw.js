@@ -104,6 +104,13 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
+function notificationId(value) {
+  return typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+    ? value
+    : null;
+}
+
 self.addEventListener("push", (event) => {
   let payload = {};
   try {
@@ -114,14 +121,12 @@ self.addEventListener("push", (event) => {
   const title = typeof payload.title === "string" ? payload.title : "Atria";
   const body = typeof payload.body === "string" ? payload.body : "Ada pembaruan baru.";
   const url = safeDestination(payload.url);
-  const tag =
-    typeof payload.notificationId === "string"
-      ? `atria-${payload.notificationId}`
-      : "atria-notification";
+  const id = notificationId(payload.notificationId);
+  const tag = id ? `atria-${id}` : "atria-notification";
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
-      data: { url },
+      data: { url, ...(id ? { notificationId: id } : {}) },
       tag,
       renotify: false,
       icon: "/icons/icon-192.png",
@@ -136,12 +141,22 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const destination = safeDestination(event.notification.data?.url);
+  // Existing tray entries from older workers carry the UUID only in their tag.
+  const id =
+    notificationId(event.notification.data?.notificationId) ||
+    notificationId(event.notification.tag?.startsWith("atria-")
+      ? event.notification.tag.slice("atria-".length)
+      : null);
+  const target = new URL(destination, self.location.origin);
+  target.searchParams.delete("notificationId");
+  if (id) target.searchParams.set("notificationId", id);
+  const href = `${target.pathname}${target.search}${target.hash}`;
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      const target = new URL(destination, self.location.origin).href;
-      const existing = clients.find((client) => client.url === target);
+      const existing = clients.find((client) => client.url === target.href);
       if (existing) return existing.focus();
-      return self.clients.openWindow(destination);
+      // The authenticated page acknowledges the ID; navigation never waits for that write.
+      return self.clients.openWindow(href);
     }),
   );
 });

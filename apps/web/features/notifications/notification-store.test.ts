@@ -68,6 +68,45 @@ function setup(
   };
 }
 describe("notification store", () => {
+  test("push acknowledgement invalidates stale unread results without resolving an action", async () => {
+    const api = transport();
+    let read = false;
+    let calls = 0;
+    let finishOld:
+      ((result: Awaited<ReturnType<NotificationTransport["summary"]>>) => void) | undefined;
+    api.summary = () => {
+      calls += 1;
+      if (calls === 1)
+        return new Promise((resolve) => {
+          finishOld = resolve;
+        });
+      return Promise.resolve({ success: true, data: { ...summary, unreadCount: 119 } });
+    };
+    api.list = async ({ category }) => ({
+      success: true,
+      data: {
+        items: category === "ACTION_REQUIRED" ? [{ ...item, read }] : [],
+        hasMore: false,
+        nextCursor: null,
+      },
+    });
+    const { store, stop } = setup(api);
+    try {
+      read = true;
+      await store.invalidate();
+      finishOld?.({ success: true, data: summary });
+      await settle();
+      expect(store.snapshot().summary.unreadCount).toBe(119);
+      expect(store.snapshot().summary.actionRequiredCount).toBe(100);
+      expect(store.snapshot().pages.ACTION_REQUIRED.items[0]).toMatchObject({
+        read: true,
+        isResolved: false,
+      });
+    } finally {
+      stop();
+    }
+  });
+
   test("mark-all uses global count and never resolves open actions", async () => {
     const api = transport();
     let complete: (() => void) | undefined;

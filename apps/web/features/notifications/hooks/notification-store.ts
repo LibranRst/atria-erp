@@ -49,6 +49,7 @@ export function createNotificationStore(
   subscribe: (listener: () => void) => () => void;
   snapshot: () => NotificationStoreState;
   refresh: () => Promise<void>;
+  invalidate: () => Promise<void>;
   loadMore: (category: NotificationCategory) => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: (category?: NotificationCategory) => Promise<void>;
@@ -238,6 +239,10 @@ export function createNotificationStore(
     },
     snapshot: () => state,
     refresh,
+    invalidate: (): Promise<void> => {
+      generation += 1;
+      return refresh();
+    },
     loadMore,
     openNotification: (id) =>
       api.open

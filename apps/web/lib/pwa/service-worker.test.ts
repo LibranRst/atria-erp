@@ -14,6 +14,7 @@ import path from "node:path";
 
 const SW_PATH = path.join(import.meta.dir, "..", "..", "public", "notification-sw.js");
 const ORIGIN = "https://atria.example";
+const NOTIFICATION_ID = "11111111-1111-4111-8111-111111111111";
 
 type NotificationCall = { readonly title: string; readonly options: Record<string, unknown> };
 
@@ -33,7 +34,10 @@ type Scope = {
  * berkas ini, dan sengaja dibiarkan sempit: yang disuntikkan hanya API yang
  * benar-benar dipakai worker.
  */
-function createScope(fetchImpl: (request: Request) => Promise<Response>): {
+function createScope(
+  fetchImpl: (request: Request) => Promise<Response>,
+  windows: readonly { url: string; focus: () => Promise<void> }[] = [],
+): {
   dispatch: (type: string, event: Record<string, unknown>) => Promise<Scope>;
 } {
   const handlers = new Map<string, (event: Record<string, unknown>) => void>();
@@ -70,7 +74,8 @@ function createScope(fetchImpl: (request: Request) => Promise<Response>): {
     skipWaiting: async (): Promise<void> => undefined,
     clients: {
       claim: async (): Promise<void> => undefined,
-      matchAll: async (): Promise<unknown[]> => [],
+      matchAll: async (): Promise<readonly { url: string; focus: () => Promise<void> }[]> =>
+        windows,
       openWindow: (url: string): Promise<null> => {
         calls.opened.push(url);
         return Promise.resolve(null);
@@ -244,7 +249,7 @@ describe("notifikasi service worker", () => {
           title: "Approval baru",
           body: "Menunggu.",
           url: "/expenses/abc",
-          notificationId: "n-1",
+          notificationId: NOTIFICATION_ID,
         }),
       },
     });
@@ -258,9 +263,12 @@ describe("notifikasi service worker", () => {
       lang: "id",
       dir: "ltr",
       renotify: false,
-      tag: "atria-n-1",
+      tag: `atria-${NOTIFICATION_ID}`,
     });
-    expect(notification.options.data).toEqual({ url: "/expenses/abc" });
+    expect(notification.options.data).toEqual({
+      url: "/expenses/abc",
+      notificationId: NOTIFICATION_ID,
+    });
   });
 
   test("tujuan di luar allowlist dan skema berbahaya jatuh ke /notifications", async () => {
@@ -283,5 +291,65 @@ describe("notifikasi service worker", () => {
       notification: { close: () => undefined, data: { url: "javascript:alert(1)" } },
     });
     expect(rejectedResult.opened).toEqual(["/notifications"]);
+  });
+
+  test("tray click carries the exact notification ID while preserving query and hash", async () => {
+    // A blocked network write must never delay opening the destination.
+    const scope = createScope(() => new Promise<Response>(() => undefined));
+    const result = await scope.dispatch("notificationclick", {
+      notification: {
+        close: () => undefined,
+        data: { url: "/projects/abc?tab=overview#budget", notificationId: NOTIFICATION_ID },
+      },
+    });
+    expect(result.opened).toEqual([
+      `/projects/abc?tab=overview&notificationId=${NOTIFICATION_ID}#budget`,
+    ]);
+  });
+
+  test("already displayed notifications recover their ID from a legacy tag", async () => {
+    const result = await createScope(networkUp).dispatch("notificationclick", {
+      notification: {
+        close: () => undefined,
+        tag: `atria-${NOTIFICATION_ID}`,
+        data: { url: "/projects/abc" },
+      },
+    });
+    expect(result.opened).toEqual([`/projects/abc?notificationId=${NOTIFICATION_ID}`]);
+  });
+
+  test("invalid IDs and destination-supplied read markers cannot acknowledge another item", async () => {
+    const result = await createScope(networkUp).dispatch("notificationclick", {
+      notification: {
+        close: () => undefined,
+        tag: "atria-invalid",
+        data: {
+          url: `/projects/abc?notificationId=${NOTIFICATION_ID}&tab=overview`,
+          notificationId: "invalid",
+        },
+      },
+    });
+    expect(result.opened).toEqual(["/projects/abc?tab=overview"]);
+  });
+
+  test("an existing destination with the same intent is focused instead of opening another", async () => {
+    let focused = false;
+    const href = `/projects/abc?notificationId=${NOTIFICATION_ID}`;
+    const scope = createScope(networkUp, [
+      {
+        url: `${ORIGIN}${href}`,
+        focus: async (): Promise<void> => {
+          focused = true;
+        },
+      },
+    ]);
+    const result = await scope.dispatch("notificationclick", {
+      notification: {
+        close: () => undefined,
+        data: { url: "/projects/abc", notificationId: NOTIFICATION_ID },
+      },
+    });
+    expect(focused).toBe(true);
+    expect(result.opened).toEqual([]);
   });
 });

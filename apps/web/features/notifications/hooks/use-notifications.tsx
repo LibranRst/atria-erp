@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { NotificationContext } from "./notification-context";
 import { createNotificationStore } from "./notification-store";
 import { createNotificationEnvironment } from "./notification-environment";
+import { startPushNotificationRead } from "./push-notification-read";
 function createStore(): ReturnType<typeof createNotificationStore> {
   return createNotificationStore(
     {
@@ -29,13 +30,22 @@ function createStore(): ReturnType<typeof createNotificationStore> {
 }
 function SessionStore({
   children,
-  enabled,
+  userId,
 }: {
   children: React.ReactNode;
-  enabled: boolean;
+  userId: string | null;
 }): React.JSX.Element {
   const store = useMemo(() => createStore(), []);
-  useEffect(() => (enabled ? store.start() : undefined), [store, enabled]);
+  useEffect(() => (userId ? store.start() : undefined), [store, userId]);
+  useEffect(
+    () =>
+      startPushNotificationRead({
+        userId,
+        markRead: markNotificationReadAction,
+        onRead: store.invalidate,
+      }),
+    [store, userId],
+  );
   return <NotificationContext.Provider value={store}>{children}</NotificationContext.Provider>;
 }
 export function NotificationsProvider({
@@ -46,7 +56,7 @@ export function NotificationsProvider({
   const { data } = authClient.useSession();
   const key = data ? `${data.user.id}:${data.session.id}` : "anonymous";
   return (
-    <SessionStore key={key} enabled={Boolean(data)}>
+    <SessionStore key={key} userId={data?.user.id ?? null}>
       {children}
     </SessionStore>
   );

@@ -37,7 +37,7 @@ function ensureHistoryEventsPatched(): void {
   historyEventsPatched = true;
 }
 
-function subscribeToUrl(onStoreChange: () => void): () => void {
+export function subscribeToUrl(onStoreChange: () => void): () => void {
   ensureHistoryEventsPatched();
   window.addEventListener("popstate", onStoreChange);
   window.addEventListener(URL_CHANGE_EVENT, onStoreChange);
@@ -89,7 +89,7 @@ export function updateUrlSearchParam(
     params.set(key, value);
   }
   const query = params.toString();
-  const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}`;
+  const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
   if (mode === "replace") {
     window.history.replaceState({}, "", nextUrl);
   } else {
