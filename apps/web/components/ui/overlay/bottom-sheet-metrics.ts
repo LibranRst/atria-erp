@@ -24,7 +24,7 @@ export function calculateBottomSheetMetrics({
   bodyHeight,
   footerHeight,
 }: BottomSheetMetricsInput): BottomSheetMetrics {
-  const maximumHeight = Math.max(MIN_SHEET_HEIGHT, Math.floor(viewportHeight - SHEET_TOP_GAP));
+  const maximumHeight = Math.max(0, Math.floor(viewportHeight - SHEET_TOP_GAP));
   const measuredHeight = Math.ceil(handleHeight + headerHeight + bodyHeight + footerHeight);
   const contentOverflows = measuredHeight > maximumHeight;
   const naturalHeight = contentOverflows

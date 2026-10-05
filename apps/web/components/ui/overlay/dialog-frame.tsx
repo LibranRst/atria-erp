@@ -4,15 +4,17 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
-import {
-  transitionEaseSmooth,
-  transitionSpringSmooth,
-} from "@/lib/utils/motion";
+import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import { IconButton } from "../button/button";
 import { AppIcon } from "../icon/app-icon";
 import { OverlayLayerProvider } from "./overlay-layer-context";
 import { deactivateOverlay, isTopOverlay, lockBodyScroll, promoteOverlay } from "./overlay-stack";
 import { usePortalContainer } from "./portal-container-context";
+import {
+  observeOverlayViewport,
+  readOverlayViewport,
+  type OverlayViewport,
+} from "./overlay-viewport";
 
 export type DialogMorphOrigin = {
   readonly top: number;
@@ -82,6 +84,8 @@ export function DialogFrame({
   const dialogRef = React.useRef<HTMLElement>(null);
   const hostRef = React.useRef<HTMLDivElement>(null);
   const contentSizeRef = React.useRef<HTMLDivElement>(null);
+  const bodyRef = React.useRef<HTMLDivElement>(null);
+  const [viewport, setViewport] = React.useState<OverlayViewport | null>(null);
   const [contentHeight, setContentHeight] = React.useState<number | null>(null);
   const dialogId = React.useId();
   const titleId = `${dialogId}-title`;
@@ -118,7 +122,7 @@ export function DialogFrame({
   }, [shouldRender, morphOrigin, portalNode]);
 
   React.useEffect(() => {
-    if (!shouldRender) return undefined;
+    if (!shouldRender || !portalNode) return undefined;
     const activeDialogId = dialogId;
     const returnFocusTarget = returnFocusRef?.current;
     const previousFocus =
@@ -126,13 +130,21 @@ export function DialogFrame({
     const layer = promoteOverlay(activeDialogId);
     const releaseBodyScroll = lockBodyScroll();
 
-    function updateViewport(): void {
+    function updateViewport(next: OverlayViewport): void {
       if (!hostRef.current) return;
-      hostRef.current.style.height = `${window.visualViewport?.height ?? window.innerHeight}px`;
-      hostRef.current.style.top = `${window.visualViewport?.offsetTop ?? 0}px`;
+      hostRef.current.style.height = `${next.height}px`;
+      hostRef.current.style.top = `${next.top}px`;
+      setViewport(next);
     }
 
-    updateViewport();
+    const releaseViewport = dialogRef.current
+      ? observeOverlayViewport({
+          overlay: dialogRef.current,
+          getBody: (): HTMLElement | null => bodyRef.current,
+          isActive: (): boolean => isTopOverlay(activeDialogId),
+          onViewportChange: updateViewport,
+        })
+      : undefined;
     const animationFrame = window.requestAnimationFrame(() => {
       setZIndex(layer);
       const preferred = dialogRef.current?.querySelector<HTMLElement>(
@@ -172,36 +184,36 @@ export function DialogFrame({
     }
 
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("resize", updateViewport);
-    window.visualViewport?.addEventListener("resize", updateViewport);
-    window.visualViewport?.addEventListener("scroll", updateViewport);
 
     return () => {
       window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("resize", updateViewport);
-      window.visualViewport?.removeEventListener("resize", updateViewport);
-      window.visualViewport?.removeEventListener("scroll", updateViewport);
+      releaseViewport?.();
       deactivateOverlay(activeDialogId);
       releaseBodyScroll();
       const trigger = returnFocusTarget;
       if (trigger?.isConnected) trigger.focus({ preventScroll: true });
       else if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };
-  }, [dialogId, requestClose, returnFocusRef, shouldRender]);
+  }, [dialogId, portalNode, requestClose, returnFocusRef, shouldRender]);
 
   if (portalNode === null) return null;
 
-  const visualViewport = window.visualViewport;
-  const viewportWidth = visualViewport?.width ?? window.innerWidth;
-  const viewportHeight = visualViewport?.height ?? window.innerHeight;
-  const viewportTop = visualViewport?.offsetTop ?? 0;
-  const viewportLeft = visualViewport?.offsetLeft ?? 0;
-  const morphTargetWidth = Math.min(360, Math.max(0, viewportWidth - 32));
-  const morphTargetHeight = Math.min(
-    contentHeight ?? morphOrigin?.height ?? 0,
-    Math.min(viewportHeight * 0.78, 560),
+  const currentViewport = viewport ?? readOverlayViewport();
+  const viewportWidth = currentViewport.width;
+  const viewportHeight = currentViewport.height;
+  const viewportTop = currentViewport.top;
+  const viewportLeft = currentViewport.left;
+  const maximumHeight = Math.max(
+    0,
+    Math.min(
+      viewportHeight * 0.78,
+      560,
+      viewportHeight - (placement === "top" && topInset === "header" ? 72 : 16) - 16,
+    ),
   );
+  const morphTargetWidth = Math.min(360, Math.max(0, viewportWidth - 32));
+  const morphTargetHeight = Math.min(contentHeight ?? morphOrigin?.height ?? 0, maximumHeight);
   const morphTarget = morphOrigin
     ? {
         top: topInset === "header" ? 72 : 16,
@@ -276,13 +288,10 @@ export function DialogFrame({
                     ? { opacity: 0 }
                     : { opacity: 0, scale: 0.97 }
               }
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : transitionSpringSmooth
-              }
+              transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
               onAnimationComplete={morphOrigin && !open ? () => onExitComplete?.() : undefined}
-              className={`pointer-events-none flex max-h-[min(78dvh,560px)] flex-col outline-none ${morphOrigin ? `absolute overflow-hidden rounded-owner ring-1 ring-ring-control ${open ? "bg-surface-container-low shadow-raised" : "bg-surface-container-lowest shadow-control"}` : `w-full ${calendarPresentation ? "max-w-85" : "max-w-90"}`} ${utility || detachedCloseButton ? "gap-2" : ""}`}
+              style={{ maxHeight: maximumHeight }}
+              className={`pointer-events-none flex flex-col outline-none ${morphOrigin ? `absolute overflow-hidden rounded-owner ring-1 ring-ring-control ${open ? "bg-surface-container-low shadow-raised" : "bg-surface-container-lowest shadow-control"}` : `w-full ${calendarPresentation ? "max-w-85" : "max-w-90"}`} ${utility || detachedCloseButton ? "gap-2" : ""}`}
             >
               {morphOrigin && morphClosedContent ? (
                 <motion.div
@@ -319,8 +328,10 @@ export function DialogFrame({
               >
                 <div
                   ref={contentSizeRef}
-                  className={morphOrigin ? "flex max-h-[min(78dvh,560px)] flex-col" : "contents"}
-                  style={morphOrigin ? { width: morphTargetWidth } : undefined}
+                  className={morphOrigin ? "flex flex-col" : "contents"}
+                  style={
+                    morphOrigin ? { width: morphTargetWidth, maxHeight: maximumHeight } : undefined
+                  }
                 >
                   {utility || detachedCloseButton ? (
                     <div className="pointer-events-auto flex min-h-10 shrink-0 items-center gap-2">
@@ -399,6 +410,7 @@ export function DialogFrame({
                         {bodyHeader ? <div className="shrink-0 px-2 pb-3">{bodyHeader}</div> : null}
                         {children ? (
                           <div
+                            ref={bodyRef}
                             className={`no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain ${choicePresentation ? "mx-2 scroll-pb-2 rounded-3xl pb-2" : "px-5 py-2"}`}
                           >
                             {children}

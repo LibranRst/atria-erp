@@ -279,7 +279,7 @@
       "refersTo": "input-standalone",
       "description": "A white full-capsule field used outside a grouped form panel.",
       "html": "<div class=\"ds-input\"><input type=\"text\" placeholder=\"Cari project\" /></div>",
-      "css": ".ds-input { display: flex; align-items: center; min-height: 48px; width: 100%; border-radius: 9999px; border: 1px solid color-mix(in srgb, #8e8e93 35%, transparent); background: #ffffff; padding: 0 20px; box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03), 0 3px 8px rgb(24 24 23 / 0.05); transition: border-color 0.15s ease, box-shadow 0.15s ease; } .ds-input:focus-within { border-color: #b84b2c; box-shadow: 0 0 0 2px color-mix(in srgb, #b84b2c 35%, transparent); } .ds-input input { flex: 1; min-width: 0; background: transparent; border: none; outline: none; font-size: 14px; font-weight: 600; color: #181817; } .ds-input input::placeholder { color: color-mix(in srgb, #636366 55%, transparent); }"
+      "css": ".ds-input { display: flex; align-items: center; min-height: 48px; width: 100%; border-radius: 9999px; border: 1px solid color-mix(in srgb, #8e8e93 35%, transparent); background: #ffffff; padding: 0 20px; box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03), 0 3px 8px rgb(24 24 23 / 0.05); transition: border-color 0.15s ease, box-shadow 0.15s ease; } .ds-input:focus-within { border-color: #b84b2c; box-shadow: 0 0 0 2px color-mix(in srgb, #b84b2c 35%, transparent); } .ds-input input { flex: 1; min-width: 0; background: transparent; border: none; outline: none; font-size: 14px; font-weight: 600; color: #181817; } .ds-input input::placeholder { color: color-mix(in srgb, #636366 55%, transparent); } @media (width < 64rem), (any-pointer: coarse) { .ds-input input:not([readonly]) { font-size: 16px; } }"
     },
     {
       "name": "Grouped Card",
@@ -351,6 +351,11 @@
       {
         "name": "The One Role Rule",
         "body": "Pick the semantic type role whose purpose matches, not the one whose pixel size happens to look close. An arbitrary size remains valid only for something with no role in this table.",
+        "section": "typography"
+      },
+      {
+        "name": "The Editable Text Rule",
+        "body": "Below 1024px or with a coarse pointer, editable text inputs and textareas use the shared 16px minimum (--text-input-min). Apply the floor on the control itself so larger text stays larger and labels, helper copy, read-only facts and fine-pointer desktop controls retain their compact roles. Preserve manual pinch zoom.",
         "section": "typography"
       },
       {

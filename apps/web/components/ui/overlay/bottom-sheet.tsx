@@ -18,6 +18,7 @@ import { IconButton } from "../button/button";
 import { OverlayLayerProvider } from "./overlay-layer-context";
 import { deactivateOverlay, isTopOverlay, lockBodyScroll, promoteOverlay } from "./overlay-stack";
 import { usePortalContainer } from "./portal-container-context";
+import { observeOverlayViewport, readOverlayViewport } from "./overlay-viewport";
 
 const SNAP_DISTANCE = 42;
 const SNAP_VELOCITY = 520;
@@ -100,11 +101,13 @@ export function BottomSheet({
   const [zIndex, setZIndex] = useState(200);
   const [expanded, setExpanded] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(720);
+  const [viewportBottom, setViewportBottom] = useState(0);
   const [naturalHeight, setNaturalHeight] = useState(MIN_SHEET_HEIGHT);
   const [topChromeHeight, setTopChromeHeight] = useState(76);
   const [footerHeight, setFooterHeight] = useState(0);
   const [contentOverflows, setContentOverflows] = useState(false);
   const [hasMeasured, setHasMeasured] = useState(false);
+  const measuredViewportRef = React.useRef<ReturnType<typeof readOverlayViewport> | null>(null);
   const portalNode = usePortalContainer();
 
   useEffect(() => {
@@ -114,7 +117,12 @@ export function BottomSheet({
   const updateSheetMetrics = React.useCallback((): void => {
     if (typeof window === "undefined") return;
 
-    const nextViewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const nextViewport = readOverlayViewport();
+    const viewport = nextViewport.zoomed
+      ? (measuredViewportRef.current ?? nextViewport)
+      : nextViewport;
+    measuredViewportRef.current = viewport;
+    const nextViewportHeight = viewport.height;
     const handleHeight = handleRef.current?.offsetHeight ?? 20;
     const headerHeight = headerRef.current?.offsetHeight ?? 56;
     const bodyHeight = bodyContentRef.current?.scrollHeight ?? 0;
@@ -128,6 +136,7 @@ export function BottomSheet({
     });
 
     setViewportHeight(nextViewportHeight);
+    setViewportBottom(viewport.bottomInset);
     setNaturalHeight(metrics.naturalHeight);
     setTopChromeHeight(handleHeight + headerHeight);
     setFooterHeight(nextFooterHeight);
@@ -161,17 +170,27 @@ export function BottomSheet({
     const resizeObserver = new ResizeObserver(() => updateSheetMetrics());
 
     observedElements.forEach((element) => resizeObserver.observe(element));
-    window.addEventListener("resize", updateSheetMetrics);
-    window.visualViewport?.addEventListener("resize", updateSheetMetrics);
-    window.visualViewport?.addEventListener("scroll", updateSheetMetrics);
+    const releaseViewport = sheetRef.current
+      ? observeOverlayViewport({
+          overlay: sheetRef.current,
+          getBody: (): HTMLElement | null => bodyRef.current,
+          isActive: (): boolean => isTopOverlay(sheetId),
+          onViewportChange: updateSheetMetrics,
+          getInsets: (): { readonly top: number; readonly bottom: number } => ({
+            top:
+              (handleRef.current?.offsetHeight ?? 20) +
+              (headerRef.current?.offsetHeight ?? 56) +
+              16,
+            bottom: (footerRef.current?.offsetHeight ?? 0) + 16,
+          }),
+        })
+      : undefined;
 
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", updateSheetMetrics);
-      window.visualViewport?.removeEventListener("resize", updateSheetMetrics);
-      window.visualViewport?.removeEventListener("scroll", updateSheetMetrics);
+      releaseViewport?.();
     };
-  }, [open, portalNode, updateSheetMetrics]);
+  }, [open, portalNode, sheetId, updateSheetMetrics]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -237,7 +256,7 @@ export function BottomSheet({
 
   if (portalNode === null) return null;
 
-  const expandedHeight = Math.max(MIN_SHEET_HEIGHT, viewportHeight - SHEET_TOP_GAP);
+  const expandedHeight = Math.max(0, viewportHeight - SHEET_TOP_GAP);
   const canResize = !contentOverflows && expandedHeight - naturalHeight > MIN_RESIZE_DISTANCE;
   const activeHeight = expanded && canResize ? expandedHeight : naturalHeight;
 
@@ -294,7 +313,8 @@ export function BottomSheet({
             className={`fixed inset-x-0 bottom-0 mx-auto flex w-full ${desktop ? "max-w-3xl" : "max-w-md"} flex-col overflow-hidden rounded-t-owner bg-surface-container-low shadow-sheet ring-1 ring-ring-control outline-none`}
             style={{
               zIndex: zIndex + 1,
-              maxHeight: `calc(100dvh - ${SHEET_TOP_GAP}px)`,
+              bottom: viewportBottom,
+              maxHeight: expandedHeight,
             }}
             role="dialog"
             aria-modal="true"

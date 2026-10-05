@@ -168,6 +168,8 @@ The palette is a disciplined cool-neutral monochrome foundation with exactly one
 
 **The One Role Rule.** Pick the semantic type role whose purpose matches, not the one whose pixel size happens to look close. An arbitrary size remains valid only for something with no role in this table.
 
+**The Editable Text Rule.** On viewports below 1024px or devices with a coarse pointer, editable text inputs and textareas have a 16px minimum (`--text-input-min`). The shared stylesheet raises small type roles on the control itself, including grouped forms, money/quantity controls, search, chat, and HEX entry. Larger text keeps its size; labels, helper copy, read-only facts, and fine-pointer desktop controls keep their compact roles. Keep manual pinch zoom available.
+
 ## Layout
 
 The existing/mobile application shell is a fixed `max-w-md` (448px) column at every viewport. `/admin/**` uses a separate desktop shell and never widens the mobile shell. Design and verification both happen at 320, 360, 390, and 430px; a desktop preview alone is not acceptance evidence.
