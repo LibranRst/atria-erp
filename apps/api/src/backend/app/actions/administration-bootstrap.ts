@@ -9,9 +9,11 @@ import {
   budgetAllocationSettingCategory,
   expenseCategory,
   role,
+  rolePermission,
   user,
 } from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
+import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
 import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@atria/core/auth/role-constants";
 import {
   DEFAULT_EXPENSE_CATEGORIES,
@@ -98,10 +100,33 @@ export async function bootstrapFirstOwner(
       });
       if (existingOwner) throw new Error("BOOTSTRAP_ALREADY_COMPLETED");
 
-      await tx
+      const previousUser = await tx.query.user.findFirst({ columns: { id: true } });
+      const createdRoles = await tx
         .insert(role)
         .values([...SYSTEM_ROLES])
-        .onConflictDoNothing();
+        .onConflictDoNothing()
+        .returning({ id: role.id });
+      const createdRoleIds = new Set(createdRoles.map((createdRole) => createdRole.id));
+      const storedGrants = await tx.query.rolePermission.findMany({
+        columns: { roleId: true },
+      });
+      const initializedRoleIds = new Set(storedGrants.map((grant) => grant.roleId));
+      // Reset removes permission rows as well as roles. Initialize new roles and
+      // empty role scaffolding before the first user; preserve configured grants
+      // and intentional revocations in installations that already have users.
+      const initialPermissions = SYSTEM_ROLES.filter(
+        (systemRole) =>
+          createdRoleIds.has(systemRole.id) ||
+          (!previousUser && !initializedRoleIds.has(systemRole.id)),
+      ).flatMap((systemRole) =>
+        (ROLE_PERMISSIONS[systemRole.name.toUpperCase()] ?? []).map((permissionKey) => ({
+          roleId: systemRole.id,
+          permissionKey,
+        })),
+      );
+      if (initialPermissions.length > 0) {
+        await tx.insert(rolePermission).values(initialPermissions).onConflictDoNothing();
+      }
       const [created] = await tx
         .insert(user)
         .values({
