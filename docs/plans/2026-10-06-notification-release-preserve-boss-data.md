@@ -89,3 +89,25 @@ Web HTTP DTOs and authenticated upload results rebase only valid private UUID
 references to the new frontend proxy, preserving its same-origin session.
 Stored database references remain unchanged. Submitted expense proofs remain
 protected from draft cleanup across every configured origin.
+
+## Release verification on 6 October
+
+- Production backup GitHub run `37408047374` completed successfully before any
+  hosted API or database configuration was changed. The main Railway database
+  is still `atria_pilot`; its bridge matches the original frontend.
+- Local checks: core 323, API 370, web 862, mobile 105 and operator tests 6
+  passed (164 API integration tests skipped without disposable PostgreSQL).
+  API/web typechecks, workspace lint and API/web production builds passed.
+- CI `37408356000` passed disposable PostgreSQL integration but rejected the
+  newly reviewed source-map-js advisory GHSA-68fv-2mgg-jv7q (reviewed 5 October).
+  Patch only source-map-js 1.2.1 → 1.2.2 through the root override and lockfile.
+  Production classification now passes the unchanged high-severity gate; the
+  inherited moderate uuid advisory is not an assertion of exploitability.
+- Netlify account session is now the human-authorized new account; the import
+  form targets team `atria-team`, source `codex/notifications-production`,
+  Next.js `apps/web`, name `atria-dekoria-app` (availability confirmed).
+  Selecting Next.js sets UI base to apps/web; root netlify.toml overrides the
+  effective base/build/publish configuration. Verify those resolved build logs.
+- The bridge field is still empty. New-account credential transfer, exact new
+  origin trust and production VAPID installation await the Browser confirmation
+  at their access boundary. No public application was deployed by preparation.
