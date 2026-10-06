@@ -79,7 +79,11 @@ export function createApiApp(config: ApiConfig, ports: ApiPorts, effects: Backgr
     "/api/*",
     cors({
       origin: (origin: string): string | undefined =>
-        [new URL(config.WEB_ORIGIN).origin, new URL(config.API_PUBLIC_URL).origin].includes(origin)
+        [
+          new URL(config.WEB_ORIGIN).origin,
+          new URL(config.API_PUBLIC_URL).origin,
+          ...config.WEB_ADDITIONAL_ORIGINS,
+        ].includes(origin)
           ? origin
           : undefined,
       credentials: true,

@@ -1,4 +1,5 @@
-import { and, eq, lte } from "drizzle-orm";
+import { and, eq, inArray, lte } from "drizzle-orm";
+import { configuredAttachmentOrigins } from "@atria/core/media/web-origins";
 
 import type { SubmittedExpenseDraft } from "@backend/app/actions/finance/expense-draft-types";
 import { db } from "@backend/db";
@@ -13,19 +14,33 @@ export function nextExpenseDraftExpiry(): Date {
   return new Date(Date.now() + DRAFT_LIFETIME_MS);
 }
 
-export async function deleteExpenseDraftAttachment(fileId: string, ownerUserId: string): Promise<void> {
+export async function deleteExpenseDraftAttachment(
+  fileId: string,
+  ownerUserId: string,
+): Promise<void> {
   const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
   if (!privateKey || !fileId) return;
-  const registered = await db.query.attachment.findFirst({ where: and(eq(attachment.id, fileId), eq(attachment.uploadedById, ownerUserId)) }).catch(() => undefined);
+  const registered = await db.query.attachment
+    .findFirst({ where: and(eq(attachment.id, fileId), eq(attachment.uploadedById, ownerUserId)) })
+    .catch(() => undefined);
   if (!registered?.storageFileId || registered.referenceType !== "private_expense") return;
   // Keep an uploaded proof if a submitted cost already refers to it.
-  const inUse = await db.query.projectCost.findFirst({ where: eq(projectCost.receiptImageUrl, new URL(`/api/media/attachments/${fileId}`, process.env.WEB_ORIGIN ?? "http://localhost:3000").href), columns: { id: true } });
-  if (inUse) return;
-  const response = await fetch(`https://api.imagekit.io/v1/files/${encodeURIComponent(registered.storageFileId)}`, {
-    method: "DELETE",
-    signal: AbortSignal.timeout(10_000),
-    headers: { Authorization: `Basic ${Buffer.from(`${privateKey}:`).toString("base64")}` },
+  const references = configuredAttachmentOrigins(process.env).map(
+    (origin: string): string => new URL(`/api/media/attachments/${fileId}`, origin).href,
+  );
+  const inUse = await db.query.projectCost.findFirst({
+    where: inArray(projectCost.receiptImageUrl, references),
+    columns: { id: true },
   });
+  if (inUse) return;
+  const response = await fetch(
+    `https://api.imagekit.io/v1/files/${encodeURIComponent(registered.storageFileId)}`,
+    {
+      method: "DELETE",
+      signal: AbortSignal.timeout(10_000),
+      headers: { Authorization: `Basic ${Buffer.from(`${privateKey}:`).toString("base64")}` },
+    },
+  );
   if (!response.ok && response.status !== 404) {
     throw new Error(`IMAGEKIT_DELETE_FAILED_${response.status}`);
   }
