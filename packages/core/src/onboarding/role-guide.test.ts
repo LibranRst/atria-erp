@@ -31,7 +31,7 @@ describe("role introduction reflects actual effective access", () => {
       const guide = buildRoleGuide(access(index));
       expect(guide.roleLabel).toBe(label);
       expect(guide.primaryAction.href).toBe(href);
-      expect(guide.responsibilities.map((row) => row.id)).toEqual(ids);
+      expect(guide.responsibilities.map((row) => row.id)).toEqual([...ids]);
     },
   );
   test("Finance is not promised unrestricted approval; PM is not promised cash/stock mutations", () => {

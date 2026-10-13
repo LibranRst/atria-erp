@@ -29,6 +29,7 @@ import {
 } from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
 import { describeIntegration } from "@backend/lib/testing/integration-db";
+import { assertOwnedAuditDatabase } from "@backend/lib/testing/owned-audit-database";
 import { withTestRequest } from "@backend/lib/testing/request";
 import { resolveActor, type Actor } from "@backend/server/actor";
 import {
@@ -189,11 +190,7 @@ const confirm = withTestRequest(confirmAiQuickStartProposal),
   read = withTestRequest(getAiQuickStartProposal);
 describeIntegration("Owned Quick Start through chat", () => {
   beforeAll(async () => {
-    if (
-      new URL(process.env.ATRIA_TEST_DATABASE_URL ?? "http://invalid").pathname !==
-      "/atria_audit_quick_start"
-    )
-      throw Error("Named disposable Quick Start database only");
+    assertOwnedAuditDatabase("atria_audit_quick_start");
     owner = await person("GLOBAL");
     other = await person("GLOBAL");
     pm = await person("ASSIGNED");

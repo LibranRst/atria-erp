@@ -459,13 +459,52 @@ describeIntegration("seeded demo walkthrough — tulang punggung kas", () => {
     "10.2 refuses a match across two different bank accounts",
     withTestRequest(async () => {
       actAs(LISA);
-      const result = await reconcileCashTransaction({
-        cashTransactionId: TX_850,
-        bankStatementRowId: ROW_2500,
+      const cash = await db.query.cashTransaction.findFirst({
+        where: eq(cashTransaction.id, TX_850),
       });
-      expect(result.success).toBe(false);
-      if (result.success) throw new Error("unreachable");
-      expect(result.error.message).toContain("tidak sama");
+      const other = await db.query.bankStatementRow.findFirst({
+        where: eq(bankStatementRow.id, ROW_2500),
+        with: { import: true },
+      });
+      if (!cash || !other) throw new Error("Pasangan rekonsiliasi fixture tidak tersedia.");
+      expect(cash.bankAccountId).not.toBe(other.import.bankAccountId);
+      expect(cash.reconciled).toBe(false);
+      const cashBankBefore = await balance(cash.bankAccountId);
+      const otherBankBefore = await balance(other.import.bankAccountId);
+      // Match amount and direction so only the account differs. The original
+      // seeded statement remains intact for the positive walkthrough below.
+      const [wrongAccountRow] = await db
+        .insert(bankStatementRow)
+        .values({
+          importId: other.importId,
+          transactionDate: cash.createdAt,
+          description: "Fixture uji rekening berbeda",
+          amount: cash.amount,
+          type: cash.type,
+        })
+        .returning();
+      if (!wrongAccountRow) throw new Error("Baris uji lintas rekening tidak dibuat.");
+      try {
+        const result = await reconcileCashTransaction({
+          cashTransactionId: cash.id,
+          bankStatementRowId: wrongAccountRow.id,
+        });
+        expect(result).toMatchObject({ success: false, error: { code: "VALIDATION_ERROR" } });
+        if (result.success) throw new Error("Rekonsiliasi lintas rekening seharusnya ditolak.");
+        expect(result.error.message).toContain("pasangan harus sama persis");
+        const unchangedCash = await db.query.cashTransaction.findFirst({
+          where: eq(cashTransaction.id, cash.id),
+        });
+        const unchangedStatement = await db.query.bankStatementRow.findFirst({
+          where: eq(bankStatementRow.id, wrongAccountRow.id),
+        });
+        expect(unchangedCash).toEqual(cash);
+        expect(unchangedStatement).toEqual(wrongAccountRow);
+        expect(await balance(cash.bankAccountId)).toBe(cashBankBefore);
+        expect(await balance(other.import.bankAccountId)).toBe(otherBankBefore);
+      } finally {
+        await db.delete(bankStatementRow).where(eq(bankStatementRow.id, wrongAccountRow.id));
+      }
     }),
   );
 

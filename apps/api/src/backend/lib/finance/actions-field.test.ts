@@ -12,8 +12,10 @@ import {
   stockMovement,
   projectExpenses,
   cashTransaction,
+  auditLog,
+  projectBudgetCategory,
 } from "@backend/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, count, desc } from "drizzle-orm";
 import { auth } from "@backend/lib/auth";
 import { submitVendorBill as submitVendorBillAction } from "@backend/app/actions/finance/submit-vendor-bill";
 import { scheduleVendorBillPayment as scheduleVendorBillPaymentAction } from "@backend/app/actions/finance/schedule-vendor-bill";
@@ -830,7 +832,7 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
     );
 
     it(
-      "harus mencatat material expense dengan stock in eksplisit dan menghubungkan stock movement",
+      "harus mengizinkan stock in Material hanya dengan izin stok dan menjaga kas saat pengajuan",
       withTestRequest(async () => {
         mockUserSession(PM_BUDI_USER);
 
@@ -841,6 +843,46 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
           ),
         });
         expect(inventoryBefore).toBeDefined();
+        if (!inventoryBefore) throw new Error("Seed inventory required");
+        const balancesBefore = await db
+          .select({ id: bankAccount.id, balance: bankAccount.balance })
+          .from(bankAccount)
+          .orderBy(bankAccount.id);
+        const [cashBefore] = await db.select({ value: count() }).from(cashTransaction);
+        const [movementsBefore] = await db.select({ value: count() }).from(stockMovement);
+        const categoryBefore = await db.query.projectBudgetCategory.findFirst({
+          where: eq(projectBudgetCategory.id, MENTENG_MATERIAL_CATEGORY_ID),
+        });
+        if (!categoryBefore) throw new Error("Seed Material category required");
+        const deniedDescription = "Pembelian multipleks untuk stock proyek Menteng tanpa izin stok";
+        const denied = await submitFieldRequest({
+          projectId: MENTENG_PROJECT_ID,
+          projectBudgetCategoryId: MENTENG_MATERIAL_CATEGORY_ID,
+          materialId: MATERIAL_PLYWOOD_ID,
+          projectRapItemId: MENTENG_RAP_PLYWOOD_ITEM_ID,
+          inventoryLocationId: WAREHOUSE_LOCATION_ID,
+          stockHandling: "STOCK_IN",
+          quantity: 3,
+          unitPrice: 250000,
+          amount: 750000,
+          description: deniedDescription,
+        });
+        expect(denied.success).toBe(false);
+        if (!denied.success) expect(denied.error.message).toContain("FORBIDDEN");
+        expect(
+          await db.query.projectCost.findFirst({
+            where: eq(projectCost.description, deniedDescription),
+          }),
+        ).toBeUndefined();
+        const inventoryDenied = await db.query.materialInventory.findFirst({
+          where: eq(materialInventory.id, inventoryBefore.id),
+        });
+        expect(inventoryDenied?.currentStock).toBe(inventoryBefore.currentStock);
+        expect(inventoryDenied?.reservedStock).toBe(inventoryBefore.reservedStock);
+        expect((await db.select({ value: count() }).from(stockMovement))[0]?.value).toBe(
+          movementsBefore.value,
+        );
+        mockUserSession(OWNER_USER);
 
         const res = await submitFieldRequest({
           projectId: MENTENG_PROJECT_ID,
@@ -878,6 +920,49 @@ describeIntegration("Atria ERP Server Actions - TSK-008 Accounts Payable & Field
           where: eq(projectExpenses.legacyProjectCostId, res.data.id),
         });
         expect(canonicalExpense?.stockMovementId).toBe(movement!.id);
+        expect(canonicalExpense).toMatchObject({
+          amount: "750000.00",
+          status: "SUBMITTED",
+          paymentStatus: "UNPAID",
+          materialId: MATERIAL_PLYWOOD_ID,
+          projectRapItemId: MENTENG_RAP_PLYWOOD_ITEM_ID,
+        });
+        expect(inventoryAfter?.reservedStock).toBe(inventoryBefore.reservedStock);
+        const categoryAfter = await db.query.projectBudgetCategory.findFirst({
+          where: eq(projectBudgetCategory.id, MENTENG_MATERIAL_CATEGORY_ID),
+        });
+        expect(Number(categoryAfter?.pendingAmount) - Number(categoryBefore.pendingAmount)).toBe(
+          750000,
+        );
+        expect(categoryAfter?.actualAmount).toBe(categoryBefore.actualAmount);
+        expect(categoryAfter?.paidAmount).toBe(categoryBefore.paidAmount);
+        expect(
+          await db
+            .select({ id: bankAccount.id, balance: bankAccount.balance })
+            .from(bankAccount)
+            .orderBy(bankAccount.id),
+        ).toEqual(balancesBefore);
+        expect((await db.select({ value: count() }).from(cashTransaction))[0]?.value).toBe(
+          cashBefore.value,
+        );
+        const stockAudit = await db.query.auditLog.findFirst({
+          where: and(
+            eq(auditLog.action, "EXPENSE_STOCK_IN"),
+            eq(auditLog.targetId, inventoryBefore.id),
+            eq(auditLog.userId, OWNER_USER.id),
+          ),
+          orderBy: [desc(auditLog.createdAt)],
+        });
+        expect(stockAudit?.newState).toContain(movement!.id);
+        expect(
+          await db.query.auditLog.findFirst({
+            where: and(
+              eq(auditLog.action, "SUBMIT_FIELD_REQUEST"),
+              eq(auditLog.targetId, res.data.id),
+              eq(auditLog.userId, OWNER_USER.id),
+            ),
+          }),
+        ).toBeDefined();
       }),
     );
 

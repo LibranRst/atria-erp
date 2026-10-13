@@ -1,7 +1,7 @@
 import { withTestRequest } from "@backend/lib/testing/request";
 import { afterAll, expect, it } from "bun:test";
 import { describeIntegration } from "@backend/lib/testing/integration-db";
-import { inArray } from "drizzle-orm";
+import { inArray, eq, and, count } from "drizzle-orm";
 
 import {
   discardExpenseDraft as discardExpenseDraftAction,
@@ -11,7 +11,17 @@ import {
   submitExpenseDraft as submitExpenseDraftAction,
 } from "@backend/app/actions/finance/expense-drafts";
 import { db } from "@backend/db";
-import { approval, auditLog, formDraft, projectCost, projectExpenses } from "@backend/db/schema";
+import {
+  approval,
+  auditLog,
+  formDraft,
+  projectCost,
+  projectExpenses,
+  projectBudgetCategory,
+  cashTransaction,
+  stockMovement,
+  bankAccount,
+} from "@backend/db/schema";
 import {
   createBlankExpenseDraft,
   createBlankExpenseLine,
@@ -207,6 +217,16 @@ describeIntegration("expense draft actions", () => {
     "submits atomically, writes audit, and is idempotent on retry",
     withTestRequest(async () => {
       mockSession(OWNER);
+      const categoryBefore = await db.query.projectBudgetCategory.findFirst({
+        where: eq(projectBudgetCategory.id, OPERASIONAL_CATEGORY_ID),
+      });
+      if (!categoryBefore) throw new Error("Seed operational category required");
+      const balancesBefore = await db
+        .select({ id: bankAccount.id, balance: bankAccount.balance })
+        .from(bankAccount)
+        .orderBy(bankAccount.id);
+      const [cashBefore] = await db.select({ value: count() }).from(cashTransaction);
+      const [stockBefore] = await db.select({ value: count() }).from(stockMovement);
       const saved = await saveExpenseDraft({
         payload: validPayload(`Atomic submit ${Date.now()}`),
       });
@@ -227,11 +247,31 @@ describeIntegration("expense draft actions", () => {
       const audit = await db.query.auditLog.findFirst({
         where: (table, { and, eq }) =>
           and(
-            eq(table.action, "SUBMIT_EXPENSE_DRAFT"),
+            eq(table.action, "SUBMIT_FIELD_REQUEST"),
             eq(table.targetId, submitted.data.projectCostIds[0]),
           ),
       });
       expect(audit).toBeDefined();
+      expect(audit?.userId).toBe(OWNER.id);
+      expect(audit?.targetTable).toBe("project_cost");
+      const canonical = await db.query.projectExpenses.findMany({
+        where: eq(projectExpenses.legacyProjectCostId, submitted.data.projectCostIds[0]),
+      });
+      expect(canonical).toHaveLength(1);
+      expect(canonical[0]).toMatchObject({
+        amount: "12345.00",
+        status: "SUBMITTED",
+        paymentStatus: "UNPAID",
+        stockMovementId: null,
+      });
+      const consumed = await db.query.formDraft.findFirst({
+        where: eq(formDraft.id, saved.data.id),
+      });
+      expect(consumed).toMatchObject({
+        status: "CONSUMED",
+        submissionGroupId: submitted.data.receiptGroupId,
+        revision: saved.data.revision + 1,
+      });
 
       const retry = await submitExpenseDraft({
         draftId: saved.data.id,
@@ -242,6 +282,47 @@ describeIntegration("expense draft actions", () => {
         expect(retry.data.idempotent).toBe(true);
         expect(retry.data.projectCostIds).toEqual(submitted.data.projectCostIds);
       }
+      expect(
+        (
+          await db
+            .select({ value: count() })
+            .from(projectCost)
+            .where(eq(projectCost.receiptGroupId, submitted.data.receiptGroupId))
+        )[0]?.value,
+      ).toBe(1);
+      expect(
+        (
+          await db
+            .select({ value: count() })
+            .from(auditLog)
+            .where(
+              and(
+                eq(auditLog.action, "SUBMIT_FIELD_REQUEST"),
+                eq(auditLog.targetId, submitted.data.projectCostIds[0]),
+              ),
+            )
+        )[0]?.value,
+      ).toBe(1);
+      const categoryAfter = await db.query.projectBudgetCategory.findFirst({
+        where: eq(projectBudgetCategory.id, OPERASIONAL_CATEGORY_ID),
+      });
+      expect(Number(categoryAfter?.pendingAmount) - Number(categoryBefore.pendingAmount)).toBe(
+        12345,
+      );
+      expect(categoryAfter?.actualAmount).toBe(categoryBefore.actualAmount);
+      expect(categoryAfter?.paidAmount).toBe(categoryBefore.paidAmount);
+      expect(
+        await db
+          .select({ id: bankAccount.id, balance: bankAccount.balance })
+          .from(bankAccount)
+          .orderBy(bankAccount.id),
+      ).toEqual(balancesBefore);
+      expect((await db.select({ value: count() }).from(cashTransaction))[0]?.value).toBe(
+        cashBefore.value,
+      );
+      expect((await db.select({ value: count() }).from(stockMovement))[0]?.value).toBe(
+        stockBefore.value,
+      );
     }),
   );
 });

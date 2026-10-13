@@ -98,8 +98,11 @@ jobs:
           --seed-template atria_audit_baseline
           --empty-template atria_audit_empty
           --logs output/postgres-integration
+      # Tests remain a required gate. Artifact storage is supplementary: the
+      # runner also prints sanitized per-suite results in the immutable job log.
       - uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: postgres-integration-results
           path: output/postgres-integration/results.json

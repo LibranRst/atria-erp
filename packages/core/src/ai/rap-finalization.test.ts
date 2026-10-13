@@ -84,7 +84,7 @@ describe("RAP readiness simulation", () => {
     ).toThrow();
   });
   test("requires explicit unused scope and refuses contradictory or no-op decisions", () => {
-    let s = { ...state(), packages: [] };
+    let s: SetupState = { ...state(), packages: [] };
     expect(setupReadiness(s)).toMatchObject({ material: true, tukang: false, subcon: false });
     s = simulateSetupStep(s, { action: "SET_SCOPE", category: "TUKANG", skipped: true });
     s = simulateSetupStep(s, { action: "SET_SCOPE", category: "SUBCON", skipped: true });
