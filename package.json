@@ -68,7 +68,8 @@
   },
   "overrides": {
     "react-native-css-interop": "0.2.6",
-    "undici": "7.29.1"
+    "undici": "7.29.1",
+    "source-map-js": "1.2.2"
   },
   "ignoreScripts": [
     "sharp",
