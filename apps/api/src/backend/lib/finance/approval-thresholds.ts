@@ -1,8 +1,8 @@
 import { cache } from "@runtime/react-cache";
-import { inArray } from "drizzle-orm";
+import { inArray, and, eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { appConfig } from "@backend/db/schema";
+import { appConfig, INSTANCE_TENANT_ID } from "@backend/db/schema";
 import {
   APPROVAL_THRESHOLD_CONFIG_KEYS,
   DEFAULT_APPROVAL_THRESHOLDS,
@@ -23,18 +23,25 @@ import {
  * Ambang nol berarti "semua butuh persetujuan Owner" dan itu keputusan yang sah
  * — jadi ia tidak boleh bisa muncul dari sebuah baris yang salah ketik.
  */
-export const getApprovalThresholds = cache(async (): Promise<ApprovalThresholds> => readApprovalThresholds(db));
+export const getApprovalThresholds = cache(async (): Promise<ApprovalThresholds> =>
+  readApprovalThresholds(db),
+);
 
-export async function readApprovalThresholds(reader: Pick<typeof db, "select">): Promise<ApprovalThresholds> {
+export async function readApprovalThresholds(
+  reader: Pick<typeof db, "select">,
+): Promise<ApprovalThresholds> {
   try {
     const rows = await reader
       .select({ key: appConfig.key, value: appConfig.value })
       .from(appConfig)
       .where(
-        inArray(appConfig.key, [
-          APPROVAL_THRESHOLD_CONFIG_KEYS.fieldCost,
-          APPROVAL_THRESHOLD_CONFIG_KEYS.vendorPayment,
-        ]),
+        and(
+          eq(appConfig.tenantId, INSTANCE_TENANT_ID),
+          inArray(appConfig.key, [
+            APPROVAL_THRESHOLD_CONFIG_KEYS.fieldCost,
+            APPROVAL_THRESHOLD_CONFIG_KEYS.vendorPayment,
+          ]),
+        ),
       );
 
     const byKey = new Map(rows.map((row) => [row.key, row.value]));

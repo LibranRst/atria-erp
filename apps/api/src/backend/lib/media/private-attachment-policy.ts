@@ -1,23 +1,10 @@
-import { PRIVATE_ATTACHMENT_MAX_BYTES } from "@atria/core/media/private-attachment";
+import {
+  PRIVATE_ATTACHMENT_MAX_BYTES,
+  PRIVATE_ATTACHMENT_MIME_BY_EXTENSION,
+} from "@atria/core/media/private-attachment";
 import { z } from "zod";
 
 const idSchema = z.string().uuid();
-const MIME_BY_EXTENSION: Readonly<Record<string, string>> = {
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  webp: "image/webp",
-  gif: "image/gif",
-  heic: "image/heic",
-  heif: "image/heif",
-  pdf: "application/pdf",
-  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  xls: "application/vnd.ms-excel",
-  csv: "text/csv",
-  txt: "text/plain",
-  md: "text/markdown",
-  json: "application/json",
-};
 
 export function privateAttachmentId(url: string, origins: readonly string[]): string {
   const parsed = new URL(url);
@@ -56,7 +43,9 @@ export function imagekitSource(url: string, endpoint: string): string {
 
 export function attachmentMime(fileName: string, size: number): string {
   const extension = fileName.toLowerCase().split(".").at(-1) ?? "";
-  const mime = MIME_BY_EXTENSION[extension];
+  const mime = Object.hasOwn(PRIVATE_ATTACHMENT_MIME_BY_EXTENSION, extension)
+    ? PRIVATE_ATTACHMENT_MIME_BY_EXTENSION[extension]
+    : undefined;
   if (!mime || size <= 0 || size > PRIVATE_ATTACHMENT_MAX_BYTES) {
     throw new Error("Format berkas tidak didukung atau ukuran melebihi 10 MB.");
   }

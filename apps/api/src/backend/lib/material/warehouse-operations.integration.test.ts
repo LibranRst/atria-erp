@@ -289,7 +289,10 @@ describeIntegration("gudang — goods receipt, transfer, stock count, adjustment
       expect(selfApproval.success).toBe(false);
 
       actAs(RONALD);
-      const approved = await approveStockCount({ stockCountId, emergencyOverride: false });
+      const approved = await withTestRequest(approveStockCount)({
+        stockCountId,
+        emergencyOverride: false,
+      });
       expect(approved.success).toBe(true);
 
       const posted = await db.query.stockCount.findFirst({

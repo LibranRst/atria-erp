@@ -51,6 +51,7 @@ Object.defineProperty(browserWindow, "visualViewport", { value: visualViewport }
 const { createRoot } = await import("react-dom/client");
 const { BottomSheet } = await import("./bottom-sheet");
 const { DialogFrame } = await import("./dialog-frame");
+const { markOverlayKeyHandled } = await import("./overlay-stack");
 const host = document.createElement("div");
 document.body.append(host);
 const root = createRoot(host);
@@ -69,13 +70,16 @@ function setDimension(element: HTMLElement, name: string, value: number): void {
   Object.defineProperty(element, name, { configurable: true, value });
 }
 
+let sheetDismissals = 0;
 function sheetFixture(showDialog = false): React.JSX.Element {
   return (
     <>
       <BottomSheet
         open
         title="Keyboard fixture"
-        onClose={(): void => undefined}
+        onClose={(): void => {
+          sheetDismissals += 1;
+        }}
         footer={<button type="button">Simpan</button>}
       >
         <input aria-label="Nama" />
@@ -108,6 +112,30 @@ try {
   const input = body?.querySelector<HTMLInputElement>("input");
   const textarea = body?.querySelector<HTMLTextAreaElement>("textarea");
   assert.ok(sheet && body && input && textarea);
+  const consumedEscape = new KeyboardEvent("keydown", {
+    key: "Escape",
+    bubbles: true,
+    cancelable: true,
+  });
+  consumedEscape.preventDefault();
+  window.dispatchEvent(consumedEscape);
+  assert.equal(sheetDismissals, 0, "Escape handled by a nested selector must not close the sheet");
+  const nativeConsumedEscape = new KeyboardEvent("keydown", {
+    key: "Escape",
+    bubbles: true,
+    cancelable: true,
+  });
+  markOverlayKeyHandled(nativeConsumedEscape);
+  window.dispatchEvent(nativeConsumedEscape);
+  assert.equal(
+    sheetDismissals,
+    0,
+    "A native selector that already unmounted still owns its Escape event",
+  );
+  window.dispatchEvent(
+    new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+  );
+  assert.equal(sheetDismissals, 1, "Unhandled Escape still follows the sheet dismissal policy");
   const initialHost = sheet.parentElement;
   assert.ok(initialHost);
   initialHost.getBoundingClientRect = (): DOMRect => rect(visualTop - window.scrollY, visualHeight);

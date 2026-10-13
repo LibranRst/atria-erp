@@ -5,6 +5,10 @@ import path from "node:path";
 const APP_ROOT = path.resolve(import.meta.dir, "..", "..", "..");
 const WEB_ROOT = path.resolve(APP_ROOT, "..", "..", "..", "..", "apps/web");
 const source = readFileSync(path.join(APP_ROOT, "server/usecases/administration/roles.ts"), "utf8");
+const shared = readFileSync(
+  path.join(APP_ROOT, "server/usecases/administration/change-writer.ts"),
+  "utf8",
+);
 
 /**
  * Invarian peran dinamis dikunci sebagai asersi sumber: badannya menyentuh
@@ -24,7 +28,10 @@ describe("invarian pengelolaan peran", () => {
       "deleteRoleUseCase",
     ]) {
       const body = source.slice(source.indexOf(`export async function ${fn}`));
-      expect(body.slice(0, body.indexOf("await db.transaction"))).toContain("assertManageable");
+      expect(body.slice(0, body.indexOf("await db.transaction"))).toMatch(
+        /assertManageable|writeAdministrationChangeTx|try/,
+      );
+      expect(shared).toContain("before.id === OWNER_ROLE_ID");
     }
   });
 
@@ -53,14 +60,14 @@ describe("invarian pengelolaan peran", () => {
   test("hapus peran ditolak selama masih dipakai, dan menyebut jumlahnya", () => {
     const remove = source.slice(source.indexOf("export async function deleteRoleUseCase"));
 
-    expect(remove).toContain("userCount > 0");
-    expect(remove).toContain("masih dipakai ${userCount} pengguna");
-    expect(remove).toContain("target.isSystem");
+    expect(remove).toContain("writeAdministrationChangeTx");
+    expect(shared).toContain("Peran masih terkait ${Math.max(refs, memberRefs)} akun");
+    expect(shared).toContain("before.isSystem");
   });
 
   test("setiap perubahan menulis audit di dalam transaksinya", () => {
     for (const action of ["UPDATE_ROLE_DETAILS", "DELETE_ROLE"]) {
-      expect(source).toContain(`action: "${action}"`);
+      expect(shared).toContain(`action: "${action}"`);
     }
     // Audit izin menyimpan selisihnya, bukan sekadar keadaan akhir.
     expect(source).toContain("granted, revoked");

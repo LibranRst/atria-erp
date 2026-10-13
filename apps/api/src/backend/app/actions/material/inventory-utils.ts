@@ -253,6 +253,14 @@ export function mapStockError<T>(error: unknown, fallbackMessage: string): Actio
       error: { code: "NOT_FOUND", message: "Inventory material tidak ditemukan." },
     };
   }
+  if (message === "RELEASE_EXCEEDS_PROJECT_RESERVATION")
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Jumlah pelepasan melebihi reservasi proyek dan sumber RAP terkait.",
+      },
+    };
   if (message === "INSUFFICIENT_AVAILABLE_STOCK") {
     return {
       success: false,

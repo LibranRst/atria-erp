@@ -13,6 +13,9 @@ import {
   wasteMaterialForProject,
 } from "@/app/actions/material/inventory";
 import {
+  MoneyValue,
+  GroupedSurface,
+  FactRow,
   ConfirmationDialog,
   FormField,
   FormRiskNotice,
@@ -212,6 +215,72 @@ export function StockOperationSheet({
         ))}
       </div>
       <WorkflowFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-3">
+            <div className="px-1">
+              <h3 className="text-support font-semibold text-on-surface">Ringkasan operasi stok</h3>
+              <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+                {rapItem?.name ?? "Pilih material RAP"}
+              </p>
+            </div>
+            <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Operasi"
+                  value={operation ? LABELS[operation] : "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Lokasi"
+                  value={inventory?.locationName ?? "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Jumlah"
+                  value={`${quantity || 0} ${rapItem?.unit ?? material?.unit ?? "unit"}`}
+                />
+                {inventory && (
+                  <FactRow
+                    layout="stacked"
+                    wrapLabel
+                    label={operation === "RESERVE" ? "Stok tersedia" : "Stok fisik"}
+                    value={`${(operation === "RESERVE" ? inventory.availableStock : inventory.currentStock).toLocaleString("id-ID")} ${rapItem?.unit ?? material?.unit ?? "unit"}`}
+                  />
+                )}
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Nilai dampak"
+                  value={
+                    inventory ? (
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(estimatedImpact) ? 0 : 2}
+                        amount={estimatedImpact}
+                        variant="fullDynamic"
+                        size="sm"
+                        align="right"
+                      />
+                    ) : (
+                      "Pilih lokasi untuk melihat nilai"
+                    )
+                  }
+                />
+              </div>
+            </GroupedSurface>
+            <p className="px-1 text-support text-on-surface-variant">
+              {operation
+                ? DETAIL_HELPERS[operation]
+                : "Pilih operasi stok untuk melihat dampaknya."}{" "}
+              Pembayaran tetap memakai alur kas.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={Boolean(operation)}
         title={

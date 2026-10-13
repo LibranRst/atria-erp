@@ -161,6 +161,7 @@ describe("server module architecture", () => {
     expect(handlers).toEqual([
       "ai/chat/route.ts",
       "auth/[...better-auth]/route.ts",
+      "finance/dashboard-desktop/route.ts",
       "internal/notifications/route.ts",
       "media/[...path]/route.ts",
       "notifications/stream/route.ts",

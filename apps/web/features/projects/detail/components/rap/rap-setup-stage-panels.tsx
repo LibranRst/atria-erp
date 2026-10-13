@@ -7,6 +7,7 @@ import {
   MoneyMetricPill,
   DesktopTable,
   MoneyValue,
+  Button,
 } from "@/components/ui";
 import React from "react";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
@@ -143,22 +144,24 @@ export function MaterialRapStagePanel({
         </div>
       )}
       {canEditRap && (
-        <button
+        <Button
           type="button"
           onClick={openAddRapForm}
           className="mt-sm min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary"
+          variant="primary"
         >
           Tambah Material
-        </button>
+        </Button>
       )}
-      <button
+      <Button
         type="button"
         onClick={() => handleAdvanceRapSetup("TUKANG")}
         disabled={isPending || rap.items.length === 0 || rap.setupStage !== "MATERIAL"}
         className="mt-2 min-h-12 w-full rounded-full bg-on-surface text-xs font-bold text-surface disabled:opacity-35"
+        variant="secondary"
       >
         {rap.setupStage === "MATERIAL" ? "Lanjut ke Tukang" : "Tahap Tukang Sudah Terbuka"}
-      </button>
+      </Button>
     </NativePanel>
   );
 }
@@ -219,7 +222,7 @@ export function PackageSetupStagePanel({
         onOpen={setPackageDetailItemId}
         onSkip={(nextSkipped) => handleScopeSkip(stage, nextSkipped)}
       />
-      <button
+      <Button
         type="button"
         onClick={() => handleAdvanceRapSetup(nextStage)}
         disabled={
@@ -228,6 +231,7 @@ export function PackageSetupStagePanel({
           (!skipped && (items.length === 0 || items.some((item) => item.status === "DRAFT")))
         }
         className="mt-sm min-h-12 w-full rounded-full bg-on-surface text-xs font-bold text-surface disabled:opacity-35"
+        variant="secondary"
       >
         {currentSetupStage
           ? stage === "TUKANG"
@@ -236,7 +240,7 @@ export function PackageSetupStagePanel({
           : stage === "TUKANG"
             ? "Tahap Subcon Sudah Terbuka"
             : "Review Sudah Terbuka"}
-      </button>
+      </Button>
     </NativePanel>
   );
 }
@@ -336,14 +340,15 @@ export function ReviewInternalPlanPanel({
           Menunggu Owner/Finance untuk finalisasi. Progress tetap dapat dilihat semua role.
         </p>
       )}
-      <button
+      <Button
         type="button"
         onClick={handleFinalizeInternalPlan}
         disabled={isPending || !canFinalizeRap}
         className="mt-sm min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary disabled:opacity-35"
+        variant="primary"
       >
         Finalisasi Internal Plan
-      </button>
+      </Button>
     </NativePanel>
   );
 }

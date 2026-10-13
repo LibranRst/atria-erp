@@ -99,6 +99,10 @@ From `AGENTS.md`:
 - Introduce schema changes additively; preserve legacy `project_budget`, `project_budget_item`, and `project_cost` compatibility until reads, writes, tests, approvals, and dashboards are migrated. The field expense table is `project_cost` — there is no `field_request` table.
 - AI may analyze, summarize, and prefill, but must not mutate finance/material records without explicit human approval, must not generate or execute SQL, and must not leak internal RAP cost/margin/vendor notes into client-facing RAB output.
 
+## Desktop Dashboard read adapter
+
+`GET /api/finance/dashboard-desktop` is sanctioned only for the two typed desktop table/cashflow reads. It validates bounded inputs and delegates to the independent API's session, permission, tenant and reporting use-cases. It contains no database/business mutation and cannot forward arbitrary operation names. Using GET prevents late Server Action Flight responses from resetting client-managed Dashboard tab/filter URLs. Keep the native/mobile snapshot and mutation transports unchanged; update the web route allowlist alongside this boundary. See `docs/plans/2026-10-10-desktop-dashboard-redesign.md`.
+
 ## Notification scheduler HTTP exception
 
 `POST /api/internal/notifications` is the deployment-neutral hourly notification reconciliation entrypoint. A scheduler cannot call a browser Server Action, so this handler is explicitly allowed alongside auth, AI chat and tRPC. It requires the server-only `NOTIFICATION_JOB_SECRET` bearer credential, uses a database execution lock, and changes notification state only. Do not add public CRUD routes under this exception. For deployment, retry behavior and retention, read `docs/guide/notifications.md`.

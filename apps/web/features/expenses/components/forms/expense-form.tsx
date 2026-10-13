@@ -12,7 +12,14 @@ import {
   submitExpenseDraft,
   type ExpenseDraftSummary,
 } from "@/app/actions/finance/expense-drafts";
-import { type OperationSuccess, WorkflowFormSheet } from "@/components/ui";
+import {
+  FactRow,
+  GroupedSurface,
+  MoneyValue,
+  type OperationSuccess,
+  WorkflowFormSheet,
+} from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { ExpenseFormNotice } from "@/features/expenses/components/forms/expense-form-sections";
 import { ExpenseActiveDrafts } from "@/features/expenses/components/forms/expense-active-drafts";
 import { ExpenseFormEntryFields } from "@/features/expenses/components/forms/expense-form-entry-fields";
@@ -62,6 +69,7 @@ export function ExpenseForm({
   requestedDraftId = null,
 }: ExpenseFormProps): React.JSX.Element {
   const router = useRouter();
+  const desktop = useWorkspacePresentation() === "desktop";
   const pathname = usePathname();
   const safeRouteProjectId = routeProjectId(pathname);
   const lastProjectId = React.useSyncExternalStore(
@@ -425,6 +433,94 @@ export function ExpenseForm({
     <>
       <WorkflowFormSheet
         dismissal={{ mode: "managed" }}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          loadingDraft ? (
+            <GroupedSurface>
+              <div className="space-y-4 p-4" role="status" aria-label="Memuat ringkasan draft">
+                <span className="sr-only">Memuat ringkasan draft…</span>
+                <div aria-hidden="true" className="h-4 w-20 rounded-full bg-surface-container" />
+                <div aria-hidden="true" className="h-5 w-full rounded-full bg-surface-container" />
+                <div aria-hidden="true" className="h-4 w-24 rounded-full bg-surface-container" />
+                <div aria-hidden="true" className="h-5 w-full rounded-full bg-surface-container" />
+              </div>
+            </GroupedSurface>
+          ) : (
+            <div className="space-y-3">
+              <GroupedSurface>
+                <div className="divide-y divide-ring-subtle">
+                  <FactRow
+                    layout="stacked"
+                    label="Proyek"
+                    wrapLabel
+                    value={
+                      selectedProject?.name ??
+                      (draft.payload.projectId ? "Proyek tidak tersedia" : "Belum dipilih")
+                    }
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Total draft"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(totalAmount) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={totalAmount}
+                      />
+                    }
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Item lengkap"
+                    wrapLabel
+                    value={`${draft.payload.lines.length - incompleteCount} dari ${draft.payload.lines.length}`}
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Nota"
+                    wrapLabel
+                    value={draft.payload.receipt?.fileName ?? "Tanpa nota"}
+                  />
+                  {stockLines.length > 0 ? (
+                    <FactRow
+                      layout="stacked"
+                      label="Item terkait stok"
+                      wrapLabel
+                      value={stockLines.length}
+                    />
+                  ) : null}
+                </div>
+              </GroupedSurface>
+              {categorySummaries.length > 0 ? (
+                <GroupedSurface>
+                  <h3 className="px-4 pt-3 text-support font-semibold text-on-surface">
+                    Usulan per kategori
+                  </h3>
+                  <div className="divide-y divide-ring-subtle">
+                    {categorySummaries.map(({ category, amount }) => (
+                      <FactRow
+                        layout="stacked"
+                        key={category.id}
+                        label={category.name}
+                        wrapLabel
+                        value={
+                          <MoneyValue
+                            fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                            variant="fullDynamic"
+                            amount={amount}
+                            tone={amount > Number(category.remainingAmount) ? "danger" : "default"}
+                          />
+                        }
+                      />
+                    ))}
+                  </div>
+                </GroupedSurface>
+              ) : null}
+            </div>
+          )
+        }
         open={open && success === null}
         title={
           reviewOpen
@@ -447,7 +543,11 @@ export function ExpenseForm({
                 : undefined
             : reviewDisabledReason
         }
-        statusText={`${draft.statusLabel} · ${draft.payload.lines.length} item · Rp ${totalAmount.toLocaleString("id-ID")}`}
+        statusText={
+          desktop
+            ? draft.statusLabel
+            : `${draft.statusLabel} · ${draft.payload.lines.length} item · Rp ${totalAmount.toLocaleString("id-ID")}`
+        }
         statusTone={
           reviewOpen
             ? categorySummaries.some(

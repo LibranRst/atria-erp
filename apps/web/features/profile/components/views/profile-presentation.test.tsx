@@ -10,8 +10,23 @@ import {
 } from "@/features/profile/utils/profile-access";
 import { getProfileInitials } from "@atria/core/presentation/user-identity";
 import { PERMISSION_GROUPS } from "@atria/core/auth/permission-catalog";
+import { WorkspacePresentationProvider } from "@/lib/navigation/workspace-presentation";
 
 describe("Profile presentation", () => {
+  test("desktop access table keeps every module and exposes partial or missing permissions", () => {
+    const groups = summarizeProfileAccess(["view:settings", "view:budget"]);
+    const html = renderToStaticMarkup(
+      <WorkspacePresentationProvider presentation="desktop">
+        <ProfileAccessList groups={groups} roleLabel="Project Manager" />
+      </WorkspacePresentationProvider>,
+    );
+    expect(html).toContain('aria-label="Hak akses per modul"');
+    expect(html).toContain('role="grid"');
+    for (const group of groups) expect(html).toContain(group.title.replaceAll("&", "&amp;"));
+    expect(html).toContain("Sebagian");
+    expect(html).toContain("Tidak ada");
+    expect(html).not.toContain("view:settings");
+  });
   test("excludes deferred AI access from the active profile modules", () => {
     const groups = summarizeProfileAccess(["view:bank_account", "view:settings", "view:ai_brief"]);
 

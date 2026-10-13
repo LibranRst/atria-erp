@@ -11,7 +11,15 @@ import {
   SectionHeader,
   SummaryFact,
   SummarySurface,
+  DesktopInput,
+  FilterSelect,
+  GroupedSurface,
+  StatusBadge,
 } from "@/components/ui";
+import {
+  useWorkspacePresentation,
+  useWorkspaceControlPresentation,
+} from "@/lib/navigation/workspace-presentation";
 import { WORKSPACE_STICKY_CONTROLS_ENABLED } from "@atria/core/presentation/presentation-flags";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import type { FilterId } from "../../types/project-list-types";
@@ -22,6 +30,50 @@ export function ProjectListHeader({
   readonly summary: ProjectPortfolioSummary;
 }): React.JSX.Element {
   const hasAttention = summary.attentionCount > 0;
+  const desktop = useWorkspacePresentation() === "desktop";
+
+  if (desktop)
+    return (
+      <div className="space-y-4">
+        <header className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Proyek</h1>
+            <p className="mt-1 text-support text-on-surface-variant">
+              Bandingkan budget, realisasi, dan kondisi proyek.
+            </p>
+          </div>
+          <StatusBadge
+            label={hasAttention ? `${summary.attentionCount} perlu perhatian` : "Terkendali"}
+            tone={hasAttention ? "warning" : "healthy"}
+          />
+        </header>
+        <GroupedSurface className="p-4">
+          <div className="mb-3 text-support text-on-surface-variant">
+            {summary.activeCount} proyek aktif
+          </div>
+          <dl className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+            {[
+              { label: "Nilai proyek aktif", amount: summary.activeContractValue },
+              { label: "Budget internal", amount: summary.activeInternalBudget },
+              { label: "Terpakai", amount: summary.activeActualCost },
+              { label: "Sisa budget", amount: summary.activeRemainingBudget },
+            ].map((metric) => (
+              <div key={metric.label}>
+                <dt className="mb-1 text-support text-on-surface-variant">{metric.label}</dt>
+                <dd>
+                  <MoneyValue
+                    amount={metric.amount}
+                    variant="compact"
+                    size="md"
+                    tone={metric.amount < 0 ? "danger" : "default"}
+                  />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </GroupedSurface>
+      </div>
+    );
 
   return (
     <div className="space-y-sm">
@@ -97,6 +149,7 @@ export function ProjectSearchAndFilters({
   readonly onSearchChange: (query: string) => void;
 }): React.JSX.Element {
   const stickyControlRef = React.useRef<HTMLDivElement | null>(null);
+  const desktopControls = useWorkspaceControlPresentation() === "desktop";
   const [stickyActive, setStickyActive] = React.useState(false);
   const surfaceTransition = useReducedMotion() ? { duration: 0 } : transitionEaseSmooth;
   const stickyTransition = useReducedMotion() ? { duration: 0 } : transitionSpringSmooth;
@@ -120,7 +173,7 @@ export function ProjectSearchAndFilters({
       window.removeEventListener("scroll", updateStickyState);
       window.removeEventListener("resize", updateStickyState);
     };
-  }, []);
+  }, [desktopControls]);
 
   const handleSearchChange = React.useCallback(
     (value: string): void => {
@@ -132,6 +185,40 @@ export function ProjectSearchAndFilters({
     },
     [onSearchChange, searchQuery],
   );
+
+  if (desktopControls)
+    return (
+      <div className="flex flex-wrap items-end gap-3">
+        <DesktopInput
+          label="Cari proyek"
+          value={searchQuery}
+          onChange={(value) => {
+            if (mode !== "search") onModeChange("search");
+            onSearchChange(value);
+          }}
+          placeholder="Nama proyek, klien, lokasi"
+          className="w-full max-w-sm"
+        />
+        <FilterSelect
+          label="Tampilkan"
+          value={activeFilter}
+          onChange={(value) => {
+            if (mode !== "filter") onModeChange("filter");
+            const selected = PROJECT_FILTERS.find((filter) => filter.id === value);
+            if (selected) onFilterChange(selected.id);
+          }}
+          options={PROJECT_FILTERS.map((filter) => ({
+            value: filter.id,
+            label: filter.label,
+            meta:
+              filterCounts[filter.id] === undefined
+                ? undefined
+                : `${filterCounts[filter.id]} proyek`,
+          }))}
+          searchable={false}
+        />
+      </div>
+    );
 
   return (
     <motion.div

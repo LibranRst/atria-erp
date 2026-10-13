@@ -2,6 +2,16 @@ let nextOverlayLayer = 200;
 let activeOverlayIds: string[] = [];
 let bodyLockCount = 0;
 let originalBodyOverflow = "";
+const handledKeyboardEvents = new WeakSet<KeyboardEvent>();
+
+/** A nested native selector can close before the parent's window handler runs. */
+export function markOverlayKeyHandled(event: KeyboardEvent): void {
+  handledKeyboardEvents.add(event);
+}
+
+export function isOverlayKeyHandled(event: KeyboardEvent): boolean {
+  return event.defaultPrevented || handledKeyboardEvents.has(event);
+}
 
 export function promoteOverlay(overlayId: string): number {
   activeOverlayIds = activeOverlayIds.filter((id) => id !== overlayId);

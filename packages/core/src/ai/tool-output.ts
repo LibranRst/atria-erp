@@ -130,6 +130,7 @@ export const getBankBalancesOutputSchema = z.object({
   totalAvailable: moneySchema,
   accounts: z.array(
     z.object({
+      accountId: z.guid().optional(),
       accountName: z.string(),
       bankName: z.string(),
       balance: moneySchema,
@@ -234,19 +235,47 @@ export type MaterialShortage = z.infer<typeof materialShortageSchema>;
 // getRecentExpenses
 // ==========================================
 export const recentExpenseSchema = z.object({
+  id: z.string().optional(),
+  projectCostId: z.string().nullable().optional(),
   description: z.string(),
   projectId: z.string().optional(),
   projectName: z.string(),
   categoryName: z.string(),
+  categoryId: z.string().optional(),
+  categoryCode: z.string().optional(),
   amount: moneySchema,
+  exactAmount: z.string().optional(),
   status: z.string(),
   paymentStatus: z.string(),
   expenseDate: z.string(),
+  sourceType: z.string().optional(),
+  isCashImpact: z.boolean().optional(),
+  descriptionMatchesInScope: z.number().int().nonnegative().optional(),
 });
 
 export const getRecentExpensesOutputSchema = z.object({
   appliedFilters: appliedFiltersSchema,
   expenses: z.array(recentExpenseSchema),
+  offset: z.number().int().nonnegative().optional(),
+  limit: z.number().int().positive().optional(),
+  hasMore: z.boolean().optional(),
+  nextOffset: z.number().int().nonnegative().nullable().optional(),
+  matchedCount: z.number().int().nonnegative().optional(),
+  scope: z.string().optional(),
+  dateBasis: z.literal("expenseDate").optional(),
+  timeZone: z.literal("Asia/Jakarta").optional(),
+  requiresExpenseChoice: z.boolean().optional(),
+  project: z.object({ id: z.string(), name: z.string() }).optional(),
+  dateRange: z
+    .object({
+      asOf: z.iso.datetime(),
+      label: z.string(),
+      start: z.iso.datetime(),
+      end: z.iso.datetime(),
+      requestedEnd: z.iso.datetime(),
+      isPartial: z.boolean(),
+    })
+    .optional(),
 });
 
 export type RecentExpensesOutput = z.infer<typeof getRecentExpensesOutputSchema>;

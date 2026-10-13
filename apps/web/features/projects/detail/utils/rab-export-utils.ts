@@ -1,5 +1,6 @@
+import { z } from "zod";
 import type ExcelJS from "exceljs";
-import type { RabEstimateView } from "../types/rap-rab-types";
+import { rabPageSlices, type RabPrintableEstimate } from "@atria/core/ai/rab-export";
 
 export interface RabExportMetadata {
   readonly projectName: string;
@@ -42,77 +43,103 @@ export interface RabDocumentConfig {
 
 export const DEFAULT_RAB_CONFIG: RabDocumentConfig = {
   themeColor: "#181817",
-  companyName: "STUDIO INTERIOR",
-  companyTagline: "INTERIOR ARCHITECTURE & BUILD",
-  companyAddress: "Studio & Workshop: Jakarta, Indonesia",
-  companyPhone: "info@studio.id | +62 812-3456-7890",
+  companyName: "Perusahaan",
+  companyTagline: "",
+  companyAddress: "",
+  companyPhone: "",
   logoType: "text",
   logoDataUrl: "",
   docTitle: "RENCANA ANGGARAN BIAYA (RAB)",
-  paymentTermsNotes: `• Termin 1 (DP): 30% pada saat penandatanganan kontrak kerja sama.
-• Termin 2 (Progress 1): 35% pada saat fabrikasi/pekerjaan mencapai progres 50%.
-• Termin 3 (Progress 2): 25% pada saat pengiriman dan instalasi fisik di lokasi.
-• Termin 4 (Pelunasan): 10% pada saat serah terima pekerjaan (BAST) final.
-• Harga penawaran berlaku selama 14 hari kalender sejak tanggal terbit.`,
-  signeePreparedByTitle: "STUDIO LEAD",
-  signeePreparedByName: "Project Lead / Director",
+  paymentTermsNotes: "",
+  signeePreparedByTitle: "Disiapkan oleh",
+  signeePreparedByName: "",
   signeeApprovedByName: "",
 };
 
+const rabDocumentConfigSchema = z.object({
+  themeColor: z.string().regex(/^#[0-9a-f]{6}$/i),
+  companyName: z.string().max(255),
+  companyTagline: z.string().max(500),
+  companyAddress: z.string().max(2000),
+  companyPhone: z.string().max(500),
+  logoType: z.enum(["text", "image"]),
+  logoDataUrl: z
+    .string()
+    .max(3_000_000)
+    .refine((s) => !s || /^data:image\/(png|jpeg|webp);base64,/.test(s))
+    .optional(),
+  docTitle: z.string().max(500),
+  paymentTermsNotes: z.string().max(10000),
+  signeePreparedByTitle: z.string().max(255),
+  signeePreparedByName: z.string().max(255),
+  signeeApprovedByName: z.string().max(255),
+});
 export const RAB_CONFIG_STORAGE_KEY = "atria_rab_document_config";
 
-export function loadSavedRabConfig(metaClientName?: string): RabDocumentConfig {
-  if (typeof window === "undefined") {
-    return {
-      ...DEFAULT_RAB_CONFIG,
-      signeeApprovedByName: metaClientName || DEFAULT_RAB_CONFIG.signeeApprovedByName,
-    };
-  }
-  try {
-    const raw = localStorage.getItem(RAB_CONFIG_STORAGE_KEY);
-    if (!raw) {
-      return {
-        ...DEFAULT_RAB_CONFIG,
-        signeeApprovedByName: metaClientName || DEFAULT_RAB_CONFIG.signeeApprovedByName,
-      };
-    }
-    const parsed = JSON.parse(raw) as Partial<RabDocumentConfig>;
-    return {
-      ...DEFAULT_RAB_CONFIG,
-      ...parsed,
-      signeeApprovedByName:
-        parsed.signeeApprovedByName || metaClientName || DEFAULT_RAB_CONFIG.signeeApprovedByName,
-    };
-  } catch (err: unknown) {
-    console.warn("Failed to load rab document config from localStorage:", err);
-    return {
-      ...DEFAULT_RAB_CONFIG,
-      signeeApprovedByName: metaClientName || DEFAULT_RAB_CONFIG.signeeApprovedByName,
-    };
-  }
-}
-
-export function saveRabConfig(config: RabDocumentConfig): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(RAB_CONFIG_STORAGE_KEY, JSON.stringify(config));
-  } catch (err: unknown) {
-    console.warn("Failed to save rab document config to localStorage:", err);
-  }
-}
-
-export function resetRabConfig(metaClientName?: string): RabDocumentConfig {
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.removeItem(RAB_CONFIG_STORAGE_KEY);
-    } catch {
-      // ignore
-    }
-  }
+export function resolveRabDocumentConfig(
+  saved: unknown,
+  metaClientName?: string,
+  companyName?: string,
+  receiver?: unknown,
+): RabDocumentConfig {
+  const parsed = rabDocumentConfigSchema.partial().safeParse(saved);
+  const recipient = z.string().max(255).safeParse(receiver);
   return {
     ...DEFAULT_RAB_CONFIG,
-    signeeApprovedByName: metaClientName || "",
+    companyName: companyName || DEFAULT_RAB_CONFIG.companyName,
+    ...(parsed.success ? parsed.data : {}),
+    signeeApprovedByName: recipient.success ? recipient.data : metaClientName || "",
   };
+}
+export function loadSavedRabConfig(
+  metaClientName?: string,
+  companyName?: string,
+  documentId?: string,
+): RabDocumentConfig {
+  if (typeof window === "undefined")
+    return resolveRabDocumentConfig({}, metaClientName, companyName);
+  try {
+    const raw = localStorage.getItem(RAB_CONFIG_STORAGE_KEY);
+    const receiver = documentId
+      ? localStorage.getItem(`${RAB_CONFIG_STORAGE_KEY}:receiver:${documentId}`)
+      : null;
+    return resolveRabDocumentConfig(
+      raw ? JSON.parse(raw) : {},
+      metaClientName,
+      companyName,
+      receiver ?? undefined,
+    );
+  } catch {
+    return resolveRabDocumentConfig({}, metaClientName, companyName);
+  }
+}
+export function saveRabConfig(config: RabDocumentConfig, documentId?: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const { signeeApprovedByName, ...style } = config;
+    localStorage.setItem(RAB_CONFIG_STORAGE_KEY, JSON.stringify(style));
+    if (documentId)
+      localStorage.setItem(
+        `${RAB_CONFIG_STORAGE_KEY}:receiver:${documentId}`,
+        signeeApprovedByName,
+      );
+  } catch {
+    /* Local preferences can be retried in the current workbench. */
+  }
+}
+export function resetRabConfig(
+  metaClientName?: string,
+  companyName?: string,
+  documentId?: string,
+): RabDocumentConfig {
+  if (typeof window !== "undefined")
+    try {
+      localStorage.removeItem(RAB_CONFIG_STORAGE_KEY);
+      if (documentId) localStorage.removeItem(`${RAB_CONFIG_STORAGE_KEY}:receiver:${documentId}`);
+    } catch {
+      /* Keep the current editor usable. */
+    }
+  return resolveRabDocumentConfig({}, metaClientName, companyName);
 }
 
 export function hexToArgb(hex: string): string {
@@ -132,11 +159,11 @@ export function hexToArgb(hex: string): string {
 export function formatRupiahNumber(value: number | string): string {
   const num = typeof value === "string" ? Number(value) : value;
   if (Number.isNaN(num)) return "Rp 0";
-  return `Rp ${Math.round(num).toLocaleString("id-ID")}`;
+  return `Rp ${num.toLocaleString("id-ID", { maximumFractionDigits: 2, minimumFractionDigits: num % 1 === 0 ? 0 : 2 })}`;
 }
 
 export function buildRabExcelRows(
-  rabEstimate: RabEstimateView,
+  rabEstimate: RabPrintableEstimate,
   meta: RabExportMetadata,
 ): (string | number)[][] {
   const issueDate =
@@ -151,7 +178,7 @@ export function buildRabExcelRows(
     : `RAB/R${rabEstimate.revision}`;
 
   const rows: (string | number)[][] = [
-    ["STUDIO INTERIOR & ARCHITECTURE"],
+    [meta.companyName || DEFAULT_RAB_CONFIG.companyName],
     ["RENCANA ANGGARAN BIAYA (RAB)"],
     [],
     ["No. Dokumen", docNumber, "", "Nama Klien", meta.clientName || "-"],
@@ -257,10 +284,7 @@ export function buildRabExcelRows(
   if (rabEstimate.clientNotes) {
     rows.push([`• ${rabEstimate.clientNotes}`]);
   }
-  rows.push(["• Termin 1 (DP): 30% pada saat penandatanganan kontrak"]);
-  rows.push(["• Termin 2 (Progress 1): 35% pada saat progres pekerjaan mencapai 50%"]);
-  rows.push(["• Termin 3 (Progress 2): 25% pada saat instalasi fisik di lokasi"]);
-  rows.push(["• Termin 4 (Pelunasan): 10% pada saat serah terima pekerjaan (BAST)"]);
+
   rows.push([]);
   rows.push(["Disiapkan Oleh:", "", "", "", "", "Disetujui Oleh:"]);
   rows.push([]);
@@ -271,7 +295,7 @@ export function buildRabExcelRows(
 }
 
 export async function exportRabToExcel(
-  rabEstimate: RabEstimateView,
+  rabEstimate: RabPrintableEstimate,
   meta: RabExportMetadata,
 ): Promise<void> {
   const XLSX = await import("xlsx");
@@ -340,7 +364,7 @@ export async function optimizeLogoDataUrl(
 }
 
 export async function buildRabStyledWorkbook(
-  rabEstimate: RabEstimateView,
+  rabEstimate: RabPrintableEstimate,
   meta: RabExportMetadata,
   config?: RabDocumentConfig,
 ): Promise<ExcelJS.Workbook> {
@@ -524,7 +548,8 @@ export async function buildRabStyledWorkbook(
         wrapText: c === 3,
       };
       if (c === 6 || c === 7) {
-        cell.numFmt = '"Rp "#,##0';
+        cell.numFmt =
+          typeof cell.value === "number" && cell.value % 1 !== 0 ? '"Rp "#,##0.00' : '"Rp "#,##0';
       }
     }
 
@@ -603,7 +628,8 @@ export async function buildRabStyledWorkbook(
           wrapText: c === 3,
         };
         if (c === 6 || c === 7) {
-          cell.numFmt = '"Rp "#,##0';
+          cell.numFmt =
+            typeof cell.value === "number" && cell.value % 1 !== 0 ? '"Rp "#,##0.00' : '"Rp "#,##0';
         }
       }
     }
@@ -648,7 +674,8 @@ export async function buildRabStyledWorkbook(
           wrapText: c === 3,
         };
         if (c === 6 || c === 7) {
-          cell.numFmt = '"Rp "#,##0';
+          cell.numFmt =
+            typeof cell.value === "number" && cell.value % 1 !== 0 ? '"Rp "#,##0.00' : '"Rp "#,##0';
         }
       }
     }
@@ -677,7 +704,8 @@ export async function buildRabStyledWorkbook(
       horizontal: "right",
     };
     if (c === 7) {
-      cell.numFmt = '"Rp "#,##0';
+      cell.numFmt =
+        typeof cell.value === "number" && cell.value % 1 !== 0 ? '"Rp "#,##0.00' : '"Rp "#,##0';
     }
   }
 
@@ -766,7 +794,7 @@ export async function buildRabStyledWorkbook(
 }
 
 export async function exportRabToStyledExcel(
-  rabEstimate: RabEstimateView,
+  rabEstimate: RabPrintableEstimate,
   meta: RabExportMetadata,
   config?: RabDocumentConfig,
 ): Promise<void> {
@@ -808,37 +836,12 @@ export async function exportElementToPng(
   }
 
   try {
-    const html2canvasModule = await import("html2canvas-pro");
-    const html2canvas = html2canvasModule.default || html2canvasModule;
-
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff",
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: Math.max(element.scrollWidth, 800),
-      ignoreElements: (el: Element) => el.tagName === "STYLE",
-      onclone: (_clonedDoc: Document, clonedElement: HTMLElement) => {
-        clonedElement.style.width = "794px";
-        clonedElement.style.maxWidth = "794px";
-        clonedElement.style.margin = "0 auto";
-        clonedElement.style.boxSizing = "border-box";
-        clonedElement.style.transform = "none";
-
-        // Reset any transforms or scroll/height constraints on ancestors in the cloned tree
-        let p = clonedElement.parentElement;
-        while (p && p !== _clonedDoc.body) {
-          p.style.transform = "none";
-          p.style.overflow = "visible";
-          p.style.height = "auto";
-          p.style.maxHeight = "none";
-          p = p.parentElement;
-        }
-      },
-    });
-
+    if (element.scrollHeight > 14000)
+      return {
+        success: false,
+        error: "Dokumen terlalu panjang untuk satu gambar. Gunakan PDF atau Excel.",
+      };
+    const canvas = await captureRabCanvas(element);
     return new Promise((resolve) => {
       canvas.toBlob((blob: Blob | null) => {
         if (!blob) {
@@ -904,4 +907,130 @@ export async function shareImageViaWhatsAppOrDevice(
     }
   }
   return { shared: false, aborted: false };
+}
+
+export async function captureRabCanvas(
+  element: HTMLElement,
+  crop?: { y: number; height: number },
+): Promise<HTMLCanvasElement> {
+  await document.fonts.ready;
+  await Promise.all(Array.from(element.querySelectorAll("img")).map((img) => img.decode()));
+  const html2canvasModule = await import("html2canvas-pro");
+  const html2canvas = html2canvasModule.default || html2canvasModule;
+
+  return html2canvas(element, {
+    ...crop,
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: "#ffffff",
+    scrollX: 0,
+    scrollY: 0,
+    windowWidth: Math.max(element.scrollWidth, 800),
+    ignoreElements: (el: Element) => el.tagName === "STYLE",
+    onclone: (_clonedDoc: Document, clonedElement: HTMLElement) => {
+      clonedElement.style.width = "794px";
+      clonedElement.style.maxWidth = "794px";
+      clonedElement.style.margin = "0 auto";
+      clonedElement.style.boxSizing = "border-box";
+      clonedElement.style.transform = "none";
+
+      // Reset any transforms or scroll/height constraints on ancestors in the cloned tree
+      let p = clonedElement.parentElement;
+      while (p && p !== _clonedDoc.body) {
+        p.style.transform = "none";
+        p.style.overflow = "visible";
+        p.style.height = "auto";
+        p.style.maxHeight = "none";
+        p = p.parentElement;
+      }
+    },
+  });
+}
+
+export function downloadRabBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+export async function buildRabPdfBlob(element: HTMLElement): Promise<Blob> {
+  await document.fonts.ready;
+  await Promise.all(Array.from(element.querySelectorAll("img")).map((img) => img.decode()));
+  const { PDFDocument, PageSizes, StandardFonts } = await import("pdf-lib");
+  const pdf = await PDFDocument.create(),
+    [width, height] = PageSizes.A4,
+    margin = 24;
+  const documentWidth = element.scrollWidth,
+    ratio = documentWidth / element.getBoundingClientRect().width,
+    origin = element.getBoundingClientRect().top;
+  const bounds = (node: Element): { top: number; bottom: number } => {
+    const r = node.getBoundingClientRect();
+    return {
+      top: Math.floor((r.top - origin) * ratio),
+      bottom: Math.ceil((r.bottom - origin) * ratio),
+    };
+  };
+  const header = element.querySelector("[data-rab-export-identity]"),
+    thead = element.querySelector("thead"),
+    total = element.querySelector("tfoot"),
+    closing = element.querySelector("[data-rab-export-closing]");
+  const blocks = Array.from(element.querySelectorAll("tr,header,p,footer,h2,h3")).map(bounds);
+  if (total && closing) blocks.push({ top: bounds(total).top, bottom: bounds(closing).bottom });
+  const pdfScale = (width - margin * 2) / documentWidth;
+  const continuationHeight =
+    (header ? bounds(header).bottom - bounds(header).top : 0) +
+    (thead ? bounds(thead).bottom - bounds(thead).top : 0) +
+    20;
+  const pageHeight = Math.floor((height - margin * 2 - 14) / pdfScale - continuationHeight);
+  const first = rabPageSlices(
+    element.scrollHeight,
+    Math.floor((height - margin * 2 - 14) / pdfScale),
+    blocks,
+  )[0];
+  const rest =
+    element.scrollHeight > first.height
+      ? rabPageSlices(
+          element.scrollHeight - first.height,
+          pageHeight,
+          blocks.map((b) => ({ top: b.top - first.height, bottom: b.bottom - first.height })),
+        ).map((p) => ({ top: p.top + first.height, height: p.height }))
+      : [];
+  const slices = [first, ...rest];
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const capture = async (top: number, h: number): Promise<import("pdf-lib").PDFImage> => {
+    const canvas = await captureRabCanvas(element, { y: top, height: h });
+    const png = await pdf.embedPng(canvas.toDataURL("image/png"));
+    canvas.width = 0;
+    canvas.height = 0;
+    return png;
+  };
+  const headerImage = header
+    ? await capture(bounds(header).top, bounds(header).bottom - bounds(header).top)
+    : null;
+  const headingImage = thead
+    ? await capture(bounds(thead).top, bounds(thead).bottom - bounds(thead).top)
+    : null;
+  for (const [index, slice] of slices.entries()) {
+    const page = pdf.addPage(PageSizes.A4);
+    let y = height - margin;
+    if (index) {
+      for (const image of [headerImage, headingImage])
+        if (image) {
+          const h = (image.height * (width - margin * 2)) / image.width;
+          page.drawImage(image, { x: margin, y: y - h, width: width - margin * 2, height: h });
+          y -= h + 6;
+        }
+    }
+    const image = await capture(slice.top, slice.height),
+      h = (image.height * (width - margin * 2)) / image.width;
+    page.drawImage(image, { x: margin, y: y - h, width: width - margin * 2, height: h });
+    page.drawText(`${index + 1} / ${slices.length}`, { x: width - 60, y: 12, size: 8, font });
+  }
+  pdf.setTitle("RAB untuk klien");
+  return new Blob([new Uint8Array(await pdf.save()).buffer], { type: "application/pdf" });
 }

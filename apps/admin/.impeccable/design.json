@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-05T19:28:33Z",
+  "title": "Design System: Atria Admin",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Native blue",
+        "tonalRamp": [
+          "oklch(15% 0.195 253.83)",
+          "oklch(27% 0.195 253.83)",
+          "oklch(38% 0.195 253.83)",
+          "oklch(49% 0.195 253.83)",
+          "oklch(61% 0.195 253.83)",
+          "oklch(72% 0.195 253.83)",
+          "oklch(84% 0.195 253.83)",
+          "oklch(95% 0.195 253.83)"
+        ]
+      },
+      "accent-foreground": {
+        "role": "neutral",
+        "displayName": "Light action text",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(27% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(27% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0059 285.89)",
+          "oklch(27% 0.0059 285.89)",
+          "oklch(38% 0.0059 285.89)",
+          "oklch(49% 0.0059 285.89)",
+          "oklch(61% 0.0059 285.89)",
+          "oklch(72% 0.0059 285.89)",
+          "oklch(84% 0.0059 285.89)",
+          "oklch(95% 0.0059 285.89)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "White surface",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(27% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "surface-secondary": {
+        "role": "neutral",
+        "displayName": "Secondary surface",
+        "tonalRamp": [
+          "oklch(15% 0.0013 286.37)",
+          "oklch(27% 0.0013 286.37)",
+          "oklch(38% 0.0013 286.37)",
+          "oklch(49% 0.0013 286.37)",
+          "oklch(61% 0.0013 286.37)",
+          "oklch(72% 0.0013 286.37)",
+          "oklch(84% 0.0013 286.37)",
+          "oklch(95% 0.0013 286.37)"
+        ]
+      },
+      "default": {
+        "role": "neutral",
+        "displayName": "Default neutral",
+        "tonalRamp": [
+          "oklch(15% 0.001 286.375)",
+          "oklch(27% 0.001 286.375)",
+          "oklch(38% 0.001 286.375)",
+          "oklch(49% 0.001 286.375)",
+          "oklch(61% 0.001 286.375)",
+          "oklch(72% 0.001 286.375)",
+          "oklch(84% 0.001 286.375)",
+          "oklch(95% 0.001 286.375)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted text",
+        "tonalRamp": [
+          "oklch(15% 0.0138 285.94)",
+          "oklch(27% 0.0138 285.94)",
+          "oklch(38% 0.0138 285.94)",
+          "oklch(49% 0.0138 285.94)",
+          "oklch(61% 0.0138 285.94)",
+          "oklch(72% 0.0138 285.94)",
+          "oklch(84% 0.0138 285.94)",
+          "oklch(95% 0.0138 285.94)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15% 0.004 286.32)",
+          "oklch(27% 0.004 286.32)",
+          "oklch(38% 0.004 286.32)",
+          "oklch(49% 0.004 286.32)",
+          "oklch(61% 0.004 286.32)",
+          "oklch(72% 0.004 286.32)",
+          "oklch(84% 0.004 286.32)",
+          "oklch(95% 0.004 286.32)"
+        ]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "Success",
+        "tonalRamp": [
+          "oklch(15% 0.1935 150.81)",
+          "oklch(27% 0.1935 150.81)",
+          "oklch(38% 0.1935 150.81)",
+          "oklch(49% 0.1935 150.81)",
+          "oklch(61% 0.1935 150.81)",
+          "oklch(72% 0.1935 150.81)",
+          "oklch(84% 0.1935 150.81)",
+          "oklch(95% 0.1935 150.81)"
+        ]
+      },
+      "warning": {
+        "role": "secondary",
+        "displayName": "Warning",
+        "tonalRamp": [
+          "oklch(15% 0.1585 72.33)",
+          "oklch(27% 0.1585 72.33)",
+          "oklch(38% 0.1585 72.33)",
+          "oklch(49% 0.1585 72.33)",
+          "oklch(61% 0.1585 72.33)",
+          "oklch(72% 0.1585 72.33)",
+          "oklch(84% 0.1585 72.33)",
+          "oklch(95% 0.1585 72.33)"
+        ]
+      },
+      "danger": {
+        "role": "secondary",
+        "displayName": "Danger",
+        "tonalRamp": [
+          "oklch(15% 0.2328 25.74)",
+          "oklch(27% 0.2328 25.74)",
+          "oklch(38% 0.2328 25.74)",
+          "oklch(49% 0.2328 25.74)",
+          "oklch(61% 0.2328 25.74)",
+          "oklch(72% 0.2328 25.74)",
+          "oklch(84% 0.2328 25.74)",
+          "oklch(95% 0.2328 25.74)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "Route titles." },
+      "title": { "displayName": "Title", "purpose": "Section headings and summary values." },
+      "body": { "displayName": "Body", "purpose": "Table cells and operational copy." },
+      "label": { "displayName": "Label", "purpose": "Native buttons and control labels." },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Metric labels, table headings and secondary context."
+      }
+    },
+    "shadows": [
+      {
+        "name": "field",
+        "value": "var(--field-shadow)",
+        "purpose": "Native fields: 0 2px 4px 0 rgba(0,0,0,0.04), 0 1px 2px 0 rgba(0,0,0,0.06), 0 0 1px 0 rgba(0,0,0,0.06)."
+      },
+      {
+        "name": "overlay",
+        "value": "var(--overlay-shadow)",
+        "purpose": "Native overlays: 0 2px 8px 0 rgba(0,0,0,0.06), 0 -6px 12px 0 rgba(0,0,0,0.03), 0 14px 28px 0 rgba(0,0,0,0.08)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "native-button",
+        "value": "transform 250ms var(--ease-smooth), background-color 100ms var(--ease-out), box-shadow 100ms var(--ease-out)",
+        "purpose": "HeroUI default pressed, hover and focus transitions; reduced motion remains native."
+      },
+      {
+        "name": "native-modal-enter",
+        "value": "250ms var(--ease-out-quad)",
+        "purpose": "HeroUI default modal container entrance; no feature motion override."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Small Button",
+      "kind": "button",
+      "refersTo": "button-primary-sm",
+      "description": "Native compact action for explicit review or commit.",
+      "html": "<button class=\"ds-primary\">Tinjau perubahan</button>",
+      "css": ".ds-primary{height:32px;padding:0 12px;border:0;border-radius:24px;background:var(--accent,oklch(0.6204 0.195 253.83));color:var(--accent-foreground,oklch(0.9911 0 0));font:500 14px/20px var(--font-sans,sans-serif);white-space:nowrap;cursor:pointer;transition:transform 250ms ease,background-color 100ms ease-out}.ds-primary:hover{background:var(--accent-hover,color-mix(in oklab,oklch(0.6204 0.195 253.83) 90%,oklch(0.9911 0 0) 10%))}.ds-primary:focus-visible{outline:2px solid var(--focus,oklch(0.6204 0.195 253.83));outline-offset:2px}.ds-primary:active{transform:scale(.98)}@media(max-width:767px){.ds-primary{height:36px}}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}"
+    },
+    {
+      "name": "Secondary Small Button",
+      "kind": "button",
+      "refersTo": "button-secondary-sm",
+      "description": "Native quiet action with neutral fill and blue soft foreground.",
+      "html": "<button class=\"ds-secondary\">Kembali ke form</button>",
+      "css": ".ds-secondary{height:32px;padding:0 12px;border:0;border-radius:24px;background:var(--default,oklch(94% 0.001 286.375));color:var(--accent-soft-foreground,color-mix(in oklab,oklch(0.6204 0.195 253.83) 70%,oklch(0.2103 0.0059 285.89) 30%));font:500 14px/20px var(--font-sans,sans-serif);white-space:nowrap;cursor:pointer;transition:transform 250ms ease,background-color 100ms ease-out}.ds-secondary:hover{background:var(--default-hover,color-mix(in oklab,oklch(94% 0.001 286.375) 96%,oklch(0.2103 0.0059 285.89) 4%))}.ds-secondary:focus-visible{outline:2px solid var(--focus,oklch(0.6204 0.195 253.83));outline-offset:2px}.ds-secondary:active{transform:scale(.98)}@media(max-width:767px){.ds-secondary{height:36px}}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none}}"
+    },
+    {
+      "name": "Danger Small Button",
+      "kind": "button",
+      "refersTo": "button-danger-sm",
+      "description": "Native explicit discard action.",
+      "html": "<button class=\"ds-danger\">Buang dan lanjutkan</button>",
+      "css": ".ds-danger{height:32px;padding:0 12px;border:0;border-radius:24px;background:var(--danger,oklch(0.6532 0.2328 25.74));color:var(--danger-foreground,oklch(0.9911 0 0));font:500 14px/20px var(--font-sans,sans-serif);white-space:nowrap;cursor:pointer;transition:transform 250ms ease,background-color 100ms ease-out}.ds-danger:hover{background:var(--danger-hover,color-mix(in oklab,oklch(0.6532 0.2328 25.74) 90%,oklch(0.9911 0 0) 10%))}.ds-danger:focus-visible{outline:2px solid var(--focus,oklch(0.6204 0.195 253.83));outline-offset:2px}.ds-danger:active{transform:scale(.98)}@media(max-width:767px){.ds-danger{height:36px}}@media(prefers-reduced-motion:reduce){.ds-danger{transition:none}}"
+    },
+    {
+      "name": "Native Text Field",
+      "kind": "input",
+      "refersTo": "input-primary",
+      "description": "Visible label with the native rounded white field and focus treatment.",
+      "html": "<label class=\"ds-field\">Nama proyek<input class=\"ds-input\" value=\"Renovasi kantor\" /></label>",
+      "css": ".ds-field{display:grid;gap:4px;color:var(--foreground,oklch(0.2103 0.0059 285.89));font:500 14px/20px var(--font-sans,sans-serif)}.ds-input{padding:8px 12px;border:0;border-radius:12px;background:var(--field-background,white);color:var(--field-foreground,oklch(0.2103 0.0059 285.89));box-shadow:var(--field-shadow,0 2px 4px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.06),0 0 1px rgba(0,0,0,.06));font:400 14px/20px var(--font-sans,sans-serif);transition:background-color 150ms ease,box-shadow 150ms ease-out}.ds-input:hover{background:var(--field-hover,color-mix(in oklab,white 90%,oklch(0.2103 0.0059 285.89) 2%))}.ds-input:focus-visible{outline:2px solid var(--focus,oklch(0.6204 0.195 253.83));outline-offset:2px}@media(max-width:639px){.ds-input{font-size:16px;line-height:24px}}@media(prefers-reduced-motion:reduce){.ds-input{transition:none}}"
+    },
+    {
+      "name": "Active Navigation Item",
+      "kind": "nav",
+      "description": "Native secondary small link variant for the active sidebar route.",
+      "html": "<nav aria-label=\"Navigasi utama\"><a class=\"ds-nav\" href=\"#projects\" aria-current=\"page\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M3 7h7l2 2h9v11H3V7Zm0 0V4h7l2 3\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></svg>Proyek</a></nav>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:24px;background:var(--default,oklch(94% 0.001 286.375));color:var(--accent-soft-foreground,color-mix(in oklab,oklch(0.6204 0.195 253.83) 70%,oklch(0.2103 0.0059 285.89) 30%));font:500 14px/20px var(--font-sans,sans-serif);text-decoration:none;transition:background-color 100ms ease-out}.ds-nav:hover{background:var(--default-hover,color-mix(in oklab,oklch(94% 0.001 286.375) 96%,oklch(0.2103 0.0059 285.89) 4%))}.ds-nav:focus-visible{outline:2px solid var(--focus,oklch(0.6204 0.195 253.83));outline-offset:2px}.ds-nav:active{transform:scale(.98)}@media(prefers-reduced-motion:reduce){.ds-nav{transition:none}}"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "description": "Translated business status using the native small soft chip.",
+      "html": "<span class=\"ds-status\">Aman</span>",
+      "css": ".ds-status{display:inline-flex;align-items:center;padding:0 6px;border-radius:16px;background:var(--success-soft,color-mix(in oklab,oklch(0.7329 0.1935 150.81) 15%,transparent));color:var(--success-soft-foreground,color-mix(in oklab,oklch(0.7329 0.1935 150.81) 80%,oklch(0.2103 0.0059 285.89) 60%));font:500 12px/20px var(--font-sans,sans-serif);white-space:nowrap}"
+    },
+    {
+      "name": "Finance Surface Panel",
+      "kind": "card",
+      "refersTo": "surface-panel",
+      "description": "Flat white owner surface grouping related finance facts.",
+      "html": "<section class=\"ds-panel\"><h2 class=\"ds-title\">Posisi budget</h2><dl class=\"ds-metrics\"><div><dt>Budget internal</dt><dd>Rp 315 jt</dd></div><div><dt>Sisa budget</dt><dd>Rp 221 jt</dd></div></dl></section>",
+      "css": ".ds-panel{padding:20px;border-radius:12px;background:var(--surface,white);color:var(--foreground,oklch(0.2103 0.0059 285.89));font-family:var(--font-sans,sans-serif)}.ds-title{margin:0 0 20px;font-size:16px;line-height:24px;font-weight:600}.ds-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 32px;margin:0}.ds-metrics dt{margin-bottom:4px;color:var(--muted,oklch(0.5517 0.0138 285.94));font-size:12px;line-height:16px}.ds-metrics dd{margin:0;font-size:16px;line-height:24px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Compact Project Finance",
+    "overview": "Atria Admin is an Operate surface for desk work: compare project finances, inspect context, and explicitly review changes. Native HeroUI React and Styles (both pinned to 3.2.6) define its visual world. The app imports the complete HeroUI stylesheet into its own document and fixes the light theme; it adds no brand palette, font, radius override, or custom asset system.\n\nThis record applies to `apps/admin`. Root `PRODUCT.md` supplies product truth; the approved standalone plan supplies the phase boundary. The existing web/mobile and legacy desktop design rules have separate UI ownership. The implemented slice is the shell, account gates, and Proyek/Budget; later workflow parity and legacy removal remain acceptance work.",
+    "keyCharacteristics": [
+      "Native blue actions, white owning surfaces, neutral canvas, and semantic status colors.",
+      "Compact system sans hierarchy and native `sm`/`md` control density.",
+      "Project comparisons in tables; details and editing receive their own context.",
+      "Explicit review, permission-aware actions, Indonesian feedback, and protected drafts."
+    ],
+    "rules": [
+      {
+        "name": "The Native Theme Rule",
+        "body": "Use HeroUI semantic tokens and variants directly. Extend the local domain compositions without redefining the native palette or copying the web app's theme.",
+        "section": "colors"
+      },
+      {
+        "name": "The Status Has Words Rule",
+        "body": "Status uses a translated label inside a chip, or labelled alert content; semantic color reinforces that meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Money Rule",
+        "body": "Use the local `MoneyValue` for IDR presentation. It keeps amounts on one line with tabular numerals, uses shared core formatting, and exposes the exact amount as a title when a compact amount is displayed. Usage percentages also use tabular numerals.",
+        "section": "typography"
+      },
+      {
+        "name": "The Context Before Action Rule",
+        "body": "Keep actions with the project or budget they affect, and show permission-appropriate review controls next to the relevant state.",
+        "section": "layout"
+      },
+      {
+        "name": "The Native Interaction Rule",
+        "body": "Keep focus, overlay dismissal, pending feedback, and component transitions in HeroUI's interaction contract. Domain compositions supply behavior and data rather than replacement visual infrastructure.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Review Before Commit Rule",
+        "body": "Show the consequential facts and an explicit confirmation before mutations; keep pending state visible and prevent navigation or dismissal from abandoning an in-flight change.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do preserve the pinned HeroUI 3.2.6 defaults, semantic tokens, and native `sm`/`md` sizing.",
+      "Do reuse the local public UI inventory, `MoneyValue`, `StatusChip`, and shared navigation guard.",
+      "Do use compact labelled tables for comparisons and contextual surfaces for review/editing.",
+      "Do keep translated statuses, tabular amounts, accessible labels, keyboard focus, and reduced motion.",
+      "Do protect drafts during navigation, resize, refresh, and pending operations.",
+      "Do retain permission-aware controls and explicit review with Indonesian mutation feedback."
+    ],
+    "donts": [
+      "Don't import web/mobile UI or its palette, capsule fields, motion presets, or 48px sizing rules into this app.",
+      "Don't override native HeroUI styling with a new brand palette, display font, shadow, or radius system.",
+      "Don't replace category finance comparisons with decorative charts or repeated metric cards.",
+      "Don't expose raw business enums, silently discard edits, or make mutations automatic.",
+      "Don't treat this phase as complete workflow parity or remove the legacy desktop before full acceptance."
+    ]
+  }
+}

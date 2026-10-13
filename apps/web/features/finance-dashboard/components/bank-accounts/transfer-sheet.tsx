@@ -6,6 +6,9 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
+  FactRow,
+  GroupedSurface,
+  MoneyValue,
   MoneyImpactRow,
   MoneyInput,
   type SelectOption,
@@ -15,6 +18,7 @@ import {
   useSheetPresenceValue,
   WorkflowFormSheet,
 } from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { BankAccountContextCard } from "./bank-account-context-card";
 import type {
@@ -47,6 +51,7 @@ export function TransferSheet({
   readonly onDiscard: () => void;
   readonly onSave: () => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const { presentedValue: presentedAccount, handleExitComplete } = useSheetPresenceValue(
     open ? account : null,
     open ? account?.id : null,
@@ -106,6 +111,73 @@ export function TransferSheet({
     <>
       <WorkflowFormSheet
         dismissal={{ mode: "managed" }}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <GroupedSurface>
+            <div className="divide-y divide-ring-subtle">
+              <FactRow
+                layout="stacked"
+                label="Dari"
+                wrapLabel
+                value={presentedAccount?.name ?? "Data tidak tersedia"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Ke"
+                wrapLabel
+                value={
+                  selectedTarget?.label ??
+                  (draft.toBankAccountId ? "Data tidak tersedia" : "Belum dipilih")
+                }
+              />
+              <FactRow
+                layout="stacked"
+                label="Nominal transfer"
+                wrapLabel
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                    variant="fullDynamic"
+                    amount={amount}
+                  />
+                }
+              />
+              {presentedAccount ? (
+                <>
+                  <FactRow
+                    layout="stacked"
+                    label="Saldo sumber saat ini"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(presentedAccount.balance) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={presentedAccount.balance}
+                      />
+                    }
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Saldo sumber pratinjau"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(projectedSourceBalance) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={projectedSourceBalance}
+                        tone={projectedSourceBalance < 0 ? "danger" : "default"}
+                      />
+                    }
+                  />
+                </>
+              ) : null}
+              <p className="px-4 py-3 text-support text-on-surface-variant">
+                Transfer antar-rekening mencatat dua sisi ledger. Jumlah kas keseluruhan tetap.
+              </p>
+            </div>
+          </GroupedSurface>
+        }
         open={open}
         title={reviewing ? "Tinjau transfer rekening" : "Transfer rekening"}
         onClose={requestClose}
@@ -124,7 +196,7 @@ export function TransferSheet({
         onSecondary={() => setReviewing(false)}
       >
         <div className="space-y-md">
-          {presentedAccount ? (
+          {!desktop && presentedAccount ? (
             <BankAccountContextCard account={presentedAccount} eyebrow="Rekening Sumber" />
           ) : null}
           {reviewing ? (
@@ -199,10 +271,7 @@ export function TransferSheet({
                   options={options}
                 />
                 <FormField label="Nominal" required>
-                  <MoneyInput
-                    value={draft.amount}
-                    onChange={(value) => patch({ amount: value })}
-                  />
+                  <MoneyInput value={draft.amount} onChange={(value) => patch({ amount: value })} />
                 </FormField>
               </FormSection>
               <FormSection

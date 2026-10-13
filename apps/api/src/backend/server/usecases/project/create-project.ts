@@ -2,7 +2,12 @@ import { actorCan } from "@backend/lib/auth/permissions";
 
 import { recordNotificationEvent } from "@backend/server/services/notification-events";
 
-import { readBudgetAllocationDefault } from "@backend/app/actions/project/excel-budget-utils";
+import { readBudgetAllocationSnapshot } from "@backend/lib/budget/allocation-defaults";
+import {
+  projectBudgetDefaultsSchema,
+  projectBudgetDefaultsMatch,
+  type ProjectBudgetDefaults,
+} from "@atria/core/ai/project-budget-defaults";
 import { db } from "@backend/db";
 import type { FinanceTransaction } from "@backend/server/usecases/finance/mutation-access";
 import { auditLog, project } from "@backend/db/schema";
@@ -65,11 +70,17 @@ export async function createProjectTx(
   tx: FinanceTransaction,
   actor: Actor,
   input: CreateProjectInput,
+  reviewedBudgetDefaults?: ProjectBudgetDefaults,
 ): Promise<typeof project.$inferSelect> {
   if (!actorCan(actor, "create:project"))
     throw new Error("FORBIDDEN: Tidak memiliki izin membuat proyek.");
   const data = createProjectSchema.parse(input);
-  const allocationDefault = await readBudgetAllocationDefault(tx);
+  const allocationDefault = await readBudgetAllocationSnapshot(tx);
+  if (reviewedBudgetDefaults) {
+    const current = projectBudgetDefaultsSchema.safeParse(allocationDefault);
+    if (!current.success || !projectBudgetDefaultsMatch(reviewedBudgetDefaults, current.data))
+      throw new Error("PROJECT_BUDGET_DEFAULTS_CHANGED");
+  }
 
   const created = await insertProjectWithCanonicalBudgetTx({
     tx,

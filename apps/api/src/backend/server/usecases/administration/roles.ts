@@ -1,4 +1,14 @@
-import { and, eq, ne, sql } from "drizzle-orm";
+import {
+  writeAdministrationChangeTx,
+  lockAdministrationTx,
+  verifyRolePermissionSnapshotTx,
+  assertRoleScopeGrant,
+  refreshAdministrationActor,
+  readAdministrationState,
+  AdministrationChangeError,
+  administrationChangeFailure,
+} from "./change-writer";
+import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "@backend/db";
 import { auditLog, role, rolePermission, user } from "@backend/db/schema";
@@ -153,43 +163,62 @@ export async function createRoleUseCase(
     return forbidden(`Anda tidak dapat memberikan izin yang tidak Anda miliki: ${escalation.key}.`);
   }
 
+  try {
+    assertRoleScopeGrant(actor, validation.data.dataScope);
+  } catch (error: unknown) {
+    return administrationChangeFailure(error);
+  }
   const normalizedName = validation.data.name.trim().toUpperCase().replaceAll(" ", "_");
   const existing = await db.query.role.findFirst({ where: eq(role.name, normalizedName) });
   if (existing)
     return { success: false, error: { code: "CONFLICT", message: "Nama peran sudah dipakai." } };
 
-  const created = await db.transaction(async (tx) => {
-    const [row] = await tx
-      .insert(role)
-      .values({
-        name: normalizedName,
-        description: validation.data.description ?? null,
-        dataScope: validation.data.dataScope,
-        isSystem: false,
-      })
-      .returning();
+  try {
+    const created = await db.transaction(async (tx) => {
+      await lockAdministrationTx(tx);
+      const freshActor = refreshAdministrationActor(
+        actor,
+        await readAdministrationState(tx),
+        "manage:roles",
+        origin === "AI_PROPOSAL",
+      );
+      assertRoleScopeGrant(freshActor, validation.data.dataScope);
+      if (findEscalation(freshActor, permissions))
+        throw new AdministrationChangeError("FORBIDDEN", "Izin baru melampaui kewenangan Anda.");
+      const [row] = await tx
+        .insert(role)
+        .values({
+          name: normalizedName,
+          description: validation.data.description ?? null,
+          dataScope: validation.data.dataScope,
+          isSystem: false,
+        })
+        .returning();
 
-    if (permissions.length > 0) {
-      await tx
-        .insert(rolePermission)
-        .values(permissions.map((key) => ({ roleId: row.id, permissionKey: key })));
-    }
+      if (permissions.length > 0) {
+        await tx
+          .insert(rolePermission)
+          .values(permissions.map((key) => ({ roleId: row.id, permissionKey: key })));
+      }
 
-    await tx.insert(auditLog).values({
-      userId: actor.userId,
-      action: CREATE_AUDIT_ACTION_BY_ORIGIN[origin],
-      targetTable: "role",
-      targetId: row.id,
-      newState: JSON.stringify({
-        name: normalizedName,
-        dataScope: validation.data.dataScope,
-        permissions,
-      }),
+      await tx.insert(auditLog).values({
+        userId: actor.userId,
+        action: CREATE_AUDIT_ACTION_BY_ORIGIN[origin],
+        targetTable: "role",
+        targetId: row.id,
+        newState: JSON.stringify({
+          name: normalizedName,
+          dataScope: validation.data.dataScope,
+          permissions,
+        }),
+      });
+      return row;
     });
-    return row;
-  });
 
-  return { success: true, data: { id: created.id } };
+    return { success: true, data: { id: created.id } };
+  } catch (error: unknown) {
+    return administrationChangeFailure(error);
+  }
 }
 
 /**
@@ -240,35 +269,51 @@ export async function updateRolePermissionsUseCase(
     return forbidden(`Anda tidak dapat memberikan izin yang tidak Anda miliki: ${escalation.key}.`);
   }
 
-  await db.transaction(async (tx) => {
-    if (revoked.length > 0) {
-      for (const key of revoked) {
-        await tx
-          .delete(rolePermission)
-          .where(
-            and(
-              eq(rolePermission.roleId, validation.data.roleId),
-              eq(rolePermission.permissionKey, key),
-            ),
-          );
+  try {
+    await db.transaction(async (tx) => {
+      await lockAdministrationTx(tx);
+      await verifyRolePermissionSnapshotTx(
+        tx,
+        actor,
+        target.id,
+        target.updatedAt,
+        before,
+        after,
+        origin === "AI_PROPOSAL",
+      );
+      if (revoked.length > 0) {
+        for (const key of revoked) {
+          await tx
+            .delete(rolePermission)
+            .where(
+              and(
+                eq(rolePermission.roleId, validation.data.roleId),
+                eq(rolePermission.permissionKey, key),
+              ),
+            );
+        }
       }
-    }
-    if (granted.length > 0) {
+      if (granted.length > 0) {
+        await tx
+          .insert(rolePermission)
+          .values(granted.map((key) => ({ roleId: validation.data.roleId, permissionKey: key })));
+      }
       await tx
-        .insert(rolePermission)
-        .values(granted.map((key) => ({ roleId: validation.data.roleId, permissionKey: key })));
-    }
-    await tx.update(role).set({ updatedAt: new Date() }).where(eq(role.id, validation.data.roleId));
-    await tx.insert(auditLog).values({
-      userId: actor.userId,
-      action: AUDIT_ACTION_BY_ORIGIN[origin],
-      targetTable: "role",
-      targetId: validation.data.roleId,
-      originalState: JSON.stringify({ permissions: [...before] }),
-      newState: JSON.stringify({ permissions: [...after], granted, revoked }),
+        .update(role)
+        .set({ updatedAt: new Date() })
+        .where(eq(role.id, validation.data.roleId));
+      await tx.insert(auditLog).values({
+        userId: actor.userId,
+        action: AUDIT_ACTION_BY_ORIGIN[origin],
+        targetTable: "role",
+        targetId: validation.data.roleId,
+        originalState: JSON.stringify({ permissions: [...before] }),
+        newState: JSON.stringify({ permissions: [...after], granted, revoked }),
+      });
     });
-  });
-
+  } catch (error: unknown) {
+    return administrationChangeFailure(error);
+  }
   return { success: true, data: { updated: true } };
 }
 
@@ -276,66 +321,37 @@ export async function updateRoleDetailsUseCase(
   actor: Actor,
   input: UpdateRoleDetailsInput,
 ): Promise<ActionResponse<{ readonly updated: boolean }>> {
-  const validation = updateRoleDetailsSchema.safeParse(input);
-  if (!validation.success)
-    return invalid(validation.error.issues[0]?.message ?? "Peran tidak valid.");
-
-  const blocked = await assertManageable<{ readonly updated: boolean }>(
-    actor,
-    validation.data.roleId,
-  );
-  if (blocked) return blocked;
-
-  const target = await db.query.role.findFirst({ where: eq(role.id, validation.data.roleId) });
-  if (!target)
-    return { success: false, error: { code: "NOT_FOUND", message: "Peran tidak ditemukan." } };
-
-  const normalizedName = validation.data.name.trim().toUpperCase().replaceAll(" ", "_");
-  if (target.isSystem && normalizedName !== target.name) {
-    return forbidden("Nama peran sistem tidak dapat diubah.");
+  const parsed = updateRoleDetailsSchema.safeParse(input);
+  if (!parsed.success)
+    return invalid(parsed.error.issues[0]?.message ?? "Detail peran tidak valid.");
+  try {
+    await db.transaction((tx) =>
+      writeAdministrationChangeTx(
+        tx,
+        actor,
+        {
+          action: "ROLE_DETAILS",
+          roleId: parsed.data.roleId,
+          patch: {
+            name: parsed.data.name,
+            description: parsed.data.description ?? null,
+            dataScope: parsed.data.dataScope,
+          },
+          reason: "Perubahan detail peran melalui formulir administrasi",
+        },
+        "SCREEN",
+      ),
+    );
+    return { success: true, data: { updated: true } };
+  } catch (error: unknown) {
+    if (
+      error instanceof AdministrationChangeError &&
+      error.code === "VALIDATION_ERROR" &&
+      error.message.includes("tidak ada perubahan")
+    )
+      return { success: true, data: { updated: false } };
+    return administrationChangeFailure(error);
   }
-
-  const duplicate = await db.query.role.findFirst({
-    where: and(eq(role.name, normalizedName), ne(role.id, target.id)),
-  });
-  if (duplicate)
-    return { success: false, error: { code: "CONFLICT", message: "Nama peran sudah dipakai." } };
-
-  const changed =
-    normalizedName !== target.name ||
-    (validation.data.description ?? null) !== target.description ||
-    validation.data.dataScope !== target.dataScope;
-  if (!changed) return { success: true, data: { updated: false } };
-
-  await db.transaction(async (tx) => {
-    await tx
-      .update(role)
-      .set({
-        name: normalizedName,
-        description: validation.data.description ?? null,
-        dataScope: validation.data.dataScope,
-        updatedAt: new Date(),
-      })
-      .where(eq(role.id, target.id));
-    await tx.insert(auditLog).values({
-      userId: actor.userId,
-      action: "UPDATE_ROLE_DETAILS",
-      targetTable: "role",
-      targetId: target.id,
-      originalState: JSON.stringify({
-        name: target.name,
-        description: target.description,
-        dataScope: target.dataScope,
-      }),
-      newState: JSON.stringify({
-        name: normalizedName,
-        description: validation.data.description ?? null,
-        dataScope: validation.data.dataScope,
-      }),
-    });
-  });
-
-  return { success: true, data: { updated: true } };
 }
 
 /**
@@ -349,43 +365,23 @@ export async function deleteRoleUseCase(
   actor: Actor,
   input: DeleteRoleInput,
 ): Promise<ActionResponse<{ readonly deleted: true }>> {
-  const validation = deleteRoleSchema.safeParse(input);
-  if (!validation.success)
-    return invalid(validation.error.issues[0]?.message ?? "Peran tidak valid.");
-
-  const blocked = await assertManageable<{ readonly deleted: true }>(actor, validation.data.roleId);
-  if (blocked) return blocked;
-
-  const target = await db.query.role.findFirst({ where: eq(role.id, validation.data.roleId) });
-  if (!target)
-    return { success: false, error: { code: "NOT_FOUND", message: "Peran tidak ditemukan." } };
-  if (target.isSystem) return forbidden("Peran sistem tidak dapat dihapus.");
-
-  const holders = await db
-    .select({ total: sql<number>`count(*)::int` })
-    .from(user)
-    .where(eq(user.roleId, target.id));
-  const userCount = holders[0]?.total ?? 0;
-  if (userCount > 0) {
-    return {
-      success: false,
-      error: {
-        code: "CONFLICT",
-        message: `Peran masih dipakai ${userCount} pengguna. Pindahkan mereka lebih dulu.`,
-      },
-    };
+  const parsed = deleteRoleSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error.issues[0]?.message ?? "Peran tidak valid.");
+  try {
+    await db.transaction((tx) =>
+      writeAdministrationChangeTx(
+        tx,
+        actor,
+        {
+          action: "ROLE_DELETE",
+          roleId: parsed.data.roleId,
+          reason: "Penghapusan peran melalui formulir administrasi",
+        },
+        "SCREEN",
+      ),
+    );
+    return { success: true, data: { deleted: true } };
+  } catch (error: unknown) {
+    return administrationChangeFailure(error);
   }
-
-  await db.transaction(async (tx) => {
-    await tx.delete(role).where(eq(role.id, target.id));
-    await tx.insert(auditLog).values({
-      userId: actor.userId,
-      action: "DELETE_ROLE",
-      targetTable: "role",
-      targetId: target.id,
-      originalState: JSON.stringify({ name: target.name, dataScope: target.dataScope }),
-    });
-  });
-
-  return { success: true, data: { deleted: true } };
 }

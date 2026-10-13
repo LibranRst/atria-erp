@@ -119,6 +119,16 @@ async function fontSizes(page: Page, ids: readonly string[]): Promise<Record<str
   }, ids);
 }
 
+async function expectComposerMeasurementTypography(page: Page): Promise<void> {
+  const fonts = await page.evaluate((): { control: string; mirror: string } => {
+    const control = document.getElementById("ai-chat-input");
+    const mirror = document.querySelector("[data-composer-mirror]");
+    if (!control || !mirror) throw new Error("Missing composer measurement elements");
+    return { control: getComputedStyle(control).font, mirror: getComputedStyle(mirror).font };
+  });
+  expect(fonts.mirror).toBe(fonts.control);
+}
+
 describe.skipIf(!browserInstalled)(
   "editable input typography in the compiled production stylesheet",
   (): void => {
@@ -129,6 +139,7 @@ describe.skipIf(!browserInstalled)(
           await page.setViewportSize({ width, height: 844 });
           await loadFixture(page);
           const sizes = await fontSizes(page, editableIds);
+          await expectComposerMeasurementTypography(page);
           for (const [id, size] of Object.entries(sizes)) {
             expect({ width, id, size }).toEqual({ width, id, size: 16 });
           }
@@ -152,6 +163,7 @@ describe.skipIf(!browserInstalled)(
         for (const width of [1024, 1280, 1440]) {
           await page.setViewportSize({ width, height: 900 });
           await loadFixture(page);
+          await expectComposerMeasurementTypography(page);
           expect(
             await fontSizes(page, ["email", "hex", "ai-chat-input", "larger", "support"]),
           ).toEqual({ email: 14, hex: 12, "ai-chat-input": 14, larger: 17, support: 12 });
@@ -176,6 +188,7 @@ describe.skipIf(!browserInstalled)(
           await page.evaluate((): boolean => matchMedia("(any-pointer: coarse)").matches),
         ).toBe(true);
         const sizes = await fontSizes(page, editableIds);
+        await expectComposerMeasurementTypography(page);
         expect(Object.values(sizes).every((size): boolean => size >= 16)).toBe(true);
         expect(await fontSizes(page, ["larger", "support"])).toEqual({ larger: 17, support: 12 });
       } finally {

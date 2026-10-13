@@ -6,6 +6,9 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
+  FactRow,
+  GroupedSurface,
+  MoneyValue,
   MoneyImpactRow,
   MoneyInput,
   AdaptiveSelect,
@@ -15,6 +18,7 @@ import {
   useSheetPresenceValue,
   WorkflowFormSheet,
 } from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { movementCategoryOptions } from "@/features/finance-dashboard/utils/bank-account-constants";
@@ -51,6 +55,7 @@ export function MovementSheet({
   readonly onDiscard: () => void;
   readonly onSave: () => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const { presentedValue: presentedAccount, handleExitComplete } = useSheetPresenceValue(
     open ? account : null,
     open ? account?.id : null,
@@ -108,6 +113,76 @@ export function MovementSheet({
     <>
       <WorkflowFormSheet
         dismissal={{ mode: "managed" }}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <GroupedSurface>
+            <div className="divide-y divide-ring-subtle">
+              <FactRow
+                layout="stacked"
+                label="Rekening"
+                wrapLabel
+                value={presentedAccount?.name ?? "Data tidak tersedia"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Arah"
+                wrapLabel
+                value={draft.type === "INFLOW" ? "Kas masuk" : "Kas keluar"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Kategori"
+                wrapLabel
+                value={
+                  movementCategoryOptions.find((option) => option.value === draft.category)
+                    ?.label ?? formatBusinessLabel(draft.category, "FINANCE")
+                }
+              />
+              <FactRow
+                layout="stacked"
+                label="Nominal"
+                wrapLabel
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                    variant="fullDynamic"
+                    amount={amount}
+                  />
+                }
+              />
+              {presentedAccount ? (
+                <>
+                  <FactRow
+                    layout="stacked"
+                    label="Saldo saat ini"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(presentedAccount.balance) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={presentedAccount.balance}
+                      />
+                    }
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Saldo pratinjau"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(projectedBalance) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={projectedBalance}
+                        tone={projectedBalance < 0 ? "danger" : "default"}
+                      />
+                    }
+                  />
+                </>
+              ) : null}
+            </div>
+          </GroupedSurface>
+        }
         open={open}
         title={
           reviewing ? "Tinjau mutasi kas" : draft.type === "INFLOW" ? "Kas masuk" : "Kas keluar"
@@ -127,7 +202,7 @@ export function MovementSheet({
         onSecondary={() => setReviewing(false)}
       >
         <div className="space-y-md">
-          {presentedAccount ? (
+          {!desktop && presentedAccount ? (
             <BankAccountContextCard account={presentedAccount} eyebrow="Rekening" />
           ) : null}
           {reviewing ? (
@@ -211,10 +286,7 @@ export function MovementSheet({
                 }
               >
                 <FormField label="Nominal" required>
-                  <MoneyInput
-                    value={draft.amount}
-                    onChange={(value) => patch({ amount: value })}
-                  />
+                  <MoneyInput value={draft.amount} onChange={(value) => patch({ amount: value })} />
                 </FormField>
               </FormSection>
               <FormSection title="Klasifikasi" helper="Untuk rekonsiliasi dan audit.">

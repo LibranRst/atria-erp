@@ -32,7 +32,11 @@
     "db:provision": "bun scripts/provision-instance.ts",
     "db:check-invariants": "bun scripts/check-invariants.ts",
     "db:restore-drill": "bun scripts/restore-drill.ts",
-    "perf:loaders": "bun scripts/perf-loaders.ts"
+    "perf:loaders": "bun scripts/perf-loaders.ts",
+    "db:dev:seed": "bun scripts/seed-development-database.ts",
+    "db:dev:reset": "bun scripts/seed-development-database.ts --reset",
+    "db:dev:verify": "bun scripts/seed-development-database.ts --verify",
+    "dev:local": "bun --preload ./scripts/development-postgres-preload.ts --watch src/index.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.44",
@@ -48,6 +52,7 @@
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.12",
     "pdf-parse": "2.4.5",
+    "sharp": "0.35.5",
     "superjson": "^2.2.6",
     "web-push": "^3.6.7",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",

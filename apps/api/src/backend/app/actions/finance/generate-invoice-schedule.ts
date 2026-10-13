@@ -1,17 +1,10 @@
-import { cookies } from "@runtime/request-context";
-import { revalidateWorkspacePath as revalidatePath } from "@backend/lib/cache/revalidate-workspace";
-import { recordNotificationEvent } from "@backend/server/services/notification-events";
-import { eq } from "drizzle-orm";
-
 import { db } from "@backend/db";
-import { auditLog, clientInvoice, project } from "@backend/db/schema";
-import { auth } from "@backend/lib/auth";
-import { assertPermission, resolveRoleName } from "@backend/lib/auth/permissions";
-import { assertProjectAccess } from "@backend/lib/auth/scoping";
-import type { ActionResponse } from "@atria/core/types/action-response";
+import { clientInvoice } from "@backend/db/schema";
+import { resolveActor } from "@backend/server/actor";
+import { generateClientInvoiceScheduleTx } from "@backend/server/usecases/finance/client-invoice-writer";
 import { generateInvoiceScheduleSchema } from "@atria/core/validations/workflow-governance";
-
-type SessionUser = { readonly id: string; readonly roleId?: string };
+import type { ActionResponse } from "@atria/core/types/action-response";
+import { revalidateWorkspacePath } from "@backend/lib/cache/revalidate-workspace";
 
 export async function generateClientInvoiceSchedule(
   input: unknown,
@@ -22,79 +15,35 @@ export async function generateClientInvoiceSchedule(
       success: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: validation.error.issues[0]?.message ?? "Jadwal invoice tidak valid.",
+        message: validation.error.issues[0]?.message ?? "Isian invoice tidak valid.",
       },
     };
-  const session = await auth.api.getSession({ headers: { cookie: (await cookies()).toString() } });
-  if (!session?.user)
+  const actor = await resolveActor();
+  if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  const user = session.user as SessionUser;
   try {
-    await assertPermission(user, "create:client_invoice");
-    const roleName = await resolveRoleName(user.roleId ?? "");
-    await assertProjectAccess(validation.data.projectId, user.id, roleName);
-    const proj = await db.query.project.findFirst({
-      where: eq(project.id, validation.data.projectId),
-      with: { clientInvoices: true },
-    });
-    if (!proj) throw new Error("PROJECT_NOT_FOUND");
-    if (proj.clientInvoices.some((invoice) => invoice.status !== "VOID"))
-      throw new Error("Jadwal invoice aktif sudah tersedia untuk proyek ini.");
-    const contractValue = Number(proj.totalContractValue);
-    const scheduleToken = Date.now().toString().slice(-6);
-    const schedule = await db.transaction(async (tx) => {
-      const created: (typeof clientInvoice.$inferSelect)[] = [];
-      let allocated = 0;
-      for (const [index, installment] of validation.data.installments.entries()) {
-        const isLast = index === validation.data.installments.length - 1;
-        const amount = isLast
-          ? contractValue - allocated
-          : Math.round(contractValue * installment.percentage * 100) / 100;
-        allocated += amount;
-        const dueDate = new Date(validation.data.firstDueDate);
-        dueDate.setMonth(dueDate.getMonth() + index);
-        const stage = index === 0 ? "DP" : isLast ? "PELUNASAN" : `PROGRESS_${index}`;
-        const [invoice] = await tx
-          .insert(clientInvoice)
-          .values({
-            projectId: proj.id,
-            invoiceNumber: `INV-${proj.id.slice(0, 8).toUpperCase()}-${scheduleToken}-${String(index + 1).padStart(2, "0")}`,
-            amount: amount.toFixed(2),
-            status: "UNPAID",
-            stage,
-            dueDate,
-            notes: `${installment.label} (${(installment.percentage * 100).toFixed(0)}%)`,
-          })
-          .returning();
-        created.push(invoice);
-        await recordNotificationEvent(tx, {
-          referenceType: "client_invoice",
-          referenceId: invoice.id,
-          projectId: invoice.projectId,
-          stage: "CREATED",
-          title: "Jadwal invoice klien dibuat",
-          message: invoice.invoiceNumber,
-          permission: "view:client_invoice",
-          actionUrl: `/projects/${invoice.projectId}?tab=payments`,
-          actorId: user.id,
-        });
-      }
-      await tx.insert(auditLog).values({
-        userId: user.id,
-        action: "GENERATE_CLIENT_INVOICE_SCHEDULE",
-        targetTable: "project",
-        targetId: proj.id,
-        newState: JSON.stringify(created),
-      });
-      return created;
-    });
-    revalidatePath(`/projects/${proj.id}`);
-    return { success: true, data: schedule };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Gagal membuat jadwal invoice.";
+    const data = await db.transaction((tx) =>
+      generateClientInvoiceScheduleTx(tx, actor, validation.data),
+    );
+    revalidateWorkspacePath(`/projects/${validation.data.projectId}`);
+    revalidateWorkspacePath("/ledger");
+    return { success: true, data };
+  } catch (error: unknown) {
+    const reason = error instanceof Error ? error.message : "";
+    const forbidden = reason.startsWith("FORBIDDEN:") || reason.startsWith("PROJECT_NOT_ACTIVE:");
     return {
       success: false,
-      error: { code: message.includes("FORBIDDEN") ? "FORBIDDEN" : "TRANSACTION_FAILED", message },
+      error: {
+        code: forbidden ? "FORBIDDEN" : "VALIDATION_ERROR",
+        message:
+          reason === "INVOICE_EXCEEDS_CONTRACT_VALUE"
+            ? "Total invoice aktif akan melebihi nilai kontrak proyek. Gunakan Change Order sebelum menambah tagihan."
+            : forbidden
+              ? "Akses atau status proyek tidak mengizinkan tindakan invoice."
+              : reason && !reason.startsWith("Failed query:")
+                ? reason
+                : "Invoice belum tersimpan. Periksa nomor dan kondisi proyek.",
+      },
     };
   }
 }

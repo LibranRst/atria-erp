@@ -527,14 +527,15 @@ export function ApprovalList({
         )}
 
         {queuePage.remainingCount > 0 ? (
-          <button
+          <Button
             type="button"
             onClick={() => setOlderVisibleLimit((current) => current + APPROVAL_PAGE_SIZE)}
             aria-label={`Tampilkan ${queuePage.nextPageCount} persetujuan berikutnya dari ${queuePage.remainingCount} tersisa`}
             className="min-h-12 w-full rounded-full bg-surface-container text-xs font-bold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+            variant="secondary"
           >
             Tampilkan {queuePage.nextPageCount} berikutnya
-          </button>
+          </Button>
         ) : null}
       </div>
 
@@ -606,14 +607,15 @@ export function ApprovalList({
         onClose={closeDecision}
         pending={pending}
         actions={
-          <button
+          <Button
             type="button"
             disabled={pending || rejectionReason.trim().length < rejectionMinimum}
             onClick={confirmDecision}
             className="min-h-12 w-full rounded-full bg-error px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
+            variant="critical"
           >
             {pending ? "Menyimpan penolakan" : "Tolak pengajuan"}
-          </button>
+          </Button>
         }
       >
         <div className="space-y-md">

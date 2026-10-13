@@ -152,6 +152,8 @@ export const submitVendorBillSchema = z.object({
     .regex(uuidRegex, "ID detail plan kategori tidak valid.")
     .optional()
     .nullable(),
+  materialId: z.string().regex(uuidRegex).optional().nullable(),
+  projectRapItemId: z.string().regex(uuidRegex).optional().nullable(),
   billNumber: z.string().min(1, "Nomor tagihan vendor wajib diisi.").max(100),
   amount: z.number().positive("Nominal tagihan harus lebih besar dari 0."),
   dueDate: z.coerce.date(),

@@ -14,6 +14,7 @@ import {
   OperationalFormSheet,
   Textarea,
   TextInput,
+  Button,
 } from "@/components/ui";
 import type { PermissionKey } from "@atria/core/auth/permissions";
 import type { ManagedRole } from "@/server/usecases/administration/roles";
@@ -21,6 +22,7 @@ import {
   buildPermissionGroups,
   DATA_SCOPE_OPTIONS,
   describePermissionRow,
+  formatRoleName,
   togglePermission,
   type RoleDraft,
   type RoleSuggestions,
@@ -135,6 +137,47 @@ export function RoleEditorSheet({
       }
       open={open}
       title={role ? draft.name : "Peran"}
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <GroupedSurface>
+          <div className="divide-y divide-outline-variant/20">
+            <FactRow
+              layout="stacked"
+              label="Peran"
+              wrapLabel
+              value={formatRoleName(draft.name) || "Belum diisi"}
+            />
+            <FactRow
+              layout="stacked"
+              label="Cakupan"
+              wrapLabel
+              value={DATA_SCOPE_OPTIONS.find((option) => option.value === draft.dataScope)?.label}
+            />
+            <FactRow
+              layout="stacked"
+              label="Izin aktif"
+              value={`${draft.permissions.length} izin`}
+            />
+            <FactRow layout="stacked" label="Pemegang" value={`${role?.userCount ?? 0} pengguna`} />
+            {totalSuggested > 0 ? (
+              <FactRow
+                layout="stacked"
+                label="Saran tersisa"
+                value={`${totalSuggested} · belum diterapkan`}
+                wrapLabel
+              />
+            ) : null}
+            <p className="px-4 py-3 text-support text-on-surface-variant">
+              {readOnly
+                ? readOnlyReason || "Peran ini hanya dapat dibaca."
+                : role?.isSystem
+                  ? "Nama peran bawaan tetap terkunci. Izin berubah setelah disimpan."
+                  : "Cakupan proyek dan izin merupakan dua pengaturan terpisah."}
+            </p>
+          </div>
+        </GroupedSurface>
+      }
       submitLabel="Simpan peran"
       submittingLabel="Menyimpan…"
       pending={pending}
@@ -294,14 +337,16 @@ export function RoleEditorSheet({
               }
               action={
                 role.userCount === 0 ? (
-                  <button
+                  <Button
                     type="button"
                     onClick={onDelete}
                     disabled={pending}
                     className="min-h-10 rounded-full bg-error-container px-3.5 text-meta font-bold text-on-error-container outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-45"
+                    variant="criticalQuiet"
+                    size="compact"
                   >
                     Hapus
-                  </button>
+                  </Button>
                 ) : null
               }
             />

@@ -91,3 +91,23 @@ describe("free warehouse stock is not secured stock", () => {
     expect(projection.needToBuy).toBe(0);
   });
 });
+
+test("released reservation history stays released after later reserve/use/waste", () => {
+  expect(
+    projectMaterialProjection(
+      [
+        { movementType: "RESERVE", quantity: 10 },
+        { movementType: "RELEASE_RESERVATION", quantity: 4 },
+        { movementType: "USE", quantity: 2 },
+        { movementType: "WASTE", quantity: 1 },
+      ],
+      10,
+    ),
+  ).toMatchObject({
+    reservedQuantity: 3,
+    usedQuantity: 2,
+    wasteQuantity: 1,
+    securedQuantity: 5,
+    needToBuy: 5,
+  });
+});

@@ -4,7 +4,7 @@ import type { ViewProps } from "react-native";
 export type NativeSegmentedOption = {
   readonly id: string;
   readonly label: string;
-  readonly symbol: string;
+  readonly iconData: string;
   readonly badge: number;
   readonly disabled: boolean;
 };

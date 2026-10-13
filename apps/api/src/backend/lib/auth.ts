@@ -3,7 +3,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { bearer } from "better-auth/plugins/bearer";
 import { db } from "@backend/db";
-import { additionalWebOriginsSchema } from "@atria/core/media/web-origins";
+import { configuredAuthOrigins } from "@backend/lib/auth/trusted-origins";
 
 const localHostnames = new Set(["localhost", "127.0.0.1", "::1"]);
 
@@ -29,22 +29,7 @@ function isPrivateNetworkHostname(hostname: string): boolean {
 }
 
 function getConfiguredOrigins(): string[] {
-  return [
-    process.env.BETTER_AUTH_URL,
-    process.env.NEXT_PUBLIC_APP_URL,
-    process.env.NEXT_PUBLIC_AUTH_URL,
-    process.env.API_PUBLIC_URL ?? (isDevelopment ? "http://localhost:3001" : undefined),
-    process.env.WEB_ORIGIN ?? (isDevelopment ? "http://localhost:3000" : undefined),
-    ...additionalWebOriginsSchema.parse(process.env.WEB_ADDITIONAL_ORIGINS),
-  ].flatMap((url) => {
-    if (!url) return [];
-
-    try {
-      return [new URL(url).origin];
-    } catch {
-      return [];
-    }
-  });
+  return [...configuredAuthOrigins(process.env, isDevelopment)];
 }
 
 function getTrustedOrigins(request?: Request): string[] {

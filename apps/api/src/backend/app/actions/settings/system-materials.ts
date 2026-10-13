@@ -1,9 +1,20 @@
+import { resolveActor } from "@backend/server/actor";
+import {
+  writeCatalogSettingsTx,
+  CatalogSettingsError,
+} from "@backend/server/usecases/settings/catalog-settings-writer";
+import {
+  updateMaterialMasterTx,
+  setMaterialActiveTx,
+  materialEditFailure,
+} from "@backend/server/usecases/material/master-editor";
+import { createMaterialCategoryTx } from "@backend/server/usecases/material/reference-writer";
+import { createMaterialMasterTx } from "@backend/server/usecases/material/master-writer";
 import { revalidateWorkspacePath as revalidatePath } from "@backend/lib/cache/revalidate-workspace";
 import { eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { auditLog, materialCategory, materialInventory, materialMaster } from "@backend/db/schema";
-import { recordReadinessMilestonesTx } from "@backend/lib/onboarding/readiness-events";
+import { materialInventory, materialMaster } from "@backend/db/schema";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   archiveMaterialSchema,
@@ -22,14 +33,7 @@ import {
   type UpdateMaterialSettingDefaultsInput,
 } from "@atria/core/validations/settings";
 import type { MaterialInventorySettingRow, MaterialSettingRow } from "./system-types";
-import {
-  assertSettingsPermission,
-  getSessionUser,
-  revalidateSettings,
-  toMoney,
-  toNullableText,
-  writeSettingsAudit,
-} from "./system-utils";
+import { assertSettingsPermission, getSessionUser, revalidateSettings } from "./system-utils";
 import { getSettingsOverview } from "./system-read";
 
 export async function updateMaterial(
@@ -50,37 +54,12 @@ export async function updateMaterial(
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
 
-  const existing = await db.query.materialMaster.findFirst({
-    where: eq(materialMaster.id, validation.data.materialId),
-  });
-  if (!existing)
-    return { success: false, error: { code: "NOT_FOUND", message: "Material tidak ditemukan." } };
-
-  const [updated] = await db
-    .update(materialMaster)
-    .set({
-      categoryId: validation.data.categoryId,
-      defaultVendorId: validation.data.defaultVendorId ?? null,
-      name: validation.data.name.trim(),
-      specification: toNullableText(validation.data.specification),
-      brand: toNullableText(validation.data.brand),
-      code: toNullableText(validation.data.code),
-      color: toNullableText(validation.data.color),
-      unit: validation.data.unit.trim(),
-      isActive: validation.data.isActive,
-      updatedAt: new Date(),
-    })
-    .where(eq(materialMaster.id, validation.data.materialId))
-    .returning();
-
-  await writeSettingsAudit({
-    userId: user.id,
-    action: "UPDATE_MATERIAL_SETTING",
-    targetTable: "material_master",
-    targetId: updated.id,
-    originalState: existing,
-    newState: updated,
-  });
+  let updated: typeof materialMaster.$inferSelect;
+  try {
+    updated = await db.transaction((tx) => updateMaterialMasterTx(tx, user.id, validation.data));
+  } catch (error: unknown) {
+    return materialEditFailure(error);
+  }
 
   revalidatePath("/settings");
   revalidatePath("/materials");
@@ -95,69 +74,65 @@ export async function updateMaterial(
   return { success: true, data: material };
 }
 
+async function saveInventoryDefaults(
+  input: UpdateMaterialSettingDefaultsInput,
+  averageCost?: number,
+): Promise<ActionResponse<MaterialInventorySettingRow>> {
+  const actor = await resolveActor();
+  if (!actor)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  try {
+    const row = await db.transaction(async (tx) => {
+      await writeCatalogSettingsTx(tx, actor, { action: "INVENTORY_DEFAULTS", ...input });
+      if (averageCost !== undefined)
+        await writeCatalogSettingsTx(tx, actor, {
+          action: "INVENTORY_VALUATION",
+          materialInventoryId: input.materialInventoryId,
+          averageCost,
+          reason: "Koreksi biaya rata-rata melalui Pengaturan inventory.",
+        });
+      const saved = await tx.query.materialInventory.findFirst({
+        where: eq(materialInventory.id, input.materialInventoryId),
+        with: { location: true },
+      });
+      if (!saved) throw new Error("Inventory tidak tersedia.");
+      return {
+        id: saved.id,
+        locationId: saved.locationId,
+        locationName: saved.location.name,
+        currentStock: Number(saved.currentStock),
+        reservedStock: Number(saved.reservedStock),
+        minimumStock: Number(saved.minimumStock),
+        averageCost: Number(saved.averageCost),
+        lastPurchasePrice: Number(saved.lastPurchasePrice),
+      };
+    });
+    revalidateSettings();
+    return { success: true, data: row };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: {
+        code: error instanceof CatalogSettingsError ? error.code : "CONFLICT",
+        message:
+          error instanceof CatalogSettingsError
+            ? error.message
+            : "Pengaturan inventory belum tersimpan.",
+      },
+    };
+  }
+}
 export async function updateMaterialInventoryDefaults(
   input: UpdateMaterialInventoryDefaultsInput,
 ): Promise<ActionResponse<MaterialInventorySettingRow>> {
-  const validation = updateMaterialInventoryDefaultsSchema.safeParse(input);
-  if (!validation.success) {
+  const v = updateMaterialInventoryDefaultsSchema.safeParse(input);
+  if (!v.success)
     return {
       success: false,
       error: { code: "VALIDATION_ERROR", message: "Default inventory tidak valid." },
     };
-  }
-
-  const user = await getSessionUser();
-  if (!user)
-    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-
-  const accessError = await assertSettingsPermission(user, "manage:material_settings");
-  if (accessError) return accessError;
-
-  const existing = await db.query.materialInventory.findFirst({
-    where: eq(materialInventory.id, validation.data.materialInventoryId),
-    with: { location: true },
-  });
-  if (!existing)
-    return {
-      success: false,
-      error: { code: "NOT_FOUND", message: "Inventory material tidak ditemukan." },
-    };
-
-  const [updated] = await db
-    .update(materialInventory)
-    .set({
-      minimumStock: validation.data.minimumStock.toFixed(2),
-      averageCost: toMoney(validation.data.averageCost),
-      lastPurchasePrice: toMoney(validation.data.lastPurchasePrice),
-      updatedAt: new Date(),
-    })
-    .where(eq(materialInventory.id, validation.data.materialInventoryId))
-    .returning();
-
-  await writeSettingsAudit({
-    userId: user.id,
-    action: "UPDATE_MATERIAL_INVENTORY_DEFAULTS",
-    targetTable: "material_inventory",
-    targetId: updated.id,
-    originalState: existing,
-    newState: updated,
-  });
-
-  revalidatePath("/settings");
-  revalidatePath("/materials");
-  return {
-    success: true,
-    data: {
-      id: updated.id,
-      locationId: updated.locationId,
-      locationName: existing.location.name,
-      currentStock: Number(updated.currentStock),
-      reservedStock: Number(updated.reservedStock),
-      minimumStock: Number(updated.minimumStock),
-      averageCost: Number(updated.averageCost),
-      lastPurchasePrice: Number(updated.lastPurchasePrice),
-    },
-  };
+  const { averageCost, ...defaults } = v.data;
+  return saveInventoryDefaults(defaults, averageCost);
 }
 
 export async function archiveMaterial(
@@ -178,22 +153,14 @@ export async function archiveMaterial(
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
 
-  const [updated] = await db
-    .update(materialMaster)
-    .set({ isActive: false, updatedAt: new Date() })
-    .where(eq(materialMaster.id, validation.data.materialId))
-    .returning();
-
-  if (!updated)
-    return { success: false, error: { code: "NOT_FOUND", message: "Material tidak ditemukan." } };
-
-  await writeSettingsAudit({
-    userId: user.id,
-    action: "ARCHIVE_MATERIAL_SETTING",
-    targetTable: "material_master",
-    targetId: updated.id,
-    newState: updated,
-  });
+  let updated: typeof materialMaster.$inferSelect;
+  try {
+    updated = await db.transaction((tx) =>
+      setMaterialActiveTx(tx, user.id, { materialId: validation.data.materialId, isActive: false }),
+    );
+  } catch (error: unknown) {
+    return materialEditFailure(error);
+  }
 
   revalidatePath("/settings");
   revalidatePath("/materials");
@@ -219,48 +186,9 @@ export async function createMaterialWithInventoryDefaults(
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
 
-  const createdId = await db.transaction(async (tx) => {
-    const [created] = await tx
-      .insert(materialMaster)
-      .values({
-        categoryId: validation.data.categoryId,
-        defaultVendorId: validation.data.defaultVendorId ?? null,
-        name: validation.data.name.trim(),
-        specification: toNullableText(validation.data.specification),
-        brand: toNullableText(validation.data.brand),
-        code: toNullableText(validation.data.code),
-        color: toNullableText(validation.data.color),
-        unit: validation.data.unit.trim(),
-      })
-      .returning();
-    await tx.insert(materialInventory).values(
-      validation.data.inventoryDefaults.map((inventory) => ({
-        materialId: created.id,
-        locationId: inventory.inventoryLocationId,
-        currentStock: "0.00",
-        reservedStock: "0.00",
-        minimumStock: inventory.minimumStock.toFixed(2),
-        averageCost: "0.00",
-        lastPurchasePrice: toMoney(inventory.lastPurchasePrice),
-      })),
-    );
-    await tx.insert(auditLog).values({
-      userId: user.id,
-      action: "CREATE_MATERIAL_WITH_INVENTORY_DEFAULTS",
-      targetTable: "material_master",
-      targetId: created.id,
-      newState: JSON.stringify({
-        material: created,
-        inventoryDefaults: validation.data.inventoryDefaults,
-      }),
-    });
-    await recordReadinessMilestonesTx({
-      tx,
-      actorUserId: user.id,
-      changedItem: "material_foundation",
-    });
-    return created.id;
-  });
+  const createdId = await db.transaction(
+    async (tx) => (await createMaterialMasterTx(tx, user.id, validation.data)).id,
+  );
   revalidateSettings();
   revalidatePath("/materials");
   return { success: true, data: { id: createdId } };
@@ -269,57 +197,13 @@ export async function createMaterialWithInventoryDefaults(
 export async function updateMaterialSettingDefaults(
   input: UpdateMaterialSettingDefaultsInput,
 ): Promise<ActionResponse<MaterialInventorySettingRow>> {
-  const validation = updateMaterialSettingDefaultsSchema.safeParse(input);
-  if (!validation.success)
+  const v = updateMaterialSettingDefaultsSchema.safeParse(input);
+  if (!v.success)
     return {
       success: false,
       error: { code: "VALIDATION_ERROR", message: "Default inventory tidak valid." },
     };
-  const user = await getSessionUser();
-  if (!user)
-    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  const accessError = await assertSettingsPermission(user, "manage:material_settings");
-  if (accessError) return accessError;
-  const existing = await db.query.materialInventory.findFirst({
-    where: eq(materialInventory.id, validation.data.materialInventoryId),
-    with: { location: true },
-  });
-  if (!existing)
-    return {
-      success: false,
-      error: { code: "NOT_FOUND", message: "Inventory material tidak ditemukan." },
-    };
-  const [updated] = await db
-    .update(materialInventory)
-    .set({
-      minimumStock: validation.data.minimumStock.toFixed(2),
-      lastPurchasePrice: toMoney(validation.data.lastPurchasePrice),
-      updatedAt: new Date(),
-    })
-    .where(eq(materialInventory.id, existing.id))
-    .returning();
-  await writeSettingsAudit({
-    userId: user.id,
-    action: "UPDATE_MATERIAL_SETTING_DEFAULTS",
-    targetTable: "material_inventory",
-    targetId: updated.id,
-    originalState: existing,
-    newState: updated,
-  });
-  revalidateSettings();
-  return {
-    success: true,
-    data: {
-      id: updated.id,
-      locationId: updated.locationId,
-      locationName: existing.location.name,
-      currentStock: Number(updated.currentStock),
-      reservedStock: Number(updated.reservedStock),
-      minimumStock: Number(updated.minimumStock),
-      averageCost: Number(updated.averageCost),
-      lastPurchasePrice: Number(updated.lastPurchasePrice),
-    },
-  };
+  return saveInventoryDefaults(v.data);
 }
 
 export async function setMaterialActive(
@@ -336,24 +220,13 @@ export async function setMaterialActive(
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
-  const existing = await db.query.materialMaster.findFirst({
-    where: eq(materialMaster.id, validation.data.materialId),
-  });
-  if (!existing)
-    return { success: false, error: { code: "NOT_FOUND", message: "Material tidak ditemukan." } };
-  const [updated] = await db
-    .update(materialMaster)
-    .set({ isActive: validation.data.isActive, updatedAt: new Date() })
-    .where(eq(materialMaster.id, existing.id))
-    .returning();
-  await writeSettingsAudit({
-    userId: user.id,
-    action: validation.data.isActive ? "REACTIVATE_MATERIAL_SETTING" : "ARCHIVE_MATERIAL_SETTING",
-    targetTable: "material_master",
-    targetId: updated.id,
-    originalState: existing,
-    newState: updated,
-  });
+  let updated: typeof materialMaster.$inferSelect;
+  try {
+    updated = await db.transaction((tx) => setMaterialActiveTx(tx, user.id, validation.data));
+  } catch (error: unknown) {
+    return materialEditFailure(error);
+  }
+
   revalidateSettings();
   revalidatePath("/materials");
   return { success: true, data: { id: updated.id, isActive: updated.isActive } };
@@ -373,20 +246,9 @@ export async function createMaterialCategorySetting(
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   const accessError = await assertSettingsPermission(user, "manage:material_settings");
   if (accessError) return accessError;
-  const [created] = await db
-    .insert(materialCategory)
-    .values({
-      name: validation.data.name.trim(),
-      description: toNullableText(validation.data.description),
-    })
-    .returning();
-  await writeSettingsAudit({
-    userId: user.id,
-    action: "CREATE_MATERIAL_CATEGORY_SETTING",
-    targetTable: "material_category",
-    targetId: created.id,
-    newState: created,
-  });
+  const created = await db.transaction(async (tx) =>
+    createMaterialCategoryTx(tx, user.id, validation.data),
+  );
   revalidateSettings();
   return { success: true, data: { id: created.id, name: created.name } };
 }

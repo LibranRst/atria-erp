@@ -1,6 +1,6 @@
 "use client";
 
-import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
 import { DesktopSegmentedTabs } from "../desktop/desktop-tabs";
 import type { JSX, ReactNode } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -13,6 +13,7 @@ export type SegmentedTabOption<TValue extends string> = {
   readonly value: TValue;
   readonly label: string;
   readonly count?: number;
+  readonly countLabel?: string;
   readonly icon?: ReactNode;
   readonly disabled?: boolean;
   readonly unavailable?: boolean;
@@ -173,7 +174,9 @@ function MobileSegmentedTabs<TValue extends string>({
           <span className="truncate">{option.label}</span>
           {typeof option.count === "number" ? (
             <span
-              aria-label={`${option.count} ${option.label} memerlukan perhatian`}
+              aria-label={
+                option.countLabel ?? `${option.count} ${option.label} memerlukan perhatian`
+              }
               className={`inline-flex min-w-4 items-center justify-center rounded-full px-1 font-sans text-eyebrow leading-4 font-extrabold tabular-nums ${active ? "bg-white/12 text-white" : "bg-surface-container-high text-on-surface"}`}
             >
               {option.count > 99 ? "99+" : option.count}
@@ -239,7 +242,7 @@ function MobileSegmentedTabs<TValue extends string>({
 export function SegmentedTabs<TValue extends string>(
   props: SegmentedTabsProps<TValue>,
 ): JSX.Element {
-  return useWorkspacePresentation() === "desktop" ? (
+  return useWorkspaceControlPresentation() === "desktop" ? (
     <DesktopSegmentedTabs {...props} />
   ) : (
     <MobileSegmentedTabs {...props} />

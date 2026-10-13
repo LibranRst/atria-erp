@@ -1,3 +1,4 @@
+import { budgetUsageSummary } from "@atria/core/budget/usage-summary";
 import { eq, inArray } from "drizzle-orm";
 
 import { db } from "@backend/db";
@@ -10,16 +11,9 @@ import {
   projectExpenses,
   vendorPayment,
 } from "@backend/db/schema";
-import {
-  calculateUsedPercentage,
-  getBudgetCategoryStatus,
-  type ExpenseCategoryCode,
-} from "@atria/core/budget/excel-budget";
+import { type ExpenseCategoryCode } from "@atria/core/budget/excel-budget";
 
 type BudgetTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-const ACTUAL_STATUSES = new Set(["APPROVED", "PAID"]);
-const PENDING_STATUSES = new Set(["SUBMITTED", "VERIFIED"]);
 
 export type CanonicalBudgetCategoryContext = {
   readonly projectBudgetId: string;
@@ -301,6 +295,38 @@ export async function ensureCanonicalExpenseForProjectCost(input: {
   return budgetContext.projectBudgetCategoryId;
 }
 
+export async function readBudgetCategorySourceTx(
+  tx: BudgetTx,
+  categoryId: string,
+): Promise<{
+  expenses: (typeof projectExpenses.$inferSelect)[];
+  payments: (typeof vendorPayment.$inferSelect)[];
+}> {
+  const expenses = await tx.query.projectExpenses.findMany({
+    where: eq(projectExpenses.projectBudgetCategoryId, categoryId),
+    orderBy: [projectExpenses.id],
+  });
+  const ids = [...new Set(expenses.flatMap((e) => (e.vendorBillId ? [e.vendorBillId] : [])))];
+  const payments = ids.length
+    ? await tx.query.vendorPayment.findMany({
+        where: inArray(vendorPayment.vendorBillId, ids),
+        orderBy: [vendorPayment.id],
+      })
+    : [];
+  return { expenses, payments };
+}
+export async function readBudgetCategoryUsageTx(
+  tx: BudgetTx,
+  categoryId: string,
+): Promise<{ pendingAmount: number; actualAmount: number; paidAmount: number }> {
+  const summary = budgetUsageSummary("0.00", await readBudgetCategorySourceTx(tx, categoryId));
+  return {
+    pendingAmount: Number(summary.pendingAmount),
+    actualAmount: Number(summary.actualAmount),
+    paidAmount: Number(summary.paidAmount),
+  };
+}
+
 export async function syncProjectBudgetCategory(input: {
   readonly tx: BudgetTx;
   readonly projectBudgetCategoryId: string;
@@ -313,60 +339,14 @@ export async function syncProjectBudgetCategory(input: {
     throw new Error("PROJECT_BUDGET_CATEGORY_NOT_FOUND");
   }
 
-  const expenses = await input.tx.query.projectExpenses.findMany({
-    where: eq(projectExpenses.projectBudgetCategoryId, input.projectBudgetCategoryId),
-  });
-
-  const vendorBillIds = expenses
-    .map((expense) => expense.vendorBillId)
-    .filter((id): id is string => Boolean(id));
-  const payments =
-    vendorBillIds.length > 0
-      ? await input.tx.query.vendorPayment.findMany({
-          where: inArray(vendorPayment.vendorBillId, vendorBillIds),
-        })
-      : [];
-
-  const paidByVendorBill = new Map<string, number>();
-  for (const payment of payments) {
-    if (payment.status !== "COMPLETED") continue;
-    paidByVendorBill.set(
-      payment.vendorBillId,
-      (paidByVendorBill.get(payment.vendorBillId) ?? 0) + Number(payment.amountPaid),
-    );
-  }
-
-  let pendingAmount = 0;
-  let actualAmount = 0;
-  let paidAmount = 0;
-
-  for (const expense of expenses) {
-    const amount = Number(expense.amount);
-    if (PENDING_STATUSES.has(expense.status)) {
-      pendingAmount += amount;
-    }
-    if (ACTUAL_STATUSES.has(expense.status)) {
-      actualAmount += amount;
-    }
-    if (expense.status === "PAID") {
-      paidAmount += amount;
-    } else if (expense.vendorBillId) {
-      paidAmount += Math.min(paidByVendorBill.get(expense.vendorBillId) ?? 0, amount);
-    }
-  }
-
-  const allocatedAmount = Number(category.allocatedAmount);
-  const usedPercentage = calculateUsedPercentage(actualAmount, allocatedAmount);
-
+  const summary = budgetUsageSummary(
+    category.allocatedAmount,
+    await readBudgetCategorySourceTx(input.tx, input.projectBudgetCategoryId),
+  );
   await input.tx
     .update(projectBudgetCategory)
     .set({
-      pendingAmount: pendingAmount.toFixed(2),
-      actualAmount: actualAmount.toFixed(2),
-      paidAmount: paidAmount.toFixed(2),
-      remainingAmount: (allocatedAmount - actualAmount).toFixed(2),
-      usedPercentage: usedPercentage.toFixed(4),
-      status: getBudgetCategoryStatus(usedPercentage),
+      ...summary,
       updatedAt: new Date(),
     })
     .where(eq(projectBudgetCategory.id, input.projectBudgetCategoryId));

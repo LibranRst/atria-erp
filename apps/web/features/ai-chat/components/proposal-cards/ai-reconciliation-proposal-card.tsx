@@ -1,13 +1,7 @@
 "use client";
 
 import { confirmAiBankReconciliationProposal } from "@/app/actions/ai/confirm-bank-reconciliation-proposal";
-import {
-  ActionMenu,
-  AppIcon,
-  MoneyValue,
-  SegmentedTabs,
-  type ActionMenuItem,
-} from "@/components/ui";
+import { AdaptiveSelect, AppIcon, FormSection, MoneyValue, SegmentedTabs } from "@/components/ui";
 import { useRouter } from "@/lib/navigation/workspace-navigation";
 
 import * as React from "react";
@@ -251,8 +245,26 @@ export function AiReconciliationProposalCard({
 
         {/* Identitas Rekening Bank (Bersih, Anti-Overflow) */}
         <div className="overflow-hidden rounded-2xl bg-surface-container-low p-1 ring-1 ring-ring-subtle">
-          <div className="flex items-center justify-between gap-3 px-3 py-2">
-            <div className="min-w-0 flex-1">
+          {proposal.availableBankAccounts &&
+          proposal.availableBankAccounts.length > 1 &&
+          !alreadyConfirmed &&
+          status !== "submitting" ? (
+            <FormSection presentation="embedded">
+              <AdaptiveSelect
+                label="Rekening Bank"
+                value={selectedBankAccountId}
+                onChange={setSelectedBankAccountId}
+                options={proposal.availableBankAccounts.map((account) => ({
+                  value: account.id,
+                  label: `${account.bankName} - ${account.name}`,
+                  description: `No. Rek: ${account.accountNumber}`,
+                }))}
+                placeholder="Pilih rekening bank"
+                searchPlaceholder="Cari rekening atau nomor rekening..."
+              />
+            </FormSection>
+          ) : (
+            <div className="min-w-0 px-3 py-2">
               <span className="block text-meta font-semibold text-on-surface-variant">
                 Rekening Bank
               </span>
@@ -263,36 +275,7 @@ export function AiReconciliationProposalCard({
                 No. Rek: {selectedAccount?.accountNumber ?? proposal.accountNumber}
               </div>
             </div>
-
-            {/* Aksi Ubah Rekening jika lebih dari 1 rekening tersedia */}
-            {proposal.availableBankAccounts &&
-              proposal.availableBankAccounts.length > 1 &&
-              !alreadyConfirmed &&
-              status !== "submitting" && (
-                <div className="shrink-0">
-                  <ActionMenu
-                    label="Pilih Rekening Alternatif"
-                    placement="bottom-end"
-                    trigger={
-                      <button
-                        type="button"
-                        className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-white px-3 py-1 text-meta font-semibold text-primary shadow-control ring-1 ring-ring-control transition-transform hover:bg-surface-container-low active:scale-[0.98]"
-                        aria-label="Ubah Rekening Bank"
-                      >
-                        <AppIcon name="edit" className="icon-xs shrink-0" aria-hidden="true" />
-                        <span>Ubah</span>
-                      </button>
-                    }
-                    items={proposal.availableBankAccounts.map((acc): ActionMenuItem => ({
-                      id: acc.id,
-                      label: `${acc.bankName} - ${acc.name} (${acc.accountNumber})`,
-                      icon: acc.id === selectedBankAccountId ? "check" : undefined,
-                      onSelect: () => setSelectedBankAccountId(acc.id),
-                    }))}
-                  />
-                </div>
-              )}
-          </div>
+          )}
         </div>
 
         {/* Pemberitahuan jika rekening diubah */}

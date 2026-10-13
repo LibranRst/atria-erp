@@ -5,9 +5,9 @@ import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { formatCompactRp } from "@/features/expenses/utils/expense-list-utils";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 
-const expensePressScale = { scale: 0.985 } as const;
+const expensePressScale = { scale: buttonTapActiveScale } as const;
 
 export function FinanceInboxHeader({
   activeClaimTotal,

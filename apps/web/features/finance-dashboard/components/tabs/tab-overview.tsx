@@ -3,6 +3,7 @@
 import { useCan } from "@/components/auth/permissions-provider";
 import React from "react";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { DesktopDashboardOverview } from "../desktop/desktop-dashboard-overview";
 import { BudgetRiskTab } from "./tab-budget-risk";
 import { DesktopFinancialPosition } from "@/features/finance-dashboard/components/overview/desktop-financial-position";
 
@@ -36,12 +37,13 @@ export function DashboardOverviewTab({
     .filter((item) => item.severity !== "INFO")
     .slice(0, 3);
 
+  if (desktop) return <DesktopDashboardOverview data={data} setup={setup} />;
   return (
     <div className="space-y-sm">
       {desktop ? <DesktopFinancialPosition data={data} /> : financialPosition}
       {setup ? <OrganizationSetupCard overview={setup} density="dashboard" /> : null}
       {desktop ? <BudgetRiskTab data={data} showSummary={false} /> : null}
-      <div className={desktop ? "grid items-start gap-6 xl:grid-cols-2" : "contents"}>
+      <div className={desktop ? "grid items-start gap-5 xl:grid-cols-2" : "contents"}>
         <OverviewPreviewSection
           title={can("decide:all_approvals") ? "Perlu keputusan" : "Prioritas finance"}
           href={can("decide:all_approvals") ? "/ledger?tab=approvals" : "/ledger?tab=cash"}
@@ -54,19 +56,21 @@ export function DashboardOverviewTab({
             <OverviewPriorityList actions={data.actions} />
           )}
         </OverviewPreviewSection>
-        <OverviewPreviewSection title="Project berisiko" href="/ledger?tab=budget">
-          {data.riskyProjects.length === 0 ? (
-            <OverviewPreviewEmpty>
-              Semua project aktif masih dalam batas budget.
-            </OverviewPreviewEmpty>
-          ) : (
-            <RowGroup>
-              {data.riskyProjects.slice(0, 3).map((project) => (
-                <ProjectRiskRow key={project.projectId} project={project} compact />
-              ))}
-            </RowGroup>
-          )}
-        </OverviewPreviewSection>
+        {!desktop ? (
+          <OverviewPreviewSection title="Project berisiko" href="/ledger?tab=budget">
+            {data.riskyProjects.length === 0 ? (
+              <OverviewPreviewEmpty>
+                Semua project aktif masih dalam batas budget.
+              </OverviewPreviewEmpty>
+            ) : (
+              <RowGroup>
+                {data.riskyProjects.slice(0, 3).map((project) => (
+                  <ProjectRiskRow key={project.projectId} project={project} compact />
+                ))}
+              </RowGroup>
+            )}
+          </OverviewPreviewSection>
+        ) : null}
         <OverviewPreviewSection title="Jatuh tempo terdekat" href="/ledger?tab=cash">
           {nextDue.length === 0 ? (
             <OverviewPreviewEmpty>Tidak ada tagihan atau invoice terbuka.</OverviewPreviewEmpty>

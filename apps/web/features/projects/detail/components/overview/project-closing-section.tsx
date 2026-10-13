@@ -3,7 +3,7 @@
 import { useReducedMotion } from "framer-motion";
 import React from "react";
 
-import { FormField, MoneyValue, Textarea } from "@/components/ui";
+import { FormField, MoneyValue, Textarea, Button } from "@/components/ui";
 import type { ProjectClosingChecklist } from "@/app/actions/project/closing";
 
 export function ProjectClosingSection({
@@ -52,14 +52,15 @@ export function ProjectClosingSection({
         Proyek hanya dapat diselesaikan setelah tagihan, biaya, RAB, change order, reservasi stok,
         dan budget sudah final.
       </p>
-      <button
+      <Button
         type="button"
         onClick={loadClosingChecklist}
         disabled={closingPending}
         className="mt-4 min-h-12 w-full rounded-full bg-surface-container-low px-4 text-xs font-bold text-primary disabled:opacity-40"
+        variant="secondary"
       >
         {closingPending ? "Memeriksa…" : "Periksa kesiapan closing"}
-      </button>
+      </Button>
       {closingMessage && (
         <p className="mt-2 rounded-2xl bg-primary/5 p-3 text-support text-primary">
           {closingMessage}
@@ -109,16 +110,17 @@ export function ProjectClosingSection({
                   aria-invalid={closingNote.trim().length > 0 && closingNote.trim().length < 10}
                 />
               </FormField>
-              <button
+              <Button
                 type="button"
                 onClick={handleCompleteProject}
                 disabled={
                   closingPending || closingNote.trim().length < 10 || projectStatus === "COMPLETED"
                 }
                 className="min-h-12 w-full rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
+                variant="primary"
               >
                 Selesaikan proyek dan simpan ringkasan akhir
-              </button>
+              </Button>
             </>
           )}
         </div>

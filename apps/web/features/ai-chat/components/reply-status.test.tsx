@@ -14,27 +14,14 @@ describe("PendingReplyIndicator", () => {
     ]);
   });
 
-  test("merender assistant row yang terlihat tanpa surface atau bubble", () => {
+  test("renders a contextual activity row without a separate card", () => {
     const html = renderToStaticMarkup(
       <PendingReplyIndicator displayedPhase="fetching" visible contentVisible={false} />,
     );
-
     expect(html).toContain("Mengambil data…");
-    expect(html).toContain("min-h-11");
-    expect(html).toContain("py-2");
-    expect(html).toContain("h-7 w-7");
-    expect(html).toContain("gap-2.5");
-    expect(html).toContain("text-row");
-    expect(html).toContain("font-semibold");
-    expect(html.match(/h-1\.5 w-1\.5/g)).toHaveLength(3);
-    expect(html.match(/bg-primary/g)).toHaveLength(3);
+    expect(html).toContain("min-h-12");
     expect(html).toContain("pointer-events-none");
-    expect(html).not.toContain("bg-on-primary");
-    expect(html).not.toContain("gap-0.5 rounded-full bg-primary");
-    expect(html).not.toContain("Asisten siap");
-    expect(html).not.toContain("bg-surface-container");
     expect(html).not.toContain("shadow-");
-    expect(html).not.toContain("rounded-t-");
   });
 
   test("memisahkan visual row dari satu live region persisten", () => {

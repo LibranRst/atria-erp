@@ -36,16 +36,24 @@ async function authorized(request: Request, env: Env): Promise<boolean> {
 }
 
 /** Delivery worker dan rekonsiliasi kondisi berbagi endpoint yang sama. */
-async function trigger(env: Env, task: "deliveries" | "reconcile" | "all"): Promise<Response> {
+async function trigger(
+  env: Env,
+  task: "deliveries" | "reconcile" | "all" | "material-analysis",
+): Promise<Response> {
   if (!env.ATRIA_API_URL) throw new Error("ATRIA_API_URL wajib menunjuk backend API.");
   const base = env.ATRIA_API_URL.replace(/\/$/, "");
-  const response = await fetch(`${base}/api/internal/notifications?task=${task}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.NOTIFICATION_JOB_SECRET}`,
-      "Content-Type": "application/json",
+  const response = await fetch(
+    task === "material-analysis"
+      ? `${base}/api/internal/material-analysis`
+      : `${base}/api/internal/notifications?task=${task}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.NOTIFICATION_JOB_SECRET}`,
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     // Biarkan Cron Trigger melihat kegagalan supaya terlihat di dashboard
@@ -64,7 +72,16 @@ const scheduler = {
     env: Env,
     ctx: Pick<ExecutionContext, "waitUntil">,
   ): Promise<void> {
-    ctx.waitUntil(trigger(env, controller.cron === "0 17 * * *" ? "all" : "deliveries"));
+    ctx.waitUntil(
+      trigger(
+        env,
+        controller.cron === "* * * * *"
+          ? "material-analysis"
+          : controller.cron === "0 17 * * *"
+            ? "all"
+            : "deliveries",
+      ),
+    );
   },
 
   /** Jalur manual untuk memicu rekonsiliasi atau memverifikasi konfigurasi. */

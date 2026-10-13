@@ -1,8 +1,6 @@
 import React from "react";
-import { motion } from "framer-motion";
 
-import { ConfirmationDialog } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { ConfirmationDialog, Button } from "@/components/ui";
 
 export function ProjectRecoveryModal({
   open,
@@ -24,34 +22,28 @@ export function ProjectRecoveryModal({
       onClose={onClose}
       actions={
         <div className="space-y-2">
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.97 }}
-            transition={transitionSpringSnappy}
-            onClick={onSaveAndClose}
-            className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white"
-          >
+          <Button type="button" onClick={onSaveAndClose} fullWidth variant="primary">
             Simpan Lokal & Tutup
-          </motion.button>
+          </Button>
           <div className="grid grid-cols-2 gap-2">
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               onClick={onDiscard}
-              className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error"
+              fullWidth
+              className="min-w-0 px-4"
+              variant="critical"
             >
               Buang Perubahan
-            </motion.button>
-            <motion.button
+            </Button>
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               onClick={onClose}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
+              fullWidth
+              className="min-w-0 px-4"
+              variant="secondary"
             >
               Lanjut Mengisi
-            </motion.button>
+            </Button>
           </div>
         </div>
       }

@@ -1,7 +1,9 @@
 import { signImagekit } from "@/app/actions/media/sign-imagekit";
 import { z } from "zod";
-import { type PrivateAttachmentPurpose } from "@atria/core/media/private-attachment";
-import { browserPrivateAttachmentResult } from "./private-attachment-links";
+import {
+  privateAttachmentResultSchema,
+  type PrivateAttachmentPurpose,
+} from "@atria/core/media/private-attachment";
 
 /**
  * Satu-satunya jalur unggah berkas dari peramban ke ImageKit.
@@ -131,7 +133,7 @@ export async function uploadToImageKit({
         z.object({ error: z.string() }).safeParse(result).data?.error ??
           `Gagal mengunggah ${subject}.`,
       );
-    return browserPrivateAttachmentResult(result, window.location.origin);
+    return privateAttachmentResultSchema.parse(result);
   }
   const signature = await signImagekit();
   if (!signature.success) {

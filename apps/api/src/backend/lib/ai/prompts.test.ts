@@ -3,6 +3,44 @@ import { aiToolContextForRole } from "@backend/lib/testing/ai-tool-context";
 import { describe, expect, it } from "bun:test";
 
 describe("buildSystemPrompt", () => {
+  it("distinguishes AI capabilities from ERP rights and labels confirmation/manual workflows", () => {
+    const prompt = buildSystemPrompt("DEEPSEEK", "Owner", aiToolContextForRole("OWNER"));
+    expect(prompt).toContain("WAJIB panggil getAvailableActions");
+    expect(prompt).toContain("explainUserAccess hanya menjelaskan izin ERP");
+    expect(prompt).toContain("proposeUpdateMaterial");
+    expect(prompt).toContain("getRapSetupContext");
+    expect(prompt).toContain("proposeRapSetupActions");
+    expect(prompt).toContain('"mode":"proposal"');
+    expect(prompt).toContain('"manual"');
+    expect(prompt).toContain("proposeRapLifecycleActions");
+    expect(prompt).toContain("proposeRabDraft");
+    expect(prompt).toContain("getRabWorkflowContext");
+    expect(prompt).toContain("proposeRabWorkflow");
+    expect(prompt).toContain("Izin ERP pengguna bukan kemampuan executable asisten");
+  });
+  it("uses fresh verified policy and never treats old assistant claims as company standards", () => {
+    const context = aiToolContextForRole("OWNER");
+    const prompt = buildSystemPrompt("DEEPSEEK", "Tester", context, undefined, "Studio Contoh", {
+      status: "configured",
+      companyName: "Studio Contoh",
+      source: {
+        label: "Pengaturan Budget",
+        href: "/settings/budget",
+        settingId: "s-1",
+        settingName: "Aktif",
+      },
+      budgetCapRatio: 0.9,
+      targetGrossMarginPercentage: 10,
+      categories: [],
+    });
+    expect(prompt).toContain('"targetGrossMarginPercentage":10');
+    expect(prompt).toContain('"budgetCapRatio":0.9');
+    expect(prompt).toContain("jawaban asisten sebelumnya BUKAN bukti");
+    expect(prompt).toContain("perusahaan ini");
+    expect(prompt).toContain("Studio Contoh");
+    expect(prompt).toContain("hilangkan argumen tersebut");
+    expect(prompt).not.toContain("untuk Dekoria");
+  });
   it("menyertakan daftar topik tidak tersedia untuk peran berlingkup proyek", () => {
     const context = aiToolContextForRole("PROJECT_MANAGER", {
       userId: "00000000-0000-0000-0000-000000000001",

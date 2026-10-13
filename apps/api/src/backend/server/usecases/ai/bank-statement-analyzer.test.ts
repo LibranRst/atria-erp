@@ -35,7 +35,14 @@ describe("analyzeBankStatementUseCase", () => {
   let modelText = JSON.stringify({
     bankName: null,
     accountNumber: null,
-    rows: [{ transactionDate: "04/10/2026", description: "Synthetic bank expense", amount: 12000, type: "OUTFLOW" }],
+    rows: [
+      {
+        transactionDate: "04/10/2026",
+        description: "Synthetic bank expense",
+        amount: 12000,
+        type: "OUTFLOW",
+      },
+    ],
   });
   beforeAll((): void => {
     process.env.AI_CHAT_PROVIDERS = "NINEROUTER";
@@ -43,7 +50,9 @@ describe("analyzeBankStatementUseCase", () => {
     process.env.ATRIA_PILOT_REAL_DATA = "true";
     process.env.NINEROUTER_API_KEY = "synthetic-no-network-gateway-key";
     process.env.NINEROUTER_BASE_URL = "https://gateway.invalid/v1";
-    documentModel.models.generateContent = async (input: DocumentContentRequest): Promise<DocumentContentResponse> => {
+    documentModel.models.generateContent = async (
+      input: DocumentContentRequest,
+    ): Promise<DocumentContentResponse> => {
       requestCount++;
       lastRequest = input;
       return { text: modelText, usageMetadata: { totalTokenCount: 20 } };
@@ -240,13 +249,16 @@ describe("analyzeBankStatementUseCase", () => {
         ["2026-10-04", "Synthetic payment", "50000", ""],
       ];
       const csv = await analyzeBankStatementUseCase(dummyActor, {
-        fileName: "synthetic.csv", mimeType: "text/csv", fileContent: data.map((row) => row.join(",")).join("\n"),
+        fileName: "synthetic.csv",
+        mimeType: "text/csv",
+        fileContent: data.map((row) => row.join(",")).join("\n"),
       });
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(data), "Mutasi");
       const bytes = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
       const excel = await analyzeBankStatementUseCase(dummyActor, {
-        fileName: "synthetic.xlsx", fileBase64: bytes.toString("base64"),
+        fileName: "synthetic.xlsx",
+        fileBase64: bytes.toString("base64"),
       });
       expect(csv.success).toBe(true);
       expect(excel.success).toBe(true);
@@ -258,10 +270,13 @@ describe("analyzeBankStatementUseCase", () => {
 
   for (const mimeType of ["image/png", "application/pdf"]) {
     test(`routes ${mimeType} through the configured document model with domain validation`, async () => {
-      const bytes = Buffer.from(mimeType === "application/pdf" ? "%PDF-1.7\nSynthetic" : "synthetic-image");
+      const bytes = Buffer.from(
+        mimeType === "application/pdf" ? "%PDF-1.7\nSynthetic" : "synthetic-image",
+      );
       const result = await analyzeBankStatementUseCase(dummyActor, {
         fileName: mimeType === "application/pdf" ? "synthetic.pdf" : "synthetic.png",
-        mimeType, fileBase64: bytes.toString("base64"),
+        mimeType,
+        fileBase64: bytes.toString("base64"),
       });
       expect(result.success).toBe(true);
       if (result.success) {
@@ -269,9 +284,12 @@ describe("analyzeBankStatementUseCase", () => {
         expect(result.data.summary.totalOutflow).toBe(12000);
         expect(result.data.detectedBankName).toBeNull();
       }
-      expect(lastRequest?.contents[0]).toEqual({ inlineData: { data: bytes.toString("base64"), mimeType } });
+      expect(lastRequest?.contents[0]).toEqual({
+        inlineData: { data: bytes.toString("base64"), mimeType },
+      });
       expect(lastRequest?.config?.responseJsonSchema).toMatchObject({
-        type: "object", properties: { bankName: { type: ["string", "null"] } },
+        type: "object",
+        properties: { bankName: { type: ["string", "null"] } },
       });
       expect(lastRequest?.config?.abortSignal).toBeInstanceOf(AbortSignal);
       expect(lastRequest && "model" in lastRequest).toBe(false);
@@ -283,7 +301,9 @@ describe("analyzeBankStatementUseCase", () => {
     process.env.AI_APPROVED_PROVIDERS = "";
     try {
       const result = await analyzeBankStatementUseCase(dummyActor, {
-        fileName: "synthetic.pdf", mimeType: "application/pdf", fileBase64: Buffer.from("%PDF-1.7\n").toString("base64"),
+        fileName: "synthetic.pdf",
+        mimeType: "application/pdf",
+        fileBase64: Buffer.from("%PDF-1.7\n").toString("base64"),
       });
       expect(result.success).toBe(false);
       expect(requestCount).toBe(previousCalls);
@@ -295,10 +315,24 @@ describe("analyzeBankStatementUseCase", () => {
   test("rejects malformed JSON and negative amounts without exposing raw model output", async () => {
     const originalText = modelText;
     try {
-      for (const invalid of ["synthetic-invalid-json", JSON.stringify({ rows: [{ transactionDate: "2026-10-04", description: "Synthetic", amount: -5, type: "OUTFLOW" }] })]) {
+      for (const invalid of [
+        "synthetic-invalid-json",
+        JSON.stringify({
+          rows: [
+            {
+              transactionDate: "2026-10-04",
+              description: "Synthetic",
+              amount: -5,
+              type: "OUTFLOW",
+            },
+          ],
+        }),
+      ]) {
         modelText = invalid;
         const result = await analyzeBankStatementUseCase(dummyActor, {
-          fileName: "synthetic.pdf", mimeType: "application/pdf", fileBase64: Buffer.from("%PDF-1.7\n").toString("base64"),
+          fileName: "synthetic.pdf",
+          mimeType: "application/pdf",
+          fileBase64: Buffer.from("%PDF-1.7\n").toString("base64"),
         });
         expect(result.success).toBe(false);
         if (!result.success) {
@@ -309,6 +343,42 @@ describe("analyzeBankStatementUseCase", () => {
       }
     } finally {
       modelText = originalText;
+    }
+  });
+
+  test("standard CSV rejects 501 rows instead of asking AI to shorten it", async () => {
+    const content = [
+      "tanggal,deskripsi,dana_masuk,dana_keluar",
+      ...Array.from({ length: 501 }, (_, i) => `2026-10-11,Mutasi QA ${i + 1},1000,`),
+    ].join("\n");
+    const result = await analyzeBankStatementUseCase(dummyActor, {
+      fileName: "limit.csv",
+      fileContent: content,
+      mimeType: "text/csv",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.message).toContain("500");
+  });
+  test("all transaction sheets are preserved in a directly parsed workbook", async () => {
+    const wb = XLSX.utils.book_new();
+    for (const name of ["Mutasi A", "Mutasi B"])
+      XLSX.utils.book_append_sheet(
+        wb,
+        XLSX.utils.aoa_to_sheet([
+          ["tanggal", "deskripsi", "dana_masuk", "dana_keluar"],
+          ["2026-10-11", `Baris ${name}`, 1000, ""],
+        ]),
+        name,
+      );
+    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    const result = await analyzeBankStatementUseCase(dummyActor, {
+      fileName: "all.xlsx",
+      fileBase64: Buffer.from(buffer).toString("base64"),
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.rows).toHaveLength(2);
+      expect(result.data.rows.map((r) => r.sheetName)).toEqual(["Mutasi A", "Mutasi B"]);
     }
   });
 });

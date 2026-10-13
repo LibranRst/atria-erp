@@ -4,7 +4,7 @@ import React from "react";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
-import { AppIcon, Badge, SegmentedTabs, DesktopTable, MoneyValue } from "@/components/ui";
+import { AppIcon, Badge, SegmentedTabs, DesktopTable, MoneyValue, Button } from "@/components/ui";
 import { NativePanel } from "../shared/rap-rab-primitives";
 import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@atria/core/utils/money";
 import type {
@@ -68,13 +68,14 @@ export function InternalPlanOverview({
           <span>{needToBuy > 0 ? `${needToBuy} perlu dibeli` : "Material siap"}</span>
         </div>
         {canEditRap && rabEstimate?.status === "APPROVED" && (
-          <button
+          <Button
             type="button"
             onClick={() => setInternalRevisionOpen(true)}
             className="mt-4 min-h-12 w-full rounded-full bg-white/10 text-xs font-bold text-white ring-1 ring-white/15"
+            variant="secondary"
           >
             Buat Revisi RAP
-          </button>
+          </Button>
         )}
       </section>
       <SegmentedTabs

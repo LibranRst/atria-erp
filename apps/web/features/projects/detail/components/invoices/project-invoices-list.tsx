@@ -4,7 +4,7 @@ import React from "react";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
-import { AppIcon, Badge, MoneyValue, DesktopTable, GroupedSurface } from "@/components/ui";
+import { AppIcon, Badge, MoneyValue, DesktopTable, GroupedSurface, Button } from "@/components/ui";
 import type { ClientInvoiceItem } from "../../types/project-invoices-types";
 import {
   calculateInvoicePaidAmount,
@@ -182,7 +182,7 @@ function ProjectInvoiceTimelineRow({
           handleOpenDetail();
         }
       }}
-      className="relative flex min-h-12 gap-3 rounded-2xl p-2 transition-all outline-none focus-visible:bg-surface-container-low active:scale-98 active:bg-surface-container-low/40"
+      className="relative flex min-h-12 gap-3 rounded-2xl p-2 transition-all outline-none focus-visible:bg-surface-container-low active:z-10 active:scale-[1.05] active:bg-surface-container-low/40 active:shadow-raised"
       aria-label={`Lihat detail invoice ${invoice.invoiceNumber}`}
     >
       {connected ? (
@@ -249,16 +249,17 @@ function ProjectInvoiceTimelineRow({
             )}
           </div>
           {remaining > 0 && canRecordPayment ? (
-            <button
+            <Button
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
                 onRecordPayment(invoice);
               }}
               className="inline-flex min-h-12 shrink-0 items-center rounded-full bg-primary/7 px-4 text-support font-bold text-primary"
+              variant="secondary"
             >
               Catat bayar
-            </button>
+            </Button>
           ) : (
             <ActivityDetailChevron />
           )}

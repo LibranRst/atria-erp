@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import {
+  GroupedSurface,
   Badge,
   DetailSheet,
   ChoiceRow,
@@ -45,6 +47,7 @@ export function RabItemEditDrawer({
   readonly rabEstimate: RabEstimateView | null;
   readonly canManageRab: boolean;
 }): React.JSX.Element | null {
+  const desktop = useWorkspacePresentation() === "desktop";
   const selectedItem = sortedRabItems.find((row) => row.id === rabItemEditorId);
   const {
     presentedValue: item,
@@ -124,6 +127,51 @@ export function RabItemEditDrawer({
 
   return (
     <OperationalFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <div className="px-1">
+            <h3 className="text-support font-semibold text-on-surface">Ringkasan item RAB</h3>
+            <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+              {draft.clientLabel.trim() || "Nama item belum diisi"}
+            </p>
+          </div>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Tampilan klien"
+                value={draft.isHidden ? "Disembunyikan" : "Ditampilkan"}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Jumlah"
+                value={`${draft.quantity || 0} ${draft.unit || "unit"}`}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Subtotal klien"
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(total) ? 0 : 2}
+                    amount={total}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                  />
+                }
+              />
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Gunakan nama dan deskripsi yang aman untuk klien. Data biaya internal tetap terpisah.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty: changed,
@@ -139,40 +187,47 @@ export function RabItemEditDrawer({
       disabledReason={!changed ? "Belum ada perubahan untuk disimpan." : undefined}
       submitLabel="Simpan"
       onSubmit={() => handleSaveRabItem(item)}
-      statusText={`${rabSourceLabel(item.sourceType)} · ${draft.quantity} ${draft.unit} · Rp ${total.toLocaleString("id-ID")}`}
+      statusText={
+        desktop
+          ? undefined
+          : `${rabSourceLabel(item.sourceType)} · ${draft.quantity} ${draft.unit} · Rp ${total.toLocaleString("id-ID")}`
+      }
       statusTone={total > 0 ? "success" : "warning"}
     >
       <div className="space-y-md">
-        <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
-                Rincian Item RAB
-              </p>
-              <h3 className="mt-0.5 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
-                {draft.clientLabel || "Item RAB"}
-              </h3>
-              <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
-                Sumber {rabSourceLabel(item.sourceType)}
-                {draft.unit ? ` · ${draft.quantity} ${draft.unit}` : ""}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-eyebrow font-bold text-success ring-1 ring-success/20">
-                Aman untuk klien
-              </span>
-              <div className="mt-1.5">
-                <MoneyValue
-                  amount={total}
-                  variant="fullDynamic"
-                  size="sm"
-                  align="right"
-                  className="font-bold text-on-surface"
-                />
+        {!desktop && (
+          <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+                  Rincian Item RAB
+                </p>
+                <h3 className="mt-0.5 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
+                  {draft.clientLabel || "Item RAB"}
+                </h3>
+                <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
+                  Sumber {rabSourceLabel(item.sourceType)}
+                  {draft.unit ? ` · ${draft.quantity} ${draft.unit}` : ""}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-eyebrow font-bold text-success ring-1 ring-success/20">
+                  Aman untuk klien
+                </span>
+                <div className="mt-1.5">
+                  <MoneyValue
+                    amount={total}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                    className="font-bold text-on-surface"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
         <FormSection
           title="Tampilan untuk klien"
           helper="Hanya nama, deskripsi, jumlah, satuan, dan harga di bagian ini yang masuk ke RAB klien."

@@ -1,6 +1,6 @@
 # Panduan Atria: memahami angka dan mencoba seluruh alur dari setup sampai closing
 
-Diperbarui 5 Oktober 2026. Panduan ini mengikuti web Atria dengan backend API terpisah dan memakai satu latihan dengan angka yang bisa dihitung ulang. Tidak perlu punya dasar akuntansi untuk memulainya.
+Diperbarui 6 Oktober 2026. Panduan ini mengikuti web Atria dengan backend API terpisah dan memakai satu latihan dengan angka yang bisa dihitung ulang. Tidak perlu punya dasar akuntansi untuk memulainya.
 
 Tujuan akhirnya: kamu bisa menjawab **proyek ini menjual berapa, boleh menghabiskan berapa, sudah memakai biaya berapa, sudah membayar berapa, uang klien yang belum diterima berapa, stok yang masih ada berapa, dan margin yang tersisa berapa**.
 
@@ -8,7 +8,7 @@ Tujuan akhirnya: kamu bisa menjawab **proyek ini menjual berapa, boleh menghabis
 
 Kerjakan latihan utama berurutan. Setelah setiap tahap, berhenti dan cocokkan angka pada tabel. Kalau berbeda, cari transaksi penyebabnya sebelum lanjut. Jangan menambah data di luar latihan utama sebelum checkpoint akhir; uji fitur tambahan memakai bagian terpisah agar angka pembanding tetap jelas.
 
-Gunakan database latihan lokal untuk percobaan pertama. Production di [atria-dekoria.netlify.app](https://atria-dekoria.netlify.app) disiapkan kosong untuk setup akun bersama boss. Jika nanti mengisi angka latihan di production, angka itu menjadi data sungguhan dalam instance tersebut; jangan mencampurnya dengan baseline proyek perusahaan.
+Gunakan database latihan lokal untuk percobaan pertama. Production di [atria-dekoria-app.netlify.app](https://atria-dekoria-app.netlify.app) memakai database dan akun existing yang sama. Rilis notifikasi 6 Oktober mempertahankan data yang sudah dimasukkan; login dengan akun lama. Setup Owner pertama hanya diperlukan pada database baru/kosong. Jika nanti mengisi angka latihan di production, angka itu menjadi data sungguhan dalam instance tersebut; jangan mencampurnya dengan baseline proyek perusahaan.
 
 Penjelasan role dan serah-terima kerja ada di [bagian 3.4](#34-role-hak-akses-dan-cara-tim-bekerja-bersama).
 
@@ -28,11 +28,11 @@ Urutan baca:
 
 ### Production dan development mempunyai data berbeda
 
-| Environment                                  | Web                                    | API                                   | Database                  | Dipakai untuk                            |
-| -------------------------------------------- | -------------------------------------- | ------------------------------------- | ------------------------- | ---------------------------------------- |
-| Production                                   | `https://atria-dekoria.netlify.app`    | API Railway                           | `atria_pilot`             | Setup dan penggunaan bersama boss        |
-| Latihan development yang disiapkan 5 Oktober | `http://localhost:3010`                | `http://localhost:3011`               | `atria_practice_20261005` | Percobaan pribadi dari setup kosong      |
-| Development sebelumnya                       | Konfigurasi sebelumnya disimpan privat | API lama dapat masih berjalan di 3001 | `atria_uat_guard`         | Data development lama yang dipertahankan |
+| Environment                                  | Web                                     | API                                   | Database                  | Dipakai untuk                               |
+| -------------------------------------------- | --------------------------------------- | ------------------------------------- | ------------------------- | ------------------------------------------- |
+| Production                                   | `https://atria-dekoria-app.netlify.app` | API Railway                           | `atria_pilot`             | Penggunaan bersama boss, data dipertahankan |
+| Latihan development yang disiapkan 5 Oktober | `http://localhost:3010`                 | `http://localhost:3011`               | `atria_practice_20261005` | Percobaan pribadi dari setup kosong         |
+| Development sebelumnya                       | Konfigurasi sebelumnya disimpan privat  | API lama dapat masih berjalan di 3001 | `atria_uat_guard`         | Data development lama yang dipertahankan    |
 
 Web/API latihan berjalan di Mac, tetapi PostgreSQL latihan tetap berada di Neon. Kamu memerlukan internet untuk database, upload ImageKit, dan AI. Database kosong bukan berarti schema kosong: tabel/migration dan fondasi sistem tetap ada, sedangkan akun/proyek/transaksi bisnis belum dibuat.
 

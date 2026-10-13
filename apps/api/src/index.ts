@@ -1,3 +1,5 @@
+import { POST as materialAnalysisJob } from "@backend/app/api/internal/material-analysis/route";
+import { drainMaterialAnalysis } from "@backend/server/services/material-analysis-worker";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { createApiApp } from "./app";
 import { readApiConfig } from "./config";
@@ -32,6 +34,7 @@ const app = createApiApp(
     media: handleMediaRequest,
     notificationStream,
     notificationJob,
+    materialAnalysisJob,
     invokeWebOperation,
     isWebOperation,
     readiness: async (): Promise<void> => {
@@ -49,10 +52,22 @@ const server = Bun.serve({
   fetch: app.fetch,
 });
 console.info(`Atria API listening on ${server.url.origin}`);
+function recoverMaterialAnalysis(): void {
+  if (!draining)
+    effects.schedule([
+      async () => {
+        await drainMaterialAnalysis();
+      },
+    ]);
+}
+recoverMaterialAnalysis();
+const materialRecovery = setInterval(recoverMaterialAnalysis, 60_000);
+materialRecovery.unref();
 
 async function shutdown(): Promise<void> {
   if (draining) return;
   draining = true;
+  clearInterval(materialRecovery);
   const deadline = Date.now() + 30_000;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<void>((resolve): void => {

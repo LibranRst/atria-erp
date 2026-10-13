@@ -84,7 +84,14 @@ export default async function RootLayout({
    */
   const actor = await resolveActor();
   const initialUser = actor
-    ? { id: actor.userId, name: actor.name, image: actor.image ?? null }
+    ? {
+        id: actor.userId,
+        name: actor.name,
+        image: actor.image ?? null,
+        sessionId: actor.sessionId,
+        roleId: actor.roleId,
+        dataScope: actor.dataScope,
+      }
     : null;
 
   return (

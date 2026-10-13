@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import ProjectsLoading from "@/app/projects/loading";
+import ProjectDetailLoading from "@/app/projects/[id]/loading";
+import { WorkspacePresentationProvider } from "@/lib/navigation/workspace-presentation";
 import { ProjectListCard } from "../cards/project-list-card";
 import { ProjectListSectionHeader, ProjectSearchAndFilters } from "./project-list-header";
 
@@ -40,6 +42,26 @@ function classTokensOf(html: string, text: string): readonly string[] {
 }
 
 describe("project list presentation", () => {
+  test("desktop list and detail loading follow compact table hierarchy while mobile keeps cover placeholders", () => {
+    const list = renderToStaticMarkup(
+      <WorkspacePresentationProvider presentation="desktop">
+        <ProjectsLoading />
+      </WorkspacePresentationProvider>,
+    );
+    const detail = renderToStaticMarkup(
+      <WorkspacePresentationProvider presentation="desktop">
+        <ProjectDetailLoading />
+      </WorkspacePresentationProvider>,
+    );
+    expect(list).toContain('aria-busy="true"');
+    expect(detail).toContain('aria-busy="true"');
+    expect(list).toContain("grid-cols-6");
+    expect(detail).toContain("grid-cols-6");
+    expect(list).not.toContain("aspect-4/3");
+    expect(detail).not.toContain("aspect-square");
+    const mobile = renderToStaticMarkup(<ProjectDetailLoading />);
+    expect(mobile).toContain("aspect-square");
+  });
   test("uses the shared compact count pill for visible project results", () => {
     const html = renderToStaticMarkup(<ProjectListSectionHeader count={12} />);
 

@@ -11,37 +11,38 @@ export type AdminNavigationItem = {
 
 export const ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   {
-    href: "/admin/ledger",
+    href: "/ledger",
     label: "Dashboard",
     icon: "space_dashboard",
     permissions: ["view:ledger"],
   },
-  { href: "/admin/projects", label: "Proyek", icon: "folder_open", permissions: ["view:project"] },
+  { href: "/projects", label: "Proyek", icon: "folder_open", permissions: ["view:project"] },
   {
-    href: "/admin/expenses",
+    href: "/expenses",
     label: "Pengeluaran",
     icon: "receipt_long",
     permissions: ["view:cost", "view:vendor_bill"],
   },
   {
-    href: "/admin/approvals",
+    href: "/approvals",
     label: "Persetujuan",
     icon: "fact_check",
     permissions: ["view:approval_queue"],
   },
   {
-    href: "/admin/materials",
+    href: "/materials",
     label: "Material",
     icon: "inventory_2",
     permissions: ["view:inventory", "view:material"],
   },
   {
-    href: "/admin/reconciliation",
+    href: "/reconciliation",
     label: "Rekonsiliasi",
     icon: "account_balance",
     permissions: ["reconcile:ledger"],
   },
-  { href: "/admin/settings", label: "Pengaturan", icon: "tune", permissions: ["view:settings"] },
+  { href: "/settings", label: "Pengaturan", icon: "tune", permissions: ["view:settings"] },
+  { href: "/ai", label: "Asisten AI", icon: "chat", permissions: ["use:ai_chat"] },
 ];
 
 export function availableAdminNavigation(
@@ -56,7 +57,6 @@ export function canAccessAdminPath(
   pathname: string,
   permissions: readonly PermissionKey[],
 ): boolean {
-  if (!permissions.includes("use:desktop_admin")) return false;
   if (!pathname.startsWith("/") || pathname.startsWith("//") || /[\\\r\n]/.test(pathname))
     return false;
   const routePathname = new URL(pathname, "https://atria.invalid").pathname;

@@ -1,17 +1,15 @@
+import {
+  createMaterialMastersTx,
+  lockMaterialCatalog,
+} from "@backend/server/usecases/material/master-writer";
 import { eq } from "drizzle-orm";
 import { revalidateWorkspacePath as revalidatePath } from "@backend/lib/cache/revalidate-workspace";
 import { z } from "zod";
 
 import { db } from "@backend/db";
-import {
-  auditLog,
-  inventoryLocation,
-  materialInventory,
-  materialMaster,
-  vendor,
-} from "@backend/db/schema";
+import { inventoryLocation, vendor } from "@backend/db/schema";
 import type { ActionResponse } from "@atria/core/types/action-response";
-import { assertSettingsPermission, getSessionUser, toMoney, toNullableText } from "./system-utils";
+import { assertSettingsPermission, getSessionUser } from "./system-utils";
 
 const materialImportRowSchema = z.object({
   rowNumber: z.number().int().positive(),
@@ -147,40 +145,26 @@ export async function commitMaterialImport(
   }
   try {
     await db.transaction(async (tx) => {
-      for (const row of resolved.data.items) {
-        const [created] = await tx
-          .insert(materialMaster)
-          .values({
+      await lockMaterialCatalog(tx);
+      await createMaterialMastersTx(
+        tx,
+        current.id,
+        resolved.data.items.map((row) => ({
+          input: {
+            ...row,
             categoryId: row.categoryId,
             defaultVendorId: row.vendorId,
-            name: row.name,
-            specification: toNullableText(row.specification),
-            brand: toNullableText(row.brand),
-            code: toNullableText(row.code),
-            color: toNullableText(row.color),
-            unit: row.unit,
-          })
-          .returning();
-        const [inventory] = await tx
-          .insert(materialInventory)
-          .values({
-            materialId: created.id,
-            locationId: row.locationId,
-            currentStock: "0.00",
-            reservedStock: "0.00",
-            minimumStock: row.minimumStock.toFixed(2),
-            averageCost: "0.00",
-            lastPurchasePrice: toMoney(row.lastPurchasePrice),
-          })
-          .returning();
-        await tx.insert(auditLog).values({
-          userId: current.id,
-          action: "IMPORT_MATERIAL_WITH_INVENTORY_DEFAULTS",
-          targetTable: "material_master",
-          targetId: created.id,
-          newState: JSON.stringify({ material: created, inventory, sourceRow: row.rowNumber }),
-        });
-      }
+            inventoryDefaults: [
+              {
+                inventoryLocationId: row.locationId,
+                minimumStock: row.minimumStock,
+                lastPurchasePrice: row.lastPurchasePrice,
+              },
+            ],
+          },
+          source: { row: row.rowNumber },
+        })),
+      );
     });
     revalidatePath("/settings");
     revalidatePath("/materials");

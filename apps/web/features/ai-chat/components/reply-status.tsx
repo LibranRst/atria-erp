@@ -1,20 +1,17 @@
 "use client";
 
-import {
-  thinkingDotAnimation,
-  thinkingDotTransition,
-  transitionEaseSmooth,
-  transitionSpringSmooth,
-} from "@/lib/utils/motion";
+import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 
+import { ActivityLine } from "./ai-activity";
 import { REPLY_PHASE_LABEL, type ReplyPhase } from "../utils/reply-phase";
 
 export type PendingReplyIndicatorProps = {
   readonly displayedPhase: ReplyPhase;
   readonly visible: boolean;
   readonly contentVisible: boolean;
+  readonly elapsedSeconds?: number;
 };
 
 /**
@@ -28,6 +25,7 @@ export function PendingReplyIndicator({
   displayedPhase,
   visible,
   contentVisible,
+  elapsedSeconds = 0,
 }: PendingReplyIndicatorProps): React.JSX.Element {
   const reduceMotion = useReducedMotion();
   const shown = visible && !contentVisible;
@@ -49,22 +47,13 @@ export function PendingReplyIndicator({
                 ? transitionEaseSmooth
                 : { duration: 0 }
         }
-        className="pointer-events-none col-start-1 row-start-1 flex min-h-11 items-center gap-2.5 self-start py-2"
+        className="pointer-events-none col-start-1 row-start-1 w-full self-start"
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center gap-1">
-          {[0, 1, 2].map((index) => (
-            <motion.span
-              key={index}
-              className="h-1.5 w-1.5 rounded-full bg-primary"
-              animate={shown && !reduceMotion ? thinkingDotAnimation : { opacity: 1 }}
-              transition={shown && !reduceMotion ? thinkingDotTransition(index) : { duration: 0 }}
-            />
-          ))}
-        </span>
-
-        <span className="text-row font-semibold whitespace-nowrap text-on-surface">
-          {REPLY_PHASE_LABEL[displayedPhase]}
-        </span>
+        <ActivityLine
+          announce={false}
+          label={REPLY_PHASE_LABEL[displayedPhase]}
+          seconds={elapsedSeconds}
+        />
       </motion.div>
 
       <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">

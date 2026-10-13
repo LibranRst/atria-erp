@@ -1,5 +1,4 @@
 import ImageKit from "@imagekit/nodejs";
-import { configuredAttachmentOrigins } from "@atria/core/media/web-origins";
 import { and, eq, gte, count } from "drizzle-orm";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
@@ -22,6 +21,8 @@ import {
   type PrivateAttachmentResult,
 } from "@atria/core/media/private-attachment";
 
+export type PrivateAttachmentActor = Pick<Actor, "userId" | "permissions" | "dataScope">;
+
 const providerFileSchema = z.object({ fileId: z.string().min(1).max(255), url: z.string().url() });
 type AttachmentRow = typeof attachment.$inferSelect;
 export type PrivateAttachmentReader = Pick<typeof db, "query">;
@@ -32,7 +33,7 @@ const REFERENCE_TYPES: Readonly<Record<PrivateAttachmentPurpose, string>> = {
 };
 
 export function canReadPrivateAttachment(
-  actor: Actor,
+  actor: PrivateAttachmentActor,
   row: Pick<AttachmentRow, "uploadedById" | "referenceType">,
 ): boolean {
   if (row.referenceType === "private_ai_chat")
@@ -49,7 +50,7 @@ export function canReadPrivateAttachment(
 }
 
 async function assertAttachmentProject(
-  actor: Actor,
+  actor: PrivateAttachmentActor,
   projectId: string,
   reader: PrivateAttachmentReader = db,
 ): Promise<void> {
@@ -184,12 +185,15 @@ export async function uploadPrivateAttachment(
 }
 
 export async function authorizedPrivateAttachment(
-  actor: Actor,
+  actor: PrivateAttachmentActor,
   url: string,
   purpose?: PrivateAttachmentPurpose,
   reader: PrivateAttachmentReader = db,
 ): Promise<AttachmentRow> {
-  const id = privateAttachmentId(url, configuredAttachmentOrigins(process.env));
+  const id = privateAttachmentId(url, [
+    process.env.WEB_ORIGIN ?? "http://localhost:3000",
+    process.env.API_PUBLIC_URL ?? "http://localhost:3001",
+  ]);
   const row = await reader.query.attachment.findFirst({
     where: and(eq(attachment.id, id), eq(attachment.tenantId, INSTANCE_TENANT_ID)),
   });

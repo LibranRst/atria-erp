@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import {
   AppIcon,
@@ -14,7 +14,7 @@ import {
   Textarea,
   TextInput,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import {
   FINANCIAL_HEALTH_OPTIONS,
   PROJECT_STATUS_OPTIONS,
@@ -81,7 +81,7 @@ export function ProjectCreatedSuccess({
                 onClose();
                 onNavigate(action.href);
               }}
-              className="flex min-h-16 w-full items-center justify-between rounded-full bg-white px-5 py-3 text-left shadow-surface transition-transform active:scale-[0.99]"
+              className="flex min-h-16 w-full items-center justify-between rounded-full bg-white px-5 py-3 text-left shadow-surface transition-transform active:z-10 active:scale-[1.05] active:shadow-raised"
             >
               <div className="flex items-center gap-3">
                 <AppIcon name={action.icon} className="text-primary" />
@@ -120,6 +120,8 @@ export function ProjectCoverField({
   readonly onClear: () => void;
   readonly onUpload: (file: File) => void;
 }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+
   const busy = isUploading || isPending;
 
   return (
@@ -142,7 +144,7 @@ export function ProjectCoverField({
 
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <motion.label
-              whileTap={busy ? undefined : { scale: 0.97 }}
+              whileTap={busy ? undefined : { scale: reduceMotion ? 1 : buttonTapActiveScale }}
               transition={transitionSpringSnappy}
               aria-disabled={busy}
               className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary focus-within:ring-2 focus-within:ring-focus-ring aria-disabled:pointer-events-none aria-disabled:opacity-45"
@@ -163,7 +165,7 @@ export function ProjectCoverField({
             </motion.label>
             <motion.button
               type="button"
-              whileTap={busy ? undefined : { scale: 0.97 }}
+              whileTap={busy ? undefined : { scale: reduceMotion ? 1 : buttonTapActiveScale }}
               transition={transitionSpringSnappy}
               disabled={busy}
               onClick={onClear}
@@ -176,7 +178,7 @@ export function ProjectCoverField({
         </div>
       ) : (
         <motion.label
-          whileTap={busy ? undefined : { scale: 0.985 }}
+          whileTap={busy ? undefined : { scale: reduceMotion ? 1 : buttonTapActiveScale }}
           transition={transitionSpringSnappy}
           aria-disabled={busy}
           className="group flex min-h-12 cursor-pointer items-center gap-3 bg-transparent py-1 focus-within:text-accent aria-disabled:pointer-events-none aria-disabled:opacity-45"
@@ -375,4 +377,3 @@ export function ProjectEditStateFields({
     </>
   );
 }
-

@@ -126,7 +126,12 @@ export type { SheetFooterAction } from "./overlay/sheet-footer-actions";
 export { OperationSuccessDialog, OperationSuccessSheet } from "./overlay/operation-success-dialog";
 export type { OperationSuccess } from "./overlay/operation-success-dialog";
 export { ActionMenu, ContextPopover, Tooltip } from "./overlay/anchored-surfaces";
-export type { ActionMenuItem, AnchoredTrigger, TooltipProps } from "./overlay/anchored-surfaces";
+export type {
+  ActionMenuItem,
+  AnchoredTrigger,
+  ContextPopoverProps,
+  TooltipProps,
+} from "./overlay/anchored-surfaces";
 export {
   FinanceUnsavedChangesModal,
   MaterialUnsavedChangesModal,
@@ -180,11 +185,14 @@ export type { SelectPresentation } from "./form/form-controls";
 export type { FormFieldLayout, FormPresentation } from "./form/form-controls";
 export { useFormPresentation } from "./form/form-presentation-context";
 export { useFormDirtySnapshot } from "./form/use-form-dirty-snapshot";
+export { ReviewCollection, ReviewItem } from "./form/review-collection";
 export { DialogOptionList } from "./form/dialog-option-list";
 export type { DialogOptionListHandle } from "./form/dialog-option-list";
 export { cx } from "./form/form-control-utils";
 
 // Desktop admin: HeroUI adapters inherit Atria tokens and shared overlay ownership.
+export { CashFlowTrendChart } from "./feedback/cash-flow-trend-chart";
+export type { CashFlowTrendChartProps } from "./feedback/cash-flow-trend-chart";
 export { DesktopUIProvider } from "./desktop/desktop-ui-provider";
 export type { DesktopUIProviderProps } from "./desktop/desktop-ui-provider";
 export { DesktopButton, DesktopInput, DesktopSelect } from "./desktop/desktop-controls";

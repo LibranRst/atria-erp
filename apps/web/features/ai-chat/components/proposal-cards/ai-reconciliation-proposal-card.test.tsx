@@ -84,19 +84,44 @@ describe("AiReconciliationProposalCard unit tests", () => {
     expect(html).toContain("Konfirmasi Rekonsiliasi (1 Mutasi)");
   });
 
-  test("menampilkan kontrol rekening dan tombol ubah jika tersedia lebih dari satu akun", () => {
+  test("menampilkan pilihan rekening jika tersedia lebih dari satu akun", () => {
     const html = renderCard();
     expect(html).toContain("Rekening Bank");
     expect(html).toContain("BCA - Operasional");
     expect(html).toContain("No. Rek: 1234567890");
-    expect(html).toContain("Ubah");
-    expect(html).toContain('aria-label="Ubah Rekening Bank"');
+    expect(html).toContain('aria-label="Rekening Bank: BCA - Operasional"');
+    expect(html).toContain('aria-haspopup="listbox"');
+  });
+
+  test.each([7, 25])("tetap menampilkan selector dengan %s rekening", (accountCount) => {
+    const availableBankAccounts = Array.from({ length: accountCount }, (_, index) => ({
+      id: index === 0 ? mockProposal.bankAccountId : `fixture-account-${index}`,
+      name: index === 0 ? "Operasional" : `Rekening ${index + 1}`,
+      bankName: "BCA",
+      accountNumber: `123456789${index}`,
+    }));
+
+    const html = renderCard({ availableBankAccounts });
+
+    expect(html).toContain('aria-label="Rekening Bank: BCA - Operasional"');
+    expect(html).toContain('aria-haspopup="dialog"');
+    expect(html).toContain("Konfirmasi Rekonsiliasi (1 Mutasi)");
+  });
+
+  test.each([0, 1])("mempertahankan identitas tanpa pilihan untuk %s rekening", (accountCount) => {
+    const html = renderCard({
+      availableBankAccounts: mockProposal.availableBankAccounts?.slice(0, accountCount),
+    });
+
+    expect(html).toContain("BCA - Operasional");
+    expect(html).toContain("No. Rek: 1234567890");
+    expect(html).not.toContain('aria-label="Rekening Bank:');
   });
 
   test("menampilkan status sudah dikonfirmasi jika alreadyConfirmed true", () => {
     const html = renderCard({}, true);
     expect(html).toContain("Rekonsiliasi mutasi bank berhasil dieksekusi");
-    expect(html).not.toContain("Ubah Rekening Bank");
+    expect(html).not.toContain('aria-label="Rekening Bank:');
   });
 
   test("menampilkan tab segmented control untuk Cocok dan Belum Tercatat", () => {

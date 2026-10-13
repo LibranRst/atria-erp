@@ -4,7 +4,6 @@ export function postLoginDestination(
   home: string,
   requested: string | undefined,
   nativeBridge: boolean,
-  desktopAllowed: boolean,
 ): string {
   let destination = home;
   // Mandatory account/setup gates precede a requested deep link.
@@ -19,7 +18,5 @@ export function postLoginDestination(
     const url = new URL(requested, "https://atria.invalid");
     if (isWorkspacePath(url.pathname) || url.pathname === "/admin") destination = requested;
   }
-  return nativeBridge || !desktopAllowed
-    ? workspaceHref(destination, "mobile", nativeBridge)
-    : destination;
+  return workspaceHref(destination, "mobile", nativeBridge);
 }

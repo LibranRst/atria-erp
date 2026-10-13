@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
 import {
   AppIcon,
@@ -23,7 +23,7 @@ import {
   Textarea,
   TextInput,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import type {
   CostComponentDraft,
   Draft,
@@ -105,6 +105,8 @@ export function LibraryTemplateEditorSheet({
   onSourceOpenChange,
   onRequestToggle,
 }: Props): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+
   const desktop = useWorkspacePresentation() === "desktop";
   const content = (
     <>
@@ -194,15 +196,15 @@ export function LibraryTemplateEditorSheet({
             title="Rincian biaya"
             helper={`${draft.components.length} komponen membentuk biaya internal.`}
             action={
-              <motion.button
+              <Button
                 type="button"
-                whileTap={{ scale: 0.97 }}
-                transition={transitionSpringSnappy}
                 onClick={onAddComponent}
                 className="flex min-h-10 items-center gap-1.5 rounded-full px-2.5 text-meta font-semibold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                variant="tertiary"
+                size="compact"
               >
                 <AppIcon name="add_circle" className="icon-sm" aria-hidden="true" /> Tambah
-              </motion.button>
+              </Button>
             }
           >
             {draft.components.map((component, index) => {
@@ -214,7 +216,7 @@ export function LibraryTemplateEditorSheet({
                 <motion.button
                   key={component.key}
                   type="button"
-                  whileTap={{ scale: 0.985 }}
+                  whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
                   transition={transitionSpringSnappy}
                   onClick={() => onOpenComponent(component)}
                   className="flex min-h-16 w-full items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:bg-surface-container-low"
@@ -416,16 +418,15 @@ export function LibraryTemplateEditorSheet({
             </FormSection>
           </FormDisclosure>
           {draft.id ? (
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               disabled={!canManage || pending || dirty}
               onClick={onRequestToggle}
               className="min-h-12 w-full rounded-full bg-error-container/20 px-5 text-xs font-bold text-error disabled:opacity-35"
+              variant="criticalQuiet"
             >
               {draft.isActive ? "Arsipkan template" : "Aktifkan kembali"}
-            </motion.button>
+            </Button>
           ) : null}
         </div>
       ) : null}

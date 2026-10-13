@@ -28,6 +28,7 @@ export type ProjectDrawerData = {
 export type ProjectDrawerProps = {
   readonly isOpen: boolean;
   readonly onClose: () => void;
+  readonly onExitComplete?: () => void;
   readonly clients: readonly ProjectClientOption[];
   readonly users: readonly ProjectUserOption[];
   readonly editProject?: ProjectDrawerData | null;

@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "@/lib/navigation/workspace-navigation";
 
 import { toast } from "sonner";
@@ -11,9 +12,12 @@ import {
   AppIcon,
   ConfirmationDialog,
   DatePickerField,
+  FactRow,
   FormField,
   FormRiskNotice,
   FormSection,
+  GroupedSurface,
+  MoneyValue,
   OperationSuccessDialog,
   type OperationSuccess,
   AdaptiveSelect,
@@ -34,7 +38,7 @@ import {
   buildGoodsReceiptBillPrefill,
   type GoodsReceiptVendorBillOption,
 } from "@/features/materials/utils/goods-receipt-prefill";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 export function GoodsReceiptSheet({
   projects,
@@ -45,6 +49,9 @@ export function GoodsReceiptSheet({
   compact = false,
   showTrigger = true,
 }: Props): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const reduceMotion = useReducedMotion();
+
   const router = useRouter();
   const urlAction = useUrlSearchParam("action");
   const showSheet = urlAction === "RECEIVE";
@@ -290,7 +297,7 @@ export function GoodsReceiptSheet({
       {showTrigger ? (
         <motion.button
           type="button"
-          whileTap={{ scale: 0.97 }}
+          whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
           transition={transitionSpringSnappy}
           onClick={launch}
           className={
@@ -303,6 +310,62 @@ export function GoodsReceiptSheet({
         </motion.button>
       ) : null}
       <WorkflowFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-4">
+            <GroupedSurface>
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Proyek"
+                  wrapLabel
+                  value={selectedProject?.name ?? "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Lokasi"
+                  wrapLabel
+                  value={allLocations.find((row) => row.id === locationId)?.name ?? "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Penerimaan"
+                  wrapLabel
+                  value={receiptNumber || "Belum diisi"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Sumber tagihan"
+                  wrapLabel
+                  value={
+                    vendorBillId
+                      ? (selectedVendorBill?.name ?? "Tagihan tidak tersedia")
+                      : "Isi manual"
+                  }
+                />
+                <FactRow layout="stacked" label="Baris material" wrapLabel value={items.length} />
+                <FactRow
+                  layout="stacked"
+                  label="Nilai draft"
+                  wrapLabel
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(total) ? 0 : 2}
+                      amount={total}
+                      variant="fullDynamic"
+                      size="sm"
+                    />
+                  }
+                />
+              </div>
+            </GroupedSurface>
+            <p className="text-support leading-relaxed text-on-surface-variant">
+              Posting menambah stok fisik dan memperbarui harga rata-rata. Pembayaran tagihan
+              dicatat terpisah.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={isSheetOpen}
         title={reviewing ? "Tinjau Penerimaan Barang" : "Penerimaan Barang"}
@@ -318,7 +381,7 @@ export function GoodsReceiptSheet({
       >
         {reviewing ? (
           <div className="space-y-md">
-            <div className="rounded-2xl bg-primary/5 px-4 py-3">
+            <div className={desktop ? "hidden" : "rounded-2xl bg-primary/5 px-4 py-3"}>
               <p className="text-meta font-bold tracking-wide text-primary uppercase">Penerimaan</p>
               <p className="mt-1 text-sm font-bold">{selectedProject?.name}</p>
               <p className="mt-0.5 text-xs text-on-surface-variant">

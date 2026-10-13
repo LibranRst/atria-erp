@@ -309,6 +309,41 @@
       "when": 1791080623641,
       "tag": "0043_private_attachment_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791273851422,
+      "tag": "0044_ai_material_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791274304614,
+      "tag": "0045_material_analysis_tenant",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1791283004037,
+      "tag": "0046_grant_purchasing_ai",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791311567688,
+      "tag": "0047_user_role_guide_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791735989968,
+      "tag": "0048_warehouse_intake",
+      "breakpoints": true
     }
   ]
 }

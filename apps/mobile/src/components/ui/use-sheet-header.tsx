@@ -8,6 +8,7 @@ import { AppIcon } from "./app-icon";
 import { ChromeButton } from "./chrome-button";
 import type { NativeMenuItem } from "./action-menu.types";
 import { theme } from "@/theme";
+import { nativeIconImageSource } from "@atria/icons/native-images";
 
 function FloatingSheetTitle({
   title,
@@ -59,7 +60,7 @@ export function sheetHeaderOptions(
             {
               type: "button",
               label: "Tutup",
-              icon: { type: "sfSymbol", name: "xmark" },
+              icon: { type: "image", source: nativeIconImageSource("close"), tinted: true },
               accessibilityLabel: "Tutup",
               onPress: onClose,
               sharesBackground: false,
@@ -145,7 +146,11 @@ export function useSheetHeader({
                     {
                       type: "menu" as const,
                       label: actionLabel,
-                      icon: { type: "sfSymbol" as const, name: "ellipsis" as const },
+                      icon: {
+                        type: "image" as const,
+                        source: nativeIconImageSource("more_horiz"),
+                        tinted: true,
+                      },
                       accessibilityLabel: actionLabel,
                       sharesBackground: false,
                       menu: {
@@ -153,9 +158,11 @@ export function useSheetHeader({
                         items: headerActions.map((action) => ({
                           type: "action" as const,
                           label: action.label,
-                          icon: action.systemImage
-                            ? { type: "sfSymbol" as const, name: action.systemImage }
-                            : undefined,
+                          icon: {
+                            type: "image" as const,
+                            source: nativeIconImageSource(action.icon),
+                            tinted: true,
+                          },
                           disabled: pending || action.disabled,
                           destructive: action.destructive,
                           onPress: action.onPress,
@@ -167,7 +174,7 @@ export function useSheetHeader({
               {
                 type: "button",
                 label: "Tutup",
-                icon: { type: "sfSymbol", name: "xmark" },
+                icon: { type: "image", source: nativeIconImageSource("close"), tinted: true },
                 accessibilityLabel: "Tutup",
                 onPress: onClose,
                 disabled: pending,

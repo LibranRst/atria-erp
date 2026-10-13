@@ -8,13 +8,10 @@ import { redirect } from "./runtime/navigation";
 import { headers } from "./runtime/request-context";
 import { WebRpcAuthorizationError } from "./runtime/web-rpc-errors";
 
-function fixture(
-  overrides: Partial<ApiPorts> = {},
-  additionalOrigin = "",
-): ReturnType<typeof createApiApp> {
+function fixture(overrides: Partial<ApiPorts> = {}): ReturnType<typeof createApiApp> {
   const plain = (): Response => new Response("ok");
   return createApiApp(
-    readApiConfig({ NODE_ENV: "test", WEB_ADDITIONAL_ORIGINS: additionalOrigin }),
+    readApiConfig({ NODE_ENV: "test" }),
     {
       auth: plain,
       trpc: plain,
@@ -47,28 +44,6 @@ function request(operation = "fixture", secret = DEVELOPMENT_BRIDGE_SECRET): Req
 }
 
 describe("API transport boundary", (): void => {
-  test("upload CORS permits an explicit second frontend and rejects neighboring origins", async (): Promise<void> => {
-    const app = fixture({}, "https://new.atria.test");
-    for (const origin of [
-      "http://localhost:3000",
-      "https://new.atria.test",
-      "https://new.atria.test.evil",
-    ]) {
-      const response = await app.fetch(
-        new Request("http://localhost/api/media/attachments", {
-          method: "OPTIONS",
-          headers: {
-            origin,
-            "access-control-request-method": "POST",
-            "access-control-request-headers": "x-atria-upload-ticket",
-          },
-        }),
-      );
-      expect(response.headers.get("access-control-allow-origin")).toBe(
-        origin.endsWith(".evil") ? null : origin,
-      );
-    }
-  });
   test("bridge rejects missing credentials and unknown operation without invoking", async (): Promise<void> => {
     let calls = 0;
     const app = fixture({ invokeWebOperation: async (): Promise<unknown> => ++calls });
@@ -130,5 +105,22 @@ describe("API transport boundary", (): void => {
     expect(() =>
       readApiConfig({ NODE_ENV: "production", API_BRIDGE_SECRET: DEVELOPMENT_BRIDGE_SECRET }),
     ).toThrow();
+  });
+
+  test("explicit admin origin can authenticate through its frontend; unknown origins remain denied", async (): Promise<void> => {
+    const app = fixture();
+    const response = await app.fetch(
+      new Request("http://localhost:3001/api/auth/get-session", {
+        headers: { origin: "http://localhost:3002" },
+      }),
+    );
+    expect(response.headers.get("access-control-allow-origin")).toBe("http://localhost:3002");
+    expect(response.headers.get("access-control-allow-credentials")).toBe("true");
+    const denied = await app.fetch(
+      new Request("http://localhost:3001/api/auth/get-session", {
+        headers: { origin: "https://foreign.example.test" },
+      }),
+    );
+    expect(denied.headers.has("access-control-allow-origin")).toBe(false);
   });
 });

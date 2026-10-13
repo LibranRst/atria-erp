@@ -16,3 +16,7 @@
 **/test-results
 **/playwright-report
 output
+outputs
+**/__pycache__
+**/*.pyc
+**/debug-storybook.log

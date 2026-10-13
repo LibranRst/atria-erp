@@ -10,9 +10,9 @@ import {
 
 import type { DashboardMaterialIssue } from "@/features/finance-dashboard/types/dashboard-types";
 import { formatShortDate } from "@/features/finance-dashboard/utils/dashboard-formatters";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { AppIcon, DuotoneIconTile } from "@/components/ui";
-const dashboardRowPressScale = { scale: 0.985 } as const;
+const dashboardRowPressScale = { scale: buttonTapActiveScale } as const;
 
 export function MaterialIssueRow({
   item,

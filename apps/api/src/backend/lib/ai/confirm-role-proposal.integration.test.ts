@@ -1,9 +1,18 @@
 import { withTestRequest } from "@backend/lib/testing/request";
-import { afterAll, expect, it } from "bun:test";
+import { afterAll, beforeAll, expect, it } from "bun:test";
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { auditLog, rolePermission } from "@backend/db/schema";
+import {
+  auditLog,
+  rolePermission,
+  role,
+  user,
+  tenant,
+  tenantMember,
+  INSTANCE_TENANT_ID,
+} from "@backend/db/schema";
+import { getAllPermissionKeys } from "@backend/lib/auth/role-access";
 import { auth } from "@backend/lib/auth";
 import { confirmAiRoleChangeProposal } from "@backend/app/actions/ai/confirm-role-proposal";
 import { createConversation } from "@backend/lib/ai/conversation-store";
@@ -52,6 +61,44 @@ async function holdsPermission(roleId: string, key: string): Promise<boolean> {
 }
 
 describeIntegration("pagar konfirmasi usulan izin AI", () => {
+  beforeAll(async () => {
+    // Self-contained fixtures also work on the schema-only disposable database.
+    await db
+      .insert(tenant)
+      .values({ id: INSTANCE_TENANT_ID, name: "Role guards test", slug: "role-guards-test" })
+      .onConflictDoNothing();
+    await db
+      .insert(role)
+      .values([
+        { id: OWNER_ROLE, name: "OWNER", isSystem: true, dataScope: "GLOBAL" },
+        {
+          id: PROJECT_MANAGER_ROLE,
+          name: "PROJECT_MANAGER",
+          isSystem: true,
+          dataScope: "ASSIGNED",
+        },
+      ])
+      .onConflictDoNothing();
+    await db
+      .insert(rolePermission)
+      .values(
+        getAllPermissionKeys().map((permissionKey) => ({ roleId: OWNER_ROLE, permissionKey })),
+      )
+      .onConflictDoNothing();
+    await db
+      .insert(user)
+      .values({ ...RONALD, isActive: true, emailVerified: true })
+      .onConflictDoNothing();
+    await db
+      .insert(tenantMember)
+      .values({
+        tenantId: INSTANCE_TENANT_ID,
+        userId: RONALD.id,
+        roleId: OWNER_ROLE,
+        isActive: true,
+      })
+      .onConflictDoNothing();
+  });
   afterAll(
     withTestRequest(() => {
       (auth.api as unknown as { getSession: unknown }).getSession = originalGetSession;

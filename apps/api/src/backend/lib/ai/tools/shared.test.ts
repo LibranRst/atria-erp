@@ -20,8 +20,11 @@ describe("penyajian nilai uang untuk model", () => {
     expect(value.formatted).toContain("343");
   });
 
-  it("membulatkan pecahan rupiah", () => {
-    expect(money("1000.60").amount).toBe(1001);
+  it("mempertahankan sen pada DTO dan nominal yang dikutip model", () => {
+    expect(money("125000000.25")).toEqual({ amount: 125000000.25, formatted: "Rp 125.000.000,25" });
+    expect(money("1000.60")).toEqual({ amount: 1000.6, formatted: "Rp 1.000,60" });
+    expect(money("-1000.25")).toEqual({ amount: -1000.25, formatted: "Rp -1.000,25" });
+    expect(money(null)).toEqual({ amount: 0, formatted: "Rp 0" });
   });
 
   it("mempertahankan tanda negatif untuk kategori yang minus", () => {

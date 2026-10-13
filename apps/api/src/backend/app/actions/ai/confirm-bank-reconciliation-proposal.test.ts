@@ -130,7 +130,7 @@ describe("confirmAiBankReconciliationProposal unit tests", () => {
   );
 
   it(
-    "menolak jika tidak ada pasangan yang dipilih dan tidak ada mutasi yang diimpor",
+    "payload lama tanpa proof milik user tidak dapat menulis",
     withTestRequest(async () => {
       actAs(OWNER);
 
@@ -145,14 +145,13 @@ describe("confirmAiBankReconciliationProposal unit tests", () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe("VALIDATION_ERROR");
-        expect(result.error.message).toContain("Pilih minimal satu mutasi");
+        expect(result.error.code).toBe("FORBIDDEN");
       }
     }),
   );
 
   it(
-    "menolak jika importUnmatched bernilai false dan matches kosong",
+    "perubahan importUnmatched dari klien tidak memberikan kewenangan",
     withTestRequest(async () => {
       actAs(OWNER);
 
@@ -174,8 +173,7 @@ describe("confirmAiBankReconciliationProposal unit tests", () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe("VALIDATION_ERROR");
-        expect(result.error.message).toContain("Pilih minimal satu mutasi");
+        expect(result.error.code).toBe("FORBIDDEN");
       }
     }),
   );

@@ -21,7 +21,7 @@ import { resolveEffectiveProjectHealth } from "@atria/core/project/effective-hea
 import { getProjectActivationReadiness } from "@atria/core/project/activation-readiness";
 import { ProjectActivationSheet } from "../sheets/project-activation-sheet";
 import { usePreservedScrollHeight } from "@/lib/hooks/use-preserved-scroll-height";
-import { DialogOptionList, SelectionDialog } from "@/components/ui";
+import { DialogOptionList, SelectionDialog, useSheetPresenceValue } from "@/components/ui";
 import { ProjectDrawer } from "@/features/projects/list/components/drawers/project-drawer";
 import { assignProjectManagerAction } from "@/app/actions/project/crud";
 import type { ProjectDrawerData } from "@/features/projects/list/components/drawers/project-drawer-types";
@@ -108,6 +108,11 @@ export function ProjectTabs({
     [project],
   );
 
+  const editDrawerPresence = useSheetPresenceValue(
+    editDrawerOpen ? editProjectData : null,
+    editDrawerOpen ? editProjectData.id : null,
+  );
+
   React.useEffect(() => {
     setProjectState({
       projectId: project.id,
@@ -191,7 +196,10 @@ export function ProjectTabs({
     if (tabId === defaultTab) params.delete("tab");
     else params.set("tab", tabId);
     const query = params.toString();
-    updateBrowserUrl(`${window.location.pathname}${query ? `?${query}` : ""}`, "replace");
+    updateBrowserUrl(
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
+      "replace",
+    );
   }
 
   return (
@@ -378,16 +386,17 @@ export function ProjectTabs({
         />
       </SelectionDialog>
 
-      {canEdit && editDrawerOpen ? (
+      {canEdit && editDrawerPresence.presentedValue ? (
         <ProjectDrawer
-          isOpen={editDrawerOpen}
-          onClose={() => {
-            setEditDrawerOpen(false);
-            router.refresh();
+          isOpen={editDrawerPresence.open}
+          onClose={() => setEditDrawerOpen(false)}
+          onExitComplete={() => {
+            editDrawerPresence.handleExitComplete();
+            if (!editDrawerOpen) router.refresh();
           }}
           clients={clients ?? []}
           users={(projectManagers ?? []).map((pm) => ({ id: pm.id, name: pm.name }))}
-          editProject={editProjectData}
+          editProject={editDrawerPresence.presentedValue}
         />
       ) : null}
     </div>

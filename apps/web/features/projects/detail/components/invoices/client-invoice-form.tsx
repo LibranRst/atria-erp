@@ -11,6 +11,8 @@ import { getInvoicePrefillContext } from "@/app/actions/finance/get-invoice-pref
 import type { InvoicePrefillResult } from "@atria/core/finance/invoice-prefill";
 import { cn } from "@/lib/utils/cn";
 import {
+  GroupedSurface,
+  FactRow,
   AppIcon,
   DatePickerField,
   FinanceUnsavedChangesModal,
@@ -25,6 +27,7 @@ import {
   Textarea,
   TextInput,
   WorkflowFormSheet,
+  Button,
 } from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 import { getErrorMessage } from "@atria/core/utils/error-message";
@@ -216,6 +219,53 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
   return (
     <>
       <WorkflowFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-3">
+            <div className="px-1">
+              <h3 className="text-support font-semibold text-on-surface">Ringkasan invoice</h3>
+              <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+                {draft.payload.invoiceNumber.trim() || "Nomor invoice belum diisi"}
+              </p>
+            </div>
+            <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow layout="stacked" wrapLabel label="Termin" value={stageLabel} />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Nominal draft"
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                      amount={amount}
+                      variant="fullDynamic"
+                      size="sm"
+                      align="right"
+                    />
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Jatuh tempo"
+                  value={
+                    draft.payload.dueDate
+                      ? new Date(draft.payload.dueDate).toLocaleDateString("id-ID", {
+                          dateStyle: "medium",
+                        })
+                      : "Belum dipilih"
+                  }
+                />
+              </div>
+            </GroupedSurface>
+            <p className="px-1 text-support text-on-surface-variant">
+              Invoice mencatat piutang. Saldo kas bertambah melalui pencatatan penerimaan klien
+              terpisah.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? "Tinjau invoice klien" : "Buat invoice klien"}
@@ -353,13 +403,15 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                           {prefill.suggestedInvoiceNumber}
                         </strong>
                       </span>
-                      <button
+                      <Button
                         type="button"
                         onClick={() => patch({ invoiceNumber: prefill.suggestedInvoiceNumber })}
-                        className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary hover:bg-primary/15 active:scale-[0.98]"
+                        className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary hover:bg-primary/15 active:z-10 active:shadow-raised"
+                        variant="secondary"
+                        size="mini"
                       >
                         Terapkan
-                      </button>
+                      </Button>
                     </div>
                   )}
                 <AdaptiveSelect

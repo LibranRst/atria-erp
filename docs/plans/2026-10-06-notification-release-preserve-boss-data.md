@@ -78,7 +78,7 @@ or a physical iPhone works. A new origin needs its own device subscription.
 
 Keep the original deployment and recorded API origin configuration for rollback.
 Application rollback does not restore a database or delete newly entered data.
-No final production release has been performed by this preparation task.
+The preparation and approved production rollout are recorded below.
 
 ## Compatibility implementation
 
@@ -111,3 +111,89 @@ protected from draft cleanup across every configured origin.
 - The bridge field is still empty. New-account credential transfer, exact new
   origin trust and production VAPID installation await the Browser confirmation
   at their access boundary. No public application was deployed by preparation.
+
+Final CI `37408755348` succeeded for exact commit `06b4b6fb`, including
+quality/security and disposable PostgreSQL integration. Netlify's display name
+`atria-team` maps to actual slug `libran-dev7`; its Billing UI confirms Free,
+300 credits and no saved card. The unrelated old-origin site remains active.
+Browser confirmation for the new access boundary was presented with the exact
+Netlify project/team, production Railway service, new HTTPS origin, production
+Web Push keys and release commit. The bridge input is still blank; deployment
+awaits that answer. Proof: `/tmp/atria-new-netlify-release-review.png`.
+
+## Approved rollout — completed
+
+The human approved the new Netlify bridge access, exact new API origin,
+production Web Push credentials and candidate deployment, then separately
+approved public production visitor access with private previews.
+
+- Exact source: `06b4b6fb838df30d4c71b40a629272668ad01192`; final CI
+  `37408755348` succeeded. No schema/migration changes or startup DB scripts.
+- Frontend: https://atria-dekoria-app.netlify.app on Netlify Free team
+  `atria-team` / slug `libran-dev7`; site
+  `6d79424c-4b7b-45ea-be7c-3394b9dd71cd`; published deployment
+  `6ac46b688a5b63f1cb9b49ba`. One function and one edge function deployed;
+  Netlify secret scan reports no exposed secrets.
+- Effective build root was `.` from root TOML. UI now also uses root `.` and
+  package `apps/web`, publish `apps/web/.next`, retained Next.js runtime.
+  Automatic builds and previews are stopped to preserve credits; future
+  releases require an intentional build/publish. This does not stop the app.
+- Bridge is explicitly flagged secret on Free, scoped to Builds/Functions/
+  Runtime, production context only; preview/branch/agent/dev values are empty.
+  Basic marked-secret protection is available here without upgrading; paid
+  smart detection was not enabled. No protection was disabled for deployment.
+- Production Public / Deploy Previews Private saved. Netlify badge is off and
+  the actual login page has zero badge frames. Existing project retained.
+- API `atria-api` active deployment
+  `7b6380e4-08a7-4dab-bf97-08919913abc6`. Reviewed changes were precisely
+  three production VAPID fields, WEB_ADDITIONAL_ORIGINS (new host),
+  NEXT_PUBLIC_APP_URL (new host), and source branch. WEB_ORIGIN remains
+  the original host; auth/database/storage/AI/job secrets were not changed.
+  Wait for CI, Singapore, one Serverless replica and `/ready` stay configured.
+- VAPID key pair matches P-256 and is separate from QA. Service values were
+  checked against the prepared production values without logging them.
+- Database connection string matched before/after byte-for-byte. Read-only
+  SELECT counts at 10:48 WIB: 4 users, 2 projects, 2 budgets, 0 expenses,
+  1 cash transaction, 1 material and 0 attachments. This establishes existing
+  data presence, not a reconciliation of monetary values or a comparison of
+  every row to the backup. No production business mutation was performed.
+- Anonymous deployment smoke: 23/23 passed. API health/readiness and login
+  return 200; ledger/admin/projects redirect to login; server artifacts are
+  denied. Manifest, worker and PNG icon return 200 with their proper types.
+  Live worker includes tray-read intent. Anonymous attachment read returns
+  401; new-origin upload preflight returns 204 and exact allowed origin.
+- Existing backup workflow run `37408047374` succeeded before API rollout.
+  Backup release metadata now records the deployed source for both services.
+  Existing Cron destination/job secret remain unchanged; no scheduler retest
+  or OS push was generated against a business recipient in this rollout.
+
+Authenticated browser workflow acceptance and actual new-domain push reception
+remain the boss/user's device test. The physical Android QA result verifies the
+underlying notification flow, not this device's new installation/subscription.
+Login with existing credentials, install the new origin and opt in through
+Profile notifications. No new Owner setup or database reset is required.
+
+Proof: `/tmp/atria-new-netlify-deployed.png`,
+`/tmp/atria-new-netlify-public-production.png`,
+`/tmp/atria-new-netlify-login.png`; scoped data-presence report and hosted smoke
+logs are private local files.
+
+Final metadata inspection confirmed both hosting dashboards link to the same
+full Git commit. API logs also emitted one Better Auth warning for unresolved
+client IP during anonymous probes, using a shared per-path rate bucket. No
+authentication failure or rate-limit bypass was observed; trusted IP forwarding
+needs a separate scoped review. Do not trust arbitrary client IP headers.
+
+Temporary local database credential copy was removed after read-only checks.
+Operator acceptance documentation remains local to avoid a doc-only API rebuild;
+production continues to use tested commit `06b4b6fb`.
+
+Final metadata inspection confirmed both hosting dashboards link to the same
+full Git commit. API logs also emitted one Better Auth warning for unresolved
+client IP during anonymous probes, using a shared per-path rate bucket. No
+authentication failure or rate-limit bypass was observed; trusted IP forwarding
+needs a separate scoped review. Do not trust arbitrary client IP headers.
+
+Temporary local database credential copy was removed after read-only checks.
+Operator acceptance documentation remains local to avoid a doc-only API rebuild;
+production continues to use tested commit `06b4b6fb`.

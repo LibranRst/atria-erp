@@ -1,59 +1,50 @@
 import { tool } from "ai";
-import { z } from "zod";
+import { normalizeInputRequestPayload } from "@atria/core/ai/input-request-flow";
+import { AI_CAPABILITIES, capabilityAvailable } from "./capability-catalog";
+import type { AiToolContext } from "./context";
 
-export const inputFieldSchema = z.object({
-  key: z.string().describe("Kunci pengenal unik field (misal: projectName, amount, category)"),
-  label: z.string().describe("Label ramah pengguna untuk field input"),
-  type: z
-    .enum(["text", "currency", "number", "date", "select"])
-    .describe("Tipe masukan data yang dibutuhkan"),
-  placeholder: z.string().optional().describe("Teks contoh petunjuk di dalam kotak input"),
-  defaultValue: z.string().optional().describe("Nilai bawaan bila ada"),
-  options: z
-    .array(
-      z.object({
-        label: z.string().describe("Teks pilihan yang ditampilkan"),
-        value: z.string().describe("Nilai dari pilihan"),
-      }),
-    )
-    .optional()
-    .describe("Daftar opsi jika tipe input adalah 'select'"),
-  required: z.boolean().default(true).describe("Apakah field ini wajib diisi"),
-});
-
-export type InputField = z.infer<typeof inputFieldSchema>;
-
-export const requestUserInputSchema = z.object({
-  actionTitle: z
-    .string()
-    .describe("Judul aksi yang sedang dipersiapkan (misal: Buat Proyek Baru, Catat Pengeluaran)"),
-  description: z.string().optional().describe("Penjelasan singkat mengapa data ini dibutuhkan"),
-  fields: z
-    .array(inputFieldSchema)
-    .min(1)
-    .max(8)
-    .describe("Daftar field input yang dibutuhkan dari pengguna"),
-});
-
-export type RequestUserInputPayload = z.infer<typeof requestUserInputSchema>;
+export { inputFieldSchema, requestUserInputSchema } from "@atria/core/ai/input-request";
+export type { InputField, RequestUserInputPayload } from "@atria/core/ai/input-request";
+import { requestUserInputSchema, type RequestUserInputPayload } from "@atria/core/ai/input-request";
 
 /**
  * Tool AI untuk meminta masukan data multi-field dari pengguna secara interaktif.
- * Ketika AI memanggil tool ini, bilah chatbar di layar pengguna akan bertransformasi
- * menjadi form input langkah demi langkah.
+ * Tool membuka wizard bertahap di composer; draft pesan dan progres tetap
+ * tersedia saat pengguna menjeda pengisian untuk menulis pesan.
  */
-export function createInputRequestTools() {
+export function createInputRequestTools(context: AiToolContext) {
   return {
     requestUserInput: tool({
       description:
-        "Gunakan tool ini ketika pengguna ingin membuat proyek baru, mencatat pengeluaran, membayar tagihan vendor, mencairkan biaya lapangan, atau menerima barang gudang, namun data/parameter yang dibutuhkan belum lengkap. Pemanggilan tool ini akan mengubah chatbar pengguna menjadi input interaktif langkah-demi-langkah.",
+        "Gunakan tool ini ketika pengguna ingin membuat proyek baru, mencatat pengeluaran, membayar tagihan vendor, mencairkan biaya lapangan, atau menerima barang gudang, namun data/parameter yang dibutuhkan belum lengkap. Wizard bertahap tampil di composer. Pengguna dapat menjeda untuk menulis pesan lalu melanjutkan tanpa kehilangan isian. Hasilnya kembali sebagai jawaban pengguna, bukan persetujuan penyimpanan data bisnis.",
       inputSchema: requestUserInputSchema,
       execute: async (args: RequestUserInputPayload) => {
+        const normalized = normalizeInputRequestPayload(args);
+        if (
+          normalized.workflow === "CREATE_PROJECT" &&
+          !capabilityAvailable(context, AI_CAPABILITIES.proposeCreateProject)
+        )
+          return {
+            error:
+              "Akun ini belum memiliki akses pembuatan proyek beserta budget melalui chat. Izin membuat proyek dan budget dengan akses global diperlukan. Minta admin memeriksa akses; jangan membuka wizard proyek atau memakai Quick Start yang sudah selesai sebagai jalan lain.",
+            toolFailed: true,
+            code: "FORBIDDEN",
+          };
+        if (normalized.fields.length === 0)
+          return {
+            error:
+              "Minta detail proyek seperti nama, nilai kontrak dan klien. Budget awal memakai Pengaturan ERP; plafon bukan isian proyek baru.",
+          };
         return {
           status: "INPUT_REQUESTED" as const,
           actionTitle: args.actionTitle,
-          description: args.description ?? "Silakan lengkapi informasi berikut:",
-          fields: args.fields,
+          description: normalized.description ?? "Silakan lengkapi informasi berikut:",
+          fields: normalized.fields,
+          workflow: normalized.workflow,
+          budgetInstruction:
+            normalized.workflow === "CREATE_PROJECT"
+              ? "Budget awal otomatis memakai Pengaturan ERP aktif. Jangan meminta plafon, margin atau rasio kategori; lanjutkan ke usulan proyek setelah detail proyek lengkap."
+              : undefined,
         };
       },
     }),

@@ -1,11 +1,17 @@
-import { validateStockMovementLinksTx } from "@backend/lib/material/stock-movement-links";
-import { eq } from "drizzle-orm";
+import {
+  writeStockCorrectionTx,
+  StockCorrectionError,
+} from "@backend/server/usecases/material/stock-correction-writer";
+import { revalidateWorkspacePath } from "@backend/lib/cache/revalidate-workspace";
+import { recordStockInTx } from "@backend/server/usecases/material/warehouse-intake-writer";
+import { resolveActor } from "@backend/server/actor";
+import {
+  writeProjectStockRowTx,
+  ProjectStockError,
+} from "@backend/server/usecases/material/project-stock-writer";
 
 import { db } from "@backend/db";
-import { materialInventory, stockMovement } from "@backend/db/schema";
-import { assertPermission } from "@backend/lib/auth/permissions";
-import { fromCents, parseNumericToCents } from "@backend/lib/finance/balance-mutation";
-import { assertOperationalStockReadiness } from "@backend/lib/material/operational-readiness";
+import { stockMovement } from "@backend/db/schema";
 import { ActionResponse } from "@atria/core/types/action-response";
 import {
   AdjustMaterialStockInput,
@@ -18,16 +24,7 @@ import {
   recordStockInSchema,
   reserveMaterialSchema,
 } from "@atria/core/validations/material";
-import {
-  assertProjectScopeForMaterialAction,
-  ensureNonNegativeStock,
-  findLockedInventory,
-  getSessionUser,
-  insertStockMovement,
-  mapStockError,
-  toDecimal,
-  writeStockMovementAuditTx,
-} from "./inventory-utils";
+import { mapStockError } from "./inventory-utils";
 import {
   returnMaterialFromProject as recordMaterialReturnFromProject,
   useMaterialForProject as recordMaterialUsageForProject,
@@ -45,74 +42,14 @@ export async function recordStockIn(
     };
   }
 
-  const sessionResult = await getSessionUser();
-  if (!sessionResult.success) return sessionResult;
-
+  const actor = await resolveActor();
+  if (!actor)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
-    await assertPermission(sessionResult.data.user, "create:stock_movement");
-    await assertOperationalStockReadiness();
-    await assertProjectScopeForMaterialAction(
-      validation.data.projectId,
-      sessionResult.data.user.id,
-      sessionResult.data.roleName,
-    );
-
-    const result = await db.transaction(async (tx) => {
-      await validateStockMovementLinksTx(tx, validation.data);
-      const inventory = await findLockedInventory(
-        tx,
-        validation.data.materialId,
-        validation.data.inventoryLocationId,
-      );
-      const oldCurrent = parseNumericToCents(inventory.currentStock);
-      const oldAverageCost = Number(inventory.averageCost);
-      const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
-      const nextCurrent = oldCurrent + quantity;
-      const unitCost = validation.data.unitCost ?? 0;
-      const currentQty = Number(inventory.currentStock);
-      const nextQty = Number(fromCents(nextCurrent));
-      const weightedAverageCost =
-        nextQty > 0
-          ? (currentQty * oldAverageCost + validation.data.quantity * unitCost) / nextQty
-          : unitCost;
-
-      const [updated] = await tx
-        .update(materialInventory)
-        .set({
-          currentStock: fromCents(nextCurrent),
-          averageCost: weightedAverageCost.toFixed(2),
-          lastPurchasePrice: unitCost.toFixed(2),
-          updatedAt: new Date(),
-        })
-        .where(eq(materialInventory.id, inventory.id))
-        .returning();
-
-      const movement = await insertStockMovement(tx, {
-        ...validation.data,
-        movementType: "STOCK_IN",
-        quantity: toDecimal(validation.data.quantity),
-        unitCost: unitCost.toFixed(2),
-        createdById: sessionResult.data.user.id,
-      });
-
-      await writeStockMovementAuditTx(tx, {
-        userId: sessionResult.data.user.id,
-        action: "RECORD_STOCK_IN",
-        inventoryId: inventory.id,
-        originalState: { currentStock: inventory.currentStock, averageCost: inventory.averageCost },
-        newState: {
-          currentStock: updated.currentStock,
-          averageCost: updated.averageCost,
-          stockMovementId: movement.id,
-        },
-      });
-
-      return movement;
-    });
-
+    const result = await db.transaction((tx) => recordStockInTx(tx, actor, validation.data));
     return { success: true, data: result };
-  } catch (error) {
-    return mapStockError(error, "Gagal mencatat stock in.");
+  } catch (error: unknown) {
+    return mapStockError(error, "Gagal mencatat stok masuk.");
   }
 }
 
@@ -120,73 +57,23 @@ export async function reserveMaterialForProject(
   input: ReserveMaterialInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const validation = reserveMaterialSchema.safeParse(input);
-  if (!validation.success) {
+  if (!validation.success)
     return {
       success: false,
-      error: { code: "VALIDATION_ERROR", message: "Data reservasi material tidak valid." },
+      error: { code: "VALIDATION_ERROR", message: "Data pergerakan stok tidak valid." },
     };
-  }
-
-  const sessionResult = await getSessionUser();
-  if (!sessionResult.success) return sessionResult;
-
+  const actor = await resolveActor();
+  if (!actor)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
-    await assertPermission(sessionResult.data.user, "reserve:stock");
-    await assertOperationalStockReadiness();
-    await assertProjectScopeForMaterialAction(
-      validation.data.projectId,
-      sessionResult.data.user.id,
-      sessionResult.data.roleName,
+    const movement = await db.transaction((tx) =>
+      writeProjectStockRowTx(tx, actor, validation.data.projectId, "RESERVE", validation.data),
     );
-
-    const result = await db.transaction(async (tx) => {
-      await validateStockMovementLinksTx(tx, validation.data);
-      const inventory = await findLockedInventory(
-        tx,
-        validation.data.materialId,
-        validation.data.inventoryLocationId,
-      );
-      const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
-      const currentStock = parseNumericToCents(inventory.currentStock);
-      const reservedStock = parseNumericToCents(inventory.reservedStock);
-      const availableStock = currentStock - reservedStock;
-
-      if (quantity > availableStock) {
-        throw new Error("INSUFFICIENT_AVAILABLE_STOCK");
-      }
-
-      const nextReserved = reservedStock + quantity;
-      const [updated] = await tx
-        .update(materialInventory)
-        .set({
-          reservedStock: fromCents(nextReserved),
-          updatedAt: new Date(),
-        })
-        .where(eq(materialInventory.id, inventory.id))
-        .returning();
-
-      const movement = await insertStockMovement(tx, {
-        ...validation.data,
-        movementType: "RESERVE",
-        quantity: toDecimal(validation.data.quantity),
-        unitCost: (validation.data.unitCost ?? Number(inventory.averageCost)).toFixed(2),
-        createdById: sessionResult.data.user.id,
-      });
-
-      await writeStockMovementAuditTx(tx, {
-        userId: sessionResult.data.user.id,
-        action: "RESERVE_MATERIAL",
-        inventoryId: inventory.id,
-        originalState: { reservedStock: inventory.reservedStock },
-        newState: { reservedStock: updated.reservedStock, stockMovementId: movement.id },
-      });
-
-      return movement;
-    });
-
-    return { success: true, data: result };
-  } catch (error) {
-    return mapStockError(error, "Gagal melakukan reservasi material.");
+    return { success: true, data: movement };
+  } catch (error: unknown) {
+    if (error instanceof ProjectStockError)
+      return { success: false, error: { code: error.code, message: error.message } };
+    return mapStockError(error, "Pergerakan stok belum tersimpan.");
   }
 }
 
@@ -212,79 +99,41 @@ export async function adjustMaterialStock(
   input: AdjustMaterialStockInput,
 ): Promise<ActionResponse<typeof stockMovement.$inferSelect>> {
   const validation = adjustMaterialStockSchema.safeParse(input);
-  if (!validation.success) {
+  if (!validation.success)
     return {
       success: false,
-      error: { code: "VALIDATION_ERROR", message: "Data adjustment stock tidak valid." },
+      error: { code: "VALIDATION_ERROR", message: "Data koreksi stok tidak valid." },
     };
-  }
-
-  const sessionResult = await getSessionUser();
-  if (!sessionResult.success) return sessionResult;
-
+  const actor = await resolveActor();
+  if (!actor)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
-    await assertPermission(sessionResult.data.user, "adjust:stock");
-    await assertOperationalStockReadiness();
-    await assertProjectScopeForMaterialAction(
-      validation.data.projectId,
-      sessionResult.data.user.id,
-      sessionResult.data.roleName,
+    const data = validation.data;
+    const movements = await db.transaction((tx) =>
+      writeStockCorrectionTx(tx, actor, {
+        action: "STOCK_CORRECT",
+        inventoryLocationId: data.inventoryLocationId,
+        projectId: data.projectId ?? null,
+        reason: data.note,
+        items: [
+          {
+            materialId: data.materialId,
+            direction: data.direction,
+            quantity: data.quantity,
+            unitCost: data.unitCost,
+            projectRapItemId: data.projectRapItemId,
+            projectCostId: data.projectCostId,
+            vendorBillId: data.vendorBillId,
+          },
+        ],
+      }),
     );
-
-    const result = await db.transaction(async (tx) => {
-      await validateStockMovementLinksTx(tx, validation.data);
-      const inventory = await findLockedInventory(
-        tx,
-        validation.data.materialId,
-        validation.data.inventoryLocationId,
-      );
-      const quantity = parseNumericToCents(toDecimal(validation.data.quantity));
-      const currentStock = parseNumericToCents(inventory.currentStock);
-      const nextCurrent =
-        validation.data.direction === "INCREASE"
-          ? currentStock + quantity
-          : currentStock - quantity;
-
-      ensureNonNegativeStock(nextCurrent, "INSUFFICIENT_CURRENT_STOCK");
-      if (nextCurrent < parseNumericToCents(inventory.reservedStock)) {
-        throw new Error("STOCK_RESERVED_FOR_OTHER_PROJECTS");
-      }
-
-      const [updated] = await tx
-        .update(materialInventory)
-        .set({
-          currentStock: fromCents(nextCurrent),
-          updatedAt: new Date(),
-        })
-        .where(eq(materialInventory.id, inventory.id))
-        .returning();
-
-      const movement = await insertStockMovement(tx, {
-        ...validation.data,
-        movementType: "ADJUSTMENT",
-        movementDirection: validation.data.direction === "INCREASE" ? "IN" : "OUT",
-        quantity: toDecimal(validation.data.quantity),
-        unitCost: (validation.data.unitCost ?? Number(inventory.averageCost)).toFixed(2),
-        createdById: sessionResult.data.user.id,
-      });
-
-      await writeStockMovementAuditTx(tx, {
-        userId: sessionResult.data.user.id,
-        action: "ADJUST_MATERIAL_STOCK",
-        inventoryId: inventory.id,
-        originalState: { currentStock: inventory.currentStock, note: validation.data.note },
-        newState: {
-          currentStock: updated.currentStock,
-          direction: validation.data.direction,
-          stockMovementId: movement.id,
-        },
-      });
-
-      return movement;
-    });
-
-    return { success: true, data: result };
-  } catch (error) {
-    return mapStockError(error, "Gagal melakukan adjustment stock.");
+    revalidateWorkspacePath("/materials");
+    if (data.projectId) revalidateWorkspacePath(`/projects/${data.projectId}`);
+    return { success: true, data: movements[0] };
+  } catch (error: unknown) {
+    if (error instanceof StockCorrectionError)
+      return { success: false, error: { code: error.code, message: error.message } };
+    return mapStockError(error, "Koreksi stok belum dapat disimpan. Periksa lagi.");
   }
 }

@@ -13,6 +13,7 @@ import {
   DuotoneIconTile,
   MoneyValue,
   WorkspaceRowChevron,
+  Button,
 } from "@/components/ui";
 import { OpeningInventoryEntryForm } from "@/features/materials/components/workspaces/opening-inventory-entry-form";
 import { OnboardingFinanceReview } from "@/features/onboarding/components/workspaces/onboarding-finance-review";
@@ -118,13 +119,14 @@ export function InitialStockSetupPanel({
               </div>
             </div>
             {eligible > 0 ? (
-              <button
+              <Button
                 type="button"
                 onClick={() => setComposerOpen(true)}
-                className="mt-4 min-h-12 w-full rounded-full bg-surface-container-low px-4 text-row font-bold text-on-surface ring-1 ring-ring-subtle transition-transform outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98]"
+                className="mt-4 min-h-12 w-full rounded-full bg-surface-container-low px-4 text-row font-bold text-on-surface ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:shadow-raised"
+                variant="secondary"
               >
                 Catat saldo awal lainnya
-              </button>
+              </Button>
             ) : null}
           </div>
         </OnboardingSurface>
@@ -204,14 +206,15 @@ export function InitialStockSetupPanel({
                   <WorkspaceRowChevron />
                 </button>
                 {batch.status === "PENDING_APPROVAL" && simulation?.enabled && financeTarget ? (
-                  <button
+                  <Button
                     type="button"
                     disabled={simulationPending}
                     onClick={() => setSimulationConfirmationBatch(batch)}
-                    className="mt-2 min-h-12 w-full rounded-full bg-accent px-4 text-meta font-bold text-on-accent transition-transform outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98] disabled:opacity-40"
+                    className="mt-2 min-h-12 w-full rounded-full bg-accent px-4 text-meta font-bold text-on-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:shadow-raised disabled:opacity-40"
+                    variant="secondary"
                   >
                     Simulasikan Finance Admin
-                  </button>
+                  </Button>
                 ) : null}
               </div>
             ))}

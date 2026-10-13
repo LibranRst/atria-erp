@@ -1,6 +1,7 @@
 import { reconcileVendorBillAction } from "@backend/server/services/notification-job";
 import { recordNotificationEvent } from "@backend/server/services/notification-events";
 
+import { APPROVAL_THRESHOLD_CONFIG_KEYS } from "@atria/core/finance/approval-thresholds";
 import { readApprovalThresholds } from "@backend/lib/finance/approval-thresholds";
 
 import {
@@ -11,7 +12,9 @@ import {
   projectExpenses,
   auditLog,
   approval,
+  appConfig,
   cashTransaction,
+  INSTANCE_TENANT_ID,
 } from "@backend/db/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -41,7 +44,6 @@ export async function payVendorBillTx(
 ): Promise<{ paymentId: string; nextBalance: number; amountPaid: number; projectId: string }> {
   assertFinancePermission(actor, "pay:vendor_bill");
   const { vendorPaymentId, referenceNumber, bankAccountId } = payVendorBillSchema.parse(input);
-  const ownerApprovalThresholdCents = (await readApprovalThresholds(tx)).vendorPaymentCents;
 
   // 1. Fetch and Lock the vendor payment record
   const [payment] = await tx
@@ -50,7 +52,7 @@ export async function payVendorBillTx(
     .where(eq(vendorPayment.id, vendorPaymentId))
     .for("update");
 
-  if (!payment) {
+  if (!payment || payment.tenantId !== INSTANCE_TENANT_ID) {
     throw new Error("PAYMENT_RECORD_NOT_FOUND");
   }
 
@@ -67,19 +69,31 @@ export async function payVendorBillTx(
     .where(eq(vendorBill.id, payment.vendorBillId))
     .for("update");
 
-  if (!bill) {
+  if (!bill || bill.tenantId !== INSTANCE_TENANT_ID) {
     throw new Error("VENDOR_BILL_NOT_FOUND");
   }
 
   const billProject = await lockFinanceProject(tx, actor, bill.projectId);
+  if (billProject.tenantId !== INSTANCE_TENANT_ID) throw new Error("PROJECT_NOT_FOUND");
   assertProjectStatusIsOperational(billProject.status);
+  await tx
+    .select()
+    .from(appConfig)
+    .where(
+      and(
+        eq(appConfig.key, APPROVAL_THRESHOLD_CONFIG_KEYS.vendorPayment),
+        eq(appConfig.tenantId, INSTANCE_TENANT_ID),
+      ),
+    )
+    .for("update");
+  const ownerApprovalThresholdCents = (await readApprovalThresholds(tx)).vendorPaymentCents;
 
   // 3. Fetch the canonical budget category for overrun checks.
   const budgetCategory = await tx.query.projectBudgetCategory.findFirst({
     where: eq(projectBudgetCategory.id, bill.projectBudgetCategoryId),
   });
 
-  if (!budgetCategory) {
+  if (!budgetCategory || budgetCategory.tenantId !== INSTANCE_TENANT_ID) {
     throw new Error("PROJECT_BUDGET_CATEGORY_NOT_FOUND");
   }
 
@@ -135,9 +149,17 @@ export async function payVendorBillTx(
 
   const targetBankAccountId = bankAccountId || payment.bankAccountId;
 
-  const accountBefore = await tx.query.bankAccount.findFirst({
-    where: eq(bankAccount.id, targetBankAccountId),
-  });
+  const [accountBefore] = await tx
+    .select()
+    .from(bankAccount)
+    .where(
+      and(
+        eq(bankAccount.id, targetBankAccountId),
+        eq(bankAccount.tenantId, INSTANCE_TENANT_ID),
+        eq(bankAccount.isActive, true),
+      ),
+    )
+    .for("update");
   if (!accountBefore) throw new Error("BANK_ACCOUNT_NOT_FOUND");
   const duplicateReference = await tx.query.cashTransaction.findFirst({
     where: and(

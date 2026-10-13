@@ -335,7 +335,7 @@ export function AccountDetailSheet({
           <DetailSection
             title="Aktivitas terbaru"
             count={presentedAccount.recentTransactions.length}
-            countLabel="Mutasi"
+            countLabel="Catatan terbaru"
             href="/expenses"
             actionLabel="Kas & Tagihan"
           >

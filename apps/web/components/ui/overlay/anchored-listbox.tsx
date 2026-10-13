@@ -55,10 +55,7 @@ export function AnchoredListbox(props: AnchoredListboxProps): React.JSX.Element 
   return <AnchoredListboxClient {...props} />;
 }
 
-export function getAnchoredContainerRadius(
-  itemCount: number,
-  hasComplexContent: boolean,
-): string {
+export function getAnchoredContainerRadius(itemCount: number, hasComplexContent: boolean): string {
   if (itemCount <= 0) return "rounded-[24px]";
   if (itemCount === 1) {
     return hasComplexContent ? "rounded-[26px]" : "rounded-full";
@@ -88,12 +85,14 @@ function AnchoredListboxClient({
     selectedIndex >= 0 ? selectedIndex : null,
   );
   const itemRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
-  const itemLabels = React.useRef<Array<string | null>>(options.map((option) => option.label));
+  const itemLabels = React.useRef<Array<string | null>>(
+    options.map((option) => option.action?.label ?? option.label),
+  );
   const reduceMotion = useReducedMotion();
   const layers = useOverlayLayers();
 
   React.useEffect(() => {
-    itemLabels.current = options.map((option) => option.label);
+    itemLabels.current = options.map((option) => option.action?.label ?? option.label);
   }, [options]);
 
   const {
@@ -230,7 +229,7 @@ function AnchoredListboxClient({
                                 selectOption(option);
                               },
                             })}
-                            className={`flex min-h-12 w-full items-center gap-3 rounded-full px-4 py-2.5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98] ${
+                            className={`flex min-h-12 w-full items-center gap-3 rounded-full px-4 py-2.5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[1.05] ${option.action ? "relative mt-2 before:pointer-events-none before:absolute before:inset-x-1 before:-top-1 before:border-t before:border-ring-subtle" : ""} ${
                               option.disabled ? "cursor-not-allowed opacity-45" : ""
                             } ${
                               active
@@ -238,8 +237,19 @@ function AnchoredListboxClient({
                                 : "text-on-surface hover:bg-surface-container-low focus-visible:bg-surface-container-low"
                             }`}
                           >
+                            {option.action ? (
+                              <AppIcon
+                                name="add"
+                                className={`icon-sm shrink-0 ${active ? "text-on-primary" : "text-accent"}`}
+                                aria-hidden="true"
+                              />
+                            ) : null}
                             <span className="min-w-0 flex-1">
-                              <span className="block text-row font-bold">{option.label}</span>
+                              <span
+                                className={`block text-row font-bold ${option.action && !active ? "text-accent" : ""}`}
+                              >
+                                {option.action?.label ?? option.label}
+                              </span>
                               {option.description || option.meta || option.disabledReason ? (
                                 <span
                                   id={reasonId}

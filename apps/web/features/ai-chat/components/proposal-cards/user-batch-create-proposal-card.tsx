@@ -1,13 +1,13 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "@/lib/navigation/workspace-navigation";
 
 import * as React from "react";
 
 import { confirmAiCreateUserBatchProposal } from "@/app/actions/ai/confirm-create-user-batch-proposal";
 import { AppIcon, UserAvatar } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { ProposalCardShell } from "./proposal-card-shell";
 
 export type BatchUserItem = {
@@ -57,6 +57,8 @@ export function UserBatchCreateProposalCard({
   readonly alreadyConfirmed: boolean;
   readonly onNavigate?: () => void;
 }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+
   const router = useRouter();
   const [status, setStatus] = React.useState<"idle" | "submitting" | "submitted" | "failed">(
     alreadyConfirmed ? "submitted" : "idle",
@@ -154,7 +156,7 @@ export function UserBatchCreateProposalCard({
         </div>
         <motion.button
           type="button"
-          whileTap={{ scale: 0.94 }}
+          whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
           transition={transitionSpringSnappy}
           onClick={() => void handleCopyAllCredentials()}
           className={`relative flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full px-3.5 text-meta font-bold shadow-control transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none ${
@@ -250,7 +252,7 @@ export function UserBatchCreateProposalCard({
 
                 <motion.button
                   type="button"
-                  whileTap={{ scale: 0.94 }}
+                  whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
                   transition={transitionSpringSnappy}
                   onClick={() => void handleCopyPassword(u.temporaryPassword, index)}
                   className={`relative flex h-8 shrink-0 items-center justify-center rounded-full px-3 text-meta font-semibold transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none ${

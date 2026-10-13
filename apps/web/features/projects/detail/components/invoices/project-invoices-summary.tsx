@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { AppIcon, MoneyValue } from "@/components/ui";
+import { AppIcon, MoneyValue, Button } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
 export function ProjectInvoicesSummary({
@@ -63,14 +63,16 @@ export function ProjectInvoicesSummary({
             </p>
           </div>
           {canCreateInvoice ? (
-            <button
+            <Button
               type="button"
               onClick={onCreateInvoiceClick}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-support font-bold text-white ring-1 ring-white/15 hover:bg-white/15"
               title="Buat invoice jika ada tagihan addendum"
+              variant="secondary"
+              size="mini"
             >
               <AppIcon name="add" className="text-[17px]" /> Addendum
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : isCurrentInvoicesSettled ? (
@@ -96,13 +98,15 @@ export function ProjectInvoicesSummary({
             </p>
           </div>
           {canCreateInvoice ? (
-            <button
+            <Button
               type="button"
               onClick={onCreateInvoiceClick}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-support font-bold text-white ring-1 ring-white/15 hover:bg-white/15"
+              variant="secondary"
+              size="mini"
             >
               <AppIcon name="add" className="text-[17px]" /> Invoice
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : (
@@ -123,13 +127,15 @@ export function ProjectInvoicesSummary({
             </p>
           </div>
           {canCreateInvoice ? (
-            <button
+            <Button
               type="button"
               onClick={onCreateInvoiceClick}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-support font-bold text-white ring-1 ring-white/15 hover:bg-white/15"
+              variant="secondary"
+              size="mini"
             >
               <AppIcon name="add" className="text-[17px]" /> Invoice
-            </button>
+            </Button>
           ) : null}
         </div>
       )}
@@ -139,24 +145,26 @@ export function ProjectInvoicesSummary({
         <InvoiceFact label="Diterima" amount={totalPaidAmount} />
       </div>
       {isFullySettled && onNavigateClosing ? (
-        <button
+        <Button
           type="button"
           onClick={onNavigateClosing}
-          className="mt-3.5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-4 text-xs font-bold text-primary shadow-sm ring-1 ring-white/20 transition-transform hover:bg-white/95 active:scale-98"
+          className="mt-3.5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-4 text-xs font-bold text-primary shadow-sm ring-1 ring-white/20 hover:bg-white/95 active:z-10 active:shadow-raised"
+          variant="secondary"
         >
           <span>Cek Kesiapan Closing</span>
           <AppIcon name="arrow_forward" className="text-[15px]" />
-        </button>
+        </Button>
       ) : null}
       {canCreateInvoice && invoicesCount === 0 ? (
-        <button
+        <Button
           type="button"
           onClick={onGenerateSchedule}
           disabled={schedulePending || contractValue <= 0}
           className="mt-4 min-h-12 w-full rounded-full bg-white/10 px-4 text-xs font-bold text-white ring-1 ring-white/15 disabled:opacity-40"
+          variant="secondary"
         >
           {schedulePending ? "Membuat termin…" : "Buat termin 30% · 35% · 25% · 10%"}
-        </button>
+        </Button>
       ) : null}
       {/* Termin dihitung dari nilai kontrak, jadi tanpa nilai itu tidak ada
           yang bisa dibagi. Teksnya memakai tint di atas permukaan gelap ini,

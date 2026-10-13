@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { FormSheet, type FormSheetDismissal } from "../overlay/semantic-sheets";
 import { cx } from "./form-control-utils";
@@ -15,8 +15,10 @@ import type { SheetFooterAction } from "../overlay/sheet-footer-actions";
 import { Button } from "../button/button";
 import type { FormRiskTone } from "./form-support";
 import { formatShortIdr } from "@atria/core/utils/money";
-import { buttonTapActiveScale, transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
+import { buttonTapActiveScale, transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon } from "@/components/ui/icon/app-icon";
+import { ContentReveal } from "../overlay/content-reveal";
+import { ChoiceRow } from "./basic-form-controls";
 
 export type MicroStatusItem = {
   readonly label: string;
@@ -73,6 +75,10 @@ export function OperationalFormSheet({
   onPrimary,
   secondary,
   dismissal,
+  desktopSize,
+  desktopFooterPlacement,
+  desktopAsideSummary,
+  sizing,
 }: {
   readonly open: boolean;
   readonly title: string;
@@ -101,6 +107,10 @@ export function OperationalFormSheet({
   readonly dismissal: FormSheetDismissal;
   readonly description?: string;
   readonly completion?: readonly [number, number];
+  readonly desktopSize?: "standard" | "wide";
+  readonly desktopFooterPlacement?: "bottom" | "aside";
+  readonly desktopAsideSummary?: React.ReactNode;
+  readonly sizing?: "content" | "maximum";
 }): React.JSX.Element {
   const hasSubmitAction = !hideSubmit;
   const effectiveSubmitLabel = submitLabel ?? primaryLabel ?? "Simpan";
@@ -129,6 +139,7 @@ export function OperationalFormSheet({
         ) : null}
         {hasSubmitAction ? (
           <SheetFooterActions
+            desktopStacked={desktopFooterPlacement === "aside"}
             primary={{
               label: effectiveSubmitLabel,
               pendingLabel: effectiveSubmittingLabel,
@@ -177,6 +188,10 @@ export function OperationalFormSheet({
       onClose={onClose}
       onExitComplete={onExitComplete}
       footer={footerContent}
+      desktopSize={desktopSize}
+      desktopFooterPlacement={desktopFooterPlacement}
+      desktopAsideSummary={desktopAsideSummary}
+      sizing={sizing}
     >
       <FormSheetPresentationBoundary>
         <div className="space-y-4">
@@ -202,47 +217,56 @@ export function FormDisclosure({
   readonly description?: string;
   readonly summary?: string;
   readonly icon?: React.ReactNode;
-  readonly variant?: "default" | "compact";
+  readonly variant?: "default" | "compact" | "plain" | "activity";
   readonly expanded: boolean;
   readonly onToggle: () => void;
   readonly children: React.ReactNode;
 }): React.JSX.Element {
-  const compact = variant === "compact";
+  const reduceMotion = useReducedMotion();
+  const compact = variant !== "default";
+  const plain = variant === "plain" || variant === "activity";
+  const activity = variant === "activity";
+  const detailsId = React.useId();
 
   return (
-    <section className={cx("min-w-0", compact ? "space-y-2.5" : "space-y-3")}>
-      <motion.button
+    <section className="min-w-0">
+      <button
         type="button"
-        whileTap={{ scale: 0.98 }}
-        transition={transitionSpringSnappy}
         onClick={onToggle}
         className={cx(
-          "flex w-full items-center text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
-          compact
-            ? "min-h-12 gap-2.5 rounded-[22px] bg-surface-container-lowest px-3 py-2.5 shadow-surface"
-            : "min-h-14 gap-3 rounded-full px-3.5 py-2.5",
-          compact
-            ? expanded
-              ? "text-on-surface ring-primary/18"
-              : "text-on-surface ring-ring-subtle"
-            : expanded
-              ? "bg-primary/7 text-primary ring-primary/20"
-              : "bg-surface-container-low text-on-surface ring-ring-subtle",
+          "flex w-full items-center text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
+          !plain && "ring-1",
+          plain
+            ? "min-h-12 gap-2.5 rounded-full bg-transparent px-0 py-2 text-on-surface-variant"
+            : compact
+              ? "min-h-12 gap-2.5 rounded-[22px] bg-surface-container-lowest px-3 py-2.5 shadow-surface"
+              : "min-h-14 gap-3 rounded-full px-3.5 py-2.5 shadow-control",
+          !plain &&
+            (compact
+              ? expanded
+                ? "text-on-surface ring-primary/18"
+                : "text-on-surface ring-ring-subtle"
+              : expanded
+                ? "bg-primary/7 text-primary ring-primary/20"
+                : "bg-surface-container-low text-on-surface ring-ring-subtle"),
         )}
         aria-expanded={expanded}
+        aria-controls={detailsId}
       >
         {icon ? (
           <span
             className={cx(
               "flex shrink-0 items-center justify-center rounded-full",
               compact ? "h-8 w-8" : "h-10 w-10",
-              expanded
-                ? compact
-                  ? "bg-primary/8 text-primary"
-                  : "bg-primary text-on-primary"
-                : compact
-                  ? "bg-surface-container-low text-on-surface-variant"
-                  : "bg-surface text-on-surface-variant",
+              activity
+                ? "bg-transparent text-on-surface"
+                : expanded
+                  ? compact
+                    ? "bg-primary/8 text-primary"
+                    : "bg-primary text-on-primary"
+                  : compact
+                    ? "bg-surface-container-low text-on-surface-variant"
+                    : "bg-surface text-on-surface-variant",
             )}
             aria-hidden="true"
           >
@@ -252,7 +276,11 @@ export function FormDisclosure({
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 items-center gap-2 leading-none">
             <span
-              className={cx("truncate text-xs font-bold", compact ? "leading-[1.15]" : "leading-4")}
+              className={cx(
+                "truncate font-semibold",
+                activity ? "text-support leading-5" : "text-xs",
+                !activity && (compact ? "leading-[1.15]" : "leading-4"),
+              )}
             >
               {title}
             </span>
@@ -282,7 +310,7 @@ export function FormDisclosure({
         </span>
         <motion.span
           animate={{ rotate: expanded ? 180 : 0 }}
-          transition={transitionSpringSnappy}
+          transition={reduceMotion ? { duration: 0 } : transitionSpringSnappy}
           className={cx(
             "flex shrink-0 items-center justify-center text-on-surface-variant",
             compact ? "icon-md" : "icon-lg",
@@ -291,24 +319,14 @@ export function FormDisclosure({
         >
           <AppIcon name="expand_more" className="h-full w-full" />
         </motion.span>
-      </motion.button>
-      <AnimatePresence initial={false}>
-        {expanded ? (
-          <motion.div
-            initial={{ opacity: 0, height: 0, overflow: "hidden" }}
-            animate={{
-              opacity: 1,
-              height: "auto",
-              transitionEnd: { overflow: "visible" },
-            }}
-            exit={{ opacity: 0, height: 0, overflow: "hidden" }}
-            transition={transitionEaseSmooth}
-            className="min-w-0"
-          >
-            {children}
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      </button>
+      <ContentReveal
+        id={detailsId}
+        expanded={expanded}
+        className={activity ? "" : compact ? "pt-2.5" : "pt-3"}
+      >
+        {children}
+      </ContentReveal>
     </section>
   );
 }
@@ -324,56 +342,113 @@ const compactStatusClass: Record<CompactEditableItemStatus, string> = {
 
 export function CompactEditableItemRow({
   status,
+  statusLabel: customStatusLabel,
   title,
   meta,
   value,
   disabled = false,
+  grouped = false,
   onClick,
+  selection,
 }: {
   readonly status: CompactEditableItemStatus;
+  readonly statusLabel?: string;
   readonly title: string;
   readonly meta: string;
-  readonly value?: string;
+  readonly value?: React.ReactNode;
   readonly disabled?: boolean;
-  readonly onClick: () => void;
+  readonly grouped?: boolean;
+  readonly onClick?: () => void;
+  readonly selection?: {
+    readonly checked: boolean;
+    readonly disabled?: boolean;
+    readonly onChange: (checked: boolean) => void;
+  };
 }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+
   const statusLabel =
-    status === "complete"
+    customStatusLabel ??
+    (status === "complete"
       ? "Lengkap"
       : status === "warning"
         ? "Perlu diperiksa"
         : status === "danger"
           ? "Bermasalah"
-          : "Belum diisi";
+          : "Belum diisi");
 
-  return (
+  const rowClass = cx(
+    "flex min-h-16 w-full items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-45",
+    grouped
+      ? "rounded-none bg-surface-container-lowest"
+      : "rounded-[22px] bg-surface-container-low/70 ring-1 ring-ring-subtle",
+  );
+  const content = (
+    <>
+      {!selection && (
+        <span
+          className={cx("h-2.5 w-2.5 shrink-0 rounded-full", compactStatusClass[status])}
+          aria-hidden="true"
+        />
+      )}
+      <span className="min-w-0 flex-1">
+        <span className="block text-xs leading-4 font-bold text-on-surface">{title}</span>
+        <span className="mt-0.5 block text-meta text-on-surface-variant">{meta}</span>
+        <span className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-meta">
+          <span className="font-medium">{statusLabel}</span>
+          {value ? <span className="text-on-surface">{value}</span> : null}
+        </span>
+      </span>
+      {onClick ? (
+        <AppIcon name="chevron_right" className="icon-md shrink-0 text-on-surface-variant" />
+      ) : null}
+    </>
+  );
+
+  const editableContent = onClick ? (
     <motion.button
       type="button"
       layout
-      whileTap={{ scale: 0.985 }}
+      whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
       transition={transitionSpringSnappy}
       disabled={disabled}
       onClick={onClick}
-      className="flex min-h-16 w-full items-center gap-3 rounded-[22px] bg-surface-container-low/70 px-4 py-2.5 text-left ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-45"
+      className={
+        selection
+          ? "flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pr-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-45"
+          : rowClass
+      }
       aria-label={`${title}. ${statusLabel}. ${meta}`}
     >
-      <span
-        className={cx("h-2.5 w-2.5 shrink-0 rounded-full", compactStatusClass[status])}
-        aria-hidden="true"
-      />
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-xs leading-4 font-bold text-on-surface">{title}</span>
-        <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
-          {meta} · {statusLabel}
-        </span>
-      </span>
-      {value ? (
-        <span className="max-w-[36%] shrink-0 truncate text-right text-xs font-bold text-on-surface tabular-nums">
-          {value}
-        </span>
-      ) : null}
-      <AppIcon name="chevron_right" className="icon-md shrink-0 text-on-surface-variant" />
+      {content}
     </motion.button>
+  ) : (
+    <div
+      className={
+        selection ? "flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pr-3" : rowClass
+      }
+    >
+      {content}
+    </div>
+  );
+  if (!selection) return editableContent;
+
+  return (
+    <div
+      className={cx(
+        "flex items-center gap-1 pl-1",
+        grouped ? "bg-surface-container-lowest" : "rounded-2xl bg-surface-container-low",
+      )}
+    >
+      <ChoiceRow
+        compact
+        checked={selection.checked}
+        disabled={disabled || selection.disabled}
+        onChange={selection.onChange}
+        title={`Pilih ${title}`}
+      />
+      {editableContent}
+    </div>
   );
 }
 
@@ -383,6 +458,7 @@ export function FormSection({
   action,
   children,
   className,
+  contentClassName,
   presentation = "grouped",
 }: {
   readonly title?: string;
@@ -390,9 +466,10 @@ export function FormSection({
   readonly action?: React.ReactNode;
   readonly children: React.ReactNode;
   readonly className?: string;
-  readonly presentation?: Exclude<FormPresentation, "standalone"> | "plain";
+  readonly contentClassName?: string;
+  readonly presentation?: Exclude<FormPresentation, "standalone"> | "plain" | "embedded";
 }): React.JSX.Element {
-  const grouped = presentation === "grouped";
+  const grouped = presentation === "grouped" || presentation === "embedded";
   const hasHeader = Boolean(title || helper || action);
 
   return (
@@ -415,9 +492,12 @@ export function FormSection({
       <FormPresentationProvider presentation={grouped ? "grouped" : "standalone"}>
         <div
           className={cx(
-            grouped
-              ? "min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle"
-              : "space-y-2.5",
+            presentation === "embedded"
+              ? "min-w-0 divide-y divide-outline-variant/20"
+              : grouped
+                ? "min-w-0 divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle"
+                : "space-y-2.5",
+            contentClassName,
           )}
         >
           {children}
@@ -529,6 +609,12 @@ export function WorkflowFormSheet({
   onPrimary,
   onSecondary,
   dismissal,
+  initialExpanded,
+  desktopSize,
+  desktopFooterPlacement,
+  desktopAsideSummary,
+  sizing,
+  contentKey,
 }: {
   readonly open: boolean;
   readonly title: string;
@@ -548,6 +634,12 @@ export function WorkflowFormSheet({
   readonly onPrimary: () => void;
   readonly onSecondary?: () => void;
   readonly dismissal: FormSheetDismissal;
+  readonly initialExpanded?: boolean;
+  readonly desktopSize?: "standard" | "wide";
+  readonly desktopFooterPlacement?: "bottom" | "aside";
+  readonly desktopAsideSummary?: React.ReactNode;
+  readonly sizing?: "content" | "maximum";
+  readonly contentKey?: string;
 }): React.JSX.Element {
   return (
     <FormSheet
@@ -555,10 +647,17 @@ export function WorkflowFormSheet({
       title={title}
       dismissal={dismissal}
       pending={pending}
+      initialExpanded={initialExpanded}
+      desktopSize={desktopSize}
+      desktopFooterPlacement={desktopFooterPlacement}
+      desktopAsideSummary={desktopAsideSummary}
+      sizing={sizing}
+      contentKey={contentKey}
       onClose={onClose}
       onExitComplete={onExitComplete}
       footer={
         <SheetFooterActions
+          desktopStacked={desktopFooterPlacement === "aside"}
           status={
             statusText ? (
               <p
@@ -634,7 +733,7 @@ export function OptionChoiceGroup<TValue extends string>({
               transition={transitionSpringSnappy}
               onClick={() => onChange(option.value)}
               className={cx(
-                "flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-container-lowest px-5 text-left ring-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:shadow-raised active:z-10",
+                "flex min-h-12 w-full items-center gap-3 rounded-full bg-surface-container-lowest px-5 text-left shadow-control ring-1 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:shadow-raised",
                 selected
                   ? "bg-primary/10 text-primary ring-primary/10"
                   : "bg-surface-container-low text-on-surface ring-ring-control",

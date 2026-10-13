@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hasTwoDecimalPrecision, RAP_COST_MAX, RAP_QUANTITY_MAX } from "../project/rap-cost";
 
 const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 const uuidSchema = (message: string): z.ZodString => z.string().regex(uuidRegex, message);
@@ -16,10 +17,23 @@ export const addProjectRapItemSchema = z.object({
   area: z.string().min(2, "Area minimal 2 karakter.").max(150),
   name: z.string().min(3, "Nama item minimal 3 karakter.").max(255),
   description: z.string().max(1000).optional().nullable(),
-  requiredQuantity: z.number().positive("Kuantitas wajib lebih besar dari 0."),
-  bufferQuantity: z.number().min(0, "Buffer tidak boleh negatif.").default(0),
+  requiredQuantity: z
+    .number()
+    .positive("Kuantitas wajib lebih besar dari 0.")
+    .max(RAP_QUANTITY_MAX)
+    .refine(hasTwoDecimalPrecision, "Maksimal dua angka desimal."),
+  bufferQuantity: z
+    .number()
+    .min(0, "Buffer tidak boleh negatif.")
+    .max(RAP_QUANTITY_MAX)
+    .refine(hasTwoDecimalPrecision, "Maksimal dua angka desimal.")
+    .default(0),
   unit: z.string().min(1, "Satuan wajib diisi.").max(50),
-  estimatedUnitCost: z.number().min(0, "Estimasi harga tidak boleh negatif."),
+  estimatedUnitCost: z
+    .number()
+    .min(0, "Estimasi harga tidak boleh negatif.")
+    .max(RAP_COST_MAX)
+    .refine(hasTwoDecimalPrecision, "Maksimal dua angka desimal."),
   source: z.enum(["STOCK", "PURCHASE", "STOCK_AND_PURCHASE", "VENDOR"]).default("PURCHASE"),
   internalNote: z.string().max(1000).optional().nullable(),
 });

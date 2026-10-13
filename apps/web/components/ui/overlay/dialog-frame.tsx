@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
@@ -8,7 +9,13 @@ import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion
 import { IconButton } from "../button/button";
 import { AppIcon } from "../icon/app-icon";
 import { OverlayLayerProvider } from "./overlay-layer-context";
-import { deactivateOverlay, isTopOverlay, lockBodyScroll, promoteOverlay } from "./overlay-stack";
+import {
+  deactivateOverlay,
+  isOverlayKeyHandled,
+  isTopOverlay,
+  lockBodyScroll,
+  promoteOverlay,
+} from "./overlay-stack";
 import { usePortalContainer } from "./portal-container-context";
 import {
   observeOverlayViewport,
@@ -81,6 +88,7 @@ export function DialogFrame({
   onClose,
   onExitComplete,
 }: DialogFrameProps): React.JSX.Element | null {
+  const desktop = useWorkspacePresentation() === "desktop";
   const dialogRef = React.useRef<HTMLElement>(null);
   const hostRef = React.useRef<HTMLDivElement>(null);
   const contentSizeRef = React.useRef<HTMLDivElement>(null);
@@ -155,7 +163,7 @@ export function DialogFrame({
     });
 
     function onKeyDown(event: KeyboardEvent): void {
-      if (!isTopOverlay(activeDialogId)) return;
+      if (isOverlayKeyHandled(event) || !isTopOverlay(activeDialogId)) return;
       if (event.key === "Escape") {
         event.preventDefault();
         requestClose();
@@ -277,6 +285,7 @@ export function DialogFrame({
               ref={dialogRef}
               tabIndex={-1}
               role={role}
+              data-atria-overlay-presentation={desktop ? "desktop" : "mobile"}
               aria-modal="true"
               aria-labelledby={titleId}
               aria-describedby={description ? descriptionId : undefined}
@@ -355,6 +364,7 @@ export function DialogFrame({
                   ) : null}
 
                   <div
+                    data-atria-dialog-surface="true"
                     className={`${morphOrigin && !open ? "pointer-events-none" : "pointer-events-auto"} flex min-h-0 flex-1 flex-col overflow-hidden rounded-owner ${morphOrigin ? "" : `ring-1 ring-ring-control ${calendarPresentation ? "bg-surface-container-low p-2 shadow-floating" : choicePresentation ? "bg-surface-container-low shadow-raised" : "bg-surface-container-low shadow-overlay"}`}`}
                   >
                     {calendarPresentation ? (

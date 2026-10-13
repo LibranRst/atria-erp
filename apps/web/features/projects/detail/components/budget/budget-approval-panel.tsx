@@ -1,9 +1,6 @@
 "use client";
-import { AppIcon, ConfirmationDialog, FormField, Textarea } from "@/components/ui";
+import { AppIcon, ConfirmationDialog, FormField, Textarea, Button } from "@/components/ui";
 import React from "react";
-import { motion } from "framer-motion";
-
-import { buttonTapActiveScale, transitionSpringSnappy } from "@/lib/utils/motion";
 
 export function BudgetDraftActions({
   hasItems,
@@ -19,17 +16,16 @@ export function BudgetDraftActions({
 
   return (
     <>
-      <motion.button
+      <Button
         type="button"
-        whileTap={{ scale: buttonTapActiveScale }}
-        transition={transitionSpringSnappy}
         onClick={() => setConfirmSubmit(true)}
         disabled={isPending}
-        className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-secondary px-5 text-xs font-bold text-on-secondary shadow-raised active:shadow-raised active:z-10 disabled:opacity-50"
+        className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-secondary px-5 text-xs font-bold text-on-secondary shadow-raised active:z-10 active:shadow-raised disabled:opacity-50"
+        variant="secondary"
       >
         <AppIcon name="publish" className="icon-md" />
         <span>Tinjau & Ajukan Project Budget</span>
-      </motion.button>
+      </Button>
       <ConfirmationDialog
         open={confirmSubmit}
         title="Ajukan Project Budget?"
@@ -38,28 +34,26 @@ export function BudgetDraftActions({
         onClose={() => setConfirmSubmit(false)}
         actions={
           <div className="grid grid-cols-2 gap-2">
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: buttonTapActiveScale }}
-              transition={transitionSpringSnappy}
               onClick={() => setConfirmSubmit(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:shadow-raised active:z-10"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:z-10 active:shadow-raised"
+              variant="secondary"
             >
               Kembali
-            </motion.button>
-            <motion.button
+            </Button>
+            <Button
               type="button"
-              whileTap={{ scale: buttonTapActiveScale }}
-              transition={transitionSpringSnappy}
               disabled={isPending}
               onClick={() => {
                 setConfirmSubmit(false);
                 onSubmitBudget();
               }}
-              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white active:shadow-raised active:z-10 disabled:opacity-40"
+              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white active:z-10 active:shadow-raised disabled:opacity-40"
+              variant="primary"
             >
               Ajukan Budget
-            </motion.button>
+            </Button>
           </div>
         }
       />
@@ -88,25 +82,27 @@ export function BudgetApprovalPanel({
   return (
     <div className="space-y-sm border-t border-outline-variant/10 pt-md">
       <div className="flex gap-md">
-        <button
+        <Button
           type="button"
           onClick={() => setShowRejectForm(true)}
           disabled={isPending}
-          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-error text-xs font-bold text-error transition active:scale-[1.05] active:shadow-raised active:z-10 disabled:opacity-50"
+          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-error text-xs font-bold text-error active:z-10 active:shadow-raised disabled:opacity-50"
+          variant="tertiary"
         >
           <AppIcon name="close" className="icon-md" />
           <span>Tolak Budget</span>
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
           onClick={() => setConfirmApprove(true)}
           disabled={isPending}
-          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-primary text-xs font-bold text-white shadow-primary transition active:scale-[1.05] active:shadow-raised active:z-10 disabled:opacity-50"
+          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-primary text-xs font-bold text-white shadow-primary active:z-10 active:shadow-raised disabled:opacity-50"
+          variant="primary"
         >
           <AppIcon name="done" className="icon-md" />
           <span>Setujui Project Budget</span>
-        </button>
+        </Button>
       </div>
       <ConfirmationDialog
         open={confirmApprove}
@@ -115,28 +111,26 @@ export function BudgetApprovalPanel({
         onClose={() => setConfirmApprove(false)}
         actions={
           <div className="grid grid-cols-2 gap-2">
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: buttonTapActiveScale }}
-              transition={transitionSpringSnappy}
               onClick={() => setConfirmApprove(false)}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:shadow-raised active:z-10"
+              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:z-10 active:shadow-raised"
+              variant="secondary"
             >
               Batal
-            </motion.button>
-            <motion.button
+            </Button>
+            <Button
               type="button"
-              whileTap={{ scale: buttonTapActiveScale }}
-              transition={transitionSpringSnappy}
               disabled={isPending}
               onClick={() => {
                 setConfirmApprove(false);
                 onApproveBudget();
               }}
-              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white active:shadow-raised active:z-10 disabled:opacity-40"
+              className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white active:z-10 active:shadow-raised disabled:opacity-40"
+              variant="primary"
             >
               Setujui Budget
-            </motion.button>
+            </Button>
           </div>
         }
       />
@@ -168,24 +162,22 @@ export function BudgetApprovalPanel({
               ) : null}
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <motion.button
+              <Button
                 type="button"
-                whileTap={{ scale: buttonTapActiveScale }}
-                transition={transitionSpringSnappy}
                 onClick={() => setShowRejectForm(false)}
-                className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:shadow-raised active:z-10"
+                className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:z-10 active:shadow-raised"
+                variant="secondary"
               >
                 Batal
-              </motion.button>
-              <motion.button
+              </Button>
+              <Button
                 type="submit"
-                whileTap={{ scale: buttonTapActiveScale }}
-                transition={transitionSpringSnappy}
                 disabled={isPending || rejectionNotes.trim().length < 3}
-                className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white active:shadow-raised active:z-10 disabled:opacity-40"
+                className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white active:z-10 active:shadow-raised disabled:opacity-40"
+                variant="critical"
               >
                 {isPending ? "Mengirim…" : "Tolak Budget"}
-              </motion.button>
+              </Button>
             </div>
           </form>
         }

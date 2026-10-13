@@ -1,5 +1,5 @@
 import { assertExpenseAttachment } from "./expense-attachment";
-import { getFieldCostApprovalThresholdRupiah } from "@backend/lib/finance/approval-thresholds";
+import { submitExpenseBatchTx } from "./submit-expense-batch";
 import crypto from "crypto";
 import { and, eq } from "drizzle-orm";
 
@@ -8,10 +8,8 @@ import {
   getSubmittedExpenseDraftResult,
 } from "@backend/app/actions/finance/expense-draft-action-utils";
 import type { SubmittedExpenseDraft } from "@backend/app/actions/finance/expense-draft-types";
-import { createSubmittedFieldRequestTx } from "@backend/app/actions/finance/field-request-submit";
-import { writeFieldRequestAuditTx } from "@backend/app/actions/finance/field-request-utils";
 import { db } from "@backend/db";
-import { formDraft, projectCost } from "@backend/db/schema";
+import { formDraft, INSTANCE_TENANT_ID } from "@backend/db/schema";
 import type { Actor } from "@backend/server/actor";
 import { authorizeFieldRequestActor } from "@backend/server/usecases/finance/authorize-field-request";
 import type { ActionResponse } from "@atria/core/types/action-response";
@@ -62,6 +60,7 @@ export async function submitExpenseDraftUseCase(
       eq(formDraft.id, validation.data.draftId),
       eq(formDraft.ownerUserId, authResult.data.user.id),
       eq(formDraft.formType, EXPENSE_DRAFT_FORM_TYPE),
+      eq(formDraft.tenantId, INSTANCE_TENANT_ID),
     ),
   });
   if (!existing) {
@@ -78,6 +77,12 @@ export async function submitExpenseDraftUseCase(
       },
     };
   }
+  const existingScope = await authorizeFieldRequestActor({
+    actor,
+    permission: "create:cost",
+    projectId: draftPayload.data.projectId,
+  });
+  if (!existingScope.success) return existingScope;
   if (existing.status === "CONSUMED" && existing.submissionGroupId) {
     return {
       success: true,
@@ -107,9 +112,9 @@ export async function submitExpenseDraftUseCase(
 
   try {
     const receipt = draftPayload.data.receipt;
-    if (receipt) await assertExpenseAttachment(actor, submission.data.projectId, receipt.url, receipt.fileId);
+    if (receipt)
+      await assertExpenseAttachment(actor, submission.data.projectId, receipt.url, receipt.fileId);
     // Ambang dibaca sebelum transaksi dibuka; keputusannya dibekukan ke baris.
-    const ownerApprovalThreshold = await getFieldCostApprovalThresholdRupiah();
     const result = await db.transaction(async (tx) => {
       const receiptGroupId = crypto.randomUUID();
       const [claimed] = await tx
@@ -137,32 +142,7 @@ export async function submitExpenseDraftUseCase(
         throw new Error("DRAFT_CONFLICT");
       }
 
-      const costs: Array<typeof projectCost.$inferSelect> = [];
-      for (const item of submission.data.items) {
-        const cost = await createSubmittedFieldRequestTx(tx, {
-          projectId: submission.data.projectId,
-          requestedById: scoped.data.user.id,
-          receiptImageUrl: submission.data.receiptImageUrl,
-          receiptGroupId,
-          item,
-          includeApprovalCategoryLabel: true,
-          ownerApprovalThreshold,
-        });
-        costs.push(cost);
-        await writeFieldRequestAuditTx(tx, {
-          userId: scoped.data.user.id,
-          action: "SUBMIT_EXPENSE_DRAFT",
-          targetTable: "project_cost",
-          targetId: cost.id,
-          originalState: { draftId: validation.data.draftId },
-          newState: {
-            status: cost.status,
-            projectId: cost.projectId,
-            amount: cost.amount,
-            receiptGroupId,
-          },
-        });
-      }
+      const costs = await submitExpenseBatchTx(tx, actor, submission.data, receiptGroupId);
       await tx
         .update(formDraft)
         .set({

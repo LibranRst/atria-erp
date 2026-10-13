@@ -11,6 +11,12 @@ describe("ambang persetujuan", () => {
     expect(thresholdCentsToRupiah(DEFAULT_OWNER_APPROVAL_THRESHOLD_CENTS)).toBe(5_000_000);
   });
 
+  test("konversi sen mempertahankan batas pecahan rupiah", () => {
+    expect(thresholdCentsToRupiah(10_050n)).toBe(100.5);
+    expect(100.49 >= thresholdCentsToRupiah(10_050n)).toBe(false);
+    expect(100.5 >= thresholdCentsToRupiah(10_050n)).toBe(true);
+  });
+
   test("nol adalah ambang yang sah, bukan kegagalan", () => {
     // Artinya "semua pencairan butuh persetujuan Owner".
     expect(parseThresholdCents("0")).toBe(BigInt(0));

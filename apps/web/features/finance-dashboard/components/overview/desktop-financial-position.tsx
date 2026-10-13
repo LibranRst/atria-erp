@@ -14,10 +14,10 @@ export function DesktopFinancialPosition({
   const paidAmount = data.categories.reduce((sum, category) => sum + category.paidAmount, 0);
   const risk = summary.remainingBudget < 0 || summary.projectedMarginPercentage < 0;
   return (
-    <div className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,1fr)]">
+    <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
       <section
         aria-label="Posisi budget proyek aktif"
-        className="rounded-owner bg-surface-inverse p-6 text-on-primary shadow-inverse"
+        className="rounded-owner bg-surface-inverse p-5 text-on-primary shadow-inverse"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -35,7 +35,7 @@ export function DesktopFinancialPosition({
             label={risk ? "Perlu tindakan" : "Terkendali"}
           />
         </div>
-        <dl className="mt-6 grid grid-cols-3 gap-x-6 gap-y-4 border-t border-white/12 pt-5">
+        <dl className="mt-5 grid grid-cols-3 gap-x-5 gap-y-4 border-t border-white/12 pt-4">
           {[
             { label: "Nilai proyek", value: summary.projectValue },
             { label: "Budget internal", value: summary.internalBudget },

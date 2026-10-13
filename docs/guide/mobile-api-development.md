@@ -4,6 +4,8 @@ Run commands from the repository root. Configure backend secrets and `DATABASE_U
 in `apps/api/.env`; configure public client URLs in `apps/mobile/.env` using the
 corresponding `.env.example` files. Never put backend secrets in `EXPO_PUBLIC_*`.
 
+For one-terminal API/client combinations and checkout-scoped shutdown, use [development presets](development-presets.md). `dev:mobile` now uses that registered supervisor; preset web fallback defaults to port3003.
+
 ```sh
 bun install
 bun run dev:mobile
@@ -21,12 +23,13 @@ explicit URL may also point to a remote development API, allowing Metro to run
 alone with `bun run dev:expo`.
 
 `EXPO_PUBLIC_WEB_URL` is separate and only supplies browser destinations for
-features that have not moved to native. Its development default is Metro's
-hostname with port 3000. When testing one of these features locally, start web
-separately:
+features that have not moved to native. Plain `dev:expo` with this value empty
+uses Metro's hostname with port3000; registered presets explicitly supply the
+LAN hostname with their configured web port (3003 by default). When adding web
+to the default mobile/API preset, start it separately on that same port:
 
 ```sh
-bun run dev:web
+bun run --cwd apps/web dev:preset --hostname 0.0.0.0 --port 3003
 ```
 
 The browser uses its own cookie session. Native login stays in SecureStore and
@@ -49,7 +52,7 @@ bun run --cwd apps/mobile typecheck
 bun run build:mobile
 ```
 
-`bun run build` builds API, web, and native client bundles in that order.
+`bun run build` builds API, web, standalone admin, and native client bundles in that order.
 `bun run test` and `bun run lint` include every workspace. Native bundle exports
 land in `apps/mobile/dist/ios` and `apps/mobile/dist/android`; native app-store
 binaries still use the existing Expo native build workflow.

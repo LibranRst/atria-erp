@@ -1,16 +1,20 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
   ChoiceRow,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
+  FactRow,
   FormField,
   FormRiskNotice,
   FormSection,
+  GroupedSurface,
   MoneyInput,
+  MoneyValue,
   NumericInput,
   OperationalFormSheet,
   SwitchRow,
@@ -62,6 +66,7 @@ export function RabSourcePickerDrawer({
   readonly selectedQuotationSourceCount: number;
   readonly rabEstimate: RabEstimateView | null;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [showManualEntry, setShowManualEntry] = React.useState(
     () => manualQuotationLine.clientLabel.trim().length > 0,
   );
@@ -78,8 +83,7 @@ export function RabSourcePickerDrawer({
   );
 
   const baselineManualItems = React.useMemo(
-    () =>
-      rabEstimate?.items.filter((item) => isRabManualSourceType(item.sourceType)) ?? [],
+    () => rabEstimate?.items.filter((item) => isRabManualSourceType(item.sourceType)) ?? [],
     [rabEstimate],
   );
 
@@ -104,6 +108,53 @@ export function RabSourcePickerDrawer({
 
   return (
     <OperationalFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <h3 className="px-1 text-support font-semibold text-on-surface">Sumber RAB dipilih</h3>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Total sumber"
+                value={selectedQuotationSourceCount}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Material"
+                value={selectedRapQuotationIds.length}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Paket kerja"
+                value={selectedCategoryQuotationIds.length}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Manual/jasa"
+                value={selectedBaselineManualItemIds?.length ?? 0}
+              />
+              {showManualEntry && (
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Item tambahan"
+                  value={manualQuotationLine.clientLabel.trim() || "Belum diisi"}
+                />
+              )}
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Sumber disalin sebagai snapshot. Periksa nama dan deskripsi untuk klien setelah draft
+            RAB dibuat.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty,
@@ -124,9 +175,11 @@ export function RabSourcePickerDrawer({
       }
       onSubmit={handleGenerateRab}
       statusText={
-        (selectedBaselineManualItemIds?.length ?? 0) > 0
-          ? `${selectedQuotationSourceCount} sumber dipilih · ${selectedRapQuotationIds.length} material · ${selectedCategoryQuotationIds.length} paket · ${selectedBaselineManualItemIds?.length ?? 0} manual/jasa`
-          : `${selectedQuotationSourceCount} sumber dipilih · ${selectedRapQuotationIds.length} material · ${selectedCategoryQuotationIds.length} paket`
+        desktop
+          ? undefined
+          : (selectedBaselineManualItemIds?.length ?? 0) > 0
+            ? `${selectedQuotationSourceCount} sumber dipilih · ${selectedRapQuotationIds.length} material · ${selectedCategoryQuotationIds.length} paket · ${selectedBaselineManualItemIds?.length ?? 0} manual/jasa`
+            : `${selectedQuotationSourceCount} sumber dipilih · ${selectedRapQuotationIds.length} material · ${selectedCategoryQuotationIds.length} paket`
       }
       statusTone={selectedQuotationSourceCount > 0 ? "success" : "warning"}
     >
@@ -197,8 +250,7 @@ export function RabSourcePickerDrawer({
           >
             <fieldset className="space-y-2">
               {baselineManualItems.map((item) => {
-                const isSelected =
-                  selectedBaselineManualItemIds?.includes(item.id) ?? true;
+                const isSelected = selectedBaselineManualItemIds?.includes(item.id) ?? true;
                 const natureBadge =
                   item.itemNature === "SERVICE_FEE" ? "Jasa & Fee" : "Pekerjaan Fisik";
                 const lineTotalFormatted = `Rp ${Number(item.lineTotal).toLocaleString("id-ID")}`;
@@ -343,13 +395,54 @@ export function ManualRabLineDrawer({
   readonly handleAddManualRabItem: () => void;
   readonly isPending: boolean;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const dirty = useFormDirtySnapshot(
     manualLineOpen,
     "manual-rab-line",
     JSON.stringify(manualQuotationLine),
   );
+  const subtotal = Number(manualQuotationLine.quantity) * Number(manualQuotationLine.unitPrice);
   return (
     <OperationalFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <div className="px-1">
+            <h3 className="text-support font-semibold text-on-surface">Ringkasan item manual</h3>
+            <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+              {manualQuotationLine.clientLabel.trim() || "Nama item belum diisi"}
+            </p>
+          </div>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Jumlah"
+                value={`${manualQuotationLine.quantity || 0} ${manualQuotationLine.unit || "unit"}`}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Subtotal klien"
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(subtotal) ? 0 : 2}
+                    amount={subtotal}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                  />
+                }
+              />
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Nama, deskripsi, dan harga item ini digunakan pada dokumen untuk klien.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty,
@@ -374,7 +467,11 @@ export function ManualRabLineDrawer({
             : undefined
       }
       onSubmit={handleAddManualRabItem}
-      statusText={`${manualQuotationLine.clientLabel.trim() || "Item belum diisi"} · ${manualQuotationLine.quantity || 0} ${manualQuotationLine.unit} · Rp ${(Number(manualQuotationLine.quantity) * Number(manualQuotationLine.unitPrice)).toLocaleString("id-ID")}`}
+      statusText={
+        desktop
+          ? undefined
+          : `${manualQuotationLine.clientLabel.trim() || "Item belum diisi"} · ${manualQuotationLine.quantity || 0} ${manualQuotationLine.unit} · Rp ${subtotal.toLocaleString("id-ID")}`
+      }
       statusTone={
         manualQuotationLine.clientLabel.trim().length >= 3 &&
         Number(manualQuotationLine.quantity) > 0
@@ -415,9 +512,7 @@ export function ManualRabLineDrawer({
             <NumericInput
               min={0.01}
               value={manualQuotationLine.quantity}
-              onChange={(value) =>
-                setManualQuotationLine((curr) => ({ ...curr, quantity: value }))
-              }
+              onChange={(value) => setManualQuotationLine((curr) => ({ ...curr, quantity: value }))}
             />
           </FormField>
           <ComboboxField

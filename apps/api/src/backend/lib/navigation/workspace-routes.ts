@@ -1,4 +1,4 @@
-/** Presentation-only URL mapping. It never grants access to a route or a project. */
+/** Canonical workspace URLs. Viewport presentation never authorizes data or changes routes. */
 export type WorkspacePresentation = "mobile" | "desktop";
 
 const ROOTS = new Set([
@@ -36,7 +36,7 @@ export function isWorkspacePath(pathname: string): boolean {
 
 export function workspaceHref(
   href: string,
-  presentation: WorkspacePresentation,
+  _presentation: WorkspacePresentation,
   nativeBridge = false,
 ): string {
   if (!href.startsWith("/") || href.startsWith("//") || /[\\\r\n]/.test(href)) return href;
@@ -44,10 +44,8 @@ export function workspaceHref(
   if (!isWorkspacePath(url.pathname) && url.pathname !== "/admin" && url.pathname !== "/")
     return href;
   const canonical = canonicalWorkspacePath(url.pathname);
-  url.pathname =
-    presentation === "desktop" ? (canonical === "/" ? "/admin" : `/admin${canonical}`) : canonical;
+  url.pathname = canonical;
   if (nativeBridge) url.searchParams.set("surface", "mobile");
-  else if (url.searchParams.get("surface") === "mobile") url.searchParams.delete("surface");
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
@@ -59,19 +57,18 @@ export function resolveWorkspaceEntry(input: {
   readonly nativeBridge: boolean;
   readonly automaticEnabled: boolean;
 }): string {
-  if (input.nativeBridge) return workspaceHref(input.href, "mobile", true);
-  if (!input.canUseDesktop) return input.href;
-  if (input.preference === "mobile") return workspaceHref(input.href, "mobile");
-  if (input.preference === "desktop" || (input.automaticEnabled && input.viewportWidth >= 1024)) {
-    return workspaceHref(input.href, "desktop");
-  }
-  return input.href;
+  return workspaceHref(input.href, "mobile", input.nativeBridge);
 }
 
-/** History updates obey the current surface even when a caller uses a canonical URL. */
+/** History updates preserve a native fallback hint and never add a presentation prefix. */
 export function workspaceHistoryHref(nextHref: string, currentHref: string): string {
   const current = new URL(currentHref, "https://atria.invalid");
-  const presentation =
-    current.pathname === "/admin" || current.pathname.startsWith("/admin/") ? "desktop" : "mobile";
-  return workspaceHref(nextHref, presentation, current.searchParams.get("surface") === "mobile");
+  return workspaceHref(nextHref, "mobile", current.searchParams.get("surface") === "mobile");
+}
+
+export function resolveWorkspacePresentation(
+  viewportWidth: number,
+  nativeBridge = false,
+): WorkspacePresentation {
+  return !nativeBridge && viewportWidth >= 1024 ? "desktop" : "mobile";
 }

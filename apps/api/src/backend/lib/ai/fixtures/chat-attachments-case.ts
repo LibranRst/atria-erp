@@ -169,8 +169,29 @@ mock.module("@backend/lib/ai/conversation-store", (): Record<string, unknown> =>
   loadConversationMessages: async (): Promise<UIMessage[]> => history,
   setConversationTitleIfEmpty: async (): Promise<void> => undefined,
 }));
+mock.module("@backend/lib/ai/user-turn", (): Record<string, unknown> => ({
+  ChatTurnConflict: class extends Error {},
+  findUserTurnConversation: async (): Promise<null> => null,
+  historyBeforeTurn: (messages: UIMessage[]): UIMessage[] => messages,
+  persistUserTurn: async (input: {
+    readonly conversationId?: string | null;
+    readonly parts: UIMessage["parts"];
+  }): Promise<{ id: string }> => {
+    if (!input.conversationId) conversationCreates += 1;
+    appended.push({ role: "user", parts: input.parts });
+    return { id: conversationId };
+  },
+}));
 mock.module("@backend/lib/ai/user-preference", (): Record<string, unknown> => ({
   loadAiPreference: async (): Promise<object> => ({}),
+}));
+mock.module("@backend/server/usecases/ai/own-profile-context", (): Record<string, unknown> => ({
+  readOwnProfileTx: async (): Promise<never> => {
+    throw new Error("Unexpected profile read in attachment fixture");
+  },
+  ownProfileSnapshot: (): never => {
+    throw new Error("Unexpected profile snapshot in attachment fixture");
+  },
 }));
 mock.module("@backend/lib/company/identity", (): Record<string, unknown> => ({
   getCompanyIdentity: async (): Promise<{ name: string }> => ({ name: "Synthetic company" }),
@@ -296,6 +317,19 @@ for (const mimeType of ["text/plain", "text/csv"]) {
   expect(policyChecks).toBe(0);
   expect(documentCalls).toHaveLength(0);
 }
+reset({
+  row: { fileName: "rekening.csv", mimeType: "text/csv" },
+  bytes: Buffer.from("Tanggal,Keterangan,Nominal\n2026-10-13,Transfer bank,25000000"),
+});
+const humanFactQuestion = "Cek saldo Rekening QA sekarang. Jangan menyimpan perubahan.";
+expect((await post(undefined, { text: humanFactQuestion })).status).toBe(200);
+expect(streamInputs[0].userQuestion).toBe(humanFactQuestion);
+expect(prompt()).toContain("Transfer bank");
+expect(prompt()).toContain("25000000");
+expect(appended[0]?.parts.filter((part) => part.type === "text").map((part) => part.text)).toEqual([
+  humanFactQuestion,
+]);
+expect(documentCalls).toHaveLength(0);
 const workbook = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([["synthetic", 2]]), "Fixture");
 reset({

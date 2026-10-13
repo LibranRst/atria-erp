@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import type { ExpenseReceiptAttachment } from "@/features/expenses/types/expense-form-types";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
+import { AppIcon, Button } from "@/components/ui";
 const MAX_RECEIPT_SIZE = 12 * 1024 * 1024;
 
 type ExpenseReceiptUploadProps = {
@@ -68,14 +68,15 @@ export function ExpenseReceiptUpload({
                 MB · Tersimpan di draft
               </p>
             </div>
-            <button
+            <Button
               type="button"
               onClick={onClearReceipt}
               disabled={disabled}
               className="min-h-12 rounded-full px-3 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
+              variant="tertiary"
             >
               Hapus
-            </button>
+            </Button>
           </div>
           <ReceiptUploadOption
             icon="swap_horiz"
@@ -133,13 +134,15 @@ export function ExpenseReceiptUpload({
         >
           <span className="min-w-0 flex-1 leading-4">{uploadError}</span>
           {lastFile ? (
-            <button
+            <Button
               type="button"
               onClick={() => onSelectFile(lastFile)}
               className="min-h-10 shrink-0 rounded-full px-3 font-bold"
+              variant="tertiary"
+              size="compact"
             >
               Coba Lagi
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : null}
@@ -160,9 +163,11 @@ function ReceiptUploadOption({
   readonly capture?: "environment";
   readonly onFile: (file: File | undefined) => void;
 }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+
   return (
     <motion.label
-      whileTap={disabled ? undefined : { scale: 0.97 }}
+      whileTap={disabled ? undefined : { scale: reduceMotion ? 1 : buttonTapActiveScale }}
       transition={transitionSpringSnappy}
       className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-3 text-on-surface shadow-surface ring-1 ring-ring-subtle focus-within:ring-2 focus-within:ring-focus-ring ${disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
     >

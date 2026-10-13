@@ -7,6 +7,7 @@ import {
   AppIcon,
   ExclusiveSearchFilterBar,
   type SegmentedTabOption,
+  Button,
 } from "@/components/ui";
 export function SettingsFilterBar<TValue extends string>({
   status,
@@ -80,10 +81,11 @@ export function SettingsFilterBar<TValue extends string>({
               open={filterOpen}
               title={filterTitle}
               trigger={
-                <button
+                <Button
                   type="button"
                   className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-on-surface shadow-surface ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                   aria-label={`Buka ${filterTitle.toLocaleLowerCase("id-ID")}`}
+                  variant="secondary"
                 >
                   <AppIcon name="tune" className="icon-md" aria-hidden="true" />
                   {filterCount > 0 ? (
@@ -91,7 +93,7 @@ export function SettingsFilterBar<TValue extends string>({
                       {filterCount}
                     </span>
                   ) : null}
-                </button>
+                </Button>
               }
               onOpenChange={(nextOpen) => {
                 if (nextOpen) {
@@ -103,23 +105,25 @@ export function SettingsFilterBar<TValue extends string>({
               onDismiss={onOpenFilters}
               actions={
                 <div className="grid grid-cols-2 gap-2">
-                  <button
+                  <Button
                     type="button"
                     onClick={onResetFilterDraft}
                     className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
+                    variant="secondary"
                   >
                     Reset
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => {
                       onApplyFilters();
                       setFilterOpen(false);
                     }}
                     className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white"
+                    variant="primary"
                   >
                     Terapkan filter
-                  </button>
+                  </Button>
                 </div>
               }
             >

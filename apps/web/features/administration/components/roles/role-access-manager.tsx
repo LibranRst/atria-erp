@@ -22,7 +22,7 @@ import { usePermissions } from "@/components/auth/permissions-provider";
 import { parsePermissionKeyList, ROLE_DEEP_LINK_PARAMS } from "@atria/core/auth/role-deep-link";
 import type { PermissionKey, RoleDataScope } from "@atria/core/auth/permissions";
 import { useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import type { ManagedRole } from "@/server/usecases/administration/roles";
 import {
   arePermissionsDirty,
@@ -287,7 +287,7 @@ export function RoleAccessManager({
                 key={role.id}
                 type="button"
                 onClick={() => openRole(role)}
-                whileTap={reduceMotion ? undefined : { scale: 0.985 }}
+                whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
                 transition={transitionSpringSnappy}
                 className="flex min-h-18 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/70"
               >

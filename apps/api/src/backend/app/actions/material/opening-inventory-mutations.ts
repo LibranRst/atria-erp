@@ -1,16 +1,10 @@
-import { and, asc, eq, gt, ne } from "drizzle-orm";
-
 import { db } from "@backend/db";
+import { resolveActor } from "@backend/server/actor";
 import {
-  auditLog,
-  inventoryOpeningBatch,
-  inventoryOpeningItem,
-  materialInventory,
-  stockMovement,
-} from "@backend/db/schema";
-import { assertPermission } from "@backend/lib/auth/permissions";
-import { recordReadinessMilestonesTx } from "@backend/lib/onboarding/readiness-events";
-import { recordNotificationEvent } from "@backend/server/services/notification-events";
+  createInventoryOpeningTx,
+  decideInventoryOpeningTx,
+  reverseInventoryOpeningTx,
+} from "@backend/server/usecases/material/opening-inventory-writer";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createInventoryOpeningSchema,
@@ -20,7 +14,6 @@ import {
   type DecideInventoryOpeningInput,
   type ReverseInventoryOpeningInput,
 } from "@atria/core/validations/material";
-import { getSessionUser } from "./inventory-utils";
 import {
   openingInventoryFailure as failure,
   refreshOpeningInventory as refresh,
@@ -40,94 +33,13 @@ export async function createInventoryOpening(
       },
     };
   }
-  const session = await getSessionUser();
-  if (!session.success) return session;
+  const actor = await resolveActor();
+  if (!actor)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
-    await assertPermission(session.data.user, "create:opening_inventory");
-    const created = await db.transaction(async (tx) => {
-      const batchNumber =
-        validation.data.batchNumber?.trim() ||
-        `SA-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-      const duplicate = await tx.query.inventoryOpeningBatch.findFirst({
-        where: eq(inventoryOpeningBatch.batchNumber, batchNumber),
-      });
-      if (duplicate) throw new Error("Referensi saldo awal sudah digunakan. Coba ajukan kembali.");
-      const inventoryIds = validation.data.items.map((item) => item.materialInventoryId).toSorted();
-      for (const inventoryId of inventoryIds) {
-        const [inventory] = await tx
-          .select()
-          .from(materialInventory)
-          .where(eq(materialInventory.id, inventoryId))
-          .for("update");
-        if (!inventory) throw new Error("Inventory material tidak ditemukan.");
-        const priorMovement = await tx.query.stockMovement.findFirst({
-          where: and(
-            eq(stockMovement.materialId, inventory.materialId),
-            eq(stockMovement.inventoryLocationId, inventory.locationId),
-          ),
-        });
-        if (
-          Number(inventory.currentStock) !== 0 ||
-          Number(inventory.reservedStock) !== 0 ||
-          priorMovement
-        ) {
-          throw new Error("INVENTORY_ALREADY_ACTIVE");
-        }
-        const [pendingOpening] = await tx
-          .select({ id: inventoryOpeningItem.id })
-          .from(inventoryOpeningItem)
-          .innerJoin(
-            inventoryOpeningBatch,
-            eq(inventoryOpeningBatch.id, inventoryOpeningItem.batchId),
-          )
-          .where(
-            and(
-              eq(inventoryOpeningItem.materialInventoryId, inventoryId),
-              eq(inventoryOpeningBatch.status, "PENDING_APPROVAL"),
-            ),
-          )
-          .limit(1);
-        if (pendingOpening) throw new Error("OPENING_ALREADY_PENDING");
-      }
-      const [batch] = await tx
-        .insert(inventoryOpeningBatch)
-        .values({
-          batchNumber,
-          cutoverDate: validation.data.cutoverDate,
-          status: "PENDING_APPROVAL",
-          note: validation.data.note,
-          referenceNumber: validation.data.referenceNumber?.trim() || null,
-          requestedById: session.data.user.id,
-        })
-        .returning();
-      await tx.insert(inventoryOpeningItem).values(
-        validation.data.items.map((item) => ({
-          batchId: batch.id,
-          materialInventoryId: item.materialInventoryId,
-          quantity: item.quantity.toFixed(2),
-          unitCost: item.unitCost.toFixed(2),
-        })),
-      );
-      await tx.insert(auditLog).values({
-        userId: session.data.user.id,
-        action: "REQUEST_INVENTORY_OPENING",
-        targetTable: "inventory_opening_batch",
-        targetId: batch.id,
-        newState: JSON.stringify({ ...batch, items: validation.data.items }),
-      });
-      await recordNotificationEvent(tx, {
-        referenceType: "inventory_opening",
-        referenceId: batch.id,
-        stage: "PENDING_APPROVAL",
-        title: "Saldo awal stok menunggu persetujuan",
-        message: `${batch.batchNumber} siap ditinjau.`,
-        permission: "approve:opening_inventory",
-        actionRequired: true,
-        actionUrl: "/approvals",
-        actorId: session.data.user.id,
-      });
-      return batch;
-    });
+    const created = await db.transaction((tx) =>
+      createInventoryOpeningTx(tx, actor, validation.data),
+    );
     refresh();
     return { success: true, data: created };
   } catch (error) {
@@ -148,160 +60,13 @@ export async function decideInventoryOpening(
       },
     };
   }
-  const session = await getSessionUser();
-  if (!session.success) return session;
+  const actor = await resolveActor();
+  if (!actor)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
-    await assertPermission(session.data.user, "approve:opening_inventory");
-    const decided = await db.transaction(async (tx) => {
-      const [locked] = await tx
-        .select()
-        .from(inventoryOpeningBatch)
-        .where(eq(inventoryOpeningBatch.id, validation.data.batchId))
-        .for("update");
-      if (!locked) throw new Error("OPENING_NOT_FOUND");
-      if (locked.status !== "PENDING_APPROVAL") {
-        throw new Error("Batch saldo awal sudah diputuskan.");
-      }
-      if (validation.data.decision === "REJECT") {
-        const [rejected] = await tx
-          .update(inventoryOpeningBatch)
-          .set({
-            status: "REJECTED",
-            decisionReason: validation.data.reason,
-            rejectedReason: validation.data.reason,
-            approvedById: session.data.user.id,
-            approvedAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .where(eq(inventoryOpeningBatch.id, locked.id))
-          .returning();
-        await tx.insert(auditLog).values({
-          userId: session.data.user.id,
-          action: "REJECT_INVENTORY_OPENING",
-          targetTable: "inventory_opening_batch",
-          targetId: locked.id,
-          originalState: JSON.stringify(locked),
-          newState: JSON.stringify(rejected),
-        });
-        await recordNotificationEvent(tx, {
-          referenceType: "inventory_opening",
-          referenceId: rejected.id,
-          stage: "REJECTED",
-          title: "Saldo awal stok perlu diperbaiki",
-          message: validation.data.reason,
-          permission: "view:inventory",
-          recipients: [locked.requestedById],
-          actionUrl: "/materials/opening",
-          actorId: session.data.user.id,
-        });
-        return rejected;
-      }
-      if (locked.requestedById === session.data.user.id) {
-        throw new Error("MAKER_CHECKER_REQUIRED");
-      }
-      const items = await tx.query.inventoryOpeningItem.findMany({
-        where: eq(inventoryOpeningItem.batchId, locked.id),
-        orderBy: [asc(inventoryOpeningItem.createdAt)],
-      });
-      for (const item of items) {
-        const [inventory] = await tx
-          .select()
-          .from(materialInventory)
-          .where(eq(materialInventory.id, item.materialInventoryId))
-          .for("update");
-        if (!inventory) throw new Error("Inventory material tidak ditemukan.");
-        const priorMovement = await tx.query.stockMovement.findFirst({
-          where: and(
-            eq(stockMovement.materialId, inventory.materialId),
-            eq(stockMovement.inventoryLocationId, inventory.locationId),
-          ),
-        });
-        if (
-          Number(inventory.currentStock) !== 0 ||
-          Number(inventory.reservedStock) !== 0 ||
-          priorMovement
-        ) {
-          throw new Error("INVENTORY_ALREADY_ACTIVE");
-        }
-        await tx
-          .update(materialInventory)
-          .set({
-            currentStock: item.quantity,
-            averageCost: item.unitCost,
-            lastPurchasePrice: item.unitCost,
-            updatedAt: new Date(),
-          })
-          .where(eq(materialInventory.id, inventory.id));
-        const [movement] = await tx
-          .insert(stockMovement)
-          .values({
-            materialId: inventory.materialId,
-            inventoryLocationId: inventory.locationId,
-            movementType: "OPENING_BALANCE",
-            movementDirection: "IN",
-            referenceType: "INVENTORY_OPENING",
-            referenceId: locked.id,
-            quantity: item.quantity,
-            unitCost: item.unitCost,
-            note: locked.note,
-            createdById: session.data.user.id,
-          })
-          .returning();
-        await tx
-          .update(inventoryOpeningItem)
-          .set({ stockMovementId: movement.id })
-          .where(eq(inventoryOpeningItem.id, item.id));
-        await tx.insert(auditLog).values({
-          userId: session.data.user.id,
-          action: "POST_INVENTORY_OPENING_ITEM",
-          targetTable: "material_inventory",
-          targetId: inventory.id,
-          originalState: JSON.stringify(inventory),
-          newState: JSON.stringify({
-            currentStock: item.quantity,
-            averageCost: item.unitCost,
-            stockMovementId: movement.id,
-          }),
-        });
-      }
-      const [posted] = await tx
-        .update(inventoryOpeningBatch)
-        .set({
-          status: "POSTED",
-          decisionReason: validation.data.reason,
-          approvedById: session.data.user.id,
-          approvedAt: new Date(),
-          postedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(inventoryOpeningBatch.id, locked.id))
-        .returning();
-      await tx.insert(auditLog).values({
-        userId: session.data.user.id,
-        action: "APPROVE_INVENTORY_OPENING",
-        targetTable: "inventory_opening_batch",
-        targetId: locked.id,
-        originalState: JSON.stringify(locked),
-        newState: JSON.stringify({ ...posted, decisionReason: validation.data.reason }),
-      });
-      await recordReadinessMilestonesTx({
-        tx,
-        actorUserId: session.data.user.id,
-        changedItem: "initial_stock",
-      });
-      await recordNotificationEvent(tx, {
-        referenceType: "inventory_opening",
-        referenceId: posted.id,
-        stage: "POSTED",
-        title: "Saldo awal stok disetujui",
-        message: `${posted.batchNumber} sudah diposting ke inventory.`,
-        permission: "view:inventory",
-        recipients: [locked.requestedById],
-        actionUrl: "/materials/opening",
-        actorId: session.data.user.id,
-      });
-      return posted;
-    });
+    const decided = await db.transaction((tx) =>
+      decideInventoryOpeningTx(tx, actor, validation.data),
+    );
     refresh(false);
     return { success: true, data: decided };
   } catch (error) {
@@ -322,123 +87,13 @@ export async function reverseInventoryOpening(
       },
     };
   }
-  const session = await getSessionUser();
-  if (!session.success) return session;
+  const actor = await resolveActor();
+  if (!actor)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
-    await assertPermission(session.data.user, "reverse:opening_inventory");
-    const reversed = await db.transaction(async (tx) => {
-      const [locked] = await tx
-        .select()
-        .from(inventoryOpeningBatch)
-        .where(eq(inventoryOpeningBatch.id, validation.data.batchId))
-        .for("update");
-      if (!locked) throw new Error("OPENING_NOT_FOUND");
-      if (locked.status !== "POSTED") {
-        throw new Error("Hanya saldo awal berstatus sudah diposting yang dapat dibalik.");
-      }
-      const items = await tx.query.inventoryOpeningItem.findMany({
-        where: eq(inventoryOpeningItem.batchId, locked.id),
-        with: { stockMovement: true },
-      });
-      for (const item of items) {
-        if (!item.stockMovement) throw new Error("Pergerakan saldo awal tidak ditemukan.");
-        const [inventory] = await tx
-          .select()
-          .from(materialInventory)
-          .where(eq(materialInventory.id, item.materialInventoryId))
-          .for("update");
-        // Serialize history checks with all stock writers. Date values retain
-        // milliseconds while PostgreSQL may retain microseconds, so explicitly
-        // exclude this opening rather than comparing it to its rounded date.
-        const later = await tx.query.stockMovement.findFirst({
-          where: and(
-            eq(stockMovement.materialId, item.stockMovement.materialId),
-            eq(stockMovement.inventoryLocationId, item.stockMovement.inventoryLocationId),
-            ne(stockMovement.id, item.stockMovement.id),
-            gt(stockMovement.createdAt, item.stockMovement.createdAt),
-          ),
-        });
-        if (later) throw new Error("REVERSAL_HAS_LATER_MOVEMENT");
-        if (
-          !inventory ||
-          Number(inventory.currentStock) !== Number(item.quantity) ||
-          Number(inventory.reservedStock) !== 0
-        ) {
-          throw new Error("Saldo inventory sudah berubah dan tidak aman untuk reversal.");
-        }
-        await tx
-          .update(materialInventory)
-          .set({
-            currentStock: "0.00",
-            averageCost: "0.00",
-            lastPurchasePrice: "0.00",
-            updatedAt: new Date(),
-          })
-          .where(eq(materialInventory.id, inventory.id));
-        const [movement] = await tx
-          .insert(stockMovement)
-          .values({
-            materialId: inventory.materialId,
-            inventoryLocationId: inventory.locationId,
-            movementType: "OPENING_BALANCE_REVERSAL",
-            movementDirection: "OUT",
-            referenceType: "INVENTORY_OPENING",
-            referenceId: locked.id,
-            quantity: item.quantity,
-            unitCost: item.unitCost,
-            note: validation.data.reason,
-            createdById: session.data.user.id,
-          })
-          .returning();
-        await tx
-          .update(inventoryOpeningItem)
-          .set({ reversalStockMovementId: movement.id })
-          .where(eq(inventoryOpeningItem.id, item.id));
-        await tx.insert(auditLog).values({
-          userId: session.data.user.id,
-          action: "REVERSE_INVENTORY_OPENING_ITEM",
-          targetTable: "material_inventory",
-          targetId: inventory.id,
-          originalState: JSON.stringify(inventory),
-          newState: JSON.stringify({
-            currentStock: 0,
-            averageCost: 0,
-            reversalStockMovementId: movement.id,
-          }),
-        });
-      }
-      const [updated] = await tx
-        .update(inventoryOpeningBatch)
-        .set({
-          status: "REVERSED",
-          reversedById: session.data.user.id,
-          reversedAt: new Date(),
-          reversalReason: validation.data.reason,
-          updatedAt: new Date(),
-        })
-        .where(eq(inventoryOpeningBatch.id, locked.id))
-        .returning();
-      await tx.insert(auditLog).values({
-        userId: session.data.user.id,
-        action: "REVERSE_INVENTORY_OPENING",
-        targetTable: "inventory_opening_batch",
-        targetId: locked.id,
-        originalState: JSON.stringify(locked),
-        newState: JSON.stringify(updated),
-      });
-      await recordNotificationEvent(tx, {
-        referenceType: "inventory_opening",
-        referenceId: updated.id,
-        stage: "REVERSED",
-        title: "Saldo awal stok dibalik",
-        message: validation.data.reason,
-        permission: "view:inventory",
-        recipients: [locked.requestedById],
-        actionUrl: "/materials/opening",
-        actorId: session.data.user.id,
-      });
-      return updated;
-    });
+    const reversed = await db.transaction((tx) =>
+      reverseInventoryOpeningTx(tx, actor, validation.data),
+    );
     refresh();
     return { success: true, data: reversed };
   } catch (error) {

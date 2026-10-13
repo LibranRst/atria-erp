@@ -37,3 +37,15 @@ export async function returnMaterialFromProject(
     { allowCookieWrites: true },
   );
 }
+
+export async function releaseMaterialReservation(
+  ...args: WebRpcArgs<"app/actions/material/inventory-project-movements.releaseMaterialReservation">
+): Promise<
+  WebRpcResult<"app/actions/material/inventory-project-movements.releaseMaterialReservation">
+> {
+  return callBackendAction(
+    "app/actions/material/inventory-project-movements.releaseMaterialReservation",
+    args,
+    { allowCookieWrites: true },
+  );
+}

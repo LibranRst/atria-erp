@@ -147,6 +147,12 @@ async function cancellation(kind: "request" | "deadline", partial = false): Prom
   expect(providerSignal?.aborted).toBe(true);
   expect(resolved).toEqual(["DEEPSEEK"]);
   if (kind === "deadline") expect(timeoutMs).toBe(45_000);
+  if (kind === "deadline")
+    expect(
+      chunks.some(
+        (chunk) => chunk.type === "error" && chunk.errorText.includes("waktu terlalu lama"),
+      ),
+    ).toBe(true);
   if (partial)
     expect(
       chunks.some((chunk) => chunk.type === "text-delta" && chunk.delta === "Jawaban parsial"),

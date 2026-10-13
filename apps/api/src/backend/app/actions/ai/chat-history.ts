@@ -23,6 +23,7 @@ import { z } from "zod";
  */
 
 type ConversationPayload = {
+  readonly title?: string | null;
   readonly conversationId: string | null;
   readonly messages: UIMessage[];
   /** Peta toolCallId → id dokumen, untuk kartu usulan yang sudah dieksekusi. */
@@ -85,7 +86,7 @@ export async function getLatestAiConversation(): Promise<ActionResponse<Conversa
 
     return {
       success: true,
-      data: { conversationId: latest.id, messages, confirmedProposals },
+      data: { conversationId: latest.id, title: latest.title, messages, confirmedProposals },
     };
   } catch {
     return {
@@ -116,7 +117,12 @@ export async function getAiConversation(
 
   return {
     success: true,
-    data: { conversationId: conversation.id, messages, confirmedProposals },
+    data: {
+      conversationId: conversation.id,
+      title: conversation.title,
+      messages,
+      confirmedProposals,
+    },
   };
 }
 

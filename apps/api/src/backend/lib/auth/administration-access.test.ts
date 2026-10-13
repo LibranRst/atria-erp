@@ -86,7 +86,19 @@ describe("administration role boundary", () => {
     );
 
     expect(createUserBlock).toContain('assertPermission(actor, "manage:users")');
-    expect(updateUserBlock).toContain('assertPermission(actor, "manage:users")');
-    expect(vendorBlock).toContain('assertPermission(actor, "manage:vendors")');
+    expect(updateUserBlock).toContain("resolveActor()");
+    expect(updateUserBlock).toContain("writeAdministrationChangeTx");
+    expect(vendorBlock).toContain("return write(");
+    expect(vendorSource).toContain("const actor = await resolveActor()");
+    expect(vendorSource).toContain("writeCatalogSettingsTx(tx, actor, input)");
+    const catalogWriter = await Bun.file(
+      new URL("../../server/usecases/settings/catalog-settings-writer.ts", import.meta.url),
+    ).text();
+    const catalogContract = await Bun.file(
+      new URL("../../../../../../packages/core/src/ai/catalog-settings.ts", import.meta.url),
+    ).text();
+    expect(catalogWriter).toContain("assertCatalogRights(actor, input)");
+    expect(catalogWriter).toContain("actorCan(actor, catalogSettingsPermission(input.action))");
+    expect(catalogContract).toContain('"manage:vendors"');
   });
 });

@@ -1,14 +1,21 @@
-import { and, eq, ne } from "drizzle-orm";
+import {
+  writeAdministrationChangeTx,
+  administrationChangeFailure,
+  lockAdministrationTx,
+  readAdministrationState,
+  assertNewStaffRole,
+  AdministrationChangeError,
+} from "@backend/server/usecases/administration/change-writer";
+import { eq } from "drizzle-orm";
 import { revalidateWorkspacePath as revalidatePath } from "@backend/lib/cache/revalidate-workspace";
 import { db } from "@backend/db";
-import { account, auditLog, role, session, tenantMember, user } from "@backend/db/schema";
+import { account, auditLog, role, tenantMember, user } from "@backend/db/schema";
 import { INSTANCE_TENANT_ID } from "@backend/db/schema/tenant-constants";
 import { auth } from "@backend/lib/auth";
 import { assertPermission } from "@backend/lib/auth/permissions";
 import { resolveActor } from "@backend/server/actor";
 import { changeTemporaryPasswordUseCase } from "@backend/server/usecases/administration/change-temporary-password";
 import { recordReadinessMilestonesTx } from "@backend/lib/onboarding/readiness-events";
-import { OWNER_ROLE_ID } from "@atria/core/auth/role-constants";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createStaffUserSchema,
@@ -49,7 +56,11 @@ export async function createStaffUser(
     const passwordHash = await auth.$context.then((context) =>
       context.password.hash(validation.data.temporaryPassword),
     );
+    const authority = await resolveActor();
+    if (!authority) throw new Error("UNAUTHORIZED");
     const created = await db.transaction(async (tx) => {
+      await lockAdministrationTx(tx);
+      assertNewStaffRole(authority, await readAdministrationState(tx), validation.data.roleId);
       const [row] = await tx
         .insert(user)
         .values({
@@ -96,6 +107,7 @@ export async function createStaffUser(
     revalidatePath("/settings");
     return { success: true, data: { id: created.id } };
   } catch (error) {
+    if (error instanceof AdministrationChangeError) return administrationChangeFailure(error);
     const message = error instanceof Error ? error.message : "Gagal membuat user.";
     return {
       success: false,
@@ -110,93 +122,42 @@ export async function createStaffUser(
 export async function updateStaffUser(
   input: UpdateStaffUserInput,
 ): Promise<ActionResponse<{ readonly id: string }>> {
-  const validation = updateStaffUserSchema.safeParse(input);
-  if (!validation.success)
+  const parsed = updateStaffUserSchema.safeParse(input);
+  if (!parsed.success)
     return {
       success: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: validation.error.issues[0]?.message ?? "User tidak valid.",
+        message: parsed.error.issues[0]?.message ?? "Data staf tidak valid.",
       },
     };
-  const actor = await currentUser();
+  const actor = await resolveActor();
   if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-  await assertPermission(actor, "manage:users");
   try {
-    await db.transaction(async (tx) => {
-      const existing = await tx.query.user.findFirst({
-        where: eq(user.id, validation.data.userId),
-      });
-      if (!existing) throw new Error("USER_NOT_FOUND");
-      const assignedRole = await tx.query.role.findFirst({
-        where: eq(role.id, validation.data.roleId),
-        columns: { id: true },
-      });
-      if (!assignedRole) throw new Error("ROLE_NOT_ALLOWED");
-      if (
-        existing.roleId === OWNER_ROLE_ID &&
-        (validation.data.roleId !== OWNER_ROLE_ID || !validation.data.isActive)
-      ) {
-        const otherOwner = await tx.query.user.findFirst({
-          where: and(
-            eq(user.roleId, OWNER_ROLE_ID),
-            eq(user.isActive, true),
-            ne(user.id, existing.id),
-          ),
-        });
-        if (!otherOwner) throw new Error("LAST_ACTIVE_OWNER");
-      }
-      const [updated] = await tx
-        .update(user)
-        .set({
-          name: validation.data.name,
-          roleId: validation.data.roleId,
-          isActive: validation.data.isActive,
-          updatedAt: new Date(),
-        })
-        .where(eq(user.id, existing.id))
-        .returning();
-      if (!updated.isActive) await tx.delete(session).where(eq(session.userId, updated.id));
-      await tx
-        .update(tenantMember)
-        .set({
-          roleId: validation.data.roleId,
-          isActive: validation.data.isActive,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(eq(tenantMember.tenantId, INSTANCE_TENANT_ID), eq(tenantMember.userId, updated.id)),
-        );
-      await tx.insert(auditLog).values({
-        userId: actor.id,
-        action: "UPDATE_STAFF_USER",
-        targetTable: "user",
-        targetId: updated.id,
-        originalState: JSON.stringify(existing),
-        newState: JSON.stringify(updated),
-      });
-    });
-    revalidatePath("/settings");
-    return { success: true, data: { id: validation.data.userId } };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Gagal memperbarui user.";
-    if (message === "LAST_ACTIVE_OWNER")
-      return {
-        success: false,
-        error: {
-          code: "FORBIDDEN",
-          message: "Owner aktif terakhir tidak dapat dinonaktifkan atau diubah rolenya.",
+    const { userId, ...patch } = parsed.data;
+    const id = await db.transaction((tx) =>
+      writeAdministrationChangeTx(
+        tx,
+        actor,
+        {
+          action: "STAFF_CHANGES",
+          users: [{ userId, patch }],
+          reason: "Perubahan staf melalui formulir administrasi",
         },
-      };
-    if (message === "ROLE_NOT_ALLOWED")
-      return {
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "Role tidak ditemukan." },
-      };
-    if (message === "USER_NOT_FOUND")
-      return { success: false, error: { code: "NOT_FOUND", message: "User tidak ditemukan." } };
-    return { success: false, error: { code: "INTERNAL_SERVER_ERROR", message } };
+        "SCREEN",
+      ),
+    );
+    revalidatePath("/settings");
+    return { success: true, data: { id } };
+  } catch (error: unknown) {
+    if (
+      error instanceof AdministrationChangeError &&
+      error.code === "VALIDATION_ERROR" &&
+      error.message.includes("tidak ada perubahan")
+    )
+      return { success: true, data: { id: parsed.data.userId } };
+    return administrationChangeFailure(error);
   }
 }
 

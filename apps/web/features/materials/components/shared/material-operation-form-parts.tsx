@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { AppIcon, FormField, QuantityStepper, AdaptiveSelect } from "@/components/ui";
+import { AppIcon, FormField, QuantityStepper, AdaptiveSelect, Button } from "@/components/ui";
 import type { MaterialOption } from "@/features/materials/types/material-operation-dialog-types";
 import type { SimpleItem } from "@/features/materials/utils/material-ui-utils";
 
@@ -74,14 +74,15 @@ export function ItemRows({
           </FormField>
         </div>
       ))}
-      <button
+      <Button
         type="button"
         onClick={() => setItems([...items, createItem()])}
         className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container px-5 text-xs font-bold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+        variant="secondary"
       >
         <AppIcon name="add" className="text-[17px]" />
         Tambah material
-      </button>
+      </Button>
     </div>
   );
 }

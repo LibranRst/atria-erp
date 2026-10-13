@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import type { PermissionKey } from "@atria/core/auth/permissions";
+import type { PermissionKey, RoleDataScope } from "@atria/core/auth/permissions";
 
 /**
  * Izin pengguna berjalan, diselesaikan server dan diturunkan ke klien.
@@ -19,6 +19,9 @@ import type { PermissionKey } from "@atria/core/auth/permissions";
  */
 export type CurrentUserProfile = {
   readonly id?: string;
+  readonly sessionId?: string;
+  readonly roleId?: string;
+  readonly dataScope?: RoleDataScope;
   readonly name: string | null;
   readonly image: string | null;
 };

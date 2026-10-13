@@ -1,5 +1,5 @@
 import { Host } from "@expo/ui";
-import { Button, Image, RNHostView, Text, VStack } from "@expo/ui/swift-ui";
+import { Button, RNHostView, Text, VStack } from "@expo/ui/swift-ui";
 import { Image as ProfileImage } from "expo-image";
 import { useState } from "react";
 import {
@@ -20,10 +20,11 @@ import {
 } from "@expo/ui/swift-ui/modifiers";
 import type { ChromeButtonProps } from "./chrome-button.types";
 import { theme } from "@/theme";
+import { AppIcon } from "./app-icon";
 
 export function ChromeButton({
   label,
-  systemImage,
+  icon,
   initials,
   imageUri,
   onPress,
@@ -42,6 +43,23 @@ export function ChromeButton({
   const surfaceHeight = visualSize === undefined ? height : Math.min(height, visualSize);
   const [failedUri, setFailedUri] = useState<string | null>(null);
   const showImage = Boolean(imageUri) && failedUri !== imageUri;
+  const glyph = (
+    <RNHostView matchContents>
+      <AppIcon
+        name={icon}
+        size={20}
+        accessible={false}
+        pointerEvents="none"
+        color={
+          ink
+            ? theme.colors.onPrimary
+            : surfaceStyle === "tonal"
+              ? theme.colors.onSurface
+              : theme.colors.primary
+        }
+      />
+    </RNHostView>
+  );
   const button = (
     <Button
       onPress={disabled ? undefined : onPress}
@@ -93,7 +111,7 @@ export function ChromeButton({
         <Text modifiers={[font({ textStyle: "caption", weight: "bold" })]}>{initials}</Text>
       ) : showLabel ? (
         <VStack spacing={theme.spacing.base / 2}>
-          <Image systemName={systemImage} size={20} />
+          {glyph}
           <Text
             modifiers={[
               font({ textStyle: "caption2", weight: selected ? "semibold" : "medium" }),
@@ -105,7 +123,7 @@ export function ChromeButton({
           </Text>
         </VStack>
       ) : (
-        <Image systemName={systemImage} size={20} />
+        glyph
       )}
     </Button>
   );

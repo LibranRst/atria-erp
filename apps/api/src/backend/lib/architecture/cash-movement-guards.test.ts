@@ -1,48 +1,29 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-
-/**
- * Rekening yang sudah diarsipkan tidak boleh lagi menerima pergerakan kas.
- *
- * Penjagaannya bukan sebuah `if`, melainkan filter pada kueri pencarian
- * rekening: `isActive` harus ikut dipersyaratkan, sehingga rekening terarsip
- * gagal ditemukan dan transaksi berhenti sebelum saldo tersentuh. Bentuk itu
- * mudah hilang tanpa terasa — menghapus satu baris filter tidak membuat satu
- * test pun merah, dan tidak ada test yang menutupinya sebelum ini.
- *
- * Di-anchor ke `import.meta.dir` mengikuti test arsitektur lain di folder ini.
- */
+/** Manual and AI entry points share active-account checks after deterministic locks.
+ * Metadata/status writers can read inactive accounts; movements must reject them before posting. */
 const APP_ROOT = path.resolve(import.meta.dir, "..", "..");
-
-function readSource(relative: string): string | null {
-  try {
-    return readFileSync(path.join(APP_ROOT, relative), "utf8");
-  } catch {
-    return null;
-  }
-}
-
+const source = (relative: string): string => readFileSync(path.join(APP_ROOT, relative), "utf8");
 describe("cash movement guards", () => {
-  test("bank account lookups for movements require an active account", () => {
-    const source = readSource("app/actions/finance/bank-account-movements.ts");
-    expect(source).not.toBeNull();
-
-    // Setiap pencarian rekening di modul ini harus berpasangan dengan filter aktif.
-    const lookups = source!.match(/tx\.query\.bankAccount\.findFirst|from\(bankAccount\)/g) ?? [];
-    const activeFilters = source!.match(/eq\(\s*bankAccount\.isActive\s*,\s*true\s*\)/g) ?? [];
-
-    expect(lookups.length).toBeGreaterThan(0);
-    expect(activeFilters.length).toBeGreaterThanOrEqual(lookups.length);
+  test("manual cash entry points delegate to the shared transactional writer", () => {
+    const module = source("app/actions/finance/bank-account-movements.ts");
+    expect(module).toContain("postManualCashMovementTx");
+    expect(module).toContain("transferBetweenBankAccountsTx");
+    expect(module.match(/db\.transaction/g)?.length).toBe(2);
   });
-
-  test("every movement entry point in the module filters on isActive", () => {
-    const source = readSource("app/actions/finance/bank-account-movements.ts")!;
-    const exportedActions = source.match(/export async function (\w+)/g) ?? [];
-    const activeFilters = source.match(/eq\(\s*bankAccount\.isActive\s*,\s*true\s*\)/g) ?? [];
-
-    // Mutasi manual dan transfer antar rekening: keduanya harus terjaga.
-    expect(exportedActions.length).toBeGreaterThanOrEqual(1);
-    expect(activeFilters.length).toBeGreaterThanOrEqual(exportedActions.length);
+  test("shared movement writers check every locked account before ledger writes", () => {
+    const writer = source("server/usecases/finance/bank-cash-writer.ts");
+    expect(writer).toContain('if (!row.isActive) throw new Error("BANK_ACCOUNT_INACTIVE")');
+    const cash = writer
+      .split("export async function postManualCashMovementTx")[1]
+      .split("export async function transferBetweenBankAccountsTx")[0];
+    const transfer = writer.split("export async function transferBetweenBankAccountsTx")[1];
+    expect(cash.indexOf("lockBankAccounts")).toBeLessThan(cash.indexOf("assertCashAccount"));
+    expect(cash.indexOf("assertCashAccount")).toBeLessThan(cash.indexOf("mutateBalance"));
+    expect(transfer.match(/assertCashAccount/g)?.length).toBe(2);
+    expect(transfer.lastIndexOf("assertCashAccount")).toBeLessThan(
+      transfer.indexOf("mutateBalance"),
+    );
   });
 });

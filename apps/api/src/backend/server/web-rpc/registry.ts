@@ -1,3 +1,30 @@
+import * as quickStartAi from "@backend/app/actions/ai/quick-start";
+import * as ownProfileAi from "@backend/app/actions/ai/own-profile";
+import * as budgetSyncAi from "@backend/app/actions/ai/budget-sync";
+import * as rabExportAi from "@backend/app/actions/ai/rab-export";
+import * as administrationAi from "@backend/app/actions/ai/administration";
+import * as bankReconciliationAi from "@backend/app/actions/ai/bank-reconciliation";
+import * as bankCashAi from "@backend/app/actions/ai/bank-cash";
+import * as expenseBatchAi from "@backend/app/actions/ai/expense-batch";
+import * as expenseBatchActionAi from "@backend/app/actions/ai/expense-batch-action";
+import * as vendorPaymentWorkflowAi from "@backend/app/actions/ai/vendor-payment-workflow";
+import * as financeInputAi from "@backend/app/actions/ai/finance-input";
+import * as projectManagementAi from "@backend/app/actions/ai/project-management";
+import * as catalogSettingsAi from "@backend/app/actions/ai/catalog-settings";
+import * as procurementWarehouseAi from "@backend/app/actions/ai/procurement-warehouse";
+import * as vendorBillCorrections from "@backend/app/actions/finance/correct-vendor-bill";
+import * as dashboardDesktop from "@backend/app/actions/finance/dashboard-desktop";
+import * as projectStockAi from "@backend/app/actions/ai/project-stock";
+import * as rabAi from "@backend/app/actions/ai/rab-draft";
+import * as rabWorkflowAi from "@backend/app/actions/ai/rab-workflow";
+import * as rabWorkflow from "@backend/app/actions/project/rab-workflow";
+import * as lifecycleAi from "@backend/app/actions/ai/rap-lifecycle";
+import * as rapSetupAi from "@backend/app/actions/ai/rap-finalization";
+import * as packageAi from "@backend/app/actions/ai/category-plan";
+import * as rapChangeAi from "@backend/app/actions/ai/rap-change";
+import * as materialAi from "@backend/app/actions/ai/material-master";
+import * as materialUpdateAi from "@backend/app/actions/ai/material-update";
+import * as rapDraftAi from "@backend/app/actions/ai/rap-draft";
 // Explicit compatibility allowlist. Only the API executes these functions.
 import { resolveActor } from "@backend/server/actor";
 import { getServerSession } from "@backend/lib/server/session";
@@ -72,6 +99,8 @@ import * as module31 from "@backend/app/actions/project/rab-item-actions";
 import * as module32 from "@backend/app/actions/project/revision-change-order-approval";
 import * as module33 from "@backend/app/actions/profile/change-own-password";
 import * as module34 from "@backend/app/actions/profile/update-own-profile";
+import * as roleGuide from "@backend/app/actions/profile/role-guide";
+import { acknowledgeRoleGuideSchema } from "@atria/core/onboarding/role-guide";
 import * as module35 from "@backend/app/actions/ai/chat-history";
 import * as module36 from "@backend/app/actions/ai/confirm-finance-proposal";
 import * as module37 from "@backend/app/actions/ai/process-receipt";
@@ -144,6 +173,43 @@ import * as module103 from "@backend/features/onboarding/server/get-quick-start-
 import * as module104 from "@backend/server/actor";
 
 const operations = {
+  "app/actions/ai/quick-start.getAiQuickStartProposal": quickStartAi.getAiQuickStartProposal,
+  "app/actions/ai/quick-start.confirmAiQuickStartProposal":
+    quickStartAi.confirmAiQuickStartProposal,
+  "app/actions/ai/own-profile.getAiOwnProfileProposal": ownProfileAi.getAiOwnProfileProposal,
+  "app/actions/ai/own-profile.confirmAiOwnProfileProposal":
+    ownProfileAi.confirmAiOwnProfileProposal,
+  "app/actions/ai/budget-sync.getAiBudgetSyncProposal": budgetSyncAi.getAiBudgetSyncProposal,
+  "app/actions/ai/budget-sync.confirmAiBudgetSyncProposal":
+    budgetSyncAi.confirmAiBudgetSyncProposal,
+  "app/actions/ai/rab-export.getAiRabExportPreview": rabExportAi.getAiRabExportPreview,
+  "app/actions/ai/bank-reconciliation.getAiReconciliationProposal":
+    bankReconciliationAi.getAiReconciliationProposal,
+  "app/actions/ai/bank-reconciliation.patchAiReconciliationProposal":
+    bankReconciliationAi.patchAiReconciliationProposal,
+  "app/actions/ai/bank-reconciliation.discardAiReconciliationProposal":
+    bankReconciliationAi.discardAiReconciliationProposal,
+  "app/actions/ai/bank-reconciliation.confirmAiReconciliationProposal":
+    bankReconciliationAi.confirmAiReconciliationProposal,
+  "app/actions/ai/bank-cash.getAiBankCashProposal": bankCashAi.getAiBankCashProposal,
+  "app/actions/ai/bank-cash.confirmAiBankCashProposal": bankCashAi.confirmAiBankCashProposal,
+  "app/actions/ai/expense-batch.startAiExpenseBatchReview":
+    expenseBatchAi.startAiExpenseBatchReview,
+  "app/actions/ai/expense-batch.getAiExpenseBatchReview": expenseBatchAi.getAiExpenseBatchReview,
+  "app/actions/ai/expense-batch.patchAiExpenseBatchReview":
+    expenseBatchAi.patchAiExpenseBatchReview,
+  "app/actions/ai/expense-batch.submitAiExpenseBatchReview":
+    expenseBatchAi.submitAiExpenseBatchReview,
+  "app/actions/ai/expense-batch.discardAiExpenseBatchReview":
+    expenseBatchAi.discardAiExpenseBatchReview,
+  "app/actions/ai/expense-batch-action.getAiExpenseBatchAction":
+    expenseBatchActionAi.getAiExpenseBatchAction,
+  "app/actions/ai/expense-batch-action.confirmAiExpenseBatchAction":
+    expenseBatchActionAi.confirmAiExpenseBatchAction,
+  "app/actions/ai/vendor-payment-workflow.getAiVendorPaymentWorkflowProposal":
+    vendorPaymentWorkflowAi.getAiVendorPaymentWorkflowProposal,
+  "app/actions/ai/vendor-payment-workflow.confirmAiVendorPaymentWorkflowProposal":
+    vendorPaymentWorkflowAi.confirmAiVendorPaymentWorkflowProposal,
   "app/actions/onboarding-overview.getOwnerOnboardingOverview": module0.getOwnerOnboardingOverview,
   "app/actions/settings/approval-thresholds.getApprovalThresholdSettings":
     module1.getApprovalThresholdSettings,
@@ -318,6 +384,67 @@ const operations = {
     module32.approveProjectChangeOrder,
   "app/actions/profile/change-own-password.changeOwnPassword": module33.changeOwnPassword,
   "app/actions/profile/update-own-profile.updateOwnProfile": module34.updateOwnProfile,
+  "app/actions/profile/role-guide.getOwnRoleGuide": roleGuide.getOwnRoleGuide,
+  "app/actions/profile/role-guide.acknowledgeOwnRoleGuide": roleGuide.acknowledgeOwnRoleGuide,
+  "app/actions/ai/material-master.startAiMaterialAnalysis": materialAi.startAiMaterialAnalysis,
+  "app/actions/ai/material-master.getAiMaterialDraft": materialAi.getAiMaterialDraft,
+  "app/actions/ai/material-master.patchAiMaterialDraft": materialAi.patchAiMaterialDraft,
+  "app/actions/ai/material-master.selectAiMaterialRows": materialAi.selectAiMaterialRows,
+  "app/actions/ai/material-master.saveAiMaterialRows": materialAi.saveAiMaterialRows,
+  "app/actions/ai/material-master.confirmAiMaterialReference":
+    materialAi.confirmAiMaterialReference,
+  "app/actions/ai/material-master.retryAiMaterialAnalysis": materialAi.retryAiMaterialAnalysis,
+  "app/actions/ai/material-master.discardAiMaterialDraft": materialAi.discardAiMaterialDraft,
+  "app/actions/ai/material-update.getAiMaterialUpdateProposal":
+    materialUpdateAi.getAiMaterialUpdateProposal,
+  "app/actions/ai/rab-draft.getAiRabDraftProposal": rabAi.getAiRabDraftProposal,
+  "app/actions/ai/project-management.getAiProjectManagementProposal":
+    projectManagementAi.getAiProjectManagementProposal,
+  "app/actions/ai/project-management.confirmAiProjectManagementProposal":
+    projectManagementAi.confirmAiProjectManagementProposal,
+  "app/actions/ai/administration.getAiAdministrationProposal":
+    administrationAi.getAiAdministrationProposal,
+  "app/actions/ai/administration.confirmAiAdministrationProposal":
+    administrationAi.confirmAiAdministrationProposal,
+  "app/actions/ai/finance-input.getAiFinanceInputProposal":
+    financeInputAi.getAiFinanceInputProposal,
+  "app/actions/ai/finance-input.confirmAiFinanceInputProposal":
+    financeInputAi.confirmAiFinanceInputProposal,
+  "app/actions/ai/catalog-settings.getAiCatalogSettingsProposal":
+    catalogSettingsAi.getAiCatalogSettingsProposal,
+  "app/actions/ai/catalog-settings.confirmAiCatalogSettingsProposal":
+    catalogSettingsAi.confirmAiCatalogSettingsProposal,
+  "app/actions/ai/procurement-warehouse.getAiProcurementWarehouseProposal":
+    procurementWarehouseAi.getAiProcurementWarehouseProposal,
+  "app/actions/ai/procurement-warehouse.confirmAiProcurementWarehouseProposal":
+    procurementWarehouseAi.confirmAiProcurementWarehouseProposal,
+  "app/actions/ai/project-stock.getAiProjectStockProposal":
+    projectStockAi.getAiProjectStockProposal,
+  "app/actions/ai/project-stock.confirmAiProjectStockProposal":
+    projectStockAi.confirmAiProjectStockProposal,
+  "app/actions/ai/rab-workflow.getAiRabWorkflowProposal": rabWorkflowAi.getAiRabWorkflowProposal,
+  "app/actions/ai/rab-workflow.confirmAiRabWorkflowProposal":
+    rabWorkflowAi.confirmAiRabWorkflowProposal,
+  "app/actions/project/rab-workflow.createRabRevision": rabWorkflow.createRabRevision,
+  "app/actions/project/rab-workflow.rejectChangeOrder": rabWorkflow.rejectChangeOrder,
+  "app/actions/project/rab-workflow.updateRabEstimateHeader": rabWorkflow.updateRabEstimateHeader,
+  "app/actions/ai/rab-draft.patchAiRabDraftProposal": rabAi.patchAiRabDraftProposal,
+  "app/actions/ai/rab-draft.confirmAiRabDraftProposal": rabAi.confirmAiRabDraftProposal,
+  "app/actions/ai/rap-lifecycle.getAiRapLifecycleProposal": lifecycleAi.getAiRapLifecycleProposal,
+  "app/actions/ai/rap-lifecycle.confirmAiRapLifecycleProposal":
+    lifecycleAi.confirmAiRapLifecycleProposal,
+  "app/actions/ai/rap-finalization.getAiRapSetupProposal": rapSetupAi.getAiRapSetupProposal,
+  "app/actions/ai/rap-finalization.confirmAiRapSetupProposal": rapSetupAi.confirmAiRapSetupProposal,
+  "app/actions/ai/category-plan.getAiCategoryPlanProposal": packageAi.getAiCategoryPlanProposal,
+  "app/actions/ai/category-plan.confirmAiCategoryPlanProposal":
+    packageAi.confirmAiCategoryPlanProposal,
+  "app/actions/ai/rap-change.getAiRapChangeProposal": rapChangeAi.getAiRapChangeProposal,
+  "app/actions/ai/rap-change.confirmAiRapChangeProposal": rapChangeAi.confirmAiRapChangeProposal,
+  "app/actions/ai/material-update.confirmAiMaterialUpdateProposal":
+    materialUpdateAi.confirmAiMaterialUpdateProposal,
+  "app/actions/ai/rap-draft.patchAiRapDraftProposal": rapDraftAi.patchAiRapDraftProposal,
+  "app/actions/ai/rap-draft.getAiRapDraftProposal": rapDraftAi.getAiRapDraftProposal,
+  "app/actions/ai/rap-draft.confirmAiRapDraftProposal": rapDraftAi.confirmAiRapDraftProposal,
   "app/actions/ai/chat-history.getLatestAiConversation": module35.getLatestAiConversation,
   "app/actions/ai/chat-history.getAiConversation": module35.getAiConversation,
   "app/actions/ai/chat-history.listAiConversations": module35.listAiConversations,
@@ -342,6 +469,7 @@ const operations = {
   "app/actions/ai/confirm-bank-reconciliation-proposal.confirmAiBankReconciliationProposal":
     module41.confirmAiBankReconciliationProposal,
   "app/actions/ai/preferences.getAiPreference": module42.getAiPreference,
+  "app/actions/ai/preferences.getAiCapabilities": module42.getAiCapabilities,
   "app/actions/ai/preferences.saveAiPreference": module42.saveAiPreference,
   "app/actions/ai/preferences.resetAiPreference": module42.resetAiPreference,
   "app/actions/ai/confirm-create-role-proposal.confirmAiCreateRoleProposal":
@@ -402,6 +530,10 @@ const operations = {
   "app/actions/finance/field-request-auth.authorizeOwnerVendorApproval":
     module60.authorizeOwnerVendorApproval,
   "app/actions/finance/expense-draft-submit.submitExpenseDraft": module61.submitExpenseDraft,
+  "app/actions/finance/dashboard-desktop.getFinanceDashboardDesktopTabData":
+    dashboardDesktop.getFinanceDashboardDesktopTabData,
+  "app/actions/finance/dashboard-desktop.getFinanceDashboardCashFlowTrend":
+    dashboardDesktop.getFinanceDashboardCashFlowTrend,
   "app/actions/finance/dashboard-overview.getFinanceDashboardOverview":
     module62.getFinanceDashboardOverview,
   "app/actions/finance/expense-draft-storage.listExpenseDrafts": module63.listExpenseDrafts,
@@ -412,6 +544,8 @@ const operations = {
   "app/actions/finance/get-invoice-prefill-context.getInvoicePrefillContext":
     module65.getInvoicePrefillContext,
   "app/actions/finance/submit-vendor-bill.submitVendorBill": module66.submitVendorBill,
+  "app/actions/finance/correct-vendor-bill.correctVendorBill":
+    vendorBillCorrections.correctVendorBill,
   "app/actions/finance/submit-vendor-bill.getVendorBillFormData": module66.getVendorBillFormData,
   "app/actions/finance/record-client-payment.recordClientPayment": module67.recordClientPayment,
   "app/actions/finance/bank-account-movements.postManualCashMovement":
@@ -454,6 +588,8 @@ const operations = {
     module78.getMaterialMovementPage,
   "app/actions/material/operations-dashboard.getMaterialOperationsDashboard":
     module78.getMaterialOperationsDashboard,
+  "app/actions/material/inventory-project-movements.releaseMaterialReservation":
+    module79.releaseMaterialReservation,
   "app/actions/material/inventory-project-movements.wasteMaterialForProject":
     module79.wasteMaterialForProject,
   "app/actions/material/inventory-project-movements.useMaterialForProject":
@@ -544,6 +680,150 @@ export async function invokeWebOperation(
   if (!isWebOperation(operation)) throw new Error("NOT_FOUND: Operasi tidak tersedia.");
   await enforceSessionGate(operation);
   switch (operation) {
+    case "app/actions/ai/bank-reconciliation.getAiReconciliationProposal":
+      return bankReconciliationAi.getAiReconciliationProposal(args[0]);
+    case "app/actions/ai/bank-reconciliation.patchAiReconciliationProposal":
+      return bankReconciliationAi.patchAiReconciliationProposal(args[0]);
+    case "app/actions/ai/bank-reconciliation.discardAiReconciliationProposal":
+      return bankReconciliationAi.discardAiReconciliationProposal(args[0]);
+    case "app/actions/ai/bank-reconciliation.confirmAiReconciliationProposal":
+      return bankReconciliationAi.confirmAiReconciliationProposal(args[0]);
+    case "app/actions/ai/bank-cash.getAiBankCashProposal":
+      return bankCashAi.getAiBankCashProposal(args[0]);
+    case "app/actions/ai/bank-cash.confirmAiBankCashProposal":
+      return bankCashAi.confirmAiBankCashProposal(args[0]);
+    case "app/actions/ai/expense-batch.startAiExpenseBatchReview":
+      return expenseBatchAi.startAiExpenseBatchReview(args[0]);
+    case "app/actions/ai/expense-batch.getAiExpenseBatchReview":
+      return expenseBatchAi.getAiExpenseBatchReview(args[0]);
+    case "app/actions/ai/expense-batch.patchAiExpenseBatchReview":
+      return expenseBatchAi.patchAiExpenseBatchReview(args[0]);
+    case "app/actions/ai/expense-batch.submitAiExpenseBatchReview":
+      return expenseBatchAi.submitAiExpenseBatchReview(args[0]);
+    case "app/actions/ai/expense-batch.discardAiExpenseBatchReview":
+      return expenseBatchAi.discardAiExpenseBatchReview(args[0]);
+    case "app/actions/ai/expense-batch-action.getAiExpenseBatchAction":
+      return expenseBatchActionAi.getAiExpenseBatchAction(args[0]);
+    case "app/actions/ai/expense-batch-action.confirmAiExpenseBatchAction":
+      return expenseBatchActionAi.confirmAiExpenseBatchAction(args[0]);
+    case "app/actions/ai/vendor-payment-workflow.getAiVendorPaymentWorkflowProposal":
+      return vendorPaymentWorkflowAi.getAiVendorPaymentWorkflowProposal(args[0]);
+    case "app/actions/ai/vendor-payment-workflow.confirmAiVendorPaymentWorkflowProposal":
+      return vendorPaymentWorkflowAi.confirmAiVendorPaymentWorkflowProposal(args[0]);
+    case "app/actions/ai/project-management.getAiProjectManagementProposal":
+      return projectManagementAi.getAiProjectManagementProposal(args[0]);
+    case "app/actions/ai/project-management.confirmAiProjectManagementProposal":
+      return projectManagementAi.confirmAiProjectManagementProposal(args[0]);
+    case "app/actions/ai/quick-start.getAiQuickStartProposal":
+      return quickStartAi.getAiQuickStartProposal(args[0]);
+    case "app/actions/ai/quick-start.confirmAiQuickStartProposal":
+      return quickStartAi.confirmAiQuickStartProposal(args[0]);
+    case "app/actions/ai/own-profile.getAiOwnProfileProposal":
+      return ownProfileAi.getAiOwnProfileProposal(args[0]);
+    case "app/actions/ai/own-profile.confirmAiOwnProfileProposal":
+      return ownProfileAi.confirmAiOwnProfileProposal(args[0]);
+    case "app/actions/ai/budget-sync.getAiBudgetSyncProposal":
+      return budgetSyncAi.getAiBudgetSyncProposal(args[0]);
+    case "app/actions/ai/budget-sync.confirmAiBudgetSyncProposal":
+      return budgetSyncAi.confirmAiBudgetSyncProposal(args[0]);
+    case "app/actions/ai/rab-export.getAiRabExportPreview": {
+      const parameters = args as WebRpcArgs<"app/actions/ai/rab-export.getAiRabExportPreview">;
+      return rabExportAi.getAiRabExportPreview(...parameters);
+    }
+    case "app/actions/ai/administration.getAiAdministrationProposal": {
+      const parameters = [...args] as Parameters<
+        typeof administrationAi.getAiAdministrationProposal
+      >;
+      return administrationAi.getAiAdministrationProposal(...parameters);
+    }
+    case "app/actions/ai/administration.confirmAiAdministrationProposal": {
+      const parameters = [...args] as Parameters<
+        typeof administrationAi.confirmAiAdministrationProposal
+      >;
+      return administrationAi.confirmAiAdministrationProposal(...parameters);
+    }
+    case "app/actions/ai/finance-input.getAiFinanceInputProposal":
+      return financeInputAi.getAiFinanceInputProposal(args[0]);
+    case "app/actions/ai/finance-input.confirmAiFinanceInputProposal":
+      return financeInputAi.confirmAiFinanceInputProposal(args[0]);
+    case "app/actions/ai/catalog-settings.getAiCatalogSettingsProposal": {
+      const parameters = [...args] as Parameters<
+        typeof catalogSettingsAi.getAiCatalogSettingsProposal
+      >;
+      return catalogSettingsAi.getAiCatalogSettingsProposal(...parameters);
+    }
+    case "app/actions/ai/catalog-settings.confirmAiCatalogSettingsProposal": {
+      const parameters = [...args] as Parameters<
+        typeof catalogSettingsAi.confirmAiCatalogSettingsProposal
+      >;
+      return catalogSettingsAi.confirmAiCatalogSettingsProposal(...parameters);
+    }
+    case "app/actions/ai/procurement-warehouse.getAiProcurementWarehouseProposal":
+      return procurementWarehouseAi.getAiProcurementWarehouseProposal(args[0]);
+    case "app/actions/ai/procurement-warehouse.confirmAiProcurementWarehouseProposal":
+      return procurementWarehouseAi.confirmAiProcurementWarehouseProposal(args[0]);
+    case "app/actions/ai/project-stock.getAiProjectStockProposal":
+      return projectStockAi.getAiProjectStockProposal(args[0]);
+    case "app/actions/ai/project-stock.confirmAiProjectStockProposal":
+      return projectStockAi.confirmAiProjectStockProposal(args[0]);
+    case "app/actions/ai/rab-workflow.getAiRabWorkflowProposal":
+      return rabWorkflowAi.getAiRabWorkflowProposal(args[0]);
+    case "app/actions/ai/rab-workflow.confirmAiRabWorkflowProposal":
+      return rabWorkflowAi.confirmAiRabWorkflowProposal(args[0]);
+    case "app/actions/project/rab-workflow.createRabRevision":
+      return rabWorkflow.createRabRevision(args[0]);
+    case "app/actions/project/rab-workflow.rejectChangeOrder":
+      return rabWorkflow.rejectChangeOrder(args[0]);
+    case "app/actions/project/rab-workflow.updateRabEstimateHeader":
+      return rabWorkflow.updateRabEstimateHeader(args[0]);
+    case "app/actions/ai/rab-draft.getAiRabDraftProposal":
+      return rabAi.getAiRabDraftProposal(args[0]);
+    case "app/actions/ai/rab-draft.patchAiRabDraftProposal":
+      return rabAi.patchAiRabDraftProposal(args[0]);
+    case "app/actions/ai/rab-draft.confirmAiRabDraftProposal":
+      return rabAi.confirmAiRabDraftProposal(args[0]);
+    case "app/actions/ai/rap-lifecycle.getAiRapLifecycleProposal":
+      return lifecycleAi.getAiRapLifecycleProposal(args[0]);
+    case "app/actions/ai/rap-lifecycle.confirmAiRapLifecycleProposal":
+      return lifecycleAi.confirmAiRapLifecycleProposal(args[0]);
+    case "app/actions/ai/rap-finalization.getAiRapSetupProposal":
+      return rapSetupAi.getAiRapSetupProposal(args[0]);
+    case "app/actions/ai/rap-finalization.confirmAiRapSetupProposal":
+      return rapSetupAi.confirmAiRapSetupProposal(args[0]);
+    case "app/actions/ai/category-plan.getAiCategoryPlanProposal":
+      return packageAi.getAiCategoryPlanProposal(args[0]);
+    case "app/actions/ai/category-plan.confirmAiCategoryPlanProposal":
+      return packageAi.confirmAiCategoryPlanProposal(args[0]);
+    case "app/actions/ai/rap-draft.patchAiRapDraftProposal":
+      return rapDraftAi.patchAiRapDraftProposal(args[0]);
+    case "app/actions/ai/rap-draft.getAiRapDraftProposal":
+      return rapDraftAi.getAiRapDraftProposal(args[0]);
+    case "app/actions/ai/rap-draft.confirmAiRapDraftProposal":
+      return rapDraftAi.confirmAiRapDraftProposal(args[0]);
+    case "app/actions/ai/material-update.getAiMaterialUpdateProposal":
+      return materialUpdateAi.getAiMaterialUpdateProposal(args[0]);
+    case "app/actions/ai/rap-change.getAiRapChangeProposal":
+      return rapChangeAi.getAiRapChangeProposal(args[0]);
+    case "app/actions/ai/rap-change.confirmAiRapChangeProposal":
+      return rapChangeAi.confirmAiRapChangeProposal(args[0]);
+    case "app/actions/ai/material-update.confirmAiMaterialUpdateProposal":
+      return materialUpdateAi.confirmAiMaterialUpdateProposal(args[0]);
+    case "app/actions/ai/material-master.startAiMaterialAnalysis":
+      return materialAi.startAiMaterialAnalysis(args[0]);
+    case "app/actions/ai/material-master.getAiMaterialDraft":
+      return materialAi.getAiMaterialDraft(args[0]);
+    case "app/actions/ai/material-master.patchAiMaterialDraft":
+      return materialAi.patchAiMaterialDraft(args[0]);
+    case "app/actions/ai/material-master.selectAiMaterialRows":
+      return materialAi.selectAiMaterialRows(args[0]);
+    case "app/actions/ai/material-master.saveAiMaterialRows":
+      return materialAi.saveAiMaterialRows(args[0]);
+    case "app/actions/ai/material-master.confirmAiMaterialReference":
+      return materialAi.confirmAiMaterialReference(args[0]);
+    case "app/actions/ai/material-master.retryAiMaterialAnalysis":
+      return materialAi.retryAiMaterialAnalysis(args[0]);
+    case "app/actions/ai/material-master.discardAiMaterialDraft":
+      return materialAi.discardAiMaterialDraft(args[0]);
     case "app/actions/onboarding-overview.getOwnerOnboardingOverview": {
       const parameters = [...args] as Parameters<typeof module0.getOwnerOnboardingOverview>;
       return module0.getOwnerOnboardingOverview(...parameters);
@@ -1060,6 +1340,13 @@ export async function invokeWebOperation(
       const parameters = [...args] as Parameters<typeof module34.updateOwnProfile>;
       return module34.updateOwnProfile(...parameters);
     }
+    case "app/actions/profile/role-guide.getOwnRoleGuide": {
+      return roleGuide.getOwnRoleGuide();
+    }
+    case "app/actions/profile/role-guide.acknowledgeOwnRoleGuide": {
+      const parsed = acknowledgeRoleGuideSchema.parse(args[0]);
+      return roleGuide.acknowledgeOwnRoleGuide(parsed);
+    }
     case "app/actions/ai/chat-history.getLatestAiConversation": {
       const parameters = [...args] as Parameters<typeof module35.getLatestAiConversation>;
       return module35.getLatestAiConversation(...parameters);
@@ -1127,6 +1414,9 @@ export async function invokeWebOperation(
     case "app/actions/ai/preferences.getAiPreference": {
       const parameters = [...args] as Parameters<typeof module42.getAiPreference>;
       return module42.getAiPreference(...parameters);
+    }
+    case "app/actions/ai/preferences.getAiCapabilities": {
+      return module42.getAiCapabilities();
     }
     case "app/actions/ai/preferences.saveAiPreference": {
       const parameters = [...args] as Parameters<typeof module42.saveAiPreference>;
@@ -1300,6 +1590,18 @@ export async function invokeWebOperation(
       const parameters = [...args] as Parameters<typeof module61.submitExpenseDraft>;
       return module61.submitExpenseDraft(...parameters);
     }
+    case "app/actions/finance/dashboard-desktop.getFinanceDashboardDesktopTabData": {
+      const parameters = [...args] as Parameters<
+        typeof dashboardDesktop.getFinanceDashboardDesktopTabData
+      >;
+      return dashboardDesktop.getFinanceDashboardDesktopTabData(...parameters);
+    }
+    case "app/actions/finance/dashboard-desktop.getFinanceDashboardCashFlowTrend": {
+      const parameters = [...args] as Parameters<
+        typeof dashboardDesktop.getFinanceDashboardCashFlowTrend
+      >;
+      return dashboardDesktop.getFinanceDashboardCashFlowTrend(...parameters);
+    }
     case "app/actions/finance/dashboard-overview.getFinanceDashboardOverview": {
       const parameters = [...args] as Parameters<typeof module62.getFinanceDashboardOverview>;
       return module62.getFinanceDashboardOverview(...parameters);
@@ -1332,6 +1634,8 @@ export async function invokeWebOperation(
       const parameters = [...args] as Parameters<typeof module66.submitVendorBill>;
       return module66.submitVendorBill(...parameters);
     }
+    case "app/actions/finance/correct-vendor-bill.correctVendorBill":
+      return vendorBillCorrections.correctVendorBill(args[0]);
     case "app/actions/finance/submit-vendor-bill.getVendorBillFormData": {
       const parameters = [...args] as Parameters<typeof module66.getVendorBillFormData>;
       return module66.getVendorBillFormData(...parameters);
@@ -1469,6 +1773,10 @@ export async function invokeWebOperation(
     case "app/actions/material/operations-dashboard.getMaterialOperationsDashboard": {
       const parameters = [...args] as Parameters<typeof module78.getMaterialOperationsDashboard>;
       return module78.getMaterialOperationsDashboard(...parameters);
+    }
+    case "app/actions/material/inventory-project-movements.releaseMaterialReservation": {
+      const parameters = [...args] as Parameters<typeof module79.releaseMaterialReservation>;
+      return module79.releaseMaterialReservation(...parameters);
     }
     case "app/actions/material/inventory-project-movements.wasteMaterialForProject": {
       const parameters = [...args] as Parameters<typeof module79.wasteMaterialForProject>;

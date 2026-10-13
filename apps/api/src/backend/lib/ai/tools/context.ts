@@ -1,5 +1,5 @@
 import { db } from "@backend/db";
-import { project } from "@backend/db/schema";
+import { project, INSTANCE_TENANT_ID } from "@backend/db/schema";
 import type { RoleDataScope } from "@atria/core/auth/permissions";
 import { type PermissionKey } from "@backend/lib/auth/permissions";
 import { and, eq, inArray } from "drizzle-orm";
@@ -25,6 +25,10 @@ export type AiToolContext = {
    */
   readonly permissions: readonly PermissionKey[];
   readonly dataScope: RoleDataScope;
+  /** Validated human text, separate from extracted attachment/model content. */
+  readonly userQuestion?: string;
+  /** One server clock snapshot for all relative-period reads in this turn. */
+  readonly asOf?: string;
 };
 
 /**
@@ -51,14 +55,19 @@ export async function canAccessProject(
 ): Promise<boolean> {
   if (hasGlobalScope(context)) {
     const found = await db.query.project.findFirst({
-      where: eq(project.id, projectId),
+      where: and(eq(project.id, projectId), eq(project.tenantId, INSTANCE_TENANT_ID)),
       columns: { id: true },
     });
     return found !== undefined;
   }
 
+  if (context.dataScope !== "ASSIGNED") return false;
   const scoped = await db.query.project.findFirst({
-    where: and(eq(project.id, projectId), eq(project.projectManagerId, context.userId)),
+    where: and(
+      eq(project.id, projectId),
+      eq(project.tenantId, INSTANCE_TENANT_ID),
+      eq(project.projectManagerId, context.userId),
+    ),
     columns: { id: true },
   });
   return scoped !== undefined;
@@ -137,9 +146,13 @@ export async function accessibleProjectIds(context: AiToolContext): Promise<stri
   if (hasGlobalScope(context)) {
     return null;
   }
+  if (context.dataScope !== "ASSIGNED") return [];
 
   const rows = await db.query.project.findMany({
-    where: eq(project.projectManagerId, context.userId),
+    where: and(
+      eq(project.tenantId, INSTANCE_TENANT_ID),
+      eq(project.projectManagerId, context.userId),
+    ),
     columns: { id: true },
   });
   return rows.map((row) => row.id);

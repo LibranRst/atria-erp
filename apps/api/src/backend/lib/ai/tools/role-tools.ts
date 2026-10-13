@@ -27,6 +27,7 @@ import {
 import type { PermissionKey } from "@atria/core/auth/permissions";
 import { hasPermission, permissionDenied, type AiToolContext } from "./context";
 import { roleReviewOutputSchema } from "../tool-output";
+import { aiCapabilityReport } from "./capability-catalog";
 
 /**
  * Tool kecerdasan peran — read-only, tanpa satu pun jalan menulis.
@@ -171,7 +172,7 @@ export function buildRoleTools(context: AiToolContext) {
   return {
     explainUserAccess: tool({
       description:
-        "Explain what a person can and cannot do in the ERP, grouped by module, based on their role's effective permissions. Use this to answer questions like 'what am I allowed to do?' or 'why can't Budi disburse a vendor payment?'. Omit `person` to explain the current user. Read-only: it never changes permissions.",
+        "Explain ERP authorization, NOT the assistant's implemented capabilities. Use getAvailableActions for 'what can AI do?' even for an Owner. Use this for 'what am I allowed to do in ERP?' or 'why can't Budi disburse a vendor payment?'. Omit person to explain the current user. Read-only.",
       inputSchema: z.object({
         person: z
           .string()
@@ -222,6 +223,9 @@ export function buildRoleTools(context: AiToolContext) {
           projectScope: describeDataScopeForAi(target.role.dataScope),
           totalGranted: held.size,
           modules: summarizePermissionsByModule(held),
+          aiCapabilityNote:
+            "Izin ERP bukan bukti bahwa seluruh aksi tersedia lewat chat. Tool getAvailableActions adalah sumber kemampuan AI.",
+          ...(inspectingSelf ? { aiActions: aiCapabilityReport(context) } : {}),
         };
       },
     }),

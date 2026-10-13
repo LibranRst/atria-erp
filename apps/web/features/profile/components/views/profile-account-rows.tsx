@@ -2,7 +2,8 @@
 
 import React from "react";
 
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button } from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { useProfileActions } from "./profile-actions-provider";
 
 const ROW_CLASS =
@@ -40,7 +41,22 @@ function ActionRow({
 
 export function ProfileAccountRows(): React.JSX.Element | null {
   const actions = useProfileActions();
+  const desktop = useWorkspacePresentation() === "desktop";
   if (!actions) return null;
+  if (desktop)
+    return (
+      <div className="flex min-h-14 items-center justify-between gap-4 px-3.5 py-3 pointer-coarse:min-h-16">
+        <div className="min-w-0">
+          <p className="text-row font-semibold text-on-surface">Password</p>
+          <p className="mt-0.5 text-support text-on-surface-variant">
+            Perangkat lain akan keluar setelah diubah.
+          </p>
+        </div>
+        <Button size="compact" variant="secondary" onClick={actions.openChangePassword}>
+          Ganti password
+        </Button>
+      </div>
+    );
 
   return (
     <>

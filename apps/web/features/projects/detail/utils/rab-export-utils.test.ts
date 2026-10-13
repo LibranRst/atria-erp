@@ -1,10 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { buildRabExcelRows } from "./rab-export-utils";
-import type {
-  RabBundleView,
-  RabEstimateView,
-  RabItemView,
-} from "../types/rap-rab-types";
+import type { RabBundleView, RabEstimateView, RabItemView } from "../types/rap-rab-types";
 
 describe("rab-export-utils", () => {
   const mockBundle: RabBundleView = {
@@ -124,7 +120,7 @@ describe("rab-export-utils", () => {
 
     expect(rows.length).toBeGreaterThan(15);
     // Header validations
-    expect(rows[0][0]).toBe("STUDIO INTERIOR & ARCHITECTURE");
+    expect(rows[0][0]).toBe("Perusahaan");
     expect(rows[1][0]).toBe("RENCANA ANGGARAN BIAYA (RAB)");
 
     // Project & client metadata
@@ -249,7 +245,9 @@ describe("rab-export-utils", () => {
   it("handles document config defaults and reset cleanly", async () => {
     const { DEFAULT_RAB_CONFIG, resetRabConfig } = await import("./rab-export-utils");
     expect(DEFAULT_RAB_CONFIG.themeColor).toBe("#181817");
-    expect(DEFAULT_RAB_CONFIG.companyName).toBe("STUDIO INTERIOR");
+    expect(DEFAULT_RAB_CONFIG.companyName).toBe("Perusahaan");
+    expect(DEFAULT_RAB_CONFIG.paymentTermsNotes).toBe("");
+    expect(DEFAULT_RAB_CONFIG.companyPhone).toBe("");
 
     const resetCfg = resetRabConfig("Pak Hendra");
     expect(resetCfg.themeColor).toBe("#181817");
@@ -290,6 +288,45 @@ describe("rab-export-utils", () => {
     const media = (workbook.model as { media?: unknown[] })?.media;
     expect(media).toBeDefined();
     expect(media?.length).toBeGreaterThan(0);
+  });
+
+  it("does not carry a globally saved receiver into a different document", async () => {
+    const { resolveRabDocumentConfig } = await import("./rab-export-utils");
+    expect(
+      resolveRabDocumentConfig(
+        { signeeApprovedByName: "Klien lama", themeColor: "#181817" },
+        "Klien baru",
+        "Perusahaan nyata",
+      ).signeeApprovedByName,
+    ).toBe("Klien baru");
+    expect(
+      resolveRabDocumentConfig(
+        { signeeApprovedByName: "Klien lama" },
+        "Klien baru",
+        "Perusahaan nyata",
+        "Penerima untuk revisi ini",
+      ).signeeApprovedByName,
+    ).toBe("Penerima untuk revisi ini");
+  });
+
+  it("keeps fractional prices, subtotals and final total visible in Excel", async () => {
+    const { buildRabStyledWorkbook } = await import("./rab-export-utils");
+    const book = await buildRabStyledWorkbook(
+      {
+        ...mockRabEstimate,
+        bundles: [],
+        items: [{ ...mockStandaloneItem, quantity: "1", unitPrice: "100.25", lineTotal: "100.25" }],
+      },
+      { projectName: "Proyek QA" },
+    );
+    const formats: string[] = [];
+    book.worksheets[0].eachRow((row) =>
+      row.eachCell((cell) => {
+        if (cell.value === 100.25) formats.push(cell.numFmt);
+      }),
+    );
+    expect(formats.length).toBeGreaterThanOrEqual(3);
+    expect(formats.every((format) => format.includes("0.00"))).toBe(true);
   });
 
   it("handles optimizeLogoDataUrl gracefully for SVG and non-browser environments", async () => {

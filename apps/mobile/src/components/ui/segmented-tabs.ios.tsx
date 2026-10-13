@@ -3,17 +3,9 @@ import type { SegmentedTabsProps } from "./segmented-tabs.shared";
 import { transitionEaseSmooth, transitionSpringBouncy } from "@atria/tokens/motion";
 import { useWindowDimensions } from "react-native";
 import { theme } from "@/theme";
+import { nativeIconImageData } from "@atria/icons/native-images";
 
 export type { SegmentedTab, SegmentedTabsProps } from "./segmented-tabs.shared";
-
-const symbols: Readonly<Record<string, string>> = {
-  space_dashboard: "square.grid.2x2",
-  approval: "checkmark.seal",
-  monitoring: "chart.xyaxis.line",
-  event_busy: "calendar.badge.clock",
-  account_balance: "building.columns",
-  inventory_2: "shippingbox",
-};
 
 export function SegmentedTabs<TValue extends string>({
   accessibilityLabel,
@@ -30,7 +22,7 @@ export function SegmentedTabs<TValue extends string>({
       options={options.map((option) => ({
         id: option.value,
         label: option.label,
-        symbol: option.icon ? (symbols[option.icon] ?? option.icon) : "",
+        iconData: option.icon ? nativeIconImageData(option.icon) : "",
         badge: option.badge ?? -1,
         disabled: option.disabled ?? false,
       }))}

@@ -1,8 +1,10 @@
+import { prepareProcurementWarehouseProposal } from "@backend/server/usecases/ai/procurement-warehouse-context";
 import { afterAll, expect, it } from "bun:test";
 import { and, eq, inArray } from "drizzle-orm";
 import { db, pool } from "@backend/db";
 import {
   aiConversation,
+  aiMessage,
   aiProposalConfirmation,
   auditLog,
   goodsReceipt,
@@ -96,7 +98,7 @@ async function pendingReceipt(
   ],
 ): Promise<string> {
   actAs(PURCHASING);
-  const posted = await postGoodsReceipt({
+  const posted = await withTestRequest(postGoodsReceipt)({
     projectId: PROJECT,
     inventoryLocationId: LOCATION,
     receiptNumber: `GRN-RACE-${crypto.randomUUID()}`,
@@ -105,7 +107,7 @@ async function pendingReceipt(
   });
   expect(posted.success).toBe(true);
   if (!posted.success) throw new Error(posted.error.message);
-  const requested = await requestGoodsReceiptReversal({
+  const requested = await withTestRequest(requestGoodsReceiptReversal)({
     goodsReceiptId: posted.data.id,
     reason: "Penerimaan duplikat pada fixture concurrency.",
   });
@@ -386,13 +388,37 @@ describeIntegration(
           receivedAt: new Date().toISOString(),
           items: [{ materialId: PU, quantity: 2, unitCost: 150000 }],
         };
+        const actor = await resolveActor();
+        if (!actor) throw new Error("Receipt actor missing.");
+        const proposal = await prepareProcurementWarehouseProposal(actor, {
+          action: "PROJECT_RECEIPT",
+          projectId: input.projectId,
+          inventoryLocationId: input.inventoryLocationId,
+          receiptNumber: input.receiptNumber,
+          receivedAt: input.receivedAt.slice(0, 10),
+          note: "Penerimaan sintetis untuk rollback",
+          items: input.items,
+        });
+        await db.insert(aiMessage).values({
+          conversationId: conversation.id,
+          role: "assistant",
+          parts: [
+            {
+              type: "tool-proposeGoodsReceipt",
+              state: "output-available",
+              toolCallId: input.toolCallId,
+              output: { proposal },
+            },
+          ],
+        });
+        const identity = { conversationId: conversation.id, toolCallId: input.toolCallId };
         const before = await inventory(PU);
         // Test-only fault injection rejects the last insert after business writes.
         await pool.query(
           "ALTER TABLE ai_proposal_confirmation ADD CONSTRAINT test_receipt_confirmation_failure CHECK (false) NOT VALID",
         );
         try {
-          const failed = await confirmAiGoodsReceiptProposal(input);
+          const failed = await confirmAiGoodsReceiptProposal(identity);
           expect(failed.success).toBe(false);
           expect((await inventory(PU)).currentStock).toBe(before.currentStock);
           expect((await inventory(PU)).averageCost).toBe(before.averageCost);
@@ -411,11 +437,11 @@ describeIntegration(
             "ALTER TABLE ai_proposal_confirmation DROP CONSTRAINT test_receipt_confirmation_failure",
           );
         }
-        const confirmed = await confirmAiGoodsReceiptProposal(input);
+        const confirmed = await confirmAiGoodsReceiptProposal(identity);
         expect(confirmed.success).toBe(true);
         if (!confirmed.success) throw new Error(confirmed.error.message);
         expect(confirmed.data.alreadyConfirmed).toBe(false);
-        const repeated = await confirmAiGoodsReceiptProposal(input);
+        const repeated = await confirmAiGoodsReceiptProposal(identity);
         expect(repeated.success).toBe(true);
         if (!repeated.success) throw new Error(repeated.error.message);
         expect(repeated.data.alreadyConfirmed).toBe(true);

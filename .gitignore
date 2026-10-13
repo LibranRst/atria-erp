@@ -66,8 +66,12 @@ next-env.d.ts
 .pnpm-store/
 .playwright-cli/
 output/
+outputs/
 scratch/
 .atria-demo/
+__pycache__/
+*.pyc
+debug-storybook.log
 
 # storybook
 storybook-static/
@@ -90,6 +94,7 @@ apps/web/dist/
 /graft/
 
 # Isolated Next.js verification output
+.atria-dev/
 apps/web/.next-admin-verify/
 apps/web/.next-admin-dev/
 # Isolated verification build/browser output (also excluded from Tailwind scans).

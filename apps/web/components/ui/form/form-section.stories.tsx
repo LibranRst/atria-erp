@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
 
 import { FieldContextLine, FormSection } from "./guided-form";
+import { FormField, TextInput } from "./basic-form-controls";
 
 const meta = {
   title: "ui/form/FormSection",
@@ -26,4 +27,16 @@ export const Grouped: Story = {};
 
 export const Plain: Story = {
   args: { presentation: "plain" },
+};
+
+export const Embedded: Story = {
+  render: () => (
+    <div className="rounded-owner bg-surface-container-lowest p-2 shadow-control">
+      <FormSection presentation="embedded">
+        <FormField label="Nama material">
+          <TextInput value="Panel contoh" onChange={() => undefined} />
+        </FormField>
+      </FormSection>
+    </div>
+  ),
 };

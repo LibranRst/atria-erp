@@ -30,6 +30,9 @@ const userId = crypto.randomUUID();
 await database
   .insert(schema.user)
   .values({ id: userId, name: "Test", email: "test@example.invalid", roleId });
+await database
+  .insert(schema.tenantMember)
+  .values({ tenantId: schema.INSTANCE_TENANT_ID, userId, roleId, isActive: true });
 const actor: Actor = {
   userId,
   roleId,
@@ -59,7 +62,35 @@ expect(await roleNameHasPermission("FINANCE_ADMIN", "pay:cost")).toBe(false);
 // Read/write melalui use-case asli, bukan hanya menghapus baris fixture.
 const { updateRolePermissionsUseCase } =
   await import("@backend/server/usecases/administration/roles");
-const manager: Actor = { ...actor, permissions: ["manage:roles", "pay:cost", "view:cost"] };
+// The writer verifies persisted authority after locking; a fabricated Actor
+// permission array is intentionally insufficient.
+const managerRoleId = crypto.randomUUID(),
+  managerId = crypto.randomUUID();
+await database
+  .insert(schema.role)
+  .values({ id: managerRoleId, name: "CUSTOM_ADMIN", dataScope: "GLOBAL" });
+const managerKeys = ["manage:roles", "pay:cost", "view:cost"] as const;
+await database
+  .insert(schema.rolePermission)
+  .values(managerKeys.map((permissionKey) => ({ roleId: managerRoleId, permissionKey })));
+await database.insert(schema.user).values({
+  id: managerId,
+  name: "Manager",
+  email: "manager@example.invalid",
+  roleId: managerRoleId,
+});
+await database.insert(schema.tenantMember).values({
+  tenantId: schema.INSTANCE_TENANT_ID,
+  userId: managerId,
+  roleId: managerRoleId,
+  isActive: true,
+});
+const manager: Actor = {
+  ...actor,
+  userId: managerId,
+  roleId: managerRoleId,
+  permissions: managerKeys,
+};
 expect(
   (await updateRolePermissionsUseCase(manager, { roleId, permissions: ["pay:cost", "view:cost"] }))
     .success,
@@ -241,15 +272,13 @@ await expect(
 const mixedRoleId = crypto.randomUUID();
 const wildcardDecoyId = crypto.randomUUID();
 const mixedOtherProjectId = crypto.randomUUID();
-await database
-  .insert(schema.project)
-  .values({
-    id: mixedOtherProjectId,
-    clientId,
-    name: "Mixed role foreign project",
-    status: "ACTIVE",
-    totalContractValue: "1000.00",
-  });
+await database.insert(schema.project).values({
+  id: mixedOtherProjectId,
+  clientId,
+  name: "Mixed role foreign project",
+  status: "ACTIVE",
+  totalContractValue: "1000.00",
+});
 await database.insert(schema.role).values([
   { id: mixedRoleId, name: "MiXeD_Pm_%_Reviewer", dataScope: "ASSIGNED" },
   { id: wildcardDecoyId, name: "MIXEDAPMBANYCREVIEWER", dataScope: "GLOBAL" },

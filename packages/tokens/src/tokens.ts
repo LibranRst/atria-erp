@@ -72,6 +72,7 @@ export const spacing = {
 
 export const radii = {
   owner: 28,
+  desktopPanel: 16,
   inset: 20,
   icon: 16,
 } as const;

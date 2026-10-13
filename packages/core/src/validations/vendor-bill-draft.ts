@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { invoiceSourceSchema } from "../ai/procurement-warehouse";
 
 import { submitVendorBillSchema } from "./finance";
 import { zodIssuesToDetails } from "./expense-draft";
@@ -17,6 +18,9 @@ export const vendorBillDraftPayloadSchema = z.object({
   projectBudgetCategoryId: optionalUuid,
   projectBudgetItemId: optionalUuid,
   projectCategoryPlanItemId: optionalUuid,
+  materialId: uuid.optional().nullable(),
+  projectRapItemId: uuid.optional().nullable(),
+  invoice: invoiceSourceSchema.optional(),
   billNumber: z.string().max(120),
   amount: z.union([z.number().nonnegative(), z.literal("")]),
   dueDate: z.string().max(20),
@@ -47,6 +51,8 @@ export function toVendorBillSubmission(
     projectId: payload.projectId,
     projectBudgetCategoryId: payload.projectBudgetCategoryId,
     projectCategoryPlanItemId: payload.projectCategoryPlanItemId || undefined,
+    materialId: payload.materialId,
+    projectRapItemId: payload.projectRapItemId,
     billNumber: payload.billNumber.trim(),
     amount: Number(payload.amount),
     dueDate: new Date(payload.dueDate),

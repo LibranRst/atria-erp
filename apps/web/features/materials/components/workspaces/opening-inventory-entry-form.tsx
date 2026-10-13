@@ -1,9 +1,8 @@
 "use client";
-
-import { motion } from "framer-motion";
 import { useRouter } from "@/lib/navigation/workspace-navigation";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { toast } from "sonner";
 import {
   createInventoryOpening,
@@ -15,13 +14,14 @@ import {
   AppIcon,
   ConfirmationDialog,
   DuotoneIconTile,
+  FactRow,
   GroupedSurface,
   MoneyValue,
   OperationalFormSheet,
   SegmentedTabs,
   SheetFooterActions,
+  Button,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { OpeningInventoryCsvEntry } from "./opening-inventory-csv-entry";
 import { OpeningInventoryManualEntry } from "./opening-inventory-manual-entry";
 import { OpeningInventoryMetadataFields } from "./opening-inventory-metadata-fields";
@@ -49,6 +49,7 @@ export function OpeningInventoryEntryForm({
   open = false,
   onClose,
 }: OpeningInventoryEntryFormProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const router = useRouter();
   const [mode, setMode] = React.useState<EntryMode>("MANUAL");
   const [metadata, setMetadata] = React.useState<Metadata>(EMPTY_METADATA);
@@ -220,7 +221,7 @@ export function OpeningInventoryEntryForm({
         />
       )}
 
-      <GroupedSurface>
+      <GroupedSurface className={presentation === "sheet" && desktop ? "hidden" : ""}>
         <div className="divide-y divide-outline-variant/20">
           <div className="flex min-h-16 items-center gap-3.5 px-4 py-3.5">
             <DuotoneIconTile name="inventory_2" tone="accent" />
@@ -253,6 +254,81 @@ export function OpeningInventoryEntryForm({
     return (
       <>
         <OperationalFormSheet
+          desktopSize="wide"
+          desktopFooterPlacement="aside"
+          desktopAsideSummary={
+            <div className="space-y-4">
+              <GroupedSurface>
+                <div className="divide-y divide-outline-variant/20">
+                  <FactRow
+                    layout="stacked"
+                    label="Cara pengisian"
+                    wrapLabel
+                    value={mode === "CSV" ? "Import CSV" : "Isi manual"}
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Tanggal saldo awal"
+                    wrapLabel
+                    value={metadata.balanceDate || "Belum dipilih"}
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Dokumen sumber"
+                    wrapLabel
+                    value={metadata.referenceNumber || "Tidak ada"}
+                  />
+                  {mode === "CSV" ? (
+                    <FactRow
+                      layout="stacked"
+                      label="File"
+                      wrapLabel
+                      value={fileName || "Belum dipilih"}
+                    />
+                  ) : null}
+                  <FactRow
+                    layout="stacked"
+                    label="Baris draft"
+                    wrapLabel
+                    value={submittedItems.length}
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Nilai draft"
+                    wrapLabel
+                    value={
+                      Number.isFinite(total) ? (
+                        <MoneyValue
+                          fractionDigits={Number.isInteger(total) ? 0 : 2}
+                          amount={total}
+                          variant="fullDynamic"
+                          size="sm"
+                        />
+                      ) : (
+                        "Periksa jumlah dan harga"
+                      )
+                    }
+                  />
+                  {mode === "CSV" ? (
+                    <FactRow
+                      layout="stacked"
+                      label="Validasi CSV"
+                      wrapLabel
+                      value={
+                        preview
+                          ? `${preview.errors.length} baris perlu diperbaiki`
+                          : "Belum divalidasi"
+                      }
+                    />
+                  ) : null}
+                </div>
+              </GroupedSurface>
+              <p className="text-support leading-relaxed text-on-surface-variant">
+                Saldo awal diajukan untuk persetujuan. Kas dan stok fisik belum berubah sampai
+                disetujui.
+              </p>
+            </div>
+          }
           dismissal={{ mode: "managed" }}
           open={open}
           title="Catat saldo awal stok"
@@ -262,7 +338,11 @@ export function OpeningInventoryEntryForm({
           pending={pending}
           disabled={!formComplete}
           disabledReason={submitDisabledReason}
-          statusText={`${submittedItems.length} item · Rp ${total.toLocaleString("id-ID")} · Perlu persetujuan`}
+          statusText={
+            desktop
+              ? undefined
+              : `${submittedItems.length} item · Rp ${total.toLocaleString("id-ID")} · Perlu persetujuan`
+          }
           statusTone={formComplete ? "success" : "default"}
           onClose={requestClose}
         >
@@ -308,12 +388,11 @@ export function OpeningInventoryEntryForm({
         </div>
       ) : null}
 
-      <motion.button
+      <Button
         type="submit"
-        whileTap={pending || !formComplete ? undefined : { scale: 0.98 }}
-        transition={transitionSpringSnappy}
         disabled={pending || !formComplete}
-        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-row font-bold text-on-primary shadow-primary transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-row font-bold text-on-primary shadow-primary active:z-10 active:shadow-raised disabled:cursor-not-allowed disabled:opacity-40"
+        variant="primary"
       >
         {pending ? (
           <>
@@ -323,7 +402,7 @@ export function OpeningInventoryEntryForm({
         ) : (
           <span>Ajukan saldo awal</span>
         )}
-      </motion.button>
+      </Button>
     </form>
   );
 }

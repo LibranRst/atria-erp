@@ -11,6 +11,7 @@ import {
   EmptyState,
   FilterSelect,
   FormRiskNotice,
+  Button,
 } from "@/components/ui";
 import { InventoryLocationSheet } from "@/features/materials/components/sheets/inventory-location-sheet";
 import { VendorCreateSheet } from "@/features/administration/components/forms/vendor-create-sheet";
@@ -272,22 +273,26 @@ export function MaterialSettingsManager({
             </span>
           </span>
           <span className="flex shrink-0 items-center gap-1">
-            <button
+            <Button
               type="button"
               onClick={() => setShowImport(true)}
               disabled={!canManage}
               className="relative min-h-10 rounded-full bg-accent/8 px-3 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
+              variant="secondary"
+              size="compact"
             >
               Import
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => openMaterial(blank())}
               disabled={!canManage}
               className="relative min-h-10 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
+              variant="secondary"
+              size="compact"
             >
               Tambah
-            </button>
+            </Button>
           </span>
         </div>
       ) : (
@@ -349,28 +354,31 @@ export function MaterialSettingsManager({
               />
               {canManage ? (
                 <div className="mt-2 border-t border-black/5.5 pt-3">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setShowImport(true)}
                     className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface hover:bg-surface-container-high"
+                    variant="secondary"
+                    size="compact"
                   >
                     <AppIcon name="upload_file" className="icon-sm" />
                     Import Material dari CSV
-                  </button>
+                  </Button>
                 </div>
               ) : null}
             </SettingsFilterBar>
           </div>
           {canManage ? (
-            <button
+            <Button
               type="button"
               onClick={() => openMaterial(blank())}
               className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
               title="Tambah Material Baru"
+              variant="primary"
             >
               <AppIcon name="add" className="icon-sm" />
               <span className="ml-1 max-[420px]:hidden">Tambah</span>
-            </button>
+            </Button>
           ) : null}
         </div>
       )}

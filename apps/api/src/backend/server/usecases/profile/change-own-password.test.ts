@@ -78,19 +78,21 @@ describe("changeOwnPassword transaction integrity", () => {
 describe("updateOwnProfile audit integrity", () => {
   const useCaseSource = readSource("server/usecases/profile/update-own-profile.ts");
 
-  test("perubahan dan auditnya berada dalam satu transaksi", () => {
+  test("jalur manual memakai writer transaksi yang sama dengan AI", () => {
     const body = extractTransactionBody(useCaseSource);
-
-    expect(body).toContain(".update(user)");
-    expect(body).toContain('action: "UPDATE_OWN_PROFILE"');
+    expect(body).toContain("updateOwnProfileTx(tx, actor, input)");
+    const writer =
+      useCaseSource
+        .split("export async function updateOwnProfileTx")[1]
+        ?.split("export async function updateOwnProfileUseCase")[0] ?? "";
+    expect(writer).toContain(".update(user)");
+    expect(writer).toContain('action: "UPDATE_OWN_PROFILE"');
+    expect(writer).not.toMatch(/db\.(insert|update)/);
   });
-
-  test("submit tanpa perubahan keluar sebelum transaksi dibuka", () => {
-    const earlyReturnIndex = useCaseSource.indexOf("data: { updated: false }");
-    const transactionIndex = useCaseSource.indexOf("await db.transaction(");
-
+  test("submit tanpa perubahan keluar sebelum update dan audit", () => {
+    const earlyReturnIndex = useCaseSource.indexOf("updated: false, auditId: null");
     expect(earlyReturnIndex).toBeGreaterThan(-1);
-    expect(earlyReturnIndex).toBeLessThan(transactionIndex);
+    expect(earlyReturnIndex).toBeLessThan(useCaseSource.indexOf(".update(user)"));
   });
 
   test("tidak ada identitas yang berasal dari argumen klien", () => {

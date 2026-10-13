@@ -14,6 +14,7 @@ import {
   SegmentedTabs,
   SummaryFact,
   SummarySurface,
+  Button,
 } from "@/components/ui";
 import { usePreservedScrollHeight } from "@/lib/hooks/use-preserved-scroll-height";
 import type { ExpenseCostItem, FilterStatus } from "@/features/expenses/types/expense-list-types";
@@ -215,13 +216,14 @@ export function FieldClaimsPanel({
             )}
 
             {filteredCosts.length > visibleLimit ? (
-              <button
+              <Button
                 type="button"
                 onClick={() => setVisibleLimit((current) => current + 20)}
                 className="min-h-12 w-full rounded-full bg-surface-container text-xs leading-4 font-bold text-on-surface"
+                variant="secondary"
               >
                 Tampilkan 20 berikutnya
-              </button>
+              </Button>
             ) : null}
 
             {filter === "ALL" && (
@@ -261,14 +263,16 @@ function FieldClaimsSummary({
       statusTone={needsActionCount > 0 ? "warning" : "positive"}
       action={
         projectId ? (
-          <button
+          <Button
             type="button"
             onClick={onOpenExpenseDrawer}
             className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
+            variant="secondary"
+            size="mini"
           >
             <AppIcon name="add" className="icon-xs leading-none" />
             Tambah
-          </button>
+          </Button>
         ) : undefined
       }
     >

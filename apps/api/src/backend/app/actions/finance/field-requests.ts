@@ -1,9 +1,8 @@
+import { submitExpenseBatchTx } from "@backend/server/usecases/finance/submit-expense-batch";
 import { resolveActor } from "@backend/server/actor";
 import { submitFieldRequestTx } from "@backend/server/usecases/finance/submit-field-request";
-import { assertExpenseAttachment } from "@backend/server/usecases/finance/expense-attachment";
-import { getFieldCostApprovalThresholdRupiah } from "@backend/lib/finance/approval-thresholds";
 import { db } from "@backend/db";
-import { auditLog, projectCost } from "@backend/db/schema";
+import { projectCost } from "@backend/db/schema";
 import { ActionResponse } from "@atria/core/types/action-response";
 import {
   submitFieldRequestSchema,
@@ -12,7 +11,6 @@ import {
   submitFieldRequestsSchema,
   SubmitFieldRequestsInput,
 } from "@atria/core/validations/finance";
-import crypto from "crypto";
 import { authorizeFieldRequestAction } from "./field-request-auth";
 import { payFieldRequest as payFieldRequestWrite } from "./field-request-payment";
 import {
@@ -20,7 +18,6 @@ import {
   approveVendorPayment as approveVendorPaymentWrite,
   verifyFieldRequest as verifyFieldRequestWrite,
 } from "./field-request-review";
-import { createSubmittedFieldRequestTx } from "./field-request-submit";
 import { mapSubmitFieldRequestError } from "./field-request-utils";
 
 /**
@@ -42,7 +39,8 @@ export async function submitFieldRequest(
 
   try {
     const actor = await resolveActor();
-    if (!actor) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+    if (!actor)
+      return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
     const result = await db.transaction((tx) => submitFieldRequestTx(tx, actor, validation.data));
 
     return {
@@ -71,7 +69,7 @@ export async function submitFieldRequests(
     };
   }
 
-  const { projectId, receiptImageUrl, items } = validation.data;
+  const { projectId } = validation.data;
 
   try {
     const authResult = await authorizeFieldRequestAction({
@@ -79,34 +77,11 @@ export async function submitFieldRequests(
       projectId,
     });
     if (!authResult.success) return authResult;
-    const currentUser = authResult.data.user;
 
     const actor = await resolveActor();
-    if (!actor) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-    await assertExpenseAttachment(actor, projectId, receiptImageUrl);
-    const receiptGroupId = crypto.randomUUID();
-    const ownerApprovalThreshold = await getFieldCostApprovalThresholdRupiah();
-
-    const results = await db.transaction(async (tx) => {
-      const createdCosts: Array<typeof projectCost.$inferSelect> = [];
-
-      for (const item of items) {
-        const cost = await createSubmittedFieldRequestTx(tx, {
-          projectId,
-          requestedById: currentUser.id,
-          receiptImageUrl,
-          receiptGroupId,
-          item,
-          includeApprovalCategoryLabel: true,
-          ownerApprovalThreshold,
-        });
-
-        await tx.insert(auditLog).values({ userId: currentUser.id, action: "SUBMIT_FIELD_REQUEST", targetTable: "project_cost", targetId: cost.id, newState: JSON.stringify(cost) });
-        createdCosts.push(cost);
-      }
-
-      return createdCosts;
-    });
+    if (!actor)
+      return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+    const results = await db.transaction((tx) => submitExpenseBatchTx(tx, actor, validation.data));
 
     return {
       success: true,

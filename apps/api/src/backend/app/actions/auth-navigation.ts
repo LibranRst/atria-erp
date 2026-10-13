@@ -1,6 +1,5 @@
 import { resolveHomeDestination } from "@backend/features/navigation/server/home-destination";
 import { z } from "zod";
-import { actorCan } from "@backend/lib/auth/permissions";
 import { postLoginDestination } from "@backend/lib/navigation/post-login-policy";
 import { resolveActor } from "@backend/server/actor";
 
@@ -24,10 +23,5 @@ export async function getPostLoginRedirectDestination(input?: unknown): Promise<
     actor.mustChangePassword && !actor.developerActorUserId
       ? "/profile/password"
       : await resolveHomeDestination(actor);
-  return postLoginDestination(
-    home,
-    hints?.returnTo,
-    hints?.surface === "mobile",
-    actorCan(actor, "use:desktop_admin"),
-  );
+  return postLoginDestination(home, hints?.returnTo, hints?.surface === "mobile");
 }

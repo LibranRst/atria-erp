@@ -7,18 +7,17 @@ import {
   useCurrentUserProfile,
   usePermissions,
 } from "@/components/auth/permissions-provider";
-import { AppIcon, ConnectivityBanner, DesktopButtonLink, UserAvatar } from "@/components/ui";
+import { AppIcon, DesktopButtonLink } from "@/components/ui";
 import { availableAdminNavigation } from "@/lib/navigation/admin-navigation";
-import { getProfileInitials } from "@atria/core/presentation/user-identity";
 import { NotificationBellButton } from "@/features/notifications";
 import { useTopBarSlots } from "./top-bar-slots";
 import { AdminQuickActions } from "./admin-quick-actions";
-import { WorkspaceSwitch } from "./workspace-switch";
+import { DesktopProfileMenu } from "./desktop-profile-menu";
 
-export function AdminShell({
-  children,
+export function DesktopChrome({
+  hidden = false,
 }: {
-  readonly children: React.ReactNode;
+  readonly hidden?: boolean;
 }): React.JSX.Element {
   const pathname = usePathname();
   const permissions = usePermissions();
@@ -30,86 +29,74 @@ export function AdminShell({
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
   return (
-    <div className="admin-workspace min-h-dvh bg-background text-on-surface">
+    <>
       <a
-        href="#admin-content"
+        hidden={hidden}
+        href="#workspace-content"
         className="sr-only focus:not-sr-only focus:fixed focus:z-50 focus:rounded-full focus:bg-white focus:px-5 focus:py-3"
       >
         Lewati navigasi
       </a>
-      <aside className="admin-sidebar border-outline-variant/25 bg-surface-container-lowest lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:w-60 lg:border-r">
+      <aside
+        hidden={hidden}
+        className="fixed inset-y-0 left-0 z-20 w-52 border-r border-outline-variant/25 bg-surface-container-lowest"
+      >
         <Link
-          href="/admin"
-          className="flex min-h-20 items-center gap-3 px-6 text-title font-bold outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+          href="/"
+          className="flex h-16 items-center gap-2.5 px-5 text-base font-bold outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-icon bg-primary text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-icon bg-primary text-white">
             <AppIcon name="space_dashboard" className="icon-lg" />
           </span>
           Atria
         </Link>
-        <nav
-          aria-label="Workspace desktop"
-          className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible"
-        >
+        <nav aria-label="Navigasi Atria" className="flex flex-col gap-1 px-3 pb-3">
           {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               aria-current={active?.href === item.href ? "page" : undefined}
-              className={`text-body flex min-h-12 shrink-0 items-center gap-3 rounded-full px-4 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${active?.href === item.href ? "bg-primary text-white shadow-primary" : "text-on-surface-variant hover:bg-surface-container-low"}`}
+              className={`flex min-h-10 shrink-0 items-center gap-2.5 rounded-full px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-focus-ring pointer-coarse:min-h-12 ${active?.href === item.href ? "bg-primary text-white shadow-primary" : "text-on-surface-variant hover:bg-surface-container-low"}`}
             >
               <AppIcon name={item.icon} className="icon-md" />
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="hidden px-5 py-5 text-support text-on-surface-variant lg:block">
+        <div className="px-5 py-5 text-xs leading-relaxed text-on-surface-variant">
           Kontrol keuangan dan material proyek dalam satu workspace.
         </div>
       </aside>
-      <div className="min-w-0 lg:pl-60">
-        <header className="sticky top-0 z-10 flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-outline-variant/25 bg-surface-container-lowest px-5 lg:px-8">
-          <div className="min-w-0">
-            <p className="text-body font-bold">{slots?.title ?? active?.label ?? "Workspace"}</p>
-            <p className="text-support text-on-surface-variant">{user?.name ?? "Atria"}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {slots?.left}
-            {slots?.right}
-            <AdminQuickActions />
-            <WorkspaceSwitch target="mobile" />
-            {can("use:ai_chat") ? (
-              <DesktopButtonLink
-                href="/admin/ai"
-                variant="secondary"
-                aria-label="Asisten AI"
-                leadingIcon={<AppIcon name="sparkle" className="icon-md" />}
-              >
-                <span className="hidden xl:inline">Asisten AI</span>
-              </DesktopButtonLink>
-            ) : null}
-            <NotificationBellButton />
-            <Link
-              href="/admin/profile"
-              aria-label="Profil saya"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-container-lowest shadow-control outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+      <header
+        hidden={hidden}
+        className="atria-desktop-topbar sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b border-outline-variant/25 bg-background px-6"
+      >
+        <div className="min-w-0">
+          <p className="max-w-96 truncate text-sm font-semibold" title={slots?.title}>
+            {slots?.title ?? active?.label ?? (pathname === "/profile" ? "Profil saya" : "Atria")}
+          </p>
+          <p className="text-xs text-on-surface-variant">
+            {slots?.subtitle ?? user?.name ?? "Atria"}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {slots?.left}
+          {slots?.right}
+          {pathname !== "/ai" ? <AdminQuickActions /> : null}
+          {can("use:ai_chat") && pathname !== "/ai" ? (
+            <DesktopButtonLink
+              href="/ai"
+              variant="secondary"
+              aria-label="Asisten AI"
+              leadingIcon={<AppIcon name="sparkle" className="icon-md" />}
             >
-              <UserAvatar
-                imageUrl={user?.image}
-                initials={getProfileInitials(user?.name ?? "")}
-                renderPx={40}
-              />
-            </Link>
-          </div>
-        </header>
-        <ConnectivityBanner />
-        <main
-          id="admin-content"
-          className="mx-auto w-full max-w-400 min-w-0 space-y-lg px-5 py-6 lg:px-8 lg:py-8"
-        >
-          {children}
-        </main>
-      </div>
-    </div>
+              Asisten AI
+            </DesktopButtonLink>
+          ) : null}
+          <NotificationBellButton size="default" />
+          <DesktopProfileMenu />
+        </div>
+      </header>
+    </>
   );
 }

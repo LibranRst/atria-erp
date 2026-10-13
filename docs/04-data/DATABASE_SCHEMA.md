@@ -21,6 +21,19 @@ tanpa nama, email, isi form, atau nilai finansial.
 
 `project_cost` is the implemented field expense table. Documentation and code should not refer to a separate `field_request` table unless one is intentionally introduced later.
 
+## Per-user Role Guide State
+
+`user_role_guide_state` stores the last role-guide acknowledgment for one authenticated person,
+independent of organization onboarding and company finance/material records. It is global auth
+metadata, scoped by the session's user ID; it does not use `tenant_id`.
+
+- `user_id`: primary key and foreign key to `user`, deleted with the user.
+- `context_key`: SHA-256 of guide version, effective role identity, project data scope, and relevant grants.
+- `acknowledged_at`: time of the latest changed-context acknowledgment; repeated acknowledgment does not update it.
+
+Missing rows make existing and new accounts eligible. Developer account simulation never writes
+these records. Migration: `0047_user_role_guide_state`.
+
 ## Project Budget Control Tables
 
 ### `budget_allocation_setting`

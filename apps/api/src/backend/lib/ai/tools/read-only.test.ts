@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import ts from "typescript";
 
 /**
  * Pagar arsitektur: tool yang tersedia bagi model bahasa harus selalu read-only.
@@ -20,7 +21,43 @@ const FORBIDDEN_PATTERNS: readonly { pattern: RegExp; label: string }[] = [
   { pattern: /\bdb\s*\.\s*execute\s*\(/, label: "db.execute(" },
   { pattern: /\bdb\s*\.\s*transaction\s*\(/, label: "db.transaction(" },
   { pattern: /\btx\s*\.\s*(insert|update|delete)\s*\(/, label: "tx.insert/update/delete(" },
+  { pattern: /\btx\s*\.\s*execute\s*\(/, label: "tx.execute(" },
 ];
+
+/** One scoped exception: a repeatable, database-enforced READ ONLY snapshot. */
+function hasReadOnlyHistoryTransaction(filePath: string, source: string): boolean {
+  if (path.resolve(filePath) !== path.join(TOOLS_DIRECTORY, "financial-history-tools.ts"))
+    return false;
+  const ast = ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const calls: ts.CallExpression[] = [];
+  const visit = (node: ts.Node): void => {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      ts.isIdentifier(node.expression.expression) &&
+      node.expression.expression.text === "db" &&
+      node.expression.name.text === "transaction"
+    )
+      calls.push(node);
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  const call = calls[0];
+  if (calls.length !== 1 || call?.arguments.length !== 2) return false;
+  const config = call.arguments[1];
+  if (!ts.isObjectLiteralExpression(config) || config.properties.length !== 2) return false;
+  const values: Record<string, string> = {};
+  for (const property of config.properties) {
+    if (
+      !ts.isPropertyAssignment(property) ||
+      !(ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)) ||
+      !ts.isStringLiteral(property.initializer)
+    )
+      return false;
+    values[property.name.text] = property.initializer.text;
+  }
+  return values.isolationLevel === "repeatable read" && values.accessMode === "read only";
+}
 
 function collectToolSources(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -48,6 +85,8 @@ describe("registry tool AI", () => {
     for (const filePath of files) {
       const source = readFileSync(filePath, "utf8");
       for (const { pattern, label } of FORBIDDEN_PATTERNS) {
+        if (label === "db.transaction(" && hasReadOnlyHistoryTransaction(filePath, source))
+          continue;
         if (pattern.test(source)) {
           violations.push(`${path.relative(process.cwd(), filePath)} memakai ${label}`);
         }
@@ -55,6 +94,36 @@ describe("registry tool AI", () => {
     }
 
     expect(violations).toEqual([]);
+  });
+
+  test("exception laporan periode menolak transaksi biasa, konfigurasi dinamis dan file lain", () => {
+    const file = path.join(TOOLS_DIRECTORY, "financial-history-tools.ts");
+    const source = readFileSync(file, "utf8");
+    expect(hasReadOnlyHistoryTransaction(file, source)).toBe(true);
+    expect(
+      hasReadOnlyHistoryTransaction(path.join(TOOLS_DIRECTORY, "other-tools.ts"), source),
+    ).toBe(false);
+    expect(
+      hasReadOnlyHistoryTransaction(
+        file,
+        source.replace('accessMode: "read only"', 'accessMode: "read write"'),
+      ),
+    ).toBe(false);
+    expect(
+      hasReadOnlyHistoryTransaction(
+        file,
+        source.replace('accessMode: "read only"', "accessMode: requestedMode"),
+      ),
+    ).toBe(false);
+    expect(
+      hasReadOnlyHistoryTransaction(
+        file,
+        source.replace('isolationLevel: "repeatable read"', 'isolationLevel: "read committed"'),
+      ),
+    ).toBe(false);
+    expect(
+      hasReadOnlyHistoryTransaction(file, `${source}\ndb.transaction(async () => null);`),
+    ).toBe(false);
   });
 
   test("tool backend tidak bergantung pada framework frontend", () => {
@@ -84,45 +153,117 @@ describe("registry tool AI", () => {
     const { aiToolContextForRole } = await import("@backend/lib/testing/ai-tool-context");
     const tools = buildAiTools(aiToolContextForRole("OWNER"));
 
-    expect(Object.keys(tools).sort()).toEqual([
-      "analyzeRoleChangeImpact",
-      "explainUserAccess",
-      "getBankBalances",
-      "getExpenseCategories",
-      "getInventoryLocations",
-      "getMaterialCatalog",
-      "getMaterialShortage",
-      "getPendingApprovals",
-      "getPendingExpenseApprovals",
-      "getProjectBudget",
-      "getProjectHealth",
-      "getProjectsAtRisk",
-      "getRecentExpenses",
-      "getUnpaidClientInvoices",
-      "getUnpaidVendorBills",
-      "getUpcomingBills",
-      "listClients",
-      "listProjects",
-      "listRoles",
-      "listVendors",
-      "proposeBankReconciliation",
-      "proposeCreateProject",
-      "proposeCreateRole",
-      "proposeCreateUser",
-      "proposeCreateUserBatch",
-      "proposeDisburseExpense",
-      "proposeExpenseDraft",
-      "proposeExpenseReview",
-      "proposeGoodsReceipt",
-      "proposeRecordClientPayment",
-      "proposeRoleChange",
-      "proposeSetupProjectBudget",
-      "proposeVendorBillPayment",
-      "requestUserInput",
-      "suggestFollowUps",
-      "suggestRoleReview",
-      "whoCanDo",
-    ]);
+    expect(Object.keys(tools).sort()).toEqual(
+      [
+        "analyzeRoleChangeImpact",
+        "explainUserAccess",
+        "getQuickStartContext",
+        "proposeQuickStart",
+        "getAvailableActions",
+        "getBankBalances",
+        "getBankCashContext",
+        "getBankReconciliationContext",
+        "analyzeBankStatementAttachment",
+        "getCatalogSettingsContext",
+        "getCategoryPlanContext",
+        "getCompanyBudgetDefaults",
+        "getClientInvoiceContext",
+        "getVendorPaymentContext",
+        "getBudgetSettingsContext",
+        "getOperationalSettingsContext",
+        "getAdministrationContext",
+        "getRabExportContext",
+        "prepareRabExport",
+        "inspectProjectBudgetSummary",
+        "getOwnProfileContext",
+        "proposeOwnProfile",
+        "getExpenseCategorySettingsContext",
+        "getEditableMaterials",
+        "getEditableRapItems",
+        "getExpenseCategories",
+        "getExpenseBatchContext",
+        "getFinancialHistory",
+        "getInventoryLocations",
+        "getMaterialCatalog",
+        "getMaterialDraftForCorrection",
+        "getMaterialInputContext",
+        "getMaterialShortage",
+        "getPendingApprovals",
+        "getPendingExpenseApprovals",
+        "getProjectBudget",
+        "getProjectHealth",
+        "getProjectManagementContext",
+        "getProjectStockContext",
+        "getProjectsAtRisk",
+        "getRabDraftContext",
+        "getRabWorkflowContext",
+        "getRapDraftContext",
+        "getRapLifecycleContext",
+        "getRapSetupContext",
+        "getRecentExpenses",
+        "getUnpaidClientInvoices",
+        "getUnpaidVendorBills",
+        "getUpcomingBills",
+        "getVendorBillContext",
+        "getWarehouseContext",
+        "listClients",
+        "listProjects",
+        "listRoles",
+        "listVendors",
+        "proposeBankReconciliation",
+        "proposeBankCash",
+        "proposeCatalogSettings",
+        "proposeClientInvoice",
+        "proposeClientInvoiceSchedule",
+        "proposeBudgetSettings",
+        "proposeApprovalThresholds",
+        "proposeStaffChanges",
+        "proposeRoleDetails",
+        "proposeRoleDeletion",
+        "proposeExpenseCategorySettings",
+        "proposeCategoryPlanPackages",
+        "proposeCreateProject",
+        "proposeCreateRole",
+        "proposeCreateUser",
+        "proposeCreateUserBatch",
+        "proposeDisburseExpense",
+        "proposeExpenseDraft",
+        "proposeExpenseBatch",
+        "proposeExpenseBatchVerify",
+        "proposeExpenseBatchDecision",
+        "proposeExpenseBatchPayment",
+        "proposeExpenseReview",
+        "proposeGoodsReceipt",
+        "proposeMaterialMaster",
+        "proposeProjectManagement",
+        "proposeProjectStock",
+        "proposeRabDraft",
+        "proposeRabWorkflow",
+        "proposeRapLifecycleActions",
+        "proposeRapMaterialChanges",
+        "proposeRapMaterialDraft",
+        "proposeRapSetupActions",
+        "proposeRecordClientPayment",
+        "proposeRoleChange",
+        "proposeSetupProjectBudget",
+        "proposeUpdateMaterial",
+        "proposeVendorBill",
+        "proposeVendorBillCorrection",
+        "getVendorBillCorrectionContext",
+        "proposeVendorBillPayment",
+        "proposeVendorPaymentSchedule",
+        "proposeVendorPaymentDecision",
+        "proposeWarehouseOperation",
+        "proposeWarehouseIntake",
+        "getWarehouseIntakeContext",
+        "getStockCorrectionContext",
+        "proposeStockCorrection",
+        "requestUserInput",
+        "suggestFollowUps",
+        "suggestRoleReview",
+        "whoCanDo",
+      ].sort(),
+    );
   });
 
   test("semua tool usulan diawali dengan kata propose", () => {

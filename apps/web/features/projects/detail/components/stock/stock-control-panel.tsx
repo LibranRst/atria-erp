@@ -204,7 +204,7 @@ export function StockControlPanel({
                 type="button"
                 onClick={() => openActivityDetail({ kind: "STOCK_MOVEMENT", id: move.id })}
                 key={move.id}
-                className="relative flex min-h-12 w-full gap-3 rounded-3xl px-2 py-3 text-left transition-all outline-none focus-visible:bg-surface-container-low active:scale-98 active:bg-surface-container-low/80"
+                className="relative flex min-h-12 w-full gap-3 rounded-3xl px-2 py-3 text-left transition-all outline-none focus-visible:bg-surface-container-low active:z-10 active:scale-[1.05] active:bg-surface-container-low/80 active:shadow-raised"
                 aria-label={`Lihat detail mutasi ${move.material.name}`}
               >
                 {index < stockMovements.length - 1 ? (

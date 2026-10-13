@@ -1,21 +1,24 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import {
   AppIcon,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
+  FactRow,
   FormField,
   FormSection,
+  GroupedSurface,
   MoneyInput,
+  MoneyValue,
   NumericInput,
   OperationalFormSheet,
   AdaptiveSelect,
   TextInput,
   ValuePreviewStrip,
+  Button,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import type { ComponentType, CostComponentDraft } from "../../types/library-types";
 
 const COMPONENT_TYPES: readonly ComponentType[] = [
@@ -65,8 +68,83 @@ export function LibraryCostComponentSheet({
   isExistingComponent,
   canDelete,
 }: LibraryCostComponentSheetProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   return (
     <OperationalFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        componentEditor ? (
+          <div className="space-y-4">
+            <GroupedSurface>
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Komponen"
+                  wrapLabel
+                  value={componentEditor.label.trim() || "Nama belum diisi"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Jenis biaya"
+                  wrapLabel
+                  value={COMPONENT_TYPE_LABELS[componentEditor.componentType]}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Jumlah"
+                  wrapLabel
+                  value={`${componentEditor.quantity.toLocaleString("id-ID")} ${componentEditor.unit}`}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Biaya satuan"
+                  wrapLabel
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(componentEditor.unitCost) ? 0 : 2}
+                      amount={componentEditor.unitCost}
+                      variant="fullDynamic"
+                      size="sm"
+                    />
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Subtotal draft"
+                  wrapLabel
+                  value={
+                    <MoneyValue
+                      fractionDigits={
+                        Number.isInteger(componentEditor.quantity * componentEditor.unitCost)
+                          ? 0
+                          : 2
+                      }
+                      amount={componentEditor.quantity * componentEditor.unitCost}
+                      variant="fullDynamic"
+                      size="sm"
+                    />
+                  }
+                />
+              </div>
+            </GroupedSurface>
+            <p className="text-support leading-relaxed text-on-surface-variant">
+              Komponen menjadi bagian rincian biaya template. Menyimpannya belum mengubah transaksi
+              atau stok.
+            </p>
+          </div>
+        ) : undefined
+      }
+      secondary={
+        desktop && isExistingComponent
+          ? {
+              label: "Hapus Komponen",
+              onClick: deleteComponent,
+              disabled: !canDelete,
+              variant: "criticalQuiet",
+            }
+          : undefined
+      }
       dismissal={{ mode: "managed" }}
       open={Boolean(componentEditor)}
       title={isExistingComponent ? "Edit Komponen Biaya" : "Tambah Komponen Biaya"}
@@ -80,7 +158,7 @@ export function LibraryCostComponentSheet({
       submitLabel="Simpan"
       onSubmit={onSubmit}
       statusText={
-        componentEditor
+        componentEditor && !desktop
           ? `${componentEditor.label.trim() || "Komponen belum diisi"} · ${fullMoney(componentEditor.quantity * componentEditor.unitCost)}`
           : undefined
       }
@@ -151,7 +229,7 @@ export function LibraryCostComponentSheet({
               />
             </FormField>
 
-            <div className="p-3">
+            <div className={desktop ? "hidden" : "p-3"}>
               <ValuePreviewStrip
                 items={[
                   {
@@ -164,17 +242,16 @@ export function LibraryCostComponentSheet({
             </div>
           </FormSection>
 
-          {isExistingComponent ? (
-            <motion.button
+          {isExistingComponent && !desktop ? (
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               disabled={!canDelete}
               onClick={deleteComponent}
               className="min-h-12 w-full rounded-full bg-error-container/20 px-5 text-xs font-bold text-error disabled:opacity-35"
+              variant="criticalQuiet"
             >
               <AppIcon name="delete" className="mr-1.5 inline icon-sm" /> Hapus Komponen
-            </motion.button>
+            </Button>
           ) : null}
         </div>
       ) : null}

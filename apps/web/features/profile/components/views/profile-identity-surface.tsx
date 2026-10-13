@@ -2,7 +2,16 @@
 
 import React from "react";
 
-import { AppIcon, Badge, UserAvatar, type BadgeStatus } from "@/components/ui";
+import {
+  AppIcon,
+  Badge,
+  UserAvatar,
+  GroupedSurface,
+  StatusBadge,
+  type BadgeStatus,
+  Button,
+} from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { useProfileActions } from "./profile-actions-provider";
 export function ProfileIdentitySurface({
   displayName,
@@ -26,6 +35,59 @@ export function ProfileIdentitySurface({
   readonly moduleCount: number;
 }): React.JSX.Element {
   const actions = useProfileActions();
+  const desktop = useWorkspacePresentation() === "desktop";
+
+  if (desktop)
+    return (
+      <GroupedSurface aria-label="Identitas akun" className="space-y-5 p-5">
+        <div className="space-y-3">
+          <UserAvatar
+            imageUrl={imageUrl}
+            initials={initials}
+            displayName={displayName}
+            renderPx={64}
+          />
+          <div className="min-w-0">
+            <h2 className="text-title font-bold wrap-anywhere text-on-surface">{displayName}</h2>
+            <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+              {displayEmail}
+            </p>
+          </div>
+        </div>
+        <dl className="space-y-3 border-t border-outline-variant/20 pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-support text-on-surface-variant">Peran</dt>
+            <dd className="text-support font-semibold text-on-surface">{roleLabel}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-support text-on-surface-variant">Status akun</dt>
+            <dd>
+              <StatusBadge
+                label={isActive ? "Aktif" : "Nonaktif"}
+                tone={isActive ? "healthy" : "critical"}
+              />
+            </dd>
+          </div>
+        </dl>
+        <p className="text-support text-on-surface-variant">
+          <span className="font-semibold text-on-surface">
+            {accessibleModuleCount} dari {moduleCount}
+          </span>{" "}
+          modul tersedia
+        </p>
+        {actions ? (
+          <Button
+            fullWidth
+            size="compact"
+            variant="primary"
+            onClick={actions.openEditProfile}
+            leadingIcon={<AppIcon name="edit" className="icon-md" />}
+          >
+            Ubah profil
+          </Button>
+        ) : null}
+      </GroupedSurface>
+    );
 
   const avatar = (
     <UserAvatar
@@ -53,11 +115,12 @@ export function ProfileIdentitySurface({
            * di bawah membuka sheet yang sama. Avatar sendiri sudah 64 px, jadi
            * target sentuhnya lewat dari 48 px tanpa padding tambahan.
            */
-          <button
+          <Button
             type="button"
             onClick={actions.openEditProfile}
             aria-label="Ubah profil"
-            className="group relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
+            className="group relative shrink-0 bg-transparent p-0 shadow-none focus-visible:ring-offset-2"
+            variant="tertiary"
           >
             {avatar}
             <span
@@ -66,7 +129,7 @@ export function ProfileIdentitySurface({
             >
               <AppIcon name="photo_camera" className="icon-xs leading-none" />
             </span>
-          </button>
+          </Button>
         ) : (
           avatar
         )}

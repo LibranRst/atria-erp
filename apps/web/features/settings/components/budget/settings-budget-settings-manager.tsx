@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { toast } from "sonner";
 
 import {
@@ -14,6 +15,7 @@ import {
   AppIcon,
   Button,
   ConfirmationDialog,
+  FactRow,
   FormDisclosure,
   FormField,
   FormSection,
@@ -106,6 +108,7 @@ export function SettingsBudgetSettingsManager({
   onMutationComplete,
   onDirtyChange,
 }: SettingsBudgetSettingsManagerProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [setting, setSetting] = React.useState(initialSetting);
   const [categories, setCategories] = React.useState(initialCategories);
   const [formulaDraft, setFormulaDraft] = React.useState<FormulaDraft>(() =>
@@ -603,6 +606,44 @@ export function SettingsBudgetSettingsManager({
       ) : null}
 
       <OperationalFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-4">
+            <GroupedSurface>
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Preset"
+                  wrapLabel
+                  value={formulaDraft.name.trim() || "Nama belum diisi"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Batas budget draft"
+                  wrapLabel
+                  value={percent(formulaDraft.budgetCapRatio)}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Target margin kotor"
+                  wrapLabel
+                  value={percent(1 - formulaDraft.budgetCapRatio)}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Batas tersimpan"
+                  wrapLabel
+                  value={percent(setting.budgetCapRatio)}
+                />
+              </div>
+            </GroupedSurface>
+            <p className="text-support leading-relaxed text-on-surface-variant">
+              Formula berlaku untuk proyek baru. Budget proyek aktif tetap memakai pengaturannya;
+              perubahan perlu ditinjau sebelum diterapkan.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={formulaOpen}
         title="Ubah formula default"
@@ -617,7 +658,7 @@ export function SettingsBudgetSettingsManager({
         }
         submitLabel="Tinjau perubahan"
         submittingLabel="Menyimpan…"
-        statusText="Formula ini hanya menjadi titik awal untuk proyek baru."
+        statusText={desktop ? undefined : "Formula ini hanya menjadi titik awal untuk proyek baru."}
         onClose={closeFormula}
         onSubmit={() => setConfirmFormulaSave(true)}
         error={

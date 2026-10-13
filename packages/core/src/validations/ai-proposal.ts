@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { passwordPolicySchema } from "./administration";
+import { projectBudgetDefaultsSchema } from "../ai/project-budget-defaults";
 
 const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
@@ -76,6 +77,7 @@ export const aiCreateProjectProposalSchema = z.object({
   newClientPhone: z.string().max(50).optional().or(z.literal("")),
   projectManagerId: z.string().regex(uuidRegex, "ID Project Manager tidak valid."),
   totalContractValue: z.number().nonnegative().default(0),
+  budgetDefaults: projectBudgetDefaultsSchema.optional(),
   startDate: z.string().optional().or(z.literal("")),
   endDate: z.string().optional().or(z.literal("")),
   location: z.string().max(300).optional().or(z.literal("")),
@@ -137,7 +139,9 @@ export const aiRecordClientPaymentProposalSchema = z.object({
   referenceNumber: z.string().min(1, "Nomor referensi mutasi bank wajib diisi.").max(100),
 });
 
-export type AiRecordClientPaymentProposalInput = z.infer<typeof aiRecordClientPaymentProposalSchema>;
+export type AiRecordClientPaymentProposalInput = z.infer<
+  typeof aiRecordClientPaymentProposalSchema
+>;
 
 export const aiGoodsReceiptProposalSchema = z.object({
   toolCallId: z
@@ -150,7 +154,11 @@ export const aiGoodsReceiptProposalSchema = z.object({
   inventoryLocationId: z.string().regex(uuidRegex, "ID Lokasi Gudang tidak valid."),
   receiptNumber: z.string().min(1, "Nomor Goods Receipt wajib diisi.").max(100),
   receivedAt: z.string().min(1, "Tanggal penerimaan wajib diisi."),
-  vendorBillId: z.string().regex(uuidRegex, "ID Tagihan Vendor tidak valid.").optional().or(z.literal("")),
+  vendorBillId: z
+    .string()
+    .regex(uuidRegex, "ID Tagihan Vendor tidak valid.")
+    .optional()
+    .or(z.literal("")),
   note: z.string().max(500).optional().or(z.literal("")),
   items: z
     .array(
@@ -158,7 +166,11 @@ export const aiGoodsReceiptProposalSchema = z.object({
         materialId: z.string().regex(uuidRegex, "ID Material tidak valid."),
         quantity: z.number().positive("Kuantitas barang harus lebih besar dari 0."),
         unitCost: z.number().nonnegative("Harga per unit tidak boleh negatif."),
-        projectRapItemId: z.string().regex(uuidRegex, "ID Item RAP tidak valid.").optional().or(z.literal("")),
+        projectRapItemId: z
+          .string()
+          .regex(uuidRegex, "ID Item RAP tidak valid.")
+          .optional()
+          .or(z.literal("")),
         note: z.string().max(200).optional(),
       }),
     )
@@ -315,4 +327,3 @@ export const aiBankReconciliationProposalSchema = z.object({
 });
 
 export type AiBankReconciliationProposalInput = z.infer<typeof aiBankReconciliationProposalSchema>;
-

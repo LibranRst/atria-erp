@@ -4,6 +4,14 @@ import { callBackendAction } from "@/lib/api/backend";
 import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
 export type * from "@atria/api/types/app/actions/ai/preferences";
 
+export async function getAiCapabilities(
+  ...args: WebRpcArgs<"app/actions/ai/preferences.getAiCapabilities">
+): Promise<WebRpcResult<"app/actions/ai/preferences.getAiCapabilities">> {
+  return callBackendAction("app/actions/ai/preferences.getAiCapabilities", args, {
+    allowCookieWrites: true,
+  });
+}
+
 export async function getAiPreference(
   ...args: WebRpcArgs<"app/actions/ai/preferences.getAiPreference">
 ): Promise<WebRpcResult<"app/actions/ai/preferences.getAiPreference">> {

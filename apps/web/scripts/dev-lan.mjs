@@ -35,7 +35,7 @@ const nodeOptions = [existingNodeOptions, `--require=${JSON.stringify(preloadPat
 
 console.log("Starting Next.js dev server with localhost and LAN access enabled");
 
-const child = spawn(nextBin, ["dev"], {
+const child = spawn(nextBin, ["dev", ...process.argv.slice(2)], {
   cwd: rootDir,
   env: {
     ...process.env,

@@ -398,6 +398,32 @@ export const stockMovementRelations = relations(stockMovement, ({ one }) => ({
   createdBy: one(user, { fields: [stockMovement.createdById], references: [user.id] }),
 }));
 
+// Company stock-in documents retain their source reference independently of projects.
+export const warehouseIntake = pgTable(
+  "warehouse_intake",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .default(DEKORIA_TENANT_ID)
+      .references(() => tenant.id, { onDelete: "restrict" }),
+    inventoryLocationId: uuid("inventory_location_id")
+      .notNull()
+      .references(() => inventoryLocation.id, { onDelete: "restrict" }),
+    referenceNumber: varchar("reference_number", { length: 100 }).notNull(),
+    receivedAt: timestamp("received_at").notNull(),
+    note: text("note").notNull(),
+    receivedById: uuid("received_by_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("wi_tenant_reference_uidx").on(table.tenantId, table.referenceNumber),
+    index("wi_location_idx").on(table.inventoryLocationId),
+  ],
+);
+
 export const inventoryOpeningBatch = pgTable(
   "inventory_opening_batch",
   {

@@ -246,66 +246,7 @@ export function buildFinanceDashboardCore(
     })
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
-  const allRiskyProjects = input.projects
-    .map((project): FinanceDashboardRiskyProject => {
-      const projectActual = project.categories.reduce(
-        (sum, category) => sum + category.actualAmount,
-        0,
-      );
-      const remaining = project.internalBudget - projectActual;
-      const margin = project.contractValue - Math.max(project.internalBudget, projectActual);
-      const usedPercentage = calculateUsedPercentage(projectActual, project.internalBudget);
-      const projectedMarginPercentage =
-        project.contractValue > 0 ? (margin / project.contractValue) * 100 : 0;
-      const targetMarginPercentage =
-        project.contractValue > 0 ? (project.targetGrossAmount / project.contractValue) * 100 : 0;
-      const riskyCategories = project.categories
-        .map((category) => {
-          const categoryUsedPercentage = calculateUsedPercentage(
-            category.actualAmount,
-            category.allocatedAmount,
-          );
-          return {
-            code: category.code,
-            name: category.name,
-            usedPercentage: categoryUsedPercentage,
-            remainingAmount: category.allocatedAmount - category.actualAmount,
-            status: getBudgetCategoryStatus(categoryUsedPercentage),
-          };
-        })
-        .filter((category) => category.status !== "SAFE")
-        .sort((a, b) => b.usedPercentage - a.usedPercentage)
-        .slice(0, 3);
-      const health = resolveEffectiveProjectHealth({
-        storedHealth: project.financialHealth,
-        remainingBudget: remaining,
-        usedPercentage,
-        categoryStatuses: project.categories.map((category) =>
-          getBudgetCategoryStatus(
-            calculateUsedPercentage(category.actualAmount, category.allocatedAmount),
-          ),
-        ),
-        projectedMarginPercentage,
-        targetMarginPercentage,
-      });
-      return {
-        projectId: project.projectId,
-        projectName: project.projectName,
-        financialHealth: project.financialHealth,
-        effectiveHealth: health.effectiveHealth,
-        healthReasons: health.healthReasons,
-        usedPercentage,
-        internalBudget: project.internalBudget,
-        actualCost: projectActual,
-        remainingBudget: remaining,
-        targetMarginPercentage,
-        projectedMarginPercentage,
-        riskReason: health.healthReasons[0]
-          ? projectHealthReasonLabel(health.healthReasons[0])
-          : "Perlu review margin dan pemakaian budget.",
-        riskyCategories,
-      };
-    })
+  const allRiskyProjects = buildDashboardProjectRows(input.projects)
     .filter((project) => project.effectiveHealth !== "HEALTHY")
     .sort((a, b) => {
       const healthRank = (value: string): number =>
@@ -453,4 +394,68 @@ export function buildFinanceDashboardCore(
       detailLimit: DASHBOARD_TAB_DETAIL_LIMIT,
     },
   };
+}
+
+export function buildDashboardProjectRows(
+  projects: readonly DashboardProjectInput[],
+): readonly FinanceDashboardRiskyProject[] {
+  return projects.map((project): FinanceDashboardRiskyProject => {
+    const projectActual = project.categories.reduce(
+      (sum, category) => sum + category.actualAmount,
+      0,
+    );
+    const remaining = project.internalBudget - projectActual;
+    const margin = project.contractValue - Math.max(project.internalBudget, projectActual);
+    const usedPercentage = calculateUsedPercentage(projectActual, project.internalBudget);
+    const projectedMarginPercentage =
+      project.contractValue > 0 ? (margin / project.contractValue) * 100 : 0;
+    const targetMarginPercentage =
+      project.contractValue > 0 ? (project.targetGrossAmount / project.contractValue) * 100 : 0;
+    const riskyCategories = project.categories
+      .map((category) => {
+        const categoryUsedPercentage = calculateUsedPercentage(
+          category.actualAmount,
+          category.allocatedAmount,
+        );
+        return {
+          code: category.code,
+          name: category.name,
+          usedPercentage: categoryUsedPercentage,
+          remainingAmount: category.allocatedAmount - category.actualAmount,
+          status: getBudgetCategoryStatus(categoryUsedPercentage),
+        };
+      })
+      .filter((category) => category.status !== "SAFE")
+      .sort((a, b) => b.usedPercentage - a.usedPercentage)
+      .slice(0, 3);
+    const health = resolveEffectiveProjectHealth({
+      storedHealth: project.financialHealth,
+      remainingBudget: remaining,
+      usedPercentage,
+      categoryStatuses: project.categories.map((category) =>
+        getBudgetCategoryStatus(
+          calculateUsedPercentage(category.actualAmount, category.allocatedAmount),
+        ),
+      ),
+      projectedMarginPercentage,
+      targetMarginPercentage,
+    });
+    return {
+      projectId: project.projectId,
+      projectName: project.projectName,
+      financialHealth: project.financialHealth,
+      effectiveHealth: health.effectiveHealth,
+      healthReasons: health.healthReasons,
+      usedPercentage,
+      internalBudget: project.internalBudget,
+      actualCost: projectActual,
+      remainingBudget: remaining,
+      targetMarginPercentage,
+      projectedMarginPercentage,
+      riskReason: health.healthReasons[0]
+        ? projectHealthReasonLabel(health.healthReasons[0])
+        : "Perlu review margin dan pemakaian budget.",
+      riskyCategories,
+    };
+  });
 }

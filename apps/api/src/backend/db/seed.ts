@@ -115,7 +115,7 @@ function describeDatabaseTarget(): string {
   return `${url.hostname}/${url.pathname.replace(/^\//, "") || "postgres"}`;
 }
 
-async function assertDemoDatabaseIsEmpty(): Promise<void> {
+async function assertDemoDatabaseIsEmpty(profile: "demo" | "development" = "demo"): Promise<void> {
   const [existingRole, existingUser, existingProject, existingBankAccount] = await Promise.all([
     db.query.role.findFirst({ columns: { id: true } }),
     db.query.user.findFirst({ columns: { id: true } }),
@@ -123,8 +123,9 @@ async function assertDemoDatabaseIsEmpty(): Promise<void> {
     db.query.bankAccount.findFirst({ columns: { id: true } }),
   ]);
   if (existingRole || existingUser || existingProject || existingBankAccount) {
+    const resetCommand = profile === "development" ? "db:dev:reset" : "db:demo:reset";
     throw new Error(
-      "DEMO_DATABASE_NOT_EMPTY: db:seed tidak menghapus data. Gunakan `bun run db:demo:reset --confirm-reset` hanya pada sandbox yang memang boleh dikosongkan.",
+      `DEMO_DATABASE_NOT_EMPTY: seed tidak menghapus data. Gunakan \`bun run ${resetCommand} --confirm-reset\` hanya pada sandbox yang memang boleh dikosongkan.`,
     );
   }
 }
@@ -148,7 +149,9 @@ async function writeDemoFixtures(): Promise<void> {
   console.log(`Demo CSV fixtures written to ${directory}`);
 }
 
-export async function seedDemoDatabase(): Promise<void> {
+export async function seedDemoDatabase(options?: {
+  readonly profile?: "demo" | "development";
+}): Promise<void> {
   if (process.env.NODE_ENV === "production") {
     throw new Error("Demo seed ditolak ketika NODE_ENV=production.");
   }
@@ -156,7 +159,7 @@ export async function seedDemoDatabase(): Promise<void> {
   const demoClock = demoClockFromEnvironment();
   const demoDate = demoClock.fromBaseline;
   console.log(`Starting connected demo seed on ${target} (anchor ${demoClock.anchorDate})...`);
-  await assertDemoDatabaseIsEmpty();
+  await assertDemoDatabaseIsEmpty(options?.profile);
 
   await db.transaction(async (tx) => {
     // 1. Seed Roles and Role Permissions
@@ -4951,10 +4954,18 @@ export async function seedDemoDatabase(): Promise<void> {
       "Senopati closing sandbox is not financially ready",
     );
     console.log("Seed invariants passed.");
+    if (options?.profile === "development") {
+      const { seedDevelopmentDataset } = await import("./seed/development-dataset");
+      await seedDevelopmentDataset(tx, demoClock);
+    }
   });
 
   await writeDemoFixtures();
-  console.log("Connected demo database seeding executed successfully!");
+  console.log(
+    options?.profile === "development"
+      ? "Detailed development database seeded successfully!"
+      : "Connected demo database seeding executed successfully!",
+  );
   console.log("Test login credentials:");
   console.log("- Ronald (Owner): ronald@dekoria.com / password123");
   console.log("- Lisa (Finance Admin): lisa@dekoria.com / password123");

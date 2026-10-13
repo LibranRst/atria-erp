@@ -7,6 +7,8 @@ import { formatIsoDate } from "@atria/core/utils/date";
 import { cx, parseIsoDate } from "../form/form-control-utils";
 import { transitionEaseSmooth } from "@/lib/utils/motion";
 import { DialogFrame } from "./dialog-frame";
+import { Button, IconButton } from "../button/button";
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
 
 const DAYS_HEADER = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"] as const;
 
@@ -86,6 +88,7 @@ function CalendarContent({
   readonly maxDate?: string;
   readonly children?: React.ReactNode;
 }): React.JSX.Element {
+  const desktop = useWorkspaceControlPresentation() === "desktop";
   const gridContentRef = React.useRef<HTMLDivElement>(null);
   const dayButtonRefs = React.useRef(new Map<string, HTMLButtonElement>());
   const [measuredGridHeight, setMeasuredGridHeight] = React.useState<number | null>(null);
@@ -220,36 +223,66 @@ function CalendarContent({
     <>
       <div className="flex items-center justify-between px-2 pt-2 pb-3">
         <span className="text-sm font-bold text-on-surface">{title}</span>
-        <button
-          type="button"
-          disabled={todayDisabled}
-          onClick={onSelectToday}
-          className="rounded-full bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-accent transition-all hover:bg-surface-container active:scale-[1.05] active:shadow-raised active:z-10 disabled:opacity-45"
-        >
-          Hari Ini
-        </button>
+        {desktop ? (
+          <Button
+            type="button"
+            size="compact"
+            variant="secondary"
+            disabled={todayDisabled}
+            onClick={onSelectToday}
+          >
+            Hari Ini
+          </Button>
+        ) : (
+          <button
+            type="button"
+            disabled={todayDisabled}
+            onClick={onSelectToday}
+            className="rounded-full bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-accent transition-all hover:bg-surface-container active:z-10 active:scale-[1.05] active:shadow-raised disabled:opacity-45"
+          >
+            Hari Ini
+          </button>
+        )}
       </div>
 
       <div className="rounded-3xl bg-surface-container-lowest shadow-surface">
         {/* Month Navigation */}
         <div className="flex items-center justify-between px-2 py-2">
-          <button
-            type="button"
-            onClick={handlePrevMonth}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-on-surface transition-all outline-none hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[1.05] active:shadow-raised active:z-10"
-            aria-label="Bulan sebelumnya"
-          >
-            <AppIcon name="chevron_left" className="icon-sm" />
-          </button>
+          {desktop ? (
+            <IconButton
+              size="compact"
+              label="Bulan sebelumnya"
+              icon={<AppIcon name="chevron_left" className="icon-sm" />}
+              onClick={handlePrevMonth}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-on-surface transition-all outline-none hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:scale-[1.05] active:shadow-raised"
+              aria-label="Bulan sebelumnya"
+            >
+              <AppIcon name="chevron_left" className="icon-sm" />
+            </button>
+          )}
           <span className="text-row font-bold text-on-surface capitalize">{monthLabel}</span>
-          <button
-            type="button"
-            onClick={handleNextMonth}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-on-surface transition-all outline-none hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[1.05] active:shadow-raised active:z-10"
-            aria-label="Bulan berikutnya"
-          >
-            <AppIcon name="chevron_right" className="icon-sm" />
-          </button>
+          {desktop ? (
+            <IconButton
+              size="compact"
+              label="Bulan berikutnya"
+              icon={<AppIcon name="chevron_right" className="icon-sm" />}
+              onClick={handleNextMonth}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-low text-on-surface transition-all outline-none hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:scale-[1.05] active:shadow-raised"
+              aria-label="Bulan berikutnya"
+            >
+              <AppIcon name="chevron_right" className="icon-sm" />
+            </button>
+          )}
         </div>
 
         {/* Custom Children (if provided) or Default Grid */}
@@ -315,7 +348,7 @@ function CalendarContent({
                         year: "numeric",
                       }).format(date)}
                       className={cx(
-                        "flex aspect-square items-center justify-center rounded-full text-sm font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[1.05] active:z-10",
+                        "flex aspect-square items-center justify-center rounded-full text-sm font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:scale-[1.05]",
                         isDisabled && "cursor-not-allowed opacity-30",
                         active
                           ? "bg-primary text-on-primary shadow-xs"
@@ -337,7 +370,7 @@ function CalendarContent({
           <button
             type="button"
             onClick={onClose}
-            className="flex min-h-10 w-full items-center justify-center rounded-full bg-surface-container-low text-xs font-semibold text-on-surface transition-all hover:bg-surface-container active:scale-[1.05] active:shadow-raised active:z-10"
+            className="flex min-h-10 w-full items-center justify-center rounded-full bg-surface-container-low text-xs font-semibold text-on-surface transition-all hover:bg-surface-container active:z-10 active:scale-[1.05] active:shadow-raised"
           >
             Batal
           </button>

@@ -2,7 +2,12 @@ import { recordNotificationEvent } from "@backend/server/services/notification-e
 
 import { and, eq } from "drizzle-orm";
 
-import { approval, projectBudgetCategory, projectCost } from "@backend/db/schema";
+import {
+  approval,
+  projectBudgetCategory,
+  projectCost,
+  INSTANCE_TENANT_ID,
+} from "@backend/db/schema";
 import {
   ensureCanonicalExpenseForProjectCost,
   syncProjectBudgetCategory,
@@ -42,10 +47,11 @@ export async function verifyFieldRequestTx(
     .where(eq(projectCost.id, projectCostId))
     .for("update");
 
-  if (!cost) {
+  if (!cost || cost.tenantId !== INSTANCE_TENANT_ID) {
     throw new Error("PROJECT_COST_NOT_FOUND");
   }
   const currentProject = await lockFinanceProject(tx, actor, cost.projectId);
+  if (currentProject.tenantId !== INSTANCE_TENANT_ID) throw new Error("PROJECT_COST_NOT_FOUND");
   assertProjectStatusIsOperational(currentProject.status);
 
   if (cost.status !== "SUBMITTED") {
@@ -187,10 +193,11 @@ export async function approveFieldRequestTx(
     .where(eq(projectCost.id, projectCostId))
     .for("update");
 
-  if (!cost) {
+  if (!cost || cost.tenantId !== INSTANCE_TENANT_ID) {
     throw new Error("PROJECT_COST_NOT_FOUND");
   }
   const currentProject = await lockFinanceProject(tx, actor, cost.projectId);
+  if (currentProject.tenantId !== INSTANCE_TENANT_ID) throw new Error("PROJECT_COST_NOT_FOUND");
   assertProjectStatusIsOperational(currentProject.status);
 
   if (cost.status !== "VERIFIED") {

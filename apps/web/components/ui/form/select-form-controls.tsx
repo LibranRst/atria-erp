@@ -1,7 +1,8 @@
 "use client";
 
-import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
-import { DesktopSelect } from "../desktop/desktop-controls";
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
+import { DesktopSelect, DesktopInputControl } from "../desktop/desktop-controls";
+import { DesktopFilterSelect } from "../desktop/desktop-filter-select";
 import React from "react";
 
 import { AnchoredListbox } from "../overlay/anchored-listbox";
@@ -90,7 +91,7 @@ export function AdaptiveSelect({
   readonly onCreateAction?: () => void;
   readonly presentation?: SelectPresentation;
 }): React.JSX.Element {
-  const desktop = useWorkspacePresentation() === "desktop";
+  const desktop = useWorkspaceControlPresentation() === "desktop";
   const generatedId = React.useId();
   const controlId = id ?? `${generatedId}-control`;
   const messageId = helper || error ? `${generatedId}-message` : undefined;
@@ -108,6 +109,7 @@ export function AdaptiveSelect({
   const searchable = selectDialogNeedsSearch({ options, hasCreateAction });
   const normalizedQuery = query.trim().toLocaleLowerCase("id-ID");
   const filtered = options.filter((option) => {
+    if (option.action) return true;
     const text =
       `${option.label} ${option.description ?? ""} ${option.meta ?? ""} ${option.group ?? ""}`.toLocaleLowerCase(
         "id-ID",
@@ -121,17 +123,12 @@ export function AdaptiveSelect({
     onChange(option.value);
   }
 
-  if (
-    desktop &&
-    resolvedPresentation === "menu" &&
-    !hasCreateAction &&
-    !options.some((option) => option.group)
-  ) {
+  if (desktop) {
     return (
       <DesktopSelect
         id={controlId}
         label={label}
-        value={value || null}
+        value={options.some((option) => option.value === value) ? value : null}
         options={options}
         onChange={(next): void => onChange(next ?? "")}
         placeholder={placeholder}
@@ -140,6 +137,11 @@ export function AdaptiveSelect({
         disabled={disabled || readOnly}
         required={required}
         emptyText={emptyText}
+        searchable={searchable}
+        searchPlaceholder={searchPlaceholder}
+        createActionLabel={createActionLabel}
+        createActionDescription={createActionDescription}
+        onCreateAction={onCreateAction}
         className={grouped ? "atria-grouped-select px-4 py-3" : undefined}
       />
     );
@@ -190,7 +192,7 @@ export function AdaptiveSelect({
       className={cx(
         grouped
           ? "flex min-h-8 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
-          : "flex w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left shadow-control transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
+          : "flex w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left shadow-control transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:z-10 active:scale-[1.05] active:shadow-raised disabled:cursor-not-allowed disabled:opacity-55",
         !grouped && (compact ? "min-h-11" : "min-h-12"),
         !grouped && compact && "bg-surface-container-low",
         readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
@@ -205,7 +207,7 @@ export function AdaptiveSelect({
         >
           {selected?.label || placeholder}
         </span>
-        {(selected?.description || selected?.meta) && (
+        {!selected?.action && (selected?.description || selected?.meta) && (
           <span className="mt-0.5 block truncate text-meta text-on-surface-variant">
             {selected.description ?? selected.meta}
           </span>
@@ -312,6 +314,7 @@ export function ComboboxField({
   readonly createCustomDescription?: string;
 }): React.JSX.Element {
   const generatedId = React.useId();
+  const desktop = useWorkspaceControlPresentation() === "desktop";
   const controlId = id ?? `${generatedId}-control`;
   const messageId = helper || error ? `${generatedId}-message` : undefined;
   const grouped = useFormPresentation() === "grouped";
@@ -329,6 +332,26 @@ export function ComboboxField({
     allowCustomValue &&
     customValue.length > 0 &&
     !uniqueOptions.some((option) => option.toLowerCase() === customValue.toLowerCase());
+
+  if (desktop)
+    return (
+      <DesktopSelect
+        id={controlId}
+        label={label}
+        value={value || null}
+        options={uniqueOptions.map((option) => ({ value: option, label: option }))}
+        onChange={(next): void => onChange(next ?? "")}
+        placeholder={placeholder}
+        description={helper}
+        error={error}
+        disabled={disabled}
+        searchable
+        allowCustomValue={allowCustomValue}
+        customDescription={createCustomDescription}
+        emptyText={emptyText}
+        className={grouped ? "atria-grouped-select px-4 py-3" : undefined}
+      />
+    );
 
   return (
     <FormField label={label} helper={helper} error={error} htmlFor={controlId} helperId={messageId}>
@@ -348,7 +371,7 @@ export function ComboboxField({
           className={cx(
             grouped
               ? "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 border-0 bg-transparent px-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-55"
-              : "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left shadow-control transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55",
+              : "flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 text-left shadow-control transition focus:border-accent focus:ring-2 focus:ring-focus-ring focus:outline-none active:z-10 active:scale-[1.05] active:shadow-raised disabled:cursor-not-allowed disabled:opacity-55",
           )}
         >
           <span
@@ -436,15 +459,18 @@ export function SearchInput({
   readonly showClear?: boolean;
   readonly className?: string;
 }): React.JSX.Element {
+  const desktop = useWorkspaceControlPresentation() === "desktop";
+  const InputControl = desktop ? DesktopInputControl : "input";
   return (
     <div
       className={cx(
         "flex min-h-12 items-center gap-2 rounded-full bg-surface-container-lowest px-5 shadow-control ring-1 ring-ring-control transition-shadow focus-within:ring-2 focus-within:ring-focus-ring",
+        desktop && "atria-desktop-field",
         className,
       )}
     >
       <AppIcon name="search" className="icon-sm shrink-0 text-on-surface-variant" />
-      <input
+      <InputControl
         id={id}
         name={name}
         type="search"
@@ -452,13 +478,13 @@ export function SearchInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel ?? placeholder}
-        className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-on-surface-variant/55 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
+        className="atria-embedded-field min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-on-surface-variant/55 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
       />
-      {showClear && value ? (
+      {showClear && value && !desktop ? (
         <button
           type="button"
           onClick={() => onChange("")}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition active:scale-95"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition active:z-10 active:scale-[1.05] active:shadow-raised"
           aria-label={clearLabel}
         >
           <AppIcon name="close" className="icon-sm" />
@@ -476,13 +502,33 @@ export function FilterSelect({
   options,
   onChange,
   presentation = "auto",
+  searchable,
 }: {
   readonly label: string;
   readonly value: string;
   readonly options: readonly SelectOption[];
   readonly onChange: (value: string) => void;
   readonly presentation?: SelectPresentation;
+  readonly searchable?: boolean;
 }): React.JSX.Element {
+  const desktop = useWorkspaceControlPresentation() === "desktop";
+  if (desktop)
+    return (
+      <DesktopFilterSelect
+        label={label}
+        value={value}
+        options={options}
+        onChange={onChange}
+        searchable={
+          searchable ??
+          (presentation === "menu"
+            ? false
+            : selectDialogNeedsSearch({ options }) ||
+              presentation === "dialog" ||
+              presentation === "sheet")
+        }
+      />
+    );
   return (
     <AdaptiveSelect
       compact

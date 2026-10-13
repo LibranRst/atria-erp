@@ -1,10 +1,10 @@
-import { formatIdr } from "@atria/core/utils/money";
+import { formatExactIdr, formatIdr } from "@atria/core/utils/money";
 
 /**
  * Pembantu bersama untuk seluruh registry tool AI.
  *
- * Nilai uang selalu dikembalikan dalam dua bentuk: angka rupiah bulat untuk
- * perbandingan, dan string terformat untuk dikutip langsung oleh model.
+ * Nilai uang selalu dikembalikan dalam dua bentuk: angka asli dengan sen untuk
+ * perbandingan/konfirmasi, dan string terformat untuk dikutip langsung oleh model.
  * Model dilarang menghitung aritmatika uang sendiri.
  */
 
@@ -40,8 +40,11 @@ export function toNumber(value: string | null): number {
 }
 
 export function money(value: string | null): { amount: number; formatted: string } {
-  const amount = Math.round(toNumber(value));
-  return { amount, formatted: formatIdr(amount) };
+  const amount = toNumber(value);
+  return {
+    amount,
+    formatted: Number.isInteger(amount) ? formatIdr(amount) : formatExactIdr(amount),
+  };
 }
 
 /**

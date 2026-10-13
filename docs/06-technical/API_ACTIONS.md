@@ -10,6 +10,18 @@
 - No raw SQL in application code.
 - Responses use `ActionResponse<T>`.
 
+## Role Guide Actions
+
+- `getOwnRoleGuide()` returns permission-aware role copy, at most three responsibilities, a scope note,
+  a permitted first-step link, an opaque `contextKey`, `shouldAutoShow`, and `canAcknowledge`.
+- `acknowledgeOwnRoleGuide({ contextKey })` validates the payload with Zod and derives the user from
+  the Better Auth session. It rechecks current database access inside a transaction, rejects stale
+  contexts, and records the acknowledgment idempotently. Simulation returns without storing it.
+
+The API owns execution under `app/actions/profile/role-guide`; both operations are explicitly
+allowlisted in web RPC. The matching web actions are typed HTTP facades. No finance, stock, role,
+or organization-onboarding state changes. Viewing/acknowledgment failures do not block the workspace.
+
 ## Existing Finance Actions to Preserve
 
 - `submitFieldRequest`, `submitFieldRequests`, `verifyFieldRequest`, `approveFieldRequest`, `payFieldRequest`
@@ -213,3 +225,17 @@ Tukang/Subcon expense and vendor bill flows may optionally link to `project_cate
 - `registerPushTokenAction(input)` / `unregisterPushTokenAction(input)` and matching `notifications.registerPush` / `notifications.unregisterPush` tRPC procedures bind Web/Expo credentials to the authenticated user and session.
 - `GET /api/notifications/stream` is the authenticated SSE invalidation stream; it emits no notification body.
 - `GET|POST /api/internal/notifications?task=reconcile|deliveries|all` is a bearer-secret worker endpoint, not a user CRUD API. Vercel GET uses `CRON_SECRET`; generic POST may use `NOTIFICATION_JOB_SECRET`. See `docs/guide/notifications.md`.
+
+## AI Material Master draft operations
+
+Backend module: `app/actions/ai/material-master`; exposed by explicit private web-RPC operations and typed Next facades. All require authenticated AI-chat and Material Settings permission.
+
+- `startAiMaterialAnalysis({conversationId, toolCallId})`: verify stored owned proposal, create/reopen draft and enqueue background analysis idempotently.
+- `getAiMaterialDraft({draftId})`: current owned draft, live validation, reference options, permission context and progress.
+- `patchAiMaterialDraft({draftId, expectedRevision, rows})`: update unsaved fields/selection, preserving server-owned source/results/receipts.
+- `selectAiMaterialRows({draftId, expectedRevision, selectedRowIds})`: replace selection without acknowledging uncertain source values.
+- `saveAiMaterialRows({draftId, expectedRevision, operationId, rowIds})`: explicit atomic subset creation with stable replay receipt.
+- `confirmAiMaterialReference({draftId, expectedRevision, operationId, reference, sourceName?})`: separately approved category/location/vendor creation; vendor additionally requires vendor management.
+- `retryAiMaterialAnalysis({draftId})`, `discardAiMaterialDraft({draftId})`: resumable retry/cancellation of AI metadata; existing business results remain.
+
+`POST /api/internal/material-analysis` accepts the existing scheduler bearer secret and only processes queued analysis jobs. It cannot create Material Master, vendor, location, category, stock or finance records.

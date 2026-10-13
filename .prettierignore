@@ -1,5 +1,6 @@
 .next
 node_modules
+.atria-dev
 coverage
 scratch
 .agents
@@ -11,6 +12,7 @@ drizzle/meta
 # Generated verification and native dependency output
 .next-admin-verify
 .next-admin-dev
+**/.next-*/
 apps/mobile/ios/Pods
 apps/mobile/ios/build
 apps/mobile/android/build

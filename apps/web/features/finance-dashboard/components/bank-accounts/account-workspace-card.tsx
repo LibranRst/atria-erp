@@ -1,5 +1,5 @@
 import React from "react";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button } from "@/components/ui";
 
 import { BankAccountCard } from "@/features/finance-dashboard/components/cards/dashboard-cards";
 import type { BankAccount } from "@/features/finance-dashboard/types/bank-account-types";
@@ -27,13 +27,15 @@ function QuickActionButton({
         : "bg-surface-container-low text-on-surface";
 
   return (
-    <button
+    <Button
       type="button"
+      variant={tone === "danger" ? "criticalQuiet" : "secondary"}
+      size="compact"
+      leadingIcon={icon}
       disabled={disabled}
       onClick={onClick}
-      className={`flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-full px-1 text-eyebrow font-bold transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 min-[430px]:gap-1.5 min-[500px]:px-3 min-[500px]:text-meta ${toneClass}`}
+      className={`flex min-h-11 min-w-0 items-center justify-center gap-1 px-1 text-eyebrow min-[430px]:gap-1.5 min-[500px]:px-3 min-[500px]:text-meta ${toneClass}`}
     >
-      <span className="shrink-0">{icon}</span>
       {compactLabel ? (
         <>
           <span className="min-w-0 truncate min-[390px]:hidden">{compactLabel}</span>
@@ -42,7 +44,7 @@ function QuickActionButton({
       ) : (
         <span className="min-w-0 truncate">{label}</span>
       )}
-    </button>
+    </Button>
   );
 }
 

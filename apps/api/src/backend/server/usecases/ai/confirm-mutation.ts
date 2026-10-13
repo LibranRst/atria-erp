@@ -11,6 +11,15 @@ export type ConfirmedMutation<Result> =
 
 export function mapConfirmationError(error: unknown): ActionResponse<never> {
   const reason = error instanceof Error ? error.message : "";
+  if (reason === "PROJECT_BUDGET_DEFAULTS_CHANGED")
+    return {
+      success: false,
+      error: {
+        code: "CONFLICT",
+        message:
+          "Pengaturan Budget berubah sejak usulan disiapkan. Minta asisten menyiapkan ulang usulan proyek sebelum mengonfirmasi.",
+      },
+    };
   if (
     reason.startsWith("FORBIDDEN:") ||
     reason.startsWith("UNAUTHORIZED:") ||

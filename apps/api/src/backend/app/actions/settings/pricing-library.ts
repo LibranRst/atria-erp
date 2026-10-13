@@ -4,16 +4,17 @@ import { asc, eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
 import {
-  auditLog,
   expenseCategory,
   itemPriceLibrary,
   itemPriceLibraryCostComponent,
-  materialMaster,
-  vendor,
 } from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
 import { assertPermission } from "@backend/lib/auth/permissions";
-import { calculateSuggestedClientPrice, roundMoney } from "@atria/core/project/pricing";
+import { resolveActor } from "@backend/server/actor";
+import {
+  writeCatalogSettingsTx,
+  CatalogSettingsError,
+} from "@backend/server/usecases/settings/catalog-settings-writer";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   upsertPricingTemplateSchema,
@@ -133,148 +134,43 @@ export async function getPricingTemplates(
   }
 }
 
-async function validateReferences(input: UpsertPricingTemplateInput): Promise<void> {
-  const category = await db.query.expenseCategory.findFirst({
-    where: eq(expenseCategory.id, input.expenseCategoryId),
-  });
-  if (!category) throw new Error("EXPENSE_CATEGORY_NOT_FOUND");
-  const requiredCategory: Readonly<Record<string, string>> = {
-    MATERIAL_ITEM: "MATERIAL",
-    WORK_PACKAGE: "TUKANG",
-    SUBCON_PACKAGE: "SUBCON",
-  };
-  const expectedCode = requiredCategory[input.itemType];
-  if (expectedCode && category.code !== expectedCode) {
-    throw new Error(`Tipe ${input.itemType} wajib memakai kategori ${expectedCode}.`);
-  }
-  if (input.materialId) {
-    const material = await db.query.materialMaster.findFirst({
-      where: eq(materialMaster.id, input.materialId),
-    });
-    if (!material) throw new Error("MATERIAL_NOT_FOUND");
-  }
-  const vendorIds = new Set(
-    [
-      input.defaultVendorId ?? undefined,
-      ...input.components.map((component) => component.vendorId ?? undefined),
-    ].filter((id): id is string => Boolean(id)),
-  );
-  for (const vendorId of vendorIds) {
-    const existingVendor = await db.query.vendor.findFirst({ where: eq(vendor.id, vendorId) });
-    if (!existingVendor) throw new Error("VENDOR_NOT_FOUND");
-  }
-}
-
 export async function upsertPricingTemplate(
   input: UpsertPricingTemplateInput,
 ): Promise<ActionResponse<PricingTemplateRow>> {
-  const validation = upsertPricingTemplateSchema.safeParse(input);
-  if (!validation.success) {
+  const v = upsertPricingTemplateSchema.safeParse(input);
+  if (!v.success)
     return {
       success: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: validation.error.issues[0]?.message ?? "Template harga tidak valid.",
+        message: v.error.issues[0]?.message ?? "Template tidak valid.",
       },
     };
-  }
-  const user = await getSessionUser();
-  if (!user)
+  const actor = await resolveActor();
+  if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-
   try {
-    await assertPermission(user, "manage:item_library");
-    await validateReferences(validation.data);
-    const totalInternalCost = roundMoney(
-      validation.data.components.reduce(
-        (sum, component) => sum + component.quantity * component.unitCost,
-        0,
-      ),
-    );
-    const suggestedPrice =
-      validation.data.pricingMode === "MARGIN_BASED"
-        ? calculateSuggestedClientPrice(totalInternalCost, validation.data.targetGrossPercentage)
-        : (validation.data.fixedClientPrice ?? 0);
-
-    const templateId = await db.transaction(async (tx) => {
-      const existing = validation.data.itemPriceLibraryId
-        ? await tx.query.itemPriceLibrary.findFirst({
-            where: eq(itemPriceLibrary.id, validation.data.itemPriceLibraryId),
-          })
-        : null;
-      if (validation.data.itemPriceLibraryId && !existing)
-        throw new Error("ITEM_PRICE_LIBRARY_NOT_FOUND");
-
-      const values = {
-        expenseCategoryId: validation.data.expenseCategoryId,
-        materialId: validation.data.materialId ?? null,
-        defaultVendorId: validation.data.defaultVendorId ?? null,
-        code: validation.data.code || null,
-        itemType: validation.data.itemType,
-        itemCategory: validation.data.itemCategory,
-        name: validation.data.name,
-        description: validation.data.description ?? null,
-        unit: validation.data.unit,
-        defaultClientPrice: roundMoney(suggestedPrice).toFixed(2),
-        defaultInternalCost: totalInternalCost.toFixed(2),
-        pricingMode: validation.data.pricingMode,
-        targetGrossPercentage: validation.data.targetGrossPercentage.toFixed(4),
-        priceSourceType: validation.data.priceSourceType,
-        sourceNote: validation.data.sourceNote,
-        effectiveFrom: validation.data.effectiveFrom,
-        isActive: validation.data.isActive ?? true,
-        updatedById: user.id,
-        updatedAt: new Date(),
-      };
-
-      const [saved] = existing
-        ? await tx
-            .update(itemPriceLibrary)
-            .set(values)
-            .where(eq(itemPriceLibrary.id, existing.id))
-            .returning()
-        : await tx.insert(itemPriceLibrary).values(values).returning();
-
-      await tx
-        .delete(itemPriceLibraryCostComponent)
-        .where(eq(itemPriceLibraryCostComponent.itemPriceLibraryId, saved.id));
-      await tx.insert(itemPriceLibraryCostComponent).values(
-        validation.data.components.map((component, index) => ({
-          itemPriceLibraryId: saved.id,
-          vendorId: component.vendorId ?? null,
-          componentType: component.componentType,
-          label: component.label,
-          quantity: component.quantity.toFixed(2),
-          unit: component.unit,
-          unitCost: component.unitCost.toFixed(2),
-          totalCost: roundMoney(component.quantity * component.unitCost).toFixed(2),
-          note: component.note ?? null,
-          displayOrder: component.displayOrder ?? index,
-        })),
-      );
-      await tx.insert(auditLog).values({
-        userId: user.id,
-        action: existing ? "UPDATE_PRICING_TEMPLATE" : "CREATE_PRICING_TEMPLATE",
-        targetTable: "item_price_library",
-        targetId: saved.id,
-        originalState: existing ? JSON.stringify(existing) : null,
-        newState: JSON.stringify({ ...saved, components: validation.data.components }),
+    const row = await db.transaction(async (tx) => {
+      const id = await writeCatalogSettingsTx(tx, actor, {
+        action: "PRICING_TEMPLATE_SAVE",
+        payload: { ...v.data, effectiveFrom: v.data.effectiveFrom.toISOString() },
       });
-      return saved.id;
+      const saved = await tx.query.itemPriceLibrary.findFirst({
+        where: eq(itemPriceLibrary.id, id),
+        with: {
+          expenseCategory: true,
+          costComponents: { orderBy: [asc(itemPriceLibraryCostComponent.displayOrder)] },
+        },
+      });
+      if (!saved) throw new Error("ITEM_PRICE_LIBRARY_NOT_FOUND");
+      return mapTemplate(saved);
     });
-
     revalidatePath("/settings");
     revalidatePath("/settings/library");
-    const rows = await db.query.itemPriceLibrary.findFirst({
-      where: eq(itemPriceLibrary.id, templateId),
-      with: {
-        expenseCategory: true,
-        costComponents: { orderBy: [asc(itemPriceLibraryCostComponent.displayOrder)] },
-      },
-    });
-    if (!rows) throw new Error("ITEM_PRICE_LIBRARY_NOT_FOUND");
-    return { success: true, data: mapTemplate(rows) };
-  } catch (error) {
-    return toFailure(error, "Gagal menyimpan template harga.");
+    return { success: true, data: row };
+  } catch (error: unknown) {
+    if (error instanceof CatalogSettingsError)
+      return { success: false, error: { code: error.code, message: error.message } };
+    return toFailure(error, "Template belum tersimpan.");
   }
 }

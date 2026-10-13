@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { toast } from "sonner";
 
 import { updateApprovalThresholds } from "@/app/actions/settings/approval-thresholds";
 import {
   FormField,
+  FactRow,
   FormSection,
   GroupedSurface,
   InlineStateRow,
@@ -39,6 +41,7 @@ export function ApprovalControlManager({
   readonly canManage: boolean;
   readonly onMutationComplete?: () => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [open, setOpen] = React.useState(false);
   const [pending, setPending] = React.useState(false);
   const [fieldCost, setFieldCost] = React.useState(String(fieldCostCents / 100));
@@ -107,6 +110,46 @@ export function ApprovalControlManager({
       </GroupedSurface>
 
       <OperationalFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-4">
+            <GroupedSurface>
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Pengeluaran lapangan draft"
+                  wrapLabel
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(fieldCostNext / 100) ? 0 : 2}
+                      amount={fieldCostNext / 100}
+                      variant="fullDynamic"
+                      size="sm"
+                    />
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Pembayaran vendor draft"
+                  wrapLabel
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(vendorPaymentNext / 100) ? 0 : 2}
+                      amount={vendorPaymentNext / 100}
+                      variant="fullDynamic"
+                      size="sm"
+                    />
+                  }
+                />
+              </div>
+            </GroupedSurface>
+            <p className="text-support leading-relaxed text-on-surface-variant">
+              Owner memutus pengajuan mulai dari nominal ambang. Nol berarti semua pengajuan
+              terkait. Berlaku untuk pengajuan baru; pengajuan berjalan memakai keputusan awal.
+            </p>
+          </div>
+        }
         dismissal={{
           mode: "confirm",
           dirty,
@@ -123,7 +166,11 @@ export function ApprovalControlManager({
         pending={pending}
         disabled={!dirty}
         disabledReason={dirty ? undefined : "Belum ada perubahan."}
-        statusText="Perubahan hanya menilai pengajuan baru, bukan yang sedang menunggu."
+        statusText={
+          desktop
+            ? undefined
+            : "Perubahan hanya menilai pengajuan baru, bukan yang sedang menunggu."
+        }
         onClose={() => setOpen(false)}
         onSubmit={() => void submit()}
       >

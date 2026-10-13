@@ -89,11 +89,9 @@ export function OnboardingVerificationPanel({
       aria-label="Status langkah onboarding"
       className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle"
     >
-      <motion.button
+      <button
         type="button"
         onClick={toggleExpanded}
-        whileTap={reduceMotion ? undefined : { scale: 0.985 }}
-        transition={transitionSpringSnappy}
         aria-expanded={expanded}
         aria-controls={contentId}
         className="flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
@@ -128,7 +126,7 @@ export function OnboardingVerificationPanel({
         >
           <AppIcon name="expand_more" className="h-4.75 w-4.75" />
         </motion.span>
-      </motion.button>
+      </button>
 
       <AnimatePresence initial={false}>
         {expanded ? (

@@ -6,7 +6,9 @@ const stockGuardPath = new URL("../../../lib/material/operational-readiness.ts",
 
 describe("quick-start mutation contracts", () => {
   test("creates the first project, budget, audit, events, and completion inside one transaction", async () => {
-    const source = await Bun.file(mutationPath).text();
+    const source =
+      (await Bun.file(mutationPath).text()) +
+      (await Bun.file(new URL("./quick-start-writer.ts", import.meta.url)).text());
     expect(source).toContain("db.transaction");
     expect(source).toContain('.for("update")');
     expect(source).toContain("insertProjectWithCanonicalBudgetTx");

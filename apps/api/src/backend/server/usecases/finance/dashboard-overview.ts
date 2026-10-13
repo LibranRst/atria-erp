@@ -1,10 +1,23 @@
+import type { DashboardDesktopInput } from "@atria/core/finance/dashboard-desktop";
+import { INSTANCE_TENANT_ID } from "@backend/db/schema/tenant-constants";
 import { actorCan } from "@backend/lib/auth/permissions";
 import { getFieldCostApprovalThresholdRupiah } from "@backend/lib/finance/approval-thresholds";
 
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { cashTransaction, goodsReceipt, project, stockMovement } from "@backend/db/schema";
+import {
+  cashTransaction,
+  goodsReceipt,
+  project,
+  stockMovement,
+  bankAccount,
+  clientInvoice,
+  vendorBill,
+  projectBudgets,
+  materialInventory,
+  projectRapItem,
+} from "@backend/db/schema";
 import {
   getPendingApprovalDetails,
   rankPendingApprovals,
@@ -13,6 +26,7 @@ import type { Actor } from "@backend/server/actor";
 import { summarizeApprovals } from "@atria/core/finance/approval-summary";
 import {
   buildFinanceDashboardCore,
+  buildDashboardProjectRows,
   DASHBOARD_TAB_DETAIL_LIMIT,
   limitDashboardTabDetails,
   dashboardDueDayOffset,
@@ -80,6 +94,19 @@ function buildCashDueGroups(
 export async function getFinanceDashboardOverviewUseCase(
   actor: Actor,
 ): Promise<ActionResponse<FinanceDashboardOverview>> {
+  return readDashboard(actor, false);
+}
+export async function getFinanceDashboardDesktopSourceUseCase(
+  actor: Actor,
+  focus: DashboardDesktopInput["tab"],
+): Promise<ActionResponse<FinanceDashboardOverview>> {
+  return readDashboard(actor, true, focus);
+}
+async function readDashboard(
+  actor: Actor,
+  complete: boolean,
+  focus?: DashboardDesktopInput["tab"],
+): Promise<ActionResponse<FinanceDashboardOverview>> {
   const resolvedRole = actor.roleName;
   if (!actorCan(actor, "view:ledger") || actor.dataScope !== "GLOBAL") {
     return {
@@ -93,29 +120,49 @@ export async function getFinanceDashboardOverviewUseCase(
   const role: DashboardRole = resolvedRole;
 
   try {
-    const activeProjects = await db.query.project.findMany({
-      where: eq(project.status, "ACTIVE"),
-    });
+    const needsProjects = !complete || focus === "budget" || focus === "materials";
+    const needsCash = !complete || focus === "cash";
+    const needsMaterials = !complete || focus === "materials";
+    const activeProjects = needsProjects
+      ? await db.query.project.findMany({
+          where: and(
+            eq(project.status, "ACTIVE"),
+            complete ? eq(project.tenantId, INSTANCE_TENANT_ID) : undefined,
+          ),
+        })
+      : [];
     const activeProjectIds = activeProjects.map((item) => item.id);
     const [accounts, invoices, bills, budgets] = await Promise.all([
-      db.query.bankAccount.findMany({
-        with: {
-          cashTransactions: {
-            orderBy: [desc(cashTransaction.createdAt)],
-            limit: 8,
-          },
-        },
-      }),
-      db.query.clientInvoice.findMany({
-        with: { payments: true, project: true },
-      }),
-      db.query.vendorBill.findMany({
-        with: { payments: true, project: true, vendor: true },
-      }),
-      activeProjectIds.length === 0
+      complete
+        ? Promise.resolve([])
+        : db.query.bankAccount.findMany({
+            where: complete ? eq(bankAccount.tenantId, INSTANCE_TENANT_ID) : undefined,
+            with: {
+              cashTransactions: {
+                orderBy: [desc(cashTransaction.createdAt)],
+                limit: 8,
+              },
+            },
+          }),
+      needsCash
+        ? db.query.clientInvoice.findMany({
+            where: complete ? eq(clientInvoice.tenantId, INSTANCE_TENANT_ID) : undefined,
+            with: { payments: true, project: true },
+          })
+        : Promise.resolve([]),
+      needsCash
+        ? db.query.vendorBill.findMany({
+            where: complete ? eq(vendorBill.tenantId, INSTANCE_TENANT_ID) : undefined,
+            with: { payments: true, project: true, vendor: true },
+          })
+        : Promise.resolve([]),
+      activeProjectIds.length === 0 || (complete && focus !== "budget")
         ? Promise.resolve([])
         : db.query.projectBudgets.findMany({
-            where: (table, operators) => operators.inArray(table.projectId, activeProjectIds),
+            where: and(
+              inArray(projectBudgets.projectId, activeProjectIds),
+              complete ? eq(projectBudgets.tenantId, INSTANCE_TENANT_ID) : undefined,
+            ),
             with: {
               project: true,
               categories: { with: { expenseCategory: true } },
@@ -124,32 +171,65 @@ export async function getFinanceDashboardOverviewUseCase(
     ]);
 
     const optionalResults = await Promise.allSettled([
-      actorCan(actor, "view:approval_queue") ? getPendingApprovalDetails() : Promise.resolve([]),
-      db.query.materialInventory.findMany({ with: { material: true, location: true } }),
-      db.query.projectRapItem.findMany({
-        with: {
-          rap: { with: { project: true } },
-          material: { with: { inventory: true } },
-        },
-      }),
-      db.query.cashTransaction.findMany({ orderBy: [desc(cashTransaction.createdAt)], limit: 5 }),
-      db.query.goodsReceipt.findMany({
-        where: eq(goodsReceipt.status, "REVERSAL_REQUESTED"),
-        with: { project: true, inventoryLocation: true },
-        orderBy: [desc(goodsReceipt.createdAt)],
-        limit: 5,
-      }),
-      db.query.stockMovement.findMany({
-        where: inArray(stockMovement.movementType, [
-          "WASTE",
-          "ADJUSTMENT",
-          "EMERGENCY_ADJUSTMENT",
-          "STOCK_COUNT_ADJUSTMENT",
-        ]),
-        with: { material: true, location: true, project: true },
-        orderBy: [desc(stockMovement.createdAt)],
-        limit: 5,
-      }),
+      actorCan(actor, "view:approval_queue") && (!complete || focus === "approvals")
+        ? getPendingApprovalDetails()
+        : Promise.resolve([]),
+      needsMaterials
+        ? db.query.materialInventory.findMany({
+            where: complete ? eq(materialInventory.tenantId, INSTANCE_TENANT_ID) : undefined,
+            with: { material: true, location: true },
+          })
+        : Promise.resolve([]),
+      needsMaterials
+        ? db.query.projectRapItem.findMany({
+            where: complete ? eq(projectRapItem.tenantId, INSTANCE_TENANT_ID) : undefined,
+            with: {
+              rap: { with: { project: true } },
+              material: {
+                with: {
+                  inventory: {
+                    where: complete
+                      ? eq(materialInventory.tenantId, INSTANCE_TENANT_ID)
+                      : undefined,
+                  },
+                },
+              },
+            },
+          })
+        : Promise.resolve([]),
+      complete
+        ? Promise.resolve([])
+        : db.query.cashTransaction.findMany({
+            orderBy: [desc(cashTransaction.createdAt)],
+            limit: 5,
+          }),
+      needsMaterials
+        ? db.query.goodsReceipt.findMany({
+            where: and(
+              eq(goodsReceipt.status, "REVERSAL_REQUESTED"),
+              complete ? eq(goodsReceipt.tenantId, INSTANCE_TENANT_ID) : undefined,
+            ),
+            with: { project: true, inventoryLocation: true },
+            orderBy: [desc(goodsReceipt.createdAt)],
+            limit: complete ? undefined : 5,
+          })
+        : Promise.resolve([]),
+      needsMaterials
+        ? db.query.stockMovement.findMany({
+            where: and(
+              complete ? eq(stockMovement.tenantId, INSTANCE_TENANT_ID) : undefined,
+              inArray(stockMovement.movementType, [
+                "WASTE",
+                "ADJUSTMENT",
+                "EMERGENCY_ADJUSTMENT",
+                "STOCK_COUNT_ADJUSTMENT",
+              ]),
+            ),
+            with: { material: true, location: true, project: true },
+            orderBy: [desc(stockMovement.createdAt)],
+            limit: complete ? undefined : 5,
+          })
+        : Promise.resolve([]),
     ] as const);
     const unavailableSources: string[] = [];
     const rawApprovalDetails = optionalData(
@@ -179,11 +259,10 @@ export async function getFinanceDashboardOverviewUseCase(
       unavailableSources,
     );
     const now = new Date();
-    const rankedApprovalDetails = rankPendingApprovals(
-      approvalDetails,
-      now,
-      await getFieldCostApprovalThresholdRupiah(),
-    );
+    const rankedApprovalDetails =
+      approvalDetails.length === 0
+        ? []
+        : rankPendingApprovals(approvalDetails, now, await getFieldCostApprovalThresholdRupiah());
     const pendingApprovalCount = rankedApprovalDetails.length;
 
     const totalStockValue = inventoryRows.reduce(
@@ -412,6 +491,7 @@ export async function getFinanceDashboardOverviewUseCase(
           unavailableSources,
         },
         ...core,
+        riskyProjects: complete ? buildDashboardProjectRows(projectInputs) : core.riskyProjects,
         bankAccounts: accounts.map((account) => ({
           id: account.id,
           name: account.name,
@@ -443,12 +523,20 @@ export async function getFinanceDashboardOverviewUseCase(
           },
         },
         dashboardDetails: {
-          approvals: limitDashboardTabDetails(rankedApprovalDetails, DASHBOARD_TAB_DETAIL_LIMIT),
+          approvals: complete
+            ? rankedApprovalDetails
+            : limitDashboardTabDetails(rankedApprovalDetails, DASHBOARD_TAB_DETAIL_LIMIT),
           approvalSummary: summarizeApprovals(rankedApprovalDetails, now),
-          cashDue: limitDashboardTabDetails(cashDue, DASHBOARD_TAB_DETAIL_LIMIT),
+          cashDue: complete
+            ? cashDue
+            : limitDashboardTabDetails(cashDue, DASHBOARD_TAB_DETAIL_LIMIT),
           cashDueGroups: buildCashDueGroups(cashDue),
-          budgetRisks: limitDashboardTabDetails(core.riskyProjects, DASHBOARD_TAB_DETAIL_LIMIT),
-          materials: limitDashboardTabDetails(materialIssues, DASHBOARD_TAB_DETAIL_LIMIT),
+          budgetRisks: complete
+            ? buildDashboardProjectRows(projectInputs)
+            : limitDashboardTabDetails(core.riskyProjects, DASHBOARD_TAB_DETAIL_LIMIT),
+          materials: complete
+            ? materialIssues
+            : limitDashboardTabDetails(materialIssues, DASHBOARD_TAB_DETAIL_LIMIT),
         },
         stockIssues: {
           materialShortageCount,

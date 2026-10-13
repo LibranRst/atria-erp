@@ -1,13 +1,12 @@
 import React from "react";
-import { motion } from "framer-motion";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
 import {
   AppIcon,
   GroupedSurface,
   WorkspaceRowChevron,
   WorkspaceStatusLabel,
+  Button,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { DetailSheet } from "@/components/ui";
 import type { DetailNextAction } from "../../types/material-types";
 
@@ -59,22 +58,20 @@ export function MaterialDetailSheet({
       footer={
         material && canManage ? (
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               onClick={editMaterial}
               className="flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+              variant="primary"
             >
               <AppIcon name="edit" className="icon-sm shrink-0" aria-hidden="true" />
               <span className="truncate">Edit identitas</span>
-            </motion.button>
-            <motion.button
+            </Button>
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               onClick={() => onToggle(material)}
               className="flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+              variant="tertiary"
             >
               {material.isActive ? (
                 <AppIcon name="archive" className="icon-sm" aria-hidden="true" />
@@ -82,7 +79,7 @@ export function MaterialDetailSheet({
                 <AppIcon name="restore" className="icon-sm" aria-hidden="true" />
               )}
               <span>{material.isActive ? "Arsipkan" : "Aktifkan"}</span>
-            </motion.button>
+            </Button>
           </div>
         ) : undefined
       }

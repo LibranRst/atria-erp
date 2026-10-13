@@ -1,38 +1,34 @@
-import { redirect } from "next/navigation";
-import { resolveActor } from "@/server/actor";
-import { actorCan } from "@/lib/auth/permissions";
-import { resolveHomeDestination } from "@/features/navigation/server/home-destination";
-import { availableAdminNavigation, canAccessAdminPath } from "@/lib/navigation/admin-navigation";
 import { workspaceHref } from "@/lib/navigation/workspace-routes";
-import { PageState } from "@/components/ui";
+import { LegacyWorkspaceRedirect } from "@/components/layout/legacy-workspace-redirect";
+import { getPostLoginRedirectDestination } from "@/app/actions/auth-navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminHome({
+export default async function LegacyWorkspaceHome({
   searchParams,
 }: {
-  readonly searchParams: Promise<{ readonly surface?: string }>;
+  readonly searchParams: Promise<Readonly<Record<string, string | readonly string[] | undefined>>>;
 }): Promise<React.JSX.Element> {
-  if ((await searchParams).surface === "mobile") redirect("/?surface=mobile");
-  const actor = await resolveActor();
-  if (!actor) redirect("/login");
-  if (!actorCan(actor, "use:desktop_admin"))
-    return (
-      <PageState
-        kind="restricted"
-        title="Akses desktop dibatasi"
-        description="Peran Anda belum memiliki akses desktop."
-      />
-    );
-  const home = await resolveHomeDestination(actor);
-  if (canAccessAdminPath(home, actor.permissions)) redirect(workspaceHref(home, "desktop"));
-  const first = availableAdminNavigation(actor.permissions)[0];
-  if (first) redirect(first.href);
+  const query = await searchParams;
+  // The root alias resolves the existing account/onboarding/home policy first,
+  // avoiding a second server redirect at `/` that would discard the fragment.
+  const home = await getPostLoginRedirectDestination(
+    query.surface === "mobile" ? { surface: "mobile" } : undefined,
+  );
+  const destination = new URL(home, "https://atria.invalid");
+  const preserved = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (typeof value === "string") preserved.append(key, value);
+    else if (value) for (const item of value) preserved.append(key, item);
+  }
+  for (const key of new Set(preserved.keys())) {
+    // Mandatory home gate parameters (for example onboarding step) win.
+    if (destination.searchParams.has(key)) continue;
+    for (const value of preserved.getAll(key)) destination.searchParams.append(key, value);
+  }
   return (
-    <PageState
-      kind="restricted"
-      title="Belum ada modul yang dapat dibuka"
-      description="Akses desktop sudah aktif. Minta Owner memberikan izin modul yang diperlukan untuk pekerjaan Anda."
+    <LegacyWorkspaceRedirect
+      canonicalHref={workspaceHref(`${destination.pathname}${destination.search}`, "mobile")}
     />
   );
 }

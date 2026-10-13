@@ -3,6 +3,8 @@
 import React from "react";
 
 import {
+  GroupedSurface,
+  FactRow,
   ChoiceRow,
   FormField,
   FormRiskNotice,
@@ -39,6 +41,42 @@ export function InternalRevisionDrawer({
 }): React.JSX.Element {
   return (
     <OperationalFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <div className="px-1">
+            <h3 className="text-support font-semibold text-on-surface">Lingkup revisi</h3>
+          </div>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Material RAP"
+                value={reviseMaterial ? "Dipilih" : "Tidak dipilih"}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Paket kerja"
+                value={`${revisionPackageIds.length} dipilih`}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Alasan audit"
+                value={
+                  internalRevisionReason.trim().length >= 10 ? "Terisi" : "Minimal 10 karakter"
+                }
+              />
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Revisi menghasilkan draft baru; baseline RAP yang terkunci tetap dipertahankan.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty: internalRevisionReason.length > 0 || reviseMaterial || revisionPackageIds.length > 0,

@@ -77,12 +77,13 @@ describe("independent backend boundary", () => {
 
   test("public HTTP entry points remain explicitly sanctioned", () => {
     const source = readFileSync(path.join(API_ROOT, "src/app.ts"), "utf8");
-    const paths = [...source.matchAll(/app\.(?:get|post|on)\((?:\[[^\]]*\],\s*)?"([^"]+)"/g)]
+    const paths = [...source.matchAll(/app\.(?:get|post|on)\(\s*(?:\[[^\]]*\],\s*)?"([^"]+)"/g)]
       .map((match) => match[1])
       .sort();
     expect(paths).toEqual([
       "/api/ai/chat",
       "/api/auth/*",
+      "/api/internal/material-analysis",
       "/api/internal/notifications",
       "/api/internal/web-rpc",
       "/api/media/*",

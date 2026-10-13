@@ -2,24 +2,25 @@ import { cookies } from "@runtime/request-context";
 import { and, desc, eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import {
-  budgetAllocationSetting,
-  expenseCategory,
-  projectBudgetCategory,
-  projectBudgets,
-  rabEstimate,
-} from "@backend/db/schema";
+import { projectBudgetCategory, projectBudgets, rabEstimate } from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
 import { assertPermission, resolveRoleName } from "@backend/lib/auth/permissions";
 import { assertProjectAccess } from "@backend/lib/auth/scoping";
 import {
   calculateUsedPercentage,
-  EXCEL_BUDGET_CAP_RATIO,
   getBudgetCategoryStatus,
   type BudgetCategoryStatus,
   type ExpenseCategoryCode,
 } from "@atria/core/budget/excel-budget";
 import type { ActionResponse } from "@atria/core/types/action-response";
+import {
+  readBudgetAllocationDefault,
+  type BudgetAllocationDefault,
+} from "@backend/lib/budget/allocation-defaults";
+export {
+  readBudgetAllocationDefault,
+  type BudgetAllocationDefault,
+} from "@backend/lib/budget/allocation-defaults";
 
 type SessionUser = {
   readonly id: string;
@@ -82,19 +83,6 @@ export type OwnerBudgetDashboard = {
   readonly projects: readonly ProjectBudgetDashboard[];
 };
 
-type BudgetAllocationDefaultCategory = {
-  readonly expenseCategoryId: string;
-  readonly code: string;
-  readonly name: string;
-  readonly ratioPercentage: number;
-  readonly sortOrder: number;
-};
-
-export type BudgetAllocationDefault = {
-  readonly budgetCapRatio: number;
-  readonly categories: readonly BudgetAllocationDefaultCategory[];
-};
-
 export async function getSessionUser(): Promise<SessionUser | null> {
   const session = await auth.api.getSession({
     headers: {
@@ -127,54 +115,6 @@ export function toCategoryCode(value: string): ExpenseCategoryCode {
 
 export async function getBudgetAllocationDefault(): Promise<BudgetAllocationDefault> {
   return readBudgetAllocationDefault(db);
-}
-
-export async function readBudgetAllocationDefault(reader: Pick<typeof db, "query">): Promise<BudgetAllocationDefault> {
-  const setting = await reader.query.budgetAllocationSetting.findFirst({
-    where: eq(budgetAllocationSetting.isActive, true),
-    with: {
-      categories: {
-        with: { expenseCategory: true },
-      },
-    },
-  });
-
-  if (setting) {
-    const enabledCategories = setting.categories
-      .filter((category) => category.isEnabled && category.expenseCategory.isActive)
-      .map((category) => ({
-        expenseCategoryId: category.expenseCategoryId,
-        code: category.expenseCategory.code,
-        name: category.expenseCategory.name,
-        ratioPercentage: Number(category.ratioPercentage),
-        sortOrder: category.sortOrder,
-      }))
-      .sort((first, second) => first.sortOrder - second.sortOrder);
-
-    if (enabledCategories.length > 0) {
-      return {
-        budgetCapRatio: Number(setting.budgetCapRatio),
-        categories: enabledCategories,
-      };
-    }
-  }
-
-  const activeCategories = await reader.query.expenseCategory.findMany({
-    where: eq(expenseCategory.isActive, true),
-  });
-
-  return {
-    budgetCapRatio: EXCEL_BUDGET_CAP_RATIO,
-    categories: activeCategories
-      .map((category) => ({
-        expenseCategoryId: category.id,
-        code: category.code,
-        name: category.name,
-        ratioPercentage: Number(category.defaultRatio),
-        sortOrder: category.sortOrder,
-      }))
-      .sort((first, second) => first.sortOrder - second.sortOrder),
-  };
 }
 
 export async function assertBudgetAccess<T>(

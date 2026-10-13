@@ -88,6 +88,7 @@ export function AdminQuickActions(): React.JSX.Element | null {
           const items: readonly ActionMenuItem[] = group.actions.map((action) => ({
             id: action.href,
             label: action.label,
+            icon: action.iconName,
             disabledReason: action.disabled ? action.description : undefined,
             onSelect: (): void => router.push(action.href),
           }));

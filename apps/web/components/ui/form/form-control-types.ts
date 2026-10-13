@@ -6,6 +6,7 @@ export type SelectOption = {
   readonly group?: string;
   readonly disabled?: boolean;
   readonly disabledReason?: string;
+  readonly action?: { readonly kind: "create"; readonly label: string };
 };
 
 export const COMMON_UNIT_OPTIONS = [

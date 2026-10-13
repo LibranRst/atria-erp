@@ -6,6 +6,13 @@ database tetap berada di schema Drizzle; dokumen ini tidak menyalin SQL atau pse
 Seed adalah **sandbox pembelajaran**, bukan bootstrap production. Untuk acceptance test dari data
 operasional kosong, gunakan `docs/guide/financial_workflow_guide.md`.
 
+Untuk dataset development lokal yang lebih padat, gunakan
+[profil development](../guide/development-seed.md): `bun run db:dev:seed`,
+`bun run db:dev:reset --confirm-reset`, dan `bun run db:dev:verify`. Profil ini menambah
+rincian RAP/RAB per ruangan, histori biaya proyek selesai, price library, draft stok,
+notifikasi tiap peran dan histori percakapan. Kontrak baseline demo di bawah tetap
+khusus command `db:seed` / `db:demo:*`.
+
 ## Menjalankan dengan aman
 
 ```bash
@@ -40,7 +47,7 @@ fixture, dan test dapat merujuk record yang sama.
 | Finance Admin   | Lisa Permata  | `lisa@dekoria.com`   | `password123` |
 | Project Manager | Budi Santoso  | `budi@dekoria.com`   | `password123` |
 | Project Manager | Siti Aminah   | `siti@dekoria.com`   | `password123` |
-| Purchasing      | Agus Setiawan | `agus@dekoria.com`   | `password123` |
+| Purchasing      | Agus Pratama  | `agus@dekoria.com`   | `password123` |
 
 Password tersebut hanya untuk development. Walkthrough mengutamakan Developer Account Switcher
 dengan `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED="true"`.

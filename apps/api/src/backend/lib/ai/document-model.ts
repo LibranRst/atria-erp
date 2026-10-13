@@ -19,6 +19,16 @@ export interface DocumentContentResponse {
   readonly usageMetadata?: { readonly totalTokenCount?: number };
   readonly modelVersion?: string;
 }
+export class DocumentContentError extends Error {
+  constructor(readonly code: "TIMEOUT" | "UNAVAILABLE") {
+    super(
+      code === "TIMEOUT"
+        ? "Permintaan AI dibatalkan atau melewati batas waktu."
+        : "Penyedia AI gagal membaca dokumen. Coba lagi atau isi formulir secara manual.",
+    );
+    this.name = "DocumentContentError";
+  }
+}
 
 /** Select an approved document provider without invoking a model. */
 export function requireDocumentProvider(): ChatProviderName {
@@ -137,11 +147,7 @@ async function generateDocumentContent(
   } catch {
     // Provider exceptions can embed headers, prompts and document bytes. Do not
     // expose or retain them through an action error or an extraction log.
-    throw new Error(
-      signal.aborted
-        ? "Permintaan AI dibatalkan atau melewati batas waktu."
-        : "Penyedia AI gagal membaca dokumen. Coba lagi atau isi formulir secara manual.",
-    );
+    throw new DocumentContentError(signal.aborted ? "TIMEOUT" : "UNAVAILABLE");
   }
 }
 

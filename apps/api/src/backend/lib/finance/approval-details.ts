@@ -1,9 +1,15 @@
 import { roleNameHasPermission } from "@backend/lib/auth/role-access";
 import { OWNER_APPROVAL_AMOUNT_THRESHOLD } from "@atria/core/finance/expense-approval-rule";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { approval, inventoryOpeningBatch, projectCost, vendorPayment } from "@backend/db/schema";
+import {
+  approval,
+  inventoryOpeningBatch,
+  projectCost,
+  vendorPayment,
+  INSTANCE_TENANT_ID,
+} from "@backend/db/schema";
 import type {
   ApprovalDetail,
   FinanceApprovalDetail,
@@ -343,7 +349,7 @@ export async function getPendingApprovalDetails(
     : false;
 
   const records = await db.query.approval.findMany({
-    where: eq(approval.status, "PENDING"),
+    where: and(eq(approval.tenantId, INSTANCE_TENANT_ID), eq(approval.status, "PENDING")),
     orderBy: [desc(approval.createdAt)],
   });
   const details: ApprovalDetail[] = [];
@@ -366,7 +372,10 @@ export async function getPendingApprovalDetails(
   }
 
   const openingBatches = await db.query.inventoryOpeningBatch.findMany({
-    where: eq(inventoryOpeningBatch.status, "PENDING_APPROVAL"),
+    where: and(
+      eq(inventoryOpeningBatch.tenantId, INSTANCE_TENANT_ID),
+      eq(inventoryOpeningBatch.status, "PENDING_APPROVAL"),
+    ),
     with: {
       requestedBy: { columns: { name: true } },
       items: {

@@ -9,6 +9,20 @@ import {
 } from "./segmented-tabs";
 
 describe("segmented tabs", () => {
+  test("saved totals can expose their own accessible count label", () => {
+    const html = renderToStaticMarkup(
+      <SegmentedTabs
+        value="saved"
+        onChange={() => undefined}
+        ariaLabel="Review material"
+        options={[
+          { value: "saved", label: "Tersimpan", count: 3, countLabel: "3 material tersimpan" },
+        ]}
+      />,
+    );
+    expect(html).toContain("3 material tersimpan");
+    expect(html).not.toContain("memerlukan perhatian");
+  });
   test("marks the active item inside an overflow-capable tablist", () => {
     const html = renderToStaticMarkup(
       <SegmentedTabs

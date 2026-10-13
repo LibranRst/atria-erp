@@ -1,7 +1,7 @@
 "use client";
 
-import { Avatar as HeroAvatar } from "@heroui/react";
-import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { DesktopAvatar } from "../desktop/desktop-avatar";
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
 import Image from "next/image";
 import React from "react";
 
@@ -65,24 +65,18 @@ export function UserAvatar({
    * baru yang barusan diunggah untuk menggantikannya.
    */
   const [failedUrl, setFailedUrl] = React.useState<string | null>(null);
-  const desktop = useWorkspacePresentation() === "desktop";
+  const desktop = useWorkspaceControlPresentation() === "desktop";
   const showImage = Boolean(imageUrl) && failedUrl !== imageUrl;
 
   if (desktop)
     return (
-      <HeroAvatar
-        className={`atria-desktop-avatar shrink-0 text-support ${className}`}
-        style={{ width: renderPx, height: renderPx }}
-        aria-label={displayName ? `Foto profil ${displayName}` : undefined}
-      >
-        {imageUrl ? (
-          <HeroAvatar.Image
-            src={withImageKitTransform(imageUrl, renderPx)}
-            alt={displayName ? `Foto profil ${displayName}` : ""}
-          />
-        ) : null}
-        <HeroAvatar.Fallback aria-hidden={!displayName}>{initials}</HeroAvatar.Fallback>
-      </HeroAvatar>
+      <DesktopAvatar
+        className={className}
+        renderPx={renderPx}
+        displayName={displayName}
+        initials={initials}
+        imageUrl={imageUrl ? withImageKitTransform(imageUrl, renderPx) : imageUrl}
+      />
     );
 
   return (

@@ -1,8 +1,9 @@
 import { cookies } from "@runtime/request-context";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { materialMaster } from "@backend/db/schema";
+import { INSTANCE_TENANT_ID, materialMaster } from "@backend/db/schema";
+import { availableRapStock, calculateRapMaterialCost } from "@atria/core/project/rap-cost";
 import { auth } from "@backend/lib/auth";
 import { assertPermission, resolveRoleName } from "@backend/lib/auth/permissions";
 import { assertProjectAccess } from "@backend/lib/auth/scoping";
@@ -57,42 +58,63 @@ export function toError<T>(error: unknown, fallbackMessage: string): ActionRespo
 
 export async function getAvailableStockForMaterial(
   materialId: string | null | undefined,
+  connection: Pick<typeof db, "query"> = db,
 ): Promise<number> {
   if (!materialId) return 0;
-  const material = await db.query.materialMaster.findFirst({
-    where: eq(materialMaster.id, materialId),
+  const material = await connection.query.materialMaster.findFirst({
+    where: and(eq(materialMaster.id, materialId), eq(materialMaster.tenantId, INSTANCE_TENANT_ID)),
     with: {
       inventory: true,
     },
   });
-  return (
-    material?.inventory.reduce((sum, inventory) => {
-      return sum + Number(inventory.currentStock) - Number(inventory.reservedStock);
-    }, 0) ?? 0
-  );
+  return availableRapStock(material?.inventory ?? []);
 }
 
 export async function buildRapItemValues(
   input: AddProjectRapItemInput | UpdateProjectRapItemInput,
-) {
-  const totalQuantity = input.requiredQuantity + input.bufferQuantity;
-  const estimatedTotalCost = totalQuantity * input.estimatedUnitCost;
-  const availableStock = await getAvailableStockForMaterial(input.materialId);
+  connection: Pick<typeof db, "query"> = db,
+): Promise<{
+  materialId: string | null;
+  area: string;
+  name: string;
+  description: string | null;
+  requiredQuantity: string;
+  bufferQuantity: string;
+  totalQuantity: string;
+  unit: string;
+  estimatedUnitCost: string;
+  estimatedTotalCost: string;
+  source: string;
+  status: string;
+  internalNote: string | null;
+}> {
+  const calculated = calculateRapMaterialCost(input);
+  if (input.materialId) {
+    const material = await connection.query.materialMaster.findFirst({
+      where: and(
+        eq(materialMaster.id, input.materialId),
+        eq(materialMaster.tenantId, INSTANCE_TENANT_ID),
+      ),
+      columns: { isActive: true },
+    });
+    if (!material?.isActive) throw new Error("Material tidak tersedia atau nonaktif.");
+  }
+  const availableStock = await getAvailableStockForMaterial(input.materialId, connection);
 
   return {
     materialId: input.materialId ?? null,
     area: input.area,
     name: input.name,
     description: input.description ?? null,
-    requiredQuantity: input.requiredQuantity.toFixed(2),
-    bufferQuantity: input.bufferQuantity.toFixed(2),
-    totalQuantity: totalQuantity.toFixed(2),
+    requiredQuantity: calculated.requiredQuantity,
+    bufferQuantity: calculated.bufferQuantity,
+    totalQuantity: calculated.totalQuantity,
     unit: input.unit,
-    estimatedUnitCost: input.estimatedUnitCost.toFixed(2),
-    estimatedTotalCost: estimatedTotalCost.toFixed(2),
+    estimatedUnitCost: calculated.estimatedUnitCost,
+    estimatedTotalCost: calculated.estimatedTotalCost,
     source: input.source,
     status: getRapItemAvailabilityStatus({
-      totalQuantity,
+      totalQuantity: Number(calculated.totalQuantity),
       availableStock,
       source: input.source,
     }),

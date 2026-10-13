@@ -1,0 +1,4 @@
+DROP INDEX "material_analysis_proposal_uidx";--> statement-breakpoint
+ALTER TABLE "material_import_analysis_job" ADD COLUMN "tenant_id" uuid DEFAULT '00000000-0000-4000-8000-000000000001' NOT NULL;--> statement-breakpoint
+ALTER TABLE "material_import_analysis_job" ADD CONSTRAINT "material_import_analysis_job_tenant_id_tenant_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenant"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "material_analysis_proposal_uidx" ON "material_import_analysis_job" USING btree ("tenant_id","conversation_id","tool_call_id");

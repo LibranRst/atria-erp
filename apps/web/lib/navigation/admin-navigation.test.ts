@@ -19,7 +19,7 @@ test("desktop access never grants a module or creation capability", () => {
       "view:project",
     ]),
   ).toBe(true);
-  expect(canAccessAdminPath("/admin/projects/project-123?tab=rap", ["view:project"])).toBe(false);
+  expect(canAccessAdminPath("/admin/projects/project-123?tab=rap", ["view:project"])).toBe(true);
   expect(canAccessAdminPath("/admin/settings?tab=organization", ["use:desktop_admin"])).toBe(false);
   expect(canAccessAdminPath("/admin/expenses/new", ["use:desktop_admin", "view:cost"])).toBe(false);
   expect(canAccessAdminPath("/admin/expenses/new", ["use:desktop_admin", "create:cost"])).toBe(
@@ -38,4 +38,11 @@ test("external and unknown destinations cannot be mistaken for a workspace", () 
   ]) {
     expect(canAccessAdminPath(path, grants)).toBe(false);
   }
+});
+
+test("responsive navigation uses each role's domain permissions without a desktop grant", () => {
+  expect(canAccessAdminPath("/projects/project-123?tab=budget", ["view:project"])).toBe(true);
+  expect(canAccessAdminPath("/ledger", ["view:project"])).toBe(false);
+  expect(canAccessAdminPath("/materials", ["view:inventory"])).toBe(true);
+  expect(canAccessAdminPath("/expenses/new", ["view:cost"])).toBe(false);
 });

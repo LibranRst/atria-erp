@@ -1,146 +1,36 @@
-import type { ComponentType } from "react";
-import * as Phosphor from "phosphor-react-native";
-import type { IconProps, IconWeight } from "phosphor-react-native";
+import { HugeiconsIcon, type HugeiconsProps } from "@hugeicons/react-native";
+import {
+  APP_ICON_STROKE_WIDTH,
+  resolveAppIcon,
+  type AppIconName,
+  type AppIconWeight,
+} from "@atria/icons";
 
-const componentNameByLegacyName = {
-  account_balance: "BankIcon",
-  account_balance_wallet: "WalletIcon",
-  add: "PlusIcon",
-  add_box: "PlusSquareIcon",
-  add_circle: "PlusCircleIcon",
-  add_location_alt: "MapPinPlusIcon",
-  add_photo: "ImageSquareIcon",
-  analytics: "ChartBarIcon",
-  approval: "SealCheckIcon",
-  architecture: "BlueprintIcon",
-  archive: "ArchiveIcon",
-  arrow_back: "ArrowLeftIcon",
-  arrow_downward: "ArrowDownIcon",
-  arrow_forward: "ArrowRightIcon",
-  arrow_upward: "ArrowUpIcon",
-  assignment_late: "ClipboardTextIcon",
-  cancel: "XCircleIcon",
-  category: "TagIcon",
-  chat: "ChatCircleIcon",
-  check: "CheckIcon",
-  check_circle: "CheckCircleIcon",
-  chevron_left: "CaretLeftIcon",
-  chevron_right: "CaretRightIcon",
-  close: "XIcon",
-  cloud_off: "CloudSlashIcon",
-  code: "CodeIcon",
-  construction: "HammerIcon",
-  contactless: "BroadcastIcon",
-  content_copy: "CopyIcon",
-  dashboard: "SquaresFourIcon",
-  data_alert: "WarningCircleIcon",
-  database: "DatabaseIcon",
-  delete: "TrashIcon",
-  description: "FileTextIcon",
-  developer_mode: "CodeIcon",
-  domain: "BuildingsIcon",
-  done: "CheckIcon",
-  edit: "PencilSimpleIcon",
-  edit_note: "NotePencilIcon",
-  engineering: "HardHatIcon",
-  error: "WarningCircleIcon",
-  event: "CalendarIcon",
-  event_available: "CalendarCheckIcon",
-  event_busy: "CalendarXIcon",
-  event_upcoming: "CalendarDotsIcon",
-  expand_more: "CaretDownIcon",
-  fact_check: "ClipboardTextIcon",
-  file_search: "FileMagnifyingGlassIcon",
-  filter_alt_off: "FunnelXIcon",
-  folder: "FolderIcon",
-  folder_open: "FolderOpenIcon",
-  format_list_bulleted: "ListBulletsIcon",
-  group: "UsersIcon",
-  handshake: "HandshakeIcon",
-  history: "ClockCounterClockwiseIcon",
-  hourglass_top: "HourglassIcon",
-  image: "ImageIcon",
-  inbox: "TrayIcon",
-  info: "InfoIcon",
-  inventory: "PackageIcon",
-  inventory_2: "PackageIcon",
-  keyboard_arrow_down: "CaretDownIcon",
-  layers: "StackIcon",
-  link: "LinkIcon",
-  list: "ListBulletsIcon",
-  local_shipping: "TruckIcon",
-  location_on: "MapPinIcon",
-  lock: "LockIcon",
-  logout: "SignOutIcon",
-  mail: "EnvelopeIcon",
-  monitoring: "ChartLineUpIcon",
-  more_horiz: "DotsThreeIcon",
-  move_to_inbox: "TrayArrowDownIcon",
-  north_east: "ArrowUpRightIcon",
-  notes: "NoteIcon",
-  notification_important: "BellRingingIcon",
-  password: "KeyIcon",
-  payments: "MoneyIcon",
-  person: "UserIcon",
-  person_play: "UserCheckIcon",
-  photo_camera: "CameraIcon",
-  photo_library: "ImageIcon",
-  playlist_add: "ListPlusIcon",
-  priority_high: "WarningIcon",
-  production_quantity_limits: "PackageIcon",
-  progress_activity: "CircleNotchIcon",
-  publish: "FileArrowUpIcon",
-  receipt_long: "ReceiptIcon",
-  refresh: "ArrowClockwiseIcon",
-  remove: "MinusIcon",
-  report: "WarningOctagonIcon",
-  report_problem: "WarningIcon",
-  request_quote: "FileTextIcon",
-  restore: "ArrowCounterClockwiseIcon",
-  resume: "PlayIcon",
-  save: "FloppyDiskIcon",
-  schedule: "ClockIcon",
-  search: "MagnifyingGlassIcon",
-  search_off: "MagnifyingGlassMinusIcon",
-  send: "PaperPlaneRightIcon",
-  shield: "ShieldIcon",
-  shopping_cart_checkout: "ShoppingCartIcon",
-  south_west: "ArrowDownLeftIcon",
-  space_dashboard: "SquaresFourIcon",
-  sparkle: "SparkleIcon",
-  sparkles: "SparkleIcon",
-  swap_horiz: "ArrowsLeftRightIcon",
-  sync: "ArrowsClockwiseIcon",
-  sync_alt: "ArrowsLeftRightIcon",
-  sync_problem: "WarningCircleIcon",
-  task_alt: "CheckCircleIcon",
-  trending_up: "TrendUpIcon",
-  tune: "SlidersHorizontalIcon",
-  undo: "ArrowUUpLeftIcon",
-  upload_file: "FileArrowUpIcon",
-  verified: "SealCheckIcon",
-  verified_user: "ShieldCheckIcon",
-  warehouse: "WarehouseIcon",
-  warning: "WarningIcon",
-} as const satisfies Readonly<Record<string, keyof typeof Phosphor>>;
+export type { AppIconName } from "@atria/icons";
 
-export type AppIconName = keyof typeof componentNameByLegacyName;
-export type AppIconProps = Omit<IconProps, "weight"> & {
+export type AppIconProps = Omit<HugeiconsProps, "icon" | "strokeWidth"> & {
   readonly name: AppIconName | string;
-  readonly weight?: IconWeight;
+  /** Compatibility only: the free family always renders Stroke Rounded. */
+  readonly weight?: AppIconWeight;
+  readonly mirrored?: boolean;
 };
-
-type PhosphorIcon = ComponentType<IconProps>;
-const phosphorIcons = Phosphor as unknown as Record<string, PhosphorIcon>;
 
 export function AppIcon({
   name,
   size = 18,
-  weight = "regular",
+  weight,
+  mirrored = false,
+  style,
   ...props
 }: AppIconProps): React.JSX.Element {
-  const componentName = componentNameByLegacyName[name as AppIconName];
-  const Icon =
-    (componentName ? phosphorIcons[componentName] : undefined) ?? phosphorIcons.QuestionIcon;
-  return <Icon {...props} size={size} weight={weight} />;
+  void weight;
+  return (
+    <HugeiconsIcon
+      {...props}
+      icon={resolveAppIcon(name)}
+      size={size}
+      strokeWidth={APP_ICON_STROKE_WIDTH}
+      style={mirrored ? [style, { transform: [{ scaleX: -1 }] }] : style}
+    />
+  );
 }

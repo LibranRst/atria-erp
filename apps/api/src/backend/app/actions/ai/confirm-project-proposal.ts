@@ -35,7 +35,12 @@ export async function confirmAiCreateProjectProposal(
   }
   const proposal = parsed.data;
   const outcome = await confirmMutation(actor, proposal, "CREATE_PROJECT", async (tx) => {
-    const result = await createProjectTx(tx, actor, { ...proposal, status: "DRAFT" });
+    const result = await createProjectTx(
+      tx,
+      actor,
+      { ...proposal, status: "DRAFT" },
+      proposal.budgetDefaults,
+    );
     return { documentId: result.id, result };
   });
   if (!outcome.success) return outcome;

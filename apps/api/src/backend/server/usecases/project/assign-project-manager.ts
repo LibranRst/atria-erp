@@ -1,131 +1,59 @@
-import { actorCan } from "@backend/lib/auth/permissions";
-import { recordNotificationEvent } from "@backend/server/services/notification-events";
 import { db } from "@backend/db";
-import { auditLog, project, user } from "@backend/db/schema";
-import { assertProjectAccess } from "@backend/lib/auth/scoping";
 import type { Actor } from "@backend/server/actor";
-
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   assignProjectManagerSchema,
   type AssignProjectManagerInput,
 } from "@atria/core/validations/project";
-import { eq } from "drizzle-orm";
-
+import {
+  prepareProjectManagementTx,
+  writeProjectManagementTx,
+  assertProjectManagementRights,
+  ProjectManagementError,
+} from "./project-management-writer";
 export type AssignProjectManagerResult = {
   readonly projectId: string;
   readonly projectManagerId: string;
   readonly pmName: string;
 };
 
-/** Menugaskan Project Manager ke proyek dengan audit log dan transaksi aman. */
 export async function assignProjectManagerUseCase(
   actor: Actor,
   input: AssignProjectManagerInput,
 ): Promise<ActionResponse<AssignProjectManagerResult>> {
-  const validation = assignProjectManagerSchema.safeParse(input);
-  if (!validation.success) {
+  const parsed = assignProjectManagerSchema.safeParse(input);
+  if (!parsed.success)
     return {
       success: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: validation.error.issues[0]?.message || "Validasi data penugasan PM gagal.",
+        message: parsed.error.issues[0]?.message ?? "Penugasan tidak valid.",
       },
     };
-  }
-
-  if (!actorCan(actor, "create:project")) {
-    return {
-      success: false,
-      error: {
-        code: "FORBIDDEN",
-        message: "Peran Anda tidak diizinkan untuk menugaskan Project Manager.",
-      },
-    };
-  }
-
-  const { projectId, projectManagerId } = validation.data;
   try {
-    await assertProjectAccess(projectId, actor.userId, actor.roleName);
-  } catch {
-    return {
-      success: false,
-      error: {
-        code: "FORBIDDEN",
-        message: "Anda hanya dapat menugaskan PM pada proyek yang berada dalam cakupan Anda.",
-      },
-    };
-  }
-
-  try {
-    const result = await db.transaction(async (tx) => {
-      const existing = await tx.query.project.findFirst({
-        where: eq(project.id, projectId),
+    assertProjectManagementRights(actor, { action: "ASSIGN_PM", ...parsed.data });
+    const data = await db.transaction(async (tx) => {
+      const proposal = await prepareProjectManagementTx(tx, actor, {
+        action: "ASSIGN_PM",
+        ...parsed.data,
       });
-
-      if (!existing) {
-        throw new Error("Proyek tidak ditemukan.");
-      }
-      if (existing.status === "COMPLETED" || existing.status === "CANCELLED") {
-        throw new Error("Proyek yang sudah selesai atau dibatalkan tidak dapat diubah.");
-      }
-
-      const targetPm = await tx.query.user.findFirst({
-        where: eq(user.id, projectManagerId),
-      });
-      if (!targetPm) {
-        throw new Error("Project Manager yang dipilih tidak ditemukan.");
-      }
-
-      await tx
-        .update(project)
-        .set({
-          projectManagerId,
-          updatedAt: new Date(),
-        })
-        .where(eq(project.id, projectId));
-
-      await tx.insert(auditLog).values({
-        id: crypto.randomUUID(),
-        userId: actor.userId,
-        action: "ASSIGN_PROJECT_MANAGER",
-        targetTable: "project",
-        targetId: projectId,
-        originalState: JSON.stringify({ projectManagerId: existing.projectManagerId }),
-        newState: JSON.stringify({ projectManagerId, projectManagerName: targetPm.name }),
-        createdAt: new Date(),
-      });
-
-      if (existing.projectManagerId !== projectManagerId)
-        await recordNotificationEvent(tx, {
-          referenceType: "project",
-          referenceId: projectId,
-          projectId,
-          stage: `ASSIGNED:${projectManagerId}:${crypto.randomUUID()}`,
-          title: "Penugasan proyek",
-          message: existing.name,
-          recipients: [projectManagerId],
-          permission: "view:project",
-          actionUrl: `/projects/${projectId}`,
-          actorId: actor.userId,
-        });
+      await writeProjectManagementTx(tx, actor, proposal);
       return {
-        projectId,
-        projectManagerId,
-        pmName: targetPm.name,
+        projectId: parsed.data.projectId,
+        projectManagerId: parsed.data.projectManagerId,
+        pmName: String(proposal.rows[0].details[1].value),
       };
     });
-
-    return { success: true, data: result };
-  } catch (error) {
+    return { success: true, data };
+  } catch (error: unknown) {
     return {
       success: false,
       error: {
-        code: "INTERNAL_SERVER_ERROR",
+        code: error instanceof ProjectManagementError ? error.code : "INTERNAL_SERVER_ERROR",
         message:
-          error instanceof Error
+          error instanceof ProjectManagementError
             ? error.message
-            : "Terjadi kesalahan saat menugaskan Project Manager.",
+            : "Gagal menugaskan Project Manager.",
       },
     };
   }

@@ -1,18 +1,18 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { resolveActor } from "@backend/server/actor";
+import {
+  generateRabFromSelectedSourcesTx,
+  lockRabGenerationTx,
+} from "@backend/server/usecases/project/rab-generation-writer";
+import { and, desc, eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
 import {
   auditLog,
-  project,
   projectBudgets,
-  projectCategoryPlanItem,
   projectRap,
-  projectRapItem,
   rabEstimate,
-  rabEstimateBundle,
   rabEstimateItem,
 } from "@backend/db/schema";
-import { getNextRabRevision } from "@atria/core/project/rab-selection";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   generateRabFromRapSchema,
@@ -20,13 +20,7 @@ import {
   type GenerateRabFromRapInput,
   type GenerateRabFromSelectedSourcesInput,
 } from "@atria/core/validations/rap-rab";
-import {
-  assertProjectMutationAccess,
-  buildRabCategoryPlanItemValues,
-  buildRabMaterialItemValues,
-  getSessionUser,
-  toError,
-} from "./rap-rab-utils";
+import { buildRabMaterialItemValues, toError } from "./rap-rab-utils";
 
 export async function generateRabFromRap(
   input: GenerateRabFromRapInput,
@@ -39,12 +33,18 @@ export async function generateRabFromRap(
     };
   }
 
-  const user = await getSessionUser();
-  if (!user)
+  const actor = await resolveActor();
+  if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
 
   try {
     const result = await db.transaction(async (tx) => {
+      const target = await tx.query.projectRap.findFirst({
+        where: eq(projectRap.id, validation.data.projectRapId),
+        columns: { projectId: true },
+      });
+      if (!target) throw new Error("RAP_NOT_FOUND");
+      await lockRabGenerationTx(tx, actor, target.projectId, [], []);
       const rap = await tx.query.projectRap.findFirst({
         where: eq(projectRap.id, validation.data.projectRapId),
         with: {
@@ -57,7 +57,6 @@ export async function generateRabFromRap(
       if (rap.items.length === 0) throw new Error("RAP_EMPTY");
       if (rap.status !== "LOCKED")
         throw new Error("RAP harus difinalisasi sebelum menjadi source RAB.");
-      await assertProjectMutationAccess(user, rap.projectId, "create:rab");
 
       const openEstimate = rap.rabEstimates.find((estimate) => estimate.status === "DRAFT");
       if (openEstimate) throw new Error("RAB_DRAFT_EXISTS");
@@ -102,7 +101,7 @@ export async function generateRabFromRap(
         ),
       );
       await tx.insert(auditLog).values({
-        userId: user.id,
+        userId: actor.userId,
         action: "GENERATE_RAB_DRAFT_FROM_RAP",
         targetTable: "rab_estimate",
         targetId: estimate.id,
@@ -122,278 +121,22 @@ export async function generateRabFromSelectedSources(
   input: GenerateRabFromSelectedSourcesInput,
 ): Promise<ActionResponse<typeof rabEstimate.$inferSelect>> {
   const validation = generateRabFromSelectedSourcesSchema.safeParse(input);
-  if (!validation.success) {
+  if (!validation.success)
     return {
       success: false,
       error: { code: "VALIDATION_ERROR", message: "Data sumber quotation tidak valid." },
     };
-  }
-
-  const user = await getSessionUser();
-  if (!user)
+  const actor = await resolveActor();
+  if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
-
   try {
-    const result = await db.transaction(async (tx) => {
-      const proj = await tx.query.project.findFirst({
-        where: eq(project.id, validation.data.projectId),
-        with: {
-          rabEstimates: true,
-        },
-      });
-      if (!proj) throw new Error("PROJECT_NOT_FOUND");
-      await assertProjectMutationAccess(user, validation.data.projectId, "create:rab");
-
-      const openEstimate = proj.rabEstimates.find((estimate) => estimate.status === "DRAFT");
-      if (openEstimate) throw new Error("RAB_DRAFT_EXISTS");
-      const currentApproved =
-        proj.rabEstimates.find((estimate) => estimate.status === "APPROVED") ?? null;
-
-      const budget = await tx.query.projectBudgets.findFirst({
-        where: eq(projectBudgets.projectId, validation.data.projectId),
-      });
-      const targetGrossPercentage = budget ? Number(budget.targetGrossPercentage) : 10;
-      const revision = getNextRabRevision(proj.rabEstimates);
-
-      const uniqueRapItemIds = Array.from(new Set(validation.data.projectRapItemIds));
-      const uniquePlanItemIds = Array.from(new Set(validation.data.projectCategoryPlanItemIds));
-      const rapItems =
-        uniqueRapItemIds.length > 0
-          ? await tx.query.projectRapItem.findMany({
-              where: inArray(projectRapItem.id, uniqueRapItemIds),
-              with: {
-                rap: true,
-              },
-            })
-          : [];
-      const categoryPlanItems =
-        uniquePlanItemIds.length > 0
-          ? await tx.query.projectCategoryPlanItem.findMany({
-              where: inArray(projectCategoryPlanItem.id, uniquePlanItemIds),
-              with: {
-                expenseCategory: true,
-              },
-            })
-          : [];
-
-      if (rapItems.length !== uniqueRapItemIds.length) throw new Error("RAP_ITEM_NOT_FOUND");
-      if (categoryPlanItems.length !== uniquePlanItemIds.length)
-        throw new Error("CATEGORY_PLAN_ITEM_NOT_FOUND");
-
-      for (const item of rapItems) {
-        if (item.rap.projectId !== validation.data.projectId)
-          throw new Error("RAP_ITEM_PROJECT_MISMATCH");
-        if (item.rap.status !== "LOCKED")
-          throw new Error("Material RAP harus difinalisasi sebelum menjadi source RAB.");
-      }
-      for (const item of categoryPlanItems) {
-        if (item.projectId !== validation.data.projectId)
-          throw new Error("CATEGORY_PLAN_ITEM_PROJECT_MISMATCH");
-        if (item.expenseCategory.code !== "TUKANG" && item.expenseCategory.code !== "SUBCON") {
-          throw new Error("CATEGORY_PLAN_ONLY_ALLOWED_FOR_TUKANG_OR_SUBCON");
-        }
-        if (item.status !== "ACTIVE" && item.status !== "LOCKED") {
-          throw new Error("Package Tukang/Subcon harus ACTIVE sebelum dipakai sebagai source RAB.");
-        }
-      }
-
-      const firstRap = rapItems[0]?.rap ?? null;
-      const [estimate] = await tx
-        .insert(rabEstimate)
-        .values({
-          projectId: validation.data.projectId,
-          sourceProjectRapId: firstRap?.id ?? null,
-          supersedesRabEstimateId: currentApproved?.id ?? null,
-          status: "DRAFT",
-          revision,
-          title: validation.data.title ?? `Client Estimate / Quotation - ${proj.name}`,
-          clientNotes:
-            validation.data.clientNotes ??
-            "Draft quotation client. Review label, harga, dan item sebelum dikirim.",
-        })
-        .returning();
-
-      const generatedSourceItems = [
-        ...rapItems.map((item, index) =>
-          buildRabMaterialItemValues({
-            rabEstimateId: estimate.id,
-            item: { ...item, revision: item.rap.revision },
-            targetGrossPercentage,
-            displayOrder: index + 1,
-          }),
-        ),
-        ...categoryPlanItems.map((item, index) =>
-          buildRabCategoryPlanItemValues({
-            rabEstimateId: estimate.id,
-            item,
-            targetGrossPercentage,
-            displayOrder: rapItems.length + index + 1,
-          }),
-        ),
-      ];
-
-      const baselineItems = currentApproved
-        ? await tx.query.rabEstimateItem.findMany({
-            where: eq(rabEstimateItem.rabEstimateId, currentApproved.id),
-            orderBy: (table, { asc }) => [asc(table.displayOrder)],
-          })
-        : [];
-      const baselineBundles = currentApproved
-        ? await tx.query.rabEstimateBundle.findMany({
-            where: eq(rabEstimateBundle.rabEstimateId, currentApproved.id),
-            with: { items: true },
-            orderBy: (table, { asc }) => [asc(table.displayOrder)],
-          })
-        : [];
-
-      const mergedSourceItems = generatedSourceItems.map((generatedItem) => {
-        const baselineItem = baselineItems.find((candidate) => {
-          if (candidate.sourceType !== generatedItem.sourceType) return false;
-          if (
-            generatedItem.sourceLibraryItemId &&
-            candidate.sourceLibraryItemId === generatedItem.sourceLibraryItemId
-          )
-            return true;
-          if (
-            generatedItem.sourceProjectCategoryPlanItemId &&
-            candidate.sourceProjectCategoryPlanItemId ===
-              generatedItem.sourceProjectCategoryPlanItemId
-          )
-            return true;
-          return candidate.clientLabel === generatedItem.clientLabel;
-        });
-        if (!baselineItem) return generatedItem;
-        return {
-          ...generatedItem,
-          clientLabel: baselineItem.clientLabel,
-          description: baselineItem.description,
-          quantity: baselineItem.quantity,
-          unit: baselineItem.unit,
-          unitPrice: baselineItem.unitPrice,
-          lineTotal: baselineItem.lineTotal,
-          displayOrder: baselineItem.displayOrder,
-          isHidden: baselineItem.isHidden,
-          isBundle: baselineItem.isBundle,
-        };
-      });
-
-      const baselineManualItems = baselineItems
-        .filter(
-          (item) =>
-            (item.sourceType === "MANUAL" || item.sourceType === "MANUAL_CLIENT_LINE") &&
-            (!validation.data.selectedBaselineManualItemIds ||
-              validation.data.selectedBaselineManualItemIds.includes(item.id)),
-        )
-        .map((item) => ({
-          rabEstimateId: estimate.id,
-          sourceType: "MANUAL",
-          itemNature: item.itemNature ?? "PRODUCTION",
-          sourceProjectRapItemId: null,
-          sourceProjectCategoryPlanItemId: null,
-          sourceLibraryItemId: item.sourceLibraryItemId,
-          sourceRevision: item.sourceRevision,
-          sourceUpdatedAt: item.sourceUpdatedAt,
-          clientLabel: item.clientLabel,
-          description: item.description,
-          quantity: item.quantity,
-          unit: item.unit,
-          unitPrice: item.unitPrice,
-          lineTotal: item.lineTotal,
-          displayOrder: item.displayOrder,
-          isHidden: item.isHidden,
-          isBundle: item.isBundle,
-        }));
-
-      const baselineManualLabels = new Set(
-        baselineManualItems.map((item) => item.clientLabel.trim().toLowerCase()),
-      );
-      const newManualItems = validation.data.manualLines
-        .filter((item) => !baselineManualLabels.has(item.clientLabel.trim().toLowerCase()))
-        .map((item, index) => ({
-          rabEstimateId: estimate.id,
-          sourceType: "MANUAL",
-          itemNature: item.itemNature ?? "PRODUCTION",
-          sourceProjectRapItemId: null,
-          sourceProjectCategoryPlanItemId: null,
-          sourceLibraryItemId: null,
-          sourceRevision: null,
-          sourceUpdatedAt: null,
-          clientLabel: item.clientLabel,
-          description: item.description ?? null,
-          quantity: item.quantity.toFixed(2),
-          unit: item.unit,
-          unitPrice: item.unitPrice.toFixed(2),
-          lineTotal: (item.quantity * item.unitPrice).toFixed(2),
-          displayOrder: mergedSourceItems.length + baselineManualItems.length + index + 1,
-          isHidden: item.isHidden ?? false,
-          isBundle: item.isBundle ?? false,
-        }));
-
-      const generatedItems = [...mergedSourceItems, ...baselineManualItems, ...newManualItems];
-
-      const insertedItems = await tx.insert(rabEstimateItem).values(generatedItems).returning();
-      for (const baselineBundle of baselineBundles) {
-        const [bundle] = await tx
-          .insert(rabEstimateBundle)
-          .values({
-            rabEstimateId: estimate.id,
-            clientLabel: baselineBundle.clientLabel,
-            description: baselineBundle.description,
-            quantity: baselineBundle.quantity,
-            unit: baselineBundle.unit,
-            unitPrice: baselineBundle.unitPrice,
-            lineTotal: baselineBundle.lineTotal,
-            displayOrder: baselineBundle.displayOrder,
-            isHidden: baselineBundle.isHidden,
-          })
-          .returning();
-        for (const oldMember of baselineBundle.items) {
-          const member = insertedItems.find((candidate) => {
-            if (
-              oldMember.sourceProjectRapItemId &&
-              candidate.sourceProjectRapItemId === oldMember.sourceProjectRapItemId
-            )
-              return true;
-            if (
-              oldMember.sourceProjectCategoryPlanItemId &&
-              candidate.sourceProjectCategoryPlanItemId ===
-                oldMember.sourceProjectCategoryPlanItemId
-            )
-              return true;
-            return (
-              (oldMember.sourceType === "MANUAL" ||
-                oldMember.sourceType === "MANUAL_CLIENT_LINE") &&
-              (candidate.sourceType === "MANUAL" ||
-                candidate.sourceType === "MANUAL_CLIENT_LINE") &&
-              candidate.clientLabel === oldMember.clientLabel
-            );
-          });
-          if (member)
-            await tx
-              .update(rabEstimateItem)
-              .set({ bundleId: bundle.id, isBundle: true })
-              .where(eq(rabEstimateItem.id, member.id));
-        }
-      }
-
-      await tx.insert(auditLog).values({
-        userId: user.id,
-        action: "GENERATE_RAB_DRAFT_FROM_SELECTED_SOURCES",
-        targetTable: "rab_estimate",
-        targetId: estimate.id,
-        newState: JSON.stringify({
-          estimate,
-          itemCount: insertedItems.length,
-          sourceRapItemIds: validation.data.projectRapItemIds,
-          sourceCategoryPlanItemIds: validation.data.projectCategoryPlanItemIds,
-        }),
-      });
-
-      return estimate;
-    });
-
-    return { success: true, data: result };
-  } catch (error) {
+    return {
+      success: true,
+      data: await db.transaction((tx) =>
+        generateRabFromSelectedSourcesTx(tx, actor, validation.data),
+      ),
+    };
+  } catch (error: unknown) {
     return toError(error, "Gagal generate quotation dari sumber terpilih.");
   }
 }

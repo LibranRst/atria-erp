@@ -6,8 +6,6 @@ import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { parseSetCookie } from "next/dist/compiled/@edge-runtime/cookies";
-import { additionalWebOriginsSchema } from "@atria/core/media/web-origins";
-import { rebasePrivateAttachmentLinks } from "@/lib/media/private-attachment-links";
 
 import { getBackendConnection } from "./config";
 import { BackendTransportError, requestBackendOperation } from "./http";
@@ -84,10 +82,7 @@ export async function callBackend<K extends WebRpcOperation>(
   }
   // The allowlisted operation's external response was validated above. Its data
   // type is the declaration emitted by the API, without importing its runtime.
-  return rebasePrivateAttachmentLinks(envelope.data, process.env.NEXT_PUBLIC_APP_URL, [
-    getBackendConnection().origin,
-    ...additionalWebOriginsSchema.parse(process.env.WEB_ADDITIONAL_ORIGINS),
-  ]) as WebRpcResult<K>;
+  return envelope.data as WebRpcResult<K>;
 }
 
 /** Preserve the existing form contract when a request cannot reach or pass the bridge. */

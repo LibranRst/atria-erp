@@ -1,156 +1,27 @@
-import { eq } from "drizzle-orm";
-
-import { getBudgetAllocationDefault } from "@backend/app/actions/project/excel-budget-utils";
 import { db } from "@backend/db";
-import {
-  appConfig,
-  auditLog,
-  budgetAllocationSetting,
-  expenseCategory,
-  onboardingEvent,
-} from "@backend/db/schema";
-import { insertProjectWithCanonicalBudgetTx } from "@backend/server/usecases/project/project-creation-write";
-import { recordReadinessMilestonesTx } from "@backend/lib/onboarding/readiness-events";
+import { onboardingEvent } from "@backend/db/schema";
 import type { Actor } from "@backend/server/actor";
-import { DEFAULT_EXPENSE_CATEGORIES } from "@atria/core/budget/excel-budget";
 import {
   advanceQuickStartSchema,
-  createDefaultOwnerQuickStartState,
   createFirstProjectQuickStartSchema,
-  mapLegacyOwnerOnboardingState,
-  OWNER_ONBOARDING_V2_CONFIG_KEY,
-  parseOwnerQuickStartState,
   pauseQuickStartSchema,
   recordQuickStartInteractionSchema,
   setInitialStockDecisionSchema,
   type CreateFirstProjectQuickStartInput,
   type OwnerQuickStartState,
-  type QuickStartStepId,
 } from "@atria/core/onboarding/organization-setup";
-import {
-  OWNER_ONBOARDING_CONFIG_KEY,
-  parseOwnerOnboardingState,
-} from "@atria/core/onboarding/owner-onboarding";
 import type { ActionResponse } from "@atria/core/types/action-response";
-
-type QuickStartTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-type LockedQuickStartState = {
-  readonly state: OwnerQuickStartState;
-  readonly configRow: typeof appConfig.$inferSelect | null;
-};
-
+import {
+  advanceQuickStartTx,
+  pauseQuickStartTx,
+  createFirstProjectQuickStartTx,
+  setInitialStockDecisionTx,
+  recordQuickStartRetryTx,
+  QuickStartError,
+} from "./quick-start-writer";
 function hasPermission(actor: Actor, permission: Actor["permissions"][number]): boolean {
   return actor.permissions.includes(permission);
 }
-
-async function financeDefaultsReadyTx(tx: QuickStartTx): Promise<boolean> {
-  const [budget, categories] = await Promise.all([
-    tx.query.budgetAllocationSetting.findFirst({
-      where: eq(budgetAllocationSetting.isActive, true),
-      columns: { id: true },
-    }),
-    tx.query.expenseCategory.findMany({
-      where: eq(expenseCategory.isActive, true),
-      columns: { code: true },
-    }),
-  ]);
-  const codes = new Set(categories.map((category) => category.code));
-  return (
-    Boolean(budget) && DEFAULT_EXPENSE_CATEGORIES.every((category) => codes.has(category.code))
-  );
-}
-
-async function lockQuickStartState(tx: QuickStartTx): Promise<LockedQuickStartState> {
-  const [v2Row] = await tx
-    .select()
-    .from(appConfig)
-    .where(eq(appConfig.key, OWNER_ONBOARDING_V2_CONFIG_KEY))
-    .for("update");
-  const parsedV2 = parseOwnerQuickStartState(v2Row?.value);
-  if (parsedV2) return { state: parsedV2, configRow: v2Row };
-  if (v2Row) throw new Error("QUICK_START_STATE_INVALID");
-
-  const [legacyRow] = await tx
-    .select()
-    .from(appConfig)
-    .where(eq(appConfig.key, OWNER_ONBOARDING_CONFIG_KEY))
-    .for("update");
-  const [financeReady, firstProject] = await Promise.all([
-    financeDefaultsReadyTx(tx),
-    tx.query.project.findFirst({
-      columns: { id: true },
-      orderBy: (table, { asc }) => [asc(table.createdAt)],
-    }),
-  ]);
-  return {
-    state: legacyRow
-      ? mapLegacyOwnerOnboardingState(parseOwnerOnboardingState(legacyRow.value), {
-          financeDefaultsReady: financeReady,
-          hasProject: Boolean(firstProject),
-          firstProjectId: firstProject?.id ?? null,
-        })
-      : createDefaultOwnerQuickStartState(),
-    configRow: null,
-  };
-}
-
-async function persistQuickStartStateTx(args: {
-  readonly tx: QuickStartTx;
-  readonly actor: Actor;
-  readonly locked: LockedQuickStartState;
-  readonly next: OwnerQuickStartState;
-  readonly action: string;
-}): Promise<typeof appConfig.$inferSelect> {
-  const value = JSON.stringify(args.next);
-  const [saved] = args.locked.configRow
-    ? await args.tx
-        .update(appConfig)
-        .set({ value, updatedAt: new Date(), updatedById: args.actor.userId })
-        .where(eq(appConfig.id, args.locked.configRow.id))
-        .returning()
-    : await args.tx
-        .insert(appConfig)
-        .values({
-          key: OWNER_ONBOARDING_V2_CONFIG_KEY,
-          value,
-          description: "Quick start Owner dan keputusan kesiapan operasional Atria.",
-          updatedById: args.actor.userId,
-        })
-        .returning();
-
-  await args.tx.insert(auditLog).values({
-    userId: args.actor.userId,
-    action: args.action,
-    targetTable: "app_config",
-    targetId: saved.id,
-    originalState: args.locked.configRow?.value ?? null,
-    newState: value,
-  });
-  return saved;
-}
-
-async function insertEventTx(args: {
-  readonly tx: QuickStartTx;
-  readonly actor: Actor;
-  readonly eventType: string;
-  readonly stepId?: QuickStartStepId;
-  readonly readinessItemId?: string;
-  readonly idempotencyKey?: string;
-  readonly durationMs?: number;
-  readonly metadata?: Record<string, string | number | boolean | null>;
-}): Promise<void> {
-  await args.tx.insert(onboardingEvent).values({
-    actorUserId: args.actor.userId,
-    eventType: args.eventType,
-    stepId: args.stepId,
-    readinessItemId: args.readinessItemId,
-    idempotencyKey: args.idempotencyKey,
-    durationMs: args.durationMs,
-    metadata: args.metadata,
-  });
-}
-
 async function recordFailure(actor: Actor, eventType: string, errorCode: string): Promise<void> {
   try {
     await db.insert(onboardingEvent).values({
@@ -180,51 +51,11 @@ export async function advanceQuickStartUseCase(
   }
 
   try {
-    const next = await db.transaction(async (tx) => {
-      const locked = await lockQuickStartState(tx);
-      if (locked.state.status === "COMPLETED") throw new Error("QUICK_START_COMPLETED");
-      if (locked.state.currentStep !== parsed.data.stepId)
-        throw new Error("STALE_QUICK_START_STEP");
-      if (parsed.data.stepId === "financial_defaults" && !(await financeDefaultsReadyTx(tx))) {
-        throw new Error("FINANCE_DEFAULTS_INCOMPLETE");
-      }
-
-      const destination: QuickStartStepId =
-        parsed.data.stepId === "welcome" ? "financial_defaults" : "first_project";
-      const state: OwnerQuickStartState = {
-        ...locked.state,
-        status: "IN_PROGRESS",
-        currentStep: destination,
-        reviewedSteps: [...new Set([...locked.state.reviewedSteps, parsed.data.stepId])],
-      };
-      await persistQuickStartStateTx({
-        tx,
-        actor,
-        locked,
-        next: state,
-        action: "ADVANCE_OWNER_QUICK_START",
-      });
-      await insertEventTx({
-        tx,
-        actor,
-        eventType:
-          locked.configRow === null && parsed.data.stepId === "welcome"
-            ? "QUICK_START_STARTED"
-            : "QUICK_START_STEP_COMPLETED",
-        stepId: parsed.data.stepId,
-      });
-      if (locked.state.status === "PAUSED") {
-        await insertEventTx({
-          tx,
-          actor,
-          eventType: "QUICK_START_RESUMED",
-          stepId: parsed.data.stepId,
-        });
-      }
-      return state;
-    });
+    const next = await db.transaction((tx) => advanceQuickStartTx(tx, actor, parsed.data));
     return { success: true, data: next };
   } catch (error) {
+    if (error instanceof QuickStartError)
+      return { success: false, error: { code: error.code, message: error.message } };
     const code = error instanceof Error ? error.message : "INTERNAL_SERVER_ERROR";
     await recordFailure(actor, "QUICK_START_ADVANCE_ERROR", code);
     if (code === "QUICK_START_COMPLETED" || code === "STALE_QUICK_START_STEP") {
@@ -268,29 +99,11 @@ export async function pauseQuickStartUseCase(
   }
 
   try {
-    const next = await db.transaction(async (tx) => {
-      const locked = await lockQuickStartState(tx);
-      if (locked.state.status === "COMPLETED") throw new Error("QUICK_START_COMPLETED");
-      if (locked.state.currentStep !== parsed.data.currentStep)
-        throw new Error("STALE_QUICK_START_STEP");
-      const state: OwnerQuickStartState = { ...locked.state, status: "PAUSED" };
-      await persistQuickStartStateTx({
-        tx,
-        actor,
-        locked,
-        next: state,
-        action: "PAUSE_OWNER_QUICK_START",
-      });
-      await insertEventTx({
-        tx,
-        actor,
-        eventType: "QUICK_START_PAUSED",
-        stepId: state.currentStep,
-      });
-      return state;
-    });
+    const next = await db.transaction((tx) => pauseQuickStartTx(tx, actor, parsed.data));
     return { success: true, data: next };
   } catch (error) {
+    if (error instanceof QuickStartError)
+      return { success: false, error: { code: error.code, message: error.message } };
     const code = error instanceof Error ? error.message : "INTERNAL_SERVER_ERROR";
     await recordFailure(actor, "QUICK_START_PAUSE_ERROR", code);
     return {
@@ -328,84 +141,13 @@ export async function createFirstProjectQuickStartUseCase(
   }
 
   try {
-    const allocation = await getBudgetAllocationDefault();
-    const result = await db.transaction(async (tx) => {
-      const locked = await lockQuickStartState(tx);
-      if (locked.state.status === "COMPLETED") {
-        if (locked.state.firstProjectId) {
-          return { projectId: locked.state.firstProjectId, alreadyCompleted: true };
-        }
-        throw new Error("QUICK_START_COMPLETED");
-      }
-      if (locked.state.currentStep !== "first_project") throw new Error("STALE_QUICK_START_STEP");
-      if (!(await financeDefaultsReadyTx(tx))) throw new Error("FINANCE_DEFAULTS_INCOMPLETE");
-      if (parsed.data.projectManagerId) {
-        const manager = await tx.query.user.findFirst({
-          where: (table, { and, eq }) =>
-            and(eq(table.id, parsed.data.projectManagerId!), eq(table.isActive, true)),
-          columns: { id: true },
-          with: { role: { columns: { name: true, dataScope: true } } },
-        });
-        if (!manager || manager.role.dataScope !== "ASSIGNED") {
-          throw new Error("PROJECT_MANAGER_INVALID");
-        }
-      }
-
-      const created = await insertProjectWithCanonicalBudgetTx({
-        tx,
-        input: {
-          ...parsed.data,
-          projectManagerId: parsed.data.projectManagerId ?? null,
-        },
-        allocation,
-      });
-      await tx.insert(auditLog).values({
-        userId: actor.userId,
-        action: "CREATE_FIRST_PROJECT_QUICK_START",
-        targetTable: "project",
-        targetId: created.project.id,
-        newState: JSON.stringify({
-          project: created.project,
-          canonicalBudgetId: created.budgetId,
-          source: "OWNER_QUICK_START",
-        }),
-      });
-
-      const completedAt = new Date().toISOString();
-      const state: OwnerQuickStartState = {
-        ...locked.state,
-        status: "COMPLETED",
-        currentStep: "success",
-        reviewedSteps: ["welcome", "financial_defaults", "first_project", "success"],
-        firstProjectId: created.project.id,
-        completedAt,
-      };
-      await persistQuickStartStateTx({
-        tx,
-        actor,
-        locked,
-        next: state,
-        action: "COMPLETE_OWNER_QUICK_START",
-      });
-      await insertEventTx({
-        tx,
-        actor,
-        eventType: "FIRST_PROJECT_CREATED",
-        stepId: "first_project",
-        idempotencyKey: `first-project:${created.project.id}`,
-      });
-      await insertEventTx({
-        tx,
-        actor,
-        eventType: "QUICK_START_COMPLETED",
-        stepId: "success",
-        idempotencyKey: `quick-start-completed:${created.project.id}`,
-        durationMs: Math.max(0, Date.parse(completedAt) - Date.parse(state.startedAt)),
-      });
-      return { projectId: created.project.id, alreadyCompleted: false };
-    });
+    const result = await db.transaction((tx) =>
+      createFirstProjectQuickStartTx(tx, actor, parsed.data),
+    );
     return { success: true, data: result };
   } catch (error) {
+    if (error instanceof QuickStartError)
+      return { success: false, error: { code: error.code, message: error.message } };
     const code = error instanceof Error ? error.message : "INTERNAL_SERVER_ERROR";
     await recordFailure(actor, "FIRST_PROJECT_CREATE_ERROR", code);
     if (code === "QUICK_START_COMPLETED" || code === "STALE_QUICK_START_STEP") {
@@ -461,30 +203,11 @@ export async function setInitialStockDecisionUseCase(
   }
 
   try {
-    const next = await db.transaction(async (tx) => {
-      const locked = await lockQuickStartState(tx);
-      const state: OwnerQuickStartState = {
-        ...locked.state,
-        initialStockDecision: parsed.data.decision,
-      };
-      await persistQuickStartStateTx({
-        tx,
-        actor,
-        locked,
-        next: state,
-        action: "SET_INITIAL_STOCK_READINESS_DECISION",
-      });
-      if (parsed.data.decision === "NO_LEGACY_STOCK") {
-        await recordReadinessMilestonesTx({
-          tx,
-          actorUserId: actor.userId,
-          changedItem: "initial_stock",
-        });
-      }
-      return state;
-    });
+    const next = await db.transaction((tx) => setInitialStockDecisionTx(tx, actor, parsed.data));
     return { success: true, data: next };
-  } catch {
+  } catch (error: unknown) {
+    if (error instanceof QuickStartError)
+      return { success: false, error: { code: error.code, message: error.message } };
     await recordFailure(actor, "INITIAL_STOCK_DECISION_ERROR", "INTERNAL_SERVER_ERROR");
     return {
       success: false,
@@ -511,11 +234,7 @@ export async function recordQuickStartInteractionUseCase(
     };
   }
   try {
-    await db.insert(onboardingEvent).values({
-      actorUserId: actor.userId,
-      eventType: "QUICK_START_RETRY",
-      stepId: parsed.data.stepId,
-    });
+    await db.transaction((tx) => recordQuickStartRetryTx(tx, actor, parsed.data.stepId));
     return { success: true, data: { recorded: true } };
   } catch {
     return {

@@ -183,6 +183,7 @@ export function SuccessDialog({
   onPrimary,
   onSecondary,
   onTertiary,
+  onExitComplete,
 }: {
   readonly open: boolean;
   readonly title: string;
@@ -195,6 +196,7 @@ export function SuccessDialog({
   readonly onPrimary?: () => void;
   readonly onSecondary?: () => void;
   readonly onTertiary?: () => void;
+  readonly onExitComplete?: () => void;
 }): React.JSX.Element {
   if (facts.length > SUCCESS_DIALOG_FACT_LIMIT) {
     throw new RangeError(`SuccessDialog menerima maksimal ${SUCCESS_DIALOG_FACT_LIMIT} fakta.`);
@@ -204,6 +206,7 @@ export function SuccessDialog({
   return (
     <DialogFrame
       open={open}
+      onExitComplete={onExitComplete}
       title={title}
       description={description}
       align="center"
@@ -267,6 +270,7 @@ type ConfirmationDialogStandardActions = ConfirmationDialogCommonProps & {
   readonly onConfirm: () => void;
   readonly danger?: boolean;
   readonly disabled?: boolean;
+  readonly actionLayout?: "columns" | "adaptive";
 };
 
 export type ConfirmationDialogProps =
@@ -279,7 +283,13 @@ export function ConfirmationDialog(props: ConfirmationDialogProps): React.JSX.El
   const footer: React.ReactNode =
     "confirmLabel" in props ? (
       <SheetFooterActions
-        secondary={{ label: "Batal", onClick: props.onClose, disabled: props.pending }}
+        layout={props.actionLayout}
+        secondary={{
+          label: "Batal",
+          onClick: props.onClose,
+          disabled: props.pending,
+          variant: props.actionLayout === "adaptive" ? "quiet" : "secondary",
+        }}
         primary={{
           label: props.confirmLabel,
           pending: props.pending,

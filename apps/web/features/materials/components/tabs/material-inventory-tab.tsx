@@ -13,6 +13,7 @@ import {
   MoneyValue,
   type SearchFilterMode,
   SegmentedTabs,
+  Button,
 } from "@/components/ui";
 import type { MaterialLocation } from "@/features/materials/types/material-dashboard-types";
 import {
@@ -103,15 +104,17 @@ export function MaterialInventoryTab({
             ) : null}
           </div>
           {canManage && onAddLocation ? (
-            <button
+            <Button
               type="button"
               onClick={onAddLocation}
               className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-full bg-surface-container-low px-3 text-meta font-bold text-on-surface hover:bg-surface-container active:bg-surface-container-high"
               title="Tambah Lokasi Gudang"
+              variant="secondary"
+              size="compact"
             >
               <AppIcon name="add" className="icon-xs" />
               <span>Lokasi</span>
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>

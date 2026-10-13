@@ -12,6 +12,7 @@ import {
   FactRow,
   FormField,
   FormSection,
+  GroupedSurface,
   NumericInput,
   SheetFooterActions,
   SwitchRow,
@@ -19,6 +20,7 @@ import {
   TextInput,
   WorkflowFormSheet,
 } from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 const ratioToPercent = (ratio: number): number => Math.round(ratio * 10_000) / 100;
 
@@ -46,6 +48,7 @@ export function OnboardingBudgetDefaultsSheet({
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmDiscard, setConfirmDiscard] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
+  const desktop = useWorkspacePresentation() === "desktop";
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(baseline);
   const allocation = draft.categories.reduce(
@@ -103,13 +106,55 @@ export function OnboardingBudgetDefaultsSheet({
         dismissal={{ mode: "managed" }}
         open={open}
         title="Sesuaikan default budget"
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        contentKey={reviewing ? "review" : "edit"}
+        desktopAsideSummary={
+          <GroupedSurface>
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                label="Preset"
+                wrapLabel
+                value={draft.name || "Belum diisi"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Batas budget"
+                wrapLabel
+                value={percent(draft.budgetCapRatio)}
+              />
+              <FactRow
+                layout="stacked"
+                label="Target margin"
+                wrapLabel
+                value={percent(1 - draft.budgetCapRatio)}
+              />
+              <FactRow layout="stacked" label="Teralokasi" value={percent(allocation)} />
+              <FactRow
+                layout="stacked"
+                label="Buffer"
+                value={percent(Math.max(0, 1 - allocation))}
+              />
+              <p className="px-4 py-3 text-support text-on-surface-variant">
+                Default ini hanya berlaku untuk proyek baru. Budget proyek aktif tetap sama.
+              </p>
+            </div>
+          </GroupedSurface>
+        }
         primaryLabel={reviewing ? "Simpan" : "Tinjau"}
         secondaryLabel={reviewing ? "Ubah" : undefined}
         pendingLabel="Menyimpan…"
         pending={pending}
         disabled={Boolean(disabledReason)}
         disabledReason={disabledReason}
-        statusText={`Teralokasi ${percent(allocation)} · Buffer ${percent(Math.max(0, 1 - allocation))}`}
+        statusText={
+          desktop
+            ? reviewing
+              ? "Periksa alokasi sebelum menyimpan."
+              : undefined
+            : `Teralokasi ${percent(allocation)} · Buffer ${percent(Math.max(0, 1 - allocation))}`
+        }
         statusTone={overLimit ? "danger" : dirty ? "success" : "default"}
         onClose={requestClose}
         onPrimary={() => {
@@ -120,16 +165,18 @@ export function OnboardingBudgetDefaultsSheet({
       >
         {reviewing ? (
           <div className="space-y-4">
-            <FormSection
-              title="Dampak perubahan"
-              helper="Default ini hanya dipakai saat proyek baru dibuat. Proyek aktif tidak berubah."
-            >
-              <FactRow label="Nama preset" value={draft.name} />
-              <FactRow label="Batas budget internal" value={percent(draft.budgetCapRatio)} />
-              <FactRow label="Target margin kotor" value={percent(1 - draft.budgetCapRatio)} />
-              <FactRow label="Total alokasi kategori" value={percent(allocation)} />
-              <FactRow label="Buffer" value={percent(Math.max(0, 1 - allocation))} />
-            </FormSection>
+            {!desktop ? (
+              <FormSection
+                title="Dampak perubahan"
+                helper="Default ini hanya dipakai saat proyek baru dibuat. Proyek aktif tidak berubah."
+              >
+                <FactRow label="Nama preset" value={draft.name} />
+                <FactRow label="Batas budget internal" value={percent(draft.budgetCapRatio)} />
+                <FactRow label="Target margin kotor" value={percent(1 - draft.budgetCapRatio)} />
+                <FactRow label="Total alokasi kategori" value={percent(allocation)} />
+                <FactRow label="Buffer" value={percent(Math.max(0, 1 - allocation))} />
+              </FormSection>
+            ) : null}
             <FormSection title="Alokasi kategori">
               {draft.categories.map((category) => (
                 <FactRow

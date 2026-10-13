@@ -1,4 +1,5 @@
 import { db } from "@backend/db";
+import { INSTANCE_TENANT_ID } from "@backend/db/schema";
 import {
   expenseCategory,
   project,
@@ -9,7 +10,7 @@ import {
 } from "@backend/db/schema";
 import { projectMaterialProjection } from "@atria/core/material/project-material-projection";
 import { tool } from "ai";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, gte, ilike, inArray, lt, or } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -21,7 +22,16 @@ import {
   projectScopeCondition,
   type AiToolContext,
 } from "./context";
-import { money, toNumber } from "./shared";
+import { describeFilters, money, toNumber } from "./shared";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import {
+  isFinancialHistoryQuestion,
+  parseFinancialHistoryRequest,
+} from "@atria/core/ai/financial-history";
+import {
+  isExpenseStatusQuestion,
+  isSupportedCurrentExpenseStatusQuestion,
+} from "../grounded-expenses";
 
 /**
  * Tool batch 3: kebutuhan material lapangan, pengeluaran terakhir, dan kategori
@@ -29,6 +39,13 @@ import { money, toNumber } from "./shared";
  */
 
 const MAX_ROWS = 20;
+const expenseDateSchema = z.iso.date();
+const jakartaDate = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Jakarta",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
 
 export function buildOperationsTools(context: AiToolContext) {
   return {
@@ -140,34 +157,130 @@ export function buildOperationsTools(context: AiToolContext) {
 
     getRecentExpenses: tool({
       description:
-        "List the most recent recorded expenses, with project, category, amount, and approval status. Optionally narrow to one project.",
-      inputSchema: z.object({
-        projectId: z
-          .guid()
-          .optional()
-          .describe("Narrow to one project. Omit to cover every project the user can access."),
-        limit: z.number().int().min(1).max(MAX_ROWS).default(10),
-      }),
-      execute: async ({ projectId, limit }) => {
+        "Read current recorded expense statuses and exact amounts in the actor's project scope. Search description with query, project with projectQuery or actual projectId, canonical/field expense with expenseId, status/category, or inclusive Jakarta expenseDate from/to. Canonical id and projectCostId are different: payment tools require projectCostId. Results are bounded (20/page), matchedCount/hasMore require pagination; never sum a recent page as all project expenses. Duplicate descriptions and one-character queries require human choice, never auto-select the first. No historical status/paid-at inference.",
+      inputSchema: z
+        .object({
+          projectId: z
+            .guid()
+            .optional()
+            .describe("Narrow to one project. Omit to cover every project the user can access."),
+          expenseId: z.guid().optional(),
+          query: z.string().trim().min(1).max(160).optional(),
+          projectQuery: z.string().trim().min(1).max(120).optional(),
+          categoryCode: z
+            .enum(["MATERIAL", "TUKANG", "OPERASIONAL", "LAIN_LAIN", "SUBCON"])
+            .optional(),
+          status: z
+            .enum(["SUBMITTED", "VERIFIED", "APPROVED", "REJECTED", "PAID", "INVENTORY_ASSET"])
+            .optional(),
+          dateFrom: expenseDateSchema.optional(),
+          dateTo: expenseDateSchema.optional(),
+          limit: z.number().int().min(1).max(MAX_ROWS).default(10),
+          offset: z.number().int().min(0).max(100000).default(0),
+        })
+        .refine((input) => !input.dateFrom || !input.dateTo || input.dateFrom <= input.dateTo, {
+          message: "Tanggal awal tidak boleh melewati tanggal akhir.",
+          path: ["dateTo"],
+        }),
+      execute: async ({
+        projectId,
+        expenseId,
+        query,
+        projectQuery,
+        categoryCode,
+        status,
+        dateFrom,
+        dateTo,
+        limit,
+        offset,
+      }) => {
         if (!hasPermission(context, "view:cost")) {
           return permissionDenied("data pengeluaran proyek");
         }
+        if (context.dataScope === "NONE") return PROJECT_ACCESS_DENIED;
+        const asOf = context.asOf ? new Date(context.asOf) : new Date();
+        const datedQuestion =
+          context.userQuestion && isFinancialHistoryQuestion(context.userQuestion);
+        if (
+          datedQuestion &&
+          isExpenseStatusQuestion(context.userQuestion ?? "") &&
+          !isSupportedCurrentExpenseStatusQuestion(context.userQuestion ?? "")
+        ) {
+          return {
+            error:
+              "Riwayat status persetujuan pada tanggal lampau belum tersedia. Sebutkan status saat ini untuk pengeluaran pada tanggal tersebut.",
+          };
+        }
+        const dateRequest = datedQuestion
+          ? parseFinancialHistoryRequest(context.userQuestion ?? "", asOf)
+          : null;
+        if (dateRequest?.error) return { error: dateRequest.error };
+        if (dateRequest && (dateRequest.periods.length !== 1 || dateRequest.comparison)) {
+          return {
+            error:
+              "Gunakan laporan periode untuk perbandingan. Daftar status saat ini memerlukan satu rentang tanggal pengeluaran.",
+          };
+        }
+        const dateRange = dateRequest?.periods[0]
+          ? { ...dateRequest.periods[0], asOf: asOf.toISOString() }
+          : undefined;
 
         if (projectId && !(await canAccessProject(context, projectId))) {
           return PROJECT_ACCESS_DENIED;
         }
 
         const projectIds = await accessibleProjectIds(context);
-        const conditions = [];
+        const conditions = [
+          eq(projectExpenses.tenantId, INSTANCE_TENANT_ID),
+          eq(project.tenantId, INSTANCE_TENANT_ID),
+          eq(expenseCategory.tenantId, INSTANCE_TENANT_ID),
+        ];
         if (projectId) {
           conditions.push(eq(projectExpenses.projectId, projectId));
         } else {
           const scope = projectScopeCondition(projectIds, projectExpenses.projectId);
           if (scope) conditions.push(scope);
         }
+        const idCondition = expenseId
+          ? or(
+              eq(projectExpenses.id, expenseId),
+              eq(projectExpenses.legacyProjectCostId, expenseId),
+            )
+          : undefined;
+        if (idCondition) conditions.push(idCondition);
+        // Treat a user's search as literal text; '%' and '_' cannot broaden the query.
+        const literalPattern = (value: string): string => `%${value.replace(/[\\%_]/g, "\\$&")}%`;
+        const descriptionSearchCondition = query
+          ? ilike(projectExpenses.description, literalPattern(query))
+          : undefined;
+        if (descriptionSearchCondition) conditions.push(descriptionSearchCondition);
+        if (projectQuery) conditions.push(ilike(project.name, literalPattern(projectQuery)));
+        if (categoryCode) conditions.push(eq(expenseCategory.code, categoryCode));
+        const statusCondition = status ? eq(projectExpenses.status, status) : undefined;
+        if (statusCondition) conditions.push(statusCondition);
+        if (dateRange) {
+          conditions.push(
+            gte(projectExpenses.expenseDate, new Date(dateRange.start)),
+            lt(projectExpenses.expenseDate, new Date(dateRange.end)),
+          );
+        } else {
+          if (dateFrom)
+            conditions.push(
+              gte(projectExpenses.expenseDate, new Date(`${dateFrom}T00:00:00+07:00`)),
+            );
+          if (dateTo)
+            conditions.push(
+              lt(
+                projectExpenses.expenseDate,
+                new Date(new Date(`${dateTo}T00:00:00+07:00`).getTime() + 86400000),
+              ),
+            );
+        }
 
         const rows = await db
           .select({
+            id: projectExpenses.id,
+            projectCostId: projectExpenses.legacyProjectCostId,
             description: projectExpenses.description,
             amount: projectExpenses.amount,
             status: projectExpenses.status,
@@ -176,24 +289,99 @@ export function buildOperationsTools(context: AiToolContext) {
             projectId: projectExpenses.projectId,
             projectName: project.name,
             categoryName: expenseCategory.name,
+            categoryId: expenseCategory.id,
+            categoryCode: expenseCategory.code,
+            sourceType: projectExpenses.sourceType,
+            isCashImpact: projectExpenses.isCashImpact,
           })
           .from(projectExpenses)
           .innerJoin(project, eq(projectExpenses.projectId, project.id))
           .innerJoin(expenseCategory, eq(projectExpenses.expenseCategoryId, expenseCategory.id))
           .where(conditions.length > 0 ? and(...conditions) : undefined)
-          .orderBy(desc(projectExpenses.expenseDate))
-          .limit(limit);
+          .orderBy(desc(projectExpenses.expenseDate), desc(projectExpenses.id))
+          .limit(limit + 1)
+          .offset(offset);
+        const [matched] = await db
+          .select({ value: count() })
+          .from(projectExpenses)
+          .innerJoin(project, eq(projectExpenses.projectId, project.id))
+          .innerJoin(expenseCategory, eq(projectExpenses.expenseCategoryId, expenseCategory.id))
+          .where(and(...conditions));
+        const hasMore = rows.length > limit;
+        let descriptionMatchesInScope: number | undefined;
+        if (expenseId && rows.length === 1) {
+          // An ID from the model is not a human choice. Check this exact name in
+          // the current authorized/project/date/category scope independently of
+          // that ID and lifecycle filter before a named reread can be certified.
+          const [sameDescription] = await db
+            .select({ value: count() })
+            .from(projectExpenses)
+            .innerJoin(project, eq(projectExpenses.projectId, project.id))
+            .innerJoin(expenseCategory, eq(projectExpenses.expenseCategoryId, expenseCategory.id))
+            .where(
+              and(
+                ...conditions.filter(
+                  (condition) =>
+                    condition !== idCondition &&
+                    condition !== statusCondition &&
+                    condition !== descriptionSearchCondition,
+                ),
+                ilike(projectExpenses.description, rows[0].description.replace(/[\\%_]/g, "\\$&")),
+              ),
+            );
+          descriptionMatchesInScope = sameDescription?.value ?? 0;
+        }
+        const scopedProject = projectId
+          ? await db.query.project.findFirst({
+              where: and(eq(project.id, projectId), eq(project.tenantId, INSTANCE_TENANT_ID)),
+              columns: { id: true, name: true },
+            })
+          : undefined;
 
         return {
-          expenses: rows.map((row) => ({
+          appliedFilters: describeFilters([
+            query ? `Deskripsi cocok "${query}"` : null,
+            projectQuery ? `Proyek cocok "${projectQuery}"` : null,
+            categoryCode ? `Kategori ${formatBusinessLabel(categoryCode)}` : null,
+            status ? `Status ${formatBusinessLabel(status)}` : null,
+            dateRange
+              ? `Tanggal pengeluaran ${dateRange.label} (Asia/Jakarta)`
+              : dateFrom || dateTo
+                ? `Tanggal pengeluaran ${dateFrom ?? "awal"}–${dateTo ?? "sekarang"} (Asia/Jakarta)`
+                : null,
+          ]),
+          offset,
+          limit,
+          hasMore,
+          nextOffset: hasMore ? offset + limit : null,
+          matchedCount: matched?.value ?? 0,
+          ...(scopedProject ? { project: scopedProject } : {}),
+          ...(dateRange ? { dateRange } : {}),
+          requiresExpenseChoice:
+            query?.length === 1 ||
+            projectQuery?.length === 1 ||
+            Boolean(query && (matched?.value ?? 0) > 1),
+          scope:
+            "Pengeluaran tercatat pada proyek dalam akses Anda; halaman ini bukan total seluruh proyek.",
+          dateBasis: "expenseDate" as const,
+          timeZone: "Asia/Jakarta" as const,
+          expenses: rows.slice(0, limit).map((row) => ({
+            id: row.id,
+            projectCostId: row.projectCostId,
             description: row.description,
             projectId: row.projectId,
             projectName: row.projectName,
             categoryName: row.categoryName,
+            categoryId: row.categoryId,
+            categoryCode: row.categoryCode,
             amount: money(row.amount),
+            exactAmount: row.amount,
             status: row.status,
             paymentStatus: row.paymentStatus,
-            expenseDate: row.expenseDate.toISOString().slice(0, 10),
+            expenseDate: jakartaDate.format(row.expenseDate),
+            sourceType: row.sourceType,
+            isCashImpact: row.isCashImpact,
+            ...(descriptionMatchesInScope !== undefined ? { descriptionMatchesInScope } : {}),
           })),
         };
       },
@@ -205,7 +393,10 @@ export function buildOperationsTools(context: AiToolContext) {
       inputSchema: z.object({}),
       execute: async () => {
         const rows = await db.query.expenseCategory.findMany({
-          where: eq(expenseCategory.isActive, true),
+          where: and(
+            eq(expenseCategory.tenantId, INSTANCE_TENANT_ID),
+            eq(expenseCategory.isActive, true),
+          ),
           columns: { code: true, name: true, description: true },
           orderBy: [expenseCategory.sortOrder],
         });

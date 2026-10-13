@@ -8,7 +8,7 @@ import { RabClientPanel } from "../rab/rab-client-panel";
 import { useRapManager } from "../../hooks/use-rap-manager";
 import { useRabManager } from "../../hooks/use-rab-manager";
 import { RapRabWorkflowDrawers } from "./rap-rab-workflow-drawers";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button } from "@/components/ui";
 import type {
   MaterialOption,
   PricingTemplateOption,
@@ -136,14 +136,15 @@ export function RapRabManager({
                   Material menjadi baseline biaya internal. Tukang dan Subcon disusun setelahnya.
                 </p>
                 {rapManager.canEditRap && (
-                  <button
+                  <Button
                     type="button"
                     onClick={rapManager.handleCreateRap}
                     disabled={rapManager.isPending}
                     className="mt-5 min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary disabled:opacity-40"
+                    variant="primary"
                   >
                     Mulai Susun RAP
-                  </button>
+                  </Button>
                 )}
               </div>
             </NativePanel>

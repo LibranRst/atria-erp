@@ -2,7 +2,10 @@ import { actorCan } from "@backend/lib/auth/permissions";
 import { type PermissionKey } from "@atria/core/auth/permissions";
 import type { ActionResponse } from "@atria/core/types/action-response";
 
-import { assertProjectAccess, assertProjectIsOperational } from "@backend/lib/auth/scoping";
+import { assertProjectStatusIsOperational } from "@backend/lib/auth/scoping";
+import { db } from "@backend/db";
+import { project, INSTANCE_TENANT_ID } from "@backend/db/schema";
+import { and, eq } from "drizzle-orm";
 import type { Actor } from "@backend/server/actor";
 
 export type AuthorizedFieldRequestUser = {
@@ -22,7 +25,7 @@ export async function authorizeFieldRequestActor({
   readonly permission: PermissionKey;
   readonly projectId?: string;
 }): Promise<AuthorizationResult> {
-  if (!actorCan(actor, permission)) {
+  if (!actorCan(actor, permission) || actor.dataScope === "NONE") {
     return {
       success: false,
       error: { code: "FORBIDDEN", message: "Akses ditolak." },
@@ -31,8 +34,12 @@ export async function authorizeFieldRequestActor({
 
   if (projectId) {
     try {
-      await assertProjectAccess(projectId, actor.userId, actor.roleName);
-      await assertProjectIsOperational(projectId);
+      const p = await db.query.project.findFirst({
+        where: and(eq(project.id, projectId), eq(project.tenantId, INSTANCE_TENANT_ID)),
+      });
+      if (!p || (actor.dataScope === "ASSIGNED" && p.projectManagerId !== actor.userId))
+        throw new Error("Akses proyek ditolak.");
+      assertProjectStatusIsOperational(p.status);
     } catch (error) {
       return {
         success: false,

@@ -214,6 +214,7 @@
 
   /* Calm Modern Luxury geometry roles. */
   --radius-owner: 28px;
+  --radius-desktop-panel: 16px;
   --radius-inset: 20px;
   --radius-icon: 16px;
 
@@ -311,7 +312,8 @@ body {
         [type="month"],
         [type="week"]
       ):not([readonly]),
-    textarea:not([readonly]) {
+    textarea:not([readonly]),
+    [data-composer-mirror] {
       font-size: max(var(--text-input-min), 1em);
       --text-xs: var(--text-input-min);
       --text-sm: var(--text-input-min);
@@ -351,6 +353,29 @@ body {
   display: block;
   min-width: 0;
   max-width: 100%;
+}
+
+/* Inline review editors inherit the shared form contract with operational type density. */
+.review-item-editor .group\/form label {
+  font-size: var(--text-support);
+  line-height: var(--text-support--line-height);
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.review-item-editor .group\/form :is(input, textarea) {
+  font-size: var(--text-row);
+  line-height: 20px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+@media (width < 64rem), (any-pointer: coarse) {
+  .review-item-editor .group\/form :is(input, textarea) {
+    font-size: var(--text-base);
+  }
+}
+[data-review-presentation="mobile"] .review-item-editor .group\/form :is(input, textarea) {
+  font-size: var(--text-base);
 }
 
 .money-value-compact {
@@ -524,6 +549,63 @@ body {
 
 [data-sonner-toast] [data-close-button]:active {
   transform: scale(1.05) !important;
+}
+
+/* Shared scroll-edge material: a gradual canvas wash, mirrored at the bottom. */
+.scroll-edge-scrim {
+  --scroll-edge-direction: to bottom;
+  --scroll-edge-color: var(--color-background);
+  background-image: linear-gradient(
+    var(--scroll-edge-direction),
+    var(--scroll-edge-color) 0%,
+    var(--scroll-edge-color) var(--scroll-edge-solid-size, 0%),
+    color-mix(in srgb, var(--scroll-edge-color) 98%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.14),
+    color-mix(in srgb, var(--scroll-edge-color) 91%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.28),
+    color-mix(in srgb, var(--scroll-edge-color) 76%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.42),
+    color-mix(in srgb, var(--scroll-edge-color) 54%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.58),
+    color-mix(in srgb, var(--scroll-edge-color) 30%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.74),
+    color-mix(in srgb, var(--scroll-edge-color) 10%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.88),
+    transparent 100%
+  );
+}
+
+.scroll-edge-scrim-sheet {
+  --scroll-edge-color: var(--color-surface-container-low);
+}
+
+/* Desktop work surfaces are lighter than their contained tonal tables. */
+[data-atria-sheet-canvas="true"][data-atria-overlay-presentation="desktop"] {
+  background-color: var(--color-surface);
+}
+[data-atria-overlay-presentation="desktop"] .scroll-edge-scrim-sheet {
+  --scroll-edge-color: var(--color-surface);
+}
+
+.scroll-edge-scrim-sheet-header {
+  --scroll-edge-solid-size: calc(100% - 1rem);
+}
+
+.scroll-edge-scrim-sheet-footer {
+  --scroll-edge-solid-size: calc(100% - 3rem);
+}
+
+.scroll-edge-scrim-bottom {
+  --scroll-edge-direction: to top;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="active:scale-"]:active,
+  [data-sonner-toast] [data-button]:active,
+  [data-sonner-toast] [data-close-button]:active {
+    scale: 1;
+    transform: none !important;
+  }
 }
 
 /* Hide native browser search cancel and decoration buttons across WebKit, Blink, and Edge */

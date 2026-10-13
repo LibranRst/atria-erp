@@ -51,9 +51,14 @@ function field(overrides: Partial<InputField> & Pick<InputField, "key" | "label"
 }
 
 describe("MorphedInputComposer panel", () => {
-  test("renders the action title, the first field, and both escape controls", () => {
+  test("renders the action title, first field and an escape to normal message entry", () => {
     const html = renderToStaticMarkup(
-      <MorphedInputComposer payload={samplePayload} onSubmit={() => {}} onCancel={() => {}} />,
+      <MorphedInputComposer
+        payload={samplePayload}
+        onPause={() => {}}
+        onSubmit={() => {}}
+        onCancel={() => {}}
+      />,
     );
 
     // Judul aksi dulu hanya diterima sebagai prop dan tidak pernah tampil.
@@ -62,7 +67,8 @@ describe("MorphedInputComposer panel", () => {
     expect(html).toContain("Nama Proyek");
     expect(html).toContain("Contoh: Sudirman Suites");
     // Batal dan kembali kini sama-sama tersedia sejak langkah pertama.
-    expect(html).toContain("Batalkan pengisian dan kembali ke chat");
+    expect(html).toContain("Tulis pesan tanpa membatalkan isian");
+    expect(html).toContain("Opsi pengisian");
     expect(html).toContain("Kembali ke langkah sebelumnya");
   });
 
@@ -75,12 +81,12 @@ describe("MorphedInputComposer panel", () => {
     // urutan atribut JSX tidak menentukan hasil test.
     const nextButtonTag = html.match(/<button[^>]*Lanjut ke langkah berikutnya[^>]*>/)?.[0];
     expect(nextButtonTag).toBeDefined();
-    expect(nextButtonTag).not.toContain("disabled");
+    expect(nextButtonTag).not.toMatch(/\sdisabled(?:=|\s|>)/);
 
     // Sebagai pembanding: tombol kembali memang mati di langkah pertama, jadi
     // test ini benar-benar bisa membedakan keduanya.
     const backButtonTag = html.match(/<button[^>]*Kembali ke langkah sebelumnya[^>]*>/)?.[0];
-    expect(backButtonTag).toContain("disabled");
+    expect(backButtonTag).toMatch(/\sdisabled(?:=|\s|>)/);
 
     // Slot pesan sudah ada sejak awal supaya panel tidak melonjak saat terisi.
     expect(html).toContain('aria-live="polite"');
@@ -114,7 +120,7 @@ describe("MorphedInputComposer panel", () => {
     expect(chipList).toContain("Sudirman Suites");
   });
 
-  test("renders a short option list inline instead of behind a dialog trigger", () => {
+  test("uses the shared selector for short options and retains an explicit next action", () => {
     const selectPayload: RequestUserInputPayload = {
       actionTitle: "Catat Pengeluaran",
       fields: [
@@ -134,13 +140,12 @@ describe("MorphedInputComposer panel", () => {
       <MorphedInputComposer payload={selectPayload} onSubmit={() => {}} onCancel={() => {}} />,
     );
 
-    expect(html).toContain("Sudirman Suites");
-    expect(html).toContain("Menteng Mansion");
-    // Dua opsi tidak lagi memunculkan pemicu dialog.
-    expect(html).not.toContain("Pilih proyek…");
+    expect(html).toContain('aria-haspopup="listbox"');
+    expect(html).toContain("Pilih proyek…");
+    expect(html).toContain("Kirim ke asisten AI");
   });
 
-  test("falls back to the SearchDialog trigger once options outgrow the inline list", () => {
+  test("large option sets remain owned by the shared adaptive selection control", () => {
     const manyOptions = Array.from({ length: 6 }, (_, index) => ({
       label: `Proyek ${index + 1}`,
       value: `proj-${index + 1}`,
@@ -178,10 +183,8 @@ describe("nextStepAfter", () => {
     expect(nextStepAfter(1, 1, 3)).toBe(2);
   });
 
-  test("resumes to the furthest step after editing an earlier field", () => {
-    // Melompat mundur lewat chip lalu menekan lanjut tidak boleh menyeret
-    // pengguna mengulang sisa formulir.
-    expect(nextStepAfter(1, 4, 6)).toBe(4);
+  test("moves sequentially after editing an earlier field", () => {
+    expect(nextStepAfter(1, 4, 6)).toBe(2);
   });
 
   test("submits only from the last step", () => {

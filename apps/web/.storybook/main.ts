@@ -9,7 +9,13 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const config: StorybookConfig = {
   stories: [
     "../components/**/*.stories.@(ts|tsx)",
+    "../features/ai-chat/components/proposal-cards/material-master-proposal-card.stories.tsx",
     "../features/notifications/**/*.stories.@(ts|tsx)",
+    "../features/projects/list/components/drawers/project-drawer.stories.tsx",
+    "../features/finance-dashboard/components/bank-accounts/manual-form-panels.stories.tsx",
+    "../features/settings/components/materials/material-editor-sheet.stories.tsx",
+    "../features/administration/components/roles/role-desktop-panels.stories.tsx",
+    "../features/expenses/components/forms/expense-form-sections.stories.tsx",
   ],
   addons: ["@storybook/addon-a11y"],
   framework: {
@@ -26,10 +32,46 @@ const config: StorybookConfig = {
   },
   staticDirs: ["../public"],
   webpackFinal: async (webpackConfig, { configType }) => {
+    // Resolver/cache changes must invalidate cached server-action modules.
+    if (typeof webpackConfig.cache === "object" && webpackConfig.cache.type === "filesystem") {
+      webpackConfig.cache.version = "atria-ui-fixtures-no-server-actions-v2";
+    }
     webpackConfig.resolve ??= {};
     webpackConfig.resolve.alias = {
-      ...webpackConfig.resolve.alias,
+      "@/app/actions/ai/material-master$": path.resolve(dirname, "material-ai-actions.fixture.ts"),
+      [path.resolve(dirname, "../app/actions/ai/material-master")]: path.resolve(
+        dirname,
+        "material-ai-actions.fixture.ts",
+      ),
       "@/lib/auth-client$": path.resolve(dirname, "mocks/auth-client.ts"),
+      "@/app/actions/project/crud$": path.resolve(dirname, "project-actions.fixture.ts"),
+      "@/lib/media/upload-to-imagekit$": path.resolve(dirname, "project-upload.fixture.ts"),
+      "@/app/actions/material/warehouse$": path.resolve(dirname, "warehouse-actions.fixture.ts"),
+      [path.resolve(dirname, "../app/actions/material/warehouse")]: path.resolve(
+        dirname,
+        "warehouse-actions.fixture.ts",
+      ),
+      [path.resolve(dirname, "../app/actions/material/warehouse.ts")]: path.resolve(
+        dirname,
+        "warehouse-actions.fixture.ts",
+      ),
+      [path.resolve(dirname, "../app/actions/project/crud")]: path.resolve(
+        dirname,
+        "project-actions.fixture.ts",
+      ),
+      [path.resolve(dirname, "../app/actions/project/crud.ts")]: path.resolve(
+        dirname,
+        "project-actions.fixture.ts",
+      ),
+      [path.resolve(dirname, "../lib/media/upload-to-imagekit")]: path.resolve(
+        dirname,
+        "project-upload.fixture.ts",
+      ),
+      [path.resolve(dirname, "../lib/media/upload-to-imagekit.ts")]: path.resolve(
+        dirname,
+        "project-upload.fixture.ts",
+      ),
+      ...webpackConfig.resolve.alias,
     };
 
     // Production builds (storybook build, used for the design-sync reference)

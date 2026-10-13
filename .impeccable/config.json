@@ -1,95 +1,75 @@
 {
   "detector": {
     "ignoreRules": [],
-    "ignoreFiles": [],
+    "ignoreFiles": ["apps/web/components/ui/desktop/heroui-scoped.css"],
     "ignoreValues": [
       {
         "rule": "design-system-font",
         "value": "*",
-        "files": [
-          "docs/bisnis/**"
-        ],
+        "files": ["docs/bisnis/**"],
         "createdAt": "2026-08-30T01:46:01.085Z",
         "reason": "Dokumen bisnis mandiri, bukan antarmuka ERP; DESIGN.md mengatur aplikasinya, halaman ini sengaja punya identitas visual sendiri"
       },
       {
         "rule": "design-system-font-size",
         "value": "*",
-        "files": [
-          "docs/bisnis/**"
-        ],
+        "files": ["docs/bisnis/**"],
         "createdAt": "2026-08-30T01:46:01.112Z",
         "reason": "Dokumen bisnis mandiri, bukan antarmuka ERP; DESIGN.md mengatur aplikasinya, halaman ini sengaja punya identitas visual sendiri"
       },
       {
         "rule": "design-system-radius",
         "value": "*",
-        "files": [
-          "docs/bisnis/**"
-        ],
+        "files": ["docs/bisnis/**"],
         "createdAt": "2026-08-30T01:46:01.140Z",
         "reason": "Dokumen bisnis mandiri, bukan antarmuka ERP; DESIGN.md mengatur aplikasinya, halaman ini sengaja punya identitas visual sendiri"
       },
       {
         "rule": "design-system-color",
         "value": "#000000",
-        "files": [
-          "apps/web/components/ui/form/color-picker.tsx"
-        ],
+        "files": ["apps/web/components/ui/form/color-picker.tsx"],
         "createdAt": "2026-10-04T02:27:52.074Z",
         "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
       },
       {
         "rule": "design-system-color",
         "value": "#ff0000",
-        "files": [
-          "apps/web/components/ui/form/color-picker.tsx"
-        ],
+        "files": ["apps/web/components/ui/form/color-picker.tsx"],
         "createdAt": "2026-10-04T02:27:52.313Z",
         "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
       },
       {
         "rule": "design-system-color",
         "value": "#ffff00",
-        "files": [
-          "apps/web/components/ui/form/color-picker.tsx"
-        ],
+        "files": ["apps/web/components/ui/form/color-picker.tsx"],
         "createdAt": "2026-10-04T02:27:52.425Z",
         "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
       },
       {
         "rule": "design-system-color",
         "value": "#00ff00",
-        "files": [
-          "apps/web/components/ui/form/color-picker.tsx"
-        ],
+        "files": ["apps/web/components/ui/form/color-picker.tsx"],
         "createdAt": "2026-10-04T02:27:52.541Z",
         "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
       },
       {
         "rule": "design-system-color",
         "value": "#00ffff",
-        "files": [
-          "apps/web/components/ui/form/color-picker.tsx"
-        ],
+        "files": ["apps/web/components/ui/form/color-picker.tsx"],
         "createdAt": "2026-10-04T02:27:52.645Z",
         "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
       },
       {
         "rule": "design-system-color",
         "value": "#0000ff",
-        "files": [
-          "apps/web/components/ui/form/color-picker.tsx"
-        ],
+        "files": ["apps/web/components/ui/form/color-picker.tsx"],
         "createdAt": "2026-10-04T02:27:52.753Z",
         "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
       },
       {
         "rule": "design-system-color",
         "value": "#ff00ff",
-        "files": [
-          "apps/web/components/ui/form/color-picker.tsx"
-        ],
+        "files": ["apps/web/components/ui/form/color-picker.tsx"],
         "createdAt": "2026-10-04T02:27:52.861Z",
         "reason": "Product requirement: the RAB document color picker uses arbitrary document colors and an HSV spectrum; these colors represent selectable data, not the app surface palette."
       },
@@ -128,6 +108,20 @@
         ],
         "createdAt": "2026-10-04T02:42:26.863Z",
         "reason": "Existing synthetic fixture: tests exercise configured bank account identity gradients, the explicit DESIGN.md palette exception."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "16px",
+        "files": ["apps/web/app/layout.tsx"],
+        "createdAt": "2026-10-06T18:35:22.701Z",
+        "reason": "Pre-existing root browser type baseline preserved; DESIGN.md specifies the 16px editable input accessibility minimum. Role-guide change adds identity metadata only, not typography."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "12px",
+        "files": ["apps/web/components/ui/feedback/page-primitives.tsx"],
+        "createdAt": "2026-10-11T19:38:09.011Z",
+        "reason": "Preserve the established compact MoneyValue and MetricPill typography from the approved Atria UI; this extension changes decimal formatting only."
       }
     ]
   }

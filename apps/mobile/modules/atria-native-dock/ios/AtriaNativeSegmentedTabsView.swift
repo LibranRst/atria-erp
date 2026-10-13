@@ -4,7 +4,7 @@ import UIKit
 struct NativeSegmentedOption: Record {
   @Field var id: String = ""
   @Field var label: String = ""
-  @Field var symbol: String = ""
+  @Field var iconData: String = ""
   @Field var badge: Int = -1
   @Field var disabled: Bool = false
 }
@@ -116,7 +116,7 @@ private final class AtriaSegmentButton: UIButton {
   func configure(_ value: NativeSegmentedOption) {
     option = value
     label.text = value.label
-    icon.image = value.symbol.isEmpty ? nil : UIImage(systemName: value.symbol)
+    icon.image = AtriaIconImage.decode(value.iconData)
     icon.isHidden = icon.image == nil
     badge.text = value.badge > 99 ? "99+" : String(value.badge)
     badgeContainer.isHidden = value.badge < 0
@@ -239,7 +239,7 @@ final class AtriaNativeSegmentedTabsView: ExpoView, UIGestureRecognizerDelegate,
   }
 
   func applyChanges() {
-    let signature = options.map { "\($0.id)|\($0.label)|\($0.symbol)|\($0.badge)|\($0.disabled)" }
+    let signature = options.map { "\($0.id)|\($0.label)|\($0.iconData)|\($0.badge)|\($0.disabled)" }
     if signature != renderedSignature {
       cancelTouch()
       renderedSignature = signature

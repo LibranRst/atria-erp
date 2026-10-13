@@ -1,6 +1,7 @@
 "use client";
 
 import type { UIMessage } from "ai";
+import type { ActiveInputRequest } from "../utils/input-request-reader";
 import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 
@@ -10,6 +11,7 @@ import { useReplyContentVisibility } from "../hooks/use-reply-content-visibility
 import { useReplyStatus } from "../hooks/use-reply-status";
 import { deriveStatusPhase } from "../utils/reply-phase";
 import { ChatMessage } from "./chat-message";
+import { useReplyElapsed } from "../hooks/use-reply-elapsed";
 import { PendingReplyIndicator } from "./reply-status";
 
 type ChatTurnProps = {
@@ -23,6 +25,7 @@ type ChatTurnProps = {
   readonly isBusy: boolean;
   readonly statusSuppressed: boolean;
   readonly replyCycle: number;
+  readonly pendingInput?: ActiveInputRequest | null;
 };
 
 export function ChatTurn({
@@ -36,9 +39,11 @@ export function ChatTurn({
   isBusy,
   statusSuppressed,
   replyCycle,
+  pendingInput = null,
 }: ChatTurnProps): React.JSX.Element {
   const reduceMotion = useReducedMotion();
   const replyIsActive = isCurrent && isBusy && !statusSuppressed;
+  const elapsedSeconds = useReplyElapsed(replyIsActive, replyCycle);
   const sourcePhase = deriveStatusPhase(assistant, replyIsActive);
   const { displayedPhase, visible: statusVisible } = useReplyStatus(sourcePhase, replyCycle);
   const contentVisible = useReplyContentVisibility(assistant, replyIsActive, replyCycle);
@@ -65,6 +70,7 @@ export function ChatTurn({
           displayedPhase={displayedPhase}
           visible={statusVisible}
           contentVisible={contentVisible}
+          elapsedSeconds={elapsedSeconds}
         />
 
         {assistant && contentVisible && (
@@ -83,6 +89,8 @@ export function ChatTurn({
               isBusy={isBusy}
               isStreaming={replyIsActive}
               handoffFromIndicator={handoff}
+              elapsedSeconds={elapsedSeconds}
+              pendingInput={pendingInput}
             />
           </motion.div>
         )}

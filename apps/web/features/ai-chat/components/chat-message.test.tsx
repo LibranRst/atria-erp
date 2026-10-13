@@ -12,7 +12,7 @@ function assistant(parts: unknown[]): UIMessage {
   return { id: "assistant-1", role: "assistant", parts } as unknown as UIMessage;
 }
 
-function render(message: UIMessage): string {
+function render(message: UIMessage, isStreaming = true): string {
   return renderToStaticMarkup(
     <ChatMessage
       message={message}
@@ -21,7 +21,7 @@ function render(message: UIMessage): string {
       showFollowUps={false}
       onFollowUp={() => undefined}
       isBusy
-      isStreaming
+      isStreaming={isStreaming}
       handoffFromIndicator={false}
     />,
   );
@@ -53,7 +53,7 @@ describe("ChatMessage assistant content", () => {
       ]),
     );
 
-    expect(html).toContain("0 dari 1 sumber dibaca");
+    expect(html).toContain("Membaca saldo rekening");
     expect(html).not.toContain("rounded-tl-md");
   });
 
@@ -69,7 +69,7 @@ describe("ChatMessage assistant content", () => {
       ]),
     );
 
-    expect(html).toContain("1 sumber data dibaca");
+    expect(html).toContain("1 sumber diperiksa");
     expect(html).toContain("Menyusun jawaban…");
     expect(html).not.toContain("rounded-tl-md");
   });
@@ -126,8 +126,94 @@ describe("ChatMessage assistant content", () => {
       ]),
     );
 
-    expect(html.indexOf("0 dari 1 sumber dibaca")).toBeLessThan(html.indexOf("Saya cek datanya."));
+    expect(html.indexOf("Membaca saldo rekening")).toBeLessThan(html.indexOf("Saya cek datanya."));
     expect(html.match(/rounded-tl-md/g)).toHaveLength(2);
+  });
+
+  test("batas riwayat yang tidak didukung tidak menampilkan kartu saldo saat ini, tetapi error aktivitas tetap terlihat", () => {
+    const html = render(
+      assistant([
+        {
+          type: "tool-getBankBalances",
+          toolCallId: "current-bank",
+          state: "output-available",
+          input: {},
+          output: {
+            totalAvailable: { amount: 1000000, formatted: "Rp 1.000.000" },
+            accounts: [
+              {
+                accountId: "00000000-0000-4000-8000-000000000001",
+                accountName: "Rekening saat ini",
+                bankName: "Bank QA",
+                balance: { amount: 1000000, formatted: "Rp 1.000.000" },
+              },
+            ],
+          },
+        },
+        {
+          type: "tool-getFinancialHistory",
+          toolCallId: "failed-history",
+          state: "output-error",
+          input: {},
+          errorText: "Laporan gagal dibaca.",
+        },
+        {
+          type: "text",
+          text: "Saldo pada tanggal lampau belum tersedia sebagai snapshot terverifikasi.",
+        },
+        {
+          type: "data-grounded-facts",
+          data: { status: "error", sources: [], coveredDomains: [], missingDomains: ["history"] },
+        },
+      ]),
+      false,
+    );
+    expect(html).toContain("snapshot terverifikasi");
+    expect(html).toContain("1 gagal");
+    expect(html).not.toContain("Rekening saat ini");
+    expect(html).not.toContain("Saldo rekening");
+    expect(html).not.toContain("1.000.000");
+  });
+
+  test("menunggu pilihan tetap menampilkan kandidat proyek dan pesan lama tetap menampilkan hasilnya", () => {
+    const choice = {
+      type: "tool-listProjects",
+      toolCallId: "project-choice",
+      state: "output-available",
+      input: { query: "Proyek QA" },
+      output: {
+        projects: [
+          {
+            projectId: "00000000-0000-4000-8000-000000000002",
+            name: "Proyek kandidat QA",
+            status: "ACTIVE",
+            storedHealth: "HEALTHY",
+            clientName: "Klien QA",
+            contractValue: { amount: 250000, formatted: "Rp 250.000" },
+          },
+        ],
+      },
+    };
+    const waiting = render(
+      assistant([
+        choice,
+        { type: "text", text: "Pilih proyek untuk melanjutkan." },
+        {
+          type: "data-grounded-facts",
+          data: {
+            status: "waiting",
+            sources: [],
+            coveredDomains: [],
+            missingDomains: ["documents"],
+          },
+        },
+      ]),
+      false,
+    );
+    expect(waiting).toContain("Proyek kandidat QA");
+    expect(waiting).toContain("Pilih proyek untuk melanjutkan");
+    const legacy = render(assistant([choice]), false);
+    expect(legacy).toContain("Proyek kandidat QA");
   });
 });
 

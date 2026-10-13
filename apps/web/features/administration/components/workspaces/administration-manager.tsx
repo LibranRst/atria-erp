@@ -3,9 +3,15 @@
 import { motion, useReducedMotion } from "framer-motion";
 import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
-import { AppIcon, GroupedSurface, SegmentedTabs, WorkspaceStatusLabel } from "@/components/ui";
+import {
+  AppIcon,
+  GroupedSurface,
+  SegmentedTabs,
+  WorkspaceStatusLabel,
+  Button,
+} from "@/components/ui";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { ROLE_DEEP_LINK_PARAMS, ROLE_WORKSPACE_VALUE } from "@atria/core/auth/role-deep-link";
 import { useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { RoleAccessManager } from "../roles/role-access-manager";
@@ -223,13 +229,15 @@ export function AdministrationManager({
               </span>
             </span>
             {canManageActiveTab ? (
-              <button
+              <Button
                 type="button"
                 onClick={openCreate}
                 className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
+                variant="secondary"
+                size="compact"
               >
                 {activeTab === "USERS" ? "Tambah user" : "Tambah vendor"}
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>
@@ -250,7 +258,7 @@ export function AdministrationManager({
             </div>
           ) : null}
           {canManageActiveTab ? (
-            <button
+            <Button
               type="button"
               onClick={openCreate}
               /*
@@ -260,10 +268,11 @@ export function AdministrationManager({
                */
               className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
               title={createActionTitle}
+              variant="primary"
             >
               <AppIcon name="add" className="icon-sm" />
               <span className="ml-1 max-[420px]:hidden">{createActionLabel}</span>
-            </button>
+            </Button>
           ) : null}
         </div>
       )}
@@ -297,7 +306,7 @@ export function AdministrationManager({
                       });
                       setEditorMode("EDIT_USER");
                     }}
-                    whileTap={reduceMotion ? undefined : { scale: 0.985 }}
+                    whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
                     transition={transitionSpringSnappy}
                     className="flex min-h-18 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/70"
                   >
@@ -379,7 +388,7 @@ export function AdministrationManager({
                       });
                       setEditorMode("EDIT_VENDOR");
                     }}
-                    whileTap={reduceMotion ? undefined : { scale: 0.985 }}
+                    whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
                     transition={transitionSpringSnappy}
                     className="flex min-h-17 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/70"
                   >

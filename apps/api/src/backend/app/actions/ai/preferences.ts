@@ -13,6 +13,20 @@ import {
   type AiPreferenceInput,
 } from "@atria/core/validations/ai-preference";
 import type { ActionResponse } from "@atria/core/types/action-response";
+import { resolveActor } from "@backend/server/actor";
+import { actorCan } from "@backend/lib/auth/permissions";
+import { availableAiCapabilities } from "@backend/lib/ai/tools/capability-catalog";
+import type { AiActionCapability } from "@atria/core/ai/action-capability";
+
+export async function getAiCapabilities(): Promise<ActionResponse<readonly AiActionCapability[]>> {
+  const actor = await resolveActor();
+  if (!actor || !actorCan(actor, "use:ai_chat"))
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "Akses asisten AI tidak tersedia." },
+    };
+  return { success: true, data: availableAiCapabilities(actor) };
+}
 
 type CurrentUserContext = {
   readonly id: string;

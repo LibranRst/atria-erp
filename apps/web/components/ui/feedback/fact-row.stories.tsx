@@ -22,3 +22,18 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const FormAside: Story = {
+  args: {
+    label: "Rekening sumber dana",
+    value: "Operasional proyek dan produksi dengan nama panjang",
+    layout: "stacked",
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-56">
+        <Story />
+      </div>
+    ),
+  ],
+};

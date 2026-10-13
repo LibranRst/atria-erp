@@ -1,8 +1,11 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import {
+  GroupedSurface,
+  FactRow,
   ComboboxField,
   COMMON_ROOM_OPTIONS,
   COMMON_UNIT_OPTIONS,
@@ -53,6 +56,7 @@ export function CategoryPlanFormDrawer({
   readonly isPending: boolean;
   readonly categoryFormEstimatedTotal: number;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const dirty = useFormDirtySnapshot(
     showCategoryPlanForm,
     editingCategoryPlanItemId ?? "new-category-plan",
@@ -60,6 +64,56 @@ export function CategoryPlanFormDrawer({
   );
   return (
     <OperationalFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <div className="px-1">
+            <h3 className="text-support font-semibold text-on-surface">Ringkasan paket</h3>
+            <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+              {categoryPlanForm.name.trim() || "Nama paket belum diisi"}
+            </p>
+          </div>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Kategori"
+                value={
+                  budgetCategories.find(
+                    (category) => category.id === categoryPlanForm.projectBudgetCategoryId,
+                  )?.name ?? "Belum dipilih"
+                }
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Volume"
+                value={`${categoryPlanForm.quantity || 0} ${categoryPlanForm.unit || "unit"}`}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Estimasi biaya"
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(categoryFormEstimatedTotal) ? 0 : 2}
+                    amount={categoryFormEstimatedTotal}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                  />
+                }
+              />
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Paket adalah rencana biaya internal. Pengeluaran atau tagihan tetap dicatat melalui
+            alurnya.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty,
@@ -87,49 +141,55 @@ export function CategoryPlanFormDrawer({
           ? "Lengkapi kategori, nama paket, area, dan satuan."
           : undefined
       }
-      statusText={`${categoryPlanForm.name || "Paket belum diisi"} · ${formatRp(categoryFormEstimatedTotal)}`}
+      statusText={
+        desktop
+          ? undefined
+          : `${categoryPlanForm.name || "Paket belum diisi"} · ${formatRp(categoryFormEstimatedTotal)}`
+      }
       statusTone={
         categoryPlanForm.name && categoryPlanForm.projectBudgetCategoryId ? "success" : "warning"
       }
     >
       <div className="space-y-md">
-        <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
-                Paket Rencana RAP
-              </p>
-              <h3 className="mt-0.5 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
-                {categoryPlanForm.name || "Nama paket belum diisi"}
-              </h3>
-              <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
-                {budgetCategories.find(
-                  (category) => category.id === categoryPlanForm.projectBudgetCategoryId,
-                )?.name ?? "Kategori belum dipilih"}
-                {categoryPlanForm.area ? ` · Area ${categoryPlanForm.area}` : ""}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
-                Estimasi Biaya
-              </p>
-              <div className="mt-0.5">
-                <MoneyValue
-                  amount={categoryFormEstimatedTotal}
-                  variant="fullDynamic"
-                  size="sm"
-                  align="right"
-                  className="font-bold text-primary"
-                />
-              </div>
-              {categoryPlanForm.quantity && categoryPlanForm.unit && (
-                <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
-                  Volume {categoryPlanForm.quantity} {categoryPlanForm.unit}
+        {!desktop && (
+          <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+                  Paket Rencana RAP
                 </p>
-              )}
+                <h3 className="mt-0.5 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
+                  {categoryPlanForm.name || "Nama paket belum diisi"}
+                </h3>
+                <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
+                  {budgetCategories.find(
+                    (category) => category.id === categoryPlanForm.projectBudgetCategoryId,
+                  )?.name ?? "Kategori belum dipilih"}
+                  {categoryPlanForm.area ? ` · Area ${categoryPlanForm.area}` : ""}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+                  Estimasi Biaya
+                </p>
+                <div className="mt-0.5">
+                  <MoneyValue
+                    amount={categoryFormEstimatedTotal}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                    className="font-bold text-primary"
+                  />
+                </div>
+                {categoryPlanForm.quantity && categoryPlanForm.unit && (
+                  <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+                    Volume {categoryPlanForm.quantity} {categoryPlanForm.unit}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
         <form
           id="category-plan-item-form"
           onSubmit={handleSubmitCategoryPlanItem}
@@ -284,21 +344,21 @@ export function CategoryPlanFormDrawer({
             </FormField>
           </FormSection>
 
-            <div className="p-3">
-              <ValuePreviewStrip
-                items={[
-                  {
-                    label: "Jumlah",
-                    value: `${categoryPlanForm.quantity || 0} ${categoryPlanForm.unit}`,
-                  },
-                  {
-                    label: "Estimasi paket",
-                    amount: categoryFormEstimatedTotal,
-                    tone: categoryFormEstimatedTotal > 0 ? "success" : "default",
-                  },
-                ]}
-              />
-            </div>
+          <div className="p-3">
+            <ValuePreviewStrip
+              items={[
+                {
+                  label: "Jumlah",
+                  value: `${categoryPlanForm.quantity || 0} ${categoryPlanForm.unit}`,
+                },
+                {
+                  label: "Estimasi paket",
+                  amount: categoryFormEstimatedTotal,
+                  tone: categoryFormEstimatedTotal > 0 ? "success" : "default",
+                },
+              ]}
+            />
+          </div>
         </form>
       </div>
     </OperationalFormSheet>

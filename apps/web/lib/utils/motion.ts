@@ -33,6 +33,18 @@ export const transitionEaseSmooth: Transition = sharedTransitionEaseSmooth;
 export const transitionSpinLinear: Transition = sharedTransitionSpinLinear;
 export const transitionPulseSmooth: Transition = sharedTransitionPulseSmooth;
 
+/** Anchored panels share the Dashboard dropdown's compact travel and scale. */
+export const anchoredPopoverClosed: Readonly<{ opacity: number; scale: number; y: number }> = {
+  opacity: 0,
+  scale: 0.96,
+  y: 4,
+};
+export const anchoredPopoverOpen: Readonly<{ opacity: number; scale: number; y: number }> = {
+  opacity: 1,
+  scale: 1,
+  y: 0,
+};
+
 export const spinAnimation: TargetAndTransition = sharedSpinAnimation;
 export const pulseAnimation: TargetAndTransition = sharedPulseAnimation;
 export const thinkingDotAnimation: TargetAndTransition = sharedThinkingDotAnimation;

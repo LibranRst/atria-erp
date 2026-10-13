@@ -3,6 +3,7 @@
 import React, { type ReactNode } from "react";
 
 import { Button, type ButtonVariant } from "../button/button";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 export type SheetFooterAction = {
   readonly label: string;
@@ -22,6 +23,11 @@ export type SheetFooterActionsProps = {
   readonly secondary?: SheetFooterAction;
   readonly status?: ReactNode;
   readonly disabledReason?: string;
+  /** Review-canvas footer: stack on desktop and keep secondary actions distinct from gray. */
+  readonly desktopStacked?: boolean;
+  /** Share a row when both labels fit; otherwise each action fills its own row. */
+  readonly layout?: "columns" | "adaptive";
+  readonly primaryFirst?: boolean;
 };
 
 /**
@@ -40,8 +46,21 @@ export function SheetFooterActions({
   secondary,
   status,
   disabledReason,
+  desktopStacked = false,
+  layout = "columns",
+  primaryFirst = false,
 }: SheetFooterActionsProps): React.JSX.Element {
   const reasonId = React.useId();
+  const presentation = useWorkspacePresentation();
+  const stacked = desktopStacked && presentation === "desktop";
+  const adaptive = layout === "adaptive" && !stacked;
+  const actionClassName = adaptive ? "min-w-max flex-auto" : "min-w-0";
+  // Review footers sit on the gray sheet canvas at either width; quiet actions
+  // retain their gray treatment only inside white card/confirmation owners.
+  const secondaryVariant =
+    desktopStacked && secondary?.variant === "quiet"
+      ? "secondary"
+      : (secondary?.variant ?? "secondary");
   // Hanya blokir lunak ketika alasannya benar-benar ada untuk dibacakan.
   const blocked = Boolean(primary.disabled) && Boolean(disabledReason);
 
@@ -57,6 +76,23 @@ export function SheetFooterActions({
         disabled: undefined,
       }
     : {};
+  const primaryControl = (
+    <Button
+      data-atria-footer-action="primary"
+      type={primary.type ?? "button"}
+      form={primary.form}
+      onClick={primary.onClick}
+      disabled={primary.disabled}
+      pending={primary.pending}
+      pendingLabel={primary.pendingLabel}
+      variant={primary.variant ?? "primary"}
+      fullWidth={!adaptive || !secondary}
+      className={actionClassName}
+      {...primaryGuards}
+    >
+      {primary.label}
+    </Button>
+  );
 
   return (
     <div className="space-y-2">
@@ -69,7 +105,16 @@ export function SheetFooterActions({
         ) : null}
       </div>
       {secondary ? (
-        <div className="grid grid-cols-2 gap-2">
+        <div
+          className={
+            stacked
+              ? "grid grid-cols-1 gap-2"
+              : adaptive
+                ? "flex flex-wrap gap-2"
+                : "grid grid-cols-2 gap-2"
+          }
+        >
+          {primaryFirst ? primaryControl : null}
           <Button
             type={secondary.type ?? "button"}
             form={secondary.form}
@@ -77,41 +122,16 @@ export function SheetFooterActions({
             disabled={secondary.disabled}
             pending={secondary.pending}
             pendingLabel={secondary.pendingLabel}
-            variant={secondary.variant ?? "secondary"}
-            fullWidth
-            className="min-w-0"
+            variant={secondaryVariant}
+            fullWidth={!adaptive}
+            className={actionClassName}
           >
             {secondary.label}
           </Button>
-          <Button
-            type={primary.type ?? "button"}
-            form={primary.form}
-            onClick={primary.onClick}
-            disabled={primary.disabled}
-            pending={primary.pending}
-            pendingLabel={primary.pendingLabel}
-            variant={primary.variant ?? "primary"}
-            fullWidth
-            className="min-w-0"
-            {...primaryGuards}
-          >
-            {primary.label}
-          </Button>
+          {primaryFirst ? null : primaryControl}
         </div>
       ) : (
-        <Button
-          type={primary.type ?? "button"}
-          form={primary.form}
-          onClick={primary.onClick}
-          disabled={primary.disabled}
-          pending={primary.pending}
-          pendingLabel={primary.pendingLabel}
-          variant={primary.variant ?? "primary"}
-          fullWidth
-          {...primaryGuards}
-        >
-          {primary.label}
-        </Button>
+        primaryControl
       )}
     </div>
   );

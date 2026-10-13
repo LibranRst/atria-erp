@@ -1,5 +1,8 @@
 import { resolveActor } from "@backend/server/actor";
-import { assertFinancePermission, lockFinanceProject } from "@backend/server/usecases/finance/mutation-access";
+import {
+  assertFinancePermission,
+  lockFinanceProject,
+} from "@backend/server/usecases/finance/mutation-access";
 
 import { db } from "@backend/db";
 import { vendorBill, vendor } from "@backend/db/schema";
@@ -28,6 +31,8 @@ export async function submitVendorBill(
 
   const {
     vendorId,
+    materialId,
+    projectRapItemId,
     projectId,
     projectBudgetCategoryId,
     projectCategoryPlanItemId,
@@ -39,12 +44,16 @@ export async function submitVendorBill(
 
   try {
     const actor = await resolveActor();
-    if (!actor) return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi kedaluwarsa." } };
+    if (!actor)
+      return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi kedaluwarsa." } };
     assertFinancePermission(actor, "create:vendor_bill");
     const bill = await db.transaction(async (tx) => {
       const currentProject = await lockFinanceProject(tx, actor, projectId);
       assertProjectStatusIsOperational(currentProject.status);
-      return createVendorBillTx(tx, {        vendorId,
+      return createVendorBillTx(tx, {
+        vendorId,
+        materialId,
+        projectRapItemId,
         projectId,
         projectBudgetCategoryId,
         projectCategoryPlanItemId,
@@ -61,7 +70,14 @@ export async function submitVendorBill(
       data: bill,
     };
   } catch (error) {
-    if (error instanceof Error && (error.message.startsWith("FORBIDDEN:") || error.message.startsWith("PROJECT_NOT_ACTIVE:"))) return { success: false, error: { code: "FORBIDDEN", message: "Akses proyek atau pencatatan tagihan ditolak." } };
+    if (
+      error instanceof Error &&
+      (error.message.startsWith("FORBIDDEN:") || error.message.startsWith("PROJECT_NOT_ACTIVE:"))
+    )
+      return {
+        success: false,
+        error: { code: "FORBIDDEN", message: "Akses proyek atau pencatatan tagihan ditolak." },
+      };
     if (error instanceof Error && error.message === "VENDOR_BILL_NUMBER_EXISTS") {
       return {
         success: false,

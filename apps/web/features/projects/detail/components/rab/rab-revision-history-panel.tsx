@@ -129,14 +129,15 @@ export function RabRevisionHistoryPanel({
               </span>
             </button>
             {order.status === "PENDING_APPROVAL" ? (
-              <button
+              <Button
                 type="button"
                 disabled={pendingId === order.id}
                 onClick={() => void approve(order.id)}
                 className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-meta font-bold text-white disabled:opacity-50"
+                variant="primary"
               >
                 {pendingId === order.id ? "Memproses" : "Setujui"}
-              </button>
+              </Button>
             ) : null}
           </div>
         ))}

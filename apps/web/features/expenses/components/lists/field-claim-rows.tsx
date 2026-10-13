@@ -1,18 +1,18 @@
 "use client";
-import { AppIcon, GroupedSurface, MoneyValue } from "@/components/ui";
+import { AppIcon, GroupedSurface, MoneyValue, Button } from "@/components/ui";
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import type { ExpenseCostItem } from "@/features/expenses/types/expense-list-types";
 import { fieldClaimStatusLabel } from "@/features/expenses/utils/expense-list-utils";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import {
   ActivityDetailChevron,
   type ActivityDetailOpenOptions,
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
 
-const expenseRowPressScale = { scale: 0.975 } as const;
+const expenseRowPressScale = { scale: buttonTapActiveScale } as const;
 
 export function FieldClaimRow({
   cost,
@@ -29,7 +29,6 @@ export function FieldClaimRow({
   readonly onDisburse: (cost: ExpenseCostItem) => void;
   readonly onOpenReceipt: (imageUrl: string) => void;
 }): React.JSX.Element {
-  const reduceMotion = useReducedMotion();
   const { openActivityDetail } = useActivityDetail();
   const amountNum = Number(cost.amount);
   const allocated = Number(cost.budgetItem?.allocatedAmount || 0);
@@ -152,37 +151,37 @@ export function FieldClaimRow({
           <ReceiptButton imageUrl={cost.receiptImageUrl} onOpenReceipt={onOpenReceipt} />
         ) : null}
         {cost.status === "SUBMITTED" && isOwnerOrFinance && (
-          <motion.button
+          <Button
             type="button"
             onClick={(event) => {
               event.stopPropagation();
               onVerify(cost);
             }}
             disabled={pending}
-            whileTap={reduceMotion ? undefined : expenseRowPressScale}
-            transition={transitionSpringSnappy}
             className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-meta font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50"
+            variant="primary"
+            size="mini"
           >
             <AppIcon name="fact_check" className="icon-xs leading-none" />
             Verifikasi
-          </motion.button>
+          </Button>
         )}
 
         {cost.status === "APPROVED" && isOwnerOrFinance && (
-          <motion.button
+          <Button
             type="button"
             onClick={(event) => {
               event.stopPropagation();
               onDisburse(cost);
             }}
             disabled={pending}
-            whileTap={reduceMotion ? undefined : expenseRowPressScale}
-            transition={transitionSpringSnappy}
             className="relative flex h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-3 text-meta font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50"
+            variant="primary"
+            size="mini"
           >
             <AppIcon name="payments" className="icon-xs leading-none" />
             Cairkan
-          </motion.button>
+          </Button>
         )}
       </div>
     </div>

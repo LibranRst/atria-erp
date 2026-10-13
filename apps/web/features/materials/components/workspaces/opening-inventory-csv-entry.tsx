@@ -42,7 +42,7 @@ export function OpeningInventoryCsvEntry({
         >
           Unduh template CSV
         </Button>
-        <label className="mt-3 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-surface-container px-5 text-row font-bold text-on-surface ring-1 ring-ring-subtle active:scale-[0.98] transition-transform">
+        <label className="mt-3 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-surface-container px-5 text-row font-bold text-on-surface ring-1 ring-ring-subtle transition-transform active:z-10 active:scale-[1.05] active:shadow-raised">
           <AppIcon name="upload_file" className="icon-md" />
           {fileName || "Pilih file CSV"}
           <input

@@ -18,6 +18,8 @@ const SOURCE_EXTENSIONS = new Set([".ts", ".tsx"]);
  * biasanya tempatnya di `components/ui` atau `lib/`, bukan jadi edge baru.
  */
 const ALLOWED_EDGES: Readonly<Record<string, readonly string[]>> = {
+  // Chat opens the same client RAB export workbench as Project; document behavior stays in its domain.
+  "ai-chat": ["projects"],
   // Onboarding memandu penyiapan domain lain, jadi memang menyusunnya.
   onboarding: ["settings", "finance-dashboard", "materials", "approvals", "administration"],
   // Halaman proyek menampilkan pengeluaran, stok, dan riwayat aktivitasnya.

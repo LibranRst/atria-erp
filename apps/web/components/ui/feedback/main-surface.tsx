@@ -69,14 +69,16 @@ export function GroupedSurface({
   as: Component = "div",
   children,
   className = "",
+  variant = "default",
 }: {
   readonly as?: "article" | "div" | "section";
+  readonly variant?: "default" | "desktopPanel";
   readonly children: React.ReactNode;
   readonly className?: string;
 }): React.JSX.Element {
   return (
     <Component
-      className={`relative isolate overflow-hidden rounded-owner bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle ${className}`}
+      className={`relative isolate overflow-hidden bg-surface-container-lowest ${variant === "desktopPanel" ? "rounded-desktop-panel ring-1 ring-ring-subtle" : "rounded-owner shadow-surface ring-1 ring-ring-subtle"} ${className}`}
     >
       {children}
     </Component>
@@ -211,7 +213,7 @@ export function SheetSection({
 }): React.JSX.Element {
   return (
     <section className="space-y-2">
-      <h3 className="px-1 text-[12px] font-bold tracking-wide text-on-surface-variant uppercase">
+      <h3 className="px-1 text-support font-bold tracking-wide text-on-surface-variant uppercase">
         {title}
       </h3>
       <div className="overflow-hidden rounded-[22px] bg-white ring-1 ring-ring-subtle">
@@ -232,16 +234,18 @@ export function PanelSection({
   action,
   children,
   className = "",
+  variant = "default",
 }: {
   readonly eyebrow?: string;
   readonly title: string;
   readonly action?: React.ReactNode;
   readonly children: React.ReactNode;
   readonly className?: string;
+  readonly variant?: "default" | "desktopPanel";
 }): React.JSX.Element {
   return (
     <section
-      className={`rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle ${className}`}
+      className={`bg-white p-4 ring-1 ring-ring-subtle ${variant === "desktopPanel" ? "rounded-desktop-panel" : "rounded-owner shadow-surface"} ${className}`}
     >
       <div className="mb-sm flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -250,7 +254,11 @@ export function PanelSection({
               {eyebrow}
             </p>
           )}
-          <h3 className="text-title font-semibold text-on-surface">{title}</h3>
+          <h3
+            className={`${variant === "desktopPanel" ? "text-section" : "text-title"} font-semibold text-on-surface`}
+          >
+            {title}
+          </h3>
         </div>
         {action}
       </div>
@@ -290,15 +298,37 @@ export function FactRow({
   label,
   value,
   inset = true,
+  wrapLabel = false,
+  layout = "inline",
 }: {
   readonly label: string;
   readonly value: React.ReactNode;
   readonly inset?: boolean;
+  readonly wrapLabel?: boolean;
+  /** Stacked facts keep long labels/values legible in narrow form asides. */
+  readonly layout?: "inline" | "stacked";
 }): React.JSX.Element {
+  if (layout === "stacked")
+    return (
+      <div className={`grid min-w-0 gap-1 py-3 text-xs ${inset ? "px-4" : ""}`}>
+        <span className="text-on-surface-variant">{label}</span>
+        <span className="min-w-0 font-semibold wrap-anywhere text-on-surface">{value}</span>
+      </div>
+    );
   return (
-    <div className={`flex items-start justify-between gap-4 py-3.5 text-xs ${inset ? "px-4" : ""}`}>
-      <span className="shrink-0 text-on-surface-variant">{label}</span>
-      <span className="min-w-0 text-right font-bold text-on-surface">{value}</span>
+    <div
+      className={`flex ${wrapLabel ? "items-center" : "items-start"} justify-between gap-4 py-3.5 text-xs ${inset ? "px-4" : ""}`}
+    >
+      <span
+        className={`${wrapLabel ? "min-w-0 flex-1 wrap-anywhere" : "shrink-0"} text-on-surface-variant`}
+      >
+        {label}
+      </span>
+      <span
+        className={`${wrapLabel ? "max-w-[70%] min-w-0 shrink-0" : "min-w-0"} text-right font-bold text-on-surface`}
+      >
+        {value}
+      </span>
     </div>
   );
 }
@@ -363,15 +393,19 @@ export function InlineStateRow({
   description,
   tone = "neutral",
   action,
+  actionPlacement = "trailing",
 }: {
   readonly icon: string;
   readonly title: string;
   readonly description: string;
   readonly tone?: InlineStateTone;
   readonly action?: React.ReactNode;
+  readonly actionPlacement?: "trailing" | "below";
 }): React.JSX.Element {
   return (
-    <div className="flex min-h-19 items-center gap-3 px-3.5 py-3">
+    <div
+      className={`flex min-h-19 gap-3 px-3.5 py-3 ${actionPlacement === "below" ? "items-start" : "items-center"}`}
+    >
       <DuotoneIconTile
         name={icon}
         tone={tone === "critical" ? "critical" : tone === "warning" ? "attention" : "neutral"}
@@ -380,9 +414,12 @@ export function InlineStateRow({
       />
       <span className="grid min-w-0 flex-1 gap-1">
         <span className="text-row font-bold text-on-surface">{title}</span>
-        <span className="text-[11px] leading-[1.3] text-on-surface-variant">{description}</span>
+        <span className="text-support text-on-surface-variant">{description}</span>
+        {action && actionPlacement === "below" ? (
+          <span className="mt-1 justify-self-start">{action}</span>
+        ) : null}
       </span>
-      {action ? <span className="shrink-0">{action}</span> : null}
+      {action && actionPlacement === "trailing" ? <span className="shrink-0">{action}</span> : null}
     </div>
   );
 }

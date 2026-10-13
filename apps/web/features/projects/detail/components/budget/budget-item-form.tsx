@@ -1,8 +1,12 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import {
+  MoneyValue,
+  GroupedSurface,
+  FactRow,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
   FormField,
@@ -38,6 +42,7 @@ export function BudgetItemForm({
   readonly onSubmit: (event: React.FormEvent) => void;
   readonly onClose: () => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const estimatedTotal =
     form.quantity !== "" && form.unitPrice !== ""
       ? Number(form.quantity) * Number(form.unitPrice)
@@ -45,6 +50,54 @@ export function BudgetItemForm({
   const dirty = useFormDirtySnapshot(open, "budget-item", JSON.stringify(form));
   return (
     <OperationalFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <div className="px-1">
+            <h3 className="text-support font-semibold text-on-surface">Ringkasan item</h3>
+            <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+              {form.itemName.trim() || "Nama item belum diisi"}
+            </p>
+          </div>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Kategori"
+                value={
+                  costCategories.find((category) => category.id === form.selectedCategoryId)
+                    ?.name ?? "Belum dipilih"
+                }
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Kuantitas"
+                value={`${form.quantity || 0} ${form.unit || "unit"}`}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Subtotal draft"
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(estimatedTotal) ? 0 : 2}
+                    amount={estimatedTotal}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                  />
+                }
+              />
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Subtotal mengikuti kuantitas dan harga satuan yang sedang diisi.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty,
@@ -71,7 +124,7 @@ export function BudgetItemForm({
       }
       submitLabel="Tambah"
       submittingLabel="Menambahkan…"
-      statusText={`Subtotal Rp ${estimatedTotal.toLocaleString("id-ID")}`}
+      statusText={desktop ? undefined : `Subtotal Rp ${estimatedTotal.toLocaleString("id-ID")}`}
       statusTone={estimatedTotal > 0 ? "success" : "warning"}
     >
       <form id="project-budget-item-form" onSubmit={onSubmit} className="space-y-md">

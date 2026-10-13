@@ -1,3 +1,4 @@
+import { boundedAttachmentPreview } from "@backend/lib/ai/attachment-preview";
 import { readPrivateAttachment } from "@backend/server/usecases/media/private-attachments";
 import { resolveActor, type Actor } from "@backend/server/actor";
 import { PRIVATE_ATTACHMENT_MAX_BYTES } from "@atria/core/media/private-attachment";
@@ -5,14 +6,28 @@ import { sessionAccessFailure } from "@backend/lib/server/session-access";
 import { documentModel, requireDocumentProvider } from "@backend/lib/ai/document-model";
 import { resolveProviderChain } from "@backend/lib/ai/providers";
 import { runChatStream } from "@backend/lib/ai/chat-stream";
+import { requiredFreshRead } from "@backend/lib/ai/chat-context";
+import { db } from "@backend/db";
+import {
+  readOwnProfileTx,
+  ownProfileSnapshot,
+} from "@backend/server/usecases/ai/own-profile-context";
+import type { OwnProfileSnapshot } from "@atria/core/ai/own-profile";
+import { OwnProfileError } from "@backend/server/usecases/profile/update-own-profile";
+import { isOwnProfileNameQuestion, profileFactStream } from "@backend/lib/ai/profile-fact-stream";
 import { getCompanyIdentity } from "@backend/lib/company/identity";
+import { readCompanyBudgetPolicy } from "@backend/lib/ai/tools/company-budget-tools";
 import {
   appendMessage,
-  createConversation,
   findOwnedConversation,
   loadConversationMessages,
-  setConversationTitleIfEmpty,
 } from "@backend/lib/ai/conversation-store";
+import {
+  persistUserTurn,
+  findUserTurnConversation,
+  historyBeforeTurn,
+  ChatTurnConflict,
+} from "@backend/lib/ai/user-turn";
 import { checkRateLimit } from "@backend/lib/ai/rate-limit";
 import type { AiToolContext } from "@backend/lib/ai/tools/context";
 import { loadAiPreference } from "@backend/lib/ai/user-preference";
@@ -47,6 +62,7 @@ const PDF_EXTRACTION_FAILURE =
 const requestSchema = z
   .object({
     conversationId: z.string().uuid().nullable().optional(),
+    userMessageId: z.string().uuid().optional(),
     text: z.string().trim().max(2000),
     attachments: z.array(attachmentSchema).max(4).optional().default([]),
   })
@@ -86,15 +102,15 @@ async function extractAttachmentContent(
         const sheet = workbook.Sheets[sheetName];
         if (!sheet) continue;
         const csvContent = XLSX.utils.sheet_to_csv(sheet);
-        const previewLines = csvContent.split("\n").slice(0, 100).join("\n");
+        const previewLines = boundedAttachmentPreview(csvContent);
         sheets.push(`--- Sheet: ${sheetName} ---\n${previewLines}`);
       }
-      return `[Data Berkas Spreadsheet: ${fileName}]\n${sheets.join("\n\n")}`;
+      return `[Data Berkas Spreadsheet: ${fileName}]\n${sheets.join("\n\n")}${workbook.SheetNames.length > 3 ? "\n[PREVIEW TIDAK LENGKAP: hanya 3 sheet pertama. Minta sumber dipecah sebelum usulan invoice; jangan mengklaim seluruh sheet dibaca.]" : ""}`;
     }
 
     if (isCsvOrText) {
       const textContent = await response.text();
-      const previewLines = textContent.split("\n").slice(0, 100).join("\n");
+      const previewLines = boundedAttachmentPreview(textContent);
       return `[Data Berkas Teks: ${fileName}]\n${previewLines}`;
     }
 
@@ -113,19 +129,21 @@ async function extractAttachmentContent(
               mimeType: effectiveMime,
             },
           },
-          "Baca dan ekstrak seluruh teks serta tabel data dari dokumen/gambar ini (termasuk tanggal transaksi, nominal, keterangan, saldo, nama bank, atau nomor rekening jika ada). Sajikan informasi secara terstruktur dan lengkap untuk analisis mutasi atau rekonsiliasi.",
+          "Baca dan ekstrak seluruh teks serta tabel data dari dokumen/gambar ini (termasuk tanggal transaksi, nominal, keterangan, saldo, nama bank, atau nomor rekening jika ada). Sajikan teks dan seluruh tabel secara terstruktur, termasuk vendor, nomor invoice, rincian barang/jumlah/satuan/harga, total/pajak/diskon dan jatuh tempo bila ada. Sebutkan bagian yang ambigu atau tidak terbaca; jangan mengisi atau menebak nilai yang hilang.",
         ],
       });
 
       const extractedText = ocrResponse.text;
       if (extractedText?.trim()) {
-        return `[Data Ekstraksi ${isPdf ? "Dokumen PDF" : "Gambar"}: ${fileName}]\n${extractedText.slice(0, 8000)}`;
+        return `[Data Ekstraksi ${isPdf ? "Dokumen PDF" : "Gambar"}: ${fileName}]\n${boundedAttachmentPreview(extractedText, 300, 8000)}`;
       }
       if (isPdf) throw new Error(PDF_EXTRACTION_FAILURE);
+      return `[EKSTRAKSI BELUM BERHASIL: ${fileName}. Minta berkas lebih jelas atau rincian manusia; jangan menebak invoice.]`;
     }
   } catch {
     console.error("Gagal mengekstrak lampiran berkas.");
     if (isPdf) throw new Error(PDF_EXTRACTION_FAILURE);
+    return `[EKSTRAKSI BELUM BERHASIL: ${fileName}. Minta sumber yang lebih jelas atau rincian manusia.]`;
   }
 
   return null;
@@ -175,7 +193,7 @@ export async function POST(request: Request): Promise<Response> {
     return jsonError(400, "Pesan tidak valid atau terlalu panjang.");
   }
 
-  const { conversationId, text, attachments } = parsed.data;
+  const { conversationId, text, attachments, userMessageId } = parsed.data;
   const actor = await resolveActor();
   if (!actor) return jsonError(401, "Silakan masuk kembali.");
   const attachmentActor: Actor = actor;
@@ -218,14 +236,35 @@ export async function POST(request: Request): Promise<Response> {
   if (conversationId && !conversation) {
     return jsonError(404, "Percakapan tidak ditemukan.");
   }
-  const history = conversation ? await loadConversationMessages(conversation.id) : [];
+  if (!conversationId && userMessageId)
+    conversation = await findUserTurnConversation(session.user.id, userMessageId);
+  const history = historyBeforeTurn(
+    conversation ? await loadConversationMessages(conversation.id) : [],
+    userMessageId ?? "",
+  );
   const currentFileUrls = new Set(attachments.map((item) => item.url));
 
-  const extractedAttachmentTexts: string[] = [];
+  const materialIntent =
+    /(material|katalog)/i.test(effectiveText) &&
+    /(tambah|buat|input|import|impor|masuk|daftar|analisis|analisa)/i.test(effectiveText) &&
+    (!/(invoice|tagihan|nota|transfer|opname)/i.test(effectiveText) ||
+      /(material master|master material|katalog material)/i.test(effectiveText));
+  const extractedAttachmentTexts: string[] = attachments.map(
+    (att) =>
+      `[Lampiran privat: ${att.url}; berkas: ${att.fileName}]. Untuk input Material Master, gunakan URL sumber ini melalui proposeMaterialMaster agar seluruh data dianalisis di background, bukan hanya preview chat.`,
+  );
+  if (materialIntent)
+    for (const att of attachments)
+      extractedAttachmentTexts.push(
+        `[Sumber material privat: ${att.url}; berkas: ${att.fileName ?? "lampiran"}]. Gunakan proposeMaterialMaster dengan attachmentUrls, jangan ekstrak katalog di chat.`,
+      );
   try {
-    for (const url of currentFileUrls) {
+    for (const url of materialIntent ? [] : currentFileUrls) {
       const content = await extractFile(url);
-      if (content) extractedAttachmentTexts.push(content);
+      if (content)
+        extractedAttachmentTexts.push(
+          `[Preview lampiran untuk percakapan; import Material Master memakai sumber lengkap melalui background analysis.]\n${content}`,
+        );
     }
   } catch {
     console.error("PDF chat belum berhasil diproses.");
@@ -246,7 +285,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const userMessage: UIMessage = {
-    id: randomUUID(),
+    id: userMessageId ?? randomUUID(),
     role: "user",
     parts: userParts,
   };
@@ -278,6 +317,11 @@ export async function POST(request: Request): Promise<Response> {
             if (part.type !== "file") return part;
             if (!activeFileUrls.includes(part.url))
               return { type: "text", text: `[Lampiran sebelumnya: ${part.filename ?? "berkas"}]` };
+            if (materialIntent)
+              return {
+                type: "text",
+                text: `[Lampiran material privat: ${part.url}; ${part.filename ?? "berkas"}]`,
+              };
             const file = await readFile(part.url);
             const isPdf =
               file.row.mimeType === "application/pdf" ||
@@ -312,16 +356,18 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  if (!conversation) {
-    conversation = await createConversation(session.user.id, effectiveText);
+  try {
+    conversation = await persistUserTurn({
+      userId: session.user.id,
+      conversationId,
+      messageId: userMessage.id,
+      text: effectiveText,
+      parts: userMessage.parts,
+    });
+  } catch (error: unknown) {
+    if (error instanceof ChatTurnConflict) return jsonError(409, error.message);
+    return jsonError(503, "Pertanyaan belum dapat disimpan. Coba lagi.");
   }
-  await setConversationTitleIfEmpty(conversation.id, effectiveText);
-  await appendMessage({
-    conversationId: conversation.id,
-    role: "user",
-    parts: userMessage.parts,
-  });
-
   const roleAccess = await getRoleAccess(session.user.roleId);
   const toolContext: AiToolContext = {
     userId: session.user.id,
@@ -331,16 +377,56 @@ export async function POST(request: Request): Promise<Response> {
     dataScope: roleAccess?.dataScope ?? "NONE",
   };
   const preference = await loadAiPreference(session.user.id);
-  const company = await getCompanyIdentity();
+  const [company, companyBudgetPolicy] = await Promise.all([
+    getCompanyIdentity(),
+    readCompanyBudgetPolicy(toolContext),
+  ]);
+  let verifiedOwnProfile: OwnProfileSnapshot | undefined;
+  if (
+    requiredFreshRead([userMessage], ["getOwnProfileContext"]) &&
+    !/\b(siapkan|usulan|ubah|koreksi|edit|update|ganti|hapus|tambahkan)\b/i.test(
+      effectiveText.replace(/\bjangan\b[^.!?\n]*/gi, ""),
+    )
+  ) {
+    try {
+      verifiedOwnProfile = await db.transaction(async (tx) =>
+        ownProfileSnapshot(await readOwnProfileTx(tx, actor)),
+      );
+    } catch (error: unknown) {
+      return error instanceof OwnProfileError
+        ? jsonError(403, error.message)
+        : jsonError(503, "Profil terbaru belum dapat dibaca. Coba lagi.");
+    }
+  }
 
+  if (verifiedOwnProfile && attachments.length === 0 && isOwnProfileNameQuestion(effectiveText)) {
+    return createUIMessageStreamResponse({
+      stream: profileFactStream({
+        profile: verifiedOwnProfile,
+        conversationId: conversation.id,
+        messages,
+        save: async (message): Promise<void> => {
+          await appendMessage({
+            conversationId: conversation.id,
+            role: "assistant",
+            parts: message.parts,
+          });
+        },
+      }),
+      headers: { "x-conversation-id": conversation.id },
+    });
+  }
   const { stream } = runChatStream({
     signal: requestDeadline,
+    userQuestion: effectiveText,
     messages,
     toolContext,
     userName: session.user.name,
     conversationId: conversation.id,
     preference,
     companyName: company.name,
+    companyBudgetPolicy,
+    verifiedOwnProfile,
     onAssistantMessage: async ({ message, provider, inputTokens, outputTokens }) => {
       await appendMessage({
         conversationId: conversation.id,

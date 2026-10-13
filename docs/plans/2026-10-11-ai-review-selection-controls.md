@@ -1,0 +1,11 @@
+# Contextual AI review selection
+
+The user finds the isolated checkmarks and reserved leading column wasteful across similar AI reviews. Replace them with the existing ChoiceRow in a labeled review presentation: Pilih/Dipilih, a compact shared button with real checkbox semantics, neutral selected styling, visible focus, disabled guards and a stable control width. Keep the ordinary choice/radio presentation unchanged.
+
+ReviewItem puts selection beside Edit in its existing below-summary action row. Material Master, RAB and expense draft reviews use this presentation, so identity and amounts retain the full row width. Remove redundant Material Master selected-state copy; validation and saved status remain distinct. Preserve autosave, local corrections, pagination, revision/permission gates and explicit business confirmation.
+
+Expense review keeps Koreksi lewat chat as one full-width secondary footer action. Buka pengeluaran moves beside the metadata discard action below the review content, outside the protected commit area. Use shared Button/ButtonLink, retain the project-scoped destination and keep all financial behavior unchanged.
+
+Verify visible dev app through @Browser: selection toggle/keyboard, disabled state, Edit without selection side effects, pagination/reload/resize, current and saved states, Material Master/RAB/expense parity, and mobile320/360/390/430 plus desktop1024/1280/1440. Update shared stories/DOM tests and design rules, run relevant checks, then refresh the graph. No development stock/cash/expense writes.
+
+Completed: the three inclusion consumers use the shared review presentation. Browser expense selection toggles by Space and updates the selected count/total immediately; resize across all seven widths retained selection and exposed no horizontal overflow. Shared desktop/mobile DOM fixtures cover controlled selection, disabled choices and preservation of edited values. The desktop action-button adapter now preserves checkbox/radio roles through native button semantics while reusing its existing visual classes and motion; ordinary action buttons remain on HeroUI. All 985 web tests pass, build/types/lint pass (the existing Material Master hook warning remains). Review screenshots live under output/ai-chat-qa/expense-batch-workflow/ux-consistency/selection. No business writes.

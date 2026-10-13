@@ -1,0 +1,29 @@
+# Direct RAB export verification — 12 October 2026
+
+## Workflow and authority
+
+Read-only getRabExportContext supplies actual scoped project/revision references, one-character disambiguation and twenty-row pagination. Unique longer-name matches and a sole eligible revision can proceed without asking the same choice again. prepareRabExport returns an immutable RAB_EXPORT card for an explicit revision and initial PDF/EXCEL/PNG format. The user previews and downloads; export does not approve, update or send the RAB. Missing RAB uses the existing drafting workflow first.
+
+Actual use:ai_chat/view:project/view:rab, current account/role and GLOBAL/ASSIGNED project scope protect the identity-only getAiRabExportPreview adapter. Stored conversation/tool ownership, exact tool proof, thirty-day expiry and fresh fingerprints prevent fabricated, expired or stale downloads. The printable allowlist excludes internal RAP costs, margins, markup, source IDs and private/vendor notes. Hidden bundles and their children are omitted. Visible bundle children have no individual price and are not double-counted. Empty/VOID/unrecognized sources or inconsistent approved totals block export. Every download checks source/rights before generation and before releasing the file.
+
+## Shared presentation
+
+Reused ProposalCardShell, FactRow, MoneyValue with exact fractional rupiah, FormSheet, SheetFooterActions, AdaptiveSelect, SegmentedTabs, Button and IconButton. The same RabExportDrawer/Document/workbook serve manual and chat exports; no UI primitive was introduced. Desktop has paper plus a concise summary/action aside; mobile and native-pinned presentation retain summary first. Format/configuration survive resizing and reopening. The canvas offers keyboard arrows, Page Up/Down, Home/End, shared mobile touch targets and reduced-motion presets. Its toolbar stays in normal flow above the clipped paper stage, with no fixed-footer overlap at320 px.
+
+Human local template preferences do not change the RAB. Default invented contacts and payment terms were removed. Receiver overrides are saved by document ID and a legacy globally saved receiver is ignored for another document. The edited title appears in PDF, Excel and PNG. XLSX number formats preserve cents. Fixed client-paper colors preserve print appearance independently of app theme; secondary content has readable contrast. A4 PDF slices preserve ordinary rows, repeat document/project/client/revision identity and table headings, and group final total/terms/signatures. PDF paper is raster rather than searchable/tagged text; Excel retains structured cells. PNG has a14,000 px CSS-height limit with a clear PDF/Excel fallback.
+
+## Actual Browser evidence
+
+Visible @Browser at http://127.0.0.1:3004/ai uses API3005 and the named disposable atria_audit_reconciliation database. A synthetic project has Draft R2, Approved R1, stale, expired and cancelled examples. Proofs were prepared by the actual backend and stored in the QA user's conversation. Real Better Auth/session/API checks ran when opening and downloading. The normal localhost3003 application and company data remained separate.
+
+Actual downloads in output/ai-chat-qa/rab-export include RAB-QA-final.pdf, RAB-QA-fixed.xlsx and RAB-QA-fixed.png. The PDF has three A4 pages; fresh renders in pdf-final-verified show repeated identity/headings and a complete closing packet. The workbook has53 rows, total7350014.25,59 fractional money cells with decimal-aware formats, the custom title and no hidden/private-price sentinels. The PNG preserves the same paper and custom title. Original downloads also exercised all three formats before the finish fixes. The receiver was changed for R2; opening R1 retained its actual client name. Keyboard End/Home and format persistence through resize/reopening were exercised directly.
+
+viewport-checks-fixed.json and screenshots cover320/360/390/430 and1024/1280/1440, with no horizontal dialog/toolbar overflow. Shared zoom/fit controls measured48 px high on mobile/coarse pointer and32 px on desktop/fine pointer. final-320.png verifies full toolbar clearance after the finishing regression fix. business-invariants.json records identical RAB/project/budget/cost/bank/cash/stock state hashes and audit/confirmation counts before and after actual downloads/customization. No approval, payment, stock movement or external sharing was performed.
+
+## Checks and limits
+
+Workspace tests passed2124 cases. Eight focused disposable PostgreSQL cases cover exact sen/client-only data, hidden bundles, stale source/fresh replacement, ownership/strict identity, actual grant revocation/inactive actor, assigned/NONE/tenant boundaries, approved-total integrity, expiry/VOID/empty content and lookup choices. Existing export tests plus new receiver/cents regressions passed. Integration uses the separate atria_audit_administration database; normal tests cannot access development data.
+
+API/web/mobile typechecks, workspace build with refreshed API/web builds, lint and scoped formatting/styles checks passed. Lint retains the pre-existing Material Master hook warning. Global formatting retains102 unrelated pre-existing failures; changed targets were formatted. Independent Impeccable finish disposition ship: six findings and the toolbar regression are resolved. A stale same-path PDF page capture was replaced with a fresh raster directory and verified PDF image resources.
+
+The QA server disables external model keys. Backend preparation, UI/API/source authorization and actual file downloads are verified; live provider generation/tool choice is not certified by this fixture. No deployment or commit was performed. Implementation references: [PDF-lib](https://pdf-lib.js.org/) and [html2canvas capture options](https://html2canvas.hertzen.com/configuration).

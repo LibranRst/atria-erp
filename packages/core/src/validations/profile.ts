@@ -41,10 +41,12 @@ const avatarUrl = z
  * Sheet mengirim nama dan foto dalam satu submit, jadi "tidak mengubah foto"
  * tidak boleh terlihat sama dengan "hapus foto".
  */
-export const updateOwnProfileSchema = z.object({
-  name: displayName,
-  imageUrl: avatarUrl.nullable().optional(),
-});
+export const updateOwnProfileSchema = z
+  .object({
+    name: displayName,
+    imageUrl: avatarUrl.nullable().optional(),
+  })
+  .strict();
 
 export const changeOwnPasswordSchema = z
   .object({

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { AppIcon, FormField, useFormPresentation } from "@/components/ui";
+import { AppIcon, FormField, useFormPresentation, Button } from "@/components/ui";
 import { CARD_PRESETS } from "@/features/finance-dashboard/utils/bank-account-constants";
 import type { AccountDraft } from "@/features/finance-dashboard/types/bank-account-types";
 function ColorInput({
@@ -111,7 +111,7 @@ export function ColorEditor({
                   cardTextColor: preset.text,
                 })
               }
-              className={`min-h-12 rounded-full px-2 text-eyebrow font-black transition active:scale-[0.97] ${
+              className={`min-h-12 rounded-full px-2 text-eyebrow font-black transition active:scale-[1.05] ${
                 preset.text === "dark" ? "text-on-surface" : "text-white"
               } ${active ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
               style={{
@@ -138,7 +138,7 @@ export function ColorEditor({
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <button
+        <Button
           type="button"
           onClick={() =>
             patch({
@@ -146,12 +146,13 @@ export function ColorEditor({
               cardColorTo: draft.cardColorFrom,
             })
           }
-          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface transition active:scale-[1.05] active:shadow-raised active:z-10"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface active:z-10 active:shadow-raised"
+          variant="secondary"
         >
           <AppIcon name="swap_horiz" className="icon-sm" />
           Balik warna
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() =>
             patch({
@@ -160,22 +161,24 @@ export function ColorEditor({
               cardTextColor: CARD_PRESETS[0].text,
             })
           }
-          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface transition active:scale-[1.05] active:shadow-raised active:z-10"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface active:z-10 active:shadow-raised"
+          variant="secondary"
         >
           <AppIcon name="restore" className="icon-sm" />
           Atur ulang
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() =>
             patch({
               cardTextColor: draft.cardTextColor === "light" ? "dark" : "light",
             })
           }
-          className="min-h-12 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface transition active:scale-[1.05] active:shadow-raised active:z-10"
+          className="min-h-12 rounded-full bg-surface-container-low px-4 text-meta font-bold text-on-surface active:z-10 active:shadow-raised"
+          variant="secondary"
         >
           Teks {draft.cardTextColor === "light" ? "Terang" : "Gelap"}
-        </button>
+        </Button>
       </div>
     </section>
   );

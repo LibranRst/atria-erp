@@ -12,6 +12,7 @@ import {
   vendor,
   vendorBill,
   vendorPayment,
+  INSTANCE_TENANT_ID,
 } from "@backend/db/schema";
 import { tool } from "ai";
 import { and, asc, desc, eq, ilike, inArray, ne, or } from "drizzle-orm";
@@ -39,7 +40,7 @@ export function buildLookupTools(context: AiToolContext) {
         limit: z.number().int().min(1).max(MAX_LOOKUP_ROWS).default(10),
       }),
       execute: async ({ query, limit }) => {
-        const conditions = [eq(vendor.isActive, true)];
+        const conditions = [eq(vendor.tenantId, INSTANCE_TENANT_ID), eq(vendor.isActive, true)];
         if (query) {
           conditions.push(or(ilike(vendor.name, `%${query}%`), ilike(vendor.email, `%${query}%`))!);
         }
@@ -81,7 +82,7 @@ export function buildLookupTools(context: AiToolContext) {
         limit: z.number().int().min(1).max(MAX_LOOKUP_ROWS).default(10),
       }),
       execute: async ({ query, limit }) => {
-        const conditions = [];
+        const conditions = [eq(client.tenantId, INSTANCE_TENANT_ID)];
         if (query) {
           conditions.push(
             or(
@@ -131,11 +132,14 @@ export function buildLookupTools(context: AiToolContext) {
         limit: z.number().int().min(1).max(MAX_LOOKUP_ROWS).default(10),
       }),
       execute: async ({ query, limit }) => {
-        if (!hasPermission(context, "view:material")) {
-          return permissionDenied("katalog material");
+        if (!hasPermission(context, "view:material") || !hasPermission(context, "view:inventory")) {
+          return permissionDenied("katalog material dan stok");
         }
 
-        const conditions = [eq(materialMaster.isActive, true)];
+        const conditions = [
+          eq(materialMaster.tenantId, INSTANCE_TENANT_ID),
+          eq(materialMaster.isActive, true),
+        ];
         if (query) {
           conditions.push(
             or(
@@ -157,7 +161,13 @@ export function buildLookupTools(context: AiToolContext) {
             specification: materialMaster.specification,
           })
           .from(materialMaster)
-          .leftJoin(materialCategory, eq(materialMaster.categoryId, materialCategory.id))
+          .leftJoin(
+            materialCategory,
+            and(
+              eq(materialMaster.categoryId, materialCategory.id),
+              eq(materialCategory.tenantId, INSTANCE_TENANT_ID),
+            ),
+          )
           .where(and(...conditions))
           .orderBy(asc(materialMaster.name))
           .limit(limit);
@@ -178,7 +188,13 @@ export function buildLookupTools(context: AiToolContext) {
                   inventoryLocation,
                   eq(materialInventory.locationId, inventoryLocation.id),
                 )
-                .where(inArray(materialInventory.materialId, materialIds))
+                .where(
+                  and(
+                    eq(materialInventory.tenantId, INSTANCE_TENANT_ID),
+                    eq(inventoryLocation.tenantId, INSTANCE_TENANT_ID),
+                    inArray(materialInventory.materialId, materialIds),
+                  ),
+                )
             : [];
 
         return {
@@ -221,7 +237,10 @@ export function buildLookupTools(context: AiToolContext) {
         }
 
         const rows = await db.query.inventoryLocation.findMany({
-          where: eq(inventoryLocation.isActive, true),
+          where: and(
+            eq(inventoryLocation.tenantId, INSTANCE_TENANT_ID),
+            eq(inventoryLocation.isActive, true),
+          ),
           columns: { id: true, name: true, description: true, isActive: true },
           orderBy: [asc(inventoryLocation.name)],
         });
@@ -252,7 +271,13 @@ export function buildLookupTools(context: AiToolContext) {
         const projectIds = await accessibleProjectIds(context);
         const scope = projectScopeCondition(projectIds, vendorBill.projectId);
 
-        const conditions = [ne(vendorBill.status, "PAID"), ne(vendorBill.status, "VOID")];
+        const conditions = [
+          eq(vendorBill.tenantId, INSTANCE_TENANT_ID),
+          eq(project.tenantId, INSTANCE_TENANT_ID),
+          eq(vendor.tenantId, INSTANCE_TENANT_ID),
+          ne(vendorBill.status, "PAID"),
+          ne(vendorBill.status, "VOID"),
+        ];
         if (scope) conditions.push(scope);
         if (projectName) conditions.push(ilike(project.name, `%${projectName}%`));
         if (vendorName) conditions.push(ilike(vendor.name, `%${vendorName}%`));
@@ -295,7 +320,12 @@ export function buildLookupTools(context: AiToolContext) {
             bankAccountId: vendorPayment.bankAccountId,
           })
           .from(vendorPayment)
-          .where(inArray(vendorPayment.vendorBillId, billIds));
+          .where(
+            and(
+              eq(vendorPayment.tenantId, INSTANCE_TENANT_ID),
+              inArray(vendorPayment.vendorBillId, billIds),
+            ),
+          );
 
         return {
           bills: bills.map((b) => {
@@ -342,7 +372,13 @@ export function buildLookupTools(context: AiToolContext) {
         const projectIds = await accessibleProjectIds(context);
         const scope = projectScopeCondition(projectIds, clientInvoice.projectId);
 
-        const conditions = [ne(clientInvoice.status, "PAID"), ne(clientInvoice.status, "VOID")];
+        const conditions = [
+          eq(clientInvoice.tenantId, INSTANCE_TENANT_ID),
+          eq(project.tenantId, INSTANCE_TENANT_ID),
+          eq(client.tenantId, INSTANCE_TENANT_ID),
+          ne(clientInvoice.status, "PAID"),
+          ne(clientInvoice.status, "VOID"),
+        ];
         if (scope) conditions.push(scope);
         if (projectName) conditions.push(ilike(project.name, `%${projectName}%`));
 
@@ -403,7 +439,13 @@ export function buildLookupTools(context: AiToolContext) {
           .from(projectCost)
           .innerJoin(project, eq(projectCost.projectId, project.id))
           .innerJoin(user, eq(projectCost.requestedById, user.id))
-          .where(or(eq(projectCost.status, "SUBMITTED"), eq(projectCost.status, "VERIFIED")))
+          .where(
+            and(
+              eq(projectCost.tenantId, INSTANCE_TENANT_ID),
+              eq(project.tenantId, INSTANCE_TENANT_ID),
+              or(eq(projectCost.status, "SUBMITTED"), eq(projectCost.status, "VERIFIED")),
+            ),
+          )
           .orderBy(desc(projectCost.createdAt))
           .limit(limit);
 

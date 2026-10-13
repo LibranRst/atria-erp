@@ -133,7 +133,7 @@ describe("pengelompokan history workspace", () => {
 
     expect(html).toContain("Mulai percakapan baru");
     expect(html).toContain("Preferensi asisten");
-    expect(html).toContain("Cari percakapan");
+    expect(html).toContain("Cari judul percakapan");
     expect(html).toContain("Memuat riwayat");
   });
 });

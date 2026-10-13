@@ -10,6 +10,7 @@ import { AppIcon } from "../icon/app-icon";
 import { DesktopButton } from "./desktop-controls";
 import { Button, IconButton } from "../button/button";
 import { DesktopTable } from "./desktop-table";
+import { FilterSelect, SearchInput } from "../form/select-form-controls";
 
 function desktop(children: React.ReactNode): string {
   return renderToStaticMarkup(
@@ -24,6 +25,28 @@ test("desktop avatar has a fixed square box even without caller geometry or a lo
   expect(html).toContain("width:40px;height:40px");
   expect(html).toContain("avatar__fallback");
   expect(html).toContain("RW");
+});
+
+test("desktop status filters have an inline trigger, separate count and an accessible hidden label", () => {
+  const html = desktop(
+    <FilterSelect
+      label="Tampilkan"
+      value="all"
+      searchable={false}
+      options={[
+        { value: "all", label: "Semua", meta: "12 proyek" },
+        { value: "closed", label: "Ditutup", disabledReason: "Tidak tersedia" },
+      ]}
+      onChange={(): void => undefined}
+    />,
+  );
+  expect(html).toContain("atria-desktop-filter-trigger");
+  expect(html).toContain("sr-only");
+  expect(html).toContain("12 proyek");
+  expect(html).toContain("aria-labelledby=");
+  expect(html).not.toContain("select--full-width");
+  expect(html).not.toContain("atria-desktop-select-trigger");
+  expect(html).not.toContain("data-atria-popover-content");
 });
 
 test("desktop peer tabs are intrinsic-width HeroUI tabs with a controlled selected value", () => {
@@ -78,6 +101,40 @@ test("desktop action and switch use the HeroUI interaction contract without losi
   expect(html).toContain('value="save"');
   expect(html).toContain('role="switch"');
   expect(html).toContain('checked=""');
+});
+
+test("shared desktop controls use native compact size variants without inheriting mobile geometry", () => {
+  const html = desktop(
+    <>
+      <Button className="min-h-12 px-5">Simpan perubahan</Button>
+      <Button size="compact">Ubah</Button>
+      <IconButton label="Aksi" icon={<AppIcon name="add" />} size="mini" />
+      <SearchInput value="proyek" onChange={(): void => undefined} ariaLabel="Cari proyek" />
+    </>,
+  );
+  expect(html).toContain("button--md");
+  expect(html).toContain("button--sm");
+  expect(html).toContain("button--icon-only");
+  expect(html).toContain('data-atria-size="compact"');
+  expect(html).toContain("atria-desktop-field");
+  expect(html).toContain('type="search"');
+  expect(html).toContain('aria-label="Cari proyek"');
+  expect(html).not.toContain('aria-label="Bersihkan pencarian"');
+});
+
+test("native HeroUI table accepts controlled selection with no selected row", () => {
+  const html = desktop(
+    <DesktopTable
+      ariaLabel="Proyek"
+      rows={[{ id: "one", name: "Bassura" }]}
+      rowKey={(row): string => row.id}
+      selectedRowKey={null}
+      onRowAction={(): void => undefined}
+      columns={[{ key: "name", label: "Proyek", render: (row): string => row.name }]}
+    />,
+  );
+  expect(html).toContain('data-selection-mode="single"');
+  expect(html).not.toContain('aria-selected="true"');
 });
 
 test("HeroUI table exposes real single selection and sortable columns", () => {

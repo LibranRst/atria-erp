@@ -23,7 +23,7 @@ import {
 } from "@atria/core/finance/budget-indicator";
 import { formatShortDate } from "@atria/core/utils/date";
 import { formatIdr } from "@atria/core/utils/money";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 
 export type ApprovalItem = ApprovalDetail;
 
@@ -38,10 +38,9 @@ export function cleanApprovalNotes(notes: string): string {
   return notes.replace(/^\[Kategori:\s*[^\]]+\]\s*/i, "").trim();
 }
 
-
 import { cn } from "@/lib/utils/cn";
 
-const rowPressScale = { scale: 0.985 } as const;
+const rowPressScale = { scale: buttonTapActiveScale } as const;
 
 /**
  * What's being decided, restated at the commit step (approve/reject) so the
@@ -287,7 +286,7 @@ export function ApprovalDetailContent({
               <FactRow
                 label="Catatan"
                 value={
-                  <span className="font-medium text-on-surface whitespace-pre-wrap">
+                  <span className="font-medium whitespace-pre-wrap text-on-surface">
                     {cleanApprovalNotes(item.notes)}
                   </span>
                 }
@@ -311,7 +310,6 @@ export function ApprovalDetailContent({
   );
 }
 
-
 /**
  * The receipt as its own attached exhibit — a photo chip in the same gray
  * canvas as every other fact, not a bordered row inside a white list.
@@ -323,6 +321,8 @@ function ApprovalEvidenceRow({
   readonly item: ApprovalItem;
   readonly onOpenReceipt: (url: string) => void;
 }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+
   if (!item.receiptImageUrl) {
     return (
       <GroupedSurface>
@@ -348,7 +348,7 @@ function ApprovalEvidenceRow({
       <motion.button
         type="button"
         onClick={() => onOpenReceipt(receiptUrl)}
-        whileTap={{ scale: 0.99 }}
+        whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
         transition={transitionSpringSnappy}
         className="group relative block h-48 w-full overflow-hidden rounded-inset bg-surface-container text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
       >
@@ -491,7 +491,6 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
     </section>
   );
 }
-
 
 function formatQueueTime(value: Date): string {
   return new Date(value).toLocaleDateString("id-ID", {

@@ -1,8 +1,11 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import {
+  GroupedSurface,
+  FactRow,
   DetailSheet,
   ConfirmationDialog,
   DatePickerField,
@@ -78,6 +81,7 @@ export function ChangeOrderDrawer({
   readonly approvedBaseline: RabRevisionHistoryView | null;
   readonly visibleRabValue: number;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [reviewing, setReviewing] = React.useState(false);
 
   const formValid =
@@ -113,6 +117,77 @@ export function ChangeOrderDrawer({
 
   return (
     <WorkflowFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <div className="px-1">
+            <h3 className="text-support font-semibold text-on-surface">Perubahan kontrak</h3>
+          </div>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Revisi"
+                value={`R${baseRevision} → R${targetRevision}`}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Nilai sebelumnya"
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(previousValue) ? 0 : 2}
+                    amount={previousValue}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                  />
+                }
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Nilai baru"
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(visibleRabValue) ? 0 : 2}
+                    amount={visibleRabValue}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                  />
+                }
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Selisih"
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(Math.abs(valueDelta)) ? 0 : 2}
+                    amount={Math.abs(valueDelta)}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                    prefix={valueDelta > 0 ? "+ " : valueDelta < 0 ? "− " : ""}
+                  />
+                }
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Persetujuan klien"
+                value={changeOrderForm.clientReference.trim() || "Belum diisi"}
+              />
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Baseline resmi berubah setelah tinjauan dan persetujuan Change Order.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty,
@@ -140,63 +215,68 @@ export function ChangeOrderDrawer({
         }
       }}
       onSecondary={() => setReviewing(false)}
-      statusText={`Nilai baru Rp ${visibleRabValue.toLocaleString("id-ID")} · Selisih ${valueDelta >= 0 ? "+" : ""}Rp ${valueDelta.toLocaleString("id-ID")}`}
+      statusText={
+        desktop
+          ? undefined
+          : `Nilai baru Rp ${visibleRabValue.toLocaleString("id-ID")} · Selisih ${valueDelta >= 0 ? "+" : ""}Rp ${valueDelta.toLocaleString("id-ID")}`
+      }
       statusTone={!formValid || valueDelta > 0 ? "warning" : "success"}
     >
       <div className="space-y-md">
         {/* Context Card: Perbandingan Nilai Kontrak */}
-        <div className="rounded-3xl bg-surface-container-lowest p-4 ring-1 ring-ring-subtle shadow-surface">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-meta font-bold uppercase tracking-[0.12em] text-on-surface-variant">
-              Revisi Baseline Kontrak
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-meta font-bold text-primary">
-              R{baseRevision} → R{targetRevision}
-            </span>
-          </div>
+        {!desktop && (
+          <div className="rounded-3xl bg-surface-container-lowest p-4 shadow-surface ring-1 ring-ring-subtle">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-meta font-bold tracking-[0.12em] text-on-surface-variant uppercase">
+                Revisi Baseline Kontrak
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-meta font-bold text-primary">
+                R{baseRevision} → R{targetRevision}
+              </span>
+            </div>
 
-          <div className="mt-3 grid grid-cols-3 divide-x divide-outline-variant/20 rounded-2xl bg-surface-container-low p-2.5">
-            <div className="px-2 text-center">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                Sebelum
-              </p>
-              <div className="mt-1 flex justify-center font-mono text-xs font-bold tabular-nums text-on-surface">
-                <MoneyValue amount={previousValue} variant="compact" size="xs" align="center" />
+            <div className="mt-3 grid grid-cols-3 divide-x divide-outline-variant/20 rounded-2xl bg-surface-container-low p-2.5">
+              <div className="px-2 text-center">
+                <p className="text-[9px] font-bold tracking-wider text-on-surface-variant uppercase">
+                  Sebelum
+                </p>
+                <div className="mt-1 flex justify-center font-mono text-xs font-bold text-on-surface tabular-nums">
+                  <MoneyValue amount={previousValue} variant="compact" size="xs" align="center" />
+                </div>
               </div>
-            </div>
-            <div className="px-2 text-center">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                Sesudah
-              </p>
-              <div className="mt-1 flex justify-center font-mono text-xs font-bold tabular-nums text-on-surface">
-                <MoneyValue amount={visibleRabValue} variant="compact" size="xs" align="center" />
+              <div className="px-2 text-center">
+                <p className="text-[9px] font-bold tracking-wider text-on-surface-variant uppercase">
+                  Sesudah
+                </p>
+                <div className="mt-1 flex justify-center font-mono text-xs font-bold text-on-surface tabular-nums">
+                  <MoneyValue amount={visibleRabValue} variant="compact" size="xs" align="center" />
+                </div>
               </div>
-            </div>
-            <div className="px-2 text-center">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                Selisih
-              </p>
-              <div
-                className={`mt-1 flex justify-center font-mono text-xs font-bold tabular-nums ${
-                  valueDelta > 0
-                    ? "text-warning"
-                    : valueDelta < 0
-                      ? "text-success"
-                      : "text-on-surface-variant"
-                }`}
-              >
-                <MoneyValue
-                  amount={Math.abs(valueDelta)}
-                  variant="compact"
-                  size="xs"
-                  align="center"
-                  prefix={valueDelta > 0 ? "+ " : valueDelta < 0 ? "- " : ""}
-                />
+              <div className="px-2 text-center">
+                <p className="text-[9px] font-bold tracking-wider text-on-surface-variant uppercase">
+                  Selisih
+                </p>
+                <div
+                  className={`mt-1 flex justify-center font-mono text-xs font-bold tabular-nums ${
+                    valueDelta > 0
+                      ? "text-warning"
+                      : valueDelta < 0
+                        ? "text-success"
+                        : "text-on-surface-variant"
+                  }`}
+                >
+                  <MoneyValue
+                    amount={Math.abs(valueDelta)}
+                    variant="compact"
+                    size="xs"
+                    align="center"
+                    prefix={valueDelta > 0 ? "+ " : valueDelta < 0 ? "- " : ""}
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
+        )}
         {reviewing ? (
           /* Step 2: Review Mode */
           <div className="space-y-md">
@@ -204,22 +284,10 @@ export function ChangeOrderDrawer({
               title="Rincian pengajuan Change Order"
               helper="Periksa kembali detail revisi sebelum memperbarui baseline kontrak resmi."
             >
-              <ReviewRow
-                label="Target revisi"
-                value={`R${baseRevision} → R${targetRevision}`}
-              />
-              <ReviewRow
-                label="Alasan perubahan"
-                value={changeOrderForm.reason}
-              />
-              <ReviewRow
-                label="Ringkasan lingkup"
-                value={changeOrderForm.scopeSummary}
-              />
-              <ReviewRow
-                label="Referensi persetujuan"
-                value={changeOrderForm.clientReference}
-              />
+              <ReviewRow label="Target revisi" value={`R${baseRevision} → R${targetRevision}`} />
+              <ReviewRow label="Alasan perubahan" value={changeOrderForm.reason} />
+              <ReviewRow label="Ringkasan lingkup" value={changeOrderForm.scopeSummary} />
+              <ReviewRow label="Referensi persetujuan" value={changeOrderForm.clientReference} />
               <ReviewRow
                 label="Tanggal persetujuan"
                 value={formatDateDisplay(changeOrderForm.clientConfirmedAt)}
@@ -227,7 +295,9 @@ export function ChangeOrderDrawer({
             </FormSection>
 
             <FormRiskNotice title="Persetujuan mengikat kontrak" tone="warning">
-              Setelah disetujui, nilai kontrak dan baseline RAB proyek akan diperbarui menjadi R{targetRevision}. Revisi sebelumnya akan terkunci sebagai riwayat audit dan tidak dapat diedit langsung.
+              Setelah disetujui, nilai kontrak dan baseline RAB proyek akan diperbarui menjadi R
+              {targetRevision}. Revisi sebelumnya akan terkunci sebagai riwayat audit dan tidak
+              dapat diedit langsung.
             </FormRiskNotice>
           </div>
         ) : (
@@ -245,9 +315,7 @@ export function ChangeOrderDrawer({
                 <Textarea
                   rows={3}
                   value={changeOrderForm.reason}
-                  onChange={(value) =>
-                    setChangeOrderForm((curr) => ({ ...curr, reason: value }))
-                  }
+                  onChange={(value) => setChangeOrderForm((curr) => ({ ...curr, reason: value }))}
                   placeholder="Contoh: Permintaan penambahan pekerjaan partisi dan upgrade material lantai oleh klien."
                 />
               </FormField>
@@ -306,7 +374,8 @@ export function ChangeOrderDrawer({
               title="Perubahan baseline resmi"
               tone={valueDelta > 0 ? "warning" : "default"}
             >
-              Form ini menyiapkan pengajuan perubahan kontrak. Baseline resmi proyek baru akan diperbarui setelah Anda meninjau dan menyetujui langkah berikutnya.
+              Form ini menyiapkan pengajuan perubahan kontrak. Baseline resmi proyek baru akan
+              diperbarui setelah Anda meninjau dan menyetujui langkah berikutnya.
             </FormRiskNotice>
           </>
         )}
@@ -381,9 +450,9 @@ export function ChangeOrderDetailDrawer({
     >
       <div className="space-y-md">
         {/* Comparison Header Card */}
-        <div className="rounded-3xl bg-surface-container-lowest p-4 ring-1 ring-ring-subtle shadow-surface">
+        <div className="rounded-3xl bg-surface-container-lowest p-4 shadow-surface ring-1 ring-ring-subtle">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-meta font-bold uppercase tracking-[0.12em] text-on-surface-variant">
+            <span className="text-meta font-bold tracking-[0.12em] text-on-surface-variant uppercase">
               Riwayat Revisi Kontrak
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-meta font-bold text-primary">
@@ -393,10 +462,10 @@ export function ChangeOrderDetailDrawer({
 
           <div className="mt-3 grid grid-cols-3 divide-x divide-outline-variant/20 rounded-2xl bg-surface-container-low p-2.5">
             <div className="px-2 text-center">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+              <p className="text-[9px] font-bold tracking-wider text-on-surface-variant uppercase">
                 Sebelum
               </p>
-              <div className="mt-1 flex justify-center font-mono text-xs font-bold tabular-nums text-on-surface">
+              <div className="mt-1 flex justify-center font-mono text-xs font-bold text-on-surface tabular-nums">
                 <MoneyValue
                   amount={Number(order.previousContractValue)}
                   variant="compact"
@@ -406,10 +475,10 @@ export function ChangeOrderDetailDrawer({
               </div>
             </div>
             <div className="px-2 text-center">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+              <p className="text-[9px] font-bold tracking-wider text-on-surface-variant uppercase">
                 Sesudah
               </p>
-              <div className="mt-1 flex justify-center font-mono text-xs font-bold tabular-nums text-on-surface">
+              <div className="mt-1 flex justify-center font-mono text-xs font-bold text-on-surface tabular-nums">
                 <MoneyValue
                   amount={Number(order.revisedContractValue)}
                   variant="compact"
@@ -419,7 +488,7 @@ export function ChangeOrderDetailDrawer({
               </div>
             </div>
             <div className="px-2 text-center">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+              <p className="text-[9px] font-bold tracking-wider text-on-surface-variant uppercase">
                 Selisih
               </p>
               <div
@@ -437,11 +506,7 @@ export function ChangeOrderDetailDrawer({
                   size="xs"
                   align="center"
                   prefix={
-                    Number(order.valueDelta) > 0
-                      ? "+ "
-                      : Number(order.valueDelta) < 0
-                        ? "- "
-                        : ""
+                    Number(order.valueDelta) > 0 ? "+ " : Number(order.valueDelta) < 0 ? "- " : ""
                   }
                 />
               </div>
@@ -450,7 +515,7 @@ export function ChangeOrderDetailDrawer({
         </div>
 
         {/* Audit Facts */}
-        <div className="overflow-hidden rounded-3xl bg-surface-container-lowest divide-y divide-outline-variant/20 ring-1 ring-ring-subtle shadow-surface">
+        <div className="divide-y divide-outline-variant/20 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
           <ReviewRow label="Status" value={formatBusinessLabel(order.status)} />
           <ReviewRow label="Sumber" value={order.sourceRevisionSummary} />
           <ReviewRow label="Alasan perubahan" value={order.reason} />
@@ -461,7 +526,9 @@ export function ChangeOrderDetailDrawer({
           />
           <ReviewRow
             label="Tanggal persetujuan klien"
-            value={formatDateDisplay(order.clientConfirmedAt ? String(order.clientConfirmedAt) : null)}
+            value={formatDateDisplay(
+              order.clientConfirmedAt ? String(order.clientConfirmedAt) : null,
+            )}
           />
           <ReviewRow
             label="Dibuat oleh"
@@ -472,7 +539,11 @@ export function ChangeOrderDetailDrawer({
             <ReviewRow
               label="Disetujui oleh"
               value={order.approvedByName}
-              subvalue={order.approvedAt ? new Date(order.approvedAt).toLocaleDateString("id-ID", { dateStyle: "long" }) : undefined}
+              subvalue={
+                order.approvedAt
+                  ? new Date(order.approvedAt).toLocaleDateString("id-ID", { dateStyle: "long" })
+                  : undefined
+              }
             />
           ) : null}
         </div>

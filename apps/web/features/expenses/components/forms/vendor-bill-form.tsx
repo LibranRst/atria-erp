@@ -22,7 +22,10 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
+  FactRow,
+  GroupedSurface,
   MoneyInput,
+  MoneyValue,
   type OperationSuccess,
   OperationSuccessDialog,
   AdaptiveSelect,
@@ -288,6 +291,103 @@ export function VendorBillForm({
     <>
       <WorkflowFormSheet
         dismissal={{ mode: "managed" }}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-3">
+            <GroupedSurface>
+              <div className="divide-y divide-ring-subtle">
+                <FactRow
+                  layout="stacked"
+                  label="Vendor"
+                  wrapLabel
+                  value={
+                    selectedVendor?.name ??
+                    (payload.vendorId ? "Vendor tidak tersedia" : "Belum dipilih")
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Proyek"
+                  wrapLabel
+                  value={
+                    activeProject?.name ??
+                    (payload.projectId ? "Proyek tidak tersedia" : "Belum dipilih")
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Kategori"
+                  wrapLabel
+                  value={
+                    selectedCategory?.name ??
+                    (payload.projectBudgetCategoryId ? "Kategori tidak tersedia" : "Belum dipilih")
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Total tagihan"
+                  wrapLabel
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                      variant="fullDynamic"
+                      amount={amount}
+                    />
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Jatuh tempo"
+                  wrapLabel
+                  value={
+                    payload.dueDate
+                      ? new Date(payload.dueDate).toLocaleDateString("id-ID", {
+                          dateStyle: "medium",
+                        })
+                      : "Belum ditentukan"
+                  }
+                />
+              </div>
+            </GroupedSurface>
+            {selectedCategory ? (
+              <GroupedSurface>
+                <div className="divide-y divide-ring-subtle">
+                  <FactRow
+                    layout="stacked"
+                    label="Sisa kategori saat ini"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(remainingBefore) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={remainingBefore}
+                      />
+                    }
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label={isInventoryPurchase ? "Sisa kategori tetap" : "Sisa setelah tagihan"}
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(remainingAfter) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={remainingAfter}
+                        tone={remainingAfter < 0 ? "danger" : "default"}
+                      />
+                    }
+                  />
+                  <p className="px-4 py-3 text-support text-on-surface-variant">
+                    {isInventoryPurchase
+                      ? "Tagihan Material belum mengurangi sisa kategori. Kas berubah saat pembayaran."
+                      : "Pratinjau budget untuk tagihan ini. Kas berubah saat pembayaran."}
+                  </p>
+                </div>
+              </GroupedSurface>
+            ) : null}
+          </div>
+        }
         open={animatedClose.visible}
         title={reviewing ? "Tinjau tagihan vendor" : "Tagihan vendor baru"}
         onClose={requestClose}
@@ -366,7 +466,7 @@ export function VendorBillForm({
                         <span className="truncate text-xs leading-[1.15] font-bold text-on-surface">
                           {item.payload.billNumber || "Tagihan belum bernomor"}
                         </span>
-                        <span className="truncate text-[10px] leading-[1.2] text-on-surface-variant">
+                        <span className="truncate text-meta leading-[1.2] text-on-surface-variant">
                           {item.projectName} · Rp{" "}
                           {Number(item.payload.amount || 0).toLocaleString("id-ID")}
                         </span>
@@ -500,7 +600,24 @@ export function VendorBillForm({
                 <AdaptiveSelect
                   label="Kategori Budget"
                   value={payload.projectBudgetCategoryId}
-                  disabled={pending || !payload.projectId}
+                  disabled={pending || categories.length === 0}
+                  placeholder={
+                    !activeProject
+                      ? "Pilih proyek terlebih dahulu"
+                      : categories.length === 0
+                        ? "Kategori belum tersedia"
+                        : "Pilih kategori budget"
+                  }
+                  helper={
+                    !activeProject
+                      ? payload.projectId
+                        ? "Proyek yang tersimpan tidak tersedia. Pilih proyek aktif terlebih dahulu."
+                        : "Pilih proyek untuk melihat kategori budgetnya."
+                      : categories.length === 0
+                        ? "Kategori budget proyek belum tersedia. Periksa pengaturan budget proyek terlebih dahulu."
+                        : undefined
+                  }
+                  emptyText="Kategori budget proyek belum tersedia."
                   onChange={(value) =>
                     patch({
                       projectBudgetCategoryId: value,
@@ -555,13 +672,15 @@ export function VendorBillForm({
                       Format standar:{" "}
                       <strong className="font-mono text-on-surface">{suggestedBillNumber}</strong>
                     </span>
-                    <button
+                    <Button
                       type="button"
                       onClick={() => patch({ billNumber: suggestedBillNumber })}
-                      className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary/15 active:scale-[0.98]"
+                      className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary/15 active:z-10 active:shadow-raised"
+                      variant="secondary"
+                      size="mini"
                     >
                       Gunakan
-                    </button>
+                    </Button>
                   </div>
                 ) : null}
                 <FormField label="Nominal Tagihan" required>

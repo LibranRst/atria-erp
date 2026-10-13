@@ -1,7 +1,10 @@
 import { db } from "@backend/db";
-import { client, expenseCategory, project, projectBudget, user } from "@backend/db/schema";
+import { calculateTargetGross } from "@atria/core/budget/excel-budget";
+import { readBudgetAllocationSnapshot } from "@backend/lib/budget/allocation-defaults";
+import { projectBudgetDefaultsSchema } from "@atria/core/ai/project-budget-defaults";
+import { client, project, projectBudget, user } from "@backend/db/schema";
 import { tool } from "ai";
-import { asc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -18,7 +21,7 @@ export function buildProjectProposalTools(context: AiToolContext) {
   return {
     proposeCreateProject: tool({
       description:
-        "Prepare a proposal to create a new interior design & build project. Resolves client, PM, and contract value, and returns an interactive confirmation card with projected scope. Does NOT write to DB.",
+        "Prepare a proposal to create a new interior design & build project and its initial budget using active ERP Budget Settings. Ask only for project details; no cap or category-ratio input is needed. Returns a confirmation card with current budget defaults. Does NOT write to DB.",
       inputSchema: z.object({
         name: z
           .string()
@@ -62,6 +65,14 @@ export function buildProjectProposalTools(context: AiToolContext) {
         if (!hasPermission(context, "create:budget") || !hasGlobalScope(context)) {
           return permissionDenied("pembuatan proyek baru");
         }
+        const budgetDefaults = projectBudgetDefaultsSchema.safeParse(
+          await readBudgetAllocationSnapshot(db),
+        );
+        if (!budgetDefaults.success)
+          return {
+            error:
+              "Pengaturan Budget aktif belum lengkap. Lengkapi Pengaturan ERP sebelum menyiapkan proyek; jangan mengisi plafon secara manual pada wizard.",
+          };
 
         let resolvedClientName = newClientName ?? "Klien Baru";
         let resolvedClientId = clientId;
@@ -101,6 +112,7 @@ export function buildProjectProposalTools(context: AiToolContext) {
         return {
           proposal: {
             kind: "CREATE_PROJECT" as const,
+            budgetDefaults: budgetDefaults.data,
             name: name.trim(),
             clientId: resolvedClientId ?? "",
             clientName: resolvedClientName,
@@ -115,7 +127,7 @@ export function buildProjectProposalTools(context: AiToolContext) {
             notes: notes ?? "",
           },
           instruction:
-            "Sampaikan ringkasan usulan pembuatan proyek ini kepada pengguna. Kartu konfirmasi sudah ditampilkan otomatis.",
+            "Sampaikan ringkasan usulan proyek dan budget awal yang mengikuti Pengaturan ERP. Kartu konfirmasi sudah menampilkan plafon, margin dan alokasi. Setelah dikonfirmasi, proyek beserta budget awal dibuat bersama; jangan menawarkan pembuatan budget kedua. Jangan mengklaim plafon khusus yang tidak ada dalam usulan.",
         };
       },
     }),
@@ -134,9 +146,9 @@ export function buildProjectProposalTools(context: AiToolContext) {
           .number()
           .positive()
           .max(1)
-          .default(0.85)
+          .optional()
           .describe(
-            "Budget cap ratio (e.g. 0.85 for 85% internal budget cap / 15% target margin).",
+            "Only provide a ratio explicitly requested by the user as an override. Omit to use active Budget Settings. Never assume a company/industry default.",
           ),
       }),
       execute: async ({ projectId, contractValue, budgetCapRatio }) => {
@@ -166,36 +178,24 @@ export function buildProjectProposalTools(context: AiToolContext) {
           columns: { id: true, status: true },
         });
 
-        const activeCategories = await db.query.expenseCategory.findMany({
-          where: eq(expenseCategory.isActive, true),
-          columns: { id: true, code: true, name: true, sortOrder: true },
-          orderBy: [asc(expenseCategory.sortOrder)],
-        });
-
-        if (activeCategories.length === 0) {
-          return { error: "Kategori pengeluaran belum dikonfigurasi di Settings." };
+        const defaults = await readBudgetAllocationSnapshot(db);
+        if (!defaults.settingId) {
+          return {
+            error:
+              "Pengaturan Budget aktif belum lengkap. Lengkapi pengaturan sebelum menyiapkan alokasi.",
+          };
         }
+        const effectiveBudgetCapRatio = budgetCapRatio ?? defaults.budgetCapRatio;
+        const internalBudgetAmount = Math.round(effectiveContractValue * effectiveBudgetCapRatio);
+        const targetGross = calculateTargetGross(effectiveContractValue, internalBudgetAmount);
+        const targetGrossAmount = targetGross.amount;
+        const targetGrossPercentage = Math.round(targetGross.percentage * 10) / 10;
 
-        // Distribusi rasio default standar interior:
-        // MATERIAL: 45%, TUKANG: 25%, OPERASIONAL: 10%, SUBCON: 10%, LAIN_LAIN: 10%
-        const defaultRatios: Record<string, number> = {
-          MATERIAL: 0.45,
-          TUKANG: 0.25,
-          OPERASIONAL: 0.1,
-          SUBCON: 0.1,
-          LAIN_LAIN: 0.1,
-        };
-
-        const internalBudgetAmount = Math.round(effectiveContractValue * budgetCapRatio);
-        const targetGrossAmount = effectiveContractValue - internalBudgetAmount;
-        const targetGrossPercentage =
-          Math.round((targetGrossAmount / effectiveContractValue) * 1000) / 10;
-
-        const categoryAllocations = activeCategories.map((cat) => {
-          const ratio = defaultRatios[cat.code] ?? 1 / activeCategories.length;
+        const categoryAllocations = defaults.categories.map((cat) => {
+          const ratio = cat.ratioPercentage;
           const allocated = Math.round(internalBudgetAmount * ratio);
           return {
-            expenseCategoryId: cat.id,
+            expenseCategoryId: cat.expenseCategoryId,
             categoryCode: cat.code,
             categoryName: cat.name,
             ratioPercentage: ratio,
@@ -212,12 +212,18 @@ export function buildProjectProposalTools(context: AiToolContext) {
             projectName: projectRow.name,
             alreadyHasBudget: Boolean(existingBudget),
             contractValue: money(String(effectiveContractValue)),
-            budgetCapRatio,
-            budgetCapPercentageLabel: `${Math.round(budgetCapRatio * 100)}%`,
+            budgetCapRatio: effectiveBudgetCapRatio,
+            budgetCapPercentageLabel: `${Math.round(effectiveBudgetCapRatio * 100)}%`,
             internalBudget: money(String(internalBudgetAmount)),
             targetGrossAmount: money(String(targetGrossAmount)),
             targetGrossPercentage,
             categories: categoryAllocations,
+          },
+          source: {
+            label: "Pengaturan Budget",
+            href: "/settings/budget",
+            settingId: defaults.settingId,
+            capOverridden: budgetCapRatio !== undefined,
           },
           instruction:
             "Sampaikan ringkasan alokasi budget dan target margin proyek kepada pengguna. Kartu konfirmasi sudah ditampilkan otomatis.",

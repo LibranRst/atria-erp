@@ -6,7 +6,7 @@ import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentatio
 import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import type { ProjectCategoryPlanItemView } from "../shared/rap-rab-manager";
-import { AppIcon, DesktopTable, MoneyValue } from "@/components/ui";
+import { AppIcon, DesktopTable, MoneyValue, Button } from "@/components/ui";
 export function PackageSetupContent({
   items,
   code,
@@ -35,14 +35,15 @@ export function PackageSetupContent({
           Keputusan ini tersimpan untuk review dan handoff.
         </p>
         {canEdit && (
-          <button
+          <Button
             type="button"
             onClick={() => onSkip(false)}
             disabled={isPending}
             className="mt-3 min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary"
+            variant="secondary"
           >
             Buka Kembali Scope
-          </button>
+          </Button>
         )}
       </div>
     );
@@ -133,23 +134,25 @@ export function PackageSetupContent({
       )}
       {canEdit && (
         <div className="grid gap-2">
-          <button
+          <Button
             type="button"
             onClick={onAdd}
             disabled={isPending}
             className="min-h-12 rounded-full bg-primary text-xs font-bold text-on-primary"
+            variant="primary"
           >
             Tambah Package
-          </button>
+          </Button>
           {items.length === 0 && (
-            <button
+            <Button
               type="button"
               onClick={() => onSkip(true)}
               disabled={isPending}
               className="min-h-12 rounded-full bg-white text-xs font-bold text-on-surface-variant ring-1 ring-ring-control"
+              variant="secondary"
             >
               Tidak Digunakan
-            </button>
+            </Button>
           )}
         </div>
       )}

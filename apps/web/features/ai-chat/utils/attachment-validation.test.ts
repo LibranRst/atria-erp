@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import {
   isSupportedAttachment,
   MAX_ATTACHMENT_SIZE_BYTES,
+  validateAttachmentBatch,
+  CHAT_ATTACHMENT_OPTIONS,
 } from "./attachment-validation";
 
 describe("isSupportedAttachment", () => {
@@ -86,5 +88,25 @@ describe("isSupportedAttachment", () => {
       type: "application/x-msdownload",
     });
     expect(result.valid).toBe(false);
+  });
+  test("pilihan menu mencakup seluruh ekstensi yang didukung server", () => {
+    for (const option of CHAT_ATTACHMENT_OPTIONS)
+      for (const extension of option.accept.split(","))
+        expect(isSupportedAttachment({ name: `material${extension}`, size: 100 })).toEqual({
+          valid: true,
+        });
+  });
+  test("menolak tipe MIME palsu dan berkas kosong sebelum upload", () => {
+    expect(isSupportedAttachment({ name: "program.exe", type: "image/png", size: 100 }).valid).toBe(
+      false,
+    );
+    expect(isSupportedAttachment({ name: "material.txt", size: 0 }).valid).toBe(false);
+    expect(isSupportedAttachment({ name: "material.constructor", size: 100 }).valid).toBe(false);
+  });
+  test("menjaga empat lampiran tanpa memotong pilihan diam-diam", () => {
+    const files = Array.from({ length: 4 }, (_, i) => ({ name: `material-${i}.xlsx`, size: 100 }));
+    expect(validateAttachmentBatch(files, 0).valid).toBe(true);
+    expect(validateAttachmentBatch(files, 1).valid).toBe(false);
+    expect(validateAttachmentBatch([files[0]], 4).valid).toBe(false);
   });
 });

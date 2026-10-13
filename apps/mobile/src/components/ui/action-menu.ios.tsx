@@ -1,17 +1,17 @@
 import { requireNativeView } from "expo";
 import type { ViewProps } from "react-native";
 import type { ActionMenuProps } from "./action-menu.types";
+import { nativeIconImageData } from "@atria/icons/native-images";
 
 type NativeActionMenuProps = ViewProps & {
   readonly title: string;
-  readonly symbol: string;
+  readonly iconData: string;
   readonly primary: boolean;
   readonly menuLabel: string;
   readonly actions: readonly {
     readonly id: string;
     readonly label: string;
-    readonly symbol: string;
-    readonly selectedSymbol: string;
+    readonly iconData: string;
     readonly disabled: boolean;
     readonly destructive: boolean;
     readonly selected: boolean;
@@ -38,14 +38,13 @@ export function ActionMenu({
     <NativeMenu
       style={{ width, height, overflow: "visible" }}
       title={nativeTitle ?? ""}
-      symbol={nativeIcon ?? ""}
+      iconData={nativeIcon ? nativeIconImageData(nativeIcon === "plus" ? "add" : "more_horiz") : ""}
       primary={tone === "primary"}
       menuLabel={accessibilityLabel}
       actions={items.map((item) => ({
         id: item.id,
         label: item.label,
-        symbol: item.systemImage ?? "",
-        selectedSymbol: item.selectedSystemImage ?? item.systemImage ?? "",
+        iconData: nativeIconImageData(item.icon),
         disabled: item.disabled ?? false,
         destructive: item.destructive ?? false,
         selected: item.selected ?? false,

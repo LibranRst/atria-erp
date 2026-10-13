@@ -10,10 +10,8 @@ import {
 } from "@/components/ui";
 import React from "react";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
-import { motion } from "framer-motion";
 
 import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { NativePanel, rabSourceLabel } from "../shared/rap-rab-primitives";
 import type {
@@ -100,15 +98,17 @@ export function RabClientSummaryPanel({
             {rabStatusLabel(rabEstimate.status)}
           </Badge>
           {onOpenExport ? (
-            <button
+            <Button
               type="button"
               onClick={onOpenExport}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-support font-bold text-white ring-1 ring-white/15 transition-transform hover:bg-white/15 active:z-10 active:scale-[1.05] active:shadow-raised"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-support font-bold text-white ring-1 ring-white/15 hover:bg-white/15 active:z-10 active:shadow-raised"
               title="Export Dokumen RAB ke PDF, Gambar WhatsApp, atau Excel"
+              variant="secondary"
+              size="mini"
             >
               <AppIcon name="description" className="text-sm" />
               <span>Export Dokumen</span>
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>
@@ -163,24 +163,26 @@ export function RabClientSummaryPanel({
         <div className="mt-4 rounded-[18px] bg-warning/15 p-3 text-white ring-1 ring-warning/25">
           <p className="text-xs font-bold">{staleSourceLabels.length} sumber berubah</p>
           <p className="mt-1 text-meta">Perbarui jumlah dan harga tanpa mengubah label klien.</p>
-          <button
+          <Button
             type="button"
             onClick={handleRefreshRabSources}
             disabled={isPending}
             className="mt-3 min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary"
+            variant="secondary"
           >
             Perbarui sumber
-          </button>
+          </Button>
         </div>
       )}
       {canManageRab && rabEstimate.status === "APPROVED" && rap && (
-        <button
+        <Button
           type="button"
           onClick={() => setSourcePickerOpen(true)}
           className="mt-4 min-h-12 w-full rounded-full bg-white/10 text-xs font-bold text-white ring-1 ring-white/15"
+          variant="secondary"
         >
           Buat revisi RAB
-        </button>
+        </Button>
       )}
     </section>
   );
@@ -387,13 +389,14 @@ export function RabItemsPanel({
         </>
       )}
       {canBundle && (
-        <button
+        <Button
           type="button"
           onClick={openCreateBundle}
           className="mt-sm min-h-12 w-full rounded-full bg-white text-xs font-bold text-primary ring-1 ring-primary/15"
+          variant="secondary"
         >
           Buat paket RAB
-        </button>
+        </Button>
       )}
     </NativePanel>
   );
@@ -423,39 +426,43 @@ export function RabDraftActionsPanel({
       >
         {isRevisionDraft ? (
           <div className="space-y-2">
-            <button
+            <Button
               type="button"
               onClick={() =>
                 document.getElementById("rab-items")?.scrollIntoView({ behavior: "smooth" })
               }
               className="min-h-12 w-full rounded-full bg-surface-container-low text-xs font-bold"
+              variant="secondary"
             >
               Lanjut edit
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => setChangeOrderOpen(true)}
               className="min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary"
+              variant="primary"
             >
               Proses change order
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => setVoidRevisionOpen(true)}
               className="min-h-12 w-full rounded-full bg-error-container/25 text-xs font-bold text-error"
+              variant="criticalQuiet"
             >
               Batalkan revisi
-            </button>
+            </Button>
           </div>
         ) : (
-          <button
+          <Button
             type="button"
             onClick={() => setConfirmApprove(true)}
             disabled={isPending || rabEstimate.items.length === 0}
             className="min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary disabled:opacity-40"
+            variant="primary"
           >
             Tinjau & Setujui RAB
-          </button>
+          </Button>
         )}
       </NativePanel>
       <ConfirmationDialog
@@ -466,28 +473,26 @@ export function RabDraftActionsPanel({
         onClose={() => setConfirmApprove(false)}
         actions={
           <div className="grid grid-cols-2 gap-2">
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: 1.05 }}
-              transition={transitionSpringSnappy}
               onClick={() => setConfirmApprove(false)}
               className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:z-10 active:shadow-raised"
+              variant="secondary"
             >
               Kembali
-            </motion.button>
-            <motion.button
+            </Button>
+            <Button
               type="button"
-              whileTap={{ scale: 1.05 }}
-              transition={transitionSpringSnappy}
               disabled={isPending}
               onClick={() => {
                 setConfirmApprove(false);
                 handleApproveRab();
               }}
               className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-white outline-none active:z-10 active:shadow-raised disabled:opacity-40"
+              variant="primary"
             >
               Setujui RAB
-            </motion.button>
+            </Button>
           </div>
         }
       />

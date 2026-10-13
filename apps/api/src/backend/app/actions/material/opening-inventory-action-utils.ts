@@ -11,6 +11,11 @@ export function refreshOpeningInventory(includeOwnerOnboarding = true): void {
 
 export function openingInventoryFailure<T>(error: unknown, fallback: string): ActionResponse<T> {
   const message = error instanceof Error ? error.message : fallback;
+  if (message.startsWith("FORBIDDEN:"))
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: message.replace("FORBIDDEN: ", "") },
+    };
   if (message === "OPENING_NOT_FOUND")
     return {
       success: false,

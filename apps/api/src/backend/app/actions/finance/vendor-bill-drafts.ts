@@ -1,3 +1,8 @@
+import { resolveActor } from "@backend/server/actor";
+import {
+  saveVendorBillDraftTx,
+  submitVendorBillDraftTx,
+} from "@backend/server/usecases/finance/vendor-bill-draft-writer";
 import { getRoleDataScopeByName } from "@backend/lib/auth/role-access";
 
 import { and, desc, eq, lte } from "drizzle-orm";
@@ -5,16 +10,14 @@ import { cookies } from "@runtime/request-context";
 import { revalidateWorkspacePath as revalidatePath } from "@backend/lib/cache/revalidate-workspace";
 
 import { db } from "@backend/db";
-import { formDraft, vendorBill } from "@backend/db/schema";
+import { formDraft } from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
 import { assertPermission, resolveRoleName } from "@backend/lib/auth/permissions";
 import { assertProjectAccess } from "@backend/lib/auth/scoping";
-import { createVendorBillTx } from "@backend/lib/finance/vendor-bill-write";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   saveVendorBillDraftSchema,
   submitVendorBillDraftSchema,
-  toVendorBillSubmission,
   vendorBillDraftIdSchema,
   vendorBillDraftPayloadSchema,
   zodIssuesToDetails,
@@ -24,8 +27,6 @@ import {
 } from "@atria/core/validations/vendor-bill-draft";
 
 const FORM_TYPE = "VENDOR_BILL_CREATE";
-const SCHEMA_VERSION = 1;
-const DRAFT_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 
 export type VendorBillDraftRecord = {
   readonly id: string;
@@ -47,10 +48,6 @@ export type SubmittedVendorBillDraft = {
 };
 
 type ActionUser = { readonly id: string; readonly roleId?: string };
-
-function nextExpiry(): Date {
-  return new Date(Date.now() + DRAFT_LIFETIME_MS);
-}
 
 async function authorize(
   projectId?: string,
@@ -176,63 +173,24 @@ export async function saveVendorBillDraft(
         details: zodIssuesToDetails(parsed.error),
       },
     };
-  const access = await authorize(parsed.data.payload.projectId || undefined);
-  if (!access.success) return access;
-  const now = new Date();
-  if (!parsed.data.draftId) {
-    const [created] = await db
-      .insert(formDraft)
-      .values({
-        ownerUserId: access.data.user.id,
-        formType: FORM_TYPE,
-        projectId: parsed.data.payload.projectId || null,
-        schemaVersion: SCHEMA_VERSION,
-        revision: 1,
-        payload: parsed.data.payload,
-        status: "ACTIVE",
-        lastSavedAt: now,
-        expiresAt: nextExpiry(),
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
-    return { success: true, data: record(created, parsed.data.payload) };
-  }
-  if (!parsed.data.expectedRevision)
-    return {
-      success: false,
-      error: { code: "VALIDATION_ERROR", message: "Versi draft wajib disertakan." },
-    };
-  const [updated] = await db
-    .update(formDraft)
-    .set({
-      projectId: parsed.data.payload.projectId || null,
-      payload: parsed.data.payload,
-      revision: parsed.data.expectedRevision + 1,
-      schemaVersion: SCHEMA_VERSION,
-      lastSavedAt: now,
-      expiresAt: nextExpiry(),
-      updatedAt: now,
-    })
-    .where(
-      and(
-        eq(formDraft.id, parsed.data.draftId),
-        eq(formDraft.ownerUserId, access.data.user.id),
-        eq(formDraft.formType, FORM_TYPE),
-        eq(formDraft.status, "ACTIVE"),
-        eq(formDraft.revision, parsed.data.expectedRevision),
-      ),
-    )
-    .returning();
-  if (!updated)
+  const actor = await resolveActor();
+  if (!actor)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  try {
+    const row = await db.transaction((tx) => saveVendorBillDraftTx(tx, actor, parsed.data));
+    return { success: true, data: record(row, parsed.data.payload) };
+  } catch (error: unknown) {
     return {
       success: false,
       error: {
-        code: "CONFLICT",
-        message: "Draft berubah di sesi lain. Muat versi server atau simpan sebagai draft baru.",
+        code:
+          error instanceof Error && error.message.startsWith("FORBIDDEN")
+            ? "FORBIDDEN"
+            : "CONFLICT",
+        message: "Draft berubah atau akses tidak tersedia. Periksa draft terbaru.",
       },
     };
-  return { success: true, data: record(updated, parsed.data.payload) };
+  }
 }
 
 export async function discardVendorBillDraft(
@@ -276,123 +234,29 @@ export async function submitVendorBillDraft(
         details: zodIssuesToDetails(parsed.error),
       },
     };
-  const access = await authorize();
-  if (!access.success) return access;
-  const existing = await db.query.formDraft.findFirst({
-    where: and(
-      eq(formDraft.id, parsed.data.draftId),
-      eq(formDraft.ownerUserId, access.data.user.id),
-      eq(formDraft.formType, FORM_TYPE),
-    ),
-  });
-  if (!existing)
-    return { success: false, error: { code: "NOT_FOUND", message: "Draft tidak ditemukan." } };
-  if (existing.status === "CONSUMED" && existing.submissionGroupId) {
-    const bill = await db.query.vendorBill.findFirst({
-      where: eq(vendorBill.id, existing.submissionGroupId),
-    });
-    if (!bill)
-      return {
-        success: false,
-        error: { code: "NOT_FOUND", message: "Tagihan hasil submit tidak ditemukan." },
-      };
-    return {
-      success: true,
-      data: {
-        draftId: existing.id,
-        vendorBillId: bill.id,
-        billNumber: bill.billNumber,
-        amount: Number(bill.amount),
-        idempotent: true,
-      },
-    };
-  }
-  const payload = vendorBillDraftPayloadSchema.safeParse(existing.payload);
-  if (!payload.success)
-    return {
-      success: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: "Isi draft tidak valid.",
-        details: zodIssuesToDetails(payload.error),
-      },
-    };
-  const submission = toVendorBillSubmission(payload.data);
-  if (!submission.success)
-    return {
-      success: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: "Lengkapi tagihan sebelum diajukan.",
-        details: zodIssuesToDetails(submission.error),
-      },
-    };
-  const scoped = await authorize(submission.data.projectId);
-  if (!scoped.success) return scoped;
+  const actor = await resolveActor();
+  if (!actor)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
-    const bill = await db.transaction(async (tx) => {
-      const [claimed] = await tx
-        .update(formDraft)
-        .set({ status: "SUBMITTING", updatedAt: new Date() })
-        .where(
-          and(
-            eq(formDraft.id, parsed.data.draftId),
-            eq(formDraft.ownerUserId, scoped.data.user.id),
-            eq(formDraft.formType, FORM_TYPE),
-            eq(formDraft.status, "ACTIVE"),
-            eq(formDraft.revision, parsed.data.expectedRevision),
-          ),
-        )
-        .returning();
-      if (!claimed) throw new Error("DRAFT_CONFLICT");
-      const created = await createVendorBillTx(tx, {
-        ...submission.data,
-        requestedById: scoped.data.user.id,
-      });
-      await tx
-        .update(formDraft)
-        .set({
-          status: "CONSUMED",
-          submissionGroupId: created.id,
-          consumedAt: new Date(),
-          revision: parsed.data.expectedRevision + 1,
-          updatedAt: new Date(),
-        })
-        .where(eq(formDraft.id, claimed.id));
-      return created;
-    });
+    const result = await db.transaction((tx) => submitVendorBillDraftTx(tx, actor, parsed.data));
     revalidatePath("/expenses");
-    revalidatePath(`/projects/${submission.data.projectId}`);
-    return {
-      success: true,
-      data: {
-        draftId: existing.id,
-        vendorBillId: bill.id,
-        billNumber: bill.billNumber,
-        amount: Number(bill.amount),
-        idempotent: false,
-      },
-    };
-  } catch (error) {
+    return { success: true, data: result };
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "";
-    if (message === "DRAFT_CONFLICT")
-      return {
-        success: false,
-        error: { code: "CONFLICT", message: "Draft berubah atau sudah diajukan dari sesi lain." },
-      };
-    if (message === "VENDOR_BILL_NUMBER_EXISTS")
-      return {
-        success: false,
-        error: {
-          code: "CONFLICT",
-          message: "Nomor tagihan ini sudah terdaftar. Draft tetap aman.",
-        },
-      };
     return {
       success: false,
       error: {
-        code: "TRANSACTION_FAILED",
-        message: "Tagihan belum berhasil dibuat. Draft tetap tersedia untuk dicoba kembali.",
+        code: message.startsWith("FORBIDDEN")
+          ? "FORBIDDEN"
+          : message === "VENDOR_BILL_INCOMPLETE"
+            ? "VALIDATION_ERROR"
+            : "CONFLICT",
+        message:
+          message === "VENDOR_BILL_NUMBER_EXISTS"
+            ? "Nomor tagihan ini sudah terdaftar. Draft tetap aman."
+            : message === "VENDOR_BILL_INCOMPLETE"
+              ? "Lengkapi tagihan sebelum diajukan."
+              : "Draft, sumber atau akses berubah. Periksa draft terbaru; draft tetap aman.",
       },
     };
   }

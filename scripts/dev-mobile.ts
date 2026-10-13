@@ -6,7 +6,12 @@ export type DevelopmentProcess = {
   readonly command: string;
   readonly args: readonly string[];
   readonly cwd: string;
+  readonly env?: NodeJS.ProcessEnv;
 };
+
+export interface DevelopmentSupervisorOptions {
+  readonly onSpawn?: (child: ChildProcess, definition: DevelopmentProcess) => void;
+}
 
 type RunningProcess = {
   readonly child: ChildProcess;
@@ -39,6 +44,7 @@ function signalProcessTree(child: ChildProcess, signal: NodeJS.Signals): void {
 /** Stops both development trees if either fails or the user stops the runner. */
 export async function runDevelopmentProcesses(
   definitions: readonly DevelopmentProcess[],
+  options: DevelopmentSupervisorOptions = {},
 ): Promise<number> {
   if (definitions.length === 0) throw new Error("At least one development process is required.");
   const running: RunningProcess[] = [];
@@ -82,6 +88,7 @@ export async function runDevelopmentProcesses(
       console.log(`Starting ${definition.name}`);
       const child = spawn(definition.command, [...definition.args], {
         cwd: definition.cwd,
+        env: { ...process.env, ...definition.env },
         stdio: "inherit",
         detached: process.platform !== "win32",
       });
@@ -100,6 +107,7 @@ export async function runDevelopmentProcesses(
         });
       });
       running.push({ child, exited });
+      options.onSpawn?.(child, definition);
     }
     return await result;
   } catch (error: unknown) {

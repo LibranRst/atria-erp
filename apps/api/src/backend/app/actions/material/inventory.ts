@@ -1,7 +1,12 @@
+import {
+  lockMaterialCatalog,
+  assertMaterialIdentityAvailable,
+} from "@backend/server/usecases/material/master-writer";
 import { revalidateWorkspacePath as revalidatePath } from "@backend/lib/cache/revalidate-workspace";
 import { db } from "@backend/db";
 import { projectMaterialProjection } from "@atria/core/material/project-material-projection";
 import {
+  auditLog,
   materialCategory,
   materialInventory,
   materialMaster,
@@ -103,17 +108,29 @@ export async function createMaterial(
 
   try {
     await assertPermission(sessionResult.data.user, "create:material");
-    const [created] = await db
-      .insert(materialMaster)
-      .values({
-        ...validation.data,
-        defaultVendorId: validation.data.defaultVendorId ?? null,
-        specification: validation.data.specification ?? null,
-        brand: validation.data.brand ?? null,
-        code: validation.data.code ?? null,
-        color: validation.data.color ?? null,
-      })
-      .returning();
+    const created = await db.transaction(async (tx) => {
+      await lockMaterialCatalog(tx);
+      await assertMaterialIdentityAvailable(tx, validation.data.name, validation.data.code);
+      const [created] = await tx
+        .insert(materialMaster)
+        .values({
+          ...validation.data,
+          defaultVendorId: validation.data.defaultVendorId ?? null,
+          specification: validation.data.specification ?? null,
+          brand: validation.data.brand ?? null,
+          code: validation.data.code ?? null,
+          color: validation.data.color ?? null,
+        })
+        .returning();
+      await tx.insert(auditLog).values({
+        userId: sessionResult.data.user.id,
+        action: "CREATE_MATERIAL",
+        targetTable: "material_master",
+        targetId: created.id,
+        newState: JSON.stringify(created),
+      });
+      return created;
+    });
 
     revalidatePath("/materials");
     revalidatePath("/settings");

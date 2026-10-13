@@ -9,7 +9,13 @@ import { recordNotificationEvent } from "@backend/server/services/notification-e
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { approval, bankAccount, cashTransaction, projectCost } from "@backend/db/schema";
+import {
+  approval,
+  bankAccount,
+  cashTransaction,
+  projectCost,
+  INSTANCE_TENANT_ID,
+} from "@backend/db/schema";
 import {
   ensureCanonicalExpenseForProjectCost,
   syncProjectBudgetCategory,
@@ -88,11 +94,12 @@ export async function payFieldRequestTx(
     .where(eq(projectCost.id, projectCostId))
     .for("update");
 
-  if (!cost) {
+  if (!cost || cost.tenantId !== INSTANCE_TENANT_ID) {
     throw new Error("PROJECT_COST_NOT_FOUND");
   }
 
   const currentProject = await lockFinanceProject(tx, actor, cost.projectId);
+  if (currentProject.tenantId !== INSTANCE_TENANT_ID) throw new Error("PROJECT_COST_NOT_FOUND");
   assertProjectStatusIsOperational(currentProject.status);
 
   if (cost.status === "PAID") {
@@ -118,9 +125,17 @@ export async function payFieldRequestTx(
     }
   }
 
-  const accountBefore = await tx.query.bankAccount.findFirst({
-    where: eq(bankAccount.id, bankAccountId),
-  });
+  const [accountBefore] = await tx
+    .select()
+    .from(bankAccount)
+    .where(
+      and(
+        eq(bankAccount.id, bankAccountId),
+        eq(bankAccount.tenantId, INSTANCE_TENANT_ID),
+        eq(bankAccount.isActive, true),
+      ),
+    )
+    .for("update");
   if (!accountBefore) throw new Error("BANK_ACCOUNT_NOT_FOUND");
   const duplicateReference = await tx.query.cashTransaction.findFirst({
     where: and(

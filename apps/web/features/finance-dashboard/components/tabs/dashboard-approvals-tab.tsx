@@ -45,6 +45,7 @@ type ApprovalsTabProps = {
   readonly approvalSummary: ApprovalQueueSummary;
   readonly onDecisionRecorded: (item: ApprovalDetail) => void;
   readonly canEmergencyOverride?: boolean;
+  readonly renderDesktopList?: (onOpen: (item: ApprovalDetail) => void) => React.ReactNode;
 };
 
 export function ApprovalsTab({
@@ -52,6 +53,7 @@ export function ApprovalsTab({
   approvalSummary,
   onDecisionRecorded,
   canEmergencyOverride = false,
+  renderDesktopList,
 }: ApprovalsTabProps): React.JSX.Element {
   const router = useRouter();
   const [selectedApproval, setSelectedApproval] = React.useState<ApprovalDetail | null>(null);
@@ -166,71 +168,92 @@ export function ApprovalsTab({
 
   return (
     <div className="space-y-sm">
-      <SummarySurface
-        ariaLabel="Antrean keputusan"
-        eyebrow="Antrean keputusan"
-        icon="approval"
-        status={approvalSummary.totalCount > 0 ? "Perlu ditinjau" : "Selesai"}
-        statusTone={approvalSummary.totalCount > 0 ? "warning" : "positive"}
-      >
-        <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
-          <div className="min-w-0">
-            <p className="financial-amount text-[36px] leading-none font-extrabold tracking-[-0.045em] text-on-surface max-[430px]:text-[32px]">
-              {approvalSummary.totalCount}
-            </p>
-            <p className="text-meta font-semibold text-on-surface-variant">
-              persetujuan menunggu keputusan
-            </p>
+      {renderDesktopList ? (
+        <div className="flex items-center justify-between rounded-desktop-panel bg-white p-4 ring-1 ring-ring-subtle">
+          <div>
+            <p className="text-support text-on-surface-variant">Menunggu keputusan</p>
+            <p className="text-title font-semibold tabular-nums">{approvalSummary.totalCount}</p>
           </div>
-          <div className="min-w-0 shrink-0 text-right">
-            <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total antrean</p>
-            <MoneyValue
-              amount={approvalSummary.totalAmount}
-              variant="compact"
-              size="lg"
-              align="right"
-              className="mt-1"
+          <div className="text-end">
+            <p className="text-support text-on-surface-variant">Nilai antrean</p>
+            <MoneyValue amount={approvalSummary.totalAmount} size="lg" variant="compact" />
+          </div>
+          <p className="text-support text-on-surface-variant">
+            {approvalSummary.criticalCount} kritis · {approvalSummary.waitingLongCount} menunggu ≥3
+            hari
+          </p>
+        </div>
+      ) : (
+        <SummarySurface
+          ariaLabel="Antrean keputusan"
+          eyebrow="Antrean keputusan"
+          icon="approval"
+          status={approvalSummary.totalCount > 0 ? "Perlu ditinjau" : "Selesai"}
+          statusTone={approvalSummary.totalCount > 0 ? "warning" : "positive"}
+        >
+          <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
+            <div className="min-w-0">
+              <p className="financial-amount text-[36px] leading-none font-extrabold tracking-[-0.045em] text-on-surface max-[430px]:text-[32px]">
+                {approvalSummary.totalCount}
+              </p>
+              <p className="text-meta font-semibold text-on-surface-variant">
+                persetujuan menunggu keputusan
+              </p>
+            </div>
+            <div className="min-w-0 shrink-0 text-right">
+              <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total antrean</p>
+              <MoneyValue
+                amount={approvalSummary.totalAmount}
+                variant="compact"
+                size="lg"
+                align="right"
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 p-2">
+            <SummaryFact
+              label="Prioritas kritis"
+              value={String(approvalSummary.criticalCount)}
+              tone={approvalSummary.criticalCount > 0 ? "danger" : "default"}
+            />
+            <SummaryFact
+              label="Menunggu ≥3 hari"
+              value={String(approvalSummary.waitingLongCount)}
+              tone={approvalSummary.waitingLongCount > 0 ? "warning" : "positive"}
             />
           </div>
-        </div>
+        </SummarySurface>
+      )}
 
-        <div className="grid grid-cols-2 gap-2 p-2">
-          <SummaryFact
-            label="Prioritas kritis"
-            value={String(approvalSummary.criticalCount)}
-            tone={approvalSummary.criticalCount > 0 ? "danger" : "default"}
-          />
-          <SummaryFact
-            label="Menunggu ≥3 hari"
-            value={String(approvalSummary.waitingLongCount)}
-            tone={approvalSummary.waitingLongCount > 0 ? "warning" : "positive"}
-          />
-        </div>
-      </SummarySurface>
-
-      <DetailSection title="Urutan prioritas" href="/approvals" actionLabel="Buka semua">
-        {approvals.length === 0 ? (
-          <DashboardTabEmpty>
-            Tidak ada persetujuan tertunda. Semua keputusan saat ini sudah ditangani.
-          </DashboardTabEmpty>
-        ) : (
-          <>
-            <div className="mx-3 mt-3 rounded-inset bg-surface-container-low px-3 py-2 text-meta text-on-surface-variant">
-              Diurutkan berdasarkan risiko budget, jatuh tempo, lama menunggu, dan nominal.
-            </div>
-            <RowGroup>
-              {approvals.map((item) => (
-                <ApprovalWorkbenchRow
-                  key={item.id}
-                  item={item}
-                  pending={pending}
-                  onOpen={setSelectedApproval}
-                />
-              ))}
-            </RowGroup>
-          </>
-        )}
-      </DetailSection>
+      {renderDesktopList ? (
+        renderDesktopList(setSelectedApproval)
+      ) : (
+        <DetailSection title="Urutan prioritas" href="/approvals" actionLabel="Buka semua">
+          {approvals.length === 0 ? (
+            <DashboardTabEmpty>
+              Tidak ada persetujuan tertunda. Semua keputusan saat ini sudah ditangani.
+            </DashboardTabEmpty>
+          ) : (
+            <>
+              <div className="mx-3 mt-3 rounded-inset bg-surface-container-low px-3 py-2 text-meta text-on-surface-variant">
+                Diurutkan berdasarkan risiko budget, jatuh tempo, lama menunggu, dan nominal.
+              </div>
+              <RowGroup>
+                {approvals.map((item) => (
+                  <ApprovalWorkbenchRow
+                    key={item.id}
+                    item={item}
+                    pending={pending}
+                    onOpen={setSelectedApproval}
+                  />
+                ))}
+              </RowGroup>
+            </>
+          )}
+        </DetailSection>
+      )}
 
       <ApprovalDetailSheet
         item={selectedApproval}

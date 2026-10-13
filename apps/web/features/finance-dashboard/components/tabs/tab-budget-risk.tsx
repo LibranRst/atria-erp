@@ -16,6 +16,7 @@ import {
   RowGroup,
   SummaryFact,
   SummarySurface,
+  type DesktopTableProps,
 } from "@/components/ui";
 import { DashboardTabEmpty } from "@/features/finance-dashboard/components/shared/dashboard-row-primitives";
 import { CategoryUsageRow } from "@/features/finance-dashboard/components/rows/category-rows";
@@ -30,6 +31,14 @@ export function BudgetRiskTab({
 }): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
   const workspaceHref = useWorkspaceHref();
+  type Sort = NonNullable<
+    DesktopTableProps<
+      FinanceDashboardOverview["dashboardDetails"]["budgetRisks"][number]
+    >["sortDescriptor"]
+  >;
+  // The owning tab preserves sorting when its row/table presentation changes.
+  const [projectSort, setProjectSort] = React.useState<Sort>();
+  const [categorySort, setCategorySort] = React.useState<Sort>();
   const criticalCategories = data.categories.filter(
     (category) => category.status === "CRITICAL" || category.status === "OVER_BUDGET",
   );
@@ -107,10 +116,13 @@ export function BudgetRiskTab({
             rows={data.dashboardDetails.budgetRisks}
             rowKey={(project) => project.projectId}
             rowHref={(project) => workspaceHref(`/projects/${project.projectId}?tab=overview`)}
+            sortDescriptor={projectSort}
+            onSortChange={setProjectSort}
             columns={[
               {
                 key: "project",
                 label: "Proyek",
+                sortValue: (project) => project.projectName,
                 render: (project) => (
                   <div>
                     <p className="font-semibold">{project.projectName}</p>
@@ -121,6 +133,7 @@ export function BudgetRiskTab({
               {
                 key: "budget",
                 label: "Budget",
+                sortValue: (project) => project.internalBudget,
                 align: "end",
                 render: (project) => (
                   <MoneyValue amount={project.internalBudget} variant="compact" size="sm" />
@@ -129,6 +142,7 @@ export function BudgetRiskTab({
               {
                 key: "actual",
                 label: "Terpakai",
+                sortValue: (project) => project.actualCost,
                 align: "end",
                 render: (project) => (
                   <MoneyValue amount={project.actualCost} variant="compact" size="sm" />
@@ -137,6 +151,7 @@ export function BudgetRiskTab({
               {
                 key: "remaining",
                 label: "Sisa",
+                sortValue: (project) => project.remainingBudget,
                 align: "end",
                 render: (project) => (
                   <MoneyValue
@@ -150,6 +165,7 @@ export function BudgetRiskTab({
               {
                 key: "margin",
                 label: "Margin / target",
+                sortValue: (project) => project.projectedMarginPercentage,
                 align: "end",
                 render: (project) => (
                   <span className="tabular-nums">
@@ -184,11 +200,19 @@ export function BudgetRiskTab({
                 ariaLabel="Penggunaan kategori budget"
                 rows={data.categories}
                 rowKey={(category) => category.code}
+                sortDescriptor={categorySort}
+                onSortChange={setCategorySort}
                 columns={[
-                  { key: "category", label: "Kategori", render: (category) => category.name },
+                  {
+                    key: "category",
+                    label: "Kategori",
+                    sortValue: (category) => category.name,
+                    render: (category) => category.name,
+                  },
                   {
                     key: "allocated",
                     label: "Alokasi",
+                    sortValue: (category) => category.allocatedAmount,
                     align: "end",
                     render: (category) => (
                       <MoneyValue amount={category.allocatedAmount} variant="compact" size="sm" />
@@ -197,6 +221,7 @@ export function BudgetRiskTab({
                   {
                     key: "pending",
                     label: "Menunggu review",
+                    sortValue: (category) => category.pendingAmount,
                     align: "end",
                     render: (category) => (
                       <MoneyValue amount={category.pendingAmount} variant="compact" size="sm" />
@@ -205,6 +230,7 @@ export function BudgetRiskTab({
                   {
                     key: "actual",
                     label: "Terpakai",
+                    sortValue: (category) => category.actualAmount,
                     align: "end",
                     render: (category) => (
                       <MoneyValue amount={category.actualAmount} variant="compact" size="sm" />
@@ -213,6 +239,7 @@ export function BudgetRiskTab({
                   {
                     key: "paid",
                     label: "Dibayar",
+                    sortValue: (category) => category.paidAmount,
                     align: "end",
                     render: (category) => (
                       <MoneyValue amount={category.paidAmount} variant="compact" size="sm" />
@@ -221,6 +248,7 @@ export function BudgetRiskTab({
                   {
                     key: "remaining",
                     label: "Sisa",
+                    sortValue: (category) => category.remainingAmount,
                     align: "end",
                     render: (category) => (
                       <MoneyValue
@@ -234,6 +262,7 @@ export function BudgetRiskTab({
                   {
                     key: "status",
                     label: "Kondisi",
+                    sortValue: (category) => category.usedPercentage,
                     render: (category) => (
                       <span>
                         {formatBusinessLabel(category.status)} ·{" "}

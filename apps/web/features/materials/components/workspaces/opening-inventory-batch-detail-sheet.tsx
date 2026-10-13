@@ -1,6 +1,4 @@
 "use client";
-
-import { motion } from "framer-motion";
 import { useRouter } from "@/lib/navigation/workspace-navigation";
 
 import React from "react";
@@ -19,9 +17,9 @@ import {
   OperationalFormSheet,
   Textarea,
   useSheetPresenceValue,
+  Button,
 } from "@/components/ui";
 import { MaterialStatusLabel } from "@/features/materials/components/shared/material-page-primitives";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import {
   OpeningBatchItemRow,
   OpeningBatchStateNotice,
@@ -220,15 +218,14 @@ export function OpeningInventoryBatchDetailSheet({
           )}
 
           {!reversalMode && presentedBatch.canReverse && !setupOnly ? (
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               onClick={() => setReversalMode(true)}
-              className="min-h-12 w-full rounded-full bg-error/10 px-5 text-row font-bold text-error transition-transform outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98]"
+              className="min-h-12 w-full rounded-full bg-error/10 px-5 text-row font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:shadow-raised"
+              variant="secondary"
             >
               Balik saldo awal
-            </motion.button>
+            </Button>
           ) : null}
         </div>
       ) : null}

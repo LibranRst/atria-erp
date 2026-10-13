@@ -134,7 +134,9 @@ describe("inline owner onboarding workspace", () => {
     expect(workspaceSource).toContain("showExitConfirm");
     expect(workspaceSource).toContain("Jeda setup sekarang?");
     expect(workspaceSource).toContain("grid grid-cols-2 gap-2");
-    expect(workspaceSource).toContain("transition={transitionSpringSnappy}");
+    // Action feedback belongs to the shared Button, rather than per-feature
+    // motion wrappers; the shared button suite verifies its spring and hold.
+    expect(workspaceSource).toContain("<Button");
     expect(dashboardSource).toContain("OrganizationSetupCard");
     expect(setupCardSource).toContain('role="progressbar"');
     expect(setupCardSource).toContain("aria-valuetext");

@@ -27,3 +27,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => <Demo />,
 };
+
+function ReviewDemo(): React.JSX.Element {
+  const [checked, setChecked] = useState(true);
+  return (
+    <ChoiceRow
+      presentation="review"
+      title="Pilih panel laminasi"
+      checked={checked}
+      onChange={setChecked}
+    />
+  );
+}
+export const ReviewSelection: Story = { render: () => <ReviewDemo /> };

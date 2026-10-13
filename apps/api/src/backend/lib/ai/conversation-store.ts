@@ -4,6 +4,7 @@ import type { UIMessage } from "ai";
 import { and, asc, count, desc, eq, ilike, isNull, lt, or } from "drizzle-orm";
 
 import type { ChatProviderName } from "./providers";
+import { markUnconfirmedProposal } from "./proposal-history";
 
 /**
  * Penyimpanan riwayat AI chat.
@@ -196,7 +197,7 @@ export async function loadConversationMessages(conversationId: string): Promise<
 
   return rows.map((row) => {
     const parts = row.parts as UIMessage["parts"];
-    if (row.role !== "assistant" || confirmedMap.size === 0 || !Array.isArray(parts)) {
+    if (row.role !== "assistant" || !Array.isArray(parts)) {
       return {
         id: row.id,
         role: row.role === "user" ? "user" : "assistant",
@@ -207,7 +208,7 @@ export async function loadConversationMessages(conversationId: string): Promise<
     const enrichedParts = parts.map((part) => {
       const toolCallId = (part as { toolCallId?: string }).toolCallId;
       if (!toolCallId || !confirmedMap.has(toolCallId)) {
-        return part;
+        return markUnconfirmedProposal(part);
       }
 
       const conf = confirmedMap.get(toolCallId)!;

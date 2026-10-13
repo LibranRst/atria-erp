@@ -107,7 +107,7 @@ function parseMarkdown(text: string): React.JSX.Element[] {
         >
           <table className="w-full min-w-full border-collapse text-left text-support">
             <thead>
-              <tr className="border-b border-black/8 bg-surface-container-low/70">
+              <tr className="border-b border-black/8 bg-surface-container-low/70 lg:bg-surface-container-low">
                 {headers.map((th, thIdx) => (
                   <th
                     key={thIdx}

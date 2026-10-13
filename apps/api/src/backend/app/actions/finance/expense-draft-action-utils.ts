@@ -1,5 +1,4 @@
-import { and, eq, inArray, lte } from "drizzle-orm";
-import { configuredAttachmentOrigins } from "@atria/core/media/web-origins";
+import { and, eq, lte, ne } from "drizzle-orm";
 
 import type { SubmittedExpenseDraft } from "@backend/app/actions/finance/expense-draft-types";
 import { db } from "@backend/db";
@@ -25,14 +24,25 @@ export async function deleteExpenseDraftAttachment(
     .catch(() => undefined);
   if (!registered?.storageFileId || registered.referenceType !== "private_expense") return;
   // Keep an uploaded proof if a submitted cost already refers to it.
-  const references = configuredAttachmentOrigins(process.env).map(
-    (origin: string): string => new URL(`/api/media/attachments/${fileId}`, origin).href,
-  );
   const inUse = await db.query.projectCost.findFirst({
-    where: inArray(projectCost.receiptImageUrl, references),
+    where: eq(
+      projectCost.receiptImageUrl,
+      new URL(`/api/media/attachments/${fileId}`, process.env.WEB_ORIGIN ?? "http://localhost:3000")
+        .href,
+    ),
     columns: { id: true },
   });
   if (inUse) return;
+  const shared = await db.query.attachment.findFirst({
+    where: and(
+      eq(attachment.storageFileId, registered.storageFileId),
+      ne(attachment.id, registered.id),
+    ),
+  });
+  if (shared) {
+    await db.delete(attachment).where(eq(attachment.id, registered.id));
+    return;
+  }
   const response = await fetch(
     `https://api.imagekit.io/v1/files/${encodeURIComponent(registered.storageFileId)}`,
     {

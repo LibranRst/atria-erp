@@ -234,6 +234,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "view:rab",
   ],
   PURCHASING: [
+    "use:ai_chat",
     "view:budget",
     "view:vendor_bill",
     "create:vendor_bill",

@@ -8,6 +8,8 @@ import { getPageTitle } from "@/components/layout/header-menu-config";
 import { useHeaderMenu } from "@/components/layout/use-header-menu";
 import { useTopBarSlots } from "@/components/layout/top-bar-slots";
 import { usePathname, useRouter } from "@/lib/navigation/workspace-navigation";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { DesktopChrome } from "./admin-shell";
 
 import {
   AppIcon,
@@ -120,7 +122,7 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
                     imageUrl={userImageUrl}
                     initials={getProfileInitials(userName ?? "")}
                     renderPx={40}
-                    className="h-full w-full text-[13px]"
+                    className="h-full w-full text-support"
                   />
                 </IconButtonLink>
               </TopBarControl>,
@@ -132,6 +134,7 @@ function MobileHeader({ isRootRoute }: { readonly isRootRoute: boolean }): React
 
 export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
   const pathname = usePathname();
+  const desktop = useWorkspacePresentation() === "desktop";
 
   const isLoginPage =
     pathname === "/login" ||
@@ -164,7 +167,11 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
   }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-background font-sans text-on-surface">
+    <div
+      data-workspace-layout={desktop ? "desktop" : "mobile"}
+      className={`min-h-screen bg-background font-sans text-on-surface ${desktop && !isLoginPage ? "pl-52" : ""}`}
+    >
+      <DesktopChrome hidden={!desktop || isLoginPage} />
       {/* Top AppBar - Fixed, contents centered to match page width */}
       {/*
        * Fallback `null`, bukan sebuah blok setinggi bilah.
@@ -177,9 +184,11 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
        * tidak pernah ada dalam rancangan aslinya.
        */}
       {!hideTopBar && (
-        <Suspense fallback={null}>
-          <MobileHeader isRootRoute={isRootRoute} />
-        </Suspense>
+        <div hidden={desktop}>
+          <Suspense fallback={null}>
+            <MobileHeader isRootRoute={isRootRoute} />
+          </Suspense>
+        </div>
       )}
 
       {!hideStandardChrome && <ConnectivityBanner />}
@@ -188,13 +197,18 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
       <main
         // Jarak atas diturunkan dari geometri bilah, bukan ditulis sebagai
         // `pt-20`. Nilainya tetap 80px, jadi tidak ada halaman yang bergeser.
-        style={hideStandardChrome ? undefined : { paddingTop: TOP_BAR_INSET_PX }}
+        id="workspace-content"
+        style={hideStandardChrome || desktop ? undefined : { paddingTop: TOP_BAR_INSET_PX }}
         className={
-          isAiPage
-            ? "mx-auto h-dvh w-full max-w-md overflow-hidden p-0"
-            : isLoginPage
-              ? "mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-margin-mobile pt-6 pb-6"
-              : "mx-auto w-full max-w-md space-y-lg px-margin-mobile pb-[calc(10rem+env(safe-area-inset-bottom))]"
+          desktop && !isLoginPage
+            ? isAiPage
+              ? "mx-auto h-[calc(100dvh-64px)] w-full max-w-400 min-w-0 overflow-hidden"
+              : "mx-auto w-full max-w-400 min-w-0 space-y-6 px-6 py-5"
+            : isAiPage
+              ? "mx-auto h-dvh w-full max-w-md overflow-hidden p-0"
+              : isLoginPage
+                ? "mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-margin-mobile pt-6 pb-6"
+                : "mx-auto w-full max-w-md space-y-lg px-margin-mobile pb-[calc(10rem+env(safe-area-inset-bottom))]"
         }
       >
         {children}
@@ -204,9 +218,11 @@ export function MobileShell({ children }: MobileShellProps): React.JSX.Element {
 
       {/* Bottom Navigation wrapped in Suspense */}
       {!hideStandardChrome && (
-        <Suspense fallback={null}>
-          <BottomNav />
-        </Suspense>
+        <div hidden={desktop}>
+          <Suspense fallback={null}>
+            <BottomNav />
+          </Suspense>
+        </div>
       )}
     </div>
   );

@@ -1,11 +1,17 @@
 "use client";
 
-import { Input as HeroInput, TextArea as HeroTextArea, Switch as HeroSwitch } from "@heroui/react";
-import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import {
+  DesktopInputControl as HeroInput,
+  DesktopTextAreaControl as HeroTextArea,
+  DesktopSwitchControl as HeroSwitch,
+  DesktopSwitchThumb,
+} from "../desktop/desktop-controls";
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
 import React from "react";
 import { AppIcon } from "@/components/ui/icon/app-icon";
-import { motion } from "framer-motion";
-import { transitionSpringBouncy } from "@/lib/utils/motion";
+import { Button } from "../button/button";
+import { motion, useReducedMotion } from "framer-motion";
+import { transitionSpringBouncy, transitionSpringSmooth } from "@/lib/utils/motion";
 
 import { type FormFieldLayout, useFormPresentation } from "./form-presentation-context";
 import {
@@ -73,6 +79,7 @@ export function FormField({
   if (layout === "inline") {
     return (
       <div
+        data-form-layout="inline"
         className={cx(
           grouped ? "group/form min-w-0 bg-surface-container-lowest px-4 py-3" : fieldShell,
           error && grouped && "bg-error-container/10",
@@ -111,7 +118,7 @@ export function FormField({
             <div className="min-w-0 shrink-0">{children}</div>
           </FormFieldAssociationProvider>
           {adornment ? (
-            <span className="shrink-0 text-[8px] font-bold tracking-wide text-on-surface-variant/75 uppercase">
+            <span className="shrink-0 text-meta font-bold tracking-wide text-on-surface-variant/75 uppercase">
               {adornment}
             </span>
           ) : null}
@@ -144,7 +151,7 @@ export function FormField({
             <AppIcon name="lock" className="icon-xs text-on-surface-variant" aria-hidden="true" />
           )}
           {adornment && (
-            <span className="text-[8px] font-bold tracking-wide text-on-surface-variant/75 uppercase">
+            <span className="text-meta font-bold tracking-wide text-on-surface-variant/75 uppercase">
               {adornment}
             </span>
           )}
@@ -214,14 +221,17 @@ export function TextInput({
   const resolvedDescribedBy = mergeAriaIds(ariaDescribedBy, association?.describedBy);
   const resolvedInvalid = ariaInvalid ?? association?.invalid;
   const resolvedRequired = required ?? association?.required;
-  const InputControl = useWorkspacePresentation() === "desktop" ? HeroInput : "input";
+  const desktop = useWorkspaceControlPresentation() === "desktop";
+  const InputControl = desktop ? HeroInput : "input";
   const grouped = useFormPresentation() === "grouped";
   return (
     <div
+      data-grouped={grouped || undefined}
       className={cx(
         grouped
           ? "flex min-h-8 w-full min-w-0 items-center gap-2 border-0 bg-transparent px-0 focus-within:ring-0"
           : "flex min-h-12 w-full min-w-0 items-center gap-2 rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 shadow-control transition focus-within:border-accent focus-within:ring-2 focus-within:ring-focus-ring",
+        desktop && "atria-desktop-field",
         disabled && "opacity-55",
         readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
         className,
@@ -269,6 +279,10 @@ export function Textarea({
   rows = 3,
   required,
   className,
+  variant = "default",
+  maxLength,
+  onKeyDown,
+  onHeightChange,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
@@ -284,6 +298,10 @@ export function Textarea({
   readonly rows?: number;
   readonly required?: boolean;
   readonly className?: string;
+  readonly variant?: "default" | "composer";
+  readonly maxLength?: number;
+  readonly onKeyDown?: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  readonly onHeightChange?: (height: number) => void;
   readonly "aria-label"?: string;
   readonly "aria-describedby"?: string;
   readonly "aria-invalid"?: boolean;
@@ -293,13 +311,34 @@ export function Textarea({
   const resolvedDescribedBy = mergeAriaIds(ariaDescribedBy, association?.describedBy);
   const resolvedInvalid = ariaInvalid ?? association?.invalid;
   const resolvedRequired = required ?? association?.required;
-  const TextareaControl = useWorkspacePresentation() === "desktop" ? HeroTextArea : "textarea";
+  const desktop = useWorkspaceControlPresentation() === "desktop";
+  const TextareaControl = desktop ? HeroTextArea : "textarea";
   const grouped = useFormPresentation() === "grouped";
+  if (variant === "composer")
+    return (
+      <ComposerTextarea
+        id={resolvedId}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        disabled={disabled}
+        readOnly={readOnly}
+        autoFocus={autoFocus}
+        maxLength={maxLength}
+        onKeyDown={onKeyDown}
+        onHeightChange={onHeightChange}
+        aria-label={ariaLabel}
+        aria-describedby={resolvedDescribedBy}
+        aria-invalid={resolvedInvalid}
+      />
+    );
   return (
     <TextareaControl
       id={resolvedId}
       name={name}
       rows={rows}
+      maxLength={maxLength}
+      onKeyDown={onKeyDown}
       value={value}
       onChange={(event) => onChange?.(event.target.value)}
       placeholder={placeholder}
@@ -310,6 +349,7 @@ export function Textarea({
       aria-label={ariaLabel}
       aria-describedby={resolvedDescribedBy}
       aria-invalid={resolvedInvalid || undefined}
+      data-grouped={grouped || undefined}
       className={cx(
         grouped
           ? "min-h-20 w-full min-w-0 resize-none border-0 bg-transparent px-0 py-1 text-sm leading-5 font-semibold text-on-surface caret-accent outline-none placeholder:text-on-surface-variant/55 disabled:cursor-not-allowed disabled:opacity-55"
@@ -318,9 +358,85 @@ export function Textarea({
               "min-h-24 resize-none rounded-2xl bg-surface-container-lowest py-3 shadow-control placeholder:text-on-surface-variant/55 focus:border-accent focus:ring-2 focus:ring-focus-ring",
             ),
         readOnly && (grouped ? "opacity-70" : "bg-surface-container"),
+        desktop && "atria-desktop-textarea",
         className,
       )}
     />
+  );
+}
+
+/** Native message entry stays mounted through responsive/control presentation changes. */
+function ComposerTextarea(props: {
+  readonly id?: string;
+  readonly value: string;
+  readonly onChange?: (value: string) => void;
+  readonly placeholder?: string;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+  readonly autoFocus?: boolean;
+  readonly maxLength?: number;
+  readonly onKeyDown?: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  readonly onHeightChange?: (height: number) => void;
+  readonly "aria-label"?: string;
+  readonly "aria-describedby"?: string;
+  readonly "aria-invalid"?: boolean;
+}): React.JSX.Element {
+  const mirror = React.useRef<HTMLDivElement>(null);
+  const [height, setHeight] = React.useState(40);
+  const reduced = useReducedMotion();
+  const report = React.useRef(props.onHeightChange);
+  React.useLayoutEffect(() => {
+    report.current = props.onHeightChange;
+  }, [props.onHeightChange]);
+  React.useLayoutEffect(() => {
+    const node = mirror.current;
+    if (!node) return;
+    const measure = (): void => {
+      const next = Math.max(40, Math.min(136, node.getBoundingClientRect().height));
+      setHeight(next);
+      report.current?.(next);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  const typeClass =
+    "w-full min-w-0 break-words bg-transparent px-0 py-2 text-row leading-6 font-medium text-on-surface";
+  return (
+    <div className="relative min-w-0 flex-1">
+      <div
+        ref={mirror}
+        data-composer-mirror
+        aria-hidden="true"
+        className={cx(
+          typeClass,
+          "pointer-events-none invisible absolute inset-x-0 top-0 whitespace-pre-wrap",
+        )}
+      >{`${props.value || " "}\u200b`}</div>
+      <motion.textarea
+        id={props.id}
+        rows={1}
+        value={props.value}
+        onChange={(event) => props.onChange?.(event.target.value)}
+        onKeyDown={props.onKeyDown}
+        placeholder={props.placeholder}
+        disabled={props.disabled}
+        readOnly={props.readOnly}
+        autoFocus={props.autoFocus}
+        maxLength={props.maxLength}
+        aria-label={props["aria-label"]}
+        aria-describedby={props["aria-describedby"]}
+        aria-invalid={props["aria-invalid"] || undefined}
+        initial={false}
+        animate={{ height }}
+        transition={reduced ? { duration: 0 } : transitionSpringSmooth}
+        className={cx(
+          typeClass,
+          "block resize-none caret-accent outline-none placeholder:text-on-surface-variant disabled:opacity-55",
+        )}
+      />
+    </div>
   );
 }
 
@@ -338,6 +454,7 @@ export function NumericInput({
   prefix,
   className,
   required,
+  autoFocus,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
@@ -355,6 +472,7 @@ export function NumericInput({
   readonly prefix?: React.ReactNode;
   readonly className?: string;
   readonly required?: boolean;
+  readonly autoFocus?: boolean;
   readonly "aria-label"?: string;
   readonly "aria-describedby"?: string;
   readonly "aria-invalid"?: boolean;
@@ -363,6 +481,7 @@ export function NumericInput({
     <TextInput
       id={id}
       name={name}
+      autoFocus={autoFocus}
       value={toNumberString(value)}
       onFocus={(event) => event.target.select()}
       onBlur={(event) => {
@@ -412,8 +531,10 @@ export function MoneyInput({
   placeholder = "0",
   showPreview,
   required,
+  autoFocus,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
+  "aria-label": ariaLabel,
 }: {
   readonly id?: string;
   readonly name?: string;
@@ -423,8 +544,10 @@ export function MoneyInput({
   readonly placeholder?: string;
   readonly showPreview?: boolean;
   readonly required?: boolean;
+  readonly autoFocus?: boolean;
   readonly "aria-describedby"?: string;
   readonly "aria-invalid"?: boolean;
+  readonly "aria-label"?: string;
 }): React.JSX.Element {
   const presentation = useFormPresentation();
   const effectiveShowPreview = showPreview ?? presentation !== "grouped";
@@ -434,6 +557,7 @@ export function MoneyInput({
       <NumericInput
         id={id}
         name={name}
+        autoFocus={autoFocus}
         value={value}
         onChange={onChange}
         min={0}
@@ -443,6 +567,7 @@ export function MoneyInput({
         className="financial-amount"
         required={required}
         aria-describedby={ariaDescribedBy}
+        aria-label={ariaLabel}
         aria-invalid={ariaInvalid}
       />
       {effectiveShowPreview && (
@@ -510,7 +635,7 @@ export function QuantityStepper({
         aria-label="Kurangi jumlah"
         disabled={disabled || Number(value || 0) <= min}
         onClick={() => adjust(-step)}
-        className="flex items-center justify-center border-r border-outline-variant/25 text-on-surface-variant transition active:scale-95 disabled:opacity-35"
+        className="flex items-center justify-center border-r border-outline-variant/25 text-on-surface-variant transition active:z-10 active:scale-[1.05] active:shadow-raised disabled:opacity-35"
       >
         <AppIcon name="remove" className="icon-sm" />
       </button>
@@ -557,7 +682,7 @@ export function QuantityStepper({
         aria-label="Tambah jumlah"
         disabled={disabled || (max !== undefined && Number(value || 0) >= max)}
         onClick={() => adjust(step)}
-        className="flex items-center justify-center border-l border-outline-variant/25 text-on-surface-variant transition active:scale-95 disabled:opacity-35"
+        className="flex items-center justify-center border-l border-outline-variant/25 text-on-surface-variant transition active:z-10 active:scale-[1.05] active:shadow-raised disabled:opacity-35"
       >
         <AppIcon name="add" className="icon-sm" />
       </button>
@@ -582,6 +707,9 @@ export function ChoiceRow({
   disabled,
   selectionMode = "checkbox",
   emphasis = "accent",
+  compact = false,
+  indicatorShape = "circle",
+  presentation = "default",
 }: {
   readonly checked: boolean;
   readonly onChange: (checked: boolean) => void;
@@ -597,38 +725,74 @@ export function ChoiceRow({
    * mengubah aksen menjadi latar, dan justru baris yang MATI yang menonjol.
    */
   readonly emphasis?: "accent" | "neutral";
+  /** Independent checkbox beside an editable row, without nesting controls. */
+  readonly compact?: boolean;
+  readonly indicatorShape?: "circle" | "square";
+  /** Labeled inclusion control for contextual review action rows. */
+  readonly presentation?: "default" | "review";
 }): React.JSX.Element {
   const grouped = useFormPresentation() === "grouped";
   const radio = selectionMode === "radio";
   const tintLabel = emphasis === "accent";
+  if (presentation === "review")
+    return (
+      <Button
+        type="button"
+        size="compact"
+        variant={checked ? "secondary" : "quiet"}
+        className="min-w-24"
+        role={radio ? "radio" : "checkbox"}
+        aria-label={title}
+        aria-checked={checked}
+        disabled={disabled}
+        onClick={(event) => {
+          event.stopPropagation();
+          onChange(radio ? true : !checked);
+        }}
+      >
+        {checked && <AppIcon name="check" className="icon-sm" />}
+        {checked ? "Dipilih" : "Pilih"}
+      </Button>
+    );
   return (
     <button
       type="button"
       disabled={disabled}
-      onClick={() => onChange(radio ? true : !checked)}
-      role={radio ? "radio" : undefined}
-      aria-checked={radio ? checked : undefined}
-      aria-pressed={radio ? undefined : checked}
+      onClick={(event) => {
+        if (compact) event.stopPropagation();
+        onChange(radio ? true : !checked);
+      }}
+      role={radio ? "radio" : compact ? "checkbox" : undefined}
+      aria-label={compact ? title : undefined}
+      aria-checked={radio || compact ? checked : undefined}
+      aria-pressed={radio || compact ? undefined : checked}
       className={cx(
-        grouped
-          ? "flex min-h-14 w-full items-center gap-3 bg-surface-container-lowest px-4 py-3 text-left transition active:bg-surface-container-low disabled:opacity-45"
-          : "flex min-h-12 w-full items-center gap-3 rounded-full border px-5 py-3 text-left shadow-control transition active:scale-[0.99] disabled:opacity-45",
-        checked
-          ? grouped
-            ? tintLabel
-              ? "text-accent"
-              : "text-on-surface"
-            : tintLabel
-              ? "border-accent bg-accent-container text-accent"
-              : "border-accent/40 bg-surface-container-lowest text-on-surface"
+        "outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
+        compact
+          ? "fine-pointer:lg:min-h-10 fine-pointer:lg:min-w-10 flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-full disabled:opacity-45"
           : grouped
-            ? "text-on-surface"
-            : "border-outline-variant/15 bg-surface-container-lowest text-on-surface",
+            ? "flex min-h-14 w-full items-center gap-3 bg-surface-container-lowest px-4 py-3 text-left transition active:bg-surface-container-low disabled:opacity-45"
+            : "flex min-h-12 w-full items-center gap-3 rounded-full border px-5 py-3 text-left shadow-control transition active:z-10 active:scale-[1.05] active:shadow-raised disabled:opacity-45",
+        compact
+          ? "bg-transparent text-on-surface"
+          : checked
+            ? grouped
+              ? tintLabel
+                ? "text-accent"
+                : "text-on-surface"
+              : tintLabel
+                ? "border-accent bg-accent-container text-accent"
+                : "border-accent/40 bg-surface-container-lowest text-on-surface"
+            : grouped
+              ? "text-on-surface"
+              : "border-outline-variant/15 bg-surface-container-lowest text-on-surface",
       )}
     >
       <span
         className={cx(
-          "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
+          "flex shrink-0 items-center justify-center border",
+          !radio && indicatorShape === "square" ? "h-4 w-4" : "h-5 w-5",
+          !radio && indicatorShape === "square" ? "rounded-sm" : "rounded-full",
           checked
             ? radio
               ? "border-accent bg-surface"
@@ -645,7 +809,7 @@ export function ChoiceRow({
           )
         ) : null}
       </span>
-      <span className="min-w-0 flex-1">
+      <span className={compact ? "sr-only" : "min-w-0 flex-1"}>
         <span className="block truncate text-xs font-bold">{title}</span>
         {description && (
           <span className="mt-0.5 block text-meta text-on-surface-variant">{description}</span>
@@ -676,12 +840,14 @@ export function SwitchRow({
   readonly switchLabel?: string;
   readonly className?: string;
 }): React.JSX.Element {
-  const desktop = useWorkspacePresentation() === "desktop";
+  const desktop = useWorkspaceControlPresentation() === "desktop";
   const grouped = useFormPresentation() === "grouped";
+  const reducedMotion = useReducedMotion();
   return (
     <div
       className={cx(
         "flex items-center justify-between gap-4 transition-opacity",
+        desktop && "atria-desktop-switch-row",
         grouped ? "min-h-14 bg-surface-container-lowest px-4 py-3" : "bg-surface-container-lowest",
         disabled && "pointer-events-none opacity-45",
         className,
@@ -690,7 +856,7 @@ export function SwitchRow({
       <div className="min-w-0 flex-1 text-left">
         <span className="block text-row font-bold text-on-surface">{title}</span>
         {description && (
-          <span className="mt-0.5 block text-[10px] leading-relaxed text-on-surface-variant">
+          <span className="mt-0.5 block text-meta leading-relaxed text-on-surface-variant">
             {description}
           </span>
         )}
@@ -706,7 +872,7 @@ export function SwitchRow({
         >
           <HeroSwitch.Content aria-label={switchLabel ?? title}>
             <HeroSwitch.Control>
-              <HeroSwitch.Thumb />
+              <DesktopSwitchThumb checked={checked} />
             </HeroSwitch.Control>
           </HeroSwitch.Content>
         </HeroSwitch>
@@ -730,7 +896,8 @@ export function SwitchRow({
           )}
         >
           <motion.span
-            transition={transitionSpringBouncy}
+            initial={false}
+            transition={reducedMotion ? { duration: 0 } : transitionSpringBouncy}
             className="absolute top-0.5 left-0.5 block h-5 w-5 rounded-full bg-white shadow-control"
             animate={{ x: checked ? 20 : 0 }}
           />

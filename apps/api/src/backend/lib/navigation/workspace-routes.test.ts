@@ -4,16 +4,17 @@ import {
   canonicalWorkspacePath,
   isWorkspacePath,
   resolveWorkspaceEntry,
+  resolveWorkspacePresentation,
   workspaceHref,
 } from "./workspace-routes";
 
 describe("workspace URLs", () => {
   test("preserves project IDs, filters, drawer state and hashes in both directions", () => {
     const source = "/projects/p-1?tab=rab&invoice=inv-1#review";
-    expect(workspaceHref(source, "desktop")).toBe(`/admin${source}`);
+    expect(workspaceHref(source, "desktop")).toBe(source);
     expect(workspaceHref(`/admin${source}`, "mobile")).toBe(source);
     expect(workspaceHref("/settings?admin=roles&newRole=true", "desktop")).toBe(
-      "/admin/settings?admin=roles&newRole=true",
+      "/settings?admin=roles&newRole=true",
     );
   });
   test("does not map public, API, external or unknown URLs", () => {
@@ -32,7 +33,7 @@ describe("workspace URLs", () => {
     expect(canonicalWorkspacePath("/admin/projects/a")).toBe("/projects/a");
   });
   test("mapping is idempotent", () => {
-    expect(workspaceHref("/admin/ledger?tab=cash", "desktop")).toBe("/admin/ledger?tab=cash");
+    expect(workspaceHref("/admin/ledger?tab=cash", "desktop")).toBe("/ledger?tab=cash");
     expect(workspaceHref("/admin", "mobile")).toBe("/");
   });
 });
@@ -46,14 +47,17 @@ describe("browser entry policy", () => {
     nativeBridge: false,
     automaticEnabled: true,
   } as const;
-  test("automatic entry uses 1024px boundary", () => {
+  test("viewport changes presentation without changing the canonical URL", () => {
     expect(resolveWorkspaceEntry({ ...defaults, viewportWidth: 1023 })).toBe("/ledger");
-    expect(resolveWorkspaceEntry({ ...defaults, viewportWidth: 1024 })).toBe("/admin/ledger");
+    expect(resolveWorkspaceEntry({ ...defaults, viewportWidth: 1024 })).toBe("/ledger");
+    expect(resolveWorkspacePresentation(1023)).toBe("mobile");
+    expect(resolveWorkspacePresentation(1024)).toBe("desktop");
+    expect(resolveWorkspacePresentation(1440, true)).toBe("mobile");
   });
-  test("manual choice takes precedence over viewport", () => {
+  test("retired preferences do not add a second URL", () => {
     expect(resolveWorkspaceEntry({ ...defaults, preference: "mobile" })).toBe("/ledger");
     expect(resolveWorkspaceEntry({ ...defaults, viewportWidth: 390, preference: "desktop" })).toBe(
-      "/admin/ledger",
+      "/ledger",
     );
   });
   test("native browser fallback remains mobile even with desktop preference", () => {
@@ -72,21 +76,19 @@ describe("browser entry policy", () => {
       "/profile/password",
     );
   });
-  test("rollout flag leaves manual desktop entry available", () => {
+  test("retired desktop rollout flags no longer alter navigation", () => {
     expect(resolveWorkspaceEntry({ ...defaults, automaticEnabled: false })).toBe("/ledger");
     expect(
       resolveWorkspaceEntry({ ...defaults, automaticEnabled: false, preference: "desktop" }),
-    ).toBe("/admin/ledger");
+    ).toBe("/ledger");
   });
 });
 
-test("history tab updates cannot leave the current desktop or native surface", () => {
-  expect(workspaceHistoryHref("/ledger?tab=budget", "/admin/ledger")).toBe(
-    "/admin/ledger?tab=budget",
-  );
-  expect(workspaceHistoryHref("/ledger", "/admin/ledger?tab=accounts")).toBe("/admin/ledger");
+test("history tab updates canonicalize old desktop links and retain native hints", () => {
+  expect(workspaceHistoryHref("/ledger?tab=budget", "/admin/ledger")).toBe("/ledger?tab=budget");
+  expect(workspaceHistoryHref("/ledger", "/admin/ledger?tab=accounts")).toBe("/ledger");
   expect(workspaceHistoryHref("/settings?tab=catalog", "/admin/settings")).toBe(
-    "/admin/settings?tab=catalog",
+    "/settings?tab=catalog",
   );
   expect(workspaceHistoryHref("/ledger?tab=cash", "/ledger?surface=mobile")).toBe(
     "/ledger?tab=cash&surface=mobile",

@@ -31,10 +31,12 @@ import {
   Textarea,
   TextInput,
   WorkflowFormSheet,
+  Button,
 } from "@/components/ui";
 import { formatIdr } from "@atria/core/utils/money";
 import { updateUrlSearchParam, useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import { useRouter } from "@/lib/navigation/workspace-navigation";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import {
   cashDisplayTitle,
@@ -54,6 +56,12 @@ import {
 } from "./reconciliation-primitives";
 import { ReconciliationHistorySheet } from "./reconciliation-history-sheet";
 import { ReconciliationQueue } from "./reconciliation-queue";
+import { StatementImportPreview, type StatementPreviewRow } from "./statement-import-preview";
+import {
+  ReconciliationMatchSummary,
+  StatementDraftSummary,
+  StatementImportSummary,
+} from "./reconciliation-form-summary";
 
 export function ReconciliationWorkspace({
   initialData,
@@ -61,6 +69,7 @@ export function ReconciliationWorkspace({
   readonly initialData: ReconciliationWorkspaceData;
 }): React.JSX.Element {
   const router = useRouter();
+  const desktop = useWorkspacePresentation() === "desktop";
   const data = initialData;
   const viewParam = useBrowserUrlSearchParam("view", "statement");
   const activeView: ReconciliationView =
@@ -83,14 +92,8 @@ export function ReconciliationWorkspace({
     fileName: "",
     content: "",
   });
-  const [previewRows, setPreviewRows] = React.useState<
-    Array<{
-      transactionDate: string;
-      description: string;
-      amount: number;
-      type: "INFLOW" | "OUTFLOW";
-    }>
-  >([]);
+  const [previewRows, setPreviewRows] = React.useState<StatementPreviewRow[]>([]);
+  const [hasReadImport, setHasReadImport] = React.useState(false);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [detectedBank, setDetectedBank] = React.useState<string | null>(null);
 
@@ -125,6 +128,7 @@ export function ReconciliationWorkspace({
   function openImport(): void {
     setError(null);
     setPreviewRows([]);
+    setHasReadImport(false);
     setIsAnalyzing(false);
     setDetectedBank(null);
     setImportDraft({
@@ -166,6 +170,7 @@ export function ReconciliationWorkspace({
   async function selectFile(event: React.ChangeEvent<HTMLInputElement>): Promise<void> {
     const file = event.target.files?.[0];
     if (!file) return;
+    setHasReadImport(false);
     if (file.size > 10_000_000) {
       setError("Ukuran file mutasi maksimal 10 MB.");
       return;
@@ -190,6 +195,7 @@ export function ReconciliationWorkspace({
           type: r.type,
         }));
         setPreviewRows(rows);
+        setHasReadImport(true);
         setDetectedBank(null);
         return;
       } catch {
@@ -225,6 +231,7 @@ export function ReconciliationWorkspace({
           type: r.type,
         })),
       );
+      setHasReadImport(true);
       setDetectedBank(res.data.detectedBankName ?? null);
 
       if (res.data.detectedBankName) {
@@ -471,11 +478,30 @@ export function ReconciliationWorkspace({
               content: "",
             });
             setPreviewRows([]);
+            setHasReadImport(false);
           },
           description: "Pratinjau mutasi rekening koran yang belum disimpan akan dibuang.",
         }}
         open={importOpen}
         title="Impor rekening koran"
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <StatementImportSummary
+            accountName={
+              data.bankAccounts.find((account) => account.id === importDraft.bankAccountId)?.name
+            }
+            fileName={importDraft.fileName}
+            rowCount={previewRows.length}
+            inflow={previewRows
+              .filter((row) => row.type === "INFLOW")
+              .reduce((sum, row) => sum + row.amount, 0)}
+            outflow={previewRows
+              .filter((row) => row.type === "OUTFLOW")
+              .reduce((sum, row) => sum + row.amount, 0)}
+            state={error ? "failed" : isAnalyzing ? "reading" : hasReadImport ? "ready" : "unread"}
+          />
+        }
         submitLabel={
           previewRows.length > 0 ? `Simpan ${previewRows.length} Mutasi` : "Pilih Berkas"
         }
@@ -487,7 +513,7 @@ export function ReconciliationWorkspace({
           error
             ? undefined
             : previewRows.length > 0
-              ? `Periksa ${previewRows.length} mutasi sebelum disimpan ke buku besar.`
+              ? `Periksa ${previewRows.length} mutasi sebelum disimpan sebagai bukti bank.`
               : "Unggah mutasi untuk dianalisis oleh AI atau format CSV standar Atria."
         }
         statusTone={error ? "danger" : "default"}
@@ -501,6 +527,7 @@ export function ReconciliationWorkspace({
         onClose={() => {
           setImportOpen(false);
           setPreviewRows([]);
+          setHasReadImport(false);
         }}
         onSubmit={submitImport}
       >
@@ -508,13 +535,15 @@ export function ReconciliationWorkspace({
           title="Rekening tujuan"
           helper="Pilih rekening bank tempat mutasi ini akan dicatat."
           action={
-            <button
+            <Button
               type="button"
               onClick={downloadTemplate}
               className="min-h-10 rounded-full bg-primary/8 px-3.5 text-meta font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-primary/12"
+              variant="secondary"
+              size="compact"
             >
               Unduh template
-            </button>
+            </Button>
           }
         >
           <AdaptiveSelect
@@ -569,13 +598,15 @@ export function ReconciliationWorkspace({
                 className="sr-only"
                 onChange={selectFile}
               />
-              <button
+              <Button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="relative inline-flex min-h-11 shrink-0 items-center rounded-full bg-primary px-4 text-meta font-semibold text-white shadow-control outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-primary/90"
+                variant="primary"
+                size="compact"
               >
                 Pilih berkas
-              </button>
+              </Button>
             </div>
           </FormSection>
         ) : (
@@ -595,6 +626,7 @@ export function ReconciliationWorkspace({
                 type="button"
                 onClick={() => {
                   setPreviewRows([]);
+                  setHasReadImport(false);
                   setImportDraft((c) => ({ ...c, fileName: "" }));
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
@@ -605,93 +637,114 @@ export function ReconciliationWorkspace({
             </div>
 
             {/* Inset metric cells */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-[16px] bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
-                <p className="text-eyebrow font-semibold tracking-wider text-on-surface-variant uppercase">
-                  Total Masuk
-                </p>
-                <p className="mt-1 text-row font-bold text-success">
-                  {formatIdr(
-                    previewRows
-                      .filter((r) => r.type === "INFLOW")
-                      .reduce((sum, r) => sum + r.amount, 0),
-                  )}
-                </p>
+            {!desktop ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-[16px] bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
+                  <p className="text-eyebrow font-semibold tracking-wider text-on-surface-variant uppercase">
+                    Total Masuk
+                  </p>
+                  <p className="mt-1 text-row font-bold text-success">
+                    {formatIdr(
+                      previewRows
+                        .filter((r) => r.type === "INFLOW")
+                        .reduce((sum, r) => sum + r.amount, 0),
+                    )}
+                  </p>
+                </div>
+                <div className="rounded-[16px] bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
+                  <p className="text-eyebrow font-semibold tracking-wider text-on-surface-variant uppercase">
+                    Total Keluar
+                  </p>
+                  <p className="mt-1 text-row font-bold text-error">
+                    {formatIdr(
+                      previewRows
+                        .filter((r) => r.type === "OUTFLOW")
+                        .reduce((sum, r) => sum + r.amount, 0),
+                    )}
+                  </p>
+                </div>
               </div>
-              <div className="rounded-[16px] bg-surface-container-lowest p-3 ring-1 ring-ring-subtle">
-                <p className="text-eyebrow font-semibold tracking-wider text-on-surface-variant uppercase">
-                  Total Keluar
-                </p>
-                <p className="mt-1 text-row font-bold text-error">
-                  {formatIdr(
-                    previewRows
-                      .filter((r) => r.type === "OUTFLOW")
-                      .reduce((sum, r) => sum + r.amount, 0),
-                  )}
-                </p>
-              </div>
-            </div>
+            ) : null}
 
             {/* Tabel Baris Pratinjau */}
-            <div className="overflow-hidden rounded-inset bg-white ring-1 ring-ring-subtle">
-              <div className="border-b border-outline-variant/15 bg-surface-container-low/50 px-4 py-2.5 text-eyebrow font-semibold tracking-wider text-on-surface-variant uppercase">
-                Pratinjau Mutasi Rekening Koran
-              </div>
-              <div className="max-h-64 divide-y divide-outline-variant/10 overflow-y-auto">
-                {previewRows.map((row, idx) => (
-                  <div key={idx} className="flex items-center justify-between gap-3 px-4 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-semibold text-on-surface">
-                        {row.description}
-                      </p>
-                      <p className="mt-0.5 text-meta text-on-surface-variant">
-                        {row.transactionDate}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2.5">
-                      <div className="text-right">
-                        <p
-                          className={`text-xs font-bold tabular-nums ${
-                            row.type === "INFLOW" ? "text-success" : "text-error"
-                          }`}
-                        >
-                          {row.type === "INFLOW" ? "+" : "-"} {formatIdr(row.amount)}
+            {desktop ? (
+              <StatementImportPreview
+                rows={previewRows}
+                pending={pending}
+                onToggleDirection={(index) =>
+                  setPreviewRows((current) =>
+                    current.map((row, rowIndex) =>
+                      rowIndex === index
+                        ? { ...row, type: row.type === "INFLOW" ? "OUTFLOW" : "INFLOW" }
+                        : row,
+                    ),
+                  )
+                }
+                onRemove={(index) =>
+                  setPreviewRows((current) => current.filter((_, rowIndex) => rowIndex !== index))
+                }
+              />
+            ) : (
+              <div className="overflow-hidden rounded-inset bg-white ring-1 ring-ring-subtle">
+                <div className="border-b border-outline-variant/15 bg-surface-container-low/50 px-4 py-2.5 text-eyebrow font-semibold tracking-wider text-on-surface-variant uppercase">
+                  Pratinjau Mutasi Rekening Koran
+                </div>
+                <div className="max-h-64 divide-y divide-outline-variant/10 overflow-y-auto">
+                  {previewRows.map((row, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-3 px-4 py-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-on-surface">
+                          {row.description}
                         </p>
+                        <p className="mt-0.5 text-meta text-on-surface-variant">
+                          {row.transactionDate}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2.5">
+                        <div className="text-right">
+                          <p
+                            className={`text-xs font-bold tabular-nums ${
+                              row.type === "INFLOW" ? "text-success" : "text-error"
+                            }`}
+                          >
+                            {row.type === "INFLOW" ? "+" : "-"} {formatIdr(row.amount)}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPreviewRows((curr) =>
+                                curr.map((r, i) =>
+                                  i === idx
+                                    ? { ...r, type: r.type === "INFLOW" ? "OUTFLOW" : "INFLOW" }
+                                    : r,
+                                ),
+                              )
+                            }
+                            title="Klik untuk mengubah Masuk / Keluar"
+                            className={`inline-flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 text-support font-bold transition hover:opacity-80 active:scale-[1.05] ${
+                              row.type === "INFLOW"
+                                ? "bg-success/10 text-success ring-1 ring-success/20"
+                                : "bg-error/10 text-error ring-1 ring-error/20"
+                            }`}
+                          >
+                            <span>{row.type === "INFLOW" ? "Masuk" : "Keluar"}</span>
+                            <AppIcon name="swap_horiz" className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
                         <button
                           type="button"
-                          onClick={() =>
-                            setPreviewRows((curr) =>
-                              curr.map((r, i) =>
-                                i === idx
-                                  ? { ...r, type: r.type === "INFLOW" ? "OUTFLOW" : "INFLOW" }
-                                  : r,
-                              ),
-                            )
-                          }
-                          title="Klik untuk mengubah Masuk / Keluar"
-                          className={`inline-flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold transition hover:opacity-80 active:scale-95 ${
-                            row.type === "INFLOW"
-                              ? "bg-success/10 text-success ring-1 ring-success/20"
-                              : "bg-error/10 text-error ring-1 ring-error/20"
-                          }`}
+                          onClick={() => setPreviewRows((curr) => curr.filter((_, i) => i !== idx))}
+                          title="Hapus baris ini"
+                          className="flex h-7 w-7 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-error"
                         >
-                          <span>{row.type === "INFLOW" ? "Masuk" : "Keluar"}</span>
-                          <AppIcon name="swap_horiz" className="h-2.5 w-2.5" />
+                          <AppIcon name="close" className="icon-xs leading-none" />
                         </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setPreviewRows((curr) => curr.filter((_, i) => i !== idx))}
-                        title="Hapus baris ini"
-                        className="flex h-7 w-7 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-error"
-                      >
-                        <AppIcon name="close" className="icon-xs leading-none" />
-                      </button>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -705,6 +758,7 @@ export function ReconciliationWorkspace({
               onClick={() => {
                 setImportOpen(false);
                 setPreviewRows([]);
+                setHasReadImport(false);
                 openManual();
               }}
               className="font-bold text-primary underline decoration-primary/25 underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
@@ -727,6 +781,18 @@ export function ReconciliationWorkspace({
         }}
         open={manualOpen}
         title="Catat mutasi bank"
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <StatementDraftSummary
+            accountName={
+              data.bankAccounts.find((account) => account.id === draft.bankAccountId)?.name
+            }
+            date={draft.transactionDate}
+            type={draft.type}
+            amount={draft.amount}
+          />
+        }
         submitLabel="Simpan"
         submittingLabel="Menyimpan…"
         pending={pending}
@@ -806,6 +872,15 @@ export function ReconciliationWorkspace({
         }}
         open={selectedCash !== null}
         title="Cocokkan transaksi"
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <ReconciliationMatchSummary
+            cash={selectedCash}
+            statement={selectedStatement}
+            candidateCount={matchingStatements.length}
+          />
+        }
         primaryLabel="Cocokkan"
         secondaryLabel={selectedCash?.exceptionReason ? "Hapus pengecualian" : "Catat pengecualian"}
         pending={pending}
@@ -828,12 +903,14 @@ export function ReconciliationWorkspace({
       >
         {selectedCash ? (
           <div className="space-y-4">
-            <SheetMoneySummary
-              amount={selectedCash.amount}
-              type={selectedCash.type}
-              label="Nominal yang akan dicocokkan"
-              meta={`${selectedCash.bankAccountName} · ${directionCopy(selectedCash.type)}`}
-            />
+            {!desktop ? (
+              <SheetMoneySummary
+                amount={selectedCash.amount}
+                type={selectedCash.type}
+                label="Nominal yang akan dicocokkan"
+                meta={`${selectedCash.bankAccountName} · ${directionCopy(selectedCash.type)}`}
+              />
+            ) : null}
 
             <FormSection title="Catatan Atria" helper="Transaksi internal yang sedang ditinjau.">
               <EvidenceDescription

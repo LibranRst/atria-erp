@@ -9,6 +9,9 @@ import {
   projectRapItem,
   stockMovement,
   vendorBill,
+  project,
+  inventoryLocation,
+  INSTANCE_TENANT_ID,
 } from "@backend/db/schema";
 import { actorCan } from "@backend/lib/auth/permissions";
 import { assertProjectStatusIsOperational } from "@backend/lib/auth/scoping";
@@ -16,6 +19,7 @@ import { assertOperationalStockReadiness } from "@backend/lib/material/operation
 import { validateStockMovementLinksTx } from "@backend/lib/material/stock-movement-links";
 import type { Actor } from "@backend/server/actor";
 import { recordNotificationEvent } from "@backend/server/services/notification-events";
+import { assertIntakeInventoryTx } from "./warehouse-intake-writer";
 import type { createGoodsReceiptSchema } from "@atria/core/validations/workflow-governance";
 
 export type GoodsReceiptTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -32,22 +36,36 @@ export async function postGoodsReceiptTx(
     throw new Error("FORBIDDEN: Peran Anda tidak memiliki izin menerima material.");
   }
   await assertOperationalStockReadiness(tx);
-  const project = await tx.query.project.findFirst({
-    where: (table, { eq: equal }) => equal(table.id, input.projectId),
-    columns: { status: true, projectManagerId: true },
-  });
-  if (actor.dataScope === "ASSIGNED" && project?.projectManagerId !== actor.userId) {
+  const [projectRow] = await tx
+    .select()
+    .from(project)
+    .where(and(eq(project.id, input.projectId), eq(project.tenantId, INSTANCE_TENANT_ID)))
+    .for("update");
+  if (
+    !projectRow ||
+    (actor.dataScope === "ASSIGNED" && projectRow.projectManagerId !== actor.userId)
+  ) {
     throw new Error("FORBIDDEN: Anda tidak ditugaskan pada proyek ini.");
   }
   // Warehouse permissions allow Purchasing to receive across projects;
   // assigned roles remain restricted to their own project.
-  assertProjectStatusIsOperational(project?.status);
+  assertProjectStatusIsOperational(projectRow.status);
+  const location = await tx.query.inventoryLocation.findFirst({
+    where: and(
+      eq(inventoryLocation.id, input.inventoryLocationId),
+      eq(inventoryLocation.tenantId, INSTANCE_TENANT_ID),
+      eq(inventoryLocation.isActive, true),
+    ),
+  });
+  if (!location) throw new Error("Lokasi penerimaan aktif tidak tersedia.");
   const lockedBill = input.vendorBillId
     ? (
         await tx
           .select()
           .from(vendorBill)
-          .where(eq(vendorBill.id, input.vendorBillId))
+          .where(
+            and(eq(vendorBill.id, input.vendorBillId), eq(vendorBill.tenantId, INSTANCE_TENANT_ID)),
+          )
           .for("update")
       )[0]
     : null;
@@ -97,7 +115,13 @@ export async function postGoodsReceiptTx(
     })
     .returning();
 
-  for (const [index, item] of input.items.entries()) {
+  for (const [index, item] of input.items
+    .toSorted(
+      (a, b) =>
+        a.materialId.localeCompare(b.materialId) ||
+        (a.projectRapItemId ?? "").localeCompare(b.projectRapItemId ?? ""),
+    )
+    .entries()) {
     await validateStockMovementLinksTx(tx, {
       materialId: item.materialId,
       projectId: input.projectId,
@@ -148,16 +172,12 @@ export async function postGoodsReceiptTx(
     ) {
       throw new Error("GOODS_RECEIPT_VENDOR_BILL_ITEM_MISMATCH");
     }
-    const [inventory] = await tx
-      .select()
-      .from(materialInventory)
-      .where(
-        and(
-          eq(materialInventory.materialId, item.materialId),
-          eq(materialInventory.locationId, input.inventoryLocationId),
-        ),
-      )
-      .for("update");
+    const inventory = await assertIntakeInventoryTx(
+      tx,
+      actor,
+      item.materialId,
+      input.inventoryLocationId,
+    );
     if (!inventory)
       throw new Error("Inventory default material belum tersedia di lokasi penerimaan.");
     const currentQuantity = Number(inventory.currentStock);

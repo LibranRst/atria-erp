@@ -43,9 +43,9 @@ export function BankBalancesResult({
       </div>
 
       <div className="divide-y divide-black/5.5 border-t border-black/5.5">
-        {data.accounts.map((account) => (
+        {data.accounts.map((account, index) => (
           <ResultRow
-            key={`${account.bankName}-${account.accountName}`}
+            key={account.accountId ?? `legacy-account-${index}`}
             label={account.accountName}
             meta={account.bankName}
             value={

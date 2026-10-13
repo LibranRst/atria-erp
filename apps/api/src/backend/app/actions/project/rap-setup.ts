@@ -1,18 +1,16 @@
+import { changePackageStatusTx } from "@backend/server/usecases/project/category-plan-writer";
 import { cookies } from "@runtime/request-context";
+import { resolveActor } from "@backend/server/actor";
+import { applyRapSetupStepTx } from "@backend/server/usecases/project/rap-setup-writer";
 import { revalidateWorkspacePath as revalidatePath } from "@backend/lib/cache/revalidate-workspace";
 import { eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { auditLog, projectCategoryPlanItem, projectRap } from "@backend/db/schema";
+import { projectCategoryPlanItem, projectRap } from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
 import { assertPermission, resolveRoleName } from "@backend/lib/auth/permissions";
 import { assertProjectAccess } from "@backend/lib/auth/scoping";
 import type { ActionResponse } from "@atria/core/types/action-response";
-import {
-  assertRapCategoryReady,
-  assertRapSetupTransition,
-  type RapSetupStage,
-} from "@atria/core/project/rap-setup";
 import {
   advanceProjectRapSetupSchema,
   finalizeProjectInternalPlanSchema,
@@ -49,76 +47,29 @@ async function assertScoped(
   return roleName;
 }
 
-async function getPackages(
-  projectId: string,
-): Promise<Array<Package & { readonly categoryCode: string }>> {
-  const rows = await db.query.projectCategoryPlanItem.findMany({
-    where: eq(projectCategoryPlanItem.projectId, projectId),
-    with: { expenseCategory: true },
-  });
-  return rows.map((row) => ({ ...row, categoryCode: row.expenseCategory.code }));
-}
-
 export async function advanceProjectRapSetup(input: unknown): Promise<ActionResponse<Rap>> {
   const parsed = advanceProjectRapSetupSchema.safeParse(input);
   if (!parsed.success)
     return {
       success: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: parsed.error.issues[0]?.message ?? "Tahap RAP tidak valid.",
-      },
+      error: { code: "VALIDATION_ERROR", message: "Tahap RAP tidak valid." },
     };
-  const user = await getSessionUser();
-  if (!user)
+  const actor = await resolveActor();
+  if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
-    const rap = await db.query.projectRap.findFirst({
-      where: eq(projectRap.id, parsed.data.projectRapId),
-      with: { items: true },
-    });
-    if (!rap) throw new Error("RAP_NOT_FOUND");
-    if (rap.status !== "DRAFT") throw new Error("RAP harus DRAFT untuk melanjutkan setup.");
-    assertRapSetupTransition(rap.setupStage as RapSetupStage, parsed.data.targetStage);
-    await assertScoped(
-      user,
-      rap.projectId,
-      rap.setupStage === "MATERIAL" ? "update:rap" : "update:budget",
+    const result = await db.transaction((tx) =>
+      applyRapSetupStepTx(tx, actor, parsed.data.projectRapId, {
+        action: "ADVANCE",
+        targetStage: parsed.data.targetStage,
+      }),
     );
-    if (rap.setupStage === "MATERIAL" && rap.items.length === 0)
-      throw new Error("Tambahkan minimal satu material sebelum lanjut.");
-    const packages = await getPackages(rap.projectId);
-    if (rap.setupStage === "TUKANG")
-      assertRapCategoryReady(packages, "TUKANG", rap.tukangScopeSkipped);
-    if (rap.setupStage === "SUBCON")
-      assertRapCategoryReady(packages, "SUBCON", rap.subconScopeSkipped);
-    const [updated] = await db.transaction(async (tx) => {
-      const rows = await tx
-        .update(projectRap)
-        .set({
-          setupStage: parsed.data.targetStage,
-          setupUpdatedById: user.id,
-          updatedAt: new Date(),
-        })
-        .where(eq(projectRap.id, rap.id))
-        .returning();
-      await tx.insert(auditLog).values({
-        userId: user.id,
-        action: "ADVANCE_RAP_SETUP",
-        targetTable: "project_rap",
-        targetId: rap.id,
-        originalState: JSON.stringify(rap),
-        newState: JSON.stringify(rows[0]),
-      });
-      return rows;
-    });
-    revalidatePath(`/projects/${rap.projectId}`);
-    return { success: true, data: updated };
-  } catch (error) {
-    return failure(error, "Gagal melanjutkan setup RAP.");
+    revalidatePath(`/projects/${result.projectId}`);
+    return { success: true, data: result };
+  } catch (error: unknown) {
+    return failure(error, "Gagal melanjutkan tahap RAP.");
   }
 }
-
 export async function setProjectRapScopeSkipped(input: unknown): Promise<ActionResponse<Rap>> {
   const parsed = setProjectRapScopeSkippedSchema.safeParse(input);
   if (!parsed.success)
@@ -126,47 +77,21 @@ export async function setProjectRapScopeSkipped(input: unknown): Promise<ActionR
       success: false,
       error: { code: "VALIDATION_ERROR", message: "Keputusan scope tidak valid." },
     };
-  const user = await getSessionUser();
-  if (!user)
+  const actor = await resolveActor();
+  if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
-    const rap = await db.query.projectRap.findFirst({
-      where: eq(projectRap.id, parsed.data.projectRapId),
-    });
-    if (!rap) throw new Error("RAP_NOT_FOUND");
-    if (rap.status !== "DRAFT") throw new Error("RAP sudah terkunci.");
-    await assertScoped(user, rap.projectId, "update:budget");
-    const packages = await getPackages(rap.projectId);
-    const relevant = packages.filter(
-      (row) =>
-        row.categoryCode === parsed.data.categoryCode && ["DRAFT", "ACTIVE"].includes(row.status),
+    const result = await db.transaction((tx) =>
+      applyRapSetupStepTx(tx, actor, parsed.data.projectRapId, {
+        action: "SET_SCOPE",
+        category: parsed.data.categoryCode,
+        skipped: parsed.data.skipped,
+      }),
     );
-    if (parsed.data.skipped && relevant.length > 0)
-      throw new Error("Hapus package yang masih aktif sebelum menandai scope Tidak Digunakan.");
-    const changes =
-      parsed.data.categoryCode === "TUKANG"
-        ? { tukangScopeSkipped: parsed.data.skipped }
-        : { subconScopeSkipped: parsed.data.skipped };
-    const [updated] = await db.transaction(async (tx) => {
-      const rows = await tx
-        .update(projectRap)
-        .set({ ...changes, setupUpdatedById: user.id, updatedAt: new Date() })
-        .where(eq(projectRap.id, rap.id))
-        .returning();
-      await tx.insert(auditLog).values({
-        userId: user.id,
-        action: parsed.data.skipped ? "SKIP_RAP_SCOPE" : "RESTORE_RAP_SCOPE",
-        targetTable: "project_rap",
-        targetId: rap.id,
-        originalState: JSON.stringify(rap),
-        newState: JSON.stringify({ ...rows[0], categoryCode: parsed.data.categoryCode }),
-      });
-      return rows;
-    });
-    revalidatePath(`/projects/${rap.projectId}`);
-    return { success: true, data: updated };
-  } catch (error) {
-    return failure(error, "Gagal memperbarui keputusan scope.");
+    revalidatePath(`/projects/${result.projectId}`);
+    return { success: true, data: result };
+  } catch (error: unknown) {
+    return failure(error, "Gagal memperbarui scope RAP.");
   }
 }
 
@@ -186,22 +111,11 @@ export async function markProjectCategoryPlanItemDraft(
     if (!item) throw new Error("CATEGORY_PLAN_ITEM_NOT_FOUND");
     if (item.status !== "ACTIVE") throw new Error("Hanya package Siap yang dapat diedit lagi.");
     await assertScoped(user, item.projectId, "update:budget");
-    const [updated] = await db.transaction(async (tx) => {
-      const rows = await tx
-        .update(projectCategoryPlanItem)
-        .set({ status: "DRAFT", updatedAt: new Date() })
-        .where(eq(projectCategoryPlanItem.id, item.id))
-        .returning();
-      await tx.insert(auditLog).values({
-        userId: user.id,
-        action: "REOPEN_CATEGORY_PLAN_PACKAGE",
-        targetTable: "project_category_plan_item",
-        targetId: item.id,
-        originalState: JSON.stringify(item),
-        newState: JSON.stringify(rows[0]),
-      });
-      return rows;
-    });
+    const actor = await resolveActor();
+    if (!actor) throw new Error("FORBIDDEN: Sesi tidak valid.");
+    const updated = await db.transaction((tx) =>
+      changePackageStatusTx(tx, actor, item.id, "DRAFT"),
+    );
     revalidatePath(`/projects/${item.projectId}`);
     return { success: true, data: updated };
   } catch (error) {
@@ -213,58 +127,16 @@ export async function finalizeProjectInternalPlan(input: unknown): Promise<Actio
   const parsed = finalizeProjectInternalPlanSchema.safeParse(input);
   if (!parsed.success)
     return { success: false, error: { code: "VALIDATION_ERROR", message: "RAP tidak valid." } };
-  const user = await getSessionUser();
-  if (!user)
+  const actor = await resolveActor();
+  if (!actor)
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
-    const result = await db.transaction(async (tx) => {
-      const rap = await tx.query.projectRap.findFirst({
-        where: eq(projectRap.id, parsed.data.projectRapId),
-        with: { items: true },
-      });
-      if (!rap) throw new Error("RAP_NOT_FOUND");
-      if (rap.status !== "DRAFT" || rap.setupStage !== "REVIEW")
-        throw new Error("RAP belum berada pada tahap Review.");
-      /*
-       * `lock:rap` sendiri sudah menjadi gerbangnya. Pemeriksaan nama peran di
-       * bawahnya dulu menyaring himpunan yang persis sama, jadi ia tidak pernah
-       * menolak siapa pun — yang ia lakukan hanya membuat izin ini berhenti
-       * bekerja begitu diberikan kepada peran lain.
-       */
-      await assertScoped(user, rap.projectId, "lock:rap");
-      if (rap.items.length === 0) throw new Error("Material RAP masih kosong.");
-      const packages = await tx.query.projectCategoryPlanItem.findMany({
-        where: eq(projectCategoryPlanItem.projectId, rap.projectId),
-        with: { expenseCategory: true },
-      });
-      const enriched = packages.map((row) => ({ ...row, categoryCode: row.expenseCategory.code }));
-      assertRapCategoryReady(enriched, "TUKANG", rap.tukangScopeSkipped);
-      assertRapCategoryReady(enriched, "SUBCON", rap.subconScopeSkipped);
-      const [updated] = await tx
-        .update(projectRap)
-        .set({
-          status: "LOCKED",
-          setupStage: "COMPLETE",
-          setupUpdatedById: user.id,
-          lockedById: user.id,
-          lockedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(projectRap.id, rap.id))
-        .returning();
-      await tx.insert(auditLog).values({
-        userId: user.id,
-        action: "FINALIZE_PROJECT_INTERNAL_PLAN",
-        targetTable: "project_rap",
-        targetId: rap.id,
-        originalState: JSON.stringify(rap),
-        newState: JSON.stringify(updated),
-      });
-      return updated;
-    });
+    const result = await db.transaction((tx) =>
+      applyRapSetupStepTx(tx, actor, parsed.data.projectRapId, { action: "FINALIZE" }),
+    );
     revalidatePath(`/projects/${result.projectId}`);
     return { success: true, data: result };
-  } catch (error) {
-    return failure(error, "Gagal finalisasi internal plan.");
+  } catch (error: unknown) {
+    return failure(error, "Gagal finalisasi RAP.");
   }
 }

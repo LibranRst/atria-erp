@@ -90,4 +90,52 @@ describe("desktop HeroUI adapters", () => {
     expect(html).toContain("aria-labelledby=");
     expect(html).toContain('aria-haspopup="listbox"');
   });
+
+  test("selected grouped option retains its label and distinct metadata before the popover opens", () => {
+    const html = renderToStaticMarkup(
+      <DesktopSelect
+        label="Proyek"
+        value="active"
+        placeholder="Pilih proyek"
+        onChange={(): void => undefined}
+        options={[
+          { value: "active", label: "Aktif", meta: "12 proyek", group: "Berjalan" },
+          {
+            value: "locked",
+            label: "Ditutup",
+            disabledReason: "Proyek sudah ditutup",
+            group: "Arsip",
+          },
+        ]}
+      />,
+    );
+    const value = html.slice(
+      html.indexOf('data-slot="select-value"'),
+      html.indexOf('data-slot="select-indicator"'),
+    );
+    expect(value).toContain("Aktif");
+    expect(value).toContain("12 proyek");
+    expect(value).not.toContain("Pilih proyek");
+    expect(html).toContain('value="active" selected=""');
+  });
+
+  test("searchable selects retain committed value and label/error association before opening", () => {
+    const html = renderToStaticMarkup(
+      <DesktopSelect
+        id="material-choice"
+        label="Material"
+        searchable
+        value="wood"
+        onChange={(): void => undefined}
+        error="Pilih material aktif"
+        options={[{ value: "wood", label: "Kayu solid" }]}
+      />,
+    );
+    expect(html).toContain('aria-haspopup="listbox"');
+    expect(html).toContain("Kayu solid");
+    expect(html).toContain('id="material-choice"');
+    expect(html).toContain('data-invalid="true"');
+    expect(html).toContain("aria-labelledby=");
+    expect(html).toContain("aria-describedby=");
+  });
 });

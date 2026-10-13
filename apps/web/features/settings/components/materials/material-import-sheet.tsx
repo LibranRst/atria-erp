@@ -12,6 +12,7 @@ import {
 import {
   AppIcon,
   Button,
+  FactRow,
   FormRiskNotice,
   GroupedSurface,
   WorkflowFormSheet,
@@ -123,6 +124,44 @@ export function MaterialImportSheet({
 
   return (
     <WorkflowFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-4">
+          <GroupedSurface>
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                label="File CSV"
+                wrapLabel
+                value={fileName || "Belum dipilih"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Baris dibaca"
+                wrapLabel
+                value={input?.rows.length ?? "Belum dibaca"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Material valid"
+                wrapLabel
+                value={preview?.items.length ?? "Belum divalidasi"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Perlu diperbaiki"
+                wrapLabel
+                value={preview?.errors.length ?? "Belum divalidasi"}
+              />
+            </div>
+          </GroupedSurface>
+          <p className="text-support leading-relaxed text-on-surface-variant">
+            Impor membuat Material Master dengan inventori bersaldo nol. Pratinjau belum mengubah
+            data; stok dan pembayaran tetap melalui operasi terpisah.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty: Boolean(input || preview || fileName),
@@ -136,9 +175,11 @@ export function MaterialImportSheet({
       pending={pending}
       disabled={!canCommit}
       disabledReason={
-        preview?.errors.length
-          ? "Perbaiki seluruh error CSV sebelum import."
-          : "Upload dan validasi CSV terlebih dahulu."
+        canCommit
+          ? undefined
+          : preview?.errors.length
+            ? "Perbaiki seluruh error CSV sebelum import."
+            : "Upload dan validasi CSV terlebih dahulu."
       }
       onClose={onClose}
       onExitComplete={reset}

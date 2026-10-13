@@ -130,12 +130,7 @@ globalThis.fetch = Object.assign(
               ? "/profile/password"
               : home;
         return rpcResponse(
-          postLoginDestination(
-            destination,
-            hints?.returnTo,
-            hints?.surface === "mobile",
-            scenario !== "projects",
-          ),
+          postLoginDestination(destination, hints?.returnTo, hints?.surface === "mobile"),
         );
       }
       default:

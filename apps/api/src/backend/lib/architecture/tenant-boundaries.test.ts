@@ -33,6 +33,10 @@ const GLOBAL_TABLES: ReadonlyMap<string, string> = new Map([
   ["rolePermission", "Ditangguhkan bersama role."],
   ["projectCostCategory", "Enum tetap: MATERIAL, SUBCONTRACTOR, OPERATIONAL, OTHER."],
   ["aiUserPreference", "Preferensi milik orang, bukan perusahaan."],
+  [
+    "userRoleGuideState",
+    "Pengakuan panduan milik identitas user; operasinya dibatasi sesi pengguna sendiri, bukan data perusahaan.",
+  ],
   ["tenant", "Akar hierarki tenant itu sendiri."],
   ["tenantMember", "Punya tenantId sebagai foreign key, bukan sebagai kolom scoping."],
 ]);

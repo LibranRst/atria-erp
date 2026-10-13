@@ -1,8 +1,15 @@
+"use client";
+
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { ProjectDesktopLoading } from "@/features/projects/list/components/views/project-desktop-loading";
+
 function SkeletonLine({ className }: { readonly className: string }): React.JSX.Element {
   return <div className={`rounded-full bg-surface-container ${className}`} aria-hidden="true" />;
 }
 
 export default function ProjectDetailLoading(): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  if (desktop) return <ProjectDesktopLoading detail />;
   return (
     <div className="space-y-md pb-8" aria-label="Memuat detail proyek" role="status">
       <section className="relative aspect-square overflow-hidden rounded-owner bg-primary/90">

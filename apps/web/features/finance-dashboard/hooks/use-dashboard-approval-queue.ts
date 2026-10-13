@@ -13,13 +13,18 @@ export type DashboardApprovalQueue = {
   readonly summary: ApprovalQueueSummary;
 };
 
-type RecordedDecision = { readonly approvalId: string; readonly decidedAt: Date };
+type RecordedDecision = {
+  readonly approvalId: string;
+  readonly decidedAt: Date;
+  readonly approval?: ApprovalDetail;
+};
 
 export function removeRecordedApproval(
   current: DashboardApprovalQueue,
   decision: RecordedDecision,
 ): DashboardApprovalQueue {
-  const item = current.approvals.find((approval) => approval.id === decision.approvalId);
+  const item =
+    current.approvals.find((approval) => approval.id === decision.approvalId) ?? decision.approval;
   if (!item) return current;
   return {
     approvals: current.approvals.filter((approval) => approval.id !== item.id),

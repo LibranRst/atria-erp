@@ -4,7 +4,7 @@ import React from "react";
 import { toast } from "sonner";
 
 import { createInventoryLocation } from "@/app/actions/material/warehouse";
-import { AppIcon, EmptyState, GroupedSurface } from "@/components/ui";
+import { AppIcon, EmptyState, GroupedSurface, Button } from "@/components/ui";
 import { InventoryLocationSheet } from "@/features/materials/components/sheets/inventory-location-sheet";
 import type { SettingsOption } from "../../types/material-types";
 
@@ -55,7 +55,7 @@ export function LocationSettingsManager({
   }
 
   return (
-    <section className="space-y-sm min-w-0">
+    <section className="min-w-0 space-y-sm">
       <div className="flex min-w-0 items-center justify-between gap-3">
         <span className="min-w-0 px-1">
           <span className="block text-[13px] leading-5 font-bold text-on-surface">
@@ -66,15 +66,16 @@ export function LocationSettingsManager({
           </span>
         </span>
         {canManage ? (
-          <button
+          <Button
             type="button"
             onClick={() => setShowLocationSheet(true)}
             className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
             title="Tambah Lokasi Gudang Baru"
+            variant="primary"
           >
             <AppIcon name="add" className="icon-sm" />
             <span className="ml-1 max-[420px]:hidden">Tambah</span>
-          </button>
+          </Button>
         ) : null}
       </div>
 
@@ -85,13 +86,14 @@ export function LocationSettingsManager({
             description="Tambahkan lokasi gudang atau workshop pertama untuk menempatkan stok material dan pencatatan inventori."
           />
           {canManage ? (
-            <button
+            <Button
               type="button"
               onClick={() => setShowLocationSheet(true)}
               className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary shadow-control"
+              variant="primary"
             >
               Buat lokasi gudang pertama
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : (

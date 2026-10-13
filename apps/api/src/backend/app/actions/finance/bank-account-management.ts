@@ -1,17 +1,19 @@
-import { eq } from "drizzle-orm";
+import {
+  createBankAccountTx,
+  updateBankAccountTx,
+  setBankAccountActiveTx,
+  lockBankAccounts,
+  lockBankCatalog,
+} from "@backend/server/usecases/finance/bank-cash-writer";
 
 import {
   authorizeBankAccountAction,
   bankAccountPayload,
   mapBankAccountError,
   revalidateFinanceViews,
-  toBankMoney,
 } from "@backend/app/actions/finance/bank-account-action-utils";
 import { db } from "@backend/db";
-import { auditLog, bankAccount } from "@backend/db/schema";
 import { assertPermission } from "@backend/lib/auth/permissions";
-import { mutateBalance } from "@backend/lib/finance/balance-mutation";
-import { recordReadinessMilestonesTx } from "@backend/lib/onboarding/readiness-events";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   createBankAccountSchema,
@@ -36,53 +38,9 @@ export async function createBankAccount(
   const authResult = await authorizeBankAccountAction("create:bank_account");
   if (!authResult.success) return authResult;
   try {
-    const result = await db.transaction(async (tx) => {
-      const [created] = await tx
-        .insert(bankAccount)
-        .values({
-          name: validation.data.name.trim(),
-          accountNumber: validation.data.accountNumber.trim(),
-          bankName: validation.data.bankName.trim(),
-          holderName: validation.data.holderName.trim(),
-          balance: "0.00",
-          cardColorFrom: validation.data.cardColorFrom,
-          cardColorTo: validation.data.cardColorTo,
-          cardTextColor: validation.data.cardTextColor,
-          isActive: true,
-        })
-        .returning();
-      if (!created) throw new Error("BANK_ACCOUNT_CREATE_FAILED");
-      await tx.insert(auditLog).values({
-        userId: authResult.data.user.id,
-        action: "CREATE_BANK_ACCOUNT",
-        targetTable: "bank_account",
-        targetId: created.id,
-        newState: JSON.stringify(created),
-      });
-      if (validation.data.openingBalance > 0) {
-        await mutateBalance({
-          tx,
-          bankAccountId: created.id,
-          type: "INFLOW",
-          amount: toBankMoney(validation.data.openingBalance),
-          category: "opening_balance",
-          description: validation.data.openingNote?.trim() || `Saldo awal ${created.name}`,
-          referenceType: "opening_balance",
-          referenceId: crypto.randomUUID(),
-          userId: authResult.data.user.id,
-        });
-      }
-      await recordReadinessMilestonesTx({
-        tx,
-        actorUserId: authResult.data.user.id,
-        changedItem: "bank_account",
-      });
-      const latest = await tx.query.bankAccount.findFirst({
-        where: eq(bankAccount.id, created.id),
-      });
-      if (!latest) throw new Error("BANK_ACCOUNT_NOT_FOUND");
-      return latest;
-    });
+    const result = await db.transaction((tx) =>
+      createBankAccountTx(tx, authResult.data.user.id, validation.data),
+    );
     revalidateFinanceViews();
     return { success: true, data: bankAccountPayload(result) };
   } catch (error) {
@@ -107,10 +65,8 @@ export async function updateBankAccount(
   if (!authResult.success) return authResult;
   try {
     const updated = await db.transaction(async (tx) => {
-      const existing = await tx.query.bankAccount.findFirst({
-        where: eq(bankAccount.id, validation.data.bankAccountId),
-      });
-      if (!existing) throw new Error("BANK_ACCOUNT_NOT_FOUND");
+      await lockBankCatalog(tx);
+      const [existing] = await lockBankAccounts(tx, [validation.data.bankAccountId]);
       if (existing.isActive !== validation.data.isActive) {
         try {
           await assertPermission(authResult.data.user, "delete:bank_account");
@@ -118,31 +74,7 @@ export async function updateBankAccount(
           throw new Error("BANK_ACCOUNT_STATUS_FORBIDDEN");
         }
       }
-      const [row] = await tx
-        .update(bankAccount)
-        .set({
-          name: validation.data.name.trim(),
-          accountNumber: validation.data.accountNumber.trim(),
-          bankName: validation.data.bankName.trim(),
-          holderName: validation.data.holderName.trim(),
-          cardColorFrom: validation.data.cardColorFrom,
-          cardColorTo: validation.data.cardColorTo,
-          cardTextColor: validation.data.cardTextColor,
-          isActive: validation.data.isActive,
-          updatedAt: new Date(),
-        })
-        .where(eq(bankAccount.id, validation.data.bankAccountId))
-        .returning();
-      if (!row) throw new Error("BANK_ACCOUNT_UPDATE_FAILED");
-      await tx.insert(auditLog).values({
-        userId: authResult.data.user.id,
-        action: "UPDATE_BANK_ACCOUNT",
-        targetTable: "bank_account",
-        targetId: row.id,
-        originalState: JSON.stringify(existing),
-        newState: JSON.stringify(row),
-      });
-      return row;
+      return updateBankAccountTx(tx, authResult.data.user.id, validation.data);
     });
     revalidateFinanceViews();
     return { success: true, data: bankAccountPayload(updated) };
@@ -167,27 +99,14 @@ export async function setBankAccountActive(input: {
   const authResult = await authorizeBankAccountAction("delete:bank_account");
   if (!authResult.success) return authResult;
   try {
-    const updated = await db.transaction(async (tx) => {
-      const existing = await tx.query.bankAccount.findFirst({
-        where: eq(bankAccount.id, validation.data.bankAccountId),
-      });
-      if (!existing) throw new Error("BANK_ACCOUNT_NOT_FOUND");
-      const [row] = await tx
-        .update(bankAccount)
-        .set({ isActive: validation.data.isActive, updatedAt: new Date() })
-        .where(eq(bankAccount.id, validation.data.bankAccountId))
-        .returning();
-      if (!row) throw new Error("BANK_ACCOUNT_UPDATE_FAILED");
-      await tx.insert(auditLog).values({
-        userId: authResult.data.user.id,
-        action: validation.data.isActive ? "REACTIVATE_BANK_ACCOUNT" : "ARCHIVE_BANK_ACCOUNT",
-        targetTable: "bank_account",
-        targetId: row.id,
-        originalState: JSON.stringify(existing),
-        newState: JSON.stringify({ isActive: row.isActive }),
-      });
-      return row;
-    });
+    const updated = await db.transaction((tx) =>
+      setBankAccountActiveTx(
+        tx,
+        authResult.data.user.id,
+        validation.data.bankAccountId,
+        validation.data.isActive,
+      ),
+    );
     revalidateFinanceViews();
     return { success: true, data: { id: updated.id, isActive: updated.isActive } };
   } catch (error) {

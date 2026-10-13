@@ -1,5 +1,5 @@
 import { db } from "@backend/db";
-import { bankAccount, project, vendor, vendorBill } from "@backend/db/schema";
+import { bankAccount, project, vendor, vendorBill, INSTANCE_TENANT_ID } from "@backend/db/schema";
 import { getPendingApprovalDetails } from "@backend/lib/finance/approval-details";
 import { tool } from "ai";
 import { and, asc, eq, ilike, lte, ne } from "drizzle-orm";
@@ -37,16 +37,21 @@ export function buildFinanceTools(context: AiToolContext) {
         }
 
         const rows = await db.query.bankAccount.findMany({
-          where: eq(bankAccount.isActive, true),
-          columns: { name: true, bankName: true, balance: true },
+          where: and(eq(bankAccount.tenantId, INSTANCE_TENANT_ID), eq(bankAccount.isActive, true)),
+          columns: { id: true, name: true, bankName: true, balance: true },
           orderBy: [asc(bankAccount.name)],
         });
 
         const total = rows.reduce((sum, row) => sum + toNumber(row.balance), 0);
 
         return {
+          accountCount: rows.length,
+          scope: "Seluruh rekening aktif perusahaan ini",
+          instruction:
+            "Untuk saldo gabungan perusahaan, gunakan totalAvailable dan accountCount ini. Daftar hasil pencarian/halaman getBankCashContext bukan total seluruh perusahaan.",
           totalAvailable: money(String(total)),
           accounts: rows.map((row) => ({
+            accountId: row.id,
             accountName: row.name,
             bankName: row.bankName,
             balance: money(row.balance),
@@ -160,6 +165,9 @@ export function buildFinanceTools(context: AiToolContext) {
         horizon.setDate(horizon.getDate() + withinDays);
 
         const conditions = [
+          eq(vendorBill.tenantId, INSTANCE_TENANT_ID),
+          eq(project.tenantId, INSTANCE_TENANT_ID),
+          eq(vendor.tenantId, INSTANCE_TENANT_ID),
           ne(vendorBill.status, "PAID"),
           ne(vendorBill.status, "VOID"),
           lte(vendorBill.dueDate, horizon),

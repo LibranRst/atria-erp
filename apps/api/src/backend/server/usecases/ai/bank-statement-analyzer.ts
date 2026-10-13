@@ -10,9 +10,11 @@ import { getErrorMessage } from "@atria/core/utils/error-message";
 import { eq } from "drizzle-orm";
 import * as XLSX from "xlsx";
 import { z } from "zod";
+import { statementMutationSchema } from "@atria/core/ai/bank-reconciliation";
 
 export type AnalyzedBankStatementRow = {
   readonly rowNumber: number;
+  readonly sheetName?: string;
   readonly transactionDate: string; // YYYY-MM-DD
   readonly description: string;
   readonly amount: number;
@@ -55,7 +57,9 @@ function parseAiBankAnalysis(rawJson: string): z.infer<typeof aiBankAnalysisSche
   try {
     return aiBankAnalysisSchema.parse(JSON.parse(rawJson));
   } catch {
-    throw new Error("AI belum berhasil membaca struktur mutasi bank. Periksa dokumen atau isi manual.");
+    throw new Error(
+      "AI belum berhasil membaca struktur mutasi bank. Periksa dokumen atau isi manual.",
+    );
   }
 }
 
@@ -147,13 +151,10 @@ export function normalizeDateToIso(rawDate: string): string {
     }
   }
 
-  // DD/MM (tanpa tahun, gunakan tahun sekarang)
+  // Missing years must be supplied from the source, never guessed from today's date.
   const shortMatch = /^(\d{1,2})[/-](\d{1,2})$/.exec(trimmed);
   if (shortMatch) {
-    const currentYear = new Date().getFullYear();
-    const day = shortMatch[1]!.padStart(2, "0");
-    const month = shortMatch[2]!.padStart(2, "0");
-    return `${currentYear}-${month}-${day}`;
+    throw new Error("Tanggal mutasi belum memiliki tahun. Lengkapi tahun dari rekening koran.");
   }
 
   const parsed = new Date(trimmed);
@@ -161,7 +162,7 @@ export function normalizeDateToIso(rawDate: string): string {
     return parsed.toISOString().slice(0, 10);
   }
 
-  return new Date().toISOString().slice(0, 10);
+  throw new Error("Tanggal mutasi tidak dapat dibaca. Periksa tanggal pada sumber.");
 }
 
 /**
@@ -197,6 +198,15 @@ function calculateSummary(rows: readonly AnalyzedBankStatementRow[]): {
   totalOutflow: number;
   rowCount: number;
 } {
+  if (rows.length > 500)
+    throw new Error("Maksimal 500 mutasi per berkas. Pecah sumber menjadi beberapa berkas.");
+  for (const row of rows)
+    statementMutationSchema.parse({
+      transactionDate: row.transactionDate,
+      description: row.description,
+      amount: row.amount,
+      type: row.type,
+    });
   let totalInflow = 0;
   let totalOutflow = 0;
 
@@ -229,7 +239,13 @@ function tryParseStandardAtriaCsv(content: string): AnalyzedBankStatementRow[] |
       amount: Number(row.amount),
       type: row.type,
     }));
-  } catch {
+  } catch (error: unknown) {
+    if (
+      error instanceof Error &&
+      !error.message.startsWith("CSV_MISSING_HEADERS") &&
+      !error.message.startsWith("CSV_EMPTY")
+    )
+      throw error;
     return null;
   }
 }
@@ -492,57 +508,64 @@ function extractExcelData(buffer: Buffer): {
     return { isParsedDirectly: false, directResult: null, tabularText: "" };
   }
 
-  // 1. Cek apakah ada sheet yang cocok dengan format CSV standar Atria atau format bank umum
+  const parsedSheets: BankStatementAnalysisResult[] = [];
+  const textParts: string[] = [];
+  let allParsed = true;
   for (const sheetName of sheetNames) {
     const worksheet = workbook.Sheets[sheetName];
     if (!worksheet) continue;
-
     const csvContent = XLSX.utils.sheet_to_csv(worksheet, { FS: "," });
+    if (!csvContent.trim()) continue;
+    textParts.push(`Sheet: ${sheetName}\n${csvContent}`);
     const standardRows = tryParseStandardAtriaCsv(csvContent);
-    if (standardRows && standardRows.length > 0) {
-      return {
-        isParsedDirectly: true,
-        directResult: {
+    const generic = standardRows
+      ? {
           rows: standardRows,
           detectedBankName: null,
           detectedAccountNumber: null,
           summary: calculateSummary(standardRows),
-        },
-        tabularText: csvContent,
-      };
+        }
+      : tryParseGenericBankTabular(
+          XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
+            header: 1,
+            raw: false,
+            dateNF: "yyyy-mm-dd",
+          }),
+        );
+    if (!generic) {
+      const rawRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, raw: false });
+      // A cover sheet has no transaction table. Unknown tabular sheets still enter full analysis.
+      if (rawRows.some((row) => row.length > 1)) allParsed = false;
+      continue;
     }
-
-    const rawRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
-      header: 1,
-      raw: false,
-      dateNF: "yyyy-mm-dd",
-    });
-    const genericResult = tryParseGenericBankTabular(rawRows);
-    if (genericResult && genericResult.rows.length > 0) {
-      return {
-        isParsedDirectly: true,
-        directResult: genericResult,
-        tabularText: csvContent,
-      };
-    }
+    parsedSheets.push({ ...generic, rows: generic.rows.map((row) => ({ ...row, sheetName })) });
   }
-
-  // 2. Jika tidak ada sheet yang ter-parse secara langsung, kumpulkan teks untuk AI
-  const textParts: string[] = [];
-  for (const sheetName of sheetNames.slice(0, 3)) {
-    const worksheet = workbook.Sheets[sheetName];
-    if (!worksheet) continue;
-    const csvContent = XLSX.utils.sheet_to_csv(worksheet, { FS: "," });
-    if (csvContent.trim().length > 0) {
-      textParts.push(`--- Sheet: ${sheetName} ---\n${csvContent.slice(0, 10000)}`);
-    }
+  const tabularText = textParts.join("\n\n");
+  if (allParsed && parsedSheets.length) {
+    const accounts = [
+      ...new Set(
+        parsedSheets.flatMap((s) => (s.detectedAccountNumber ? [s.detectedAccountNumber] : [])),
+      ),
+    ];
+    if (accounts.length > 1)
+      throw new Error("Spreadsheet memuat beberapa rekening. Pisahkan sumber per rekening.");
+    const rows = parsedSheets.flatMap((s) => s.rows);
+    return {
+      isParsedDirectly: true,
+      directResult: {
+        rows,
+        detectedBankName: parsedSheets.find((s) => s.detectedBankName)?.detectedBankName ?? null,
+        detectedAccountNumber: accounts[0] ?? null,
+        summary: calculateSummary(rows),
+      },
+      tabularText,
+    };
   }
-
-  return {
-    isParsedDirectly: false,
-    directResult: null,
-    tabularText: textParts.join("\n\n"),
-  };
+  if (tabularText.length > 32000)
+    throw new Error(
+      "Data spreadsheet terlalu panjang untuk dipetakan sekaligus. Pecah sumber tanpa menghilangkan sheet.",
+    );
+  return { isParsedDirectly: false, directResult: null, tabularText };
 }
 
 async function safeUpdateAiRun(
@@ -676,7 +699,12 @@ export async function analyzeBankStatementUseCase(
             return { success: true, data: genericResult };
           }
         }
-      } catch {
+      } catch (error: unknown) {
+        if (
+          error instanceof Error &&
+          (error.message.startsWith("Maksimal 500") || error.message.startsWith("Tanggal mutasi"))
+        )
+          throw error;
         // Lanjutkan ke AI jika parsing lokal gagal
       }
     }
@@ -718,7 +746,7 @@ Petakan data ini menjadi daftar baris mutasi bank yang terstandarisasi:
 6. accountNumber: nomor rekening jika tertera
 
 Data tabular:
-${tabularText.slice(0, 30000)}`;
+${tabularText}`;
 
       requireDocumentProvider();
       const response = await documentModel.models.generateContent({
@@ -779,6 +807,8 @@ ${tabularText.slice(0, 30000)}`;
 
     // Jalur 3: CSV non-standar atau teks bebas
     if (isCsv && data.fileContent) {
+      if (data.fileContent.length > 32000)
+        throw new Error("Data teks terlalu panjang. Pecah sumber menjadi beberapa berkas.");
       const prompt = `Berikut adalah data mutasi rekening koran dari file CSV atau teks:
 Petakan data ini menjadi daftar baris mutasi bank yang terstandarisasi:
 1. transactionDate: YYYY-MM-DD
@@ -789,7 +819,7 @@ Petakan data ini menjadi daftar baris mutasi bank yang terstandarisasi:
 6. accountNumber: nomor rekening jika tertera
 
 Isi teks/CSV:
-${data.fileContent.slice(0, 30000)}`;
+${data.fileContent}`;
 
       requireDocumentProvider();
       const response = await documentModel.models.generateContent({

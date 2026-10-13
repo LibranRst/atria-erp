@@ -7,9 +7,9 @@ import { motion, useReducedMotion } from "framer-motion";
 import { AppIcon, DuotoneIconTile, MoneyValue, StatusBadge } from "@/components/ui";
 import type { DashboardRiskyProject } from "@/features/finance-dashboard/types/dashboard-types";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { cn } from "@/lib/utils/cn";
-const dashboardRowPressScale = { scale: 0.985 } as const;
+const dashboardRowPressScale = { scale: buttonTapActiveScale } as const;
 
 function projectHealthLabel(health: DashboardRiskyProject["effectiveHealth"]): string {
   if (health === "CRITICAL") return "Kritis";

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
 
 import { InlineStateRow } from "./main-surface";
+import { Button } from "../button/button";
 
 const meta = {
   title: "ui/feedback/InlineStateRow",
@@ -48,5 +49,20 @@ export const Critical: Story = {
     icon: "error",
     title: "Ditolak",
     description: "Bukti pembayaran tidak lengkap",
+  },
+};
+
+export const RecoveryBelow: Story = {
+  args: {
+    tone: "critical",
+    icon: "error",
+    title: "Belum bisa dilanjutkan",
+    description: "Proyek di luar akses Anda.",
+    actionPlacement: "below",
+    action: (
+      <Button variant="quiet" size="compact">
+        Periksa lagi
+      </Button>
+    ),
   },
 };

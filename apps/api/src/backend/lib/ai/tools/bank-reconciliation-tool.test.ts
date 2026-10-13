@@ -1,20 +1,21 @@
-import {
-  bankReconciliationInputSchema,
-  buildFinanceProposalTools,
-} from "@backend/lib/ai/tools/finance-proposal-tools";
+import { buildBankReconciliationTools } from "./bank-reconciliation-tools";
+import { bankReconciliationInputSchema } from "@backend/lib/ai/tools/finance-proposal-tools";
 import { aiToolContextForRole } from "@backend/lib/testing/ai-tool-context";
 import { describe, expect, it } from "bun:test";
 
 describe("tool proposeBankReconciliation", () => {
   it("menolak eksekusi jika pengguna tidak memiliki izin reconcile:ledger (misal: PROJECT_MANAGER)", async () => {
     const pmContext = aiToolContextForRole("PROJECT_MANAGER");
-    const tools = buildFinanceProposalTools(pmContext);
+    const tools = buildBankReconciliationTools(pmContext);
 
     const execute = tools.proposeBankReconciliation.execute;
     if (!execute) throw new Error("execute is not defined");
     const result = await execute(
       {
-        mutations: [
+        action: "IMPORT",
+        bankAccountId: "00000000-0000-0000-0000-000000000010",
+        fileName: "qa.csv",
+        rows: [
           {
             transactionDate: "2026-03-01",
             description: "TRF SEMEN",
@@ -26,15 +27,14 @@ describe("tool proposeBankReconciliation", () => {
       { messages: [], toolCallId: "call-test" } as unknown as Parameters<typeof execute>[1],
     );
 
-    expect("error" in result).toBe(true);
-    if ("error" in result) {
-      expect(result.error).toContain("akses");
-    }
+    expect(result).toMatchObject({ error: expect.stringContaining("Akses") });
   });
   it("memvalidasi skema input tool dengan benar", () => {
     const valid = bankReconciliationInputSchema.safeParse({
+      action: "IMPORT",
+      fileName: "qa.csv",
       bankAccountId: "00000000-0000-0000-0000-000000000010",
-      mutations: [
+      rows: [
         {
           transactionDate: "2026-03-01",
           description: "TRF PEMBAYARAN VENDOR",
@@ -46,12 +46,12 @@ describe("tool proposeBankReconciliation", () => {
     expect(valid.success).toBe(true);
 
     const invalidEmptyMutations = bankReconciliationInputSchema.safeParse({
-      mutations: [],
+      rows: [],
     });
     expect(invalidEmptyMutations.success).toBe(false);
 
     const invalidNegativeAmount = bankReconciliationInputSchema.safeParse({
-      mutations: [
+      rows: [
         {
           transactionDate: "2026-03-01",
           description: "BIAYA",

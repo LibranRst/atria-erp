@@ -1,86 +1,84 @@
-import { describe, expect, test } from "bun:test";
+import { expect, test } from "bun:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-
 import { ToolTraceList } from "./tool-trace";
-
-const done = (label: string, count = 1) =>
-  ({ key: label, label, state: "done" as const, count }) as const;
-
-describe("jejak tool yang diringkas", () => {
-  test("meringkas jejak selesai menjadi satu baris bercacah", () => {
-    const html = renderToStaticMarkup(
-      <ToolTraceList traces={[done("Daftar proyek dibaca"), done("Budget dibaca", 3)]} />,
-    );
-
-    expect(html).toContain("4 sumber data dibaca");
-    expect(html).not.toContain("Daftar proyek dibaca");
-    expect(html).toContain('aria-expanded="false"');
-    expect(html).toContain("aria-controls=");
-    expect(html).toContain("after:-inset-y-2");
-    expect(html.match(/pointer-events-none/g)).toHaveLength(3);
-  });
-
-  test("tetap compact dan dapat dibuka pengguna selama tool berjalan", () => {
-    const html = renderToStaticMarkup(
-      <ToolTraceList
-        traces={[{ key: "a", label: "Membaca daftar proyek", state: "running", count: 1 }]}
-      />,
-    );
-
-    expect(html).toContain("0 dari 1 sumber dibaca");
-    expect(html).not.toContain("Membaca daftar proyek");
-    expect(html).toContain('aria-expanded="false"');
-    expect(html).not.toContain("disabled");
-    expect(html).toContain("rotate-0");
-  });
-
-  test("tetap compact dan dapat dibuka pengguna ketika tool gagal", () => {
-    const html = renderToStaticMarkup(
-      <ToolTraceList
-        traces={[
-          done("Daftar proyek dibaca"),
-          { key: "b", label: "Gagal membaca budget", state: "failed", count: 1 },
-        ]}
-      />,
-    );
-
-    expect(html).toContain("1 sumber data dibaca, 1 gagal");
-    expect(html).not.toContain("Gagal membaca budget");
-    expect(html).toContain('aria-expanded="false"');
-    expect(html).not.toContain("disabled");
-  });
-
-  test("menyebut jejak yang terputus terpisah dari yang gagal", () => {
-    const html = renderToStaticMarkup(
-      <ToolTraceList
-        traces={[
-          done("Daftar proyek dibaca"),
-          { key: "b", label: "Membaca budget", state: "interrupted", count: 1 },
-        ]}
-      />,
-    );
-
-    expect(html).toContain("1 sumber data dibaca, 1 dihentikan");
-  });
-
-  test("tidak merender apa-apa ketika tidak ada tool yang dipanggil", () => {
-    expect(renderToStaticMarkup(<ToolTraceList traces={[]} />)).toBe("");
-  });
-
-  test("memisahkan key animasi running dan static sehingga icon selesai tidak terus berputar", () => {
-    const runningHtml = renderToStaticMarkup(
-      <ToolTraceList
-        traces={[{ key: "tool-1", label: "Membaca kas", state: "running", count: 1 }]}
-      />,
-    );
-    expect(runningHtml).toContain("0 dari 1 sumber dibaca");
-
-    const doneHtml = renderToStaticMarkup(
-      <ToolTraceList
-        traces={[{ key: "tool-1", label: "Kas dibaca", state: "done", count: 1 }]}
-      />,
-    );
-    expect(doneHtml).toContain("1 sumber data dibaca");
-  });
+import { activitySummary, waitingDuration, type ActivityTrace } from "../utils/activity-summary";
+const traces: ActivityTrace[] = [
+  { key: "read", label: "Stok dibaca", state: "done", count: 2, kind: "read" },
+  { key: "proposal", label: "Draft disiapkan", state: "done", count: 1, kind: "proposal" },
+  { key: "suggest", label: "Saran disiapkan", state: "done", count: 1, kind: "suggestion" },
+];
+test("mixed calls count actual sources separately from proposals and suggestions", () => {
+  const summary = activitySummary(traces, false);
+  expect(summary.label).toBe("2 sumber diperiksa · 1 usulan siap");
+});
+test("current tool action is contextual and detail stays manually collapsed", () => {
+  const html = renderToStaticMarkup(
+    <ToolTraceList
+      traces={[{ key: "a", label: "Memeriksa stok", state: "running", count: 1, kind: "read" }]}
+      isActive
+      elapsedSeconds={12}
+    />,
+  );
+  expect(html).toContain("Memeriksa stok");
+  expect(html).toContain("12 dtk");
+  expect(html).toContain('aria-expanded="false"');
+  expect(html).toContain("aria-controls=");
+});
+test("failed and interrupted calls remain distinct from successful work", () => {
+  expect(
+    activitySummary([...traces, { key: "f", label: "Budget", state: "failed", count: 2 }], false)
+      .detail,
+  ).toContain("2 gagal");
+  expect(
+    activitySummary(
+      [...traces, { key: "s", label: "Budget", state: "interrupted", count: 1 }],
+      false,
+    ).label,
+  ).toBe("Proses dihentikan");
+});
+test("no tools does not invent data sources", () => {
+  expect(renderToStaticMarkup(<ToolTraceList traces={[]} />)).toBe("");
+  expect(renderToStaticMarkup(<ToolTraceList traces={[]} isActive />)).toContain(
+    "Menyusun jawaban",
+  );
+});
+test("waiting time appears only after ten seconds and has no invented ETA", () => {
+  expect(waitingDuration(9)).toBe("");
+  expect(waitingDuration(10)).toBe("10 dtk");
+  expect(waitingDuration(70)).toBe("1 m 10 dtk");
+});
+test("waiting and recovered activity use neutral copy while blocking errors remain clear", () => {
+  const state: ActivityTrace[] = [
+    { key: "retry", label: "Pencarian awal diulang", state: "recovered", count: 1, kind: "read" },
+    {
+      key: "input",
+      label: "Form input siap diisi",
+      state: "done",
+      count: 1,
+      kind: "input",
+      waitingForInput: "project",
+    },
+  ];
+  expect(activitySummary(state, false).state).toBe("waiting");
+  const html = renderToStaticMarkup(<ToolTraceList traces={state} />);
+  expect(html).toContain("Pilih proyek untuk melanjutkan");
+  expect(html).toContain("percobaan dipulihkan");
+  expect(html).not.toContain("pemeriksaan belum selesai");
+  const blocked = activitySummary(
+    [
+      ...state,
+      {
+        key: "denied",
+        label: "Akses data",
+        detail: "Akses data ditolak.",
+        state: "failed",
+        count: 1,
+        kind: "read",
+      },
+    ],
+    false,
+  );
+  expect(blocked.state).toBe("failed");
+  expect(blocked.detail).toContain("1 gagal");
 });

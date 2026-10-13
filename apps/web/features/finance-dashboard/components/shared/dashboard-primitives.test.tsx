@@ -18,7 +18,8 @@ describe("native editorial dashboard sections", () => {
     expect(html).toContain("pl-3 pr-2.5");
     expect(html).toContain("after:-inset-y-2");
     expect(html).toContain("text-on-surface-variant");
-    expect(html).toContain('viewBox="0 0 256 256"');
+    expect(html).toContain("<svg");
+    expect(html).toContain('aria-hidden="true"');
     expect(html).toContain("active:bg-surface-container");
   });
 

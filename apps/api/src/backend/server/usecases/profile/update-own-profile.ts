@@ -1,60 +1,68 @@
 import { eq } from "drizzle-orm";
-
 import { db } from "@backend/db";
-import { auditLog, user } from "@backend/db/schema";
+import { auditLog, user, role } from "@backend/db/schema";
 import type { Actor } from "@backend/server/actor";
+import type { FinanceTransaction } from "../finance/mutation-access";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   updateOwnProfileSchema,
   type UpdateOwnProfileInput,
 } from "@atria/core/validations/profile";
-
-/**
- * Memperbarui nama tampilan dan foto profil milik pemanggil sendiri.
- *
- * Nama punya dua jalur tulis — jalur ini dan `updateStaffUser` milik admin —
- * dan keduanya menulis `audit_log`, sehingga riwayat sebuah nama tetap utuh dari
- * sisi mana pun ia diubah.
- *
- * `updated: false` bukan kegagalan: ia menandai submit yang tidak mengubah apa
- * pun. Tanpa itu, membuka lalu menyimpan sheet tanpa mengetik apa-apa akan
- * melahirkan satu baris `audit_log` kosong setiap kali — dan `audit_log` di
- * sini adalah alat investigasi finansial, bukan buku harian.
- */
-export async function updateOwnProfileUseCase(
+export class OwnProfileError extends Error {
+  constructor(
+    readonly code:
+      "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "TRANSACTION_FAILED",
+    message: string,
+  ) {
+    super(message);
+  }
+}
+export async function lockOwnProfileTx(
+  tx: FinanceTransaction,
+  actor: Actor,
+): Promise<typeof user.$inferSelect> {
+  const [r] = await tx.select().from(role).where(eq(role.id, actor.roleId)).for("share");
+  if (!r || !actor.isActive)
+    throw new OwnProfileError("FORBIDDEN", "Akun tidak tersedia dalam sesi Anda.");
+  const [u] = await tx.select().from(user).where(eq(user.id, actor.userId)).for("update");
+  if (
+    !u ||
+    !u.isActive ||
+    u.roleId !== actor.roleId ||
+    (u.mustChangePassword && !actor.developerActorUserId)
+  )
+    throw new OwnProfileError(
+      "FORBIDDEN",
+      "Sesi atau akses akun berubah. Periksa akun lalu masuk kembali.",
+    );
+  return u;
+}
+/** One locked own-user writer for web, native and reviewed AI changes. Omitted photo is preserved. */
+export async function updateOwnProfileTx(
+  tx: FinanceTransaction,
   actor: Actor,
   input: UpdateOwnProfileInput,
-): Promise<ActionResponse<{ readonly updated: boolean }>> {
+): Promise<{ readonly updated: boolean; readonly auditId: string | null }> {
   const validation = updateOwnProfileSchema.safeParse(input);
   if (!validation.success)
-    return {
-      success: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: validation.error.issues[0]?.message ?? "Data profil tidak valid.",
-      },
-    };
-
-  const existing = await db.query.user.findFirst({ where: eq(user.id, actor.userId) });
-  if (!existing)
-    return { success: false, error: { code: "NOT_FOUND", message: "User tidak ditemukan." } };
-
-  const nextName = validation.data.name;
-  // `undefined` berarti foto tidak disentuh; `null` berarti dihapus.
-  const imageProvided = validation.data.imageUrl !== undefined;
-  const nextImage = imageProvided ? (validation.data.imageUrl ?? null) : existing.image;
-
-  const nameChanged = nextName !== existing.name;
-  const imageChanged = imageProvided && nextImage !== existing.image;
-
-  if (!nameChanged && !imageChanged) return { success: true, data: { updated: false } };
-
-  await db.transaction(async (tx) => {
-    await tx
-      .update(user)
-      .set({ name: nextName, image: nextImage, updatedAt: new Date() })
-      .where(eq(user.id, actor.userId));
-    await tx.insert(auditLog).values({
+    throw new OwnProfileError(
+      "VALIDATION_ERROR",
+      validation.error.issues[0]?.message ?? "Data profil tidak valid.",
+    );
+  const existing = await lockOwnProfileTx(tx, actor),
+    name = validation.data.name;
+  const photoProvided = validation.data.imageUrl !== undefined,
+    image = photoProvided ? (validation.data.imageUrl ?? null) : existing.image;
+  const nameChanged = name !== existing.name,
+    imageChanged = photoProvided && image !== existing.image;
+  if (!nameChanged && !imageChanged) return { updated: false, auditId: null };
+  await tx
+    .update(user)
+    .set({ name, image, updatedAt: new Date() })
+    .where(eq(user.id, actor.userId));
+  const [audit] = await tx
+    .insert(auditLog)
+    .values({
       userId: actor.userId,
       action: "UPDATE_OWN_PROFILE",
       targetTable: "user",
@@ -64,11 +72,31 @@ export async function updateOwnProfileUseCase(
         ...(imageChanged ? { image: existing.image } : {}),
       }),
       newState: JSON.stringify({
-        ...(nameChanged ? { name: nextName } : {}),
-        ...(imageChanged ? { image: nextImage } : {}),
+        ...(nameChanged ? { name } : {}),
+        ...(imageChanged ? { image } : {}),
       }),
-    });
-  });
-
-  return { success: true, data: { updated: true } };
+    })
+    .returning({ id: auditLog.id });
+  if (!audit) throw new OwnProfileError("TRANSACTION_FAILED", "Profil belum tercatat. Coba lagi.");
+  return { updated: true, auditId: audit.id };
+}
+export async function updateOwnProfileUseCase(
+  actor: Actor,
+  input: UpdateOwnProfileInput,
+): Promise<ActionResponse<{ readonly updated: boolean }>> {
+  try {
+    const result = await db.transaction((tx) => updateOwnProfileTx(tx, actor, input));
+    return { success: true, data: { updated: result.updated } };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: {
+        code: error instanceof OwnProfileError ? error.code : "TRANSACTION_FAILED",
+        message:
+          error instanceof OwnProfileError
+            ? error.message
+            : "Profil belum dapat disimpan. Coba lagi.",
+      },
+    };
+  }
 }

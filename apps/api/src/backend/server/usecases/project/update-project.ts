@@ -1,7 +1,12 @@
 import { actorCan } from "@backend/lib/auth/permissions";
 import { db } from "@backend/db";
 import { auditLog, project, projectBudgets } from "@backend/db/schema";
-import { assertProjectAccess } from "@backend/lib/auth/scoping";
+import {
+  prepareProjectManagementTx,
+  writeProjectManagementTx,
+  assertProjectManagementRights,
+  ProjectManagementError,
+} from "./project-management-writer";
 import type { Actor } from "@backend/server/actor";
 
 import type { ActionResponse } from "@atria/core/types/action-response";
@@ -40,22 +45,27 @@ export async function updateProjectUseCase(
 
   const data = validation.data;
   try {
-    await assertProjectAccess(data.id, actor.userId, actor.roleName);
-  } catch {
-    return {
-      success: false,
-      error: {
-        code: "FORBIDDEN",
-        message: "Anda hanya dapat memperbarui proyek yang berada dalam cakupan Anda.",
-      },
-    };
-  }
-
-  try {
+    assertProjectManagementRights(actor, {
+      action: "EDIT_PROJECT",
+      projectId: data.id,
+      patch: { name: data.name },
+    });
     await db.transaction(async (tx) => {
-      const existing = await tx.query.project.findFirst({
-        where: eq(project.id, data.id),
+      const proposal = await prepareProjectManagementTx(tx, actor, {
+        action: "EDIT_PROJECT",
+        projectId: data.id,
+        patch: {
+          name: data.name,
+          clientId: data.clientId,
+          startDate: data.startDate || null,
+          endDate: data.endDate || null,
+          location: data.location || null,
+          roomArea: data.roomArea || null,
+          projectType: data.projectType || null,
+          notes: data.notes || null,
+        },
       });
+      const existing = await tx.query.project.findFirst({ where: eq(project.id, data.id) });
 
       if (!existing) {
         throw new Error("Proyek tidak ditemukan.");
@@ -64,11 +74,32 @@ export async function updateProjectUseCase(
         throw new Error("Proyek yang sudah selesai atau dibatalkan tidak dapat diedit langsung.");
       }
       if (data.status === "COMPLETED" && existing.status !== "COMPLETED") {
-        throw new Error(
-          "Status COMPLETED hanya dapat ditetapkan melalui Project Closing Checklist.",
-        );
+        throw new Error("Penutupan proyek harus melalui pemeriksaan kesiapan penutupan.");
       }
 
+      if (data.status === "ACTIVE" && existing.status === "DRAFT")
+        throw new Error("Aktifkan proyek melalui pemeriksaan kesiapan proyek.");
+      const guardedBudget = await tx.query.projectBudgets.findFirst({
+        where: eq(projectBudgets.projectId, data.id),
+      });
+      if (
+        data.totalContractValue !== undefined &&
+        Number(existing.totalContractValue) !== data.totalContractValue &&
+        guardedBudget &&
+        guardedBudget.status !== "DRAFT"
+      )
+        throw new Error("Perubahan nilai kontrak memakai persetujuan RAB atau Change Order.");
+      await writeProjectManagementTx(tx, actor, proposal);
+      if (data.projectManagerId !== existing.projectManagerId)
+        await writeProjectManagementTx(
+          tx,
+          actor,
+          await prepareProjectManagementTx(tx, actor, {
+            action: "ASSIGN_PM",
+            projectId: data.id,
+            projectManagerId: data.projectManagerId,
+          }),
+        );
       // 1. Update project details
       await tx
         .update(project)
@@ -139,7 +170,7 @@ export async function updateProjectUseCase(
     return {
       success: false,
       error: {
-        code: "INTERNAL_SERVER_ERROR",
+        code: error instanceof ProjectManagementError ? error.code : "INTERNAL_SERVER_ERROR",
         message:
           error instanceof Error
             ? error.message

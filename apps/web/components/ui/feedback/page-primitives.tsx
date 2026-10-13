@@ -1,6 +1,6 @@
 import type { JSX, ReactNode } from "react";
 
-import { formatIdr, formatShortIdr } from "@atria/core/utils/money";
+import { formatIdr, formatExactIdr, formatShortIdr } from "@atria/core/utils/money";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 import { Tooltip } from "../overlay/anchored-surfaces";
 
@@ -152,6 +152,7 @@ export type MoneyValueProps = {
   readonly size?: MoneyValueSize;
   readonly className?: string;
   readonly showTooltip?: boolean;
+  readonly fractionDigits?: 0 | 2;
 };
 
 export function MoneyValue({
@@ -163,9 +164,10 @@ export function MoneyValue({
   size = "md",
   className = "",
   showTooltip = true,
+  fractionDigits = 0,
 }: MoneyValueProps): JSX.Element {
   const compactValue = `${prefix}${formatShortIdr(amount)}`;
-  const fullValue = `${prefix}${formatIdr(amount)}`;
+  const fullValue = `${prefix}${fractionDigits === 2 ? formatExactIdr(amount) : formatIdr(amount)}`;
   const alignClass =
     align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left";
   const valueClass = moneyToneClass(tone);
@@ -411,7 +413,7 @@ export function PillTabs<TValue extends string>({
             aria-pressed={active}
             disabled={option.disabled}
             onClick={() => onChange(option.value)}
-            className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-support font-bold transition active:scale-[1.05] active:shadow-raised active:z-10 disabled:opacity-50 ${
+            className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-support font-bold transition active:z-10 active:scale-[1.05] active:shadow-raised disabled:opacity-50 ${
               active
                 ? "bg-primary text-on-primary shadow-primary"
                 : "bg-surface-container text-on-surface-variant ring-1 ring-ring-control hover:text-on-surface"

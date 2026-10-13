@@ -26,16 +26,14 @@ const toneClass: Record<IconTileTone, string> = {
   inverse: "bg-white/10 text-white",
 };
 
-export function DuotoneIconTile({
-  name,
+/** Private frame shared with the Storybook-only icon-family evaluation. */
+export function IconTileFrame({
+  children,
   tone = "neutral",
   className,
-  iconClassName,
   ...props
-}: Omit<ComponentPropsWithoutRef<"span">, "children"> & {
-  readonly name: AppIconName | string;
+}: ComponentPropsWithoutRef<"span"> & {
   readonly tone?: IconTileTone;
-  readonly iconClassName?: string;
 }): React.JSX.Element {
   return (
     <span
@@ -46,7 +44,23 @@ export function DuotoneIconTile({
         className,
       )}
     >
-      <AppIcon name={name} weight="duotone" className={cn("icon-lg", iconClassName)} />
+      {children}
     </span>
+  );
+}
+
+export function DuotoneIconTile({
+  name,
+  iconClassName,
+  ...props
+}: Omit<ComponentPropsWithoutRef<"span">, "children"> & {
+  readonly name: AppIconName | string;
+  readonly tone?: IconTileTone;
+  readonly iconClassName?: string;
+}): React.JSX.Element {
+  return (
+    <IconTileFrame {...props}>
+      <AppIcon name={name} className={cn("icon-lg", iconClassName)} />
+    </IconTileFrame>
   );
 }

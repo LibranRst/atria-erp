@@ -5,8 +5,8 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import { AppIcon, DuotoneIconTile, MoneyValue } from "@/components/ui";
 import type { ApprovalDetail } from "@atria/core/finance/approval-types";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
-const dashboardRowPressScale = { scale: 0.985 } as const;
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
+const dashboardRowPressScale = { scale: buttonTapActiveScale } as const;
 
 export function ApprovalWorkbenchRow({
   item,

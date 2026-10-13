@@ -1,6 +1,15 @@
 "use client";
 
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { useDesktopDashboardData } from "../../hooks/use-desktop-dashboard-data";
+import {
+  DesktopBudgetTab,
+  DesktopCashDueTab,
+  DesktopMaterialsTab,
+  DesktopApprovalsTable,
+} from "../desktop/desktop-dashboard-tabs";
+import { DesktopBudgetBand } from "../desktop/desktop-dashboard-overview";
 import { useCan } from "@/components/auth/permissions-provider";
 import React from "react";
 
@@ -288,6 +297,8 @@ export function FinanceDashboard({
     data.dashboardDetails.approvalSummary,
   );
   const activeTab = parseDashboardTab(tabParam, can("view:approval_queue"));
+  const desktop = useWorkspacePresentation() === "desktop";
+  const desktopQuery = useDesktopDashboardData(activeTab, data.generatedAt);
   const today = referenceDate.toLocaleDateString("id-ID", {
     weekday: "long",
     day: "numeric",
@@ -312,29 +323,76 @@ export function FinanceDashboard({
       />
     ) : activeTab === "approvals" && can("view:approval_queue") ? (
       <ApprovalsTab
-        approvals={approvalQueue.approvals}
+        approvals={
+          desktop && desktopQuery.data?.tab === "approvals"
+            ? desktopQuery.data.rows
+            : approvalQueue.approvals
+        }
         approvalSummary={approvalQueue.summary}
-        onDecisionRecorded={(item) =>
-          recordDecision({ approvalId: item.id, decidedAt: new Date() })
+        onDecisionRecorded={(item) => {
+          recordDecision({ approvalId: item.id, decidedAt: new Date(), approval: item });
+          desktopQuery.reload();
+        }}
+        renderDesktopList={
+          desktop
+            ? (onOpen) => <DesktopApprovalsTable query={desktopQuery} onOpen={onOpen} />
+            : undefined
         }
         canEmergencyOverride={can("override:self_approval")}
       />
     ) : activeTab === "budget" ? (
-      <BudgetRiskTab data={data} />
+      desktop ? (
+        <div className="space-y-4">
+          <DesktopBudgetBand data={data} />
+          <DesktopBudgetTab data={data} query={desktopQuery} />
+        </div>
+      ) : (
+        <BudgetRiskTab data={data} />
+      )
     ) : activeTab === "cash" ? (
-      <CashDueTab data={data} referenceDate={referenceDate} />
+      desktop ? (
+        <DesktopCashDueTab query={desktopQuery} data={data} />
+      ) : (
+        <CashDueTab data={data} referenceDate={referenceDate} />
+      )
     ) : activeTab === "accounts" ? (
       <AccountsTab data={data} />
+    ) : desktop ? (
+      <DesktopMaterialsTab data={data} query={desktopQuery} />
     ) : (
       <MaterialsTab data={data} />
     );
 
   return (
-    <div className="dashboard-density space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6">
+    <div
+      className={
+        desktop
+          ? "space-y-4 pb-8"
+          : "dashboard-density space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6"
+      }
+    >
       <PageHeader
         title={`Halo, ${userName.split(" ")[0]}`}
         subtitle={today}
-        action={<Badge status="PRIMARY">{formatBusinessLabel(data.role)}</Badge>}
+        action={
+          desktop ? (
+            <div className="flex items-center gap-3">
+              <span className="text-support text-on-surface-variant">
+                Diperbarui{" "}
+                {new Date(data.generatedAt).toLocaleTimeString("id-ID", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: "Asia/Jakarta",
+                })}
+              </span>
+              <Button size="compact" variant="secondary" pending={refreshing} onClick={refresh}>
+                Segarkan
+              </Button>
+            </div>
+          ) : (
+            <Badge status="PRIMARY">{formatBusinessLabel(data.role)}</Badge>
+          )
+        }
       />
       <DashboardTabsNav
         activeTab={activeTab}

@@ -24,6 +24,9 @@ export async function updateOwnProfile(
   // Halaman profil dirender server; tanpa ini nama lama bertahan sampai
   // navigasi berikutnya. Submit yang tidak mengubah apa pun tidak perlu
   // membatalkan cache.
-  if (result.success && result.data.updated) revalidatePath("/profile");
+  if (result.success && result.data.updated) {
+    revalidatePath("/profile");
+    revalidatePath("/", "layout");
+  }
   return result;
 }

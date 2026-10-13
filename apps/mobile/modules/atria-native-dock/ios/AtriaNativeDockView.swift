@@ -35,6 +35,8 @@ final class AtriaHeaderLeadingControlsView: ExpoView {
   let onAction = EventDispatcher()
   var hasBack = false
   var canUseAI = false
+  var backIconData = ""
+  var aiIconData = ""
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -50,17 +52,14 @@ final class AtriaHeaderLeadingControlsView: ExpoView {
     bar.isTranslucent = true
     bar.overrideUserInterfaceStyle = .light
     bar.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
-    back = makeControl(symbol: "chevron.left", label: "Kembali", id: "back")
-    ai = makeControl(symbol: "sparkles", label: "Buka asisten AI · Buka di web", id: "ai")
+    back = makeControl(label: "Kembali", id: "back")
+    ai = makeControl(label: "Buka asisten AI · Buka di web", id: "ai")
     bar.setItems([], animated: false)
     addSubview(bar)
   }
 
-  private func makeControl(symbol: String, label: String, id: String) -> UIBarButtonItem {
-    let light = UITraitCollection(userInterfaceStyle: .light)
-    let foreground = UIColor.label.resolvedColor(with: light)
-    let image = UIImage(systemName: symbol)?.withTintColor(foreground, renderingMode: .alwaysOriginal)
-    let item = UIBarButtonItem(image: image, primaryAction: UIAction { [weak self] _ in
+  private func makeControl(label: String, id: String) -> UIBarButtonItem {
+    let item = UIBarButtonItem(image: nil, primaryAction: UIAction { [weak self] _ in
       self?.onAction(["id": id])
     })
     item.width = 44
@@ -77,7 +76,10 @@ final class AtriaHeaderLeadingControlsView: ExpoView {
   }
 
   func applyChanges() {
-    let next = "\(hasBack)|\(canUseAI)"
+    let foreground = UIColor.label.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
+    back.image = AtriaIconImage.decode(backIconData)?.withTintColor(foreground, renderingMode: .alwaysOriginal)
+    ai.image = AtriaIconImage.decode(aiIconData)?.withTintColor(foreground, renderingMode: .alwaysOriginal)
+    let next = "\(hasBack)|\(canUseAI)|\(backIconData)|\(aiIconData)"
     guard signature != next else { return }
     signature = next
     var items: [UIBarButtonItem] = []
@@ -369,8 +371,7 @@ final class AtriaMenuButton: UIButton {
 struct NativeMenuAction: Record {
   @Field var id: String = ""
   @Field var label: String = ""
-  @Field var symbol: String = ""
-  @Field var selectedSymbol: String = ""
+  @Field var iconData: String = ""
   @Field var disabled: Bool = false
   @Field var destructive: Bool = false
   @Field var selected: Bool = false
@@ -446,11 +447,11 @@ final class AtriaNativeActionMenuView: ExpoView {
   }()
   let onAction = EventDispatcher()
   var title: String = ""
-  var symbol: String = ""
+  var iconData: String = ""
   var primary: Bool = false
   var menuLabel: String = ""
   var actions: [NativeMenuAction] = []
-  private var titleOnly: Bool { !primary && !title.isEmpty && symbol.isEmpty }
+  private var titleOnly: Bool { !primary && !title.isEmpty && iconData.isEmpty }
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -484,7 +485,7 @@ final class AtriaNativeActionMenuView: ExpoView {
     config.baseBackgroundColor = titleOnly ? nil : .label
     config.cornerStyle = .capsule
     config.title = title.isEmpty ? nil : title
-    config.image = symbol.isEmpty ? nil : UIImage(systemName: symbol)
+    config.image = AtriaIconImage.decode(iconData)
     config.imagePadding = 6
     config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
       var result = attributes
@@ -510,9 +511,8 @@ final class AtriaNativeActionMenuView: ExpoView {
       var attributes: UIMenuElement.Attributes = []
       if action.disabled { attributes.insert(.disabled) }
       if action.destructive { attributes.insert(.destructive) }
-      // Active icons come from the catalog; UIKit .on would add a checkmark.
-      let symbol = action.selected && !action.selectedSymbol.isEmpty ? action.selectedSymbol : action.symbol
-      return UIAction(title: action.label, image: UIImage(systemName: symbol), identifier: UIAction.Identifier(action.id), attributes: attributes, state: .off) { [weak self] _ in
+      // Selection is explicit; the free outline family has no filled variant.
+      return UIAction(title: action.label, image: AtriaIconImage.decode(action.iconData), identifier: UIAction.Identifier(action.id), attributes: attributes, state: action.selected ? .on : .off) { [weak self] _ in
         guard let self else { return }
         if action.id == "sign-out" {
           // Auth teardown removes this anchor. Finish dismissal before changing

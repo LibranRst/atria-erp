@@ -2,8 +2,9 @@
 
 /* eslint-disable react-hooks/refs -- Floating UI exposes stable callback setters on a property named `refs`; no `.current` value is read during render. */
 
-import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
 import { DesktopActionMenu } from "../desktop/desktop-action-menu";
+import { DesktopContextPopover } from "../desktop/desktop-context-popover";
 import React from "react";
 import {
   autoUpdate,
@@ -28,7 +29,7 @@ import {
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { transitionEaseSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon, type AppIconName } from "../icon/app-icon";
+import { AppIcon } from "../icon/app-icon";
 import { useOverlayLayers } from "./overlay-layer-context";
 import { getAnchoredContainerRadius } from "./anchored-listbox";
 
@@ -135,7 +136,8 @@ function FloatingSurface({
 export type ActionMenuItem = {
   readonly id: string;
   readonly label: string;
-  readonly icon?: AppIconName;
+  readonly icon?: string;
+  readonly description?: string;
   readonly tone?: "default" | "critical";
   readonly disabledReason?: string;
   readonly onSelect: () => void;
@@ -146,10 +148,11 @@ export type ActionMenuProps = {
   readonly label: string;
   readonly items: readonly ActionMenuItem[];
   readonly placement?: Placement;
+  readonly header?: React.ReactNode;
 };
 
 export function ActionMenu(props: ActionMenuProps): React.JSX.Element {
-  const desktop = useWorkspacePresentation() === "desktop";
+  const desktop = useWorkspaceControlPresentation() === "desktop";
   const trigger = useStableTrigger(props.trigger);
   if (props.items.length > MAX_ACTION_MENU_ITEMS) {
     throw new RangeError(`ActionMenu menerima maksimal ${MAX_ACTION_MENU_ITEMS} tindakan.`);
@@ -170,6 +173,7 @@ function ActionMenuClient({
   label,
   items,
   placement = "bottom-end",
+  header,
 }: ActionMenuProps): React.JSX.Element {
   const [open, setOpen] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
@@ -264,7 +268,7 @@ function ActionMenuClient({
     );
   }
 
-  const hasComplexContent = items.some((item) => Boolean(item.disabledReason));
+  const hasComplexContent = items.some((item) => Boolean(item.disabledReason || item.description));
   const radiusClass = getAnchoredContainerRadius(items.length, hasComplexContent);
 
   return (
@@ -286,6 +290,7 @@ function ActionMenuClient({
                 radiusClass={radiusClass}
                 ariaLabel={label}
               >
+                {header}
                 <div className="space-y-1">
                   {items.map((item, index) => {
                     const reasonId = item.disabledReason
@@ -310,7 +315,7 @@ function ActionMenuClient({
                             queueAction(item);
                           },
                         })}
-                        className={`flex min-h-12 w-full items-center gap-3 rounded-full px-4 py-2.5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98] ${
+                        className={`flex min-h-12 w-full items-center gap-3 rounded-full px-4 py-2.5 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[1.05] ${
                           item.tone === "critical"
                             ? "text-critical hover:bg-critical-container/60 focus-visible:bg-critical-container/60"
                             : "text-on-surface hover:bg-surface-container-low focus-visible:bg-surface-container-low"
@@ -325,12 +330,12 @@ function ActionMenuClient({
                         ) : null}
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-row font-bold">{item.label}</span>
-                          {item.disabledReason ? (
+                          {item.disabledReason || item.description ? (
                             <span
                               id={reasonId}
                               className="mt-0.5 block text-meta font-semibold text-on-surface-variant"
                             >
-                              {item.disabledReason}
+                              {item.disabledReason ?? item.description}
                             </span>
                           ) : null}
                         </span>
@@ -347,17 +352,20 @@ function ActionMenuClient({
   );
 }
 
-type ContextPopoverProps = {
+export type ContextPopoverProps = {
   readonly trigger: AnchoredTrigger;
   readonly label: string;
   readonly children: React.ReactNode;
   readonly placement?: Placement;
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
+  readonly width?: number;
 };
 
 export function ContextPopover(props: ContextPopoverProps): React.JSX.Element {
+  const desktop = useWorkspaceControlPresentation() === "desktop";
   const trigger = useStableTrigger(props.trigger);
+  if (desktop) return <DesktopContextPopover {...props} trigger={trigger} />;
   if (typeof window === "undefined") {
     return React.cloneElement(trigger, {
       "aria-haspopup": "dialog",
@@ -375,6 +383,7 @@ function ContextPopoverClient({
   placement = "bottom-start",
   open: controlledOpen,
   onOpenChange,
+  width = CONTEXT_POPOVER_WIDTH_PX,
 }: ContextPopoverProps): React.JSX.Element {
   const [internalOpen, setInternalOpen] = React.useState(false);
   const open = controlledOpen ?? internalOpen;
@@ -398,7 +407,7 @@ function ContextPopoverClient({
         padding: ANCHORED_SURFACE_GUTTER_PX,
         apply({ availableHeight, availableWidth, elements }) {
           Object.assign(elements.floating.style, {
-            width: `${Math.min(CONTEXT_POPOVER_WIDTH_PX, availableWidth)}px`,
+            width: `${Math.min(width, availableWidth)}px`,
             maxHeight: `${Math.max(96, availableHeight)}px`,
           });
         },
@@ -484,7 +493,8 @@ function TooltipClient({
       delay: { open: 450, close: 100 },
     }),
     useFocus(context, { enabled: !disabled, visibleOnly: true }),
-    useDismiss(context, { enabled: !disabled, referencePress: true }),
+    // A tooltip annotates its trigger; it must not intercept the owner's Escape.
+    useDismiss(context, { enabled: !disabled, referencePress: true, bubbles: { escapeKey: true } }),
     useRole(context, { role: "tooltip", enabled: !disabled }),
     useClick(context, {
       enabled: !disabled && Boolean(touch),
@@ -499,11 +509,28 @@ function TooltipClient({
         referenceRef={refs.setReference}
         getReferenceProps={(userProps) => {
           const baseProps = getReferenceProps(userProps);
-          if (!touch) return baseProps;
+          const originalOnKeyDown = baseProps.onKeyDown as
+            React.KeyboardEventHandler<HTMLElement> | undefined;
+          const referenceProps = {
+            ...baseProps,
+            onKeyDown: (event: React.KeyboardEvent<HTMLElement>): void => {
+              originalOnKeyDown?.(event);
+              // React Aria custom keyboard handlers stop propagation by default.
+              // The tooltip owns neither dialog dismissal nor its focus trap.
+              if (
+                (event.key === "Escape" || event.key === "Tab") &&
+                !event.defaultPrevented &&
+                "continuePropagation" in event &&
+                typeof event.continuePropagation === "function"
+              )
+                event.continuePropagation();
+            },
+          };
+          if (!touch) return referenceProps;
           const originalOnClick = baseProps.onClick as
             React.MouseEventHandler<HTMLElement> | undefined;
           return {
-            ...baseProps,
+            ...referenceProps,
             onClick: (event: React.MouseEvent<HTMLElement>) => {
               const nativeEvent = event.nativeEvent;
               const isTouch =

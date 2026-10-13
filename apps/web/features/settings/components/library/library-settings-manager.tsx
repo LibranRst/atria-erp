@@ -11,6 +11,7 @@ import {
   EmptyState,
   FilterSelect,
   FormRiskNotice,
+  Button,
 } from "@/components/ui";
 import { createClientId } from "@atria/core/utils/client-id";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
@@ -309,14 +310,16 @@ export function LibrarySettingsManager({
                 {items.filter((row) => row.isActive).length} template aktif
               </span>
             </span>
-            <button
+            <Button
               type="button"
               onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
               disabled={!canManage}
               className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
+              variant="secondary"
+              size="compact"
             >
               Tambah
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="flex min-w-0 items-center gap-2">
@@ -374,15 +377,16 @@ export function LibrarySettingsManager({
               </SettingsFilterBar>
             </div>
             {canManage ? (
-              <button
+              <Button
                 type="button"
                 onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
                 className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
                 title="Tambah Template Baru"
+                variant="primary"
               >
                 <AppIcon name="add" className="icon-sm" />
                 <span className="ml-1 max-[420px]:hidden">Tambah</span>
-              </button>
+              </Button>
             ) : null}
           </div>
         )}

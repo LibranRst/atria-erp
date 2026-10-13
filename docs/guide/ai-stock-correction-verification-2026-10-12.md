@@ -1,0 +1,26 @@
+# Direct stock corrections through AI chat
+
+Ask for an explicit increase or decrease, for example “Kurangi stok Panel MDF 18 mm di Gudang Utama sebanyak 2,5 lembar karena salah pencatatan pemindahan barang”. The assistant resolves the real location and material, reads physical/reserved stock, and asks for any missing amount, reason or ambiguous identity. It prepares a proposal; only the human **Terapkan koreksi stok** confirmation changes inventory. Corrections through chat generate a fresh proposal.
+
+One proposal covers one location and up to fifty distinct materials. Small corrections expose physical and available quantities before/after on the card with one short confirmation. Batches use the existing grouped review, five rows per page, two panels on desktop and a summary-first mobile sheet. Units, reservations and the human audit reason remain visible. An explicitly supplied movement cost is shown as **Harga pokok pergerakan**; it does not update inventory valuation defaults. Optional project/RAP/Material-cost/vendor links must be valid, scoped and explicitly requested. Related source names are visible in the review.
+
+## Verification
+
+Visible Browser QA used `http://127.0.0.1:3004/ai`, **QA koreksi stok · data sintetis**, and the named disposable `atria_audit_reconciliation` database. The real card, sheet, HTTP adapters, authenticated API and Postgres writes were exercised. Assistant parts were stored using the actual read-only proposal usecase; live model tool selection and conversational disambiguation were not certified in this run. The original development tab/database was not modified.
+
+- Cancellation preserved all six initial inventories and produced no movement, audit or receipt.
+- The batch confirmation changed alternating quantities from100 to97.50/104.00, producing six ADJUSTMENT movements, six audits and one receipt. A subsequent fresh single confirmation changed the first material from97.50 to95.00, bringing totals to seven movements, seven audits and two receipts.
+- Attempting the old single proposal after the batch was rejected without another write. The card showed **DATA BERUBAH**, disabled its commit button and offered **Minta preview terbaru**. A deliberately expired stored proof was likewise blocked on read.
+- Every reservation stayed15.00; average cost18500.00 and last purchase price19000.00 were unchanged. A hash of all cash transactions, bank accounts, project expenses, project budgets and category summaries exactly matched the initial hash after both commits.
+- **Buka gudang** reached the actual Material page. Its latest activity showed the posted corrections; filtering the synthetic location and opening Panel MDF confirmed physical95, reserved15, available80 and average costRp18.500.
+- Fifteen disposable Postgres integration cases passed with101 assertions: read-only preparation; increases/decreases and explicit movement cost; atomic batches; concurrency/replay; negative/reservation floors and precision; stale reservations/references; identity ownership and expiry; current grant revocation and inactive actors; NONE/ASSIGNED scope; inactive/foreign sources; operational readiness; post-write rollback/retry; manual writer compatibility; twenty-row one-character lookup; valid named references and reference drift.
+- Core input tests passed. Workspace tool tests verify that the proposal tools remain read-only, actual permission requirements govern availability, and every supported operation has a real proposal/confirmation route.
+- Final mobile320/360/390/430 and desktop1024/1280/1440 captures show no document/dialog overflow. The six-item review displays1–5/6, then6–6/6. Normal and reduced-motion review use the existing overlay contract; keyboard Escape closes the sheet. No custom focus, motion, selection or touch-target infrastructure was added.
+
+The synthetic QA role gained only its named adjustment grant. The preview server retained an old permission context through hot reload, so that QA web process was restarted to load the grant; no application permission bypass was introduced.
+
+Evidence is under `output/ai-chat-qa/stock-correction/`: authoritative layout captures are `review-final-{width}.png` and `viewports-final.json`; inline and confirmation desktop/mobile captures accompany saved batch/single and stale states. The initial layout captures are superseded. `business-invariants.json` records before, batch and single quantities, protected hashes and write counts.
+
+Fresh Impeccable review disposition: **ship**, no material fixes. The extension reuses ProposalCardShell, ProposalInlineReview/ProposalDiffRow, FormSheet, ReviewCollection/ReviewItem, GroupedSurface/FactRow, SheetFooterActions, MoneyValue and ConfirmationDialog. The built contract is recorded in DESIGN.md and its sidecar. The shared transactional writer also serves both existing manual adjustment aliases. Measured physical counts and protected emergency adjustments retain their existing workflows.
+
+Workspace tests, full build, API/web/mobile typechecks, lint and HeroUI style checks passed. Lint retains the existing Material Master hook warning. Repository-wide formatting reports unrelated baseline files; changed executable and documentation targets pass the scoped check. No deployment, production mutation or development business mutation was performed.

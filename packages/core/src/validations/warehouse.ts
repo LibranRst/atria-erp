@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { stockQuantitySchema } from "../ai/procurement-warehouse";
 
 const uuid = z
   .string()
@@ -6,7 +7,7 @@ const uuid = z
     /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
     "ID tidak valid.",
   );
-const positive = z.number().finite().positive();
+const positive = stockQuantitySchema.positive();
 
 export const createStockTransferSchema = z
   .object({
@@ -39,8 +40,12 @@ export const saveStockCountSchema = z.object({
   countedAt: z.coerce.date(),
   note: z.string().trim().max(1000).optional().nullable(),
   items: z
-    .array(z.object({ materialId: uuid, countedQuantity: z.number().finite().nonnegative() }))
-    .min(1),
+    .array(z.object({ materialId: uuid, countedQuantity: stockQuantitySchema }))
+    .min(1)
+    .refine(
+      (items) => new Set(items.map((i) => i.materialId)).size === items.length,
+      "Material count tidak boleh duplikat.",
+    ),
 });
 export const stockCountIdSchema = z.object({
   stockCountId: uuid,

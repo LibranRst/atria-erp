@@ -11,7 +11,7 @@ import type {
 import { ExpenseLineEditor } from "./expense-line-editor";
 import { isExpenseLineComplete } from "@/features/expenses/utils/expense-form-utils";
 import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button } from "@/components/ui";
 type BudgetCategory = NonNullable<
   NonNullable<ExpenseFormProject["canonicalBudgets"]>[number]["categories"]
 >[number];
@@ -94,6 +94,13 @@ export function ExpenseItemsSection({
   } | null>(null);
   const removalTimer = React.useRef<number | null>(null);
   const editingLine = lines.find((line) => line.key === editingKey) ?? null;
+  const itemEditingBlockerId = React.useId();
+  const itemEditingBlocker = !selectedProjectId
+    ? "Pilih proyek dulu untuk mengisi item pengeluaran."
+    : budgetCategories.length === 0
+      ? "Kategori budget proyek belum tersedia. Lengkapi budget proyek sebelum mengisi item."
+      : null;
+  const itemEditingDisabled = disabled || Boolean(itemEditingBlocker);
 
   React.useEffect(
     () => () => {
@@ -129,7 +136,7 @@ export function ExpenseItemsSection({
       >
         <div className="flex min-w-0 items-center gap-2">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-on-surface-variant/10 text-on-surface-variant">
-            <AppIcon name="delete" className="text-[15px]" />
+            <AppIcon name="delete" className="icon-sm" />
           </span>
           <span className="truncate text-xs font-medium text-on-surface-variant">
             <strong className="font-semibold text-on-surface">
@@ -151,6 +158,16 @@ export function ExpenseItemsSection({
 
   return (
     <div className="space-y-2.5">
+      <div aria-live="polite" className="empty:hidden">
+        {itemEditingBlocker ? (
+          <p
+            id={itemEditingBlockerId}
+            className="px-1 text-meta font-medium text-on-surface-variant"
+          >
+            {itemEditingBlocker}
+          </p>
+        ) : null}
+      </div>
       <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
         {lines.map((line, index) => {
           const category = budgetCategories.find(
@@ -169,7 +186,8 @@ export function ExpenseItemsSection({
                   type="button"
                   data-expense-incomplete={complete ? undefined : "true"}
                   onClick={() => setEditingKey(line.key)}
-                  disabled={disabled}
+                  disabled={itemEditingDisabled}
+                  aria-describedby={itemEditingBlocker ? itemEditingBlockerId : undefined}
                   className="flex w-full min-w-0 items-start gap-3 rounded-2xl p-1 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-low disabled:opacity-50"
                 >
                   <span
@@ -198,7 +216,7 @@ export function ExpenseItemsSection({
                           {category.name}
                         </span>
                       ) : null}
-                      <span className="truncate text-[10px] leading-tight text-on-surface-variant tabular-nums">
+                      <span className="truncate text-meta leading-tight text-on-surface-variant tabular-nums">
                         {quantity || "–"} × Rp {unitPrice.toLocaleString("id-ID")}
                         {complete ? "" : " · Perlu diperiksa"}
                       </span>
@@ -234,7 +252,7 @@ export function ExpenseItemsSection({
                     <RowAction
                       label="Duplikat item"
                       icon="content_copy"
-                      disabled={disabled}
+                      disabled={itemEditingDisabled}
                       onClick={() => onDuplicate(line.key)}
                     />
                     <RowAction
@@ -253,26 +271,16 @@ export function ExpenseItemsSection({
         {removed && insertIndex === lines.length ? renderRemovedBanner() : null}
       </div>
 
-      {/* Item hanya bisa disusun setelah proyeknya dipilih, karena kategori
-          budget dan daftar materialnya mengikuti proyek itu. Sebelumnya tombol
-          ini sekadar mati tanpa menyebut syaratnya. */}
-      <div aria-live="polite" className="empty:hidden">
-        {!selectedProjectId && !disabled ? (
-          <p className="px-1 text-meta font-medium text-on-surface-variant">
-            Pilih proyek dulu untuk menambahkan item.
-          </p>
-        ) : null}
-      </div>
-      <motion.button
+      <Button
         type="button"
-        whileTap={{ scale: 0.97 }}
-        transition={transitionSpringSnappy}
         onClick={onAdd}
-        disabled={!selectedProjectId || disabled}
+        disabled={itemEditingDisabled}
+        aria-describedby={itemEditingBlocker ? itemEditingBlockerId : undefined}
         className="min-h-12 w-full rounded-full bg-surface-container px-5 text-sm font-bold text-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-45"
+        variant="secondary"
       >
         Tambahkan Item
-      </motion.button>
+      </Button>
 
       {editingLine ? (
         <ExpenseLineEditor

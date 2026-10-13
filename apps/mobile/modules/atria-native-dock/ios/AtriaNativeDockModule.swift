@@ -20,13 +20,15 @@ public class AtriaNativeDockModule: Module {
       Events("onAction")
       Prop("hasBack") { (view: AtriaHeaderLeadingControlsView, value: Bool) in view.hasBack = value }
       Prop("canUseAI") { (view: AtriaHeaderLeadingControlsView, value: Bool) in view.canUseAI = value }
+      Prop("backIconData") { (view: AtriaHeaderLeadingControlsView, value: String) in view.backIconData = value }
+      Prop("aiIconData") { (view: AtriaHeaderLeadingControlsView, value: String) in view.aiIconData = value }
       OnViewDidUpdateProps { (view: AtriaHeaderLeadingControlsView) in view.applyChanges() }
     }
 
     View(AtriaNativeActionMenuView.self) {
       Events("onAction")
       Prop("title") { (view: AtriaNativeActionMenuView, value: String) in view.title = value }
-      Prop("symbol") { (view: AtriaNativeActionMenuView, value: String) in view.symbol = value }
+      Prop("iconData") { (view: AtriaNativeActionMenuView, value: String) in view.iconData = value }
       Prop("primary") { (view: AtriaNativeActionMenuView, value: Bool) in view.primary = value }
       Prop("menuLabel") { (view: AtriaNativeActionMenuView, value: String) in view.menuLabel = value }
       Prop("actions") { (view: AtriaNativeActionMenuView, value: [NativeMenuAction]) in view.actions = value }

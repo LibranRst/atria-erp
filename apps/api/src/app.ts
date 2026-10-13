@@ -16,6 +16,7 @@ export type ApiPorts = {
   readonly trpc: (request: Request) => Response | Promise<Response>;
   readonly chat: (request: Request) => Response | Promise<Response>;
   readonly notificationStream: (request: Request) => Response | Promise<Response>;
+  readonly materialAnalysisJob?: (request: Request) => Response | Promise<Response>;
   readonly notificationJob: (request: Request) => Response | Promise<Response>;
   readonly media?: (request: Request) => Response | Promise<Response>;
   readonly isWebOperation: (operation: string) => boolean;
@@ -82,7 +83,7 @@ export function createApiApp(config: ApiConfig, ports: ApiPorts, effects: Backgr
         [
           new URL(config.WEB_ORIGIN).origin,
           new URL(config.API_PUBLIC_URL).origin,
-          ...config.WEB_ADDITIONAL_ORIGINS,
+          ...(config.ADMIN_ORIGIN ? [new URL(config.ADMIN_ORIGIN).origin] : []),
         ].includes(origin)
           ? origin
           : undefined,
@@ -123,6 +124,12 @@ export function createApiApp(config: ApiConfig, ports: ApiPorts, effects: Backgr
   );
   app.get("/api/notifications/stream", (context): Response | Promise<Response> =>
     ports.notificationStream(context.req.raw),
+  );
+  app.post(
+    "/api/internal/material-analysis",
+    (context) =>
+      ports.materialAnalysisJob?.(context.req.raw) ??
+      Response.json({ error: "Unavailable" }, { status: 503 }),
   );
   app.on(["GET", "POST"], "/api/internal/notifications", (context): Response | Promise<Response> =>
     ports.notificationJob(context.req.raw),

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import ts from "typescript";
 
 // Di-anchor ke lokasi file ini, bukan `process.cwd()`, supaya hasilnya sama
 // dari mana pun suite dijalankan. `apps/mobile` sengaja di luar jangkauan:
@@ -43,17 +44,58 @@ function productionConsumerFiles(): string[] {
   return consumerFiles().filter((filePath) => !/\.test\.tsx?$/.test(filePath));
 }
 
+function missingDismissalOwners(source: string, fileName: string): string[] {
+  const tree = ts.createSourceFile(
+    fileName,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    fileName.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+  const owners = new Set(["FormSheet", "OperationalFormSheet", "WorkflowFormSheet"]);
+  const missing: string[] = [];
+  function visit(node: ts.Node): void {
+    if (
+      (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
+      owners.has(node.tagName.getText(tree))
+    ) {
+      const declaresPolicy = node.attributes.properties.some(
+        (attribute): boolean =>
+          ts.isJsxAttribute(attribute) && attribute.name.getText(tree) === "dismissal",
+      );
+      if (!declaresPolicy) missing.push(node.tagName.getText(tree));
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(tree);
+  return missing;
+}
+
 describe("shared UI import boundaries", () => {
   test("every production form sheet declares its dismissal contract", () => {
-    const formSheetPattern = /<(FormSheet|OperationalFormSheet|WorkflowFormSheet)\b([\s\S]*?)>/g;
     const offenders = productionConsumerFiles().flatMap((filePath) => {
       const source = readFileSync(filePath, "utf8");
-      return [...source.matchAll(formSheetPattern)]
-        .filter((match) => !match[2].includes("dismissal="))
-        .map((match) => `${relativePath(filePath)} -> ${match[1]} has no dismissal policy`);
+      return missingDismissalOwners(source, filePath).map(
+        (owner) => `${relativePath(filePath)} -> ${owner} has no dismissal policy`,
+      );
     });
 
     expect(offenders).toEqual([]);
+  });
+
+  test("dismissal inspection reads the owner attributes past nested aside JSX", () => {
+    expect(
+      missingDismissalOwners(
+        '<WorkflowFormSheet desktopAsideSummary={<div>{rows.map(row => <span>{row.name}</span>)}</div>} dismissal={{ mode: "confirm", dirty }} />',
+        "fixture.tsx",
+      ),
+    ).toEqual([]);
+    expect(
+      missingDismissalOwners(
+        '<OperationalFormSheet desktopAsideSummary={<span data-note="dismissal=" />}><FormSheet dismissal={{ mode: "discard" }} /></OperationalFormSheet>',
+        "fixture.tsx",
+      ),
+    ).toEqual(["OperationalFormSheet"]);
   });
 
   test("application code imports shared UI through the barrel only", () => {
@@ -155,20 +197,29 @@ describe("shared UI import boundaries", () => {
   });
 
   /**
-   * `CONTROL_LANGUAGE.md` mewajibkan satu set ikon: `AppIcon` yang didukung
-   * Phosphor. Dua pustaka ikon dalam satu layar berarti dua bobot garis dan dua
+   * `DESIGN.md` mewajibkan satu set ikon: `AppIcon` yang didukung
+   * Hugeicons Stroke Rounded. Dua pustaka ikon dalam satu layar berarti dua bobot garis dan dua
    * ukuran optik, dan `AppIcon` juga yang membawa perlakuan ikon global.
    */
   test("no icon library other than the shared AppIcon is imported", () => {
-    const FORBIDDEN = ["lucide-react", "@heroicons/react", "react-icons"];
+    const FORBIDDEN = [
+      "lucide-react",
+      "@heroicons/react",
+      "react-icons",
+      "@phosphor-icons/react",
+      "@hugeicons/react",
+      "@hugeicons/core-free-icons",
+    ];
     const uiFiles = collectSourceFiles(path.join(APP_ROOT, "components", "ui"));
     const offenders = [...consumerFiles(), ...uiFiles].flatMap((filePath) => {
       // Berkas tes boleh menyebut nama paketnya justru untuk menegaskan ketiadaannya.
-      if (filePath.endsWith("app-icon.tsx") || /\.test\.tsx?$/.test(filePath)) return [];
+      if (filePath.endsWith("app-icon.tsx") || /\.(test|stories|storybook)\.tsx?$/.test(filePath))
+        return [];
       const source = readFileSync(filePath, "utf8");
-      return FORBIDDEN.filter((pkg) => source.includes(`from "${pkg}"`)).map(
-        (pkg) => `${relativePath(filePath)} imports ${pkg}`,
-      );
+      const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)].map((match) => match[1]);
+      return FORBIDDEN.filter((pkg) =>
+        imports.some((specifier) => specifier === pkg || specifier.startsWith(`${pkg}/`)),
+      ).map((pkg) => `${relativePath(filePath)} imports ${pkg}`);
     });
 
     expect(offenders).toEqual([]);

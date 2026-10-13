@@ -1,0 +1,12 @@
+# Material image analysis timeout repair
+
+The owned 20-item PNG job fails before OCR checkpoints any sources. Reproduction with the production extractor timed out at 41.6s; a compact full-image response still timed out at 40.9s. The same provider read a complete five-item region in 21.1s. A fast regression exercises the real extractor and rejects oversized vision requests, reproducing DocumentContentError TIMEOUT.
+
+- Segment tall document images at full-width separators or whitespace; never discard pixels or infer missing fields. Keep original page and image-region provenance. Bound region height and row separators; leave ordinary images/unsupported codecs on the existing full-image path.
+- Return compact OCR values with explicit ambiguity, reuse deterministic material normalization, and checkpoint readable rows immediately when user instructions do not need interpretation. Keep 20-row/32k-character steps, 45s deadline, fenced 120s lease and three transient attempts.
+- Preserve upload/PDF limits, source ownership, create-only duplicate checks, draft revision, role permissions, separate reference approval and explicit business Save. No stock/cash write accompanies analysis.
+- Test complete contiguous regions, ambiguity, resumed source offsets, no redundant mapping, multi-file 500 candidates and oversized sources. Recover the existing failed draft through its normal web retry operation; verify all 20 codes/prices in dev @Browser. Remove the diagnostic harness, run scoped/workspace checks and refresh graft.
+
+Verified: the regression failed with the same TIMEOUT before the fix and now extracts/maps all 20 fixture records without a second generation. The original development PNG job was resumed through Lanjutkan analisis and completed READY/DONE with all UJI20-001–020 codes, all 20 exact reference prices (245000 through 48000), explicit without-vendor values, no ambiguous-source flags, and no business save IDs/receipts. Four complete image regions were checkpointed. Source segments retain all pixels and original coordinates; header context is supplied separately to later regions.
+
+Quality gates: 1,854 workspace tests, 15 disposable PostgreSQL integration tests, workspace lint/typechecks/build pass. Integration covers immediate structured progress and exactly 500 sources across two files without double counting, plus restart/retry fencing and atomic saves. The diagnostic harness was deleted. Existing upload/PDF limits, deadlines/leases, permissions and explicit Save remain in force.

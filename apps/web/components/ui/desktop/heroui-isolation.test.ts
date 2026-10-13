@@ -90,4 +90,37 @@ describe("HeroUI stylesheet isolation", () => {
       expect(capsuleFound).toBe(true);
     }
   });
+
+  test("density policy overrides caller mobile classes while coarse pointers retain 48px targets", async () => {
+    const css = await Bun.file(new URL("./heroui-scoped.css", import.meta.url)).text();
+    const root = postcss.parse(css);
+    let desktopButton = false;
+    let coarseTargets = false;
+    root.walkRules((rule): void => {
+      if (
+        rule.parent?.type === "root" &&
+        rule.selector === "[data-atria-admin] .atria-desktop-button"
+      ) {
+        const declarations = new Map<string, string>();
+        rule.walkDecls((declaration): void => {
+          declarations.set(declaration.prop, declaration.value);
+        });
+        desktopButton =
+          declarations.get("height") === "auto" &&
+          declarations.get("--atria-control-height") === "40px";
+      }
+      if (
+        rule.parent?.type === "atrule" &&
+        rule.parent.name === "media" &&
+        rule.parent.params.includes("pointer: coarse")
+      ) {
+        rule.walkDecls("min-height", (declaration): void => {
+          if (declaration.value === "48px") coarseTargets = true;
+        });
+      }
+    });
+    expect(desktopButton).toBe(true);
+    expect(coarseTargets).toBe(true);
+    expect(css).toContain("--atria-control-height: 32px");
+  });
 });

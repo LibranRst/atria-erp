@@ -18,6 +18,9 @@ type Story = StoryObj<typeof meta>;
 export const Compact: Story = {
   args: { variant: "compact" },
 };
+export const ExactCorrectionCents: Story = {
+  args: { variant: "fullDynamic", amount: 100.49, fractionDigits: 2, size: "sm" },
+};
 
 export const CompactDisabledTooltip: Story = {
   args: { variant: "compact", showTooltip: false },

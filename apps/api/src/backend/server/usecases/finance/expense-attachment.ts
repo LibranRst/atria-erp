@@ -1,5 +1,8 @@
 import type { Actor } from "@backend/server/actor";
-import { authorizedPrivateAttachment, type PrivateAttachmentReader } from "@backend/server/usecases/media/private-attachments";
+import {
+  authorizedPrivateAttachment,
+  type PrivateAttachmentReader,
+} from "@backend/server/usecases/media/private-attachments";
 
 export async function assertExpenseAttachment(
   actor: Actor,
@@ -9,9 +12,11 @@ export async function assertExpenseAttachment(
   reader?: PrivateAttachmentReader,
 ): Promise<void> {
   if (!url) return;
-  const row = await authorizedPrivateAttachment(actor, url, "expense", reader);
+  const row = await authorizedPrivateAttachment(actor, url, undefined, reader);
   if (
-    row.referenceId !== projectId ||
+    (row.referenceType === "private_expense"
+      ? row.referenceId !== projectId
+      : row.referenceType !== "private_ai_chat" || !row.mimeType.startsWith("image/")) ||
     row.uploadedById !== actor.userId ||
     (fileId !== undefined && row.id !== fileId)
   ) {

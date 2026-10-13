@@ -3,6 +3,8 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // The floating development badge overlaps the chat attachment target at 320px.
+  devIndicators: false,
   // Keep verification builds separate from an already running development server.
   distDir: process.env.ATRIA_NEXT_DIST_DIR ?? ".next",
   allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*"],

@@ -95,13 +95,13 @@ export function OpeningInventoryWorkspace({
             <div className="grid grid-cols-2 gap-2 border-t border-black/5.5 p-3">
               <Link
                 href="/materials?action=LOCATION"
-                className="flex min-h-12 items-center justify-center rounded-full bg-white px-3 text-row font-bold text-on-surface ring-1 ring-ring-subtle transition-transform active:scale-[0.98]"
+                className="flex min-h-12 items-center justify-center rounded-full bg-white px-3 text-row font-bold text-on-surface ring-1 ring-ring-subtle transition-transform active:z-10 active:scale-[1.05] active:shadow-raised"
               >
                 Buat lokasi
               </Link>
               <Link
                 href="/settings?tab=materials"
-                className="flex min-h-12 items-center justify-center rounded-full bg-primary px-3 text-row font-bold text-on-primary transition-transform active:scale-[0.98]"
+                className="flex min-h-12 items-center justify-center rounded-full bg-primary px-3 text-row font-bold text-on-primary transition-transform active:z-10 active:scale-[1.05] active:shadow-raised"
               >
                 Material Master
               </Link>

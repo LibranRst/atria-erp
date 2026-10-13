@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { createInventoryLocation } from "@/app/actions/material/warehouse";
 import type { SettingsOverview } from "@/app/actions/settings/system";
-import { AppIcon, SegmentedTabs } from "@/components/ui";
+import { AppIcon, SegmentedTabs, Button } from "@/components/ui";
 import { InventoryLocationSheet } from "@/features/materials/components/sheets/inventory-location-sheet";
 import { MaterialSettingsManager } from "@/features/settings/components/materials/material-settings-manager";
 import {
@@ -105,16 +105,17 @@ export function MaterialFoundationPanel({
               detail="Buat minimal satu lokasi agar inventory awal material dapat ditempatkan dengan benar."
             />
           </OnboardingSurface>
-          <button
+          <Button
             type="button"
             onClick={() => {
               setTab("LOCATIONS");
               setLocationOpen(true);
             }}
             className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
+            variant="primary"
           >
             Buat lokasi pertama
-          </button>
+          </Button>
         </div>
       ) : (
         <MaterialSettingsManager

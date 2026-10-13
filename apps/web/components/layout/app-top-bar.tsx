@@ -176,8 +176,8 @@ export function AppTopBar({
     <>
       <div
         aria-hidden="true"
-        style={{ height: TOP_BAR_INSET_PX }}
-        className="pointer-events-none fixed inset-x-0 top-0 z-30 mx-auto w-full max-w-md bg-linear-to-b from-background via-background/90 to-transparent"
+        style={{ height: TOP_BAR_INSET_PX + TOP_BAR_FADE_PX }}
+        className="scroll-edge-scrim pointer-events-none fixed inset-x-0 top-0 z-30 mx-auto w-full max-w-md"
       />
 
       {/*

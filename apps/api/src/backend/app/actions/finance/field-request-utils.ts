@@ -232,6 +232,14 @@ export function mapPayFieldRequestError(error: unknown): ActionResponse<never> {
 
 export function mapApproveVendorPaymentError(error: unknown): ActionResponse<never> {
   const errMsg = getErrorMessage(error, "Gagal memproses persetujuan pembayaran vendor.");
+  if (errMsg === "PAYMENT_DECISION_ALREADY_FINAL")
+    return {
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Keputusan pembayaran sudah selesai. Periksa status terbaru sebelum melanjutkan.",
+      },
+    };
   if (errMsg === "PAYMENT_RECORD_NOT_FOUND") {
     return {
       success: false,

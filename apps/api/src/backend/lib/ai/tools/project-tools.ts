@@ -5,6 +5,7 @@ import {
   project,
   projectBudgetCategory,
   projectBudgets,
+  INSTANCE_TENANT_ID,
 } from "@backend/db/schema";
 import {
   resolveEffectiveProjectHealth,
@@ -36,10 +37,12 @@ export function buildProjectTools(context: AiToolContext) {
       inputSchema: z.object({
         query: z
           .string()
-          .min(2)
+          .trim()
+          .min(1)
+          .max(100)
           .optional()
           .describe(
-            "Part of a project or client name, for example 'Sudirman'. Pass this whenever the user mentions a specific project.",
+            "Part of a project or client name, including a single character. Pass this whenever the user mentions a specific project. A one-character query is discovery only: ask the user to confirm the project even if one row matches. Multiple matches require a choice; never auto-select an ambiguous match.",
           ),
         status: z
           .enum(["ACTIVE", "DRAFT", "ON_HOLD", "COMPLETED", "CANCELLED"])
@@ -54,6 +57,7 @@ export function buildProjectTools(context: AiToolContext) {
           .describe("Maximum number of projects to return."),
       }),
       execute: async ({ query, status, limit }) => {
+        if (context.dataScope === "NONE") return PROJECT_ACCESS_DENIED;
         const scopeCondition = hasGlobalScope(context)
           ? undefined
           : eq(project.projectManagerId, context.userId);
@@ -64,9 +68,13 @@ export function buildProjectTools(context: AiToolContext) {
         const searchCondition = query
           ? or(ilike(project.name, `%${query}%`), ilike(client.name, `%${query}%`))
           : undefined;
-        const conditions = [scopeCondition, statusCondition, searchCondition].filter(
-          (condition) => condition !== undefined,
-        );
+        const conditions = [
+          eq(project.tenantId, INSTANCE_TENANT_ID),
+          eq(client.tenantId, INSTANCE_TENANT_ID),
+          scopeCondition,
+          statusCondition,
+          searchCondition,
+        ].filter((condition) => condition !== undefined);
         // Join eksplisit, bukan relational query: `where` pada relational query
         // tidak bisa menjangkau kolom tabel yang di-join, sehingga pencarian
         // berdasarkan nama klien akan diam-diam tidak pernah cocok.
@@ -86,6 +94,7 @@ export function buildProjectTools(context: AiToolContext) {
           .limit(limit);
 
         return {
+          requiresProjectChoice: query?.length === 1 || rows.length > 1,
           appliedFilters: describeFilters([
             query ? `Cocok "${query}"` : null,
             status ? `Status ${statusLabel(status)}` : null,
@@ -115,6 +124,7 @@ export function buildProjectTools(context: AiToolContext) {
           .describe("Maximum number of projects to return."),
       }),
       execute: async ({ limit }) => {
+        if (context.dataScope === "NONE") return PROJECT_ACCESS_DENIED;
         // Pertanyaan "mana yang paling mengkhawatirkan" dijawab satu panggilan,
         // dan hanya mengembalikan proyek yang benar-benar bermasalah. Sebelumnya
         // model memanggil getProjectBudget untuk setiap proyek, sehingga kartu
@@ -132,7 +142,13 @@ export function buildProjectTools(context: AiToolContext) {
           })
           .from(projectBudgets)
           .innerJoin(project, eq(projectBudgets.projectId, project.id))
-          .where(scopeCondition);
+          .where(
+            and(
+              eq(project.tenantId, INSTANCE_TENANT_ID),
+              eq(projectBudgets.tenantId, INSTANCE_TENANT_ID),
+              scopeCondition,
+            ),
+          );
 
         if (budgets.length === 0) {
           return { appliedFilters: ["Hanya berisiko"], projects: [] };
@@ -219,7 +235,7 @@ export function buildProjectTools(context: AiToolContext) {
 
     getProjectBudget: tool({
       description:
-        "Get budget versus actual spending per expense category for one project, including remaining amount, used percentage, and per-category status.",
+        "Get current scoped project identity/status and assigned Project Manager, plus budget versus actual spending, cash paid, pending and remaining per category. Actual consumption and cash paid are distinct. Use for fresh PM/contract/budget facts instead of historical answers; no staff-management rights needed for the assigned PM's public name.",
       inputSchema: z.object({
         projectId: z.guid().describe("The project id, obtained from listProjects."),
       }),
@@ -229,8 +245,9 @@ export function buildProjectTools(context: AiToolContext) {
         }
 
         const projectRow = await db.query.project.findFirst({
-          where: eq(project.id, projectId),
-          columns: { name: true },
+          where: and(eq(project.id, projectId), eq(project.tenantId, INSTANCE_TENANT_ID)),
+          columns: { name: true, status: true },
+          with: { projectManager: { columns: { id: true, name: true } } },
         });
 
         const budget = await db.query.projectBudgets.findFirst({
@@ -250,10 +267,12 @@ export function buildProjectTools(context: AiToolContext) {
 
         const categories = await db
           .select({
+            id: projectBudgetCategory.id,
             name: expenseCategory.name,
             code: expenseCategory.code,
             allocated: projectBudgetCategory.allocatedAmount,
             actual: projectBudgetCategory.actualAmount,
+            paid: projectBudgetCategory.paidAmount,
             pending: projectBudgetCategory.pendingAmount,
             remaining: projectBudgetCategory.remainingAmount,
             usedPercentage: projectBudgetCategory.usedPercentage,
@@ -273,15 +292,19 @@ export function buildProjectTools(context: AiToolContext) {
           // proyek ini. Model diminta tidak menampilkan id kepada pengguna.
           projectId,
           projectName: projectRow?.name,
+          projectStatus: projectRow?.status,
+          projectManager: projectRow?.projectManager ?? null,
           budgetStatus: budget.status,
           internalBudget: money(budget.internalBudget),
           contractValue: money(budget.contractValue),
           projectProgressPercentage: toNumber(budget.projectProgressPercentage),
           categories: categories.map((row) => ({
+            categoryId: row.id,
             categoryName: row.name,
             categoryCode: row.code,
             allocated: money(row.allocated),
             actual: money(row.actual),
+            paid: money(row.paid),
             pending: money(row.pending),
             remaining: money(row.remaining),
             usedPercentage: toNumber(row.usedPercentage),
