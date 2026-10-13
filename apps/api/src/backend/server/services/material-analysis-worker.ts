@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, eq, lte, or } from "drizzle-orm";
+import { and, eq, inArray, lte, or } from "drizzle-orm";
 import { db } from "@backend/db";
 import {
   formDraft,
@@ -32,6 +32,13 @@ import {
 } from "./material-source-mapping";
 import { DocumentContentError } from "@backend/lib/ai/document-model";
 let running = false;
+let recoveryNeeded = true;
+let wakeGeneration = 0;
+
+/** Startup and real enqueue/retry requests wake recovery; an empty worker stays idle. */
+export function materialAnalysisRecoveryNeeded(): boolean {
+  return recoveryNeeded && !running;
+}
 function candidate(
   fields: MaterialFields,
   source: MaterialSource,
@@ -321,12 +328,24 @@ export async function processMaterialAnalysisStep(): Promise<boolean> {
   return true;
 }
 export async function drainMaterialAnalysis(): Promise<void> {
+  recoveryNeeded = true;
+  const generation = ++wakeGeneration;
   if (running) return;
   running = true;
   try {
     for (let step = 0; step < 30; step++) {
       if (!(await processMaterialAnalysisStep())) break;
     }
+    // Future retries and leases still need recovery; only a terminal/empty queue
+    // can sleep. A concurrent committed wake cannot be overwritten by this read.
+    const pending = await db.query.materialImportAnalysisJob.findFirst({
+      columns: { id: true },
+      where: inArray(materialImportAnalysisJob.status, ["QUEUED", "PROCESSING"]),
+    });
+    recoveryNeeded = Boolean(pending) || generation !== wakeGeneration;
+  } catch (error: unknown) {
+    recoveryNeeded = true;
+    throw error;
   } finally {
     running = false;
   }

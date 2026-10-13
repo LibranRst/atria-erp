@@ -18,6 +18,8 @@ The retained production targets are the existing Netlify Atria Dekoria site and 
 
 Run the candidate's workspace tests, strict typechecks, lint, security checks, API/web production builds and frozen container build. Resolve packaging gaps in the workspace manifests and deployment ignore rules. Verify exact production API/web origins and matching bridge, retained old-origin/private attachment compatibility, real-data policy, existing approved provider, storage/job configuration and developer simulation disabled.
 
+Preflight identified an unconditional one-minute Material analysis recovery poll. Make recovery queue-aware so an empty worker does not issue recurring database queries, while startup recovery, explicit enqueue/retry, future leases and concurrent work remain recoverable. Verify idle and lost-wake regressions before freezing the final candidate; this does not alter business transactions or require another schema migration.
+
 Deploy schema additions only after rehearsal and backup pass, then deploy the compatible API and wait for readiness before the matching Netlify web. Keep the old deploys available. Application rollback uses compatible source/deployments and never restores over newer business data. Preserve automatic-build/preview and account/billing preferences unless the release requires an explicitly authorized change.
 
 ## Hosted acceptance

@@ -1,5 +1,8 @@
 import { POST as materialAnalysisJob } from "@backend/app/api/internal/material-analysis/route";
-import { drainMaterialAnalysis } from "@backend/server/services/material-analysis-worker";
+import {
+  drainMaterialAnalysis,
+  materialAnalysisRecoveryNeeded,
+} from "@backend/server/services/material-analysis-worker";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { createApiApp } from "./app";
 import { readApiConfig } from "./config";
@@ -53,7 +56,7 @@ const server = Bun.serve({
 });
 console.info(`Atria API listening on ${server.url.origin}`);
 function recoverMaterialAnalysis(): void {
-  if (!draining)
+  if (!draining && materialAnalysisRecoveryNeeded())
     effects.schedule([
       async () => {
         await drainMaterialAnalysis();
