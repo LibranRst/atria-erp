@@ -17,6 +17,8 @@ const { bootstrapFirstOwner, getBootstrapStatus } =
   await import("@backend/app/actions/administration-bootstrap");
 const { getRoleAccess } = await import("@backend/lib/auth/role-access");
 const { assertPermission } = await import("@backend/lib/auth/permissions");
+const { readAdministrationState, assertNewStaffRole } =
+  await import("@backend/server/usecases/administration/change-writer");
 
 const input: BootstrapOwnerInput = {
   bootstrapSecret: "bootstrap-fixture-only-secret",
@@ -41,6 +43,7 @@ async function expectNoBootstrapData(): Promise<void> {
   for (const table of [
     schema.user,
     schema.account,
+    schema.tenantMember,
     schema.role,
     schema.rolePermission,
     schema.expenseCategory,
@@ -114,7 +117,7 @@ try {
       caseName === "scaffold" ? defaultKeys("PROJECT_MANAGER") : [],
     );
     expect((await getRoleAccess(customRoleId))?.dataScope).toBe("ASSIGNED");
-  } else if (caseName === "fresh" || caseName === "repeat") {
+  } else if (caseName === "fresh" || caseName === "repeat" || caseName === "staff") {
     expect(await getBootstrapStatus()).toMatchObject({ success: true, data: { required: true } });
     const result = await bootstrapFirstOwner(input);
     expect(result.success).toBe(true);
@@ -124,6 +127,36 @@ try {
       expect((await getRoleAccess(systemRole.id))?.dataScope).toBe(systemRole.dataScope);
     }
     const ownerIdentity = { id: result.data.userId, roleId: OWNER_ROLE_ID };
+    const state = await readAdministrationState(database);
+    const ownerAccess = await getRoleAccess(OWNER_ROLE_ID);
+    if (!ownerAccess) throw new Error("Owner role unavailable");
+    // Exercise the same locked-state authority gate used by staff creation.
+    // Before the fix, a freshly bootstrapped Owner fails company membership.
+    assertNewStaffRole(
+      {
+        userId: result.data.userId,
+        roleId: OWNER_ROLE_ID,
+        roleName: "OWNER",
+        name: input.name,
+        email: input.email,
+        isActive: true,
+        mustChangePassword: false,
+        sessionId: "bootstrap-fixture-session",
+        permissions: ownerAccess.permissions,
+        dataScope: ownerAccess.dataScope,
+        developerActorUserId: null,
+      },
+      state,
+      purchasingRoleId,
+    );
+    expect(state.members).toMatchObject([
+      {
+        tenantId: schema.INSTANCE_TENANT_ID,
+        userId: result.data.userId,
+        roleId: OWNER_ROLE_ID,
+        isActive: true,
+      },
+    ]);
     for (const permission of ["manage:onboarding", "manage:roles", "use:desktop_admin"] as const) {
       await expect(assertPermission(ownerIdentity, permission)).resolves.toBeUndefined();
     }
@@ -139,6 +172,58 @@ try {
     expect(credentials[0]?.password).not.toBe(input.password);
     expect((await database.select().from(schema.auditLog)).length).toBe(1);
     expect(await getBootstrapStatus()).toMatchObject({ success: true, data: { required: false } });
+
+    if (caseName === "staff") {
+      const { auth } = await import("@backend/lib/auth");
+      const { withRequestContext } = await import("@runtime/request-context");
+      const { createStaffUser } = await import("@backend/app/actions/administration-staff");
+      const login = await auth.api.signInEmail({
+        body: { email: input.email, password: input.password },
+        asResponse: true,
+      });
+      expect(login.status).toBe(200);
+      const cookie = login.headers
+        .getSetCookie()
+        .map((value) => value.split(";")[0])
+        .join("; ");
+      expect(cookie).toBeTruthy();
+      const outcome = await withRequestContext(
+        new Request("http://127.0.0.1:3001/api/internal/web-rpc", { headers: { cookie } }),
+        () =>
+          createStaffUser({
+            name: "Staff Fixture",
+            email: "staff@bootstrap.example.invalid",
+            roleId: purchasingRoleId,
+            temporaryPassword: "StaffFixture123",
+          }),
+      );
+      expect(outcome.value.success).toBe(true);
+      if (!outcome.value.success) throw new Error(outcome.value.error.message);
+      const createdId = outcome.value.data.id;
+      expect(
+        await database.query.tenantMember.findFirst({
+          where: eq(schema.tenantMember.userId, createdId),
+        }),
+      ).toMatchObject({
+        tenantId: schema.INSTANCE_TENANT_ID,
+        roleId: purchasingRoleId,
+        isActive: true,
+      });
+      expect(
+        await database.query.account.findFirst({ where: eq(schema.account.userId, createdId) }),
+      ).toMatchObject({ providerId: "credential" });
+      expect(
+        await database.query.user.findFirst({ where: eq(schema.user.id, createdId) }),
+      ).toMatchObject({ mustChangePassword: true });
+      expect(
+        await database.query.auditLog.findFirst({
+          where: and(
+            eq(schema.auditLog.targetId, createdId),
+            eq(schema.auditLog.action, "CREATE_STAFF_USER"),
+          ),
+        }),
+      ).toBeTruthy();
+    }
 
     if (caseName === "repeat") {
       await database

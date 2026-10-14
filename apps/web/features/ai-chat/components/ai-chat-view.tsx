@@ -45,6 +45,7 @@ import { ChatTurn } from "./chat-turn";
 import { ConversationHistoryWorkspace } from "./conversation-history-workspace";
 import { useChatScroll } from "../hooks/use-chat-scroll";
 import { groupChatTurns } from "../utils/chat-turns";
+import { finishChatReply } from "../utils/finish-chat-reply";
 import { readActiveInputRequest } from "../utils/input-request-reader";
 import { isSupportedAttachment, validateAttachmentBatch } from "../utils/attachment-validation";
 
@@ -186,8 +187,12 @@ export function AiChatView(): React.JSX.Element {
     useChat({
       transport,
       generateId: () => crypto.randomUUID(),
-      onFinish: ({ isError, isAbort }) => {
-        if (!isError && !isAbort) setPendingTurn(null);
+      onFinish: ({ message, isError, isAbort }) => {
+        if (isError || isAbort || !acceptStreamData.current) return;
+        // Terminal status can render before the final streamed snapshot.
+        // Publish the complete SDK reply, retaining the same turn/card IDs.
+        setMessages((current) => finishChatReply(current, message));
+        setPendingTurn(null);
       },
       onData: (part) => {
         if (

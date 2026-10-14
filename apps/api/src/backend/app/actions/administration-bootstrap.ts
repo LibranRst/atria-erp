@@ -9,8 +9,10 @@ import {
   budgetAllocationSetting,
   budgetAllocationSettingCategory,
   expenseCategory,
+  tenantMember,
   user,
 } from "@backend/db/schema";
+import { INSTANCE_TENANT_ID } from "@backend/db/schema/tenant-constants";
 import { auth } from "@backend/lib/auth";
 import { OWNER_ROLE_ID } from "@atria/core/auth/role-constants";
 import {
@@ -116,6 +118,12 @@ export async function bootstrapFirstOwner(
         providerId: "credential",
         userId: created.id,
         password: passwordHash,
+      });
+      await tx.insert(tenantMember).values({
+        tenantId: INSTANCE_TENANT_ID,
+        userId: created.id,
+        roleId: created.roleId,
+        isActive: created.isActive,
       });
 
       await tx

@@ -3,6 +3,7 @@ import { expect, test } from "bun:test";
 
 const CASES = [
   ["fresh", "first Owner receives the complete default system grants after reset"],
+  ["staff", "bootstrapped Owner can create a staff credential and company membership"],
   ["scaffold", "empty role scaffolding is initialized while configured grants stay intact"],
   ["existing", "existing users' customized grants and revocations stay intact"],
   ["repeat", "repeated bootstrap cannot recreate revoked permissions"],
