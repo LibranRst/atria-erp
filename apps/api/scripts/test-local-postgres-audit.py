@@ -92,27 +92,48 @@ class DiscoveryTests(unittest.TestCase):
                     module.discover_suites(app)
 
     def test_reviewed_unit_exclusion_still_requires_both_database_selectors_cleared(self) -> None:
-        for cleared in [True, False]:
-            with tempfile.TemporaryDirectory() as directory:
-                app = Path(directory)
-                self.fixture(app, "src/valid.integration.test.ts",
-                             'import { describeIntegration } from "@backend/lib/testing/integration-db"; describeIntegration("db", () => {});')
-                source = ('ATRIA_TEST_DATABASE_URL: undefined, ATRIA_TEST_EMPTY_DATABASE_URL: undefined'
-                          if cleared else 'ATRIA_TEST_DATABASE_URL: process.env.DATABASE_URL')
-                self.fixture(app, "src/backend/app/actions/administration-bootstrap.test.ts", source)
-                if cleared:
-                    self.assertEqual(len(module.discover_suites(app)), 1)
-                else:
+        for relative in module.UNIT_DATABASE_SELECTOR_ALLOWLIST:
+            for cleared in [True, False]:
+                with self.subTest(file=relative, cleared=cleared), tempfile.TemporaryDirectory() as directory:
+                    app = Path(directory)
+                    self.fixture(app, "src/valid.integration.test.ts",
+                                 'import { describeIntegration } from "@backend/lib/testing/integration-db"; describeIntegration("db", () => {});')
+                    source = ('ATRIA_TEST_DATABASE_URL: undefined, ATRIA_TEST_EMPTY_DATABASE_URL: undefined'
+                              if cleared else 'ATRIA_TEST_DATABASE_URL: process.env.DATABASE_URL')
+                    self.fixture(app, relative, source)
+                    if cleared:
+                        self.assertEqual(len(module.discover_suites(app)), 1)
+                    else:
+                        with self.assertRaisesRegex(ValueError, "Unreviewed database test"):
+                            module.discover_suites(app)
+
+    def test_each_reviewed_unit_wrapper_requires_both_explicit_selector_clears(self) -> None:
+        for relative in module.UNIT_DATABASE_SELECTOR_ALLOWLIST:
+            for removed in ["ATRIA_TEST_DATABASE_URL", "ATRIA_TEST_EMPTY_DATABASE_URL"]:
+                with self.subTest(file=relative, removed=removed), tempfile.TemporaryDirectory() as directory:
+                    app = Path(directory)
+                    selectors = ["ATRIA_TEST_DATABASE_URL", "ATRIA_TEST_EMPTY_DATABASE_URL"]
+                    self.fixture(app, relative, ", ".join(
+                        f"{name}: undefined" for name in selectors if name != removed))
                     with self.assertRaisesRegex(ValueError, "Unreviewed database test"):
                         module.discover_suites(app)
 
     def test_unit_allowlist_cannot_hide_an_added_direct_live_database_guard(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            app = Path(directory)
-            self.fixture(app, "src/backend/app/actions/administration-bootstrap.test.ts",
-                         'ATRIA_TEST_DATABASE_URL: undefined, ATRIA_TEST_EMPTY_DATABASE_URL: undefined; describe.skipIf(!process.env.ATRIA_TEST_DATABASE_URL)("actual db", () => {});')
-            with self.assertRaisesRegex(ValueError, "Unreviewed database test"):
-                module.discover_suites(app)
+        for relative in module.UNIT_DATABASE_SELECTOR_ALLOWLIST:
+            with self.subTest(file=relative), tempfile.TemporaryDirectory() as directory:
+                app = Path(directory)
+                self.fixture(app, relative,
+                             'ATRIA_TEST_DATABASE_URL: undefined, ATRIA_TEST_EMPTY_DATABASE_URL: undefined; describe.skipIf(!process.env.ATRIA_TEST_DATABASE_URL)("actual db", () => {});')
+                with self.assertRaisesRegex(ValueError, "Unreviewed database test"):
+                    module.discover_suites(app)
+
+    def test_reviewed_unit_wrapper_with_recognized_live_guard_is_included(self) -> None:
+        for relative in module.UNIT_DATABASE_SELECTOR_ALLOWLIST:
+            with self.subTest(file=relative), tempfile.TemporaryDirectory() as directory:
+                app = Path(directory)
+                self.fixture(app, relative,
+                             'ATRIA_TEST_DATABASE_URL: undefined, ATRIA_TEST_EMPTY_DATABASE_URL: undefined; import { describeIntegration } from "@backend/lib/testing/integration-db"; describeIntegration("actual db", () => {});')
+                self.assertEqual(module.discover_suites(app), [{"file": relative, "mode": "seeded"}])
 
     def test_repository_inventory_contains_new_ai_actions_readers_and_profile_suites(self) -> None:
         app = Path(__file__).resolve().parents[1]
@@ -133,6 +154,7 @@ class DiscoveryTests(unittest.TestCase):
                               if row["file"] == module.DEVELOPMENT_SUITE), "development")
         self.assertNotIn("tests/native-http.test.ts", files)
         self.assertNotIn("scripts/local-postgres-preload.test.ts", files)
+        self.assertTrue(module.UNIT_DATABASE_SELECTOR_ALLOWLIST.isdisjoint(files))
 
     def test_unknown_direct_database_guard_in_scripts_is_not_silently_ignored(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

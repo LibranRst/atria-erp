@@ -20,6 +20,12 @@ from urllib.parse import ParseResult, urlparse
 UNIT_DATABASE_SELECTOR_ALLOWLIST = frozenset({
     "src/backend/app/actions/administration-bootstrap.test.ts",
     "src/backend/app/actions/material/operations-dashboard.test.ts",
+    "src/backend/features/projects/detail/server/project-operations-read.test.ts",
+    "src/backend/features/projects/detail/server/project-planning-read.test.ts",
+    "src/backend/features/projects/list/server/projects-desktop-read.test.ts",
+    "src/backend/features/settings/server/settings-read-tenant.test.ts",
+    "src/backend/server/usecases/finance/client-payment-tenant.test.ts",
+    "src/backend/server/usecases/material/material-desktop.test.ts",
 })
 INTEGRATION_HELPER = "@backend/lib/testing/integration-db"
 DEVELOPMENT_SUITE = "scripts/development-seed.integration.test.ts"

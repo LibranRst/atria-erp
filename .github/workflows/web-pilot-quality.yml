@@ -3,7 +3,6 @@ name: Web pilot quality
 on:
   pull_request:
   push:
-    branches: [development, main]
   workflow_dispatch:
 
 permissions:
@@ -19,6 +18,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -30,12 +31,17 @@ jobs:
         run: |
           bun run heroui:styles:check
           bun run tokens:check
-      - name: Safe core, API and web tests
+      - name: Install Chromium for browser-backed unit tests
+        working-directory: apps/web
+        run: bun x playwright install --with-deps chromium
+      - name: Workspace unit and regression tests
         run: |
-          bun run --filter @atria/core test
-          bun run --filter @atria/api test
-          bun run --filter @atria/web test
+          bun run test
+      - name: Database isolation and backup guard tests
+        run: |
           python3 scripts/test-backup-pilot-db.py
+          python3 scripts/test-backup-production-db.py
+          python3 scripts/test-test-integration.py
           python3 apps/api/scripts/test-local-postgres-audit.py
       - name: Classify dependency security
         run: |
@@ -63,48 +69,23 @@ jobs:
   postgres-integration:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ci-disposable-only
-          POSTGRES_DB: atria_audit_baseline
-        ports:
-          - "127.0.0.1:5432:5432"
-        options: >-
-          --label atria.purpose=readiness-audit
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    env:
-      NODE_ENV: test
-      ATRIA_LOCAL_TEST_DATABASE_URL: postgresql://postgres:ci-disposable-only@127.0.0.1:5432/atria_audit_baseline
-      BETTER_AUTH_SECRET: ci-only-auth-secret-never-use-in-production
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.14"
       - run: bun install --frozen-lockfile
-      - name: Migrate and prepare fresh synthetic templates
-        working-directory: apps/api
-        run: bun scripts/prepare-disposable-postgres.ts atria_audit_empty
-      - name: Run each integration suite on its own clone
-        run: >-
-          python3 apps/api/scripts/run-local-postgres-audit.py
-          --container "${{ job.services.postgres.id }}"
-          --seed-template atria_audit_baseline
-          --empty-template atria_audit_empty
-          --logs output/postgres-integration
-      # Tests remain a required gate. Artifact storage is supplementary: the
-      # runner also prints sanitized per-suite results in the immutable job log.
+      - name: Isolated PostgreSQL integration tests
+        run: bun run test:integration
+      # Test failures fail this job. Artifact storage is supplementary: the
+      # command prints totals, and artifacts contain sanitized per-suite results.
       - uses: actions/upload-artifact@v4
         if: always()
         continue-on-error: true
         with:
           name: postgres-integration-results
-          path: output/postgres-integration/results.json
+          path: output/test-integration/*/suites/results.json
           if-no-files-found: ignore
           retention-days: 7

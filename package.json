@@ -59,7 +59,8 @@
     "db:dev:seed": "bun --filter @atria/api db:dev:seed",
     "db:dev:reset": "bun --filter @atria/api db:dev:reset",
     "db:dev:verify": "bun --filter @atria/api db:dev:verify",
-    "dev:api:local": "bun --filter @atria/api dev:local"
+    "dev:api:local": "bun --filter @atria/api dev:local",
+    "test:integration": "python3 scripts/test-integration.py"
   },
   "devDependencies": {
     "prettier": "^3.9.5",
