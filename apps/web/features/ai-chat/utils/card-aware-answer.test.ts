@@ -1,7 +1,11 @@
 import { expect, test } from "bun:test";
 import type { UIMessage } from "ai";
 import type { CardNarrative } from "@atria/core/ai/answer-presentation";
-import { projectCardAwareAnswerText, type RenderedReadCard } from "./card-aware-answer";
+import {
+  canRenderGroundedReadCard,
+  projectCardAwareAnswerText,
+  type RenderedReadCard,
+} from "./card-aware-answer";
 
 type Part = UIMessage["parts"][number];
 const cashFull =
@@ -315,4 +319,38 @@ test("projection makes no model, fetch or business request", (): void => {
   } finally {
     globalThis.fetch = previousFetch;
   }
+});
+
+test("factual card scope uses the latest exact source while legacy cards retain compatibility", (): void => {
+  const ids = ["00000000-0000-4000-8000-000000000001", "00000000-0000-4000-8000-000000000002"];
+  const output = {
+    ...cashOutput,
+    accounts: cashOutput.accounts.map((account, index) => ({ ...account, accountId: ids[index] })),
+  };
+  const proof: Part = {
+    type: "data-grounded-facts",
+    data: { status: "partial", sources: [{ ...cash, entityIds: ids }], missingDomains: ["budget"] },
+  };
+  const current = message([tool(cash, output), proof]);
+  const snapshot = JSON.stringify(current);
+  expect(canRenderGroundedReadCard(current, cash, output)).toBe(true);
+  expect(canRenderGroundedReadCard(current, { ...cash, toolCallId: "another-call" }, output)).toBe(
+    false,
+  );
+  expect(canRenderGroundedReadCard(current, cash, cashOutput)).toBe(false);
+  expect(canRenderGroundedReadCard(message([tool(cash, output)]), cash, output)).toBe(true);
+  for (const data of [
+    { status: "partial", sources: [{ ...cash, entityIds: [ids[0]] }] },
+    { status: "waiting", sources: [] },
+    { status: "error", sources: [] },
+    { status: "verified" },
+  ])
+    expect(
+      canRenderGroundedReadCard(
+        message([proof, { type: "data-grounded-facts", data }]),
+        cash,
+        output,
+      ),
+    ).toBe(false);
+  expect(JSON.stringify(current)).toBe(snapshot);
 });

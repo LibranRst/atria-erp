@@ -29,14 +29,17 @@ import { MaterialUpdateProposalCard } from "./proposal-cards/material-update-pro
 import type { UIMessage } from "ai";
 import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
-import { z } from "zod";
 
 import { transitionSpringSmooth } from "@/lib/utils/motion";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { readAnyProposal } from "../utils/proposal-reader";
 import { toolNameFromPartType } from "../utils/tool-labels";
 import { activityToolState, deriveToolActivity } from "../utils/tool-activity";
-import { projectCardAwareAnswerText, type RenderedReadCard } from "../utils/card-aware-answer";
+import {
+  canRenderGroundedReadCard,
+  projectCardAwareAnswerText,
+  type RenderedReadCard,
+} from "../utils/card-aware-answer";
 import type { ActiveInputRequest } from "../utils/input-request-reader";
 import { USER_MESSAGE_ATTRIBUTE } from "../hooks/use-chat-scroll";
 import { ChatBubble } from "./chat-bubble";
@@ -59,11 +62,6 @@ import { FollowUpChips, readFollowUps } from "./follow-up-chips";
 import { ToolTraceList } from "./tool-trace";
 import { resolveToolResultRenderer, selectVisibleCards } from "./tool-results";
 import { collectProjectNames, readToolProjectId } from "../utils/message-context";
-
-const unsupportedFactsSchema = z.object({
-  status: z.literal("error"),
-  sources: z.array(z.unknown()).length(0),
-});
 
 type ChatMessageProps = {
   readonly message: UIMessage;
@@ -164,15 +162,6 @@ export function ChatMessage({
   let followUps: readonly string[] = [];
 
   const projectNames = collectProjectNames(message);
-  // An unsupported factual answer cannot use a current-value card as its
-  // apparent answer. Keep real activity/errors and human choice candidates.
-  const suppressUnsupportedFactResults = message.parts.some(
-    (part) =>
-      part.type === "data-grounded-facts" &&
-      "data" in part &&
-      unsupportedFactsSchema.safeParse(part.data).success,
-  );
-
   message.parts.forEach((part, index) => {
     const toolName = toolNameFromPartType(part.type);
 
@@ -843,7 +832,10 @@ export function ChatMessage({
       }
 
       const Renderer = resolveToolResultRenderer(toolName);
-      if (Renderer && !suppressUnsupportedFactResults) {
+      if (
+        Renderer &&
+        canRenderGroundedReadCard(message, { toolName, toolCallId: toolCallId ?? "" }, output)
+      ) {
         cards.push({
           toolName,
           toolCallId,

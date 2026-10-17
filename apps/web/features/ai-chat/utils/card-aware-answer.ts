@@ -31,6 +31,56 @@ const groundedNarrativesSchema = z.object({
   cardNarratives: z.array(usableNarrativeSchema),
 });
 
+const groundedCardSourcesSchema = z.object({
+  status: z.enum(["verified", "partial", "waiting", "error"]),
+  sources: z.array(
+    z.object({
+      toolName: z.string().min(1),
+      toolCallId: z.string().min(1),
+      entityIds: z.array(z.string()),
+    }),
+  ),
+  missingDomains: z.array(z.string()).optional(),
+});
+
+/** Cards must not broaden a final factual answer's verified source or account scope. */
+export function canRenderGroundedReadCard(
+  message: UIMessage,
+  card: RenderedReadCard,
+  output: unknown,
+): boolean {
+  const latest = message.parts.findLast((part): boolean => part.type === "data-grounded-facts");
+  if (!latest) return true; // Legacy/advisory messages retain their existing read cards.
+  if (!("data" in latest)) return false;
+  const parsed = groundedCardSourcesSchema.safeParse(latest.data);
+  if (!parsed.success || parsed.data.status === "error") return false;
+  const facts = parsed.data;
+  // Discovery candidates are choices for a still-unbound project, not final values.
+  if (
+    card.toolName === "listProjects" &&
+    facts.status !== "verified" &&
+    facts.missingDomains?.some((domain) => ["budget", "stock", "documents"].includes(domain))
+  )
+    return true;
+  if (facts.status === "waiting") return false;
+  const source = facts.sources.find(
+    (source) => source.toolName === card.toolName && source.toolCallId === card.toolCallId,
+  );
+  if (!source) return false;
+  if (card.toolName !== "getBankBalances") return true;
+  const balances = getBankBalancesOutputSchema.safeParse(output);
+  if (!balances.success) return false;
+  const ids = balances.data.accounts.map((account) => account.accountId);
+  const verified = new Set(source.entityIds);
+  // Keep scoped canonical text when a company-total card would include other accounts.
+  return (
+    ids.length > 0 &&
+    ids.length === verified.size &&
+    new Set(ids).size === ids.length &&
+    ids.every((id) => id !== undefined && verified.has(id))
+  );
+}
+
 function hasUsableReadCard(message: UIMessage, narrative: Narrative): boolean {
   const parts = message.parts.filter(
     (part): boolean =>

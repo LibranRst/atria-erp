@@ -71,7 +71,10 @@ describe("ChatMessage assistant content", () => {
               {
                 toolName: "getBankBalances",
                 toolCallId: "cash-read",
-                entityIds: ["cash-a", "cash-b"],
+                entityIds: [
+                  "00000000-0000-4000-8000-000000000001",
+                  "00000000-0000-4000-8000-000000000002",
+                ],
                 query: {},
               },
             ],
@@ -104,6 +107,90 @@ describe("ChatMessage assistant content", () => {
     expect(render(noUsableCard, false)).not.toContain(cardText);
   });
 
+  test.each(["waiting", "partial", "verified"])(
+    "an unsourced cash card cannot answer a grounded request: %s",
+    (status) => {
+      const html = render(
+        assistant([
+          { type: "text", text: "Rekening yang diminta belum terverifikasi." },
+          {
+            type: "tool-getBankBalances",
+            toolCallId: "company-cash",
+            state: "output-available",
+            input: {},
+            output: {
+              totalAvailable: { amount: 1000000, formatted: "Rp 1.000.000" },
+              accounts: [
+                {
+                  accountId: "00000000-0000-4000-8000-000000000003",
+                  accountName: "Kas perusahaan lain",
+                  bankName: "Bank QA",
+                  balance: { amount: 1000000, formatted: "Rp 1.000.000" },
+                },
+              ],
+            },
+          },
+          { type: "data-grounded-facts", data: { status, sources: [], missingDomains: ["cash"] } },
+        ]),
+        false,
+      );
+      expect(html).toContain("Rekening yang diminta belum terverifikasi");
+      expect(html).not.toContain("Kas perusahaan lain");
+      expect(html).not.toContain("Saldo rekening");
+      expect(html).not.toContain("1.000.000");
+    },
+  );
+  test("a named-account answer keeps scoped text instead of a broader company-total card", () => {
+    const html = render(
+      assistant([
+        { type: "text", text: "Saldo Rekening Tujuan: Rp 100.000." },
+        {
+          type: "tool-getBankBalances",
+          toolCallId: "company-cash",
+          state: "output-available",
+          input: {},
+          output: {
+            totalAvailable: { amount: 300000, formatted: "Rp 300.000" },
+            accounts: [
+              {
+                accountId: "00000000-0000-4000-8000-000000000001",
+                accountName: "Rekening Tujuan",
+                bankName: "Bank QA",
+                balance: { amount: 100000, formatted: "Rp 100.000" },
+              },
+              {
+                accountId: "00000000-0000-4000-8000-000000000002",
+                accountName: "Rekening Lain",
+                bankName: "Bank Lain",
+                balance: { amount: 200000, formatted: "Rp 200.000" },
+              },
+            ],
+          },
+        },
+        {
+          type: "data-grounded-facts",
+          data: {
+            status: "verified",
+            sources: [
+              {
+                toolName: "getBankBalances",
+                toolCallId: "company-cash",
+                entityIds: ["00000000-0000-4000-8000-000000000001"],
+                query: {},
+              },
+            ],
+            coveredDomains: ["cash"],
+            missingDomains: [],
+          },
+        },
+      ]),
+      false,
+    );
+    expect(html).toContain("Saldo Rekening Tujuan");
+    expect(html).toContain("100.000");
+    expect(html).not.toContain("Rekening Lain");
+    expect(html).not.toContain("300.000");
+  });
   test("tidak membuat placeholder atau bubble untuk pesan asisten kosong", () => {
     const html = render(assistant([]));
 
