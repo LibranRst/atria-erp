@@ -202,6 +202,8 @@ describe("trusted current-run financial and stock facts", () => {
     "Cek saldo rekening Tidak Ada saat ini",
     "Cek saldo rekening ini",
     'Cek saldo rekening "Yang Tercatat Saat Ini"',
+    "Cek saldo bank Tidak Ada saat ini",
+    'Cek saldo bank "Saat Ini"',
   ])(
     "current-balance wording does not broaden an unknown or ambiguous account: %s",
     (question): void => {
@@ -210,6 +212,13 @@ describe("trusted current-run financial and stock facts", () => {
       expect(answer?.sources).toEqual([]);
     },
   );
+  test("a named bank remains scoped while current-time wording is accepted", (): void => {
+    const answer = renderGroundedFacts("Berapa saldo bank BCA saat ini?", [bank()]);
+    expect(answer?.status).toBe("verified");
+    expect(answer?.sources[0]?.entityIds).toEqual([accountA]);
+    expect(answer?.text).toContain("1.250.000,25");
+    expect(answer?.text).not.toContain("2.000.000,32");
+  });
   test("terkini denotes a current balance request while named account binding stays explicit", (): void => {
     const answer = renderGroundedFacts(
       "Periksa saldo rekening terkini dan tampilkan daftar rekeningnya. Jangan ubah data.",

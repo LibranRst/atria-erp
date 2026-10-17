@@ -340,10 +340,12 @@ function cashSection(question: string, observation: GroundedToolObservation): Se
               bankOnly === normalize(a.bankName)),
         );
     const explicitlyNamed = namedAccounts.length ? namedAccounts : namedBanks;
-    const target = normalize(question.split(/[.!?;\n]/, 1)[0] ?? "").match(
-      /\brekening\s+(.+?)(?:\s+dan\s+|$)/,
-    )?.[1];
-    const quotedTarget = /\brekening\s+["'“‘]/i.test(question);
+    const balanceClause = normalize(question.split(/[.!?;\n]/, 1)[0] ?? "").replace(
+      /^.*?\b(?:saldo|balance)\b/,
+      "",
+    );
+    const target = balanceClause.match(/\b(?:rekening|bank)\s+(.+?)(?:\s+dan\s+|$)/)?.[1];
+    const quotedTarget = /\b(?:rekening|bank)\s+["'“‘]/i.test(question);
     const genericTarget = target
       ?.replace(/\b(?:yang\s+)?(?:tercatat|tersedia)\b/g, " ")
       .replace(
